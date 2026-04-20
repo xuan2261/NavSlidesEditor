@@ -20,6 +20,7 @@ A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revea
 - **Undo / redo** — Ctrl+Z / Ctrl+Y with 50-step history
 - **Clipboard** — Ctrl+C/X/V and Ctrl+D to copy/cut/paste/duplicate elements
 - **Auto-save** — debounced saves every 1.5 s with last-saved timestamp display
+- **Translucent Presenter UI** — floating tools and slide navigation dim to 15% opacity when idle to minimize distraction during presentations
 
 ### Element Types
 
@@ -63,8 +64,8 @@ A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revea
 
 - **Present mode** — full-screen reveal.js presentation with speaker notes (press `S`)
 - **Export HTML** — download as a self-contained HTML file
-- **Export offline HTML** — inlines all CDN resources (Reveal.js, KaTeX, highlight.js) so the file works without internet
-- **Export PDF** — print-ready layout with one page per slide, fragment states expanded
+- **Export offline HTML** — inlines all CDN resources (Reveal.js, KaTeX, highlight.js) and correctly resolves local iframes/plugins so the file works entirely without internet
+- **Export PDF** — print-ready layout with one page per slide, fragment states expanded, with improved iframe initialization for embeds
 - **Export PPTX** — generate a PowerPoint file for sharing with non-technical users
 - **Shareable links** — generate public URLs to view presentations without the editor; toggle on/off per presentation
 - **GitHub integration** — push presentations directly to a GitHub repo with auto-generated README
