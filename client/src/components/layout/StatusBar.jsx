@@ -24,7 +24,7 @@ export default function StatusBar() {
             <polyline points="16 18 22 12 16 6" />
             <polyline points="8 6 2 12 8 18" />
           </svg>
-          v1.4.0
+          v1.4.4
         </span>
       </div>
     </footer>
