@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bode Plot Pro</title>
+    <style>
+        :root {
+            --bg: #0a1a18;
+            --primary: #4ecdc4;
+            --glow: #4ecdc480;
+            --text: #d0fff5;
+            --mag-col: #4ecdc4;
+            --phi-col: #ff8a5c;
+            --panel: rgba(10, 26, 24, 0.8);
+            --border: rgba(78, 205, 196, 0.2);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 15px; }
+        
+        .header { text-align: center; margin-bottom: 10px; }
+        h3 { font-size: 1.3rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px var(--glow); margin-bottom: 5px; }
+        
+        .container {
+            display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 950px; height: 420px;
+            background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+        }
+        
+        .top-bar { display: flex; gap: 15px; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 8px; }
+        .input-group { display: flex; align-items: center; gap: 8px; }
+        .input-group label { font-size: 0.9rem; font-weight: bold; color: rgba(208, 255, 245, 0.8); }
+        .input-group input { background: #071210; border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 4px; font-family: monospace; font-size: 0.95rem; outline: none; transition: border 0.3s; width: 120px; }
+        .input-group input:focus { border-color: var(--primary); box-shadow: 0 0 5px var(--glow); }
+        
+        .btn { background: rgba(78, 205, 196, 0.1); border: 1px solid var(--primary); color: var(--text); padding: 6px 15px; border-radius: 4px; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; font-weight: bold; }
+        .btn:hover { background: rgba(78, 205, 196, 0.3); box-shadow: 0 0 10px var(--glow); }
+        .presets { display: flex; gap: 8px; }
+        
+        .graphs { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+        .canvas-bg { flex: 1; background: #040908; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+        canvas { display: block; width: 100%; height: 100%; }
+        
+        .lbl-mag { position: absolute; top: 10px; left: 15px; font-size: 0.8rem; font-weight: bold; color: var(--mag-col); text-shadow: 0 0 5px var(--mag-col); }
+        .lbl-phi { position: absolute; top: 10px; left: 15px; font-size: 0.8rem; font-weight: bold; color: var(--phi-col); text-shadow: 0 0 5px var(--phi-col); }
+        
+        .margins { display: flex; justify-content: center; gap: 40px; margin-top: 5px; font-size: 0.9rem; }
+        .mg { color: #2ecc71; text-shadow: 0 0 5px #2ecc71; }
+        .mb { color: #ff4757; text-shadow: 0 0 5px #ff4757; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h3>📈 Dynamic Bode Analyzer</h3>
+    </div>
+    <div class="container">
+        <div class="top-bar">
+            <div style="display:flex; gap:15px">
+                <div class="input-group">
+                    <label>Num(s)</label>
+                    <input id="iN" value="10" placeholder="e.g. 1,0">
+                </div>
+                <div class="input-group">
+                    <label>Den(s)</label>
+                    <input id="iD" value="1,0.2,1" placeholder="e.g. 1,2,1">
+                </div>
+                <button class="btn" onclick="draw()">Bode Plot</button>
+            </div>
+            <div class="presets">
+                <button class="btn" style="border-style:dashed" onclick="preset('1','1,1')">LPF</button>
+                <button class="btn" style="border-style:dashed" onclick="preset('1,0','1,1')">HPF</button>
+                <button class="btn" style="border-style:dashed" onclick="preset('0.1,0','1,0.1,1')">BPF</button>
+            </div>
+        </div>
+        
+        <div class="graphs">
+            <div class="canvas-bg">
+                <div class="lbl-mag">Magnitude |H(jω)| (dB)</div>
+                <canvas id="cvMag"></canvas>
+            </div>
+            <div class="canvas-bg">
+                <div class="lbl-phi">Phase ∠H(jω) (°)</div>
+                <canvas id="cvPhi"></canvas>
+            </div>
+        </div>
+        <div class="margins">
+            <span>Gain Margin: <b id="mGM" class="mg">--</b></span>
+            <span>Phase Margin: <b id="mPM" class="mg">--</b></span>
+            <span>Est. Stability: <b id="mStab" class="mg">--</b></span>
+        </div>
+    </div>
+
+    <script>
+        const cvMag = document.getElementById('cvMag'), ctxM = cvMag.getContext('2d');
+        const cvPhi = document.getElementById('cvPhi'), ctxP = cvPhi.getContext('2d');
+        
+        function preset(n, d) { document.getElementById('iN').value = n; document.getElementById('iD').value = d; draw(); }
+        function parseCoeffs(s) { return s.split(',').map(Number).reverse(); }
+        function evalPoly(c, re, im) {
+            let rr=0, ri=0;
+            for(let i=0; i<c.length; i++) {
+                let pr=1, pi=0;
+                for(let j=0; j<i; j++) {
+                    let nr = pr*re - pi*im;
+                    let ni = pr*im + pi*re;
+                    pr = nr; pi = ni;
+                }
+                rr += c[i]*pr; ri += c[i]*pi;
+            }
+            return [rr, ri];
+        }
+
+        function resize() {
+            const r1 = cvMag.parentElement.getBoundingClientRect();
+            cvMag.width = r1.width; cvMag.height = r1.height;
+            const r2 = cvPhi.parentElement.getBoundingClientRect();
+            cvPhi.width = r2.width; cvPhi.height = r2.height;
+        }
+        window.addEventListener('resize', () => { resize(); draw(); });
+        setTimeout(() => { resize(); draw(); }, 100);
+
+        function drawGrid(ctx, W, H, cX, cY) {
+            ctx.clearRect(0,0,W,H);
+            ctx.strokeStyle = 'rgba(78, 205, 196, 0.1)'; ctx.lineWidth = 1;
+            
+            // Decades (Log scale approx)
+            for(let i=0; i<=10; i++) {
+                let x = W * (i/10);
+                ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+            }
+            // Linear Y grid
+            for(let i=0; i<=4; i++) {
+                let y = H * (i/4);
+                ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+            }
+        }
+
+        function draw() {
+            let num = parseCoeffs(document.getElementById('iN').value);
+            let den = parseCoeffs(document.getElementById('iD').value);
+            if(!num.length || !den.length) return;
+
+            const W = cvMag.width, HM = cvMag.height, HP = cvPhi.height;
+            drawGrid(ctxM, W, HM, W/10, HM/4);
+            drawGrid(ctxP, W, HP, W/10, HP/4);
+
+            const pts = W, fMin = 0.01, fMax = 100;
+            let mags = [], phases = [];
+            
+            // Calculate response
+            for(let i=0; i<pts; i++) {
+                let f = fMin * Math.pow(fMax/fMin, i/(pts-1));
+                let w = f; // using w instead of 2pi*f for textbook scale
+                let nr = evalPoly(num, 0, w), dr = evalPoly(den, 0, w);
+                
+                let numR = nr[0], numI = nr[1], denR = dr[0], denI = dr[1];
+                let magD = denR*denR + denI*denI;
+                if(magD < 1e-30) magD = 1e-30;
+                
+                let hR = (numR*denR + numI*denI)/magD;
+                let hI = (numI*denR - numR*denI)/magD;
+                
+                let mag = Math.sqrt(hR*hR + hI*hI);
+                mags.push(20 * Math.log10(Math.max(mag, 1e-10)));
+                phases.push(Math.atan2(hI, hR) * 180 / Math.PI);
+            }
+
+            // Mag scale: -80 to +40 dB
+            let mMin = -80, mMax = 40, mRange = mMax - mMin;
+            // Phase scale: -270 to +90
+            let pMin = -270, pMax = 90, pRange = pMax - pMin;
+
+            // Draw Mag
+            ctxM.strokeStyle = '#4ecdc4'; ctxM.lineWidth = 2.5; ctxM.beginPath();
+            let wcMagZero = -1, wcPhase180 = -1;
+            let GM = Infinity, PM = Infinity;
+            
+            for(let i=0; i<pts; i++) {
+                let x = i;
+                let y = HM * (1 - (mags[i] - mMin)/mRange);
+                y = Math.max(-10, Math.min(HM+10, y));
+                if(i===0) ctxM.moveTo(x,y); else ctxM.lineTo(x,y);
+                
+                // Estimate crossings
+                if(i>0 && mags[i-1] >= 0 && mags[i] < 0) wcMagZero = i;
+                if(i>0 && phases[i-1] >= -180 && phases[i] < -180) wcPhase180 = i;
+            }
+            // Glow
+            ctxM.shadowColor = '#4ecdc4'; ctxM.shadowBlur = 8;
+            ctxM.stroke(); ctxM.shadowBlur = 0;
+
+            // Draw 0dB line
+            let y0dB = HM * (1 - (0 - mMin)/mRange);
+            ctxM.strokeStyle = 'rgba(255,255,255,0.4)'; ctxM.setLineDash([4,4]);
+            ctxM.beginPath(); ctxM.moveTo(0, y0dB); ctxM.lineTo(W, y0dB); ctxM.stroke(); ctxM.setLineDash([]);
+            ctxM.fillStyle = 'rgba(255,255,255,0.6)'; ctxM.font = '10px sans'; ctxM.fillText('0 dB', 5, y0dB - 5);
+
+            // Draw Phase
+            ctxP.strokeStyle = '#ff8a5c'; ctxP.lineWidth = 2.5; ctxP.beginPath();
+            for(let i=0; i<pts; i++) {
+                let x = i;
+                let ph = phases[i];
+                // Unwrap hack for visual continuity
+                if(i>0 && ph - phases[i-1] > 180) ph -= 360;
+                if(i>0 && phases[i-1] - ph > 180) ph += 360;
+                phases[i] = ph;
+                
+                let y = HP * (1 - (ph - pMin)/pRange);
+                y = Math.max(-10, Math.min(HP+10, y));
+                if(i===0) ctxP.moveTo(x,y); else ctxP.lineTo(x,y);
+            }
+            ctxP.shadowColor = '#ff8a5c'; ctxP.shadowBlur = 8;
+            ctxP.stroke(); ctxP.shadowBlur = 0;
+
+            // Draw -180° line
+            let y180 = HP * (1 - (-180 - pMin)/pRange);
+            ctxP.strokeStyle = 'rgba(255,255,255,0.4)'; ctxP.setLineDash([4,4]);
+            ctxP.beginPath(); ctxP.moveTo(0, y180); ctxP.lineTo(W, y180); ctxP.stroke(); ctxP.setLineDash([]);
+            ctxP.fillStyle = 'rgba(255,255,255,0.6)'; ctxP.font = '10px sans'; ctxP.fillText('-180°', 5, y180 - 5);
+
+            // Calculate Margins
+            if(wcMagZero !== -1) {
+                PM = 180 + phases[wcMagZero];
+                // Draw PM marker
+                let yP = HP * (1 - (phases[wcMagZero] - pMin)/pRange);
+                ctxP.strokeStyle = '#2ecc71'; ctxP.beginPath();
+                ctxP.moveTo(wcMagZero, y180); ctxP.lineTo(wcMagZero, yP); ctxP.stroke();
+            }
+            if(wcPhase180 !== -1) {
+                GM = 0 - mags[wcPhase180];
+                // Draw GM marker
+                let yM = HM * (1 - (mags[wcPhase180] - mMin)/mRange);
+                ctxM.strokeStyle = '#2ecc71'; ctxM.beginPath();
+                ctxM.moveTo(wcPhase180, y0dB); ctxM.lineTo(wcPhase180, yM); ctxM.stroke();
+            }
+            
+            let eGM = document.getElementById('mGM');
+            let ePM = document.getElementById('mPM');
+            let eStab = document.getElementById('mStab');
+            
+            eGM.textContent = GM === Infinity ? '∞' : GM.toFixed(1) + ' dB';
+            ePM.textContent = PM === Infinity ? '∞' : PM.toFixed(1) + '°';
+            
+            let isStab = (GM > 0 || GM === Infinity) && (PM > 0 || PM === Infinity);
+            eStab.textContent = isStab ? 'Stable ✓' : 'Unstable ⚠️';
+            eStab.className = isStab ? 'mg' : 'mb';
+        }
+    </script>
+</body>
+</html>

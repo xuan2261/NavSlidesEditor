@@ -1,0 +1,13 @@
+services:
+  revealjs-editor:
+    build: .
+    ports:
+      - '3002:3002'
+    volumes:
+      - revealjs-data:/app/server/data
+      - revealjs-uploads:/app/server/uploads
+    restart: unless-stopped
+
+volumes:
+  revealjs-data:
+  revealjs-uploads:

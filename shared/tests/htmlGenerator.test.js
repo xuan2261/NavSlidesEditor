@@ -1,0 +1,36 @@
+import { describe, it, expect } from 'vitest'
+import { generateRevealHTML, getBackgroundAttrs } from '../src/htmlGenerator.js'
+
+describe('htmlGenerator', () => {
+  it('should generate a basic HTML presentation structure', () => {
+    const presentation = {
+      title: 'Test Presentation',
+      theme: 'dracula',
+      slides: [
+        {
+          id: 'slide-1',
+          elements: [
+            { type: 'text', content: 'Hello World', x: 100, y: 100, width: 200, height: 50 },
+          ],
+        },
+      ],
+    }
+
+    const html = generateRevealHTML(presentation)
+    expect(html).toContain('<title>Test Presentation</title>')
+    expect(html).toContain('dracula.css')
+    expect(html).toContain('Hello World')
+  })
+
+  it('should correctly format background attributes', () => {
+    expect(getBackgroundAttrs({ type: 'color', color: '#ff0000' })).toBe(
+      ' data-background-color="#ff0000"'
+    )
+    expect(getBackgroundAttrs({ type: 'image', image: 'test.png' })).toContain(
+      'data-background-image="test.png"'
+    )
+    expect(
+      getBackgroundAttrs({ type: 'gradient', gradient: 'linear-gradient(to right, red, blue)' })
+    ).toContain('data-background-gradient="linear-gradient(to right, red, blue)"')
+  })
+})

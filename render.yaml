@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: navslides-editor
+    env: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 3002
+      - key: NODE_ENV
+        value: production

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Gear Train Mechanics Explorer</title>
+    <style>
+        :root {
+            --bg: #0f1419;
+            --primary: #95adb6;
+            --glow: #95adb680;
+            --text: #dce5e8;
+            --c1: #74b9ff;
+            --c2: #ff8a5c;
+            --c3: #55efc4;
+            --panel: rgba(15, 20, 25, 0.8);
+            --border: rgba(149, 173, 182, 0.2);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 15px; }
+        h3 { font-size: 1.3rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px var(--glow); margin-bottom: 5px; text-align: center; }
+        .sub { font-size: 0.85rem; color: rgba(220, 229, 232, 0.6); text-align: center; margin-bottom: 12px; }
+        
+        .container { display: flex; gap: 15px; width: 100%; max-width: 950px; height: 420px; }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); backdrop-filter: blur(5px); display: flex; flex-direction: column; padding: 15px; }
+        
+        .left-panel { flex: 0.7; }
+        .right-panel { flex: 1.5; padding: 0; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+        
+        canvas { display: block; width: 100%; height: 100%; background: radial-gradient(circle at center, #1a2228 0%, #0f1419 100%); }
+        
+        .row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
+        .row label { font-size: 0.85rem; font-weight: bold; }
+        input[type=range] { width: 100px; accent-color: var(--primary); }
+        .val { font-family: monospace; font-size: 1rem; font-weight: bold; width: 40px; text-align: right; color: var(--primary); }
+        
+        .modes { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn { flex: 1; background: rgba(149, 173, 182, 0.1); border: 1px solid var(--primary); color: var(--text); padding: 8px; border-radius: 4px; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; font-weight: bold; }
+        .btn.active { background: var(--primary); color: var(--bg); box-shadow: 0 0 10px var(--glow); }
+
+        .metrics { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; text-align: center; }
+        .card .lbl { font-size: 0.75rem; color: rgba(220, 229, 232, 0.6); text-transform: uppercase; }
+        .card .num { font-size: 1.2rem; font-family: monospace; font-weight: bold; margin-top: 5px; }
+        .c1-tex { color: var(--c1); } .c2-tex { color: var(--c2); } .c3-tex { color: var(--c3); }
+        
+        .overlay { position: absolute; top: 15px; left: 15px; display: flex; flex-direction: column; gap: 5px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+    <h3>⚙️ Gear Train & Planatary Systems</h3>
+    <div class="sub">Kinematic Power Transmission</div>
+    
+    <div class="container">
+        <!-- Controls -->
+        <div class="panel left-panel">
+            <div class="modes">
+                <button class="btn active" id="btnS" onclick="setMode('simple')">Standard 2-Gear</button>
+                <button class="btn" id="btnP" onclick="setMode('planet')">Planetary (Sun+3P)</button>
+            </div>
+            
+            <div class="row" style="border-left:3px solid var(--c1)">
+                <label>Z₁ (Sun/Driver)</label>
+                <input type="range" id="sZ1" min="10" max="40" value="20">
+                <div class="val" id="vZ1">20</div>
+            </div>
+            <div class="row" style="border-left:3px solid var(--c2)">
+                <label>Z₂ (Planet/Driven)</label>
+                <input type="range" id="sZ2" min="10" max="40" value="30">
+                <div class="val" id="vZ2">30</div>
+            </div>
+            <div class="row" style="border-left:3px solid #fff">
+                <label>Input RPM <span style="font-weight:normal;font-size:0.7em">(x100)</span></label>
+                <input type="range" id="sN" min="1" max="20" value="6">
+                <div class="val" id="vN">6</div>
+            </div>
+            
+            <div class="metrics">
+                <div class="card"><div class="lbl">Ratio (i)</div><div class="num" id="mR">1.50</div></div>
+                <div class="card"><div class="lbl">Output RPM</div><div class="num c2-tex" id="mN2">400</div></div>
+                <div class="card"><div class="lbl">Torque Mul.</div><div class="num c3-tex" id="mT">1.50</div></div>
+                <div class="card"><div class="lbl">Efficiency</div><div class="num c1-tex" id="mE">97%</div></div>
+            </div>
+        </div>
+        
+        <!-- Canvas -->
+        <div class="panel right-panel">
+            <canvas id="cv"></canvas>
+            <div class="overlay" id="p-stats" style="display:none">
+                <div><span style="color:var(--c1)">Sun (Z1):</span> <span id="vS">20</span></div>
+                <div><span style="color:var(--c2)">Planet (Z2):</span> <span id="vP">10</span></div>
+                <div><span style="color:var(--c3)">Ring (Z3):</span> <span id="vR">40</span> 固定</div>
+                <div style="margin-top:5px; border-top:1px solid #444; padding-top:5px">i = 1 + Z3/Z1 = <span id="vIResult">3.0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+        let mode = 'simple';
+        let angle1 = 0;
+        let raf;
+
+        function setMode(m) {
+            mode = m;
+            document.getElementById('btnS').className = 'btn' + (m==='simple'?' active':'');
+            document.getElementById('btnP').className = 'btn' + (m==='planet'?' active':'');
+            document.getElementById('p-stats').style.display = m==='planet'?'flex':'none';
+            if(m==='planet') {
+                document.getElementById('sZ1').max = 30;
+                document.getElementById('sZ2').max = 20;
+            } else {
+                document.getElementById('sZ1').max = 50;
+                document.getElementById('sZ2').max = 50;
+            }
+        }
+        
+        function resize() { cv.width = cv.parentElement.clientWidth; cv.height = cv.parentElement.clientHeight; }
+        window.addEventListener('resize', resize);
+        setTimeout(resize, 100);
+
+        function drawGear(cx, cy, R, teeth, angle, color, internal = false) {
+            ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle);
+            
+            const module = R / (teeth/2);
+            // Better involute approximation
+            const addendum = module * 0.8;
+            const dedendum = module * 1.0;
+            const ra = internal ? R - addendum : R + addendum; // Outer tip radius
+            const rd = internal ? R + dedendum : R - dedendum; // Root radius
+            const dp = 2*Math.PI/teeth;
+            const halfTooth = dp/4;
+            
+            ctx.beginPath();
+            for(let i=0; i<teeth; i++) {
+                let a = i * dp;
+                if(!internal) {
+                    ctx.lineTo((rd)*Math.cos(a - halfTooth*1.2), (rd)*Math.sin(a - halfTooth*1.2));
+                    ctx.lineTo((ra)*Math.cos(a - halfTooth*0.5), (ra)*Math.sin(a - halfTooth*0.5));
+                    ctx.lineTo((ra)*Math.cos(a + halfTooth*0.5), (ra)*Math.sin(a + halfTooth*0.5));
+                    ctx.lineTo((rd)*Math.cos(a + halfTooth*1.2), (rd)*Math.sin(a + halfTooth*1.2));
+                } else {
+                    // Ring gear
+                    ctx.lineTo((ra)*Math.cos(a - halfTooth*0.8), (ra)*Math.sin(a - halfTooth*0.8));
+                    ctx.lineTo((rd)*Math.cos(a - halfTooth*0.3), (rd)*Math.sin(a - halfTooth*0.3));
+                    ctx.lineTo((rd)*Math.cos(a + halfTooth*0.3), (rd)*Math.sin(a + halfTooth*0.3));
+                    ctx.lineTo((ra)*Math.cos(a + halfTooth*0.8), (ra)*Math.sin(a + halfTooth*0.8));
+                }
+            }
+            ctx.closePath();
+            
+            if(internal) {
+                // Draw outer boundary for ring
+                let outerR = R + module * 3;
+                ctx.arc(0, 0, outerR, 0, Math.PI*2, true);
+            }
+            
+            // 3D Metal styling
+            ctx.fillStyle = color; ctx.fill();
+            ctx.strokeStyle = '#222'; ctx.lineWidth = 1; ctx.stroke();
+            
+            // Inner hollow or hub
+            if(!internal) {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath(); ctx.arc(0, 0, R*0.4, 0, Math.PI*2); ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
+                
+                ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 4;
+                ctx.beginPath(); ctx.arc(0, 0, R*0.4, 0, Math.PI*2); ctx.stroke();
+                
+                // Cross beams
+                ctx.strokeStyle = color; ctx.lineWidth = R*0.1;
+                ctx.beginPath(); ctx.moveTo(-R*0.4, 0); ctx.lineTo(R*0.4, 0); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, -R*0.4); ctx.lineTo(0, R*0.4); ctx.stroke();
+                
+                // Hub pin
+                ctx.fillStyle = '#444'; ctx.beginPath(); ctx.arc(0, 0, R*0.1, 0, Math.PI*2); ctx.fill();
+            } else {
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(0, 0, R + module*2.5, 0, Math.PI*2); ctx.stroke();
+            }
+            
+            ctx.restore();
+        }
+
+        function loop() {
+            const z1 = +document.getElementById('sZ1').value;
+            const z2 = +document.getElementById('sZ2').value;
+            const n1 = +document.getElementById('sN').value * 100;
+            
+            document.getElementById('vZ1').textContent = z1;
+            document.getElementById('vZ2').textContent = z2;
+            document.getElementById('vN').textContent = n1;
+            
+            const W = cv.width, H = cv.height;
+            ctx.clearRect(0,0,W,H);
+            
+            // Advance angle (visually scaled down otherwise it aliases)
+            // n1 is RPM. RPS = n1/60. Max visual RPS should be around 1 to avoid skipping teeth.
+            let visualSpeed = (n1/600) * 0.15; // smooth rotation
+            angle1 += visualSpeed * 2 * Math.PI;
+
+            if(mode === 'simple') {
+                let ratio = z2/z1;
+                let n2 = n1/ratio;
+                document.getElementById('mR').textContent = ratio.toFixed(2);
+                document.getElementById('mN2').textContent = Math.round(n2);
+                document.getElementById('mT').textContent = ratio.toFixed(2);
+                document.getElementById('mE').textContent = '97%';
+                
+                let M = Math.min(W, H) / (z1 + z2 + 8); // Scale module to fit
+                let R1 = M * z1, R2 = M * z2;
+                
+                let cx1 = W/2 - R1 - 5, cy = H/2;
+                let cx2 = cx1 + R1 + R2 + M*0.0; // Pitch circles touch
+                
+                // Gear 2 angle
+                let angle2 = -angle1 * (z1/z2) + Math.PI/z2;
+                
+                drawGear(cx1, cy, R1, z1, angle1, '#74b9ff'); // C1
+                drawGear(cx2, cy, R2, z2, angle2, '#ff8a5c'); // C2
+                
+                // Labels
+                ctx.fillStyle = '#74b9ff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(`Drive ${n1} RPM`, cx1, cy + R1 + 20);
+                ctx.fillStyle = '#ff8a5c';
+                ctx.fillText(`Load ${Math.round(n2)} RPM`, cx2, cy + R2 + 20);
+                
+            } else {
+                // Planetary Setup: Z1 = Sun, Z2 = Planet. Ring Z3 = Z1 + 2*Z2. Carrier is Output. Ring Fixed.
+                let z3 = z1 + 2*z2;
+                let ratio = 1 + z3/z1; // Planetary ratio if ring fixed
+                let n2 = n1/ratio; // Carrier speed
+                
+                document.getElementById('vS').textContent = z1;
+                document.getElementById('vP').textContent = z2;
+                document.getElementById('vR').textContent = z3;
+                document.getElementById('vIResult').textContent = ratio.toFixed(2);
+                
+                document.getElementById('mR').textContent = ratio.toFixed(2);
+                document.getElementById('mN2').textContent = Math.round(n2);
+                document.getElementById('mT').textContent = ratio.toFixed(2);
+                document.getElementById('mE').textContent = '90%'; // Planetary is slightly less efficient
+                
+                let M = Math.min(W, H) / (z3 + 10);
+                let cx = W/2, cy = H/2;
+                let R1 = M*z1, R2 = M*z2, R3 = M*z3;
+                
+                // Carrier angle
+                let angleC = angle1 / ratio;
+                // Planet spin angle relative to carrier
+                let angleP = angle1 * (z1/z2) * (1 - 1/ratio) - angleC; // Approx kinematics
+                // Math is tricky, let's use exact relative kinematics:
+                // ω_s = ω_1, ω_c = ω_1 / ratio.
+                // Planet rolls inside ring: ω_p = (ω_c * R3 - ω_c * (R3-R2)) / R2 ? No.
+                // Simple: sun moves angleA. Carrier moves angleA/ratio.
+                // Displacement at sun/planet mesh: r1 * (angleA - angleC). 
+                // Planet rotation angle: - (r1/r2) * (angleA - angleC) + angleC.
+                let spinP = - (R1/R2) * (angle1 - angleC);
+                
+                // Draw Ring Gear (Fixed)
+                drawGear(cx, cy, R3, z3, 0, '#55efc4', true);
+                
+                // Draw Carrier (Background spider)
+                ctx.save(); ctx.translate(cx, cy); ctx.rotate(angleC);
+                ctx.beginPath();
+                for(let i=0; i<3; i++) {
+                    let a = i * 2*Math.PI/3;
+                    let dx = Math.cos(a) * (R1+R2), dy = Math.sin(a) * (R1+R2);
+                    ctx.moveTo(0,0); ctx.lineTo(dx, dy);
+                    ctx.arc(dx, dy, M*3, 0, Math.PI*2);
+                }
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; ctx.lineWidth = M*6; ctx.stroke();
+                ctx.restore();
+                
+                // Draw Sun
+                drawGear(cx, cy, R1, z1, angle1, '#74b9ff');
+                
+                // Draw Planets (3 of them)
+                for(let i=0; i<3; i++) {
+                    let startAng = i * 2*Math.PI/3;
+                    let pCx = cx + Math.cos(angleC + startAng) * (R1+R2);
+                    let pCy = cy + Math.sin(angleC + startAng) * (R1+R2);
+                    // Align teeth based on position
+                    // We just rotate spinP plus a phase offset
+                    let phase = startAng * (z1/z2); 
+                    drawGear(pCx, pCy, R2, z2, spinP + phase + Math.PI/z2, '#ff8a5c');
+                }
+            }
+            
+            raf = requestAnimationFrame(loop);
+        }
+        
+        loop();
+    </script>
+</body>
+</html>

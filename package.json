@@ -1,0 +1,54 @@
+{
+  "name": "navslides-editor",
+  "version": "1.4.3",
+  "private": true,
+  "description": "NavSlides Editor — A WYSIWYG presentation editor powered by Reveal.js",
+  "author": {
+    "name": "Xuan2261",
+    "email": "xuan2261@users.noreply.github.com"
+  },
+  "main": "electron/main.js",
+  "workspaces": [
+    "server",
+    "client",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=server\" \"npm run dev --workspace=client\"",
+    "vendor": "node scripts/copy-vendor.js",
+    "postinstall": "npm run vendor",
+    "build": "npm run build --workspace=client",
+    "start": "NODE_ENV=production npm run start --workspace=server",
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:load:ws": "k6 run tests/load/websocket-load.js",
+    "test:load:api": "k6 run tests/load/api-load.js",
+    "electron:dev": "npm run build && electron .",
+    "electron:prepare": "npm run build && node scripts/prepare-electron.js",
+    "electron:build": "npm run electron:prepare && npx electron-builder",
+    "electron:build:linux": "npm run electron:prepare && npx electron-builder --linux",
+    "electron:build:mac": "npm run electron:prepare && npx electron-builder --mac",
+    "electron:build:win": "npm run electron:prepare && npx electron-builder --win"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.59.1",
+    "concurrently": "^8.2.2",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "globals": "^17.4.0",
+    "playwright": "^1.59.1",
+    "prettier": "^3.8.2",
+    "vitest": "^4.1.4"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.2.0",
+    "jszip": "^3.10.1"
+  }
+}

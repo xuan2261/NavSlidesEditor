@@ -1,0 +1,64 @@
+{
+  "title": "Hướng dẫn sử dụng phần mềm NavSlides Editor",
+  "author": "Khoa Kỹ thuật cơ sở - Học viện Hải quân",
+  "version": "1.0",
+  "chapters": [
+    {
+      "id": "chap1",
+      "title": "Chương 1: Tổng quan về NavSlides Editor",
+      "sections": [
+        "1.1. Giới thiệu phần mềm",
+        "1.2. Tính năng nổi bật",
+        "1.3. Yêu cầu hệ thống"
+      ]
+    },
+    {
+      "id": "chap2",
+      "title": "Chương 2: Bắt đầu nhanh",
+      "sections": [
+        "2.1. Cài đặt và khởi động",
+        "2.2. Giao diện làm việc (Workspace)",
+        "2.3. Tạo dự án bài giảng đầu tiên"
+      ]
+    },
+    {
+      "id": "chap3",
+      "title": "Chương 3: Các chức năng cơ bản",
+      "sections": [
+        "3.1. Thêm, xóa và sắp xếp slide",
+        "3.2. Soạn thảo văn bản và định dạng",
+        "3.3. Chèn hình ảnh, video và âm thanh",
+        "3.4. Sử dụng công cụ thuyết trình (Bút vẽ, Bảng đen, Phóng to)"
+      ]
+    },
+    {
+      "id": "chap4",
+      "title": "Chương 4: Quản lý và Xuất bản dự án",
+      "sections": [
+        "4.1. Lưu và mở dự án (.navslides)",
+        "4.2. Quản lý thư viện mẫu (Templates)",
+        "4.3. Chế độ trình chiếu (Live, Speaker Notes)"
+      ]
+    },
+    {
+      "id": "chap5",
+      "title": "Chương 5: Cẩm nang Prompt AI (Ứng dụng Trí tuệ Nhân tạo)",
+      "sections": [
+        "5.1. Giới thiệu về việc sinh mã Slide bằng AI",
+        "5.2. Nguyên tắc thiết kế Prompt tối ưu cho NavSlides",
+        "5.3. Mẫu Prompt 1: Sinh Slide Trắc nghiệm (Quiz)",
+        "5.4. Mẫu Prompt 2: Sinh Slide Mô phỏng Vật lý (Canvas)",
+        "5.5. Mẫu Prompt 3: Sinh Slide Animation Điện tử số"
+      ]
+    },
+    {
+      "id": "chap6",
+      "title": "Chương 6: Hỏi đáp và Xử lý sự cố",
+      "sections": [
+        "6.1. Lỗi hiển thị toán học LaTeX",
+        "6.2. Không import được dự án",
+        "6.3. Giải quyết vấn đề liên quan đến Media"
+      ]
+    }
+  ]
+}

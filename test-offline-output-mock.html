@@ -1,0 +1,96 @@
+
+    <html>
+      <head>
+  <base href="http://localhost:3002/">
+        
+  <script>
+  // Offline iframe initialization
+  (function() {
+    var _iframeB64 = {
+    '__offline_iframe_0': 'PCFkb2N0eXBlIGh0bWw+PGh0bWw+PGhlYWQ+PG1ldGEgY2hhcnNldD0idXRmLTgiPjxzdHlsZT5odG1sLGJvZHl7bWFyZ2luOjA7cGFkZGluZzowO3dpZHRoOjEwMCU7aGVpZ2h0OjEwMCU7b3ZlcmZsb3c6aGlkZGVufTwvc3R5bGU+PC9oZWFkPjxib2R5PjxzY3JpcHQ+Y29uc29sZS5sb2coJ2hpJyk7PC9zY3JpcHQ+PGgxPlRlc3QgRW1iZWQgSFRNTDwvaDE+PC9ib2R5PjwvaHRtbD4='
+    };
+
+    // Detect if running from file:// protocol — blob URLs silently fail there
+    var _isFileProto = (window.location.protocol === 'file:');
+
+    function _decodeB64(b64) {
+      return decodeURIComponent(escape(atob(b64)));
+    }
+
+    function _initIframe(el) {
+      var id = el.getAttribute('data-offline-id');
+      if (!id || !_iframeB64[id]) return;
+      if (el.getAttribute('data-loaded')) return;
+      el.setAttribute('data-loaded', '1');
+      var html;
+      try {
+        html = _decodeB64(_iframeB64[id]);
+      } catch(e) {
+        console.error('Failed to decode iframe data:', id, e);
+        return;
+      }
+
+      if (_isFileProto) {
+        // file:// protocol: blob URLs won't work, use srcdoc directly
+        el.removeAttribute('src');
+        el.srcdoc = html;
+      } else {
+        // http(s): use blob URL for better performance with large content
+        try {
+          var blob = new Blob([html], {type: 'text/html;charset=utf-8'});
+          el.src = URL.createObjectURL(blob);
+        } catch(e) {
+          el.removeAttribute('src');
+          el.srcdoc = html;
+        }
+      }
+    }
+
+    function _initAll() {
+      var all = document.querySelectorAll('iframe[data-offline-id]:not([data-loaded])');
+      for (var i = 0; i < all.length; i++) _initIframe(all[i]);
+    }
+
+    // Hook into Reveal.js events when available
+    function _hookReveal() {
+      if (typeof Reveal !== 'undefined' && Reveal.on) {
+        // Init ALL iframes on ready (not just visible slide)
+        if (Reveal.isReady && Reveal.isReady()) {
+          _initAll();
+        }
+        Reveal.on('ready', _initAll);
+        // Also re-init on slide change for any that were missed
+        Reveal.on('slidechanged', function() {
+          var pending = document.querySelectorAll('iframe[data-offline-id]:not([data-loaded])');
+          for (var i = 0; i < pending.length; i++) _initIframe(pending[i]);
+        });
+        return true;
+      }
+      return false;
+    }
+
+    // Try hooking immediately
+    if (!_hookReveal()) {
+      // Retry after a delay (Reveal.js may not be loaded yet)
+      var _retries = 0;
+      var _timer = setInterval(function() {
+        if (_hookReveal() || ++_retries > 20) {
+          clearInterval(_timer);
+          if (_retries > 20) _initAll(); // fallback: init everything
+        }
+      }, 500);
+    }
+
+    // Ultimate fallback: init all iframes after page load
+    window.addEventListener('load', function() {
+      setTimeout(_initAll, 2000);
+    });
+  })();
+  </script>
+<script>window.Reveal = { on: function(){}, isReady: function(){ return true; } };</script><script>Reveal.initialize = function(){ console.log('Reveal Init'); }; Reveal.initialize();</script>
+      </head>
+      <body>
+        <iframe data-offline-id="__offline_iframe_0" src="about:blank"></iframe>
+      </body>
+    </html>
+  

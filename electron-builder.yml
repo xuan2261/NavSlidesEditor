@@ -1,0 +1,56 @@
+appId: com.navslides-editor.app
+productName: NavSlides Editor
+directories:
+  output: dist-electron
+
+electronVersion: '33.4.11'
+
+icon: build/icon.png
+
+files:
+  - electron/**/*
+  - '!node_modules'
+
+extraResources:
+  - from: build/
+    to: build/
+    filter:
+      - 'icon.png'
+      - 'icon.ico'
+  - from: server/
+    to: server/
+    filter:
+      - '**/*'
+      - '!data/**'
+      - '!uploads/**'
+  - from: server/data/built-in-templates.json
+    to: server/data/built-in-templates.json
+  - from: client/dist/
+    to: client/dist/
+
+mac:
+  category: public.app-category.productivity
+  icon: build/icon.png
+  target:
+    - zip
+
+win:
+  icon: build/icon.ico
+  target:
+    - nsis
+    - portable
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+
+linux:
+  icon: build/icon.png
+  target:
+    - AppImage
+    - deb
+  category: Office
+  executableArgs:
+    - '--no-sandbox'

@@ -1,0 +1,121 @@
+name: Build & Release Electron
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 1.0.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build client
+        run: npm run build
+
+      - name: Prepare Electron (server deps + shared module)
+        run: node scripts/prepare-electron.js
+
+      - name: Verify server dependencies
+        shell: bash
+        run: |
+          echo "=== Checking critical server modules ==="
+          for mod in express cors fs-extra multer uuid revealjs-shared; do
+            if [ -d "server/node_modules/$mod" ]; then
+              echo "✓ $mod"
+            else
+              echo "✗ $mod MISSING" && exit 1
+            fi
+          done
+
+      - name: Build Electron (Windows)
+        run: npx electron-builder --win --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify packaged app
+        shell: bash
+        run: |
+          echo "=== Checking packaged resources ==="
+          ls -la dist-electron/ 2>/dev/null || echo "No output dir"
+          if [ -d "dist-electron/win-unpacked/resources/server/node_modules/express" ]; then
+            echo "✓ express bundled in packaged app"
+          else
+            echo "✗ express MISSING from packaged app" && exit 1
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-win
+          path: |
+            dist-electron/*.exe
+            dist-electron/*.yml
+            dist-electron/*.yaml
+          if-no-files-found: warn
+          retention-days: 30
+
+  release:
+    needs: build-windows
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: List release files
+        run: find release-assets -type f 2>/dev/null | head -50 || echo "No files"
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.version }}" ]]; then
+            echo "tag=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "name=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=v0.0.0-dev.$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+            echo "name=Dev Build $(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.name }}
+          draft: false
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          generate_release_notes: true
+          files: release-assets/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
