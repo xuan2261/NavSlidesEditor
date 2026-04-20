@@ -20,9 +20,8 @@ export function useAutosave(isTemplate = false) {
     
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     
-     
-    setSaveStatus('saving');
     saveTimerRef.current = setTimeout(async () => {
+      setSaveStatus('saving');
       try {
         const saveFn = isTemplate ? api.updateTemplate : api.updatePresentation;
         await saveFn(presentation.id, presentation);

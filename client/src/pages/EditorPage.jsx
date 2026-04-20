@@ -845,6 +845,9 @@ svg.selectAll('circle').data(data).join('circle')
     )
   }
 
+  // eslint-disable-next-line
+  const hasChanges = historyRef.current.length > 0;
+
   return (
     <div className="editor-page" style={{ position: 'relative' }}>
       {/* Editor Header */}
@@ -894,7 +897,7 @@ svg.selectAll('circle').data(data).join('circle')
           }}
           onPresent={() => presentInWindow(presentation)}
           saving={saving}
-          hasChanges={historyRef.current.length > 0}
+          hasChanges={hasChanges}
         />
         <EditorMenuBar
           presentation={presentation}
