@@ -1,7 +1,7 @@
 ---
 title: "Refactor Presenter Tools UI"
 description: "Refactor Presenter Tools UI to minimize distraction using translucent CSS and grouped toolbars."
-status: in-progress
+status: completed
 priority: P2
 branch: ""
 tags: []
@@ -23,9 +23,9 @@ This plan aims to refactor the Presenter Tools UI and the Fullscreen button to m
 | Phase | Name | Status |
 |-------|------|--------|
 | 1 | [Research](./phase-01-research.md) | Completed |
-| 2 | [Refactor HTML Generator](./phase-02-refactor-html-generator.md) | Pending |
-| 3 | [Refactor Presenter Tools Styles](./phase-03-refactor-presenter-tools-styles.md) | Pending |
-| 4 | [Verification](./phase-04-verification.md) | Pending |
+| 2 | [Refactor HTML Generator](./phase-02-refactor-html-generator.md) | Completed |
+| 3 | [Refactor Presenter Tools Styles](./phase-03-refactor-presenter-tools-styles.md) | Completed |
+| 4 | [Verification](./phase-04-verification.md) | Completed |
 
 ## Dependencies
 

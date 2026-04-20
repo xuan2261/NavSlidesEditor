@@ -132,14 +132,6 @@ function generateRevealHTML(presentation) {
     /* Footer ΓÇö explicit CSS rule with high specificity so reveal.js theme cannot override */
     .reveal .slides section .reveal-footer,
     .reveal .slides section .reveal-footer * { font-family: ${footerFontFamily} !important; font-size: ${footerFontSize}px !important; color: ${footerColor} !important; }
-    #fs-btn {
-      position: fixed; bottom: 16px; right: 16px; z-index: 9999;
-      background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 13px;
-      backdrop-filter: blur(4px); transition: background 0.15s;
-    }
-    #fs-btn:hover { background: rgba(0,0,0,0.75); }
-    :fullscreen #fs-btn, :-webkit-full-screen #fs-btn { display: none; }
   </style>
   ${getPresenterToolsHead(presenterTools)}${presentation.customCSS ? `\n  <style>\n${presentation.customCSS}\n  </style>` : ''}
 </head>
@@ -150,7 +142,6 @@ ${slidesHtml}
     </div>
   </div>
   ${getPresenterToolsBody(presenterTools)}
-  <button id="fs-btn" title="Enter fullscreen (F)" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">&#x26F6; Fullscreen</button>
   <script src="/vendor/reveal.js/dist/reveal.js"></script>
   <script src="/vendor/reveal.js/plugin/notes/notes.js"></script>
   <script src="/vendor/reveal.js/plugin/highlight/highlight.js"></script>

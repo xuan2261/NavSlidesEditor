@@ -97,10 +97,10 @@ function getPresenterToolsHead(presenterTools) {
     </style>`)
   }
 
-  // Presenter toolbar button styles
-  if (presenterTools.themeToggle !== false || presenterTools.fontZoom !== false) {
-    parts.push(`<style>
-    .presenter-toolbar { position:fixed; top:10px; right:10px; z-index:100; display:flex; gap:5px; }
+  // Presenter toolbar button styles (Always render since fs-btn is now inside it)
+  parts.push(`<style>
+    .presenter-toolbar { position:fixed; top:10px; right:10px; z-index:100; display:flex; gap:5px; opacity: 0.15; transition: opacity 0.3s ease; }
+    .presenter-toolbar:hover { opacity: 1; }
     .presenter-toolbar button {
       background:rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.25);
       border-radius:6px; padding:5px 10px; cursor:pointer; font-size:14px;
@@ -108,8 +108,10 @@ function getPresenterToolsHead(presenterTools) {
     }
     .presenter-toolbar button:hover { background:rgba(0,0,0,0.75); }
     :fullscreen .presenter-toolbar { top:10px; }
+    :fullscreen #fs-btn, :-webkit-full-screen #fs-btn { display: none; }
+    .slide-menu-button, #customcontrols, .reveal .controls, .palette, .boardhandle { opacity: 0.15 !important; transition: opacity 0.3s ease !important; }
+    .slide-menu-button:hover, #customcontrols:hover, .reveal .controls:hover, .palette:hover, .boardhandle:hover { opacity: 1 !important; }
     </style>`)
-  }
 
   // Slide menu Tools tab keyboard badge styles
   if (presenterTools.slideMenu) {
@@ -235,7 +237,9 @@ function getPresenterToolsBody(presenterTools) {
     buttons.push('<button onclick="zoomFont(-1)" title="Decrease font">A\u2212</button>')
   }
 
-  if (buttons.length === 0) return ''
+  // Fullscreen button is always present
+  buttons.push('<button id="fs-btn" title="Enter fullscreen (F)" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">&#x26F6;</button>')
+
   return `<div class="presenter-toolbar">${buttons.join('')}</div>`
 }
 
