@@ -6,6 +6,7 @@ import QRCode from 'qrcode'
 import hljs from 'highlight.js'
 import { calculateGuides } from '../utils/smartGuides'
 import MiniToolbar from './MiniToolbar'
+import { cn } from '../lib/utils'
 
 // Lazy-loaded on first render to avoid 764KB in initial bundle
 let _iconPathsCache = null
@@ -177,17 +178,17 @@ function applyCropHandle(handle, startCrop, dx, dy, elW, elH) {
 }
 
 function getBgStyle(bg) {
-  if (!bg) return { backgroundColor: '#1e1e2e' }
-  if (bg.type === 'color') return { backgroundColor: bg.color || '#1e1e2e' }
+  if (!bg) return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
+  if (bg.type === 'color') return { backgroundColor: bg.color || 'var(--bg-canvas-default, #ffffff)' }
   if (bg.type === 'gradient')
-    return { background: bg.gradient || 'linear-gradient(135deg, #1e1e2e, #2d2d5e)' }
+    return { background: bg.gradient || 'linear-gradient(135deg, #ffffff, #f1f5f9)' }
   if (bg.type === 'image' && bg.image)
     return {
       backgroundImage: `url(${bg.image})`,
       backgroundSize: bg.size || 'cover',
       backgroundPosition: bg.position || 'center',
     }
-  return { backgroundColor: '#1e1e2e' }
+  return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
 }
 
 export default function SlideCanvas({
@@ -740,7 +741,7 @@ export default function SlideCanvas({
   return (
     <div
       ref={containerRef}
-      className="tour-step-canvas"
+      className={cn("tour-step-canvas bg-workspace")}
       style={{
         width: '100%',
         height: '100%',
@@ -764,6 +765,7 @@ export default function SlideCanvas({
         <>
           {/* Top ruler */}
           <div
+            className={cn("bg-panel/90 border-b border-border text-muted-foreground")}
             style={{
               position: 'absolute',
               top: 0,
@@ -772,16 +774,13 @@ export default function SlideCanvas({
               transformOrigin: 'top center',
               width: SLIDE_W,
               height: 20,
-              background: 'rgba(30,30,46,0.9)',
               zIndex: 100,
               cursor: 'crosshair',
               overflow: 'hidden',
-              borderBottom: '1px solid var(--border)',
               display: 'flex',
               alignItems: 'flex-end',
               userSelect: 'none',
               fontSize: 8,
-              color: 'rgba(255,255,255,0.4)',
             }}
             onMouseDown={(e) => handleRulerMouseDown('x', e)}
           >
@@ -803,6 +802,7 @@ export default function SlideCanvas({
           </div>
           {/* Left ruler */}
           <div
+            className={cn("bg-panel/90 border-r border-border text-muted-foreground")}
             style={{
               position: 'absolute',
               left: 0,
@@ -811,14 +811,11 @@ export default function SlideCanvas({
               transformOrigin: 'left center',
               width: 20,
               height: SLIDE_H,
-              background: 'rgba(30,30,46,0.9)',
               zIndex: 100,
               cursor: 'crosshair',
               overflow: 'hidden',
-              borderRight: '1px solid var(--border)',
               userSelect: 'none',
               fontSize: 8,
-              color: 'rgba(255,255,255,0.4)',
             }}
             onMouseDown={(e) => handleRulerMouseDown('y', e)}
           >
@@ -843,7 +840,7 @@ export default function SlideCanvas({
       )}
       <div
         ref={canvasRef}
-        className="slide-canvas"
+        className={cn("slide-canvas shadow-lg")}
         style={{
           width: SLIDE_W,
           height: SLIDE_H,
@@ -882,12 +879,12 @@ export default function SlideCanvas({
         {/* Locked slide overlay */}
         {slide?.locked && (
           <div
+            className={cn("bg-black/15 dark:bg-white/10")}
             style={{
               position: 'absolute',
               inset: 0,
               zIndex: 997,
               pointerEvents: 'none',
-              background: 'rgba(0,0,0,0.15)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

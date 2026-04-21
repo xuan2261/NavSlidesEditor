@@ -1,4 +1,4 @@
-﻿/* ════════════════════════════════════════════
+/* ════════════════════════════════════════════
    MATH NODES
    ════════════════════════════════════════════ */
 .math-node {
@@ -32,13 +32,13 @@
 .slide-text-content li { margin-bottom: 0.2em; line-height: 1.5; }
 .slide-text-content a { text-decoration: underline; }
 .slide-text-content code {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-hover);
   padding: 2px 5px;
   border-radius: 3px;
   font-family: monospace;
 }
 .slide-text-content pre {
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--surface-1);
   padding: 12px 16px;
   border-radius: var(--radius-sm);
   margin-bottom: 0.4em;
@@ -46,7 +46,7 @@
 }
 .slide-text-content pre code { background: none; padding: 0; }
 .slide-text-content blockquote {
-  border-left: 3px solid rgba(255, 255, 255, 0.3);
+  border-left: 3px solid var(--border-strong);
   padding-left: 16px;
   opacity: 0.8;
   margin-bottom: 0.4em;

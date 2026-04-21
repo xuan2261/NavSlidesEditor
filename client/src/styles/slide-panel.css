@@ -1,4 +1,4 @@
-﻿/* ════════════════════════════════════════════
+/* ════════════════════════════════════════════
    SLIDE PANEL
    ════════════════════════════════════════════ */
 .slide-panel {
@@ -121,11 +121,12 @@
   align-items: flex-start;
   padding: 6px;
   overflow: hidden;
+  background: var(--bg-canvas-default);
 }
 .slide-thumb-content {
   font-size: 5px;
   line-height: 1.3;
-  color: white;
+  color: #1a1a2e;
   width: 100%;
   overflow: hidden;
   max-height: 100%;
