@@ -21,6 +21,7 @@ A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revea
 - **Clipboard** — Ctrl+C/X/V and Ctrl+D to copy/cut/paste/duplicate elements
 - **Auto-save** — debounced saves every 1.5 s with last-saved timestamp display
 - **Translucent Presenter UI** — floating tools and slide navigation dim to 15% opacity when idle to minimize distraction during presentations
+- **Interactive Onboarding** — comprehensive step-by-step product tour using React-Joyride to guide new users
 
 ### Element Types
 
@@ -40,7 +41,9 @@ A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revea
 
 ### Slides
 
+- **Full-Deck Templates** — gallery of 10+ high-quality presentation themes available directly from the homepage
 - **Slide templates** — blank, title, two-column, three-column, image+text, section header, comparison, big number
+- **Global Settings** — centrally manage Reveal.js configurations (auto-slide, loop, navigation modes)
 - **Slide backgrounds** — solid color, CSS gradient, or image per slide via toolbar popup
 - **Fragment animations** — per-element appear animations with visual timeline editor for sequencing
 - **Per-slide page numbers** — toggle page numbers on/off per slide; skipped slides don't count in numbering
@@ -63,6 +66,7 @@ A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revea
 ### Export & Sharing
 
 - **Present mode** — full-screen reveal.js presentation with speaker notes (press `S`)
+- **Advanced Markdown Import** — generate full decks from Markdown with support for advanced slide attributes
 - **Export HTML** — download as a self-contained HTML file
 - **Export offline HTML** — inlines all CDN resources (Reveal.js, KaTeX, highlight.js) and correctly resolves local iframes/plugins so the file works entirely without internet
 - **Export PDF** — print-ready layout with one page per slide, fragment states expanded, with improved iframe initialization for embeds
@@ -434,4 +438,6 @@ This project uses `k6` for load testing to simulate high traffic on the REST API
 | Backend             | Node.js, Express 4                            |
 | Desktop app         | Electron                                      |
 | Cloud sync          | rclone                                        |
+| Testing             | Vitest, Playwright, k6                        |
+| Linting & Formatting| ESLint, Prettier                              |
 | Storage             | JSON files + local filesystem                 |

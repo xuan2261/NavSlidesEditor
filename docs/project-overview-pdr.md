@@ -39,6 +39,7 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 - Find & replace across all slides (Ctrl+F)
 - Auto-save with 1500ms debounce
 - Copy/cut/paste/duplicate elements
+- Interactive step-by-step product tour (React-Joyride)
 
 ### Elements (14 types)
 
@@ -75,6 +76,8 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 - 6 transitions: none, fade, slide, convex, concave, zoom
 - 6 preset design themes: Minimal Dark, Minimal Light, Academic, Gradient, Corporate, Neon
 - Custom templates: create, edit, manage, start new presentations from templates
+- Full-Deck Template Gallery directly accessible from the homepage
+- Global Presentation Settings (Auto-slide, Loop, Navigation Modes)
 - Editor UI dark/light theme toggle (persisted in localStorage)
 
 ### Export & Sharing
