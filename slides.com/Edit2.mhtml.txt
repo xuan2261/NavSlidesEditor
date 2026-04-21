@@ -1,0 +1,87 @@
+Edit Loading Explore New deck buithanhxuan Settings Title Description Presentation size 1280x720 — 16:9 1024x576 — 16:9 960x700 — 1.37:1 960x720 — 4:3 600x800 — 3:4 Custom Margin Width Height 16:9 3:4 Content language English Abkhazian Afar Afrikaans Akan Albanian Amharic Arabic Aragonese Armenian Assamese Avaric Avestan Aymara Azerbaijani Bambara Bashkir Basque Belarusian Bengali (Bangla) Bihari Bislama Bosnian Breton Bulgarian Burmese Catalan Chamorro Chechen Chichewa, Chewa, Nyanja Chinese Chinese (Simplified) Chinese (Traditional) Chuvash Cornish Corsican Cree Croatian Czech Danish Dutch Dzongkha Esperanto Estonian Ewe Faroese Fijian Finnish French Galician Gaelic (Scottish) Gaelic (Manx) Georgian German Greek Greenlandic Guarani Gujarati Haitian Hausa Hebrew Herero Hindi Hiri Hungarian Icelandic Ido Igbo Indonesian Interlingua Interlingue Inuktitut Inupiak Irish Italian Japanese Javanese Kannada Kanuri Kashmiri Kazakh Khmer Kikuyu Kinyarwanda (Rwanda) Kirundi Kyrgyz Komi Kongo Korean Kurdish Kwanyama Lao Latin Latvian (Lettish) Limburgish ( Limburger) Lingala Lithuanian Luga-Katanga Luganda, Ganda Luxembourgish Manx Macedonian Malagasy Malay Malayalam Maltese Maori Marathi Marshallese Moldavian Mongolian Nauru Navajo Ndonga Northern Ndebele Nepali Norwegian Norwegian bokmål Norwegian nynorsk Nuosu Occitan Ojibwe Old Church Slavonic, Old Bulgarian Oriya Oromo (Afaan Oromo) Ossetian Pāli Pashto, Pushto Persian (Farsi) Polish Portuguese Punjabi (Eastern) Quechua Romansh Romanian Russian Sami Samoan Sango Sanskrit Serbian Serbo-Croatian Sesotho Setswana Shona Sichuan Sindhi Sinhalese Siswati Slovak Slovenian Somali Southern Ndebele Spanish Sundanese Swahili (Kiswahili) Swati Swedish Tagalog Tahitian Tajik Tamil Tatar Telugu Thai Tibetan Tigrinya Tonga Tsonga Turkish Turkmen Twi Uyghur Ukrainian Urdu Uzbek Venda Vietnamese Volapük Wallon Welsh Wolof Western Frisian Xhosa Yiddish Yoruba Zhuang, Chuang Zulu Auto-slide Off 2 seconds 4 seconds 6 seconds 8 seconds 10 seconds 15 seconds 20 seconds 30 seconds 40 seconds 60 seconds 120 seconds 180 seconds Navigation mode Default — Use left/right/up/down arrows to navigate Linear — Use left/right arrows to reach all slides (incl. vertical) Grid — Move directly between adjacent vertical slides Slide numbers Show the current slide number in the bottom right corner. Share notes Let viewers see your speaker notes next to the current slide. Loop presentation Make the last slide loop back to the first. Shuffle slides Randomize the order of slides each time this deck loads. Right-to-left Make content flow right-to-left. Forking Allow others to make copies of this deck. Upsizing Allow this presentation to scale up to fit any display size. Note: presentations aren't scaled up while editing. Cancel Save Ctrl+ ↵ CSS editor (Pro) Cancel Save Ctrl+ ↵ Export to PDF, PPTX, HTML, and Dropbox With a paid account you can export decks to multiple formats. HTML exports contain everything you need to present offline or self-host your deck. Powered by our open source HTML presentation framework, reveal.js . PDF and PPTX exports are great for archiving, printing, and sharing. You can also sync your work to Dropbox , giving you automated offline access. View plans & upgrade Export to reveal.js Presentation made with Slides are powered by the reveal.js open source presentation framework. This export lets you migrate your slide content to a fresh reveal.js install. Show export instructions 1. Download a copy of the reveal.js framework and make the following edits to its index.html . 2. In the <head> , replace the theme CSS <link> with: 3. In the <body> , replace the <div class="reveal"> node with: 4. In the Reveal.initialize call towards the bottom of your index.html, append these config values: Close Import PDF or PowerPoint Upload a PDF or PPT document to import all contained pages. Imported slides are converted to images, meaning inner content such as text can not be edited. Loading... Import Markdown Write or paste a Markdown document to create a presentation. Slides are separated by horizontal rules (---). Import Markdown Import Import reveal.js Paste the HTML source of a reveal.js presentation below to import all contained slides. Note that the formatting of imported content can differ since Slides and reveal.js use different themes. Import Close Close Revision History Once your deck has been saved a few times you'll see a record of each saved version here. You'll be able to preview or roll back to any of those versions. Please try again by closing and re-opening this panel. Close Title Text Resume presentation Title Text. Hey, I'm Slides Agent. I can help you add new content, make edits, or answer questions about your deck. Create content Write a 10-slide outline about Japan Create five slides about React Add a slide about the theory of relativity Add a chart showing 5-year US GDP history Create a table of contents Make edits Switch this slide to dark mode Write speaker notes for all of my slides Make this slide more colorful Get information Summarize my deck Critique my deck What slides should I add? How can I make my deck more engaging? Which colors are used in my deck? ↑ Layers Fragments CSS Selector Examples // Apply a background color to all slides
+.slide-background {
+  background-color: indigo;
+}
+
+// Body text color
+.slides {
+  color: #009999;
+}
+
+// Control arrow color
+.controls button {
+  color: #ff0000;
+}
+
+// Fill color for the presentation progress bar
+.progress span {
+  background: #ff0000;
+}
+
+// Turn text white if the slide has a dark background
+.has-dark-background {
+  color: #fff;
+}
+
+// Add a blue border to all slides (each slide is a <section>)
+.slides section {
+  outline: 1px solid blue;
+}
+
+// Add a red border to all vertical stacks of slides
+.slides section.stack {
+  outline: 1px solid red;
+} Slide Classes in Editor UI You can use special syntax ("//= class-name") to specify custom class names that should be made available through the presentation editor interface. This makes it convenient to apply classes to specific slides. Here's an example class that blurs the slide that you apply it to: //= blurry-slide
+.blurry-slide { filter: blur(5px); } Include fonts from Google or Typekit Click the T icon in the top right to load font families from Google Fonts or Typekit. Once you have added the fonts you want, don't forget to apply them to the content using CSS. For example, if you are loading the "Lobster" font family from Google Fonts you can apply it to all headings with: .slides h1, .slides h2, .slides h3 {
+  font-family: "Lobster";
+} Include a custom font If you wish to include a custom font from another source you can point straight to the font file. @font-face {
+  font-family: "Cabin Sketch";
+  src: url("https://static.slid.es/fonts/cabinsketch/cabinsketch-regular.woff") format("woff");
+}
+
+.slides h1, .slides h2, .slides h3 {
+  font-family: "Cabin Sketch";
+} Enter custom styles using LESS or plain CSS. All selectors are automatically prefixed with .reveal on save. More info & examples Apply custom font CSS Selector Examples // Apply a background color to all slides
+.slide-background {
+  background-color: indigo;
+}
+
+// Body text color
+.slides {
+  color: #009999;
+}
+
+// Control arrow color
+.controls button {
+  color: #ff0000;
+}
+
+// Fill color for the presentation progress bar
+.progress span {
+  background: #ff0000;
+}
+
+// Turn text white if the slide has a dark background
+.has-dark-background {
+  color: #fff;
+}
+
+// Add a blue border to all slides (each slide is a <section>)
+.slides section {
+  outline: 1px solid blue;
+}
+
+// Add a red border to all vertical stacks of slides
+.slides section.stack {
+  outline: 1px solid red;
+} Slide Classes in Editor UI You can use special syntax ("//= class-name") to specify custom class names that should be made available through the presentation editor interface. This makes it convenient to apply classes to specific slides. Here's an example class that blurs the slide that you apply it to: //= blurry-slide
+.blurry-slide { filter: blur(5px); } Include fonts from Google or Typekit Click the T icon in the top right to load font families from Google Fonts or Typekit. Once you have added the fonts you want, don't forget to apply them to the content using CSS. For example, if you are loading the "Lobster" font family from Google Fonts you can apply it to all headings with: .slides h1, .slides h2, .slides h3 {
+  font-family: "Lobster";
+} Include a custom font If you wish to include a custom font from another source you can point straight to the font file. @font-face {
+  font-family: "Cabin Sketch";
+  src: url("https://static.slid.es/fonts/cabinsketch/cabinsketch-regular.woff") format("woff");
+}
+
+.slides h1, .slides h2, .slides h3 {
+  font-family: "Cabin Sketch";
+} Cancel Save Ctrl+ ↵ Text T Shape S Image I Video V Chart Pen P Line L Arrow A Iframe Table Code Math Upgrade Get started Skip tutorial Choose a template When adding a new slide, you get to choose from templates. You can save your own templates in the "My Saved Slides" tab. Slide Templates My Saved Slides Tools Insert Markdown Generate Outline Save current slide Blank Title Text Duplicate Title Text Subtitle Title Text Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin urna odio, aliquam vulputate faucibus id, elementum lobortis felis. Mauris urna dolor, placerat ac sagittis quis. Column 2 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin urna odio, aliquam vulputate faucibus id, elementum lobortis felis. Mauris urna dolor, placerat ac sagittis quis. Column 1 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin urna odio, aliquam vulputate faucibus id, elementum lobortis felis. Mauris urna dolor, placerat ac sagittis quis. Column 3 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin urna odio, aliquam vulputate faucibus id, elementum lobortis felis. Mauris urna dolor, placerat ac sagittis quis. Column 2 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin urna odio, aliquam vulputate faucibus id, elementum lobortis felis. Mauris urna dolor, placerat ac sagittis quis. Column 1 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin urna odio, aliquam vulputate faucibus id, elementum lobortis felis. Mauris urna dolor, placerat ac sagittis quis. Title Text Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin urna odio, aliquam vulputate faucibus id, elementum lobortis felis. Mauris urna dolor, placerat ac sagittis quis. Title Text Card 3 Body text Card 2 Body text Card 1 Body text Description Title Card 4 Body text Card 3 Body text Card 2 Body text Card 1 Body text Title Big Text Title “Quote or citation” Title Text Title Text What are you presenting? Describe the topic you want to generate slides about. Slide content Choose what type of content you want us to generate for each slide. Heading Heading Subheading Heading Paragraph Heading Bullet 1 Bullet 2 Add images to my slides Presentation length More slides take longer to generate. Cancel Back Select all
