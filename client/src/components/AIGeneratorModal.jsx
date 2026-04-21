@@ -1,24 +1,11 @@
 import { useState } from 'react'
 import { Sparkles, X, Loader2, FileText, Edit3, Check } from 'lucide-react'
 import { aiGenerateOutline } from '../utils/ai'
+import { Button } from '../components/ui';
+
 
 const STYLES = ['Professional', 'Academic', 'Casual', 'Military Briefing', 'Technical', 'Creative']
 const LANGUAGES = ['English', 'Tiếng Việt', 'Japanese', 'Korean', 'Chinese', 'French', 'German', 'Spanish', 'Russian']
-
-const overlay = {
-  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-  display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000,
-}
-const modal = {
-  background: 'var(--bg-card)', borderRadius: 12, padding: 24,
-  width: 560, maxHeight: '85vh', overflowY: 'auto',
-  boxShadow: '0 20px 60px rgba(0,0,0,0.5)', border: '1px solid var(--border)',
-}
-const field = {
-  width: '100%', padding: '8px 12px', borderRadius: 6,
-  border: '1px solid var(--border)', background: 'var(--bg-secondary)',
-  color: 'var(--text)', fontSize: 14, boxSizing: 'border-box',
-}
 
 export default function AIGeneratorModal({ onCreatePresentation, onClose }) {
   const [topic, setTopic] = useState('')
@@ -59,90 +46,88 @@ export default function AIGeneratorModal({ onCreatePresentation, onClose }) {
   }
 
   return (
-    <div style={overlay} onClick={onClose}>
-      <div style={modal} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: 16 }}>
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]" onClick={onClose}>
+      <div className="bg-bg-card rounded-xl p-6 w-[560px] max-h-[85vh] overflow-y-auto shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="m-0 flex items-center gap-2 text-base">
             <FileText size={18} /> AI Slide Generator
           </h3>
-          <button onClick={onClose} className="btn-icon" style={{ padding: 4 }}><X size={16} /></button>
+          <Button variant="icon" onClick={onClose} className="p-1"><X size={16} /></Button>
         </div>
 
         {!outline ? (
           <>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Topic or description</label>
+            <div className="mb-3">
+              <label className="text-xs text-text-muted block mb-1">Topic or description</label>
               <textarea
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g. IoT Security in Military Systems — threats, defense strategies, case studies"
-                style={{ ...field, minHeight: 80, resize: 'vertical' }}
+                className="w-full px-3 py-2 rounded-md border border-border bg-bg-secondary text-text text-sm min-h-[80px] resize-y"
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
-                <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Slides</label>
-                <select value={slideCount} onChange={(e) => setSlideCount(+e.target.value)} style={field}>
+                <label className="text-xs text-text-muted block mb-1">Slides</label>
+                <select value={slideCount} onChange={(e) => setSlideCount(+e.target.value)} className="w-full px-3 py-2 rounded-md border border-border bg-bg-secondary text-text text-sm box-border">
                   {[5, 6, 7, 8, 10, 12, 15].map(n => <option key={n} value={n}>{n} slides</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Style</label>
-                <select value={style} onChange={(e) => setStyle(e.target.value)} style={field}>
+                <label className="text-xs text-text-muted block mb-1">Style</label>
+                <select value={style} onChange={(e) => setStyle(e.target.value)} className="w-full px-3 py-2 rounded-md border border-border bg-bg-secondary text-text text-sm box-border">
                   {STYLES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
             </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Language</label>
-              <select value={language} onChange={(e) => setLanguage(e.target.value)} style={field}>
+            <div className="mb-4">
+              <label className="text-xs text-text-muted block mb-1">Language</label>
+              <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full px-3 py-2 rounded-md border border-border bg-bg-secondary text-text text-sm box-border">
                 {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
 
-            <button
-              className="btn btn-primary"
+            <Button variant="primary"
               onClick={handleGenerate}
               disabled={loading || !topic.trim()}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              className="w-full flex items-center justify-center gap-1.5"
             >
-              {loading ? <><Loader2 size={14} className="spin" /> Generating Outline...</> : <><Sparkles size={14} /> Generate Outline</>}
-            </button>
+              {loading ? <><Loader2 size={14} className="animate-spin" /> Generating Outline...</> : <><Sparkles size={14} /> Generate Outline</>}
+            </Button>
 
-            {error && <div style={{ color: 'var(--danger)', fontSize: 13, marginTop: 8 }}>{error}</div>}
+            {error && <div className="text-danger text-[13px] mt-2">{error}</div>}
           </>
         ) : (
           <>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <label style={{ fontSize: 12, color: 'var(--text-muted)' }}>Generated Outline ({outline.length} slides)</label>
-                <button
-                  className="btn-icon"
+            <div className="mb-3">
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs text-text-muted">Generated Outline ({outline.length} slides)</label>
+                <Button variant="ghost"
                   onClick={() => setEditingOutline(!editingOutline)}
-                  style={{ padding: '2px 8px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}
+                  className="px-2 py-0.5 text-[11px] flex items-center gap-1 border border-border bg-bg-secondary rounded hover:bg-bg-hover"
                 >
                   <Edit3 size={12} /> {editingOutline ? 'Preview' : 'Edit JSON'}
-                </button>
+                </Button>
               </div>
 
               {editingOutline ? (
                 <textarea
                   value={outlineText}
                   onChange={(e) => setOutlineText(e.target.value)}
-                  style={{ ...field, minHeight: 250, fontFamily: 'monospace', fontSize: 12, resize: 'vertical' }}
+                  className="w-full px-3 py-2 rounded-md border border-border bg-bg-secondary text-text text-xs min-h-[250px] font-mono resize-y"
                 />
               ) : (
-                <div style={{ maxHeight: 300, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 8, padding: 12, background: 'var(--bg-secondary)' }}>
+                <div className="max-h-[300px] overflow-y-auto border border-border rounded-lg p-3 bg-bg-secondary">
                   {outline.map((slide, i) => (
-                    <div key={i} style={{ marginBottom: 12, paddingBottom: 12, borderBottom: i < outline.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                    <div key={i} className={`mb-3 pb-3 ${i < outline.length - 1 ? 'border-b border-border' : ''}`}>
+                      <div className="text-[13px] font-semibold text-text mb-1">
                         {i + 1}. {slide.title}
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>({slide.layout})</span>
+                        <span className="text-[11px] text-text-muted ml-2">({slide.layout})</span>
                       </div>
                       {slide.bulletPoints?.length > 0 && (
-                        <ul style={{ margin: '4px 0 0 16px', padding: 0, fontSize: 12, color: 'var(--text-muted)' }}>
+                        <ul className="m-0 mt-1 pl-4 text-xs text-text-muted list-disc">
                           {slide.bulletPoints.map((bp, j) => <li key={j}>{bp}</li>)}
                         </ul>
                       )}
@@ -152,20 +137,19 @@ export default function AIGeneratorModal({ onCreatePresentation, onClose }) {
               )}
             </div>
 
-            {error && <div style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 8 }}>{error}</div>}
+            {error && <div className="text-danger text-[13px] mb-2">{error}</div>}
 
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                className="btn btn-primary"
+            <div className="flex gap-2">
+              <Button variant="primary"
                 onClick={handleCreate}
                 disabled={creating}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                className="flex-1 flex items-center justify-center gap-1.5"
               >
-                {creating ? <><Loader2 size={14} className="spin" /> Creating...</> : <><Check size={14} /> Create Presentation</>}
-              </button>
-              <button className="btn btn-secondary" onClick={() => { setOutline(null); setOutlineText('') }}>
+                {creating ? <><Loader2 size={14} className="animate-spin" /> Creating...</> : <><Check size={14} /> Create Presentation</>}
+              </Button>
+              <Button variant="secondary" onClick={() => { setOutline(null); setOutlineText('') }}>
                 Back
-              </button>
+              </Button>
             </div>
           </>
         )}

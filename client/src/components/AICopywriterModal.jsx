@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Sparkles, X, RotateCw, Check, Loader2 } from 'lucide-react'
 import { aiRewrite } from '../utils/ai'
+import { Button } from '../components/ui'
 
 const ACTIONS = [
   { id: 'improve', label: 'Improve', icon: '✨' },
@@ -10,21 +11,6 @@ const ACTIONS = [
   { id: 'casual', label: 'Casual', icon: '😊' },
   { id: 'grammar', label: 'Fix Grammar', icon: '📝' },
 ]
-
-const overlay = {
-  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-  display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000,
-}
-const modal = {
-  background: 'var(--bg-card)', borderRadius: 12, padding: 24,
-  width: 480, maxHeight: '80vh', overflowY: 'auto',
-  boxShadow: '0 20px 60px rgba(0,0,0,0.5)', border: '1px solid var(--border)',
-}
-const field = {
-  width: '100%', padding: '8px 12px', borderRadius: 6,
-  border: '1px solid var(--border)', background: 'var(--bg-secondary)',
-  color: 'var(--text)', fontSize: 14, boxSizing: 'border-box', resize: 'vertical',
-}
 
 export default function AICopywriterModal({ text, onApply, onClose }) {
   const [action, setAction] = useState('improve')
@@ -44,89 +30,78 @@ export default function AICopywriterModal({ text, onApply, onClose }) {
   }
 
   return (
-    <div style={overlay} onClick={onClose}>
-      <div style={modal} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: 16 }}>
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]" onClick={onClose}>
+      <div className="bg-bg-card rounded-xl p-6 w-[480px] max-h-[80vh] overflow-y-auto shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="m-0 flex items-center gap-2 text-base">
             <Sparkles size={18} /> AI Copywriter
           </h3>
-          <button onClick={onClose} className="btn-icon" style={{ padding: 4 }}><X size={16} /></button>
+          <Button variant="icon" onClick={onClose} className="p-1"><X size={16} /></Button>
         </div>
 
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Selected text</label>
-          <div style={{ ...field, background: 'var(--bg-hover)', minHeight: 40, whiteSpace: 'pre-wrap', fontSize: 13 }}>
+        <div className="mb-3">
+          <label className="text-xs text-text-muted block mb-1">Selected text</label>
+          <div className="w-full px-3 py-2 rounded-md border border-border bg-bg-hover text-text text-[13px] min-h-[40px] whitespace-pre-wrap">
             {text || '(No text selected)'}
           </div>
         </div>
 
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Action</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <div className="mb-3">
+          <label className="text-xs text-text-muted block mb-1.5">Action</label>
+          <div className="flex flex-wrap gap-1.5">
             {ACTIONS.map((a) => (
-              <button
+              <Button variant="ghost"
                 key={a.id}
                 onClick={() => setAction(a.id)}
-                style={{
-                  padding: '6px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer',
-                  border: action === a.id ? '2px solid var(--accent)' : '1px solid var(--border)',
-                  background: action === a.id ? 'var(--accent-muted, rgba(99,102,241,0.15))' : 'var(--bg-secondary)',
-                  color: 'var(--text)',
-                }}
+                className={`px-3 py-1.5 rounded-md text-xs cursor-pointer border ${action === a.id ? 'border-accent bg-accent/15' : 'border-border bg-bg-secondary'} text-text`}
               >
                 {a.icon} {a.label}
-              </button>
+              </Button>
             ))}
-            <button
+            <Button variant="ghost"
               onClick={() => setAction('custom')}
-              style={{
-                padding: '6px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer',
-                border: action === 'custom' ? '2px solid var(--accent)' : '1px solid var(--border)',
-                background: action === 'custom' ? 'var(--accent-muted, rgba(99,102,241,0.15))' : 'var(--bg-secondary)',
-                color: 'var(--text)',
-              }}
+              className={`px-3 py-1.5 rounded-md text-xs cursor-pointer border ${action === 'custom' ? 'border-accent bg-accent/15' : 'border-border bg-bg-secondary'} text-text`}
             >
               🎯 Custom
-            </button>
+            </Button>
           </div>
         </div>
 
         {action === 'custom' && (
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Custom prompt</label>
+          <div className="mb-3">
+            <label className="text-xs text-text-muted block mb-1">Custom prompt</label>
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               placeholder="e.g. Make it more dramatic and add bullet points"
-              style={{ ...field, minHeight: 60 }}
+              className="w-full px-3 py-2 rounded-md border border-border bg-bg-secondary text-text text-sm resize-y min-h-[60px]"
             />
           </div>
         )}
 
-        <button
-          className="btn btn-primary"
+        <Button variant="primary"
           onClick={handleGenerate}
           disabled={loading || !text}
-          style={{ width: '100%', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+          className="w-full mb-3 flex items-center justify-center gap-1.5"
         >
-          {loading ? <><Loader2 size={14} className="spin" /> Generating...</> : <><Sparkles size={14} /> Generate</>}
-        </button>
+          {loading ? <><Loader2 size={14} className="animate-spin" /> Generating...</> : <><Sparkles size={14} /> Generate</>}
+        </Button>
 
-        {error && <div style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 12 }}>{error}</div>}
+        {error && <div className="text-danger text-[13px] mb-3">{error}</div>}
 
         {result && (
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Result</label>
-            <div style={{ ...field, background: 'var(--bg-hover)', minHeight: 60, whiteSpace: 'pre-wrap', fontSize: 13 }}>
+          <div className="mb-3">
+            <label className="text-xs text-text-muted block mb-1">Result</label>
+            <div className="w-full px-3 py-2 rounded-md border border-border bg-bg-hover text-text text-[13px] min-h-[60px] whitespace-pre-wrap">
               {result}
             </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button className="btn btn-primary" onClick={() => { onApply(result); onClose() }} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <div className="flex gap-2 mt-2">
+              <Button variant="primary" onClick={() => { onApply(result); onClose() }} className="flex-1 flex items-center justify-center gap-1.5">
                 <Check size={14} /> Apply
-              </button>
-              <button className="btn btn-secondary" onClick={handleGenerate} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              </Button>
+              <Button variant="secondary" onClick={handleGenerate} disabled={loading} className="flex items-center gap-1.5">
                 <RotateCw size={14} /> Regenerate
-              </button>
+              </Button>
             </div>
           </div>
         )}

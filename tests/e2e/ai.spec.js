@@ -47,4 +47,20 @@ test.describe('AI Integrations', () => {
     const textContent = await wrapper.innerText();
     expect(textContent).toContain('MOCKED_AI_GENERATED_CONTENT');
   });
+
+  test('can use AI Slide Generator modal', async ({ page }) => {
+    await page.click('button.menu-trigger:has-text("AI")');
+    await page.locator('.dropdown-item').filter({ hasText: 'AI Slide Generator' }).click();
+    await expect(page.locator('h3:has-text("AI Slide Generator")')).toBeVisible();
+    await page.locator('button:has(svg.lucide-x)').click();
+    await expect(page.locator('h3:has-text("AI Slide Generator")')).toBeHidden();
+  });
+
+  test('can use Translate Presentation modal', async ({ page }) => {
+    await page.click('button.menu-trigger:has-text("AI")');
+    await page.locator('.dropdown-item').filter({ hasText: 'Translate Presentation' }).click();
+    await expect(page.locator('h3:has-text("Translate Presentation")')).toBeVisible();
+    await page.locator('button:has(svg.lucide-x)').click();
+    await expect(page.locator('h3:has-text("Translate Presentation")')).toBeHidden();
+  });
 });

@@ -1,27 +1,16 @@
 import { useState } from 'react'
 import { Languages, X, Loader2 } from 'lucide-react'
 import { aiTranslate } from '../utils/ai'
+import { Button } from '../components/ui';
+
+
+
 
 const LANGUAGES = [
   'English', 'Tiếng Việt', '日本語', '한국어', '中文', 'Français',
   'Deutsch', 'Español', 'Русский', 'ภาษาไทย', 'Italiano', 'Português',
   'العربية', 'हिन्दी', 'Bahasa Indonesia', 'Bahasa Melayu',
 ]
-
-const overlay = {
-  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-  display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000,
-}
-const modal = {
-  background: 'var(--bg-card)', borderRadius: 12, padding: 24,
-  width: 480, maxHeight: '80vh', overflowY: 'auto',
-  boxShadow: '0 20px 60px rgba(0,0,0,0.5)', border: '1px solid var(--border)',
-}
-const field = {
-  width: '100%', padding: '8px 12px', borderRadius: 6,
-  border: '1px solid var(--border)', background: 'var(--bg-secondary)',
-  color: 'var(--text)', fontSize: 14, boxSizing: 'border-box',
-}
 
 export default function AITranslateModal({ slides, onApplyTranslations, onClose }) {
   const [targetLang, setTargetLang] = useState('Tiếng Việt')
@@ -89,52 +78,51 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
   const textCount = extractTexts().length
 
   return (
-    <div style={overlay} onClick={onClose}>
-      <div style={modal} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: 16 }}>
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]" onClick={onClose}>
+      <div className="bg-bg-card rounded-xl p-6 w-[480px] max-h-[80vh] overflow-y-auto shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="m-0 flex items-center gap-2 text-base">
             <Languages size={18} /> Translate Presentation
           </h3>
-          <button onClick={onClose} className="btn-icon" style={{ padding: 4 }}><X size={16} /></button>
+          <Button variant="icon" onClick={onClose} className="p-1"><X size={16} /></Button>
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Target Language</label>
-          <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)} style={field}>
+        <div className="mb-4">
+          <label className="text-xs text-text-muted block mb-1">Target Language</label>
+          <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)} className="w-full px-3 py-2 rounded-md border border-border bg-bg-secondary text-text text-sm box-border">
             {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
           </select>
         </div>
 
-        <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <label style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: 'var(--text)' }}>
-            <input type="checkbox" checked={translateContent} onChange={(e) => setTranslateContent(e.target.checked)} />
+        <div className="mb-4 flex flex-col gap-2">
+          <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text">
+            <input type="checkbox" checked={translateContent} onChange={(e) => setTranslateContent(e.target.checked)} className="rounded border-border" />
             Translate slide content
           </label>
-          <label style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: 'var(--text)' }}>
-            <input type="checkbox" checked={translateNotes} onChange={(e) => setTranslateNotes(e.target.checked)} />
+          <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text">
+            <input type="checkbox" checked={translateNotes} onChange={(e) => setTranslateNotes(e.target.checked)} className="rounded border-border" />
             Translate speaker notes
           </label>
-          <label style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: 'var(--text)' }}>
-            <input type="checkbox" checked={keepOriginalAsNotes} onChange={(e) => setKeepOriginalAsNotes(e.target.checked)} />
+          <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text">
+            <input type="checkbox" checked={keepOriginalAsNotes} onChange={(e) => setKeepOriginalAsNotes(e.target.checked)} className="rounded border-border" />
             Keep original text as speaker notes
           </label>
         </div>
 
-        <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
+        <p className="text-xs text-text-muted mb-4">
           Found <strong>{textCount}</strong> text elements to translate across {slides?.length || 0} slides.
         </p>
 
-        {error && <div style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 12 }}>{error}</div>}
-        {progress && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>{progress}</div>}
+        {error && <div className="text-danger text-[13px] mb-3">{error}</div>}
+        {progress && <div className="text-xs text-text-muted mb-3">{progress}</div>}
 
-        <button
-          className="btn btn-primary"
+        <Button variant="primary"
           onClick={handleTranslate}
           disabled={loading || textCount === 0}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+          className="w-full flex items-center justify-center gap-1.5"
         >
-          {loading ? <><Loader2 size={14} className="spin" /> Translating...</> : <><Languages size={14} /> Translate All</>}
-        </button>
+          {loading ? <><Loader2 size={14} className="animate-spin" /> Translating...</> : <><Languages size={14} /> Translate All</>}
+        </Button>
       </div>
     </div>
   )
