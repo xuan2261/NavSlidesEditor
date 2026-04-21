@@ -163,6 +163,7 @@ ${slidesHtml}
     ${presentation.autoSlide ? `revealConfig.autoSlide = ${presentation.autoSlide};` : ''}
     ${presentation.autoSlide && presentation.autoSlideLoop ? `revealConfig.loop = true;` : ''}
     ${presentation.autoSlide && presentation.kioskMode ? `revealConfig.autoSlideStoppable = false;` : ''}
+    ${presentation.navigationMode ? `revealConfig.navigationMode = '${presentation.navigationMode}';` : ''}
     if (params.get('scroll') === 'true') { revealConfig.view = 'scroll'; revealConfig.scrollProgress = true; }
     Reveal.initialize(revealConfig);
     Reveal.on('ready', function() {

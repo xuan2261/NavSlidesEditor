@@ -52,4 +52,19 @@ describe('htmlGenerator', () => {
     expect(html).toContain('opacity: 0.15;')
     expect(html).toContain('.slide-menu-button, #customcontrols, .reveal .controls, .palette, .boardhandle { opacity: 0.15 !important;')
   })
+
+  it('should include global settings in revealConfig', () => {
+    const presentation = {
+      title: 'Global Settings',
+      slides: [],
+      autoSlide: 5000,
+      autoSlideLoop: true,
+      navigationMode: 'linear'
+    }
+    const html = generateRevealHTML(presentation)
+    
+    expect(html).toContain('revealConfig.autoSlide = 5000;')
+    expect(html).toContain('revealConfig.loop = true;')
+    expect(html).toContain("revealConfig.navigationMode = 'linear';")
+  })
 })

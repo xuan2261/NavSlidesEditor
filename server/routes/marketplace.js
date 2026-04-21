@@ -49,6 +49,18 @@ const CATEGORIES = [
   { id: 'mathematics', name: 'Toán học', nameEn: 'Mathematics', icon: 'sigma' },
   { id: 'signal-processing', name: 'Xử lý tín hiệu', nameEn: 'Signal Processing', icon: 'activity' },
   { id: 'quiz', name: 'Trắc nghiệm', nameEn: 'Quiz', icon: 'check-circle' },
+  
+  // New Diverse Categories (Phase 1 Expansion)
+  { id: 'education', name: 'Giáo dục', nameEn: 'Education', icon: 'graduation-cap' },
+  { id: 'business', name: 'Kinh doanh', nameEn: 'Business', icon: 'briefcase' },
+  { id: 'hr', name: 'Nhân sự', nameEn: 'Human Resources', icon: 'users' },
+  { id: 'marketing', name: 'Marketing', nameEn: 'Marketing', icon: 'megaphone' },
+  
+  { id: 'dark', name: 'Dark Mode', nameEn: 'Dark Mode', icon: 'moon' },
+  { id: 'minimal', name: 'Tối giản', nameEn: 'Minimal', icon: 'layout' },
+  
+  { id: 'interactive', name: 'Tương tác', nameEn: 'Interactive', icon: 'mouse-pointer-click' },
+  { id: 'chart-heavy', name: 'Biểu đồ', nameEn: 'Chart-heavy', icon: 'bar-chart' },
 ];
 
 // GET /api/marketplace/templates?category=X&search=Y&tags=a,b
