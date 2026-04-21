@@ -62,14 +62,11 @@ All core features operational. Security patches applied. Architecture refactored
 
 ### Code Quality
 
-- **SlideCanvas.jsx still large** (2421 LOC) — complex canvas interaction logic difficult to decompose further without abstraction cost
 - **No full TypeScript** — JSDoc types provide IDE support but not compile-time enforcement across all files
-- **No linting config** — no ESLint or Prettier configured
 
 ### CI/CD
 
 - GitHub Actions builds for Windows only
-- No automated tests in CI pipeline
 
 ## Completed Phases
 
@@ -93,33 +90,24 @@ PowerPoint-parity keyboard shortcuts and Selection Pane.
 
 ## Future Improvement Phases
 
-### Phase A — Testing (High Priority)
+### Phase 3 — Testing & CI Quality Gate (✅ Complete)
 
-Establish test coverage for critical paths.
+Established test coverage for critical paths and introduced linting/formatting.
 
-**Tasks:**
+**Tasks Completed:**
+- Unit tests for `htmlGenerator.js`
+- Vitest workspace configuration
+- Playwright E2E suite (`tests/e2e/`)
+- ESLint + Prettier configuration
 
-- Unit tests for `htmlGenerator.js` (export correctness)
-- Unit tests for `smartGuides.js` (snap threshold logic)
-- Unit tests for `exportPptx.js` (element mapping)
-- Integration tests for REST API endpoints (presentations CRUD, upload, share)
-- Add tests to GitHub Actions CI
+### Phase 4 — Export Completeness & Templates Expansion (✅ Complete)
 
-**Success criteria:** Critical export path has >80% unit test coverage; CI runs tests on all PRs.
+Fixed offline export rendering and expanded template gallery.
 
-### Phase B — Export Completeness (Medium Priority)
-
-Fix offline export and PPTX limitations.
-
-**Tasks:**
-
-- Complete `offlineExport.js`: inline all CDN resources
-- PPTX: map shapes correctly (circle → ellipse, triangle, etc.)
-- PPTX: render chart elements as static images via canvas capture
-- PPTX: render icon elements as SVG images
-- Add configurable CDN URL overrides for self-hosted asset serving
-
-**Success criteria:** Offline HTML export works with zero network requests; PPTX preserves all visual element types.
+**Tasks Completed:**
+- Robust offline HTML export with protocol-agnostic iframe initialization
+- Fix PDF printing rendering for embedded HTML
+- Added Interactive & Quiz templates, and rich built-in template gallery (26,000+ lines in `built-in-templates.json`)
 
 ### Phase C — SlideCanvas Decomposition (Medium Priority)
 

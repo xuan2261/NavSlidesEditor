@@ -82,8 +82,8 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 | Format              | Notes                                             |
 | ------------------- | ------------------------------------------------- |
 | Present mode        | Full-screen reveal.js with speaker notes (S key)  |
-| Export HTML         | Self-contained HTML file                          |
-| Export offline HTML | Inlines CDN resources (partial — see limitations) |
+| Export HTML         | Self-contained HTML file (CDN dependent)          |
+| Export offline HTML | Inlines CDN resources for true offline support    |
 | Export PDF          | Print layout, one page per slide                  |
 | Export PPTX         | Via pptxgenjs (shape/media limitations)           |
 | Shareable link      | UUID token, view-only public URL                  |
@@ -131,12 +131,10 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 
 - `SlideCanvas.jsx` is 2421 LOC — complex canvas interaction, difficult to decompose further
 - JSDoc types only (no full TypeScript migration)
-- Offline HTML export partially complete
 - PPTX export skips chart, html, latex, video, audio, icon elements
 - PPTX shapes all render as rectangles
 - No auth — not suitable for multi-tenant hosting
-- CDN dependency at runtime for present/export
-- No ESLint or Prettier configured
+- CDN dependency at runtime for standard HTML export and present mode
 
 ## Completed Refactoring (v1.4.x)
 

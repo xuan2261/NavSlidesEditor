@@ -109,6 +109,10 @@ revealjs_gui/
 │   ├── main.js                # Electron entry + safeStorage IPC (140 LOC)
 │   └── preload.js             # Context bridge for credentials
 ├── package.json               # Root workspace + Electron scripts
+├── eslint.config.mjs          # ESLint Flat Config
+├── playwright.config.js       # Playwright E2E Config
+├── vitest.config.mjs          # Vitest testing config
+├── vitest.workspace.ts        # Vitest workspace definition
 ├── Dockerfile                 # Multi-stage build (Node 20 alpine)
 └── docker-compose.yml         # Single service + 2 named volumes
 ```

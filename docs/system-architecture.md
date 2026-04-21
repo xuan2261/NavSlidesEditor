@@ -176,6 +176,7 @@ Environment variables:
 server/data/
 ├── presentations.json    ← array of all presentations
 ├── templates.json        ← array of custom templates
+├── built-in-templates.json ← massive array of pre-built premium templates (26k+ LOC)
 ├── share-tokens.json     ← map: token → presentationId
 ├── github-config.json    ← { token, owner, repo } (encrypted in Electron)
 ├── rclone.conf           ← rclone configuration file

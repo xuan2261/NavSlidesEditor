@@ -22,6 +22,8 @@
 | Desktop             | Electron                | 33              |
 | Cloud sync          | rclone                  | system / Docker |
 | Storage             | JSON files + filesystem | —               |
+| Testing             | Vitest, Playwright      |                 |
+| Linting & Formatting| ESLint, Prettier        |                 |
 
 ## File Naming
 
@@ -219,8 +221,6 @@ CDN URLs hardcoded in `shared/htmlGenerator.js`: reveal.js 5.1.0, highlight.js 1
 | Item                     | Status                                                |
 | ------------------------ | ----------------------------------------------------- |
 | Full TypeScript          | JSDoc types only (no .ts/.tsx migration)              |
-| Linting config           | No `.eslintrc` or `eslint.config.js`                  |
-| Prettier config          | Not configured                                        |
 | React Router             | Not used (useState-based routing)                     |
 | Database                 | None (file-based only)                                |
 | Authentication           | None (single-user design)                             |
