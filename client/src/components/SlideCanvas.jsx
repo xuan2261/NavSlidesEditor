@@ -740,6 +740,7 @@ export default function SlideCanvas({
   return (
     <div
       ref={containerRef}
+      className="tour-step-canvas"
       style={{
         width: '100%',
         height: '100%',
@@ -1439,6 +1440,7 @@ function CanvasElement({
         width: element.width,
         height: element.height,
         zIndex: element.zIndex || 1,
+        pointerEvents: element.type === 'line' && !isSelected && !isEditing ? 'none' : 'auto',
         outline: element.locked
           ? '2px solid #f59e0b'
           : (isSelected || isEditing) && !isCropping
@@ -1611,7 +1613,7 @@ function CanvasElement({
             height: '100%',
             objectFit: element.objectFit || 'contain',
             display: 'block',
-            pointerEvents: isSelected ? 'auto' : 'none',
+            pointerEvents: (isSelected && !isDragging) ? 'auto' : 'none',
           }}
         />
       )}
@@ -1630,14 +1632,14 @@ function CanvasElement({
           <audio
             src={element.src}
             controls
-            style={{ width: '90%', pointerEvents: isSelected ? 'auto' : 'none' }}
+            style={{ width: '90%', pointerEvents: (isSelected && !isDragging) ? 'auto' : 'none' }}
           />
         </div>
       )}
       {element.type === 'table' && <TableRenderer element={element} isEditing={isEditing} />}
-      {element.type === 'latex' && <LatexRenderer element={element} isSelected={isSelected} />}
+      {element.type === 'latex' && <LatexRenderer element={element} isSelected={isSelected} isDragging={isDragging} />}
       {element.type === 'markdown' && <MarkdownRenderer element={element} />}
-      {element.type === 'chart' && <ChartRenderer element={element} isSelected={isSelected} />}
+      {element.type === 'chart' && <ChartRenderer element={element} isSelected={isSelected} isDragging={isDragging} />}
       {element.type === 'callout' && <CalloutRenderer element={element} />}
       {element.type === 'icon' && <IconRenderer element={element} iconPaths={iconPaths} />}
       {element.type === 'drawing' && <DrawingRenderer element={element} />}
@@ -1959,7 +1961,7 @@ function MarkdownRenderer({ element }) {
   )
 }
 
-function ChartRenderer({ element, isSelected }) {
+function ChartRenderer({ element, isSelected, isDragging }) {
   const { chartType = 'bar', chartData = {} } = element
   const labels = chartData.labels || []
   const datasets = chartData.datasets || []
@@ -2003,7 +2005,7 @@ new Chart(document.getElementById('c'),{
         height: '100%',
         border: 'none',
         display: 'block',
-        pointerEvents: isSelected ? 'auto' : 'none',
+        pointerEvents: (isSelected && !isDragging) ? 'auto' : 'none',
         background: 'transparent',
       }}
       sandbox="allow-scripts"
@@ -2112,7 +2114,7 @@ ${tikzScript}
 </head><body>${bodyContent}</body></html>`
 }
 
-function LatexRenderer({ element, isSelected }) {
+function LatexRenderer({ element, isSelected, isDragging }) {
   const html = generateLatexIframeHtml(element.content || '')
   return (
     <iframe
@@ -2122,7 +2124,7 @@ function LatexRenderer({ element, isSelected }) {
         height: '100%',
         border: 'none',
         display: 'block',
-        pointerEvents: isSelected ? 'auto' : 'none',
+        pointerEvents: (isSelected && !isDragging) ? 'auto' : 'none',
         background: 'transparent',
       }}
       sandbox="allow-scripts"
@@ -2456,6 +2458,7 @@ function LineArrowRenderer({ element }) {
           strokeDasharray={dash}
           markerStart={markerStart}
           markerEnd={markerEnd}
+          style={{ pointerEvents: 'stroke' }}
         />
       </svg>
     </div>

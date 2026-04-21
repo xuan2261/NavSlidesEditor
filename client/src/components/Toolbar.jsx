@@ -37,6 +37,8 @@ import {
   Ruler,
   Group,
   Ungroup,
+  Minus,
+  ArrowUpRight,
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import InsertMenu from './InsertMenu'
@@ -235,7 +237,7 @@ export default function Toolbar({
   const currentColor = editor ? editor.getAttributes('textStyle').color || '#ffffff' : '#ffffff'
 
   return (
-    <div className="toolbar">
+    <div className="toolbar tour-step-toolbar">
       {/* Insert dropdown — replaces all element insertion buttons */}
       <InsertMenu
         onAddText={onAddText}
@@ -259,6 +261,28 @@ export default function Toolbar({
         onAddQrCode={onAddQrCode}
         onAddDivider={onAddDivider}
       />
+
+      <button
+        className="btn-icon"
+        title="Draw Line"
+        onClick={() => {
+          if (typeof onAddLine === 'function') onAddLine()
+        }}
+      >
+        <Minus size={15} />
+      </button>
+
+      <button
+        className="btn-icon"
+        title="Draw Arrow"
+        onClick={() => {
+          if (typeof onAddLine === 'function') {
+            onAddLine({ arrowEnd: 'arrow' })
+          }
+        }}
+      >
+        <ArrowUpRight size={15} />
+      </button>
 
       <span className="toolbar-divider" />
 

@@ -52,6 +52,7 @@ import HtmlEditorModal from '../components/HtmlEditorModal'
 import CodeEditorModal from '../components/CodeEditorModal'
 import LatexEditorModal from '../components/LatexEditorModal'
 import TemplatePickerModal from '../components/TemplatePickerModal'
+import ProductTour from '../components/ProductTour'
 import PromptPopover from '../components/PromptPopover'
 import { MathNode } from '../extensions/MathExtension'
 import { FontSize } from '../extensions/FontSize'
@@ -594,7 +595,7 @@ svg.selectAll('circle').data(data).join('circle')
 
   const addDrawingElement = useCallback(() => addElement('drawing'), [addElement])
 
-  const addLineElement = useCallback(() => addElement('line'), [addElement])
+  const addLineElement = useCallback((overrides = {}) => addElement('line', overrides), [addElement])
 
   const addSvgElement = useCallback((svgContent) => {
     return addElement('svg', svgContent ? { content: svgContent } : {})
@@ -1559,6 +1560,8 @@ svg.selectAll('circle').data(data).join('circle')
           }}
         />
       )}
+
+      <ProductTour />
     </div>
   )
 }

@@ -16,6 +16,7 @@ import MiscProperties from './properties/misc-properties'
 function ElementTypeProperties({ element, onUpdate, onEditHtml, onEditCode, onEditLatex }) {
   switch (element.type) {
     case 'shape':
+    case 'line':
       return <ShapeProperties element={element} onUpdate={onUpdate} />
     case 'image':
       return <ImageProperties element={element} onUpdate={onUpdate} />
@@ -63,7 +64,7 @@ export default function PropertiesPanel({
 }) {
   if (!slide) {
     return (
-      <div className="properties-panel">
+      <div className="properties-panel tour-step-properties">
         <div className="prop-section">
           <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>No slide selected</p>
         </div>
@@ -72,7 +73,7 @@ export default function PropertiesPanel({
   }
 
   return (
-    <div className="properties-panel">
+    <div className="properties-panel tour-step-properties">
       {/* Element Section */}
       {selectedElement && (
         <div className="prop-section">
@@ -154,6 +155,48 @@ export default function PropertiesPanel({
             onEditLatex={onEditLatex}
           />
         </div>
+      )}
+
+      {/* Presentation Settings */}
+      {!selectedElement && presentation && onUpdatePresentation && (
+        <CollapsibleSection title="Presentation Settings" defaultOpen={true}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Auto-slide (s)</div>
+              <input
+                className="prop-input" type="number" min="0" step="1"
+                value={presentation.autoSlide ? presentation.autoSlide / 1000 : 0}
+                onChange={(e) => {
+                  const val = Number(e.target.value) || 0
+                  onUpdatePresentation({ autoSlide: val * 1000 })
+                }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Loop</div>
+              <label style={{ display: 'flex', alignItems: 'center', height: 28, gap: 6, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={presentation.autoSlideLoop || false}
+                  onChange={(e) => onUpdatePresentation({ autoSlideLoop: e.target.checked })}
+                  style={{ accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Enable loop</span>
+              </label>
+            </div>
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Navigation Mode</div>
+            <select
+              className="prop-input"
+              value={presentation.navigationMode || 'default'}
+              onChange={(e) => onUpdatePresentation({ navigationMode: e.target.value })}
+            >
+              <option value="default">Default (2D)</option>
+              <option value="linear">Linear (Flat)</option>
+            </select>
+          </div>
+        </CollapsibleSection>
       )}
 
       {/* Slide Footer */}

@@ -54,7 +54,7 @@ export default function SlidePanel({
   }, [])
 
   return (
-    <div className="slide-panel">
+    <div className="slide-panel tour-step-slide-panel">
       <div className="slide-panel-header">
         <span>Slides</span>
         <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{slides.length}</span>

@@ -240,7 +240,7 @@ export default function EditorMenuBar({
   ]
 
   return (
-    <div className="editor-menu-bar">
+    <div className="editor-menu-bar tour-step-quick-access">
       {/* Save Status */}
       {saveStatus === 'saving' && <span className="save-indicator">Saving...</span>}
       {saveStatus === 'saved' && (
