@@ -3,6 +3,8 @@ import {
   Shield, Cog, Target, Book, Briefcase, Palette,
   Cpu, Radio, Bot, Zap, Gauge, Wrench, PenTool, Droplets, GitBranch, PlugZap,
   Search, Star,
+  GraduationCap, Users, Megaphone, Moon, Layout, MousePointerClick, BarChart,
+  Code, Atom, Sigma, Activity, CheckCircle
 } from 'lucide-react';
 
 const ICON_MAP = {
@@ -23,6 +25,18 @@ const ICON_MAP = {
   wrench: Wrench,
   'pen-tool': PenTool,
   droplets: Droplets,
+  code: Code,
+  atom: Atom,
+  sigma: Sigma,
+  activity: Activity,
+  'check-circle': CheckCircle,
+  'graduation-cap': GraduationCap,
+  users: Users,
+  megaphone: Megaphone,
+  moon: Moon,
+  layout: Layout,
+  'mouse-pointer-click': MousePointerClick,
+  'bar-chart': BarChart,
 };
 
 const CATEGORY_GROUPS = [
@@ -37,9 +51,20 @@ const CATEGORY_GROUPS = [
     ],
   },
   {
-    label: 'Chung',
-    categories: ['military', 'academic', 'corporate', 'creative', 'quiz'],
+    label: 'Mục đích sử dụng',
+    categories: [
+      'academic', 'education', 'corporate', 'business', 
+      'hr', 'marketing', 'military', 'tactical', 'quiz'
+    ],
   },
+  {
+    label: 'Phong cách',
+    categories: ['dark', 'minimal', 'creative'],
+  },
+  {
+    label: 'Thành phần',
+    categories: ['interactive', 'chart-heavy'],
+  }
 ];
 
 export default function TemplateGallery({ onSelectTemplate, onClose }) {
@@ -82,7 +107,10 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
     if (activeCategory === 'favorites') {
       items = items.filter(t => favorites.includes(t.id));
     } else if (activeCategory) {
-      items = items.filter(t => t.category === activeCategory);
+      items = items.filter(t => 
+        t.category === activeCategory || 
+        (t.tags && t.tags.includes(activeCategory))
+      );
     }
     
     if (searchQuery.trim()) {
@@ -116,7 +144,16 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
 
   const catCount = useMemo(() => {
     const m = {};
-    data.templates.forEach(t => { m[t.category] = (m[t.category] || 0) + 1; });
+    data.templates.forEach(t => { 
+      m[t.category] = (m[t.category] || 0) + 1; 
+      if (t.tags) {
+        t.tags.forEach(tag => {
+          if (tag !== t.category) {
+            m[tag] = (m[tag] || 0) + 1;
+          }
+        });
+      }
+    });
     return m;
   }, [data.templates]);
 
@@ -275,6 +312,33 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
                               background: 'rgba(0,212,255,0.25)', color: '#00d4ff', backdropFilter: 'blur(4px)',
                             }}>
                               ⚡ Tương tác
+                            </span>
+                          )}
+                          {(template.tags || []).includes('dark') && (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 2,
+                              padding: '2px 7px', borderRadius: 10, fontSize: 10, fontWeight: 600,
+                              background: 'rgba(255,255,255,0.15)', color: '#e2e8f0', backdropFilter: 'blur(4px)',
+                            }}>
+                              🌙 Dark
+                            </span>
+                          )}
+                          {(template.tags || []).includes('minimal') && (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 2,
+                              padding: '2px 7px', borderRadius: 10, fontSize: 10, fontWeight: 600,
+                              background: 'rgba(200,200,200,0.2)', color: '#f8fafc', backdropFilter: 'blur(4px)',
+                            }}>
+                              ✨ Minimal
+                            </span>
+                          )}
+                          {(template.tags || []).includes('chart-heavy') && (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 2,
+                              padding: '2px 7px', borderRadius: 10, fontSize: 10, fontWeight: 600,
+                              background: 'rgba(52,211,153,0.2)', color: '#34d399', backdropFilter: 'blur(4px)',
+                            }}>
+                              📊 Biểu đồ
                             </span>
                           )}
                           <span style={{

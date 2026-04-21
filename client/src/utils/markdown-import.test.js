@@ -36,4 +36,20 @@ describe('markdownToSlides', () => {
     expect(slides[0].id).toBeDefined();
     expect(slides[0].elements[0].id).toBeDefined();
   });
+
+  it('should parse slide background config from HTML comments', () => {
+    const md = `<!-- .slide: data-background-color="#ff0000" -->\n# Title`;
+    const slides = markdownToSlides(md);
+    expect(slides[0].background).toBeDefined();
+    expect(slides[0].background.type).toBe('color');
+    expect(slides[0].background.color).toBe('#ff0000');
+  });
+
+  it('should parse slide background image from HTML comments', () => {
+    const md = `<!-- .slide: data-background-image="https://example.com/img.jpg" -->\n# Title`;
+    const slides = markdownToSlides(md);
+    expect(slides[0].background).toBeDefined();
+    expect(slides[0].background.type).toBe('image');
+    expect(slides[0].background.image).toBe('https://example.com/img.jpg');
+  });
 });

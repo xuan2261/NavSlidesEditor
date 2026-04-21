@@ -9,7 +9,28 @@ export function markdownToSlides(md) {
   const sections = md.split(/\n---\n|\n(?=## )/).filter((s) => s.trim())
 
   return sections.map((section) => {
-    const trimmed = section.trim()
+    let trimmed = section.trim()
+    let background = { type: 'color', color: '#1e1e2e' }
+
+    // Parse <!-- .slide: ... --> comments
+    const slideConfigMatch = trimmed.match(/<!--\s*\.slide:\s*(.+?)\s*-->/)
+    if (slideConfigMatch) {
+      const configStr = slideConfigMatch[1]
+      
+      const bgColorMatch = configStr.match(/data-background-color="([^"]+)"/)
+      if (bgColorMatch) {
+        background = { type: 'color', color: bgColorMatch[1] }
+      }
+      
+      const bgImageMatch = configStr.match(/data-background-image="([^"]+)"/)
+      if (bgImageMatch) {
+        background = { type: 'image', image: bgImageMatch[1] }
+      }
+      
+      // Remove the comment from content
+      trimmed = trimmed.replace(/<!--\s*\.slide:\s*.+?\s*-->\n?/, '').trim()
+    }
+
     // Detect if this section is a title-only slide (just h1 or h2)
     const isTitle = /^#{1,2}\s/.test(trimmed) && !trimmed.includes('\n\n')
 
@@ -30,7 +51,7 @@ export function markdownToSlides(md) {
           content: html,
         },
       ],
-      background: { type: 'color', color: '#1e1e2e' },
+      background,
     }
   })
 }
