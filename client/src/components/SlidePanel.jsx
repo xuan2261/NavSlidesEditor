@@ -279,22 +279,43 @@ export default function SlidePanel({
                         &#9835;
                       </div>
                     )}
-                    {el.type === 'table' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'rgba(99,102,241,0.15)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 6,
-                          color: 'rgba(255,255,255,0.4)',
-                        }}
-                      >
-                        &#9638;
-                      </div>
-                    )}
+                    {el.type === 'table' && (() => {
+                      const data = el.data || [['']]
+                      const headerBg = el.headerBgColor || 'rgba(99,102,241,0.3)'
+                      const cellBg = el.cellBgColor || 'transparent'
+                      const borderColor = el.borderColor || 'rgba(255,255,255,0.2)'
+                      const borderWidth = Math.max(0.5, (el.borderWidth ?? 1) / 4)
+                      const textColor = el.textColor || '#ffffff'
+                      return (
+                        <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+                          <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                            <tbody>
+                              {data.map((row, ri) => (
+                                <tr key={ri}>
+                                  {(row || []).map((cell, ci) => (
+                                    <td
+                                      key={ci}
+                                      style={{
+                                        padding: 2,
+                                        border: `${borderWidth}px solid ${borderColor}`,
+                                        background: el.headerRow && ri === 0 ? headerBg : cellBg,
+                                        color: textColor,
+                                        fontSize: 4,
+                                        fontWeight: el.headerRow && ri === 0 ? 600 : 400,
+                                        verticalAlign: 'middle',
+                                        overflow: 'hidden',
+                                      }}
+                                    >
+                                      {cell || ''}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )
+                    })()}
                     {el.type === 'latex' && (
                       <div
                         style={{

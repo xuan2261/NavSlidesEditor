@@ -1027,11 +1027,18 @@ export default function SlideCanvas({
               }}
               onClick={(e) => {
                 e.stopPropagation()
-                if (!cropMode && editingElementId !== element.id) onToggleSelectElement(element.id, e.shiftKey)
+                if (!cropMode && editingElementId !== element.id) {
+                  if (selectedElementIdsRef.current.includes(element.id) && element.type === 'table' && !e.shiftKey) {
+                    onStartEdit(element.id)
+                  } else {
+                    onToggleSelectElement(element.id, e.shiftKey)
+                  }
+                }
               }}
               onDoubleClick={(e) => {
                 e.stopPropagation()
                 if (element.type === 'text' && editingElementId !== element.id) onStartEdit(element.id)
+                else if (element.type === 'table' && editingElementId !== element.id) onStartEdit(element.id)
                 else if (element.type === 'html') onOpenHtmlEditor?.(element.id)
                 else if (element.type === 'code') onOpenCodeEditor?.(element.id)
                 else if (element.type === 'latex') onOpenLatexEditor?.(element.id)
@@ -1060,6 +1067,7 @@ export default function SlideCanvas({
                 }
               }}
               onCommitCrop={commitCrop}
+              onUpdateElement={onUpdateElement}
             />
           ))}
 
@@ -1411,6 +1419,7 @@ function CanvasElement({
   onStopEdit,
   onCropHandleDown,
   onCommitCrop,
+  onUpdateElement,
 }) {
   const contentRef = useRef(null)
 
@@ -1636,7 +1645,7 @@ function CanvasElement({
           />
         </div>
       )}
-      {element.type === 'table' && <TableRenderer element={element} isEditing={isEditing} />}
+      {element.type === 'table' && <TableRenderer element={element} isEditing={isEditing} onUpdateElement={onUpdateElement} />}
       {element.type === 'latex' && <LatexRenderer element={element} isSelected={isSelected} isDragging={isDragging} />}
       {element.type === 'markdown' && <MarkdownRenderer element={element} />}
       {element.type === 'chart' && <ChartRenderer element={element} isSelected={isSelected} isDragging={isDragging} />}
@@ -2133,8 +2142,7 @@ function LatexRenderer({ element, isSelected, isDragging }) {
   )
 }
 
-// eslint-disable-next-line unused-imports/no-unused-vars
-function TableRenderer({ element, isEditing }) {
+function TableRenderer({ element, isEditing, onUpdateElement }) {
   const data = element.data || [['']]
   const headerBg = element.headerBgColor || 'rgba(99,102,241,0.3)'
   const cellBg = element.cellBgColor || 'transparent'
@@ -2143,6 +2151,23 @@ function TableRenderer({ element, isEditing }) {
   const textColor = element.textColor || '#ffffff'
   const fontSize = element.fontSize || 14
   const cellPadding = element.cellPadding || 8
+
+  const [focusCell, setFocusCell] = useState(null)
+  const inputRefs = useRef({})
+
+  useEffect(() => {
+    if (isEditing && focusCell) {
+      const key = `${focusCell.ri}-${focusCell.ci}`
+      const input = inputRefs.current[key]
+      if (input) {
+        input.focus()
+        // Try to place cursor at the end
+        if (typeof input.setSelectionRange === 'function') {
+          input.setSelectionRange(input.value.length, input.value.length)
+        }
+      }
+    }
+  }, [isEditing, focusCell])
 
   return (
     <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
@@ -2155,6 +2180,11 @@ function TableRenderer({ element, isEditing }) {
               {(row || []).map((cell, ci) => (
                 <td
                   key={ci}
+                  onMouseDown={() => {
+                    if (!isEditing) {
+                      setFocusCell({ ri, ci })
+                    }
+                  }}
                   style={{
                     padding: cellPadding,
                     border: `${borderWidth}px solid ${borderColor}`,
@@ -2162,12 +2192,41 @@ function TableRenderer({ element, isEditing }) {
                     color: textColor,
                     fontSize,
                     fontWeight: element.headerRow && ri === 0 ? 600 : 400,
-                    verticalAlign: 'middle',
+                    verticalAlign: 'top',
                     overflow: 'hidden',
-                    textOverflow: 'ellipsis',
                   }}
                 >
-                  {cell || ''}
+                  {isEditing ? (
+                    <textarea
+                      ref={(el) => (inputRefs.current[`${ri}-${ci}`] = el)}
+                      value={cell || ''}
+                      onChange={(e) => {
+                        const newData = data.map(r => [...r])
+                        newData[ri][ci] = e.target.value
+                        onUpdateElement(element.id, { data: newData })
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'inherit',
+                        fontSize: 'inherit',
+                        fontWeight: 'inherit',
+                        outline: 'none',
+                        textAlign: 'inherit',
+                        fontFamily: 'inherit',
+                        resize: 'none',
+                        overflow: 'hidden',
+                      }}
+                    />
+                  ) : (
+                    <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                      {cell || ''}
+                    </div>
+                  )}
                 </td>
               ))}
             </tr>
