@@ -53,7 +53,7 @@ export default function AICopywriterModal({ text, onApply, onClose }) {
 
         <div className="mb-3">
           <label className="text-xs text-text-muted block mb-1">Selected text</label>
-          <div className="w-full px-3 py-2 rounded-md border border-border bg-hover text-text text-[13px] min-h-[40px] whitespace-pre-wrap">
+          <div className="w-full px-3 py-2 rounded-md border border-border bg-hover text-text-primary text-[13px] min-h-[40px] whitespace-pre-wrap">
             {text || '(No text selected)'}
           </div>
         </div>
@@ -88,7 +88,7 @@ export default function AICopywriterModal({ text, onApply, onClose }) {
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               placeholder="e.g. Make it more dramatic and add bullet points"
-              className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm resize-y min-h-[60px]"
+              className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm resize-y min-h-[60px]"
             />
           </div>
         )}
@@ -115,7 +115,7 @@ export default function AICopywriterModal({ text, onApply, onClose }) {
         {result && (
           <div className="mb-3">
             <label className="text-xs text-text-muted block mb-1">Result</label>
-            <div className="w-full px-3 py-2 rounded-md border border-border bg-hover text-text text-[13px] min-h-[60px] whitespace-pre-wrap">
+            <div className="w-full px-3 py-2 rounded-md border border-border bg-hover text-text-primary text-[13px] min-h-[60px] whitespace-pre-wrap">
               {result}
             </div>
             <div className="flex gap-2 mt-2">

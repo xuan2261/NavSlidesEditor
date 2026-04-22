@@ -49,6 +49,6 @@ test.describe('Explore Page', () => {
     await explore.goto()
     await explore.goBack()
 
-    await expect(page.locator('.bg-bg-primary').first()).toBeVisible()
+    await expect(page.locator('.bg-panel').first()).toBeVisible()
   })
 })

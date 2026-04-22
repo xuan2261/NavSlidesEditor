@@ -8,7 +8,7 @@ import CodeProperties from './properties/code-properties'
 import MediaProperties from './properties/media-properties'
 import TableProperties from './properties/table-properties'
 import MiscProperties from './properties/misc-properties'
-import { Button, Input, Select } from '../components/ui'
+import { Button, Input, Select, ColorPicker } from '../components/ui'
 
 /**
  * Type-specific property panel router.
@@ -471,8 +471,7 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
         </div>
         <div className="flex flex-col gap-1">
           <div className="text-[10px] text-text-muted">Active</div>
-          <input
-            type="color"
+          <ColorPicker
             value={presentation.footerColor || '#a8b4c8'}
             onChange={(e) => onUpdatePresentation({ footerColor: e.target.value })}
             className="w-7 h-7 p-[2px] bg-card border border-border rounded cursor-pointer"
@@ -482,8 +481,7 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
       {presentation.footerMode === 'sequence' && (
         <div className="flex items-center gap-1.5 mt-1.5">
           <div className="text-[10px] text-text-muted">Inactive color</div>
-          <input
-            type="color"
+          <ColorPicker
             value={presentation.footerInactiveColor || '#404060'}
             onChange={(e) => onUpdatePresentation({ footerInactiveColor: e.target.value })}
             className="w-7 h-7 p-[2px] bg-card border border-border rounded cursor-pointer"

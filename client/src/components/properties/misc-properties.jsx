@@ -1,3 +1,5 @@
+import { ColorPicker } from '../../components/ui'
+
 /**
  * Misc element properties: callout, icon, qrcode, drawing, line/arrow, svg, html, latex, markdown.
  */
@@ -88,8 +90,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
           ].map(([l, k, d]) => (
             <div key={k}>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>{l}</div>
-              <input
-                type="color"
+              <ColorPicker
                 value={element[k] || d}
                 onChange={(e) => onUpdate({ [k]: e.target.value })}
                 style={{
@@ -97,7 +98,6 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
                   height: 28,
                   border: '1px solid var(--border)',
                   borderRadius: 4,
-                  background: 'var(--bg-card)',
                   cursor: 'pointer',
                 }}
               />
@@ -113,8 +113,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
           <div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>Color</div>
-            <input
-              type="color"
+            <ColorPicker
               value={element.iconColor || '#ffffff'}
               onChange={(e) => onUpdate({ iconColor: e.target.value })}
               style={{
@@ -122,7 +121,6 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
                 height: 28,
                 border: '1px solid var(--border)',
                 borderRadius: 4,
-                background: 'var(--bg-card)',
                 cursor: 'pointer',
               }}
             />
@@ -167,8 +165,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
           ].map(([l, k, d]) => (
             <div key={k}>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>{l}</div>
-              <input
-                type="color"
+              <ColorPicker
                 value={element[k] || d}
                 onChange={(e) => onUpdate({ [k]: e.target.value })}
                 style={{
@@ -176,7 +173,6 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
                   height: 32,
                   border: '1px solid var(--border)',
                   borderRadius: 4,
-                  background: 'var(--bg-card)',
                   cursor: 'pointer',
                 }}
               />
@@ -208,8 +204,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>
               Stroke Color
             </div>
-            <input
-              type="color"
+            <ColorPicker
               value={element.strokeColor || '#ffffff'}
               onChange={(e) => onUpdate({ strokeColor: e.target.value })}
               style={{
@@ -217,7 +212,6 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
                 height: 28,
                 border: '1px solid var(--border)',
                 borderRadius: 4,
-                background: 'var(--bg-card)',
                 cursor: 'pointer',
               }}
             />
@@ -248,8 +242,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>
               Stroke Color
             </div>
-            <input
-              type="color"
+            <ColorPicker
               value={element.stroke || '#ffffff'}
               onChange={(e) => onUpdate({ stroke: e.target.value })}
               style={{
@@ -257,7 +250,6 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
                 height: 28,
                 border: '1px solid var(--border)',
                 borderRadius: 4,
-                background: 'var(--bg-card)',
                 cursor: 'pointer',
               }}
             />
@@ -325,8 +317,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
           ].map(([l, k, d]) => (
             <div key={k}>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>{l}</div>
-              <input
-                type="color"
+              <ColorPicker
                 value={element[k] || d}
                 onChange={(e) => onUpdate({ [k]: e.target.value })}
                 style={{
@@ -334,7 +325,6 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
                   height: 28,
                   border: '1px solid var(--border)',
                   borderRadius: 4,
-                  background: 'var(--bg-card)',
                   cursor: 'pointer',
                 }}
               />

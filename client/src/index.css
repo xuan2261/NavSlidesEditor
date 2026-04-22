@@ -91,6 +91,11 @@
 
   /* Sidebar */
   --sidebar-width: 220px;
+
+  /* Border radius tokens */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
 }
 
 [data-theme='light'] {
@@ -128,6 +133,8 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  border-style: solid;
+  border-width: 0;
 }
 html,
 body,
@@ -199,10 +206,59 @@ svg {
   flex-shrink: 0;
 }
 
+/* ── Color picker swatch — ensure value color fills the input ── */
+.color-picker-swatch {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+.color-picker-swatch::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+.color-picker-swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+.color-picker-swatch::-moz-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+/* Quick Access Toolbar — save indicator dot */
+.qat-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: opacity 0.2s;
+}
+
 /* Joyride Overrides */
 .react-joyride__overlay {
   z-index: 99999 !important;
 }
 .react-joyride__tooltip {
   z-index: 100000 !important;
+}
+
+/* Animations */
+.anim-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.anim-zoom-in {
+  animation: zoomIn 0.2s ease-out;
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }

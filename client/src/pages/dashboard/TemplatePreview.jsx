@@ -17,40 +17,15 @@ export default function TemplatePreview({ template, onClose, onUseTemplate, onUs
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 10000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(0,0,0,0.5)',
-      }}
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
       onClick={onClose}
     >
       <div
-        style={{
-          background: 'var(--bg-card)',
-          borderRadius: 12,
-          padding: 24,
-          width: 560,
-          maxWidth: '90vw',
-          maxHeight: '80vh',
-          overflowY: 'auto',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-          border: '1px solid var(--border)',
-        }}
+        className="bg-card rounded-xl p-6 w-[560px] max-w-[90vw] max-h-[80vh] overflow-y-auto shadow-2xl border border-border"
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 16,
-          }}
-        >
-          <h3 style={{ margin: 0, fontSize: 16, color: 'var(--text)' }}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="m-0 text-base text-text-primary">
             {template.title || 'Template Preview'}
           </h3>
           <Button variant="icon" onClick={onClose} style={{ padding: 4 }}>
@@ -59,54 +34,26 @@ export default function TemplatePreview({ template, onClose, onUseTemplate, onUs
         </div>
 
         <div
-          style={{
-            height: 240,
-            borderRadius: 8,
-            marginBottom: 12,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--text-muted)',
-            fontSize: 14,
-            ...bgStyle,
-          }}
+          className="h-[240px] rounded-lg mb-3 flex items-center justify-center text-text-muted text-sm"
+          style={bgStyle}
         >
-          <Eye size={32} style={{ opacity: 0.3 }} />
+          <Eye size={32} className="opacity-30" />
         </div>
 
         {/* Metadata badges */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-          <span
-            style={{
-              padding: '2px 8px',
-              borderRadius: 10,
-              fontSize: 11,
-              background: 'var(--bg-hover)',
-              color: 'var(--text-muted)',
-            }}
-          >
+        <div className="flex gap-1.5 flex-wrap mb-2.5">
+          <span className="px-2 py-0.5 rounded-[10px] text-[11px] bg-hover text-text-muted">
             📄 {template.slides?.length || 0} slides
           </span>
           {template.category && (
-            <span
-              style={{
-                padding: '2px 8px',
-                borderRadius: 10,
-                fontSize: 11,
-                background: 'var(--bg-hover)',
-                color: 'var(--text-muted)',
-              }}
-            >
+            <span className="px-2 py-0.5 rounded-[10px] text-[11px] bg-hover text-text-muted">
               📁 {template.category}
             </span>
           )}
           {template.difficulty && (
             <span
+              className="px-2 py-0.5 rounded-[10px] text-[11px] font-semibold"
               style={{
-                padding: '2px 8px',
-                borderRadius: 10,
-                fontSize: 11,
-                fontWeight: 600,
                 background: `${diffColor[template.difficulty] || 'var(--bg-hover)'}18`,
                 color: diffColor[template.difficulty] || 'var(--text-muted)',
               }}
@@ -115,16 +62,7 @@ export default function TemplatePreview({ template, onClose, onUseTemplate, onUs
             </span>
           )}
           {(template.tags || []).includes('interactive') && (
-            <span
-              style={{
-                padding: '2px 8px',
-                borderRadius: 10,
-                fontSize: 11,
-                fontWeight: 600,
-                background: 'rgba(0,212,255,0.15)',
-                color: '#00d4ff',
-              }}
-            >
+            <span className="px-2 py-0.5 rounded-[10px] text-[11px] font-semibold bg-[rgba(0,212,255,0.15)] text-[#00d4ff]">
               ⚡ Tương tác
             </span>
           )}
@@ -132,20 +70,14 @@ export default function TemplatePreview({ template, onClose, onUseTemplate, onUs
 
         {/* Tags */}
         {template.tags?.length > 0 && (
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>
+          <div className="flex gap-1 flex-wrap mb-2.5">
             {template.tags
               .filter((t) => t !== 'interactive')
               .slice(0, 6)
               .map((tag) => (
                 <span
                   key={tag}
-                  style={{
-                    padding: '1px 6px',
-                    borderRadius: 6,
-                    fontSize: 10,
-                    background: 'var(--bg-hover)',
-                    color: 'var(--text-muted)',
-                  }}
+                  className="px-1.5 py-px rounded-md text-[10px] bg-hover text-text-muted"
                 >
                   #{tag}
                 </span>
@@ -153,7 +85,7 @@ export default function TemplatePreview({ template, onClose, onUseTemplate, onUs
           </div>
         )}
 
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
+        <p className="text-[13px] text-text-muted mb-4 leading-relaxed">
           {template.description || `${template.slides?.length || 0} slides`}
         </p>
 
@@ -164,7 +96,7 @@ export default function TemplatePreview({ template, onClose, onUseTemplate, onUs
             handler?.(template)
             onClose()
           }}
-          style={{ width: '100%', justifyContent: 'center' }}
+          className="w-full justify-center"
         >
           <Play size={14} /> Use This Template
         </Button>

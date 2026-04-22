@@ -111,6 +111,8 @@ const CATEGORY_GROUPS = [
   },
 ]
 
+const badgeCls = 'inline-flex items-center gap-0.5 px-[7px] py-0.5 rounded-[10px] text-[10px] font-semibold backdrop-blur-sm'
+
 export default function TemplateGallery({ onSelectTemplate, onClose }) {
   const [data, setData] = useState({ categories: [], templates: [] })
   const [activeCategory, setActiveCategory] = useState(null)
@@ -230,57 +232,25 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div
-          style={{
-            padding: '16px 20px',
-            borderBottom: '1px solid var(--border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <h2 style={{ margin: 0, fontSize: 20 }}>🎓 Template Gallery</h2>
-          <div style={{ position: 'relative', width: 240 }}>
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+          <h2 className="m-0 text-xl">🎓 Template Gallery</h2>
+          <div className="relative w-[240px]">
             <Search
               size={14}
-              style={{
-                position: 'absolute',
-                left: 10,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'var(--text-muted)',
-              }}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted"
             />
             <input
               type="text"
               placeholder="Tìm template..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '7px 10px 7px 30px',
-                border: '1px solid var(--border)',
-                borderRadius: 6,
-                background: 'var(--bg-secondary)',
-                color: 'var(--text)',
-                fontSize: 13,
-                outline: 'none',
-              }}
+              className="w-full py-[7px] pl-[30px] pr-2.5 border border-border rounded-md bg-secondary text-text-primary text-[13px] outline-none focus:border-accent"
             />
           </div>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            style={{
-              padding: '6px 12px',
-              border: '1px solid var(--border)',
-              borderRadius: 6,
-              background: 'var(--bg-secondary)',
-              color: 'var(--text)',
-              fontSize: 13,
-              outline: 'none',
-              marginLeft: 12,
-            }}
+            className="py-1.5 px-3 border border-border rounded-md bg-secondary text-text-primary text-[13px] outline-none ml-3"
           >
             <option value="newest">Mới nhất</option>
             <option value="difficulty">Độ khó</option>
@@ -288,17 +258,9 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
           </select>
         </div>
 
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <div className="flex flex-1 overflow-hidden">
           {/* Sidebar */}
-          <div
-            style={{
-              width: 210,
-              borderRight: '1px solid var(--border)',
-              overflowY: 'auto',
-              padding: '12px 0',
-              flexShrink: 0,
-            }}
-          >
+          <div className="w-[210px] border-r border-border overflow-y-auto py-3 shrink-0">
             <Button
               variant={!activeCategory ? 'primary' : 'secondary'}
               style={{
@@ -313,15 +275,7 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
               onClick={() => setActiveCategory(null)}
             >
               <span>Tất cả</span>
-              <span
-                style={{
-                  fontSize: 10,
-                  opacity: 0.7,
-                  background: 'var(--bg-hover)',
-                  padding: '1px 6px',
-                  borderRadius: 8,
-                }}
-              >
+              <span className="text-[10px] opacity-70 bg-hover px-1.5 py-px rounded-lg">
                 {data.templates.length}
               </span>
             </Button>
@@ -338,7 +292,7 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
               }}
               onClick={() => setActiveCategory('favorites')}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div className="flex items-center gap-1.5">
                 <Star
                   size={14}
                   color="#fbbf24"
@@ -346,15 +300,7 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
                 />
                 <span>Yêu thích</span>
               </div>
-              <span
-                style={{
-                  fontSize: 10,
-                  opacity: 0.7,
-                  background: 'var(--bg-hover)',
-                  padding: '1px 6px',
-                  borderRadius: 8,
-                }}
-              >
+              <span className="text-[10px] opacity-70 bg-hover px-1.5 py-px rounded-lg">
                 {favorites.length}
               </span>
             </Button>
@@ -366,16 +312,7 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
               if (!groupCats.length) return null
               return (
                 <div key={group.label}>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: 'var(--text-muted)',
-                      padding: '10px 16px 4px',
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                    }}
-                  >
+                  <div className="text-[10px] font-bold text-text-muted px-4 pt-2.5 pb-1 uppercase tracking-wider">
                     {group.label}
                   </div>
                   {groupCats.map((cat) => {
@@ -397,17 +334,9 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
                         onClick={() => setActiveCategory(cat.id)}
                       >
                         <Icon size={14} />
-                        <span style={{ flex: 1, textAlign: 'left' }}>{cat.name}</span>
+                        <span className="flex-1 text-left">{cat.name}</span>
                         {count > 0 && (
-                          <span
-                            style={{
-                              fontSize: 10,
-                              background: 'var(--bg-hover)',
-                              padding: '1px 5px',
-                              borderRadius: 8,
-                              color: 'var(--text-muted)',
-                            }}
-                          >
+                          <span className="text-[10px] bg-hover px-[5px] py-px rounded-lg text-text-muted">
                             {count}
                           </span>
                         )}
@@ -420,23 +349,17 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
           </div>
 
           {/* Grid */}
-          <div style={{ flex: 1, padding: 16, overflowY: 'auto' }}>
+          <div className="flex-1 p-4 overflow-y-auto">
             {loading ? (
-              <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+              <div className="text-center p-10 text-text-muted">
                 Loading...
               </div>
             ) : filteredTemplates.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+              <div className="text-center p-10 text-text-muted">
                 {searchQuery ? `Không tìm thấy "${searchQuery}"` : 'Không có template nào.'}
               </div>
             ) : (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                  gap: 16,
-                }}
-              >
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                 {filteredTemplates.map((template) => {
                   const bgStyle = template.colorScheme
                     ? {
@@ -449,117 +372,33 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
                   return (
                     <div
                       key={template.id}
-                      style={{
-                        border: '1px solid var(--border)',
-                        borderRadius: 8,
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        background: 'var(--bg-card)',
-                        transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s',
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--accent)'
-                        e.currentTarget.style.transform = 'translateY(-2px)'
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--border)'
-                        e.currentTarget.style.transform = 'none'
-                      }}
+                      className="border border-border rounded-lg overflow-hidden cursor-pointer bg-card transition-all hover:border-accent hover:-translate-y-0.5 hover:shadow-lg"
                       onClick={() => onSelectTemplate(template)}
                     >
-                      <div style={{ height: 110, position: 'relative', ...bgStyle }}>
+                      <div className="h-[110px] relative" style={bgStyle}>
                         {/* Badges overlay */}
-                        <div
-                          style={{
-                            position: 'absolute',
-                            bottom: 6,
-                            left: 6,
-                            display: 'flex',
-                            gap: 4,
-                          }}
-                        >
+                        <div className="absolute bottom-1.5 left-1.5 flex gap-1">
                           {(template.tags || []).includes('interactive') && (
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 2,
-                                padding: '2px 7px',
-                                borderRadius: 10,
-                                fontSize: 10,
-                                fontWeight: 600,
-                                background: 'rgba(0,212,255,0.25)',
-                                color: '#00d4ff',
-                                backdropFilter: 'blur(4px)',
-                              }}
-                            >
+                            <span className={`${badgeCls} bg-[rgba(0,212,255,0.25)] text-[#00d4ff]`}>
                               ⚡ Tương tác
                             </span>
                           )}
                           {(template.tags || []).includes('dark') && (
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 2,
-                                padding: '2px 7px',
-                                borderRadius: 10,
-                                fontSize: 10,
-                                fontWeight: 600,
-                                background: 'rgba(255,255,255,0.15)',
-                                color: '#e2e8f0',
-                                backdropFilter: 'blur(4px)',
-                              }}
-                            >
+                            <span className={`${badgeCls} bg-white/15 text-[#e2e8f0]`}>
                               🌙 Dark
                             </span>
                           )}
                           {(template.tags || []).includes('minimal') && (
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 2,
-                                padding: '2px 7px',
-                                borderRadius: 10,
-                                fontSize: 10,
-                                fontWeight: 600,
-                                background: 'rgba(200,200,200,0.2)',
-                                color: '#f8fafc',
-                                backdropFilter: 'blur(4px)',
-                              }}
-                            >
+                            <span className={`${badgeCls} bg-[rgba(200,200,200,0.2)] text-[#f8fafc]`}>
                               ✨ Minimal
                             </span>
                           )}
                           {(template.tags || []).includes('chart-heavy') && (
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 2,
-                                padding: '2px 7px',
-                                borderRadius: 10,
-                                fontSize: 10,
-                                fontWeight: 600,
-                                background: 'rgba(52,211,153,0.2)',
-                                color: '#34d399',
-                                backdropFilter: 'blur(4px)',
-                              }}
-                            >
+                            <span className={`${badgeCls} bg-[rgba(52,211,153,0.2)] text-[#34d399]`}>
                               📊 Biểu đồ
                             </span>
                           )}
-                          <span
-                            style={{
-                              padding: '2px 6px',
-                              borderRadius: 10,
-                              fontSize: 10,
-                              background: 'rgba(0,0,0,0.5)',
-                              color: '#ffffff90',
-                              backdropFilter: 'blur(4px)',
-                            }}
-                          >
+                          <span className="px-1.5 py-0.5 rounded-[10px] text-[10px] bg-black/50 text-white/60 backdrop-blur-sm">
                             {template.slides?.length || 0} slides
                           </span>
                         </div>
@@ -582,31 +421,18 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
                           />
                         </Button>
                       </div>
-                      <div style={{ padding: 10 }}>
-                        <h4 style={{ margin: '0 0 4px', fontSize: 13, lineHeight: 1.3 }}>
+                      <div className="p-2.5">
+                        <h4 className="m-0 mb-1 text-[13px] leading-snug">
                           {template.title}
                         </h4>
-                        <p
-                          style={{
-                            margin: '0 0 6px',
-                            fontSize: 11,
-                            color: 'var(--text-muted)',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                          }}
-                        >
+                        <p className="m-0 mb-1.5 text-[11px] text-text-muted line-clamp-2">
                           {template.description}
                         </p>
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        <div className="flex gap-1 flex-wrap">
                           {template.difficulty && (
                             <span
+                              className="px-1.5 py-px rounded-lg text-[10px] font-semibold"
                               style={{
-                                padding: '1px 6px',
-                                borderRadius: 8,
-                                fontSize: 10,
-                                fontWeight: 600,
                                 background: `${difficultyColor(template.difficulty)}18`,
                                 color: difficultyColor(template.difficulty),
                               }}
@@ -624,16 +450,8 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
           </div>
         </div>
 
-        <div
-          style={{
-            padding: 10,
-            borderTop: '1px solid var(--border)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+        <div className="p-2.5 border-t border-border flex justify-between items-center">
+          <span className="text-xs text-text-muted">
             {filteredTemplates.length} / {data.templates.length} templates
           </span>
           <Button variant="secondary" onClick={onClose}>

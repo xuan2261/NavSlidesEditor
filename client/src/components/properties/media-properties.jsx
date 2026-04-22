@@ -10,7 +10,7 @@ export default function MediaProperties({ element, onUpdate }) {
     <div style={{ marginBottom: 10 }}>
       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Source URL</div>
       <Input
-        className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+        className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
         type="text"
         value={element.src || ''}
         onChange={(e) => onUpdate({ src: e.target.value })}
@@ -23,7 +23,7 @@ export default function MediaProperties({ element, onUpdate }) {
             Poster Image URL
           </div>
           <Input
-            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="text"
             value={element.poster || ''}
             onChange={(e) => onUpdate({ poster: e.target.value })}
@@ -34,7 +34,7 @@ export default function MediaProperties({ element, onUpdate }) {
             Object Fit
           </div>
           <Select
-            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             value={element.objectFit || 'contain'}
             onChange={(e) => onUpdate({ objectFit: e.target.value })}
             style={{ padding: '4px 6px', marginBottom: 8 }}

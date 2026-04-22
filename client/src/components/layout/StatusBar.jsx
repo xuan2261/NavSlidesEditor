@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function StatusBar() {
   return (
-    <footer className="h-6 bg-accent text-white flex items-center justify-between px-3 text-[11px] select-none z-[100] shrink-0 font-medium">
+    <footer className="h-6 bg-accent text-white flex items-center justify-between px-6 text-[11px] select-none z-[100] shrink-0 font-medium">
       <div className="flex items-center h-full">
         <span
           className="flex items-center gap-1.5 opacity-90 transition-opacity hover:opacity-100"

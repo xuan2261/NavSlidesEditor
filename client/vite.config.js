@@ -24,5 +24,20 @@ export default defineConfig({
       include: [/revealjs-shared/, /shared\/src\//, /node_modules/],
       transformMixedEsModules: true,
     },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-reveal': ['reveal.js'],
+          'vendor-katex': ['katex'],
+          'vendor-lucide': ['lucide-react'],
+          'vendor-tiptap': [
+            '@tiptap/core',
+            '@tiptap/starter-kit',
+            '@tiptap/extension-text-style',
+          ],
+        },
+      },
+    },
   },
 })

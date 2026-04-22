@@ -132,7 +132,7 @@ export default function FindReplaceBar({
   }
 
   return (
-    <div className="find-replace-bar absolute top-[46px] right-2.5 z-[9990] bg-card border border-border-light rounded-b-md p-2 shadow-md flex flex-col gap-1.5 min-w-[380px]">
+    <div className="find-replace-bar absolute top-[46px] right-2.5 z-[9990] bg-card border border-border rounded-b-md p-2 shadow-md flex flex-col gap-1.5 min-w-[380px]">
       <div className="flex items-center gap-1.5">
         <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
         <input
@@ -144,7 +144,7 @@ export default function FindReplaceBar({
             setCurrentMatchIdx(0)
           }}
           placeholder="Find..."
-          className="find-input flex-1 bg-muted border border-border text-foreground py-1 px-2 rounded text-[13px] outline-none min-w-0 focus:border-accent"
+          className="find-input flex-1 bg-secondary border border-border text-text-primary py-1 px-2 rounded text-[13px] outline-none min-w-0 focus:border-accent"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.shiftKey ? handlePrev() : handleNext()
@@ -152,7 +152,7 @@ export default function FindReplaceBar({
             if (e.key === 'Escape') onClose?.()
           }}
         />
-        <span className="find-count text-[11px] text-muted-foreground whitespace-nowrap min-w-[30px] text-center">
+        <span className="find-count text-[11px] text-text-muted whitespace-nowrap min-w-[30px] text-center">
           {matches.length > 0 ? `${currentMatchIdx + 1}/${matches.length}` : '0'}
         </span>
         <Button
@@ -204,7 +204,7 @@ export default function FindReplaceBar({
             value={replaceTerm}
             onChange={(e) => setReplaceTerm(e.target.value)}
             placeholder="Replace..."
-            className="flex-1 bg-muted border border-border text-foreground py-1 px-2 rounded text-[13px] outline-none min-w-0 focus:border-accent"
+            className="flex-1 bg-secondary border border-border text-text-primary py-1 px-2 rounded text-[13px] outline-none min-w-0 focus:border-accent"
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleReplace()
             }}

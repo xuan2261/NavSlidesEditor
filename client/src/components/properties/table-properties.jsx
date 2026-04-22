@@ -1,4 +1,4 @@
-import { Input, Select } from '../../components/ui'
+import { Input, Select, ColorPicker } from '../../components/ui'
 import { Button } from '../../components/ui'
 /**
  * Table properties: row/col management, header, colors, cell editor.
@@ -67,8 +67,7 @@ export default function TableProperties({ element, onUpdate }) {
         ].map(([l, k, d]) => (
           <div key={k}>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>{l}</div>
-            <input
-              type="color"
+            <ColorPicker
               className="w-9 h-7 border border-border rounded cursor-pointer p-[1px] bg-card shrink-0"
               value={element[k] || d}
               onChange={(e) => onUpdate({ [k]: e.target.value })}
@@ -86,7 +85,7 @@ export default function TableProperties({ element, onUpdate }) {
         <div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>Font Size</div>
           <Input
-            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             min="8"
             max="32"

@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: 'Fix Dashboard'
-status: completed
+status: pending
 effort: '2h'
 ---
 

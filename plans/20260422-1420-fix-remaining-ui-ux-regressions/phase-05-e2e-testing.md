@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: 'E2E Testing'
-status: completed
+status: pending
 effort: '1h'
 ---
 

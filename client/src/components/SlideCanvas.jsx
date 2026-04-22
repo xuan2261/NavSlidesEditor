@@ -766,7 +766,7 @@ export default function SlideCanvas({
         <>
           {/* Top ruler */}
           <div
-            className={cn('bg-panel/90 border-b border-border text-muted-foreground')}
+            className={cn('bg-panel/90 border-b border-border text-text-muted')}
             style={{
               position: 'absolute',
               top: 0,
@@ -803,7 +803,7 @@ export default function SlideCanvas({
           </div>
           {/* Left ruler */}
           <div
-            className={cn('bg-panel/90 border-r border-border text-muted-foreground')}
+            className={cn('bg-panel/90 border-r border-border text-text-muted')}
             style={{
               position: 'absolute',
               left: 0,
@@ -1022,6 +1022,7 @@ export default function SlideCanvas({
               cropState={cropMode?.elementId === element.id ? cropMode : null}
               isDragging={draggingRef.current?.elementId === element.id}
               editor={editor}
+              iconPaths={iconPaths}
               onPointerDown={(e, type, handle) => {
                 if (cropMode) return
                 if (editingElementId === element.id) return
@@ -1373,7 +1374,7 @@ export default function SlideCanvas({
           −
         </Button>
         <select
-          className="bg-muted border border-border text-foreground rounded text-[11px] px-1 py-0.5 min-w-[60px] text-center outline-none cursor-pointer"
+          className="bg-secondary border border-border text-text-primary rounded text-[11px] px-1 py-0.5 min-w-[60px] text-center outline-none cursor-pointer"
           value={`${Math.round(scale * 100)}`}
           onChange={(e) => {
             const pct = parseInt(e.target.value) / 100
@@ -1402,7 +1403,7 @@ export default function SlideCanvas({
         </Button>
         <Button
           variant="ghost"
-          className="text-[11px] px-2 py-1 h-7 rounded whitespace-nowrap text-muted-foreground hover:text-foreground"
+          className="text-[11px] px-2 py-1 h-7 rounded whitespace-nowrap text-text-muted hover:text-text-primary"
           onClick={() => {
             setUserZoomMode(false)
             if (containerRef.current) {
@@ -1456,6 +1457,7 @@ function CanvasElement({
   onCropHandleDown,
   onCommitCrop,
   onUpdateElement,
+  iconPaths,
 }) {
   const contentRef = useRef(null)
 
@@ -2104,7 +2106,10 @@ function CalloutRenderer({ element }) {
 // ICON_PATHS loaded from shared/data/icon-paths.json (3448 icons)
 
 function IconRenderer({ element, iconPaths }) {
-  const svgPath = iconPaths[element.iconName] || iconPaths['Star']
+  // Normalize icon name in case it has an 'Icon' suffix (from lucide-react aliases)
+  const rawName = element.iconName || 'Star'
+  const iconKey = rawName.endsWith('Icon') && rawName !== 'ImageIcon' ? rawName.replace(/Icon$/, '') : rawName
+  const svgPath = iconPaths[iconKey] || iconPaths['Star']
   const color = element.iconColor || '#ffffff'
   const sw = element.iconStrokeWidth || 2
   return (

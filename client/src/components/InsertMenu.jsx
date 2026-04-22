@@ -18,6 +18,7 @@ import {
   BarChart3,
   QrCode,
   Minus,
+  Sigma,
 } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import * as shared from 'revealjs-shared'
@@ -26,6 +27,7 @@ const { SHAPES } = shared
 // Dynamic Lucide icon list — all named exports that are React components
 const ICON_NAMES = Object.keys(LucideIcons)
   .filter((name) => /^[A-Z]/.test(name)) // PascalCase = component
+  .filter((name) => !name.endsWith('Icon')) // Exclude duplicate *Icon aliases
   .filter(
     (name) =>
       ![
@@ -121,7 +123,8 @@ export default function InsertMenu({
       </button>
 
       {open && (
-        <div className="insert-dropdown absolute left-0 top-[calc(100%+4px)] z-[110] max-h-[520px] w-[240px] overflow-y-auto rounded-md border border-border-strong bg-card p-1 shadow-xl">
+        <div className="insert-dropdown absolute left-0 top-[calc(100%+4px)] z-[110] w-[240px] overflow-visible rounded-md border border-border-strong bg-card p-1 shadow-xl">
+          <div className="overflow-y-auto max-h-[520px] w-full flex flex-col">
           {/* BASIC */}
           <div className="insert-category mt-1 px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
             Basic
@@ -162,7 +165,7 @@ export default function InsertMenu({
             }}
           />
 
-          <div className="insert-separator my-1 h-[1px] bg-border-light" />
+          <div className="insert-separator my-1 h-[1px] bg-border" />
 
           {/* CONTENT */}
           <div className="insert-category mt-1 px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
@@ -190,18 +193,7 @@ export default function InsertMenu({
             className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
             onClick={() => doAction(onAddLatexElement)}
           >
-            <span
-              style={{
-                fontSize: 14,
-                fontFamily: 'serif',
-                fontWeight: 700,
-                width: 15,
-                textAlign: 'center',
-                flexShrink: 0,
-              }}
-            >
-              T<sub style={{ fontSize: 9 }}>E</sub>X
-            </span>
+            <Sigma size={15} />
             <span>LaTeX / TikZ</span>
           </button>
           <button
@@ -228,7 +220,7 @@ export default function InsertMenu({
             <BarChart3 size={15} /> <span>Chart</span>
           </button>
 
-          <div className="insert-separator my-1 h-[1px] bg-border-light" />
+          <div className="insert-separator my-1 h-[1px] bg-border" />
 
           {/* MEDIA */}
           <div className="insert-category mt-1 px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
@@ -275,7 +267,7 @@ export default function InsertMenu({
             <FolderOpen size={15} /> <span>Media Library</span>
           </button>
 
-          <div className="insert-separator my-1 h-[1px] bg-border-light" />
+          <div className="insert-separator my-1 h-[1px] bg-border" />
 
           {/* SHAPES & LINES */}
           <div className="insert-category mt-1 px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
@@ -418,7 +410,7 @@ export default function InsertMenu({
             <span>Callout</span>
           </button>
 
-          <div className="insert-separator my-1 h-[1px] bg-border-light" />
+          <div className="insert-separator my-1 h-[1px] bg-border" />
 
           {/* LAYOUT */}
           <div className="insert-category mt-1 px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
@@ -469,6 +461,7 @@ export default function InsertMenu({
           >
             <Pencil size={15} /> <span>Drawing Canvas</span>
           </button>
+          </div>
         </div>
       )}
       {videoPrompt && (

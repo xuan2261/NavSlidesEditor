@@ -14,7 +14,7 @@ export class HomePage {
   async goto() {
     await this.page.goto('/', { timeout: 30000 })
     // Chờ Vite compile và render react app
-    await this.page.waitForSelector('.bg-bg-primary', { timeout: 30000 })
+    await this.page.waitForSelector('.bg-panel', { timeout: 30000 })
   }
 
   async createNewPresentation(title = 'E2E Automated Presentation') {

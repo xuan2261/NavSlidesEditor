@@ -4,128 +4,61 @@ import { Button } from '../components/ui'
 export default function LivePresentationModal({ presentationId, roomCode, onClose }) {
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 10000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(0,0,0,0.5)',
-      }}
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
       <div
-        style={{
-          background: 'var(--bg-card, #1e1e2e)',
-          borderRadius: 12,
-          padding: 24,
-          width: 400,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-          border: '1px solid var(--border)',
-        }}
+        className="bg-card rounded-xl p-6 w-[400px] shadow-2xl border border-border"
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 16,
-          }}
-        >
-          <h3
-            style={{
-              margin: 0,
-              fontSize: 16,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              color: 'var(--text)',
-            }}
-          >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="m-0 text-base flex items-center gap-2 text-text-primary">
             <Radio size={18} /> Present Live
           </h3>
           <Button variant="icon" onClick={onClose} style={{ padding: 4 }}>
             <X size={16} />
           </Button>
         </div>
-        <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>Room Code</div>
+        <div className="text-center mb-4">
+          <div className="text-[13px] text-text-muted mb-2">Room Code</div>
           <div
-            style={{
-              fontSize: 36,
-              fontWeight: 700,
-              fontFamily: 'monospace',
-              letterSpacing: 4,
-              color: 'var(--text)',
-              padding: '12px 0',
-            }}
+            className="text-4xl font-bold text-text-primary py-3"
+            style={{ fontFamily: 'monospace', letterSpacing: 4 }}
           >
             {roomCode}
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>
+        <div className="flex flex-col gap-2">
+          <div className="text-xs text-text-muted mb-1">
             Share these links:
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="flex gap-2">
             <input
               readOnly
               value={`${window.location.origin}/live/${roomCode}`}
-              style={{
-                flex: 1,
-                padding: '8px 12px',
-                borderRadius: 6,
-                border: '1px solid var(--border)',
-                background: 'var(--bg-secondary)',
-                color: 'var(--text)',
-                fontSize: 12,
-              }}
+              className="flex-1 px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-xs"
               onClick={(e) => {
                 e.target.select()
                 navigator.clipboard.writeText(e.target.value)
               }}
             />
-            <span
-              style={{
-                fontSize: 11,
-                color: 'var(--text-muted)',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
+            <span className="text-[11px] text-text-muted flex items-center">
               Viewer
             </span>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="flex gap-2">
             <input
               readOnly
               value={`${window.location.origin}/remote/${roomCode}`}
-              style={{
-                flex: 1,
-                padding: '8px 12px',
-                borderRadius: 6,
-                border: '1px solid var(--border)',
-                background: 'var(--bg-secondary)',
-                color: 'var(--text)',
-                fontSize: 12,
-              }}
+              className="flex-1 px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-xs"
               onClick={(e) => {
                 e.target.select()
                 navigator.clipboard.writeText(e.target.value)
               }}
             />
-            <span
-              style={{
-                fontSize: 11,
-                color: 'var(--text-muted)',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
+            <span className="text-[11px] text-text-muted flex items-center">
               Remote
             </span>
           </div>
@@ -136,7 +69,7 @@ export default function LivePresentationModal({ presentationId, roomCode, onClos
             window.open(`/api/presentations/${presentationId}/present?live=${roomCode}`, '_blank')
             onClose()
           }}
-          style={{ width: '100%', marginTop: 16, justifyContent: 'center' }}
+          className="w-full mt-4 justify-center"
         >
           <Play size={14} /> Start Presenting
         </Button>

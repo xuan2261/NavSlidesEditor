@@ -20,7 +20,7 @@ export default function SlideThumbnail({ id, bgProp, fallback, className = '' })
   return (
     <div
       ref={containerRef}
-      className={`w-full h-full flex items-center justify-center relative overflow-hidden bg-card aspect-video ${className}`}
+      className={`w-full flex items-center justify-center relative overflow-hidden bg-card aspect-video ${className}`}
       style={bgProp}
     >
       <iframe

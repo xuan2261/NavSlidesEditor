@@ -107,13 +107,13 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
 
       <div className="flex overflow-x-auto py-2.5 px-3 gap-2 flex-1">
         {/* Initial state (non-fragment elements) */}
-        <div className="min-w-[140px] bg-muted border border-border rounded-sm p-2 shrink-0">
-          <div className="text-[11px] font-semibold text-muted-foreground mb-1.5">Initial</div>
+        <div className="min-w-[140px] bg-secondary border border-border rounded-sm p-2 shrink-0">
+          <div className="text-[11px] font-semibold text-text-muted mb-1.5">Initial</div>
           <div className="flex flex-col gap-1">
             {nonFragElements.slice(0, 5).map((el) => (
               <div
                 key={el.id}
-                className="flex items-center gap-1 py-1 px-2 rounded border border-border text-[11px] cursor-grab text-foreground"
+                className="flex items-center gap-1 py-1 px-2 rounded border border-border text-[11px] cursor-grab text-text-primary"
                 style={{ background: 'rgba(255,255,255,0.08)', opacity: 0.5 }}
               >
                 <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -133,16 +133,16 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
         {sortedIndices.map((idx) => (
           <div
             key={idx}
-            className="min-w-[140px] bg-muted border border-border rounded-sm p-2 shrink-0"
+            className="min-w-[140px] bg-secondary border border-border rounded-sm p-2 shrink-0"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => handleDrop(e, idx)}
           >
-            <div className="text-[11px] font-semibold text-muted-foreground mb-1.5">Step {idx}</div>
+            <div className="text-[11px] font-semibold text-text-muted mb-1.5">Step {idx}</div>
             <div className="flex flex-col gap-1">
               {groups[idx].map((el, i) => (
                 <div
                   key={el.id}
-                  className="flex items-center gap-1 py-1 px-2 rounded border border-border text-[11px] cursor-grab text-foreground"
+                  className="flex items-center gap-1 py-1 px-2 rounded border border-border text-[11px] cursor-grab text-text-primary"
                   draggable
                   onDragStart={(e) => handleDragStart(e, el.id, idx)}
                   style={{
@@ -157,7 +157,7 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
                   <select
                     value={el.fragmentAnimation || 'fade-in'}
                     onChange={(e) => onUpdateElement(el.id, { fragmentAnimation: e.target.value })}
-                    className="bg-card border border-border text-foreground py-0.5 px-1 rounded-sm text-[10px] cursor-pointer max-w-[80px]"
+                    className="bg-card border border-border text-text-primary py-0.5 px-1 rounded-sm text-[10px] cursor-pointer max-w-[80px]"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {ANIMATION_TYPES.map((a) => (
@@ -179,7 +179,7 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
           onDrop={(e) => handleDrop(e, maxIndex + 1)}
         >
           <div
-            className="text-[11px] font-semibold text-muted-foreground mb-1.5"
+            className="text-[11px] font-semibold text-text-muted mb-1.5"
             style={{ opacity: 0.4 }}
           >
             +

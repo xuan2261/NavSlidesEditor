@@ -193,7 +193,12 @@ function renderCallout(el, style, wrap, vis) {
 function renderIcon(el, style, wrap, vis) {
   const color = el.iconColor || '#ffffff'
   const sw = el.iconStrokeWidth || 2
-  const path = ICON_PATHS[el.iconName] || ICON_PATHS['Star'] || ''
+  
+  // Normalize icon name in case it has an 'Icon' suffix (from lucide-react aliases)
+  const rawName = el.iconName || 'Star'
+  const iconKey = rawName.endsWith('Icon') && rawName !== 'ImageIcon' ? rawName.replace(/Icon$/, '') : rawName
+  const path = ICON_PATHS[iconKey] || ICON_PATHS['Star'] || ''
+  
   return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${path}</svg></div>`
 }
 

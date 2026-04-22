@@ -1,4 +1,4 @@
-import { Input, Select } from '../../components/ui'
+import { Input, Select, ColorPicker } from '../../components/ui'
 /**
  * Shape and Line specific properties.
  */
@@ -12,9 +12,8 @@ export default function ShapeProperties({ element, onUpdate }) {
         {!isLine && (
           <div className="flex flex-col gap-1">
             <div className="text-[11px] text-text-muted">Fill</div>
-            <input
-              type="color"
-              className="w-full h-8 border border-border rounded cursor-pointer p-[1px] bg-card shrink-0"
+            <ColorPicker
+              className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
               value={element.fill || '#6366f1'}
               onChange={(e) => onUpdate({ fill: e.target.value })}
             />
@@ -22,9 +21,8 @@ export default function ShapeProperties({ element, onUpdate }) {
         )}
         <div className="flex flex-col gap-1">
           <div className="text-[11px] text-text-muted">Stroke Color</div>
-          <input
-            type="color"
-            className="w-full h-8 border border-border rounded cursor-pointer p-[1px] bg-card shrink-0"
+            <ColorPicker
+            className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
             value={element.stroke === 'none' || !element.stroke ? '#ffffff' : element.stroke}
             onChange={(e) => onUpdate({ stroke: e.target.value })}
           />
@@ -50,7 +48,7 @@ export default function ShapeProperties({ element, onUpdate }) {
           <div className="flex flex-col gap-1 mb-2.5">
             <div className="text-[11px] text-text-muted">Line Style</div>
             <Select
-              className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+              className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
               value={element.dashArray || ''}
               onChange={(e) => onUpdate({ dashArray: e.target.value })}
             >
@@ -64,7 +62,7 @@ export default function ShapeProperties({ element, onUpdate }) {
             <div className="flex flex-col gap-1">
               <div className="text-[11px] text-text-muted">Start Marker</div>
               <Select
-                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+                className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 value={element.arrowStart || 'none'}
                 onChange={(e) => onUpdate({ arrowStart: e.target.value })}
               >
@@ -78,7 +76,7 @@ export default function ShapeProperties({ element, onUpdate }) {
             <div className="flex flex-col gap-1">
               <div className="text-[11px] text-text-muted">End Marker</div>
               <Select
-                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+                className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 value={element.arrowEnd || 'none'}
                 onChange={(e) => onUpdate({ arrowEnd: e.target.value })}
               >
@@ -127,7 +125,7 @@ export default function ShapeProperties({ element, onUpdate }) {
         <div className="flex flex-col gap-1 mb-2.5">
           <div className="text-[11px] text-text-muted">Label Text</div>
           <Input
-            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="text"
             value={element.text || ''}
             onChange={(e) => onUpdate({ text: e.target.value })}
@@ -141,7 +139,7 @@ export default function ShapeProperties({ element, onUpdate }) {
           <div className="flex flex-col gap-1">
             <div className="text-[11px] text-text-muted">Text Size</div>
             <Input
-              className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+              className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
               type="number"
               min="8"
               max="144"
@@ -151,9 +149,8 @@ export default function ShapeProperties({ element, onUpdate }) {
           </div>
           <div className="flex flex-col gap-1">
             <div className="text-[11px] text-text-muted">Text Color</div>
-            <input
-              type="color"
-              className="w-full h-8 border border-border rounded cursor-pointer p-[1px] bg-card shrink-0"
+            <ColorPicker
+              className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
               value={element.textColor || '#ffffff'}
               onChange={(e) => onUpdate({ textColor: e.target.value })}
             />

@@ -104,7 +104,7 @@ export default function ShareModal({ presentationId, onClose }) {
               variant="ghost"
               key={t}
               onClick={() => setTab(t)}
-              className={`px-4 py-2 text-[13px] rounded-none border-b-2 ${tab === t ? 'border-accent text-accent font-semibold' : 'border-transparent text-text-muted hover:text-text font-normal'}`}
+              className={`px-4 py-2 text-[13px] rounded-none border-b-2 ${tab === t ? 'border-accent text-accent font-semibold' : 'border-transparent text-text-muted hover:text-text-primary font-normal'}`}
             >
               {t === 'links' ? '🔗 Links' : '📋 Embed'}
             </Button>
@@ -136,7 +136,7 @@ export default function ShareModal({ presentationId, onClose }) {
                       <tbody>
                         {shares.map((s) => (
                           <tr key={s.token} className="border-b border-border">
-                            <td className="py-2 px-1 text-text">
+                            <td className="py-2 px-1 text-text-primary">
                               {s.name || 'Shared Link'}
                               {s.expiresAt && (
                                 <span className="text-[11px] text-text-muted ml-1.5 inline-flex items-center gap-1">
@@ -196,7 +196,7 @@ export default function ShareModal({ presentationId, onClose }) {
                       <label className="text-xs text-text-muted block mb-1">Link Name</label>
                       <input
                         type="text"
-                        className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm focus:border-accent focus:outline-none transition-colors"
+                        className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors"
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                         placeholder="e.g. Client Review"
@@ -209,7 +209,7 @@ export default function ShareModal({ presentationId, onClose }) {
                         </label>
                         <input
                           type="password"
-                          className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm focus:border-accent focus:outline-none transition-colors"
+                          className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           placeholder="Leave empty for no password"
@@ -220,7 +220,7 @@ export default function ShareModal({ presentationId, onClose }) {
                           <Clock size={10} /> Expires in
                         </label>
                         <select
-                          className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm focus:border-accent focus:outline-none transition-colors"
+                          className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors"
                           value={newExpiry}
                           onChange={(e) => setNewExpiry(e.target.value)}
                         >
@@ -284,7 +284,7 @@ export default function ShareModal({ presentationId, onClose }) {
                     <textarea
                       readOnly
                       value={embedCode(s.token)}
-                      className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-xs font-mono min-h-[60px] resize-none focus:outline-none focus:border-accent"
+                      className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-xs font-mono min-h-[60px] resize-none focus:outline-none focus:border-accent"
                     />
                     <Button
                       variant="icon"

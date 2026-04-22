@@ -72,33 +72,25 @@ setTimeout(()=>Reveal.next(),800);
 
   return (
     <div
-      className="transition-preview-overlay"
+      className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="transition-preview-modal">
-        <div className="transition-preview-header">
-          <span style={{ fontWeight: 600, fontSize: 14 }}>Transition Preview</span>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+      <div className="bg-card rounded-xl border border-border shadow-2xl w-[620px] max-w-[90vw] overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+          <span className="font-semibold text-sm">Transition Preview</span>
+          <span className="text-xs text-text-muted">
             Slide {fromIndex + 1} → {toIndex + 1}
           </span>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }}>
+          <div className="flex items-center gap-2 ml-auto">
             <select
               value={transition}
               onChange={(e) => {
                 setTransition(e.target.value)
                 setKey((k) => k + 1)
               }}
-              style={{
-                background: 'var(--bg-hover)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-primary)',
-                padding: '4px 8px',
-                borderRadius: 4,
-                fontSize: 12,
-                cursor: 'pointer',
-              }}
+              className="bg-hover border border-border text-text-primary px-2 py-1 rounded text-xs cursor-pointer"
             >
               {TRANSITIONS.map((t) => (
                 <option key={t} value={t}>
@@ -114,7 +106,7 @@ setTimeout(()=>Reveal.next(),800);
             </Button>
           </div>
         </div>
-        <div className="transition-preview-content">
+        <div className="p-4 flex items-center justify-center bg-black/30 overflow-hidden h-[360px]">
           <iframe
             key={key}
             ref={iframeRef}

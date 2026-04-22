@@ -38,14 +38,13 @@ export default function PromptPopover({
 
   return (
     <>
-      <div className="popover-overlay" onClick={onCancel} />
-      <div className="prompt-popover" ref={wrapperRef} style={style}>
-        {title && <div className="prompt-popover-title">{title}</div>}
+      <div className="fixed inset-0 z-[9998] bg-black/40" onClick={onCancel} />
+      <div className="absolute z-[9999] bg-card border border-border rounded-lg shadow-xl p-3 min-w-[240px]" ref={wrapperRef} style={style}>
+        {title && <div className="text-xs font-semibold text-text-secondary mb-2">{title}</div>}
         <input
           ref={inputRef}
           type={type}
-          className="select-sm"
-          style={{ width: '100%', padding: '6px 10px', fontSize: 13 }}
+          className="w-full bg-surface-3 border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-[13px] focus:outline-none focus:border-accent"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder={placeholder}
@@ -53,14 +52,14 @@ export default function PromptPopover({
             if (e.key === 'Enter') handleSubmit()
           }}
         />
-        <div className="prompt-popover-actions">
-          <Button variant="ghost" onClick={onCancel} style={{ fontSize: 12 }}>
+        <div className="flex items-center justify-end gap-2 mt-2">
+          <Button variant="ghost" onClick={onCancel} className="text-xs">
             Cancel
           </Button>
           <Button
             variant="primary"
             onClick={handleSubmit}
-            style={{ fontSize: 12, padding: '4px 12px' }}
+            className="text-xs px-3 py-1"
           >
             OK
           </Button>

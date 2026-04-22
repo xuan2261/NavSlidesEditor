@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: 'Fix Toolbar Icons'
-status: completed
+status: pending
 effort: '1h'
 ---
 

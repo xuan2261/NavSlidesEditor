@@ -37,7 +37,7 @@ export default function QuickAccessToolbar({
         title={saving ? 'Saving…' : hasChanges ? 'Save (Ctrl+S)' : 'No changes'}
       >
         {saving ? (
-          <Loader2 size={16} className="spin" />
+          <Loader2 size={18} className="animate-spin" />
         ) : (
           <span className="qat-dot" style={{ opacity: hasChanges ? 1 : 0.3 }} />
         )}
@@ -52,8 +52,8 @@ export default function QuickAccessToolbar({
         title="Undo (Ctrl+Z)"
       >
         <svg
-          width="16"
-          height="16"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -74,8 +74,8 @@ export default function QuickAccessToolbar({
         style={{ transform: 'scaleX(-1)' }}
       >
         <svg
-          width="16"
-          height="16"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -96,7 +96,7 @@ export default function QuickAccessToolbar({
         onClick={onPresent}
         title="Present"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <polygon points="5,3 19,12 5,21" />
         </svg>
       </button>

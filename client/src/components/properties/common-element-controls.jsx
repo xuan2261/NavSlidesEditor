@@ -1,5 +1,5 @@
-import { Input, Select } from '../../components/ui'
-import { Button } from '../../components/ui'
+import { Input, Select, Button, ColorPicker } from '../../components/ui'
+
 /**
  * Common element controls shared across all element types:
  * Position (X/Y/W/H/Rotation), Lock, Fragment animation, Drop Shadow, Layer buttons, Delete.
@@ -19,7 +19,7 @@ export default function CommonElementControls({
         <div className="flex flex-col gap-1">
           <div className="text-[11px] text-text-muted">X</div>
           <Input
-            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             value={Math.round(element.x)}
             onChange={(e) => onUpdate({ x: Number(e.target.value) })}
@@ -28,7 +28,7 @@ export default function CommonElementControls({
         <div className="flex flex-col gap-1">
           <div className="text-[11px] text-text-muted">Y</div>
           <Input
-            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             value={Math.round(element.y)}
             onChange={(e) => onUpdate({ y: Number(e.target.value) })}
@@ -37,7 +37,7 @@ export default function CommonElementControls({
         <div className="flex flex-col gap-1">
           <div className="text-[11px] text-text-muted">Rot</div>
           <Input
-            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             step="1"
             value={Math.round(element.rotation || 0)}
@@ -48,7 +48,7 @@ export default function CommonElementControls({
         <div className="flex flex-col gap-1">
           <div className="text-[11px] text-text-muted">W</div>
           <Input
-            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             value={Math.round(element.width)}
             onChange={(e) => onUpdate({ width: Number(e.target.value) })}
@@ -57,7 +57,7 @@ export default function CommonElementControls({
         <div className="flex flex-col gap-1">
           <div className="text-[11px] text-text-muted">H</div>
           <Input
-            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             value={Math.round(element.height)}
             onChange={(e) => onUpdate({ height: Number(e.target.value) })}
@@ -99,7 +99,7 @@ export default function CommonElementControls({
             <div className="flex flex-col gap-1">
               <div className="text-[11px] text-text-muted">Order</div>
               <Input
-                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+                className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 type="number"
                 min="1"
                 max="20"
@@ -110,7 +110,7 @@ export default function CommonElementControls({
             <div className="flex flex-col gap-1">
               <div className="text-[11px] text-text-muted">Animation</div>
               <Select
-                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+                className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 style={{ padding: '4px 6px' }}
                 value={element.fragmentAnimation || 'fade-in'}
                 onChange={(e) => onUpdate({ fragmentAnimation: e.target.value })}
@@ -137,11 +137,11 @@ export default function CommonElementControls({
       {element.type !== 'html' && element.type !== 'code' && (
         <div className="mb-2.5">
           <div className="text-[11px] text-text-muted mb-1">Drop Shadow</div>
-          <div className="grid grid-cols-[1fr_1fr_1fr_28px] gap-1.5 items-end">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-2 items-start mt-2">
             <div className="flex flex-col gap-1">
               <div className="text-[10px] text-text-muted">X</div>
               <Input
-                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+                className="w-full bg-card border border-border text-text-primary px-2 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 type="number"
                 value={element.shadowX ?? 0}
                 onChange={(e) => onUpdate({ shadowX: Number(e.target.value) })}
@@ -150,7 +150,7 @@ export default function CommonElementControls({
             <div className="flex flex-col gap-1">
               <div className="text-[10px] text-text-muted">Y</div>
               <Input
-                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+                className="w-full bg-card border border-border text-text-primary px-2 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 type="number"
                 value={element.shadowY ?? 0}
                 onChange={(e) => onUpdate({ shadowY: Number(e.target.value) })}
@@ -159,7 +159,7 @@ export default function CommonElementControls({
             <div className="flex flex-col gap-1">
               <div className="text-[10px] text-text-muted">Blur</div>
               <Input
-                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+                className="w-full bg-card border border-border text-text-primary px-2 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 type="number"
                 min="0"
                 value={element.shadowBlur ?? 0}
@@ -167,10 +167,9 @@ export default function CommonElementControls({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <div className="text-[10px] text-text-muted"></div>
-              <input
-                type="color"
-                className="w-7 h-7 border border-border rounded cursor-pointer p-[2px] bg-card shrink-0"
+              <div className="text-[10px] text-text-muted">Color</div>
+              <ColorPicker
+                className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
                 value={element.shadowColor || '#000000'}
                 onChange={(e) => onUpdate({ shadowColor: e.target.value })}
               />

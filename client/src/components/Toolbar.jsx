@@ -39,6 +39,8 @@ import {
   Ungroup,
   Minus,
   ArrowUpRight,
+  Sigma,
+  FunctionSquare,
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import InsertMenu from './InsertMenu'
@@ -897,7 +899,7 @@ export default function Toolbar({
               title="Text color"
             >
               <Type size={18} />
-              <span className="color-indicator" style={{ background: currentColor }} />
+              <span className="inline-block w-4 h-1 rounded-sm mt-0.5" style={{ background: currentColor }} />
             </Button>
             {showColorPalette && (
               <div
@@ -957,7 +959,7 @@ export default function Toolbar({
                   <span style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                     Custom
                   </span>
-                  <div className="color-btn-wrapper" style={{ flex: 1 }}>
+                  <div className="flex-1">
                     <div
                       style={{
                         width: '100%',
@@ -998,7 +1000,7 @@ export default function Toolbar({
             >
               <Highlighter size={18} />
               <span
-                className="color-indicator"
+                className="inline-block w-4 h-1 rounded-sm mt-0.5"
                 style={{
                   background: editor.getAttributes('highlight').color || 'transparent',
                   border: '1px solid rgba(255,255,255,0.2)',
@@ -1294,9 +1296,9 @@ export default function Toolbar({
                 title: 'LaTeX (inline)',
               })
             }
-            style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: 14 }}
+            style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: 18 }}
           >
-            ∑
+            <Sigma size={18} />
           </Button>
           <Button
             variant="icon"
@@ -1308,9 +1310,9 @@ export default function Toolbar({
                 title: 'LaTeX (display)',
               })
             }
-            style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: 14 }}
+            style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: 18 }}
           >
-            ∫
+            <FunctionSquare size={18} />
           </Button>
 
           <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />

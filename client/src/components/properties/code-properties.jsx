@@ -45,7 +45,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
         <div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>Language</div>
           <Select
-            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             style={{ padding: '4px 6px' }}
             value={element.language || 'plaintext'}
             onChange={(e) => onUpdate({ language: e.target.value })}
@@ -60,7 +60,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
         <div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>Font Size</div>
           <Input
-            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             min="8"
             max="32"

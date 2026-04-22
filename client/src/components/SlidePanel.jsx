@@ -13,16 +13,16 @@ import {
 import { Button } from './ui/Button'
 
 function getBgStyle(bg) {
-  if (!bg || bg.type === 'none') return {}
-  if (bg.type === 'color') return { backgroundColor: bg.color }
-  if (bg.type === 'gradient') return { background: bg.gradient }
+  if (!bg || bg.type === 'none') return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
+  if (bg.type === 'color') return { backgroundColor: bg.color || 'var(--bg-canvas-default, #ffffff)' }
+  if (bg.type === 'gradient') return { background: bg.gradient || 'var(--bg-canvas-default, #ffffff)' }
   if (bg.type === 'image' && bg.image)
     return {
       backgroundImage: `url(${bg.image})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     }
-  return {}
+  return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
 }
 
 export default function SlidePanel({
@@ -73,7 +73,7 @@ export default function SlidePanel({
         <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{slides.length}</span>
       </div>
 
-      <div className="slide-list flex-1 overflow-y-auto p-2">
+      <div className="slide-list flex-1 overflow-y-auto p-2 space-y-2">
         {slides.map((slide, index) => {
           return (
             <div
@@ -169,7 +169,7 @@ export default function SlidePanel({
                 </div>
               )}
               <div
-                className="aspect-video flex items-start p-1.5 overflow-hidden bg-bg-canvas-default relative"
+                className="aspect-video flex items-start p-1.5 overflow-hidden relative"
                 style={{
                   ...getBgStyle(slide.background),
                   position: 'relative',
@@ -545,7 +545,7 @@ export default function SlidePanel({
                         {index + 1}.{ci + 1}
                       </span>
                       <div
-                        className="aspect-video flex items-start p-1.5 overflow-hidden bg-bg-canvas-default relative"
+                        className="aspect-video flex items-start p-1.5 overflow-hidden relative"
                         style={{
                           ...getBgStyle(child.background),
                           position: 'relative',
@@ -585,7 +585,7 @@ export default function SlidePanel({
 
       {/* Batch operations footer when multi-selecting */}
       {selectedIndices.length > 1 && (
-        <div className="flex items-center gap-2 py-1.5 px-3 border-t border-border bg-bg-surface text-xs text-text-muted">
+        <div className="flex items-center gap-2 py-1.5 px-3 border-t border-border bg-surface-2 text-xs text-text-muted">
           <span>{selectedIndices.length} selected</span>
           <Button
             variant="icon"
@@ -620,9 +620,9 @@ export default function SlidePanel({
       {/* Context Menu */}
       {ctxMenu && (
         <>
-          <div className="slide-context-overlay" onMouseDown={() => setCtxMenu(null)} />
+          <div className="fixed inset-0 z-[9998]" onMouseDown={() => setCtxMenu(null)} />
           <div
-            className="slide-context-menu"
+            className="absolute z-[9999] bg-card border border-border rounded-lg shadow-xl py-1 min-w-[160px]"
             style={{ top: ctxMenu.y, left: ctxMenu.x }}
             onMouseDown={(e) => e.stopPropagation()}
           >
@@ -652,7 +652,7 @@ export default function SlidePanel({
               <Sparkles size={14} />
               {slides[ctxMenu.index]?.autoAnimate ? 'Disable' : 'Enable'} Auto-Animate
             </button>
-            <div className="context-separator" />
+            <div className="h-px bg-border my-1 mx-2" />
             <button
               onClick={() => {
                 onMove(ctxMenu.index, ctxMenu.index - 1)
@@ -681,7 +681,7 @@ export default function SlidePanel({
                 <ArrowDownRight size={14} /> Add Vertical Slide
               </button>
             )}
-            <div className="context-separator" />
+            <div className="h-px bg-border my-1 mx-2" />
             <button
               onClick={() => {
                 if (slides.length > 1) onDelete(ctxMenu.index)

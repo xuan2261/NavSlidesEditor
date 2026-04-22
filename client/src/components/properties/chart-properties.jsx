@@ -1,4 +1,4 @@
-import { Input, Select } from '../../components/ui'
+import { Input, Select, ColorPicker } from '../../components/ui'
 /**
  * Chart-specific properties: chart type, labels, values, series label, color.
  */
@@ -8,7 +8,7 @@ export default function ChartProperties({ element, onUpdate }) {
     <div style={{ marginBottom: 10 }}>
       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Chart Type</div>
       <Select
-        className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+        className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
         value={element.chartType || 'bar'}
         onChange={(e) => onUpdate({ chartType: e.target.value })}
         style={{ padding: '4px 6px', marginBottom: 8 }}
@@ -23,7 +23,7 @@ export default function ChartProperties({ element, onUpdate }) {
         Labels (comma-separated)
       </div>
       <Input
-        className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+        className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
         type="text"
         value={(element.chartData?.labels || []).join(', ')}
         onChange={(e) =>
@@ -40,7 +40,7 @@ export default function ChartProperties({ element, onUpdate }) {
         Values (comma-separated)
       </div>
       <Input
-        className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+        className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
         type="text"
         value={((element.chartData?.datasets || [])[0]?.data || []).join(', ')}
         onChange={(e) => {
@@ -55,7 +55,7 @@ export default function ChartProperties({ element, onUpdate }) {
       />
       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Series Label</div>
       <Input
-        className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+        className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
         type="text"
         value={(element.chartData?.datasets || [])[0]?.label || ''}
         onChange={(e) => {
@@ -69,8 +69,7 @@ export default function ChartProperties({ element, onUpdate }) {
       />
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Color</div>
-        <input
-          type="color"
+        <ColorPicker
           className="w-9 h-7 border border-border rounded cursor-pointer p-[1px] bg-card shrink-0"
           value={(element.chartData?.datasets || [])[0]?.color || '#6366f1'}
           onChange={(e) => {

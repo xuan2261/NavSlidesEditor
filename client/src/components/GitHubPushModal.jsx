@@ -58,7 +58,7 @@ export default function GitHubPushModal({ presentationId, presentationTitle, onC
           <div>
             <label className="text-xs text-text-muted block mb-1">Repository Owner</label>
             <input
-              className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm box-border focus:border-accent focus:outline-none transition-colors"
+              className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm box-border focus:border-accent focus:outline-none transition-colors"
               value={config.owner}
               onChange={(e) => setConfig((prev) => ({ ...prev, owner: e.target.value }))}
               placeholder="username or org"
@@ -67,7 +67,7 @@ export default function GitHubPushModal({ presentationId, presentationTitle, onC
           <div>
             <label className="text-xs text-text-muted block mb-1">Repository Name</label>
             <input
-              className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm box-border focus:border-accent focus:outline-none transition-colors"
+              className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm box-border focus:border-accent focus:outline-none transition-colors"
               value={config.repo}
               onChange={(e) => setConfig((prev) => ({ ...prev, repo: e.target.value }))}
               placeholder="my-presentations"
@@ -80,7 +80,7 @@ export default function GitHubPushModal({ presentationId, presentationTitle, onC
             </label>
             <input
               type="password"
-              className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm box-border focus:border-accent focus:outline-none transition-colors"
+              className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm box-border focus:border-accent focus:outline-none transition-colors"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder={config.hasToken ? '••••••••  (leave blank to keep)' : 'ghp_...'}
@@ -99,7 +99,7 @@ export default function GitHubPushModal({ presentationId, presentationTitle, onC
           <div>
             <label className="text-xs text-text-muted block mb-1">Commit Message (optional)</label>
             <input
-              className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm box-border focus:border-accent focus:outline-none transition-colors"
+              className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm box-border focus:border-accent focus:outline-none transition-colors"
               value={commitMsg}
               onChange={(e) => setCommitMsg(e.target.value)}
               placeholder={`${presentationTitle || 'Untitled'} ${new Date().toLocaleString()}`}

@@ -137,7 +137,7 @@ export default function MiniToolbar({ editor, position, onClose }) {
       <div className="flex items-center gap-1 px-1 text-text-muted">
         <Type size={12} />
         <select
-          className="cursor-pointer rounded border border-border bg-bg-surface px-1 py-0.5 text-xs text-text-primary outline-none"
+          className="cursor-pointer rounded border border-border bg-surface-2 px-1 py-0.5 text-xs text-text-primary outline-none"
           onMouseDown={(e) => e.stopPropagation()}
           onChange={(e) => {
             editor.chain().focus().setFontSize(e.target.value).run()

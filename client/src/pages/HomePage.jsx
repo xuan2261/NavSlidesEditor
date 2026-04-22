@@ -574,7 +574,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   }, [isMarketplaceView])
 
   return (
-    <div className="h-full flex flex-col bg-bg-primary">
+    <div className="h-full flex flex-col bg-panel">
       {/* ════ Header ════ */}
       <div className="flex items-center justify-between px-6 h-14 border-b border-border bg-secondary shrink-0">
         <div className="flex items-center gap-4">
@@ -882,12 +882,20 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                       style={{ cursor: creating ? 'wait' : 'pointer' }}
                     >
                       <div
-                        className="aspect-video flex items-center justify-center bg-surface-2 relative overflow-hidden text-[32px] text-text-muted"
+                        className="aspect-video flex items-center justify-center relative overflow-hidden"
                         style={bgProp}
                       >
+                        <div className="flex flex-col items-center justify-center gap-1 px-4 text-center">
+                          <span style={{ fontSize: 16, fontWeight: 700, color: preset.thumbnail?.color === '#ffffff' || preset.thumbnail?.color === '#fafafa' || preset.thumbnail?.color === '#fcfcfc' ? '#333' : '#fff', opacity: 0.85 }}>
+                            {preset.title}
+                          </span>
+                          <span style={{ fontSize: 10, color: preset.thumbnail?.color === '#ffffff' || preset.thumbnail?.color === '#fafafa' || preset.thumbnail?.color === '#fcfcfc' ? '#666' : 'rgba(255,255,255,0.5)' }}>
+                            {preset.theme} · {preset.transition}
+                          </span>
+                        </div>
                         <Sparkles
-                          size={20}
-                          style={{ position: 'absolute', top: 8, right: 8, opacity: 0.3 }}
+                          size={16}
+                          style={{ position: 'absolute', top: 8, right: 8, opacity: 0.25 }}
                         />
                       </div>
                       <div className="px-4 py-3">
@@ -938,15 +946,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
                         onClick={() => onOpen(tmpl.id, true)}
                       >
-                        <div
-                          className="aspect-video flex items-center justify-center bg-surface-2 relative overflow-hidden text-[32px] text-text-muted"
-                          style={bgProp}
-                        >
-                          <Layout
-                            size={24}
-                            style={{ position: 'absolute', top: 6, right: 6, opacity: 0.5 }}
-                          />
-                        </div>
+                        <SlideThumbnail id={tmpl.id} bgProp={bgProp} />
                         <div className="px-4 py-3">
                           <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
                             {tmpl.title || 'Untitled Template'}
@@ -956,7 +956,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                             {formatDate(tmpl.updatedAt)}
                           </p>
                         </div>
-                        <div className="flex justify-end gap-1 px-3 py-2 border-t border-border opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="flex justify-end gap-1 px-3 py-2 border-t border-border">
                           <Button
                             variant="icon"
                             title="Edit template"
@@ -1056,15 +1056,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         onClick={() => setPreviewTemplate(tmpl)}
                         style={{ cursor: 'pointer' }}
                       >
-                        <div
-                          className="aspect-video flex items-center justify-center bg-surface-2 relative overflow-hidden text-[32px] text-text-muted"
-                          style={bgProp}
-                        >
-                          <Sparkles
-                            size={16}
-                            style={{ position: 'absolute', top: 6, right: 6, opacity: 0.4 }}
-                          />
-                        </div>
+                        <SlideThumbnail id={tmpl.id} bgProp={bgProp} />
                         <div className="px-4 py-3">
                           <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
                             {tmpl.titleVi || tmpl.title}
@@ -1107,7 +1099,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   <div className="flex gap-3 flex-wrap justify-center">
                     <Button
                       variant="ghost"
-                      className="flex items-center gap-2.5 px-5 py-3.5 bg-card border border-border-light rounded-md text-text-primary text-sm font-medium cursor-pointer transition-all hover:bg-hover hover:border-accent hover:shadow-md hover:-translate-y-[1px]"
+                      className="flex items-center gap-2.5 px-5 py-3.5 bg-card border border-border rounded-md text-text-primary text-sm font-medium cursor-pointer transition-all hover:bg-hover hover:border-accent hover:shadow-md hover:-translate-y-[1px]"
                       onClick={handleOpenModal}
                     >
                       <Plus size={18} />
@@ -1115,7 +1107,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     </Button>
                     <Button
                       variant="ghost"
-                      className="flex items-center gap-2.5 px-5 py-3.5 bg-card border border-border-light rounded-md text-text-primary text-sm font-medium cursor-pointer transition-all hover:bg-hover hover:border-accent hover:shadow-md hover:-translate-y-[1px]"
+                      className="flex items-center gap-2.5 px-5 py-3.5 bg-card border border-border rounded-md text-text-primary text-sm font-medium cursor-pointer transition-all hover:bg-hover hover:border-accent hover:shadow-md hover:-translate-y-[1px]"
                       onClick={() => setSidebarView('templates')}
                     >
                       <LayoutTemplate size={18} />
@@ -1189,7 +1181,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         return (
                           <div
                             key={pres.id}
-                            className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
+                            className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg flex flex-col h-full"
                             onClick={() => onOpen(pres.id)}
                           >
                             <SlideThumbnail
@@ -1198,7 +1190,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                               fallback={!pres.thumbnail || pres.thumbnail.type === 'none'}
                               className="aspect-video"
                             />
-                            <div className="px-4 py-3">
+                            <div className="px-4 py-3 flex-1">
                               <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
                                 {pres.title || 'Untitled'}
                               </h3>
@@ -1207,7 +1199,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                                 {formatDate(pres.updatedAt)}
                               </p>
                             </div>
-                            <div className="flex justify-end gap-1 px-3 py-2 border-t border-border opacity-0 transition-opacity group-hover:opacity-100">
+                            <div className="flex justify-end gap-1 px-3 py-2 border-t border-border">
                               <Button
                                 variant="icon"
                                 title="Edit"
@@ -1268,7 +1260,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                                 {formatDate(pres.updatedAt)}
                               </p>
                             </div>
-                            <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                            <div className="flex justify-end gap-1 px-3 py-2 border-t border-border">
                               <Button
                                 variant="icon"
                                 title="Edit"
@@ -1314,7 +1306,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           onClick={() => setShowModal(false)}
         >
           <div
-            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full animate-in fade-in zoom-in-95 duration-200"
+            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full anim-zoom-in"
             onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: 560 }}
           >
@@ -1350,7 +1342,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                       padding: '10px 8px',
                       background: !form.templateId ? 'var(--accent)' : 'var(--bg-card)',
                       border:
-                        '2px solid ' + (!form.templateId ? 'var(--accent)' : 'var(--border-light)'),
+                        '2px solid ' + (!form.templateId ? 'var(--accent)' : 'var(--border)'),
                       borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       color: !form.templateId ? 'white' : 'var(--text-primary)',
@@ -1361,19 +1353,26 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   >
                     Blank
                   </Button>
-                  {allTemplates.map((tmpl) => (
-                    <Button
-                      variant="ghost"
-                      key={tmpl.id}
-                      type="button"
-                      onClick={() =>
-                        setForm((f) => ({
-                          ...f,
-                          templateId: tmpl.id,
-                          theme: tmpl.theme || f.theme,
-                          transition: tmpl.transition || f.transition,
-                        }))
-                      }
+                  {allTemplates
+                    .filter(
+                      (tmpl) =>
+                        tmpl.title &&
+                        tmpl.title !== 'New Template' &&
+                        tmpl.title !== 'Untitled Template'
+                    )
+                    .map((tmpl) => (
+                      <Button
+                        variant="ghost"
+                        key={tmpl.id}
+                        type="button"
+                        onClick={() =>
+                          setForm((f) => ({
+                            ...f,
+                            templateId: tmpl.id,
+                            theme: tmpl.theme || f.theme,
+                            transition: tmpl.transition || f.transition,
+                          }))
+                        }
                       style={{
                         padding: '6px 8px',
                         textAlign: 'center',
@@ -1382,7 +1381,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                           form.templateId === tmpl.id ? 'var(--accent)' : 'var(--bg-card)',
                         border:
                           '2px solid ' +
-                          (form.templateId === tmpl.id ? 'var(--accent)' : 'var(--border-light)'),
+                          (form.templateId === tmpl.id ? 'var(--accent)' : 'var(--border)'),
                         borderRadius: 'var(--radius-sm)',
                         color: form.templateId === tmpl.id ? 'white' : 'var(--text-primary)',
                         fontSize: 11,
@@ -1408,7 +1407,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
               {!form.templateId && (
                 <>
-                  <div className="form-group">
+                  <div className="mb-3">
                     <label>Theme</label>
                     <Select
                       value={form.theme}
@@ -1421,7 +1420,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                       ))}
                     </Select>
                   </div>
-                  <div className="form-group">
+                  <div className="mb-3">
                     <label>Transition</label>
                     <Select
                       value={form.transition}
@@ -1486,7 +1485,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           onClick={() => setConfirmDialog(null)}
         >
           <div
-            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full animate-in fade-in zoom-in-95 duration-200"
+            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full anim-zoom-in"
             onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: 420 }}
           >

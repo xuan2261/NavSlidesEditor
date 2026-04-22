@@ -164,7 +164,7 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
               className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
             />
             <input
-              className="w-full pl-9 pr-3 py-1.5 rounded-md border border-border bg-secondary text-text text-sm focus:border-accent focus:outline-none transition-colors"
+              className="w-full pl-9 pr-3 py-1.5 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors"
               type="text"
               placeholder={`Search ${activeTab === 'local' ? 'files' : activeTab}...`}
               value={search}

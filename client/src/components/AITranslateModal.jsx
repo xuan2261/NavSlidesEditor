@@ -124,7 +124,7 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
           <select
             value={targetLang}
             onChange={(e) => setTargetLang(e.target.value)}
-            className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm box-border"
+            className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm box-border"
           >
             {LANGUAGES.map((l) => (
               <option key={l} value={l}>
@@ -135,7 +135,7 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
         </div>
 
         <div className="mb-4 flex flex-col gap-2">
-          <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text">
+          <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text-primary">
             <input
               type="checkbox"
               checked={translateContent}
@@ -144,7 +144,7 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
             />
             Translate slide content
           </label>
-          <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text">
+          <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text-primary">
             <input
               type="checkbox"
               checked={translateNotes}
@@ -153,7 +153,7 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
             />
             Translate speaker notes
           </label>
-          <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text">
+          <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text-primary">
             <input
               type="checkbox"
               checked={keepOriginalAsNotes}

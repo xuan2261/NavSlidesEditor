@@ -93,7 +93,7 @@ export default function AIGeneratorModal({ onCreatePresentation, onClose }) {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g. IoT Security in Military Systems — threats, defense strategies, case studies"
-                className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm min-h-[80px] resize-y"
+                className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm min-h-[80px] resize-y"
               />
             </div>
 
@@ -103,7 +103,7 @@ export default function AIGeneratorModal({ onCreatePresentation, onClose }) {
                 <select
                   value={slideCount}
                   onChange={(e) => setSlideCount(+e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm box-border"
+                  className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm box-border"
                 >
                   {[5, 6, 7, 8, 10, 12, 15].map((n) => (
                     <option key={n} value={n}>
@@ -117,7 +117,7 @@ export default function AIGeneratorModal({ onCreatePresentation, onClose }) {
                 <select
                   value={style}
                   onChange={(e) => setStyle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm box-border"
+                  className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm box-border"
                 >
                   {STYLES.map((s) => (
                     <option key={s} value={s}>
@@ -133,7 +133,7 @@ export default function AIGeneratorModal({ onCreatePresentation, onClose }) {
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm box-border"
+                className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm box-border"
               >
                 {LANGUAGES.map((l) => (
                   <option key={l} value={l}>
@@ -182,7 +182,7 @@ export default function AIGeneratorModal({ onCreatePresentation, onClose }) {
                 <textarea
                   value={outlineText}
                   onChange={(e) => setOutlineText(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-xs min-h-[250px] font-mono resize-y"
+                  className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-xs min-h-[250px] font-mono resize-y"
                 />
               ) : (
                 <div className="max-h-[300px] overflow-y-auto border border-border rounded-lg p-3 bg-secondary">
@@ -191,7 +191,7 @@ export default function AIGeneratorModal({ onCreatePresentation, onClose }) {
                       key={i}
                       className={`mb-3 pb-3 ${i < outline.length - 1 ? 'border-b border-border' : ''}`}
                     >
-                      <div className="text-[13px] font-semibold text-text mb-1">
+                      <div className="text-[13px] font-semibold text-text-primary mb-1">
                         {i + 1}. {slide.title}
                         <span className="text-[11px] text-text-muted ml-2">({slide.layout})</span>
                       </div>

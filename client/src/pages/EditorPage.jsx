@@ -1046,7 +1046,15 @@ svg.selectAll('circle').data(data).join('circle')
           onFindReplace={() => setShowFindReplace((v) => !v)}
           onTimeline={() => setShowTimeline((v) => !v)}
           onCssEditor={() => setShowCssEditor(true)}
-          onSpeaker={() => presentInWindow(presentation)}
+          onSpeaker={() => {
+            const notesSection = document.querySelector('[data-section="speaker-notes"]') 
+              || document.querySelector('textarea[placeholder*="speaker" i]')
+              || document.querySelector('textarea[placeholder*="notes" i]')
+            if (notesSection) {
+              notesSection.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              notesSection.focus()
+            }
+          }}
           onSlideSorter={() => setViewMode((v) => (v === 'sorter' ? 'normal' : 'sorter'))}
           showTimeline={showTimeline}
           showFindReplace={showFindReplace}

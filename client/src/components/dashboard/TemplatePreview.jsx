@@ -10,18 +10,18 @@ function SlideThumbnail({ slide, width = 960, height = 540, style }) {
   if (!slide) return null
   const bg = slide.background
   const bgStyle = !bg
-    ? { backgroundColor: '#1e1e2e' }
+    ? { backgroundColor: 'var(--bg-card)' }
     : bg.type === 'color'
-      ? { backgroundColor: bg.color || '#1e1e2e' }
+      ? { backgroundColor: bg.color || 'var(--bg-card)' }
       : bg.type === 'gradient'
-        ? { background: bg.gradient || '#1e1e2e' }
+        ? { background: bg.gradient || 'var(--bg-card)' }
         : bg.type === 'image' && bg.image
           ? {
               backgroundImage: `url(${bg.image})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }
-          : { backgroundColor: '#1e1e2e' }
+          : { backgroundColor: 'var(--bg-card)' }
 
   return (
     <div style={{ width, height, position: 'relative', overflow: 'hidden', ...bgStyle, ...style }}>

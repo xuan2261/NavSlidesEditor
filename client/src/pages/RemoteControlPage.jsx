@@ -72,197 +72,80 @@ export default function RemoteControlPage() {
     socketRef.current?.emit('laser', { x: 0.5, y: 0.5, active: !laserActive })
   }
 
-  const btnStyle = {
-    padding: '20px 32px',
-    borderRadius: 12,
-    fontSize: 18,
-    fontWeight: 600,
-    border: '2px solid var(--border)',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    background: 'var(--bg-card)',
-    color: 'var(--text)',
-    touchAction: 'manipulation',
-    userSelect: 'none',
-  }
-
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'var(--bg-primary, #0f172a)',
-        color: 'var(--text, #e2e8f0)',
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: 'Inter, system-ui, sans-serif',
-      }}
-    >
+    <div className="min-h-screen bg-workspace text-text-primary flex flex-col font-[Inter,system-ui,sans-serif]">
       {/* Header */}
-      <div
-        style={{
-          padding: '12px 16px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          borderBottom: '1px solid var(--border, #334155)',
-        }}
-      >
+      <div className="px-4 py-3 flex justify-between items-center border-b border-border">
         <button
           onClick={() => navigate('/')}
           className="bg-transparent border-none text-slate-400 cursor-pointer flex items-center gap-1 text-[13px] hover:text-white transition-colors"
         >
           <Home size={16} /> Exit
         </button>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            fontSize: 13,
-            color: 'var(--text-muted)',
-          }}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div className="flex items-center gap-4 text-[13px] text-text-muted">
+          <span className="flex items-center gap-1">
             <div
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: isConnected ? '#22c55e' : '#ef4444',
-              }}
+              className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success' : 'bg-danger'}`}
             />
             {isConnected ? 'Connected' : 'Disconnected'}
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span className="flex items-center gap-1">
             <Users size={14} /> {viewersCount}
           </span>
         </div>
       </div>
 
       {/* Speaker Notes */}
-      <div
-        style={{
-          flex: 1,
-          padding: 16,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 12,
-        }}
-      >
-        <div
-          style={{
-            background: 'var(--bg-card, #1e293b)',
-            borderRadius: 12,
-            padding: 16,
-            flex: 1,
-            minHeight: 100,
-          }}
-        >
-          <h4
-            style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}
-          >
+      <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3">
+        <div className="bg-card rounded-xl p-4 flex-1 min-h-[100px]">
+          <h4 className="mb-2 text-[13px] text-text-muted font-medium">
             Speaker Notes
           </h4>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 15,
-              lineHeight: 1.6,
-              color: 'var(--text)',
-              whiteSpace: 'pre-wrap',
-            }}
-          >
+          <p className="text-[15px] leading-relaxed text-text-primary whitespace-pre-wrap">
             {speakerNotes || 'No speaker notes for this slide.'}
           </p>
         </div>
       </div>
 
       {/* Slide counter */}
-      <div
-        style={{
-          textAlign: 'center',
-          padding: '8px 16px',
-          fontSize: 20,
-          fontWeight: 700,
-          color: 'var(--text)',
-          borderTop: '1px solid var(--border, #334155)',
-        }}
-      >
+      <div className="text-center px-4 py-2 text-xl font-bold text-text-primary border-t border-border">
         Slide {slideIndex + 1}
       </div>
 
       {/* Navigation */}
-      <div style={{ padding: '12px 16px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button onClick={goPrev} style={{ ...btnStyle, flex: 1 }}>
+      <div className="px-4 pt-3 pb-6 flex flex-col gap-3">
+        <div className="flex gap-3">
+          <button onClick={goPrev} className="flex-1 px-8 py-5 rounded-xl text-lg font-semibold border-2 border-border cursor-pointer flex items-center justify-center gap-2 bg-card text-text-primary touch-manipulation select-none hover:bg-hover transition-colors">
             <ChevronLeft size={24} /> Prev
           </button>
           <button
             onClick={goNext}
-            style={{
-              ...btnStyle,
-              flex: 1,
-              background: 'var(--accent, #6366f1)',
-              color: '#fff',
-              border: 'none',
-            }}
+            className="flex-1 px-8 py-5 rounded-xl text-lg font-semibold border-none cursor-pointer flex items-center justify-center gap-2 bg-accent text-white touch-manipulation select-none hover:bg-accent-hover transition-colors"
           >
             Next <ChevronRight size={24} />
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div className="flex gap-3">
           <button
             onClick={toggleLaser}
-            style={{
-              ...btnStyle,
-              flex: 1,
-              fontSize: 14,
-              padding: '12px 16px',
-              background: laserActive ? 'rgba(239,68,68,0.2)' : 'var(--bg-card)',
-              borderColor: laserActive ? '#ef4444' : 'var(--border)',
-              color: laserActive ? '#ef4444' : 'var(--text)',
-            }}
+            className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold border-2 cursor-pointer flex items-center justify-center gap-2 touch-manipulation select-none transition-colors ${laserActive ? 'bg-danger/20 border-danger text-danger' : 'bg-card border-border text-text-primary hover:bg-hover'}`}
           >
             <Pointer size={16} /> Laser
           </button>
-          <div
-            style={{
-              ...btnStyle,
-              flex: 1,
-              fontSize: 14,
-              padding: '12px 16px',
-              cursor: 'default',
-              justifyContent: 'center',
-            }}
-          >
+          <div className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold border-2 border-border cursor-default flex items-center justify-center gap-2 bg-card text-text-primary touch-manipulation select-none">
             <Clock size={16} /> {formatTime(elapsedTime)}
           </div>
         </div>
       </div>
 
       {presenterLeft && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.8)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <div style={{ textAlign: 'center', color: '#fff' }}>
+        <div className="fixed inset-0 bg-black/80 z-[1000] flex items-center justify-center">
+          <div className="text-center text-white">
             <h2>Session Ended</h2>
             <button
               onClick={() => navigate('/')}
-              className="bg-accent text-white px-4 py-2 rounded font-medium hover:bg-accent/90 transition-colors border-none"
-              style={{ marginTop: 12 }}
+              className="bg-accent text-white px-4 py-2 rounded font-medium hover:bg-accent/90 transition-colors border-none mt-3"
             >
               Go Home
             </button>

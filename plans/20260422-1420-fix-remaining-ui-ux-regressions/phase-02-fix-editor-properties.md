@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: 'Fix Editor Properties'
-status: completed
+status: pending
 effort: '1h'
 ---
 

@@ -104,7 +104,7 @@ export default function SyncModal({ presentationId, onClose }) {
                 <div>
                   <label className="text-xs text-text-muted block mb-1">Remote Path</label>
                   <input
-                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm focus:border-accent focus:outline-none transition-colors box-border"
+                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors box-border"
                     value={syncConfig.remotePath || '/slides-backup'}
                     onChange={(e) =>
                       setSyncConfig((prev) => ({ ...prev, remotePath: e.target.value }))
@@ -140,7 +140,7 @@ export default function SyncModal({ presentationId, onClose }) {
                 <div>
                   <label className="text-xs text-text-muted block mb-1">Proton Username</label>
                   <input
-                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm focus:border-accent focus:outline-none transition-colors box-border"
+                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors box-border"
                     value={syncConfig.username}
                     onChange={(e) =>
                       setSyncConfig((prev) => ({ ...prev, username: e.target.value }))
@@ -152,7 +152,7 @@ export default function SyncModal({ presentationId, onClose }) {
                   <label className="text-xs text-text-muted block mb-1">Proton Password</label>
                   <input
                     type="password"
-                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm focus:border-accent focus:outline-none transition-colors box-border"
+                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors box-border"
                     value={syncConfig.password}
                     onChange={(e) =>
                       setSyncConfig((prev) => ({ ...prev, password: e.target.value }))
@@ -163,7 +163,7 @@ export default function SyncModal({ presentationId, onClose }) {
                 <div>
                   <label className="text-xs text-text-muted block mb-1">Remote Name</label>
                   <input
-                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm focus:border-accent focus:outline-none transition-colors box-border"
+                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors box-border"
                     value={syncConfig.remoteName}
                     onChange={(e) =>
                       setSyncConfig((prev) => ({ ...prev, remoteName: e.target.value }))

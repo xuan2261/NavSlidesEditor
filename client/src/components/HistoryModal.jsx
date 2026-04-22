@@ -37,7 +37,7 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
 
         <div className="flex gap-2 mb-4 shrink-0">
           <input
-            className="flex-1 px-3 py-2 rounded-md border border-border bg-secondary text-text text-[13px] box-border focus:border-accent focus:outline-none transition-colors"
+            className="flex-1 px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-[13px] box-border focus:border-accent focus:outline-none transition-colors"
             value={snapshotName}
             onChange={(e) => setSnapshotName(e.target.value)}
             placeholder="Snapshot name (optional)"

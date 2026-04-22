@@ -2,26 +2,6 @@ import { useState, useEffect } from 'react'
 import { BarChart3, X, Eye, TrendingUp, Clock, Loader2 } from 'lucide-react'
 import { Button } from '../components/ui'
 
-const overlay = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0,0,0,0.5)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  zIndex: 10000,
-}
-const modal = {
-  background: 'var(--bg-card)',
-  borderRadius: 12,
-  padding: 24,
-  width: 560,
-  maxHeight: '85vh',
-  overflowY: 'auto',
-  boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-  border: '1px solid var(--border)',
-}
-
 export default function AnalyticsModal({ presentationId, onClose }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -39,17 +19,16 @@ export default function AnalyticsModal({ presentationId, onClose }) {
   const maxDaily = data?.dailyViews?.reduce((m, d) => Math.max(m, d.count), 0) || 1
 
   return (
-    <div style={overlay} onClick={onClose}>
-      <div style={modal} onClick={(e) => e.stopPropagation()}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 16,
-          }}
-        >
-          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, fontSize: 16 }}>
+    <div
+      className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
+      onClick={onClose}
+    >
+      <div
+        className="bg-card rounded-xl p-6 w-[560px] max-h-[85vh] overflow-y-auto shadow-2xl border border-border"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="m-0 flex items-center gap-2 text-base">
             <BarChart3 size={18} /> Analytics
           </h3>
           <Button variant="icon" onClick={onClose} style={{ padding: 4 }}>
@@ -58,92 +37,51 @@ export default function AnalyticsModal({ presentationId, onClose }) {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-            <Loader2 size={20} className="spin" /> Loading...
+          <div className="text-center p-10 text-text-muted">
+            <Loader2 size={20} className="animate-spin" /> Loading...
           </div>
         ) : !data ? (
-          <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>No analytics data yet.</p>
+          <p className="text-text-muted text-center">No analytics data yet.</p>
         ) : (
           <>
             {/* Stats row */}
-            <div
-              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}
-            >
-              <div
-                style={{
-                  background: 'var(--bg-secondary)',
-                  borderRadius: 8,
-                  padding: '14px 16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                }}
-              >
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="bg-secondary rounded-lg px-4 py-3.5 flex items-center gap-3">
                 <Eye size={20} color="var(--accent, #6366f1)" />
                 <div>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>
+                  <div className="text-2xl font-bold text-text-primary">
                     {data.totalViews}
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Total Views</div>
+                  <div className="text-xs text-text-muted">Total Views</div>
                 </div>
               </div>
-              <div
-                style={{
-                  background: 'var(--bg-secondary)',
-                  borderRadius: 8,
-                  padding: '14px 16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                }}
-              >
+              <div className="bg-secondary rounded-lg px-4 py-3.5 flex items-center gap-3">
                 <TrendingUp size={20} color="#22c55e" />
                 <div>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>
+                  <div className="text-2xl font-bold text-text-primary">
                     {data.dailyViews?.length || 0}
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Active Days</div>
+                  <div className="text-xs text-text-muted">Active Days</div>
                 </div>
               </div>
             </div>
 
             {/* Daily views bar chart */}
             {data.dailyViews?.length > 0 && (
-              <div style={{ marginBottom: 20 }}>
-                <h4
-                  style={{
-                    margin: '0 0 10px',
-                    fontSize: 13,
-                    color: 'var(--text-muted)',
-                    fontWeight: 500,
-                  }}
-                >
+              <div className="mb-5">
+                <h4 className="m-0 mb-2.5 text-[13px] text-text-muted font-medium">
                   Views Over Time
                 </h4>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    gap: 2,
-                    height: 80,
-                    padding: '0 4px',
-                    background: 'var(--bg-secondary)',
-                    borderRadius: 8,
-                  }}
-                >
+                <div className="flex items-end gap-0.5 h-20 px-1 bg-secondary rounded-lg">
                   {data.dailyViews.slice(-30).map((d, i) => (
                     <div
                       key={i}
                       title={`${d.date}: ${d.count} views`}
+                      className="flex-1 min-w-[4px] rounded-t-sm cursor-pointer transition-opacity"
                       style={{
-                        flex: 1,
-                        minWidth: 4,
                         height: `${Math.max(4, (d.count / maxDaily) * 100)}%`,
                         background: 'var(--accent, #6366f1)',
-                        borderRadius: '3px 3px 0 0',
                         opacity: 0.7 + (d.count / maxDaily) * 0.3,
-                        cursor: 'pointer',
-                        transition: 'opacity 0.15s',
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.opacity = '1'
@@ -154,16 +92,7 @@ export default function AnalyticsModal({ presentationId, onClose }) {
                     />
                   ))}
                 </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: 10,
-                    color: 'var(--text-muted)',
-                    marginTop: 4,
-                    padding: '0 4px',
-                  }}
-                >
+                <div className="flex justify-between text-[10px] text-text-muted mt-1 px-1">
                   <span>{data.dailyViews[0]?.date}</span>
                   <span>{data.dailyViews[data.dailyViews.length - 1]?.date}</span>
                 </div>
@@ -172,44 +101,23 @@ export default function AnalyticsModal({ presentationId, onClose }) {
 
             {/* Per-token breakdown */}
             {Object.keys(data.byToken || {}).length > 0 && (
-              <div style={{ marginBottom: 20 }}>
-                <h4
-                  style={{
-                    margin: '0 0 10px',
-                    fontSize: 13,
-                    color: 'var(--text-muted)',
-                    fontWeight: 500,
-                  }}
-                >
+              <div className="mb-5">
+                <h4 className="m-0 mb-2.5 text-[13px] text-text-muted font-medium">
                   Views by Link
                 </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div className="flex flex-col gap-1.5">
                   {Object.entries(data.byToken)
                     .sort((a, b) => b[1] - a[1])
                     .slice(0, 10)
                     .map(([token, count]) => (
                       <div
                         key={token}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '6px 10px',
-                          background: 'var(--bg-secondary)',
-                          borderRadius: 6,
-                          fontSize: 13,
-                        }}
+                        className="flex justify-between items-center px-2.5 py-1.5 bg-secondary rounded-md text-[13px]"
                       >
-                        <span
-                          style={{
-                            color: 'var(--text-muted)',
-                            fontFamily: 'monospace',
-                            fontSize: 11,
-                          }}
-                        >
+                        <span className="text-text-muted font-mono text-[11px]">
                           ...{token.slice(-8)}
                         </span>
-                        <span style={{ fontWeight: 600, color: 'var(--text)' }}>{count} views</span>
+                        <span className="font-semibold text-text-primary">{count} views</span>
                       </div>
                     ))}
                 </div>
@@ -219,39 +127,20 @@ export default function AnalyticsModal({ presentationId, onClose }) {
             {/* Recent events */}
             {data.recentEvents?.length > 0 && (
               <div>
-                <h4
-                  style={{
-                    margin: '0 0 10px',
-                    fontSize: 13,
-                    color: 'var(--text-muted)',
-                    fontWeight: 500,
-                  }}
-                >
-                  <Clock size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                <h4 className="m-0 mb-2.5 text-[13px] text-text-muted font-medium">
+                  <Clock size={12} className="inline-block align-middle mr-1" />
                   Recent Views
                 </h4>
-                <div style={{ maxHeight: 140, overflowY: 'auto' }}>
+                <div className="max-h-[140px] overflow-y-auto">
                   {data.recentEvents.slice(0, 10).map((e, i) => (
                     <div
                       key={i}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        padding: '4px 0',
-                        fontSize: 12,
-                        borderBottom: '1px solid var(--border)',
-                      }}
+                      className="flex justify-between py-1 text-xs border-b border-border"
                     >
-                      <span style={{ color: 'var(--text-muted)' }}>
+                      <span className="text-text-muted">
                         {new Date(e.timestamp).toLocaleString()}
                       </span>
-                      <span
-                        style={{
-                          color: 'var(--text-muted)',
-                          fontFamily: 'monospace',
-                          fontSize: 11,
-                        }}
-                      >
+                      <span className="text-text-muted font-mono text-[11px]">
                         ...{e.token.slice(-6)}
                       </span>
                     </div>

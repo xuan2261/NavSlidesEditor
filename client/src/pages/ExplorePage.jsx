@@ -46,117 +46,62 @@ export default function ExplorePage() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-bg-primary">
+    <div className="h-full flex flex-col bg-panel">
       <div className="flex items-center justify-between px-6 h-14 border-b border-border bg-secondary shrink-0">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="flex items-center gap-3">
           <Button variant="secondary" onClick={() => navigate('/')} style={{ padding: '6px 10px' }}>
             <ChevronLeft size={16} />
           </Button>
-          <h1 style={{ fontSize: 20 }}>
-            <Globe size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
+          <h1 className="text-xl">
+            <Globe size={20} className="inline-block mr-2 align-middle" />
             Explore Public Presentations
           </h1>
         </div>
       </div>
 
-      <div
-        className="flex-1 overflow-y-auto pt-7 px-8 pb-7"
-        style={{ maxWidth: 960, margin: '0 auto' }}
-      >
+      <div className="flex-1 overflow-y-auto pt-7 px-8 pb-7 max-w-[960px] mx-auto">
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+          <div className="text-center p-10 text-text-muted">
             Loading...
           </div>
         ) : presentations.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>
-            <Globe size={48} style={{ opacity: 0.3, marginBottom: 12 }} />
-            <p style={{ fontSize: 16 }}>No public presentations yet</p>
-            <p style={{ fontSize: 13 }}>Share a presentation to make it appear here.</p>
+          <div className="text-center py-[60px] text-text-muted">
+            <Globe size={48} className="opacity-30 mb-3 inline-block" />
+            <p className="text-base">No public presentations yet</p>
+            <p className="text-[13px]">Share a presentation to make it appear here.</p>
           </div>
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: 16,
-            }}
-          >
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
             {presentations.map((p) => (
               <div
                 key={p.id}
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 12,
-                  padding: 16,
-                  cursor: 'pointer',
-                  transition: 'transform 0.15s, box-shadow 0.15s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'none'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
+                className="bg-card border border-border rounded-xl p-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg"
               >
                 {/* Thumbnail placeholder */}
-                <div
-                  style={{
-                    height: 140,
-                    borderRadius: 8,
-                    marginBottom: 12,
-                    background: 'linear-gradient(135deg, var(--bg-secondary), var(--bg-hover))',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 32,
-                    color: 'var(--text-muted)',
-                    opacity: 0.5,
-                  }}
-                >
+                <div className="h-[140px] rounded-lg mb-3 bg-gradient-to-br from-secondary to-hover flex items-center justify-center text-[32px] text-text-muted opacity-50">
                   <Layers size={32} />
                 </div>
 
-                <h3
-                  style={{ margin: '0 0 8px', fontSize: 15, color: 'var(--text)', lineHeight: 1.3 }}
-                >
+                <h3 className="mb-2 text-[15px] text-text-primary leading-snug">
                   {p.title}
                 </h3>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    fontSize: 12,
-                    color: 'var(--text-muted)',
-                  }}
-                >
+                <div className="flex justify-between items-center text-xs text-text-muted">
                   <span>
-                    <Layers size={12} /> {p.slideCount} slides
+                    <Layers size={12} className="inline-block mr-1" /> {p.slideCount} slides
                   </span>
                   <span>
-                    <Calendar size={12} /> {new Date(p.createdAt).toLocaleDateString()}
+                    <Calendar size={12} className="inline-block mr-1" /> {new Date(p.createdAt).toLocaleDateString()}
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
+                <div className="flex gap-1.5 mt-3">
                   <Button
                     variant="secondary"
                     onClick={(e) => {
                       e.stopPropagation()
                       handleFork(p.id)
                     }}
-                    style={{
-                      flex: 1,
-                      fontSize: 12,
-                      padding: '6px 8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 4,
-                    }}
+                    className="flex-1 text-xs py-1.5 px-2 flex items-center justify-center gap-1"
                   >
                     <Copy size={12} /> Fork
                   </Button>
@@ -164,18 +109,8 @@ export default function ExplorePage() {
                     href={`/api/presentations/${p.id}/present`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-accent text-white rounded hover:bg-accent/90 transition-colors border-none"
+                    className="flex-1 text-xs py-1.5 px-2 flex items-center justify-center gap-1 bg-accent text-white rounded hover:bg-accent/90 transition-colors no-underline"
                     onClick={(e) => e.stopPropagation()}
-                    style={{
-                      flex: 1,
-                      fontSize: 12,
-                      padding: '6px 8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 4,
-                      textDecoration: 'none',
-                    }}
                   >
                     <ExternalLink size={12} /> View
                   </a>

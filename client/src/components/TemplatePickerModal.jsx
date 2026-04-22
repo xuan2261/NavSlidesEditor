@@ -89,7 +89,7 @@ export default function TemplatePickerModal({ onSelect, onClose }) {
       onClick={onClose}
     >
       <div
-        className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col p-6 w-full animate-in fade-in zoom-in-95 duration-200"
+        className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col p-6 w-full anim-zoom-in"
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: 800, maxHeight: '90vh', overflowY: 'auto' }}
       >

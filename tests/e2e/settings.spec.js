@@ -58,7 +58,7 @@ test.describe('Settings Page', () => {
     await settings.goto()
     await settings.goBack()
 
-    await expect(page.locator('.bg-bg-primary').first()).toBeVisible()
+    await expect(page.locator('.bg-panel').first()).toBeVisible()
   })
 
   test('test connection button is present', async ({ page }) => {
