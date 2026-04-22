@@ -16,10 +16,10 @@ Khi Present hay export HTML/Live, font chữ lớn hơn nhiều so với trong E
 
 **Phase 1 — Mismatch hoàn toàn giữa base font-size:**
 
-| Component | Base font-size | h1 | h2 |
-|-----------|---------------|----|----|
-| Editor (`ProseMirror`) | `16px` | 36px (2.25em) | 28px |
-| Generated reveal.js | `42px` ← **bug** | Browser default × 42px | Browser default × 42px |
+| Component              | Base font-size   | h1                     | h2                     |
+| ---------------------- | ---------------- | ---------------------- | ---------------------- |
+| Editor (`ProseMirror`) | `16px`           | 36px (2.25em)          | 28px                   |
+| Generated reveal.js    | `42px` ← **bug** | Browser default × 42px | Browser default × 42px |
 
 `font-size: 42px` cứng trên `<section>` trong `htmlGenerator.js` là nguyên nhân gốc. TipTap không output explicit `font-size` cho heading → trình duyệt dùng browser default (~24px × 42px = ~29px) trong khi editor dùng 16px base → h1 = 36px.
 
@@ -33,6 +33,7 @@ Khi Present hay export HTML/Live, font chữ lớn hơn nhiều so với trong E
 - style="...font-size:42px;">
 + style="...font-size:16px;">
 ```
+
 - `<section>` (line 315)
 - `<section>` child slides (line 349)
 - `.slide-page` print HTML (line 703)
@@ -45,6 +46,7 @@ Khi Present hay export HTML/Live, font chữ lớn hơn nhiều so với trong E
 ```
 
 Áp dụng tại:
+
 - Main slide elements (lines 77-78)
 - Vertical child sections (lines 336-338)
 - Print HTML (lines 594-596)

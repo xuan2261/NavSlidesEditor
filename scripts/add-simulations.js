@@ -1,15 +1,15 @@
 /* eslint-env node */
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
 
-const BUILT_IN_PATH = path.join(__dirname, 'server', 'data', 'built-in-templates.json');
+const BUILT_IN_PATH = path.join(__dirname, 'server', 'data', 'built-in-templates.json')
 
 const simulations = [
   {
     id: 'sim-ohm-law',
     category: 'circuit-theory',
     title: "Ohm's Law Simulation",
-    titleVi: "Mô phỏng định luật Ohm",
+    titleVi: 'Mô phỏng định luật Ohm',
     description: "Interactive Ohm's law calculator with real-time circuit visualization.",
     tags: ['ohm', 'circuit', 'simulation', 'interactive'],
     thumbnail: 'sim-ohm-law.png',
@@ -20,17 +20,54 @@ const simulations = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: "<h1 style='text-align:center'>Ohm's Law</h1>" },
-          { id: 'el-2', type: 'text', x: 180, y: 320, width: 600, height: 60, zIndex: 2, content: "<p style='text-align:center'>Interactive Circuit Simulation</p>" }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: "<h1 style='text-align:center'>Ohm's Law</h1>",
+          },
+          {
+            id: 'el-2',
+            type: 'text',
+            x: 180,
+            y: 320,
+            width: 600,
+            height: 60,
+            zIndex: 2,
+            content: "<p style='text-align:center'>Interactive Circuit Simulation</p>",
+          },
+        ],
       },
       {
         id: 'slide-2',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-3', type: 'text', x: 80, y: 80, width: 800, height: 80, zIndex: 1, content: '<h2>Theory</h2>' },
-          { id: 'el-4', type: 'text', x: 80, y: 180, width: 800, height: 200, zIndex: 2, content: "<p>Ohm's law states that the current through a conductor between two points is directly proportional to the voltage across the two points.</p><p style='text-align:center; font-size: 32px; font-weight: bold; margin-top: 20px;'>V = I × R</p>" }
-        ]
+          {
+            id: 'el-3',
+            type: 'text',
+            x: 80,
+            y: 80,
+            width: 800,
+            height: 80,
+            zIndex: 1,
+            content: '<h2>Theory</h2>',
+          },
+          {
+            id: 'el-4',
+            type: 'text',
+            x: 80,
+            y: 180,
+            width: 800,
+            height: 200,
+            zIndex: 2,
+            content:
+              "<p>Ohm's law states that the current through a conductor between two points is directly proportional to the voltage across the two points.</p><p style='text-align:center; font-size: 32px; font-weight: bold; margin-top: 20px;'>V = I × R</p>",
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -121,27 +158,65 @@ const simulations = [
   update();
 </script>
 </body>
-</html>`
-          }
-        ]
+</html>`,
+          },
+        ],
       },
       {
         id: 'slide-4',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-5', type: 'text', x: 80, y: 80, width: 800, height: 80, zIndex: 1, content: '<h2>Explanation</h2>' },
-          { id: 'el-6', type: 'text', x: 80, y: 180, width: 800, height: 200, zIndex: 2, content: '<p>As voltage increases (with constant resistance), the current increases proportionally.</p><p>As resistance increases (with constant voltage), the current decreases inversely.</p>' }
-        ]
+          {
+            id: 'el-5',
+            type: 'text',
+            x: 80,
+            y: 80,
+            width: 800,
+            height: 80,
+            zIndex: 1,
+            content: '<h2>Explanation</h2>',
+          },
+          {
+            id: 'el-6',
+            type: 'text',
+            x: 80,
+            y: 180,
+            width: 800,
+            height: 200,
+            zIndex: 2,
+            content:
+              '<p>As voltage increases (with constant resistance), the current increases proportionally.</p><p>As resistance increases (with constant voltage), the current decreases inversely.</p>',
+          },
+        ],
       },
       {
         id: 'slide-5',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-7', type: 'text', x: 80, y: 80, width: 800, height: 80, zIndex: 1, content: '<h2>Exercises</h2>' },
-          { id: 'el-8', type: 'text', x: 80, y: 180, width: 800, height: 200, zIndex: 2, content: '<ol><li>Calculate current if V = 24V and R = 120Ω.</li><li>If a 9V battery produces 0.05A, what is the resistance?</li></ol>' }
-        ]
-      }
-    ]
+          {
+            id: 'el-7',
+            type: 'text',
+            x: 80,
+            y: 80,
+            width: 800,
+            height: 80,
+            zIndex: 1,
+            content: '<h2>Exercises</h2>',
+          },
+          {
+            id: 'el-8',
+            type: 'text',
+            x: 80,
+            y: 180,
+            width: 800,
+            height: 200,
+            zIndex: 2,
+            content:
+              '<ol><li>Calculate current if V = 24V and R = 120Ω.</li><li>If a 9V battery produces 0.05A, what is the resistance?</li></ol>',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'sim-binary-converter',
@@ -158,17 +233,54 @@ const simulations = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Base Converter</h1>' },
-          { id: 'el-2', type: 'text', x: 180, y: 320, width: 600, height: 60, zIndex: 2, content: '<p style="text-align:center">Dec ↔ Bin ↔ Hex ↔ Oct</p>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Base Converter</h1>',
+          },
+          {
+            id: 'el-2',
+            type: 'text',
+            x: 180,
+            y: 320,
+            width: 600,
+            height: 60,
+            zIndex: 2,
+            content: '<p style="text-align:center">Dec ↔ Bin ↔ Hex ↔ Oct</p>',
+          },
+        ],
       },
       {
         id: 'slide-2',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-3', type: 'text', x: 80, y: 80, width: 800, height: 80, zIndex: 1, content: '<h2>Theory</h2>' },
-          { id: 'el-4', type: 'text', x: 80, y: 180, width: 800, height: 200, zIndex: 2, content: '<ul><li><b>Base 10 (Decimal):</b> 0-9</li><li><b>Base 2 (Binary):</b> 0, 1</li><li><b>Base 16 (Hexadecimal):</b> 0-9, A-F</li><li><b>Base 8 (Octal):</b> 0-7</li></ul>' }
-        ]
+          {
+            id: 'el-3',
+            type: 'text',
+            x: 80,
+            y: 80,
+            width: 800,
+            height: 80,
+            zIndex: 1,
+            content: '<h2>Theory</h2>',
+          },
+          {
+            id: 'el-4',
+            type: 'text',
+            x: 80,
+            y: 180,
+            width: 800,
+            height: 200,
+            zIndex: 2,
+            content:
+              '<ul><li><b>Base 10 (Decimal):</b> 0-9</li><li><b>Base 2 (Binary):</b> 0, 1</li><li><b>Base 16 (Hexadecimal):</b> 0-9, A-F</li><li><b>Base 8 (Octal):</b> 0-7</li></ul>',
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -268,27 +380,65 @@ const simulations = [
   updateFromDec();
 </script>
 </body>
-</html>`
-          }
-        ]
+</html>`,
+          },
+        ],
       },
       {
         id: 'slide-4',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-5', type: 'text', x: 80, y: 80, width: 800, height: 80, zIndex: 1, content: '<h2>Explanation</h2>' },
-          { id: 'el-6', type: 'text', x: 80, y: 180, width: 800, height: 200, zIndex: 2, content: '<p>Click on the individual bits to toggle them and see how the numbers change across different bases.</p>' }
-        ]
+          {
+            id: 'el-5',
+            type: 'text',
+            x: 80,
+            y: 80,
+            width: 800,
+            height: 80,
+            zIndex: 1,
+            content: '<h2>Explanation</h2>',
+          },
+          {
+            id: 'el-6',
+            type: 'text',
+            x: 80,
+            y: 180,
+            width: 800,
+            height: 200,
+            zIndex: 2,
+            content:
+              '<p>Click on the individual bits to toggle them and see how the numbers change across different bases.</p>',
+          },
+        ],
       },
       {
         id: 'slide-5',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-7', type: 'text', x: 80, y: 80, width: 800, height: 80, zIndex: 1, content: '<h2>Exercises</h2>' },
-          { id: 'el-8', type: 'text', x: 80, y: 180, width: 800, height: 200, zIndex: 2, content: '<ol><li>Convert 0xFF to decimal.</li><li>What is 10101010 in hexadecimal?</li></ol>' }
-        ]
-      }
-    ]
+          {
+            id: 'el-7',
+            type: 'text',
+            x: 80,
+            y: 80,
+            width: 800,
+            height: 80,
+            zIndex: 1,
+            content: '<h2>Exercises</h2>',
+          },
+          {
+            id: 'el-8',
+            type: 'text',
+            x: 80,
+            y: 180,
+            width: 800,
+            height: 200,
+            zIndex: 2,
+            content:
+              '<ol><li>Convert 0xFF to decimal.</li><li>What is 10101010 in hexadecimal?</li></ol>',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'sim-logic-gates',
@@ -305,16 +455,44 @@ const simulations = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Logic Gates</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Logic Gates</h1>',
+          },
+        ],
       },
       {
         id: 'slide-2',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-2', type: 'text', x: 80, y: 80, width: 800, height: 80, zIndex: 1, content: '<h2>Theory</h2>' },
-          { id: 'el-3', type: 'text', x: 80, y: 180, width: 800, height: 200, zIndex: 2, content: '<p>Logic gates are the basic building blocks of any digital system. They implement boolean functions.</p>' }
-        ]
+          {
+            id: 'el-2',
+            type: 'text',
+            x: 80,
+            y: 80,
+            width: 800,
+            height: 80,
+            zIndex: 1,
+            content: '<h2>Theory</h2>',
+          },
+          {
+            id: 'el-3',
+            type: 'text',
+            x: 80,
+            y: 180,
+            width: 800,
+            height: 200,
+            zIndex: 2,
+            content:
+              '<p>Logic gates are the basic building blocks of any digital system. They implement boolean functions.</p>',
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -430,19 +608,37 @@ const simulations = [
   update();
 </script>
 </body>
-</html>`
-          }
-        ]
+</html>`,
+          },
+        ],
       },
       {
         id: 'slide-4',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-4', type: 'text', x: 80, y: 80, width: 800, height: 80, zIndex: 1, content: '<h2>Exercises</h2>' },
-          { id: 'el-5', type: 'text', x: 80, y: 180, width: 800, height: 200, zIndex: 2, content: '<ol><li>Build an XOR gate using only NAND gates.</li></ol>' }
-        ]
-      }
-    ]
+          {
+            id: 'el-4',
+            type: 'text',
+            x: 80,
+            y: 80,
+            width: 800,
+            height: 80,
+            zIndex: 1,
+            content: '<h2>Exercises</h2>',
+          },
+          {
+            id: 'el-5',
+            type: 'text',
+            x: 80,
+            y: 180,
+            width: 800,
+            height: 200,
+            zIndex: 2,
+            content: '<ol><li>Build an XOR gate using only NAND gates.</li></ol>',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'sim-projectile',
@@ -459,8 +655,17 @@ const simulations = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Projectile Motion</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Projectile Motion</h1>',
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -586,32 +791,32 @@ const simulations = [
   drawBg();
 </script>
 </body>
-</html>`
-          }
-        ]
-      }
-    ]
-  }
-];
+</html>`,
+          },
+        ],
+      },
+    ],
+  },
+]
 
 // Append to built-in-templates.json
 fs.readFile(BUILT_IN_PATH, 'utf-8', (err, data) => {
   if (err) {
-    console.error('Error reading JSON:', err);
-    return;
+    console.error('Error reading JSON:', err)
+    return
   }
   try {
-    const templates = JSON.parse(data);
-    
+    const templates = JSON.parse(data)
+
     // Filter out existing ones with the same IDs if running multiple times
-    const simIds = simulations.map(s => s.id);
-    const filteredTemplates = templates.filter(t => !simIds.includes(t.id));
-    
-    const newTemplates = [...filteredTemplates, ...simulations];
-    
-    fs.writeFileSync(BUILT_IN_PATH, JSON.stringify(newTemplates, null, 2), 'utf-8');
-    console.log(`Successfully added ${simulations.length} simulation templates.`);
+    const simIds = simulations.map((s) => s.id)
+    const filteredTemplates = templates.filter((t) => !simIds.includes(t.id))
+
+    const newTemplates = [...filteredTemplates, ...simulations]
+
+    fs.writeFileSync(BUILT_IN_PATH, JSON.stringify(newTemplates, null, 2), 'utf-8')
+    console.log(`Successfully added ${simulations.length} simulation templates.`)
   } catch (e) {
-    console.error('Error parsing JSON:', e);
+    console.error('Error parsing JSON:', e)
   }
-});
+})

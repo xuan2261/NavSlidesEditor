@@ -1,3 +1,5 @@
+import { Button } from '../components/ui'
+
 export default function LatexEditorModal({ state, onChange, onApply, onCancel }) {
   const content = state.content || ''
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
@@ -14,82 +16,32 @@ export default function LatexEditorModal({ state, onChange, onApply, onCancel })
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 10000,
-        background: 'rgba(0,0,0,0.75)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      className="fixed inset-0 z-[10000] bg-black/75 flex items-center justify-center"
       onKeyDown={(e) => {
         if (e.key === 'Escape') onCancel()
       }}
     >
-      <div
-        style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 12,
-          width: '78vw',
-          maxWidth: 960,
-          height: '78vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-        }}
-      >
-        <div
-          style={{
-            padding: '12px 16px',
-            borderBottom: '1px solid var(--border)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexShrink: 0,
-            gap: 12,
-          }}
-        >
-          <span style={{ fontWeight: 600, fontSize: 14 }}>LaTeX / TikZ</span>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+      <div className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl">
+        <div className="px-4 py-3 border-b border-border flex justify-between items-center shrink-0 gap-3">
+          <span className="font-semibold text-sm">LaTeX / TikZ</span>
+          <span className="text-xs text-text-muted">
             Supports KaTeX math and TikZ diagrams (via TikZJax)
           </span>
-          <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
-            <button
-              className="btn btn-secondary"
-              style={{ fontSize: 12 }}
-              onClick={onCancel}
-            >
+          <div className="flex gap-2 ml-auto">
+            <Button variant="secondary" className="text-xs" onClick={onCancel}>
               Cancel
-            </button>
-            <button
-              className="btn btn-primary"
-              style={{ fontSize: 12 }}
-              onClick={onApply}
-            >
+            </Button>
+            <Button variant="primary" className="text-xs" onClick={onApply}>
               Apply
-            </button>
+            </Button>
           </div>
         </div>
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <div className="flex flex-1 overflow-hidden">
           <textarea
             value={state.content}
             onChange={(e) => onChange({ ...state, content: e.target.value })}
-            style={{
-              flex: 1,
-              background: '#0d0d1a',
-              color: '#e2e8f0',
-              fontFamily: "'Fira Code','JetBrains Mono',monospace",
-              fontSize: 13,
-              padding: '16px 20px',
-              border: 'none',
-              outline: 'none',
-              resize: 'none',
-              lineHeight: 1.6,
-              tabSize: 2,
-              borderRight: '1px solid var(--border)',
-            }}
+            className="flex-1 bg-[#0d0d1a] text-[#e2e8f0] font-mono text-[13px] p-4 md:p-5 border-none outline-none resize-none leading-relaxed border-r border-border rounded-bl-xl"
+            style={{ tabSize: 2 }}
             spellCheck={false}
             autoFocus
             onKeyDown={(e) => {
@@ -105,26 +57,11 @@ export default function LatexEditorModal({ state, onChange, onApply, onCancel })
               }
             }}
           />
-          <div
-            style={{
-              flex: 1,
-              background: '#1a1a2e',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'auto',
-              padding: 16,
-            }}
-          >
+          <div className="flex-1 bg-[#1a1a2e] flex items-center justify-center overflow-auto p-4 rounded-br-xl">
             <iframe
               key={state.content}
               srcDoc={previewSrcDoc}
-              style={{
-                width: '100%',
-                height: '100%',
-                border: 'none',
-                background: 'transparent',
-              }}
+              className="w-full h-full border-none bg-transparent"
               sandbox="allow-scripts"
               title="LaTeX Preview"
             />

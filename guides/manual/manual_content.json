@@ -6,11 +6,7 @@
     {
       "id": "chap1",
       "title": "Chương 1: Tổng quan về NavSlides Editor",
-      "sections": [
-        "1.1. Giới thiệu phần mềm",
-        "1.2. Tính năng nổi bật",
-        "1.3. Yêu cầu hệ thống"
-      ]
+      "sections": ["1.1. Giới thiệu phần mềm", "1.2. Tính năng nổi bật", "1.3. Yêu cầu hệ thống"]
     },
     {
       "id": "chap2",

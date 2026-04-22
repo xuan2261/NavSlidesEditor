@@ -24,9 +24,7 @@ describe('detectLocalMedia', () => {
       title: 'Test',
       slides: [
         {
-          elements: [
-            { type: 'image', src: '/uploads/abc123.png' },
-          ],
+          elements: [{ type: 'image', src: '/uploads/abc123.png' }],
         },
       ],
     }
@@ -55,9 +53,7 @@ describe('detectLocalMedia', () => {
       title: 'Test',
       slides: [
         {
-          elements: [
-            { type: 'image', src: 'https://example.com/image.png' },
-          ],
+          elements: [{ type: 'image', src: 'https://example.com/image.png' }],
         },
       ],
     }
@@ -87,9 +83,7 @@ describe('detectLocalMedia', () => {
     const pres = {
       slides: [
         {
-          elements: [
-            { type: 'image', src: 'http://localhost:3002/uploads/photo.jpg' },
-          ],
+          elements: [{ type: 'image', src: 'http://localhost:3002/uploads/photo.jpg' }],
         },
       ],
     }

@@ -19,15 +19,18 @@
 ## 2. Canva, Figma, Notion
 
 ### Canva
+
 - Export: PNG, JPG, PDF, SVG, GIF (không có backup project đầy đủ)
 - Pro users có thể export source code
 
 ### Figma
+
 - File `.fig` có thể save local
 - Backup tự động qua cloud + version history
 - Export: PNG, JPG, SVG, PDF, DXF
 
 ### Notion
+
 - Export: Markdown, CSV, HTML
 - Team plan: bulk export
 - Restore qua trash trong 30 ngày
@@ -51,6 +54,7 @@ mypresentation.pptx (ZIP)
 ```
 
 **Pattern cho NavSlides:**
+
 - Dùng ZIP làm container
 - `manifest.json` khai báo cấu trúc
 - `slides/` chứa JSON cho từng slide
@@ -62,6 +66,7 @@ mypresentation.pptx (ZIP)
 ## 4. Best Practices Cho .json Project Files
 
 ### Schema Design
+
 - **Bắt buộc có `version` field** để handle migration khi schema thay đổi
 - **Idempotent:** cùng content → cùng output (quan trọng cho git/diff)
 - **Include checksum/hash** để detect corruption
@@ -77,6 +82,7 @@ mypresentation.pptx (ZIP)
 ```
 
 ### Import/Export
+
 - **Validation:** Dùng JSON Schema hoặc `zod` trước khi process
 - **Atomic writes:** Write to temp → rename (tránh corruption khi crash)
 - **Partial import:** Hỗ trợ import từng slide riêng lẻ
@@ -87,42 +93,45 @@ mypresentation.pptx (ZIP)
 ## 5. JSZip Patterns Trong React
 
 ### Installation
+
 ```bash
 npm install jszip file-saver
 ```
 
 ### Export Pattern
+
 ```javascript
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
+import JSZip from 'jszip'
+import { saveAs } from 'file-saver'
 
 async function exportProject(presentation, assets) {
-  const zip = new JSZip();
-  zip.file('manifest.json', JSON.stringify(presentation, null, 2));
-  
+  const zip = new JSZip()
+  zip.file('manifest.json', JSON.stringify(presentation, null, 2))
+
   // Add assets
   for (const asset of assets) {
-    zip.file(`assets/${asset.name}`, asset.blob);
+    zip.file(`assets/${asset.name}`, asset.blob)
   }
-  
+
   const blob = await zip.generateAsync({
     type: 'blob',
     compression: 'DEFLATE',
-    compressionOptions: { level: 6 }
-  });
-  
-  saveAs(blob, `navslides-${Date.now()}.navslides`);
+    compressionOptions: { level: 6 },
+  })
+
+  saveAs(blob, `navslides-${Date.now()}.navslides`)
 }
 ```
 
 ### Import Pattern
+
 ```javascript
 async function importProject(file) {
-  const zip = await JSZip.loadAsync(file);
-  const manifest = JSON.parse(await zip.file('manifest.json').async('string'));
-  
+  const zip = await JSZip.loadAsync(file)
+  const manifest = JSON.parse(await zip.file('manifest.json').async('string'))
+
   // Validate version trước khi process
-  return { manifest, assets: zip };
+  return { manifest, assets: zip }
 }
 ```
 
@@ -131,16 +140,19 @@ async function importProject(file) {
 ## 6. Security Considerations
 
 ### Zip Slip Attack Prevention (CRITICAL)
+
 - **Luôn sanitize file paths** trong ZIP trước khi extract
 - Kiểm tra `../` hoặc absolute paths
 - Dùng library đã được validate (JSZip đã handle tốt)
 
 ### File Size Limits
+
 - Set max file size (recommend: 50-100MB cho project files)
 - Check `file.size` trước khi load vào memory
 - Stream processing cho files > 10MB
 
 ### Malicious Content
+
 - Validate MIME type không chỉ qua extension
 - Scan content của JSON manifest
 - Không execute任何 code từ uploaded files
@@ -172,6 +184,7 @@ async function importProject(file) {
 ---
 
 **Sources:**
+
 - [Google Slides API Documentation](https://developers.google.com/slides)
 - [Supported file formats in Google Drive](https://support.google.com/drive)
 - [PPTX File Format - ECMA-376 Standard](https://www.ecma-international.org/publications-and-standards/standards/ecma-376/)

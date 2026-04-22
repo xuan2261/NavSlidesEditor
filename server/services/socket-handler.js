@@ -48,7 +48,9 @@ function setupSocketHandlers(io) {
                 const html = generateRevealHTML(pres)
                 socket.emit('presentation-data', { html })
               }
-            } catch { /* ignore */ }
+            } catch {
+              /* ignore */
+            }
           }
         }
       }
@@ -58,7 +60,10 @@ function setupSocketHandlers(io) {
 
     // Presenter navigates
     socket.on('navigate', ({ slideIndex, fragmentIndex }) => {
-      const success = liveRoomsService.updateRoomState(socket.data.roomId, socket.id, { slideIndex, fragmentIndex })
+      const success = liveRoomsService.updateRoomState(socket.data.roomId, socket.id, {
+        slideIndex,
+        fragmentIndex,
+      })
       if (success) {
         socket.to(socket.data.roomId).emit('navigate', { slideIndex, fragmentIndex })
       }

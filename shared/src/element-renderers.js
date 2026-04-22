@@ -32,7 +32,11 @@ function escapeHtml(str) {
 }
 
 function escapeSrcdoc(html) {
-  return html.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return html
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 }
 
 /** Build the shared base positioning style for an element */
@@ -54,7 +58,8 @@ function buildBaseStyle(el, opts = {}) {
 function buildWrapperAttrs(el, slide) {
   const dataIdAttr = slide && slide.autoAnimate ? ` data-id="${el.id}"` : ''
   const fragClass = el.fragment ? ` class="fragment ${el.fragmentAnimation || 'fade-in'}"` : ''
-  const fragIdx = el.fragment && el.fragmentIndex != null ? ` data-fragment-index="${el.fragmentIndex}"` : ''
+  const fragIdx =
+    el.fragment && el.fragmentIndex != null ? ` data-fragment-index="${el.fragmentIndex}"` : ''
   return { dataIdAttr, fragClass, fragIdx }
 }
 
@@ -70,10 +75,14 @@ function renderText(el, style, wrap, vis) {
 function renderImage(el, style, wrap, vis, opts) {
   const src = absoluteSrc(el.src)
   const imgFilterParts = [
-    el.filterBrightness != null && el.filterBrightness !== 100 ? `brightness(${el.filterBrightness}%)` : '',
+    el.filterBrightness != null && el.filterBrightness !== 100
+      ? `brightness(${el.filterBrightness}%)`
+      : '',
     el.filterContrast != null && el.filterContrast !== 100 ? `contrast(${el.filterContrast}%)` : '',
     el.filterGrayscale ? `grayscale(${el.filterGrayscale}%)` : '',
-  ].filter(Boolean).join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
   const filterStyle = imgFilterParts ? `filter:${imgFilterParts};` : ''
   const imgReset = opts.forPrint ? 'max-width:none;max-height:none;' : ''
   if (el.imageW != null) {
@@ -103,7 +112,7 @@ function renderHtml(el, style, wrap, vis, opts) {
   // PDF mode: use data-pdf-iframe with blob URL initialization.
   // Iframes with srcdoc break Chrome's CSS paged media engine layout, causing
   // slides to merge into one scrolling page. Instead, we emit an empty iframe
-  // and inject a script at the end of the print HTML to convert data-pdf-iframe 
+  // and inject a script at the end of the print HTML to convert data-pdf-iframe
   // into a Blob URL at runtime, avoiding the layout breakage while keeping interactivity.
   if (opts.forPrint) {
     const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style></head><body>${content}</body></html>`
@@ -134,9 +143,10 @@ function renderChart(el, style, wrap, vis, opts) {
     borderWidth: chartType === 'line' ? 2 : 0,
     fill: chartType === 'line' ? false : undefined,
   }))
-  const scalesOpt = chartType === 'pie' || chartType === 'doughnut'
-    ? '{}'
-    : `{x:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`
+  const scalesOpt =
+    chartType === 'pie' || chartType === 'doughnut'
+      ? '{}'
+      : `{x:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`
 
   if (opts.forPrint) {
     const canvasId = `chart-${el.id || Math.random().toString(36).slice(2, 8)}`
@@ -144,12 +154,23 @@ function renderChart(el, style, wrap, vis, opts) {
       type: chartType,
       data: { labels: chartData.labels || [], datasets: datasetsArr },
       options: {
-        responsive: true, maintainAspectRatio: false, animation: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
         plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 12 } } } },
-        scales: chartType === 'pie' || chartType === 'doughnut' ? {} : {
-          x: { ticks: { color: 'rgba(255,255,255,0.6)' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-          y: { ticks: { color: 'rgba(255,255,255,0.6)' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-        },
+        scales:
+          chartType === 'pie' || chartType === 'doughnut'
+            ? {}
+            : {
+                x: {
+                  ticks: { color: 'rgba(255,255,255,0.6)' },
+                  grid: { color: 'rgba(255,255,255,0.1)' },
+                },
+                y: {
+                  ticks: { color: 'rgba(255,255,255,0.6)' },
+                  grid: { color: 'rgba(255,255,255,0.1)' },
+                },
+              },
       },
     }).replace(/</g, '\\u003c')
     return `<div style="${style}${vis}"><canvas id="${canvasId}" data-chart-config='${chartConfig}' style="width:100%;height:100%;"></canvas></div>`
@@ -233,22 +254,28 @@ function renderTable(el, style, wrap, vis) {
   const textColor = el.textColor || '#ffffff'
   const fontSize = el.fontSize || 14
   const cellPadding = el.cellPadding || 8
-  const rows = data.map((row, ri) => {
-    const cells = (row || []).map((cell) => {
-      const bg = el.headerRow && ri === 0 ? headerBg : cellBg
-      return `<td style="padding:${cellPadding}px;border:${borderWidth}px solid ${borderColor};background:${bg};color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));">${escapeHtml(cell || '')}</td>`
-    }).join('')
-    return `<tr>${cells}</tr>`
-  }).join('')
+  const rows = data
+    .map((row, ri) => {
+      const cells = (row || [])
+        .map((cell) => {
+          const bg = el.headerRow && ri === 0 ? headerBg : cellBg
+          return `<td style="padding:${cellPadding}px;border:${borderWidth}px solid ${borderColor};background:${bg};color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));">${escapeHtml(cell || '')}</td>`
+        })
+        .join('')
+      return `<tr>${cells}</tr>`
+    })
+    .join('')
   return `<div${wrap} style="${style}${vis}overflow:auto;"><table style="width:100%;height:100%;border-collapse:collapse;">${rows}</table></div>`
 }
 
 function renderDrawing(el, style, wrap, vis) {
-  const paths = (el.paths || []).map(p => {
-    const stroke = p.stroke || el.strokeColor || '#ffffff'
-    const sw = p.strokeWidth || el.strokeWidth || 3
-    return `<path d="${escapeHtml(p.d || '')}" stroke="${stroke}" stroke-width="${sw}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${p.opacity ?? 1}"/>`
-  }).join('')
+  const paths = (el.paths || [])
+    .map((p) => {
+      const stroke = p.stroke || el.strokeColor || '#ffffff'
+      const sw = p.strokeWidth || el.strokeWidth || 3
+      return `<path d="${escapeHtml(p.d || '')}" stroke="${stroke}" stroke-width="${sw}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${p.opacity ?? 1}"/>`
+    })
+    .join('')
   return `<div${wrap} style="${style}${vis}"><svg width="100%" height="100%" viewBox="0 0 ${el.width} ${el.height}" preserveAspectRatio="none" style="position:absolute;inset:0;">${paths}</svg></div>`
 }
 
@@ -256,17 +283,24 @@ function renderLine(el, style, wrap, vis) {
   const color = el.stroke || '#ffffff'
   const sw = el.strokeWidth || 2
   const dash = el.dashArray ? ` stroke-dasharray="${escapeHtml(el.dashArray)}"` : ''
-  const x1 = el.x1 ?? 0, y1 = el.y1 ?? el.height / 2
-  const x2 = el.x2 ?? el.width, y2 = el.y2 ?? el.height / 2
+  const x1 = el.x1 ?? 0,
+    y1 = el.y1 ?? el.height / 2
+  const x2 = el.x2 ?? el.width,
+    y2 = el.y2 ?? el.height / 2
   const uid = (el.id || 'l').slice(0, 8)
   const startType = el.arrowStart || 'none'
   const endType = el.arrowEnd || 'none'
   let defs = ''
-  let ms = '', me = ''
-  const mkArrow = (id, c) => `<marker id="${id}" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth"><polygon points="0 0,10 3.5,0 7" fill="${c}"/></marker>`
-  const mkDiamond = (id, c) => `<marker id="${id}" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto" markerUnits="strokeWidth"><polygon points="5 0,10 5,5 10,0 5" fill="${c}"/></marker>`
-  const mkCircle = (id, c) => `<marker id="${id}" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><circle cx="4" cy="4" r="3" fill="${c}"/></marker>`
-  const mkSquare = (id, c) => `<marker id="${id}" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><rect x="1" y="1" width="6" height="6" fill="${c}"/></marker>`
+  let ms = '',
+    me = ''
+  const mkArrow = (id, c) =>
+    `<marker id="${id}" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth"><polygon points="0 0,10 3.5,0 7" fill="${c}"/></marker>`
+  const mkDiamond = (id, c) =>
+    `<marker id="${id}" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto" markerUnits="strokeWidth"><polygon points="5 0,10 5,5 10,0 5" fill="${c}"/></marker>`
+  const mkCircle = (id, c) =>
+    `<marker id="${id}" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><circle cx="4" cy="4" r="3" fill="${c}"/></marker>`
+  const mkSquare = (id, c) =>
+    `<marker id="${id}" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><rect x="1" y="1" width="6" height="6" fill="${c}"/></marker>`
   const markerFns = { arrow: mkArrow, diamond: mkDiamond, circle: mkCircle, square: mkSquare }
   if (startType !== 'none' && markerFns[startType]) {
     const sid = `ms-${uid}`
@@ -278,16 +312,18 @@ function renderLine(el, style, wrap, vis) {
     defs += markerFns[endType](eid, color)
     me = ` marker-end="url(#${eid})"`
   }
-  const pathD = el.cx != null && el.cy != null
-    ? `M ${x1} ${y1} Q ${el.cx} ${el.cy} ${x2} ${y2}`
-    : `M ${x1} ${y1} L ${x2} ${y2}`
+  const pathD =
+    el.cx != null && el.cy != null
+      ? `M ${x1} ${y1} Q ${el.cx} ${el.cy} ${x2} ${y2}`
+      : `M ${x1} ${y1} L ${x2} ${y2}`
   return `<div${wrap} style="${style}${vis}"><svg width="100%" height="100%" viewBox="0 0 ${el.width} ${el.height}" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;"><defs>${defs}</defs><path d="${pathD}" stroke="${color}" stroke-width="${sw}" fill="none" stroke-linecap="round"${dash}${ms}${me}/></svg></div>`
 }
 
 function renderSvg(el, style, wrap, vis) {
   let svgContent = el.content || ''
   if (el.fillOverride) svgContent = svgContent.replace(/fill="[^"]*"/g, `fill="${el.fillOverride}"`)
-  if (el.strokeOverride) svgContent = svgContent.replace(/stroke="[^"]*"/g, `stroke="${el.strokeOverride}"`)
+  if (el.strokeOverride)
+    svgContent = svgContent.replace(/stroke="[^"]*"/g, `stroke="${el.strokeOverride}"`)
   return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;">${svgContent}</div>`
 }
 

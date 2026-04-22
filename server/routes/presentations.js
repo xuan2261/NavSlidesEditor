@@ -1,23 +1,27 @@
-const express = require('express');
-const { v4: uuidv4 } = require('uuid');
-const { generateRevealHTML } = require('revealjs-shared');
+const express = require('express')
+const { v4: uuidv4 } = require('uuid')
+const { generateRevealHTML } = require('revealjs-shared')
 const {
   // eslint-disable-next-line unused-imports/no-unused-vars
-  readPresentations, writePresentations, withPresentations,
-  readShareTokens, writeShareTokens, HISTORY_DIR,
-} = require('../services/storage');
-const fs = require('fs-extra');
-const path = require('path');
-const { validate } = require('../middleware/validate');
-const { createPresentationSchema, updatePresentationSchema } = require('../middleware/schemas');
+  readPresentations,
+  writePresentations,
+  withPresentations,
+  readShareTokens,
+  writeShareTokens,
+  HISTORY_DIR,
+} = require('../services/storage')
+const fs = require('fs-extra')
+const path = require('path')
+const { validate } = require('../middleware/validate')
+const { createPresentationSchema, updatePresentationSchema } = require('../middleware/schemas')
 
-const router = express.Router();
+const router = express.Router()
 
 // GET /api/presentations - list summaries (excludes trashed)
 router.get('/', async (req, res) => {
   try {
-    const presentations = await readPresentations();
-    const active = presentations.filter((p) => !p.deletedAt);
+    const presentations = await readPresentations()
+    const active = presentations.filter((p) => !p.deletedAt)
     const summaries = active.map((p) => ({
       id: p.id,
       title: p.title,
@@ -27,23 +31,27 @@ router.get('/', async (req, res) => {
       updatedAt: p.updatedAt,
       createdAt: p.createdAt,
       thumbnail: p.slides && p.slides[0] ? p.slides[0].background : null,
-    }));
-    res.json(summaries);
+    }))
+    res.json(summaries)
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
 // POST /api/presentations - create new (optionally from template)
 router.post('/', validate(createPresentationSchema), async (req, res) => {
   try {
     const {
-      title, theme, transition, templateId,
-      slides: providedSlides, ...extraFields
-    } = req.body;
-    const now = new Date().toISOString();
-    const { readTemplates } = require('../services/storage');
-    let presentation;
+      title,
+      theme,
+      transition,
+      templateId,
+      slides: providedSlides,
+      ...extraFields
+    } = req.body
+    const now = new Date().toISOString()
+    const { readTemplates } = require('../services/storage')
+    let presentation
 
     if (providedSlides && Array.isArray(providedSlides)) {
       presentation = {
@@ -59,22 +67,24 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
         })),
         createdAt: now,
         updatedAt: now,
-      };
-      delete presentation.isTemplate;
-      delete presentation.description;
-      delete presentation.thumbnail;
+      }
+      delete presentation.isTemplate
+      delete presentation.description
+      delete presentation.thumbnail
     } else if (templateId) {
-      const templates = await readTemplates();
-      let template = templates.find((t) => t.id === templateId);
+      const templates = await readTemplates()
+      let template = templates.find((t) => t.id === templateId)
       if (!template) {
         try {
-          const builtIn = await fs.readJson(path.join(__dirname, '..', 'data', 'built-in-templates.json'));
-          template = builtIn.find((t) => t.id === templateId);
-        // eslint-disable-next-line unused-imports/no-unused-vars
-        } catch(e) {}
+          const builtIn = await fs.readJson(
+            path.join(__dirname, '..', 'data', 'built-in-templates.json')
+          )
+          template = builtIn.find((t) => t.id === templateId)
+          // eslint-disable-next-line unused-imports/no-unused-vars
+        } catch (e) {}
       }
       if (template) {
-        const cloned = JSON.parse(JSON.stringify(template));
+        const cloned = JSON.parse(JSON.stringify(template))
         presentation = {
           ...cloned,
           id: uuidv4(),
@@ -86,8 +96,8 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
             id: uuidv4(),
             elements: (s.elements || []).map((el) => ({ ...el, id: uuidv4() })),
           })),
-        };
-        delete presentation.isTemplate;
+        }
+        delete presentation.isTemplate
       }
     }
 
@@ -97,16 +107,26 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
         title: title || 'Untitled Presentation',
         theme: theme || 'black',
         transition: transition || 'slide',
-        slides: [{
-          id: uuidv4(),
-          elements: [{
+        slides: [
+          {
             id: uuidv4(),
-            type: 'text', x: 80, y: 160, width: 800, height: 220, zIndex: 1,
-            content: '<h2 style="text-align: center">Welcome to your presentation</h2><p style="text-align: center">Double-click to start editing</p>',
-          }],
-          notes: '',
-          background: { type: 'color', color: '#1e1e2e' },
-        }],
+            elements: [
+              {
+                id: uuidv4(),
+                type: 'text',
+                x: 80,
+                y: 160,
+                width: 800,
+                height: 220,
+                zIndex: 1,
+                content:
+                  '<h2 style="text-align: center">Welcome to your presentation</h2><p style="text-align: center">Double-click to start editing</p>',
+              },
+            ],
+            notes: '',
+            background: { type: 'color', color: '#1e1e2e' },
+          },
+        ],
         createdAt: now,
         updatedAt: now,
         presenterTools: extraFields.presenterTools || {
@@ -115,213 +135,229 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
           slideMenu: false,
           chalkboard: false,
         },
-      };
+      }
     }
 
     const result = await withPresentations((presentations) => {
-      presentations.push(presentation);
-      return presentation;
-    });
-    res.status(201).json(result);
+      presentations.push(presentation)
+      return presentation
+    })
+    res.status(201).json(result)
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 // GET /api/presentations/trash/list — list trashed presentations
 router.get('/trash/list', async (req, res) => {
   try {
-    const presentations = await readPresentations();
-    const trashed = presentations.filter((p) => p.deletedAt).map((p) => ({
-      id: p.id,
-      title: p.title,
-      slideCount: (p.slides || []).length,
-      deletedAt: p.deletedAt,
-      updatedAt: p.updatedAt,
-      thumbnail: p.slides && p.slides[0] ? p.slides[0].background : null,
-    }));
-    res.json(trashed);
+    const presentations = await readPresentations()
+    const trashed = presentations
+      .filter((p) => p.deletedAt)
+      .map((p) => ({
+        id: p.id,
+        title: p.title,
+        slideCount: (p.slides || []).length,
+        deletedAt: p.deletedAt,
+        updatedAt: p.updatedAt,
+        thumbnail: p.slides && p.slides[0] ? p.slides[0].background : null,
+      }))
+    res.json(trashed)
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
 // GET /api/presentations/:id
 router.get('/:id', async (req, res) => {
   try {
-    const presentations = await readPresentations();
-    const presentation = presentations.find((p) => p.id === req.params.id);
-    if (!presentation) return res.status(404).json({ error: 'Not found' });
-    res.json(presentation);
+    const presentations = await readPresentations()
+    const presentation = presentations.find((p) => p.id === req.params.id)
+    if (!presentation) return res.status(404).json({ error: 'Not found' })
+    res.json(presentation)
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
 // PUT /api/presentations/:id
 router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
   try {
     const result = await withPresentations((presentations) => {
-      const index = presentations.findIndex((p) => p.id === req.params.id);
-      if (index === -1) return null;
+      const index = presentations.findIndex((p) => p.id === req.params.id)
+      if (index === -1) return null
       presentations[index] = {
         ...presentations[index],
         ...req.body,
         id: req.params.id,
         updatedAt: new Date().toISOString(),
-      };
-      return presentations[index];
-    });
-    if (!result) return res.status(404).json({ error: 'Not found' });
-    res.json(result);
+      }
+      return presentations[index]
+    })
+    if (!result) return res.status(404).json({ error: 'Not found' })
+    res.json(result)
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
 // DELETE /api/presentations/:id — soft delete (move to trash)
 router.delete('/:id', async (req, res) => {
   try {
-    const presId = req.params.id;
+    const presId = req.params.id
     const result = await withPresentations((presentations) => {
-      const pres = presentations.find((p) => p.id === presId);
-      if (!pres) return null;
-      pres.deletedAt = new Date().toISOString();
-      return true;
-    });
-    if (!result) return res.status(404).json({ error: 'Not found' });
-    res.json({ success: true });
+      const pres = presentations.find((p) => p.id === presId)
+      if (!pres) return null
+      pres.deletedAt = new Date().toISOString()
+      return true
+    })
+    if (!result) return res.status(404).json({ error: 'Not found' })
+    res.json({ success: true })
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
-
+})
 
 // POST /api/presentations/:id/restore — restore from trash
 router.post('/:id/restore', async (req, res) => {
   try {
-    const presId = req.params.id;
+    const presId = req.params.id
     const result = await withPresentations((presentations) => {
-      const pres = presentations.find((p) => p.id === presId);
-      if (!pres || !pres.deletedAt) return null;
-      delete pres.deletedAt;
-      pres.updatedAt = new Date().toISOString();
-      return pres;
-    });
-    if (!result) return res.status(404).json({ error: 'Not found or not in trash' });
-    res.json({ success: true });
+      const pres = presentations.find((p) => p.id === presId)
+      if (!pres || !pres.deletedAt) return null
+      delete pres.deletedAt
+      pres.updatedAt = new Date().toISOString()
+      return pres
+    })
+    if (!result) return res.status(404).json({ error: 'Not found or not in trash' })
+    res.json({ success: true })
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
 // DELETE /api/presentations/:id/permanent — permanently delete
 router.delete('/:id/permanent', async (req, res) => {
   try {
-    const presId = req.params.id;
+    const presId = req.params.id
     const result = await withPresentations((presentations) => {
-      const index = presentations.findIndex((p) => p.id === presId);
-      if (index === -1) return null;
-      presentations.splice(index, 1);
-      return true;
-    });
-    if (!result) return res.status(404).json({ error: 'Not found' });
+      const index = presentations.findIndex((p) => p.id === presId)
+      if (index === -1) return null
+      presentations.splice(index, 1)
+      return true
+    })
+    if (!result) return res.status(404).json({ error: 'Not found' })
 
     // Cascade: remove share tokens
     try {
-      const tokens = await readShareTokens();
-      let changed = false;
+      const tokens = await readShareTokens()
+      let changed = false
       for (const [token, id] of Object.entries(tokens)) {
-        if (id === presId) { delete tokens[token]; changed = true; }
+        if (id === presId) {
+          delete tokens[token]
+          changed = true
+        }
       }
-      if (changed) await writeShareTokens(tokens);
+      if (changed) await writeShareTokens(tokens)
     } catch {}
 
     // Cascade: remove history snapshots
     try {
-      const presHistDir = path.join(HISTORY_DIR, presId);
-      if (fs.existsSync(presHistDir)) fs.removeSync(presHistDir);
+      const presHistDir = path.join(HISTORY_DIR, presId)
+      if (fs.existsSync(presHistDir)) fs.removeSync(presHistDir)
     } catch {}
 
-    res.json({ success: true });
+    res.json({ success: true })
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
 // POST /api/presentations/:id/duplicate
 router.post('/:id/duplicate', async (req, res) => {
   try {
     const result = await withPresentations(async (presentations) => {
-      const original = presentations.find((p) => p.id === req.params.id);
-      if (!original) return null;
-      const now = new Date().toISOString();
-      const copy = JSON.parse(JSON.stringify(original));
-      copy.id = uuidv4();
-      copy.title = (copy.title || 'Untitled') + ' (copy)';
-      copy.createdAt = now;
-      copy.updatedAt = now;
-      presentations.push(copy);
-      return copy;
-    });
-    if (!result) return res.status(404).json({ error: 'Not found' });
-    res.status(201).json(result);
+      const original = presentations.find((p) => p.id === req.params.id)
+      if (!original) return null
+      const now = new Date().toISOString()
+      const copy = JSON.parse(JSON.stringify(original))
+      copy.id = uuidv4()
+      copy.title = (copy.title || 'Untitled') + ' (copy)'
+      copy.createdAt = now
+      copy.updatedAt = now
+      presentations.push(copy)
+      return copy
+    })
+    if (!result) return res.status(404).json({ error: 'Not found' })
+    res.status(201).json(result)
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
 // GET /api/presentations/:id/export
 router.get('/:id/export', async (req, res) => {
   try {
-    const presentations = await readPresentations();
-    const presentation = presentations.find((p) => p.id === req.params.id);
-    if (!presentation) return res.status(404).json({ error: 'Not found' });
-    const html = generateRevealHTML(presentation);
-    const filename = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`;
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send(html);
+    const presentations = await readPresentations()
+    const presentation = presentations.find((p) => p.id === req.params.id)
+    if (!presentation) return res.status(404).json({ error: 'Not found' })
+    const html = generateRevealHTML(presentation)
+    const filename = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
+    res.setHeader('Content-Type', 'text/html')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    res.send(html)
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
 // GET /api/presentations/:id/present
 router.get('/:id/present', async (req, res) => {
   try {
-    const presentations = await readPresentations();
-    let presentation = presentations.find((p) => p.id === req.params.id);
+    const presentations = await readPresentations()
+    let presentation = presentations.find((p) => p.id === req.params.id)
     if (!presentation) {
-      const { readTemplates } = require('../services/storage');
-      const templates = await readTemplates();
-      presentation = templates.find(t => t.id === req.params.id);
+      const { readTemplates } = require('../services/storage')
+      const templates = await readTemplates()
+      presentation = templates.find((t) => t.id === req.params.id)
       if (!presentation) {
         try {
-          const fs = require('fs-extra');
-          const path = require('path');
-          const builtIn = await fs.readJson(path.join(__dirname, '..', 'data', 'built-in-templates.json'));
-          presentation = builtIn.find((t) => t.id === req.params.id);
-        // eslint-disable-next-line unused-imports/no-unused-vars
-        } catch(e) {}
+          const fs = require('fs-extra')
+          const path = require('path')
+          const builtIn = await fs.readJson(
+            path.join(__dirname, '..', 'data', 'built-in-templates.json')
+          )
+          presentation = builtIn.find((t) => t.id === req.params.id)
+          // eslint-disable-next-line unused-imports/no-unused-vars
+        } catch (e) {}
       }
     }
-    if (!presentation) return res.status(404).json({ error: 'Not found' });
-    const html = generateRevealHTML(presentation);
-    res.setHeader('Content-Type', 'text/html');
-    res.send(html);
+    if (!presentation) return res.status(404).json({ error: 'Not found' })
+    let html = generateRevealHTML(presentation)
+    if (req.query.preview === 'true') {
+      html = html.replace(
+        '</head>',
+        '<style>.reveal .controls, .reveal .progress, .reveal .slide-number, .reveal .navigate-left, .reveal .navigate-right, .reveal .navigate-up, .reveal .navigate-down { display: none !important; pointer-events: none !important; }</style></head>'
+      )
+      html = html.replace(
+        'var revealConfig = {',
+        'var revealConfig = { controls: false, progress: false, keyboard: false,'
+      )
+    }
+    res.setHeader('Content-Type', 'text/html')
+    res.send(html)
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
 // POST /api/presentations/:id/save-as-template
 router.post('/:id/save-as-template', async (req, res) => {
   try {
-    const { readTemplates, writeTemplates } = require('../services/storage');
-    const presentations = await readPresentations();
-    const pres = presentations.find((p) => p.id === req.params.id);
-    if (!pres) return res.status(404).json({ error: 'Not found' });
-    const now = new Date().toISOString();
+    const { readTemplates, writeTemplates } = require('../services/storage')
+    const presentations = await readPresentations()
+    const pres = presentations.find((p) => p.id === req.params.id)
+    if (!pres) return res.status(404).json({ error: 'Not found' })
+    const now = new Date().toISOString()
     const template = {
       ...JSON.parse(JSON.stringify(pres)),
       id: uuidv4(),
@@ -329,14 +365,14 @@ router.post('/:id/save-as-template', async (req, res) => {
       isTemplate: true,
       createdAt: now,
       updatedAt: now,
-    };
-    const templates = await readTemplates();
-    templates.push(template);
-    await writeTemplates(templates);
-    res.status(201).json(template);
+    }
+    const templates = await readTemplates()
+    templates.push(template)
+    await writeTemplates(templates)
+    res.status(201).json(template)
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
-module.exports = router;
+module.exports = router

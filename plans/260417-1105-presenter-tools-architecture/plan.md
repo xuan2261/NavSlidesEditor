@@ -20,12 +20,12 @@ source: skill
 
 ## Phases
 
-| Phase | Name | Status |
-|-------|------|--------|
-| 1 | [Plugin Dependencies Setup](./phase-01-plugin-dependencies-setup.md) | Completed |
-| 2 | [Refactor Font Zoom System](./phase-02-refactor-font-zoom-system.md) | Completed |
-| 3 | [Refactor Theme Toggle](./phase-03-refactor-theme-toggle.md) | Completed |
-| 4 | [Offline Export Integration](./phase-04-offline-export-integration.md) | Completed |
+| Phase | Name                                                                   | Status    |
+| ----- | ---------------------------------------------------------------------- | --------- |
+| 1     | [Plugin Dependencies Setup](./phase-01-plugin-dependencies-setup.md)   | Completed |
+| 2     | [Refactor Font Zoom System](./phase-02-refactor-font-zoom-system.md)   | Completed |
+| 3     | [Refactor Theme Toggle](./phase-03-refactor-theme-toggle.md)           | Completed |
+| 4     | [Offline Export Integration](./phase-04-offline-export-integration.md) | Completed |
 
 ## Dependencies
 

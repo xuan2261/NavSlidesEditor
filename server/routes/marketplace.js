@@ -1,26 +1,26 @@
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
+const express = require('express')
+const path = require('path')
+const fs = require('fs')
 
-const router = express.Router();
+const router = express.Router()
 
-const BUILT_IN_PATH = path.join(__dirname, '..', 'data', 'built-in-templates.json');
+const BUILT_IN_PATH = path.join(__dirname, '..', 'data', 'built-in-templates.json')
 
 // Cache with TTL for large template files
-let cachedTemplates = null;
-let cacheTimestamp = 0;
-const CACHE_TTL = 60000; // 60s
+let cachedTemplates = null
+let cacheTimestamp = 0
+const CACHE_TTL = 60000 // 60s
 
 function loadBuiltInTemplates() {
-  const now = Date.now();
-  if (cachedTemplates && (now - cacheTimestamp) < CACHE_TTL) return cachedTemplates;
+  const now = Date.now()
+  if (cachedTemplates && now - cacheTimestamp < CACHE_TTL) return cachedTemplates
   try {
-    cachedTemplates = JSON.parse(fs.readFileSync(BUILT_IN_PATH, 'utf-8'));
-    cacheTimestamp = now;
+    cachedTemplates = JSON.parse(fs.readFileSync(BUILT_IN_PATH, 'utf-8'))
+    cacheTimestamp = now
   } catch {
-    cachedTemplates = [];
+    cachedTemplates = []
   }
-  return cachedTemplates;
+  return cachedTemplates
 }
 
 // Category metadata — existing + 11 engineering subjects
@@ -40,78 +40,92 @@ const CATEGORIES = [
   { id: 'automation', name: 'Tự động hoá', nameEn: 'Automation', icon: 'bot' },
   { id: 'electrical', name: 'Điện', nameEn: 'Electrical', icon: 'zap' },
   { id: 'measurement', name: 'Đo lường điện', nameEn: 'Measurement', icon: 'gauge' },
-  { id: 'power-electronics', name: 'Điện tử công suất', nameEn: 'Power Electronics', icon: 'plug-zap' },
+  {
+    id: 'power-electronics',
+    name: 'Điện tử công suất',
+    nameEn: 'Power Electronics',
+    icon: 'plug-zap',
+  },
   { id: 'mechanical', name: 'Cơ khí', nameEn: 'Mechanical', icon: 'wrench' },
-  { id: 'technical-drawing', name: 'Hình hoạ - VKT', nameEn: 'Technical Drawing', icon: 'pen-tool' },
+  {
+    id: 'technical-drawing',
+    name: 'Hình hoạ - VKT',
+    nameEn: 'Technical Drawing',
+    icon: 'pen-tool',
+  },
   { id: 'fluid-mechanics', name: 'Thuỷ khí', nameEn: 'Fluid Mechanics', icon: 'droplets' },
   { id: 'computer-science', name: 'Tin học', nameEn: 'Computer Science', icon: 'code' },
   { id: 'physics', name: 'Vật lý', nameEn: 'Physics', icon: 'atom' },
   { id: 'mathematics', name: 'Toán học', nameEn: 'Mathematics', icon: 'sigma' },
-  { id: 'signal-processing', name: 'Xử lý tín hiệu', nameEn: 'Signal Processing', icon: 'activity' },
+  {
+    id: 'signal-processing',
+    name: 'Xử lý tín hiệu',
+    nameEn: 'Signal Processing',
+    icon: 'activity',
+  },
   { id: 'quiz', name: 'Trắc nghiệm', nameEn: 'Quiz', icon: 'check-circle' },
-  
+
   // New Diverse Categories (Phase 1 Expansion)
   { id: 'education', name: 'Giáo dục', nameEn: 'Education', icon: 'graduation-cap' },
   { id: 'business', name: 'Kinh doanh', nameEn: 'Business', icon: 'briefcase' },
   { id: 'hr', name: 'Nhân sự', nameEn: 'Human Resources', icon: 'users' },
   { id: 'marketing', name: 'Marketing', nameEn: 'Marketing', icon: 'megaphone' },
-  
+
   { id: 'dark', name: 'Dark Mode', nameEn: 'Dark Mode', icon: 'moon' },
   { id: 'minimal', name: 'Tối giản', nameEn: 'Minimal', icon: 'layout' },
-  
+
   { id: 'interactive', name: 'Tương tác', nameEn: 'Interactive', icon: 'mouse-pointer-click' },
   { id: 'chart-heavy', name: 'Biểu đồ', nameEn: 'Chart-heavy', icon: 'bar-chart' },
-];
+]
 
 // GET /api/marketplace/templates?category=X&search=Y&tags=a,b
 router.get('/templates', (req, res) => {
   try {
-    const templates = loadBuiltInTemplates();
-    const { category, search, tags } = req.query;
+    const templates = loadBuiltInTemplates()
+    const { category, search, tags } = req.query
 
-    let result = templates;
+    let result = templates
 
     if (category) {
-      result = result.filter(t => t.category === category);
+      result = result.filter((t) => t.category === category)
     }
 
     if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(t =>
-        (t.title || '').toLowerCase().includes(q) ||
-        (t.description || '').toLowerCase().includes(q) ||
-        (t.tags || []).some(tag => tag.includes(q))
-      );
+      const q = search.toLowerCase()
+      result = result.filter(
+        (t) =>
+          (t.title || '').toLowerCase().includes(q) ||
+          (t.description || '').toLowerCase().includes(q) ||
+          (t.tags || []).some((tag) => tag.includes(q))
+      )
     }
 
     if (tags) {
-      const tagList = tags.split(',');
-      result = result.filter(t =>
-        tagList.every(tag => (t.tags || []).includes(tag))
-      );
+      const tagList = tags.split(',')
+      result = result.filter((t) => tagList.every((tag) => (t.tags || []).includes(tag)))
     }
 
     res.json({
       categories: CATEGORIES,
       templates: result,
-    });
-  // eslint-disable-next-line unused-imports/no-unused-vars
+    })
+    // eslint-disable-next-line unused-imports/no-unused-vars
   } catch (err) {
-    res.status(500).json({ error: 'Failed to load marketplace templates' });
+    res.status(500).json({ error: 'Failed to load marketplace templates' })
   }
-});
+})
 
 // GET /api/marketplace/templates/:id
 router.get('/templates/:id', (req, res) => {
   try {
-    const templates = loadBuiltInTemplates();
-    const template = templates.find(t => t.id === req.params.id);
-    if (!template) return res.status(404).json({ error: 'Template not found' });
-    res.json(template);
-  // eslint-disable-next-line unused-imports/no-unused-vars
+    const templates = loadBuiltInTemplates()
+    const template = templates.find((t) => t.id === req.params.id)
+    if (!template) return res.status(404).json({ error: 'Template not found' })
+    res.json(template)
+    // eslint-disable-next-line unused-imports/no-unused-vars
   } catch (err) {
-    res.status(500).json({ error: 'Failed to load template' });
+    res.status(500).json({ error: 'Failed to load template' })
   }
-});
+})
 
-module.exports = router;
+module.exports = router

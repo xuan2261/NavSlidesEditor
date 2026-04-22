@@ -1,3 +1,4 @@
+import { Input, Select } from '../../components/ui'
 /**
  * Video/Audio media properties: source URL, poster, controls, autoplay, loop, muted.
  */
@@ -7,11 +8,9 @@ export default function MediaProperties({ element, onUpdate }) {
 
   return (
     <div style={{ marginBottom: 10 }}>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
-        Source URL
-      </div>
-      <input
-        className="prop-input"
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Source URL</div>
+      <Input
+        className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
         type="text"
         value={element.src || ''}
         onChange={(e) => onUpdate({ src: e.target.value })}
@@ -23,8 +22,8 @@ export default function MediaProperties({ element, onUpdate }) {
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
             Poster Image URL
           </div>
-          <input
-            className="prop-input"
+          <Input
+            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
             type="text"
             value={element.poster || ''}
             onChange={(e) => onUpdate({ poster: e.target.value })}
@@ -34,22 +33,33 @@ export default function MediaProperties({ element, onUpdate }) {
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
             Object Fit
           </div>
-          <select
-            className="prop-input"
+          <Select
+            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
             value={element.objectFit || 'contain'}
             onChange={(e) => onUpdate({ objectFit: e.target.value })}
             style={{ padding: '4px 6px', marginBottom: 8 }}
           >
             {['contain', 'cover', 'fill', 'none'].map((v) => (
-              <option key={v} value={v}>{v}</option>
+              <option key={v} value={v}>
+                {v}
+              </option>
             ))}
-          </select>
+          </Select>
         </>
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {(isVideo
-          ? [['controls', 'Show controls'], ['autoplay', 'Autoplay'], ['loop', 'Loop'], ['muted', 'Muted']]
-          : [['autoplay', 'Autoplay'], ['loop', 'Loop'], ['muted', 'Muted']]
+          ? [
+              ['controls', 'Show controls'],
+              ['autoplay', 'Autoplay'],
+              ['loop', 'Loop'],
+              ['muted', 'Muted'],
+            ]
+          : [
+              ['autoplay', 'Autoplay'],
+              ['loop', 'Loop'],
+              ['muted', 'Muted'],
+            ]
         ).map(([key, label]) => (
           <label
             key={key}
@@ -57,11 +67,7 @@ export default function MediaProperties({ element, onUpdate }) {
           >
             <input
               type="checkbox"
-              checked={
-                key === 'controls'
-                  ? element[key] !== false
-                  : element[key] || false
-              }
+              checked={key === 'controls' ? element[key] !== false : element[key] || false}
               onChange={(e) => onUpdate({ [key]: e.target.checked })}
               style={{ accentColor: 'var(--accent)' }}
             />

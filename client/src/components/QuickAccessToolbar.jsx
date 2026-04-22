@@ -28,44 +28,75 @@ export default function QuickAccessToolbar({
   }, [])
 
   return (
-    <div className="quick-access-toolbar">
+    <div className="flex items-center gap-1">
       {/* Save */}
       <button
-        className="qat-btn"
+        className="flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
         onClick={onSave}
         disabled={saving}
         title={saving ? 'Saving…' : hasChanges ? 'Save (Ctrl+S)' : 'No changes'}
       >
         {saving ? (
-          <Loader2 size={13} className="spin" />
+          <Loader2 size={16} className="spin" />
         ) : (
           <span className="qat-dot" style={{ opacity: hasChanges ? 1 : 0.3 }} />
         )}
       </button>
 
-      <span className="qat-divider" />
+      <span className="mx-1 h-4 w-[1px] bg-border" />
 
       {/* Undo */}
-      <button className="qat-btn" onClick={handleUndo} title="Undo (Ctrl+Z)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <button
+        className="flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
+        onClick={handleUndo}
+        title="Undo (Ctrl+Z)"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M3 7v6h6" />
           <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.36 2.64L3 13" />
         </svg>
       </button>
 
       {/* Redo */}
-      <button className="qat-btn" onClick={handleRedo} title="Redo (Ctrl+Y)" style={{ transform: 'scaleX(-1)' }}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <button
+        className="flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
+        onClick={handleRedo}
+        title="Redo (Ctrl+Y)"
+        style={{ transform: 'scaleX(-1)' }}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M3 7v6h6" />
           <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.36 2.64L3 13" />
         </svg>
       </button>
 
-      <span className="qat-divider" />
+      <span className="mx-1 h-4 w-[1px] bg-border" />
 
       {/* Present */}
-      <button className="qat-btn qat-present-btn" onClick={onPresent} title="Present">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+      <button
+        className="flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
+        onClick={onPresent}
+        title="Present"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <polygon points="5,3 19,12 5,21" />
         </svg>
       </button>

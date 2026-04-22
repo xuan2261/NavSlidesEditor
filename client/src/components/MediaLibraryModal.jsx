@@ -3,6 +3,7 @@ import { Search, Trash2, X, Upload, Image, Film, Music, Download } from 'lucide-
 import { api } from '../utils/api'
 import { searchUnsplash } from '../services/unsplash'
 import { searchGiphy } from '../services/giphy'
+import { Button } from '../components/ui'
 
 const TYPE_FILTERS = [
   { key: '', label: 'All', icon: null },
@@ -95,15 +96,17 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
       try {
         setUploading(true)
         // Here we'd ideally fetch the blob and upload to api.uploadFile
-        // For simplicity in this demo without proxy, we just return the remote URL 
+        // For simplicity in this demo without proxy, we just return the remote URL
         // OR we can fetch it via browser and upload.
         const res = await fetch(item.downloadUrl)
         const blob = await res.blob()
-        const file = new File([blob], `${item.id}.${blob.type.split('/')[1] || 'jpg'}`, { type: blob.type })
+        const file = new File([blob], `${item.id}.${blob.type.split('/')[1] || 'jpg'}`, {
+          type: blob.type,
+        })
         const uploaded = await api.uploadFile(file)
         if (onInsert) {
           // Fake item object matching local structure
-          onInsert({ url: uploaded.url || item.url, type: 'image' }) 
+          onInsert({ url: uploaded.url || item.url, type: 'image' })
         }
         onClose()
       } catch (err) {
@@ -120,75 +123,76 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
+      onClick={onClose}
+    >
       <div
-        className="modal-content"
-        style={{ width: 850, maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}
+        className="bg-card rounded-xl shadow-2xl border border-border w-[850px] max-w-[90vw] max-h-[85vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h2 style={{ margin: 0, fontSize: 18, color: 'var(--text-primary)' }}>Media Library</h2>
-          <button className="btn-icon" onClick={onClose}><X size={18} /></button>
+        <div className="flex justify-between items-center px-6 pt-5 pb-3">
+          <h2 className="m-0 text-lg text-text-primary">Media Library</h2>
+          <Button variant="icon" onClick={onClose}>
+            <X size={18} />
+          </Button>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 12, borderBottom: '1px solid var(--border)', paddingBottom: 12, marginBottom: 12 }}>
-          {['local', 'unsplash', 'giphy'].map(tab => (
-            <button
+        <div className="flex gap-3 border-b border-border px-6 pb-3 mb-4">
+          {['local', 'unsplash', 'giphy'].map((tab) => (
+            <Button
+              variant="ghost"
               key={tab}
-              className={`btn ${activeTab === tab ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ textTransform: 'capitalize', padding: '6px 16px', fontSize: 13 }}
-              onClick={() => { setActiveTab(tab); setSearch(''); }}
+              className={`capitalize px-4 py-1.5 text-[13px] rounded-md transition-colors ${activeTab === tab ? 'bg-accent/15 text-accent font-medium' : 'text-text-muted hover:bg-hover'}`}
+              onClick={() => {
+                setActiveTab(tab)
+                setSearch('')
+              }}
             >
               {tab === 'local' ? 'My Media' : tab}
-            </button>
+            </Button>
           ))}
         </div>
 
         {/* Toolbar: Search + Filter + Upload */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <Search size={14} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+        <div className="flex gap-2 items-center px-6 mb-4">
+          <div className="relative flex-1">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+            />
             <input
-              className="prop-input"
+              className="w-full pl-9 pr-3 py-1.5 rounded-md border border-border bg-secondary text-text text-sm focus:border-accent focus:outline-none transition-colors"
               type="text"
               placeholder={`Search ${activeTab === 'local' ? 'files' : activeTab}...`}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: 28, width: '100%' }}
             />
           </div>
           {activeTab === 'local' && (
-            <div style={{ display: 'flex', gap: 2 }}>
+            <div className="flex gap-1">
               {TYPE_FILTERS.map((f) => (
-                <button
+                <Button
+                  variant="ghost"
                   key={f.key}
-                  className={`btn btn-secondary ${typeFilter === f.key ? 'active' : ''}`}
-                  style={{
-                    padding: '4px 10px',
-                    fontSize: 11,
-                    background: typeFilter === f.key ? 'var(--accent)' : undefined,
-                    color: typeFilter === f.key ? '#fff' : undefined,
-                  }}
+                  className={`px-3 py-1.5 text-[11px] rounded-md transition-colors ${typeFilter === f.key ? 'bg-accent text-white' : 'bg-secondary text-text-muted hover:bg-hover border border-border'}`}
                   onClick={() => setTypeFilter(f.key)}
                 >
                   {f.label}
-                </button>
+                </Button>
               ))}
             </div>
           )}
-          <label
-            className="btn btn-primary"
-            style={{ padding: '6px 12px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-          >
+          <label className="flex items-center justify-center gap-1.5 px-4 py-1.5 text-[13px] bg-accent hover:bg-accent-hover text-white rounded-md cursor-pointer transition-colors font-medium ml-2">
             <Upload size={14} />
             {uploading ? 'Uploading...' : 'Upload'}
             <input
               type="file"
               multiple
               accept="image/*,video/*,audio/*,.svg"
-              style={{ display: 'none' }}
+              className="hidden"
               onChange={handleUpload}
               disabled={uploading}
             />
@@ -196,75 +200,71 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
         </div>
 
         {/* Grid */}
-        <div style={{ flex: 1, overflow: 'auto', minHeight: 300, paddingRight: 8 }}>
+        <div className="flex-1 overflow-y-auto min-h-[300px] px-6 pb-6">
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>Loading...</div>
+            <div className="text-center py-16 text-text-muted text-[13px]">Loading...</div>
           ) : media.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>
-              <Image size={48} style={{ marginBottom: 12, opacity: 0.3 }} />
-              <p>No media files found</p>
-              {activeTab === 'local' && <p style={{ fontSize: 13 }}>Upload images, videos, or audio to get started</p>}
+            <div className="text-center py-16 text-text-muted flex flex-col items-center">
+              <Image size={48} className="mb-3 opacity-30" />
+              <p className="text-[13px] font-medium text-text-primary">No media files found</p>
+              {activeTab === 'local' && (
+                <p className="text-xs mt-1">Upload images, videos, or audio to get started</p>
+              )}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
               {media.map((item) => (
                 <div
                   key={item.id || item.filename}
-                  style={{
-                    border: '1px solid var(--border)',
-                    borderRadius: 8,
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    background: 'var(--bg-card)',
-                    transition: 'border-color 0.15s',
-                    position: 'relative'
-                  }}
+                  className="border border-border rounded-lg overflow-hidden cursor-pointer bg-card transition-colors hover:border-accent relative flex flex-col"
                   onClick={() => handleInsert(item)}
-                  onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
-                  onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
                 >
                   {/* Preview */}
-                  <div style={{ height: 120, background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  <div className="h-[120px] bg-[#111] flex items-center justify-center overflow-hidden">
                     {item.type === 'video' ? (
-                      <Film size={28} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                      <Film size={28} className="text-white/30" />
                     ) : item.type === 'audio' ? (
-                      <Music size={28} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                      <Music size={28} className="text-white/30" />
                     ) : (
                       <img
                         src={item.url}
                         alt={item.originalName || item.author}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        className="w-full h-full object-cover"
                         loading="lazy"
                       />
                     )}
                   </div>
                   {/* Info */}
-                  <div style={{ padding: '8px' }}>
-                    <div style={{ fontSize: 12, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div className="p-2 flex flex-col flex-1">
+                    <div className="text-xs text-text-primary overflow-hidden text-ellipsis whitespace-nowrap">
                       {item.originalName || item.author || 'Image'}
                     </div>
-                    {activeTab === 'local' && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatSize(item.size)}</span>
-                        <button
-                          className="btn-icon"
-                          style={{ width: 22, height: 22 }}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDelete(item.filename)
-                          }}
-                          title="Delete"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    )}
-                    {activeTab !== 'local' && (
-                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                       <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>From {activeTab}</span>
-                       <Download size={14} style={{ color: 'var(--text-muted)' }} />
-                     </div>
-                    )}
+                    <div className="mt-auto">
+                      {activeTab === 'local' && (
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-[11px] text-text-muted">
+                            {formatSize(item.size)}
+                          </span>
+                          <Button
+                            variant="icon"
+                            className="w-[22px] h-[22px] text-text-muted hover:text-danger hover:bg-danger/10 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDelete(item.filename)
+                            }}
+                            title="Delete"
+                          >
+                            <Trash2 size={13} />
+                          </Button>
+                        </div>
+                      )}
+                      {activeTab !== 'local' && (
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-[11px] text-text-muted">From {activeTab}</span>
+                          <Download size={13} className="text-text-muted" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

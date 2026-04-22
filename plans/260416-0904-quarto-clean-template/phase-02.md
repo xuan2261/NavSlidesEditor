@@ -10,6 +10,7 @@
 
 `quarto-clean` template already exists at lines 23475–24082 in `built-in-templates.json`.
 Current issues:
+
 1. **Missing `presenterTools`** — needs `themeToggle`, `fontZoom`, `slideMenu`, `chalkboard`
 2. **Wrong accent color** — current `#2a76dd`, should be `#2980b9`
 3. **Title slide background** — current `#ffffff`, should be `#1a1a2e` (dark)
@@ -17,14 +18,14 @@ Current issues:
 
 ## Spec Reference (from task)
 
-| Property | Current | Correct |
-|----------|---------|---------|
-| accent | `#e64173` | `#2980b9` |
-| primary | `#2a76dd` | `#2980b9` |
-| title bg | `#ffffff` | `#1a1a2e` |
-| title text | `#1a1a2e` | white/light |
-| content bg | (white) | `#f5f5f5` |
-| presenterTools | missing | all 4 enabled |
+| Property       | Current   | Correct       |
+| -------------- | --------- | ------------- |
+| accent         | `#e64173` | `#2980b9`     |
+| primary        | `#2a76dd` | `#2980b9`     |
+| title bg       | `#ffffff` | `#1a1a2e`     |
+| title text     | `#1a1a2e` | white/light   |
+| content bg     | (white)   | `#f5f5f5`     |
+| presenterTools | missing   | all 4 enabled |
 
 ## Changes Required
 
@@ -105,10 +106,10 @@ powershell -Command "Get-Content 'server/data/built-in-templates.json' | Convert
 
 ## Related Code Files
 
-| File | Action |
-|------|--------|
-| `server/data/built-in-templates.json` | Edit — patch existing `quarto-clean` object |
-| `shared/src/presenterTools.js` | Read only — reference for available presenterTools keys |
+| File                                  | Action                                                  |
+| ------------------------------------- | ------------------------------------------------------- |
+| `server/data/built-in-templates.json` | Edit — patch existing `quarto-clean` object             |
+| `shared/src/presenterTools.js`        | Read only — reference for available presenterTools keys |
 
 ## Next Steps
 

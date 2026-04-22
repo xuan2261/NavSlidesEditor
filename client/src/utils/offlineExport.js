@@ -1,7 +1,6 @@
 // Offline export: fetch vendor resources from local server and inline them into the HTML.
 // Uses a safe inlining technique to avoid </script> breakage inside inlined JS.
 
-
 async function fetchText(url) {
   try {
     // Ensure absolute URL for fetch
@@ -61,12 +60,30 @@ function toVendorPath(url) {
 
 // Known CDN-to-vendor mappings for offline resolution
 const CDN_TO_VENDOR = [
-  { pattern: /cdn\.jsdelivr\.net\/npm\/d3(?:@[^/"']*)?(?:\/[^"']*)?/i, vendor: '/vendor/d3/dist/d3.min.js' },
-  { pattern: /cdn\.jsdelivr\.net\/npm\/chart\.js(?:@[^/"']*)?(?:\/[^"']*)?/i, vendor: '/vendor/chart.js/dist/chart.umd.js' },
-  { pattern: /cdn\.jsdelivr\.net\/npm\/marked(?:@[^/"']*)?(?:\/[^"']*)?/i, vendor: '/vendor/marked/marked.min.js' },
-  { pattern: /cdn\.jsdelivr\.net\/npm\/katex(?:@[^/"']*)?\/?dist\/katex\.min\.js/i, vendor: '/vendor/katex/dist/katex.min.js' },
-  { pattern: /cdn\.jsdelivr\.net\/npm\/katex(?:@[^/"']*)?\/?dist\/katex\.min\.css/i, vendor: '/vendor/katex/dist/katex.min.css' },
-  { pattern: /cdnjs\.cloudflare\.com\/ajax\/libs\/d3\/[^/]*\/d3\.min\.js/i, vendor: '/vendor/d3/dist/d3.min.js' },
+  {
+    pattern: /cdn\.jsdelivr\.net\/npm\/d3(?:@[^/"']*)?(?:\/[^"']*)?/i,
+    vendor: '/vendor/d3/dist/d3.min.js',
+  },
+  {
+    pattern: /cdn\.jsdelivr\.net\/npm\/chart\.js(?:@[^/"']*)?(?:\/[^"']*)?/i,
+    vendor: '/vendor/chart.js/dist/chart.umd.js',
+  },
+  {
+    pattern: /cdn\.jsdelivr\.net\/npm\/marked(?:@[^/"']*)?(?:\/[^"']*)?/i,
+    vendor: '/vendor/marked/marked.min.js',
+  },
+  {
+    pattern: /cdn\.jsdelivr\.net\/npm\/katex(?:@[^/"']*)?\/?dist\/katex\.min\.js/i,
+    vendor: '/vendor/katex/dist/katex.min.js',
+  },
+  {
+    pattern: /cdn\.jsdelivr\.net\/npm\/katex(?:@[^/"']*)?\/?dist\/katex\.min\.css/i,
+    vendor: '/vendor/katex/dist/katex.min.css',
+  },
+  {
+    pattern: /cdnjs\.cloudflare\.com\/ajax\/libs\/d3\/[^/]*\/d3\.min\.js/i,
+    vendor: '/vendor/d3/dist/d3.min.js',
+  },
 ]
 
 function resolveToVendor(url) {
@@ -89,8 +106,6 @@ function decodeSrcdoc(raw) {
     .replace(/&gt;/g, '>')
 }
 
-
-
 /**
  * Inline vendor scripts and CSS inside a decoded srcdoc HTML string.
  */
@@ -101,7 +116,11 @@ async function inlineSrcdocDeps(inner) {
   inner = inner.replace(/<\\\//g, '</')
 
   // Inline script src with vendor paths
-  const vendorScriptMatches = [...inner.matchAll(/<script\s+src=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+)["'][^>]*><\\?\/?script>/gi)]
+  const vendorScriptMatches = [
+    ...inner.matchAll(
+      /<script\s+src=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+)["'][^>]*><\\?\/?script>/gi
+    ),
+  ]
   for (const sm of vendorScriptMatches) {
     const vendorPath = toVendorPath(sm[1])
     const js = await cachedFetchText(vendorPath)
@@ -111,7 +130,9 @@ async function inlineSrcdocDeps(inner) {
   }
 
   // Inline script src with external CDN URLs
-  const cdnScriptMatches = [...inner.matchAll(/<script\s+src=["'](https?:\/\/[^"']+)["'][^>]*><\\?\/?script>/gi)]
+  const cdnScriptMatches = [
+    ...inner.matchAll(/<script\s+src=["'](https?:\/\/[^"']+)["'][^>]*><\\?\/?script>/gi),
+  ]
   for (const sm of cdnScriptMatches) {
     const cdnUrl = sm[1]
     const vendorPath = resolveToVendor(cdnUrl)
@@ -124,7 +145,11 @@ async function inlineSrcdocDeps(inner) {
   }
 
   // Inline link href with vendor CSS paths
-  const vendorLinkMatches = [...inner.matchAll(/<link[^>]*href=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+\.css)["'][^>]*\/?>/gi)]
+  const vendorLinkMatches = [
+    ...inner.matchAll(
+      /<link[^>]*href=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+\.css)["'][^>]*\/?>/gi
+    ),
+  ]
   for (const lm of vendorLinkMatches) {
     const vendorPath = toVendorPath(lm[1])
     let css = await cachedFetchText(vendorPath)
@@ -146,7 +171,9 @@ async function inlineSrcdocDeps(inner) {
   }
 
   // Inline link href with external CDN CSS URLs
-  const cdnLinkMatches = [...inner.matchAll(/<link[^>]*href=["'](https?:\/\/[^"']+\.css(?:\?[^"']*)?)["'][^>]*\/?>/gi)]
+  const cdnLinkMatches = [
+    ...inner.matchAll(/<link[^>]*href=["'](https?:\/\/[^"']+\.css(?:\?[^"']*)?)["'][^>]*\/?>/gi),
+  ]
   for (const lm of cdnLinkMatches) {
     const cdnUrl = lm[1]
     const vendorPath = resolveToVendor(cdnUrl)
@@ -164,7 +191,11 @@ export async function generateOfflineHTML(html) {
   let result = html
 
   // ── 1. Inline all <link> vendor CSS ──────────────────────────────────────
-  const cssMatches = [...result.matchAll(/<link[^>]*href=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+\.css)["'][^>]*\/?>/g)]
+  const cssMatches = [
+    ...result.matchAll(
+      /<link[^>]*href=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+\.css)["'][^>]*\/?>/g
+    ),
+  ]
   for (const match of cssMatches) {
     const rawUrl = match[1]
     const vendorPath = toVendorPath(rawUrl)
@@ -191,7 +222,11 @@ export async function generateOfflineHTML(html) {
   }
 
   // ── 2. Inline all <script> vendor JS ─────────────────────────────────────
-  const jsMatches = [...result.matchAll(/<script[^>]*src=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+)["'][^>]*>\s*<\/script>/g)]
+  const jsMatches = [
+    ...result.matchAll(
+      /<script[^>]*src=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+)["'][^>]*>\s*<\/script>/g
+    ),
+  ]
   for (const match of jsMatches) {
     const rawUrl = match[1]
     const vendorPath = toVendorPath(rawUrl)
@@ -204,25 +239,22 @@ export async function generateOfflineHTML(html) {
     // relative image paths (sponge.png, blackboard.png, cursors) break.
     const _origin = window.location.origin
     if (vendorPath.includes('chalkboard/plugin.js')) {
-      const imgRegex = /path \+ '([^']+)'/g;
-      let match;
-      const replacements = [];
+      const imgRegex = /path \+ '([^']+)'/g
+      let match
+      const replacements = []
       while ((match = imgRegex.exec(safe)) !== null) {
-        replacements.push(match[1]); // e.g. "img/sponge.png"
+        replacements.push(match[1]) // e.g. "img/sponge.png"
       }
-        for (const imgPath of [...new Set(replacements)]) {
-          const cleanPath = imgPath.split(')')[0];
-          const dataUri = await fetchAsDataUri(`/vendor/reveal-plugins/chalkboard/${cleanPath}`);
-          if (dataUri) {
-            const suffix = imgPath.substring(cleanPath.length);
-            safe = safe.split(`path + '${imgPath}'`).join(`'${dataUri}${suffix}'`);
-          }
+      for (const imgPath of [...new Set(replacements)]) {
+        const cleanPath = imgPath.split(')')[0]
+        const dataUri = await fetchAsDataUri(`/vendor/reveal-plugins/chalkboard/${cleanPath}`)
+        if (dataUri) {
+          const suffix = imgPath.substring(cleanPath.length)
+          safe = safe.split(`path + '${imgPath}'`).join(`'${dataUri}${suffix}'`)
         }
+      }
       // Replace scriptPath() to return empty string since we inlined everything
-      safe = safe.replace(
-        'function scriptPath() {',
-        `function scriptPath() { return '';`
-      )
+      safe = safe.replace('function scriptPath() {', `function scriptPath() { return '';`)
     }
     if (vendorPath.includes('menu/menu.js')) {
       // The menu plugin dynamically loads css using P(...) which breaks offline mode.
@@ -273,7 +305,7 @@ export async function generateOfflineHTML(html) {
     // Replace srcdoc with a placeholder data attribute + about:blank src
     iframeReplacements.push({
       original: srcdocMatch[0],
-      replacement: `${beforeSrcdoc}data-offline-id="${iframeId}" src="about:blank"${afterSrcdoc}`
+      replacement: `${beforeSrcdoc}data-offline-id="${iframeId}" src="about:blank"${afterSrcdoc}`,
     })
   }
 
@@ -285,7 +317,7 @@ export async function generateOfflineHTML(html) {
   // ── 5. Inject iframe initialization script ───────────────────────────────
   if (iframeEntries.length > 0) {
     // Build the iframe data as base64-encoded strings to avoid any escaping issues
-    const iframeDataParts = iframeEntries.map(entry => {
+    const iframeDataParts = iframeEntries.map((entry) => {
       // Convert HTML to base64 to completely avoid escaping issues
       try {
         const base64 = btoa(unescape(encodeURIComponent(entry.html)))
@@ -300,8 +332,10 @@ export async function generateOfflineHTML(html) {
       }
     })
 
-    const initScript = `
-  <` + `script>
+    const initScript =
+      `
+  <` +
+      `script>
   // Offline iframe initialization with retry logic
   (function() {
     var _iframeB64 = {
@@ -362,7 +396,8 @@ ${iframeDataParts.join(',\n')}
     setTimeout(_initAll, 2000);
     setTimeout(_initAll, 5000);
   })();
-  <` + `/script>`
+  <` +
+      `/script>`
 
     // Insert before the Reveal.initialize script (look for Reveal.initialize)
     // This ensures our iframe data is available when Reveal fires its events.
@@ -374,30 +409,38 @@ ${iframeDataParts.join(',\n')}
       // Find the <script> tag that contains Reveal.initialize
       const scriptBeforeInit = result.lastIndexOf('<script>', revealInitIdx)
       if (scriptBeforeInit !== -1) {
-        result = result.substring(0, scriptBeforeInit) + initScript + '\n' + result.substring(scriptBeforeInit)
+        result =
+          result.substring(0, scriptBeforeInit) +
+          initScript +
+          '\n' +
+          result.substring(scriptBeforeInit)
       } else {
         // Fallback: insert before </body>
         const bodyCloseIdx = result.lastIndexOf('</body>')
         if (bodyCloseIdx !== -1) {
-          result = result.substring(0, bodyCloseIdx) + initScript + '\n' + result.substring(bodyCloseIdx)
+          result =
+            result.substring(0, bodyCloseIdx) + initScript + '\n' + result.substring(bodyCloseIdx)
         }
       }
     } else {
       // Fallback: insert before </body>
       const bodyCloseIdx = result.lastIndexOf('</body>')
       if (bodyCloseIdx !== -1) {
-        result = result.substring(0, bodyCloseIdx) + initScript + '\n' + result.substring(bodyCloseIdx)
+        result =
+          result.substring(0, bodyCloseIdx) + initScript + '\n' + result.substring(bodyCloseIdx)
       }
     }
   }
 
   // ── 6. Inline uploaded images as base64 data URIs ─────────────────────────
   // This makes the offline HTML truly self-contained — images won't depend on the server
-  const imgSrcMatches = [...new Set(
-    (result.match(/(?:src|data-background-image)=["'](\/?uploads\/[^"']+)["']/g) || [])
-      .map(m => m.match(/["'](\/?uploads\/[^"']+)["']/)?.[1])
-      .filter(Boolean)
-  )]
+  const imgSrcMatches = [
+    ...new Set(
+      (result.match(/(?:src|data-background-image)=["'](\/?uploads\/[^"']+)["']/g) || [])
+        .map((m) => m.match(/["'](\/?uploads\/[^"']+)["']/)?.[1])
+        .filter(Boolean)
+    ),
+  ]
   for (const imgPath of imgSrcMatches) {
     const dataUri = await fetchAsDataUri(imgPath.startsWith('/') ? imgPath : `/${imgPath}`)
     if (dataUri) {

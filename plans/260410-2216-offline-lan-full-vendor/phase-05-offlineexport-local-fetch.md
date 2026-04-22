@@ -1,11 +1,13 @@
 # Phase 05: Update offlineExport.js — Fetch from Local Vendor
 
 ## Context
+
 - Plan: [plan.md](./plan.md)
 - Requires: Phase 03 (Express `/vendor` route must be live)
 - Related file: `client/src/utils/offlineExport.js`
 
 ## Overview
+
 - **Priority:** Critical
 - **Status:** Pending
 
@@ -15,6 +17,7 @@ File export HTML vẫn self-contained (all assets inlined) sau khi process.
 ## Current State Analysis
 
 `offlineExport.js` hiện tại (159 lines) đã có logic hoàn chỉnh gồm 6 steps:
+
 - Steps 1–4: fetch CDN CSS/JS + inline
 - Step 5: remove Google Fonts + Computer Modern links
 - Step 6: scan srcdoc attributes + inline CDNs bên trong
@@ -42,6 +45,7 @@ function getVendorBase() {
 ### 2. Update `CDN_RESOURCES` constant
 
 **Before:**
+
 ```javascript
 const CDN_RESOURCES = {
   css: [
@@ -59,6 +63,7 @@ const CDN_RESOURCES = {
 ```
 
 **After:**
+
 ```javascript
 // Build vendor resource URLs from local server
 // Called inside generateOfflineHTML() after getVendorBase() is available
@@ -129,8 +134,11 @@ const codeThemeMatch = result.match(
 Step 6 scan tất cả `https://` URLs trong srcdoc — sau Phase 04, các URLs trong srcdoc đã là `http://localhost/vendor/...` (absolute URLs với `getAssetOrigin()`).
 
 Step 6 regex hiện tại:
+
 ```javascript
-const scriptMatches = [...inner.matchAll(/<script\s+src=["'](https?:\/\/[^"']+)["'][^>]*><\\?\/script>/gi)]
+const scriptMatches = [
+  ...inner.matchAll(/<script\s+src=["'](https?:\/\/[^"']+)["'][^>]*><\\?\/script>/gi),
+]
 ```
 
 Pattern `https?://` đã match cả `http://localhost` — **không cần thay đổi regex**.
@@ -161,9 +169,11 @@ result = result.replace(re, () => `<style>/* ${url} */\n${css}\n</style>`)
 > **Alternative:** Fetch và base64-inline tất cả fonts — nhưng 28 fonts × ~45KB = ~1.3MB base64 → quá nặng.
 
 ## Files to Modify
+
 - `client/src/utils/offlineExport.js`
 
 ## Todo
+
 - [ ] Add `getVendorBase()` helper function
 - [ ] Replace `CDN_RESOURCES` const với `getVendorResources(base)` function
 - [ ] Update `generateOfflineHTML()` to call `getVendorBase()` + `getVendorResources()`
@@ -175,16 +185,17 @@ result = result.replace(re, () => `<style>/* ${url} */\n${css}\n</style>`)
 
 ## Risk
 
-| Risk | Mitigation |
-|---|---|
-| `window.location.origin` = `'null'` khi Electron sai config | Fallback `http://localhost:3000`; verify Electron port config |
-| KaTeX font paths không rewrite đúng | Unit test regex với sample katex.min.css content |
-| Step 2/3 regex không match sau Phase 04 URL change | Test locally: generate HTML → verify theme CSS inline |
-| File export size too large (KaTeX fonts not inlined) | Documented trade-off; fonts served from server when viewing exported file |
+| Risk                                                        | Mitigation                                                                |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `window.location.origin` = `'null'` khi Electron sai config | Fallback `http://localhost:3000`; verify Electron port config             |
+| KaTeX font paths không rewrite đúng                         | Unit test regex với sample katex.min.css content                          |
+| Step 2/3 regex không match sau Phase 04 URL change          | Test locally: generate HTML → verify theme CSS inline                     |
+| File export size too large (KaTeX fonts not inlined)        | Documented trade-off; fonts served from server when viewing exported file |
 
 ## Note: Exported HTML File Behavior
 
 Sau khi export, file `.html` chứa:
+
 - reveal.js, KaTeX JS, Chart.js, etc. → **fully inlined** (self-contained)
 - KaTeX fonts (woff2) → **NOT inlined**, reference absolute URL `http://server:PORT/vendor/katex/dist/fonts/`
 

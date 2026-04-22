@@ -1,12 +1,14 @@
 # Phase 3: Interactive Simulation Templates
 
 ## Context
+
 - [built-in-templates.json](file:///d:/NCKH_2025/revealjs_gui/server/data/built-in-templates.json) — 53 templates, ~911KB
 - [marketplace.js](file:///d:/NCKH_2025/revealjs_gui/server/routes/marketplace.js) — 17 categories
 - [htmlGenerator.js:115-118](file:///d:/NCKH_2025/revealjs_gui/shared/src/htmlGenerator.js#L115-L118) — HTML embed iframe rendering
 - Existing interactive templates đã có (Phase 5 của plan 260415)
 
 ## Overview
+
 - Priority: P1
 - Status: ✅ Completed
 - Thêm 10 interactive simulation templates mới vào built-in-templates.json
@@ -14,6 +16,7 @@
 ## Requirements
 
 ### Functional
+
 1. 10 simulation templates — mỗi template có 5-8 slides
 2. Mỗi simulation template chứa ít nhất 1 slide với `html` embed element có JavaScript tương tác
 3. Thêm 4 categories mới vào marketplace
@@ -21,20 +24,21 @@
 
 ### 10 Simulation Templates
 
-| # | Template ID | Category | Simulation |
-|---|------------|----------|------------|
-| 1 | `sim-ohm-law` | circuit-theory | Ohm's Law calculator — 3 sliders V/I/R, real-time update |
-| 2 | `sim-binary-converter` | digital-electronics | Dec↔Bin↔Hex↔Oct converter — input fields + auto convert |
-| 3 | `sim-logic-gates` | digital-electronics | Click inputs toggle 0/1, see gate output — AND/OR/NOT/NAND/NOR/XOR |
-| 4 | `sim-sorting-algo` | computer-science | Visual bubble sort — click "Step" to animate one swap |
-| 5 | `sim-pid-controller` | automation | PID tuning — Kp/Ki/Kd sliders, step response canvas |
-| 6 | `sim-projectile` | physics | Projectile motion — angle + velocity → trajectory canvas |
-| 7 | `sim-resistor-color` | electronics | 4-band resistor color code → value calculator |
-| 8 | `sim-signal-wave` | signal-processing | Sine/Square/Triangle wave generator — freq + amp sliders |
-| 9 | `sim-matrix-calc` | mathematics | 2×2 matrix operations — add/multiply/determinant/inverse |
-| 10 | `sim-newton-force` | physics | Force vector diagram — drag force arrows, see net force |
+| #   | Template ID            | Category            | Simulation                                                         |
+| --- | ---------------------- | ------------------- | ------------------------------------------------------------------ |
+| 1   | `sim-ohm-law`          | circuit-theory      | Ohm's Law calculator — 3 sliders V/I/R, real-time update           |
+| 2   | `sim-binary-converter` | digital-electronics | Dec↔Bin↔Hex↔Oct converter — input fields + auto convert            |
+| 3   | `sim-logic-gates`      | digital-electronics | Click inputs toggle 0/1, see gate output — AND/OR/NOT/NAND/NOR/XOR |
+| 4   | `sim-sorting-algo`     | computer-science    | Visual bubble sort — click "Step" to animate one swap              |
+| 5   | `sim-pid-controller`   | automation          | PID tuning — Kp/Ki/Kd sliders, step response canvas                |
+| 6   | `sim-projectile`       | physics             | Projectile motion — angle + velocity → trajectory canvas           |
+| 7   | `sim-resistor-color`   | electronics         | 4-band resistor color code → value calculator                      |
+| 8   | `sim-signal-wave`      | signal-processing   | Sine/Square/Triangle wave generator — freq + amp sliders           |
+| 9   | `sim-matrix-calc`      | mathematics         | 2×2 matrix operations — add/multiply/determinant/inverse           |
+| 10  | `sim-newton-force`     | physics             | Force vector diagram — drag force arrows, see net force            |
 
 ### Categories mới
+
 ```
 { id: 'computer-science', name: 'Tin học', nameEn: 'Computer Science', icon: 'code' }
 { id: 'physics', name: 'Vật lý', nameEn: 'Physics', icon: 'atom' }
@@ -45,25 +49,30 @@
 ## Architecture
 
 ### Simulation HTML Embed Pattern
+
 Mỗi simulation là 1 self-contained HTML document (trong `content` field của html element):
+
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <style>/* inline CSS */</style>
-</head>
-<body>
-  <div id="controls"><!-- sliders, inputs --></div>
-  <canvas id="canvas" width="460" height="300"></canvas>
-  <script>
-    // Pure vanilla JS — no external dependencies
-    // All math + rendering inline
-  </script>
-</body>
+  <head>
+    <style>
+      /* inline CSS */
+    </style>
+  </head>
+  <body>
+    <div id="controls"><!-- sliders, inputs --></div>
+    <canvas id="canvas" width="460" height="300"></canvas>
+    <script>
+      // Pure vanilla JS — no external dependencies
+      // All math + rendering inline
+    </script>
+  </body>
 </html>
 ```
 
 ### Template Structure per Simulation
+
 ```
 Slide 1: Title slide — tên simulation, mô tả ngắn
 Slide 2: Lý thuyết — text + LaTeX formulas
@@ -75,10 +84,12 @@ Slide 5: Bài tập — text with exercises
 ## Related Code Files
 
 ### Modify
+
 - `server/data/built-in-templates.json` — Append 10 simulation templates
 - `server/routes/marketplace.js` — Add 4 new categories
 
 ### Create
+
 - (none — all content goes into existing JSON file)
 
 ## Implementation Steps
@@ -176,6 +187,7 @@ Slide 5: Bài tập — text with exercises
 - [x] Test offline export for simulations
 
 ## Success Criteria
+
 - ✅ 63 total built-in templates (53 + 10 new)
 - ✅ 21 categories total (17 + 4 new)
 - ✅ All 10 simulations interactive in present mode
@@ -183,8 +195,9 @@ Slide 5: Bài tập — text with exercises
 - ✅ Build passes, no JSON errors
 
 ## Risk
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| JSON file grows to ~1.5MB | Medium | minify template data, cache with TTL |
-| Complex simulations too large for JSON string | Medium | Keep each HTML under 5KB |
-| Canvas simulations don't scale | Low | Use percentage-based sizing |
+
+| Risk                                          | Impact | Mitigation                           |
+| --------------------------------------------- | ------ | ------------------------------------ |
+| JSON file grows to ~1.5MB                     | Medium | minify template data, cache with TTL |
+| Complex simulations too large for JSON string | Medium | Keep each HTML under 5KB             |
+| Canvas simulations don't scale                | Low    | Use percentage-based sizing          |

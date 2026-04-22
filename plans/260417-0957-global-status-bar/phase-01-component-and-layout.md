@@ -1,14 +1,17 @@
 # Phase 1: Xây dựng UI Component \`StatusBar\` và \`MainLayout\`
 
 ## Mục tiêu
+
 Tạo ra một file layout tổng bao gồm khu vực nội dung (Outlet) và phần thanh trạng thái (StatusBar) cố định dưới đáy.
 
 ## Các file cần thao tác
+
 - Mới: \`client/src/components/layout/MainLayout.jsx\` (hoặc thư mục tương tự nếu dự án cấu trúc khác)
 - Mới/Cập nhật: \`client/src/components/layout/StatusBar.jsx\`
 - Cập nhật: \`client/src/index.css\`
 
 ## Các bước triển khai
+
 1. **Tạo StatusBar.jsx:**
    - Xây dựng component \`StatusBar\` trả về một div chứa nội dung text tĩnh: \`"Design by Bùi Thanh Xuân - Khoa Kỹ thuật cơ sở - Học viện Hải quân"\`.
    - Có thể thêm các biểu tượng tinh giản (ví dụ icon code/shield).
@@ -20,21 +23,22 @@ Tạo ra một file layout tổng bao gồm khu vực nội dung (Outlet) và ph
 
 3. **Tạo MainLayout.jsx:**
    - Import \`Outlet\` từ \`react-router-dom\`.
-   - Cấu trúc: 
+   - Cấu trúc:
      \`\`\`jsx
      export default function MainLayout() {
-       return (
-         <div className="main-layout">
-           <div className="main-layout-content">
-             <Outlet />
-           </div>
-           <StatusBar />
-         </div>
-       );
+     return (
+     <div className="main-layout">
+     <div className="main-layout-content">
+     <Outlet />
+     </div>
+     <StatusBar />
+     </div>
+     );
      }
      \`\`\`
 
 ## Tiêu chí hoàn thành
+
 - [ ] Component StatusBar hiển thị đúng thông điệp tác giả (Học viện Hải quân).
 - [ ] Responsive tốt, khi co kéo màn hình thanh trạng thái không bị đè lên hay đẩy lệch quá đáng.
 - [ ] Sử dụng đúng biến màu CSS (CSS custom properties) của theme hiện tại.

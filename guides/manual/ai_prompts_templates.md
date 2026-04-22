@@ -1,11 +1,13 @@
 # Cẩm nang Prompt AI dành cho NavSlides Editor
 
 ## Mẫu 1: Sinh Slide Trắc nghiệm (Quiz) Tương tác
+
 **Mục đích:** Tạo nhanh một slide câu hỏi trắc nghiệm nhiều lựa chọn có phản hồi đúng/sai tức thì.
 
 **Prompt Template:**
+
 ```text
-Bạn là một chuyên gia thiết kế bài giảng E-learning. Hãy viết mã HTML cho một slide trắc nghiệm nhiều lựa chọn (Multiple Choice) chạy trong thư viện Reveal.js. 
+Bạn là một chuyên gia thiết kế bài giảng E-learning. Hãy viết mã HTML cho một slide trắc nghiệm nhiều lựa chọn (Multiple Choice) chạy trong thư viện Reveal.js.
 
 Yêu cầu kỹ thuật:
 1. Chỉ sử dụng HTML và JavaScript (nếu cần).
@@ -16,9 +18,11 @@ Yêu cầu kỹ thuật:
 ```
 
 ## Mẫu 2: Sinh Slide Mô phỏng Vật lý (Sử dụng Canvas)
+
 **Mục đích:** Tạo một slide chứa hình ảnh động mô phỏng các hiện tượng vật lý (ví dụ: con lắc đơn, chuyển động ném xiên).
 
 **Prompt Template:**
+
 ```text
 Bạn là một lập trình viên chuyên viết các mô phỏng tương tác giáo dục. Hãy tạo một mô phỏng vật lý (ví dụ: chuyển động của một con lắc đơn) hiển thị trên thẻ `<canvas>`.
 
@@ -31,9 +35,11 @@ Yêu cầu kỹ thuật:
 ```
 
 ## Mẫu 3: Sinh Slide Animation Điện tử số
+
 **Mục đích:** Mô phỏng trực quan cơ chế hoạt động của các cổng logic (AND, OR, NOT) hoặc mạch kỹ thuật số.
 
 **Prompt Template:**
+
 ```text
 Bạn là giảng viên môn Điện tử số. Hãy thiết kế một slide minh họa hoạt động của cổng logic AND có tương tác.
 

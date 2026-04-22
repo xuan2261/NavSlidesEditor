@@ -160,8 +160,8 @@ npm run electron:dev
 
 ### Data Location
 
-| Platform | Path                                           |
-| -------- | ---------------------------------------------- |
+| Platform | Path                                              |
+| -------- | ------------------------------------------------- |
 | Linux    | `~/.config/NavSlides Editor/`                     |
 | macOS    | `~/Library/Application Support/NavSlides Editor/` |
 | Windows  | `%APPDATA%/NavSlides Editor/`                     |

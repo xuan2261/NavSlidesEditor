@@ -1,5 +1,5 @@
 ---
-title: "Offline LAN Full Vendor — Complete CDN Independence"
+title: 'Offline LAN Full Vendor — Complete CDN Independence'
 status: completed
 date: 2026-04-10
 blockedBy: []
@@ -20,12 +20,12 @@ supersedes: plans/20260410-2144-fix-offline-iframe-export
 
 Project chạy trong mạng LAN không internet. 4 điểm thất bại:
 
-| Failure point | Root cause |
-|---|---|
-| Export offline HTML | `offlineExport.js` fetch từ CDN internet → timeout/fail |
-| Present mode (`/api/present`) | `htmlGenerator.js` dùng CDN URLs → browser không load được |
-| KaTeX fonts (28 woff2) | CDN-hosted, không có trong offline export |
-| Computer Modern / Google Fonts | External links bị remove nhưng không có fallback |
+| Failure point                  | Root cause                                                 |
+| ------------------------------ | ---------------------------------------------------------- |
+| Export offline HTML            | `offlineExport.js` fetch từ CDN internet → timeout/fail    |
+| Present mode (`/api/present`)  | `htmlGenerator.js` dùng CDN URLs → browser không load được |
+| KaTeX fonts (28 woff2)         | CDN-hosted, không có trong offline export                  |
+| Computer Modern / Google Fonts | External links bị remove nhưng không có fallback           |
 
 ## Current State
 
@@ -35,14 +35,14 @@ Project chạy trong mạng LAN không internet. 4 điểm thất bại:
 
 ## Phases
 
-| Phase | File | Priority | Status |
-|-------|------|----------|--------|
-| Phase 01 | [phase-01-vendor-assets-setup.md](./phase-01-vendor-assets-setup.md) | Critical | Completed |
-| Phase 02 | [phase-02-tikzjax-self-host.md](./phase-02-tikzjax-self-host.md) | High | Completed |
-| Phase 03 | [phase-03-express-vendor-route.md](./phase-03-express-vendor-route.md) | Critical | Completed |
-| Phase 04 | [phase-04-htmlgenerator-local-urls.md](./phase-04-htmlgenerator-local-urls.md) | Critical | Completed |
+| Phase    | File                                                                             | Priority | Status    |
+| -------- | -------------------------------------------------------------------------------- | -------- | --------- |
+| Phase 01 | [phase-01-vendor-assets-setup.md](./phase-01-vendor-assets-setup.md)             | Critical | Completed |
+| Phase 02 | [phase-02-tikzjax-self-host.md](./phase-02-tikzjax-self-host.md)                 | High     | Completed |
+| Phase 03 | [phase-03-express-vendor-route.md](./phase-03-express-vendor-route.md)           | Critical | Completed |
+| Phase 04 | [phase-04-htmlgenerator-local-urls.md](./phase-04-htmlgenerator-local-urls.md)   | Critical | Completed |
 | Phase 05 | [phase-05-offlineexport-local-fetch.md](./phase-05-offlineexport-local-fetch.md) | Critical | Completed |
-| Phase 06 | [phase-06-fonts-cleanup.md](./phase-06-fonts-cleanup.md) | Medium | Completed |
+| Phase 06 | [phase-06-fonts-cleanup.md](./phase-06-fonts-cleanup.md)                         | Medium   | Completed |
 
 ## Key Dependencies
 
@@ -84,13 +84,13 @@ client/src/utils/offlineExport.js  ← fetch from window.location.origin/vendor/
 
 ## Estimated Asset Sizes
 
-| Asset | Uncompressed | Gzipped |
-|---|---|---|
-| reveal.js | ~280 KB | ~90 KB |
-| KaTeX (CSS+JS+fonts) | ~1.4 MB | ~600 KB |
-| Chart.js | ~220 KB | ~70 KB |
-| highlight.js | ~50 KB | ~15 KB |
-| D3.js | ~280 KB | ~90 KB |
-| marked.js | ~60 KB | ~20 KB |
-| TikZJax + WASM + fonts | ~1.9 MB | ~600 KB |
-| **Total** | **~4.2 MB** | **~1.5 MB** |
+| Asset                  | Uncompressed | Gzipped     |
+| ---------------------- | ------------ | ----------- |
+| reveal.js              | ~280 KB      | ~90 KB      |
+| KaTeX (CSS+JS+fonts)   | ~1.4 MB      | ~600 KB     |
+| Chart.js               | ~220 KB      | ~70 KB      |
+| highlight.js           | ~50 KB       | ~15 KB      |
+| D3.js                  | ~280 KB      | ~90 KB      |
+| marked.js              | ~60 KB       | ~20 KB      |
+| TikZJax + WASM + fonts | ~1.9 MB      | ~600 KB     |
+| **Total**              | **~4.2 MB**  | **~1.5 MB** |

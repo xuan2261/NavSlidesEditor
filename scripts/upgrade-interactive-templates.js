@@ -6,40 +6,79 @@
  * - Improve theory slides with visual boxes
  * - Upgrade ending slides
  */
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
 
-const DATA_PATH = path.join(__dirname, '..', 'server', 'data', 'built-in-templates.json');
+const DATA_PATH = path.join(__dirname, '..', 'server', 'data', 'built-in-templates.json')
 
 // ─── Utility helpers ───
-function makeId() { return 'up-' + Math.random().toString(36).substring(2, 10); }
+function makeId() {
+  return 'up-' + Math.random().toString(36).substring(2, 10)
+}
 
 function shapeBar(color, height = 6) {
-  return { type: 'shape', shape: 'rect', x: 0, y: 0, width: 960, height, fill: color, stroke: 'none', strokeWidth: 0, locked: true, zIndex: 0 };
+  return {
+    type: 'shape',
+    shape: 'rect',
+    x: 0,
+    y: 0,
+    width: 960,
+    height,
+    fill: color,
+    stroke: 'none',
+    strokeWidth: 0,
+    locked: true,
+    zIndex: 0,
+  }
 }
 
 function shapeDivider(color, y = 70) {
-  return { type: 'shape', shape: 'rect', x: 40, y, width: 880, height: 1, fill: color + '30', stroke: 'none', strokeWidth: 0, locked: true, zIndex: 1 };
+  return {
+    type: 'shape',
+    shape: 'rect',
+    x: 40,
+    y,
+    width: 880,
+    height: 1,
+    fill: color + '30',
+    stroke: 'none',
+    strokeWidth: 0,
+    locked: true,
+    zIndex: 1,
+  }
 }
 
 function glassBox(x, y, w, h, color) {
-  return { type: 'shape', shape: 'rect', x, y, width: w, height: h, fill: color + '12', stroke: color + '40', strokeWidth: 1, cornerRadius: 12, locked: true, zIndex: 1 };
+  return {
+    type: 'shape',
+    shape: 'rect',
+    x,
+    y,
+    width: w,
+    height: h,
+    fill: color + '12',
+    stroke: color + '40',
+    strokeWidth: 1,
+    cornerRadius: 12,
+    locked: true,
+    zIndex: 1,
+  }
 }
 
 function textEl(x, y, w, h, content, z = 2) {
-  return { type: 'text', x, y, width: w, height: h, zIndex: z, content };
+  return { type: 'text', x, y, width: w, height: h, zIndex: z, content }
 }
 
 function latexEl(x, y, w, h, content, z = 3) {
-  return { type: 'latex', x, y, width: w, height: h, zIndex: z, content };
+  return { type: 'latex', x, y, width: w, height: h, zIndex: z, content }
 }
 
 function htmlEmbed(x, y, w, h, content, z = 2) {
-  return { type: 'html', x, y, width: w, height: h, zIndex: z, content };
+  return { type: 'html', x, y, width: w, height: h, zIndex: z, content }
 }
 
 function makeSlide(bg, elements) {
-  return { id: makeId(), elements, background: { type: 'color', color: bg } };
+  return { id: makeId(), elements, background: { type: 'color', color: bg } }
 }
 
 // ─── HTML Simulations ───
@@ -143,7 +182,7 @@ function drawCircuit(g1,g2,M,Y){
   \`;
 }
 update();
-</script></body></html>`;
+</script></body></html>`
 }
 
 function rlcPhasorHTML() {
@@ -252,7 +291,7 @@ function draw(){
   }
 }
 draw();
-</script></body></html>`;
+</script></body></html>`
 }
 
 function pidCompareHTML() {
@@ -353,7 +392,7 @@ function simulate(){
     '<span class="metric" style="color:#00ff87">'+getMetrics(pidData,'PID')+'</span>';
 }
 simulate();
-</script></body></html>`;
+</script></body></html>`
 }
 
 function bodePoleZeroHTML() {
@@ -456,7 +495,7 @@ function draw(){
   else{el.className='stability unstable';el.textContent='✗ UNSTABLE';info.textContent='Poles in RHP (Re > 0) → Output grows unbounded'}
 }
 draw();
-</script></body></html>`;
+</script></body></html>`
 }
 
 function threePhPhasorHTML() {
@@ -572,7 +611,7 @@ function animate(){
   drawPhasor();requestAnimationFrame(animate);
 }
 animate();
-</script></body></html>`;
+</script></body></html>`
 }
 
 function gearMultiStageHTML() {
@@ -694,17 +733,17 @@ function animate(){
   requestAnimationFrame(animate);
 }
 update();animate();
-</script></body></html>`;
+</script></body></html>`
 }
 
 // ─── Template Upgrade Functions ───
 
 function upgradeLogicGate(template) {
-  const C = template.colorScheme;
-  const bg = C.background;
-  
+  const C = template.colorScheme
+  const bg = C.background
+
   // Slide 0: Keep title (already good)
-  
+
   // Slide 1: Improved theory with LaTeX elements and glass boxes
   template.slides[1] = makeSlide(bg, [
     shapeBar(C.primary),
@@ -712,72 +751,170 @@ function upgradeLogicGate(template) {
     shapeDivider(C.primary, 62),
     // Glass box left - Boolean operations
     glassBox(30, 75, 440, 210, C.primary),
-    textEl(45, 82, 410, 30, `<p style="color:${C.primary};font-size:15px;font-weight:bold">⚡ Phép toán Boolean cơ bản</p>`),
-    textEl(45, 112, 410, 160, `<ul style="color:${C.text};font-size:17px;line-height:2"><li><b>AND:</b> Y = A · B — cả 2 = 1 → output 1</li><li><b>OR:</b> Y = A + B — ít nhất 1 = 1 → output 1</li><li><b>NOT:</b> Y = A̅ — đảo input</li><li><b>XOR:</b> Y = A ⊕ B — khác nhau → 1</li></ul>`, 3),
+    textEl(
+      45,
+      82,
+      410,
+      30,
+      `<p style="color:${C.primary};font-size:15px;font-weight:bold">⚡ Phép toán Boolean cơ bản</p>`
+    ),
+    textEl(
+      45,
+      112,
+      410,
+      160,
+      `<ul style="color:${C.text};font-size:17px;line-height:2"><li><b>AND:</b> Y = A · B — cả 2 = 1 → output 1</li><li><b>OR:</b> Y = A + B — ít nhất 1 = 1 → output 1</li><li><b>NOT:</b> Y = A̅ — đảo input</li><li><b>XOR:</b> Y = A ⊕ B — khác nhau → 1</li></ul>`,
+      3
+    ),
     // Glass box right - Universal gates
     glassBox(490, 75, 440, 210, C.accent),
-    textEl(505, 82, 410, 30, `<p style="color:${C.accent};font-size:15px;font-weight:bold">🔧 Universal Gates</p>`),
-    textEl(505, 112, 410, 160, `<ul style="color:${C.text};font-size:17px;line-height:2"><li><b>NAND</b> = NOT(AND) — universal gate</li><li><b>NOR</b> = NOT(OR) — universal gate</li><li>Mọi mạch logic đều xây từ NAND hoặc NOR</li><li><b>XNOR:</b> Y = (A ⊕ B)̅ — equality gate</li></ul>`, 3),
+    textEl(
+      505,
+      82,
+      410,
+      30,
+      `<p style="color:${C.accent};font-size:15px;font-weight:bold">🔧 Universal Gates</p>`
+    ),
+    textEl(
+      505,
+      112,
+      410,
+      160,
+      `<ul style="color:${C.text};font-size:17px;line-height:2"><li><b>NAND</b> = NOT(AND) — universal gate</li><li><b>NOR</b> = NOT(OR) — universal gate</li><li>Mọi mạch logic đều xây từ NAND hoặc NOR</li><li><b>XNOR:</b> Y = (A ⊕ B)̅ — equality gate</li></ul>`,
+      3
+    ),
     // Bottom: DeMorgan
     glassBox(30, 300, 900, 100, '#ffd93d'),
-    textEl(45, 305, 200, 30, `<p style="color:#ffd93d;font-size:15px;font-weight:bold">📐 Định lý DeMorgan</p>`),
+    textEl(
+      45,
+      305,
+      200,
+      30,
+      `<p style="color:#ffd93d;font-size:15px;font-weight:bold">📐 Định lý DeMorgan</p>`
+    ),
     latexEl(45, 340, 400, 50, `\\overline{A \\cdot B} = \\bar{A} + \\bar{B}`, 4),
     latexEl(490, 340, 400, 50, `\\overline{A + B} = \\bar{A} \\cdot \\bar{B}`, 4),
-  ]);
+  ])
 
   // Slide 2: Keep existing simulator (Logic Gate Visualizer)
-  
+
   // Insert new slide 3: Combinational Circuit
   const combSlide = makeSlide(bg, [
     shapeBar(C.primary, 4),
     htmlEmbed(10, 15, 940, 520, logicGateCombinationalHTML()),
-  ]);
-  
+  ])
+
   // Slide 3 (was usage guide) - improve it
   const usageSlide = makeSlide(bg, [
     shapeBar(C.primary),
     textEl(40, 18, 400, 45, `<h2 style="color:${C.primary}">Hướng dẫn sử dụng</h2>`),
     shapeDivider(C.primary, 62),
     glassBox(30, 75, 440, 290, C.primary),
-    textEl(45, 82, 410, 30, `<p style="color:${C.primary};font-size:15px;font-weight:bold">🎮 Slide "Logic Gate Visualizer"</p>`),
-    textEl(45, 115, 410, 240, `<ol style="color:${C.text};font-size:16px;line-height:2.2"><li>Click nút <b>A</b> hoặc <b>B</b> để toggle 0/1</li><li>Chọn loại gate: AND, OR, NAND, NOR, XOR, XNOR, NOT</li><li>Quan sát output thay đổi real-time</li><li>Truth table highlight dòng tương ứng</li><li>NOT chỉ sử dụng 1 input (A)</li></ol>`, 3),
+    textEl(
+      45,
+      82,
+      410,
+      30,
+      `<p style="color:${C.primary};font-size:15px;font-weight:bold">🎮 Slide "Logic Gate Visualizer"</p>`
+    ),
+    textEl(
+      45,
+      115,
+      410,
+      240,
+      `<ol style="color:${C.text};font-size:16px;line-height:2.2"><li>Click nút <b>A</b> hoặc <b>B</b> để toggle 0/1</li><li>Chọn loại gate: AND, OR, NAND, NOR, XOR, XNOR, NOT</li><li>Quan sát output thay đổi real-time</li><li>Truth table highlight dòng tương ứng</li><li>NOT chỉ sử dụng 1 input (A)</li></ol>`,
+      3
+    ),
     glassBox(490, 75, 440, 290, C.accent),
-    textEl(505, 82, 410, 30, `<p style="color:${C.accent};font-size:15px;font-weight:bold">🔗 Slide "Combinational Circuit"</p>`),
-    textEl(505, 115, 410, 240, `<ol style="color:${C.text};font-size:16px;line-height:2.2"><li>Chọn Gate 1 (A,B → M) từ dropdown</li><li>Chọn Gate 2 (M,C → Y) từ dropdown</li><li>Click A, B, C để toggle input</li><li>Xem tín hiệu trung gian M</li><li>Biểu thức logic Y cập nhật tự động</li></ol>`, 3),
-  ]);
-  
+    textEl(
+      505,
+      82,
+      410,
+      30,
+      `<p style="color:${C.accent};font-size:15px;font-weight:bold">🔗 Slide "Combinational Circuit"</p>`
+    ),
+    textEl(
+      505,
+      115,
+      410,
+      240,
+      `<ol style="color:${C.text};font-size:16px;line-height:2.2"><li>Chọn Gate 1 (A,B → M) từ dropdown</li><li>Chọn Gate 2 (M,C → Y) từ dropdown</li><li>Click A, B, C để toggle input</li><li>Xem tín hiệu trung gian M</li><li>Biểu thức logic Y cập nhật tự động</li></ol>`,
+      3
+    ),
+  ])
+
   // Slide 4 (was Q&A) - upgrade to Key Takeaways
   const takeawaySlide = makeSlide(bg, [
     shapeBar(C.primary),
-    textEl(60, 80, 840, 60, `<h1 style="text-align:center;color:${C.primary}">📌 Key Takeaways</h1>`),
+    textEl(
+      60,
+      80,
+      840,
+      60,
+      `<h1 style="text-align:center;color:${C.primary}">📌 Key Takeaways</h1>`
+    ),
     shapeDivider(C.primary, 140),
     glassBox(60, 160, 400, 80, C.primary),
-    textEl(75, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.primary}">01</b> — NAND và NOR là universal gates, xây mọi mạch logic</p>`, 3),
+    textEl(
+      75,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.primary}">01</b> — NAND và NOR là universal gates, xây mọi mạch logic</p>`,
+      3
+    ),
     glassBox(500, 160, 400, 80, C.accent),
-    textEl(515, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.accent}">02</b> — DeMorgan biến AND↔OR qua phủ định</p>`, 3),
+    textEl(
+      515,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.accent}">02</b> — DeMorgan biến AND↔OR qua phủ định</p>`,
+      3
+    ),
     glassBox(60, 260, 400, 80, '#ffd93d'),
-    textEl(75, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">03</b> — Combinational: output = f(inputs hiện tại)</p>`, 3),
+    textEl(
+      75,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">03</b> — Combinational: output = f(inputs hiện tại)</p>`,
+      3
+    ),
     glassBox(500, 260, 400, 80, '#a78bfa'),
-    textEl(515, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#a78bfa">04</b> — Ứng dụng: ALU, Adder, MUX, Encoder</p>`, 3),
-    textEl(160, 380, 640, 40, `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`),
-  ]);
+    textEl(
+      515,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#a78bfa">04</b> — Ứng dụng: ALU, Adder, MUX, Encoder</p>`,
+      3
+    ),
+    textEl(
+      160,
+      380,
+      640,
+      40,
+      `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`
+    ),
+  ])
 
   // Rebuild slides array
-  const existingSimSlide = template.slides[2]; // the HTML simulation
+  const existingSimSlide = template.slides[2] // the HTML simulation
   template.slides = [
     template.slides[0], // title
     template.slides[1], // theory (updated above)
-    existingSimSlide,    // existing simulation
-    combSlide,           // NEW: combinational circuit
-    usageSlide,          // usage guide (improved)
-    takeawaySlide,       // key takeaways (replaces Q&A)
-  ];
+    existingSimSlide, // existing simulation
+    combSlide, // NEW: combinational circuit
+    usageSlide, // usage guide (improved)
+    takeawaySlide, // key takeaways (replaces Q&A)
+  ]
 }
 
 function upgradeRLC(template) {
-  const C = template.colorScheme;
-  const bg = C.background;
-  
+  const C = template.colorScheme
+  const bg = C.background
+
   // Slide 1: Improved theory with LaTeX elements
   template.slides[1] = makeSlide(bg, [
     shapeBar(C.primary),
@@ -785,56 +922,161 @@ function upgradeRLC(template) {
     shapeDivider(C.primary, 62),
     // Transfer function box
     glassBox(30, 75, 440, 170, C.primary),
-    textEl(45, 82, 410, 25, `<p style="color:${C.primary};font-size:14px;font-weight:bold">📐 Hàm truyền RLC nối tiếp</p>`),
+    textEl(
+      45,
+      82,
+      410,
+      25,
+      `<p style="color:${C.primary};font-size:14px;font-weight:bold">📐 Hàm truyền RLC nối tiếp</p>`
+    ),
     latexEl(60, 112, 390, 50, `H(j\\omega) = \\frac{1}{1 - \\omega^2 LC + j\\omega RC}`, 4),
     latexEl(60, 170, 200, 40, `f_0 = \\frac{1}{2\\pi\\sqrt{LC}}`, 4),
-    textEl(270, 175, 180, 30, `<p style="color:${C.text}90;font-size:14px">← Tần số cộng hưởng</p>`, 3),
+    textEl(
+      270,
+      175,
+      180,
+      30,
+      `<p style="color:${C.text}90;font-size:14px">← Tần số cộng hưởng</p>`,
+      3
+    ),
     // Quality factor box
     glassBox(490, 75, 440, 170, C.accent),
-    textEl(505, 82, 410, 25, `<p style="color:${C.accent};font-size:14px;font-weight:bold">⚡ Hệ số phẩm chất Q</p>`),
+    textEl(
+      505,
+      82,
+      410,
+      25,
+      `<p style="color:${C.accent};font-size:14px;font-weight:bold">⚡ Hệ số phẩm chất Q</p>`
+    ),
     latexEl(520, 112, 250, 50, `Q = \\frac{1}{R}\\sqrt{\\frac{L}{C}}`, 4),
-    textEl(505, 170, 410, 60, `<ul style="color:${C.text};font-size:15px;line-height:1.8"><li>Q cao → đỉnh nhọn, chọn lọc tần số tốt</li><li>Q thấp → đỉnh tù, dải thông rộng</li></ul>`, 3),
+    textEl(
+      505,
+      170,
+      410,
+      60,
+      `<ul style="color:${C.text};font-size:15px;line-height:1.8"><li>Q cao → đỉnh nhọn, chọn lọc tần số tốt</li><li>Q thấp → đỉnh tù, dải thông rộng</li></ul>`,
+      3
+    ),
     // Bandwidth box
     glassBox(30, 260, 900, 100, '#ffd93d'),
-    textEl(45, 268, 200, 25, `<p style="color:#ffd93d;font-size:14px;font-weight:bold">📊 Bandwidth & Ứng dụng</p>`),
+    textEl(
+      45,
+      268,
+      200,
+      25,
+      `<p style="color:#ffd93d;font-size:14px;font-weight:bold">📊 Bandwidth & Ứng dụng</p>`
+    ),
     latexEl(45, 298, 200, 40, `BW = \\frac{f_0}{Q}`, 4),
-    textEl(280, 275, 630, 80, `<ul style="color:${C.text};font-size:15px;line-height:1.9"><li><b>Bộ lọc thông dải:</b> chọn tần số mong muốn, loại bỏ nhiễu</li><li><b>LC tank:</b> mạch dao động, radio tuner, PLL</li><li><b>R lớn:</b> giảm Q → damping nhanh hơn</li></ul>`, 3),
-  ]);
+    textEl(
+      280,
+      275,
+      630,
+      80,
+      `<ul style="color:${C.text};font-size:15px;line-height:1.9"><li><b>Bộ lọc thông dải:</b> chọn tần số mong muốn, loại bỏ nhiễu</li><li><b>LC tank:</b> mạch dao động, radio tuner, PLL</li><li><b>R lớn:</b> giảm Q → damping nhanh hơn</li></ul>`,
+      3
+    ),
+  ])
 
   // Insert phasor diagram slide after existing simulation
   const phasorSlide = makeSlide(bg, [
     shapeBar(C.primary, 4),
     htmlEmbed(10, 15, 940, 520, rlcPhasorHTML()),
-  ]);
+  ])
 
   const usageSlide = makeSlide(bg, [
     shapeBar(C.primary),
     textEl(40, 18, 400, 45, `<h2 style="color:${C.primary}">Hướng dẫn sử dụng</h2>`),
     shapeDivider(C.primary, 62),
     glassBox(30, 75, 440, 280, C.primary),
-    textEl(45, 82, 410, 25, `<p style="color:${C.primary};font-size:14px;font-weight:bold">📈 Frequency Response</p>`),
-    textEl(45, 112, 410, 230, `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Kéo slider R, L, C để thay đổi thông số</li><li>Quan sát đỉnh cộng hưởng di chuyển</li><li>R lớn → đỉnh thấp, Q giảm</li><li>Xem metrics: f₀, Q, BW realtime</li></ol>`, 3),
+    textEl(
+      45,
+      82,
+      410,
+      25,
+      `<p style="color:${C.primary};font-size:14px;font-weight:bold">📈 Frequency Response</p>`
+    ),
+    textEl(
+      45,
+      112,
+      410,
+      230,
+      `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Kéo slider R, L, C để thay đổi thông số</li><li>Quan sát đỉnh cộng hưởng di chuyển</li><li>R lớn → đỉnh thấp, Q giảm</li><li>Xem metrics: f₀, Q, BW realtime</li></ol>`,
+      3
+    ),
     glassBox(490, 75, 440, 280, C.accent),
-    textEl(505, 82, 410, 25, `<p style="color:${C.accent};font-size:14px;font-weight:bold">🔄 Impedance Phasor</p>`),
-    textEl(505, 112, 410, 230, `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Điều chỉnh R, L, C, f để xem phasor</li><li>Vector R (đỏ) nằm ngang</li><li>X<sub>L</sub> hướng lên, X<sub>C</sub> hướng xuống</li><li>Z (xanh lá) = vector tổng → |Z|, φ</li></ol>`, 3),
-  ]);
+    textEl(
+      505,
+      82,
+      410,
+      25,
+      `<p style="color:${C.accent};font-size:14px;font-weight:bold">🔄 Impedance Phasor</p>`
+    ),
+    textEl(
+      505,
+      112,
+      410,
+      230,
+      `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Điều chỉnh R, L, C, f để xem phasor</li><li>Vector R (đỏ) nằm ngang</li><li>X<sub>L</sub> hướng lên, X<sub>C</sub> hướng xuống</li><li>Z (xanh lá) = vector tổng → |Z|, φ</li></ol>`,
+      3
+    ),
+  ])
 
   const takeawaySlide = makeSlide(bg, [
     shapeBar(C.primary),
-    textEl(60, 80, 840, 60, `<h1 style="text-align:center;color:${C.primary}">📌 Key Takeaways</h1>`),
+    textEl(
+      60,
+      80,
+      840,
+      60,
+      `<h1 style="text-align:center;color:${C.primary}">📌 Key Takeaways</h1>`
+    ),
     shapeDivider(C.primary, 140),
     glassBox(60, 160, 400, 80, C.primary),
-    textEl(75, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.primary}">01</b> — Cộng hưởng khi X<sub>L</sub> = X<sub>C</sub>, Z = R (thuần trở)</p>`, 3),
+    textEl(
+      75,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.primary}">01</b> — Cộng hưởng khi X<sub>L</sub> = X<sub>C</sub>, Z = R (thuần trở)</p>`,
+      3
+    ),
     glassBox(500, 160, 400, 80, C.accent),
-    textEl(515, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.accent}">02</b> — Q càng cao → chọn lọc tần số càng tốt</p>`, 3),
+    textEl(
+      515,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.accent}">02</b> — Q càng cao → chọn lọc tần số càng tốt</p>`,
+      3
+    ),
     glassBox(60, 260, 400, 80, '#ffd93d'),
-    textEl(75, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">03</b> — Phasor: R nằm ngang, L hướng lên, C hướng xuống</p>`, 3),
+    textEl(
+      75,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">03</b> — Phasor: R nằm ngang, L hướng lên, C hướng xuống</p>`,
+      3
+    ),
     glassBox(500, 260, 400, 80, '#a78bfa'),
-    textEl(515, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#a78bfa">04</b> — BW = f₀/Q: trade-off giữa độ nhọn vs dải thông</p>`, 3),
-    textEl(160, 380, 640, 40, `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`),
-  ]);
+    textEl(
+      515,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#a78bfa">04</b> — BW = f₀/Q: trade-off giữa độ nhọn vs dải thông</p>`,
+      3
+    ),
+    textEl(
+      160,
+      380,
+      640,
+      40,
+      `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`
+    ),
+  ])
 
-  const existingSimSlide = template.slides[2];
+  const existingSimSlide = template.slides[2]
   template.slides = [
     template.slides[0],
     template.slides[1],
@@ -842,13 +1084,13 @@ function upgradeRLC(template) {
     phasorSlide,
     usageSlide,
     takeawaySlide,
-  ];
+  ]
 }
 
 function upgradePID(template) {
-  const C = template.colorScheme;
-  const bg = C.background;
-  
+  const C = template.colorScheme
+  const bg = C.background
+
   // Slide 1: Improved theory
   template.slides[1] = makeSlide(bg, [
     shapeBar(C.primary),
@@ -856,59 +1098,184 @@ function upgradePID(template) {
     shapeDivider(C.primary, 62),
     // PID formula box
     glassBox(30, 75, 900, 90, C.primary),
-    textEl(45, 80, 200, 25, `<p style="color:${C.primary};font-size:14px;font-weight:bold">📐 Luật điều khiển PID</p>`),
-    latexEl(200, 105, 560, 50, `u(t) = K_p \\, e(t) + K_i \\int_0^t e(\\tau)\\,d\\tau + K_d \\, \\frac{de(t)}{dt}`, 4),
+    textEl(
+      45,
+      80,
+      200,
+      25,
+      `<p style="color:${C.primary};font-size:14px;font-weight:bold">📐 Luật điều khiển PID</p>`
+    ),
+    latexEl(
+      200,
+      105,
+      560,
+      50,
+      `u(t) = K_p \\, e(t) + K_i \\int_0^t e(\\tau)\\,d\\tau + K_d \\, \\frac{de(t)}{dt}`,
+      4
+    ),
     // Three columns: P, I, D
     glassBox(30, 180, 290, 190, '#ff6b6b'),
-    textEl(45, 185, 260, 25, `<p style="color:#ff6b6b;font-size:14px;font-weight:bold">P — Proportional</p>`),
-    textEl(45, 215, 260, 145, `<ul style="color:${C.text};font-size:14px;line-height:1.9"><li>Phản ứng theo sai số hiện tại</li><li>K<sub>p</sub> ↑ → response nhanh hơn</li><li>K<sub>p</sub> quá lớn → dao động</li><li>Không triệt tiêu SS error</li></ul>`, 3),
+    textEl(
+      45,
+      185,
+      260,
+      25,
+      `<p style="color:#ff6b6b;font-size:14px;font-weight:bold">P — Proportional</p>`
+    ),
+    textEl(
+      45,
+      215,
+      260,
+      145,
+      `<ul style="color:${C.text};font-size:14px;line-height:1.9"><li>Phản ứng theo sai số hiện tại</li><li>K<sub>p</sub> ↑ → response nhanh hơn</li><li>K<sub>p</sub> quá lớn → dao động</li><li>Không triệt tiêu SS error</li></ul>`,
+      3
+    ),
     glassBox(335, 180, 290, 190, '#ffd93d'),
-    textEl(350, 185, 260, 25, `<p style="color:#ffd93d;font-size:14px;font-weight:bold">I — Integral</p>`),
-    textEl(350, 215, 260, 145, `<ul style="color:${C.text};font-size:14px;line-height:1.9"><li>Tích lũy sai số theo thời gian</li><li>Triệt tiêu SS error = 0</li><li>K<sub>i</sub> quá lớn → overshoot</li><li>Wind-up khi saturation</li></ul>`, 3),
+    textEl(
+      350,
+      185,
+      260,
+      25,
+      `<p style="color:#ffd93d;font-size:14px;font-weight:bold">I — Integral</p>`
+    ),
+    textEl(
+      350,
+      215,
+      260,
+      145,
+      `<ul style="color:${C.text};font-size:14px;line-height:1.9"><li>Tích lũy sai số theo thời gian</li><li>Triệt tiêu SS error = 0</li><li>K<sub>i</sub> quá lớn → overshoot</li><li>Wind-up khi saturation</li></ul>`,
+      3
+    ),
     glassBox(640, 180, 290, 190, '#4ecdc4'),
-    textEl(655, 185, 260, 25, `<p style="color:#4ecdc4;font-size:14px;font-weight:bold">D — Derivative</p>`),
-    textEl(655, 215, 260, 145, `<ul style="color:${C.text};font-size:14px;line-height:1.9"><li>Dự đoán xu hướng sai số</li><li>Giảm overshoot hiệu quả</li><li>K<sub>d</sub> → damping tốt hơn</li><li>Nhạy với nhiễu tần số cao</li></ul>`, 3),
+    textEl(
+      655,
+      185,
+      260,
+      25,
+      `<p style="color:#4ecdc4;font-size:14px;font-weight:bold">D — Derivative</p>`
+    ),
+    textEl(
+      655,
+      215,
+      260,
+      145,
+      `<ul style="color:${C.text};font-size:14px;line-height:1.9"><li>Dự đoán xu hướng sai số</li><li>Giảm overshoot hiệu quả</li><li>K<sub>d</sub> → damping tốt hơn</li><li>Nhạy với nhiễu tần số cao</li></ul>`,
+      3
+    ),
     // Plant info
     glassBox(30, 385, 900, 50, C.primary),
     textEl(45, 390, 200, 30, `<p style="color:${C.text}90;font-size:14px"><b>Plant:</b></p>`, 3),
     latexEl(200, 392, 300, 35, `G(s) = \\frac{1}{s^2 + 2s + 1}`, 4),
-    textEl(520, 390, 380, 30, `<p style="color:${C.text}70;font-size:13px">Hệ bậc 2, poles tại s = -1 (critically damped)</p>`, 3),
-  ]);
+    textEl(
+      520,
+      390,
+      380,
+      30,
+      `<p style="color:${C.text}70;font-size:13px">Hệ bậc 2, poles tại s = -1 (critically damped)</p>`,
+      3
+    ),
+  ])
 
   // New comparison slide
   const compareSlide = makeSlide(bg, [
     shapeBar(C.primary, 4),
     htmlEmbed(10, 15, 940, 520, pidCompareHTML()),
-  ]);
+  ])
 
   const usageSlide = makeSlide(bg, [
     shapeBar(C.primary),
     textEl(40, 18, 400, 45, `<h2 style="color:${C.primary}">Hướng dẫn sử dụng</h2>`),
     shapeDivider(C.primary, 62),
     glassBox(30, 75, 440, 280, C.primary),
-    textEl(45, 82, 410, 25, `<p style="color:${C.primary};font-size:14px;font-weight:bold">🎛️ PID Tuning</p>`),
-    textEl(45, 112, 410, 230, `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Kéo slider Kp, Ki, Kd để thay đổi</li><li>Mode "P only" / "PI" / "PID" so sánh</li><li>Quan sát Rise time, Overshoot, Settling</li><li>"Ziegler-Nichols" → auto-tune</li></ol>`, 3),
+    textEl(
+      45,
+      82,
+      410,
+      25,
+      `<p style="color:${C.primary};font-size:14px;font-weight:bold">🎛️ PID Tuning</p>`
+    ),
+    textEl(
+      45,
+      112,
+      410,
+      230,
+      `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Kéo slider Kp, Ki, Kd để thay đổi</li><li>Mode "P only" / "PI" / "PID" so sánh</li><li>Quan sát Rise time, Overshoot, Settling</li><li>"Ziegler-Nichols" → auto-tune</li></ol>`,
+      3
+    ),
     glassBox(490, 75, 440, 280, C.accent || '#4ecdc4'),
-    textEl(505, 82, 410, 25, `<p style="color:${C.accent || '#4ecdc4'};font-size:14px;font-weight:bold">📊 P vs PI vs PID Compare</p>`),
-    textEl(505, 112, 410, 230, `<ol style="color:${C.text};font-size:16px;line-height:2"><li>3 đường cong cùng hiển thị</li><li><span style="color:#ff6b6b">●</span> P: có SS error, không overshoot</li><li><span style="color:#ffd93d">●</span> PI: SS=0, có overshoot</li><li><span style="color:#00ff87">●</span> PID: SS=0, ít overshoot</li></ol>`, 3),
-  ]);
+    textEl(
+      505,
+      82,
+      410,
+      25,
+      `<p style="color:${C.accent || '#4ecdc4'};font-size:14px;font-weight:bold">📊 P vs PI vs PID Compare</p>`
+    ),
+    textEl(
+      505,
+      112,
+      410,
+      230,
+      `<ol style="color:${C.text};font-size:16px;line-height:2"><li>3 đường cong cùng hiển thị</li><li><span style="color:#ff6b6b">●</span> P: có SS error, không overshoot</li><li><span style="color:#ffd93d">●</span> PI: SS=0, có overshoot</li><li><span style="color:#00ff87">●</span> PID: SS=0, ít overshoot</li></ol>`,
+      3
+    ),
+  ])
 
   const takeawaySlide = makeSlide(bg, [
     shapeBar(C.primary),
-    textEl(60, 80, 840, 60, `<h1 style="text-align:center;color:${C.primary}">📌 Key Takeaways</h1>`),
+    textEl(
+      60,
+      80,
+      840,
+      60,
+      `<h1 style="text-align:center;color:${C.primary}">📌 Key Takeaways</h1>`
+    ),
     shapeDivider(C.primary, 140),
     glassBox(60, 160, 400, 80, '#ff6b6b'),
-    textEl(75, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ff6b6b">P</b> — Response nhanh nhưng luôn có steady-state error</p>`, 3),
+    textEl(
+      75,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ff6b6b">P</b> — Response nhanh nhưng luôn có steady-state error</p>`,
+      3
+    ),
     glassBox(500, 160, 400, 80, '#ffd93d'),
-    textEl(515, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">PI</b> — Triệt tiêu SS error nhưng tăng overshoot</p>`, 3),
+    textEl(
+      515,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">PI</b> — Triệt tiêu SS error nhưng tăng overshoot</p>`,
+      3
+    ),
     glassBox(60, 260, 400, 80, '#4ecdc4'),
-    textEl(75, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#4ecdc4">PID</b> — Cân bằng: SS=0, giảm overshoot bằng D</p>`, 3),
+    textEl(
+      75,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#4ecdc4">PID</b> — Cân bằng: SS=0, giảm overshoot bằng D</p>`,
+      3
+    ),
     glassBox(500, 260, 400, 80, '#a78bfa'),
-    textEl(515, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#a78bfa">Tip</b> — Ziegler-Nichols: tìm K<sub>u</sub>, T<sub>u</sub> → tính Kp,Ki,Kd</p>`, 3),
-    textEl(160, 380, 640, 40, `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`),
-  ]);
+    textEl(
+      515,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#a78bfa">Tip</b> — Ziegler-Nichols: tìm K<sub>u</sub>, T<sub>u</sub> → tính Kp,Ki,Kd</p>`,
+      3
+    ),
+    textEl(
+      160,
+      380,
+      640,
+      40,
+      `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`
+    ),
+  ])
 
-  const existingSimSlide = template.slides[2];
+  const existingSimSlide = template.slides[2]
   template.slides = [
     template.slides[0],
     template.slides[1],
@@ -916,67 +1283,186 @@ function upgradePID(template) {
     compareSlide,
     usageSlide,
     takeawaySlide,
-  ];
+  ]
 }
 
 function upgradeBodePlot(template) {
-  const C = template.colorScheme;
-  const bg = C.background;
-  
+  const C = template.colorScheme
+  const bg = C.background
+
   // Slide 1: Improved theory
   template.slides[1] = makeSlide(bg, [
     shapeBar(C.primary),
     textEl(40, 18, 600, 45, `<h2 style="color:${C.primary}">Biểu đồ Bode — Lý thuyết</h2>`),
     shapeDivider(C.primary, 62),
     glassBox(30, 75, 440, 145, C.primary),
-    textEl(45, 82, 410, 25, `<p style="color:${C.primary};font-size:14px;font-weight:bold">📐 Bode Magnitude</p>`),
+    textEl(
+      45,
+      82,
+      410,
+      25,
+      `<p style="color:${C.primary};font-size:14px;font-weight:bold">📐 Bode Magnitude</p>`
+    ),
     latexEl(60, 112, 380, 45, `|H|_{dB} = 20\\log_{10}|H(j\\omega)|`, 4),
-    textEl(60, 165, 380, 40, `<p style="color:${C.text}90;font-size:14px">Trục x: log(ω), trục y: dB</p>`, 3),
+    textEl(
+      60,
+      165,
+      380,
+      40,
+      `<p style="color:${C.text}90;font-size:14px">Trục x: log(ω), trục y: dB</p>`,
+      3
+    ),
     glassBox(490, 75, 440, 145, C.accent || '#ff6b6b'),
-    textEl(505, 82, 410, 25, `<p style="color:${C.accent || '#ff6b6b'};font-size:14px;font-weight:bold">📐 Bode Phase</p>`),
-    latexEl(520, 112, 380, 45, `\\angle H(j\\omega) = \\arctan\\left(\\frac{\\text{Im}}{\\text{Re}}\\right)`, 4),
-    textEl(520, 165, 380, 40, `<p style="color:${C.text}90;font-size:14px">Đơn vị: độ (°), range [-180°, 0°]</p>`, 3),
+    textEl(
+      505,
+      82,
+      410,
+      25,
+      `<p style="color:${C.accent || '#ff6b6b'};font-size:14px;font-weight:bold">📐 Bode Phase</p>`
+    ),
+    latexEl(
+      520,
+      112,
+      380,
+      45,
+      `\\angle H(j\\omega) = \\arctan\\left(\\frac{\\text{Im}}{\\text{Re}}\\right)`,
+      4
+    ),
+    textEl(
+      520,
+      165,
+      380,
+      40,
+      `<p style="color:${C.text}90;font-size:14px">Đơn vị: độ (°), range [-180°, 0°]</p>`,
+      3
+    ),
     // Stability margins
     glassBox(30, 235, 900, 130, '#ffd93d'),
-    textEl(45, 240, 300, 25, `<p style="color:#ffd93d;font-size:14px;font-weight:bold">⚠️ Chỉ tiêu ổn định</p>`),
-    textEl(45, 270, 430, 90, `<ul style="color:${C.text};font-size:15px;line-height:2"><li><b style="color:#ff6b6b">Gain Margin:</b> |H| tại pha = −180°</li><li><b style="color:#4ecdc4">Phase Margin:</b> φ tại |H| = 0 dB</li><li><b>Bandwidth:</b> ω khi |H| giảm −3dB</li></ul>`, 3),
-    textEl(490, 270, 420, 90, `<ul style="color:${C.text};font-size:15px;line-height:2"><li>GM > 0 dB → <span style="color:#00ff87">ổn định</span></li><li>PM > 45° → <span style="color:#00ff87">đủ damping</span></li><li>PM < 0° → <span style="color:#ff4757">mất ổn định</span></li></ul>`, 3),
-  ]);
+    textEl(
+      45,
+      240,
+      300,
+      25,
+      `<p style="color:#ffd93d;font-size:14px;font-weight:bold">⚠️ Chỉ tiêu ổn định</p>`
+    ),
+    textEl(
+      45,
+      270,
+      430,
+      90,
+      `<ul style="color:${C.text};font-size:15px;line-height:2"><li><b style="color:#ff6b6b">Gain Margin:</b> |H| tại pha = −180°</li><li><b style="color:#4ecdc4">Phase Margin:</b> φ tại |H| = 0 dB</li><li><b>Bandwidth:</b> ω khi |H| giảm −3dB</li></ul>`,
+      3
+    ),
+    textEl(
+      490,
+      270,
+      420,
+      90,
+      `<ul style="color:${C.text};font-size:15px;line-height:2"><li>GM > 0 dB → <span style="color:#00ff87">ổn định</span></li><li>PM > 45° → <span style="color:#00ff87">đủ damping</span></li><li>PM < 0° → <span style="color:#ff4757">mất ổn định</span></li></ul>`,
+      3
+    ),
+  ])
 
   // Pole-Zero Map slide
   const pzSlide = makeSlide(bg, [
     shapeBar(C.primary, 4),
     htmlEmbed(10, 15, 940, 520, bodePoleZeroHTML()),
-  ]);
+  ])
 
   const usageSlide = makeSlide(bg, [
     shapeBar(C.primary),
     textEl(40, 18, 400, 45, `<h2 style="color:${C.primary}">Hướng dẫn sử dụng</h2>`),
     shapeDivider(C.primary, 62),
     glassBox(30, 75, 440, 280, C.primary),
-    textEl(45, 82, 410, 25, `<p style="color:${C.primary};font-size:14px;font-weight:bold">📈 Bode Plot Generator</p>`),
-    textEl(45, 112, 410, 230, `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Nhập hệ số tử/mẫu của H(s)</li><li>Magnitude plot (dB) tự động vẽ</li><li>Phase plot (°) tương ứng</li><li>Xem Gain/Phase margins</li></ol>`, 3),
+    textEl(
+      45,
+      82,
+      410,
+      25,
+      `<p style="color:${C.primary};font-size:14px;font-weight:bold">📈 Bode Plot Generator</p>`
+    ),
+    textEl(
+      45,
+      112,
+      410,
+      230,
+      `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Nhập hệ số tử/mẫu của H(s)</li><li>Magnitude plot (dB) tự động vẽ</li><li>Phase plot (°) tương ứng</li><li>Xem Gain/Phase margins</li></ol>`,
+      3
+    ),
     glassBox(490, 75, 440, 280, '#ff4757'),
-    textEl(505, 82, 410, 25, `<p style="color:#ff4757;font-size:14px;font-weight:bold">📍 Pole-Zero Map</p>`),
-    textEl(505, 112, 410, 230, `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Chọn preset system từ panel</li><li><span style="color:#ff4757">✗</span> = poles, <span style="color:${C.primary}">○</span> = zeros</li><li>Left Half Plane → stable</li><li>Tự động check ổn định</li></ol>`, 3),
-  ]);
+    textEl(
+      505,
+      82,
+      410,
+      25,
+      `<p style="color:#ff4757;font-size:14px;font-weight:bold">📍 Pole-Zero Map</p>`
+    ),
+    textEl(
+      505,
+      112,
+      410,
+      230,
+      `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Chọn preset system từ panel</li><li><span style="color:#ff4757">✗</span> = poles, <span style="color:${C.primary}">○</span> = zeros</li><li>Left Half Plane → stable</li><li>Tự động check ổn định</li></ol>`,
+      3
+    ),
+  ])
 
   const takeawaySlide = makeSlide(bg, [
     shapeBar(C.primary),
-    textEl(60, 80, 840, 60, `<h1 style="text-align:center;color:${C.primary}">📌 Key Takeaways</h1>`),
+    textEl(
+      60,
+      80,
+      840,
+      60,
+      `<h1 style="text-align:center;color:${C.primary}">📌 Key Takeaways</h1>`
+    ),
     shapeDivider(C.primary, 140),
     glassBox(60, 160, 400, 80, C.primary),
-    textEl(75, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.primary}">01</b> — Bode plot: dB=20log|H| + phase vs log(ω)</p>`, 3),
+    textEl(
+      75,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.primary}">01</b> — Bode plot: dB=20log|H| + phase vs log(ω)</p>`,
+      3
+    ),
     glassBox(500, 160, 400, 80, '#ff6b6b'),
-    textEl(515, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ff6b6b">02</b> — GM, PM dương → hệ thống ổn định</p>`, 3),
+    textEl(
+      515,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ff6b6b">02</b> — GM, PM dương → hệ thống ổn định</p>`,
+      3
+    ),
     glassBox(60, 260, 400, 80, '#ffd93d'),
-    textEl(75, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">03</b> — Poles LHP = stable, RHP = unstable</p>`, 3),
+    textEl(
+      75,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">03</b> — Poles LHP = stable, RHP = unstable</p>`,
+      3
+    ),
     glassBox(500, 260, 400, 80, '#a78bfa'),
-    textEl(515, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#a78bfa">04</b> — Zeros ảnh hưởng đường cong, không ảnh hưởng ổn định</p>`, 3),
-    textEl(160, 380, 640, 40, `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`),
-  ]);
+    textEl(
+      515,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#a78bfa">04</b> — Zeros ảnh hưởng đường cong, không ảnh hưởng ổn định</p>`,
+      3
+    ),
+    textEl(
+      160,
+      380,
+      640,
+      40,
+      `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`
+    ),
+  ])
 
-  const existingSimSlide = template.slides[2];
+  const existingSimSlide = template.slides[2]
   template.slides = [
     template.slides[0],
     template.slides[1],
@@ -984,12 +1470,12 @@ function upgradeBodePlot(template) {
     pzSlide,
     usageSlide,
     takeawaySlide,
-  ];
+  ]
 }
 
 function upgradeThreePhase(template) {
-  const C = template.colorScheme;
-  const bg = C.background;
+  const C = template.colorScheme
+  const bg = C.background
 
   // Slide 1: Improved theory
   template.slides[1] = makeSlide(bg, [
@@ -998,57 +1484,155 @@ function upgradeThreePhase(template) {
     shapeDivider(C.primary, 62),
     // Voltage equations
     glassBox(30, 75, 440, 175, C.primary),
-    textEl(45, 82, 410, 25, `<p style="color:${C.primary};font-size:14px;font-weight:bold">⚡ Điện áp 3 pha cân bằng (lệch 120°)</p>`),
+    textEl(
+      45,
+      82,
+      410,
+      25,
+      `<p style="color:${C.primary};font-size:14px;font-weight:bold">⚡ Điện áp 3 pha cân bằng (lệch 120°)</p>`
+    ),
     latexEl(60, 115, 380, 35, `V_a = V_m \\sin(\\omega t)`, 4),
     latexEl(60, 155, 380, 35, `V_b = V_m \\sin(\\omega t - 120°)`, 4),
     latexEl(60, 195, 380, 35, `V_c = V_m \\sin(\\omega t + 120°)`, 4),
     // Properties
     glassBox(490, 75, 440, 175, '#ffd93d'),
-    textEl(505, 82, 410, 25, `<p style="color:#ffd93d;font-size:14px;font-weight:bold">📐 Tính chất quan trọng</p>`),
+    textEl(
+      505,
+      82,
+      410,
+      25,
+      `<p style="color:#ffd93d;font-size:14px;font-weight:bold">📐 Tính chất quan trọng</p>`
+    ),
     latexEl(520, 115, 350, 35, `V_a + V_b + V_c = 0 \\;\\text{(luôn luôn)}`, 4),
     latexEl(520, 160, 350, 35, `V_{line} = \\sqrt{3} \\times V_{phase}`, 4),
-    textEl(520, 205, 390, 35, `<p style="color:${C.text}90;font-size:14px">Vline ≈ 1.732 × Vpha (star connection)</p>`, 3),
+    textEl(
+      520,
+      205,
+      390,
+      35,
+      `<p style="color:${C.text}90;font-size:14px">Vline ≈ 1.732 × Vpha (star connection)</p>`,
+      3
+    ),
     // Power
     glassBox(30, 265, 900, 100, '#4ecdc4'),
-    textEl(45, 272, 300, 25, `<p style="color:#4ecdc4;font-size:14px;font-weight:bold">🔌 Công suất 3 pha</p>`),
+    textEl(
+      45,
+      272,
+      300,
+      25,
+      `<p style="color:#4ecdc4;font-size:14px;font-weight:bold">🔌 Công suất 3 pha</p>`
+    ),
     latexEl(45, 302, 350, 40, `P_{3\\phi} = \\sqrt{3} \\, V_L \\, I_L \\, \\cos\\phi`, 4),
-    textEl(430, 280, 480, 80, `<ul style="color:${C.text};font-size:14px;line-height:2"><li><b>Công suất không đổi</b> theo thời gian (không nhấp nháy)</li><li><b>Tiết kiệm dây dẫn</b> 25% so với 1 pha tương đương</li><li>Tạo <b>từ trường quay</b> cho động cơ không đồng bộ</li></ul>`, 3),
-  ]);
+    textEl(
+      430,
+      280,
+      480,
+      80,
+      `<ul style="color:${C.text};font-size:14px;line-height:2"><li><b>Công suất không đổi</b> theo thời gian (không nhấp nháy)</li><li><b>Tiết kiệm dây dẫn</b> 25% so với 1 pha tương đương</li><li>Tạo <b>từ trường quay</b> cho động cơ không đồng bộ</li></ul>`,
+      3
+    ),
+  ])
 
   // Phasor diagram slide
   const phasorSlide = makeSlide(bg, [
     shapeBar(C.primary, 4),
     htmlEmbed(10, 15, 940, 520, threePhPhasorHTML()),
-  ]);
+  ])
 
   const usageSlide = makeSlide(bg, [
     shapeBar(C.primary),
     textEl(40, 18, 400, 45, `<h2 style="color:${C.primary}">Hướng dẫn sử dụng</h2>`),
     shapeDivider(C.primary, 62),
     glassBox(30, 75, 440, 280, C.primary),
-    textEl(45, 82, 410, 25, `<p style="color:${C.primary};font-size:14px;font-weight:bold">📊 3-Phase Waveform</p>`),
-    textEl(45, 112, 410, 230, `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Kéo slider Frequency, Amplitude</li><li>3 sóng sin lệch 120° nhau</li><li>Tổng luôn = 0 (xác minh bằng metrics)</li><li>Pause/Resume để phân tích</li></ol>`, 3),
+    textEl(
+      45,
+      82,
+      410,
+      25,
+      `<p style="color:${C.primary};font-size:14px;font-weight:bold">📊 3-Phase Waveform</p>`
+    ),
+    textEl(
+      45,
+      112,
+      410,
+      230,
+      `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Kéo slider Frequency, Amplitude</li><li>3 sóng sin lệch 120° nhau</li><li>Tổng luôn = 0 (xác minh bằng metrics)</li><li>Pause/Resume để phân tích</li></ol>`,
+      3
+    ),
     glassBox(490, 75, 440, 280, '#ff6b6b'),
-    textEl(505, 82, 410, 25, `<p style="color:#ff6b6b;font-size:14px;font-weight:bold">🔄 Rotating Phasor</p>`),
-    textEl(505, 112, 410, 230, `<ol style="color:${C.text};font-size:16px;line-height:2"><li>3 vector quay với tốc độ ω</li><li><span style="color:#ff6b6b">●</span> A, <span style="color:#ffd93d">●</span> B, <span style="color:#4ecdc4">●</span> C lệch 120°</li><li>Waveform (phải) = projection theo thời gian</li><li>ΣV luôn ≈ 0</li></ol>`, 3),
-  ]);
+    textEl(
+      505,
+      82,
+      410,
+      25,
+      `<p style="color:#ff6b6b;font-size:14px;font-weight:bold">🔄 Rotating Phasor</p>`
+    ),
+    textEl(
+      505,
+      112,
+      410,
+      230,
+      `<ol style="color:${C.text};font-size:16px;line-height:2"><li>3 vector quay với tốc độ ω</li><li><span style="color:#ff6b6b">●</span> A, <span style="color:#ffd93d">●</span> B, <span style="color:#4ecdc4">●</span> C lệch 120°</li><li>Waveform (phải) = projection theo thời gian</li><li>ΣV luôn ≈ 0</li></ol>`,
+      3
+    ),
+  ])
 
   const takeawaySlide = makeSlide(bg, [
     shapeBar(C.primary),
-    textEl(60, 80, 840, 60, `<h1 style="text-align:center;color:${C.primary}">📌 Key Takeaways</h1>`),
+    textEl(
+      60,
+      80,
+      840,
+      60,
+      `<h1 style="text-align:center;color:${C.primary}">📌 Key Takeaways</h1>`
+    ),
     shapeDivider(C.primary, 140),
     glassBox(60, 160, 400, 80, C.primary),
-    textEl(75, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.primary}">01</b> — 3 pha lệch 120°, tổng = 0 mọi thời điểm</p>`, 3),
+    textEl(
+      75,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:${C.primary}">01</b> — 3 pha lệch 120°, tổng = 0 mọi thời điểm</p>`,
+      3
+    ),
     glassBox(500, 160, 400, 80, '#ff6b6b'),
-    textEl(515, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ff6b6b">02</b> — V<sub>line</sub> = √3 × V<sub>phase</sub></p>`, 3),
+    textEl(
+      515,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ff6b6b">02</b> — V<sub>line</sub> = √3 × V<sub>phase</sub></p>`,
+      3
+    ),
     glassBox(60, 260, 400, 80, '#ffd93d'),
-    textEl(75, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">03</b> — Công suất 3 pha = const (không nhấp nháy)</p>`, 3),
+    textEl(
+      75,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">03</b> — Công suất 3 pha = const (không nhấp nháy)</p>`,
+      3
+    ),
     glassBox(500, 260, 400, 80, '#4ecdc4'),
-    textEl(515, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#4ecdc4">04</b> — Tạo từ trường quay cho motor 3 pha</p>`, 3),
-    textEl(160, 380, 640, 40, `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`),
-  ]);
+    textEl(
+      515,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#4ecdc4">04</b> — Tạo từ trường quay cho motor 3 pha</p>`,
+      3
+    ),
+    textEl(
+      160,
+      380,
+      640,
+      40,
+      `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`
+    ),
+  ])
 
-  const existingSimSlide = template.slides[2];
+  const existingSimSlide = template.slides[2]
   template.slides = [
     template.slides[0],
     template.slides[1],
@@ -1056,12 +1640,12 @@ function upgradeThreePhase(template) {
     phasorSlide,
     usageSlide,
     takeawaySlide,
-  ];
+  ]
 }
 
 function upgradeGearTrain(template) {
-  const C = template.colorScheme;
-  const bg = C.background;
+  const C = template.colorScheme
+  const bg = C.background
 
   // Slide 1: Improved theory
   template.slides[1] = makeSlide(bg, [
@@ -1070,58 +1654,177 @@ function upgradeGearTrain(template) {
     shapeDivider('#64ffda', 62),
     // Main formula
     glassBox(30, 75, 440, 155, '#64ffda'),
-    textEl(45, 82, 410, 25, `<p style="color:#64ffda;font-size:14px;font-weight:bold">📐 Tỷ số truyền</p>`),
+    textEl(
+      45,
+      82,
+      410,
+      25,
+      `<p style="color:#64ffda;font-size:14px;font-weight:bold">📐 Tỷ số truyền</p>`
+    ),
     latexEl(60, 112, 390, 55, `i = \\frac{Z_2}{Z_1} = \\frac{n_1}{n_2} = \\frac{T_2}{T_1}`, 4),
-    textEl(60, 175, 390, 45, `<p style="color:${C.text}90;font-size:14px">Z: số răng, n: tốc độ quay, T: moment xoắn</p>`, 3),
+    textEl(
+      60,
+      175,
+      390,
+      45,
+      `<p style="color:${C.text}90;font-size:14px">Z: số răng, n: tốc độ quay, T: moment xoắn</p>`,
+      3
+    ),
     // Properties
     glassBox(490, 75, 440, 155, C.primary),
-    textEl(505, 82, 410, 25, `<p style="color:${C.primary};font-size:14px;font-weight:bold">⚙️ Đặc tính</p>`),
-    textEl(505, 112, 410, 110, `<ul style="color:${C.text};font-size:15px;line-height:2"><li><b>i > 1:</b> giảm tốc, tăng moment xoắn</li><li><b>i < 1:</b> tăng tốc, giảm moment</li><li><b>i = 1:</b> truyền thẳng 1:1</li></ul>`, 3),
+    textEl(
+      505,
+      82,
+      410,
+      25,
+      `<p style="color:${C.primary};font-size:14px;font-weight:bold">⚙️ Đặc tính</p>`
+    ),
+    textEl(
+      505,
+      112,
+      410,
+      110,
+      `<ul style="color:${C.text};font-size:15px;line-height:2"><li><b>i > 1:</b> giảm tốc, tăng moment xoắn</li><li><b>i < 1:</b> tăng tốc, giảm moment</li><li><b>i = 1:</b> truyền thẳng 1:1</li></ul>`,
+      3
+    ),
     // Multi-stage
     glassBox(30, 245, 440, 120, '#ffd93d'),
-    textEl(45, 252, 410, 25, `<p style="color:#ffd93d;font-size:14px;font-weight:bold">🔗 Truyền động nhiều cấp</p>`),
-    latexEl(60, 282, 380, 40, `i_{total} = i_1 \\times i_2 = \\frac{Z_2}{Z_1} \\times \\frac{Z_3}{Z_2} = \\frac{Z_3}{Z_1}`, 4),
-    textEl(60, 330, 380, 30, `<p style="color:${C.text}80;font-size:13px">→ Gear giữa (idler) hủy nhau, chỉ còn bánh đầu/cuối</p>`, 3),
+    textEl(
+      45,
+      252,
+      410,
+      25,
+      `<p style="color:#ffd93d;font-size:14px;font-weight:bold">🔗 Truyền động nhiều cấp</p>`
+    ),
+    latexEl(
+      60,
+      282,
+      380,
+      40,
+      `i_{total} = i_1 \\times i_2 = \\frac{Z_2}{Z_1} \\times \\frac{Z_3}{Z_2} = \\frac{Z_3}{Z_1}`,
+      4
+    ),
+    textEl(
+      60,
+      330,
+      380,
+      30,
+      `<p style="color:${C.text}80;font-size:13px">→ Gear giữa (idler) hủy nhau, chỉ còn bánh đầu/cuối</p>`,
+      3
+    ),
     // Efficiency
     glassBox(490, 245, 440, 120, '#ff6b6b'),
-    textEl(505, 252, 410, 25, `<p style="color:#ff6b6b;font-size:14px;font-weight:bold">⚡ Hiệu suất</p>`),
-    textEl(505, 282, 410, 80, `<ul style="color:${C.text};font-size:15px;line-height:2"><li>η ≈ 96–99% (bánh răng trụ)</li><li>η ≈ 90–95% (bánh răng côn)</li><li>η ≈ 40–80% (trục vít, tự hãm)</li></ul>`, 3),
-  ]);
+    textEl(
+      505,
+      252,
+      410,
+      25,
+      `<p style="color:#ff6b6b;font-size:14px;font-weight:bold">⚡ Hiệu suất</p>`
+    ),
+    textEl(
+      505,
+      282,
+      410,
+      80,
+      `<ul style="color:${C.text};font-size:15px;line-height:2"><li>η ≈ 96–99% (bánh răng trụ)</li><li>η ≈ 90–95% (bánh răng côn)</li><li>η ≈ 40–80% (trục vít, tự hãm)</li></ul>`,
+      3
+    ),
+  ])
 
   // Multi-stage gear train slide
   const multiStageSlide = makeSlide(bg, [
     shapeBar('#64ffda', 4),
     htmlEmbed(10, 15, 940, 520, gearMultiStageHTML()),
-  ]);
+  ])
 
   const usageSlide = makeSlide(bg, [
     shapeBar('#64ffda'),
     textEl(40, 18, 400, 45, `<h2 style="color:#64ffda">Hướng dẫn sử dụng</h2>`),
     shapeDivider('#64ffda', 62),
     glassBox(30, 75, 440, 280, '#64ffda'),
-    textEl(45, 82, 410, 25, `<p style="color:#64ffda;font-size:14px;font-weight:bold">⚙️ Gear Train (2 bánh)</p>`),
-    textEl(45, 112, 410, 230, `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Kéo slider Z₁, Z₂ thay đổi số răng</li><li>Quan sát tốc độ quay thay đổi</li><li>Thông số i, tốc độ, moment tự cập nhật</li><li>Bánh lớn quay chậm nhưng mạnh hơn</li></ol>`, 3),
+    textEl(
+      45,
+      82,
+      410,
+      25,
+      `<p style="color:#64ffda;font-size:14px;font-weight:bold">⚙️ Gear Train (2 bánh)</p>`
+    ),
+    textEl(
+      45,
+      112,
+      410,
+      230,
+      `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Kéo slider Z₁, Z₂ thay đổi số răng</li><li>Quan sát tốc độ quay thay đổi</li><li>Thông số i, tốc độ, moment tự cập nhật</li><li>Bánh lớn quay chậm nhưng mạnh hơn</li></ol>`,
+      3
+    ),
     glassBox(490, 75, 440, 280, C.primary),
-    textEl(505, 82, 410, 25, `<p style="color:${C.primary};font-size:14px;font-weight:bold">🔗 Multi-Stage (3 bánh)</p>`),
-    textEl(505, 112, 410, 230, `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Kéo Z₁, Z₂, Z₃ riêng biệt</li><li>3 bánh răng ăn khớp trực quan</li><li>i<sub>total</sub> = Z₃/Z₁ bất kể Z₂</li><li>Tốc độ ω₃ output tự tính</li></ol>`, 3),
-  ]);
+    textEl(
+      505,
+      82,
+      410,
+      25,
+      `<p style="color:${C.primary};font-size:14px;font-weight:bold">🔗 Multi-Stage (3 bánh)</p>`
+    ),
+    textEl(
+      505,
+      112,
+      410,
+      230,
+      `<ol style="color:${C.text};font-size:16px;line-height:2"><li>Kéo Z₁, Z₂, Z₃ riêng biệt</li><li>3 bánh răng ăn khớp trực quan</li><li>i<sub>total</sub> = Z₃/Z₁ bất kể Z₂</li><li>Tốc độ ω₃ output tự tính</li></ol>`,
+      3
+    ),
+  ])
 
   const takeawaySlide = makeSlide(bg, [
     shapeBar('#64ffda'),
     textEl(60, 80, 840, 60, `<h1 style="text-align:center;color:#64ffda">📌 Key Takeaways</h1>`),
     shapeDivider('#64ffda', 140),
     glassBox(60, 160, 400, 80, '#64ffda'),
-    textEl(75, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#64ffda">01</b> — i = Z₂/Z₁ = n₁/n₂ = T₂/T₁</p>`, 3),
+    textEl(
+      75,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#64ffda">01</b> — i = Z₂/Z₁ = n₁/n₂ = T₂/T₁</p>`,
+      3
+    ),
     glassBox(500, 160, 400, 80, '#ff6b6b'),
-    textEl(515, 170, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ff6b6b">02</b> — i > 1: giảm tốc, tăng moment (reducer)</p>`, 3),
+    textEl(
+      515,
+      170,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ff6b6b">02</b> — i > 1: giảm tốc, tăng moment (reducer)</p>`,
+      3
+    ),
     glassBox(60, 260, 400, 80, '#ffd93d'),
-    textEl(75, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">03</b> — Multi-stage: i<sub>total</sub> = tích các i từng cấp</p>`, 3),
+    textEl(
+      75,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#ffd93d">03</b> — Multi-stage: i<sub>total</sub> = tích các i từng cấp</p>`,
+      3
+    ),
     glassBox(500, 260, 400, 80, '#4ecdc4'),
-    textEl(515, 270, 370, 60, `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#4ecdc4">04</b> — Hiệu suất: trụ 96-99%, côn 90-95%</p>`, 3),
-    textEl(160, 380, 640, 40, `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`),
-  ]);
+    textEl(
+      515,
+      270,
+      370,
+      60,
+      `<p style="color:${C.text};font-size:16px;line-height:1.6"><b style="color:#4ecdc4">04</b> — Hiệu suất: trụ 96-99%, côn 90-95%</p>`,
+      3
+    ),
+    textEl(
+      160,
+      380,
+      640,
+      40,
+      `<p style="text-align:center;color:${C.text}80;font-size:15px">Cảm ơn đã theo dõi! 🎓</p>`
+    ),
+  ])
 
-  const existingSimSlide = template.slides[2];
+  const existingSimSlide = template.slides[2]
   template.slides = [
     template.slides[0],
     template.slides[1],
@@ -1129,14 +1832,14 @@ function upgradeGearTrain(template) {
     multiStageSlide,
     usageSlide,
     takeawaySlide,
-  ];
+  ]
 }
 
 // ─── Main ───
 function main() {
-  console.log('Reading built-in-templates.json...');
-  const data = JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'));
-  
+  console.log('Reading built-in-templates.json...')
+  const data = JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'))
+
   const upgrades = [
     { match: 'Logic Gate', fn: upgradeLogicGate },
     { match: 'RLC Frequency', fn: upgradeRLC },
@@ -1144,30 +1847,30 @@ function main() {
     { match: 'Bode Plot', fn: upgradeBodePlot },
     { match: '3-Phase Power', fn: upgradeThreePhase },
     { match: 'Gear Train', fn: upgradeGearTrain },
-  ];
+  ]
 
-  let count = 0;
+  let count = 0
   upgrades.forEach(({ match, fn }) => {
-    const template = data.find(t => t.title && t.title.includes(match));
+    const template = data.find((t) => t.title && t.title.includes(match))
     if (!template) {
-      console.warn(`  ⚠ Template "${match}" not found, skipping`);
-      return;
+      console.warn(`  ⚠ Template "${match}" not found, skipping`)
+      return
     }
-    console.log(`  Upgrading: ${template.title} (${template.slides.length} slides → ...)`);
-    fn(template);
-    console.log(`    → ${template.slides.length} slides`);
-    count++;
-  });
+    console.log(`  Upgrading: ${template.title} (${template.slides.length} slides → ...)`)
+    fn(template)
+    console.log(`    → ${template.slides.length} slides`)
+    count++
+  })
 
   // Backup first
-  const backupPath = DATA_PATH + '.backup-' + Date.now();
-  fs.copyFileSync(DATA_PATH, backupPath);
-  console.log(`\nBackup saved to: ${backupPath}`);
+  const backupPath = DATA_PATH + '.backup-' + Date.now()
+  fs.copyFileSync(DATA_PATH, backupPath)
+  console.log(`\nBackup saved to: ${backupPath}`)
 
   // Write updated data
-  fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), 'utf8');
-  console.log(`✓ Updated ${count} interactive templates`);
-  console.log('Done!');
+  fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), 'utf8')
+  console.log(`✓ Updated ${count} interactive templates`)
+  console.log('Done!')
 }
 
-main();
+main()

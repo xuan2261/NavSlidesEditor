@@ -37,7 +37,10 @@ const copyItems = [
   { srcPkg: 'd3/dist', dest: path.join(vendorDir, 'd3/dist') },
   { srcPkg: '@drgrice1/tikzjax/dist', dest: path.join(vendorDir, 'tikzjax') },
   { srcPkg: '@fortawesome/fontawesome-free/css', dest: path.join(vendorDir, 'font-awesome/css') },
-  { srcPkg: '@fortawesome/fontawesome-free/webfonts', dest: path.join(vendorDir, 'font-awesome/webfonts') },
+  {
+    srcPkg: '@fortawesome/fontawesome-free/webfonts',
+    dest: path.join(vendorDir, 'font-awesome/webfonts'),
+  },
   { srcPkg: 'qrcode/build', dest: path.join(vendorDir, 'qrcode') },
 ]
 
@@ -71,51 +74,62 @@ if (markedSrc) {
 // --- Download Remote Plugins ---
 async function downloadRemotePlugins() {
   const chalkboardImages = [
-    'blackboard.png', 'whiteboard.png', 'sponge.png',
-    'boardmarker-black.png', 'boardmarker-blue.png', 'boardmarker-green.png',
-    'boardmarker-orange.png', 'boardmarker-purple.png', 'boardmarker-red.png',
+    'blackboard.png',
+    'whiteboard.png',
+    'sponge.png',
+    'boardmarker-black.png',
+    'boardmarker-blue.png',
+    'boardmarker-green.png',
+    'boardmarker-orange.png',
+    'boardmarker-purple.png',
+    'boardmarker-red.png',
     'boardmarker-yellow.png',
-    'chalk-white.png', 'chalk-blue.png', 'chalk-red.png', 'chalk-green.png',
-    'chalk-orange.png', 'chalk-purple.png', 'chalk-yellow.png',
+    'chalk-white.png',
+    'chalk-blue.png',
+    'chalk-red.png',
+    'chalk-green.png',
+    'chalk-orange.png',
+    'chalk-purple.png',
+    'chalk-yellow.png',
   ]
 
   const remoteFiles = [
     {
       url: 'https://cdn.jsdelivr.net/npm/reveal.js-menu@2.1.0/menu.js',
-      dest: path.join(vendorDir, 'reveal-plugins/menu/menu.js')
+      dest: path.join(vendorDir, 'reveal-plugins/menu/menu.js'),
     },
     {
       url: 'https://cdn.jsdelivr.net/npm/reveal.js-menu@2.1.0/menu.css',
-      dest: path.join(vendorDir, 'reveal-plugins/menu/menu.css')
+      dest: path.join(vendorDir, 'reveal-plugins/menu/menu.css'),
     },
     {
       url: 'https://cdn.jsdelivr.net/npm/reveal.js-plugins@4.6.0/chalkboard/plugin.js',
-      dest: path.join(vendorDir, 'reveal-plugins/chalkboard/plugin.js')
+      dest: path.join(vendorDir, 'reveal-plugins/chalkboard/plugin.js'),
     },
     {
       url: 'https://cdn.jsdelivr.net/npm/reveal.js-plugins@4.6.0/customcontrols/plugin.js',
-      dest: path.join(vendorDir, 'reveal-plugins/customcontrols/plugin.js')
+      dest: path.join(vendorDir, 'reveal-plugins/customcontrols/plugin.js'),
     },
     {
       url: 'https://cdn.jsdelivr.net/npm/reveal.js-plugins@4.6.0/customcontrols/style.css',
-      dest: path.join(vendorDir, 'reveal-plugins/customcontrols/style.css')
+      dest: path.join(vendorDir, 'reveal-plugins/customcontrols/style.css'),
     },
     // Chalkboard image assets (cursors, eraser, board backgrounds)
-    ...chalkboardImages.map(img => ({
+    ...chalkboardImages.map((img) => ({
       url: `https://cdn.jsdelivr.net/npm/reveal.js-plugins@4.6.0/chalkboard/img/${img}`,
-      dest: path.join(vendorDir, `reveal-plugins/chalkboard/img/${img}`)
-    }))
+      dest: path.join(vendorDir, `reveal-plugins/chalkboard/img/${img}`),
+    })),
   ]
 
   for (const file of remoteFiles) {
     try {
       if (fs.existsSync(file.dest)) continue
       fs.mkdirSync(path.dirname(file.dest), { recursive: true })
-      
+
       console.log(`Downloading ${path.basename(file.dest)}...`)
       const response = await fetch(file.url)
       if (!response.ok) throw new Error(`HTTP ${response.status} for ${file.url}`)
-      
+
       const isBinary = /\.(png|jpg|jpeg|gif|woff2?|ttf|eot)$/i.test(file.dest)
       if (isBinary) {
         const buf = Buffer.from(await response.arrayBuffer())
@@ -131,4 +145,4 @@ async function downloadRemotePlugins() {
   console.log('\n✅ Vendor assets ready.')
 }
 
-downloadRemotePlugins();
+downloadRemotePlugins()

@@ -85,20 +85,32 @@ const path = require('path')
 // GET /api/presentations/:id/export-project
 router.get('/:id/export-project', async (req, res) => {
   const presentations = storage.loadJson('presentations.json')
-  const presentation = presentations.find(p => p.id === req.params.id)
+  const presentation = presentations.find((p) => p.id === req.params.id)
   if (!presentation) return res.status(404).json({ error: 'Not found' })
 
   const html = generateRevealHTML(presentation)
   const zip = archiver('zip', { zlib: { level: 6 } })
 
   res.setHeader('Content-Type', 'application/zip')
-  res.setHeader('Content-Disposition',
-    `attachment; filename="${slugify(presentation.title)}.navslides"`)
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="${slugify(presentation.title)}.navslides"`
+  )
 
   zip.pipe(res)
-  zip.append(JSON.stringify({ version: '1.0', title: presentation.title,
-    exportedAt: new Date().toISOString(), hasLocalMedia: false }, null, 2),
-    { name: 'manifest.json' })
+  zip.append(
+    JSON.stringify(
+      {
+        version: '1.0',
+        title: presentation.title,
+        exportedAt: new Date().toISOString(),
+        hasLocalMedia: false,
+      },
+      null,
+      2
+    ),
+    { name: 'manifest.json' }
+  )
   zip.append(JSON.stringify(presentation, null, 2), { name: 'presentation.json' })
   zip.append(html, { name: 'presentation.html' })
   zip.finalize()
@@ -111,11 +123,11 @@ router.get('/:id/export-project', async (req, res) => {
 
 ## API Endpoints Used
 
-| Method | Endpoint | Purpose | Status |
-|---|---|---|---|
-| `POST` | `/api/presentations` | Create from imported JSON | ✅ existing |
-| `POST` | `/api/upload` | Upload extracted media | ✅ existing |
-| `GET` | `/api/presentations/:id` | Load presentation | ✅ existing |
+| Method | Endpoint                 | Purpose                   | Status      |
+| ------ | ------------------------ | ------------------------- | ----------- |
+| `POST` | `/api/presentations`     | Create from imported JSON | ✅ existing |
+| `POST` | `/api/upload`            | Upload extracted media    | ✅ existing |
+| `GET`  | `/api/presentations/:id` | Load presentation         | ✅ existing |
 
 ---
 
@@ -146,11 +158,11 @@ router.get('/:id/export-project', async (req, res) => {
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Multer file size too small | Low | Medium | Increase to 200MB |
-| Path traversal in ZIP | Low | High | JSZip tự handle; server validate |
-| Memory pressure on large ZIP | Low | Medium | Stream processing with archiver |
+| Risk                         | Likelihood | Impact | Mitigation                       |
+| ---------------------------- | ---------- | ------ | -------------------------------- |
+| Multer file size too small   | Low        | Medium | Increase to 200MB                |
+| Path traversal in ZIP        | Low        | High   | JSZip tự handle; server validate |
+| Memory pressure on large ZIP | Low        | Medium | Stream processing with archiver  |
 
 ---
 

@@ -17,11 +17,11 @@ Cải thiện toàn diện UX controls của NavSlides Editor để đạt mức
 
 ## Phases
 
-| # | Phase | Issues | Priority | Time | Status |
-|---|---|---|---|---|---|
-| 1 | Critical Fixes | Ctrl+B/I/U bug, Cut/Copy/Paste, Selection Pane | 🔴 P0 | 1-2 days | ✅ Complete |
-| 2 | Core Parity | Slide Sorter, Mini Toolbar, Zoom, Toolbar UX | 🟠 P1 | 3-5 days | ✅ Complete |
-| 3 | Polish & Advanced | Animation duration, Alignment, Settings split, Context menus, Anim gallery | 🟡 P2-P3 | 5-7 days | ✅ Complete |
+| #   | Phase             | Issues                                                                     | Priority | Time     | Status      |
+| --- | ----------------- | -------------------------------------------------------------------------- | -------- | -------- | ----------- |
+| 1   | Critical Fixes    | Ctrl+B/I/U bug, Cut/Copy/Paste, Selection Pane                             | 🔴 P0    | 1-2 days | ✅ Complete |
+| 2   | Core Parity       | Slide Sorter, Mini Toolbar, Zoom, Toolbar UX                               | 🟠 P1    | 3-5 days | ✅ Complete |
+| 3   | Polish & Advanced | Animation duration, Alignment, Settings split, Context menus, Anim gallery | 🟡 P2-P3 | 5-7 days | ✅ Complete |
 
 **Total estimated time:** 9-14 days
 
@@ -43,15 +43,15 @@ Phase 1 ──┬── Phase 2 ── Phase 3
 
 ## Key Files to Modify
 
-| File | Phase | Changes |
-|---|---|---|
-| `client/src/components/SlideCanvas.jsx` | 1 | Fix Ctrl+B/I/U keyboard, add clipboard events |
-| `client/src/stores/editor-store.js` | 1 | Add clipboard state (copy/cut/paste) |
-| `client/src/components/PropertiesPanel.jsx` | 1, 2, 3 | Add Selection Pane, Alignment, Fragment section |
-| `client/src/pages/EditorPage.jsx` | 2 | Add Slide Sorter mode, Mini Toolbar, Zoom controls |
-| `client/src/components/Toolbar.jsx` | 2 | Add tooltips+shortcuts, reorganize layout |
-| `client/src/components/AnimationTimeline.jsx` | 3 | Add duration/delay, expand animation types |
-| `client/src/components/SlidePanel.jsx` | 2 | Multi-select, Slide Sorter view |
+| File                                          | Phase   | Changes                                            |
+| --------------------------------------------- | ------- | -------------------------------------------------- |
+| `client/src/components/SlideCanvas.jsx`       | 1       | Fix Ctrl+B/I/U keyboard, add clipboard events      |
+| `client/src/stores/editor-store.js`           | 1       | Add clipboard state (copy/cut/paste)               |
+| `client/src/components/PropertiesPanel.jsx`   | 1, 2, 3 | Add Selection Pane, Alignment, Fragment section    |
+| `client/src/pages/EditorPage.jsx`             | 2       | Add Slide Sorter mode, Mini Toolbar, Zoom controls |
+| `client/src/components/Toolbar.jsx`           | 2       | Add tooltips+shortcuts, reorganize layout          |
+| `client/src/components/AnimationTimeline.jsx` | 3       | Add duration/delay, expand animation types         |
+| `client/src/components/SlidePanel.jsx`        | 2       | Multi-select, Slide Sorter view                    |
 
 ---
 
@@ -67,12 +67,12 @@ Phase 1 ──┬── Phase 2 ── Phase 3
 
 ## Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| Ctrl shortcut fix phá vỡ TipTap editor behavior | Medium | Test kỹ trong EditorPage với text element |
-| Selection Pane làm Properties Panel quá rộng | Low | Collapsible, default collapsed |
-| Animation expansion gây conflict với reveal.js | Medium | Map chỉ những animations reveal.js support |
-| Toolbar quá đông sau khi tách lại | Low | Reorganize trước khi test |
+| Risk                                            | Impact | Mitigation                                 |
+| ----------------------------------------------- | ------ | ------------------------------------------ |
+| Ctrl shortcut fix phá vỡ TipTap editor behavior | Medium | Test kỹ trong EditorPage với text element  |
+| Selection Pane làm Properties Panel quá rộng    | Low    | Collapsible, default collapsed             |
+| Animation expansion gây conflict với reveal.js  | Medium | Map chỉ những animations reveal.js support |
+| Toolbar quá đông sau khi tách lại               | Low    | Reorganize trước khi test                  |
 
 ---
 
@@ -91,4 +91,4 @@ Phase 1 ──┬── Phase 2 ── Phase 3
 → Review Phase 2 plan → `phase-02-core-parity.md`  
 → Review Phase 3 plan → `phase-03-polish-advanced.md`
 
- Sau khi approve → implement Phase 1 → Phase 2 → Phase 3.
+Sau khi approve → implement Phase 1 → Phase 2 → Phase 3.

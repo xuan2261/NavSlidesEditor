@@ -1,14 +1,19 @@
 # Phase 01 — Editor Menu Bar (CRITICAL)
 
 ## Priority: 🔴 CRITICAL
+
 ## Status: ⬜ Not started
+
 ## Effort: Large (~4h)
+
 ## Impact: ⭐⭐⭐⭐⭐
 
 ## Overview
+
 Thay thế 18 nút `btn-secondary` dàn hàng ngang trong `header-controls` bằng một menu bar gồm 5 dropdown menus + 1 primary CTA. Giảm từ 18 nút → 6 items trên header.
 
 ## Key Insights
+
 - Hiện tại `header-controls` (EditorPage.jsx L1741-L2204) chứa: Save indicator + 3 selects (Background, Size, Transition) + 4 checkboxes (Grid, Footer, Page#, Auto) + Auto sub-controls (interval, Loop, Kiosk) + 18 action buttons
 - CSS: `.header-controls` dùng `flex-wrap: wrap` nên tràn 2+ dòng
 - Tất cả button dùng `btn btn-secondary` → cùng visual weight, không phân biệt priority
@@ -27,54 +32,60 @@ Thay thế 18 nút `btn-secondary` dàn hàng ngang trong `header-controls` bằ
 ### Menu Contents
 
 #### File Menu
-| Item | Icon | Shortcut | Current location |
-|------|------|----------|------------------|
-| Export PDF | `Download` | — | L2030-2037 |
-| Export PPTX | `Download` | — | L2039-2046 |
-| Export HTML | `Download` | — | L2048-2070 |
-| Export Offline HTML | `FileDown` | — | L2072-2094 |
-| --- separator --- | | | |
-| Save to GitHub | `Github` | — | L2117-2124 |
-| Sync to Cloud | `CloudUpload` | — | L2126-2142 |
-| --- separator --- | | | |
-| Version History | `History` | — | L2096-2106 |
+
+| Item                | Icon          | Shortcut | Current location |
+| ------------------- | ------------- | -------- | ---------------- |
+| Export PDF          | `Download`    | —        | L2030-2037       |
+| Export PPTX         | `Download`    | —        | L2039-2046       |
+| Export HTML         | `Download`    | —        | L2048-2070       |
+| Export Offline HTML | `FileDown`    | —        | L2072-2094       |
+| --- separator ---   |               |          |                  |
+| Save to GitHub      | `Github`      | —        | L2117-2124       |
+| Sync to Cloud       | `CloudUpload` | —        | L2126-2142       |
+| --- separator ---   |               |          |                  |
+| Version History     | `History`     | —        | L2096-2106       |
 
 #### View Menu
-| Item | Icon | Shortcut | Current location |
-|------|------|----------|------------------|
-| Find & Replace | `Search` | `Ctrl+F` | L1989-1995 |
-| Animation Timeline | `Clock` | — | L1997-2003 |
-| Custom CSS | `Code2` | — | L2005-2011 |
-| Speaker Notes | `MessageSquare` | — | L2108-2115 |
+
+| Item               | Icon            | Shortcut | Current location |
+| ------------------ | --------------- | -------- | ---------------- |
+| Find & Replace     | `Search`        | `Ctrl+F` | L1989-1995       |
+| Animation Timeline | `Clock`         | —        | L1997-2003       |
+| Custom CSS         | `Code2`         | —        | L2005-2011       |
+| Speaker Notes      | `MessageSquare` | —        | L2108-2115       |
 
 #### Settings Menu (popover with form controls)
-| Item | Type | Current location |
-|------|------|------------------|
-| Background Theme | `<select>` | L1758-1770 |
-| Slide Size | `<select>` | L1772-1805 |
-| Transition | `<select>` | L1807-1819 |
-| --- separator --- | | |
-| Show Grid | `<checkbox>` | L1821-1841 |
-| Show Footer | `<checkbox>` | L1843-1863 |
-| Show Page Numbers | `<checkbox>` + format select | L1865-1899 |
-| --- separator --- | | |
-| Auto-advance | `<checkbox>` + interval + Loop + Kiosk | L1901-1987 |
+
+| Item              | Type                                   | Current location |
+| ----------------- | -------------------------------------- | ---------------- |
+| Background Theme  | `<select>`                             | L1758-1770       |
+| Slide Size        | `<select>`                             | L1772-1805       |
+| Transition        | `<select>`                             | L1807-1819       |
+| --- separator --- |                                        |                  |
+| Show Grid         | `<checkbox>`                           | L1821-1841       |
+| Show Footer       | `<checkbox>`                           | L1843-1863       |
+| Show Page Numbers | `<checkbox>` + format select           | L1865-1899       |
+| --- separator --- |                                        |                  |
+| Auto-advance      | `<checkbox>` + interval + Loop + Kiosk | L1901-1987       |
 
 #### AI Tools Menu
-| Item | Icon | Current location |
-|------|------|------------------|
-| AI Copywriter | `Sparkles` | L2144-2159 |
-| AI Slide Generator | `FileText` | L2161-2168 |
-| Translate | `Languages` | L2170-2176 |
+
+| Item               | Icon        | Current location |
+| ------------------ | ----------- | ---------------- |
+| AI Copywriter      | `Sparkles`  | L2144-2159       |
+| AI Slide Generator | `FileText`  | L2161-2168       |
+| Translate          | `Languages` | L2170-2176       |
 
 #### Share Menu
-| Item | Icon | Current location |
-|------|------|------------------|
-| Share Link | `Share2` | L2013-2020 |
-| Present Live | `Radio` | L2178-2194 |
-| View Analytics | `BarChart3` | L2022-2028 |
+
+| Item           | Icon        | Current location |
+| -------------- | ----------- | ---------------- |
+| Share Link     | `Share2`    | L2013-2020       |
+| Present Live   | `Radio`     | L2178-2194       |
+| View Analytics | `BarChart3` | L2022-2028       |
 
 ### Standalone Buttons (luôn hiển thị)
+
 - **Present** (`btn-primary`) — L2196-2203
 
 ---
@@ -82,10 +93,12 @@ Thay thế 18 nút `btn-secondary` dàn hàng ngang trong `header-controls` bằ
 ## Related Code Files
 
 ### Files to create:
+
 - `client/src/components/EditorMenuBar.jsx` — Menu bar component chính
 - `client/src/components/DropdownMenu.jsx` — Reusable dropdown menu component
 
 ### Files to modify:
+
 - `client/src/pages/EditorPage.jsx` — Extract header-controls → EditorMenuBar
 - `client/src/index.css` — Thêm styles cho dropdown menu
 
@@ -94,6 +107,7 @@ Thay thế 18 nút `btn-secondary` dàn hàng ngang trong `header-controls` bằ
 ## Implementation Steps
 
 ### Step 1: Create DropdownMenu component
+
 Tạo `DropdownMenu.jsx` — reusable component cho tất cả dropdown menus
 
 ```jsx
@@ -109,6 +123,7 @@ Tạo `DropdownMenu.jsx` — reusable component cho tất cả dropdown menus
 ```
 
 **Yêu cầu kỹ thuật:**
+
 - Click trigger → toggle dropdown
 - Click outside → close (useEffect + document click listener)
 - Escape key → close
@@ -120,6 +135,7 @@ Tạo `DropdownMenu.jsx` — reusable component cho tất cả dropdown menus
 - Keyboard shortcut hints hiển thị bên phải mỗi item
 
 ### Step 2: Create EditorMenuBar component
+
 Tạo `EditorMenuBar.jsx` — orchestrator cho 5 dropdown menus
 
 ```jsx
@@ -152,6 +168,7 @@ Tạo `EditorMenuBar.jsx` — orchestrator cho 5 dropdown menus
 ```
 
 ### Step 3: Add CSS for dropdown menus
+
 Thêm vào `index.css`:
 
 ```css
@@ -241,9 +258,11 @@ Thêm vào `index.css`:
 ```
 
 ### Step 4: Refactor EditorPage.jsx
+
 1. Import EditorMenuBar
 2. Extract hàm xử lý (handleExportPDF, handleExportPPTX, etc.) thành named functions
 3. Thay thế toàn bộ `header-controls` section (L1741-L2204) bằng:
+
 ```jsx
 <EditorMenuBar
   {...menuBarProps}
@@ -278,6 +297,7 @@ Thêm vào `index.css`:
 - [ ] Verify keyboard shortcuts still work (Ctrl+F, etc.)
 
 ## Success Criteria
+
 1. Header giảm từ 2-3 dòng → 1 dòng duy nhất
 2. Tất cả actions vẫn accessible qua dropdown
 3. Present button luôn visible, nổi bật
@@ -285,6 +305,7 @@ Thêm vào `index.css`:
 5. Responsive — dropdown không bị tràn viewport
 
 ## Risk Assessment
+
 - **High**: EditorPage.jsx rất lớn (3939 lines) → cần cẩn thận khi refactor, test kỹ
 - **Medium**: Một số props cần passthrough nhiều lớp → giữ flat props thay vì context
 - **Low**: E2E tests sẽ fail nếu selector dựa trên button text → cần update

@@ -1,12 +1,15 @@
 # Phase 2: Tích hợp vào Router App.jsx & Kiểm thử
 
 ## Mục tiêu
+
 Đưa `MainLayout` vào làm Route bọc ngoài cho các trang quản trị và thao tác, đồng thời kiểm tra và không để lộ thanh này ở màn hình thực thi (Presentation).
 
 ## Các file cần thao tác
+
 - Cập nhật: `client/src/App.jsx`
 
 ## Các bước triển khai
+
 1. **Import `MainLayout` vào `App.jsx`**.
 2. **Cập nhật `AppRoutes`:**
    - Tạo thẻ `<Route element={<MainLayout />}>` bên trong thẻ định tuyến `<Routes>`.
@@ -24,6 +27,7 @@
    - Khởi động chế độ Presentation (Play), check qua route `/live/:roomCode` hoặc `/speaker/:roomCode` để bảo đảm chữ ký thiết kế không bị rò rỉ vào không gian trình chiếu chính thức.
 
 ## Tiêu chí hoàn thành
+
 - [ ] Router bọc chính xác chỉ những page cần thiết.
 - [ ] Theme (Sáng/Tối) hoạt động bình thường, layout bên trong EditorPage, HomePage không bị méo lệch, padding/flex container ở UI chính vẫn giữ nguyên tỷ lệ cấu trúc.
 - [ ] Chữ ký Status Bar xuất hiện tĩnh ổn định.

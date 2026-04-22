@@ -1,8 +1,22 @@
 import { useState, useRef } from 'react'
 import {
-  Eye, EyeOff, Lock, Unlock, GripVertical,
-  Type, Image, Square, Code, BarChart2, Table,
-  Film, Music, Hash, Layers, FileText, Sigma
+  Eye,
+  EyeOff,
+  Lock,
+  Unlock,
+  GripVertical,
+  Type,
+  Image,
+  Square,
+  Code,
+  BarChart2,
+  Table,
+  Film,
+  Music,
+  Hash,
+  Layers,
+  FileText,
+  Sigma,
 } from 'lucide-react'
 
 const TYPE_ICONS = {
@@ -97,9 +111,16 @@ export default function SelectionPane({
   }
 
   return (
-    <div className="selection-pane" style={{ userSelect: 'none' }}>
+    <div className="selection-pane select-none">
       {elements.length === 0 && (
-        <div style={{ padding: '8px 6px', fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+        <div
+          style={{
+            padding: '8px 6px',
+            fontSize: 11,
+            color: 'var(--text-muted)',
+            fontStyle: 'italic',
+          }}
+        >
           No elements on this slide
         </div>
       )}
@@ -114,20 +135,7 @@ export default function SelectionPane({
         return (
           <div
             key={el.id}
-            className={`selection-pane-item ${isSelected ? 'selected' : ''} ${isHidden ? 'hidden' : ''}`}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '3px 4px',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: 12,
-              opacity: isHidden ? 0.45 : 1,
-              background: isSelected ? 'var(--accent-alpha, rgba(99,102,241,0.15))' : 'transparent',
-              borderLeft: isSelected ? '2px solid var(--accent, #6366f1)' : '2px solid transparent',
-              transition: 'background 0.1s',
-            }}
+            className={`selection-pane-item flex items-center gap-1 px-1 py-[3px] rounded text-xs cursor-pointer transition-colors ${isSelected ? 'bg-accent/15 border-l-2 border-accent' : 'bg-transparent border-l-2 border-transparent'} ${isHidden ? 'opacity-45' : 'opacity-100'}`}
             draggable
             onDragStart={(e) => handleDragStart(e, idx)}
             onDragOver={(e) => handleDragOver(e, idx)}
@@ -153,7 +161,9 @@ export default function SelectionPane({
                 onBlur={commitRename}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') commitRename()
-                  if (e.key === 'Escape') { setRenamingId(null) }
+                  if (e.key === 'Escape') {
+                    setRenamingId(null)
+                  }
                   e.stopPropagation()
                 }}
                 onClick={(e) => e.stopPropagation()}
@@ -184,7 +194,10 @@ export default function SelectionPane({
 
             {/* Visibility toggle */}
             <button
-              onClick={(e) => { e.stopPropagation(); onToggleVisibility(el.id) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleVisibility(el.id)
+              }}
               title={isHidden ? 'Show element' : 'Hide element'}
               style={{
                 background: 'none',
@@ -202,7 +215,10 @@ export default function SelectionPane({
 
             {/* Lock toggle */}
             <button
-              onClick={(e) => { e.stopPropagation(); onToggleLock(el.id) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleLock(el.id)
+              }}
               title={isLocked ? 'Unlock element' : 'Lock element'}
               style={{
                 background: 'none',

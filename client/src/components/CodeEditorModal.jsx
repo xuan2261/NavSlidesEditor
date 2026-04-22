@@ -1,3 +1,5 @@
+import { Button } from '../components/ui'
+
 const LANGUAGES = [
   { id: 'plaintext', label: 'Plain Text' },
   { id: 'javascript', label: 'JavaScript' },
@@ -25,59 +27,28 @@ const LANGUAGES = [
   { id: 'latex', label: 'LaTeX' },
 ]
 
-export default function CodeEditorModal({ state, onChange, onApply, onCancel, codeTheme, onChangeTheme }) {
+export default function CodeEditorModal({
+  state,
+  onChange,
+  onApply,
+  onCancel,
+  codeTheme,
+  onChangeTheme,
+}) {
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 10000,
-        background: 'rgba(0,0,0,0.75)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      className="fixed inset-0 z-[10000] bg-black/75 flex items-center justify-center"
       onKeyDown={(e) => {
         if (e.key === 'Escape') onCancel()
       }}
     >
-      <div
-        style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 12,
-          width: '78vw',
-          maxWidth: 960,
-          height: '78vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-        }}
-      >
-        <div
-          style={{
-            padding: '12px 16px',
-            borderBottom: '1px solid var(--border)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexShrink: 0,
-            gap: 12,
-          }}
-        >
-          <span style={{ fontWeight: 600, fontSize: 14 }}>Code Block</span>
+      <div className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl">
+        <div className="px-4 py-3 border-b border-border flex justify-between items-center shrink-0 gap-3">
+          <span className="font-semibold text-sm">Code Block</span>
           <select
             value={state.language}
             onChange={(e) => onChange({ ...state, language: e.target.value })}
-            style={{
-              background: 'var(--bg-hover)',
-              border: '1px solid var(--border)',
-              color: '#e0e0e0',
-              padding: '4px 8px',
-              borderRadius: 4,
-              fontSize: 12,
-              cursor: 'pointer',
-            }}
+            className="bg-hover border border-border text-[#e0e0e0] px-2 py-1 rounded-md text-xs cursor-pointer focus:outline-none focus:border-accent transition-colors"
           >
             {LANGUAGES.map((l) => (
               <option key={l.id} value={l.id}>
@@ -88,15 +59,7 @@ export default function CodeEditorModal({ state, onChange, onApply, onCancel, co
           <select
             value={codeTheme || 'monokai'}
             onChange={(e) => onChangeTheme(e.target.value)}
-            style={{
-              background: 'var(--bg-hover)',
-              border: '1px solid var(--border)',
-              color: '#e0e0e0',
-              padding: '4px 8px',
-              borderRadius: 4,
-              fontSize: 12,
-              cursor: 'pointer',
-            }}
+            className="bg-hover border border-border text-[#e0e0e0] px-2 py-1 rounded-md text-xs cursor-pointer focus:outline-none focus:border-accent transition-colors"
             title="Code highlight theme"
           >
             <optgroup label="Dark">
@@ -114,40 +77,20 @@ export default function CodeEditorModal({ state, onChange, onApply, onCancel, co
               <option value="vs">Visual Studio</option>
             </optgroup>
           </select>
-          <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
-            <button
-              className="btn btn-secondary"
-              style={{ fontSize: 12 }}
-              onClick={onCancel}
-            >
+          <div className="flex gap-2 ml-auto">
+            <Button variant="secondary" className="text-xs" onClick={onCancel}>
               Cancel
-            </button>
-            <button
-              className="btn btn-primary"
-              style={{ fontSize: 12 }}
-              onClick={onApply}
-            >
+            </Button>
+            <Button variant="primary" className="text-xs" onClick={onApply}>
               Apply
-            </button>
+            </Button>
           </div>
         </div>
         <textarea
           value={state.content}
           onChange={(e) => onChange({ ...state, content: e.target.value })}
-          style={{
-            flex: 1,
-            background: '#0d0d1a',
-            color: '#e2e8f0',
-            fontFamily: "'Fira Code','JetBrains Mono',monospace",
-            fontSize: 13,
-            padding: '16px 20px',
-            border: 'none',
-            outline: 'none',
-            resize: 'none',
-            borderRadius: '0 0 12px 12px',
-            lineHeight: 1.6,
-            tabSize: 2,
-          }}
+          className="flex-1 bg-[#0d0d1a] text-[#e2e8f0] font-mono text-[13px] p-4 md:p-5 border-none outline-none resize-none rounded-b-xl leading-relaxed"
+          style={{ tabSize: 2 }}
           spellCheck={false}
           autoFocus
           onKeyDown={(e) => {

@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working on code
 ## Commands
 
 ### Development
+
 ```bash
 npm run dev          # Start Vite dev server (5173) + Express API (3002) concurrently
 npm run build        # Compile React → client/dist/
@@ -16,6 +17,7 @@ npm start            # Serve built client + API on port 3002 (production)
 ```
 
 ### Testing
+
 ```bash
 npm run test                   # Unit tests (Vitest)
 npm run test:e2e               # E2E tests (Playwright)
@@ -24,12 +26,14 @@ npm run test:load:ws           # k6 load test: WebSocket/Socket.IO
 ```
 
 ### Linting & Formatting
+
 ```bash
 npm run lint     # ESLint
 npm run format   # Prettier
 ```
 
 ### Electron Desktop App
+
 ```bash
 npm run electron:dev        # Run Electron in dev mode (no package)
 npm run electron:build:win   # Build Windows .exe installer
@@ -38,6 +42,7 @@ npm run electron:build:mac   # Build macOS .zip
 ```
 
 ### Docker
+
 ```bash
 docker compose up -d          # Start server on port 3002 with persistent volumes
 docker compose logs -f         # Tail logs
@@ -45,6 +50,7 @@ docker compose down -v        # Stop + delete volumes
 ```
 
 ### Single Test
+
 ```bash
 npx vitest run server/routes/share.test.js
 npx vitest run shared/tests/
@@ -86,6 +92,7 @@ revealjs_gui/
 ### Server Architecture (Express)
 
 Single `server/index.js` file (~800 LOC) with all REST routes and Socket.IO setup:
+
 - `GET/POST/PUT/DELETE /api/presentations` — CRUD
 - `GET/POST/DELETE /api/templates`
 - `POST /api/share/:id` — generate/revoke share tokens
@@ -100,16 +107,18 @@ File storage: `server/data/*.json` (presentations, templates, share tokens, gith
 ### HTML Generation (shared/src/htmlGenerator.js)
 
 The core export pipeline: `presentation JSON → reveal.js HTML string`. Used by:
+
 1. Client: offline export, PPTX export (reads HTML)
 2. Server: shareable link serving, GitHub push
 
 ### Live Presentation (Socket.IO)
 
 `server/routes/live.js` + `server/services/live-rooms.js` manage real-time rooms:
+
 - `presenter-join` / `viewer-join` events
 - `slide-change` broadcast to viewers
 - `navigate` (remote control), `sync-state`, `end-presentation`
-Client hook `use-live-presentation.js` handles Socket.IO connection in LiveViewPage.
+  Client hook `use-live-presentation.js` handles Socket.IO connection in LiveViewPage.
 
 ### Workflows
 

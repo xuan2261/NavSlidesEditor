@@ -30,12 +30,13 @@ Completed 5 P0 fixes to align NavSlides editor behavior with PowerPoint conventi
 **Problem:** No Cut/Copy/Paste/Duplicate functionality in editor.
 
 **Implemented:**
+
 - `Ctrl+C/X/V/D` shortcuts in SlideCanvas
 - Canvas context menu with Cut/Copy/Paste/Duplicate
 - `editor-store.js`: Added `copySelected`/`cutSelected` actions
 - `EditorPage.jsx`: Implemented `addElements` callback with proper ID generation
 
-**Bug Fixed:** IDs were undefined in closures. Solution: Generate IDs via `crypto.randomUUID()` *before* calling `setPresentation`.
+**Bug Fixed:** IDs were undefined in closures. Solution: Generate IDs via `crypto.randomUUID()` _before_ calling `setPresentation`.
 
 ---
 
@@ -46,6 +47,7 @@ Completed 5 P0 fixes to align NavSlides editor behavior with PowerPoint conventi
 **New Component:** `SelectionPane.jsx`
 
 **Features:**
+
 - Visibility toggle (eye icon)
 - Lock toggle
 - Inline rename (double-click)
@@ -57,6 +59,7 @@ Completed 5 P0 fixes to align NavSlides editor behavior with PowerPoint conventi
 ### P0-4: Hidden Element Support
 
 **Implementation:**
+
 - Filter: `.filter(el => !(el.hidden || false))` in SlideCanvas render
 - `onToggleVisibility` in SelectionPane
 
@@ -65,6 +68,7 @@ Completed 5 P0 fixes to align NavSlides editor behavior with PowerPoint conventi
 ### P0-5: editor-store.js Updates
 
 Added clipboard actions:
+
 - `copySelected`
 - `cutSelected`
 
@@ -72,24 +76,24 @@ Added clipboard actions:
 
 ## Key Architectural Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| IDs generated before setState | Closure bug fix — IDs were undefined when captured |
-| Hidden filter at render level | Simpler than modifying element model |
-| SelectionPane uses batch update | `onUpdateElements` for drag reorder |
-| SelectionPane delegates to EditorPage | `toggleElementSelection` via prop |
+| Decision                              | Rationale                                          |
+| ------------------------------------- | -------------------------------------------------- |
+| IDs generated before setState         | Closure bug fix — IDs were undefined when captured |
+| Hidden filter at render level         | Simpler than modifying element model               |
+| SelectionPane uses batch update       | `onUpdateElements` for drag reorder                |
+| SelectionPane delegates to EditorPage | `toggleElementSelection` via prop                  |
 
 ---
 
 ## Files Changed
 
-| File | Change |
-|------|--------|
-| SlideCanvas.jsx | +52 lines (keyboard + context menu) |
-| EditorPage.jsx | +120 lines (addElements, integration) |
-| SelectionPane.jsx | +180 lines (new component) |
-| PropertiesPanel.jsx | +40 lines (CollapsibleSection) |
-| editor-store.js | +44 lines (clipboard actions) |
+| File                | Change                                |
+| ------------------- | ------------------------------------- |
+| SlideCanvas.jsx     | +52 lines (keyboard + context menu)   |
+| EditorPage.jsx      | +120 lines (addElements, integration) |
+| SelectionPane.jsx   | +180 lines (new component)            |
+| PropertiesPanel.jsx | +40 lines (CollapsibleSection)        |
+| editor-store.js     | +44 lines (clipboard actions)         |
 
 **Totals:** 5 files, 436 insertions, 12 deletions
 **Commit:** 6507dcff
@@ -113,4 +117,4 @@ Added clipboard actions:
 
 ---
 
-*Author: journal-writer agent*
+_Author: journal-writer agent_

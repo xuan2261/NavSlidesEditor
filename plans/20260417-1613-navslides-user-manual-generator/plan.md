@@ -16,6 +16,7 @@ status: completed
 - [x] **Phase 04:** Rà soát, Sửa lỗi và Hoàn thiện (`phase-04-verification-and-refinement.md`)
 
 ## Key Dependencies
+
 - Node.js (Playwright)
 - Python 3 (`python-docx`)
 - Thư mục dự án `docs/manual/`

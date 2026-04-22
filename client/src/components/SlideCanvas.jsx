@@ -7,6 +7,7 @@ import hljs from 'highlight.js'
 import { calculateGuides } from '../utils/smartGuides'
 import MiniToolbar from './MiniToolbar'
 import { cn } from '../lib/utils'
+import { Button } from '../components/ui'
 
 // Lazy-loaded on first render to avoid 764KB in initial bundle
 let _iconPathsCache = null
@@ -179,7 +180,8 @@ function applyCropHandle(handle, startCrop, dx, dy, elW, elH) {
 
 function getBgStyle(bg) {
   if (!bg) return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
-  if (bg.type === 'color') return { backgroundColor: bg.color || 'var(--bg-canvas-default, #ffffff)' }
+  if (bg.type === 'color')
+    return { backgroundColor: bg.color || 'var(--bg-canvas-default, #ffffff)' }
   if (bg.type === 'gradient')
     return { background: bg.gradient || 'linear-gradient(135deg, #ffffff, #f1f5f9)' }
   if (bg.type === 'image' && bg.image)
@@ -264,10 +266,12 @@ export default function SlideCanvas({
   }, [])
 
   // Clipboard state — shared via Zustand store
-  const clipboard = useEditorStore(s => s.clipboard)
-  const setClipboard = useEditorStore(s => s.setClipboard)
+  const clipboard = useEditorStore((s) => s.clipboard)
+  const setClipboard = useEditorStore((s) => s.setClipboard)
   const clipboardRef = useRef(null)
-  useEffect(() => { clipboardRef.current = clipboard }, [clipboard])
+  useEffect(() => {
+    clipboardRef.current = clipboard
+  }, [clipboard])
   const slideRef = useRef(slide)
   useEffect(() => {
     showGridRef.current = showGrid
@@ -490,7 +494,7 @@ export default function SlideCanvas({
   }, [onUpdateElement, onUpdateElements])
 
   // Keyboard shortcuts
-   
+
   useEffect(() => {
     const onKeyDown = (e) => {
       if (cropMode) {
@@ -512,7 +516,10 @@ export default function SlideCanvas({
           return
         }
         // Forward formatting shortcuts to TipTap — do NOT block them
-        if ((e.ctrlKey || e.metaKey) && ['b','i','u','z','y','0'].includes(e.key.toLowerCase())) {
+        if (
+          (e.ctrlKey || e.metaKey) &&
+          ['b', 'i', 'u', 'z', 'y', '0'].includes(e.key.toLowerCase())
+        ) {
           return // Let browser/TipTap handle
         }
         return // Block other keys when editing
@@ -538,8 +545,8 @@ export default function SlideCanvas({
           if (e.key === 'c' || e.key === 'C') {
             // Copy selected elements
             const clones = (slide?.elements || [])
-              .filter(el => selectedElementIds.includes(el.id))
-              .map(el => {
+              .filter((el) => selectedElementIds.includes(el.id))
+              .map((el) => {
                 // eslint-disable-next-line unused-imports/no-unused-vars
                 const { id, ...rest } = el
                 return { ...rest }
@@ -550,8 +557,8 @@ export default function SlideCanvas({
           if (e.key === 'x' || e.key === 'X') {
             // Cut: copy then delete originals (caller deletes)
             const clones = (slide?.elements || [])
-              .filter(el => selectedElementIds.includes(el.id))
-              .map(el => {
+              .filter((el) => selectedElementIds.includes(el.id))
+              .map((el) => {
                 // eslint-disable-next-line unused-imports/no-unused-vars
                 const { id, ...rest } = el
                 return { ...rest }
@@ -566,7 +573,7 @@ export default function SlideCanvas({
           if (e.key === 'v' || e.key === 'V') {
             // Paste at offset position
             if (clipboardRef.current && clipboardRef.current.length > 0) {
-              const newElements = clipboardRef.current.map(el => {
+              const newElements = clipboardRef.current.map((el) => {
                 const newId = `${el.type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
                 return { ...el, id: newId, x: (el.x || 0) + 20, y: (el.y || 0) + 20 }
               })
@@ -580,11 +587,14 @@ export default function SlideCanvas({
           if (e.key === 'd' || e.key === 'D') {
             // Duplicate in place
             const clones = (slide?.elements || [])
-              .filter(el => selectedElementIds.includes(el.id))
-              .map(el => {
+              .filter((el) => selectedElementIds.includes(el.id))
+              .map((el) => {
                 // eslint-disable-next-line unused-imports/no-unused-vars
                 const { id, ...rest } = el
-                return { ...rest, id: `${rest.type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` }
+                return {
+                  ...rest,
+                  id: `${rest.type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                }
               })
             if (typeof onAddElements === 'function' && clones.length > 0) {
               onAddElements(clones)
@@ -741,16 +751,7 @@ export default function SlideCanvas({
   return (
     <div
       ref={containerRef}
-      className={cn("tour-step-canvas bg-workspace")}
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        position: 'relative',
-      }}
+      className="tour-step-canvas bg-workspace w-full h-full flex items-center justify-center overflow-hidden relative"
       onWheel={(e) => {
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault()
@@ -765,7 +766,7 @@ export default function SlideCanvas({
         <>
           {/* Top ruler */}
           <div
-            className={cn("bg-panel/90 border-b border-border text-muted-foreground")}
+            className={cn('bg-panel/90 border-b border-border text-muted-foreground')}
             style={{
               position: 'absolute',
               top: 0,
@@ -802,7 +803,7 @@ export default function SlideCanvas({
           </div>
           {/* Left ruler */}
           <div
-            className={cn("bg-panel/90 border-r border-border text-muted-foreground")}
+            className={cn('bg-panel/90 border-r border-border text-muted-foreground')}
             style={{
               position: 'absolute',
               left: 0,
@@ -840,7 +841,7 @@ export default function SlideCanvas({
       )}
       <div
         ref={canvasRef}
-        className={cn("slide-canvas shadow-lg")}
+        className={cn('slide-canvas shadow-lg')}
         style={{
           width: SLIDE_W,
           height: SLIDE_H,
@@ -879,7 +880,7 @@ export default function SlideCanvas({
         {/* Locked slide overlay */}
         {slide?.locked && (
           <div
-            className={cn("bg-black/15 dark:bg-white/10")}
+            className={cn('bg-black/15 dark:bg-white/10')}
             style={{
               position: 'absolute',
               inset: 0,
@@ -890,7 +891,14 @@ export default function SlideCanvas({
               justifyContent: 'center',
             }}
           >
-            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, fontFamily: 'sans-serif', userSelect: 'none' }}>
+            <span
+              style={{
+                color: 'rgba(255,255,255,0.3)',
+                fontSize: 14,
+                fontFamily: 'sans-serif',
+                userSelect: 'none',
+              }}
+            >
               🔒 Slide Locked
             </span>
           </div>
@@ -1001,7 +1009,7 @@ export default function SlideCanvas({
         )}
 
         {slide?.elements
-          ?.filter(el => !(el.hidden || false)) // hide elements with hidden:true
+          ?.filter((el) => !(el.hidden || false)) // hide elements with hidden:true
           .slice()
           .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
           .map((element) => (
@@ -1025,7 +1033,11 @@ export default function SlideCanvas({
               onClick={(e) => {
                 e.stopPropagation()
                 if (!cropMode && editingElementId !== element.id) {
-                  if (selectedElementIdsRef.current.includes(element.id) && element.type === 'table' && !e.shiftKey) {
+                  if (
+                    selectedElementIdsRef.current.includes(element.id) &&
+                    element.type === 'table' &&
+                    !e.shiftKey
+                  ) {
                     onStartEdit(element.id)
                   } else {
                     onToggleSelectElement(element.id, e.shiftKey)
@@ -1034,8 +1046,10 @@ export default function SlideCanvas({
               }}
               onDoubleClick={(e) => {
                 e.stopPropagation()
-                if (element.type === 'text' && editingElementId !== element.id) onStartEdit(element.id)
-                else if (element.type === 'table' && editingElementId !== element.id) onStartEdit(element.id)
+                if (element.type === 'text' && editingElementId !== element.id)
+                  onStartEdit(element.id)
+                else if (element.type === 'table' && editingElementId !== element.id)
+                  onStartEdit(element.id)
                 else if (element.type === 'html') onOpenHtmlEditor?.(element.id)
                 else if (element.type === 'code') onOpenCodeEditor?.(element.id)
                 else if (element.type === 'latex') onOpenLatexEditor?.(element.id)
@@ -1177,40 +1191,49 @@ export default function SlideCanvas({
           const currentRef = ctxEl?.snapRef || 'ul'
           return (
             <div
-              className="canvas-context-menu"
-              style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 9999 }}
+              className="fixed z-[9999] bg-card border border-border shadow-md rounded-md p-1 min-w-[160px] flex flex-col gap-1"
+              style={{ top: contextMenu.y, left: contextMenu.x }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* ── Clipboard actions (always visible when element is right-clicked) ── */}
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => {
                   const clones = (slide?.elements || [])
-                    .filter(el => contextMenu.elementId === el.id)
+                    .filter((el) => contextMenu.elementId === el.id)
                     // eslint-disable-next-line unused-imports/no-unused-vars
-                    .map(el => { const { id, ...rest } = el; return { ...rest } })
+                    .map((el) => {
+                      const { id, ...rest } = el
+                      return { ...rest }
+                    })
                   setClipboard(clones)
                   setContextMenu(null)
                 }}
               >
                 📋 Copy (Ctrl+C)
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => {
                   const clones = (slide?.elements || [])
-                    .filter(el => contextMenu.elementId === el.id)
+                    .filter((el) => contextMenu.elementId === el.id)
                     // eslint-disable-next-line unused-imports/no-unused-vars
-                    .map(el => { const { id, ...rest } = el; return { ...rest } })
+                    .map((el) => {
+                      const { id, ...rest } = el
+                      return { ...rest }
+                    })
                   setClipboard(clones)
                   onDeleteElement(contextMenu.elementId)
                   setContextMenu(null)
                 }}
               >
                 ✂ Cut (Ctrl+X)
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => {
                   if (!clipboardRef.current || clipboardRef.current.length === 0) return
-                  const newEls = clipboardRef.current.map(el => ({
+                  const newEls = clipboardRef.current.map((el) => ({
                     ...el,
                     id: `${el.type || 'el'}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                     x: (el.x || 0) + 20,
@@ -1221,8 +1244,9 @@ export default function SlideCanvas({
                 }}
               >
                 📌 Paste (Ctrl+V)
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => {
                   if (!ctxEl) return
                   // eslint-disable-next-line unused-imports/no-unused-vars
@@ -1238,13 +1262,16 @@ export default function SlideCanvas({
                 }}
               >
                 ⧉ Duplicate (Ctrl+D)
-              </button>
-              <div className="canvas-context-menu-separator" />
+              </Button>
+              <div className="h-px bg-border my-1" />
 
               {contextMenu.elementType === 'image' && (
                 <>
-                  <button onClick={() => startCrop(contextMenu.elementId)}>✂ Crop</button>
-                  <button
+                  <Button variant="ghost" onClick={() => startCrop(contextMenu.elementId)}>
+                    ✂ Crop
+                  </Button>
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       const el = slide?.elements?.find((e) => e.id === contextMenu.elementId)
                       if (el && el.imageW != null) {
@@ -1264,8 +1291,8 @@ export default function SlideCanvas({
                     }}
                   >
                     ↺ Reset crop
-                  </button>
-                  <div className="canvas-context-menu-separator" />
+                  </Button>
+                  <div className="h-px bg-border my-1" />
                 </>
               )}
               <div
@@ -1287,7 +1314,8 @@ export default function SlideCanvas({
                 }}
               >
                 {SNAP_REF_OPTIONS.map((opt) => (
-                  <button
+                  <Button
+                    variant="ghost"
                     key={opt.id}
                     title={opt.label}
                     style={{
@@ -1324,7 +1352,7 @@ export default function SlideCanvas({
                                   : opt.id === 'lc'
                                     ? '↓'
                                     : '↘'}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -1332,16 +1360,20 @@ export default function SlideCanvas({
         })()}
 
       {/* Zoom Controls */}
-      <div className="zoom-controls">
-        <button
-          className="btn-icon zoom-btn"
-          onClick={() => { setScale((s) => Math.max(0.1, s - 0.1)); setUserZoomMode(true) }}
+      <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-card border border-border rounded-md p-1 shadow-md z-[100]">
+        <Button
+          variant="icon"
+          className="h-7 w-7 p-0 shrink-0 flex items-center justify-center text-lg"
+          onClick={() => {
+            setScale((s) => Math.max(0.1, s - 0.1))
+            setUserZoomMode(true)
+          }}
           title="Zoom out"
         >
-          <span style={{ fontSize: 16, lineHeight: 1 }}>−</span>
-        </button>
+          −
+        </Button>
         <select
-          className="zoom-select"
+          className="bg-muted border border-border text-foreground rounded text-[11px] px-1 py-0.5 min-w-[60px] text-center outline-none cursor-pointer"
           value={`${Math.round(scale * 100)}`}
           onChange={(e) => {
             const pct = parseInt(e.target.value) / 100
@@ -1357,15 +1389,20 @@ export default function SlideCanvas({
           <option value="200">200%</option>
           <option value="400">400%</option>
         </select>
-        <button
-          className="btn-icon zoom-btn"
-          onClick={() => { setScale((s) => Math.min(4, s + 0.1)); setUserZoomMode(true) }}
+        <Button
+          variant="icon"
+          className="h-7 w-7 p-0 shrink-0 flex items-center justify-center text-lg"
+          onClick={() => {
+            setScale((s) => Math.min(4, s + 0.1))
+            setUserZoomMode(true)
+          }}
           title="Zoom in"
         >
-          <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
-        </button>
-        <button
-          className="zoom-fit-btn"
+          +
+        </Button>
+        <Button
+          variant="ghost"
+          className="text-[11px] px-2 py-1 h-7 rounded whitespace-nowrap text-muted-foreground hover:text-foreground"
           onClick={() => {
             setUserZoomMode(false)
             if (containerRef.current) {
@@ -1376,26 +1413,28 @@ export default function SlideCanvas({
           title="Fit to window"
         >
           Fit
-        </button>
+        </Button>
       </div>
 
       {/* Mini Toolbar — floating formatting bar when editing text */}
-      {editingElementId && editor && (() => {
-        const el = slide?.elements?.find(e => e.id === editingElementId)
-        if (!el || el.type !== 'text') return null
-        const containerLeft = containerRef.current?.getBoundingClientRect().left ?? 0
-        const containerTop = containerRef.current?.getBoundingClientRect().top ?? 0
-        return (
-          <MiniToolbar
-            editor={editor}
-            position={{
-              x: containerLeft + (el.x + (el.width ?? 200) / 2) * scale,
-              y: containerTop + el.y * scale,
-            }}
-            onClose={onStopEdit}
-          />
-        )
-      })()}
+      {editingElementId &&
+        editor &&
+        (() => {
+          const el = slide?.elements?.find((e) => e.id === editingElementId)
+          if (!el || el.type !== 'text') return null
+          const containerLeft = containerRef.current?.getBoundingClientRect().left ?? 0
+          const containerTop = containerRef.current?.getBoundingClientRect().top ?? 0
+          return (
+            <MiniToolbar
+              editor={editor}
+              position={{
+                x: containerLeft + (el.x + (el.width ?? 200) / 2) * scale,
+                y: containerTop + el.y * scale,
+              }}
+              onClose={onStopEdit}
+            />
+          )
+        })()}
     </div>
   )
 }
@@ -1431,7 +1470,7 @@ function CanvasElement({
           displayMode: el.getAttribute('data-math-display') === 'true',
         })
         el.setAttribute('data-katex-done', '1')
-      // eslint-disable-next-line unused-imports/no-unused-vars
+        // eslint-disable-next-line unused-imports/no-unused-vars
       } catch (e) {}
     })
   }, [element.content, isEditing])
@@ -1477,11 +1516,15 @@ function CanvasElement({
             : undefined,
       }}
       onMouseDown={(e) => {
-        if (isEditing) { e.stopPropagation(); return }
+        if (isEditing) {
+          e.stopPropagation()
+          return
+        }
         if (!isCropping) onPointerDown(e, 'move', null)
       }}
       onClick={(e) => {
-        if (!isEditing) onClick(e); else e.stopPropagation();
+        if (!isEditing) onClick(e)
+        else e.stopPropagation()
       }}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
@@ -1505,7 +1548,10 @@ function CanvasElement({
         />
       )}
       {element.type === 'text' && isEditing && (
-        <EditorContent editor={editor} style={{ width: '100%', height: '100%', color: 'white', boxSizing: 'border-box' }} />
+        <EditorContent
+          editor={editor}
+          style={{ width: '100%', height: '100%', color: 'white', boxSizing: 'border-box' }}
+        />
       )}
       {element.type === 'image' &&
         (() => {
@@ -1619,7 +1665,7 @@ function CanvasElement({
             height: '100%',
             objectFit: element.objectFit || 'contain',
             display: 'block',
-            pointerEvents: (isSelected && !isDragging) ? 'auto' : 'none',
+            pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
           }}
         />
       )}
@@ -1638,14 +1684,20 @@ function CanvasElement({
           <audio
             src={element.src}
             controls
-            style={{ width: '90%', pointerEvents: (isSelected && !isDragging) ? 'auto' : 'none' }}
+            style={{ width: '90%', pointerEvents: isSelected && !isDragging ? 'auto' : 'none' }}
           />
         </div>
       )}
-      {element.type === 'table' && <TableRenderer element={element} isEditing={isEditing} onUpdateElement={onUpdateElement} />}
-      {element.type === 'latex' && <LatexRenderer element={element} isSelected={isSelected} isDragging={isDragging} />}
+      {element.type === 'table' && (
+        <TableRenderer element={element} isEditing={isEditing} onUpdateElement={onUpdateElement} />
+      )}
+      {element.type === 'latex' && (
+        <LatexRenderer element={element} isSelected={isSelected} isDragging={isDragging} />
+      )}
       {element.type === 'markdown' && <MarkdownRenderer element={element} />}
-      {element.type === 'chart' && <ChartRenderer element={element} isSelected={isSelected} isDragging={isDragging} />}
+      {element.type === 'chart' && (
+        <ChartRenderer element={element} isSelected={isSelected} isDragging={isDragging} />
+      )}
       {element.type === 'callout' && <CalloutRenderer element={element} />}
       {element.type === 'icon' && <IconRenderer element={element} iconPaths={iconPaths} />}
       {element.type === 'drawing' && <DrawingRenderer element={element} />}
@@ -2011,7 +2063,7 @@ new Chart(document.getElementById('c'),{
         height: '100%',
         border: 'none',
         display: 'block',
-        pointerEvents: (isSelected && !isDragging) ? 'auto' : 'none',
+        pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
         background: 'transparent',
       }}
       sandbox="allow-scripts"
@@ -2130,7 +2182,7 @@ function LatexRenderer({ element, isSelected, isDragging }) {
         height: '100%',
         border: 'none',
         display: 'block',
-        pointerEvents: (isSelected && !isDragging) ? 'auto' : 'none',
+        pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
         background: 'transparent',
       }}
       sandbox="allow-scripts"
@@ -2198,7 +2250,7 @@ function TableRenderer({ element, isEditing, onUpdateElement }) {
                       ref={(el) => (inputRefs.current[`${ri}-${ci}`] = el)}
                       value={cell || ''}
                       onChange={(e) => {
-                        const newData = data.map(r => [...r])
+                        const newData = data.map((r) => [...r])
                         newData[ri][ci] = e.target.value
                         onUpdateElement(element.id, { data: newData })
                       }}
@@ -2467,10 +2519,14 @@ const ARROWHEAD_MARKERS = {
 }
 
 function LineArrowRenderer({ element }) {
-  const w = element.width, h = element.height
-  const x1 = element.x1 ?? 0, y1 = element.y1 ?? h / 2
-  const x2 = element.x2 ?? w, y2 = element.y2 ?? h / 2
-  const cx = element.cx, cy = element.cy
+  const w = element.width,
+    h = element.height
+  const x1 = element.x1 ?? 0,
+    y1 = element.y1 ?? h / 2
+  const x2 = element.x2 ?? w,
+    y2 = element.y2 ?? h / 2
+  const cx = element.cx,
+    cy = element.cy
   const color = element.stroke || '#ffffff'
   const sw = element.strokeWidth || 2
   const dash = element.dashArray || ''
@@ -2479,7 +2535,8 @@ function LineArrowRenderer({ element }) {
   const uid = element.id?.slice(0, 8) || 'line'
 
   const markers = []
-  let markerStart = undefined, markerEnd = undefined
+  let markerStart = undefined,
+    markerEnd = undefined
   if (startType !== 'none' && ARROWHEAD_MARKERS[startType]) {
     const sid = `ms-${uid}`
     markers.push(ARROWHEAD_MARKERS[startType](sid, color))
@@ -2491,9 +2548,10 @@ function LineArrowRenderer({ element }) {
     markerEnd = `url(#${eid})`
   }
 
-  const pathD = cx != null && cy != null
-    ? `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`
-    : `M ${x1} ${y1} L ${x2} ${y2}`
+  const pathD =
+    cx != null && cy != null
+      ? `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`
+      : `M ${x1} ${y1} L ${x2} ${y2}`
 
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
@@ -2526,10 +2584,7 @@ function SvgElementRenderer({ element }) {
   // Apply fill/stroke overrides via CSS variables or inline style
   let modifiedContent = content
   if (element.fillOverride) {
-    modifiedContent = modifiedContent.replace(
-      /fill="[^"]*"/g,
-      `fill="${element.fillOverride}"`
-    )
+    modifiedContent = modifiedContent.replace(/fill="[^"]*"/g, `fill="${element.fillOverride}"`)
   }
   if (element.strokeOverride) {
     modifiedContent = modifiedContent.replace(
@@ -2558,17 +2613,37 @@ function QrCodeRenderer({ element }) {
     QRCode.toDataURL(element.qrData || 'https://example.com', {
       color: {
         dark: element.qrColor || '#000000',
-        light: element.qrBgColor || '#ffffff'
+        light: element.qrBgColor || '#ffffff',
       },
       errorCorrectionLevel: element.qrErrorLevel || 'M',
       margin: 1,
       width: 500,
-    }).then(setDataUrl).catch(console.error)
+    })
+      .then(setDataUrl)
+      .catch(console.error)
   }, [element.qrData, element.qrColor, element.qrBgColor, element.qrErrorLevel])
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: element.qrBgColor || '#ffffff', borderRadius: element.borderRadius || 0, overflow: 'hidden' }}>
-      {dataUrl ? <img src={dataUrl} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="QR Code" draggable={false} /> : null}
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: element.qrBgColor || '#ffffff',
+        borderRadius: element.borderRadius || 0,
+        overflow: 'hidden',
+      }}
+    >
+      {dataUrl ? (
+        <img
+          src={dataUrl}
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          alt="QR Code"
+          draggable={false}
+        />
+      ) : null}
     </div>
   )
 }

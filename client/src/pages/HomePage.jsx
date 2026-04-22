@@ -28,31 +28,133 @@ import { api } from '../utils/api'
 import { markdownToSlides } from '../utils/markdown-import'
 import { parseProjectFile, validateProjectFile, rewriteMediaUrls } from '../utils/import-project'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
+import { Button, Input, Select } from '../components/ui'
+import SlideThumbnail from '../components/SlideThumbnail'
 
 const THEMES = [
-  'black', 'white', 'league', 'beige', 'sky',
-  'night', 'serif', 'simple', 'solarized', 'moon', 'dracula',
+  'black',
+  'white',
+  'league',
+  'beige',
+  'sky',
+  'night',
+  'serif',
+  'simple',
+  'solarized',
+  'moon',
+  'dracula',
 ]
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
 
 const PRESET_THEMES = [
-  { id: 'deck-blank-light', title: 'Blank Light', category: 'minimal', theme: 'white', transition: 'slide', thumbnail: { type: 'color', color: '#ffffff' }, description: 'Clean minimal light theme' },
-  { id: 'deck-blank-dark', title: 'Blank Dark', category: 'minimal', theme: 'black', transition: 'fade', thumbnail: { type: 'color', color: '#111111' }, description: 'Clean minimal dark theme' },
-  { id: 'deck-palette', title: 'Palette', category: 'creative', theme: 'solarized', transition: 'zoom', thumbnail: { type: 'color', color: '#fdf6e3' }, description: 'Vibrant and creative colors' },
-  { id: 'deck-bento', title: 'Bento', category: 'creative', theme: 'white', transition: 'convex', thumbnail: { type: 'gradient', gradient: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)' }, description: 'Grid-based bento box design' },
-  { id: 'deck-serif', title: 'Serif', category: 'academic', theme: 'serif', transition: 'slide', thumbnail: { type: 'color', color: '#fcfcfc' }, description: 'Classic typography for reading' },
-  { id: 'deck-bold', title: 'Bold', category: 'corporate', theme: 'blood', transition: 'none', thumbnail: { type: 'color', color: '#222222' }, description: 'High contrast for impact' },
-  { id: 'deck-minimal', title: 'Minimalist', category: 'minimal', theme: 'simple', transition: 'fade', thumbnail: { type: 'color', color: '#fafafa' }, description: 'Focus entirely on content' },
-  { id: 'deck-code', title: 'Code', category: 'engineering', theme: 'night', transition: 'slide', thumbnail: { type: 'color', color: '#1a1b26' }, description: 'Developer focused template' },
-  { id: 'deck-desk', title: 'Desk', category: 'corporate', theme: 'league', transition: 'slide', thumbnail: { type: 'color', color: '#2b2b2b' }, description: 'Professional office environment' },
-  { id: 'deck-ellipse', title: 'Ellipse', category: 'creative', theme: 'sky', transition: 'concave', thumbnail: { type: 'gradient', gradient: 'radial-gradient(circle, #f6f8fd, #e9eff9)' }, description: 'Soft rounded shapes' },
+  {
+    id: 'deck-blank-light',
+    title: 'Blank Light',
+    category: 'minimal',
+    theme: 'white',
+    transition: 'slide',
+    thumbnail: { type: 'color', color: '#ffffff' },
+    description: 'Clean minimal light theme',
+  },
+  {
+    id: 'deck-blank-dark',
+    title: 'Blank Dark',
+    category: 'minimal',
+    theme: 'black',
+    transition: 'fade',
+    thumbnail: { type: 'color', color: '#111111' },
+    description: 'Clean minimal dark theme',
+  },
+  {
+    id: 'deck-palette',
+    title: 'Palette',
+    category: 'creative',
+    theme: 'solarized',
+    transition: 'zoom',
+    thumbnail: { type: 'color', color: '#fdf6e3' },
+    description: 'Vibrant and creative colors',
+  },
+  {
+    id: 'deck-bento',
+    title: 'Bento',
+    category: 'creative',
+    theme: 'white',
+    transition: 'convex',
+    thumbnail: { type: 'gradient', gradient: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)' },
+    description: 'Grid-based bento box design',
+  },
+  {
+    id: 'deck-serif',
+    title: 'Serif',
+    category: 'academic',
+    theme: 'serif',
+    transition: 'slide',
+    thumbnail: { type: 'color', color: '#fcfcfc' },
+    description: 'Classic typography for reading',
+  },
+  {
+    id: 'deck-bold',
+    title: 'Bold',
+    category: 'corporate',
+    theme: 'blood',
+    transition: 'none',
+    thumbnail: { type: 'color', color: '#222222' },
+    description: 'High contrast for impact',
+  },
+  {
+    id: 'deck-minimal',
+    title: 'Minimalist',
+    category: 'minimal',
+    theme: 'simple',
+    transition: 'fade',
+    thumbnail: { type: 'color', color: '#fafafa' },
+    description: 'Focus entirely on content',
+  },
+  {
+    id: 'deck-code',
+    title: 'Code',
+    category: 'engineering',
+    theme: 'night',
+    transition: 'slide',
+    thumbnail: { type: 'color', color: '#1a1b26' },
+    description: 'Developer focused template',
+  },
+  {
+    id: 'deck-desk',
+    title: 'Desk',
+    category: 'corporate',
+    theme: 'league',
+    transition: 'slide',
+    thumbnail: { type: 'color', color: '#2b2b2b' },
+    description: 'Professional office environment',
+  },
+  {
+    id: 'deck-ellipse',
+    title: 'Ellipse',
+    category: 'creative',
+    theme: 'sky',
+    transition: 'concave',
+    thumbnail: { type: 'gradient', gradient: 'radial-gradient(circle, #f6f8fd, #e9eff9)' },
+    description: 'Soft rounded shapes',
+  },
 ]
 
 const TEMPLATE_CATEGORIES = [
-  'All', 'Creative', 'Academic', 'Corporate',
-  'Kỹ thuật số', 'Vi xử lý', 'Lý thuyết mạch',
-  'Điện tử', 'Tự động hoá', 'Điện',
-  'Đo lường', 'ĐTCS', 'Cơ khí', 'VKT', 'Thuỷ khí',
+  'All',
+  'Creative',
+  'Academic',
+  'Corporate',
+  'Kỹ thuật số',
+  'Vi xử lý',
+  'Lý thuyết mạch',
+  'Điện tử',
+  'Tự động hoá',
+  'Điện',
+  'Đo lường',
+  'ĐTCS',
+  'Cơ khí',
+  'VKT',
+  'Thuỷ khí',
 ]
 
 function formatDate(dateStr) {
@@ -92,7 +194,12 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   const [trashItems, setTrashItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState({ title: '', theme: 'black', transition: 'slide', templateId: null })
+  const [form, setForm] = useState({
+    title: '',
+    theme: 'black',
+    transition: 'slide',
+    templateId: null,
+  })
   const [creating, setCreating] = useState(false)
   const [previewTemplate, setPreviewTemplate] = useState(null)
   const [confirmDialog, setConfirmDialog] = useState(null) // { title, message, onConfirm, variant }
@@ -104,12 +211,16 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   const [viewMode, setViewMode] = useState('grid')
   const [templateCategory, setTemplateCategory] = useState('All')
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => {
+    loadData()
+  }, [])
 
   async function loadData() {
     try {
       const [presData, tmplData, trashData] = await Promise.all([
-        api.getPresentations(), api.getTemplates(), api.getTrash(),
+        api.getPresentations(),
+        api.getTemplates(),
+        api.getTrash(),
       ])
       setPresentations(Array.isArray(presData) ? presData : [])
       setTemplates(Array.isArray(tmplData) ? tmplData : [])
@@ -149,14 +260,17 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       if (isPreset) {
         let presetData = PRESET_THEMES.find((p) => p.id === templateId)
         if (!presetData) return
-        
+
         try {
           const fullTemplate = await api.getMarketplaceTemplate(templateId)
           if (fullTemplate) {
             presetData = fullTemplate
           }
         } catch (err) {
-          console.warn('Failed to fetch full template data from backend, using metadata outline', err)
+          console.warn(
+            'Failed to fetch full template data from backend, using metadata outline',
+            err
+          )
         }
 
         // eslint-disable-next-line unused-imports/no-unused-vars
@@ -275,16 +389,26 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         title: 'New Template',
         theme: 'black',
         transition: 'slide',
-        slides: [{
-          id: crypto.randomUUID(),
-          elements: [{
+        slides: [
+          {
             id: crypto.randomUUID(),
-            type: 'text', x: 80, y: 160, width: 800, height: 220, zIndex: 1,
-            content: '<h2 style="text-align: center">Template Title</h2><p style="text-align: center">Edit this template</p>',
-          }],
-          notes: '',
-          background: { type: 'color', color: '#1e1e2e' },
-        }],
+            elements: [
+              {
+                id: crypto.randomUUID(),
+                type: 'text',
+                x: 80,
+                y: 160,
+                width: 800,
+                height: 220,
+                zIndex: 1,
+                content:
+                  '<h2 style="text-align: center">Template Title</h2><p style="text-align: center">Edit this template</p>',
+              },
+            ],
+            notes: '',
+            background: { type: 'color', color: '#1e1e2e' },
+          },
+        ],
       })
       onOpen(template.id, true)
     } catch (err) {
@@ -406,10 +530,14 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     // Sort
     items.sort((a, b) => {
       switch (sortBy) {
-        case 'title': return (a.title || '').localeCompare(b.title || '')
-        case 'createdAt': return new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-        case 'slides': return (b.slideCount || 0) - (a.slideCount || 0)
-        default: return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
+        case 'title':
+          return (a.title || '').localeCompare(b.title || '')
+        case 'createdAt':
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+        case 'slides':
+          return (b.slideCount || 0) - (a.slideCount || 0)
+        default:
+          return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
       }
     })
 
@@ -423,7 +551,9 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
   const filteredPresets = useMemo(() => {
     if (templateCategory === 'All') return PRESET_THEMES
-    return PRESET_THEMES.filter((p) => p.category === templateCategory)
+    return PRESET_THEMES.filter(
+      (p) => (p.category || '').toLowerCase() === (templateCategory || '').toLowerCase()
+    )
   }, [templateCategory])
 
   const allTemplates = [...PRESET_THEMES, ...templates.map((t) => ({ ...t, isUser: true }))]
@@ -444,21 +574,26 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   }, [isMarketplaceView])
 
   return (
-    <div className="home-page">
+    <div className="h-full flex flex-col bg-bg-primary">
       {/* ════ Header ════ */}
-      <div className="home-header">
-        <div className="home-header-left">
-          <div className="home-logo">
-            <div className="home-logo-icon">N</div>
+      <div className="flex items-center justify-between px-6 h-14 border-b border-border bg-secondary shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-[17px] font-bold text-text-primary tracking-tight">
+            <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center text-white font-extrabold text-sm">
+              N
+            </div>
             <span>NavSlides Editor</span>
           </div>
         </div>
 
         {/* Search */}
-        <div className="home-search">
-          <Search size={15} className="home-search-icon" />
-          <input
-            className="home-search-input"
+        <div className="relative w-full max-w-md">
+          <Search
+            size={15}
+            className="absolute left-[11px] top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
+          />
+          <Input
+            className="w-full pl-9"
             type="text"
             placeholder="Search presentations..."
             value={searchQuery}
@@ -467,82 +602,95 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         </div>
 
         {/* Actions */}
-        <div className="home-header-actions">
-          <button
-            className="btn-icon"
+        <div className="flex items-center gap-2">
+          <Button
+            variant="icon"
             onClick={onToggleTheme}
             title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-          <button
-            className="btn-icon"
-            onClick={() => navigate('/settings')}
-            title="Settings"
-          >
+          </Button>
+          <Button variant="icon" onClick={() => navigate('/settings')} title="Settings">
             <Settings2 size={16} />
-          </button>
-          <button className="btn btn-primary" onClick={handleOpenModal}>
+          </Button>
+          <Button variant="primary" onClick={handleOpenModal}>
             <Plus size={16} />
-            New
-          </button>
+            <span>New</span>
+          </Button>
         </div>
       </div>
 
       {/* ════ Body: Sidebar + Content ════ */}
-      <div className="home-body">
+      <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
-        <nav className="home-sidebar">
-          <div className="sidebar-section">
+        <nav className="w-[var(--sidebar-width)] shrink-0 bg-secondary border-r border-border flex flex-col overflow-y-auto py-3">
+          <div className="px-3 mb-2">
             {SIDEBAR_VIEWS.map((item) => (
-              <button
+              <Button
+                variant="ghost"
                 key={item.key}
-                className={`sidebar-item ${sidebarView === item.key ? 'active' : ''}`}
+                className={`flex items-center gap-3 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary ${sidebarView === item.key ? 'bg-primary/10 text-primary' : ''}`}
                 onClick={() => setSidebarView(item.key)}
               >
                 <item.icon size={16} />
                 <span>{item.label}</span>
                 {item.key === 'all' && (
-                  <span className="sidebar-item-count">{presentations.length}</span>
+                  <span className="ml-auto text-[11px] text-text-muted bg-hover px-[7px] py-[1px] rounded-[10px]">
+                    {presentations.length}
+                  </span>
                 )}
-              </button>
+              </Button>
             ))}
           </div>
 
-          <div className="sidebar-divider" />
+          <div className="h-px bg-border my-2 mx-3" />
 
-          <div className="sidebar-section">
-            <div className="sidebar-section-title">Templates</div>
-            <button
-              className={`sidebar-item ${sidebarView === 'templates' ? 'active' : ''}`}
+          <div className="px-3 mb-2">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted px-3 pt-2 pb-1.5">
+              Templates
+            </div>
+            <Button
+              variant="ghost"
+              className={`flex items-center gap-3 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary ${sidebarView === 'templates' ? 'bg-primary/10 text-primary' : ''}`}
               onClick={() => setSidebarView('templates')}
             >
               <LayoutTemplate size={16} />
               <span>Built-in</span>
-              <span className="sidebar-item-count">{PRESET_THEMES.length}</span>
-            </button>
-            <button
-              className={`sidebar-item ${sidebarView === 'my-templates' ? 'active' : ''}`}
+              <span className="ml-auto text-[11px] text-text-muted bg-hover px-[7px] py-[1px] rounded-[10px]">
+                {PRESET_THEMES.length}
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              className={`flex items-center gap-3 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary ${sidebarView === 'my-templates' ? 'bg-primary/10 text-primary' : ''}`}
               onClick={() => setSidebarView('my-templates')}
             >
               <Layout size={16} />
               <span>My Templates</span>
-              <span className="sidebar-item-count">{templates.length}</span>
-            </button>
-            <button
-              className={`sidebar-item ${sidebarView === 'marketplace' ? 'active' : ''}`}
+              <span className="ml-auto text-[11px] text-text-muted bg-hover px-[7px] py-[1px] rounded-[10px]">
+                {templates.length}
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              className={`flex items-center gap-3 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary ${sidebarView === 'marketplace' ? 'bg-primary/10 text-primary' : ''}`}
               onClick={() => setSidebarView('marketplace')}
             >
               <Sparkles size={16} />
               <span>Marketplace</span>
-            </button>
+            </Button>
           </div>
 
-          <div className="sidebar-divider" />
+          <div className="h-px bg-border my-2 mx-3" />
 
-          <div className="sidebar-section">
-            <div className="sidebar-section-title">Import</div>
-            <label className="sidebar-item" style={{ cursor: 'pointer' }}>
+          <div className="px-3 mb-2">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted px-3 pt-2 pb-1.5">
+              Import
+            </div>
+            <label
+              className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
+              style={{ cursor: 'pointer' }}
+            >
               <BookOpen size={16} />
               <span>Import PDF</span>
               <input
@@ -555,7 +703,10 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                 }}
               />
             </label>
-            <label className="sidebar-item" style={{ cursor: 'pointer' }}>
+            <label
+              className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
+              style={{ cursor: 'pointer' }}
+            >
               <BookOpen size={16} />
               <span>Import Markdown</span>
               <input
@@ -568,7 +719,10 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                 }}
               />
             </label>
-            <label className="sidebar-item" style={{ cursor: 'pointer' }}>
+            <label
+              className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
+              style={{ cursor: 'pointer' }}
+            >
               <FolderOpen size={16} />
               <span>Import Project</span>
               <input
@@ -583,36 +737,40 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             </label>
           </div>
 
-          <div className="sidebar-divider" />
+          <div className="h-px bg-border my-2 mx-3" />
 
-          <div className="sidebar-section">
-            <button
-              className="sidebar-item"
+          <div className="px-3 mb-2">
+            <Button
+              variant="ghost"
+              className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
               onClick={() => navigate('/explore')}
             >
               <Globe size={16} />
               <span>Explore</span>
-            </button>
+            </Button>
           </div>
 
-          <div className="sidebar-divider" />
+          <div className="h-px bg-border my-2 mx-3" />
 
-          <div className="sidebar-section">
-            <button
-              className={`sidebar-item ${sidebarView === 'trash' ? 'active' : ''}`}
+          <div className="px-3 mb-2">
+            <Button
+              variant="ghost"
+              className={`flex items-center gap-3 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary ${sidebarView === 'trash' ? 'bg-primary/10 text-primary' : ''}`}
               onClick={() => setSidebarView('trash')}
             >
               <Trash size={16} />
               <span>Trash</span>
               {trashItems.length > 0 && (
-                <span className="sidebar-item-count">{trashItems.length}</span>
+                <span className="ml-auto text-[11px] text-text-muted bg-hover px-[7px] py-[1px] rounded-[10px]">
+                  {trashItems.length}
+                </span>
               )}
-            </button>
+            </Button>
           </div>
         </nav>
 
         {/* Main Content */}
-        <div className="home-content">
+        <div className="flex-1 overflow-y-auto pt-7 px-8 pb-7">
           {loading ? (
             <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '80px' }}>
               Loading...
@@ -620,46 +778,71 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           ) : isTrashView ? (
             /* ── Trash View ── */
             <>
-              <div className="home-content-header">
-                <h2 className="home-content-title">Trash</h2>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-text-primary">Trash</h2>
                 {trashItems.length > 0 && (
-                  <button className="btn btn-danger" onClick={handleEmptyTrash} style={{ fontSize: 12 }}>
+                  <Button variant="danger" onClick={handleEmptyTrash} style={{ fontSize: 12 }}>
                     <Trash2 size={14} /> Empty Trash
-                  </button>
+                  </Button>
                 )}
               </div>
               {trashItems.length === 0 ? (
-                <div className="empty-state anim-fade-in">
+                <div className="col-span-full text-center py-20 px-5 text-text-muted anim-fade-in">
                   <Trash size={48} />
-                  <p className="empty-state-title">Trash is empty</p>
-                  <p className="empty-state-desc">Deleted presentations will appear here</p>
+                  <p className="text-[17px] font-semibold text-text-secondary mb-2">
+                    Trash is empty
+                  </p>
+                  <p className="text-sm text-text-muted mb-6">
+                    Deleted presentations will appear here
+                  </p>
                 </div>
               ) : (
-                <div className="presentations-grid anim-fade-in">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 anim-fade-in">
                   {trashItems.map((pres) => {
                     const bg = getCardBg(pres.thumbnail)
                     const bgProp = isGradientOrImage(pres.thumbnail)
                       ? { background: bg }
                       : { backgroundColor: bg }
                     return (
-                      <div key={pres.id} className="presentation-card" style={{ opacity: 0.7, cursor: 'default' }}>
-                        <div className="card-preview" style={bgProp}>
+                      <div
+                        key={pres.id}
+                        className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
+                        style={{ opacity: 0.7, cursor: 'default' }}
+                      >
+                        <div
+                          className="aspect-video flex items-center justify-center bg-surface-2 relative overflow-hidden text-[32px] text-text-muted"
+                          style={bgProp}
+                        >
                           <Trash size={24} style={{ opacity: 0.3 }} />
                         </div>
-                        <div className="card-info">
-                          <h3>{pres.title || 'Untitled'}</h3>
-                          <p>
+                        <div className="px-4 py-3">
+                          <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
+                            {pres.title || 'Untitled'}
+                          </h3>
+                          <p className="text-[12px] text-text-secondary truncate">
                             {pres.slideCount} slide{pres.slideCount !== 1 ? 's' : ''} · Deleted{' '}
                             {formatDate(pres.deletedAt)}
                           </p>
                         </div>
-                        <div className="card-actions" style={{ opacity: 1 }}>
-                          <button className="btn-icon" title="Restore" onClick={(e) => handleRestore(e, pres.id)}>
+                        <div
+                          className="flex justify-end gap-1 px-3 py-2 border-t border-border opacity-0 transition-opacity group-hover:opacity-100"
+                          style={{ opacity: 1 }}
+                        >
+                          <Button
+                            variant="icon"
+                            title="Restore"
+                            onClick={(e) => handleRestore(e, pres.id)}
+                          >
                             <RotateCcw size={14} />
-                          </button>
-                          <button className="btn-icon" title="Delete permanently" onClick={(e) => handlePermanentDelete(e, pres.id)} style={{ color: 'var(--danger)' }}>
+                          </Button>
+                          <Button
+                            variant="icon"
+                            title="Delete permanently"
+                            onClick={(e) => handlePermanentDelete(e, pres.id)}
+                            style={{ color: 'var(--danger)' }}
+                          >
                             <Trash2 size={14} />
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     )
@@ -670,21 +853,22 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           ) : isTemplateView ? (
             /* ── Built-in Template Gallery ── */
             <>
-              <div className="home-content-header">
-                <h2 className="home-content-title">Template Gallery</h2>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-text-primary">Template Gallery</h2>
               </div>
-              <div className="template-categories">
+              <div className="flex flex-wrap gap-1.5 mb-5">
                 {TEMPLATE_CATEGORIES.map((cat) => (
-                  <button
+                  <Button
+                    variant="ghost"
                     key={cat}
-                    className={`template-category-btn ${templateCategory === cat ? 'active' : ''}`}
+                    className={`template-category-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-card border border-border text-text-secondary cursor-pointer transition-all hover:border-border-strong hover:text-text-primary ${templateCategory === cat ? '!bg-accent !border-accent !text-white' : ''}`}
                     onClick={() => setTemplateCategory(cat)}
                   >
                     {cat}
-                  </button>
+                  </Button>
                 ))}
               </div>
-              <div className="presentations-grid">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5">
                 {filteredPresets.map((preset) => {
                   const bg = getCardBg(preset.thumbnail)
                   const bgProp = isGradientOrImage(preset.thumbnail)
@@ -693,16 +877,26 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   return (
                     <div
                       key={preset.id}
-                      className="presentation-card"
+                      className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
                       onClick={() => handleCreateFromTemplate(preset.id, true)}
                       style={{ cursor: creating ? 'wait' : 'pointer' }}
                     >
-                      <div className="card-preview" style={bgProp}>
-                        <Sparkles size={20} style={{ position: 'absolute', top: 8, right: 8, opacity: 0.3 }} />
+                      <div
+                        className="aspect-video flex items-center justify-center bg-surface-2 relative overflow-hidden text-[32px] text-text-muted"
+                        style={bgProp}
+                      >
+                        <Sparkles
+                          size={20}
+                          style={{ position: 'absolute', top: 8, right: 8, opacity: 0.3 }}
+                        />
                       </div>
-                      <div className="card-info">
-                        <h3>{preset.title}</h3>
-                        <p>{preset.description}</p>
+                      <div className="px-4 py-3">
+                        <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
+                          {preset.title}
+                        </h3>
+                        <p className="text-[12px] text-text-secondary truncate">
+                          {preset.description}
+                        </p>
                       </div>
                     </div>
                   )
@@ -712,21 +906,25 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           ) : isMyTemplateView ? (
             /* ── My Templates ── */
             <>
-              <div className="home-content-header">
-                <h2 className="home-content-title">My Templates</h2>
-                <button className="btn btn-secondary" onClick={handleCreateTemplate}>
-                  <Plus size={14} /> New Template
-                </button>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-text-primary">My Templates</h2>
+                <Button variant="secondary" onClick={handleCreateTemplate}>
+                  <Plus size={14} /> <span>New Template</span>
+                </Button>
               </div>
-              <div className="presentations-grid">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5">
                 {templates.length === 0 ? (
-                  <div className="empty-state">
+                  <div className="col-span-full text-center py-20 px-5 text-text-muted">
                     <Layout size={48} />
-                    <p className="empty-state-title">No custom templates yet</p>
-                    <p className="empty-state-desc">Create a template to reuse across presentations</p>
-                    <button className="btn btn-primary" onClick={handleCreateTemplate}>
-                      <Plus size={14} /> Create Template
-                    </button>
+                    <p className="text-[17px] font-semibold text-text-secondary mb-2">
+                      No custom templates yet
+                    </p>
+                    <p className="text-sm text-text-muted mb-6">
+                      Create a template to reuse across presentations
+                    </p>
+                    <Button variant="primary" onClick={handleCreateTemplate}>
+                      <Plus size={14} /> <span>Create Template</span>
+                    </Button>
                   </div>
                 ) : (
                   templates.map((tmpl) => {
@@ -735,27 +933,58 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                       ? { background: bg }
                       : { backgroundColor: bg }
                     return (
-                      <div key={tmpl.id} className="presentation-card" onClick={() => onOpen(tmpl.id, true)}>
-                        <div className="card-preview" style={bgProp}>
-                          <Layout size={24} style={{ position: 'absolute', top: 6, right: 6, opacity: 0.5 }} />
+                      <div
+                        key={tmpl.id}
+                        className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
+                        onClick={() => onOpen(tmpl.id, true)}
+                      >
+                        <div
+                          className="aspect-video flex items-center justify-center bg-surface-2 relative overflow-hidden text-[32px] text-text-muted"
+                          style={bgProp}
+                        >
+                          <Layout
+                            size={24}
+                            style={{ position: 'absolute', top: 6, right: 6, opacity: 0.5 }}
+                          />
                         </div>
-                        <div className="card-info">
-                          <h3>{tmpl.title || 'Untitled Template'}</h3>
-                          <p>
+                        <div className="px-4 py-3">
+                          <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
+                            {tmpl.title || 'Untitled Template'}
+                          </h3>
+                          <p className="text-[12px] text-text-secondary truncate">
                             {tmpl.slideCount} slide{tmpl.slideCount !== 1 ? 's' : ''} &middot;{' '}
                             {formatDate(tmpl.updatedAt)}
                           </p>
                         </div>
-                        <div className="card-actions">
-                          <button className="btn-icon" title="Edit template" onClick={(e) => { e.stopPropagation(); onOpen(tmpl.id, true) }}>
+                        <div className="flex justify-end gap-1 px-3 py-2 border-t border-border opacity-0 transition-opacity group-hover:opacity-100">
+                          <Button
+                            variant="icon"
+                            title="Edit template"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onOpen(tmpl.id, true)
+                            }}
+                          >
                             <Pencil size={14} />
-                          </button>
-                          <button className="btn-icon" title="Use template" onClick={(e) => { e.stopPropagation(); handleCreateFromTemplate(tmpl.id) }}>
+                          </Button>
+                          <Button
+                            variant="icon"
+                            title="Use template"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleCreateFromTemplate(tmpl.id)
+                            }}
+                          >
                             <Copy size={14} />
-                          </button>
-                          <button className="btn-icon" title="Delete template" onClick={(e) => handleDeleteTemplate(e, tmpl.id)} style={{ color: 'var(--danger)' }}>
+                          </Button>
+                          <Button
+                            variant="icon"
+                            title="Delete template"
+                            onClick={(e) => handleDeleteTemplate(e, tmpl.id)}
+                            style={{ color: 'var(--danger)' }}
+                          >
                             <Trash2 size={14} />
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     )
@@ -766,12 +995,14 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           ) : isMarketplaceView ? (
             /* ── Template Marketplace ── */
             <>
-              <div className="home-content-header">
-                <h2 className="home-content-title">Template Marketplace</h2>
-                <div className="home-search" style={{ maxWidth: 260 }}>
-                  <Search size={15} className="home-search-icon" />
-                  <input
-                    className="home-search-input"
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-text-primary">Template Marketplace</h2>
+                <div className="relative flex-[0_1_360px]" style={{ maxWidth: 260 }}>
+                  <Search
+                    size={15}
+                    className="absolute left-[11px] top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
+                  />
+                  <Input
                     type="text"
                     placeholder="Search templates..."
                     value={marketplaceSearch}
@@ -779,61 +1010,81 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   />
                 </div>
               </div>
-              <div className="template-categories">
-                <button
-                  className={`template-category-btn ${!marketplaceCategory ? 'active' : ''}`}
+              <div className="flex flex-wrap gap-1.5 mb-5">
+                <Button
+                  variant="ghost"
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium bg-card border border-border text-text-secondary cursor-pointer transition-all hover:border-border-strong hover:text-text-primary ${!marketplaceCategory ? '!bg-accent !border-accent !text-white' : ''}`}
                   onClick={() => setMarketplaceCategory('')}
                 >
                   All
-                </button>
+                </Button>
                 {marketplaceData.categories.map((cat) => (
-                  <button
+                  <Button
+                    variant="ghost"
                     key={cat.id}
-                    className={`template-category-btn ${marketplaceCategory === cat.id ? 'active' : ''}`}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium bg-card border border-border text-text-secondary cursor-pointer transition-all hover:border-border-strong hover:text-text-primary ${marketplaceCategory === cat.id ? '!bg-accent !border-accent !text-white' : ''}`}
                     onClick={() => setMarketplaceCategory(cat.id)}
                   >
                     {cat.name}
-                  </button>
+                  </Button>
                 ))}
               </div>
-              <div className="presentations-grid">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5">
                 {(marketplaceCategory
                   ? marketplaceData.templates.filter((t) => t.category === marketplaceCategory)
                   : marketplaceData.templates
-                ).filter((t) => {
-                  if (!marketplaceSearch.trim()) return true;
-                  const q = marketplaceSearch.toLowerCase();
-                  return (t.title || '').toLowerCase().includes(q) ||
-                    (t.titleVi || '').toLowerCase().includes(q) ||
-                    (t.description || '').toLowerCase().includes(q) ||
-                    (t.tags || []).some(tag => tag.includes(q));
-                }).map((tmpl) => {
-                  const bg = getCardBg(tmpl.thumbnail)
-                  const bgProp = isGradientOrImage(tmpl.thumbnail) ? { background: bg } : { backgroundColor: bg }
-                  return (
-                    <div
-                      key={tmpl.id}
-                      className="presentation-card"
-                      onClick={() => setPreviewTemplate(tmpl)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <div className="card-preview" style={bgProp}>
-                        <Sparkles size={16} style={{ position: 'absolute', top: 6, right: 6, opacity: 0.4 }} />
+                )
+                  .filter((t) => {
+                    if (!marketplaceSearch.trim()) return true
+                    const q = marketplaceSearch.toLowerCase()
+                    return (
+                      (t.title || '').toLowerCase().includes(q) ||
+                      (t.titleVi || '').toLowerCase().includes(q) ||
+                      (t.description || '').toLowerCase().includes(q) ||
+                      (t.tags || []).some((tag) => tag.includes(q))
+                    )
+                  })
+                  .map((tmpl) => {
+                    const bg = getCardBg(tmpl.thumbnail)
+                    const bgProp = isGradientOrImage(tmpl.thumbnail)
+                      ? { background: bg }
+                      : { backgroundColor: bg }
+                    return (
+                      <div
+                        key={tmpl.id}
+                        className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
+                        onClick={() => setPreviewTemplate(tmpl)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div
+                          className="aspect-video flex items-center justify-center bg-surface-2 relative overflow-hidden text-[32px] text-text-muted"
+                          style={bgProp}
+                        >
+                          <Sparkles
+                            size={16}
+                            style={{ position: 'absolute', top: 6, right: 6, opacity: 0.4 }}
+                          />
+                        </div>
+                        <div className="px-4 py-3">
+                          <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
+                            {tmpl.titleVi || tmpl.title}
+                          </h3>
+                          <p className="text-[12px] text-text-secondary truncate">
+                            {tmpl.description}
+                          </p>
+                          <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
+                            {tmpl.slides?.length || 0} slides · {tmpl.category}
+                          </p>
+                        </div>
                       </div>
-                      <div className="card-info">
-                        <h3>{tmpl.titleVi || tmpl.title}</h3>
-                        <p>{tmpl.description}</p>
-                        <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
-                          {tmpl.slides?.length || 0} slides · {tmpl.category}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
                 {marketplaceData.templates.length === 0 && (
-                  <div className="empty-state">
+                  <div className="col-span-full text-center py-20 px-5 text-text-muted">
                     <Sparkles size={48} />
-                    <p className="empty-state-title">Loading templates...</p>
+                    <p className="text-[17px] font-semibold text-text-secondary mb-2">
+                      Loading templates...
+                    </p>
                   </div>
                 )}
               </div>
@@ -843,37 +1094,47 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             <>
               {/* Welcome screen for empty state */}
               {presentations.length === 0 && !searchQuery ? (
-                <div className="welcome-screen anim-fade-in">
-                  <div className="welcome-icon">
+                <div className="flex flex-col items-center justify-center py-20 px-10 text-center anim-fade-in">
+                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center text-white mb-6 text-[28px]">
                     <Rocket size={28} />
                   </div>
-                  <h1 className="welcome-title">Welcome to NavSlides Editor</h1>
-                  <p className="welcome-subtitle">
+                  <h1 className="text-2xl font-bold mb-2 tracking-tight text-text-primary">
+                    Welcome to NavSlides Editor
+                  </h1>
+                  <p className="text-[15px] text-text-secondary mb-8 max-w-[420px]">
                     Create stunning presentations with WYSIWYG editing, LaTeX, charts, and more.
                   </p>
-                  <div className="welcome-actions">
-                    <button className="welcome-action-btn" onClick={handleOpenModal}>
+                  <div className="flex gap-3 flex-wrap justify-center">
+                    <Button
+                      variant="ghost"
+                      className="flex items-center gap-2.5 px-5 py-3.5 bg-card border border-border-light rounded-md text-text-primary text-sm font-medium cursor-pointer transition-all hover:bg-hover hover:border-accent hover:shadow-md hover:-translate-y-[1px]"
+                      onClick={handleOpenModal}
+                    >
                       <Plus size={18} />
-                      Create your first presentation
-                    </button>
-                    <button className="welcome-action-btn" onClick={() => setSidebarView('templates')}>
+                      <span>Create your first presentation</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="flex items-center gap-2.5 px-5 py-3.5 bg-card border border-border-light rounded-md text-text-primary text-sm font-medium cursor-pointer transition-all hover:bg-hover hover:border-accent hover:shadow-md hover:-translate-y-[1px]"
+                      onClick={() => setSidebarView('templates')}
+                    >
                       <LayoutTemplate size={18} />
-                      Browse templates
-                    </button>
+                      <span>Browse templates</span>
+                    </Button>
                   </div>
-                  <p className="welcome-features">
+                  <p className="mt-10 text-[13px] text-text-muted">
                     WYSIWYG · LaTeX · Charts · Code · Export HTML / PDF / PPTX
                   </p>
                 </div>
               ) : (
                 <>
-                  <div className="home-content-header">
-                    <h2 className="home-content-title">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-lg font-bold text-text-primary">
                       {sidebarView === 'recent' ? 'Recent Presentations' : 'All Presentations'}
                     </h2>
-                    <div className="home-content-controls">
-                      <select
-                        className="sort-select"
+                    <div className="flex items-center gap-2">
+                      <Select
+                        className="bg-card border border-border text-text-secondary py-1.5 px-2.5 rounded text-xs cursor-pointer focus:outline-none focus:border-accent"
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
                       >
@@ -881,35 +1142,42 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         <option value="createdAt">Date created</option>
                         <option value="title">Name</option>
                         <option value="slides">Slide count</option>
-                      </select>
-                      <div className="view-toggle">
-                        <button
-                          className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                      </Select>
+                      <div className="flex bg-card border border-border rounded overflow-hidden">
+                        <Button
+                          variant="ghost"
+                          className={`px-2.5 py-1.5 text-text-muted border-none bg-transparent cursor-pointer transition-colors hover:text-text-primary ${viewMode === 'grid' ? 'bg-accent text-white' : ''}`}
                           onClick={() => setViewMode('grid')}
                           title="Grid view"
                         >
                           <Grid3x3 size={14} />
-                        </button>
-                        <button
-                          className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className={`px-2.5 py-1.5 text-text-muted border-none bg-transparent cursor-pointer transition-colors hover:text-text-primary ${viewMode === 'list' ? 'bg-accent text-white' : ''}`}
                           onClick={() => setViewMode('list')}
                           title="List view"
                         >
                           <List size={14} />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
 
                   {filteredPresentations.length === 0 && searchQuery ? (
-                    <div className="empty-state anim-fade-in">
+                    <div className="col-span-full text-center py-20 px-5 text-text-muted anim-fade-in">
                       <Search size={48} />
-                      <p className="empty-state-title">No matches found</p>
-                      <p className="empty-state-desc">Try a different search term</p>
+                      <p className="text-[17px] font-semibold text-text-secondary mb-2">
+                        No matches found
+                      </p>
+                      <p className="text-sm text-text-muted mb-6">Try a different search term</p>
                     </div>
                   ) : viewMode === 'grid' ? (
-                    <div className="presentations-grid anim-fade-in">
-                      <div className="new-card" onClick={handleOpenModal}>
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 anim-fade-in">
+                      <div
+                        className="border-dashed border-2 border-border flex flex-col items-center justify-center gap-3 min-h-[200px] text-text-muted cursor-pointer transition-all rounded-lg hover:border-accent hover:text-accent hover:bg-hover"
+                        onClick={handleOpenModal}
+                      >
                         <Plus size={28} />
                         <span>New Presentation</span>
                       </div>
@@ -919,29 +1187,52 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                           ? { background: bg }
                           : { backgroundColor: bg }
                         return (
-                          <div key={pres.id} className="presentation-card" onClick={() => onOpen(pres.id)}>
-                            <div className="card-preview" style={bgProp}>
-                              {(!pres.thumbnail || pres.thumbnail.type === 'none') && (
-                                <Presentation size={36} />
-                              )}
-                            </div>
-                            <div className="card-info">
-                              <h3>{pres.title || 'Untitled'}</h3>
-                              <p>
+                          <div
+                            key={pres.id}
+                            className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
+                            onClick={() => onOpen(pres.id)}
+                          >
+                            <SlideThumbnail
+                              id={pres.id}
+                              bgProp={bgProp}
+                              fallback={!pres.thumbnail || pres.thumbnail.type === 'none'}
+                              className="aspect-video"
+                            />
+                            <div className="px-4 py-3">
+                              <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
+                                {pres.title || 'Untitled'}
+                              </h3>
+                              <p className="text-[12px] text-text-secondary truncate">
                                 {pres.slideCount} slide{pres.slideCount !== 1 ? 's' : ''} &middot;{' '}
                                 {formatDate(pres.updatedAt)}
                               </p>
                             </div>
-                            <div className="card-actions">
-                              <button className="btn-icon" title="Edit" onClick={(e) => { e.stopPropagation(); onOpen(pres.id) }}>
+                            <div className="flex justify-end gap-1 px-3 py-2 border-t border-border opacity-0 transition-opacity group-hover:opacity-100">
+                              <Button
+                                variant="icon"
+                                title="Edit"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onOpen(pres.id)
+                                }}
+                              >
                                 <Pencil size={14} />
-                              </button>
-                              <button className="btn-icon" title="Duplicate" onClick={(e) => handleDuplicate(e, pres.id)}>
+                              </Button>
+                              <Button
+                                variant="icon"
+                                title="Duplicate"
+                                onClick={(e) => handleDuplicate(e, pres.id)}
+                              >
                                 <Copy size={14} />
-                              </button>
-                              <button className="btn-icon" title="Delete" onClick={(e) => handleDelete(e, pres.id)} style={{ color: 'var(--danger)' }}>
+                              </Button>
+                              <Button
+                                variant="icon"
+                                title="Delete"
+                                onClick={(e) => handleDelete(e, pres.id)}
+                                style={{ color: 'var(--danger)' }}
+                              >
                                 <Trash2 size={14} />
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         )
@@ -949,32 +1240,60 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     </div>
                   ) : (
                     /* List View */
-                    <div className="presentations-list anim-fade-in">
+                    <div className="flex flex-col gap-0.5 anim-fade-in">
                       {filteredPresentations.map((pres) => {
                         const bg = getCardBg(pres.thumbnail)
                         const bgProp = isGradientOrImage(pres.thumbnail)
                           ? { background: bg }
                           : { backgroundColor: bg }
                         return (
-                          <div key={pres.id} className="presentation-list-item" onClick={() => onOpen(pres.id)}>
-                            <div className="list-item-preview" style={bgProp} />
-                            <div className="list-item-info">
-                              <h3>{pres.title || 'Untitled'}</h3>
-                              <p>
+                          <div
+                            key={pres.id}
+                            className="group flex items-center gap-4 px-4 py-3 rounded cursor-pointer transition-colors hover:bg-hover"
+                            onClick={() => onOpen(pres.id)}
+                          >
+                            <div className="w-20 h-[45px] rounded flex-shrink-0 overflow-hidden relative">
+                              <SlideThumbnail
+                                id={pres.id}
+                                bgProp={bgProp}
+                                fallback={!pres.thumbnail || pres.thumbnail.type === 'none'}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
+                                {pres.title || 'Untitled'}
+                              </h3>
+                              <p className="text-[12px] text-text-secondary truncate">
                                 {pres.slideCount} slide{pres.slideCount !== 1 ? 's' : ''} &middot;{' '}
                                 {formatDate(pres.updatedAt)}
                               </p>
                             </div>
-                            <div className="list-item-actions">
-                              <button className="btn-icon" title="Edit" onClick={(e) => { e.stopPropagation(); onOpen(pres.id) }}>
+                            <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                              <Button
+                                variant="icon"
+                                title="Edit"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onOpen(pres.id)
+                                }}
+                              >
                                 <Pencil size={14} />
-                              </button>
-                              <button className="btn-icon" title="Duplicate" onClick={(e) => handleDuplicate(e, pres.id)}>
+                              </Button>
+                              <Button
+                                variant="icon"
+                                title="Duplicate"
+                                onClick={(e) => handleDuplicate(e, pres.id)}
+                              >
                                 <Copy size={14} />
-                              </button>
-                              <button className="btn-icon" title="Delete" onClick={(e) => handleDelete(e, pres.id)} style={{ color: 'var(--danger)' }}>
+                              </Button>
+                              <Button
+                                variant="icon"
+                                title="Delete"
+                                onClick={(e) => handleDelete(e, pres.id)}
+                                style={{ color: 'var(--danger)' }}
+                              >
                                 <Trash2 size={14} />
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         )
@@ -990,14 +1309,20 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
       {/* ════ Create Modal ════ */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal anim-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 560 }}
+          >
             <h2>New Presentation</h2>
             <form onSubmit={handleCreate}>
               <div className="form-group">
                 <label>Title</label>
-                <input
-                  className="form-input"
+                <Input
                   type="text"
                   placeholder="My Presentation"
                   value={form.title}
@@ -1009,14 +1334,23 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
               {/* Template selector */}
               <div className="form-group">
                 <label>Start from</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 4 }}>
-                  <button
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: 8,
+                    marginBottom: 4,
+                  }}
+                >
+                  <Button
+                    variant="ghost"
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, templateId: null }))}
                     style={{
                       padding: '10px 8px',
                       background: !form.templateId ? 'var(--accent)' : 'var(--bg-card)',
-                      border: '2px solid ' + (!form.templateId ? 'var(--accent)' : 'var(--border-light)'),
+                      border:
+                        '2px solid ' + (!form.templateId ? 'var(--accent)' : 'var(--border-light)'),
                       borderRadius: 'var(--radius-sm)',
                       cursor: 'pointer',
                       color: !form.templateId ? 'white' : 'var(--text-primary)',
@@ -1026,9 +1360,10 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     }}
                   >
                     Blank
-                  </button>
+                  </Button>
                   {allTemplates.map((tmpl) => (
-                    <button
+                    <Button
+                      variant="ghost"
                       key={tmpl.id}
                       type="button"
                       onClick={() =>
@@ -1043,8 +1378,11 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         padding: '6px 8px',
                         textAlign: 'center',
                         cursor: 'pointer',
-                        background: form.templateId === tmpl.id ? 'var(--accent)' : 'var(--bg-card)',
-                        border: '2px solid ' + (form.templateId === tmpl.id ? 'var(--accent)' : 'var(--border-light)'),
+                        background:
+                          form.templateId === tmpl.id ? 'var(--accent)' : 'var(--bg-card)',
+                        border:
+                          '2px solid ' +
+                          (form.templateId === tmpl.id ? 'var(--accent)' : 'var(--border-light)'),
                         borderRadius: 'var(--radius-sm)',
                         color: form.templateId === tmpl.id ? 'white' : 'var(--text-primary)',
                         fontSize: 11,
@@ -1063,7 +1401,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         }}
                       />
                       {tmpl.title}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -1072,29 +1410,39 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                 <>
                   <div className="form-group">
                     <label>Theme</label>
-                    <select className="form-select" value={form.theme} onChange={(e) => setForm((f) => ({ ...f, theme: e.target.value }))}>
+                    <Select
+                      value={form.theme}
+                      onChange={(e) => setForm((f) => ({ ...f, theme: e.target.value }))}
+                    >
                       {THEMES.map((t) => (
-                        <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                        <option key={t} value={t}>
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                        </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                   <div className="form-group">
                     <label>Transition</label>
-                    <select className="form-select" value={form.transition} onChange={(e) => setForm((f) => ({ ...f, transition: e.target.value }))}>
+                    <Select
+                      value={form.transition}
+                      onChange={(e) => setForm((f) => ({ ...f, transition: e.target.value }))}
+                    >
                       {TRANSITIONS.map((t) => (
-                        <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                        <option key={t} value={t}>
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                        </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                 </>
               )}
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+              <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
+                <Button variant="secondary" type="button" onClick={() => setShowModal(false)}>
                   Cancel
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={creating}>
+                </Button>
+                <Button variant="primary" type="submit" disabled={creating}>
                   {creating ? 'Creating...' : 'Create'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -1133,17 +1481,37 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
       {/* ════ Confirm Dialog ════ */}
       {confirmDialog && (
-        <div className="modal-overlay" onClick={() => setConfirmDialog(null)}>
-          <div className="modal anim-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
+          onClick={() => setConfirmDialog(null)}
+        >
+          <div
+            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 420 }}
+          >
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 'var(--radius-md)', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: confirmDialog.variant === 'danger' ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)',
-              }}>
-                <AlertCircle size={22} style={{
-                  color: confirmDialog.variant === 'danger' ? 'var(--danger)' : '#f59e0b',
-                }} />
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 'var(--radius-md)',
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background:
+                    confirmDialog.variant === 'danger'
+                      ? 'rgba(239,68,68,0.12)'
+                      : 'rgba(245,158,11,0.12)',
+                }}
+              >
+                <AlertCircle
+                  size={22}
+                  style={{
+                    color: confirmDialog.variant === 'danger' ? 'var(--danger)' : '#f59e0b',
+                  }}
+                />
               </div>
               <div style={{ flex: 1 }}>
                 <h2 style={{ fontSize: 16, marginBottom: 8 }}>{confirmDialog.title}</h2>
@@ -1152,19 +1520,19 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                 </p>
               </div>
             </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setConfirmDialog(null)}>
+            <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
+              <Button variant="secondary" onClick={() => setConfirmDialog(null)}>
                 Cancel
-              </button>
-              <button
-                className={confirmDialog.variant === 'danger' ? 'btn btn-danger' : 'btn btn-primary'}
+              </Button>
+              <Button
+                variant={confirmDialog.variant === 'danger' ? 'danger' : 'primary'}
                 onClick={() => {
                   confirmDialog.onConfirm()
                   setConfirmDialog(null)
                 }}
               >
                 {confirmDialog.variant === 'danger' ? 'Delete' : 'Confirm'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

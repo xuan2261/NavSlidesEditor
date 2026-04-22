@@ -14,12 +14,12 @@ Kế hoạch tổng thể để fix các lỗ hổng bảo mật và giảm tech
 
 ## Phases
 
-| Phase | Title | Status | Priority | Effort | Dependencies |
-|-------|-------|--------|----------|--------|--------------|
-| 01 | [Security Patches](./phase-01-security-patches.md) | `[x]` | 🔴 Critical | 1-2 days | None |
-| 02 | [DRY Cleanup & Quick Wins](./phase-02-dry-cleanup.md) | `[x]` | 🟠 High | 2-3 days | Phase 01 |
-| 03 | [Component Decomposition](./phase-03-component-decomposition.md) | `[x]` | 🟠 High | 5-7 days | Phase 02 |
-| 04 | [Infrastructure & Long-term](./phase-04-infrastructure.md) | `[x]` | 🟡 Medium | 5-10 days | Phase 03 |
+| Phase | Title                                                            | Status | Priority    | Effort    | Dependencies |
+| ----- | ---------------------------------------------------------------- | ------ | ----------- | --------- | ------------ |
+| 01    | [Security Patches](./phase-01-security-patches.md)               | `[x]`  | 🔴 Critical | 1-2 days  | None         |
+| 02    | [DRY Cleanup & Quick Wins](./phase-02-dry-cleanup.md)            | `[x]`  | 🟠 High     | 2-3 days  | Phase 01     |
+| 03    | [Component Decomposition](./phase-03-component-decomposition.md) | `[x]`  | 🟠 High     | 5-7 days  | Phase 02     |
+| 04    | [Infrastructure & Long-term](./phase-04-infrastructure.md)       | `[x]`  | 🟡 Medium   | 5-10 days | Phase 03     |
 
 ## Key Constraints
 
@@ -38,9 +38,9 @@ Kế hoạch tổng thể để fix các lỗ hổng bảo mật và giảm tech
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Break existing presentations | Medium | High | JSON migration function, snapshot trước khi refactor |
-| TipTap editor desync | Medium | High | Keep single Editor instance pattern, chỉ move vào hook |
-| E2E tests flaky after refactor | High | Medium | Run full suite sau mỗi sub-task |
-| CSS selector conflicts khi tách | Medium | Medium | Prefix component classes, review trước khi merge |
+| Risk                            | Likelihood | Impact | Mitigation                                             |
+| ------------------------------- | ---------- | ------ | ------------------------------------------------------ |
+| Break existing presentations    | Medium     | High   | JSON migration function, snapshot trước khi refactor   |
+| TipTap editor desync            | Medium     | High   | Keep single Editor instance pattern, chỉ move vào hook |
+| E2E tests flaky after refactor  | High       | Medium | Run full suite sau mỗi sub-task                        |
+| CSS selector conflicts khi tách | Medium     | Medium | Prefix component classes, review trước khi merge       |

@@ -1,3 +1,5 @@
+import { Input, Select } from '../../components/ui'
+import { Button } from '../../components/ui'
 /**
  * Common element controls shared across all element types:
  * Position (X/Y/W/H/Rotation), Lock, Fragment animation, Drop Shadow, Layer buttons, Delete.
@@ -13,36 +15,29 @@ export default function CommonElementControls({
   return (
     <>
       {/* Position */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: 8,
-          marginBottom: 10,
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>X</div>
-          <input
-            className="prop-input"
+      <div className="grid grid-cols-3 gap-2 mb-2.5">
+        <div className="flex flex-col gap-1">
+          <div className="text-[11px] text-text-muted">X</div>
+          <Input
+            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
             type="number"
             value={Math.round(element.x)}
             onChange={(e) => onUpdate({ x: Number(e.target.value) })}
           />
         </div>
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>Y</div>
-          <input
-            className="prop-input"
+        <div className="flex flex-col gap-1">
+          <div className="text-[11px] text-text-muted">Y</div>
+          <Input
+            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
             type="number"
             value={Math.round(element.y)}
             onChange={(e) => onUpdate({ y: Number(e.target.value) })}
           />
         </div>
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>Rot</div>
-          <input
-            className="prop-input"
+        <div className="flex flex-col gap-1">
+          <div className="text-[11px] text-text-muted">Rot</div>
+          <Input
+            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
             type="number"
             step="1"
             value={Math.round(element.rotation || 0)}
@@ -50,19 +45,19 @@ export default function CommonElementControls({
             title="Rotation angle in degrees"
           />
         </div>
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>W</div>
-          <input
-            className="prop-input"
+        <div className="flex flex-col gap-1">
+          <div className="text-[11px] text-text-muted">W</div>
+          <Input
+            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
             type="number"
             value={Math.round(element.width)}
             onChange={(e) => onUpdate({ width: Number(e.target.value) })}
           />
         </div>
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>H</div>
-          <input
-            className="prop-input"
+        <div className="flex flex-col gap-1">
+          <div className="text-[11px] text-text-muted">H</div>
+          <Input
+            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
             type="number"
             value={Math.round(element.height)}
             onChange={(e) => onUpdate({ height: Number(e.target.value) })}
@@ -71,38 +66,21 @@ export default function CommonElementControls({
       </div>
 
       {/* Lock */}
-      <label
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          cursor: 'pointer',
-          marginBottom: 8,
-          userSelect: 'none',
-        }}
-      >
+      <label className="flex items-center gap-1.5 cursor-pointer mb-2 select-none">
         <input
           type="checkbox"
           checked={element.locked || false}
           onChange={(e) => onUpdate({ locked: e.target.checked })}
           style={{ accentColor: 'var(--accent)' }}
         />
-        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+        <span className="text-xs text-text-secondary">
           {element.locked ? '🔒' : '🔓'} Lock element
         </span>
       </label>
 
       {/* Fragment animation */}
-      <div style={{ marginBottom: 10 }}>
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            marginBottom: 6,
-            cursor: 'pointer',
-          }}
-        >
+      <div className="mb-2.5">
+        <label className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
           <input
             type="checkbox"
             checked={element.fragment || false}
@@ -114,18 +92,14 @@ export default function CommonElementControls({
             }
             style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
           />
-          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-            Fragment (animate in)
-          </span>
+          <span className="text-xs text-text-secondary">Fragment (animate in)</span>
         </label>
         {element.fragment && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>
-                Order
-              </div>
-              <input
-                className="prop-input"
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <div className="text-[11px] text-text-muted">Order</div>
+              <Input
+                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
                 type="number"
                 min="1"
                 max="20"
@@ -133,12 +107,10 @@ export default function CommonElementControls({
                 onChange={(e) => onUpdate({ fragmentIndex: Number(e.target.value) })}
               />
             </div>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>
-                Animation
-              </div>
-              <select
-                className="prop-input"
+            <div className="flex flex-col gap-1">
+              <div className="text-[11px] text-text-muted">Animation</div>
+              <Select
+                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
                 style={{ padding: '4px 6px' }}
                 value={element.fragmentAnimation || 'fade-in'}
                 onChange={(e) => onUpdate({ fragmentAnimation: e.target.value })}
@@ -155,7 +127,7 @@ export default function CommonElementControls({
                 <option value="highlight-red">Highlight Red</option>
                 <option value="highlight-green">Highlight Green</option>
                 <option value="highlight-blue">Highlight Blue</option>
-              </select>
+              </Select>
             </div>
           </div>
         )}
@@ -163,61 +135,42 @@ export default function CommonElementControls({
 
       {/* Drop Shadow */}
       {element.type !== 'html' && element.type !== 'code' && (
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
-            Drop Shadow
-          </div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr 28px',
-              gap: 6,
-              alignItems: 'end',
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>X</div>
-              <input
-                className="prop-input"
+        <div className="mb-2.5">
+          <div className="text-[11px] text-text-muted mb-1">Drop Shadow</div>
+          <div className="grid grid-cols-[1fr_1fr_1fr_28px] gap-1.5 items-end">
+            <div className="flex flex-col gap-1">
+              <div className="text-[10px] text-text-muted">X</div>
+              <Input
+                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
                 type="number"
                 value={element.shadowX ?? 0}
                 onChange={(e) => onUpdate({ shadowX: Number(e.target.value) })}
               />
             </div>
-            <div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>Y</div>
-              <input
-                className="prop-input"
+            <div className="flex flex-col gap-1">
+              <div className="text-[10px] text-text-muted">Y</div>
+              <Input
+                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
                 type="number"
                 value={element.shadowY ?? 0}
                 onChange={(e) => onUpdate({ shadowY: Number(e.target.value) })}
               />
             </div>
-            <div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>
-                Blur
-              </div>
-              <input
-                className="prop-input"
+            <div className="flex flex-col gap-1">
+              <div className="text-[10px] text-text-muted">Blur</div>
+              <Input
+                className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
                 type="number"
                 min="0"
                 value={element.shadowBlur ?? 0}
                 onChange={(e) => onUpdate({ shadowBlur: Number(e.target.value) })}
               />
             </div>
-            <div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}></div>
+            <div className="flex flex-col gap-1">
+              <div className="text-[10px] text-text-muted"></div>
               <input
                 type="color"
-                style={{
-                  width: 28,
-                  height: 28,
-                  padding: 2,
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                }}
+                className="w-7 h-7 border border-border rounded cursor-pointer p-[2px] bg-card shrink-0"
                 value={element.shadowColor || '#000000'}
                 onChange={(e) => onUpdate({ shadowColor: e.target.value })}
               />
@@ -227,31 +180,27 @@ export default function CommonElementControls({
       )}
 
       {/* Layer buttons */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-        <button
-          className="btn btn-secondary"
-          style={{ flex: 1, fontSize: 11, padding: '5px 8px', justifyContent: 'center' }}
+      <div className="flex gap-1.5 mb-2.5">
+        <Button
+          variant="secondary"
+          className="flex-1 text-[11px] py-1 justify-center"
           onClick={onBringForward}
         >
           ↑ Forward
-        </button>
-        <button
-          className="btn btn-secondary"
-          style={{ flex: 1, fontSize: 11, padding: '5px 8px', justifyContent: 'center' }}
+        </Button>
+        <Button
+          variant="secondary"
+          className="flex-1 text-[11px] py-1 justify-center"
           onClick={onSendBackward}
         >
           ↓ Backward
-        </button>
+        </Button>
       </div>
 
       {/* Delete */}
-      <button
-        className="btn btn-danger"
-        style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}
-        onClick={onDelete}
-      >
+      <Button variant="danger" className="w-full justify-center text-xs" onClick={onDelete}>
         Delete Element
-      </button>
+      </Button>
     </>
   )
 }

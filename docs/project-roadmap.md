@@ -6,51 +6,51 @@ All core features operational. Security patches applied. Architecture refactored
 
 ### What Works
 
-| Area                                     | Status                  |
-| ---------------------------------------- | ----------------------- |
-| WYSIWYG editing (15+ element types)      | Done                    |
-| Undo/redo (50-step)                      | Done                    |
-| Auto-save (debounced)                    | Done                    |
-| Smart guides + snapping                  | Done                    |
-| Fragment animations + timeline           | Done                    |
-| Slide templates (20+ layouts)            | Done                    |
-| Interactive & Quiz templates             | Done                    |
-| Footer system (basic + sequence)         | Done                    |
-| Present mode (reveal.js)                 | Done                    |
-| Export HTML                              | Done                    |
-| Export PDF                               | Done                    |
-| Export PPTX                              | Done (with limitations) |
-| Project Export/Import (.navslides)        | Done                    |
-| Offline HTML export                      | Partial                 |
-| Shareable links (with password option)   | Done                    |
-| GitHub push integration                  | Done                    |
-| rclone cloud sync                        | Done                    |
-| Version history (snapshots)              | Done                    |
-| Docker deployment                        | Done                    |
-| Electron desktop (Linux/macOS/Windows)   | Done                    |
-| Dark/light editor theme                  | Done                    |
-| AI copywriting + translation             | Done                    |
-| Media library (Unsplash, Giphy)          | Done                    |
+| Area                                   | Status                  |
+| -------------------------------------- | ----------------------- |
+| WYSIWYG editing (15+ element types)    | Done                    |
+| Undo/redo (50-step)                    | Done                    |
+| Auto-save (debounced)                  | Done                    |
+| Smart guides + snapping                | Done                    |
+| Fragment animations + timeline         | Done                    |
+| Slide templates (20+ layouts)          | Done                    |
+| Interactive & Quiz templates           | Done                    |
+| Footer system (basic + sequence)       | Done                    |
+| Present mode (reveal.js)               | Done                    |
+| Export HTML                            | Done                    |
+| Export PDF                             | Done                    |
+| Export PPTX                            | Done (with limitations) |
+| Project Export/Import (.navslides)     | Done                    |
+| Offline HTML export                    | Partial                 |
+| Shareable links (with password option) | Done                    |
+| GitHub push integration                | Done                    |
+| rclone cloud sync                      | Done                    |
+| Version history (snapshots)            | Done                    |
+| Docker deployment                      | Done                    |
+| Electron desktop (Linux/macOS/Windows) | Done                    |
+| Dark/light editor theme                | Done                    |
+| AI copywriting + translation           | Done                    |
+| Media library (Unsplash, Giphy)        | Done                    |
 
 ### What's New in v1.4.x (Security & Architecture Refactor)
 
-| Area                                     | Status   |
-| ---------------------------------------- | -------- |
-| **Zod request validation** on all mutation APIs | ✅ Done |
-| **CSS modularization** (57KB → split files)      | ✅ Done |
-| **Zustand state management** (3 stores)          | ✅ Done |
-| **Custom hooks** (6 hooks extracted)             | ✅ Done |
-| **PropertiesPanel decomposition** (8 sub-editors)| ✅ Done |
-| **Element factory** (centralized creation)       | ✅ Done |
-| **ErrorBoundary** (crash recovery UI)            | ✅ Done |
-| **JSDoc type definitions** (shared/types)        | ✅ Done |
-| **Electron safeStorage** (credential encryption) | ✅ Done |
-| **DOMPurify sanitization** (XSS prevention)      | ✅ Done |
+| Area                                              | Status  |
+| ------------------------------------------------- | ------- |
+| **Zod request validation** on all mutation APIs   | ✅ Done |
+| **CSS modularization** (57KB → split files)       | ✅ Done |
+| **Zustand state management** (3 stores)           | ✅ Done |
+| **Custom hooks** (6 hooks extracted)              | ✅ Done |
+| **PropertiesPanel decomposition** (8 sub-editors) | ✅ Done |
+| **Element factory** (centralized creation)        | ✅ Done |
+| **ErrorBoundary** (crash recovery UI)             | ✅ Done |
+| **JSDoc type definitions** (shared/types)         | ✅ Done |
+| **Electron safeStorage** (credential encryption)  | ✅ Done |
+| **DOMPurify sanitization** (XSS prevention)       | ✅ Done |
 | **MIME-type validation** (upload security)        | ✅ Done |
 | **Rate limiting** (sensitive endpoints)           | ✅ Done |
 | **DRY rendering pipeline** (element-renderers.js) | ✅ Done |
 | **Socket.IO modularization** (socket-handler.js)  | ✅ Done |
-| **EditorPage reduction** (3400 → 1475 LOC)       | ✅ Done |
+| **EditorPage reduction** (3400 → 1475 LOC)        | ✅ Done |
 
 ## Known Limitations
 
@@ -81,6 +81,7 @@ PowerPoint-parity keyboard shortcuts and Selection Pane.
 4-phase comprehensive refactor from adversarial code review findings.
 
 **Sub-phases:**
+
 1. ✅ **Security Patches** — XSS prevention, DOMPurify, MIME validation, rate limiting, POST migration
 2. ✅ **DRY Cleanup** — Element factory, Socket.IO extraction, rendering pipeline unification
 3. ✅ **Component Decomposition** — EditorPage modals extracted, Zustand stores, custom hooks, PropertiesPanel sub-editors
@@ -95,6 +96,7 @@ PowerPoint-parity keyboard shortcuts and Selection Pane.
 Established test coverage for critical paths and introduced linting/formatting.
 
 **Tasks Completed:**
+
 - Unit tests for `htmlGenerator.js`
 - Vitest workspace configuration
 - Playwright E2E suite (`tests/e2e/`)
@@ -105,6 +107,7 @@ Established test coverage for critical paths and introduced linting/formatting.
 Fixed offline export rendering and expanded template gallery.
 
 **Tasks Completed:**
+
 - Robust offline HTML export with protocol-agnostic iframe initialization
 - Fix PDF printing rendering for embedded HTML
 - Added Interactive & Quiz templates, and rich built-in template gallery (26,000+ lines in `built-in-templates.json`)
@@ -114,6 +117,7 @@ Fixed offline export rendering and expanded template gallery.
 Integrated professional-grade features based on competitive analysis.
 
 **Tasks Completed:**
+
 - Interactive Product Tour via React-Joyride
 - Native Line and Arrow drawing tools on Canvas
 - Global Presentation Settings management pane
@@ -125,6 +129,7 @@ Integrated professional-grade features based on competitive analysis.
 Transitioned the application from legacy Vanilla CSS to a robust TailwindCSS foundation.
 
 **Tasks Completed:**
+
 - Configured project-wide Design System in Tailwind.
 - Refactored `SlideCanvas` to enforce "White Canvas" philosophy while supporting Light/Dark modes in the surrounding UI.
 - Standardized typography and UI elements to Pro Max standards.

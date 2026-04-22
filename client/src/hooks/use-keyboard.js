@@ -97,9 +97,16 @@ export function useKeyboard({
     },
     [
       isEditing,
-      onCopy, onCut, onPaste, onDuplicate,
-      onUndo, onRedo, onDelete, onSelectAll,
-      onToggleFindReplace, onEscape,
+      onCopy,
+      onCut,
+      onPaste,
+      onDuplicate,
+      onUndo,
+      onRedo,
+      onDelete,
+      onSelectAll,
+      onToggleFindReplace,
+      onEscape,
     ]
   )
 

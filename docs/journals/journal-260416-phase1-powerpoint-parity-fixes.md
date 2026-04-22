@@ -16,17 +16,20 @@ Triển khai Phase 1 (P0) trong 1 session: Ctrl+B/I/U fix, Cut/Copy/Paste/Duplic
 ## Features đã implement
 
 ### P0-1: Ctrl+B/I/U Keyboard Fix (`SlideCanvas.jsx`)
+
 - **Root cause:** `onKeyDown` handler return ngay sau Escape khi `editingElementId != null` → TipTap không nhận Ctrl+B/I/U events.
 - **Fix:** Forward Ctrl+B/I/U/Z/Y/0 cho TipTap handle; block tất cả keys khác khi đang edit.
 - **Verification:** Ctrl+B/I/U hoạt động khi type trong text box.
 
 ### P0-2: Cut/Copy/Paste/Duplicate (`SlideCanvas.jsx` + `EditorPage.jsx`)
+
 - **Keyboard:** Ctrl+C/X/V/D trong `onKeyDown` handler khi có element được chọn.
 - **Context menu:** Copy/Cut/Paste/Duplicate buttons trong canvas context menu.
 - **`addElements` callback:** Generate IDs bằng `crypto.randomUUID()` TRƯỚC `setPresentation` (bug found: closure capturing undefined IDs in setState).
 - **Clipboard state:** Local `useState` + `useRef` trong SlideCanvas; `copySelected/cutSelected` trong editor-store.
 
 ### P0-3: Selection Pane (`SelectionPane.jsx` — NEW)
+
 - PowerPoint-style layer list với:
   - Type icon (Lucide icons theo element.type)
   - Name (double-click để inline rename)
@@ -40,12 +43,12 @@ Triển khai Phase 1 (P0) trong 1 session: Ctrl+B/I/U fix, Cut/Copy/Paste/Duplic
 
 ## Quyết định kiến trúc
 
-| Decision | Reason |
-|---|---|
-| IDs gen trước `setPresentation` | Closure bug — setState closures capture stale object refs |
-| Hidden filter tại render level | Không cần thay đổi element model schema |
-| `onUpdateElements` batch cho reorder | SlideCanvas drag đã có batch update; SelectionPane dùng cùng pattern |
-| `clipboard` local state trong SlideCanvas | Đơn giản hơn Zustand; paste cần position context từ canvas |
+| Decision                                  | Reason                                                               |
+| ----------------------------------------- | -------------------------------------------------------------------- |
+| IDs gen trước `setPresentation`           | Closure bug — setState closures capture stale object refs            |
+| Hidden filter tại render level            | Không cần thay đổi element model schema                              |
+| `onUpdateElements` batch cho reorder      | SlideCanvas drag đã có batch update; SelectionPane dùng cùng pattern |
+| `clipboard` local state trong SlideCanvas | Đơn giản hơn Zustand; paste cần position context từ canvas           |
 
 ---
 

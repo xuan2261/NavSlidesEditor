@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { api } from '../utils/api'
+import { Button } from '../components/ui'
 
 export default function HistoryModal({ presentationId, onRestore, onClose }) {
   const [snapshots, setSnapshots] = useState([])
   const [snapshotName, setSnapshotName] = useState('')
 
   useEffect(() => {
-    api.getSnapshots(presentationId).then(setSnapshots).catch(() => {})
+    api
+      .getSnapshots(presentationId)
+      .then(setSnapshots)
+      .catch(() => {})
   }, [presentationId])
 
   const handleSave = async () => {
@@ -18,61 +22,76 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
     >
-      <div style={{ background: '#1e1e2e', borderRadius: 12, padding: 24, width: 480, maxWidth: '90vw', maxHeight: '70vh', boxShadow: '0 8px 32px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 16, color: '#e0e0e0' }}>Version History</h3>
-          <button className="btn btn-ghost" onClick={onClose} style={{ padding: 4 }}><X size={16} /></button>
+      <div className="bg-card border border-border rounded-xl p-6 w-[480px] max-w-[90vw] max-h-[70vh] shadow-2xl flex flex-col">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="m-0 text-base text-text-primary">Version History</h3>
+          <Button variant="ghost" onClick={onClose} className="p-1">
+            <X size={16} />
+          </Button>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <div className="flex gap-2 mb-4 shrink-0">
           <input
-            style={{ flex: 1, padding: '8px 12px', borderRadius: 6, border: '1px solid #3a3a4e', background: '#2a2a3e', color: '#e0e0e0', fontSize: 13, boxSizing: 'border-box' }}
+            className="flex-1 px-3 py-2 rounded-md border border-border bg-secondary text-text text-[13px] box-border focus:border-accent focus:outline-none transition-colors"
             value={snapshotName}
             onChange={(e) => setSnapshotName(e.target.value)}
             placeholder="Snapshot name (optional)"
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSave() }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSave()
+            }}
           />
-          <button className="btn btn-primary" onClick={handleSave}>Save</button>
+          <Button variant="primary" onClick={handleSave}>
+            Save
+          </Button>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        <div className="flex-1 overflow-y-auto min-h-0 border-t border-border pt-2 -mx-2 px-2">
           {snapshots.length === 0 ? (
-            <p style={{ color: '#666', fontSize: 13, textAlign: 'center', padding: 20 }}>No snapshots yet</p>
+            <p className="text-text-muted text-[13px] text-center py-5">No snapshots yet</p>
           ) : (
             snapshots.map((snap) => (
-              <div key={snap.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderBottom: '1px solid #2a2a3e' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: '#e0e0e0', fontWeight: 500 }}>{snap.name}</div>
-                  <div style={{ fontSize: 11, color: '#888' }}>
-                    {new Date(snap.createdAt).toLocaleString()} &middot; {snap.slideCount} slide{snap.slideCount !== 1 ? 's' : ''}
+              <div
+                key={snap.id}
+                className="flex items-center gap-2.5 py-2 border-b border-border last:border-b-0"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] text-text-primary font-medium truncate">
+                    {snap.name}
+                  </div>
+                  <div className="text-[11px] text-text-muted mt-0.5">
+                    {new Date(snap.createdAt).toLocaleString()} &middot; {snap.slideCount} slide
+                    {snap.slideCount !== 1 ? 's' : ''}
                   </div>
                 </div>
-                <button
-                  className="btn btn-secondary"
-                  style={{ fontSize: 11, padding: '3px 10px' }}
+                <Button
+                  variant="secondary"
+                  className="text-[11px] px-2.5 py-1"
                   onClick={async () => {
-                    if (!confirm('Restore this snapshot? Current changes will be overwritten.')) return
+                    if (!confirm('Restore this snapshot? Current changes will be overwritten.'))
+                      return
                     const restored = await api.restoreSnapshot(presentationId, snap.id)
                     onRestore(restored)
                     onClose()
                   }}
                 >
                   Restore
-                </button>
-                <button
-                  className="btn-icon"
-                  style={{ color: 'var(--danger)' }}
+                </Button>
+                <Button
+                  variant="icon"
+                  className="text-text-muted hover:text-danger hover:bg-danger/10"
                   title="Delete snapshot"
                   onClick={async () => {
                     await api.deleteSnapshot(presentationId, snap.id)
                     setSnapshots(await api.getSnapshots(presentationId))
                   }}
                 >
-                  <X size={12} />
-                </button>
+                  <X size={14} />
+                </Button>
               </div>
             ))
           )}

@@ -10,7 +10,13 @@ const bcrypt = require('bcryptjs')
 const rateLimit = require('express-rate-limit')
 const createDOMPurify = require('dompurify')
 const { JSDOM } = require('jsdom')
-const { initDataFiles, UPLOADS_DIR, readShareTokens, writeShareTokens, readPresentations } = require('./services/storage')
+const {
+  initDataFiles,
+  UPLOADS_DIR,
+  readShareTokens,
+  writeShareTokens,
+  readPresentations,
+} = require('./services/storage')
 const { errorHandler } = require('./middleware/error-handler')
 const { generateRevealHTML } = require('revealjs-shared')
 const { recordView } = require('./routes/analytics')
@@ -58,9 +64,7 @@ app.param('presId', (req, res, next, val) => {
 })
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-const corsOptions = process.env.NODE_ENV === 'production'
-  ? { origin: false }
-  : { origin: true }
+const corsOptions = process.env.NODE_ENV === 'production' ? { origin: false } : { origin: true }
 app.use(cors(corsOptions))
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: false }))
@@ -95,8 +99,8 @@ app.use('/vendor', express.static(path.join(__dirname, 'vendor')))
 
 // ── Mount routes ─────────────────────────────────────────────────────────────
 // Core CRUD — order matters: more specific paths before generic ones
-app.use('/api/presentations', shareRouter)       // /:id/share
-app.use('/api/presentations', historyRouter)     // /:id/snapshot(s), /:id/restore
+app.use('/api/presentations', shareRouter) // /:id/share
+app.use('/api/presentations', historyRouter) // /:id/snapshot(s), /:id/restore
 app.use('/api/presentations', presentationsRouter) // CRUD + export + present + duplicate + save-as-template
 app.use('/api/templates', templatesRouter)
 app.use('/api/upload', uploadRouter)
@@ -166,9 +170,9 @@ async function renderShareView(presentationId, res) {
 // Analytics and Expiry handler
 function canViewShare(tokenData) {
   if (tokenData.expiresAt && new Date(tokenData.expiresAt) < new Date()) {
-    return false;
+    return false
   }
-  return true;
+  return true
 }
 
 // Verify password for protected link
@@ -176,18 +180,18 @@ app.post('/share/:token/verify', async (req, res) => {
   try {
     const tokens = await readShareTokens()
     let tokenData = tokens[req.params.token]
-    
+
     // Normalize if legacy string
     if (typeof tokenData === 'string') tokenData = { presentationId: tokenData }
     if (!tokenData) return res.status(404).json({ error: 'Token not found' })
     if (!canViewShare(tokenData)) return res.status(403).json({ error: 'Link expired' })
-    
+
     if (tokenData.password) {
       if (!req.body.password) return res.status(401).json({ error: 'Password required' })
       const isValid = await bcrypt.compare(req.body.password, tokenData.password)
       if (!isValid) return res.status(401).json({ error: 'Invalid password' })
     }
-    
+
     res.json({ verified: true })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -200,12 +204,12 @@ app.get('/share/:token', async (req, res) => {
   try {
     const tokens = await readShareTokens()
     let tokenData = tokens[req.params.token]
-    
+
     // Normalize if legacy string
     if (typeof tokenData === 'string') {
       tokenData = { presentationId: tokenData, views: 0 }
     }
-    
+
     if (!tokenData) return res.status(404).send('Presentation not found or sharing disabled')
     if (!canViewShare(tokenData)) return res.status(403).send('This link has expired')
 
@@ -231,7 +235,9 @@ app.get('/share/:token', async (req, res) => {
     await writeShareTokens(tokens)
 
     // Record analytics
-    try { await recordView(tokenData.presentationId, req.params.token, req.get('referer') || '') } catch {}
+    try {
+      await recordView(tokenData.presentationId, req.params.token, req.get('referer') || '')
+    } catch {}
 
     await renderShareView(tokenData.presentationId, res)
   } catch (err) {
@@ -247,19 +253,21 @@ app.post('/share/:token', async (req, res) => {
     if (typeof tokenData === 'string') tokenData = { presentationId: tokenData }
     if (!tokenData) return res.status(404).send('Not found')
     if (!canViewShare(tokenData)) return res.status(403).send('This link has expired')
-    
+
     const pwd = req.body?.pwd
     if (!pwd || !(await bcrypt.compare(pwd, tokenData.password))) {
       return res.redirect(`/share/${req.params.token}`) // back to form
     }
-    
+
     // Increment views safely
     tokenData.views = (tokenData.views || 0) + 1
     tokens[req.params.token] = tokenData
     await writeShareTokens(tokens)
 
     // Record analytics
-    try { await recordView(tokenData.presentationId, req.params.token, req.get('referer') || '') } catch {}
+    try {
+      await recordView(tokenData.presentationId, req.params.token, req.get('referer') || '')
+    } catch {}
 
     await renderShareView(tokenData.presentationId, res)
   } catch (err) {
@@ -289,11 +297,11 @@ function startServer(port) {
   const p = port || PORT
   return new Promise((resolve) => {
     const server = http.createServer(app)
-    
+
     // Attach Socket.IO
-    const corsOptions = process.env.NODE_ENV === 'production' ? { origin: false } : { origin: '*' };
+    const corsOptions = process.env.NODE_ENV === 'production' ? { origin: false } : { origin: '*' }
     const io = new Server(server, { cors: corsOptions, path: '/ws' })
-    
+
     setupSocketHandlers(io)
 
     server.listen(p, () => {

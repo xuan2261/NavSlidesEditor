@@ -146,8 +146,8 @@ npm run electron:dev
 
 The desktop app stores data in your OS app data folder:
 
-| Platform | Path                                           |
-| -------- | ---------------------------------------------- |
+| Platform | Path                                              |
+| -------- | ------------------------------------------------- |
 | Linux    | `~/.config/NavSlides Editor/`                     |
 | macOS    | `~/Library/Application Support/NavSlides Editor/` |
 | Windows  | `%APPDATA%/NavSlides Editor/`                     |
@@ -395,12 +395,12 @@ slides.example.com {
 
 ## Requirements
 
-| Method      | Requirement                          |
-| ----------- | ------------------------------------ |
-| Desktop app | Node.js 18+ (build only)             |
-| Docker      | Docker 20.10+ and Docker Compose v2+ |
-| Node.js     | Node.js 18+ and npm 8+               |
-| Load Testing| [k6](https://k6.io/docs/get-started/installation/) |
+| Method       | Requirement                                        |
+| ------------ | -------------------------------------------------- |
+| Desktop app  | Node.js 18+ (build only)                           |
+| Docker       | Docker 20.10+ and Docker Compose v2+               |
+| Node.js      | Node.js 18+ and npm 8+                             |
+| Load Testing | [k6](https://k6.io/docs/get-started/installation/) |
 
 ---
 
@@ -423,21 +423,21 @@ This project uses `k6` for load testing to simulate high traffic on the REST API
 
 ## Tech Stack
 
-| Layer               | Technology                                    |
-| ------------------- | --------------------------------------------- |
-| Frontend            | React 18, Vite 5                              |
-| Rich text editor    | TipTap 2                                      |
-| Presentation engine | reveal.js 5                                   |
-| Math rendering      | KaTeX                                         |
-| Diagrams            | TikZJax                                       |
-| Charts              | Chart.js 4                                    |
-| Syntax highlighting | highlight.js                                  |
-| Markdown            | Built-in converter + marked.js (export)       |
-| Icons               | Lucide (editor UI) + inline SVG (slide icons) |
-| PowerPoint export   | pptxgenjs                                     |
-| Backend             | Node.js, Express 4                            |
-| Desktop app         | Electron                                      |
-| Cloud sync          | rclone                                        |
-| Testing             | Vitest, Playwright, k6                        |
-| Linting & Formatting| ESLint, Prettier                              |
-| Storage             | JSON files + local filesystem                 |
+| Layer                | Technology                                    |
+| -------------------- | --------------------------------------------- |
+| Frontend             | React 18, Vite 5                              |
+| Rich text editor     | TipTap 2                                      |
+| Presentation engine  | reveal.js 5                                   |
+| Math rendering       | KaTeX                                         |
+| Diagrams             | TikZJax                                       |
+| Charts               | Chart.js 4                                    |
+| Syntax highlighting  | highlight.js                                  |
+| Markdown             | Built-in converter + marked.js (export)       |
+| Icons                | Lucide (editor UI) + inline SVG (slide icons) |
+| PowerPoint export    | pptxgenjs                                     |
+| Backend              | Node.js, Express 4                            |
+| Desktop app          | Electron                                      |
+| Cloud sync           | rclone                                        |
+| Testing              | Vitest, Playwright, k6                        |
+| Linting & Formatting | ESLint, Prettier                              |
+| Storage              | JSON files + local filesystem                 |

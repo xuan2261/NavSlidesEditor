@@ -1,11 +1,13 @@
 # Phase 2: Slide Layout Templates Expansion
 
 ## Context
+
 - [EditorPage.jsx:109-371](file:///d:/NCKH_2025/revealjs_gui/client/src/pages/EditorPage.jsx#L109-L371) — SLIDE_TEMPLATES (8 layouts)
 - [EditorPage.jsx:3421-3600](file:///d:/NCKH_2025/revealjs_gui/client/src/pages/EditorPage.jsx#L3421-L3600) — Template modal UI
 - [EditorPage.jsx:1688-1720](file:///d:/NCKH_2025/revealjs_gui/client/src/pages/EditorPage.jsx#L1688-L1720) — addSlide function
 
 ## Overview
+
 - Priority: P0
 - Status: ✅ Completed
 - Mở rộng SLIDE_TEMPLATES từ 8 → 20 layouts, extract ra file riêng để giảm EditorPage.jsx
@@ -13,6 +15,7 @@
 ## Requirements
 
 ### Functional
+
 1. Extract `SLIDE_TEMPLATES` ra `client/src/data/slide-templates.js`
 2. Thêm 12 slide layouts mới
 3. Cải tiến template modal UI: grid 4 cột, scroll, category grouping
@@ -20,30 +23,32 @@
 
 ### 12 Layouts mới
 
-| # | Key | Label | Mô tả |
-|---|-----|-------|--------|
-| 1 | `quote` | Quote | Trích dẫn lớn + tác giả, icon quote mark |
-| 2 | `agenda` | Agenda / TOC | Mục lục numbered sections, bên trái numbering |
-| 3 | `timeline` | Timeline | 4 milestones horizontal với dots + lines |
-| 4 | `four-grid` | 4-Grid | 2×2 grid cards với accent borders |
-| 5 | `steps` | Steps / Process | 3 numbered steps horizontal, arrow connectors |
-| 6 | `team` | Team Profile | Avatar placeholder + name + role |
-| 7 | `thank-you` | Thank You | Kết bài, centered text + accent line |
-| 8 | `definition` | Definition | Term highlighted + definition paragraph |
-| 9 | `pro-con` | Pro / Con | Two columns với ✅/❌ headers, green/red accents |
-| 10 | `key-takeaways` | Key Takeaways | 4 bullet points với icon bullets |
-| 11 | `qa` | Q&A | Câu hỏi & thảo luận ending slide |
-| 12 | `image-gallery` | Image Gallery | 3 image placeholders in a row |
+| #   | Key             | Label           | Mô tả                                            |
+| --- | --------------- | --------------- | ------------------------------------------------ |
+| 1   | `quote`         | Quote           | Trích dẫn lớn + tác giả, icon quote mark         |
+| 2   | `agenda`        | Agenda / TOC    | Mục lục numbered sections, bên trái numbering    |
+| 3   | `timeline`      | Timeline        | 4 milestones horizontal với dots + lines         |
+| 4   | `four-grid`     | 4-Grid          | 2×2 grid cards với accent borders                |
+| 5   | `steps`         | Steps / Process | 3 numbered steps horizontal, arrow connectors    |
+| 6   | `team`          | Team Profile    | Avatar placeholder + name + role                 |
+| 7   | `thank-you`     | Thank You       | Kết bài, centered text + accent line             |
+| 8   | `definition`    | Definition      | Term highlighted + definition paragraph          |
+| 9   | `pro-con`       | Pro / Con       | Two columns với ✅/❌ headers, green/red accents |
+| 10  | `key-takeaways` | Key Takeaways   | 4 bullet points với icon bullets                 |
+| 11  | `qa`            | Q&A             | Câu hỏi & thảo luận ending slide                 |
+| 12  | `image-gallery` | Image Gallery   | 3 image placeholders in a row                    |
 
 ## Architecture
 
 ### File Extraction
+
 ```
 client/src/data/slide-templates.js  ← NEW: export SLIDE_TEMPLATES object
 client/src/pages/EditorPage.jsx     ← import SLIDE_TEMPLATES from '../data/slide-templates'
 ```
 
 ### Template Data Structure (unchanged)
+
 ```js
 {
   label: 'Quote',
@@ -57,6 +62,7 @@ client/src/pages/EditorPage.jsx     ← import SLIDE_TEMPLATES from '../data/sli
 ```
 
 ### Modal UI Improvement
+
 - Group templates by category: Basic, Content, Layout, Ending
 - 4 columns grid instead of 3
 - Mini preview icons rendered from template data
@@ -65,9 +71,11 @@ client/src/pages/EditorPage.jsx     ← import SLIDE_TEMPLATES from '../data/sli
 ## Related Code Files
 
 ### Create
+
 - `client/src/data/slide-templates.js` — Extracted + expanded SLIDE_TEMPLATES
 
 ### Modify
+
 - `client/src/pages/EditorPage.jsx` — Remove SLIDE_TEMPLATES definition, import from new file
 - Template modal JSX — Update grid layout (4 cols), add category headers, add new template previews
 
@@ -124,6 +132,7 @@ client/src/pages/EditorPage.jsx     ← import SLIDE_TEMPLATES from '../data/sli
 - [x] Visual test: all 20 templates add correctly and look good
 
 ## Success Criteria
+
 - ✅ EditorPage.jsx reduced by ~260 lines (SLIDE_TEMPLATES extracted)
 - ✅ 20 slide layout templates available in "Add Slide" modal
 - ✅ Templates grouped by category in modal

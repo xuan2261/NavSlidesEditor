@@ -1,15 +1,25 @@
 import { useState } from 'react'
 import { Languages, X, Loader2 } from 'lucide-react'
 import { aiTranslate } from '../utils/ai'
-import { Button } from '../components/ui';
-
-
-
+import { Button } from '../components/ui'
 
 const LANGUAGES = [
-  'English', 'Tiếng Việt', '日本語', '한국어', '中文', 'Français',
-  'Deutsch', 'Español', 'Русский', 'ภาษาไทย', 'Italiano', 'Português',
-  'العربية', 'हिन्दी', 'Bahasa Indonesia', 'Bahasa Melayu',
+  'English',
+  'Tiếng Việt',
+  '日本語',
+  '한국어',
+  '中文',
+  'Français',
+  'Deutsch',
+  'Español',
+  'Русский',
+  'ภาษาไทย',
+  'Italiano',
+  'Português',
+  'العربية',
+  'हिन्दी',
+  'Bahasa Indonesia',
+  'Bahasa Melayu',
 ]
 
 export default function AITranslateModal({ slides, onApplyTranslations, onClose }) {
@@ -41,18 +51,29 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
   }
 
   const handleTranslate = async () => {
-    setLoading(true); setError(''); setProgress('Extracting text...')
+    setLoading(true)
+    setError('')
+    setProgress('Extracting text...')
     try {
       const texts = extractTexts()
-      if (texts.length === 0) { setError('No text found to translate'); setLoading(false); return }
+      if (texts.length === 0) {
+        setError('No text found to translate')
+        setLoading(false)
+        return
+      }
 
       // Batch translate in chunks of 20
       const chunkSize = 20
       const results = []
       for (let i = 0; i < texts.length; i += chunkSize) {
-        setProgress(`Translating ${i + 1}-${Math.min(i + chunkSize, texts.length)} of ${texts.length}...`)
+        setProgress(
+          `Translating ${i + 1}-${Math.min(i + chunkSize, texts.length)} of ${texts.length}...`
+        )
         const chunk = texts.slice(i, i + chunkSize)
-        const payload = chunk.map(t => ({ id: `${t.slideIdx}-${t.elementIdx || 'notes'}-${t.field}`, html: t.html }))
+        const payload = chunk.map((t) => ({
+          id: `${t.slideIdx}-${t.elementIdx || 'notes'}-${t.field}`,
+          html: t.html,
+        }))
         const data = await aiTranslate(payload, targetLang)
         results.push(...data.translations)
       }
@@ -62,7 +83,7 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
       // eslint-disable-next-line unused-imports/no-unused-vars
       texts.forEach((t, idx) => {
         const key = `${t.slideIdx}-${t.elementIdx || 'notes'}-${t.field}`
-        const translated = results.find(r => r.id === key)
+        const translated = results.find((r) => r.id === key)
         if (translated) {
           translationMap[key] = { ...t, translatedHtml: translated.html }
         }
@@ -72,56 +93,100 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
       onClose()
     } catch (err) {
       setError(err.message)
-    } finally { setLoading(false); setProgress('') }
+    } finally {
+      setLoading(false)
+      setProgress('')
+    }
   }
 
   const textCount = extractTexts().length
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]" onClick={onClose}>
-      <div className="bg-bg-card rounded-xl p-6 w-[480px] max-h-[80vh] overflow-y-auto shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
+      onClick={onClose}
+    >
+      <div
+        className="bg-card rounded-xl p-6 w-[480px] max-h-[80vh] overflow-y-auto shadow-2xl border border-border"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-4">
           <h3 className="m-0 flex items-center gap-2 text-base">
             <Languages size={18} /> Translate Presentation
           </h3>
-          <Button variant="icon" onClick={onClose} className="p-1"><X size={16} /></Button>
+          <Button variant="icon" onClick={onClose} className="p-1">
+            <X size={16} />
+          </Button>
         </div>
 
         <div className="mb-4">
           <label className="text-xs text-text-muted block mb-1">Target Language</label>
-          <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)} className="w-full px-3 py-2 rounded-md border border-border bg-bg-secondary text-text text-sm box-border">
-            {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+          <select
+            value={targetLang}
+            onChange={(e) => setTargetLang(e.target.value)}
+            className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text text-sm box-border"
+          >
+            {LANGUAGES.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
           </select>
         </div>
 
         <div className="mb-4 flex flex-col gap-2">
           <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text">
-            <input type="checkbox" checked={translateContent} onChange={(e) => setTranslateContent(e.target.checked)} className="rounded border-border" />
+            <input
+              type="checkbox"
+              checked={translateContent}
+              onChange={(e) => setTranslateContent(e.target.checked)}
+              className="rounded border-border"
+            />
             Translate slide content
           </label>
           <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text">
-            <input type="checkbox" checked={translateNotes} onChange={(e) => setTranslateNotes(e.target.checked)} className="rounded border-border" />
+            <input
+              type="checkbox"
+              checked={translateNotes}
+              onChange={(e) => setTranslateNotes(e.target.checked)}
+              className="rounded border-border"
+            />
             Translate speaker notes
           </label>
           <label className="text-[13px] flex items-center gap-2 cursor-pointer text-text">
-            <input type="checkbox" checked={keepOriginalAsNotes} onChange={(e) => setKeepOriginalAsNotes(e.target.checked)} className="rounded border-border" />
+            <input
+              type="checkbox"
+              checked={keepOriginalAsNotes}
+              onChange={(e) => setKeepOriginalAsNotes(e.target.checked)}
+              className="rounded border-border"
+            />
             Keep original text as speaker notes
           </label>
         </div>
 
         <p className="text-xs text-text-muted mb-4">
-          Found <strong>{textCount}</strong> text elements to translate across {slides?.length || 0} slides.
+          Found <strong>{textCount}</strong> text elements to translate across {slides?.length || 0}{' '}
+          slides.
         </p>
 
         {error && <div className="text-danger text-[13px] mb-3">{error}</div>}
         {progress && <div className="text-xs text-text-muted mb-3">{progress}</div>}
 
-        <Button variant="primary"
+        <Button
+          variant="primary"
           onClick={handleTranslate}
           disabled={loading || textCount === 0}
           className="w-full flex items-center justify-center gap-1.5"
         >
-          {loading ? <><Loader2 size={14} className="animate-spin" /> Translating...</> : <><Languages size={14} /> Translate All</>}
+          {loading ? (
+            <>
+              <Loader2 size={14} className="animate-spin" /> Translating...
+            </>
+          ) : (
+            <>
+              <Languages size={14} /> Translate All
+            </>
+          )}
         </Button>
       </div>
     </div>

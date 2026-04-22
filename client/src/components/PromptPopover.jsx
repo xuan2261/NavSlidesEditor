@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Button } from '../components/ui'
 
 /**
  * Inline popover that replaces window.prompt().
@@ -53,12 +54,16 @@ export default function PromptPopover({
           }}
         />
         <div className="prompt-popover-actions">
-          <button className="btn btn-ghost" onClick={onCancel} style={{ fontSize: 12 }}>
+          <Button variant="ghost" onClick={onCancel} style={{ fontSize: 12 }}>
             Cancel
-          </button>
-          <button className="btn btn-primary" onClick={handleSubmit} style={{ fontSize: 12, padding: '4px 12px' }}>
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            style={{ fontSize: 12, padding: '4px 12px' }}
+          >
             OK
-          </button>
+          </Button>
         </div>
       </div>
     </>

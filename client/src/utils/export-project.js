@@ -57,23 +57,29 @@ export async function exportProject(presentation) {
 
   // Fetch and add local media files
   const mediaFolder = zip.folder('media')
-  await Promise.allSettled(mediaUrls.map(async (url) => {
-    try {
-      const fullUrl = url.startsWith('/') ? window.location.origin + url : url
-      const resp = await fetch(fullUrl)
-      if (!resp.ok) return
-      const blob = await resp.blob()
-      const filename = url.split('/').pop()
-      mediaFolder.file(filename, blob)
-    } catch { /* skip failed media */ }
-  }))
+  await Promise.allSettled(
+    mediaUrls.map(async (url) => {
+      try {
+        const fullUrl = url.startsWith('/') ? window.location.origin + url : url
+        const resp = await fetch(fullUrl)
+        if (!resp.ok) return
+        const blob = await resp.blob()
+        const filename = url.split('/').pop()
+        mediaFolder.file(filename, blob)
+      } catch {
+        /* skip failed media */
+      }
+    })
+  )
 
   // Generate offline HTML and add
   try {
     const html = generateRevealHTML(presentation)
     const offline = await generateOfflineHTML(html)
     zip.file('presentation.html', offline)
-  } catch { /* skip HTML generation */ }
+  } catch {
+    /* skip HTML generation */
+  }
 
   // Download ZIP
   const zipBlob = await zip.generateAsync({

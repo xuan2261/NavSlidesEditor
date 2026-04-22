@@ -1,7 +1,7 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
 
-const BUILT_IN_PATH = path.join(__dirname, 'server', 'data', 'built-in-templates.json');
+const BUILT_IN_PATH = path.join(__dirname, 'server', 'data', 'built-in-templates.json')
 
 const additionalSimulations = [
   {
@@ -19,8 +19,17 @@ const additionalSimulations = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Bubble Sort</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Bubble Sort</h1>',
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -111,11 +120,11 @@ const additionalSimulations = [
   init();
 </script>
 </body>
-</html>`
-          }
-        ]
-      }
-    ]
+</html>`,
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'sim-pid-controller',
@@ -132,8 +141,17 @@ const additionalSimulations = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">PID Controller</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">PID Controller</h1>',
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -261,11 +279,11 @@ const additionalSimulations = [
   simulate();
 </script>
 </body>
-</html>`
-          }
-        ]
-      }
-    ]
+</html>`,
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'sim-resistor-color',
@@ -282,8 +300,17 @@ const additionalSimulations = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Resistor Color Code</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Resistor Color Code</h1>',
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -366,11 +393,11 @@ const additionalSimulations = [
   }
 </script>
 </body>
-</html>`
-          }
-        ]
-      }
-    ]
+</html>`,
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'sim-signal-wave',
@@ -387,8 +414,17 @@ const additionalSimulations = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Signal Generator</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Signal Generator</h1>',
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -489,11 +525,11 @@ const additionalSimulations = [
   draw();
 </script>
 </body>
-</html>`
-          }
-        ]
-      }
-    ]
+</html>`,
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'sim-matrix-calc',
@@ -510,8 +546,17 @@ const additionalSimulations = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Matrix Operations</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Matrix Operations</h1>',
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -611,11 +656,11 @@ const additionalSimulations = [
   calc();
 </script>
 </body>
-</html>`
-          }
-        ]
-      }
-    ]
+</html>`,
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'sim-newton-force',
@@ -632,8 +677,17 @@ const additionalSimulations = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Force Vectors</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Force Vectors</h1>',
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -750,32 +804,32 @@ const additionalSimulations = [
   draw();
 </script>
 </body>
-</html>`
-          }
-        ]
-      }
-    ]
-  }
-];
+</html>`,
+          },
+        ],
+      },
+    ],
+  },
+]
 
 // Read and append to the existing file
 fs.readFile(BUILT_IN_PATH, 'utf-8', (err, data) => {
   if (err) {
-    console.error('Error reading JSON:', err);
-    return;
+    console.error('Error reading JSON:', err)
+    return
   }
   try {
-    const templates = JSON.parse(data);
-    
+    const templates = JSON.parse(data)
+
     // Filter out existing ones with the same IDs
-    const simIds = additionalSimulations.map(s => s.id);
-    const filteredTemplates = templates.filter(t => !simIds.includes(t.id));
-    
-    const newTemplates = [...filteredTemplates, ...additionalSimulations];
-    
-    fs.writeFileSync(BUILT_IN_PATH, JSON.stringify(newTemplates, null, 2), 'utf-8');
-    console.log(`Successfully appended ${additionalSimulations.length} more simulation templates.`);
+    const simIds = additionalSimulations.map((s) => s.id)
+    const filteredTemplates = templates.filter((t) => !simIds.includes(t.id))
+
+    const newTemplates = [...filteredTemplates, ...additionalSimulations]
+
+    fs.writeFileSync(BUILT_IN_PATH, JSON.stringify(newTemplates, null, 2), 'utf-8')
+    console.log(`Successfully appended ${additionalSimulations.length} more simulation templates.`)
   } catch (e) {
-    console.error('Error parsing JSON:', e);
+    console.error('Error parsing JSON:', e)
   }
-});
+})

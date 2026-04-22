@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   darkMode: ['class', '[data-theme="dark"]'],
   important: true,
   corePlugins: {
@@ -12,6 +12,10 @@ export default {
         workspace: 'var(--bg-workspace)',
         panel: 'var(--bg-panel)',
         'canvas-default': 'var(--bg-canvas-default)',
+        card: 'var(--bg-card)',
+        hover: 'var(--bg-hover)',
+        active: 'var(--bg-active)',
+        secondary: 'var(--bg-secondary)',
         primary: {
           DEFAULT: 'var(--color-primary)',
           hover: 'var(--color-primary-hover)',
@@ -45,7 +49,7 @@ export default {
           hover: 'var(--danger-hover)',
         },
         warning: 'var(--warning)',
-      }
+      },
     },
   },
   plugins: [],

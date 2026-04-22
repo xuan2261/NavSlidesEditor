@@ -21,32 +21,44 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{
-          padding: 40,
-          textAlign: 'center',
-          color: '#e0e0e0',
-          background: 'var(--bg-primary, #1a1a2e)',
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 16,
-        }}>
+        <div
+          style={{
+            padding: 40,
+            textAlign: 'center',
+            color: '#e0e0e0',
+            background: 'var(--bg-primary, #1a1a2e)',
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 16,
+          }}
+        >
           <div style={{ fontSize: 48, marginBottom: 8 }}>⚠️</div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 600 }}>Something went wrong</h2>
-          <p style={{
-            color: '#a0a0b0', maxWidth: 480, fontSize: 14, lineHeight: 1.6,
-          }}>
+          <p
+            style={{
+              color: '#a0a0b0',
+              maxWidth: 480,
+              fontSize: 14,
+              lineHeight: 1.6,
+            }}
+          >
             {this.state.error?.message || 'An unexpected error occurred.'}
           </p>
           <div style={{ display: 'flex', gap: 12 }}>
             <button
               onClick={() => this.setState({ hasError: false, error: null })}
               style={{
-                padding: '10px 24px', borderRadius: 8, border: 'none',
-                background: '#6366f1', color: '#fff', fontSize: 14,
-                cursor: 'pointer', fontWeight: 500,
+                padding: '10px 24px',
+                borderRadius: 8,
+                border: 'none',
+                background: '#6366f1',
+                color: '#fff',
+                fontSize: 14,
+                cursor: 'pointer',
+                fontWeight: 500,
               }}
             >
               Try Again
@@ -54,9 +66,14 @@ class ErrorBoundary extends Component {
             <button
               onClick={() => window.location.reload()}
               style={{
-                padding: '10px 24px', borderRadius: 8,
-                border: '1px solid #444', background: 'transparent',
-                color: '#e0e0e0', fontSize: 14, cursor: 'pointer', fontWeight: 500,
+                padding: '10px 24px',
+                borderRadius: 8,
+                border: '1px solid #444',
+                background: 'transparent',
+                color: '#e0e0e0',
+                fontSize: 14,
+                cursor: 'pointer',
+                fontWeight: 500,
               }}
             >
               Reload Page

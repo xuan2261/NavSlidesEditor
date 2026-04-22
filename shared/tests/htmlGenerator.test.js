@@ -37,20 +37,26 @@ describe('htmlGenerator', () => {
   it('should not contain the old hardcoded fs-btn in body, but inject it in presenter-toolbar', () => {
     const presentation = { title: 'Test', slides: [] }
     const html = generateRevealHTML(presentation)
-    
+
     // It should no longer be a direct child in body before script tags
-    expect(html).not.toMatch(/<\/div>\s*<button id="fs-btn"[^>]*>.*<\/button>\s*<script src="\/vendor\/reveal.js/g)
-    
+    expect(html).not.toMatch(
+      /<\/div>\s*<button id="fs-btn"[^>]*>.*<\/button>\s*<script src="\/vendor\/reveal.js/g
+    )
+
     // It should be inside the presenter-toolbar
-    expect(html).toContain('<button id="fs-btn" title="Enter fullscreen (F)" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">&#x26F6;</button>')
+    expect(html).toContain(
+      '<button id="fs-btn" title="Enter fullscreen (F)" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">&#x26F6;</button>'
+    )
   })
 
   it('should contain the new translucent CSS for presenter tools', () => {
     const presentation = { title: 'Test', slides: [] }
     const html = generateRevealHTML(presentation)
-    
+
     expect(html).toContain('opacity: 0.15;')
-    expect(html).toContain('.slide-menu-button, #customcontrols, .reveal .controls, .palette, .boardhandle { opacity: 0.15 !important;')
+    expect(html).toContain(
+      '.slide-menu-button, #customcontrols, .reveal .controls, .palette, .boardhandle { opacity: 0.15 !important;'
+    )
   })
 
   it('should include global settings in revealConfig', () => {
@@ -59,10 +65,10 @@ describe('htmlGenerator', () => {
       slides: [],
       autoSlide: 5000,
       autoSlideLoop: true,
-      navigationMode: 'linear'
+      navigationMode: 'linear',
     }
     const html = generateRevealHTML(presentation)
-    
+
     expect(html).toContain('revealConfig.autoSlide = 5000;')
     expect(html).toContain('revealConfig.loop = true;')
     expect(html).toContain("revealConfig.navigationMode = 'linear';")

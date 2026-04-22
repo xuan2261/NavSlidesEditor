@@ -172,6 +172,7 @@ export function validateProjectFile(parsed) {
 ```
 
 **Implementation approach:**
+
 - Use existing `MediaLibraryModal` pattern (modal overlay) or inline drop zone
 - Simple: `<input type="file" accept=".navslides,.navslides.json">` styled as drop zone
 - On file select → `parseProjectFile()` → `validateProjectFile()` → `api.createPresentation()` → navigate to `/editor/:newId`
@@ -286,11 +287,11 @@ importProject: async (file) => {
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Media upload fails → broken images | Medium | Medium | Show error, allow retry |
-| Large ZIP import (100MB+) → memory issue | Medium | Low | Stream processing, chunked |
-| Duplicate title on import | Low | Low | Auto-append "- Imported" to title |
+| Risk                                     | Likelihood | Impact | Mitigation                        |
+| ---------------------------------------- | ---------- | ------ | --------------------------------- |
+| Media upload fails → broken images       | Medium     | Medium | Show error, allow retry           |
+| Large ZIP import (100MB+) → memory issue | Medium     | Low    | Stream processing, chunked        |
+| Duplicate title on import                | Low        | Low    | Auto-append "- Imported" to title |
 
 ---
 

@@ -1,256 +1,452 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>RLC & Oscilloscope Simulator</title>
     <style>
-        :root {
-            --bg: #0d161b;
-            --primary: #00ff87;
-            --glow: #00ff8780;
-            --text: #d5ffe8;
-            --r-color: #ff4757;
-            --l-color: #48bfe3;
-            --c-color: #ffd700;
-            --panel: rgba(13, 22, 27, 0.8);
-            --border: rgba(0, 255, 135, 0.2);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 15px; }
-        
-        .header { text-align: center; margin-bottom: 15px; }
-        h3 { font-size: 1.3rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px var(--glow); margin-bottom: 5px; }
-        
-        .container {
-            display: flex; gap: 15px; width: 100%; max-width: 950px; height: 420px;
-        }
-        
-        .panel {
-            background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-            box-shadow: 0 8px 32px 0 rgba(0,0,0,0.4); backdrop-filter: blur(8px);
-            display: flex; flex-direction: column;
-        }
-        
-        .left-panel { flex: 1; padding: 15px; }
-        .right-panel { flex: 1; padding: 15px; }
-        
-        .controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
-        .ctrl { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; border-left: 3px solid; }
-        .ctrl.r-ctrl { border-color: var(--r-color); }
-        .ctrl.l-ctrl { border-color: var(--l-color); }
-        .ctrl.c-ctrl { border-color: var(--c-color); }
-        
-        .ctrl label { font-size: 0.9rem; font-weight: bold; width: 60px; }
-        input[type=range] { flex: 1; margin: 0 10px; accent-color: var(--primary); height: 4px; }
-        input[type=range].r-slider { accent-color: var(--r-color); }
-        input[type=range].l-slider { accent-color: var(--l-color); }
-        input[type=range].c-slider { accent-color: var(--c-color); }
-        .val { font-size: 0.95rem; font-weight: bold; width: 65px; text-align: right; }
-        
-        .info-row { display: flex; justify-content: space-around; background: rgba(0,255,135,0.05); padding: 10px; border-radius: 8px; margin-top: auto; }
-        .info-card { text-align: center; }
-        .info-card .lbl { font-size: 0.75rem; color: rgba(213, 255, 232, 0.6); text-transform: uppercase; }
-        .info-card .num { font-size: 1.1rem; font-weight: bold; color: var(--primary); text-shadow: 0 0 8px var(--glow); }
+      :root {
+        --bg: #0d161b;
+        --primary: #00ff87;
+        --glow: #00ff8780;
+        --text: #d5ffe8;
+        --r-color: #ff4757;
+        --l-color: #48bfe3;
+        --c-color: #ffd700;
+        --panel: rgba(13, 22, 27, 0.8);
+        --border: rgba(0, 255, 135, 0.2);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 15px;
+      }
 
-        .canvas-container { position: relative; width: 100%; flex: 1; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; box-shadow: inset 0 0 20px rgba(0,255,135,0.05); }
-        canvas { display: block; width: 100%; height: 100%; }
-        
-        .panel-title { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-align: center; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .scope-overlay { position: absolute; top: 5px; right: 8px; font-size: 0.7rem; color: var(--primary); font-family: monospace; }
-        
-        /* Tooltip */
-        #tooltip {
-            position: absolute; background: rgba(0,0,0,0.8); border: 1px solid var(--primary); color: #fff;
-            padding: 5px 8px; font-size: 11px; border-radius: 4px; pointer-events: none; opacity: 0; transition: opacity 0.2s;
-            font-family: monospace; z-index: 100;
-        }
+      .header {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      h3 {
+        font-size: 1.3rem;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 0 0 10px var(--glow);
+        margin-bottom: 5px;
+      }
+
+      .container {
+        display: flex;
+        gap: 15px;
+        width: 100%;
+        max-width: 950px;
+        height: 420px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(8px);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .left-panel {
+        flex: 1;
+        padding: 15px;
+      }
+      .right-panel {
+        flex: 1;
+        padding: 15px;
+      }
+
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 15px;
+      }
+      .ctrl {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 8px 12px;
+        border-radius: 8px;
+        border-left: 3px solid;
+      }
+      .ctrl.r-ctrl {
+        border-color: var(--r-color);
+      }
+      .ctrl.l-ctrl {
+        border-color: var(--l-color);
+      }
+      .ctrl.c-ctrl {
+        border-color: var(--c-color);
+      }
+
+      .ctrl label {
+        font-size: 0.9rem;
+        font-weight: bold;
+        width: 60px;
+      }
+      input[type='range'] {
+        flex: 1;
+        margin: 0 10px;
+        accent-color: var(--primary);
+        height: 4px;
+      }
+      input[type='range'].r-slider {
+        accent-color: var(--r-color);
+      }
+      input[type='range'].l-slider {
+        accent-color: var(--l-color);
+      }
+      input[type='range'].c-slider {
+        accent-color: var(--c-color);
+      }
+      .val {
+        font-size: 0.95rem;
+        font-weight: bold;
+        width: 65px;
+        text-align: right;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-around;
+        background: rgba(0, 255, 135, 0.05);
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: auto;
+      }
+      .info-card {
+        text-align: center;
+      }
+      .info-card .lbl {
+        font-size: 0.75rem;
+        color: rgba(213, 255, 232, 0.6);
+        text-transform: uppercase;
+      }
+      .info-card .num {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: var(--primary);
+        text-shadow: 0 0 8px var(--glow);
+      }
+
+      .canvas-container {
+        position: relative;
+        width: 100%;
+        flex: 1;
+        background: #000;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 10px;
+        box-shadow: inset 0 0 20px rgba(0, 255, 135, 0.05);
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .panel-title {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-align: center;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .scope-overlay {
+        position: absolute;
+        top: 5px;
+        right: 8px;
+        font-size: 0.7rem;
+        color: var(--primary);
+        font-family: monospace;
+      }
+
+      /* Tooltip */
+      #tooltip {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid var(--primary);
+        color: #fff;
+        padding: 5px 8px;
+        font-size: 11px;
+        border-radius: 4px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        font-family: monospace;
+        z-index: 100;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="header">
-        <h3>📊 RLC Spectral & Time Scope</h3>
+      <h3>📊 RLC Spectral & Time Scope</h3>
     </div>
     <div class="container">
-        <!-- Controls & Bode -->
-        <div class="panel left-panel">
-            <div class="controls">
-                <div class="ctrl r-ctrl">
-                    <label style="color:var(--r-color)">R</label>
-                    <input type="range" class="r-slider" id="sR" min="10" max="2000" step="10" value="500">
-                    <div class="val" id="vR" style="color:var(--r-color)">500 Ω</div>
-                </div>
-                <div class="ctrl l-ctrl">
-                    <label style="color:var(--l-color)">L</label>
-                    <input type="range" class="l-slider" id="sL" min="1" max="100" step="1" value="20">
-                    <div class="val" id="vL" style="color:var(--l-color)">20 mH</div>
-                </div>
-                <div class="ctrl c-ctrl">
-                    <label style="color:var(--c-color)">C</label>
-                    <input type="range" class="c-slider" id="sC" min="1" max="1000" step="1" value="200">
-                    <div class="val" id="vC" style="color:var(--c-color)">200 nF</div>
-                </div>
-            </div>
-            <div class="info-row">
-                <div class="info-card"><div class="lbl">f₀ Resonance</div><div class="num" id="iF">--</div></div>
-                <div class="info-card"><div class="lbl">Q Factor</div><div class="num" id="iQ">--</div></div>
-                <div class="info-card"><div class="lbl">Bandwidth</div><div class="num" id="iB">--</div></div>
-            </div>
+      <!-- Controls & Bode -->
+      <div class="panel left-panel">
+        <div class="controls">
+          <div class="ctrl r-ctrl">
+            <label style="color: var(--r-color)">R</label>
+            <input
+              type="range"
+              class="r-slider"
+              id="sR"
+              min="10"
+              max="2000"
+              step="10"
+              value="500"
+            />
+            <div class="val" id="vR" style="color: var(--r-color)">500 Ω</div>
+          </div>
+          <div class="ctrl l-ctrl">
+            <label style="color: var(--l-color)">L</label>
+            <input type="range" class="l-slider" id="sL" min="1" max="100" step="1" value="20" />
+            <div class="val" id="vL" style="color: var(--l-color)">20 mH</div>
+          </div>
+          <div class="ctrl c-ctrl">
+            <label style="color: var(--c-color)">C</label>
+            <input type="range" class="c-slider" id="sC" min="1" max="1000" step="1" value="200" />
+            <div class="val" id="vC" style="color: var(--c-color)">200 nF</div>
+          </div>
         </div>
-        
-        <!-- Scopes -->
-        <div class="panel right-panel">
-            <div class="panel-title">Frequency Domain (Bode)</div>
-            <div class="canvas-container" onmousemove="onBodeHover(event)" onmouseleave="onBodeLeave()">
-                <canvas id="cvBode"></canvas>
-                <div id="tooltip"></div>
-            </div>
-            
-            <div class="panel-title" style="margin-top:5px;">Time Domain (Step Response)</div>
-            <div class="canvas-container">
-                <canvas id="cvTime"></canvas>
-                <div class="scope-overlay">CH1: 1V/div  T: 1ms/div</div>
-            </div>
+        <div class="info-row">
+          <div class="info-card">
+            <div class="lbl">f₀ Resonance</div>
+            <div class="num" id="iF">--</div>
+          </div>
+          <div class="info-card">
+            <div class="lbl">Q Factor</div>
+            <div class="num" id="iQ">--</div>
+          </div>
+          <div class="info-card">
+            <div class="lbl">Bandwidth</div>
+            <div class="num" id="iB">--</div>
+          </div>
         </div>
+      </div>
+
+      <!-- Scopes -->
+      <div class="panel right-panel">
+        <div class="panel-title">Frequency Domain (Bode)</div>
+        <div class="canvas-container" onmousemove="onBodeHover(event)" onmouseleave="onBodeLeave()">
+          <canvas id="cvBode"></canvas>
+          <div id="tooltip"></div>
+        </div>
+
+        <div class="panel-title" style="margin-top: 5px">Time Domain (Step Response)</div>
+        <div class="canvas-container">
+          <canvas id="cvTime"></canvas>
+          <div class="scope-overlay">CH1: 1V/div T: 1ms/div</div>
+        </div>
+      </div>
     </div>
 
     <script>
-        const cvB = document.getElementById('cvBode'), ctxB = cvB.getContext('2d');
-        const cvT = document.getElementById('cvTime'), ctxT = cvT.getContext('2d');
-        const tt = document.getElementById('tooltip');
-        let fMin = 100, fMax = 100000, bodeData = [];
+      const cvB = document.getElementById('cvBode'),
+        ctxB = cvB.getContext('2d')
+      const cvT = document.getElementById('cvTime'),
+        ctxT = cvT.getContext('2d')
+      const tt = document.getElementById('tooltip')
+      let fMin = 100,
+        fMax = 100000,
+        bodeData = []
 
-        function resize() {
-            const r1 = cvB.parentElement.getBoundingClientRect();
-            cvB.width = r1.width; cvB.height = r1.height;
-            const r2 = cvT.parentElement.getBoundingClientRect();
-            cvT.width = r2.width; cvT.height = r2.height;
-            update();
+      function resize() {
+        const r1 = cvB.parentElement.getBoundingClientRect()
+        cvB.width = r1.width
+        cvB.height = r1.height
+        const r2 = cvT.parentElement.getBoundingClientRect()
+        cvT.width = r2.width
+        cvT.height = r2.height
+        update()
+      }
+      window.addEventListener('resize', resize)
+
+      function update() {
+        const R = +document.getElementById('sR').value
+        const L = +document.getElementById('sL').value * 1e-3
+        const C = +document.getElementById('sC').value * 1e-9
+
+        document.getElementById('vR').textContent = R + ' Ω'
+        document.getElementById('vL').textContent = L * 1e3 + ' mH'
+        document.getElementById('vC').textContent = C * 1e9 + ' nF'
+
+        const f0 = 1 / (2 * Math.PI * Math.sqrt(L * C))
+        const Q = (1 / R) * Math.sqrt(L / C)
+        const BW = f0 / Q
+
+        document.getElementById('iF').textContent =
+          f0 > 1e3 ? (f0 / 1e3).toFixed(2) + ' kHz' : f0.toFixed(0) + ' Hz'
+        document.getElementById('iQ').textContent = Q.toFixed(2)
+        document.getElementById('iB').textContent =
+          BW > 1e3 ? (BW / 1e3).toFixed(1) + ' kHz' : BW.toFixed(0) + ' Hz'
+
+        drawBode(R, L, C, f0)
+        drawTimeStep(R, L, C)
+      }
+
+      function drawGrid(ctx, W, H, cX, cY) {
+        ctx.clearRect(0, 0, W, H)
+        ctx.strokeStyle = 'rgba(0, 255, 135, 0.15)'
+        ctx.lineWidth = 1
+        ctx.setLineDash([2, 4])
+        for (let x = cX; x < W; x += cX) {
+          ctx.beginPath()
+          ctx.moveTo(x, 0)
+          ctx.lineTo(x, H)
+          ctx.stroke()
         }
-        window.addEventListener('resize', resize);
-
-        function update() {
-            const R = +document.getElementById('sR').value;
-            const L = +document.getElementById('sL').value * 1e-3;
-            const C = +document.getElementById('sC').value * 1e-9;
-            
-            document.getElementById('vR').textContent = R + ' Ω';
-            document.getElementById('vL').textContent = (L*1e3) + ' mH';
-            document.getElementById('vC').textContent = (C*1e9) + ' nF';
-
-            const f0 = 1 / (2 * Math.PI * Math.sqrt(L * C));
-            const Q = (1 / R) * Math.sqrt(L / C);
-            const BW = f0 / Q;
-
-            document.getElementById('iF').textContent = f0 > 1e3 ? (f0/1e3).toFixed(2)+' kHz' : f0.toFixed(0)+' Hz';
-            document.getElementById('iQ').textContent = Q.toFixed(2);
-            document.getElementById('iB').textContent = BW > 1e3 ? (BW/1e3).toFixed(1)+' kHz' : BW.toFixed(0)+' Hz';
-
-            drawBode(R, L, C, f0);
-            drawTimeStep(R, L, C);
+        for (let y = cY; y < H; y += cY) {
+          ctx.beginPath()
+          ctx.moveTo(0, y)
+          ctx.lineTo(W, y)
+          ctx.stroke()
         }
+        ctx.setLineDash([])
+      }
 
-        function drawGrid(ctx, W, H, cX, cY) {
-            ctx.clearRect(0,0,W,H);
-            ctx.strokeStyle = 'rgba(0, 255, 135, 0.15)'; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
-            for(let x=cX; x<W; x+=cX) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-            for(let y=cY; y<H; y+=cY) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-            ctx.setLineDash([]);
+      function drawBode(R, L, C, f0) {
+        const W = cvB.width,
+          H = cvB.height
+        drawGrid(ctxB, W, H, W / 10, H / 8)
+
+        ctxB.strokeStyle = '#00ff87'
+        ctxB.lineWidth = 2
+        ctxB.beginPath()
+        const pts = W
+        bodeData = []
+        for (let i = 0; i < pts; i++) {
+          let f = fMin * Math.pow(fMax / fMin, i / (pts - 1))
+          let w = 2 * Math.PI * f
+          // V_C / V_in = 1 / (1 - w^2LC + jwRC) => Low Pass Filter. Or V_R/V_in = BPF. We do Series BPF (V_R / V_in)
+          // Transfer func for resistor voltage: H(jw) = R / (R + jwL + 1/jwC) = jwRC / (1 - w^2LC + jwRC)
+          let numR = 0,
+            numI = w * R * C
+          let denR = 1 - w * w * L * C,
+            denI = w * R * C
+          let magD = denR * denR + denI * denI
+          let hR = (numR * denR + numI * denI) / magD,
+            hI = (numI * denR - numR * denI) / magD
+          let mag = Math.sqrt(hR * hR + hI * hI)
+          let db = 20 * Math.log10(Math.max(mag, 1e-5))
+
+          bodeData.push({ f, db })
+
+          let x = i
+          let y = H * 0.1 + H * 0.8 * (1 - (db + 40) / 45) // Scale -40dB to +5dB
+          y = Math.max(0, Math.min(H, y))
+          if (i === 0) ctxB.moveTo(x, y)
+          else ctxB.lineTo(x, y)
         }
+        ctxB.stroke()
 
-        function drawBode(R, L, C, f0) {
-            const W = cvB.width, H = cvB.height;
-            drawGrid(ctxB, W, H, W/10, H/8);
-            
-            ctxB.strokeStyle = '#00ff87'; ctxB.lineWidth = 2; ctxB.beginPath();
-            const pts = W; bodeData = [];
-            for(let i=0; i<pts; i++) {
-                let f = fMin * Math.pow(fMax/fMin, i/(pts-1));
-                let w = 2*Math.PI*f;
-                // V_C / V_in = 1 / (1 - w^2LC + jwRC) => Low Pass Filter. Or V_R/V_in = BPF. We do Series BPF (V_R / V_in)
-                // Transfer func for resistor voltage: H(jw) = R / (R + jwL + 1/jwC) = jwRC / (1 - w^2LC + jwRC)
-                let numR = 0, numI = w*R*C;
-                let denR = 1 - w*w*L*C, denI = w*R*C;
-                let magD = denR*denR + denI*denI;
-                let hR = (numR*denR + numI*denI)/magD, hI = (numI*denR - numR*denI)/magD;
-                let mag = Math.sqrt(hR*hR + hI*hI);
-                let db = 20 * Math.log10(Math.max(mag, 1e-5));
-                
-                bodeData.push({ f, db });
-                
-                let x = i;
-                let y = H*0.1 + (H*0.8) * (1 - (db + 40)/45); // Scale -40dB to +5dB
-                y = Math.max(0, Math.min(H, y));
-                if(i===0) ctxB.moveTo(x,y); else ctxB.lineTo(x,y);
-            }
-            ctxB.stroke();
-            
-            // Draw f0 line
-            let wt = Math.log(f0/fMin)/Math.log(fMax/fMin);
-            if(wt>0 && wt<1) {
-                let x0 = W * wt;
-                ctxB.strokeStyle = '#ffd700'; ctxB.lineWidth = 1; ctxB.beginPath();
-                ctxB.moveTo(x0, 0); ctxB.lineTo(x0, H); ctxB.stroke();
-            }
+        // Draw f0 line
+        let wt = Math.log(f0 / fMin) / Math.log(fMax / fMin)
+        if (wt > 0 && wt < 1) {
+          let x0 = W * wt
+          ctxB.strokeStyle = '#ffd700'
+          ctxB.lineWidth = 1
+          ctxB.beginPath()
+          ctxB.moveTo(x0, 0)
+          ctxB.lineTo(x0, H)
+          ctxB.stroke()
         }
+      }
 
-        function onBodeHover(e) {
-            const rect = cvB.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            if(x>=0 && x<bodeData.length) {
-                const pt = bodeData[Math.floor(x)];
-                tt.style.opacity = 1;
-                tt.style.left = (e.clientX + 10) + 'px';
-                tt.style.top = (e.clientY + 10) + 'px';
-                tt.innerHTML = `f: ${(pt.f>1e3?(pt.f/1e3).toFixed(1)+'k':pt.f.toFixed(0))}Hz<br>G: ${pt.db.toFixed(1)}dB`;
-            }
+      function onBodeHover(e) {
+        const rect = cvB.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        if (x >= 0 && x < bodeData.length) {
+          const pt = bodeData[Math.floor(x)]
+          tt.style.opacity = 1
+          tt.style.left = e.clientX + 10 + 'px'
+          tt.style.top = e.clientY + 10 + 'px'
+          tt.innerHTML = `f: ${pt.f > 1e3 ? (pt.f / 1e3).toFixed(1) + 'k' : pt.f.toFixed(0)}Hz<br>G: ${pt.db.toFixed(1)}dB`
         }
-        function onBodeLeave() { tt.style.opacity = 0; }
+      }
+      function onBodeLeave() {
+        tt.style.opacity = 0
+      }
 
-        function drawTimeStep(R, L, C) {
-            const W = cvT.width, H = cvT.height;
-            drawGrid(ctxT, W, H, W/10, H/8);
-            
-            // Step response of RLC series circuit (voltage across capacitor)
-            // ODE: L C v'' + R C v' + v = V_in. With V_in = 1 for t>0.
-            const alpha = R / (2*L);
-            const w0 = 1 / Math.sqrt(L*C);
-            const zeta = alpha / w0;
-            
-            const tMaxRange = 0.005; // 5ms scope
-            
-            ctxT.strokeStyle = '#00d4ff'; ctxT.lineWidth = 2; ctxT.beginPath();
-            const pts = W;
-            
-            for(let i=0; i<pts; i++) {
-                let t = tMaxRange * (i/(pts-1));
-                let v = 0;
-                if (zeta < 1) { // Underdamped
-                    const wd = w0 * Math.sqrt(1 - zeta*zeta);
-                    v = 1 - Math.exp(-alpha*t) * (Math.cos(wd*t) + (alpha/wd)*Math.sin(wd*t));
-                } else if (zeta === 1) { // Critically damped
-                    v = 1 - Math.exp(-alpha*t) * (1 + alpha*t);
-                } else { // Overdamped
-                    const p1 = -alpha + Math.sqrt(alpha*alpha - w0*w0);
-                    const p2 = -alpha - Math.sqrt(alpha*alpha - w0*w0);
-                    v = 1 - (p2*Math.exp(p1*t) - p1*Math.exp(p2*t))/(p2 - p1);
-                }
-                
-                let x = i;
-                let y = H - (H*0.8) * v; // Setpoint is at H*0.2
-                if(i===0) ctxT.moveTo(x,y); else ctxT.lineTo(x,y);
-            }
-            ctxT.stroke();
-            
-            // Setpoint line
-            ctxT.strokeStyle = 'rgba(255,255,255,0.3)'; ctxT.setLineDash([4,4]);
-            ctxT.beginPath(); ctxT.moveTo(0, H*0.2); ctxT.lineTo(W, H*0.2); ctxT.stroke(); ctxT.setLineDash([]);
+      function drawTimeStep(R, L, C) {
+        const W = cvT.width,
+          H = cvT.height
+        drawGrid(ctxT, W, H, W / 10, H / 8)
+
+        // Step response of RLC series circuit (voltage across capacitor)
+        // ODE: L C v'' + R C v' + v = V_in. With V_in = 1 for t>0.
+        const alpha = R / (2 * L)
+        const w0 = 1 / Math.sqrt(L * C)
+        const zeta = alpha / w0
+
+        const tMaxRange = 0.005 // 5ms scope
+
+        ctxT.strokeStyle = '#00d4ff'
+        ctxT.lineWidth = 2
+        ctxT.beginPath()
+        const pts = W
+
+        for (let i = 0; i < pts; i++) {
+          let t = tMaxRange * (i / (pts - 1))
+          let v = 0
+          if (zeta < 1) {
+            // Underdamped
+            const wd = w0 * Math.sqrt(1 - zeta * zeta)
+            v = 1 - Math.exp(-alpha * t) * (Math.cos(wd * t) + (alpha / wd) * Math.sin(wd * t))
+          } else if (zeta === 1) {
+            // Critically damped
+            v = 1 - Math.exp(-alpha * t) * (1 + alpha * t)
+          } else {
+            // Overdamped
+            const p1 = -alpha + Math.sqrt(alpha * alpha - w0 * w0)
+            const p2 = -alpha - Math.sqrt(alpha * alpha - w0 * w0)
+            v = 1 - (p2 * Math.exp(p1 * t) - p1 * Math.exp(p2 * t)) / (p2 - p1)
+          }
+
+          let x = i
+          let y = H - H * 0.8 * v // Setpoint is at H*0.2
+          if (i === 0) ctxT.moveTo(x, y)
+          else ctxT.lineTo(x, y)
         }
+        ctxT.stroke()
 
-        setTimeout(resize, 100);
-        document.getElementById('sR').oninput = update;
-        document.getElementById('sL').oninput = update;
-        document.getElementById('sC').oninput = update;
+        // Setpoint line
+        ctxT.strokeStyle = 'rgba(255,255,255,0.3)'
+        ctxT.setLineDash([4, 4])
+        ctxT.beginPath()
+        ctxT.moveTo(0, H * 0.2)
+        ctxT.lineTo(W, H * 0.2)
+        ctxT.stroke()
+        ctxT.setLineDash([])
+      }
+
+      setTimeout(resize, 100)
+      document.getElementById('sR').oninput = update
+      document.getElementById('sL').oninput = update
+      document.getElementById('sC').oninput = update
     </script>
-</body>
+  </body>
 </html>

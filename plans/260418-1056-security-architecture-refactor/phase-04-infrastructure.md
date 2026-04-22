@@ -16,6 +16,7 @@ Sau Phase 1-3, security đã fix, component structure sạch. Phase 4 tập trun
 ## Implementation Steps
 
 ### Task 4.1: Request Body Validation (Zod)
+
 **Files:** `server/routes/*.js`, NEW `server/schemas/*.js`  
 **Effort:** 2 days
 
@@ -27,51 +28,75 @@ Sau Phase 1-3, security đã fix, component structure sạch. Phase 4 tập trun
 // server/schemas/presentation-schema.js
 const { z } = require('zod')
 
-const elementSchema = z.object({
-  id: z.string().uuid(),
-  type: z.enum(['text', 'image', 'shape', 'code', 'latex', 'html', 'markdown', 
-                 'chart', 'video', 'audio', 'table', 'icon', 'callout', 'qr', 'divider']),
-  x: z.number(),
-  y: z.number(),
-  width: z.number().positive(),
-  height: z.number().positive(),
-  rotation: z.number().default(0),
-  locked: z.boolean().default(false),
-  zIndex: z.number().int().default(1),
-}).passthrough() // Allow type-specific fields
+const elementSchema = z
+  .object({
+    id: z.string().uuid(),
+    type: z.enum([
+      'text',
+      'image',
+      'shape',
+      'code',
+      'latex',
+      'html',
+      'markdown',
+      'chart',
+      'video',
+      'audio',
+      'table',
+      'icon',
+      'callout',
+      'qr',
+      'divider',
+    ]),
+    x: z.number(),
+    y: z.number(),
+    width: z.number().positive(),
+    height: z.number().positive(),
+    rotation: z.number().default(0),
+    locked: z.boolean().default(false),
+    zIndex: z.number().int().default(1),
+  })
+  .passthrough() // Allow type-specific fields
 
-const slideSchema = z.object({
-  id: z.string().uuid(),
-  background: z.object({
-    type: z.enum(['color', 'gradient', 'image']),
-    value: z.string(),
-  }).optional(),
-  elements: z.array(elementSchema).default([]),
-  notes: z.string().default(''),
-  hidden: z.boolean().default(false),
-}).passthrough()
+const slideSchema = z
+  .object({
+    id: z.string().uuid(),
+    background: z
+      .object({
+        type: z.enum(['color', 'gradient', 'image']),
+        value: z.string(),
+      })
+      .optional(),
+    elements: z.array(elementSchema).default([]),
+    notes: z.string().default(''),
+    hidden: z.boolean().default(false),
+  })
+  .passthrough()
 
-const presentationSchema = z.object({
-  id: z.string().uuid(),
-  title: z.string().max(500),
-  theme: z.string().default('black'),
-  transition: z.string().default('none'),
-  slides: z.array(slideSchema),
-}).passthrough()
+const presentationSchema = z
+  .object({
+    id: z.string().uuid(),
+    title: z.string().max(500),
+    theme: z.string().default('black'),
+    transition: z.string().default('none'),
+    slides: z.array(slideSchema),
+  })
+  .passthrough()
 
 module.exports = { presentationSchema, slideSchema, elementSchema }
 ```
 
 **Validation middleware:**
+
 ```javascript
 // server/middleware/validate.js
 function validateBody(schema) {
   return (req, res, next) => {
     const result = schema.safeParse(req.body)
     if (!result.success) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
-        details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`),
+        details: result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
       })
     }
     req.body = result.data
@@ -82,6 +107,7 @@ module.exports = { validateBody }
 ```
 
 **Apply to routes:**
+
 ```javascript
 // server/routes/presentations.js
 const { validateBody } = require('../middleware/validate')
@@ -94,16 +120,17 @@ router.put('/:id', validateBody(presentationSchema), async (req, res) => {
 
 **Endpoints to validate:**
 
-| Method | Path | Schema |
-|--------|------|--------|
-| PUT | `/api/presentations/:id` | `presentationSchema` |
-| POST | `/api/presentations` | `presentationSchema.partial()` |
-| POST | `/api/upload` | `uploadSchema` (filename, size) |
-| POST | `/api/rclone/config` | `rcloneConfigSchema` |
-| POST | `/api/github/config` | `githubConfigSchema` |
-| POST | `/api/presentations/:id/share` | `shareSchema` |
+| Method | Path                           | Schema                          |
+| ------ | ------------------------------ | ------------------------------- |
+| PUT    | `/api/presentations/:id`       | `presentationSchema`            |
+| POST   | `/api/presentations`           | `presentationSchema.partial()`  |
+| POST   | `/api/upload`                  | `uploadSchema` (filename, size) |
+| POST   | `/api/rclone/config`           | `rcloneConfigSchema`            |
+| POST   | `/api/github/config`           | `githubConfigSchema`            |
+| POST   | `/api/presentations/:id/share` | `shareSchema`                   |
 
 **Checklist:**
+
 - `[x]` Install `zod`
 - `[x]` Create `server/schemas/presentation-schema.js`
 - `[x]` Create `server/schemas/config-schemas.js` (rclone, github)
@@ -118,6 +145,7 @@ router.put('/:id', validateBody(presentationSchema), async (req, res) => {
 ---
 
 ### Task 4.2: CSS Modules Migration
+
 **Files:** `client/src/index.css` (57KB) → nhiều module files  
 **Effort:** 3 days
 
@@ -125,29 +153,43 @@ router.put('/:id', validateBody(presentationSchema), async (req, res) => {
 
 **Migration plan:**
 
-| Component | New CSS Module | Approx Lines |
-|-----------|---------------|-------------|
-| EditorPage | `pages/EditorPage.module.css` | ~200 |
-| SlideCanvas | `components/SlideCanvas.module.css` | ~300 |
-| PropertiesPanel | `components/PropertiesPanel.module.css` | ~250 |
-| Toolbar | `components/Toolbar.module.css` | ~200 |
-| SlidePanel | `components/SlidePanel.module.css` | ~150 |
-| Modals (shared) | `components/modals/Modal.module.css` | ~100 |
-| HomePage | `pages/HomePage.module.css` | ~300 |
-| Dashboard | `components/dashboard/Dashboard.module.css` | ~200 |
+| Component       | New CSS Module                              | Approx Lines |
+| --------------- | ------------------------------------------- | ------------ |
+| EditorPage      | `pages/EditorPage.module.css`               | ~200         |
+| SlideCanvas     | `components/SlideCanvas.module.css`         | ~300         |
+| PropertiesPanel | `components/PropertiesPanel.module.css`     | ~250         |
+| Toolbar         | `components/Toolbar.module.css`             | ~200         |
+| SlidePanel      | `components/SlidePanel.module.css`          | ~150         |
+| Modals (shared) | `components/modals/Modal.module.css`        | ~100         |
+| HomePage        | `pages/HomePage.module.css`                 | ~300         |
+| Dashboard       | `components/dashboard/Dashboard.module.css` | ~200         |
 
 **Remaining in `index.css`:**
+
 ```css
 /* Global styles only (~200 lines) */
-:root { /* theme variables */ }
-[data-theme="dark"] { /* dark theme overrides */ }
-[data-theme="light"] { /* light theme overrides */ }
-*, *::before, *::after { box-sizing: border-box; }
-body { /* global body styles */ }
+:root {
+  /* theme variables */
+}
+[data-theme='dark'] {
+  /* dark theme overrides */
+}
+[data-theme='light'] {
+  /* light theme overrides */
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+body {
+  /* global body styles */
+}
 /* Global utility classes */
 ```
 
 **Usage in components:**
+
 ```jsx
 // BEFORE:
 <div className="slide-canvas-container">
@@ -158,6 +200,7 @@ import styles from './SlideCanvas.module.css'
 ```
 
 **Checklist:**
+
 - `[x]` Audit `index.css` — classify selectors by component
 - `[x]` Extract EditorPage styles → module
 - `[x]` Extract SlideCanvas styles → module
@@ -172,6 +215,7 @@ import styles from './SlideCanvas.module.css'
 ---
 
 ### Task 4.3: TypeScript Foundation (Data Models Only)
+
 **Files:** NEW `shared/src/types/`, selected files  
 **Effort:** 2 days
 
@@ -246,6 +290,7 @@ Vite hỗ trợ TypeScript type checking qua `tsc --noEmit`. Thêm `jsconfig.jso
 ```
 
 **Checklist:**
+
 - `[x]` Create `shared/src/types/` directory
 - `[x]` Define Presentation, Slide, Element types
 - `[x]` Add JSDoc annotations to element-factory.js
@@ -257,6 +302,7 @@ Vite hỗ trợ TypeScript type checking qua `tsc --noEmit`. Thêm `jsconfig.jso
 ---
 
 ### Task 4.4: Electron Keychain Integration
+
 **File:** `electron/main.js`, `server/routes/github.js`  
 **Effort:** 1 day
 
@@ -289,6 +335,7 @@ ipcMain.handle('get-credential', (event, key) => {
 **Lưu ý:** Chỉ áp dụng cho Electron. Docker/Node.js giữ plaintext file (chấp nhận được cho self-hosted).
 
 **Checklist:**
+
 - `[x]` Import `safeStorage` từ Electron
 - `[x]` Add IPC handlers cho credential save/load
 - `[x]` Update github.js: detect Electron → use safeStorage
@@ -299,6 +346,7 @@ ipcMain.handle('get-credential', (event, key) => {
 ---
 
 ### Task 4.5: Error Boundaries
+
 **File:** NEW `client/src/components/ErrorBoundary.jsx`  
 **Effort:** 2 hours
 
@@ -311,19 +359,19 @@ class ErrorBoundary extends Component {
     super(props)
     this.state = { hasError: false, error: null }
   }
-  
+
   static getDerivedStateFromError(error) {
     return { hasError: true, error }
   }
-  
+
   componentDidCatch(error, info) {
     console.error('ErrorBoundary caught:', error, info)
   }
-  
+
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{padding: 40, textAlign: 'center', color: '#e0e0e0'}}>
+        <div style={{ padding: 40, textAlign: 'center', color: '#e0e0e0' }}>
           <h2>Something went wrong</h2>
           <p>{this.state.error?.message}</p>
           <button onClick={() => this.setState({ hasError: false })}>Try Again</button>
@@ -339,6 +387,7 @@ export default ErrorBoundary
 ```
 
 **Wrap in App.jsx:**
+
 ```jsx
 <ErrorBoundary>
   {page === 'editor' ? <EditorPage ... /> : <HomePage ... />}
@@ -346,6 +395,7 @@ export default ErrorBoundary
 ```
 
 **Checklist:**
+
 - `[x]` Create ErrorBoundary component
 - `[x]` Wrap App.jsx children
 - `[x]` Optionally: separate boundary per major section (Editor, Home)
@@ -356,6 +406,7 @@ export default ErrorBoundary
 ## Verification Plan
 
 ### Automated Tests
+
 ```bash
 npx playwright test                         # Full suite
 npm run build --workspace=client            # Build check
@@ -364,12 +415,14 @@ npx tsc --noEmit --workspace=client         # Type check (if jsconfig)
 ```
 
 ### Manual Verification
+
 1. CSS: dark/light theme → verify all components styled correctly
 2. Electron: save GitHub token → close/reopen → verify token persisted securely
 3. API: send malformed JSON to PUT → verify 400 error with details
 4. Error boundary: break a component → verify graceful error UI
 
 ### Metrics
+
 - All API mutation endpoints have Zod validation
 - CSS split: `index.css` ≤200 lines (global only)
 - Type definitions cover 100% of data models

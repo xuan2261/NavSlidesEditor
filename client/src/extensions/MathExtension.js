@@ -49,7 +49,7 @@ export const MathNode = Node.create({
           katex.render(latex, dom, { throwOnError: false, displayMode: display })
           dom.setAttribute('data-math-latex', latex)
           dom.setAttribute('data-math-display', String(display))
-        // eslint-disable-next-line unused-imports/no-unused-vars
+          // eslint-disable-next-line unused-imports/no-unused-vars
         } catch (e) {
           dom.textContent = `$${latex}$`
         }
@@ -69,10 +69,19 @@ export const MathNode = Node.create({
         input.type = 'text'
         input.value = node.attrs.latex
         Object.assign(input.style, {
-          position: 'absolute', top: '0', left: '0', width: '100%',
-          minWidth: '200px', padding: '4px 8px', fontSize: '13px',
-          background: '#1e1e28', color: '#f0f0f5', border: '1px solid #6366f1',
-          borderRadius: '4px', zIndex: '100', boxSizing: 'border-box',
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          width: '100%',
+          minWidth: '200px',
+          padding: '4px 8px',
+          fontSize: '13px',
+          background: '#1e1e28',
+          color: '#f0f0f5',
+          border: '1px solid #6366f1',
+          borderRadius: '4px',
+          zIndex: '100',
+          boxSizing: 'border-box',
         })
         dom.style.position = 'relative'
         dom.appendChild(input)
@@ -84,8 +93,13 @@ export const MathNode = Node.create({
           if (input.parentNode) input.parentNode.removeChild(input)
         }
         input.addEventListener('keydown', (ke) => {
-          if (ke.key === 'Enter') { ke.preventDefault(); commit() }
-          if (ke.key === 'Escape') { if (input.parentNode) input.parentNode.removeChild(input) }
+          if (ke.key === 'Enter') {
+            ke.preventDefault()
+            commit()
+          }
+          if (ke.key === 'Escape') {
+            if (input.parentNode) input.parentNode.removeChild(input)
+          }
         })
         input.addEventListener('blur', commit)
       })

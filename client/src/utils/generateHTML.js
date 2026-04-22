@@ -1,4 +1,4 @@
-import * as shared from 'revealjs-shared';
+import * as shared from 'revealjs-shared'
 export const {
   generateRevealHTML,
   downloadHTML,
@@ -6,4 +6,4 @@ export const {
   presentInWindow,
   getBackgroundAttrs,
   escapeHtml,
-} = shared;
+} = shared

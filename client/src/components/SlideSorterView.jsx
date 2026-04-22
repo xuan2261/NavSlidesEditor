@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { X, Copy, Trash2 } from 'lucide-react'
+import { Button } from '../components/ui'
 
 function getBgStyle(bg) {
   if (!bg) return { backgroundColor: '#1e1e2e' }
   if (bg.type === 'color') return { backgroundColor: bg.color || '#1e1e2e' }
   if (bg.type === 'gradient') return { background: bg.gradient || '#1e1e2e' }
-  if (bg.type === 'image' && bg.image) return {
-    backgroundImage: `url(${bg.image})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    opacity: 0.5,
-  }
+  if (bg.type === 'image' && bg.image)
+    return {
+      backgroundImage: `url(${bg.image})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      opacity: 0.5,
+    }
   return { backgroundColor: '#1e1e2e' }
 }
 
@@ -19,26 +21,33 @@ function MiniPreview({ slide }) {
   return (
     <div className="sorter-slide-preview" style={getBgStyle(slide.background)}>
       {els.map((el, i) => (
-        <div key={el.id || i} style={{
-          position: 'absolute',
-          left: `${(el.x / 1280) * 100}%`,
-          top: `${(el.y / 720) * 100}%`,
-          width: `${((el.width ?? 100) / 1280) * 100}%`,
-          height: `${((el.height ?? 40) / 720) * 100}%`,
-          fontSize: 4,
-          overflow: 'hidden',
-          color: 'var(--text)',
-          pointerEvents: 'none',
-          zIndex: el.zIndex ?? 1,
-        }}>
+        <div
+          key={el.id || i}
+          style={{
+            position: 'absolute',
+            left: `${(el.x / 1280) * 100}%`,
+            top: `${(el.y / 720) * 100}%`,
+            width: `${((el.width ?? 100) / 1280) * 100}%`,
+            height: `${((el.height ?? 40) / 720) * 100}%`,
+            fontSize: 4,
+            overflow: 'hidden',
+            color: 'var(--text)',
+            pointerEvents: 'none',
+            zIndex: el.zIndex ?? 1,
+          }}
+        >
           {el.type === 'text' && (
-            <span dangerouslySetInnerHTML={{ __html: (el.content || '').replace(/<[^>]+>/g, ' ').slice(0, 20) }} />
+            <span
+              dangerouslySetInnerHTML={{
+                __html: (el.content || '').replace(/<[^>]+>/g, ' ').slice(0, 20),
+              }}
+            />
           )}
           {el.type === 'image' && <span style={{ opacity: 0.4 }}>🖼</span>}
           {el.type === 'html' && <span style={{ opacity: 0.4 }}>&lt;/&gt;</span>}
           {el.type === 'code' && <span style={{ opacity: 0.4 }}>⌨</span>}
           {el.type === 'latex' && <span style={{ opacity: 0.4 }}>∑</span>}
-          {!['text','image','html','code','latex'].includes(el.type) && (
+          {!['text', 'image', 'html', 'code', 'latex'].includes(el.type) && (
             <span style={{ opacity: 0.3 }}>{el.type}</span>
           )}
         </div>
@@ -95,8 +104,8 @@ export default function SlideSorterView({
     e.stopPropagation()
     if (e.ctrlKey || e.metaKey) {
       // Toggle selection
-      setSelectedIndices(prev =>
-        prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+      setSelectedIndices((prev) =>
+        prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
       )
     } else if (e.shiftKey && selectedIndices.length > 0) {
       // Range select
@@ -117,16 +126,23 @@ export default function SlideSorterView({
   }
 
   return (
-    <div className="slide-sorter-overlay" onClick={(e) => { setCtxMenu(null); handleOverlayClick(e) }}>
+    <div
+      className="slide-sorter-overlay"
+      onClick={(e) => {
+        setCtxMenu(null)
+        handleOverlayClick(e)
+      }}
+    >
       <div className="slide-sorter-header">
         <span>Slide Sorter</span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-            Ctrl+Click: multi-select &nbsp;|&nbsp; Drag: reorder &nbsp;|&nbsp; Right-click: Duplicate/Delete
+            Ctrl+Click: multi-select &nbsp;|&nbsp; Drag: reorder &nbsp;|&nbsp; Right-click:
+            Duplicate/Delete
           </span>
-          <button className="btn-icon" onClick={onClose} title="Close (Esc)">
+          <Button variant="icon" onClick={onClose} title="Close (Esc)">
             <X size={16} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -163,10 +179,17 @@ export default function SlideSorterView({
           style={{ top: ctxMenu.y, left: ctxMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button onClick={() => { onDuplicate(ctxMenu.slideIdx); setCtxMenu(null) }}>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onDuplicate(ctxMenu.slideIdx)
+              setCtxMenu(null)
+            }}
+          >
             <Copy size={12} /> Duplicate
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => {
               if (slides.length > 1) onDelete(ctxMenu.slideIdx)
               setCtxMenu(null)
@@ -175,7 +198,7 @@ export default function SlideSorterView({
             disabled={slides.length <= 1}
           >
             <Trash2 size={12} /> Delete
-          </button>
+          </Button>
         </div>
       )}
     </div>

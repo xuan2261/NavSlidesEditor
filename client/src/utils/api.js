@@ -140,6 +140,5 @@ export const api = {
     const q = category ? `?category=${category}` : ''
     return fetch(`${BASE}/marketplace/templates${q}`).then(handleResponse)
   },
-  getMarketplaceTemplate: (id) =>
-    fetch(`${BASE}/marketplace/templates/${id}`).then(handleResponse),
+  getMarketplaceTemplate: (id) => fetch(`${BASE}/marketplace/templates/${id}`).then(handleResponse),
 }

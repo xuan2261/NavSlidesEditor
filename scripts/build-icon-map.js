@@ -10,9 +10,20 @@ const fs = require('fs')
 const path = require('path')
 
 const SKIP = new Set([
-  'createContext', 'useCallback', 'useContext', 'useEffect',
-  'useMemo', 'useRef', 'useState', 'useReducer', 'createElement',
-  'forwardRef', 'lazy', 'memo', 'Suspense', 'Fragment',
+  'createContext',
+  'useCallback',
+  'useContext',
+  'useEffect',
+  'useMemo',
+  'useRef',
+  'useState',
+  'useReducer',
+  'createElement',
+  'forwardRef',
+  'lazy',
+  'memo',
+  'Suspense',
+  'Fragment',
 ])
 
 const rawMap = {}

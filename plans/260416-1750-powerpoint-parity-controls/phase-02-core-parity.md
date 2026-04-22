@@ -7,24 +7,26 @@
 
 ## Issues
 
-| # | Issue | Area | Fix Complexity |
-|---|---|---|---|
-| P1-1 | KHÔNG CÓ Slide Sorter View | SlidePanel | Medium |
-| P1-2 | KHÔNG CÓ Mini Toolbar (floating bar) | Toolbar | Medium |
-| P1-3 | KHÔNG CÓ Manual Zoom Controls | Canvas | Easy |
-| P1-4 | Toolbar quá đông, thiếu tooltip+shortcut labels | Toolbar | Easy |
-| P1-5 | KHÔNG CÓ Multi-select slides | SlidePanel | Easy |
+| #    | Issue                                           | Area       | Fix Complexity |
+| ---- | ----------------------------------------------- | ---------- | -------------- |
+| P1-1 | KHÔNG CÓ Slide Sorter View                      | SlidePanel | Medium         |
+| P1-2 | KHÔNG CÓ Mini Toolbar (floating bar)            | Toolbar    | Medium         |
+| P1-3 | KHÔNG CÓ Manual Zoom Controls                   | Canvas     | Easy           |
+| P1-4 | Toolbar quá đông, thiếu tooltip+shortcut labels | Toolbar    | Easy           |
+| P1-5 | KHÔNG CÓ Multi-select slides                    | SlidePanel | Easy           |
 
 ---
 
 ## P1-1: Add Slide Sorter View
 
 ### PowerPoint Reference
+
 View → Slide Sorter → Grid view tất cả slides (thumbnail nhỏ, 4-6/hàng), click để select, drag để reorder.
 
 ### Implementation Steps
 
 **Step 1:** Thêm view mode state vào `EditorPage.jsx`
+
 ```jsx
 // State:
 const [viewMode, setViewMode] = useState('normal') // 'normal' | 'sorter'
@@ -35,6 +37,7 @@ const exitSlideSorter = () => setViewMode('normal')
 ```
 
 **Step 2:** Tạo `SlideSorterView` component
+
 ```jsx
 // client/src/components/SlideSorterView.jsx
 // Props: slides, currentIndex, onSelect, onMove, onDelete, onDuplicate
@@ -50,6 +53,7 @@ const exitSlideSorter = () => setViewMode('normal')
 ```
 
 **Step 3:** Tích hợp vào EditorPage layout
+
 ```jsx
 // EditorPage.jsx:
 {viewMode === 'sorter' ? (
@@ -74,6 +78,7 @@ const exitSlideSorter = () => setViewMode('normal')
 ```
 
 **Step 4:** Thêm nút chuyển đổi vào View menu
+
 ```jsx
 // EditorMenuBar.jsx - viewItems:
 {
@@ -85,6 +90,7 @@ const exitSlideSorter = () => setViewMode('normal')
 ```
 
 ### UI Design
+
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ Slide Sorter View                              [✕ Close] │
@@ -101,6 +107,7 @@ const exitSlideSorter = () => setViewMode('normal')
 ```
 
 ### Verification
+
 ```
 ✅ View → Slide Sorter → hiện grid view tất cả slides
 ✅ Click slide → quay về normal view + chọn slide đó
@@ -114,11 +121,13 @@ const exitSlideSorter = () => setViewMode('normal')
 ## P1-2: Add Mini Toolbar (Floating Formatting Bar)
 
 ### PowerPoint Reference
+
 PowerPoint: Khi chọn text element → floating bar xuất hiện ngay trên text với B/I/U/Underline/Font/Font Size/Color.
 
 ### Implementation Steps
 
 **Step 1:** Tạo `MiniToolbar` component
+
 ```jsx
 // client/src/components/MiniToolbar.jsx
 // Props: editor, position (x, y), onClose
@@ -132,27 +141,31 @@ PowerPoint: Khi chọn text element → floating bar xuất hiện ngay trên te
 ```
 
 **Step 2:** Tích hợp vào `SlideCanvas`
+
 ```jsx
 // Trong SlideCanvas render:
-{isEditing && editor && (
-  <MiniToolbar
-    editor={editor}
-    position={{
-      x: element.x + element.width / 2,  // center of element
-      y: element.y - 50,                   // above element
-    }}
-    onClose={() => onStopEdit()}
-  />
-)}
+{
+  isEditing && editor && (
+    <MiniToolbar
+      editor={editor}
+      position={{
+        x: element.x + element.width / 2, // center of element
+        y: element.y - 50, // above element
+      }}
+      onClose={() => onStopEdit()}
+    />
+  )
+}
 ```
 
 **Step 3:** CSS positioning
+
 ```css
 .mini-toolbar {
   position: absolute;
   /* Positioning logic: flip if near edges */
   z-index: 9999;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   border-radius: 6px;
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -164,6 +177,7 @@ PowerPoint: Khi chọn text element → floating bar xuất hiện ngay trên te
 ```
 
 ### UI Design
+
 ```
 ┌─────────────────────────────────────────┐
 │ [B] [I] [U] │ [Font▾] [Size▾] │ [A🔵]  │
@@ -172,6 +186,7 @@ PowerPoint: Khi chọn text element → floating bar xuất hiện ngay trên te
 ```
 
 ### Verification
+
 ```
 ✅ Double-click text → Mini Toolbar xuất hiện trên text
 ✅ Click B/I/U → text được format (TipTap commands)
@@ -186,11 +201,13 @@ PowerPoint: Khi chọn text element → floating bar xuất hiện ngay trên te
 ## P1-3: Add Manual Zoom Controls
 
 ### PowerPoint Reference
+
 PowerPoint: Zoom dropdown (25%-400%) + Zoom in/out buttons ở bottom-right.
 
 ### Implementation Steps
 
 **Step 1:** Thêm zoom state vào `SlideCanvas.jsx`
+
 ```jsx
 // Trong SlideCanvas state:
 const [scale, setScale] = useState(1)
@@ -200,10 +217,11 @@ const [userZoomMode, setUserZoomMode] = useState(false) // auto-fit vs manual
 ```
 
 **Step 2:** Thêm zoom controls UI
+
 ```jsx
 // Thêm vào bottom-right của canvas container:
 <div className="zoom-controls">
-  <button onClick={() => setScale(s => Math.max(0.1, s - 0.1))} title="Zoom out">
+  <button onClick={() => setScale((s) => Math.max(0.1, s - 0.1))} title="Zoom out">
     <Minus size={12} />
   </button>
   <select
@@ -222,30 +240,35 @@ const [userZoomMode, setUserZoomMode] = useState(false) // auto-fit vs manual
     <option value="200">200%</option>
     <option value="400">400%</option>
   </select>
-  <button onClick={() => setScale(s => Math.min(4, s + 0.1))} title="Zoom in">
+  <button onClick={() => setScale((s) => Math.min(4, s + 0.1))} title="Zoom in">
     <Plus size={12} />
   </button>
-  <button onClick={() => {
-    setUserZoomMode(false)
-    updateScaleAuto() // trigger ResizeObserver logic
-  }} title="Fit to window">
+  <button
+    onClick={() => {
+      setUserZoomMode(false)
+      updateScaleAuto() // trigger ResizeObserver logic
+    }}
+    title="Fit to window"
+  >
     Fit
   </button>
 </div>
 ```
 
 **Step 3:** Add Ctrl+scroll to zoom
+
 ```jsx
 // Trong containerRef's onWheel:
 if (e.ctrlKey) {
   e.preventDefault()
   const delta = e.deltaY > 0 ? -0.1 : 0.1
-  setScale(s => Math.max(0.1, Math.min(4, s + delta)))
+  setScale((s) => Math.max(0.1, Math.min(4, s + delta)))
   setUserZoomMode(true)
 }
 ```
 
 ### Verification
+
 ```
 ✅ Zoom buttons ±10% work
 ✅ Zoom dropdown chính xác %
@@ -261,18 +284,20 @@ if (e.ctrlKey) {
 ### Improvements
 
 **Step 1:** Thêm tooltip với keyboard shortcut cho mỗi button
+
 ```jsx
 // Toolbar.jsx - thêm title attribute cho mỗi formatting button:
 <button
   className={`btn-icon ${editor.isActive('bold') ? 'active' : ''}`}
   onClick={() => editor.chain().focus().toggleBold().run()}
-  title="Bold (Ctrl+B)"  // ← THÊM SHORTCUT VÀO TITLE
+  title="Bold (Ctrl+B)" // ← THÊM SHORTCUT VÀO TITLE
 >
   <Bold size={15} />
 </button>
 ```
 
 **Step 2:** Reorganize Toolbar groups (visual separators)
+
 ```jsx
 // Toolbar.jsx - dùng toolbar-divider rõ ràng hơn:
 <span className="toolbar-divider" data-group="insert" />
@@ -283,6 +308,7 @@ if (e.ctrlKey) {
 ```
 
 **Step 3:** Conditional button titles (active state)
+
 ```jsx
 <button
   title={
@@ -294,6 +320,7 @@ if (e.ctrlKey) {
 ```
 
 ### Verification
+
 ```
 ✅ Mỗi button có tooltip với shortcut khi hover
 ✅ Các nhóm controls được phân tách rõ bằng dividers
@@ -307,6 +334,7 @@ if (e.ctrlKey) {
 ### Implementation Steps
 
 **Step 1:** Thêm multi-select state vào `SlidePanel.jsx`
+
 ```jsx
 // State:
 const [selectedIndices, setSelectedIndices] = useState([currentIndex])
@@ -315,10 +343,8 @@ const [selectedIndices, setSelectedIndices] = useState([currentIndex])
 const handleSlideClick = (e, index) => {
   if (e.ctrlKey || e.metaKey) {
     // Toggle selection
-    setSelectedIndices(prev =>
-      prev.includes(index)
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
+    setSelectedIndices((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     )
   } else if (e.shiftKey && prev.length > 0) {
     // Range select
@@ -336,6 +362,7 @@ const handleSlideClick = (e, index) => {
 ```
 
 **Step 2:** Visual feedback for multi-selected slides
+
 ```jsx
 // Trong slide-item className:
 className={`slide-item ${index === currentIndex ? 'active' : ''} ${
@@ -344,6 +371,7 @@ className={`slide-item ${index === currentIndex ? 'active' : ''} ${
 ```
 
 **Step 3:** CSS for multi-selected state
+
 ```css
 .slide-item.multi-selected {
   outline: 2px solid var(--accent);
@@ -352,21 +380,25 @@ className={`slide-item ${index === currentIndex ? 'active' : ''} ${
 ```
 
 **Step 4:** Delete/Duplicate selected slides
+
 ```jsx
 // Trong slide context menu hoặc footer buttons:
-{selectedIndices.length > 1 && (
-  <>
-    <button onClick={() => selectedIndices.forEach(i => onDelete(i))}>
-      Delete {selectedIndices.length} slides
-    </button>
-    <button onClick={() => selectedIndices.forEach(i => onDuplicate(i))}>
-      Duplicate {selectedIndices.length} slides
-    </button>
-  </>
-)}
+{
+  selectedIndices.length > 1 && (
+    <>
+      <button onClick={() => selectedIndices.forEach((i) => onDelete(i))}>
+        Delete {selectedIndices.length} slides
+      </button>
+      <button onClick={() => selectedIndices.forEach((i) => onDuplicate(i))}>
+        Duplicate {selectedIndices.length} slides
+      </button>
+    </>
+  )
+}
 ```
 
 ### Verification
+
 ```
 ✅ Ctrl+click slide → toggle selection
 ✅ Shift+click → range select

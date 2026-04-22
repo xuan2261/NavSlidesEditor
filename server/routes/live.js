@@ -1,25 +1,29 @@
-const express = require('express');
-const liveRooms = require('../services/live-rooms');
+const express = require('express')
+const liveRooms = require('../services/live-rooms')
 
-const router = express.Router();
+const router = express.Router()
 
 // Generate a new room ID and register it
 router.post('/room', (req, res) => {
-  const code = liveRooms.generateRoomCode();
+  const code = liveRooms.generateRoomCode()
   // Pre-register the room so viewers can check it exists before presenter connects
-  liveRooms.registerRoom(code);
-  res.json({ roomCode: code });
-});
+  liveRooms.registerRoom(code)
+  res.json({ roomCode: code })
+})
 
 // Check if a room exists
 router.get('/room/:code', (req, res) => {
-  const { code } = req.params;
-  const state = liveRooms.getRoomState(code);
+  const { code } = req.params
+  const state = liveRooms.getRoomState(code)
   if (state) {
-    res.json({ exists: true, viewersCount: state.viewers.length, hasPresenter: !!state.presenterId });
+    res.json({
+      exists: true,
+      viewersCount: state.viewers.length,
+      hasPresenter: !!state.presenterId,
+    })
   } else {
-    res.json({ exists: false });
+    res.json({ exists: false })
   }
-});
+})
 
-module.exports = router;
+module.exports = router

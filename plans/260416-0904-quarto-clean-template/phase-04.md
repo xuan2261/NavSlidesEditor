@@ -23,9 +23,11 @@ Add entry:
 ## [Unreleased]
 
 ### Added
+
 - **Quarto Clean template** — minimalist academic preset with serif typography, #2980b9 accent, dark title slide (#1a1a2e), light content slides (#f5f5f5). 8 slides: title, intro, lists, alerts, math, columns, tables, closing. Presenter tools: theme toggle, font zoom, slide menu, chalkboard all enabled.
 
 ### Verified
+
 - Slide Menu Tools handlers (f/s/o/e/r/?) — all 6 fire correctly in browser
 ```
 
@@ -45,6 +47,7 @@ Mark any related items as complete. Add note:
 File: `plans/reports/tester-report.md`
 
 Include:
+
 - Playwright test results (all 6 handlers pass/fail)
 - Any console errors encountered
 - Browser/environment used (Chrome, Electron, etc.)
@@ -54,6 +57,7 @@ Include:
 File: `plans/reports/planner-260416-0919-quarto-clean-template.md`
 
 Include:
+
 - Summary of changes made
 - JSON diff of template changes
 - Screenshots from Phase 03

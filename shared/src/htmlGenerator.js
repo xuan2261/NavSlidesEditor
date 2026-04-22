@@ -83,13 +83,15 @@ function generateRevealHTML(presentation) {
 
       // Vertical slides support: if slide has children, wrap in a vertical section stack
       if (slide.children && slide.children.length > 0) {
-        const childSections = slide.children.map(child => {
-          const childBg = getBackgroundAttrs(child.background)
-          const childAutoAnimate = child.autoAnimate ? ' data-auto-animate' : ''
-          const childNotes = child.notes ? `<aside class="notes">${child.notes}</aside>` : ''
-          const childElements = renderSlideElements(child, { forPrint: false })
-          return `    <section${childAutoAnimate}${childBg} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${childElements}\n      ${childNotes}\n    </section>`
-        }).join('\n')
+        const childSections = slide.children
+          .map((child) => {
+            const childBg = getBackgroundAttrs(child.background)
+            const childAutoAnimate = child.autoAnimate ? ' data-auto-animate' : ''
+            const childNotes = child.notes ? `<aside class="notes">${child.notes}</aside>` : ''
+            const childElements = renderSlideElements(child, { forPrint: false })
+            return `    <section${childAutoAnimate}${childBg} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${childElements}\n      ${childNotes}\n    </section>`
+          })
+          .join('\n')
         return `  <section>\n${sectionHtml}\n${childSections}\n  </section>`
       }
 
@@ -244,8 +246,6 @@ function getBackgroundAttrs(bg) {
   return ''
 }
 
-
-
 function downloadHTML(presentation) {
   try {
     const html = generateRevealHTML(presentation)
@@ -350,9 +350,10 @@ function generatePrintHTML(presentation) {
   const title = escapeHtml(presentation.title || 'Presentation')
   // Determine base URL for resolving relative asset paths (images, vendor, etc.)
   // When PDF HTML is opened via blob: URL, relative paths like /uploads/... won't resolve
-  const baseUrl = typeof window !== 'undefined' && window.location && window.location.origin !== 'null'
-    ? window.location.origin
-    : ''
+  const baseUrl =
+    typeof window !== 'undefined' && window.location && window.location.origin !== 'null'
+      ? window.location.origin
+      : ''
 
   return `<!doctype html>
 <html>

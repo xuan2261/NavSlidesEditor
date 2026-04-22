@@ -230,7 +230,9 @@ function getPresenterToolsBody(presenterTools) {
   const buttons = []
 
   if (presenterTools.themeToggle !== false) {
-    buttons.push('<button id="theme-btn" onclick="toggleTheme()" title="Toggle dark/light">&#x1F313;</button>')
+    buttons.push(
+      '<button id="theme-btn" onclick="toggleTheme()" title="Toggle dark/light">&#x1F313;</button>'
+    )
   }
   if (presenterTools.fontZoom !== false) {
     buttons.push('<button onclick="zoomFont(1)" title="Increase font">A+</button>')
@@ -238,7 +240,9 @@ function getPresenterToolsBody(presenterTools) {
   }
 
   // Fullscreen button is always present
-  buttons.push('<button id="fs-btn" title="Enter fullscreen (F)" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">&#x26F6;</button>')
+  buttons.push(
+    '<button id="fs-btn" title="Enter fullscreen (F)" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">&#x26F6;</button>'
+  )
 
   return `<div class="presenter-toolbar">${buttons.join('')}</div>`
 }

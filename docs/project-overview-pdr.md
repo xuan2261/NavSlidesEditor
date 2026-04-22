@@ -82,15 +82,15 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 
 ### Export & Sharing
 
-| Format              | Notes                                             |
-| ------------------- | ------------------------------------------------- |
-| Present mode        | Full-screen reveal.js with speaker notes (S key)  |
-| Export HTML         | Self-contained HTML file (CDN dependent)          |
-| Export offline HTML | Inlines CDN resources for true offline support    |
-| Export PDF          | Print layout, one page per slide                  |
-| Export PPTX         | Via pptxgenjs (shape/media limitations)           |
-| Shareable link      | UUID token, view-only public URL                  |
-| GitHub push         | Git Data API, auto-generated README               |
+| Format              | Notes                                            |
+| ------------------- | ------------------------------------------------ |
+| Present mode        | Full-screen reveal.js with speaker notes (S key) |
+| Export HTML         | Self-contained HTML file (CDN dependent)         |
+| Export offline HTML | Inlines CDN resources for true offline support   |
+| Export PDF          | Print layout, one page per slide                 |
+| Export PPTX         | Via pptxgenjs (shape/media limitations)          |
+| Shareable link      | UUID token, view-only public URL                 |
+| GitHub push         | Git Data API, auto-generated README              |
 
 ### Cloud Sync
 

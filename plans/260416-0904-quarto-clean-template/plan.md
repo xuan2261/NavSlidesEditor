@@ -5,12 +5,12 @@
 
 ## Overview
 
-| # | Phase | Status | Owner |
-|---|-------|--------|-------|
-| 01 | Browser Testing — Slide Menu Tools (Playwright) | pending | planner |
-| 02 | Template Fix — Add presenterTools + correct colors | ✅ Complete | planner |
-| 03 | Browser Verification — Manual template test | pending | planner |
-| 04 | Finalize & Docs | pending | planner |
+| #   | Phase                                              | Status      | Owner   |
+| --- | -------------------------------------------------- | ----------- | ------- |
+| 01  | Browser Testing — Slide Menu Tools (Playwright)    | pending     | planner |
+| 02  | Template Fix — Add presenterTools + correct colors | ✅ Complete | planner |
+| 03  | Browser Verification — Manual template test        | pending     | planner |
+| 04  | Finalize & Docs                                    | pending     | planner |
 
 ## Context
 
@@ -19,10 +19,10 @@
 
 ## Key Files
 
-| File | Action |
-|------|--------|
+| File                                  | Action                                  |
+| ------------------------------------- | --------------------------------------- |
 | `server/data/built-in-templates.json` | Edit — add `presenterTools`, fix colors |
-| `shared/src/presenterTools.js` | No changes — verify only |
+| `shared/src/presenterTools.js`        | No changes — verify only                |
 
 ## Deliverables
 

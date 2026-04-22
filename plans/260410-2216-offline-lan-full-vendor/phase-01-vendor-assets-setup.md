@@ -1,10 +1,12 @@
 # Phase 01: Vendor Assets Setup
 
 ## Context
+
 - Plan: [plan.md](./plan.md)
 - Brainstorm: [brainstorm report](../reports/brainstorm-260410-2216-offline-html-export-lan.md)
 
 ## Overview
+
 - **Priority:** Critical
 - **Status:** Completed
 - **Blocks:** Phase 03, Phase 04, Phase 05
@@ -14,6 +16,7 @@ Install npm packages vào `server/`, copy `/dist` folders vào `server/vendor/`,
 ## Requirements
 
 ### Packages cần install (trong `server/`)
+
 ```
 reveal.js@5.1.0
 katex@0.16.11
@@ -24,6 +27,7 @@ marked
 ```
 
 ### Vendor directory structure
+
 ```
 server/vendor/
   reveal.js/
@@ -71,6 +75,7 @@ npm install reveal.js@5.1.0 katex@0.16.11 chart.js@4 highlight.js@11 d3@7 marked
 **File:** `scripts/copy-vendor.js` (tại root của monorepo)
 
 Script làm:
+
 1. Xóa `server/vendor/` nếu tồn tại
 2. Copy từng package's dist vào đúng subdirectory
 3. Log kết quả với file sizes
@@ -108,14 +113,23 @@ function copyDir(src, dest) {
 const copies = [
   // reveal.js: copy dist/ + plugin/
   { src: path.join(nodeModules, 'reveal.js/dist'), dest: path.join(vendorDir, 'reveal.js/dist') },
-  { src: path.join(nodeModules, 'reveal.js/plugin'), dest: path.join(vendorDir, 'reveal.js/plugin') },
+  {
+    src: path.join(nodeModules, 'reveal.js/plugin'),
+    dest: path.join(vendorDir, 'reveal.js/plugin'),
+  },
   // katex: copy entire dist/ (includes fonts/ subdirectory)
   { src: path.join(nodeModules, 'katex/dist'), dest: path.join(vendorDir, 'katex/dist') },
   // chart.js: only UMD build
   { src: path.join(nodeModules, 'chart.js/dist'), dest: path.join(vendorDir, 'chart.js/dist') },
   // highlight.js: styles + lib
-  { src: path.join(nodeModules, 'highlight.js/styles'), dest: path.join(vendorDir, 'highlight.js/styles') },
-  { src: path.join(nodeModules, 'highlight.js/lib'), dest: path.join(vendorDir, 'highlight.js/lib') },
+  {
+    src: path.join(nodeModules, 'highlight.js/styles'),
+    dest: path.join(vendorDir, 'highlight.js/styles'),
+  },
+  {
+    src: path.join(nodeModules, 'highlight.js/lib'),
+    dest: path.join(vendorDir, 'highlight.js/lib'),
+  },
   // d3: dist only
   { src: path.join(nodeModules, 'd3/dist'), dest: path.join(vendorDir, 'd3/dist') },
   // marked: single file copy
@@ -167,13 +181,16 @@ console.log('\n✅ Vendor assets ready.')
 > `postinstall` tự động chạy vendor copy sau `npm install` — quan trọng cho CI/CD và first-time setup.
 
 ## Files to Create
+
 - `scripts/copy-vendor.js` (new)
 
 ## Files to Modify
+
 - `package.json` (root) — add `vendor` and `postinstall` scripts
 - `server/package.json` — add npm packages as `devDependencies` (chỉ dùng để copy)
 
 ## Todo
+
 - [x] `cd server && npm install reveal.js@5.1.0 katex@0.16.11 chart.js@4 highlight.js@11 d3@7 marked`
 - [x] Create `scripts/copy-vendor.js`
 - [x] Run `node scripts/copy-vendor.js` và verify output
@@ -182,6 +199,7 @@ console.log('\n✅ Vendor assets ready.')
 - [x] Add scripts to root `package.json`
 
 ## Verification
+
 ```bash
 # Count KaTeX fonts
 ls server/vendor/katex/dist/fonts/*.woff2 | wc -l  # expect ~28
@@ -194,5 +212,6 @@ du -sh server/vendor/
 ```
 
 ## Risk
+
 - `marked` package: file location thay đổi giữa versions. Check với `node -e "require.resolve('marked/marked.min.js')"`
 - `chart.js` UMD: package mới có thể dùng `chart.umd.js` hoặc `chart.min.js` — verify path sau install

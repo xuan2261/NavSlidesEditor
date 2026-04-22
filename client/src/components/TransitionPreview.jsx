@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { X, RotateCcw } from 'lucide-react'
+import { Button } from '../components/ui'
 
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
 
@@ -105,12 +106,12 @@ setTimeout(()=>Reveal.next(),800);
                 </option>
               ))}
             </select>
-            <button className="btn-icon" onClick={() => setKey((k) => k + 1)} title="Replay">
+            <Button variant="icon" onClick={() => setKey((k) => k + 1)} title="Replay">
               <RotateCcw size={14} />
-            </button>
-            <button className="btn-icon" onClick={onClose} title="Close">
+            </Button>
+            <Button variant="icon" onClick={onClose} title="Close">
               <X size={16} />
-            </button>
+            </Button>
           </div>
         </div>
         <div className="transition-preview-content">

@@ -1,14 +1,19 @@
 # Phase 02 — Toolbar Insert Dropdown (HIGH)
 
 ## Priority: 🟠 HIGH
+
 ## Status: ⬜ Not started
+
 ## Effort: Medium (~2.5h)
+
 ## Impact: ⭐⭐⭐⭐
 
 ## Overview
+
 Gom 16 nút insert element trong Toolbar thành **1 dropdown "Insert"** với categories, giữ canvas tools inline. Giảm toolbar từ 22 nút inline → 5 nút.
 
 ## Key Insights
+
 - Toolbar hiện tại (Toolbar.jsx, 1764 lines) chứa 2 modes:
   1. **Element insertion tools** (line 204-700): Text, Image, Upload, Embed, Code, TeX, Markdown, Chart, Callout, Icon, Video, Audio, Table, Draw, Arrow/Line, SVG
   2. **Canvas tools** (line 1057-1105): BG, Grid toggle + size, Smart guides, Ruler
@@ -68,9 +73,11 @@ Gom 16 nút insert element trong Toolbar thành **1 dropdown "Insert"** với ca
 ## Related Code Files
 
 ### Files to create:
+
 - `client/src/components/InsertMenu.jsx` — Insert dropdown với categories + sub-pickers
 
 ### Files to modify:
+
 - `client/src/components/Toolbar.jsx` — Extract element buttons → InsertMenu
 - `client/src/index.css` — Add insert menu styles
 
@@ -84,27 +91,28 @@ Gom 16 nút insert element trong Toolbar thành **1 dropdown "Insert"** với ca
 // Props needed (all callbacks from current Toolbar props):
 <InsertMenu
   onAddText={onAddText}
-  onAddImage={onAddImage}        // triggers file picker
+  onAddImage={onAddImage} // triggers file picker
   onAddImageElement={addImageElement}
   onAddHtmlElement={onAddHtmlElement}
   onAddCodeElement={onAddCodeElement}
   onAddLatexElement={onAddLatexElement}
   onAddMarkdownElement={onAddMarkdownElement}
   onAddChart={onAddChart}
-  onAddVideo={handleAddVideo}    // currently uses window.prompt
+  onAddVideo={handleAddVideo} // currently uses window.prompt
   onAddAudio={handleAddAudio}
   onOpenMediaLibrary={onOpenMediaLibrary}
-  onAddShape={onAddShape}        // shape picker sub-menu
+  onAddShape={onAddShape} // shape picker sub-menu
   onAddLine={onAddLine}
   onAddSvgElement={onAddSvgElement}
-  onAddIcon={handleAddIcon}      // icon picker sub-menu
+  onAddIcon={handleAddIcon} // icon picker sub-menu
   onAddCallout={onAddCallout}
-  onAddTable={handleAddTable}    // currently uses window.prompt
+  onAddTable={handleAddTable} // currently uses window.prompt
   onAddDrawing={onAddDrawing}
 />
 ```
 
 **Thiết kế component:**
+
 - Sử dụng `DropdownMenu` từ Phase 01 (nếu đã tạo), hoặc tạo standalone
 - Category headers: uppercase, `text-muted`, font-size 10px
 - Items: icon + label, full-width clickable
@@ -115,11 +123,13 @@ Gom 16 nút insert element trong Toolbar thành **1 dropdown "Insert"** với ca
 ### Step 2: Refactor Toolbar.jsx
 
 **Xóa khỏi inline rendering (move to InsertMenu):**
+
 - Lines 204-420: Tất cả element insertion buttons (Text, Image, Upload, ...)
 - Lines 422-700: Shape menus, Icon menus, Video/Audio handlers, table/chart buttons
 - Lines 700-800: BG menu GIỮ NGUYÊN inline
 
 **Giữ nguyên inline:**
+
 - BG button + popup (line 755-1055): vẫn là canvas tool
 - Grid toggle + size input (line 1057-1087)
 - Smart guides toggle (line 1089-1096)
@@ -134,7 +144,7 @@ Gom 16 nút insert element trong Toolbar thành **1 dropdown "Insert"** với ca
 <div className="toolbar">
   {/* Insert dropdown - luôn hiện */}
   <InsertMenu {...insertProps} />
-  
+
   <span className="toolbar-divider" />
 
   {/* Canvas tools - luôn hiện */}
@@ -155,11 +165,7 @@ Gom 16 nút insert element trong Toolbar thành **1 dropdown "Insert"** với ca
 
   {/* Hint or Text editing toolbar */}
   {!editingElementId && <span>Double-click...</span>}
-  {editor && (
-    <>
-      {/* ALL text editing tools - UNCHANGED */}
-    </>
-  )}
+  {editor && <>{/* ALL text editing tools - UNCHANGED */}</>}
 </div>
 ```
 
@@ -257,6 +263,7 @@ Gom 16 nút insert element trong Toolbar thành **1 dropdown "Insert"** với ca
 - [ ] Verify shape/icon picker still works
 
 ## Success Criteria
+
 1. Toolbar hàng 1 giảm xuống <10 items (Insert + 4 canvas tools)
 2. Tất cả 16 loại element vẫn insertable
 3. Shape picker, icon picker vẫn hoạt động

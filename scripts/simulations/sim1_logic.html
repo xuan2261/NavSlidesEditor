@@ -1,246 +1,481 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Logic Gate Simulator</title>
     <style>
-        :root {
-            --bg: #0a1628;
-            --primary: #00d4ff;
-            --primary-glow: #00d4ff80;
-            --text: #e0f2ff;
-            --high: #00ff87;
-            --high-glow: #00ff8780;
-            --low: #ff4757;
-            --low-glow: #ff475780;
-            --glass: rgba(15, 32, 64, 0.6);
-            --glass-border: rgba(0, 212, 255, 0.2);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 10px; }
-        h3 { font-size: 1.2rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px var(--primary-glow); margin-bottom: 5px; }
-        
-        .container {
-            display: flex; gap: 20px; width: 100%; max-width: 900px; height: 400px; 
-            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); backdrop-filter: blur(10px);
-        }
-        
-        /* Left: Circuit & Controls */
-        .circuit-panel {
-            flex: 2; display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-        }
-        
-        .gate-selector {
-            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 15px;
-        }
-        .gate-btn {
-            background: rgba(0, 212, 255, 0.1); border: 1px solid var(--primary); color: var(--text);
-            padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease;
-        }
-        .gate-btn:hover { background: rgba(0, 212, 255, 0.3); }
-        .gate-btn.active {
-            background: var(--primary); color: var(--bg); box-shadow: 0 0 15px var(--primary-glow); font-weight: bold;
-        }
-        
-        .interactive-area {
-            position: relative; width: 100%; height: 260px; display: flex; align-items: center; justify-content: center;
-        }
-        
-        svg { width: 100%; height: 100%; filter: drop-shadow(0 0 5px rgba(255,255,255,0.1)); }
-        
-        .wire { fill: none; stroke-width: 4; stroke-linecap: round; transition: stroke 0.3s, filter 0.3s; }
-        .wire.high { stroke: var(--high); filter: drop-shadow(0 0 8px var(--high-glow)); }
-        .wire.low { stroke: var(--low); filter: drop-shadow(0 0 8px var(--low-glow)); }
-        
-        .gate-symbol { fill: var(--glass); stroke: var(--primary); stroke-width: 3; }
-        
-        /* IO Controls */
-        .io-node {
-            position: absolute; display: flex; align-items: center; justify-content: center;
-            width: 40px; height: 40px; border-radius: 50%; font-weight: bold; font-size: 1.1rem;
-            cursor: pointer; transition: all 0.2s; user-select: none;
-            border: 2px solid; z-index: 10; background: var(--bg);
-        }
-        .io-node.input:hover { transform: scale(1.1); box-shadow: 0 0 15px currentColor; }
-        .io-node.high { color: var(--bg); background: var(--high); border-color: var(--high); box-shadow: 0 0 15px var(--high-glow); }
-        .io-node.low { color: var(--low); background: var(--bg); border-color: var(--low); box-shadow: 0 0 10px var(--low-glow); inset: 0;}
-        .io-node.output { cursor: default; width: 50px; height: 50px; font-size: 1.3rem; }
-        .io-node.output:hover { transform: none; }
-        
-        .node-a { top: 70px; left: 40px; }
-        .node-b { top: 150px; left: 40px; }
-        .node-out { top: 105px; right: 40px; }
-        
-        /* Right: Truth Table */
-        .table-panel {
-            flex: 1; display: flex; flex-direction: column; 
-            background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; border: 1px solid rgba(255,255,255,0.05);
-        }
-        .table-panel h4 { text-align: center; margin-bottom: 10px; font-weight: normal; color: rgba(255,255,255,0.8); }
-        table { width: 100%; border-collapse: collapse; text-align: center; }
-        th { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.2); font-size: 0.9rem; color: var(--primary); }
-        td { padding: 8px; font-size: 1.1rem; font-family: monospace; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
-        tr.active { background: rgba(0, 212, 255, 0.2); box-shadow: inset 0 0 10px rgba(0, 212, 255, 0.3); }
-        tr.active td { color: var(--primary); text-shadow: 0 0 8px var(--primary-glow); }
-        .val-1 { color: var(--high); }
-        .val-0 { color: var(--low); }
+      :root {
+        --bg: #0a1628;
+        --primary: #00d4ff;
+        --primary-glow: #00d4ff80;
+        --text: #e0f2ff;
+        --high: #00ff87;
+        --high-glow: #00ff8780;
+        --low: #ff4757;
+        --low-glow: #ff475780;
+        --glass: rgba(15, 32, 64, 0.6);
+        --glass-border: rgba(0, 212, 255, 0.2);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 10px;
+      }
+      h3 {
+        font-size: 1.2rem;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 0 0 10px var(--primary-glow);
+        margin-bottom: 5px;
+      }
+
+      .container {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+        max-width: 900px;
+        height: 400px;
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        backdrop-filter: blur(10px);
+      }
+
+      /* Left: Circuit & Controls */
+      .circuit-panel {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .gate-selector {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 15px;
+      }
+      .gate-btn {
+        background: rgba(0, 212, 255, 0.1);
+        border: 1px solid var(--primary);
+        color: var(--text);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .gate-btn:hover {
+        background: rgba(0, 212, 255, 0.3);
+      }
+      .gate-btn.active {
+        background: var(--primary);
+        color: var(--bg);
+        box-shadow: 0 0 15px var(--primary-glow);
+        font-weight: bold;
+      }
+
+      .interactive-area {
+        position: relative;
+        width: 100%;
+        height: 260px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      svg {
+        width: 100%;
+        height: 100%;
+        filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.1));
+      }
+
+      .wire {
+        fill: none;
+        stroke-width: 4;
+        stroke-linecap: round;
+        transition:
+          stroke 0.3s,
+          filter 0.3s;
+      }
+      .wire.high {
+        stroke: var(--high);
+        filter: drop-shadow(0 0 8px var(--high-glow));
+      }
+      .wire.low {
+        stroke: var(--low);
+        filter: drop-shadow(0 0 8px var(--low-glow));
+      }
+
+      .gate-symbol {
+        fill: var(--glass);
+        stroke: var(--primary);
+        stroke-width: 3;
+      }
+
+      /* IO Controls */
+      .io-node {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        font-weight: bold;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+        border: 2px solid;
+        z-index: 10;
+        background: var(--bg);
+      }
+      .io-node.input:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 15px currentColor;
+      }
+      .io-node.high {
+        color: var(--bg);
+        background: var(--high);
+        border-color: var(--high);
+        box-shadow: 0 0 15px var(--high-glow);
+      }
+      .io-node.low {
+        color: var(--low);
+        background: var(--bg);
+        border-color: var(--low);
+        box-shadow: 0 0 10px var(--low-glow);
+        inset: 0;
+      }
+      .io-node.output {
+        cursor: default;
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
+      }
+      .io-node.output:hover {
+        transform: none;
+      }
+
+      .node-a {
+        top: 70px;
+        left: 40px;
+      }
+      .node-b {
+        top: 150px;
+        left: 40px;
+      }
+      .node-out {
+        top: 105px;
+        right: 40px;
+      }
+
+      /* Right: Truth Table */
+      .table-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .table-panel h4 {
+        text-align: center;
+        margin-bottom: 10px;
+        font-weight: normal;
+        color: rgba(255, 255, 255, 0.8);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+      }
+      th {
+        padding: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 0.9rem;
+        color: var(--primary);
+      }
+      td {
+        padding: 8px;
+        font-size: 1.1rem;
+        font-family: monospace;
+        font-weight: bold;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s;
+      }
+      tr.active {
+        background: rgba(0, 212, 255, 0.2);
+        box-shadow: inset 0 0 10px rgba(0, 212, 255, 0.3);
+      }
+      tr.active td {
+        color: var(--primary);
+        text-shadow: 0 0 8px var(--primary-glow);
+      }
+      .val-1 {
+        color: var(--high);
+      }
+      .val-0 {
+        color: var(--low);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h3>Logic Gate Visualizer</h3>
     <div class="container">
-        <div class="circuit-panel">
-            <div class="gate-selector" id="gate-selector">
-                <!-- populated by JS -->
-            </div>
-            <div class="interactive-area">
-                <div class="io-node input node-a" id="btn-a" onclick="toggleA()">0</div>
-                <div class="io-node input node-b" id="btn-b" onclick="toggleB()">0</div>
-                <div class="io-node output node-out" id="out-node">0</div>
-                
-                <svg id="circuit-svg">
-                    <!-- Wires -->
-                    <path class="wire low" id="wire-a" d="M 80 90 L 160 90" />
-                    <path class="wire low" id="wire-b" d="M 80 170 L 160 170" />
-                    <path class="wire low" id="wire-o" d="M 330 130 L 410 130" />
-                    <!-- Gate will be drawn here -->
-                    <g id="gate-svg-group" transform="translate(160, 60) scale(1.4)"></g>
-                </svg>
-            </div>
+      <div class="circuit-panel">
+        <div class="gate-selector" id="gate-selector">
+          <!-- populated by JS -->
         </div>
-        <div class="table-panel">
-            <h4>Truth Table: <span id="tt-title">AND</span></h4>
-            <table>
-                <thead>
-                    <tr><th>A</th><th id="th-b">B</th><th>Out</th></tr>
-                </thead>
-                <tbody id="truth-table">
-                    <!-- populated by JS -->
-                </tbody>
-            </table>
+        <div class="interactive-area">
+          <div class="io-node input node-a" id="btn-a" onclick="toggleA()">0</div>
+          <div class="io-node input node-b" id="btn-b" onclick="toggleB()">0</div>
+          <div class="io-node output node-out" id="out-node">0</div>
+
+          <svg id="circuit-svg">
+            <!-- Wires -->
+            <path class="wire low" id="wire-a" d="M 80 90 L 160 90" />
+            <path class="wire low" id="wire-b" d="M 80 170 L 160 170" />
+            <path class="wire low" id="wire-o" d="M 330 130 L 410 130" />
+            <!-- Gate will be drawn here -->
+            <g id="gate-svg-group" transform="translate(160, 60) scale(1.4)"></g>
+          </svg>
         </div>
+      </div>
+      <div class="table-panel">
+        <h4>Truth Table: <span id="tt-title">AND</span></h4>
+        <table>
+          <thead>
+            <tr>
+              <th>A</th>
+              <th id="th-b">B</th>
+              <th>Out</th>
+            </tr>
+          </thead>
+          <tbody id="truth-table">
+            <!-- populated by JS -->
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <script>
-        const gates = [
-            { id: 'AND', f: (a,b)=>a&b, sym: 'M 0 10 L 40 10 A 40 40 0 0 1 40 90 L 0 90 Z', 
-              inA: 'M 0 30 L -10 30', inB: 'M 0 70 L -10 70', out: 'M 80 50 L 90 50' },
-            { id: 'OR', f: (a,b)=>a|b, sym: 'M 0 10 Q 30 10 70 50 Q 30 90 0 90 Q 20 50 0 10', 
-              inA: 'M 6 30 L -10 30', inB: 'M 6 70 L -10 70', out: 'M 70 50 L 90 50' },
-            { id: 'NAND', f: (a,b)=>(~(a&b))&1, sym: 'M 0 10 L 40 10 A 40 40 0 0 1 40 90 L 0 90 Z',
-              circ: 'M 80 50 A 5 5 0 1 1 80 49.9 Z', inA: 'M 0 30 L -10 30', inB: 'M 0 70 L -10 70', out: 'M 88 50 L 100 50', outOffset: 12 },
-            { id: 'NOR', f: (a,b)=>(~(a|b))&1, sym: 'M 0 10 Q 30 10 70 50 Q 30 90 0 90 Q 20 50 0 10',
-              circ: 'M 70 50 A 5 5 0 1 1 70 49.9 Z', inA: 'M 6 30 L -10 30', inB: 'M 6 70 L -10 70', out: 'M 78 50 L 100 50', outOffset: 8 },
-            { id: 'XOR', f: (a,b)=>a^b, sym: 'M 10 10 Q 40 10 80 50 Q 40 90 10 90 Q 30 50 10 10', extra: 'M 0 10 Q 20 50 0 90',
-              inA: 'M 5 30 L -10 30', inB: 'M 5 70 L -10 70', out: 'M 80 50 L 90 50' },
-            { id: 'XNOR', f: (a,b)=>(~(a^b))&1, sym: 'M 10 10 Q 40 10 80 50 Q 40 90 10 90 Q 30 50 10 10', extra: 'M 0 10 Q 20 50 0 90',
-              circ: 'M 80 50 A 5 5 0 1 1 80 49.9 Z', inA: 'M 5 30 L -10 30', inB: 'M 5 70 L -10 70', out: 'M 88 50 L 100 50', outOffset: 12 },
-            { id: 'NOT', f: (a)=>(~a)&1, single: true, sym: 'M 10 10 L 70 50 L 10 90 Z', 
-              circ: 'M 70 50 A 5 5 0 1 1 70 49.9 Z', inA: 'M 10 50 L -10 50', out: 'M 78 50 L 100 50', outOffset: 8 }
-        ];
+      const gates = [
+        {
+          id: 'AND',
+          f: (a, b) => a & b,
+          sym: 'M 0 10 L 40 10 A 40 40 0 0 1 40 90 L 0 90 Z',
+          inA: 'M 0 30 L -10 30',
+          inB: 'M 0 70 L -10 70',
+          out: 'M 80 50 L 90 50',
+        },
+        {
+          id: 'OR',
+          f: (a, b) => a | b,
+          sym: 'M 0 10 Q 30 10 70 50 Q 30 90 0 90 Q 20 50 0 10',
+          inA: 'M 6 30 L -10 30',
+          inB: 'M 6 70 L -10 70',
+          out: 'M 70 50 L 90 50',
+        },
+        {
+          id: 'NAND',
+          f: (a, b) => ~(a & b) & 1,
+          sym: 'M 0 10 L 40 10 A 40 40 0 0 1 40 90 L 0 90 Z',
+          circ: 'M 80 50 A 5 5 0 1 1 80 49.9 Z',
+          inA: 'M 0 30 L -10 30',
+          inB: 'M 0 70 L -10 70',
+          out: 'M 88 50 L 100 50',
+          outOffset: 12,
+        },
+        {
+          id: 'NOR',
+          f: (a, b) => ~(a | b) & 1,
+          sym: 'M 0 10 Q 30 10 70 50 Q 30 90 0 90 Q 20 50 0 10',
+          circ: 'M 70 50 A 5 5 0 1 1 70 49.9 Z',
+          inA: 'M 6 30 L -10 30',
+          inB: 'M 6 70 L -10 70',
+          out: 'M 78 50 L 100 50',
+          outOffset: 8,
+        },
+        {
+          id: 'XOR',
+          f: (a, b) => a ^ b,
+          sym: 'M 10 10 Q 40 10 80 50 Q 40 90 10 90 Q 30 50 10 10',
+          extra: 'M 0 10 Q 20 50 0 90',
+          inA: 'M 5 30 L -10 30',
+          inB: 'M 5 70 L -10 70',
+          out: 'M 80 50 L 90 50',
+        },
+        {
+          id: 'XNOR',
+          f: (a, b) => ~(a ^ b) & 1,
+          sym: 'M 10 10 Q 40 10 80 50 Q 40 90 10 90 Q 30 50 10 10',
+          extra: 'M 0 10 Q 20 50 0 90',
+          circ: 'M 80 50 A 5 5 0 1 1 80 49.9 Z',
+          inA: 'M 5 30 L -10 30',
+          inB: 'M 5 70 L -10 70',
+          out: 'M 88 50 L 100 50',
+          outOffset: 12,
+        },
+        {
+          id: 'NOT',
+          f: (a) => ~a & 1,
+          single: true,
+          sym: 'M 10 10 L 70 50 L 10 90 Z',
+          circ: 'M 70 50 A 5 5 0 1 1 70 49.9 Z',
+          inA: 'M 10 50 L -10 50',
+          out: 'M 78 50 L 100 50',
+          outOffset: 8,
+        },
+      ]
 
-        let state = { A: 0, B: 0, gate: gates[0] };
+      let state = { A: 0, B: 0, gate: gates[0] }
 
-        // Initialize
-        const sel = document.getElementById('gate-selector');
-        gates.forEach(g => {
-            let btn = document.createElement('button');
-            btn.className = 'gate-btn' + (g.id === state.gate.id ? ' active' : '');
-            btn.textContent = g.id;
-            btn.onclick = () => setGate(g.id);
-            sel.appendChild(btn);
-        });
+      // Initialize
+      const sel = document.getElementById('gate-selector')
+      gates.forEach((g) => {
+        let btn = document.createElement('button')
+        btn.className = 'gate-btn' + (g.id === state.gate.id ? ' active' : '')
+        btn.textContent = g.id
+        btn.onclick = () => setGate(g.id)
+        sel.appendChild(btn)
+      })
 
-        function setGate(id) {
-            state.gate = gates.find(g => g.id === id);
-            document.querySelectorAll('.gate-btn').forEach(b => {
-                b.className = 'gate-btn' + (b.textContent === id ? ' active' : '');
-            });
-            document.getElementById('tt-title').textContent = id;
-            if(state.gate.single) { state.B = 0; document.getElementById('btn-b').style.display = 'none'; document.getElementById('wire-b').style.display = 'none'; document.getElementById('th-b').style.display = 'none'; }
-            else { document.getElementById('btn-b').style.display = 'flex'; document.getElementById('wire-b').style.display = 'block'; document.getElementById('th-b').style.display = 'table-cell'; }
-            renderTable();
-            updateCircuit();
+      function setGate(id) {
+        state.gate = gates.find((g) => g.id === id)
+        document.querySelectorAll('.gate-btn').forEach((b) => {
+          b.className = 'gate-btn' + (b.textContent === id ? ' active' : '')
+        })
+        document.getElementById('tt-title').textContent = id
+        if (state.gate.single) {
+          state.B = 0
+          document.getElementById('btn-b').style.display = 'none'
+          document.getElementById('wire-b').style.display = 'none'
+          document.getElementById('th-b').style.display = 'none'
+        } else {
+          document.getElementById('btn-b').style.display = 'flex'
+          document.getElementById('wire-b').style.display = 'block'
+          document.getElementById('th-b').style.display = 'table-cell'
         }
+        renderTable()
+        updateCircuit()
+      }
 
-        function toggleA() { state.A = 1 - state.A; updateCircuit(); }
-        function toggleB() { state.B = 1 - state.B; updateCircuit(); }
+      function toggleA() {
+        state.A = 1 - state.A
+        updateCircuit()
+      }
+      function toggleB() {
+        state.B = 1 - state.B
+        updateCircuit()
+      }
 
-        function renderTable() {
-            const tb = document.getElementById('truth-table');
-            tb.innerHTML = '';
-            const inputs = state.gate.single ? [[0],[1]] : [[0,0],[0,1],[1,0],[1,1]];
-            inputs.forEach((row, idx) => {
-                const tr = document.createElement('tr');
-                tr.id = 'row-' + row.join('');
-                const a = row[0], b = row[1], out = state.gate.single ? state.gate.f(a) : state.gate.f(a,b);
-                let html = `<td><span class="val-${a}">${a}</span></td>`;
-                if(!state.gate.single) html += `<td><span class="val-${b}">${b}</span></td>`;
-                html += `<td><span class="val-${out}">${out}</span></td>`;
-                tr.innerHTML = html;
-                tb.appendChild(tr);
-            });
+      function renderTable() {
+        const tb = document.getElementById('truth-table')
+        tb.innerHTML = ''
+        const inputs = state.gate.single
+          ? [[0], [1]]
+          : [
+              [0, 0],
+              [0, 1],
+              [1, 0],
+              [1, 1],
+            ]
+        inputs.forEach((row, idx) => {
+          const tr = document.createElement('tr')
+          tr.id = 'row-' + row.join('')
+          const a = row[0],
+            b = row[1],
+            out = state.gate.single ? state.gate.f(a) : state.gate.f(a, b)
+          let html = `<td><span class="val-${a}">${a}</span></td>`
+          if (!state.gate.single) html += `<td><span class="val-${b}">${b}</span></td>`
+          html += `<td><span class="val-${out}">${out}</span></td>`
+          tr.innerHTML = html
+          tb.appendChild(tr)
+        })
+      }
+
+      function updateNode(id, val) {
+        const el = document.getElementById(id)
+        el.textContent = val
+        el.className = `io-node ${id === 'out-node' ? 'output' : 'input'} ${id === 'btn-a' ? 'node-a' : id === 'btn-b' ? 'node-b' : 'node-out'} ${val ? 'high' : 'low'}`
+      }
+      function updateWire(id, val) {
+        document.getElementById(id).className = `wire ${val ? 'high' : 'low'}`
+      }
+
+      function updateCircuit() {
+        const g = state.gate
+        const out = g.single ? g.f(state.A) : g.f(state.A, state.B)
+
+        updateNode('btn-a', state.A)
+        updateWire('wire-a', state.A)
+        if (!g.single) {
+          updateNode('btn-b', state.B)
+          updateWire('wire-b', state.B)
         }
+        updateNode('out-node', out)
+        updateWire('wire-o', out)
 
-        function updateNode(id, val) {
-            const el = document.getElementById(id);
-            el.textContent = val;
-            el.className = `io-node ${id==='out-node'?'output':'input'} ${id==='btn-a'?'node-a':id==='btn-b'?'node-b':'node-out'} ${val?'high':'low'}`;
+        // Draw Gate SVG
+        const grp = document.getElementById('gate-svg-group')
+        grp.innerHTML = ''
+
+        // Adjust wire positions for single input
+        if (g.single) {
+          document.getElementById('wire-a').setAttribute('d', 'M 80 130 L 150 130')
+        } else {
+          document.getElementById('wire-a').setAttribute('d', 'M 80 90 L 150 90')
+          document.getElementById('wire-b').setAttribute('d', 'M 80 170 L 150 170')
         }
-        function updateWire(id, val) {
-            document.getElementById(id).className = `wire ${val?'high':'low'}`;
-        }
+        let outX = 160 + (g.outOffset || 0) * 1.4
+        document.getElementById('wire-o').setAttribute('d', `M ${140 + outX} 130 L 410 130`)
 
-        function updateCircuit() {
-            const g = state.gate;
-            const out = g.single ? g.f(state.A) : g.f(state.A, state.B);
-            
-            updateNode('btn-a', state.A);
-            updateWire('wire-a', state.A);
-            if(!g.single) {
-                updateNode('btn-b', state.B);
-                updateWire('wire-b', state.B);
-            }
-            updateNode('out-node', out);
-            updateWire('wire-o', out);
+        // Extra paths (e.g. XOR curve)
+        if (g.extra) grp.innerHTML += `<path class="gate-symbol" fill="none" d="${g.extra}" />`
+        // Main body
+        grp.innerHTML += `<path class="gate-symbol" d="${g.sym}" />`
+        // Invert circle
+        if (g.circ)
+          grp.innerHTML += `<path class="gate-symbol" fill="${varLookup('--bg')}" stroke-width="2" d="${g.circ}" />`
 
-            // Draw Gate SVG
-            const grp = document.getElementById('gate-svg-group');
-            grp.innerHTML = '';
-            
-            // Adjust wire positions for single input
-            if(g.single) {
-                document.getElementById('wire-a').setAttribute('d', 'M 80 130 L 150 130');
-            } else {
-                document.getElementById('wire-a').setAttribute('d', 'M 80 90 L 150 90');
-                document.getElementById('wire-b').setAttribute('d', 'M 80 170 L 150 170');
-            }
-            let outX = 160 + (g.outOffset || 0) * 1.4;
-            document.getElementById('wire-o').setAttribute('d', `M ${140 + outX} 130 L 410 130`);
+        // Terminal stubs
+        grp.innerHTML += `<path class="wire ${state.A ? 'high' : 'low'}" stroke-width="2" d="${g.inA}" />`
+        if (!g.single)
+          grp.innerHTML += `<path class="wire ${state.B ? 'high' : 'low'}" stroke-width="2" d="${g.inB}" />`
+        grp.innerHTML += `<path class="wire ${out ? 'high' : 'low'}" stroke-width="2" d="${g.out}" />`
 
-            // Extra paths (e.g. XOR curve)
-            if(g.extra) grp.innerHTML += `<path class="gate-symbol" fill="none" d="${g.extra}" />`;
-            // Main body
-            grp.innerHTML += `<path class="gate-symbol" d="${g.sym}" />`;
-            // Invert circle
-            if(g.circ) grp.innerHTML += `<path class="gate-symbol" fill="${varLookup('--bg')}" stroke-width="2" d="${g.circ}" />`;
-            
-            // Terminal stubs
-            grp.innerHTML += `<path class="wire ${state.A?'high':'low'}" stroke-width="2" d="${g.inA}" />`;
-            if(!g.single) grp.innerHTML += `<path class="wire ${state.B?'high':'low'}" stroke-width="2" d="${g.inB}" />`;
-            grp.innerHTML += `<path class="wire ${out?'high':'low'}" stroke-width="2" d="${g.out}" />`;
+        // Update Truth Table Highlight
+        document.querySelectorAll('#truth-table tr').forEach((tr) => tr.classList.remove('active'))
+        const rowId = 'row-' + state.A + (g.single ? '' : state.B)
+        document.getElementById(rowId).classList.add('active')
+      }
 
-            // Update Truth Table Highlight
-            document.querySelectorAll('#truth-table tr').forEach(tr => tr.classList.remove('active'));
-            const rowId = 'row-' + state.A + (g.single ? '' : state.B);
-            document.getElementById(rowId).classList.add('active');
-        }
+      // Helper to get CSS var for SVG injection
+      function varLookup(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+      }
 
-        // Helper to get CSS var for SVG injection
-        function varLookup(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-
-        setGate('AND');
+      setGate('AND')
     </script>
-</body>
+  </body>
 </html>

@@ -13,13 +13,7 @@ import MainLayout from './components/layout/MainLayout'
 function EditorRoute({ isTemplate = false }) {
   const { id } = useParams()
   const navigate = useNavigate()
-  return (
-    <EditorPage
-      presentationId={id}
-      isTemplate={isTemplate}
-      onGoHome={() => navigate('/')}
-    />
-  )
+  return <EditorPage presentationId={id} isTemplate={isTemplate} onGoHome={() => navigate('/')} />
 }
 
 function AppRoutes() {

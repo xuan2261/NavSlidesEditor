@@ -42,6 +42,8 @@ import {
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import InsertMenu from './InsertMenu'
+import { Button } from '../components/ui'
+
 // eslint-disable-next-line unused-imports/no-unused-vars
 const { SHAPES } = shared
 
@@ -224,7 +226,8 @@ export default function Toolbar({
     } else if (type === 'table-insert') {
       // value format: 'rows,cols'
       const [r, c] = value.split(',').map(Number)
-      if (r > 0 && c > 0) editor.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run()
+      if (r > 0 && c > 0)
+        editor.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run()
     }
     setPromptState(null)
   }
@@ -237,7 +240,7 @@ export default function Toolbar({
   const currentColor = editor ? editor.getAttributes('textStyle').color || '#ffffff' : '#ffffff'
 
   return (
-    <div className="toolbar tour-step-toolbar">
+    <div className="relative z-[100] flex h-14 w-full flex-wrap items-center gap-1 border-b border-border bg-panel px-4 py-1.5 tour-step-toolbar">
       {/* Insert dropdown — replaces all element insertion buttons */}
       <InsertMenu
         onAddText={onAddText}
@@ -262,18 +265,18 @@ export default function Toolbar({
         onAddDivider={onAddDivider}
       />
 
-      <button
-        className="btn-icon"
+      <Button
+        variant="icon"
         title="Draw Line"
         onClick={() => {
           if (typeof onAddLine === 'function') onAddLine()
         }}
       >
-        <Minus size={15} />
-      </button>
+        <Minus size={18} />
+      </Button>
 
-      <button
-        className="btn-icon"
+      <Button
+        variant="icon"
         title="Draw Arrow"
         onClick={() => {
           if (typeof onAddLine === 'function') {
@@ -281,10 +284,10 @@ export default function Toolbar({
           }
         }}
       >
-        <ArrowUpRight size={15} />
-      </button>
+        <ArrowUpRight size={18} />
+      </Button>
 
-      <span className="toolbar-divider" />
+      <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
       {/* Slide Background popup */}
       {slide &&
@@ -309,8 +312,9 @@ export default function Toolbar({
             })
           return (
             <div style={{ position: 'relative' }}>
-              <button
-                className={`btn-icon ${showBgMenu ? 'active' : ''}`}
+              <Button
+                variant="icon"
+                className={showBgMenu ? 'bg-primary-light text-accent' : ''}
                 style={{
                   width: 'auto',
                   padding: '0 8px',
@@ -339,23 +343,10 @@ export default function Toolbar({
                   }}
                 />
                 BG
-              </button>
+              </Button>
               {showBgMenu && (
                 <div
-                  className="bg-popup-container"
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    marginTop: 4,
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 8,
-                    padding: 12,
-                    zIndex: 1000,
-                    width: 260,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                  }}
+                  className="bg-popup-container absolute left-0 top-full mt-1 w-[260px] rounded-lg border border-border bg-card p-3 shadow-xl z-[1000]"
                   onMouseDown={(e) => e.stopPropagation()}
                 >
                   <div
@@ -368,15 +359,16 @@ export default function Toolbar({
                   >
                     Slide Background
                   </div>
-                  <div className="bg-type-tabs" style={{ marginBottom: 8 }}>
+                  <div className="flex gap-1 mb-2">
                     {['color', 'gradient', 'image', 'none'].map((type) => (
-                      <button
+                      <Button
+                        variant="ghost"
                         key={type}
-                        className={`bg-type-tab ${bgType === type ? 'active' : ''}`}
+                        className={`bg-type-tab px-2 py-1 text-xs rounded-md ${bgType === type ? 'bg-active text-accent' : 'text-text-secondary hover:bg-hover'}`}
                         onClick={() => setBgType(type)}
                       >
                         {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </button>
+                      </Button>
                     ))}
                   </div>
 
@@ -398,11 +390,10 @@ export default function Toolbar({
                           }}
                         />
                         <input
-                          className="prop-input"
+                          className="w-full flex-1 rounded border border-border bg-secondary px-1.5 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
                           type="text"
                           value={bg.color || '#1e1e2e'}
                           onChange={(e) => setBgColor(e.target.value)}
-                          style={{ flex: 1, fontSize: 12, padding: '4px 6px' }}
                         />
                       </div>
                       <div
@@ -444,16 +435,16 @@ export default function Toolbar({
                         }}
                       />
                       <input
-                        className="prop-input"
+                        className="w-full rounded border border-border bg-secondary px-1.5 py-1 mb-2 text-xs text-text-primary focus:border-accent focus:outline-none"
                         type="text"
                         value={bg.gradient || ''}
                         onChange={(e) => setBgGradient(e.target.value)}
                         placeholder="linear-gradient(...)"
-                        style={{ marginBottom: 8, fontSize: 11, padding: '4px 6px' }}
                       />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {GRADIENT_PRESETS_BG.map((preset, i) => (
-                          <button
+                          <Button
+                            variant="ghost"
                             key={i}
                             onClick={() => setBgGradient(preset)}
                             style={{
@@ -489,15 +480,14 @@ export default function Toolbar({
                         />
                       )}
                       <input
-                        className="prop-input"
+                        className="w-full rounded border border-border bg-secondary px-1.5 py-1 mb-1.5 text-[11px] text-text-primary focus:border-accent focus:outline-none"
                         type="text"
                         value={bg.image || ''}
                         onChange={(e) => setBgImage(e.target.value)}
                         placeholder="https://example.com/image.jpg"
-                        style={{ marginBottom: 6, fontSize: 11, padding: '4px 6px' }}
                       />
-                      <button
-                        className="btn btn-secondary"
+                      <Button
+                        variant="secondary"
                         style={{
                           width: '100%',
                           justifyContent: 'center',
@@ -510,7 +500,7 @@ export default function Toolbar({
                       >
                         <Upload size={12} />
                         {uploading ? 'Uploading...' : 'Upload Image'}
-                      </button>
+                      </Button>
                       <input
                         ref={bgFileRef}
                         type="file"
@@ -539,12 +529,11 @@ export default function Toolbar({
                             Size
                           </div>
                           <select
-                            className="prop-input"
+                            className="w-full rounded border border-border bg-secondary px-1 py-0.5 text-[11px] text-text-primary focus:border-accent focus:outline-none"
                             value={bg.size || 'cover'}
                             onChange={(e) =>
                               onUpdateSlide({ background: { ...bg, size: e.target.value } })
                             }
-                            style={{ padding: '3px 4px', fontSize: 11 }}
                           >
                             <option value="cover">Cover</option>
                             <option value="contain">Contain</option>
@@ -559,12 +548,11 @@ export default function Toolbar({
                             Position
                           </div>
                           <select
-                            className="prop-input"
+                            className="w-full rounded border border-border bg-secondary px-1 py-0.5 text-[11px] text-text-primary focus:border-accent focus:outline-none"
                             value={bg.position || 'center'}
                             onChange={(e) =>
                               onUpdateSlide({ background: { ...bg, position: e.target.value } })
                             }
-                            style={{ padding: '3px 4px', fontSize: 11 }}
                           >
                             <option value="center">Center</option>
                             <option value="top">Top</option>
@@ -589,13 +577,14 @@ export default function Toolbar({
         })()}
 
       {/* Grid toggle */}
-      <button
-        className={`btn-icon ${showGrid ? 'active' : ''}`}
+      <Button
+        variant="icon"
+        className={showGrid ? 'bg-primary-light text-accent' : ''}
         onClick={onToggleGrid}
         title={showGrid ? 'Hide grid / disable snap' : 'Show grid + snap to grid'}
       >
-        <Grid size={14} />
-      </button>
+        <Grid size={18} />
+      </Button>
       {showGrid && (
         <input
           type="number"
@@ -621,26 +610,28 @@ export default function Toolbar({
       )}
 
       {/* Smart guides toggle */}
-      <button
-        className={`btn-icon ${smartGuidesEnabled ? 'active' : ''}`}
+      <Button
+        variant="icon"
+        className={smartGuidesEnabled ? 'bg-primary-light text-accent' : ''}
         onClick={onToggleSmartGuides}
         title={smartGuidesEnabled ? 'Disable smart guides' : 'Enable smart guides'}
       >
-        <Magnet size={14} />
-      </button>
+        <Magnet size={18} />
+      </Button>
 
       {/* Ruler toggle */}
-      <button
-        className={`btn-icon ${showRulers ? 'active' : ''}`}
+      <Button
+        variant="icon"
+        className={showRulers ? 'bg-primary-light text-accent' : ''}
         onClick={onToggleRulers}
         title={showRulers ? 'Hide rulers' : 'Show rulers (drag to add guides)'}
       >
-        <Ruler size={14} />
-      </button>
+        <Ruler size={18} />
+      </Button>
 
       {selectedCount >= 2 && (
         <>
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
           <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Align:</span>
           {[
             ['left', AlignStartVertical, 'Align left'],
@@ -652,37 +643,37 @@ export default function Toolbar({
             ['distribute-h', AlignHorizontalDistributeCenter, 'Distribute H'],
             ['distribute-v', AlignVerticalDistributeCenter, 'Distribute V'],
           ].map(([type, Icon, title]) => (
-            <button
+            <Button
+              variant="icon"
               key={type}
-              className="btn-icon"
               title={title}
               style={{ padding: '0 3px', width: 28, height: 28 }}
               onClick={() => onAlignElements(type)}
             >
-              <Icon size={14} />
-            </button>
+              <Icon size={18} />
+            </Button>
           ))}
-          <span className="toolbar-divider" />
-          <button
-            className="btn-icon"
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
+          <Button
+            variant="icon"
             title="Group selected elements"
             onClick={onGroupElements}
             style={{ width: 'auto', padding: '0 6px', fontSize: 11 }}
           >
-            <Group size={13} />
-          </button>
-          <button
-            className="btn-icon"
+            <Group size={18} />
+          </Button>
+          <Button
+            variant="icon"
             title="Ungroup elements"
             onClick={onUngroupElements}
             style={{ width: 'auto', padding: '0 6px', fontSize: 11 }}
           >
-            <Ungroup size={13} />
-          </button>
+            <Ungroup size={18} />
+          </Button>
         </>
       )}
 
-      <span className="toolbar-divider" />
+      <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
       {/* Hint when no text element is being edited */}
       {!editingElementId && (
@@ -789,106 +780,125 @@ export default function Toolbar({
             ))}
           </select>
 
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
           {/* Undo / Redo */}
-          <button
-            className="btn-icon"
+          <Button
+            variant="icon"
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
             title="Undo"
           >
-            <Undo2 size={15} />
-          </button>
-          <button
-            className="btn-icon"
+            <Undo2 size={18} />
+          </Button>
+          <Button
+            variant="icon"
             onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
             title="Redo"
           >
-            <Redo2 size={15} />
-          </button>
+            <Redo2 size={18} />
+          </Button>
 
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
           {/* Headings */}
-          <button
-            className={`btn-icon ${editor.isActive('heading', { level: 1 }) ? 'active' : ''}`}
+          <Button
+            variant="ghost"
+            className={
+              editor.isActive('heading', { level: 1 }) ? 'bg-primary-light text-accent' : ''
+            }
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             title="Heading 1"
             style={{ fontSize: 12, fontWeight: 700, width: 'auto', padding: '0 6px' }}
           >
             H1
-          </button>
-          <button
-            className={`btn-icon ${editor.isActive('heading', { level: 2 }) ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="ghost"
+            className={
+              editor.isActive('heading', { level: 2 }) ? 'bg-primary-light text-accent' : ''
+            }
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             title="Heading 2"
             style={{ fontSize: 12, fontWeight: 700, width: 'auto', padding: '0 6px' }}
           >
             H2
-          </button>
-          <button
-            className={`btn-icon ${editor.isActive('heading', { level: 3 }) ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="ghost"
+            className={
+              editor.isActive('heading', { level: 3 }) ? 'bg-primary-light text-accent' : ''
+            }
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             title="Heading 3"
             style={{ fontSize: 12, fontWeight: 700, width: 'auto', padding: '0 6px' }}
           >
             H3
-          </button>
-          <button
-            className={`btn-icon ${editor.isActive('paragraph') && !editor.isActive('heading') ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="icon"
+            className={
+              editor.isActive('paragraph') && !editor.isActive('heading')
+                ? 'bg-primary-light text-accent'
+                : ''
+            }
             onClick={() => editor.chain().focus().setParagraph().run()}
             title="Normal text"
           >
-            <Type size={15} />
-          </button>
+            <Type size={18} />
+          </Button>
 
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
           {/* Text formatting */}
-          <button
-            className={`btn-icon ${editor.isActive('bold') ? 'active' : ''}`}
+          <Button
+            variant="icon"
+            className={editor.isActive('bold') ? 'bg-primary-light text-accent' : ''}
             onClick={() => editor.chain().focus().toggleBold().run()}
             title="Bold (Ctrl+B)"
           >
-            <Bold size={15} />
-          </button>
-          <button
-            className={`btn-icon ${editor.isActive('italic') ? 'active' : ''}`}
+            <Bold size={18} />
+          </Button>
+          <Button
+            variant="icon"
+            className={editor.isActive('italic') ? 'bg-primary-light text-accent' : ''}
             onClick={() => editor.chain().focus().toggleItalic().run()}
             title="Italic (Ctrl+I)"
           >
-            <Italic size={15} />
-          </button>
-          <button
-            className={`btn-icon ${editor.isActive('underline') ? 'active' : ''}`}
+            <Italic size={18} />
+          </Button>
+          <Button
+            variant="icon"
+            className={editor.isActive('underline') ? 'bg-primary-light text-accent' : ''}
             onClick={() => editor.chain().focus().toggleUnderline().run()}
             title="Underline (Ctrl+U)"
           >
-            <Underline size={15} />
-          </button>
-          <button
-            className={`btn-icon ${editor.isActive('strike') ? 'active' : ''}`}
+            <Underline size={18} />
+          </Button>
+          <Button
+            variant="icon"
+            className={editor.isActive('strike') ? 'bg-primary-light text-accent' : ''}
             onClick={() => editor.chain().focus().toggleStrike().run()}
             title="Strikethrough"
           >
-            <Strikethrough size={15} />
-          </button>
+            <Strikethrough size={18} />
+          </Button>
 
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
           {/* Text color palette */}
           <div style={{ position: 'relative' }}>
-            <button
-              className={`btn-icon ${showColorPalette ? 'active' : ''}`}
+            <Button
+              variant="icon"
+              className={showColorPalette ? 'bg-primary-light text-accent' : ''}
               style={{ position: 'relative' }}
               onClick={() => setShowColorPalette((v) => !v)}
               title="Text color"
             >
-              <Type size={15} />
+              <Type size={18} />
               <span className="color-indicator" style={{ background: currentColor }} />
-            </button>
+            </Button>
             {showColorPalette && (
               <div
                 onMouseDown={(e) => e.stopPropagation()}
@@ -909,7 +919,8 @@ export default function Toolbar({
                 }}
               >
                 {COLOR_PALETTE.map((color) => (
-                  <button
+                  <Button
+                    variant="ghost"
                     key={color}
                     title={color}
                     style={{
@@ -978,13 +989,14 @@ export default function Toolbar({
 
           {/* Highlight color palette */}
           <div style={{ position: 'relative' }}>
-            <button
-              className={`btn-icon ${showHighlightPalette ? 'active' : ''}`}
+            <Button
+              variant="icon"
+              className={showHighlightPalette ? 'bg-primary-light text-accent' : ''}
               style={{ position: 'relative' }}
               onClick={() => setShowHighlightPalette((v) => !v)}
               title="Highlight color"
             >
-              <Highlighter size={15} />
+              <Highlighter size={18} />
               <span
                 className="color-indicator"
                 style={{
@@ -992,7 +1004,7 @@ export default function Toolbar({
                   border: '1px solid rgba(255,255,255,0.2)',
                 }}
               />
-            </button>
+            </Button>
             {showHighlightPalette && (
               <div
                 onMouseDown={(e) => e.stopPropagation()}
@@ -1038,7 +1050,8 @@ export default function Toolbar({
                   '#94a3b8',
                   '#64748b',
                 ].map((color) => (
-                  <button
+                  <Button
+                    variant="ghost"
                     key={color}
                     title={color}
                     style={{
@@ -1057,7 +1070,8 @@ export default function Toolbar({
                     }}
                   />
                 ))}
-                <button
+                <Button
+                  variant="ghost"
                   title="Remove highlight"
                   style={{
                     gridColumn: '1 / -1',
@@ -1078,91 +1092,104 @@ export default function Toolbar({
                   }}
                 >
                   Remove highlight
-                </button>
+                </Button>
               </div>
             )}
           </div>
 
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
           {/* Alignment */}
-          <button
-            className={`btn-icon ${editor.isActive({ textAlign: 'left' }) ? 'active' : ''}`}
+          <Button
+            variant="ghost"
+            className={editor.isActive({ textAlign: 'left' }) ? 'bg-primary-light text-accent' : ''}
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
             title="Align left"
           >
-            <AlignLeft size={15} />
-          </button>
-          <button
-            className={`btn-icon ${editor.isActive({ textAlign: 'center' }) ? 'active' : ''}`}
+            <AlignLeft size={18} />
+          </Button>
+          <Button
+            variant="ghost"
+            className={
+              editor.isActive({ textAlign: 'center' }) ? 'bg-primary-light text-accent' : ''
+            }
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
             title="Align center"
           >
-            <AlignCenter size={15} />
-          </button>
-          <button
-            className={`btn-icon ${editor.isActive({ textAlign: 'right' }) ? 'active' : ''}`}
+            <AlignCenter size={18} />
+          </Button>
+          <Button
+            variant="ghost"
+            className={
+              editor.isActive({ textAlign: 'right' }) ? 'bg-primary-light text-accent' : ''
+            }
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
             title="Align right"
           >
-            <AlignRight size={15} />
-          </button>
+            <AlignRight size={18} />
+          </Button>
 
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
           {/* Lists */}
-          <button
-            className={`btn-icon ${editor.isActive('bulletList') ? 'active' : ''}`}
+          <Button
+            variant="icon"
+            className={editor.isActive('bulletList') ? 'bg-primary-light text-accent' : ''}
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             title="Bullet list"
           >
-            <List size={15} />
-          </button>
-          <button
-            className={`btn-icon ${editor.isActive('orderedList') ? 'active' : ''}`}
+            <List size={18} />
+          </Button>
+          <Button
+            variant="icon"
+            className={editor.isActive('orderedList') ? 'bg-primary-light text-accent' : ''}
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             title="Ordered list"
           >
-            <ListOrdered size={15} />
-          </button>
+            <ListOrdered size={18} />
+          </Button>
 
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
           {/* Code */}
-          <button
-            className={`btn-icon ${editor.isActive('code') ? 'active' : ''}`}
+          <Button
+            variant="icon"
+            className={editor.isActive('code') ? 'bg-primary-light text-accent' : ''}
             onClick={() => editor.chain().focus().toggleCode().run()}
             title="Inline code"
           >
-            <Code size={15} />
-          </button>
-          <button
-            className={`btn-icon ${editor.isActive('codeBlock') ? 'active' : ''}`}
+            <Code size={18} />
+          </Button>
+          <Button
+            variant="icon"
+            className={editor.isActive('codeBlock') ? 'bg-primary-light text-accent' : ''}
             onClick={() => editor.chain().focus().toggleCodeBlock().run()}
             title="Code block"
           >
-            <FileCode size={15} />
-          </button>
-          <button
-            className={`btn-icon ${editor.isActive('blockquote') ? 'active' : ''}`}
+            <FileCode size={18} />
+          </Button>
+          <Button
+            variant="icon"
+            className={editor.isActive('blockquote') ? 'bg-primary-light text-accent' : ''}
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
             title="Blockquote"
           >
-            <Quote size={15} />
-          </button>
+            <Quote size={18} />
+          </Button>
 
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
           {/* Table */}
           <div style={{ position: 'relative' }}>
-            <button
-              className={`btn-icon ${editor.isActive('table') ? 'active' : ''}`}
+            <Button
+              variant="icon"
+              className={editor.isActive('table') ? 'bg-primary-light text-accent' : ''}
               title="Table"
               onClick={() => setShowTableMenu((v) => !v)}
               style={{ fontSize: 13 }}
             >
-              <Table2 size={14} />
-            </button>
+              <Table2 size={18} />
+            </Button>
             {showTableMenu && (
               <div
                 style={{
@@ -1201,7 +1228,8 @@ export default function Toolbar({
                   ['Delete Col', () => editor.chain().focus().deleteColumn().run()],
                   ['Delete Table', () => editor.chain().focus().deleteTable().run()],
                 ].map(([label, action]) => (
-                  <button
+                  <Button
+                    variant="ghost"
                     key={label}
                     style={{
                       padding: '6px 10px',
@@ -1221,71 +1249,76 @@ export default function Toolbar({
                     }}
                   >
                     {label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
           </div>
 
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
           {/* Link */}
-          <button
-            className={`btn-icon ${editor.isActive('link') ? 'active' : ''}`}
+          <Button
+            variant="icon"
+            className={editor.isActive('link') ? 'bg-primary-light text-accent' : ''}
             onClick={handleLink}
             title="Add link"
           >
-            <Link size={15} />
-          </button>
+            <Link size={18} />
+          </Button>
           {editor.isActive('link') && (
-            <button
-              className="btn-icon"
+            <Button
+              variant="icon"
               onClick={() => editor.chain().focus().unsetLink().run()}
               title="Remove link"
             >
-              <Unlink size={15} />
-            </button>
+              <Unlink size={18} />
+            </Button>
           )}
 
           {/* Image in text */}
-          <button className="btn-icon" onClick={handleImage} title="Insert image in text">
-            <Image size={15} />
-          </button>
+          <Button variant="icon" onClick={handleImage} title="Insert image in text">
+            <Image size={18} />
+          </Button>
 
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
           {/* Math */}
-          <button
-            className="btn-icon"
+          <Button
+            variant="icon"
             title="Insert inline math ($…$)"
-            onClick={() => setPromptState({
-              type: 'latex-inline',
-              defaultValue: 'E = mc^2',
-              title: 'LaTeX (inline)',
-            })}
+            onClick={() =>
+              setPromptState({
+                type: 'latex-inline',
+                defaultValue: 'E = mc^2',
+                title: 'LaTeX (inline)',
+              })
+            }
             style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: 14 }}
           >
             ∑
-          </button>
-          <button
-            className="btn-icon"
+          </Button>
+          <Button
+            variant="icon"
             title="Insert display math ($$…$$)"
-            onClick={() => setPromptState({
-              type: 'latex-display',
-              defaultValue: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
-              title: 'LaTeX (display)',
-            })}
+            onClick={() =>
+              setPromptState({
+                type: 'latex-display',
+                defaultValue: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
+                title: 'LaTeX (display)',
+              })
+            }
             style={{ fontFamily: 'serif', fontWeight: 'bold', fontSize: 14 }}
           >
             ∫
-          </button>
+          </Button>
 
-          <span className="toolbar-divider" />
+          <span className="mx-2 h-6 w-[1px] shrink-0 bg-border" />
 
           {/* Clear formatting */}
-          <button className="btn-icon" onClick={handleClearFormatting} title="Clear formatting">
-            <RemoveFormatting size={15} />
-          </button>
+          <Button variant="icon" onClick={handleClearFormatting} title="Clear formatting">
+            <RemoveFormatting size={18} />
+          </Button>
         </>
       )}
 

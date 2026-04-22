@@ -1,10 +1,12 @@
 # Phase 5: Template UX Enhancement
 
 ## Context
+
 - [TemplateGallery.jsx](file:///d:/NCKH_2025/revealjs_gui/client/src/components/dashboard/TemplateGallery.jsx) — Marketplace gallery UI
 - [EditorPage.jsx:3421-3600](file:///d:/NCKH_2025/revealjs_gui/client/src/pages/EditorPage.jsx#L3421-L3600) — Slide template modal
 
 ## Overview
+
 - Priority: P1
 - Status: ✅ Completed
 - Cải tiến UX cho template system: preview modal, "Insert Slides" flow, favorites
@@ -12,6 +14,7 @@
 ## Requirements
 
 ### Functional
+
 1. **Template Preview Modal**: Khi click template trong Marketplace → show slide carousel preview
 2. **"Insert Slides" Flow**: Option "Insert into current presentation" thay vì chỉ "Create new"
 3. **Favorites System**: Star/unstar templates, lưu localStorage, tab "My Favorites"
@@ -19,6 +22,7 @@
 5. **Template Info Badge**: Show slide count, interactive badge, difficulty level
 
 ### Non-Functional
+
 - Preview modal render actual slide content (miniature)
 - Responsive modal (min 600px width)
 - LocalStorage for favorites (no server dependency)
@@ -27,6 +31,7 @@
 ## Architecture
 
 ### Template Preview Modal
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ ← Template Title                         ⭐ ✕      │
@@ -50,13 +55,15 @@
 ```
 
 ### Favorites Storage
+
 ```js
 // localStorage key: 'navslides-favorite-templates'
 // Value: JSON array of template IDs
-['sim-ohm-law', 'quiz-multiple-choice', 'digi-lecture-overview']
+;['sim-ohm-law', 'quiz-multiple-choice', 'digi-lecture-overview']
 ```
 
 ### Insert Slides Flow
+
 1. User clicks "Insert into Current Presentation"
 2. Show slide selector: checkboxes for each slide in template
 3. User selects slides to insert
@@ -66,9 +73,11 @@
 ## Related Code Files
 
 ### Create
+
 - `client/src/components/dashboard/TemplatePreviewModal.jsx` — Preview modal component
 
 ### Modify
+
 - `client/src/components/dashboard/TemplateGallery.jsx` — Add preview on click, favorites tab, sorting
 - `client/src/pages/EditorPage.jsx` — Add `insertSlidesFromTemplate()` function for insert flow
 
@@ -120,6 +129,7 @@
 - [x] Build test
 
 ## Success Criteria
+
 - ✅ Click template → preview modal with slide carousel
 - ✅ Navigate between slides in preview
 - ✅ Star/unstar templates, Favorites tab works
@@ -129,8 +139,9 @@
 - ✅ Build passes, no errors
 
 ## Risk
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Miniature preview can't render html/iframe | Low | Show placeholder for html/chart elements |
-| localStorage quota | Very Low | Template IDs are tiny |
-| Insert flow breaks slide ordering | Medium | Reindex zIndex + regenerate all element IDs |
+
+| Risk                                       | Impact   | Mitigation                                  |
+| ------------------------------------------ | -------- | ------------------------------------------- |
+| Miniature preview can't render html/iframe | Low      | Show placeholder for html/chart elements    |
+| localStorage quota                         | Very Low | Template IDs are tiny                       |
+| Insert flow breaks slide ordering          | Medium   | Reindex zIndex + regenerate all element IDs |

@@ -22,8 +22,9 @@
 **Ctrl+V (Paste)** ✅ — Guarded check for empty clipboard (`clipboardRef.current.length > 0`). No crash on empty clipboard. Correct.
 
 **Ctrl+D (Duplicate)** ⚠️ 1 issue:
-- After `onAddElements(clones)` is called, the cloned elements still have `id: undefined`. The parent `addElements` generates new IDs *after* the fact, but `setSelectedElementIds` in `addElements` receives the *original* undefined-ID objects (not the ID-assigned copies).
-- **Effect:** After Ctrl+D, newly duplicated elements are NOT selected. A second Ctrl+D would duplicate the *original* selection again, not the new duplicate. User has to manually click to select the duplicate.
+
+- After `onAddElements(clones)` is called, the cloned elements still have `id: undefined`. The parent `addElements` generates new IDs _after_ the fact, but `setSelectedElementIds` in `addElements` receives the _original_ undefined-ID objects (not the ID-assigned copies).
+- **Effect:** After Ctrl+D, newly duplicated elements are NOT selected. A second Ctrl+D would duplicate the _original_ selection again, not the new duplicate. User has to manually click to select the duplicate.
 - **Fix:** `addElements` should return the new elements with generated IDs, and EditorPage should capture that return value for selection.
 
 **Context Menu: Cut** ✅ — `setClipboard(clones)` + `onDeleteElement()` called sequentially. Correct.
@@ -31,9 +32,11 @@
 **Context Menu: Paste** ✅ — Guarded with empty clipboard check. Correct.
 
 **Context Menu: Duplicate** ⚠️ 1 issue:
+
 - Same bug as Ctrl+D: no `setSelectedElementIds` call after `onAddElements([newEl])`. New element not auto-selected.
 
 **Ctrl+B/I/U — `e.ctrlKey` check includes `z`/`y`/`0`** ⚠️
+
 - At line 489: `['b','i','u','z','y','0'].includes(e.key.toLowerCase())` forwards undo/redo/reset shortcuts too. Undo/redo are fine (TipTap handles them). However, `0` (reset formatting) is forwarded correctly. No regression, just broader forwarding than strictly needed for P0-1.
 
 ### Hidden Element Filter ✅ PASS
@@ -54,17 +57,21 @@
 ## SelectionPane.jsx
 
 ### Rename ✅ PASS
+
 - `commitRename` guards against empty string (`renameValue.trim()` check at line 61).
 - `Escape` key clears `renamingId` state but does NOT clear the input visually — acceptable UX, no data corruption.
 
 ### Drag-and-Drop Reorder ✅ PASS
+
 - `handleDrop` calls `onReorder(fromIdx, toIdx)` with valid array indices.
 - No self-reorder guard needed (moving item to same index is a no-op).
 
 ### Visibility/Lock Toggles ✅ PASS
+
 - Both buttons call `e.stopPropagation()` to prevent item click → selection change.
 
 ### Addictive Selection on Click ✅ PASS
+
 - `handleItemClick` correctly checks `e.ctrlKey || e.metaKey || e.shiftKey`.
 
 ### ⚠️ Minor: SelectionPane renders ALL elements (including hidden)
@@ -95,14 +102,14 @@ const addElements = useCallback((newElements) => {
   setPresentation((prev) => {
     // ... adds newElements to slide
   })
-  setSelectedElementIds(newElements.map(el => el.id)) // ← BUG: el.id is undefined
+  setSelectedElementIds(newElements.map((el) => el.id)) // ← BUG: el.id is undefined
 }, [])
 ```
 
 - `newElements` passed from SlideCanvas contain `id: undefined` (ID not yet generated).
-- `crypto.randomUUID()` generates IDs *inside* the `setPresentation` callback, but `setSelectedElementIds` runs *after* — receiving the same undefined-ID objects.
+- `crypto.randomUUID()` generates IDs _inside_ the `setPresentation` callback, but `setSelectedElementIds` runs _after_ — receiving the same undefined-ID objects.
 - **Result:** After paste/duplicate, `selectedElementIds` contains `[undefined, ...]`. No elements selected.
-- **Second duplicate issue:** If user presses Ctrl+D again without selecting, the *original* (still selected) elements are duplicated again.
+- **Second duplicate issue:** If user presses Ctrl+D again without selecting, the _original_ (still selected) elements are duplicated again.
 
 ### Prop wiring ✅ PASS
 
@@ -112,9 +119,12 @@ const addElements = useCallback((newElements) => {
 ### `updateElements` (batch zIndex) ✅ PASS
 
 ```js
-const updateElements = useCallback((updates) => {
-  updates.forEach(({ id, ...changes }) => updateElement(id, changes))
-}, [updateElement])
+const updateElements = useCallback(
+  (updates) => {
+    updates.forEach(({ id, ...changes }) => updateElement(id, changes))
+  },
+  [updateElement]
+)
 ```
 
 Correctly destructures each `{ id, ...changes }` and calls `updateElement`.
@@ -123,19 +133,19 @@ Correctly destructures each `{ id, ...changes }` and calls `updateElement`.
 
 ## Summary
 
-| File | Feature | Status |
-|------|---------|--------|
-| SlideCanvas.jsx | P0-1 Ctrl+B/I/U forwarding | ✅ PASS |
-| SlideCanvas.jsx | P0-2 Ctrl+C/X/V | ✅ PASS |
-| SlideCanvas.jsx | P0-2 Ctrl+D (duplicate) | ⚠️ Bug: no auto-select after duplicate |
-| SlideCanvas.jsx | Context menu clipboard | ⚠️ Duplicate doesn't auto-select |
-| SlideCanvas.jsx | Hidden element filter | ✅ PASS |
-| editor-store.js | Clipboard state | ✅ PASS |
-| SelectionPane.jsx | Rename | ✅ PASS |
-| SelectionPane.jsx | Drag reorder | ✅ PASS |
-| SelectionPane.jsx | Visibility/Lock | ✅ PASS |
-| PropertiesPanel.jsx | SelectionPane integration | ✅ PASS |
-| EditorPage.jsx | `addElements` + prop wiring | ⚠️ Bug: `setSelectedElementIds` receives undefined IDs |
+| File                | Feature                     | Status                                                 |
+| ------------------- | --------------------------- | ------------------------------------------------------ |
+| SlideCanvas.jsx     | P0-1 Ctrl+B/I/U forwarding  | ✅ PASS                                                |
+| SlideCanvas.jsx     | P0-2 Ctrl+C/X/V             | ✅ PASS                                                |
+| SlideCanvas.jsx     | P0-2 Ctrl+D (duplicate)     | ⚠️ Bug: no auto-select after duplicate                 |
+| SlideCanvas.jsx     | Context menu clipboard      | ⚠️ Duplicate doesn't auto-select                       |
+| SlideCanvas.jsx     | Hidden element filter       | ✅ PASS                                                |
+| editor-store.js     | Clipboard state             | ✅ PASS                                                |
+| SelectionPane.jsx   | Rename                      | ✅ PASS                                                |
+| SelectionPane.jsx   | Drag reorder                | ✅ PASS                                                |
+| SelectionPane.jsx   | Visibility/Lock             | ✅ PASS                                                |
+| PropertiesPanel.jsx | SelectionPane integration   | ✅ PASS                                                |
+| EditorPage.jsx      | `addElements` + prop wiring | ⚠️ Bug: `setSelectedElementIds` receives undefined IDs |
 
 ---
 

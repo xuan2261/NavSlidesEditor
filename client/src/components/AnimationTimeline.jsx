@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Play, X, GripVertical } from 'lucide-react'
+import { Button } from '../components/ui'
 
 const ANIMATION_TYPES = [
   { value: 'fade-in', label: 'Fade In' },
@@ -82,40 +83,42 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
   }
 
   return (
-    <div className="animation-timeline">
-      <div className="timeline-header">
+    <div className="absolute bottom-0 left-0 right-0 z-[990] bg-card border-t border-border max-h-[200px] flex flex-col">
+      <div className="flex items-center gap-2.5 py-2 px-3 border-b border-border shrink-0">
         <span style={{ fontWeight: 600, fontSize: 13 }}>Animation Timeline</span>
         <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
           {fragmentElements.length} animated element{fragmentElements.length !== 1 ? 's' : ''}
         </span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
           {onPreview && (
-            <button
-              className="btn btn-secondary"
+            <Button
+              variant="secondary"
               style={{ fontSize: 11, padding: '3px 10px' }}
               onClick={onPreview}
             >
               <Play size={12} /> Preview
-            </button>
+            </Button>
           )}
-          <button className="btn-icon" onClick={onClose} title="Close timeline">
+          <Button variant="icon" onClick={onClose} title="Close timeline">
             <X size={14} />
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div className="timeline-body">
+      <div className="flex overflow-x-auto py-2.5 px-3 gap-2 flex-1">
         {/* Initial state (non-fragment elements) */}
-        <div className="timeline-step">
-          <div className="timeline-step-label">Initial</div>
-          <div className="timeline-step-elements">
+        <div className="min-w-[140px] bg-muted border border-border rounded-sm p-2 shrink-0">
+          <div className="text-[11px] font-semibold text-muted-foreground mb-1.5">Initial</div>
+          <div className="flex flex-col gap-1">
             {nonFragElements.slice(0, 5).map((el) => (
               <div
                 key={el.id}
-                className="timeline-element-chip"
+                className="flex items-center gap-1 py-1 px-2 rounded border border-border text-[11px] cursor-grab text-foreground"
                 style={{ background: 'rgba(255,255,255,0.08)', opacity: 0.5 }}
               >
-                <span className="timeline-chip-label">{getElementLabel(el)}</span>
+                <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                  {getElementLabel(el)}
+                </span>
               </div>
             ))}
             {nonFragElements.length > 5 && (
@@ -130,16 +133,16 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
         {sortedIndices.map((idx) => (
           <div
             key={idx}
-            className="timeline-step"
+            className="min-w-[140px] bg-muted border border-border rounded-sm p-2 shrink-0"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => handleDrop(e, idx)}
           >
-            <div className="timeline-step-label">Step {idx}</div>
-            <div className="timeline-step-elements">
+            <div className="text-[11px] font-semibold text-muted-foreground mb-1.5">Step {idx}</div>
+            <div className="flex flex-col gap-1">
               {groups[idx].map((el, i) => (
                 <div
                   key={el.id}
-                  className="timeline-element-chip"
+                  className="flex items-center gap-1 py-1 px-2 rounded border border-border text-[11px] cursor-grab text-foreground"
                   draggable
                   onDragStart={(e) => handleDragStart(e, el.id, idx)}
                   style={{
@@ -148,11 +151,13 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
                   }}
                 >
                   <GripVertical size={10} style={{ cursor: 'grab', opacity: 0.5 }} />
-                  <span className="timeline-chip-label">{getElementLabel(el)}</span>
+                  <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                    {getElementLabel(el)}
+                  </span>
                   <select
                     value={el.fragmentAnimation || 'fade-in'}
                     onChange={(e) => onUpdateElement(el.id, { fragmentAnimation: e.target.value })}
-                    className="timeline-anim-select"
+                    className="bg-card border border-border text-foreground py-0.5 px-1 rounded-sm text-[10px] cursor-pointer max-w-[80px]"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {ANIMATION_TYPES.map((a) => (
@@ -169,11 +174,14 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
 
         {/* Drop zone for new step */}
         <div
-          className="timeline-step timeline-drop-zone"
+          className="min-w-[140px] bg-transparent border-2 border-dashed border-border rounded-sm p-2 shrink-0 flex items-center justify-center gap-1.5"
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => handleDrop(e, maxIndex + 1)}
         >
-          <div className="timeline-step-label" style={{ opacity: 0.4 }}>
+          <div
+            className="text-[11px] font-semibold text-muted-foreground mb-1.5"
+            style={{ opacity: 0.4 }}
+          >
             +
           </div>
           <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Drop here for new step</span>

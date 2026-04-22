@@ -1,10 +1,12 @@
 # Phase 02: TikZJax Self-Host
 
 ## Context
+
 - Plan: [plan.md](./plan.md)
 - Blocks: Phase 03
 
 ## Overview
+
 - **Priority:** High
 - **Status:** Pending
 
@@ -22,6 +24,7 @@ const tikzScript = hasTikz
 ## TikZJax Artifacts Needed
 
 From `https://tikzjax.com/v1/`:
+
 - `tikzjax.js` — main JS loader (~50 KB)
 - `tikzjax.wasm` — WebAssembly binary (~1.4 MB)
 - `fonts.css` — TeX font declarations
@@ -79,6 +82,7 @@ if (!fs.existsSync(path.join(tikzjaxDir, 'tikzjax.js'))) {
 ```
 
 Thêm script `vendor:tikzjax` vào `package.json`:
+
 ```json
 {
   "scripts": {
@@ -101,27 +105,28 @@ const path = require('path')
 const BASE_URL = 'https://tikzjax.com/v1'
 const DEST_DIR = path.join(__dirname, '..', 'server', 'vendor', 'tikzjax')
 
-const FILES = [
-  'tikzjax.js',
-  'tikzjax.wasm',
-  'fonts.css',
-]
+const FILES = ['tikzjax.js', 'tikzjax.wasm', 'fonts.css']
 
 async function download(url, dest) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest)
-    https.get(url, (res) => {
-      if (res.statusCode === 301 || res.statusCode === 302) {
-        file.close()
+    https
+      .get(url, (res) => {
+        if (res.statusCode === 301 || res.statusCode === 302) {
+          file.close()
+          fs.unlinkSync(dest)
+          return download(res.headers.location, dest).then(resolve).catch(reject)
+        }
+        res.pipe(file)
+        file.on('finish', () => {
+          file.close()
+          resolve()
+        })
+      })
+      .on('error', (err) => {
         fs.unlinkSync(dest)
-        return download(res.headers.location, dest).then(resolve).catch(reject)
-      }
-      res.pipe(file)
-      file.on('finish', () => { file.close(); resolve() })
-    }).on('error', (err) => {
-      fs.unlinkSync(dest)
-      reject(err)
-    })
+        reject(err)
+      })
   })
 }
 
@@ -148,13 +153,16 @@ main().catch(console.error)
 ```
 
 ## Files to Create
+
 - `scripts/download-tikzjax.js` (new)
 - `server/vendor/tikzjax/` (populated by script)
 
 ## Files to Modify
+
 - `package.json` (root) — add `vendor:tikzjax` script
 
 ## Todo
+
 - [ ] Create `scripts/download-tikzjax.js`
 - [ ] Run `node scripts/download-tikzjax.js` khi có internet
 - [ ] Verify `server/vendor/tikzjax/tikzjax.wasm` tồn tại (~1.4 MB)
@@ -163,16 +171,17 @@ main().catch(console.error)
 
 ## Risk Assessment
 
-| Risk | Mitigation |
-|---|---|
-| WASM MIME type blocked bởi browser | Phase 03 set explicit `Content-Type: application/wasm` |
-| TikZJax CDN URL thay đổi | Commit artifacts vào git repo hoặc git-lfs |
-| font download không đầy đủ | Parse fonts.css, download từng font explicitly |
-| WASM binary version mismatch với JS loader | Download cùng lúc, từ cùng version URL |
+| Risk                                       | Mitigation                                             |
+| ------------------------------------------ | ------------------------------------------------------ |
+| WASM MIME type blocked bởi browser         | Phase 03 set explicit `Content-Type: application/wasm` |
+| TikZJax CDN URL thay đổi                   | Commit artifacts vào git repo hoặc git-lfs             |
+| font download không đầy đủ                 | Parse fonts.css, download từng font explicitly         |
+| WASM binary version mismatch với JS loader | Download cùng lúc, từ cùng version URL                 |
 
 ## Note: Git LFS
 
 Nếu `tikzjax.wasm` (~1.4 MB) quá lớn cho git, dùng git-lfs:
+
 ```bash
 git lfs track "server/vendor/tikzjax/*.wasm"
 git add .gitattributes

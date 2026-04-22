@@ -1,256 +1,476 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>PID Drone Simulator</title>
     <style>
-        :root {
-            --bg: #1a0a0e;
-            --primary: #ff4757;
-            --glow: #ff475780;
-            --text: #ffd5d0;
-            --p-col: #ff4757;
-            --i-col: #2ed573;
-            --d-col: #1e90ff;
-            --panel: rgba(26, 10, 14, 0.8);
-            --border: rgba(255, 71, 87, 0.2);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 10px; }
-        
-        .header { text-align: center; margin-bottom: 10px; }
-        h3 { font-size: 1.3rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px var(--glow); margin-bottom: 5px; }
-        
-        .container {
-            display: flex; gap: 15px; width: 100%; max-width: 900px; height: 420px;
-        }
-        
-        .left-panel { flex: 1; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); backdrop-filter: blur(5px);}
-        .right-panel { flex: 1.5; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); position: relative;}
-        
-        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; }
-        .row label { font-weight: bold; width: 30px; font-size: 1.1rem; }
-        input[type=range] { flex: 1; margin: 0 10px; height: 4px; }
-        #sKp { accent-color: var(--p-col); }
-        #sKi { accent-color: var(--i-col); }
-        #sKd { accent-color: var(--d-col); }
-        .val { font-size: 1rem; font-weight: bold; width: 40px; text-align: right; }
-        
-        .p-val { color: var(--p-col); } .i-val { color: var(--i-col); } .d-val { color: var(--d-col); }
-        
-        .presets { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: auto; }
-        .btn { background: rgba(255, 71, 87, 0.1); border: 1px solid var(--primary); color: var(--text); padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;}
-        .btn:hover { background: rgba(255, 71, 87, 0.3); box-shadow: 0 0 10px var(--glow); }
+      :root {
+        --bg: #1a0a0e;
+        --primary: #ff4757;
+        --glow: #ff475780;
+        --text: #ffd5d0;
+        --p-col: #ff4757;
+        --i-col: #2ed573;
+        --d-col: #1e90ff;
+        --panel: rgba(26, 10, 14, 0.8);
+        --border: rgba(255, 71, 87, 0.2);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 10px;
+      }
 
-        .canvas-bg { flex: 1; background: #000; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); width: 100%; position: relative; overflow: hidden; }
-        canvas { display: block; width: 100%; height: 100%; }
-        
-        #drone-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        
-        .metrics { display: flex; gap: 15px; justify-content: center; margin-bottom: 10px; font-size: 0.8rem; }
-        .metrics span { background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 4px; }
-        .metrics b { color: var(--primary); }
-        
-        .sp-drag { position: absolute; left: 0; width: 100%; height: 2px; background: rgba(255, 215, 0, 0.5); border-top: 1px dashed #ffd700; cursor: ns-resize; z-index: 10; padding: 10px 0; transform: translateY(-50%); }
+      .header {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      h3 {
+        font-size: 1.3rem;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 0 0 10px var(--glow);
+        margin-bottom: 5px;
+      }
+
+      .container {
+        display: flex;
+        gap: 15px;
+        width: 100%;
+        max-width: 900px;
+        height: 420px;
+      }
+
+      .left-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+      }
+      .right-panel {
+        flex: 1.5;
+        display: flex;
+        flex-direction: column;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        position: relative;
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 8px 12px;
+        border-radius: 8px;
+      }
+      .row label {
+        font-weight: bold;
+        width: 30px;
+        font-size: 1.1rem;
+      }
+      input[type='range'] {
+        flex: 1;
+        margin: 0 10px;
+        height: 4px;
+      }
+      #sKp {
+        accent-color: var(--p-col);
+      }
+      #sKi {
+        accent-color: var(--i-col);
+      }
+      #sKd {
+        accent-color: var(--d-col);
+      }
+      .val {
+        font-size: 1rem;
+        font-weight: bold;
+        width: 40px;
+        text-align: right;
+      }
+
+      .p-val {
+        color: var(--p-col);
+      }
+      .i-val {
+        color: var(--i-col);
+      }
+      .d-val {
+        color: var(--d-col);
+      }
+
+      .presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin-top: auto;
+      }
+      .btn {
+        background: rgba(255, 71, 87, 0.1);
+        border: 1px solid var(--primary);
+        color: var(--text);
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+      }
+      .btn:hover {
+        background: rgba(255, 71, 87, 0.3);
+        box-shadow: 0 0 10px var(--glow);
+      }
+
+      .canvas-bg {
+        flex: 1;
+        background: #000;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      #drone-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .metrics {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-bottom: 10px;
+        font-size: 0.8rem;
+      }
+      .metrics span {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 5px 10px;
+        border-radius: 4px;
+      }
+      .metrics b {
+        color: var(--primary);
+      }
+
+      .sp-drag {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: rgba(255, 215, 0, 0.5);
+        border-top: 1px dashed #ffd700;
+        cursor: ns-resize;
+        z-index: 10;
+        padding: 10px 0;
+        transform: translateY(-50%);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="header">
-        <h3>🎛️ Drone Altitude PID Tuning</h3>
+      <h3>🎛️ Drone Altitude PID Tuning</h3>
     </div>
     <div class="container">
-        <!-- Controls -->
-        <div class="left-panel">
-            <div class="row" style="border-left: 3px solid var(--p-col)"><label class="p-val">Kp</label><input type="range" id="sKp" min="0" max="100" value="20"><div class="val p-val" id="vKp">2.0</div></div>
-            <div class="row" style="border-left: 3px solid var(--i-col)"><label class="i-val">Ki</label><input type="range" id="sKi" min="0" max="50" value="10"><div class="val i-val" id="vKi">1.0</div></div>
-            <div class="row" style="border-left: 3px solid var(--d-col)"><label class="d-val">Kd</label><input type="range" id="sKd" min="0" max="100" value="15"><div class="val d-val" id="vKd">1.5</div></div>
-            
-            <div style="flex:1; position:relative; margin-bottom: 15px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1)">
-                <canvas id="drone-canvas"></canvas>
-            </div>
-            
-            <div class="presets">
-                <button class="btn" onclick="preset(10, 0, 0)">P-Only (Oscillates)</button>
-                <button class="btn" onclick="preset(10, 5, 0)">PI (Overshoots)</button>
-                <button class="btn" onclick="preset(20, 10, 15)">PID (Stable)</button>
-            </div>
+      <!-- Controls -->
+      <div class="left-panel">
+        <div class="row" style="border-left: 3px solid var(--p-col)">
+          <label class="p-val">Kp</label
+          ><input type="range" id="sKp" min="0" max="100" value="20" />
+          <div class="val p-val" id="vKp">2.0</div>
         </div>
-        
-        <!-- Live Graph -->
-        <div class="right-panel">
-            <div class="metrics">
-                <span>Err: <b id="mErr">0.00</b></span>
-                <span>Thrust (u): <b id="mU">0.00</b></span>
-            </div>
-            <div class="canvas-bg">
-                <canvas id="graph-canvas"></canvas>
-            </div>
+        <div class="row" style="border-left: 3px solid var(--i-col)">
+          <label class="i-val">Ki</label><input type="range" id="sKi" min="0" max="50" value="10" />
+          <div class="val i-val" id="vKi">1.0</div>
         </div>
+        <div class="row" style="border-left: 3px solid var(--d-col)">
+          <label class="d-val">Kd</label
+          ><input type="range" id="sKd" min="0" max="100" value="15" />
+          <div class="val d-val" id="vKd">1.5</div>
+        </div>
+
+        <div
+          style="
+            flex: 1;
+            position: relative;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+          "
+        >
+          <canvas id="drone-canvas"></canvas>
+        </div>
+
+        <div class="presets">
+          <button class="btn" onclick="preset(10, 0, 0)">P-Only (Oscillates)</button>
+          <button class="btn" onclick="preset(10, 5, 0)">PI (Overshoots)</button>
+          <button class="btn" onclick="preset(20, 10, 15)">PID (Stable)</button>
+        </div>
+      </div>
+
+      <!-- Live Graph -->
+      <div class="right-panel">
+        <div class="metrics">
+          <span>Err: <b id="mErr">0.00</b></span>
+          <span>Thrust (u): <b id="mU">0.00</b></span>
+        </div>
+        <div class="canvas-bg">
+          <canvas id="graph-canvas"></canvas>
+        </div>
+      </div>
     </div>
 
     <script>
-        const cvG = document.getElementById('graph-canvas'), ctxG = cvG.getContext('2d');
-        const cvD = document.getElementById('drone-canvas'), ctxD = cvD.getContext('2d');
-        
-        // Physics logic
-        const state = {
-            y: 0, v: 0, integral: 0, prevErr: 0, target: 50, time: 0,
-            mass: 1.0, gravity: 9.8, drag: 0.1
-        };
-        const dt = 0.02; // Update rate
-        const history = [];
-        const maxHistory = 400; // Screen points
-        
-        function preset(p, i, d) {
-            document.getElementById('sKp').value = p;
-            document.getElementById('sKi').value = i;
-            document.getElementById('sKd').value = d;
+      const cvG = document.getElementById('graph-canvas'),
+        ctxG = cvG.getContext('2d')
+      const cvD = document.getElementById('drone-canvas'),
+        ctxD = cvD.getContext('2d')
+
+      // Physics logic
+      const state = {
+        y: 0,
+        v: 0,
+        integral: 0,
+        prevErr: 0,
+        target: 50,
+        time: 0,
+        mass: 1.0,
+        gravity: 9.8,
+        drag: 0.1,
+      }
+      const dt = 0.02 // Update rate
+      const history = []
+      const maxHistory = 400 // Screen points
+
+      function preset(p, i, d) {
+        document.getElementById('sKp').value = p
+        document.getElementById('sKi').value = i
+        document.getElementById('sKd').value = d
+      }
+
+      function resize() {
+        const rG = cvG.parentElement.getBoundingClientRect()
+        cvG.width = rG.width
+        cvG.height = rG.height
+        const rD = cvD.parentElement.getBoundingClientRect()
+        cvD.width = rD.width
+        cvD.height = rD.height
+      }
+      window.addEventListener('resize', resize)
+      setTimeout(resize, 100)
+
+      function reset() {
+        state.y = 0
+        state.v = 0
+        state.integral = 0
+        state.prevErr = 0
+        state.time = 0
+        history.length = 0
+      }
+
+      // Add perturbance to canvas click
+      cvG.addEventListener('mousedown', (e) => {
+        const rect = cvG.getBoundingClientRect()
+        const y = e.clientY - rect.top
+        const mappedY = 100 - (y / rect.height) * 100
+        state.target = Math.max(10, Math.min(90, mappedY))
+      })
+
+      function drawDrone(ctx, W, H, yPos, tilt) {
+        ctx.clearRect(0, 0, W, H)
+
+        // Ground
+        ctx.fillStyle = 'rgba(255,255,255,0.1)'
+        ctx.fillRect(0, H - 10, W, 10)
+        // Target line
+        const tY = H - (state.target / 100) * H
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)'
+        ctx.setLineDash([5, 5])
+        ctx.beginPath()
+        ctx.moveTo(0, tY)
+        ctx.lineTo(W, tY)
+        ctx.stroke()
+        ctx.setLineDash([])
+
+        // Draw drone
+        ctx.save()
+        const dY = H - (yPos / 100) * H
+        ctx.translate(W / 2, dY)
+        ctx.rotate(tilt)
+
+        // Body
+        ctx.fillStyle = '#fff'
+        ctx.beginPath()
+        ctx.ellipse(0, 0, 15, 6, 0, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Arms
+        ctx.strokeStyle = '#aaa'
+        ctx.lineWidth = 3
+        ctx.beginPath()
+        ctx.moveTo(-25, -2)
+        ctx.lineTo(25, -2)
+        ctx.stroke()
+
+        // Props
+        ctx.fillStyle = 'rgba(0, 212, 255, 0.8)'
+        const blur = Math.abs(tilt) > 0.1 || Math.random() > 0.5 ? 4 : 0
+        ctx.beginPath()
+        ctx.ellipse(-25, -5, 10 + blur, 2, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.beginPath()
+        ctx.ellipse(25, -5, 10 + blur, 2, 0, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Thrust flame
+        if (state.lastU > state.gravity) {
+          ctx.fillStyle = 'rgba(255, 71, 87, 0.6)'
+          ctx.beginPath()
+          ctx.moveTo(-5, 0)
+          ctx.lineTo(5, 0)
+          ctx.lineTo(0, 10 + (state.lastU - state.gravity) * 2)
+          ctx.fill()
         }
 
-        function resize() {
-            const rG = cvG.parentElement.getBoundingClientRect();
-            cvG.width = rG.width; cvG.height = rG.height;
-            const rD = cvD.parentElement.getBoundingClientRect();
-            cvD.width = rD.width; cvD.height = rD.height;
-        }
-        window.addEventListener('resize', resize);
-        setTimeout(resize, 100);
+        ctx.restore()
+      }
 
-        function reset() {
-            state.y = 0; state.v = 0; state.integral = 0; state.prevErr = 0; state.time = 0;
-            history.length = 0;
-        }
+      function drawGraph() {
+        const W = cvG.width,
+          H = cvG.height
+        ctxG.clearRect(0, 0, W, H)
 
-        // Add perturbance to canvas click
-        cvG.addEventListener('mousedown', (e) => {
-            const rect = cvG.getBoundingClientRect();
-            const y = e.clientY - rect.top;
-            const mappedY = 100 - (y / rect.height) * 100;
-            state.target = Math.max(10, Math.min(90, mappedY));
-        });
-
-        function drawDrone(ctx, W, H, yPos, tilt) {
-            ctx.clearRect(0,0,W,H);
-            
-            // Ground
-            ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(0, H-10, W, 10);
-            // Target line
-            const tY = H - (state.target/100)*H;
-            ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)'; ctx.setLineDash([5,5]);
-            ctx.beginPath(); ctx.moveTo(0, tY); ctx.lineTo(W, tY); ctx.stroke(); ctx.setLineDash([]);
-            
-            // Draw drone
-            ctx.save();
-            const dY = H - (yPos/100)*H;
-            ctx.translate(W/2, dY);
-            ctx.rotate(tilt);
-            
-            // Body
-            ctx.fillStyle = '#fff';
-            ctx.beginPath(); ctx.ellipse(0, 0, 15, 6, 0, 0, Math.PI*2); ctx.fill();
-            
-            // Arms
-            ctx.strokeStyle = '#aaa'; ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.moveTo(-25, -2); ctx.lineTo(25, -2); ctx.stroke();
-            
-            // Props
-            ctx.fillStyle = 'rgba(0, 212, 255, 0.8)';
-            const blur = Math.abs(tilt) > 0.1 || Math.random() > 0.5 ? 4 : 0;
-            ctx.beginPath(); ctx.ellipse(-25, -5, 10 + blur, 2, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(25, -5, 10 + blur, 2, 0, 0, Math.PI*2); ctx.fill();
-
-            // Thrust flame
-            if (state.lastU > state.gravity) {
-                ctx.fillStyle = 'rgba(255, 71, 87, 0.6)';
-                ctx.beginPath(); 
-                ctx.moveTo(-5, 0); ctx.lineTo(5, 0); ctx.lineTo(0, 10 + (state.lastU - state.gravity)*2);
-                ctx.fill();
-            }
-
-            ctx.restore();
+        // Grid
+        ctxG.strokeStyle = 'rgba(255,255,255,0.05)'
+        ctxG.lineWidth = 1
+        for (let y = 0; y < H; y += H / 10) {
+          ctxG.beginPath()
+          ctxG.moveTo(0, y)
+          ctxG.lineTo(W, y)
+          ctxG.stroke()
         }
 
-        function drawGraph() {
-            const W = cvG.width, H = cvG.height;
-            ctxG.clearRect(0,0,W,H);
-            
-            // Grid
-            ctxG.strokeStyle = 'rgba(255,255,255,0.05)'; ctxG.lineWidth = 1;
-            for(let y=0; y<H; y+=H/10) { ctxG.beginPath(); ctxG.moveTo(0,y); ctxG.lineTo(W,y); ctxG.stroke(); }
-            
-            // Setpoint
-            const tY = H - (state.target/100)*H;
-            ctxG.strokeStyle = '#ffd700'; ctxG.lineWidth = 2; ctxG.setLineDash([4,4]);
-            ctxG.beginPath(); ctxG.moveTo(0, tY); ctxG.lineTo(W, tY); ctxG.stroke(); ctxG.setLineDash([]);
-            
-            // History
-            if(history.length === 0) return;
-            ctxG.strokeStyle = '#ff4757'; ctxG.lineWidth = 2; ctxG.beginPath();
-            
-            const step = W / maxHistory;
-            history.forEach((pt, i) => {
-                const x = W - (history.length - i) * step;
-                const dY = H - (pt.y/100)*H;
-                if(i===0) ctxG.moveTo(x, dY); else ctxG.lineTo(x, dY);
-            });
-            ctxG.stroke();
+        // Setpoint
+        const tY = H - (state.target / 100) * H
+        ctxG.strokeStyle = '#ffd700'
+        ctxG.lineWidth = 2
+        ctxG.setLineDash([4, 4])
+        ctxG.beginPath()
+        ctxG.moveTo(0, tY)
+        ctxG.lineTo(W, tY)
+        ctxG.stroke()
+        ctxG.setLineDash([])
+
+        // History
+        if (history.length === 0) return
+        ctxG.strokeStyle = '#ff4757'
+        ctxG.lineWidth = 2
+        ctxG.beginPath()
+
+        const step = W / maxHistory
+        history.forEach((pt, i) => {
+          const x = W - (history.length - i) * step
+          const dY = H - (pt.y / 100) * H
+          if (i === 0) ctxG.moveTo(x, dY)
+          else ctxG.lineTo(x, dY)
+        })
+        ctxG.stroke()
+      }
+
+      function loop() {
+        const Kp = document.getElementById('sKp').value / 10
+        const Ki = document.getElementById('sKi').value / 10
+        const Kd = document.getElementById('sKd').value / 10
+
+        document.getElementById('vKp').textContent = Kp.toFixed(1)
+        document.getElementById('vKi').textContent = Ki.toFixed(1)
+        document.getElementById('vKd').textContent = Kd.toFixed(1)
+
+        // PID formulation
+        const err = state.target - state.y
+        state.integral += err * dt
+        // Anti-windup
+        state.integral = Math.max(-100, Math.min(100, state.integral))
+        const dErr = (err - state.prevErr) / dt
+
+        let u = Kp * err + Ki * state.integral + Kd * dErr
+        // U translates to thrust. Cannot be negative (motors only push up).
+        // Let's add gravity offset so u=0 means hover? No, let's make u purely thrust.
+        // u = Thrust. Required hover thrust = gravity * mass.
+        let thrust = u + state.gravity * state.mass
+        thrust = Math.max(0, Math.min(30, thrust)) // Max thrust limit
+        state.lastU = thrust
+
+        // Physics step
+        const accel = (thrust - state.mass * state.gravity - state.drag * state.v) / state.mass
+        state.v += accel * dt
+        state.y += state.v * dt
+
+        // Ground collision
+        if (state.y < 0) {
+          state.y = 0
+          state.v = 0
+          state.integral = 0
+        }
+        if (state.y > 100) {
+          state.y = 100
+          state.v = 0
+        } // Ceiling
+
+        state.prevErr = err
+        state.time += dt
+
+        history.push({ t: state.time, y: state.y })
+        if (history.length > maxHistory) history.shift()
+
+        document.getElementById('mErr').textContent = err.toFixed(1)
+        document.getElementById('mU').textContent = thrust.toFixed(1)
+
+        // Visual tilt for drama
+        let tilt = -state.v * 0.05 * (u / 10)
+        tilt = Math.max(-0.5, Math.min(0.5, tilt))
+
+        if (cvD.width > 0) {
+          drawDrone(ctxD, cvD.width, cvD.height, state.y, tilt)
+          drawGraph()
         }
 
-        function loop() {
-            const Kp = document.getElementById('sKp').value / 10;
-            const Ki = document.getElementById('sKi').value / 10;
-            const Kd = document.getElementById('sKd').value / 10;
-            
-            document.getElementById('vKp').textContent = Kp.toFixed(1);
-            document.getElementById('vKi').textContent = Ki.toFixed(1);
-            document.getElementById('vKd').textContent = Kd.toFixed(1);
+        requestAnimationFrame(loop)
+      }
 
-            // PID formulation
-            const err = state.target - state.y;
-            state.integral += err * dt;
-            // Anti-windup
-            state.integral = Math.max(-100, Math.min(100, state.integral));
-            const dErr = (err - state.prevErr) / dt;
-            
-            let u = Kp * err + Ki * state.integral + Kd * dErr;
-            // U translates to thrust. Cannot be negative (motors only push up).
-            // Let's add gravity offset so u=0 means hover? No, let's make u purely thrust.
-            // u = Thrust. Required hover thrust = gravity * mass.
-            let thrust = u + state.gravity * state.mass; 
-            thrust = Math.max(0, Math.min(30, thrust)); // Max thrust limit
-            state.lastU = thrust;
-
-            // Physics step
-            const accel = (thrust - state.mass * state.gravity - state.drag * state.v) / state.mass;
-            state.v += accel * dt;
-            state.y += state.v * dt;
-            
-            // Ground collision
-            if(state.y < 0) { state.y = 0; state.v = 0; state.integral = 0; }
-            if(state.y > 100) { state.y = 100; state.v = 0; } // Ceiling
-            
-            state.prevErr = err;
-            state.time += dt;
-
-            history.push({t: state.time, y: state.y});
-            if(history.length > maxHistory) history.shift();
-
-            document.getElementById('mErr').textContent = err.toFixed(1);
-            document.getElementById('mU').textContent = thrust.toFixed(1);
-
-            // Visual tilt for drama
-            let tilt = -state.v * 0.05 * (u/10); 
-            tilt = Math.max(-0.5, Math.min(0.5, tilt));
-
-            if(cvD.width > 0) {
-                drawDrone(ctxD, cvD.width, cvD.height, state.y, tilt);
-                drawGraph();
-            }
-
-            requestAnimationFrame(loop);
-        }
-
-        loop();
+      loop()
     </script>
-</body>
+  </body>
 </html>

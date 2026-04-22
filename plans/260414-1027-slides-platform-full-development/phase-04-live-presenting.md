@@ -1,6 +1,7 @@
 # Phase 4 — Live Presenting & Remote Control
 
 ## Overview
+
 - **Priority**: P2
 - **Status**: ⬜ Pending
 - **Effort**: 3-4 tuần
@@ -42,7 +43,7 @@ const http = require('http')
 const server = http.createServer(app)
 const io = new Server(server, {
   cors: { origin: '*' },
-  path: '/ws'
+  path: '/ws',
 })
 
 // Room = presentationId
@@ -55,7 +56,7 @@ io.on('connection', (socket) => {
     socket.join(roomId)
     socket.data.roomId = roomId
     socket.data.role = role
-    
+
     if (role === 'presenter') {
       rooms.set(roomId, { presenterId: socket.id, state: { slideIndex: 0 } })
     } else {
@@ -64,7 +65,7 @@ io.on('connection', (socket) => {
       if (room) socket.emit('sync-state', room.state)
     }
   })
-  
+
   // Presenter navigates
   socket.on('navigate', ({ slideIndex, fragmentIndex }) => {
     const room = rooms.get(socket.data.roomId)
@@ -72,22 +73,22 @@ io.on('connection', (socket) => {
     room.state = { ...room.state, slideIndex, fragmentIndex }
     socket.to(socket.data.roomId).emit('navigate', { slideIndex, fragmentIndex })
   })
-  
+
   // Presenter moves cursor
   socket.on('cursor-move', ({ x, y }) => {
     socket.to(socket.data.roomId).emit('cursor-move', { x, y })
   })
-  
+
   // Presenter draws annotation
   socket.on('annotation', ({ type, data }) => {
     socket.to(socket.data.roomId).emit('annotation', { type, data })
   })
-  
+
   // Presenter sends laser pointer
   socket.on('laser', ({ x, y, active }) => {
     socket.to(socket.data.roomId).emit('laser', { x, y, active })
   })
-  
+
   socket.on('disconnect', () => {
     const room = rooms.get(socket.data.roomId)
     if (room?.presenterId === socket.id) {
@@ -103,12 +104,14 @@ server.listen(PORT) // Replace app.listen
 ### 4.2 Live Streaming (Presenter → Viewers)
 
 **Presenter Side:**
+
 - Button "Present Live" in toolbar → opens present mode + starts Socket.IO room
 - Room code = short 6-char alphanumeric (for easy sharing)
 - QR code display for room URL
 - Viewer count indicator
 
 **Viewer Side:**
+
 - URL: `/live/:roomCode`
 - Auto-connects to Socket.IO
 - Receives slide changes in real-time
@@ -119,21 +122,22 @@ server.listen(PORT) // Replace app.listen
 function useLivePresentation(presentationId) {
   const socket = io({ path: '/ws' })
   const roomCode = generateRoomCode() // 6-char
-  
+
   useEffect(() => {
     socket.emit('join-room', { roomId: roomCode, role: 'presenter' })
     return () => socket.disconnect()
   }, [])
-  
+
   const navigate = (slideIndex, fragmentIndex) => {
     socket.emit('navigate', { slideIndex, fragmentIndex })
   }
-  
+
   return { roomCode, navigate, socket }
 }
 ```
 
-**Files**: 
+**Files**:
+
 - MODIFY `server/index.js` — add Socket.IO
 - NEW `server/routes/live.js` — room management API
 - NEW `client/src/hooks/use-live-presentation.js`
@@ -144,6 +148,7 @@ function useLivePresentation(presentationId) {
 **Mô tả**: Điều khiển slides từ phone/tablet.
 
 **Implementation**:
+
 - URL: `/remote/:roomCode`
 - Mobile-optimized UI: large Next/Prev buttons, speaker notes display
 - QR code shown by presenter with remote URL
@@ -172,6 +177,7 @@ function useLivePresentation(presentationId) {
 **Mô tả**: Cursor của presenter hiện trên màn hình viewer như laser pointer.
 
 **Implementation**:
+
 - Presenter: mouse move → throttle 60fps → emit cursor position (% of slide)
 - Viewer: render colored dot at received position
 - Toggle on/off
@@ -200,6 +206,7 @@ socket.on('cursor-move', ({ x, y }) => {
 **Mô tả**: Presenter vẽ trên slide, viewer thấy real-time.
 
 **Implementation**:
+
 - Canvas overlay trong present mode
 - Drawing mode toggle (toolbar button)
 - Mouse/touch → SVG path (same logic as Phase 2 freehand)
@@ -210,7 +217,7 @@ socket.on('cursor-move', ({ x, y }) => {
 ```javascript
 socket.emit('annotation', {
   type: 'path',
-  data: { d: 'M10,10 C20,30...', stroke: '#ff0000', strokeWidth: 3 }
+  data: { d: 'M10,10 C20,30...', stroke: '#ff0000', strokeWidth: 3 },
 })
 
 socket.emit('annotation', { type: 'clear' })
@@ -223,6 +230,7 @@ socket.emit('annotation', { type: 'clear' })
 **Mô tả**: Cải tiến speaker view hiện tại.
 
 **Implementation**:
+
 - Current slide (large)
 - Next slide preview
 - Speaker notes (large, scrollable)
@@ -232,6 +240,7 @@ socket.emit('annotation', { type: 'clear' })
 - Quick navigation thumbnails
 
 **Layout**:
+
 ```
 ┌───────────────────────────────────────────────┐
 │ Slide 5/12  │  Timer: 12:34  │  Viewers: 15  │

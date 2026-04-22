@@ -77,13 +77,13 @@
 
 ## Screenshots Required
 
-| Shot | What to Capture |
-|------|----------------|
-| 1 | Template thumbnail in gallery |
-| 2 | Slide 1 (title) in editor |
-| 3 | Slides 2–7 (content) — 2–3 representative slides |
-| 4 | Present mode with Tools menu open |
-| 5 | Each tool in action (overview, help, scroll) |
+| Shot | What to Capture                                  |
+| ---- | ------------------------------------------------ |
+| 1    | Template thumbnail in gallery                    |
+| 2    | Slide 1 (title) in editor                        |
+| 3    | Slides 2–7 (content) — 2–3 representative slides |
+| 4    | Present mode with Tools menu open                |
+| 5    | Each tool in action (overview, help, scroll)     |
 
 Save to: `plans/260416-0904-quarto-clean-template/screenshots/`
 
@@ -96,8 +96,8 @@ Save to: `plans/260416-0904-quarto-clean-template/screenshots/`
 
 ## Risks & Mitigation
 
-| Risk | Mitigation |
-|------|-----------|
-| Template not appearing in gallery | Restart server after JSON edit |
-| Fonts not loading | Check network; Palatino is system font — fallback works |
-| Slide Menu not opening | Verify `presenterTools.slideMenu: true` is in template JSON |
+| Risk                              | Mitigation                                                  |
+| --------------------------------- | ----------------------------------------------------------- |
+| Template not appearing in gallery | Restart server after JSON edit                              |
+| Fonts not loading                 | Check network; Palatino is system font — fallback works     |
+| Slide Menu not opening            | Verify `presenterTools.slideMenu: true` is in template JSON |

@@ -1,6 +1,7 @@
 # Phase 6 — AI Integration
 
 ## Overview
+
 - **Priority**: P2 (High Impact)
 - **Status**: ⬜ Pending
 - **Effort**: 2-3 tuần
@@ -8,6 +9,7 @@
 - **Mục tiêu**: AI-powered features: copywriting, slide generation, translation
 
 ## Design Decisions
+
 - **User tự configure API key** — không tốn cost cho server operator
 - **Provider agnostic** — hỗ trợ OpenAI, Google Gemini, hoặc bất kỳ OpenAI-compatible API
 - **Settings page**: lưu API key + provider selector
@@ -38,9 +40,11 @@
 ## Features to Implement
 
 ### 6.1 AI Copywriter
+
 **Mô tả**: Cải thiện/viết lại text content trong slides.
 
-**UI**: 
+**UI**:
+
 - Chọn text element → right-click hoặc toolbar button → "AI Improve"
 - Popup với options:
   ```
@@ -65,13 +69,14 @@
   ```
 
 **Server API**:
+
 ```javascript
 // POST /api/ai/rewrite
 app.post('/api/ai/rewrite', async (req, res) => {
   const { text, action, customPrompt, targetLanguage } = req.body
   const settings = await readSettings()
   if (!settings.ai?.apiKey) return res.status(400).json({ error: 'AI not configured' })
-  
+
   const systemPrompt = `You are a presentation copywriter. ${getActionPrompt(action)}`
   const result = await callAI(settings.ai, systemPrompt, text)
   res.json({ result })
@@ -79,8 +84,10 @@ app.post('/api/ai/rewrite', async (req, res) => {
 
 function getActionPrompt(action) {
   const prompts = {
-    improve: 'Improve this text for a presentation slide. Make it clearer and more impactful. Keep it concise.',
-    shorten: 'Shorten this text significantly while keeping the key message. Bullet points preferred.',
+    improve:
+      'Improve this text for a presentation slide. Make it clearer and more impactful. Keep it concise.',
+    shorten:
+      'Shorten this text significantly while keeping the key message. Bullet points preferred.',
     expand: 'Expand this text with more details, examples, or supporting points.',
     professional: 'Rewrite in a professional, formal tone suitable for corporate presentations.',
     casual: 'Rewrite in a casual, engaging tone.',
@@ -93,9 +100,11 @@ function getActionPrompt(action) {
 ---
 
 ### 6.2 AI Slide Generator
+
 **Mô tả**: Generate full presentation outline từ topic/prompt.
 
 **UI**:
+
 ```
 ┌──────────────────────────────────────┐
 │ AI Slide Generator                   │
@@ -126,15 +135,16 @@ function getActionPrompt(action) {
 ```
 
 **Server API**:
+
 ```javascript
 // POST /api/ai/generate-outline
 app.post('/api/ai/generate-outline', async (req, res) => {
   const { topic, slideCount, style, language, templateId } = req.body
-  
+
   const systemPrompt = `You are a presentation designer. Generate a presentation outline.
 Return JSON array of slides. Each slide has: title, bulletPoints (array), layout (title|content|two-column|image-text|big-number), speakerNotes.
 Style: ${style}. Language: ${language}. Slides: ${slideCount}.`
-  
+
   const result = await callAI(settings.ai, systemPrompt, topic)
   const outline = JSON.parse(result)
   res.json({ outline })
@@ -144,12 +154,13 @@ Style: ${style}. Language: ${language}. Slides: ${slideCount}.`
 app.post('/api/ai/generate-slides', async (req, res) => {
   const { outline, templateId } = req.body
   // Map outline to slide elements using template patterns
-  const slides = outline.map(slide => mapOutlineToSlide(slide, templateId))
+  const slides = outline.map((slide) => mapOutlineToSlide(slide, templateId))
   res.json({ slides })
 })
 ```
 
 **Outline → Slides mapping**:
+
 - `title` layout → title template (h1 centered)
 - `content` layout → heading + bullet points
 - `two-column` layout → 2 text columns
@@ -160,9 +171,11 @@ app.post('/api/ai/generate-slides', async (req, res) => {
 ---
 
 ### 6.3 Presentation Translator
+
 **Mô tả**: Dịch toàn bộ text trong presentation sang ngôn ngữ khác.
 
 **UI**:
+
 ```
 ┌──────────────────────────────┐
 │ Translate Presentation       │
@@ -184,6 +197,7 @@ app.post('/api/ai/generate-slides', async (req, res) => {
 ```
 
 **Implementation**:
+
 - Collect all text elements from all slides
 - Batch translate via AI API (chunk to avoid token limits)
 - Replace text content while preserving HTML formatting
@@ -194,11 +208,11 @@ app.post('/api/ai/generate-slides', async (req, res) => {
 app.post('/api/ai/translate', async (req, res) => {
   const { texts, targetLanguage, preserveFormatting } = req.body
   // texts = [{ id, html }]
-  
+
   const systemPrompt = `Translate the following text to ${targetLanguage}.
 IMPORTANT: Preserve all HTML tags exactly. Only translate the text content between tags.
 Return JSON array with same structure.`
-  
+
   const result = await callAI(settings.ai, systemPrompt, JSON.stringify(texts))
   res.json({ translations: JSON.parse(result) })
 })
@@ -209,9 +223,11 @@ Return JSON array with same structure.`
 ---
 
 ### 6.4 AI Image Suggestions (Bonus)
+
 **Mô tả**: Gợi ý hình ảnh phù hợp cho slide content.
 
 **Implementation**:
+
 - Phân tích text content → extract keywords
 - Search Unsplash với keywords
 - Show suggestions trong side panel
@@ -238,17 +254,17 @@ async function callOpenAI(config, system, user) {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${config.apiKey}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${config.apiKey}`,
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       model: config.model || 'gpt-4o-mini',
       messages: [
         { role: 'system', content: system },
-        { role: 'user', content: user }
+        { role: 'user', content: user },
       ],
-      temperature: 0.7
-    })
+      temperature: 0.7,
+    }),
   })
   const data = await response.json()
   return data.choices[0].message.content
@@ -262,8 +278,8 @@ async function callGemini(config, system, user) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: system }] },
-        contents: [{ parts: [{ text: user }] }]
-      })
+        contents: [{ parts: [{ text: user }] }],
+      }),
     }
   )
   const data = await response.json()
@@ -279,9 +295,9 @@ async function callCustom(config, system, user) {
       model: config.customModel,
       messages: [
         { role: 'system', content: system },
-        { role: 'user', content: user }
-      ]
-    })
+        { role: 'user', content: user },
+      ],
+    }),
   })
   const data = await response.json()
   return data.choices[0].message.content
@@ -313,16 +329,16 @@ async function callCustom(config, system, user) {
 
 ## Files to Create/Modify
 
-| File | Action |
-|------|--------|
-| `server/services/ai-provider.js` | NEW — multi-provider AI abstraction |
-| `server/routes/ai.js` | NEW — /api/ai/* endpoints |
-| `server/routes/settings.js` | MODIFY — add AI config |
-| `client/src/components/modals/AICopywriterModal.jsx` | NEW |
-| `client/src/components/modals/AIGeneratorModal.jsx` | NEW |
-| `client/src/components/modals/AITranslateModal.jsx` | NEW |
-| `client/src/pages/SettingsPage.jsx` | MODIFY — add AI section |
-| `client/src/utils/ai.js` | NEW — client-side AI API calls |
+| File                                                 | Action                              |
+| ---------------------------------------------------- | ----------------------------------- |
+| `server/services/ai-provider.js`                     | NEW — multi-provider AI abstraction |
+| `server/routes/ai.js`                                | NEW — /api/ai/\* endpoints          |
+| `server/routes/settings.js`                          | MODIFY — add AI config              |
+| `client/src/components/modals/AICopywriterModal.jsx` | NEW                                 |
+| `client/src/components/modals/AIGeneratorModal.jsx`  | NEW                                 |
+| `client/src/components/modals/AITranslateModal.jsx`  | NEW                                 |
+| `client/src/pages/SettingsPage.jsx`                  | MODIFY — add AI section             |
+| `client/src/utils/ai.js`                             | NEW — client-side AI API calls      |
 
 ## Todo List
 

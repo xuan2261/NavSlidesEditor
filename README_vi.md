@@ -100,7 +100,7 @@ Tải xuống từ trang [Releases](https://github.com/jbirky/revealjs_gui/relea
 | Platform | Format                                                  |
 | -------- | ------------------------------------------------------- |
 | Linux    | `.AppImage` (chạy trực tiếp) hoặc `.deb` (cài qua dpkg) |
-| macOS    | `.zip` (giải nén và mở file `.app`)                    |
+| macOS    | `.zip` (giải nén và mở file `.app`)                     |
 | Windows  | file installer `.exe` hoặc bản `.exe` portable          |
 
 **Cài đặt `.deb` trên Linux:**
@@ -146,8 +146,8 @@ npm run electron:dev
 
 Ứng dụng desktop lưu trữ dữ liệu tại thư mục dữ liệu hệ điều hành của bạn:
 
-| Platform | Path                                           |
-| -------- | ---------------------------------------------- |
+| Platform | Path                                              |
+| -------- | ------------------------------------------------- |
 | Linux    | `~/.config/NavSlides Editor/`                     |
 | macOS    | `~/Library/Application Support/NavSlides Editor/` |
 | Windows  | `%APPDATA%/NavSlides Editor/`                     |
@@ -262,14 +262,14 @@ PORT=8080 npm start
 
 ## Data & Persistence
 
-| Path                             | Contents                                 |
-| -------------------------------- | ---------------------------------------- |
-| `server/data/presentations.json` | Toàn bộ dữ liệu của bài thuyết trình     |
-| `server/data/templates.json`     | Custom templates                         |
-| `server/data/share-tokens.json`  | Shareable link tokens                    |
-| `server/data/github-config.json` | Thông tin xác thực GitHub integration    |
-| `server/data/history/`           | Lịch sử lưu các bản nháp (snapshots)     |
-| `server/uploads/`                | Hình ảnh, audio, video được upload       |
+| Path                             | Contents                              |
+| -------------------------------- | ------------------------------------- |
+| `server/data/presentations.json` | Toàn bộ dữ liệu của bài thuyết trình  |
+| `server/data/templates.json`     | Custom templates                      |
+| `server/data/share-tokens.json`  | Shareable link tokens                 |
+| `server/data/github-config.json` | Thông tin xác thực GitHub integration |
+| `server/data/history/`           | Lịch sử lưu các bản nháp (snapshots)  |
+| `server/uploads/`                | Hình ảnh, audio, video được upload    |
 
 Mọi file cấu hình và thư mục sẽ được tự động tạo vào lần chạy đầu tiên. Bạn nên thực hiện backup để tránh mất dữ liệu.
 
@@ -293,10 +293,10 @@ Bạn có thể push các bài slide lên repository trên GitHub trực tiếp 
 
 Truy cập **GitHub → Settings → Developer settings → [Fine-grained personal access tokens](https://github.com/settings/personal-access-tokens/new)** và tạo một token với:
 
-| Setting                    | Value                                                  |
-| -------------------------- | ------------------------------------------------------ |
+| Setting                    | Value                                              |
+| -------------------------- | -------------------------------------------------- |
 | **Repository access**      | **Only select repositories** → Chọn repo mong muốn |
-| **Permissions → Contents** | **Read and write**                                     |
+| **Permissions → Contents** | **Read and write**                                 |
 
 ### 2. Tạo một target repository
 
@@ -395,12 +395,12 @@ slides.example.com {
 
 ## Requirements
 
-| Method      | Requirement                          |
-| ----------- | ------------------------------------ |
-| Desktop app | Node.js 18+ (chỉ dành cho quá trình build) |
-| Docker      | Docker 20.10+ và Docker Compose v2+  |
-| Node.js     | Node.js 18+ và npm 8+                |
-| Load Testing| [k6](https://k6.io/docs/get-started/installation/) |
+| Method       | Requirement                                        |
+| ------------ | -------------------------------------------------- |
+| Desktop app  | Node.js 18+ (chỉ dành cho quá trình build)         |
+| Docker       | Docker 20.10+ và Docker Compose v2+                |
+| Node.js      | Node.js 18+ và npm 8+                              |
+| Load Testing | [k6](https://k6.io/docs/get-started/installation/) |
 
 ---
 
@@ -423,21 +423,21 @@ Dự án này sử dụng công cụ `k6` cho việc load testing bằng cách m
 
 ## Tech Stack
 
-| Layer               | Technology                                    |
-| ------------------- | --------------------------------------------- |
-| Frontend            | React 18, Vite 5                              |
-| Rich text editor    | TipTap 2                                      |
-| Presentation engine | reveal.js 5                                   |
-| Math rendering      | KaTeX                                         |
-| Diagrams            | TikZJax                                       |
-| Charts              | Chart.js 4                                    |
-| Syntax highlighting | highlight.js                                  |
-| Markdown            | Built-in converter + marked.js (export)       |
-| Icons               | Lucide (bộ ui trình chỉnh sửa) + inline SVG (slide icons) |
-| PowerPoint export   | pptxgenjs                                     |
-| Backend             | Node.js, Express 4                            |
-| Desktop app         | Electron                                      |
-| Cloud sync          | rclone                                        |
-| Testing             | Vitest, Playwright, k6                        |
-| Linting & Formatting| ESLint, Prettier                              |
-| Storage             | JSON files + local filesystem                 |
+| Layer                | Technology                                                |
+| -------------------- | --------------------------------------------------------- |
+| Frontend             | React 18, Vite 5                                          |
+| Rich text editor     | TipTap 2                                                  |
+| Presentation engine  | reveal.js 5                                               |
+| Math rendering       | KaTeX                                                     |
+| Diagrams             | TikZJax                                                   |
+| Charts               | Chart.js 4                                                |
+| Syntax highlighting  | highlight.js                                              |
+| Markdown             | Built-in converter + marked.js (export)                   |
+| Icons                | Lucide (bộ ui trình chỉnh sửa) + inline SVG (slide icons) |
+| PowerPoint export    | pptxgenjs                                                 |
+| Backend              | Node.js, Express 4                                        |
+| Desktop app          | Electron                                                  |
+| Cloud sync           | rclone                                                    |
+| Testing              | Vitest, Playwright, k6                                    |
+| Linting & Formatting | ESLint, Prettier                                          |
+| Storage              | JSON files + local filesystem                             |

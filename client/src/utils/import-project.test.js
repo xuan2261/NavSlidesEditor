@@ -27,7 +27,7 @@ describe('validateProjectFile', () => {
     }
     const result = validateProjectFile(parsed)
     expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.includes('slides'))).toBe(true)
+    expect(result.errors.some((e) => e.includes('slides'))).toBe(true)
   })
 
   it('warns on unknown version', () => {
@@ -37,7 +37,7 @@ describe('validateProjectFile', () => {
     }
     const result = validateProjectFile(parsed)
     expect(result.valid).toBe(true)
-    expect(result.warnings.some(w => w.includes('99.0'))).toBe(true)
+    expect(result.warnings.some((w) => w.includes('99.0'))).toBe(true)
   })
 
   it('warns on missing title', () => {
@@ -46,7 +46,7 @@ describe('validateProjectFile', () => {
     }
     const result = validateProjectFile(parsed)
     expect(result.valid).toBe(true)
-    expect(result.warnings.some(w => w.includes('title'))).toBe(true)
+    expect(result.warnings.some((w) => w.includes('title'))).toBe(true)
   })
 
   it('accepts presentation without manifest', () => {
@@ -63,9 +63,7 @@ describe('rewriteMediaUrls', () => {
     const presentation = {
       slides: [
         {
-          elements: [
-            { type: 'image', src: '/uploads/old-abc.png' },
-          ],
+          elements: [{ type: 'image', src: '/uploads/old-abc.png' }],
         },
       ],
     }
@@ -78,9 +76,7 @@ describe('rewriteMediaUrls', () => {
     const presentation = {
       slides: [
         {
-          elements: [
-            { type: 'image', src: 'https://example.com/image.png' },
-          ],
+          elements: [{ type: 'image', src: 'https://example.com/image.png' }],
         },
       ],
     }

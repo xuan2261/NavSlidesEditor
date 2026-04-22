@@ -1,47 +1,52 @@
 # Phase 05 — Emoji → Lucide Icons + CSS Polish
 
 ## Priority: 🟢 LOW
+
 ## Status: ⬜ Not started
+
 ## Effort: Small (~1h)
+
 ## Impact: ⭐⭐⭐
 
 ## Overview
+
 Thay thế emoji icons trong toolbar/slide panel bằng Lucide SVG icons để đảm bảo visual consistency, cross-platform rendering, và professional appearance.
 
 ## Key Insights
 
 ### Emoji Icons cần thay (Toolbar.jsx)
 
-| Current | Location | Replacement Lucide Icon |
-|---------|----------|------------------------|
-| `📁` Media text | L234 area | Already has `FolderOpen` variant → dùng icon thay text |
-| `✏` Drawing icon | SlidePanel L338 | `Pencil` |
-| `↗` Line/Arrow icon | SlidePanel L352 | `ArrowUpRight` |
-| `☰` Chart icon | SlidePanel L280 | `BarChart3` |
-| `★` Icon icon | SlidePanel L323 | `Star` |
-| `⊞` Table button | Toolbar L1630 | `Table2` (đã import) |
-| `∑` Math inline | Toolbar L1736 | `Sigma` từ Lucide |
-| `∫` Math display | Toolbar L1750 | `FunctionSquare` hoặc giữ serif char |
-| `←L`, `↔`, `R→`, etc. | Toolbar L1112-1119 | Lucide alignment icons |
+| Current               | Location           | Replacement Lucide Icon                                |
+| --------------------- | ------------------ | ------------------------------------------------------ |
+| `📁` Media text       | L234 area          | Already has `FolderOpen` variant → dùng icon thay text |
+| `✏` Drawing icon      | SlidePanel L338    | `Pencil`                                               |
+| `↗` Line/Arrow icon   | SlidePanel L352    | `ArrowUpRight`                                         |
+| `☰` Chart icon       | SlidePanel L280    | `BarChart3`                                            |
+| `★` Icon icon         | SlidePanel L323    | `Star`                                                 |
+| `⊞` Table button      | Toolbar L1630      | `Table2` (đã import)                                   |
+| `∑` Math inline       | Toolbar L1736      | `Sigma` từ Lucide                                      |
+| `∫` Math display      | Toolbar L1750      | `FunctionSquare` hoặc giữ serif char                   |
+| `←L`, `↔`, `R→`, etc. | Toolbar L1112-1119 | Lucide alignment icons                                 |
 
 ### Alignment text labels → Lucide icons
 
-| Current Text | Lucide Replacement |
-|-------------|-------------------|
-| `←L` Align left | `AlignStartVertical` |
-| `↔` Center H | `AlignCenterHorizontal` |
-| `R→` Align right | `AlignEndVertical` |
-| `↑T` Align top | `AlignStartHorizontal` |
-| `↕` Center V | `AlignCenterVertical` |
-| `B↓` Align bottom | `AlignEndHorizontal` |
-| `⇔` Distribute H | `Columns3` hoặc custom |
-| `⇕` Distribute V | `Rows3` hoặc custom |
+| Current Text      | Lucide Replacement      |
+| ----------------- | ----------------------- |
+| `←L` Align left   | `AlignStartVertical`    |
+| `↔` Center H      | `AlignCenterHorizontal` |
+| `R→` Align right  | `AlignEndVertical`      |
+| `↑T` Align top    | `AlignStartHorizontal`  |
+| `↕` Center V      | `AlignCenterVertical`   |
+| `B↓` Align bottom | `AlignEndHorizontal`    |
+| `⇔` Distribute H  | `Columns3` hoặc custom  |
+| `⇕` Distribute V  | `Rows3` hoặc custom     |
 
 ---
 
 ## Related Code Files
 
 ### Files to modify:
+
 - `client/src/components/Toolbar.jsx` — Replace emoji/text labels with Lucide icons
 - `client/src/components/SlidePanel.jsx` — Replace emoji in slide thumbnails
 - `client/src/index.css` — Minor style adjustments
@@ -55,11 +60,11 @@ Thay thế emoji icons trong toolbar/slide panel bằng Lucide SVG icons để �
 ```jsx
 import {
   // existing...
-  Pencil,        // for Draw
-  ArrowUpRight,  // for Line/Arrow
-  Star,          // for Icon
-  Sigma,         // for Math inline
-  BarChart3,     // for Chart (if not already)
+  Pencil, // for Draw
+  ArrowUpRight, // for Line/Arrow
+  Star, // for Icon
+  Sigma, // for Math inline
+  BarChart3, // for Chart (if not already)
   AlignStartVertical,
   AlignEndVertical,
   AlignCenterHorizontal,
@@ -126,8 +131,10 @@ import {
 
 /* Add subtle transition to all toolbar buttons */
 .btn-icon {
-  transition: background var(--transition-fast), color var(--transition-fast), 
-              transform var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
 }
 .btn-icon:active {
   transform: scale(0.95);
@@ -147,6 +154,7 @@ import {
 - [ ] Cross-browser test: verify icons render correctly
 
 ## Success Criteria
+
 1. Zero emoji characters used for functional icons
 2. All icons are Lucide SVG → consistent sizing and color
 3. Touch targets >= 32px

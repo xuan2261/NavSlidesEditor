@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
 
 export const useUIStore = create((set) => ({
   // Modals — individual booleans matching EditorPage
@@ -37,4 +37,4 @@ export const useUIStore = create((set) => ({
   toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
   setLeftPanelOpen: (isOpen) => set({ leftPanelOpen: isOpen }),
   setRightPanelOpen: (isOpen) => set({ rightPanelOpen: isOpen }),
-}));
+}))

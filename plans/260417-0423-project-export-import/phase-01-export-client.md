@@ -88,8 +88,8 @@ export async function exportProject(presentation, options?)
 ```js
 // Media src patterns to detect local uploads
 const LOCAL_URL_PATTERNS = [
-  /^\/uploads\//,          // relative upload path
-  /^http.*\/uploads\//,   // absolute upload path
+  /^\/uploads\//, // relative upload path
+  /^http.*\/uploads\//, // absolute upload path
 ]
 
 // Scan all slides' elements for image/video/media src
@@ -97,12 +97,12 @@ function detectLocalMedia(presentation) {
   const mediaUrls = new Set()
   for (const slide of presentation.slides || []) {
     for (const el of slide.elements || []) {
-      if (el.src && LOCAL_URL_PATTERNS.some(p => p.test(el.src))) {
+      if (el.src && LOCAL_URL_PATTERNS.some((p) => p.test(el.src))) {
         mediaUrls.add(el.src)
       }
       // Also check backgrounds
       if (slide.background?.type === 'image' && slide.background.src) {
-        if (LOCAL_URL_PATTERNS.some(p => p.test(slide.background.src))) {
+        if (LOCAL_URL_PATTERNS.some((p) => p.test(slide.background.src))) {
           mediaUrls.add(slide.background.src)
         }
       }
@@ -153,16 +153,20 @@ export async function exportProject(presentation, opts = {}) {
 
   // Fetch and add local media files
   const mediaFolder = zip.folder('media')
-  await Promise.all(mediaUrls.map(async (url) => {
-    try {
-      const fullUrl = url.startsWith('/') ? window.location.origin + url : url
-      const resp = await fetch(fullUrl)
-      if (!resp.ok) return
-      const blob = await resp.blob()
-      const filename = url.split('/').pop()
-      mediaFolder.file(filename, blob)
-    } catch { /* skip failed media */ }
-  }))
+  await Promise.all(
+    mediaUrls.map(async (url) => {
+      try {
+        const fullUrl = url.startsWith('/') ? window.location.origin + url : url
+        const resp = await fetch(fullUrl)
+        if (!resp.ok) return
+        const blob = await resp.blob()
+        const filename = url.split('/').pop()
+        mediaFolder.file(filename, blob)
+      } catch {
+        /* skip failed media */
+      }
+    })
+  )
 
   // Generate offline HTML and add
   const html = await generateOfflineHTML(/* from generateHTML */)
@@ -211,11 +215,11 @@ function downloadBlob(blob, filename) {
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Large media files → slow export | Medium | Low | Add progress indicator |
-| Fetch CORS on media URLs | Low | Medium | Use same-origin URLs only |
-| JSZip bundle size increase | Low | Low | Tree-shakeable import |
+| Risk                            | Likelihood | Impact | Mitigation                |
+| ------------------------------- | ---------- | ------ | ------------------------- |
+| Large media files → slow export | Medium     | Low    | Add progress indicator    |
+| Fetch CORS on media URLs        | Low        | Medium | Use same-origin URLs only |
+| JSZip bundle size increase      | Low        | Low    | Tree-shakeable import     |
 
 ---
 

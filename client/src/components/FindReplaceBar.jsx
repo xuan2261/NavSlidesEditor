@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search, Replace, X, ChevronUp, ChevronDown, CaseSensitive } from 'lucide-react'
+import { Button } from '../components/ui'
 
 function stripHtml(html) {
   const doc = new DOMParser().parseFromString(html || '', 'text/html')
@@ -131,8 +132,8 @@ export default function FindReplaceBar({
   }
 
   return (
-    <div className="find-replace-bar">
-      <div className="find-replace-row">
+    <div className="find-replace-bar absolute top-[46px] right-2.5 z-[9990] bg-card border border-border-light rounded-b-md p-2 shadow-md flex flex-col gap-1.5 min-w-[380px]">
+      <div className="flex items-center gap-1.5">
         <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
         <input
           ref={searchRef}
@@ -143,7 +144,7 @@ export default function FindReplaceBar({
             setCurrentMatchIdx(0)
           }}
           placeholder="Find..."
-          className="find-input"
+          className="find-input flex-1 bg-muted border border-border text-foreground py-1 px-2 rounded text-[13px] outline-none min-w-0 focus:border-accent"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.shiftKey ? handlePrev() : handleNext()
@@ -151,60 +152,79 @@ export default function FindReplaceBar({
             if (e.key === 'Escape') onClose?.()
           }}
         />
-        <span className="find-count">
+        <span className="find-count text-[11px] text-muted-foreground whitespace-nowrap min-w-[30px] text-center">
           {matches.length > 0 ? `${currentMatchIdx + 1}/${matches.length}` : '0'}
         </span>
-        <button
-          className={`btn-icon find-btn ${matchCase ? 'active' : ''}`}
+        <Button
+          variant="ghost"
+          className={`find-btn h-6 w-6 p-0 shrink-0 ${matchCase ? 'bg-accent text-white hover:bg-accent' : ''}`}
           onClick={() => setMatchCase((v) => !v)}
           title="Match case"
         >
           <CaseSensitive size={14} />
-        </button>
-        <button className="btn-icon find-btn" onClick={handlePrev} title="Previous">
+        </Button>
+        <Button
+          variant="icon"
+          className="find-btn h-6 w-6 p-0 shrink-0"
+          onClick={handlePrev}
+          title="Previous"
+        >
           <ChevronUp size={14} />
-        </button>
-        <button className="btn-icon find-btn" onClick={handleNext} title="Next">
+        </Button>
+        <Button
+          variant="icon"
+          className="find-btn h-6 w-6 p-0 shrink-0"
+          onClick={handleNext}
+          title="Next"
+        >
           <ChevronDown size={14} />
-        </button>
-        <button
-          className={`btn-icon find-btn ${showReplace ? 'active' : ''}`}
+        </Button>
+        <Button
+          variant="ghost"
+          className={`find-btn h-6 w-6 p-0 shrink-0 ${showReplace ? 'bg-accent text-white hover:bg-accent' : ''}`}
           onClick={() => setShowReplace((v) => !v)}
           title="Toggle replace"
         >
           <Replace size={14} />
-        </button>
-        <button className="btn-icon find-btn" onClick={onClose} title="Close (Esc)">
+        </Button>
+        <Button
+          variant="icon"
+          className="find-btn h-6 w-6 p-0 shrink-0"
+          onClick={onClose}
+          title="Close (Esc)"
+        >
           <X size={14} />
-        </button>
+        </Button>
       </div>
       {showReplace && (
-        <div className="find-replace-row">
+        <div className="flex items-center gap-1.5">
           <Replace size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
           <input
             type="text"
             value={replaceTerm}
             onChange={(e) => setReplaceTerm(e.target.value)}
             placeholder="Replace..."
-            className="find-input"
+            className="flex-1 bg-muted border border-border text-foreground py-1 px-2 rounded text-[13px] outline-none min-w-0 focus:border-accent"
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleReplace()
             }}
           />
-          <button
-            className="btn btn-secondary find-action-btn"
+          <Button
+            variant="secondary"
+            className="h-7 text-[11px] px-2.5 whitespace-nowrap"
             onClick={handleReplace}
             disabled={!matches.length}
           >
             Replace
-          </button>
-          <button
-            className="btn btn-secondary find-action-btn"
+          </Button>
+          <Button
+            variant="secondary"
+            className="h-7 text-[11px] px-2.5 whitespace-nowrap"
             onClick={handleReplaceAll}
             disabled={!matches.length}
           >
             All
-          </button>
+          </Button>
         </div>
       )}
     </div>

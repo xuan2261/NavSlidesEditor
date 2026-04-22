@@ -1,8 +1,8 @@
 /* eslint-env node */
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
 
-const BUILT_IN_PATH = path.join(__dirname, 'server', 'data', 'built-in-templates.json');
+const BUILT_IN_PATH = path.join(__dirname, 'server', 'data', 'built-in-templates.json')
 
 const quizzes = [
   {
@@ -20,8 +20,17 @@ const quizzes = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Bài kiểm tra trắc nghiệm</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Bài kiểm tra trắc nghiệm</h1>',
+          },
+        ],
       },
       {
         id: 'slide-2',
@@ -86,9 +95,9 @@ const quizzes = [
   }
 </script>
 </body>
-</html>`
-          }
-        ]
+</html>`,
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -152,18 +161,28 @@ const quizzes = [
   }
 </script>
 </body>
-</html>`
-          }
-        ]
+</html>`,
+          },
+        ],
       },
       {
         id: 'slide-4',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-text', type: 'text', x: 80, y: 150, width: 800, height: 200, zIndex: 1, content: '<h2 style="text-align:center">Kết thúc phần kiểm tra</h2><p style="text-align:center; margin-top: 20px;">Giáo viên có thể sử dụng các template này để đánh giá nhanh mức độ hiểu bài của học viên ngay trong quá trình giảng dạy.</p>' }
-        ]
-      }
-    ]
+          {
+            id: 'el-text',
+            type: 'text',
+            x: 80,
+            y: 150,
+            width: 800,
+            height: 200,
+            zIndex: 1,
+            content:
+              '<h2 style="text-align:center">Kết thúc phần kiểm tra</h2><p style="text-align:center; margin-top: 20px;">Giáo viên có thể sử dụng các template này để đánh giá nhanh mức độ hiểu bài của học viên ngay trong quá trình giảng dạy.</p>',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'quiz-true-false',
@@ -180,8 +199,17 @@ const quizzes = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Đúng hay Sai?</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Đúng hay Sai?</h1>',
+          },
+        ],
       },
       {
         id: 'slide-2',
@@ -275,18 +303,28 @@ const quizzes = [
   }
 </script>
 </body>
-</html>`
-          }
-        ]
+</html>`,
+          },
+        ],
       },
       {
         id: 'slide-4',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-text', type: 'text', x: 80, y: 150, width: 800, height: 200, zIndex: 1, content: '<h2>Giải thích</h2><ul><li><b>Câu 2 sai:</b> Nước sôi ở 100°C ở áp suất khí quyển chuẩn, nhưng ở vùng núi cao áp suất thấp, nước sôi ở nhiệt độ thấp hơn.</li><li><b>Câu 4 sai:</b> CPU là bộ vi xử lý trung tâm, RAM mới là bộ nhớ chính.</li></ul>' }
-        ]
-      }
-    ]
+          {
+            id: 'el-text',
+            type: 'text',
+            x: 80,
+            y: 150,
+            width: 800,
+            height: 200,
+            zIndex: 1,
+            content:
+              '<h2>Giải thích</h2><ul><li><b>Câu 2 sai:</b> Nước sôi ở 100°C ở áp suất khí quyển chuẩn, nhưng ở vùng núi cao áp suất thấp, nước sôi ở nhiệt độ thấp hơn.</li><li><b>Câu 4 sai:</b> CPU là bộ vi xử lý trung tâm, RAM mới là bộ nhớ chính.</li></ul>',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'quiz-fill-blank',
@@ -303,8 +341,17 @@ const quizzes = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Điền vào chỗ trống</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Điền vào chỗ trống</h1>',
+          },
+        ],
       },
       {
         id: 'slide-2',
@@ -359,18 +406,28 @@ const quizzes = [
   }
 </script>
 </body>
-</html>`
-          }
-        ]
+</html>`,
+          },
+        ],
       },
       {
         id: 'slide-3',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-text', type: 'text', x: 80, y: 150, width: 800, height: 200, zIndex: 1, content: '<h2>Đáp án</h2><ul><li>Ô 1: <b>TCP/IP</b></li><li>Ô 2: <b>không dây</b></li></ul>' }
-        ]
-      }
-    ]
+          {
+            id: 'el-text',
+            type: 'text',
+            x: 80,
+            y: 150,
+            width: 800,
+            height: 200,
+            zIndex: 1,
+            content:
+              '<h2>Đáp án</h2><ul><li>Ô 1: <b>TCP/IP</b></li><li>Ô 2: <b>không dây</b></li></ul>',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'quiz-ordering',
@@ -387,8 +444,17 @@ const quizzes = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Sắp xếp chu trình</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Sắp xếp chu trình</h1>',
+          },
+        ],
       },
       {
         id: 'slide-2',
@@ -471,18 +537,28 @@ const quizzes = [
   }
 </script>
 </body>
-</html>`
-          }
-        ]
+</html>`,
+          },
+        ],
       },
       {
         id: 'slide-3',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-text', type: 'text', x: 80, y: 150, width: 800, height: 300, zIndex: 1, content: '<h2>Đáp án đúng</h2><ol style="margin-top:20px; font-size:28px; line-height: 1.8;"><li>Phân tích yêu cầu</li><li>Thiết kế</li><li>Lập trình</li><li>Kiểm thử</li><li>Bảo trì</li></ol>' }
-        ]
-      }
-    ]
+          {
+            id: 'el-text',
+            type: 'text',
+            x: 80,
+            y: 150,
+            width: 800,
+            height: 300,
+            zIndex: 1,
+            content:
+              '<h2>Đáp án đúng</h2><ol style="margin-top:20px; font-size:28px; line-height: 1.8;"><li>Phân tích yêu cầu</li><li>Thiết kế</li><li>Lập trình</li><li>Kiểm thử</li><li>Bảo trì</li></ol>',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'quiz-matching',
@@ -499,8 +575,17 @@ const quizzes = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Nối khái niệm</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Nối khái niệm</h1>',
+          },
+        ],
       },
       {
         id: 'slide-2',
@@ -614,11 +699,11 @@ const quizzes = [
   }
 </script>
 </body>
-</html>`
-          }
-        ]
-      }
-    ]
+</html>`,
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'viz-dashboard',
@@ -635,8 +720,17 @@ const quizzes = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Q3 Performance Dashboard</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Q3 Performance Dashboard</h1>',
+          },
+        ],
       },
       {
         id: 'slide-2',
@@ -736,18 +830,28 @@ const quizzes = [
   initCharts();
 </script>
 </body>
-</html>`
-          }
-        ]
+</html>`,
+          },
+        ],
       },
       {
         id: 'slide-3',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-text', type: 'text', x: 80, y: 150, width: 800, height: 300, zIndex: 1, content: '<h2>Key Insights</h2><ul><li>Revenue grew consistently month-over-month, ending Q3 strongly at <b>$45,231</b>.</li><li>Direct traffic remains our primary acquisition channel (55%), followed by Social (30%).</li><li>While revenue is up, our conversion rate dropped slightly. Focus for Q4 will be on funnel optimization.</li></ul>' }
-        ]
-      }
-    ]
+          {
+            id: 'el-text',
+            type: 'text',
+            x: 80,
+            y: 150,
+            width: 800,
+            height: 300,
+            zIndex: 1,
+            content:
+              '<h2>Key Insights</h2><ul><li>Revenue grew consistently month-over-month, ending Q3 strongly at <b>$45,231</b>.</li><li>Direct traffic remains our primary acquisition channel (55%), followed by Social (30%).</li><li>While revenue is up, our conversion rate dropped slightly. Focus for Q4 will be on funnel optimization.</li></ul>',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'viz-trend-report',
@@ -764,8 +868,17 @@ const quizzes = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Global Temperature Anomalies</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Global Temperature Anomalies</h1>',
+          },
+        ],
       },
       {
         id: 'slide-2',
@@ -849,18 +962,28 @@ const quizzes = [
   initChart();
 </script>
 </body>
-</html>`
-          }
-        ]
+</html>`,
+          },
+        ],
       },
       {
         id: 'slide-3',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-text', type: 'text', x: 80, y: 150, width: 800, height: 300, zIndex: 1, content: '<h2>Analysis</h2><p>The chart clearly demonstrates an accelerating upward trend in global temperature anomalies since 1980.</p><p>Key observations:</p><ul><li>Temperatures have consistently stayed above the pre-industrial baseline.</li><li>The rate of increase has visibly steepened post-2000.</li><li>The anomaly surpassed +1.0°C in the most recent decade.</li></ul>' }
-        ]
-      }
-    ]
+          {
+            id: 'el-text',
+            type: 'text',
+            x: 80,
+            y: 150,
+            width: 800,
+            height: 300,
+            zIndex: 1,
+            content:
+              '<h2>Analysis</h2><p>The chart clearly demonstrates an accelerating upward trend in global temperature anomalies since 1980.</p><p>Key observations:</p><ul><li>Temperatures have consistently stayed above the pre-industrial baseline.</li><li>The rate of increase has visibly steepened post-2000.</li><li>The anomaly surpassed +1.0°C in the most recent decade.</li></ul>',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 'viz-comparison-chart',
@@ -877,8 +1000,17 @@ const quizzes = [
         id: 'slide-1',
         background: '#1e1e2e',
         elements: [
-          { id: 'el-1', type: 'text', x: 80, y: 200, width: 800, height: 100, zIndex: 1, content: '<h1 style="text-align:center">Material Properties Comparison</h1>' }
-        ]
+          {
+            id: 'el-1',
+            type: 'text',
+            x: 80,
+            y: 200,
+            width: 800,
+            height: 100,
+            zIndex: 1,
+            content: '<h1 style="text-align:center">Material Properties Comparison</h1>',
+          },
+        ],
       },
       {
         id: 'slide-2',
@@ -950,9 +1082,9 @@ const quizzes = [
   initChart();
 </script>
 </body>
-</html>`
-          }
-        ]
+</html>`,
+          },
+        ],
       },
       {
         id: 'slide-3',
@@ -982,32 +1114,32 @@ const quizzes = [
     <tr><td style="padding:15px; border: 1px solid #4b5563;">Titanium</td><td style="padding:15px; border: 1px solid #4b5563; text-align:center;">900</td><td style="padding:15px; border: 1px solid #4b5563; text-align:center;">4.5</td><td style="padding:15px; border: 1px solid #4b5563; text-align:center;">200</td></tr>
     <tr><td style="padding:15px; border: 1px solid #4b5563;">Carbon Fiber</td><td style="padding:15px; border: 1px solid #4b5563; text-align:center;">1600</td><td style="padding:15px; border: 1px solid #4b5563; text-align:center;">1.6</td><td style="padding:15px; border: 1px solid #4b5563; text-align:center;">1000</td></tr>
   </tbody>
-</table>`
-          }
-        ]
-      }
-    ]
-  }
-];
+</table>`,
+          },
+        ],
+      },
+    ],
+  },
+]
 
 // Append to built-in-templates.json
 fs.readFile(BUILT_IN_PATH, 'utf-8', (err, data) => {
   if (err) {
-    console.error('Error reading JSON:', err);
-    return;
+    console.error('Error reading JSON:', err)
+    return
   }
   try {
-    const templates = JSON.parse(data);
-    
+    const templates = JSON.parse(data)
+
     // Filter out existing ones with the same IDs
-    const quizIds = quizzes.map(s => s.id);
-    const filteredTemplates = templates.filter(t => !quizIds.includes(t.id));
-    
-    const newTemplates = [...filteredTemplates, ...quizzes];
-    
-    fs.writeFileSync(BUILT_IN_PATH, JSON.stringify(newTemplates, null, 2), 'utf-8');
-    console.log(`Successfully added ${quizzes.length} quiz/viz templates.`);
+    const quizIds = quizzes.map((s) => s.id)
+    const filteredTemplates = templates.filter((t) => !quizIds.includes(t.id))
+
+    const newTemplates = [...filteredTemplates, ...quizzes]
+
+    fs.writeFileSync(BUILT_IN_PATH, JSON.stringify(newTemplates, null, 2), 'utf-8')
+    console.log(`Successfully added ${quizzes.length} quiz/viz templates.`)
   } catch (e) {
-    console.error('Error parsing JSON:', e);
+    console.error('Error parsing JSON:', e)
   }
-});
+})

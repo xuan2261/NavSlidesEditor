@@ -14,12 +14,12 @@ Kết quả: mở offline → iframe không load được D3, Chart.js, marked.j
 
 ## Root Cause
 
-| Element Type | CDN trong srcdoc | File | Line |
-|---|---|---|---|
-| `html` | User-defined (ví dụ D3.js) | `htmlGenerator.js` | 87-89 |
-| `chart` | `chart.js@4` | `htmlGenerator.js` | 105-124 |
-| `markdown` | `marked/marked.min.js` | `htmlGenerator.js` | 96-103 |
-| `latex` | `katex@0.16.11` CSS+JS, tikzjax | `htmlGenerator.js` | 148-162 |
+| Element Type | CDN trong srcdoc                | File               | Line    |
+| ------------ | ------------------------------- | ------------------ | ------- |
+| `html`       | User-defined (ví dụ D3.js)      | `htmlGenerator.js` | 87-89   |
+| `chart`      | `chart.js@4`                    | `htmlGenerator.js` | 105-124 |
+| `markdown`   | `marked/marked.min.js`          | `htmlGenerator.js` | 96-103  |
+| `latex`      | `katex@0.16.11` CSS+JS, tikzjax | `htmlGenerator.js` | 148-162 |
 
 ## Affected Files
 
@@ -65,10 +65,16 @@ const replacements = []
 while ((match = srcdocRegex.exec(result)) !== null) {
   const raw = match[1]
   // Decode HTML entities to get actual HTML
-  let inner = raw.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+  let inner = raw
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
 
   // Inline <script src="https://..."><\/script> inside srcdoc
-  const scriptMatches = [...inner.matchAll(/<script\s+src=["'](https?:\/\/[^"']+)["'][^>]*><\\?\/script>/gi)]
+  const scriptMatches = [
+    ...inner.matchAll(/<script\s+src=["'](https?:\/\/[^"']+)["'][^>]*><\\?\/script>/gi),
+  ]
   for (const sm of scriptMatches) {
     const url = sm[1]
     const js = await fetchText(url)
@@ -78,14 +84,16 @@ while ((match = srcdocRegex.exec(result)) !== null) {
   }
 
   // Inline <link href="https://..." ...> CSS inside srcdoc
-  const linkMatches = [...inner.matchAll(/<link[^>]*href=["'](https?:\/\/[^"']+\.css[^"']*)["'][^>]*\/?>/gi)]
+  const linkMatches = [
+    ...inner.matchAll(/<link[^>]*href=["'](https?:\/\/[^"']+\.css[^"']*)["'][^>]*\/?>/gi),
+  ]
   for (const lm of linkMatches) {
     const url = lm[1]
     const css = await fetchText(url)
     inner = inner.split(lm[0]).join(`<style>/* ${url} */\n${css}\n</style>`)
   }
 
-  // Re-encode for srcdoc attribute 
+  // Re-encode for srcdoc attribute
   const encoded = inner.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
   replacements.push({ from: match[0], to: `srcdoc="${encoded}"` })
 }
@@ -121,39 +129,45 @@ async function cachedFetchText(url) {
 ## Verification Plan
 
 ### Test 1: Example project slide 2 (D3 visualization)
+
 1. Mở app → chọn project "example"
 2. Export offline HTML
 3. Mở file offline → navigate đến slide 2
 4. D3 network graph phải hiển thị và interactive (drag nodes)
 
 ### Test 2: Chart element
+
 1. Tạo slide có chart element
 2. Export offline → verify chart hiển thị
 
 ### Test 3: Markdown element
+
 1. Tạo slide có markdown element
 2. Export offline → verify markdown render
 
 ### Test 4: LaTeX element
+
 1. Tạo slide có LaTeX element
 2. Export offline → verify math render
 
 ### Test 5: Mixed slide
+
 1. Slide có cả text + html embed + chart
 2. Export offline → tất cả element đều hiển thị
 
 ### Test 6: Existing functionality preserved
+
 1. Export HTML thường (không offline) → vẫn hoạt động bình thường
 2. Present mode → vẫn hoạt động bình thường
 
 ## Risk Assessment
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| File size tăng lớn | Low | Chart.js ~200KB, D3 ~300KB — chấp nhận được cho offline |
-| Fetch timeout | Low | Existing fallback comment pattern |
-| Double-encoding srcdoc | Medium | Unit test decode→process→encode roundtrip |
-| User custom HTML có CDN lạ | None | Fetch tất cả `https://` URLs, không cần whitelist |
+| Risk                       | Impact | Mitigation                                              |
+| -------------------------- | ------ | ------------------------------------------------------- |
+| File size tăng lớn         | Low    | Chart.js ~200KB, D3 ~300KB — chấp nhận được cho offline |
+| Fetch timeout              | Low    | Existing fallback comment pattern                       |
+| Double-encoding srcdoc     | Medium | Unit test decode→process→encode roundtrip               |
+| User custom HTML có CDN lạ | None   | Fetch tất cả `https://` URLs, không cần whitelist       |
 
 ## Todo
 

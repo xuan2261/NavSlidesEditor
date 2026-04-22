@@ -1,11 +1,13 @@
 # Phase 05: Interactive Simulation Templates
 
 ## Context Links
+
 - [Toolbar.jsx](file:///d:/NCKH_2025/revealjs_gui/client/src/components/Toolbar.jsx) — onAddHtml handler
 - [htmlGenerator.js](file:///d:/NCKH_2025/revealjs_gui/shared/src/htmlGenerator.js) — HTML element rendering
 - [presentations.js](file:///d:/NCKH_2025/revealjs_gui/server/routes/presentations.js) — Template → Presentation flow
 
 ## Overview
+
 - **Priority:** P1
 - **Status:** ⬜ Pending
 - **Effort:** 3-4 ngày
@@ -15,6 +17,7 @@
 - User click "Use Template" → presentation có slide chứa interactive demo.
 
 ## Key Insights
+
 - Platform đã hỗ trợ HTML embed element type — chạy trong iframe sandboxed
 - `htmlGenerator.js` render HTML elements thành `<iframe srcdoc="...">` trong present mode
 - Simulations phải self-contained: không phụ thuộc CDN (hoạt động offline)
@@ -23,6 +26,7 @@
 ## Requirements
 
 ### Functional
+
 1. 6 interactive simulations cho 6 chủ đề
 2. Mỗi simulation có UI controls (buttons, sliders, dropdowns)
 3. Real-time visualization (canvas/SVG animation)
@@ -30,6 +34,7 @@
 5. Hoạt động trong present mode + export HTML
 
 ### Non-functional
+
 - Mỗi HTML snippet < 50KB (tránh JSON quá lớn)
 - Render < 100ms trên thiết bị trung bình
 - Touch-friendly controls (slider, buttons đủ lớn)
@@ -37,6 +42,7 @@
 ## Architecture
 
 ### HTML Embed Element Structure
+
 ```json
 {
   "type": "html",
@@ -50,7 +56,9 @@
 ```
 
 ### Simulation Template Structure
+
 Mỗi template simulation có 4-5 slides:
+
 1. **Title:** Giới thiệu simulation
 2. **Theory:** Lý thuyết ngắn gọn (text + LaTeX)
 3. **Interactive Demo:** HTML embed element chiếm ~90% slide
@@ -65,21 +73,68 @@ Mỗi template simulation có 4-5 slides:
 **Mô tả:** Click input buttons (0/1) → xem output qua các cổng logic.
 
 ### HTML Snippet Spec:
+
 ```html
 <!-- ~200 lines, self-contained -->
 <style>
-  * { margin:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
-  body { background:#0a1628; color:#e0f2ff; padding:16px; }
-  .gate-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-  .gate-card { background:#0f2040; border:1px solid #00d4ff30; border-radius:8px; padding:12px; }
-  .gate-name { font-size:14px; font-weight:700; color:#00d4ff; margin-bottom:8px; }
-  .input-row { display:flex; gap:8px; align-items:center; margin:4px 0; }
-  .input-btn { width:36px; height:36px; border-radius:50%; border:2px solid #00d4ff;
-    background:transparent; color:#e0f2ff; font-size:16px; cursor:pointer; }
-  .input-btn.on { background:#00d4ff; color:#0a1628; }
-  .output { font-size:24px; font-weight:700; margin-top:8px; }
-  .output.high { color:#00ff87; }
-  .output.low { color:#ff4757; }
+  * {
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  body {
+    background: #0a1628;
+    color: #e0f2ff;
+    padding: 16px;
+  }
+  .gate-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .gate-card {
+    background: #0f2040;
+    border: 1px solid #00d4ff30;
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .gate-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #00d4ff;
+    margin-bottom: 8px;
+  }
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 4px 0;
+  }
+  .input-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid #00d4ff;
+    background: transparent;
+    color: #e0f2ff;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .input-btn.on {
+    background: #00d4ff;
+    color: #0a1628;
+  }
+  .output {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 8px;
+  }
+  .output.high {
+    color: #00ff87;
+  }
+  .output.low {
+    color: #ff4757;
+  }
 </style>
 <div>
   <h3 style="text-align:center;margin-bottom:12px">🔌 Logic Gate Simulator</h3>
@@ -89,48 +144,60 @@ Mỗi template simulation có 4-5 slides:
   <div class="gate-grid" id="gates"></div>
 </div>
 <script>
-const GATES = [
-  { name:'AND',  fn:(a,b)=>a&b, symbol:'·' },
-  { name:'OR',   fn:(a,b)=>a|b, symbol:'+' },
-  { name:'NAND', fn:(a,b)=>~(a&b)&1, symbol:'⊼' },
-  { name:'NOR',  fn:(a,b)=>~(a|b)&1, symbol:'⊽' },
-  { name:'XOR',  fn:(a,b)=>a^b, symbol:'⊕' },
-  { name:'XNOR', fn:(a,b)=>~(a^b)&1, symbol:'⊙' },
-  { name:'NOT A',fn:(a)=>~a&1, symbol:'¬', unary:true },
-  { name:'BUFFER',fn:(a)=>a, symbol:'▷', unary:true },
-];
-const container = document.getElementById('gates');
-GATES.forEach(gate => {
-  const card = document.createElement('div');
-  card.className = 'gate-card';
-  let a=0, b=0;
-  const update = () => {
-    const out = gate.unary ? gate.fn(a) : gate.fn(a,b);
-    outEl.textContent = `Output: ${out}`;
-    outEl.className = `output ${out?'high':'low'}`;
-    btnA.className = `input-btn ${a?'on':''}`;
-    if(btnB) btnB.className = `input-btn ${b?'on':''}`;
-  };
-  card.innerHTML = `<div class="gate-name">${gate.symbol} ${gate.name}</div>`;
-  const row = document.createElement('div');
-  row.className = 'input-row';
-  const btnA = document.createElement('button');
-  btnA.className = 'input-btn'; btnA.textContent = 'A:0';
-  btnA.onclick = () => { a=1-a; btnA.textContent=`A:${a}`; update(); };
-  row.appendChild(btnA);
-  let btnB;
-  if(!gate.unary) {
-    btnB = document.createElement('button');
-    btnB.className = 'input-btn'; btnB.textContent = 'B:0';
-    btnB.onclick = () => { b=1-b; btnB.textContent=`B:${b}`; update(); };
-    row.appendChild(btnB);
-  }
-  card.appendChild(row);
-  const outEl = document.createElement('div');
-  outEl.className = 'output low'; outEl.textContent = 'Output: 0';
-  card.appendChild(outEl);
-  container.appendChild(card);
-});
+  const GATES = [
+    { name: 'AND', fn: (a, b) => a & b, symbol: '·' },
+    { name: 'OR', fn: (a, b) => a | b, symbol: '+' },
+    { name: 'NAND', fn: (a, b) => ~(a & b) & 1, symbol: '⊼' },
+    { name: 'NOR', fn: (a, b) => ~(a | b) & 1, symbol: '⊽' },
+    { name: 'XOR', fn: (a, b) => a ^ b, symbol: '⊕' },
+    { name: 'XNOR', fn: (a, b) => ~(a ^ b) & 1, symbol: '⊙' },
+    { name: 'NOT A', fn: (a) => ~a & 1, symbol: '¬', unary: true },
+    { name: 'BUFFER', fn: (a) => a, symbol: '▷', unary: true },
+  ]
+  const container = document.getElementById('gates')
+  GATES.forEach((gate) => {
+    const card = document.createElement('div')
+    card.className = 'gate-card'
+    let a = 0,
+      b = 0
+    const update = () => {
+      const out = gate.unary ? gate.fn(a) : gate.fn(a, b)
+      outEl.textContent = `Output: ${out}`
+      outEl.className = `output ${out ? 'high' : 'low'}`
+      btnA.className = `input-btn ${a ? 'on' : ''}`
+      if (btnB) btnB.className = `input-btn ${b ? 'on' : ''}`
+    }
+    card.innerHTML = `<div class="gate-name">${gate.symbol} ${gate.name}</div>`
+    const row = document.createElement('div')
+    row.className = 'input-row'
+    const btnA = document.createElement('button')
+    btnA.className = 'input-btn'
+    btnA.textContent = 'A:0'
+    btnA.onclick = () => {
+      a = 1 - a
+      btnA.textContent = `A:${a}`
+      update()
+    }
+    row.appendChild(btnA)
+    let btnB
+    if (!gate.unary) {
+      btnB = document.createElement('button')
+      btnB.className = 'input-btn'
+      btnB.textContent = 'B:0'
+      btnB.onclick = () => {
+        b = 1 - b
+        btnB.textContent = `B:${b}`
+        update()
+      }
+      row.appendChild(btnB)
+    }
+    card.appendChild(row)
+    const outEl = document.createElement('div')
+    outEl.className = 'output low'
+    outEl.textContent = 'Output: 0'
+    card.appendChild(outEl)
+    container.appendChild(card)
+  })
 </script>
 ```
 
@@ -142,6 +209,7 @@ GATES.forEach(gate => {
 **Mô tả:** 3 sliders (R, L, C) → vẽ đáp ứng tần số real-time trên canvas.
 
 ### HTML Snippet Spec (~250 lines):
+
 - **Controls:** 3 range sliders cho R (1-10kΩ), L (1-100mH), C (1-100nF)
 - **Display:** Canvas 2D vẽ biểu đồ magnitude response |H(jω)|
 - **Math:** `H(jω) = 1 / (1 - ω²LC + jωRC)` — tính cho ω từ 1 đến 100kHz
@@ -161,6 +229,7 @@ GATES.forEach(gate => {
 **Mô tả:** 3 sliders (Kp, Ki, Kd) → step response animation real-time.
 
 ### HTML Snippet Spec (~300 lines):
+
 - **Controls:** 3 range sliders:
   - Kp: 0.1 - 10.0 (step 0.1)
   - Ki: 0.0 - 5.0 (step 0.1)
@@ -186,6 +255,7 @@ GATES.forEach(gate => {
 **Mô tả:** Nhập hàm truyền (poles/zeros) → vẽ biểu đồ Bode magnitude + phase.
 
 ### HTML Snippet Spec (~250 lines):
+
 - **Input:** Text fields cho:
   - Numerator coefficients: e.g. "1, 0" → s + 0
   - Denominator coefficients: e.g. "1, 2, 1" → s² + 2s + 1
@@ -207,6 +277,7 @@ GATES.forEach(gate => {
 **Mô tả:** Animation 3 pha quay với vector diagram.
 
 ### HTML Snippet Spec (~200 lines):
+
 - **Display:** Canvas vẽ:
   - 3 sinewave (R=red, Y=yellow, B=blue) amplitude vs time
   - Rotating phasor diagram (3 vectors 120° apart)
@@ -228,6 +299,7 @@ GATES.forEach(gate => {
 **Mô tả:** Animation bánh răng ăn khớp, thay đổi tỷ số truyền.
 
 ### HTML Snippet Spec (~200 lines):
+
 - **Display:** Canvas vẽ:
   - 2-3 bánh răng ăn khớp (drawn as circles with teeth)
   - Rotation animation, speed proportional to gear ratio
@@ -246,32 +318,41 @@ GATES.forEach(gate => {
 ## Implementation Steps
 
 ### Step 1: Tạo Simulation 1 — Logic Gates (2-3 giờ)
+
 Viết HTML snippet đầy đủ, test trong browser, embed vào template JSON.
 
 **Test method:**
+
 1. Save HTML to temp file → mở trong browser → verify tương tác
 2. Tạo template entry trong built-in-templates.json
 3. `npm run dev` → Marketplace → Use template → verify HTML element render
 
 ### Step 2: Tạo Simulation 2 — RLC Response (3-4 giờ)
+
 Canvas-based frequency response. Cần math: complex number evaluation.
 
 ### Step 3: Tạo Simulation 3 — PID Tuning (3-4 giờ)
+
 Euler simulation loop. Most complex — animated step response.
 
 ### Step 4: Tạo Simulation 4 — Bode Plot (2-3 giờ)
+
 Polynomial evaluation, logarithmic axes.
 
 ### Step 5: Tạo Simulation 5 — 3-Phase (2-3 giờ)
+
 requestAnimationFrame, phasor rotation, multiple sinewaves.
 
 ### Step 6: Tạo Simulation 6 — Gear Train (2-3 giờ)
+
 Gear teeth drawing algorithm, mesh animation.
 
 ### Step 7: Integrate into templates (1 giờ)
+
 Wrap each simulation as a complete template (Title + Theory + Demo + Instructions + Q&A).
 
 ### Step 8: Test all simulations (1 giờ)
+
 - In editor: HTML element visible, resizable
 - In present mode: interactive, controls work
 - Export HTML: simulations functional offline
@@ -290,6 +371,7 @@ Wrap each simulation as a complete template (Title + Theory + Demo + Instruction
 - [ ] Test offline export
 
 ## Success Criteria
+
 - 6 simulations hoạt động trong present mode
 - Controls responsive (sliders, buttons)
 - Canvas renders smooth (>30fps)
@@ -297,15 +379,17 @@ Wrap each simulation as a complete template (Title + Theory + Demo + Instruction
 - Mỗi HTML snippet < 50KB
 
 ## Risk Assessment
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| iframe sandbox blocks scripts | High | Verify sandbox="allow-scripts" |
-| Canvas DPI scaling trên Retina | Medium | Use devicePixelRatio |
-| JSON escape issues cho HTML content | High | Properly escape quotes, newlines |
-| Large HTML snippets bloat JSON | Medium | Minify HTML before embedding |
-| Touch events on mobile | Low | Use pointer events instead of mouse |
+
+| Risk                                | Impact | Mitigation                          |
+| ----------------------------------- | ------ | ----------------------------------- |
+| iframe sandbox blocks scripts       | High   | Verify sandbox="allow-scripts"      |
+| Canvas DPI scaling trên Retina      | Medium | Use devicePixelRatio                |
+| JSON escape issues cho HTML content | High   | Properly escape quotes, newlines    |
+| Large HTML snippets bloat JSON      | Medium | Minify HTML before embedding        |
+| Touch events on mobile              | Low    | Use pointer events instead of mouse |
 
 ## Security Considerations
+
 - HTML embeds run in sandboxed iframes — no access to parent DOM
 - No external network requests in simulations
 - No localStorage/cookie usage

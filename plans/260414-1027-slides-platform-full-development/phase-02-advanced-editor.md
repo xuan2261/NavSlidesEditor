@@ -1,6 +1,7 @@
 # Phase 2 — Advanced Editor Features
 
 ## Overview
+
 - **Priority**: P1
 - **Status**: ⬜ Pending
 - **Effort**: 3-4 tuần
@@ -10,9 +11,11 @@
 ## Features to Implement
 
 ### 2.1 Rubber-band Selection (Drag to Select)
+
 **Mô tả**: Click + drag trên canvas background tạo selection rectangle, chọn tất cả elements nằm trong vùng đó.
 
 **Implementation**:
+
 - Thêm state `rubberBand: { startX, startY, endX, endY }` vào editor-store
 - SlideCanvas: onMouseDown trên background → start rubberBand
 - onMouseMove → update rubberBand dimensions
@@ -22,11 +25,10 @@
 ```javascript
 // Logic chọn elements trong vùng
 function getElementsInRect(elements, rect) {
-  return elements.filter(el => {
+  return elements.filter((el) => {
     const elRight = el.x + el.width
     const elBottom = el.y + el.height
-    return el.x < rect.right && elRight > rect.left &&
-           el.y < rect.bottom && elBottom > rect.top
+    return el.x < rect.right && elRight > rect.left && el.y < rect.bottom && elBottom > rect.top
   })
 }
 ```
@@ -36,9 +38,11 @@ function getElementsInRect(elements, rect) {
 ---
 
 ### 2.2 Flexible Resolution
+
 **Mô tả**: Cho phép chọn resolution: 16:9 (960×540), 4:3 (960×720), Portrait (540×960), Custom.
 
 **Implementation**:
+
 - Thêm `resolution: { width, height }` vào presentation object
 - Settings trong Toolbar hoặc Properties panel khi không có element selected
 - Cập nhật SlideCanvas scale logic
@@ -49,8 +53,8 @@ function getElementsInRect(elements, rect) {
 const RESOLUTIONS = {
   '16:9': { width: 960, height: 540 },
   '4:3': { width: 960, height: 720 },
-  'portrait': { width: 540, height: 960 },
-  'custom': null // user input
+  portrait: { width: 540, height: 960 },
+  custom: null, // user input
 }
 ```
 
@@ -59,9 +63,11 @@ const RESOLUTIONS = {
 ---
 
 ### 2.3 Auto-Animate
+
 **Mô tả**: Smooth element transitions giữa 2 slides liên tiếp. Reveal.js đã hỗ trợ native `data-auto-animate`.
 
 **Implementation**:
+
 - Thêm `autoAnimate: boolean` per slide
 - Toggle trong slide context menu hoặc slide panel
 - HTML generator: thêm `data-auto-animate` attribute cho slide sections
@@ -85,9 +91,11 @@ const RESOLUTIONS = {
 ---
 
 ### 2.4 Freehand Drawing (Canvas-based)
+
 **Mô tả**: Vẽ tự do trên slide bằng chuột/pen, lưu dưới dạng SVG path.
 
 **Implementation**:
+
 - New element type: `drawing`
 - Canvas overlay khi ở drawing mode
 - Thu thập mouse points → smooth path (Catmull-Rom spline)
@@ -111,9 +119,11 @@ const RESOLUTIONS = {
 ---
 
 ### 2.5 Lines & Arrows 2.0
+
 **Mô tả**: Nâng cấp line element với curved lines, multiple arrowhead styles, connection points.
 
 **Implementation**:
+
 - Upgrade `shape: 'line'` → dedicated `line` element type
 - Properties: start point, end point, curvature, arrowhead start/end
 - Arrowhead types: none, arrow, diamond, circle, square
@@ -140,9 +150,11 @@ const RESOLUTIONS = {
 ---
 
 ### 2.6 SVG Element
+
 **Mô tả**: Upload + render SVG files natively (không phải image element).
 
 **Implementation**:
+
 - Accept `.svg` upload → store inline SVG content
 - Render directly in canvas (not as `<img>`)
 - Allows color customization (fill/stroke of SVG internals)
@@ -163,18 +175,23 @@ const RESOLUTIONS = {
 ---
 
 ### 2.7 Vertical Slides
+
 **Mô tả**: Sub-slides xếp dọc dưới main slide. Reveal.js native support.
 
 **Implementation**:
+
 - Thêm `children: Slide[]` vào slide data model
 - SlidePanel: hiển thị children indented dưới parent
 - Add "Add vertical slide" option trong slide context menu
 - HTML generator: wrap children trong nested `<section>`
 
 ```html
-<section>  <!-- horizontal parent -->
-  <section>Slide 1</section>  <!-- vertical child -->
-  <section>Slide 2</section>  <!-- vertical child -->
+<section>
+  <!-- horizontal parent -->
+  <section>Slide 1</section>
+  <!-- vertical child -->
+  <section>Slide 2</section>
+  <!-- vertical child -->
 </section>
 ```
 
@@ -185,9 +202,11 @@ const RESOLUTIONS = {
 ---
 
 ### 2.8 Locked Slides
+
 **Mô tả**: Lock toàn bộ slide để ngăn chỉnh sửa vô ý.
 
 **Implementation**:
+
 - Thêm `locked: boolean` per slide
 - Khi locked: disable element editing, disable drag/resize, show lock icon
 - Toggle trong slide context menu
@@ -198,9 +217,11 @@ const RESOLUTIONS = {
 ---
 
 ### 2.9 Kiosk/Autoplay Mode
+
 **Mô tả**: Auto-advance slides với configurable timing.
 
 **Implementation**:
+
 - Presentation setting: `autoSlide: number` (ms, 0 = disabled)
 - Config trong Settings hoặc present dialog
 - Inject `autoSlide` vào reveal.js config
@@ -212,9 +233,11 @@ const RESOLUTIONS = {
 ---
 
 ### 2.10 Scroll Mode
+
 **Mô tả**: View presentation như scrollable page (không phải slides).
 
 **Implementation**:
+
 - Reveal.js 5.x hỗ trợ `view: 'scroll'` hoặc `scrollActivationWidth` config
 - Thêm option trong present/share dialog: "Scroll Mode"
 - Inject config khi generate HTML cho scroll mode
@@ -225,9 +248,11 @@ const RESOLUTIONS = {
 ---
 
 ### 2.11 Custom CSS Editor
+
 **Mô tả**: Global CSS textarea cho presentation, live preview.
 
 **Implementation**:
+
 - Thêm `customCSS: string` vào presentation data
 - Modal với CodeMirror/Monaco textarea + live preview
 - Inject custom CSS vào `<style>` tag trong generated HTML

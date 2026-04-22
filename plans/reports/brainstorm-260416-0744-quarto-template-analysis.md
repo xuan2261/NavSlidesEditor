@@ -1,9 +1,9 @@
 ---
 url: https://grantmcdermott.com/quarto-revealjs-clean-demo/template.html
-title: "Quarto reveal.js clean"
-author: "Grant McDermott"
-published: "2025-10-09T00:00:00+00:00"
-captured_at: "2026-04-16T00:49:55.519Z"
+title: 'Quarto reveal.js clean'
+author: 'Grant McDermott'
+published: '2025-10-09T00:00:00+00:00'
+captured_at: '2026-04-16T00:49:55.519Z'
 ---
 
 # Quarto reveal.js clean
@@ -29,7 +29,7 @@ Before we dive a bit deeper, here is a simple example of the [clean theme](https
 Next, we’ll take a brief tour of some theme components.
 
 - We’ll use the same basic structure as the [original LaTeX slides](https://raw.githack.com/kylebutts/templates/master/latex-slides/auxiliary/slides.pdf).
-- Note that the [*full suite*](https://quarto.org/docs/presentations/revealjs/) of Reveal.js features are available for this Quarto implementation, even if we don’t cover everything here.
+- Note that the [_full suite_](https://quarto.org/docs/presentations/revealjs/) of Reveal.js features are available for this Quarto implementation, even if we don’t cover everything here.
 
 ## Before you proceed…
 
@@ -64,13 +64,13 @@ Note: While the “clean” extension renders to HTML format, this demo includes
 Here we have an unordered list.
 
 - first item
-	- sub-item
+  - sub-item
 - second item
 
 And next we have an ordered one.
 
 1. first item
-	1. sub-item
+   1. sub-item
 2. second item
 
 ## Components
@@ -162,18 +162,18 @@ Figure 1: Pairwise scatterplot
 The `clean` theme rolls its own minimalist aesthetic for tables. This should interface directly with Quarto’s excellent [table support](https://quarto.org/docs/authoring/tables.html).
 
 ```md
-| fruit  | price  |
-|--------|-------:|
-| apple  | 2.05   |
-| pear   | 1.37   |
-| orange | 3.09   |
+| fruit  | price |
+| ------ | ----: |
+| apple  |  2.05 |
+| pear   |  1.37 |
+| orange |  3.09 |
 
 : Fruit prices {tbl-colwidths="[75,25]"}
 ```
 
-| apple | 2.05 |
-| --- | --- |
-| pear | 1.37 |
+| apple  | 2.05 |
+| ------ | ---- |
+| pear   | 1.37 |
 | orange | 3.09 |
 
 ## Regression tables
@@ -274,7 +274,7 @@ Ideally, your figure will be the same aspect ratio as the screen that you’re p
 
 ## Interactive plots
 
-*Note: Simple flight data example using `threejs`. There are many interactive plotting options beyond this. (More [details](https://quarto.org/docs/interactive/).)*
+_Note: Simple flight data example using `threejs`. There are many interactive plotting options beyond this. (More [details](https://quarto.org/docs/interactive/).)_
 
 ## Other
 
@@ -323,15 +323,15 @@ quarto use template grantmcdermott/quarto-revealjs-clean-demo
 
 Table 1: Summary of the base R `attitude` dataset
 
-|  | Unique | Missing Pct. | Mean | SD | Min | Median | Max | Histogram |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| rating | 22 | 0 | 64.6 | 12.2 | 40.0 | 65.5 | 85.0 |  |
-| complaints | 23 | 0 | 66.6 | 13.3 | 37.0 | 65.0 | 90.0 |  |
-| privileges | 24 | 0 | 53.1 | 12.2 | 30.0 | 51.5 | 83.0 |  |
-| learning | 23 | 0 | 56.4 | 11.7 | 34.0 | 56.5 | 75.0 |  |
-| raises | 21 | 0 | 64.6 | 10.4 | 43.0 | 63.5 | 88.0 |  |
-| critical | 21 | 0 | 74.8 | 9.9 | 49.0 | 77.5 | 92.0 |  |
-| advance | 20 | 0 | 42.9 | 10.3 | 25.0 | 41.0 | 72.0 |  |
+|            | Unique | Missing Pct. | Mean | SD   | Min  | Median | Max  | Histogram |
+| ---------- | ------ | ------------ | ---- | ---- | ---- | ------ | ---- | --------- |
+| rating     | 22     | 0            | 64.6 | 12.2 | 40.0 | 65.5   | 85.0 |           |
+| complaints | 23     | 0            | 66.6 | 13.3 | 37.0 | 65.0   | 90.0 |           |
+| privileges | 24     | 0            | 53.1 | 12.2 | 30.0 | 51.5   | 83.0 |           |
+| learning   | 23     | 0            | 56.4 | 11.7 | 34.0 | 56.5   | 75.0 |           |
+| raises     | 21     | 0            | 64.6 | 10.4 | 43.0 | 63.5   | 88.0 |           |
+| critical   | 21     | 0            | 74.8 | 9.9  | 49.0 | 77.5   | 92.0 |           |
+| advance    | 20     | 0            | 42.9 | 10.3 | 25.0 | 41.0   | 72.0 |           |
 
 [Back to main](https://grantmcdermott.com/quarto-revealjs-clean-demo/template.html#/sec-crossref)
 

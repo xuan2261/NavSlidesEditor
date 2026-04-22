@@ -54,28 +54,29 @@ Entry: `client/src/main.jsx` → `App.jsx` → `ErrorBoundary` → `HomePage` or
 
 **Three Zustand stores** replaced the god-component pattern:
 
-| Store | File | Purpose |
-|-------|------|---------|
-| `editor-store` | `stores/editor-store.js` | Selection, editing state, clipboard, UI flags |
+| Store                | File                           | Purpose                                           |
+| -------------------- | ------------------------------ | ------------------------------------------------- |
+| `editor-store`       | `stores/editor-store.js`       | Selection, editing state, clipboard, UI flags     |
 | `presentation-store` | `stores/presentation-store.js` | Presentation data, current slide index, slide ops |
-| `ui-store` | `stores/ui-store.js` | Theme, panel visibility, toolbar state |
+| `ui-store`           | `stores/ui-store.js`           | Theme, panel visibility, toolbar state            |
 
 ### Custom Hooks
 
 Logic extracted from EditorPage into reusable hooks:
 
-| Hook | File | Purpose |
-|------|------|---------|
-| `useAutosave` | `hooks/use-autosave.js` | Debounced auto-save (1500ms) |
-| `useClipboard` | `hooks/use-clipboard.js` | Copy/cut/paste/duplicate elements |
-| `useHistory` | `hooks/use-history.js` | Undo/redo (50-step circular buffer) |
-| `useKeyboard` | `hooks/use-keyboard.js` | Keyboard shortcut dispatch |
-| `useLivePresentation` | `hooks/use-live-presentation.js` | Socket.IO live mode |
-| `useSlideOperations` | `hooks/use-slide-operations.js` | Slide CRUD + element manipulation |
+| Hook                  | File                             | Purpose                             |
+| --------------------- | -------------------------------- | ----------------------------------- |
+| `useAutosave`         | `hooks/use-autosave.js`          | Debounced auto-save (1500ms)        |
+| `useClipboard`        | `hooks/use-clipboard.js`         | Copy/cut/paste/duplicate elements   |
+| `useHistory`          | `hooks/use-history.js`           | Undo/redo (50-step circular buffer) |
+| `useKeyboard`         | `hooks/use-keyboard.js`          | Keyboard shortcut dispatch          |
+| `useLivePresentation` | `hooks/use-live-presentation.js` | Socket.IO live mode                 |
+| `useSlideOperations`  | `hooks/use-slide-operations.js`  | Slide CRUD + element manipulation   |
 
 ### EditorPage — Refactored (1475 LOC)
 
 Reduced from 3400+ LOC. EditorPage now primarily handles:
+
 - Component composition and layout
 - Modal state management
 - TipTap editor lifecycle
@@ -83,32 +84,32 @@ Reduced from 3400+ LOC. EditorPage now primarily handles:
 
 ### Component Responsibilities
 
-| Component           | LOC  | Role                                                                   |
-| ------------------- | ---- | ---------------------------------------------------------------------- |
-| `SlideCanvas`       | 2421 | Renders elements at 960×540, drag/resize/rotate, smart guides, crop    |
-| `Toolbar`           | 1229 | Insert elements, TipTap formatting commands, background picker         |
-| `PropertiesPanel`   | 437  | Routes to type-specific property editor subcomponents                  |
-| `SlidePanel`        | 584  | Slide thumbnails, drag-to-reorder, add/delete slides                   |
-| `InsertMenu`        | —    | Element insertion UI with categorized types                            |
-| `EditorMenuBar`     | —    | File, edit, view menu actions                                          |
-| `ErrorBoundary`     | 73   | Catches render errors, shows recovery UI                               |
-| `FindReplaceBar`    | —    | Cross-slide text search + replace overlay                              |
-| `AnimationTimeline` | —    | Visual sequencer for fragment animations                               |
+| Component           | LOC  | Role                                                                |
+| ------------------- | ---- | ------------------------------------------------------------------- |
+| `SlideCanvas`       | 2421 | Renders elements at 960×540, drag/resize/rotate, smart guides, crop |
+| `Toolbar`           | 1229 | Insert elements, TipTap formatting commands, background picker      |
+| `PropertiesPanel`   | 437  | Routes to type-specific property editor subcomponents               |
+| `SlidePanel`        | 584  | Slide thumbnails, drag-to-reorder, add/delete slides                |
+| `InsertMenu`        | —    | Element insertion UI with categorized types                         |
+| `EditorMenuBar`     | —    | File, edit, view menu actions                                       |
+| `ErrorBoundary`     | 73   | Catches render errors, shows recovery UI                            |
+| `FindReplaceBar`    | —    | Cross-slide text search + replace overlay                           |
+| `AnimationTimeline` | —    | Visual sequencer for fragment animations                            |
 
 ### PropertiesPanel Decomposition
 
 PropertiesPanel (437 LOC) routes to 8 type-specific sub-editors in `components/properties/`:
 
-| File | Handles |
-|------|---------|
+| File                          | Handles                                       |
+| ----------------------------- | --------------------------------------------- |
 | `common-element-controls.jsx` | Position, size, rotation, z-order (all types) |
-| `shape-properties.jsx` | Fill, stroke, opacity, corner radius |
-| `image-properties.jsx` | Crop, filters, object-fit |
-| `chart-properties.jsx` | Chart type, data, colors |
-| `code-properties.jsx` | Language, theme selection |
-| `table-properties.jsx` | Row/column management, header row |
-| `media-properties.jsx` | Autoplay, loop, muted |
-| `misc-properties.jsx` | LaTeX, HTML, QR, callout, icon, divider |
+| `shape-properties.jsx`        | Fill, stroke, opacity, corner radius          |
+| `image-properties.jsx`        | Crop, filters, object-fit                     |
+| `chart-properties.jsx`        | Chart type, data, colors                      |
+| `code-properties.jsx`         | Language, theme selection                     |
+| `table-properties.jsx`        | Row/column management, header row             |
+| `media-properties.jsx`        | Autoplay, loop, muted                         |
+| `misc-properties.jsx`         | LaTeX, HTML, QR, callout, icon, divider       |
 
 ### Element Factory
 
@@ -139,36 +140,36 @@ Environment variables:
 
 ### Route Modules (16 files in `server/routes/`)
 
-| Module | Endpoints | Zod Validation |
-|--------|-----------|----------------|
-| `presentations.js` | CRUD, duplicate, export, present | ✅ create + update |
-| `share.js` | Create/revoke share, verify password | ✅ share + verify |
-| `github.js` | Config + push | ✅ config + push |
-| `ai.js` | Generate, rewrite, translate | ✅ all endpoints |
-| `upload.js` | File upload (multer, 100MB) | — (multer handles) |
-| `history.js` | Snapshots CRUD | — |
-| `templates.js` | Template CRUD | — |
-| `sync.js` | rclone sync operations | — |
-| `media.js` | Media management | — |
-| Others | Analytics, explore, marketplace, settings, live | — |
+| Module             | Endpoints                                       | Zod Validation     |
+| ------------------ | ----------------------------------------------- | ------------------ |
+| `presentations.js` | CRUD, duplicate, export, present                | ✅ create + update |
+| `share.js`         | Create/revoke share, verify password            | ✅ share + verify  |
+| `github.js`        | Config + push                                   | ✅ config + push   |
+| `ai.js`            | Generate, rewrite, translate                    | ✅ all endpoints   |
+| `upload.js`        | File upload (multer, 100MB)                     | — (multer handles) |
+| `history.js`       | Snapshots CRUD                                  | —                  |
+| `templates.js`     | Template CRUD                                   | —                  |
+| `sync.js`          | rclone sync operations                          | —                  |
+| `media.js`         | Media management                                | —                  |
+| Others             | Analytics, explore, marketplace, settings, live | —                  |
 
 ### Middleware Stack
 
-| Middleware | File | Purpose |
-|-----------|------|---------|
-| `validate` | `middleware/validate.js` | Zod schema validation for req.body |
-| `schemas` | `middleware/schemas.js` | All Zod schema definitions |
+| Middleware      | File                          | Purpose                               |
+| --------------- | ----------------------------- | ------------------------------------- |
+| `validate`      | `middleware/validate.js`      | Zod schema validation for req.body    |
+| `schemas`       | `middleware/schemas.js`       | All Zod schema definitions            |
 | `error-handler` | `middleware/error-handler.js` | Centralized error response formatting |
 
 ### Services Layer
 
-| Service | File | Purpose |
-|---------|------|---------|
-| `storage` | `services/storage.js` | File I/O abstraction for JSON data |
-| `socket-handler` | `services/socket-handler.js` | Socket.IO event handling (extracted from index.js) |
-| `live-rooms` | `services/live-rooms.js` | Live presentation room management |
-| `ai-provider` | `services/ai-provider.js` | AI service integration |
-| `presentation-finder` | `services/presentation-finder.js` | Presentation lookup utility |
+| Service               | File                              | Purpose                                            |
+| --------------------- | --------------------------------- | -------------------------------------------------- |
+| `storage`             | `services/storage.js`             | File I/O abstraction for JSON data                 |
+| `socket-handler`      | `services/socket-handler.js`      | Socket.IO event handling (extracted from index.js) |
+| `live-rooms`          | `services/live-rooms.js`          | Live presentation room management                  |
+| `ai-provider`         | `services/ai-provider.js`         | AI service integration                             |
+| `presentation-finder` | `services/presentation-finder.js` | Presentation lookup utility                        |
 
 ### File Storage Layout
 
@@ -193,12 +194,12 @@ server/uploads/
 
 `shared/src/` — code shared between client and server:
 
-| File | Purpose |
-|------|---------|
-| `htmlGenerator.js` | Core HTML export engine (reveal.js generation) |
-| `element-renderers.js` | DRY element rendering shared between export pipelines |
-| `shapeUtils.js` | SVG path rendering for shape types |
-| `presenterTools.js` | Presenter tools (timer, notes, navigation) |
+| File                    | Purpose                                                   |
+| ----------------------- | --------------------------------------------------------- |
+| `htmlGenerator.js`      | Core HTML export engine (reveal.js generation)            |
+| `element-renderers.js`  | DRY element rendering shared between export pipelines     |
+| `shapeUtils.js`         | SVG path rendering for shape types                        |
+| `presenterTools.js`     | Presenter tools (timer, notes, navigation)                |
 | `types/presentation.js` | JSDoc type definitions (ElementType, Slide, Presentation) |
 
 ## Electron Architecture
@@ -229,6 +230,7 @@ Data paths per platform:
 ### Type Definitions (`shared/src/types/presentation.js`)
 
 Full JSDoc type definitions for all data models, including:
+
 - `ElementType` — union of 18 element type strings
 - `BaseElement` — common fields (id, type, x, y, width, height, rotation, etc.)
 - 15 type-specific element typedefs (TextElement, ImageElement, ShapeElement, etc.)
@@ -239,6 +241,7 @@ Full JSDoc type definitions for all data models, including:
 ### Zod Validation Schemas (`server/middleware/schemas.js`)
 
 Runtime validation for API endpoints:
+
 - `createPresentationSchema` / `updatePresentationSchema`
 - `elementSchema` (with `.passthrough()` for type-specific fields)
 - `slideSchema`
@@ -251,16 +254,16 @@ Runtime validation for API endpoints:
 
 Post-refactor CSS architecture (replaced monolithic 57KB `index.css`):
 
-| File | Purpose | Approx Lines |
-|------|---------|-------------|
-| `index.css` | Design tokens, resets, buttons (global) | 270 |
-| `styles/editor-page.css` | Editor layout, toolbar areas | ~250 |
-| `styles/home-page.css` | Dashboard, presentation cards | ~250 |
-| `styles/slide-panel.css` | Slide thumbnails, slide list | ~120 |
-| `styles/canvas-toolbar.css` | Canvas toolbar controls | ~150 |
-| `styles/properties-panel.css` | Properties panel layout | ~120 |
-| `styles/modals.css` | Shared modal styles | ~60 |
-| `styles/components.css` | Miscellaneous component styles | ~400 |
+| File                          | Purpose                                 | Approx Lines |
+| ----------------------------- | --------------------------------------- | ------------ |
+| `index.css`                   | Design tokens, resets, buttons (global) | 270          |
+| `styles/editor-page.css`      | Editor layout, toolbar areas            | ~250         |
+| `styles/home-page.css`        | Dashboard, presentation cards           | ~250         |
+| `styles/slide-panel.css`      | Slide thumbnails, slide list            | ~120         |
+| `styles/canvas-toolbar.css`   | Canvas toolbar controls                 | ~150         |
+| `styles/properties-panel.css` | Properties panel layout                 | ~120         |
+| `styles/modals.css`           | Shared modal styles                     | ~60          |
+| `styles/components.css`       | Miscellaneous component styles          | ~400         |
 
 Theme switching: `App.jsx` sets `document.documentElement.setAttribute('data-theme', theme)` with `[data-theme='light']` CSS overrides.
 

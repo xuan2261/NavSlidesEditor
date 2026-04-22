@@ -3,15 +3,6 @@
 /* Computer Modern fonts (CMU) */
 @import url('https://cdn.jsdelivr.net/gh/dreampulse/computer-modern-web-font@master/fonts.css');
 
-/* Component styles (split for maintainability) */
-@import './styles/home-page.css';
-@import './styles/editor-page.css';
-@import './styles/slide-panel.css';
-@import './styles/canvas-toolbar.css';
-@import './styles/properties-panel.css';
-@import './styles/modals.css';
-@import './styles/components.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -95,23 +86,6 @@
   --danger-hover: #dc2626;
   --warning: #f59e0b;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
-
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-
-  /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow: 400ms ease;
-
   /* Slide ratio */
   --slide-ratio: 56.25%;
 
@@ -145,11 +119,6 @@
   --border-strong: rgba(0, 0, 0, 0.16);
 
   --success: #16a34a;
-
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.15);
 }
 
 /* ════════════════════════════════════════════
@@ -167,15 +136,26 @@ body,
   overflow: hidden;
 }
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-h1 { font-weight: 700; letter-spacing: -0.02em; }
-h2 { font-weight: 600; letter-spacing: -0.01em; }
+h1 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
 .label-caps {
   font-size: 11px;
   font-weight: 500;
@@ -200,80 +180,29 @@ select {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
-/* ════════════════════════════════════════════
-   BUTTONS
-   ════════════════════════════════════════════ */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 500;
-  transition: transform 100ms ease, background var(--transition-fast), box-shadow var(--transition-fast);
-  cursor: pointer;
-  border: none;
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-.btn:active { transform: scale(0.97); }
-
-.btn-primary {
-  background: var(--accent);
-  color: white;
-  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
-.btn-primary:hover {
-  background: var(--accent-hover);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
 }
-.btn-secondary {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border: 1px solid var(--border-light);
-}
-.btn-secondary:hover {
-  background: var(--bg-hover);
-  border-color: var(--border-strong);
-}
-.btn-danger {
-  background: var(--danger);
-  color: white;
-}
-.btn-danger:hover {
-  background: var(--danger-hover);
-}
-.btn-ghost {
-  color: var(--text-secondary);
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-.btn-ghost:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-.btn-icon {
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  transition: background var(--transition-fast), color var(--transition-fast);
-}
-.btn-icon:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-.btn-icon.active {
-  background: var(--accent);
-  color: white;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
+svg {
+  flex-shrink: 0;
+}
 
-
+/* Joyride Overrides */
+.react-joyride__overlay {
+  z-index: 99999 !important;
+}
+.react-joyride__tooltip {
+  z-index: 100000 !important;
+}

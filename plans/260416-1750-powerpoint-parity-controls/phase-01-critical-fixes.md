@@ -7,17 +7,18 @@
 
 ## Issues
 
-| # | Issue | Area | Fix Complexity |
-|---|---|---|---|
-| P0-1 | Ctrl+B/I/U không hoạt động khi edit text | Canvas | Easy |
-| P0-2 | KHÔNG CÓ Cut/Copy/Paste elements | Canvas | Medium |
-| P0-3 | KHÔNG CÓ Selection Pane (layer list) | Properties | Medium |
+| #    | Issue                                    | Area       | Fix Complexity |
+| ---- | ---------------------------------------- | ---------- | -------------- |
+| P0-1 | Ctrl+B/I/U không hoạt động khi edit text | Canvas     | Easy           |
+| P0-2 | KHÔNG CÓ Cut/Copy/Paste elements         | Canvas     | Medium         |
+| P0-3 | KHÔNG CÓ Selection Pane (layer list)     | Properties | Medium         |
 
 ---
 
 ## P0-1: Fix Ctrl+B/I/U Keyboard Shortcuts (SlideCanvas.jsx)
 
 ### Root Cause
+
 ```jsx
 // SlideCanvas.jsx line 480-486
 if (editingElementId) {
@@ -25,13 +26,14 @@ if (editingElementId) {
     onStopEdit()
     e.preventDefault()
   }
-  return  // ← RETURN NGAY → TipTap KHÔNG nhận được Ctrl events
+  return // ← RETURN NGAY → TipTap KHÔNG nhận được Ctrl events
 }
 ```
 
 ### Fix Steps
 
 **Step 1:** Sửa `onKeyDown` handler trong `SlideCanvas.jsx`
+
 ```jsx
 // Thay:
 // if (editingElementId) { ...; return }
@@ -49,6 +51,7 @@ if (editingElementId) {
 ```
 
 **Step 2:** Verify with `EditorPage.jsx` — test all:
+
 - `Ctrl+B` → Bold text
 - `Ctrl+I` → Italic text
 - `Ctrl+U` → Underline text
@@ -58,6 +61,7 @@ if (editingElementId) {
 **Step 3:** Test keyboard shortcuts khi KHÔNG edit text (vẫn hoạt động như cũ)
 
 ### Verification
+
 ```bash
 # Test criteria:
 # ✅ Ctrl+B/I/U work khi đang type trong text box
@@ -86,6 +90,7 @@ editor-store.js          SlideCanvas.jsx          PropertiesPanel.jsx
 ### Implementation Steps
 
 **Step 1:** Thêm clipboard state vào `editor-store.js`
+
 ```js
 // Thêm vào store:
 clipboard: null, // { elements: [...], sourceSlideIdx: number }
@@ -98,25 +103,31 @@ duplicateSelected: () => { ... },
 ```
 
 **Step 2:** Thêm keyboard shortcuts vào `SlideCanvas.jsx`
+
 ```jsx
 // Trong onKeyDown handler:
 // if (selectedElementIds.length > 0) { ... }
 // THÊM:
 if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-  copySelectedElements(); e.preventDefault()
+  copySelectedElements()
+  e.preventDefault()
 }
 if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
-  cutSelectedElements(); e.preventDefault()
+  cutSelectedElements()
+  e.preventDefault()
 }
 if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-  pasteElements(currentSlideIdx, mouseX, mouseY); e.preventDefault()
+  pasteElements(currentSlideIdx, mouseX, mouseY)
+  e.preventDefault()
 }
 if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
-  duplicateSelected(); e.preventDefault()
+  duplicateSelected()
+  e.preventDefault()
 }
 ```
 
 **Step 3:** Thêm Canvas context menu items
+
 ```jsx
 // Trong canvas-context-menu JSX:
 <button onClick={copySelectedElements}>Copy (Ctrl+C)</button>
@@ -126,16 +137,19 @@ if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
 ```
 
 **Step 4:** Thêm UI feedback
+
 - `copied` state trong SlideCanvas → hiện toast "Copied N elements"
 - `pasting` state → hiện ghost element tại vị trí paste
 
 ### Edge Cases
+
 - Paste vào slide KHÁC với slide nguồn → work (đặt tại center của slide)
 - Paste khi clipboard rỗng → disabled button
 - Cut element đã locked → skip locked elements
 - Copy element có zIndex cao nhất → giữ nguyên zIndex + 1 offset
 
 ### Verification
+
 ```
 ✅ Ctrl+C → elements saved to clipboard
 ✅ Ctrl+X → elements removed + saved
@@ -150,7 +164,9 @@ if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
 ## P0-3: Add Selection Pane (PropertiesPanel.jsx)
 
 ### PowerPoint Reference
+
 View → Selection Pane → Danh sách tất cả objects trên slide với:
+
 - Visibility toggle (eye icon)
 - Lock toggle
 - Name (editable)
@@ -168,12 +184,15 @@ View → Selection Pane → Danh sách tất cả objects trên slide với:
     onToggleVisibility={(id) => onUpdateElement(id, { hidden: !el.hidden })}
     onToggleLock={(id) => onUpdateElement(id, { locked: !el.locked })}
     onRename={(id, name) => onUpdateElement(id, { name })}
-    onReorder={(fromIdx, toIdx) => { /* reorder zIndex */ }}
+    onReorder={(fromIdx, toIdx) => {
+      /* reorder zIndex */
+    }}
   />
 </CollapsibleSection>
 ```
 
 ### UI Design
+
 ```
 ┌─────────────────────────────┐
 │ Selection Pane          👁 📌 │
@@ -189,6 +208,7 @@ View → Selection Pane → Danh sách tất cả objects trên slide với:
 ### Implementation Steps
 
 **Step 1:** Tạo `SelectionPane` component
+
 ```jsx
 // client/src/components/SelectionPane.jsx
 // Props: elements, selectedIds, onSelect, onToggleVisibility,
@@ -205,10 +225,12 @@ View → Selection Pane → Danh sách tất cả objects trên slide với:
 ```
 
 **Step 2:** Thêm `hidden` field support trong element model
+
 - Trong `slide.elements[]`, thêm `{ ...el, hidden: boolean }`
 - Trong `SlideCanvas`, khi render: `{...el.hidden ? null : <CanvasElement />}`
 
 **Step 3:** Thêm vào PropertiesPanel
+
 ```jsx
 <CollapsibleSection title="Selection Pane" defaultOpen={false}>
   <SelectionPane
@@ -216,11 +238,11 @@ View → Selection Pane → Danh sách tất cả objects trên slide với:
     selectedIds={selectedElementIds}
     onSelect={onToggleSelectElement}
     onToggleVisibility={(id) => {
-      const el = slide.elements.find(e => e.id === id)
+      const el = slide.elements.find((e) => e.id === id)
       onUpdateElement(id, { hidden: !el?.hidden })
     }}
     onToggleLock={(id) => {
-      const el = slide.elements.find(e => e.id === id)
+      const el = slide.elements.find((e) => e.id === id)
       onUpdateElement(id, { locked: !el?.locked })
     }}
     onRename={(id, name) => onUpdateElement(id, { name })}
@@ -237,12 +259,14 @@ View → Selection Pane → Danh sách tất cả objects trên slide với:
 ```
 
 **Step 4:** Thêm `hidden` vào element rendering in SlideCanvas
+
 ```jsx
 // Trong SlideCanvas, render elements:
 // {slide?.elements?.filter(el => !el.hidden)...
 ```
 
 ### Verification
+
 ```
 ✅ Selection Pane hiện trong Properties Panel (collapsed by default)
 ✅ Tất cả elements được liệt kê với type icon + name

@@ -1,14 +1,14 @@
 ---
-title: "NavSlidesEditor Pro Features Integration"
-description: ""
+title: 'NavSlidesEditor Pro Features Integration'
+description: ''
 status: pending
 priority: P2
-branch: "master"
+branch: 'master'
 tags: []
 blockedBy: []
 blocks: []
-created: "2026-04-20T23:23:39.076Z"
-createdBy: "ck:plan"
+created: '2026-04-20T23:23:39.076Z'
+createdBy: 'ck:plan'
 source: skill
 ---
 
@@ -20,12 +20,12 @@ Kế hoạch này nhằm mục đích nâng cấp NavSlidesEditor với các tí
 
 ## Phases
 
-| Phase | Name | Status |
-|-------|------|--------|
-| 1 | [01-full-deck-templates](./phase-01-01-full-deck-templates.md) | Completed |
-| 2 | [02-line-arrow-tools](./phase-02-02-line-arrow-tools.md) | Completed |
-| 3 | [03-global-settings](./phase-03-03-global-settings.md) | Completed |
-| 4 | [04-tutorial-markdown](./phase-04-04-tutorial-markdown.md) | Completed |
+| Phase | Name                                                           | Status    |
+| ----- | -------------------------------------------------------------- | --------- |
+| 1     | [01-full-deck-templates](./phase-01-01-full-deck-templates.md) | Completed |
+| 2     | [02-line-arrow-tools](./phase-02-02-line-arrow-tools.md)       | Completed |
+| 3     | [03-global-settings](./phase-03-03-global-settings.md)         | Completed |
+| 4     | [04-tutorial-markdown](./phase-04-04-tutorial-markdown.md)     | Completed |
 
 ## Dependencies
 

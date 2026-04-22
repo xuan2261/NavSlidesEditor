@@ -1,267 +1,434 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>3-Phase Power & Motor Stator Analyzer</title>
     <style>
-        :root {
-            --bg: #050b14;
-            --primary: #48bfe3;
-            --glow: #48bfe380;
-            --text: #d0eeff;
-            --ph-a: #ff4757;
-            --ph-b: #ffd700;
-            --ph-c: #00ff87;
-            --panel: rgba(10, 22, 40, 0.8);
-            --border: rgba(72, 191, 227, 0.2);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 15px; }
-        
-        h3 { font-size: 1.3rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px var(--glow); margin-bottom: 5px; text-align: center; }
-        .sub { font-size: 0.85rem; color: rgba(208, 238, 255, 0.6); text-align: center; margin-bottom: 12px; }
-        
-        .container {
-            display: flex; gap: 15px; width: 100%; max-width: 1000px; height: 420px;
-        }
-        
-        .panel {
-            background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5); backdrop-filter: blur(5px);
-            display: flex; flex-direction: column; padding: 10px;
-        }
-        
-        .ctrl-panel { flex: 0.5; min-width: 200px; }
-        .wave-panel { flex: 1.5; }
-        .stator-panel { flex: 1; align-items: center; }
-        
-        .ctrl-group { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
-        .ctrl { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
-        .ctrl label { font-size: 0.85rem; font-weight: bold; color: rgba(208, 238, 255, 0.8); display: flex; justify-content: space-between; }
-        input[type=range] { width: 100%; accent-color: var(--primary); height: 4px; }
-        
-        .btn { width: 100%; background: rgba(72, 191, 227, 0.1); border: 1px solid var(--primary); color: var(--text); padding: 8px; border-radius: 4px; cursor: pointer; transition: all 0.2s; font-weight: bold; }
-        .btn:hover { background: rgba(72, 191, 227, 0.3); box-shadow: 0 0 10px var(--glow); }
+      :root {
+        --bg: #050b14;
+        --primary: #48bfe3;
+        --glow: #48bfe380;
+        --text: #d0eeff;
+        --ph-a: #ff4757;
+        --ph-b: #ffd700;
+        --ph-c: #00ff87;
+        --panel: rgba(10, 22, 40, 0.8);
+        --border: rgba(72, 191, 227, 0.2);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 15px;
+      }
 
-        .metrics { margin-top: auto; display: flex; flex-direction: column; gap: 5px; background: rgba(255, 71, 87, 0.05); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.9rem; }
-        .metrics b { color: #fff; }
-        
-        .canvas-wrapper { flex: 1; width: 100%; position: relative; border-radius: 8px; overflow: hidden; background: #000; border: 1px solid rgba(255,255,255,0.05); }
-        canvas { display: block; width: 100%; height: 100%; }
-        
-        .panel-title { font-size: 0.85rem; text-align: center; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; color: rgba(208, 238, 255, 0.7); }
+      h3 {
+        font-size: 1.3rem;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 0 0 10px var(--glow);
+        margin-bottom: 5px;
+        text-align: center;
+      }
+      .sub {
+        font-size: 0.85rem;
+        color: rgba(208, 238, 255, 0.6);
+        text-align: center;
+        margin-bottom: 12px;
+      }
+
+      .container {
+        display: flex;
+        gap: 15px;
+        width: 100%;
+        max-width: 1000px;
+        height: 420px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+      }
+
+      .ctrl-panel {
+        flex: 0.5;
+        min-width: 200px;
+      }
+      .wave-panel {
+        flex: 1.5;
+      }
+      .stator-panel {
+        flex: 1;
+        align-items: center;
+      }
+
+      .ctrl-group {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      .ctrl {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 8px;
+      }
+      .ctrl label {
+        font-size: 0.85rem;
+        font-weight: bold;
+        color: rgba(208, 238, 255, 0.8);
+        display: flex;
+        justify-content: space-between;
+      }
+      input[type='range'] {
+        width: 100%;
+        accent-color: var(--primary);
+        height: 4px;
+      }
+
+      .btn {
+        width: 100%;
+        background: rgba(72, 191, 227, 0.1);
+        border: 1px solid var(--primary);
+        color: var(--text);
+        padding: 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: bold;
+      }
+      .btn:hover {
+        background: rgba(72, 191, 227, 0.3);
+        box-shadow: 0 0 10px var(--glow);
+      }
+
+      .metrics {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        background: rgba(255, 71, 87, 0.05);
+        padding: 10px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.9rem;
+      }
+      .metrics b {
+        color: #fff;
+      }
+
+      .canvas-wrapper {
+        flex: 1;
+        width: 100%;
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #000;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .panel-title {
+        font-size: 0.85rem;
+        text-align: center;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(208, 238, 255, 0.7);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h3>⚡ Advanced 3-Phase Analytics</h3>
     <div class="sub">Waveforms, Phasors & Motor Stator Magnetic Field</div>
-    
+
     <div class="container">
-        <!-- Controls -->
-        <div class="panel ctrl-panel">
-            <div class="ctrl-group">
-                <div class="ctrl">
-                    <label>Freq (Hz) <span id="vF">50</span></label>
-                    <input type="range" id="sF" min="10" max="60" value="50">
-                </div>
-                <div class="ctrl">
-                    <label>Amplitude (%) <span id="vA">80</span></label>
-                    <input type="range" id="sA" min="10" max="100" value="80">
-                </div>
-                <div class="ctrl">
-                    <label>Phase Bal./Imbal. <span id="vI">0°</span></label>
-                    <input type="range" id="sI" min="-45" max="45" value="0">
-                </div>
-                <button class="btn" id="btnP" onclick="togglePlay()">⏸ Pause</button>
-            </div>
-            
-            <div class="metrics">
-                <div>Va: <b id="mVa" style="color:var(--ph-a)">0.0</b> V</div>
-                <div>Vb: <b id="mVb" style="color:var(--ph-b)">0.0</b> V</div>
-                <div>Vc: <b id="mVc" style="color:var(--ph-c)">0.0</b> V</div>
-                <div style="margin-top:5px; border-top:1px solid #333; padding-top:5px">Vector Sum: <b id="mSum">0.0</b> V</div>
-            </div>
+      <!-- Controls -->
+      <div class="panel ctrl-panel">
+        <div class="ctrl-group">
+          <div class="ctrl">
+            <label>Freq (Hz) <span id="vF">50</span></label>
+            <input type="range" id="sF" min="10" max="60" value="50" />
+          </div>
+          <div class="ctrl">
+            <label>Amplitude (%) <span id="vA">80</span></label>
+            <input type="range" id="sA" min="10" max="100" value="80" />
+          </div>
+          <div class="ctrl">
+            <label>Phase Bal./Imbal. <span id="vI">0°</span></label>
+            <input type="range" id="sI" min="-45" max="45" value="0" />
+          </div>
+          <button class="btn" id="btnP" onclick="togglePlay()">⏸ Pause</button>
         </div>
-        
-        <!-- Waveforms -->
-        <div class="panel wave-panel">
-            <div class="panel-title">Time Domain Waveforms</div>
-            <div class="canvas-wrapper">
-                <canvas id="cvW"></canvas>
-            </div>
+
+        <div class="metrics">
+          <div>Va: <b id="mVa" style="color: var(--ph-a)">0.0</b> V</div>
+          <div>Vb: <b id="mVb" style="color: var(--ph-b)">0.0</b> V</div>
+          <div>Vc: <b id="mVc" style="color: var(--ph-c)">0.0</b> V</div>
+          <div style="margin-top: 5px; border-top: 1px solid #333; padding-top: 5px">
+            Vector Sum: <b id="mSum">0.0</b> V
+          </div>
         </div>
-        
-        <!-- Stator / Phasor -->
-        <div class="panel stator-panel">
-            <div class="panel-title">Rotating Magnetic Field (B)</div>
-            <div class="canvas-wrapper">
-                <canvas id="cvS"></canvas>
-            </div>
+      </div>
+
+      <!-- Waveforms -->
+      <div class="panel wave-panel">
+        <div class="panel-title">Time Domain Waveforms</div>
+        <div class="canvas-wrapper">
+          <canvas id="cvW"></canvas>
         </div>
+      </div>
+
+      <!-- Stator / Phasor -->
+      <div class="panel stator-panel">
+        <div class="panel-title">Rotating Magnetic Field (B)</div>
+        <div class="canvas-wrapper">
+          <canvas id="cvS"></canvas>
+        </div>
+      </div>
     </div>
 
     <script>
-        const cvW = document.getElementById('cvW'), ctxW = cvW.getContext('2d');
-        const cvS = document.getElementById('cvS'), ctxS = cvS.getContext('2d');
-        
-        let t = 0, playing = true, raf;
-        const colors = ['#ff4757', '#ffd700', '#00ff87'];
-        
-        function resize() {
-            cvW.width = cvW.parentElement.clientWidth; cvW.height = cvW.parentElement.clientHeight;
-            cvS.width = cvS.parentElement.clientWidth; cvS.height = cvS.parentElement.clientHeight;
-        }
-        window.addEventListener('resize', resize);
-        setTimeout(resize, 100);
+      const cvW = document.getElementById('cvW'),
+        ctxW = cvW.getContext('2d')
+      const cvS = document.getElementById('cvS'),
+        ctxS = cvS.getContext('2d')
 
-        function togglePlay() {
-            playing = !playing;
-            document.getElementById('btnP').textContent = playing ? '⏸ Pause' : '▶ Play';
-            if(playing) loop();
-        }
+      let t = 0,
+        playing = true,
+        raf
+      const colors = ['#ff4757', '#ffd700', '#00ff87']
 
-        function drawWaveforms(freq, amp, phases) {
-            const W = cvW.width, H = cvW.height, py = 15;
-            ctxW.clearRect(0,0,W,H);
-            
-            // Grid
-            ctxW.strokeStyle = 'rgba(72, 191, 227, 0.1)'; ctxW.lineWidth = 1; ctxW.setLineDash([2,4]);
-            for(let i=1; i<10; i++) {
-                let x = W*i/10; ctxW.beginPath(); ctxW.moveTo(x,0); ctxW.lineTo(x,H); ctxW.stroke();
-            }
-            for(let i=1; i<6; i++) {
-                let y = H*i/6; ctxW.beginPath(); ctxW.moveTo(0,y); ctxW.lineTo(W,y); ctxW.stroke();
-            }
-            ctxW.setLineDash([]);
-            
-            // Zero line
-            ctxW.strokeStyle = 'rgba(255,255,255,0.3)'; ctxW.beginPath(); ctxW.moveTo(0,H/2); ctxW.lineTo(W,H/2); ctxW.stroke();
-            
-            const w = 2*Math.PI*1; // Visual frequency (1 Hz visual)
-            const dur = 2; // 2 visual cycles shown
-            
-            for(let ph=0; ph<3; ph++) {
-                ctxW.strokeStyle = colors[ph]; ctxW.lineWidth = 2; ctxW.beginPath();
-                for(let i=0; i<W; i++) {
-                    let tt = t + dur * (i/W);
-                    let v = amp * Math.sin(w*tt + phases[ph]);
-                    let x = i;
-                    let y = H/2 - (H/2 - py) * v;
-                    if(i===0) ctxW.moveTo(x,y); else ctxW.lineTo(x,y);
-                }
-                ctxW.shadowColor = colors[ph]; ctxW.shadowBlur = 5; ctxW.stroke(); ctxW.shadowBlur = 0;
-            }
-            
-            // Draw current time marker (at left edge t)
-            ctxW.strokeStyle = '#fff'; ctxW.lineWidth = 1.5;
-            ctxW.beginPath(); ctxW.moveTo(0,0); ctxW.lineTo(0,H); ctxW.stroke();
-        }
+      function resize() {
+        cvW.width = cvW.parentElement.clientWidth
+        cvW.height = cvW.parentElement.clientHeight
+        cvS.width = cvS.parentElement.clientWidth
+        cvS.height = cvS.parentElement.clientHeight
+      }
+      window.addEventListener('resize', resize)
+      setTimeout(resize, 100)
 
-        function drawStator(freq, amp, phases, vals) {
-            const W = cvS.width, H = cvS.height;
-            const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 20;
-            
-            ctxS.clearRect(0,0,W,H);
-            
-            // Draw Stator frame
-            ctxS.strokeStyle = '#333'; ctxS.lineWidth = 4;
-            ctxS.beginPath(); ctxS.arc(cx, cy, r, 0, Math.PI*2); ctxS.stroke();
-            
-            // Draw 3 coils (poles)
-            // A: 0°, B: 120° (2pi/3), C: 240° (4pi/3)
-            const coilAngles = [Math.PI/2, Math.PI/2 - 2*Math.PI/3, Math.PI/2 + 2*Math.PI/3];
-            const labels = ['A', 'B', 'C'];
-            
-            for(let i=0; i<3; i++) {
-                let ca = coilAngles[i];
-                let px = cx + r * Math.cos(ca);
-                let py = cy - r * Math.sin(ca);
-                
-                // Draw coil
-                let intensity = Math.abs(vals[i]); // 0 to 1
-                ctxS.fillStyle = `rgba(${colors[i]==='#ff4757'?'255,71,87':colors[i]==='#ffd700'?'255,215,0':'0,255,135'}, ${0.2 + intensity*0.8})`;
-                ctxS.strokeStyle = colors[i]; ctxS.lineWidth = 2;
-                
-                ctxS.beginPath();
-                ctxS.arc(px, py, 15, 0, Math.PI*2);
-                ctxS.fill(); ctxS.stroke();
-                
-                ctxS.fillStyle = '#000'; ctxS.font = 'bold 12px sans-serif'; ctxS.textAlign = 'center'; ctxS.textBaseline = 'middle';
-                ctxS.fillText(labels[i], px, py);
-            }
-            
-            // Draw Magnetic Field Vector (Sum of scaled vectors)
-            let Bx = 0, By = 0;
-            for(let i=0; i<3; i++) {
-                Bx += vals[i] * Math.cos(coilAngles[i]);
-                By += vals[i] * Math.sin(coilAngles[i]);
-            }
-            // B components
-            let Bmag = Math.sqrt(Bx*Bx + By*By);
-            
-            // Draw Vector
-            if(Bmag > 0.01) {
-                let ex = cx + r * 0.7 * Bx; // Scales visually
-                let ey = cy - r * 0.7 * By;
-                
-                // Glow
-                ctxS.shadowColor = '#fff'; ctxS.shadowBlur = 10;
-                
-                // Arrow
-                ctxS.strokeStyle = '#fff'; ctxS.lineWidth = 3;
-                ctxS.beginPath(); ctxS.moveTo(cx, cy); ctxS.lineTo(ex, ey); ctxS.stroke();
-                
-                // Arrow head
-                let ang = Math.atan2(ey - cy, ex - cx);
-                ctxS.beginPath();
-                ctxS.moveTo(ex, ey);
-                ctxS.lineTo(ex - 10*Math.cos(ang - Math.PI/6), ey - 10*Math.sin(ang - Math.PI/6));
-                ctxS.lineTo(ex - 10*Math.cos(ang + Math.PI/6), ey - 10*Math.sin(ang + Math.PI/6));
-                ctxS.fillStyle = '#fff'; ctxS.fill();
-                
-                ctxS.shadowBlur = 0;
-            }
-            
-            // Rotor center point
-            ctxS.fillStyle = '#fff';
-            ctxS.beginPath(); ctxS.arc(cx, cy, 4, 0, Math.PI*2); ctxS.fill();
+      function togglePlay() {
+        playing = !playing
+        document.getElementById('btnP').textContent = playing ? '⏸ Pause' : '▶ Play'
+        if (playing) loop()
+      }
+
+      function drawWaveforms(freq, amp, phases) {
+        const W = cvW.width,
+          H = cvW.height,
+          py = 15
+        ctxW.clearRect(0, 0, W, H)
+
+        // Grid
+        ctxW.strokeStyle = 'rgba(72, 191, 227, 0.1)'
+        ctxW.lineWidth = 1
+        ctxW.setLineDash([2, 4])
+        for (let i = 1; i < 10; i++) {
+          let x = (W * i) / 10
+          ctxW.beginPath()
+          ctxW.moveTo(x, 0)
+          ctxW.lineTo(x, H)
+          ctxW.stroke()
+        }
+        for (let i = 1; i < 6; i++) {
+          let y = (H * i) / 6
+          ctxW.beginPath()
+          ctxW.moveTo(0, y)
+          ctxW.lineTo(W, y)
+          ctxW.stroke()
+        }
+        ctxW.setLineDash([])
+
+        // Zero line
+        ctxW.strokeStyle = 'rgba(255,255,255,0.3)'
+        ctxW.beginPath()
+        ctxW.moveTo(0, H / 2)
+        ctxW.lineTo(W, H / 2)
+        ctxW.stroke()
+
+        const w = 2 * Math.PI * 1 // Visual frequency (1 Hz visual)
+        const dur = 2 // 2 visual cycles shown
+
+        for (let ph = 0; ph < 3; ph++) {
+          ctxW.strokeStyle = colors[ph]
+          ctxW.lineWidth = 2
+          ctxW.beginPath()
+          for (let i = 0; i < W; i++) {
+            let tt = t + dur * (i / W)
+            let v = amp * Math.sin(w * tt + phases[ph])
+            let x = i
+            let y = H / 2 - (H / 2 - py) * v
+            if (i === 0) ctxW.moveTo(x, y)
+            else ctxW.lineTo(x, y)
+          }
+          ctxW.shadowColor = colors[ph]
+          ctxW.shadowBlur = 5
+          ctxW.stroke()
+          ctxW.shadowBlur = 0
         }
 
-        function loop() {
-            if(!playing) return;
-            
-            const freq = document.getElementById('sF').value;
-            const amp = document.getElementById('sA').value / 100;
-            const imb = document.getElementById('sI').value * Math.PI / 180;
-            
-            document.getElementById('vF').textContent = freq;
-            document.getElementById('vA').textContent = Math.round(amp*100) + '%';
-            document.getElementById('vI').textContent = document.getElementById('sI').value + '°';
-            
-            const phases = [0, -2*Math.PI/3 + imb, 2*Math.PI/3 - imb];
-            
-            // Current Instant Values (at left edge of waveform)
-            const w = 2*Math.PI*1; // visual
-            let vA = amp * Math.sin(w*t + phases[0]);
-            let vB = amp * Math.sin(w*t + phases[1]);
-            let vC = amp * Math.sin(w*t + phases[2]);
-            
-            document.getElementById('mVa').textContent = (vA*100).toFixed(1);
-            document.getElementById('mVb').textContent = (vB*100).toFixed(1);
-            document.getElementById('mVc').textContent = (vC*100).toFixed(1);
-            document.getElementById('mSum').textContent = ((vA + vB + vC)*100).toFixed(2);
-            
-            if(cvW.width && cvS.width) {
-                drawWaveforms(freq, amp, phases);
-                drawStator(freq, amp, phases, [vA, vB, vC]);
-            }
-            
-            // Speed up based on freq
-            t += 0.0005 * freq; 
-            raf = requestAnimationFrame(loop);
+        // Draw current time marker (at left edge t)
+        ctxW.strokeStyle = '#fff'
+        ctxW.lineWidth = 1.5
+        ctxW.beginPath()
+        ctxW.moveTo(0, 0)
+        ctxW.lineTo(0, H)
+        ctxW.stroke()
+      }
+
+      function drawStator(freq, amp, phases, vals) {
+        const W = cvS.width,
+          H = cvS.height
+        const cx = W / 2,
+          cy = H / 2,
+          r = Math.min(W, H) / 2 - 20
+
+        ctxS.clearRect(0, 0, W, H)
+
+        // Draw Stator frame
+        ctxS.strokeStyle = '#333'
+        ctxS.lineWidth = 4
+        ctxS.beginPath()
+        ctxS.arc(cx, cy, r, 0, Math.PI * 2)
+        ctxS.stroke()
+
+        // Draw 3 coils (poles)
+        // A: 0°, B: 120° (2pi/3), C: 240° (4pi/3)
+        const coilAngles = [
+          Math.PI / 2,
+          Math.PI / 2 - (2 * Math.PI) / 3,
+          Math.PI / 2 + (2 * Math.PI) / 3,
+        ]
+        const labels = ['A', 'B', 'C']
+
+        for (let i = 0; i < 3; i++) {
+          let ca = coilAngles[i]
+          let px = cx + r * Math.cos(ca)
+          let py = cy - r * Math.sin(ca)
+
+          // Draw coil
+          let intensity = Math.abs(vals[i]) // 0 to 1
+          ctxS.fillStyle = `rgba(${colors[i] === '#ff4757' ? '255,71,87' : colors[i] === '#ffd700' ? '255,215,0' : '0,255,135'}, ${0.2 + intensity * 0.8})`
+          ctxS.strokeStyle = colors[i]
+          ctxS.lineWidth = 2
+
+          ctxS.beginPath()
+          ctxS.arc(px, py, 15, 0, Math.PI * 2)
+          ctxS.fill()
+          ctxS.stroke()
+
+          ctxS.fillStyle = '#000'
+          ctxS.font = 'bold 12px sans-serif'
+          ctxS.textAlign = 'center'
+          ctxS.textBaseline = 'middle'
+          ctxS.fillText(labels[i], px, py)
         }
-        
-        loop();
+
+        // Draw Magnetic Field Vector (Sum of scaled vectors)
+        let Bx = 0,
+          By = 0
+        for (let i = 0; i < 3; i++) {
+          Bx += vals[i] * Math.cos(coilAngles[i])
+          By += vals[i] * Math.sin(coilAngles[i])
+        }
+        // B components
+        let Bmag = Math.sqrt(Bx * Bx + By * By)
+
+        // Draw Vector
+        if (Bmag > 0.01) {
+          let ex = cx + r * 0.7 * Bx // Scales visually
+          let ey = cy - r * 0.7 * By
+
+          // Glow
+          ctxS.shadowColor = '#fff'
+          ctxS.shadowBlur = 10
+
+          // Arrow
+          ctxS.strokeStyle = '#fff'
+          ctxS.lineWidth = 3
+          ctxS.beginPath()
+          ctxS.moveTo(cx, cy)
+          ctxS.lineTo(ex, ey)
+          ctxS.stroke()
+
+          // Arrow head
+          let ang = Math.atan2(ey - cy, ex - cx)
+          ctxS.beginPath()
+          ctxS.moveTo(ex, ey)
+          ctxS.lineTo(ex - 10 * Math.cos(ang - Math.PI / 6), ey - 10 * Math.sin(ang - Math.PI / 6))
+          ctxS.lineTo(ex - 10 * Math.cos(ang + Math.PI / 6), ey - 10 * Math.sin(ang + Math.PI / 6))
+          ctxS.fillStyle = '#fff'
+          ctxS.fill()
+
+          ctxS.shadowBlur = 0
+        }
+
+        // Rotor center point
+        ctxS.fillStyle = '#fff'
+        ctxS.beginPath()
+        ctxS.arc(cx, cy, 4, 0, Math.PI * 2)
+        ctxS.fill()
+      }
+
+      function loop() {
+        if (!playing) return
+
+        const freq = document.getElementById('sF').value
+        const amp = document.getElementById('sA').value / 100
+        const imb = (document.getElementById('sI').value * Math.PI) / 180
+
+        document.getElementById('vF').textContent = freq
+        document.getElementById('vA').textContent = Math.round(amp * 100) + '%'
+        document.getElementById('vI').textContent = document.getElementById('sI').value + '°'
+
+        const phases = [0, (-2 * Math.PI) / 3 + imb, (2 * Math.PI) / 3 - imb]
+
+        // Current Instant Values (at left edge of waveform)
+        const w = 2 * Math.PI * 1 // visual
+        let vA = amp * Math.sin(w * t + phases[0])
+        let vB = amp * Math.sin(w * t + phases[1])
+        let vC = amp * Math.sin(w * t + phases[2])
+
+        document.getElementById('mVa').textContent = (vA * 100).toFixed(1)
+        document.getElementById('mVb').textContent = (vB * 100).toFixed(1)
+        document.getElementById('mVc').textContent = (vC * 100).toFixed(1)
+        document.getElementById('mSum').textContent = ((vA + vB + vC) * 100).toFixed(2)
+
+        if (cvW.width && cvS.width) {
+          drawWaveforms(freq, amp, phases)
+          drawStator(freq, amp, phases, [vA, vB, vC])
+        }
+
+        // Speed up based on freq
+        t += 0.0005 * freq
+        raf = requestAnimationFrame(loop)
+      }
+
+      loop()
     </script>
-</body>
+  </body>
 </html>

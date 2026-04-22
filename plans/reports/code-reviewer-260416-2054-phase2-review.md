@@ -21,6 +21,7 @@ Phase 2 adds solid structural features (slide sorter, multi-select batch ops, ca
 **Severity:** 🔴 Critical
 
 **Problem:**
+
 ```jsx
 const containerLeft = containerRef.current?.getBoundingClientRect().left ?? 0
 const containerTop = containerRef.current?.getBoundingClientRect().top ?? 0
@@ -37,6 +38,7 @@ return (
 - No scroll offset subtraction: if the canvas area scrolls (overflow), scroll position is not accounted for.
 
 **Fix:** Calculate canvas rect separately:
+
 ```jsx
 const canvasRect = canvasRef.current?.getBoundingClientRect()
 if (!canvasRect) return null
@@ -56,9 +58,10 @@ return (
 **Severity:** 🟡 Warning
 
 **Problem:**
+
 ```jsx
-toDelete.forEach(i => {
-  onDelete(i)          // calls EditorPage → splice array → re-render with new currentIndex
+toDelete.forEach((i) => {
+  onDelete(i) // calls EditorPage → splice array → re-render with new currentIndex
   if (i < currentIndex) newIdx--
 })
 setSelectedIndices([Math.max(0, newIdx)])
@@ -71,13 +74,17 @@ setSelectedIndices([Math.max(0, newIdx)])
 - Worst case: `toDelete=[4,5]` with `currentIndex=6`. Loop iteration 1: `i=4 < 6`, `newIdx=5`, `onDelete(4)`. Loop iteration 2: `currentIndex` prop may have updated to 5 (React pending), but closure still has 6. `i=5 < 6`, `newIdx=4`. Correct final = 4. Still works. But if deletions are in the opposite order or cross the boundary, the math is brittle.
 
 **Fix:** Capture `currentIndex` at start, use a running base:
+
 ```jsx
 const toDelete = [...selectedIndices].sort((a, b) => b - a)
 let current = currentIndex
 let newIdx = currentIndex
-toDelete.forEach(i => {
+toDelete.forEach((i) => {
   onDelete(i)
-  if (i < current) { newIdx--; current-- }
+  if (i < current) {
+    newIdx--
+    current--
+  }
 })
 setSelectedIndices([Math.max(0, newIdx)])
 ```
@@ -90,11 +97,12 @@ setSelectedIndices([Math.max(0, newIdx)])
 **Severity:** 🟡 Warning
 
 **Problem:**
+
 ```jsx
 const handleDrop = (e, idx) => {
   e.preventDefault()
   if (dragIdx !== null && dragIdx !== idx) {
-    onMove(dragIdx, idx)   // passes original dragIdx
+    onMove(dragIdx, idx) // passes original dragIdx
   }
   setDragIdx(null)
   setDragOverIdx(null)
@@ -113,6 +121,7 @@ No fix needed — acceptable given the overlay lifecycle.
 **Severity:** 🟡 Warning
 
 **Problem:**
+
 ```jsx
 style={{ color: slides.length > 1 ? 'var(--danger)' : undefined }}
 ```
@@ -129,6 +138,7 @@ The delete button is shown but grayed out (no `disabled` attr) when `slides.leng
 **Severity:** 🟡 Warning
 
 **Problem:**
+
 ```jsx
 onWheel={(e) => {
   if (e.ctrlKey || e.metaKey) {
@@ -143,6 +153,7 @@ onWheel={(e) => {
 On macOS, `ctrlKey` is often true on regular scroll (mission control / Spaces gestures) even without Ctrl held. This intercepts normal scrolling in the canvas area. Also, `onWheel` doesn't use `{ passive: false }` initially — `e.preventDefault()` may fail silently on some browsers if the listener isn't registered as non-passive.
 
 **Fix:** Consider requiring a modifier key held indicator, or check `e.ctrlKey && e.type === 'wheel'` more carefully:
+
 ```jsx
 onWheel={(e) => {
   if (e.ctrlKey || e.metaKey) {
@@ -172,20 +183,23 @@ Note: The `onWheel` prop doesn't have `passive` control in React without additio
 **Severity:** 🟢 Minor
 
 **Problem:**
+
 ```jsx
-selectedIndices.forEach(i => onDuplicate(i))
+selectedIndices.forEach((i) => onDuplicate(i))
 ```
 
 Duplicates are created in ascending index order. If duplicating slides 1 and 3:
+
 - First `onDuplicate(1)` → inserts copy at index 2, original slide 3 becomes index 4
 - Second `onDuplicate(3)` → but `presentation.slides[3]` is now the copy just created, not original slide 3
 
 This results in wrong slides being duplicated, or duplicates appearing in unexpected positions.
 
 **Fix:** Sort descending and adjust insert positions, or pass a batch-duplicate handler that inserts all at once:
+
 ```jsx
 const sorted = [...selectedIndices].sort((a, b) => b - a)
-sorted.forEach(i => {
+sorted.forEach((i) => {
   const actualIdx = Math.min(i, presentation.slides.length - 1)
   onDuplicate(actualIdx)
 })

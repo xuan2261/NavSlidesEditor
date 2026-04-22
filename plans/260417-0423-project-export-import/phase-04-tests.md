@@ -24,6 +24,7 @@
 ### Unit Tests (Vitest)
 
 Test 2 modules mới:
+
 - `client/src/utils/media-detector.js` (Vitest)
 - `client/src/utils/import-project.js` (Vitest)
 
@@ -64,9 +65,7 @@ describe('detectLocalMedia', () => {
       title: 'Test',
       slides: [
         {
-          elements: [
-            { type: 'image', src: '/uploads/abc123.png' },
-          ],
+          elements: [{ type: 'image', src: '/uploads/abc123.png' }],
         },
       ],
     }
@@ -95,9 +94,7 @@ describe('detectLocalMedia', () => {
       title: 'Test',
       slides: [
         {
-          elements: [
-            { type: 'image', src: 'https://example.com/image.png' },
-          ],
+          elements: [{ type: 'image', src: 'https://example.com/image.png' }],
         },
       ],
     }
@@ -154,7 +151,7 @@ describe('validateProjectFile', () => {
     }
     const result = validateProjectFile(parsed)
     expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.includes('slides'))).toBe(true)
+    expect(result.errors.some((e) => e.includes('slides'))).toBe(true)
   })
 
   it('warns on unknown version', () => {
@@ -163,7 +160,7 @@ describe('validateProjectFile', () => {
       manifest: { version: '99.0' },
     }
     const result = validateProjectFile(parsed)
-    expect(result.warnings.some(w => w.includes('99.0'))).toBe(true)
+    expect(result.warnings.some((w) => w.includes('99.0'))).toBe(true)
   })
 })
 
@@ -172,9 +169,7 @@ describe('rewriteMediaUrls', () => {
     const presentation = {
       slides: [
         {
-          elements: [
-            { type: 'image', src: '/uploads/old-abc.png' },
-          ],
+          elements: [{ type: 'image', src: '/uploads/old-abc.png' }],
         },
       ],
     }
@@ -187,9 +182,7 @@ describe('rewriteMediaUrls', () => {
     const presentation = {
       slides: [
         {
-          elements: [
-            { type: 'image', src: 'https://example.com/image.png' },
-          ],
+          elements: [{ type: 'image', src: 'https://example.com/image.png' }],
         },
       ],
     }
@@ -254,9 +247,7 @@ test.describe('Project Import', () => {
       hasLocalMedia: false,
       presentation: {
         title: 'Imported Presentation',
-        slides: [
-          { id: 's1', elements: [{ type: 'text', content: 'Imported text' }] },
-        ],
+        slides: [{ id: 's1', elements: [{ type: 'text', content: 'Imported text' }] }],
       },
     })
 
@@ -311,8 +302,8 @@ test.describe('Project Import', () => {
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| File download E2E flaky | Medium | Low | Use `waitForEvent('download')` |
-| Mock file upload complex | Medium | Medium | Test via API directly |
-| Race condition in round-trip | Low | Low | Wait for autosave before export |
+| Risk                         | Likelihood | Impact | Mitigation                      |
+| ---------------------------- | ---------- | ------ | ------------------------------- |
+| File download E2E flaky      | Medium     | Low    | Use `waitForEvent('download')`  |
+| Mock file upload complex     | Medium     | Medium | Test via API directly           |
+| Race condition in round-trip | Low        | Low    | Wait for autosave before export |

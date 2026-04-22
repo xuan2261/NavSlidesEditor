@@ -17,25 +17,33 @@ export function useSlideOperations({
   selectedElementIdsRef,
   editingElementIdRef,
 }) {
-  const setSelectedElementIds = useEditorStore(s => s.setSelectedElementIds)
-  const setEditingElementId = useEditorStore(s => s.setEditingElementId)
+  const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds)
+  const setEditingElementId = useEditorStore((s) => s.setEditingElementId)
 
   // ── Multi-element batch update ─────────────────────────────────────────────
-  const updateElements = useCallback((updates) => {
-    setPresentation((prev) => {
-      if (!prev) return prev
-      const map = {}
-      updates.forEach((u) => { map[u.id] = u })
-      return {
-        ...prev,
-        slides: prev.slides.map((s, i) =>
-          i === currentSlideIndexRef.current
-            ? { ...s, elements: s.elements.map((el) => (map[el.id] ? { ...el, ...map[el.id] } : el)) }
-            : s
-        ),
-      }
-    })
-  }, [setPresentation, currentSlideIndexRef])
+  const updateElements = useCallback(
+    (updates) => {
+      setPresentation((prev) => {
+        if (!prev) return prev
+        const map = {}
+        updates.forEach((u) => {
+          map[u.id] = u
+        })
+        return {
+          ...prev,
+          slides: prev.slides.map((s, i) =>
+            i === currentSlideIndexRef.current
+              ? {
+                  ...s,
+                  elements: s.elements.map((el) => (map[el.id] ? { ...el, ...map[el.id] } : el)),
+                }
+              : s
+          ),
+        }
+      })
+    },
+    [setPresentation, currentSlideIndexRef]
+  )
 
   // ── Delete all selected elements ───────────────────────────────────────────
   const deleteSelectedElements = useCallback(() => {
@@ -55,7 +63,14 @@ export function useSlideOperations({
     setSelectedElementIds([])
     setEditingElementId(null)
     editingElementIdRef.current = null
-  }, [setPresentation, selectedElementIdsRef, currentSlideIndexRef, editingElementIdRef, setSelectedElementIds, setEditingElementId])
+  }, [
+    setPresentation,
+    selectedElementIdsRef,
+    currentSlideIndexRef,
+    editingElementIdRef,
+    setSelectedElementIds,
+    setEditingElementId,
+  ])
 
   // ── Group / ungroup ────────────────────────────────────────────────────────
   const groupElements = useCallback(() => {
@@ -68,7 +83,10 @@ export function useSlideOperations({
         ...prev,
         slides: prev.slides.map((s, i) =>
           i === currentSlideIndexRef.current
-            ? { ...s, elements: s.elements.map((el) => (ids.includes(el.id) ? { ...el, groupId } : el)) }
+            ? {
+                ...s,
+                elements: s.elements.map((el) => (ids.includes(el.id) ? { ...el, groupId } : el)),
+              }
             : s
         ),
       }
@@ -91,7 +109,12 @@ export function useSlideOperations({
         ...prev,
         slides: prev.slides.map((s, i) =>
           i === currentSlideIndexRef.current
-            ? { ...s, elements: s.elements.map((el) => groupIds.has(el.groupId) ? { ...el, groupId: undefined } : el) }
+            ? {
+                ...s,
+                elements: s.elements.map((el) =>
+                  groupIds.has(el.groupId) ? { ...el, groupId: undefined } : el
+                ),
+              }
             : s
         ),
       }
@@ -99,111 +122,172 @@ export function useSlideOperations({
   }, [setPresentation, selectedElementIdsRef, currentSlideIndexRef])
 
   // ── Alignment ──────────────────────────────────────────────────────────────
-  const alignElements = useCallback((type) => {
-    const ids = selectedElementIdsRef.current
-    if (ids.length < 2) return
-    setPresentation((prev) => {
-      if (!prev) return prev
-      const slide = prev.slides[currentSlideIndexRef.current]
-      const els = slide.elements.filter((el) => ids.includes(el.id))
-      const upd = {}
-      if (type === 'left') {
-        const v = Math.min(...els.map((e) => e.x))
-        els.forEach((e) => { upd[e.id] = { x: v } })
-      } else if (type === 'right') {
-        const v = Math.max(...els.map((e) => e.x + e.width))
-        els.forEach((e) => { upd[e.id] = { x: v - e.width } })
-      } else if (type === 'center-h') {
-        const v = (Math.min(...els.map((e) => e.x)) + Math.max(...els.map((e) => e.x + e.width))) / 2
-        els.forEach((e) => { upd[e.id] = { x: v - e.width / 2 } })
-      } else if (type === 'top') {
-        const v = Math.min(...els.map((e) => e.y))
-        els.forEach((e) => { upd[e.id] = { y: v } })
-      } else if (type === 'bottom') {
-        const v = Math.max(...els.map((e) => e.y + e.height))
-        els.forEach((e) => { upd[e.id] = { y: v - e.height } })
-      } else if (type === 'center-v') {
-        const v = (Math.min(...els.map((e) => e.y)) + Math.max(...els.map((e) => e.y + e.height))) / 2
-        els.forEach((e) => { upd[e.id] = { y: v - e.height / 2 } })
-      } else if (type === 'distribute-h') {
-        const s = [...els].sort((a, b) => a.x - b.x)
-        if (s.length > 1) {
-          const l = s[0].x, r = s[s.length - 1].x + s[s.length - 1].width
-          const tw = s.reduce((a, e) => a + e.width, 0), gap = (r - l - tw) / (s.length - 1)
-          let cx = l
-          s.forEach((e) => { upd[e.id] = { x: cx }; cx += e.width + gap })
+  const alignElements = useCallback(
+    (type) => {
+      const ids = selectedElementIdsRef.current
+      if (ids.length < 2) return
+      setPresentation((prev) => {
+        if (!prev) return prev
+        const slide = prev.slides[currentSlideIndexRef.current]
+        const els = slide.elements.filter((el) => ids.includes(el.id))
+        const upd = {}
+        if (type === 'left') {
+          const v = Math.min(...els.map((e) => e.x))
+          els.forEach((e) => {
+            upd[e.id] = { x: v }
+          })
+        } else if (type === 'right') {
+          const v = Math.max(...els.map((e) => e.x + e.width))
+          els.forEach((e) => {
+            upd[e.id] = { x: v - e.width }
+          })
+        } else if (type === 'center-h') {
+          const v =
+            (Math.min(...els.map((e) => e.x)) + Math.max(...els.map((e) => e.x + e.width))) / 2
+          els.forEach((e) => {
+            upd[e.id] = { x: v - e.width / 2 }
+          })
+        } else if (type === 'top') {
+          const v = Math.min(...els.map((e) => e.y))
+          els.forEach((e) => {
+            upd[e.id] = { y: v }
+          })
+        } else if (type === 'bottom') {
+          const v = Math.max(...els.map((e) => e.y + e.height))
+          els.forEach((e) => {
+            upd[e.id] = { y: v - e.height }
+          })
+        } else if (type === 'center-v') {
+          const v =
+            (Math.min(...els.map((e) => e.y)) + Math.max(...els.map((e) => e.y + e.height))) / 2
+          els.forEach((e) => {
+            upd[e.id] = { y: v - e.height / 2 }
+          })
+        } else if (type === 'distribute-h') {
+          const s = [...els].sort((a, b) => a.x - b.x)
+          if (s.length > 1) {
+            const l = s[0].x,
+              r = s[s.length - 1].x + s[s.length - 1].width
+            const tw = s.reduce((a, e) => a + e.width, 0),
+              gap = (r - l - tw) / (s.length - 1)
+            let cx = l
+            s.forEach((e) => {
+              upd[e.id] = { x: cx }
+              cx += e.width + gap
+            })
+          }
+        } else if (type === 'distribute-v') {
+          const s = [...els].sort((a, b) => a.y - b.y)
+          if (s.length > 1) {
+            const t = s[0].y,
+              b = s[s.length - 1].y + s[s.length - 1].height
+            const th = s.reduce((a, e) => a + e.height, 0),
+              gap = (b - t - th) / (s.length - 1)
+            let cy = t
+            s.forEach((e) => {
+              upd[e.id] = { y: cy }
+              cy += e.height + gap
+            })
+          }
         }
-      } else if (type === 'distribute-v') {
-        const s = [...els].sort((a, b) => a.y - b.y)
-        if (s.length > 1) {
-          const t = s[0].y, b = s[s.length - 1].y + s[s.length - 1].height
-          const th = s.reduce((a, e) => a + e.height, 0), gap = (b - t - th) / (s.length - 1)
-          let cy = t
-          s.forEach((e) => { upd[e.id] = { y: cy }; cy += e.height + gap })
+        return {
+          ...prev,
+          slides: prev.slides.map((sl, i) =>
+            i === currentSlideIndexRef.current
+              ? {
+                  ...sl,
+                  elements: sl.elements.map((el) => (upd[el.id] ? { ...el, ...upd[el.id] } : el)),
+                }
+              : sl
+          ),
         }
-      }
-      return {
-        ...prev,
-        slides: prev.slides.map((sl, i) =>
-          i === currentSlideIndexRef.current
-            ? { ...sl, elements: sl.elements.map((el) => (upd[el.id] ? { ...el, ...upd[el.id] } : el)) }
-            : sl
-        ),
-      }
-    })
-  }, [setPresentation, selectedElementIdsRef, currentSlideIndexRef])
+      })
+    },
+    [setPresentation, selectedElementIdsRef, currentSlideIndexRef]
+  )
 
   // ── Slide CRUD ─────────────────────────────────────────────────────────────
-  const addSlide = useCallback((templateKey = null) => {
-    const template = templateKey && SLIDE_TEMPLATES[templateKey] ? SLIDE_TEMPLATES[templateKey] : null
-    const baseElements = template
-      ? template.elements.map((el) => ({ ...el, id: crypto.randomUUID() }))
-      : [{
-          id: crypto.randomUUID(), type: 'text', x: 80, y: 160, width: 800, height: 220, zIndex: 1,
-          content: '<h2 style="text-align: center">New Slide</h2><p style="text-align: center">Double-click to edit</p>',
-        }]
-    const referenceSlide = presentation?.slides?.[currentSlideIndex]
-      || presentation?.slides?.[presentation.slides.length - 1]
-    const inheritedBg = referenceSlide?.background
-      ? { ...referenceSlide.background }
-      : { type: 'color', color: '#1e1e2e' }
-    const newSlide = { id: crypto.randomUUID(), elements: baseElements, notes: '', background: inheritedBg }
-    setPresentation((prev) => ({ ...prev, slides: [...prev.slides, newSlide] }))
-    setCurrentSlideIndex(presentation.slides.length)
-  }, [presentation, currentSlideIndex, setPresentation, setCurrentSlideIndex])
+  const addSlide = useCallback(
+    (templateKey = null) => {
+      const template =
+        templateKey && SLIDE_TEMPLATES[templateKey] ? SLIDE_TEMPLATES[templateKey] : null
+      const baseElements = template
+        ? template.elements.map((el) => ({ ...el, id: crypto.randomUUID() }))
+        : [
+            {
+              id: crypto.randomUUID(),
+              type: 'text',
+              x: 80,
+              y: 160,
+              width: 800,
+              height: 220,
+              zIndex: 1,
+              content:
+                '<h2 style="text-align: center">New Slide</h2><p style="text-align: center">Double-click to edit</p>',
+            },
+          ]
+      const referenceSlide =
+        presentation?.slides?.[currentSlideIndex] ||
+        presentation?.slides?.[presentation.slides.length - 1]
+      const inheritedBg = referenceSlide?.background
+        ? { ...referenceSlide.background }
+        : { type: 'color', color: '#1e1e2e' }
+      const newSlide = {
+        id: crypto.randomUUID(),
+        elements: baseElements,
+        notes: '',
+        background: inheritedBg,
+      }
+      setPresentation((prev) => ({ ...prev, slides: [...prev.slides, newSlide] }))
+      setCurrentSlideIndex(presentation.slides.length)
+    },
+    [presentation, currentSlideIndex, setPresentation, setCurrentSlideIndex]
+  )
 
-  const deleteSlide = useCallback((index) => {
-    if (!presentation || presentation.slides.length <= 1) return
-    setPresentation((prev) => ({ ...prev, slides: prev.slides.filter((_, i) => i !== index) }))
-    setCurrentSlideIndex((prev) => Math.min(prev, presentation.slides.length - 2))
-  }, [presentation, setPresentation, setCurrentSlideIndex])
+  const deleteSlide = useCallback(
+    (index) => {
+      if (!presentation || presentation.slides.length <= 1) return
+      setPresentation((prev) => ({ ...prev, slides: prev.slides.filter((_, i) => i !== index) }))
+      setCurrentSlideIndex((prev) => Math.min(prev, presentation.slides.length - 2))
+    },
+    [presentation, setPresentation, setCurrentSlideIndex]
+  )
 
-  const duplicateSlide = useCallback((index) => {
-    if (!presentation) return
-    const slide = {
-      ...presentation.slides[index],
-      id: crypto.randomUUID(),
-      elements: (presentation.slides[index].elements || []).map((el) => ({ ...el, id: crypto.randomUUID() })),
-    }
-    setPresentation((prev) => {
-      const slides = [...prev.slides]
-      slides.splice(index + 1, 0, slide)
-      return { ...prev, slides }
-    })
-    setCurrentSlideIndex(index + 1)
-  }, [presentation, setPresentation, setCurrentSlideIndex])
+  const duplicateSlide = useCallback(
+    (index) => {
+      if (!presentation) return
+      const slide = {
+        ...presentation.slides[index],
+        id: crypto.randomUUID(),
+        elements: (presentation.slides[index].elements || []).map((el) => ({
+          ...el,
+          id: crypto.randomUUID(),
+        })),
+      }
+      setPresentation((prev) => {
+        const slides = [...prev.slides]
+        slides.splice(index + 1, 0, slide)
+        return { ...prev, slides }
+      })
+      setCurrentSlideIndex(index + 1)
+    },
+    [presentation, setPresentation, setCurrentSlideIndex]
+  )
 
-  const moveSlide = useCallback((fromIndex, toIndex) => {
-    if (!presentation) return
-    if (toIndex < 0 || toIndex >= presentation.slides.length) return
-    setPresentation((prev) => {
-      const slides = [...prev.slides]
-      const [removed] = slides.splice(fromIndex, 1)
-      slides.splice(toIndex, 0, removed)
-      return { ...prev, slides }
-    })
-    setCurrentSlideIndex(toIndex)
-  }, [presentation, setPresentation, setCurrentSlideIndex])
+  const moveSlide = useCallback(
+    (fromIndex, toIndex) => {
+      if (!presentation) return
+      if (toIndex < 0 || toIndex >= presentation.slides.length) return
+      setPresentation((prev) => {
+        const slides = [...prev.slides]
+        const [removed] = slides.splice(fromIndex, 1)
+        slides.splice(toIndex, 0, removed)
+        return { ...prev, slides }
+      })
+      setCurrentSlideIndex(toIndex)
+    },
+    [presentation, setPresentation, setCurrentSlideIndex]
+  )
 
   return {
     updateElements,

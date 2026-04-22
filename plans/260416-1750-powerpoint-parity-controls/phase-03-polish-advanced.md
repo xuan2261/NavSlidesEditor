@@ -7,35 +7,38 @@
 
 ## Issues
 
-| # | Issue | Area | Fix Complexity |
-|---|---|---|---|
-| P2-1 | THIẾU Animation Duration & Delay | Animation | Easy |
-| P2-2 | THIẾU Alignment section trong Properties Panel | Properties | Easy |
-| P2-3 | THIẾU Manual zoom controls | Canvas | Easy |
-| P2-4 | Settings menu quá đông | MenuBar | Easy |
-| P2-5 | Context menu: Bring to Front/Back | Context | Easy |
-| P2-6 | Animation Timeline: show all elements | Animation | Easy |
-| P2-7 | THIẾU Animation Gallery (12 → 30+ types) | Animation | Medium |
-| P2-8 | THIẾU Quick Access Toolbar (QAT) | MenuBar | Medium |
-| P2-9 | Find/Replace: tìm trong Markdown/LaTeX | FindReplace | Medium |
-| P2-10 | Icon picker mở rộng (60 → 200+) | Insert | Easy |
+| #     | Issue                                          | Area        | Fix Complexity |
+| ----- | ---------------------------------------------- | ----------- | -------------- |
+| P2-1  | THIẾU Animation Duration & Delay               | Animation   | Easy           |
+| P2-2  | THIẾU Alignment section trong Properties Panel | Properties  | Easy           |
+| P2-3  | THIẾU Manual zoom controls                     | Canvas      | Easy           |
+| P2-4  | Settings menu quá đông                         | MenuBar     | Easy           |
+| P2-5  | Context menu: Bring to Front/Back              | Context     | Easy           |
+| P2-6  | Animation Timeline: show all elements          | Animation   | Easy           |
+| P2-7  | THIẾU Animation Gallery (12 → 30+ types)       | Animation   | Medium         |
+| P2-8  | THIẾU Quick Access Toolbar (QAT)               | MenuBar     | Medium         |
+| P2-9  | Find/Replace: tìm trong Markdown/LaTeX         | FindReplace | Medium         |
+| P2-10 | Icon picker mở rộng (60 → 200+)                | Insert      | Easy           |
 
 ---
 
 ## P2-1: Animation Duration & Delay
 
 ### PowerPoint Reference
+
 PowerPoint: Animation Duration (0.25s - 5s) + Start delay (0s - 10s) per animation.
 
 ### Implementation Steps
 
 **Step 1:** Mở rộng `ANIMATION_TYPES` data
+
 ```js
 // AnimationTimeline.jsx - thêm vào element data model:
 { ..., duration: 0.5, delay: 0 }
 ```
 
 **Step 2:** Thêm duration/delay UI trong `AnimationTimeline`
+
 ```jsx
 // Trong timeline-element-chip, thêm:
 <div className="anim-extra">
@@ -47,10 +50,13 @@ PowerPoint: Animation Duration (0.25s - 5s) + Start delay (0s - 10s) per animati
       max="5"
       step="0.1"
       value={el.fragmentDuration ?? 0.5}
-      onChange={(e) => onUpdateElement(el.id, {
-        fragmentDuration: Math.max(0.1, parseFloat(e.target.value) || 0.5)
-      })}
-    />s
+      onChange={(e) =>
+        onUpdateElement(el.id, {
+          fragmentDuration: Math.max(0.1, parseFloat(e.target.value) || 0.5),
+        })
+      }
+    />
+    s
   </div>
   <div className="anim-field">
     <label>Delay</label>
@@ -60,15 +66,19 @@ PowerPoint: Animation Duration (0.25s - 5s) + Start delay (0s - 10s) per animati
       max="10"
       step="0.1"
       value={el.fragmentDelay ?? 0}
-      onChange={(e) => onUpdateElement(el.id, {
-        fragmentDelay: Math.max(0, parseFloat(e.target.value) || 0)
-      })}
-    />s
+      onChange={(e) =>
+        onUpdateElement(el.id, {
+          fragmentDelay: Math.max(0, parseFloat(e.target.value) || 0),
+        })
+      }
+    />
+    s
   </div>
 </div>
 ```
 
 **Step 3:** Map sang reveal.js (css custom properties)
+
 ```css
 /* Trong generated reveal.js HTML: */
 .fragment {
@@ -79,6 +89,7 @@ PowerPoint: Animation Duration (0.25s - 5s) + Start delay (0s - 10s) per animati
 ```
 
 ### Verification
+
 ```
 ✅ Duration slider: 0.1s → 5s, hiện giá trị
 ✅ Delay input: 0 → 10s
@@ -90,11 +101,13 @@ PowerPoint: Animation Duration (0.25s - 5s) + Start delay (0s - 10s) per animati
 ## P2-2: Alignment Section in Properties Panel
 
 ### PowerPoint Reference
+
 PowerPoint Format Pane → Align → dropdown với visual options.
 
 ### Implementation Steps
 
 **Step 1:** Thêm Alignment section vào `PropertiesPanel.jsx`
+
 ```jsx
 // Thêm collapsible section khi selectedElementIds.length > 0
 <CollapsibleSection title="Align & Distribute">
@@ -114,33 +127,35 @@ PowerPoint Format Pane → Align → dropdown với visual options.
       ))}
     </div>
   ) : (
-    <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-      Select 2+ elements to align
-    </p>
+    <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Select 2+ elements to align</p>
   )}
 </CollapsibleSection>
 ```
 
 **Step 2:** Thêm vào canvas context menu
+
 ```jsx
 // SlideCanvas.jsx - canvas-context-menu:
-{selectedElementIds.length >= 2 && (
-  <>
-    <div className="canvas-context-menu-separator" />
-    <button onClick={() => alignElements('left')}>Align Left</button>
-    <button onClick={() => alignElements('center-h')}>Align Center</button>
-    <button onClick={() => alignElements('right')}>Align Right</button>
-    <button onClick={() => alignElements('top')}>Align Top</button>
-    <button onClick={() => alignElements('center-v')}>Align Middle</button>
-    <button onClick={() => alignElements('bottom')}>Align Bottom</button>
-    <div className="canvas-context-menu-separator" />
-    <button onClick={() => alignElements('distribute-h')}>Distribute H</button>
-    <button onClick={() => alignElements('distribute-v')}>Distribute V</button>
-  </>
-)}
+{
+  selectedElementIds.length >= 2 && (
+    <>
+      <div className="canvas-context-menu-separator" />
+      <button onClick={() => alignElements('left')}>Align Left</button>
+      <button onClick={() => alignElements('center-h')}>Align Center</button>
+      <button onClick={() => alignElements('right')}>Align Right</button>
+      <button onClick={() => alignElements('top')}>Align Top</button>
+      <button onClick={() => alignElements('center-v')}>Align Middle</button>
+      <button onClick={() => alignElements('bottom')}>Align Bottom</button>
+      <div className="canvas-context-menu-separator" />
+      <button onClick={() => alignElements('distribute-h')}>Distribute H</button>
+      <button onClick={() => alignElements('distribute-v')}>Distribute V</button>
+    </>
+  )
+}
 ```
 
 ### Verification
+
 ```
 ✅ Properties Panel: Alignment section visible khi 1+ element selected
 ✅ Align buttons disabled khi chỉ có 1 element
@@ -154,6 +169,7 @@ PowerPoint Format Pane → Align → dropdown với visual options.
 ### Implementation Steps
 
 **Step 1:** Tách Settings menu thành 2 tabs hoặc collapsible sections
+
 ```jsx
 // EditorMenuBar.jsx - settingsItems:
 // Chia Settings thành: Presentation | Presenter Tools
@@ -180,17 +196,16 @@ const presenterItems = [
 ```
 
 **Step 2:** Di chuyển Presenter Tools ra Properties Panel (CollapsibleSection)
+
 ```jsx
 // PropertiesPanel.jsx:
 <CollapsibleSection title="Presenter Tools">
-  <PresenterToolsOptions
-    presentation={presentation}
-    onUpdatePresentation={onUpdatePresentation}
-  />
+  <PresenterToolsOptions presentation={presentation} onUpdatePresentation={onUpdatePresentation} />
 </CollapsibleSection>
 ```
 
 ### Verification
+
 ```
 ✅ Settings dropdown: 2 sections rõ ràng
 ✅ Presenter Tools also trong Properties Panel
@@ -204,35 +219,27 @@ const presenterItems = [
 ### Implementation Steps
 
 **Step 1:** Thêm vào `SlideCanvas.jsx` canvas context menu
+
 ```jsx
 // Trong canvas-context-menu:
-{selectedElementIds.length >= 1 && (
-  <>
-    <div className="canvas-context-menu-separator" />
-    <button onClick={() => bringToFront(selectedElementIds[0])}>
-      ⬆ Bring to Front
-    </button>
-    <button onClick={() => bringForward(selectedElementIds[0])}>
-      ↗ Bring Forward
-    </button>
-    <button onClick={() => sendBackward(selectedElementIds[0])}>
-      ↙ Send Backward
-    </button>
-    <button onClick={() => sendToBack(selectedElementIds[0])}>
-      ⬇ Send to Back
-    </button>
-    <div className="canvas-context-menu-separator" />
-    <button onClick={() => groupSelected(selectedElementIds)}>
-      Group
-    </button>
-    <button onClick={() => ungroupSelected(selectedElementIds)}>
-      Ungroup
-    </button>
-  </>
-)}
+{
+  selectedElementIds.length >= 1 && (
+    <>
+      <div className="canvas-context-menu-separator" />
+      <button onClick={() => bringToFront(selectedElementIds[0])}>⬆ Bring to Front</button>
+      <button onClick={() => bringForward(selectedElementIds[0])}>↗ Bring Forward</button>
+      <button onClick={() => sendBackward(selectedElementIds[0])}>↙ Send Backward</button>
+      <button onClick={() => sendToBack(selectedElementIds[0])}>⬇ Send to Back</button>
+      <div className="canvas-context-menu-separator" />
+      <button onClick={() => groupSelected(selectedElementIds)}>Group</button>
+      <button onClick={() => ungroupSelected(selectedElementIds)}>Ungroup</button>
+    </>
+  )
+}
 ```
 
 **Step 2:** Implement layer functions trong EditorPage/Store
+
 ```js
 // bringToFront: tìm max zIndex → gán max+1
 // sendToBack: tìm min zIndex → gán min-1
@@ -241,6 +248,7 @@ const presenterItems = [
 ```
 
 ### Verification
+
 ```
 ✅ Right-click element → Bring to Front/Forward/Backward/Back options
 ✅ Group/Ungroup options in context menu
@@ -254,6 +262,7 @@ const presenterItems = [
 ### Implementation Steps
 
 **Step 1:** Sửa render logic trong `AnimationTimeline.jsx`
+
 ```jsx
 // Thay vì:
 // const nonFragElements = (slide.elements || []).filter((el) => !el.fragment)
@@ -266,6 +275,7 @@ const presenterItems = [
 ```
 
 **Step 2:** Thêm "Enable Fragment" quick action
+
 ```jsx
 // Trên non-fragment element chip:
 <div
@@ -279,6 +289,7 @@ const presenterItems = [
 ```
 
 ### Verification
+
 ```
 ✅ Animation Timeline hiện TẤT CẢ elements (không giới hạn 5)
 ✅ Non-fragment elements hiển thị muted với label
@@ -291,20 +302,21 @@ const presenterItems = [
 
 ### PowerPoint Animation Mapping
 
-| PowerPoint | reveal.js equivalent |
-|---|---|
-| Fade In | `fade-in` |
-| Float In | `fade-up` |
-| Zoom In | `zoom-in` |
-| Wipe Right | `fade-right` |
-| Grow & Turn | N/A → fallback `fade-in` |
-| Expand | `grow` |
-| Appear | `fade-in` |
-| Emphasis effects | `highlight-*` variants |
+| PowerPoint       | reveal.js equivalent     |
+| ---------------- | ------------------------ |
+| Fade In          | `fade-in`                |
+| Float In         | `fade-up`                |
+| Zoom In          | `zoom-in`                |
+| Wipe Right       | `fade-right`             |
+| Grow & Turn      | N/A → fallback `fade-in` |
+| Expand           | `grow`                   |
+| Appear           | `fade-in`                |
+| Emphasis effects | `highlight-*` variants   |
 
 ### Implementation Steps
 
 **Step 1:** Mở rộng `ANIMATION_TYPES` array
+
 ```js
 const ANIMATION_TYPES = [
   // === ENTRANCE ===
@@ -336,12 +348,14 @@ const ANIMATION_TYPES = [
 ```
 
 **Step 2:** CSS transitions cho animation types mới
+
 ```css
 /* Animations are CSS reveal.js - thêm custom classes nếu cần */
 /* .reveal .fragment.fade-up { animation: fade-up 0.5s ease forwards; } */
 ```
 
 ### Verification
+
 ```
 ✅ Animation dropdown: hiện 25+ animation types
 ✅ Grouped by category (Entrance/Emphasis/Exit)
@@ -353,11 +367,13 @@ const ANIMATION_TYPES = [
 ## P2-7: Quick Access Toolbar (QAT)
 
 ### PowerPoint Reference
+
 Top-left QAT: Save, Undo, Redo, Repeat + customizable commands.
 
 ### Implementation Steps
 
 **Step 1:** Tạo `QuickAccessToolbar` component
+
 ```jsx
 // client/src/components/QuickAccessToolbar.jsx
 // Props: onSave, onUndo, onRedo, onRepeat, onPresent, extraCommands
@@ -367,6 +383,7 @@ Top-left QAT: Save, Undo, Redo, Repeat + customizable commands.
 ```
 
 **Step 2:** Tích hợp vào `EditorPage.jsx` layout
+
 ```jsx
 // EditorPage.jsx - trên cùng:
 <div className="editor-root">
@@ -379,6 +396,7 @@ Top-left QAT: Save, Undo, Redo, Repeat + customizable commands.
 ```
 
 **Step 3:** CSS
+
 ```css
 .quick-access-toolbar {
   display: flex;
@@ -392,6 +410,7 @@ Top-left QAT: Save, Undo, Redo, Repeat + customizable commands.
 ```
 
 ### Verification
+
 ```
 ✅ QAT hiện trên cùng (trước Menu Bar)
 ✅ Save, Undo, Redo, Present buttons với icons
@@ -405,17 +424,20 @@ Top-left QAT: Save, Undo, Redo, Repeat + customizable commands.
 ### Implementation Steps
 
 **Step 1:** Cập nhật `FindReplaceBar.jsx`
+
 ```jsx
 // Thêm vào stripHtml + content search:
 let text = ''
 if (el.type === 'text') text = stripHtml(el.content)
 else if (el.type === 'code') text = el.content || ''
 else if (el.type === 'shape' && el.text) text = el.text
-else if (el.type === 'markdown') text = el.content || ''  // THÊM
-else if (el.type === 'latex') text = el.content || ''     // THÊM
+else if (el.type === 'markdown')
+  text = el.content || '' // THÊM
+else if (el.type === 'latex') text = el.content || '' // THÊM
 ```
 
 ### Verification
+
 ```
 ✅ Find bar: tìm thấy text trong Markdown elements
 ✅ Find bar: tìm thấy text trong LaTeX elements
@@ -429,6 +451,7 @@ else if (el.type === 'latex') text = el.content || ''     // THÊM
 ### Implementation Steps
 
 **Step 1:** Thay hardcoded array bằng dynamic Lucide import
+
 ```jsx
 // InsertMenu.jsx - thay:
 const ICON_NAMES = [/* 60 hardcoded */]
@@ -442,12 +465,14 @@ const ICON_NAMES = Object.keys(LucideIcons)
 ```
 
 **Step 2:** Thêm icon search với debounce
+
 ```jsx
 // Debounce icon search input (300ms)
 const [debouncedIconSearch, setDebouncedIconSearch] = useState('')
 ```
 
 ### Verification
+
 ```
 ✅ Icon picker: hiện 200+ icons
 ✅ Search: real-time filter khi gõ

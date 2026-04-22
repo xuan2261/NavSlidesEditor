@@ -14,12 +14,14 @@ EditorPage.jsx (3518 lines) chứa 15+ hàm `addXxxElement` cùng pattern, 12+ i
 ## Related Files
 
 ### Files to Modify:
+
 - [client/src/pages/EditorPage.jsx](file:///d:/NCKH_2025/revealjs_gui/client/src/pages/EditorPage.jsx) — Element factory, cleanup
 - [server/index.js](file:///d:/NCKH_2025/revealjs_gui/server/index.js) — Extract helpers, move imports
 - [server/routes/presentations.js](file:///d:/NCKH_2025/revealjs_gui/server/routes/presentations.js) — Use shared helper
 - [shared/src/htmlGenerator.js](file:///d:/NCKH_2025/revealjs_gui/shared/src/htmlGenerator.js) — DRY render pipeline
 
 ### New Files:
+
 - `client/src/utils/element-factory.js` — Element creation factory
 - `client/src/data/element-defaults.js` — Default values per element type
 - `server/services/socket-handler.js` — Socket.IO logic extracted
@@ -30,6 +32,7 @@ EditorPage.jsx (3518 lines) chứa 15+ hàm `addXxxElement` cùng pattern, 12+ i
 ## Implementation Steps
 
 ### Task 2.1: Extract Element Factory
+
 **Files:** `EditorPage.jsx`, NEW `client/src/utils/element-factory.js`, NEW `client/src/data/element-defaults.js`  
 **Effort:** 3 hours  
 **Impact:** -500 lines from EditorPage
@@ -40,35 +43,57 @@ EditorPage.jsx (3518 lines) chứa 15+ hàm `addXxxElement` cùng pattern, 12+ i
 // client/src/data/element-defaults.js
 export const ELEMENT_DEFAULTS = {
   text: {
-    width: 300, height: 60, zIndex: 1,
+    width: 300,
+    height: 60,
+    zIndex: 1,
     content: '<p>Text</p>',
   },
   image: {
-    width: 300, height: 200, zIndex: 1,
-    src: '', objectFit: 'contain',
+    width: 300,
+    height: 200,
+    zIndex: 1,
+    src: '',
+    objectFit: 'contain',
   },
   shape: {
-    width: 150, height: 150, zIndex: 1,
-    shapeType: 'rect', fill: '#6366f1', stroke: '', strokeWidth: 0,
+    width: 150,
+    height: 150,
+    zIndex: 1,
+    shapeType: 'rect',
+    fill: '#6366f1',
+    stroke: '',
+    strokeWidth: 0,
   },
   code: {
-    width: 400, height: 200, zIndex: 1,
-    content: '// code here', language: 'javascript', fontSize: 14,
+    width: 400,
+    height: 200,
+    zIndex: 1,
+    content: '// code here',
+    language: 'javascript',
+    fontSize: 14,
   },
   latex: {
-    width: 300, height: 120, zIndex: 1,
+    width: 300,
+    height: 120,
+    zIndex: 1,
     content: 'E = mc^2',
   },
   html: {
-    width: 400, height: 300, zIndex: 1,
+    width: 400,
+    height: 300,
+    zIndex: 1,
     content: '<div style="padding:20px;color:white;">Custom HTML</div>',
   },
   markdown: {
-    width: 400, height: 250, zIndex: 1,
+    width: 400,
+    height: 250,
+    zIndex: 1,
     content: '# Markdown\n\n- Item 1\n- Item 2',
   },
   chart: {
-    width: 400, height: 300, zIndex: 1,
+    width: 400,
+    height: 300,
+    zIndex: 1,
     chartType: 'bar',
     chartData: {
       labels: ['A', 'B', 'C'],
@@ -78,21 +103,37 @@ export const ELEMENT_DEFAULTS = {
   video: { width: 480, height: 270, zIndex: 1, src: '', controls: true },
   audio: { width: 300, height: 50, zIndex: 1, src: '', controls: true },
   table: {
-    width: 400, height: 200, zIndex: 1,
-    data: [['Header 1', 'Header 2'], ['Cell', 'Cell']],
+    width: 400,
+    height: 200,
+    zIndex: 1,
+    data: [
+      ['Header 1', 'Header 2'],
+      ['Cell', 'Cell'],
+    ],
     headerRow: true,
   },
   icon: {
-    width: 60, height: 60, zIndex: 1,
-    iconName: 'Star', iconColor: '#ffffff', iconStrokeWidth: 2,
+    width: 60,
+    height: 60,
+    zIndex: 1,
+    iconName: 'Star',
+    iconColor: '#ffffff',
+    iconStrokeWidth: 2,
   },
   callout: {
-    width: 50, height: 50, zIndex: 1,
-    calloutNumber: 1, calloutColor: '#ef4444',
+    width: 50,
+    height: 50,
+    zIndex: 1,
+    calloutNumber: 1,
+    calloutColor: '#ef4444',
   },
   qrcode: {
-    width: 200, height: 200, zIndex: 1,
-    qrData: 'https://example.com', qrColor: '#000000', qrBgColor: '#ffffff',
+    width: 200,
+    height: 200,
+    zIndex: 1,
+    qrData: 'https://example.com',
+    qrColor: '#000000',
+    qrBgColor: '#ffffff',
   },
 }
 ```
@@ -106,7 +147,7 @@ import { ELEMENT_DEFAULTS } from '../data/element-defaults.js'
 export function createElement(type, overrides = {}) {
   const defaults = ELEMENT_DEFAULTS[type]
   if (!defaults) throw new Error(`Unknown element type: ${type}`)
-  
+
   return {
     id: crypto.randomUUID(),
     type,
@@ -153,6 +194,7 @@ const addElement = useCallback((type, overrides = {}) => {
 ```
 
 **Checklist:**
+
 - `[x]` Tạo `element-defaults.js` với defaults cho 14 element types
 - `[x]` Tạo `element-factory.js` với `createElement(type, overrides)`
 - `[x]` Replace tất cả `addXxxElement` callbacks bằng single `addElement`
@@ -164,6 +206,7 @@ const addElement = useCallback((type, overrides = {}) => {
 ---
 
 ### Task 2.2: Extract Slide Constants
+
 **File:** `EditorPage.jsx`, NEW `client/src/data/slide-constants.js`  
 **Effort:** 30 min
 
@@ -178,6 +221,7 @@ export const AUTOSAVE_DELAY_MS = 1500
 Replace tất cả hardcoded `960`, `540`, `50`, `1500` trong EditorPage, SlideCanvas.
 
 **Checklist:**
+
 - `[x]` Tạo `slide-constants.js`
 - `[x]` Replace hardcoded values trong EditorPage (~30 occurrences)
 - `[x]` Replace trong SlideCanvas
@@ -186,6 +230,7 @@ Replace tất cả hardcoded `960`, `540`, `50`, `1500` trong EditorPage, SlideC
 ---
 
 ### Task 2.3: Extract Server Helpers
+
 **Files:** `server/index.js`, `server/routes/presentations.js`, NEW `server/services/presentation-finder.js`  
 **Effort:** 2 hours
 
@@ -199,17 +244,17 @@ const BUILT_IN_TEMPLATES = require('../data/built-in-templates') // if exists
 async function findPresentationById(id) {
   // 1. Check presentations
   const presentations = await readPresentations()
-  const found = presentations.find(p => p.id === id)
+  const found = presentations.find((p) => p.id === id)
   if (found) return found
-  
+
   // 2. Check custom templates
   const templates = await readTemplates()
-  const tmpl = templates.find(t => t.id === id)
+  const tmpl = templates.find((t) => t.id === id)
   if (tmpl) return tmpl
-  
+
   // 3. Check built-in templates (if applicable)
   // ...
-  
+
   return null
 }
 
@@ -243,6 +288,7 @@ setupSocketHandlers(io)
 **Step 4: Move inline `bcrypt` require to top of file**
 
 **Checklist:**
+
 - `[x]` Tạo `presentation-finder.js`
 - `[x]` Replace 3 duplicate lookups (index.js ×2, presentations.js ×1)
 - `[x]` Extract Socket.IO handlers → `socket-handler.js`
@@ -253,6 +299,7 @@ setupSocketHandlers(io)
 ---
 
 ### Task 2.4: Lazy-Load icon-paths.json
+
 **File:** `EditorPage.jsx` hoặc component sử dụng icons  
 **Effort:** 1 hour  
 **Impact:** -764KB initial bundle
@@ -264,13 +311,14 @@ import iconPaths from '../data/icon-paths.json'
 // AFTER:
 const [iconPaths, setIconPaths] = useState({})
 useEffect(() => {
-  import('../data/icon-paths.json').then(m => setIconPaths(m.default))
+  import('../data/icon-paths.json').then((m) => setIconPaths(m.default))
 }, [])
 ```
 
 Hoặc dùng Vite dynamic import với code splitting.
 
 **Checklist:**
+
 - `[x]` Convert static import → dynamic `import()`
 - `[x]` Add loading state cho icon picker
 - `[x]` Verify icon picker vẫn hoạt động
@@ -279,6 +327,7 @@ Hoặc dùng Vite dynamic import với code splitting.
 ---
 
 ### Task 2.5: DRY htmlGenerator Render Pipeline
+
 **File:** `shared/src/htmlGenerator.js`  
 **Effort:** 3 hours  
 **Impact:** -300 lines
@@ -291,11 +340,14 @@ function renderElement(el, options = {}) {
   const { forPrint = false, assetOrigin = '' } = options
   const style = buildBaseStyle(el)
   const vis = options.isHidden ? 'visibility:hidden;' : ''
-  
+
   switch (el.type) {
-    case 'text': return renderTextElement(el, style, vis, options)
-    case 'image': return renderImageElement(el, style, vis, options)
-    case 'shape': return renderShapeElement(el, style, vis, options)
+    case 'text':
+      return renderTextElement(el, style, vis, options)
+    case 'image':
+      return renderImageElement(el, style, vis, options)
+    case 'shape':
+      return renderShapeElement(el, style, vis, options)
     // ... unified for all 14 types
   }
 }
@@ -310,6 +362,7 @@ function renderTextElement(el, style, vis, options) {
 ```
 
 **Checklist:**
+
 - `[x]` Extract `renderElement()` function
 - `[x]` Extract per-type render functions
 - `[x]` Refactor `generateRevealHTML` to use shared renderer
@@ -322,6 +375,7 @@ function renderTextElement(el, style, vis, options) {
 ## Verification Plan
 
 ### Automated Tests
+
 ```bash
 npx playwright test                                    # Full E2E suite
 npx playwright test tests/e2e/elements.spec.js         # Element creation
@@ -332,12 +386,14 @@ npm run build --workspace=client                       # Verify build
 ```
 
 ### Manual Verification
+
 1. Tạo mỗi loại element (14 types) → verify render đúng
 2. Present mode → verify hiển thị đúng
 3. Export PDF → verify layout giữ nguyên
 4. Check bundle size report: `icon-paths.json` phải lazy-loaded
 
 ### Metrics
+
 - EditorPage.jsx: ≤3000 lines (giảm ≥500)
 - htmlGenerator.js: ≤650 lines (giảm ≥250)
 - Bundle size: giảm ≥700KB (icon-paths lazy)

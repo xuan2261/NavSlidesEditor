@@ -16,9 +16,7 @@ import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
-import {
-  ChevronLeft,
-} from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { api } from '../utils/api'
 import { presentInWindow, exportPDF, generateRevealHTML } from '../utils/generateHTML'
 import { exportToPptx } from '../utils/exportPptx'
@@ -67,6 +65,7 @@ import anOldHopeCSS from '../../../node_modules/highlight.js/styles/an-old-hope.
 import atomOneLightCSS from '../../../node_modules/highlight.js/styles/atom-one-light.min.css?raw'
 import githubCSS from '../../../node_modules/highlight.js/styles/github.min.css?raw'
 import vsCSS from '../../../node_modules/highlight.js/styles/vs.min.css?raw'
+import { Button, Input } from '../components/ui'
 
 const CODE_THEME_CSS = {
   monokai: monokaiCSS,
@@ -97,7 +96,6 @@ const THEMES = [
 ]
 // eslint-disable-next-line unused-imports/no-unused-vars
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
-
 
 const migrateSlide = (slide) => {
   if (!slide.elements) {
@@ -131,30 +129,30 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const [loading, setLoading] = useState(true)
 
   // ─── Zustand store (UI state) ───────────────────────────────────────────────
-  const selectedElementIds = useEditorStore(s => s.selectedElementIds)
-  const setSelectedElementIds = useEditorStore(s => s.setSelectedElementIds)
-  const editingElementId = useEditorStore(s => s.editingElementId)
-  const setEditingElementId = useEditorStore(s => s.setEditingElementId)
+  const selectedElementIds = useEditorStore((s) => s.selectedElementIds)
+  const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds)
+  const editingElementId = useEditorStore((s) => s.editingElementId)
+  const setEditingElementId = useEditorStore((s) => s.setEditingElementId)
   // eslint-disable-next-line unused-imports/no-unused-vars
-  const clipboard = useEditorStore(s => s.clipboard)
+  const clipboard = useEditorStore((s) => s.clipboard)
   // eslint-disable-next-line unused-imports/no-unused-vars
-  const setClipboard = useEditorStore(s => s.setClipboard)
-  const showGrid = useEditorStore(s => s.showGrid)
-  const setShowGrid = useEditorStore(s => s.setShowGrid)
-  const gridSize = useEditorStore(s => s.gridSize)
-  const setGridSize = useEditorStore(s => s.setGridSize)
-  const smartGuidesEnabled = useEditorStore(s => s.smartGuidesEnabled)
-  const setSmartGuidesEnabled = useEditorStore(s => s.setSmartGuidesEnabled)
-  const showRulers = useEditorStore(s => s.showRulers)
-  const setShowRulers = useEditorStore(s => s.setShowRulers)
-  const guides = useEditorStore(s => s.guides)
-  const setGuides = useEditorStore(s => s.setGuides)
-  const showTimeline = useEditorStore(s => s.showTimeline)
-  const setShowTimeline = useEditorStore(s => s.setShowTimeline)
-  const showFindReplace = useEditorStore(s => s.showFindReplace)
-  const setShowFindReplace = useEditorStore(s => s.setShowFindReplace)
-  const viewMode = useEditorStore(s => s.viewMode)
-  const setViewMode = useEditorStore(s => s.setViewMode)
+  const setClipboard = useEditorStore((s) => s.setClipboard)
+  const showGrid = useEditorStore((s) => s.showGrid)
+  const setShowGrid = useEditorStore((s) => s.setShowGrid)
+  const gridSize = useEditorStore((s) => s.gridSize)
+  const setGridSize = useEditorStore((s) => s.setGridSize)
+  const smartGuidesEnabled = useEditorStore((s) => s.smartGuidesEnabled)
+  const setSmartGuidesEnabled = useEditorStore((s) => s.setSmartGuidesEnabled)
+  const showRulers = useEditorStore((s) => s.showRulers)
+  const setShowRulers = useEditorStore((s) => s.setShowRulers)
+  const guides = useEditorStore((s) => s.guides)
+  const setGuides = useEditorStore((s) => s.setGuides)
+  const showTimeline = useEditorStore((s) => s.showTimeline)
+  const setShowTimeline = useEditorStore((s) => s.setShowTimeline)
+  const showFindReplace = useEditorStore((s) => s.showFindReplace)
+  const setShowFindReplace = useEditorStore((s) => s.setShowFindReplace)
+  const viewMode = useEditorStore((s) => s.viewMode)
+  const setViewMode = useEditorStore((s) => s.setViewMode)
 
   // Derived from selectedElementIds — must be declared before any useEffect that references it
   const selectedElementId = selectedElementIds[selectedElementIds.length - 1] ?? null
@@ -206,7 +204,6 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     currentSlideIndexRef.current = currentSlideIndex
   }, [currentSlideIndex])
 
-   
   useEffect(() => {
     selectedElementIdsRef.current = selectedElementIds
   }, [selectedElementIds])
@@ -236,7 +233,10 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   // Load share status
   useEffect(() => {
     if (presentationId) {
-      api.getShareStatus(presentationId).then(setShareStatus).catch(() => {})
+      api
+        .getShareStatus(presentationId)
+        .then(setShareStatus)
+        .catch(() => {})
     }
   }, [presentationId])
 
@@ -425,18 +425,21 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   // Thin wrappers for call-site compatibility
   const addTextElement = useCallback(() => addElement('text'), [addElement])
 
-  const addImageElement = useCallback((src, dropX, dropY) => {
-    const posOverrides = { src }
-    if (dropX !== undefined) posOverrides.x = Math.max(0, Math.min(560, dropX - 200))
-    if (dropY !== undefined) posOverrides.y = Math.max(0, Math.min(240, dropY - 150))
-    return addElement('image', posOverrides)
-  }, [addElement])
+  const addImageElement = useCallback(
+    (src, dropX, dropY) => {
+      const posOverrides = { src }
+      if (dropX !== undefined) posOverrides.x = Math.max(0, Math.min(560, dropX - 200))
+      if (dropY !== undefined) posOverrides.y = Math.max(0, Math.min(240, dropY - 150))
+      return addElement('image', posOverrides)
+    },
+    [addElement]
+  )
 
   // Add a batch of new elements (used by clipboard paste/duplicate)
   const addElements = useCallback((newElements) => {
     if (!newElements || newElements.length === 0) return
     // Generate IDs before setState so selection works
-    const withIds = newElements.map(el => ({
+    const withIds = newElements.map((el) => ({
       ...el,
       id: el.id || crypto.randomUUID(),
     }))
@@ -451,7 +454,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         ),
       }
     })
-    setSelectedElementIds(withIds.map(el => el.id))
+    setSelectedElementIds(withIds.map((el) => el.id))
   }, [])
 
   const DEFAULT_HTML = `<script src="https://cdn.jsdelivr.net/npm/d3@7"><\/script>
@@ -470,9 +473,17 @@ svg.selectAll('circle').data(data).join('circle')
 
   const addDividerElement = useCallback(() => {
     return addElement('line', {
-      x: 96, y: 270, width: 768, height: 40,
-      x1: 0, y1: 20, x2: 768, y2: 20,
-      stroke: 'rgba(255,255,255,0.3)', arrowStart: 'none', arrowEnd: 'none',
+      x: 96,
+      y: 270,
+      width: 768,
+      height: 40,
+      x1: 0,
+      y1: 20,
+      x2: 768,
+      y2: 20,
+      stroke: 'rgba(255,255,255,0.3)',
+      arrowStart: 'none',
+      arrowEnd: 'none',
     })
   }, [addElement])
 
@@ -526,8 +537,6 @@ svg.selectAll('circle').data(data).join('circle')
     setCodeEditorState(null)
   }, [codeEditorState, updateElement])
 
-
-
   const addLatexElement = useCallback(() => {
     const newEl = addElement('latex')
     setLatexEditorState({ elementId: newEl.id, content: newEl.content })
@@ -563,9 +572,12 @@ svg.selectAll('circle').data(data).join('circle')
     [currentSlide, addElement]
   )
 
-  const addIconElement = useCallback((iconName) => {
-    return addElement('icon', iconName ? { iconName } : {})
-  }, [addElement])
+  const addIconElement = useCallback(
+    (iconName) => {
+      return addElement('icon', iconName ? { iconName } : {})
+    },
+    [addElement]
+  )
 
   const addShapeElement = useCallback(
     (shape) => {
@@ -586,20 +598,29 @@ svg.selectAll('circle').data(data).join('circle')
 
   const addAudioElement = useCallback((src) => addElement('audio', { src }), [addElement])
 
-  const addTableElement = useCallback((rows = 3, cols = 3) => {
-    const data = Array.from({ length: rows }, (_, ri) =>
-      Array.from({ length: cols }, (_, ci) => (ri === 0 ? `Header ${ci + 1}` : ''))
-    )
-    return addElement('table', { data })
-  }, [addElement])
+  const addTableElement = useCallback(
+    (rows = 3, cols = 3) => {
+      const data = Array.from({ length: rows }, (_, ri) =>
+        Array.from({ length: cols }, (_, ci) => (ri === 0 ? `Header ${ci + 1}` : ''))
+      )
+      return addElement('table', { data })
+    },
+    [addElement]
+  )
 
   const addDrawingElement = useCallback(() => addElement('drawing'), [addElement])
 
-  const addLineElement = useCallback((overrides = {}) => addElement('line', overrides), [addElement])
+  const addLineElement = useCallback(
+    (overrides = {}) => addElement('line', overrides),
+    [addElement]
+  )
 
-  const addSvgElement = useCallback((svgContent) => {
-    return addElement('svg', svgContent ? { content: svgContent } : {})
-  }, [addElement])
+  const addSvgElement = useCallback(
+    (svgContent) => {
+      return addElement('svg', svgContent ? { content: svgContent } : {})
+    },
+    [addElement]
+  )
 
   // Pre-process HTML to preserve block-level inline styles for ProseMirror
   // TipTap Color/TextStyle extensions only work on <span>, not block elements
@@ -627,14 +648,22 @@ svg.selectAll('circle').data(data).join('circle')
     })
 
     // Step 2: Move inline styles from block elements to wrapping spans
-    const blocks = doc.body.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, div')
+    const blocks = doc.body.querySelectorAll(
+      'h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, div'
+    )
     blocks.forEach((el) => {
       const color = el.style.color
       const fontSize = el.style.fontSize
       if (!color && !fontSize) return
       const span = doc.createElement('span')
-      if (color) { span.style.color = color; el.style.removeProperty('color') }
-      if (fontSize) { span.style.fontSize = fontSize; el.style.removeProperty('font-size') }
+      if (color) {
+        span.style.color = color
+        el.style.removeProperty('color')
+      }
+      if (fontSize) {
+        span.style.fontSize = fontSize
+        el.style.removeProperty('font-size')
+      }
       while (el.firstChild) span.appendChild(el.firstChild)
       el.appendChild(span)
     })
@@ -810,7 +839,6 @@ svg.selectAll('circle').data(data).join('circle')
     [presentation]
   )
 
-
   if (loading) {
     return (
       <div
@@ -839,24 +867,28 @@ svg.selectAll('circle').data(data).join('circle')
         }}
       >
         Presentation not found.{' '}
-        <button className="btn btn-ghost" onClick={onGoHome}>
+        <Button variant="ghost" onClick={onGoHome}>
           Go back
-        </button>
+        </Button>
       </div>
     )
   }
 
   // eslint-disable-next-line
-  const hasChanges = historyRef.current.length > 0;
+  const hasChanges = historyRef.current.length > 0
 
   return (
-    <div className="editor-page" style={{ position: 'relative' }}>
+    <div className="h-full flex flex-col overflow-hidden" style={{ position: 'relative' }}>
       {/* Editor Header */}
-      <div className="editor-header">
-        <button className="back-btn btn-ghost" onClick={onGoHome}>
+      <div className="relative z-[200] flex items-center gap-x-3 px-4 py-1.5 min-h-[44px] bg-secondary border-b border-border shrink-0">
+        <Button
+          variant="ghost"
+          className="flex items-center gap-1.5 text-text-secondary text-[13px] px-2.5 py-1.5 rounded-sm transition-colors hover:bg-hover hover:text-text-primary"
+          onClick={onGoHome}
+        >
           <ChevronLeft size={16} />
           Back
-        </button>
+        </Button>
         {isTemplate && (
           <span
             style={{
@@ -873,8 +905,8 @@ svg.selectAll('circle').data(data).join('circle')
             TEMPLATE
           </span>
         )}
-        <input
-          className="title-input"
+        <Input
+          className="w-[150px] sm:w-[200px] shrink-0"
           value={presentation.title || ''}
           onChange={(e) => setPresentation((prev) => ({ ...prev, title: e.target.value }))}
           placeholder={isTemplate ? 'Untitled Template' : 'Untitled Presentation'}
@@ -964,7 +996,11 @@ svg.selectAll('circle').data(data).join('circle')
                 }
                 if (warnings.length) console.warn('Import warnings:', warnings)
                 let finalPres = parsed.presentation
-                if (parsed.type === 'zip' && parsed.mediaFiles && Object.keys(parsed.mediaFiles).length > 0) {
+                if (
+                  parsed.type === 'zip' &&
+                  parsed.mediaFiles &&
+                  Object.keys(parsed.mediaFiles).length > 0
+                ) {
                   const urlMap = {}
                   for (const [name, blob] of Object.entries(parsed.mediaFiles)) {
                     try {
@@ -1021,14 +1057,14 @@ svg.selectAll('circle').data(data).join('circle')
               const data = await res.json()
               setLiveRoomCode(data.roomCode)
               setShowLiveModal(true)
-            // eslint-disable-next-line unused-imports/no-unused-vars
+              // eslint-disable-next-line unused-imports/no-unused-vars
             } catch (err) {
               alert('Failed to create live room')
             }
           }}
           onAnalytics={() => setShowAnalytics(true)}
           onAICopywriter={() => {
-            const el = currentSlide?.elements?.find(e => e.id === selectedElementId)
+            const el = currentSlide?.elements?.find((e) => e.id === selectedElementId)
             if (el?.type === 'text' && el.content) {
               setShowAICopywriter(true)
             } else {
@@ -1043,7 +1079,11 @@ svg.selectAll('circle').data(data).join('circle')
 
       {/* GitHub Modal */}
       {showGithubModal && (
-        <GitHubPushModal presentationId={presentationId} presentationTitle={presentation?.title} onClose={() => setShowGithubModal(false)} />
+        <GitHubPushModal
+          presentationId={presentationId}
+          presentationTitle={presentation?.title}
+          onClose={() => setShowGithubModal(false)}
+        />
       )}
 
       {/* Sync / Proton Drive Modal */}
@@ -1051,16 +1091,16 @@ svg.selectAll('circle').data(data).join('circle')
         <SyncModal presentationId={presentationId} onClose={() => setShowSyncModal(false)} />
       )}
 
-
       {/* Version History Modal */}
       {showHistoryModal && (
         <HistoryModal
           presentationId={presentationId}
-          onRestore={(restored) => setPresentation({ ...restored, slides: (restored.slides || []).map(s => s) })}
+          onRestore={(restored) =>
+            setPresentation({ ...restored, slides: (restored.slides || []).map((s) => s) })
+          }
           onClose={() => setShowHistoryModal(false)}
         />
       )}
-
 
       {/* Slide Sorter View */}
       {viewMode === 'sorter' && (
@@ -1101,7 +1141,7 @@ svg.selectAll('circle').data(data).join('circle')
       )}
 
       {/* Editor Body */}
-      <div className="editor-body">
+      <div className="flex-1 flex overflow-hidden">
         <SlidePanel
           slides={presentation.slides}
           currentIndex={currentSlideIndex}
@@ -1114,9 +1154,7 @@ svg.selectAll('circle').data(data).join('circle')
           onToggleLock={(idx) =>
             setPresentation((prev) => ({
               ...prev,
-              slides: prev.slides.map((s, i) =>
-                i === idx ? { ...s, locked: !s.locked } : s
-              ),
+              slides: prev.slides.map((s, i) => (i === idx ? { ...s, locked: !s.locked } : s)),
             }))
           }
           onToggleAutoAnimate={(idx) =>
@@ -1137,15 +1175,13 @@ svg.selectAll('circle').data(data).join('circle')
             setPresentation((prev) => ({
               ...prev,
               slides: prev.slides.map((s, i) =>
-                i === idx
-                  ? { ...s, children: [...(s.children || []), newChild] }
-                  : s
+                i === idx ? { ...s, children: [...(s.children || []), newChild] } : s
               ),
             }))
           }}
         />
 
-        <div className="editor-main">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-workspace">
           <Toolbar
             editor={editingElementId ? editor : null}
             editingElementId={editingElementId}
@@ -1190,7 +1226,7 @@ svg.selectAll('circle').data(data).join('circle')
             showRulers={showRulers}
             onToggleRulers={() => setShowRulers((v) => !v)}
           />
-          <div className="canvas-area" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="flex-1 flex flex-col relative overflow-hidden">
             <SlideCanvas
               editor={editor}
               slide={currentSlide}
@@ -1330,36 +1366,31 @@ svg.selectAll('circle').data(data).join('circle')
 
         {/* Share Modal */}
         {showShareModal && (
-          <ShareModal
-            presentationId={presentationId}
-            onClose={() => setShowShareModal(false)}
-          />
+          <ShareModal presentationId={presentationId} onClose={() => setShowShareModal(false)} />
         )}
 
         {/* Analytics Modal */}
         {showAnalytics && (
-          <AnalyticsModal
-            presentationId={presentationId}
-            onClose={() => setShowAnalytics(false)}
-          />
+          <AnalyticsModal presentationId={presentationId} onClose={() => setShowAnalytics(false)} />
         )}
 
         {/* AI Copywriter Modal */}
-        {showAICopywriter && (() => {
-          const el = currentSlide?.elements?.find(e => e.id === selectedElementId)
-          const textContent = el?.content?.replace(/<[^>]*>/g, '') || ''
-          return (
-            <AICopywriterModal
-              text={textContent}
-              onApply={(newText) => {
-                if (selectedElementId) {
-                  updateElement(selectedElementId, { content: `<p>${newText}</p>` })
-                }
-              }}
-              onClose={() => setShowAICopywriter(false)}
-            />
-          )
-        })()}
+        {showAICopywriter &&
+          (() => {
+            const el = currentSlide?.elements?.find((e) => e.id === selectedElementId)
+            const textContent = el?.content?.replace(/<[^>]*>/g, '') || ''
+            return (
+              <AICopywriterModal
+                text={textContent}
+                onApply={(newText) => {
+                  if (selectedElementId) {
+                    updateElement(selectedElementId, { content: `<p>${newText}</p>` })
+                  }
+                }}
+                onClose={() => setShowAICopywriter(false)}
+              />
+            )
+          })()}
 
         {/* AI Generator Modal */}
         {showAIGenerator && (
@@ -1377,17 +1408,24 @@ svg.selectAll('circle').data(data).join('circle')
                   // eslint-disable-next-line unused-imports/no-unused-vars
                   const newSlides = outline.map((item, idx) => ({
                     id: crypto.randomUUID(),
-                    elements: [{
-                      id: crypto.randomUUID(),
-                      type: 'text',
-                      x: 40, y: 40, width: 880, height: 460, zIndex: 1,
-                      content: item.layout === 'title'
-                        ? `<h1 style="text-align:center">${item.title}</h1>${item.bulletPoints?.length ? `<p style="text-align:center">${item.bulletPoints.join(' | ')}</p>` : ''}`
-                        : `<h2>${item.title}</h2><ul>${(item.bulletPoints || []).map(bp => `<li>${bp}</li>`).join('')}</ul>`,
-                    }],
+                    elements: [
+                      {
+                        id: crypto.randomUUID(),
+                        type: 'text',
+                        x: 40,
+                        y: 40,
+                        width: 880,
+                        height: 460,
+                        zIndex: 1,
+                        content:
+                          item.layout === 'title'
+                            ? `<h1 style="text-align:center">${item.title}</h1>${item.bulletPoints?.length ? `<p style="text-align:center">${item.bulletPoints.join(' | ')}</p>` : ''}`
+                            : `<h2>${item.title}</h2><ul>${(item.bulletPoints || []).map((bp) => `<li>${bp}</li>`).join('')}</ul>`,
+                      },
+                    ],
                     speakerNotes: item.speakerNotes || '',
                   }))
-                  setPresentation(prev => ({
+                  setPresentation((prev) => ({
                     ...prev,
                     slides: [...(prev.slides || []), ...newSlides],
                   }))
@@ -1405,7 +1443,7 @@ svg.selectAll('circle').data(data).join('circle')
           <AITranslateModal
             slides={presentation?.slides}
             onApplyTranslations={(translationMap, keepOriginal) => {
-              setPresentation(prev => {
+              setPresentation((prev) => {
                 const newSlides = prev.slides.map((slide, si) => {
                   let updatedSlide = { ...slide }
                   if (slide.elements) {
@@ -1436,7 +1474,11 @@ svg.selectAll('circle').data(data).join('circle')
 
         {/* Live Present Modal */}
         {showLiveModal && liveRoomCode && (
-          <LivePresentationModal presentationId={presentationId} roomCode={liveRoomCode} onClose={() => setShowLiveModal(false)} />
+          <LivePresentationModal
+            presentationId={presentationId}
+            roomCode={liveRoomCode}
+            onClose={() => setShowLiveModal(false)}
+          />
         )}
 
         {showTemplateModal && (
@@ -1455,7 +1497,6 @@ svg.selectAll('circle').data(data).join('circle')
           />
         )}
 
-
         {showMediaLibrary && (
           <MediaLibraryModal
             onClose={() => setShowMediaLibrary(false)}
@@ -1469,9 +1510,23 @@ svg.selectAll('circle').data(data).join('circle')
               }
               let el = null
               if (item.type === 'image') {
-                el = { ...base, type: 'image', width: 400, height: 300, src: item.url, objectFit: 'contain' }
+                el = {
+                  ...base,
+                  type: 'image',
+                  width: 400,
+                  height: 300,
+                  src: item.url,
+                  objectFit: 'contain',
+                }
               } else if (item.type === 'video') {
-                el = { ...base, type: 'video', width: 480, height: 270, src: item.url, controls: true }
+                el = {
+                  ...base,
+                  type: 'video',
+                  width: 480,
+                  height: 270,
+                  src: item.url,
+                  controls: true,
+                }
               } else if (item.type === 'audio') {
                 el = { ...base, type: 'audio', width: 300, height: 60, src: item.url }
               }
@@ -1479,9 +1534,7 @@ svg.selectAll('circle').data(data).join('circle')
                 setPresentation((prev) => ({
                   ...prev,
                   slides: prev.slides.map((s, i) =>
-                    i === currentSlideIndex
-                      ? { ...s, elements: [...(s.elements || []), el] }
-                      : s
+                    i === currentSlideIndex ? { ...s, elements: [...(s.elements || []), el] } : s
                   ),
                 }))
               }
@@ -1519,12 +1572,12 @@ svg.selectAll('circle').data(data).join('circle')
           onClose={() => setGalleryPreviewTemplate(null)}
           onUseAsNew={(tmpl) => {
             // Replace current presentation slides with template slides
-            const newSlides = (tmpl.slides || []).map(s => ({
+            const newSlides = (tmpl.slides || []).map((s) => ({
               ...s,
               id: crypto.randomUUID(),
-              elements: (s.elements || []).map(el => ({ ...el, id: crypto.randomUUID() }))
+              elements: (s.elements || []).map((el) => ({ ...el, id: crypto.randomUUID() })),
             }))
-            setPresentation(prev => ({
+            setPresentation((prev) => ({
               ...prev,
               slides: newSlides,
               theme: tmpl.theme || prev.theme,
@@ -1536,27 +1589,27 @@ svg.selectAll('circle').data(data).join('circle')
           }}
           onInsertSlides={(slidesToInsert, position) => {
             // Re-assign IDs for all slides and elements to avoid duplicates
-            const newSlides = slidesToInsert.map(s => ({
+            const newSlides = slidesToInsert.map((s) => ({
               ...s,
               id: crypto.randomUUID(),
-              elements: (s.elements || []).map(el => ({ ...el, id: crypto.randomUUID() }))
+              elements: (s.elements || []).map((el) => ({ ...el, id: crypto.randomUUID() })),
             }))
-            
-            setPresentation(prev => {
-              const currentSlides = [...prev.slides];
-              let insertIndex;
+
+            setPresentation((prev) => {
+              const currentSlides = [...prev.slides]
+              let insertIndex
               if (position === 'after') {
-                insertIndex = currentSlideIndex + 1;
+                insertIndex = currentSlideIndex + 1
               } else {
-                insertIndex = currentSlides.length;
+                insertIndex = currentSlides.length
               }
-              currentSlides.splice(insertIndex, 0, ...newSlides);
-              return { ...prev, slides: currentSlides };
-            });
-            
+              currentSlides.splice(insertIndex, 0, ...newSlides)
+              return { ...prev, slides: currentSlides }
+            })
+
             // Close modals
-            setGalleryPreviewTemplate(null);
-            setShowTemplateGallery(false);
+            setGalleryPreviewTemplate(null)
+            setShowTemplateGallery(false)
           }}
         />
       )}

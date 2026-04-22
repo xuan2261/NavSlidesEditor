@@ -1,12 +1,14 @@
 # Phase 1: Shapes & Controls Expansion
 
 ## Context
+
 - [shapeUtils.js](file:///d:/NCKH_2025/revealjs_gui/shared/src/shapeUtils.js) — 8 shapes hiện tại
 - [InsertMenu.jsx](file:///d:/NCKH_2025/revealjs_gui/client/src/components/InsertMenu.jsx) — Insert UI
 - [htmlGenerator.js](file:///d:/NCKH_2025/revealjs_gui/shared/src/htmlGenerator.js) — Render pipeline
 - [EditorPage.jsx](file:///d:/NCKH_2025/revealjs_gui/client/src/pages/EditorPage.jsx) — addShapeElement handler
 
 ## Overview
+
 - Priority: P0
 - Status: ⬜ Pending
 - Thêm 7 shapes mới + QR Code element + Divider element
@@ -14,11 +16,13 @@
 ## Requirements
 
 ### Functional
+
 1. 7 shapes mới trong shapeUtils.js: `hexagon`, `pentagon`, `cloud`, `cylinder`, `parallelogram`, `trapezoid`, `bracket`
 2. QR Code element type: input URL/text → render QR code trên canvas
 3. Divider element: horizontal/vertical line với dash styles (solid, dashed, dotted, gradient)
 
 ### Non-Functional
+
 - Shapes phải render chính xác ở mọi kích thước (min 20px, max 960px)
 - QR Code render client-side (không cần server API)
 - Tất cả elements mới phải work trong: Canvas, Present mode, PDF export, PPTX export
@@ -26,6 +30,7 @@
 ## Architecture
 
 ### New Shapes — SVG Path Definitions
+
 ```
 hexagon:       6-sided polygon, flat-top orientation
 pentagon:      5-sided polygon
@@ -37,6 +42,7 @@ bracket:       Left curly bracket shape
 ```
 
 ### QR Code Element
+
 - Library: `qrcode` npm package (lightweight, MIT license)
 - Element type: `qrcode`
 - Properties: `qrData` (string), `qrColor` (#hex), `qrBgColor` (#hex), `qrErrorLevel` ('L'|'M'|'Q'|'H')
@@ -44,12 +50,14 @@ bracket:       Left curly bracket shape
 - Present mode: Generate inline `<canvas>` trong htmlGenerator
 
 ### Divider Element
+
 - Reuse `line` element type với preset styles
 - InsertMenu adds shortcut button "Divider" → creates horizontal line spanning 80% width
 
 ## Related Code Files
 
 ### Modify
+
 - `shared/src/shapeUtils.js` — Add 7 shape SVG generators
 - `client/src/components/InsertMenu.jsx` — Add QR Code + Divider buttons
 - `client/src/pages/EditorPage.jsx` — Add `addQrCodeElement()`, `addDividerElement()`
@@ -58,9 +66,11 @@ bracket:       Left curly bracket shape
 - `client/src/components/SlideCanvas.jsx` — Add QR code canvas rendering
 
 ### Create
+
 - (none — all changes are additions to existing files)
 
 ### Dependencies
+
 - `npm install qrcode` — QR code generation library
 
 ## Implementation Steps
@@ -102,6 +112,7 @@ bracket:       Left curly bracket shape
 - [x] Visual test: all shapes render correctly
 
 ## Success Criteria
+
 - ✅ 15 shapes total visible in InsertMenu shape picker
 - ✅ QR Code generates from URL/text input
 - ✅ Divider inserts centered horizontal line

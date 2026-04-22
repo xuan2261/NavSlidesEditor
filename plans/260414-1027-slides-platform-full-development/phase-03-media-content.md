@@ -1,6 +1,7 @@
 # Phase 3 — Media & Content Enhancement
 
 ## Overview
+
 - **Priority**: P1
 - **Status**: ⬜ Pending
 - **Effort**: 3-4 tuần
@@ -10,11 +11,13 @@
 ## Features to Implement
 
 ### 3.1 Media Library
+
 **Mô tả**: Persistent library để browse/search tất cả uploaded assets.
 
 **Implementation**:
 
 **Server-side:**
+
 - Endpoint `GET /api/media` → scan uploads dir, return metadata
 - Store metadata trong `server/data/media.json`:
   ```json
@@ -37,6 +40,7 @@
 - Endpoint `PUT /api/media/:id` — update tags/name
 
 **Client-side:**
+
 - MediaLibraryModal component:
   - Grid view of all uploaded media
   - Search by filename/tags
@@ -51,9 +55,11 @@
 ---
 
 ### 3.2 Unsplash Integration
+
 **Mô tả**: Search + insert free stock photos từ Unsplash.
 
 **Implementation**:
+
 - Unsplash API (free tier, 50 requests/hour)
 - User cung cấp API key via Settings page (hoặc built-in demo key)
 - Search UI trong Media Library modal
@@ -64,10 +70,9 @@
 
 ```javascript
 // API call
-const response = await fetch(
-  `https://api.unsplash.com/search/photos?query=${query}&per_page=20`,
-  { headers: { Authorization: `Client-ID ${apiKey}` } }
-)
+const response = await fetch(`https://api.unsplash.com/search/photos?query=${query}&per_page=20`, {
+  headers: { Authorization: `Client-ID ${apiKey}` },
+})
 ```
 
 **Files**: NEW `services/unsplash.js`, MediaLibraryModal tab, Settings (API key)
@@ -75,9 +80,11 @@ const response = await fetch(
 ---
 
 ### 3.3 GIPHY Integration
+
 **Mô tả**: Search + insert GIFs.
 
 **Implementation**:
+
 - GIPHY API (free tier, unlimited for development)
 - Tab trong Media Library
 - Preview GIFs before insert
@@ -88,9 +95,11 @@ const response = await fetch(
 ---
 
 ### 3.4 Import PDF → Slides
+
 **Mô tả**: Convert PDF pages thành image slides.
 
 **Implementation**:
+
 - Upload PDF file to server
 - Server-side: use `pdf-poppler` hoặc `pdf2pic` to render each page as image
 - Alternative (simpler): Use `pdfjs-dist` client-side to render pages to canvas → export as images
@@ -110,20 +119,26 @@ async function pdfToSlides(file) {
     canvas.width = viewport.width
     canvas.height = viewport.height
     await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise
-    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'))
+    const blob = await new Promise((r) => canvas.toBlob(r, 'image/png'))
     // Upload blob to server
     const formData = new FormData()
     formData.append('file', blob, `page-${i}.png`)
     const { url } = await api.uploadFile(formData)
     slides.push({
       id: crypto.randomUUID(),
-      elements: [{
-        id: crypto.randomUUID(),
-        type: 'image',
-        x: 0, y: 0, width: 960, height: 540,
-        src: url, objectFit: 'contain'
-      }],
-      background: { type: 'color', color: '#ffffff' }
+      elements: [
+        {
+          id: crypto.randomUUID(),
+          type: 'image',
+          x: 0,
+          y: 0,
+          width: 960,
+          height: 540,
+          src: url,
+          objectFit: 'contain',
+        },
+      ],
+      background: { type: 'color', color: '#ffffff' },
     })
   }
   return slides
@@ -135,9 +150,11 @@ async function pdfToSlides(file) {
 ---
 
 ### 3.5 Import Markdown → Deck
+
 **Mô tả**: Convert full Markdown document thành presentation.
 
 **Implementation**:
+
 - Parse markdown, split by `---` (horizontal rule) hoặc `## Heading` → mỗi section = 1 slide
 - Convert markdown → HTML via `marked` (already available)
 - Mỗi slide: 1 text element chứa rendered HTML
@@ -147,22 +164,24 @@ async function pdfToSlides(file) {
 function markdownToSlides(md) {
   // Split by --- or ## headings
   const sections = md.split(/\n---\n|\n(?=## )/)
-  return sections.map(section => {
+  return sections.map((section) => {
     const html = marked.parse(section.trim())
     const isTitle = /^<h[12]>/.test(html) && !html.includes('<p>')
     return {
       id: crypto.randomUUID(),
-      elements: [{
-        id: crypto.randomUUID(),
-        type: 'text',
-        x: isTitle ? 80 : 60,
-        y: isTitle ? 180 : 40,
-        width: isTitle ? 800 : 840,
-        height: isTitle ? 180 : 460,
-        zIndex: 1,
-        content: html
-      }],
-      background: { type: 'color', color: '#1e1e2e' }
+      elements: [
+        {
+          id: crypto.randomUUID(),
+          type: 'text',
+          x: isTitle ? 80 : 60,
+          y: isTitle ? 180 : 40,
+          width: isTitle ? 800 : 840,
+          height: isTitle ? 180 : 460,
+          zIndex: 1,
+          content: html,
+        },
+      ],
+      background: { type: 'color', color: '#1e1e2e' },
     }
   })
 }
@@ -178,17 +197,18 @@ function markdownToSlides(md) {
 
 #### Template Categories
 
-| Category | ID | Templates |
-|----------|-----|-----------|
-| **Quân sự** | `military` | Briefing chiến thuật, Báo cáo tình hình, Huấn luyện, Đánh giá chiến dịch |
-| **Kỹ thuật** | `engineering` | Technical Report, Lab Results, System Architecture, Project Status |
-| **Chiến thuật** | `tactical` | Mission Planning, OPORD (Operations Order), Terrain Analysis, After Action Review |
-| **Academic** | `academic` | Research Paper, Thesis Defense, Lecture, Seminar |
-| **Corporate** | `corporate` | Quarterly Review, Product Launch, Team Meeting, Sales Pitch |
-| **Creative** | `creative` | Portfolio, Pitch Deck, Event, Storytelling |
-| **Blank** | `blank` | Clean templates (dark, light, gradient, minimal) |
+| Category        | ID            | Templates                                                                         |
+| --------------- | ------------- | --------------------------------------------------------------------------------- |
+| **Quân sự**     | `military`    | Briefing chiến thuật, Báo cáo tình hình, Huấn luyện, Đánh giá chiến dịch          |
+| **Kỹ thuật**    | `engineering` | Technical Report, Lab Results, System Architecture, Project Status                |
+| **Chiến thuật** | `tactical`    | Mission Planning, OPORD (Operations Order), Terrain Analysis, After Action Review |
+| **Academic**    | `academic`    | Research Paper, Thesis Defense, Lecture, Seminar                                  |
+| **Corporate**   | `corporate`   | Quarterly Review, Product Launch, Team Meeting, Sales Pitch                       |
+| **Creative**    | `creative`    | Portfolio, Pitch Deck, Event, Storytelling                                        |
+| **Blank**       | `blank`       | Clean templates (dark, light, gradient, minimal)                                  |
 
 #### Template Data Structure
+
 ```javascript
 // server/data/template-marketplace.json
 {
@@ -219,6 +239,7 @@ function markdownToSlides(md) {
 #### Military Templates (Chi tiết)
 
 **1. Tactical Briefing (Briefing Chiến thuật)**
+
 - Slide 1: Title — đơn vị, nhiệm vụ, ngày
 - Slide 2: Situation (Tình hình) — bản đồ placeholder, bullet points
 - Slide 3: Mission (Nhiệm vụ) — bold mission statement
@@ -228,18 +249,21 @@ function markdownToSlides(md) {
 - Colors: Navy (#1a2332), Gold accents (#d4a373), White text
 
 **2. Situation Report (Báo cáo tình hình)**
+
 - SITREP format: Who, What, When, Where, Why
 - Status indicators (green/amber/red)
 - Map/diagram placeholder
 - Colors: Dark green (#1a2e1a), White text
 
 **3. Training Briefing (Huấn luyện)**
+
 - Objectives, Standards, Conditions
 - Safety considerations slide
 - Schedule/timeline
 - Colors: Dark blue, Orange accents
 
 **4. Campaign Assessment (Đánh giá chiến dịch)**
+
 - Metrics/KPIs with big numbers
 - Comparison slides
 - Lessons learned
@@ -248,18 +272,21 @@ function markdownToSlides(md) {
 #### Engineering Templates
 
 **1. Technical Report**
+
 - Abstract, Methodology, Results, Conclusions
 - Chart placeholders, data tables
 - Clean serif typography
 - Colors: White background, dark text, blue accents
 
 **2. System Architecture**
+
 - Components overview
 - Data flow diagrams (placeholder shapes)
 - Tech stack slide
 - Colors: Dark gradient, indigo accents
 
 **3. Project Status**
+
 - Progress bars (using shapes)
 - Timeline/milestones
 - Risk matrix
@@ -269,6 +296,7 @@ function markdownToSlides(md) {
 #### Tactical Templates
 
 **1. OPORD (Operations Order)**
+
 - 5-paragraph order format
 - Task Organization
 - Coordinating Instructions
@@ -276,6 +304,7 @@ function markdownToSlides(md) {
 - Colors: OD Green (#3d4a2e), Khaki text
 
 **2. Terrain Analysis (OAKOC)**
+
 - Observation & Fields of Fire
 - Avenues of Approach
 - Key Terrain
@@ -284,6 +313,7 @@ function markdownToSlides(md) {
 - Colors: Earth tones, topographic feel
 
 **3. After Action Review (AAR)**
+
 - What was planned
 - What actually happened
 - Why it happened
@@ -291,6 +321,7 @@ function markdownToSlides(md) {
 - Colors: Dark with amber highlights
 
 #### Template Gallery UI
+
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │ Template Gallery                                      [Search]  │
@@ -312,12 +343,14 @@ function markdownToSlides(md) {
 ```
 
 #### Template Storage
+
 - Built-in templates: `server/data/built-in-templates.json` (shipped with app)
 - User templates: `server/data/templates.json` (existing)
 - API: `GET /api/templates/marketplace` → returns categories + built-in templates
 - Merge built-in + user templates trong client
 
-**Files**: 
+**Files**:
+
 - NEW `server/data/built-in-templates.json` (large file, ~500KB with all templates)
 - NEW `server/routes/marketplace.js`
 - NEW `client/src/components/dashboard/TemplateGallery.jsx`

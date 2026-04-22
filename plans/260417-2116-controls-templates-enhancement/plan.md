@@ -1,5 +1,5 @@
 ---
-title: "Controls & Template System Enhancement"
+title: 'Controls & Template System Enhancement'
 status: completed
 created: 2026-04-17
 priority: high
@@ -14,25 +14,25 @@ Mở rộng hệ thống controls (thêm shapes, QR Code, divider) + nâng cấp
 
 ## Quyết định thiết kế
 
-| Quyết định | Lựa chọn |
-|-----------|----------|
-| New element types | QR Code (qrcode.js library) + Divider (reuse shape renderer) |
-| Shapes mở rộng | Thêm vào shapeUtils.js — hexagon, pentagon, cloud, cylinder, parallelogram, trapezoid, bracket |
-| Slide Templates | Extract SLIDE_TEMPLATES ra file riêng `slide-templates.js` |
-| Interactive Templates | HTML embed + vanilla JS (không framework) |
-| Quiz Templates | HTML embed với client-side grading |
-| Template Preview | Inline canvas preview (render miniature elements) |
-| Storage | Giữ built-in-templates.json, thêm categories mới |
+| Quyết định            | Lựa chọn                                                                                       |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| New element types     | QR Code (qrcode.js library) + Divider (reuse shape renderer)                                   |
+| Shapes mở rộng        | Thêm vào shapeUtils.js — hexagon, pentagon, cloud, cylinder, parallelogram, trapezoid, bracket |
+| Slide Templates       | Extract SLIDE_TEMPLATES ra file riêng `slide-templates.js`                                     |
+| Interactive Templates | HTML embed + vanilla JS (không framework)                                                      |
+| Quiz Templates        | HTML embed với client-side grading                                                             |
+| Template Preview      | Inline canvas preview (render miniature elements)                                              |
+| Storage               | Giữ built-in-templates.json, thêm categories mới                                               |
 
 ## Phases
 
-| # | Phase | Status | Priority | Effort |
-|---|-------|--------|----------|--------|
-| 1 | [Shapes & Controls Expansion](./phase-01-shapes-controls.md) | ✅ Completed | P0 | 1-2 ngày |
-| 2 | [Slide Layout Templates Expansion](./phase-02-slide-layouts.md) | ✅ Completed | P0 | 1-2 ngày |
-| 3 | [Interactive Simulation Templates](./phase-03-interactive-simulations.md) | ✅ Completed | P1 | 2-3 ngày |
-| 4 | [Quiz & Data Viz Templates](./phase-04-quiz-dataviz.md) | ✅ Completed | P1 | 2-3 ngày |
-| 5 | [Template UX Enhancement](./phase-05-template-ux.md) | ✅ Completed | P1 | 1-2 ngày |
+| #   | Phase                                                                     | Status       | Priority | Effort   |
+| --- | ------------------------------------------------------------------------- | ------------ | -------- | -------- |
+| 1   | [Shapes & Controls Expansion](./phase-01-shapes-controls.md)              | ✅ Completed | P0       | 1-2 ngày |
+| 2   | [Slide Layout Templates Expansion](./phase-02-slide-layouts.md)           | ✅ Completed | P0       | 1-2 ngày |
+| 3   | [Interactive Simulation Templates](./phase-03-interactive-simulations.md) | ✅ Completed | P1       | 2-3 ngày |
+| 4   | [Quiz & Data Viz Templates](./phase-04-quiz-dataviz.md)                   | ✅ Completed | P1       | 2-3 ngày |
+| 5   | [Template UX Enhancement](./phase-05-template-ux.md)                      | ✅ Completed | P1       | 1-2 ngày |
 
 ## Dependency Graph
 
@@ -59,9 +59,9 @@ Phase 4 (Quiz/DataViz) ────┘
 
 ## Risk
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| built-in-templates.json quá lớn (>1MB) | Medium | Lazy loading per-category, nén whitespace |
-| HTML embed simulations không work offline | High | Inline tất cả JS, không dùng CDN |
-| EditorPage.jsx quá phình (~133KB) | High | Extract SLIDE_TEMPLATES ra file riêng |
-| New shapes break PDF/PPTX export | Medium | Test từng shape trong print + export pipeline |
+| Risk                                      | Impact | Mitigation                                    |
+| ----------------------------------------- | ------ | --------------------------------------------- |
+| built-in-templates.json quá lớn (>1MB)    | Medium | Lazy loading per-category, nén whitespace     |
+| HTML embed simulations không work offline | High   | Inline tất cả JS, không dùng CDN              |
+| EditorPage.jsx quá phình (~133KB)         | High   | Extract SLIDE_TEMPLATES ra file riêng         |
+| New shapes break PDF/PPTX export          | Medium | Test từng shape trong print + export pipeline |

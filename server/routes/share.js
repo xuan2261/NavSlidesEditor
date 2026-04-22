@@ -1,91 +1,95 @@
-const express = require('express');
-const { v4: uuidv4 } = require('uuid');
-const { validate } = require('../middleware/validate');
-const { z } = require('zod');
-const bcrypt = require('bcryptjs');
+const express = require('express')
+const { v4: uuidv4 } = require('uuid')
+const { validate } = require('../middleware/validate')
+const { z } = require('zod')
+const bcrypt = require('bcryptjs')
 // eslint-disable-next-line unused-imports/no-unused-vars
-const { generateRevealHTML } = require('revealjs-shared');
-const {
-  readShareTokens, writeShareTokens, readPresentations,
-} = require('../services/storage');
+const { generateRevealHTML } = require('revealjs-shared')
+const { readShareTokens, writeShareTokens, readPresentations } = require('../services/storage')
 
-const router = express.Router();
+const router = express.Router()
 
 function sanitizeToken(tokenData) {
   if (typeof tokenData === 'string') {
-    return { presentationId: tokenData, views: 0, createdAt: new Date().toISOString() };
+    return { presentationId: tokenData, views: 0, createdAt: new Date().toISOString() }
   }
-  return tokenData;
+  return tokenData
 }
 
 // GET /api/presentations/:id/shares - List all share links for presentation
 router.get('/:id/shares', async (req, res) => {
   try {
-    const tokensRaw = await readShareTokens();
+    const tokensRaw = await readShareTokens()
     const shares = Object.entries(tokensRaw)
       .map(([token, data]) => {
-        const sanitized = sanitizeToken(data);
-        return { token, ...sanitized };
+        const sanitized = sanitizeToken(data)
+        return { token, ...sanitized }
       })
       .filter((share) => share.presentationId === req.params.id)
-      .map(share => {
+      .map((share) => {
         // don't send password hash to client
-        const { password, ...rest } = share;
-        return { ...rest, isProtected: !!password };
-      });
-      
-    res.json({ shares });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+        const { password, ...rest } = share
+        return { ...rest, isProtected: !!password }
+      })
 
-const shareBodySchema = z.object({
-  name: z.string().max(200).optional(),
-  password: z.string().max(128).optional(),
-  expiresInDays: z.number().positive().max(365).optional(),
-}).passthrough();
+    res.json({ shares })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+const shareBodySchema = z
+  .object({
+    name: z.string().max(200).optional(),
+    password: z.string().max(128).optional(),
+    expiresInDays: z.number().positive().max(365).optional(),
+  })
+  .passthrough()
 
 // POST /api/presentations/:id/share - create a new share link
 router.post('/:id/share', validate(shareBodySchema), async (req, res) => {
   try {
-    const presentations = await readPresentations();
-    const presentation = presentations.find((p) => p.id === req.params.id);
-    if (!presentation) return res.status(404).json({ error: 'Not found' });
+    const presentations = await readPresentations()
+    const presentation = presentations.find((p) => p.id === req.params.id)
+    if (!presentation) return res.status(404).json({ error: 'Not found' })
 
-    const tokens = await readShareTokens();
-    const { name, password, expiresInDays } = req.body;
-    
+    const tokens = await readShareTokens()
+    const { name, password, expiresInDays } = req.body
+
     // Normalize existing string tokens first
     for (const t of Object.keys(tokens)) {
-      tokens[t] = sanitizeToken(tokens[t]);
+      tokens[t] = sanitizeToken(tokens[t])
     }
-    
-    const token = uuidv4();
+
+    const token = uuidv4()
     const newToken = {
       presentationId: req.params.id,
       name: name || 'Shared Link',
       views: 0,
       createdAt: new Date().toISOString(),
-    };
-    
-    if (password) {
-      newToken.password = await bcrypt.hash(password, 10);
-    }
-    
-    if (expiresInDays) {
-      const ms = expiresInDays * 24 * 60 * 60 * 1000;
-      newToken.expiresAt = new Date(Date.now() + ms).toISOString();
     }
 
-    tokens[token] = newToken;
-    await writeShareTokens(tokens);
-    
-    res.json({ token, shared: true, data: { ...newToken, password: undefined, isProtected: !!password } });
+    if (password) {
+      newToken.password = await bcrypt.hash(password, 10)
+    }
+
+    if (expiresInDays) {
+      const ms = expiresInDays * 24 * 60 * 60 * 1000
+      newToken.expiresAt = new Date(Date.now() + ms).toISOString()
+    }
+
+    tokens[token] = newToken
+    await writeShareTokens(tokens)
+
+    res.json({
+      token,
+      shared: true,
+      data: { ...newToken, password: undefined, isProtected: !!password },
+    })
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
 // Note: DELETE /api/presentations/:id/share was used previously to delete ALL shares
 // We redefine it to delete a specific share by token
@@ -98,32 +102,34 @@ router.post('/:id/share', validate(shareBodySchema), async (req, res) => {
 // Old delete route (disable all sharing)
 router.delete('/:id/share', async (req, res) => {
   try {
-    const tokens = await readShareTokens();
-    let modified = false;
+    const tokens = await readShareTokens()
+    let modified = false
     for (const [token, data] of Object.entries(tokens)) {
-      const sanitized = sanitizeToken(data);
+      const sanitized = sanitizeToken(data)
       if (sanitized.presentationId === req.params.id) {
-        delete tokens[token];
-        modified = true;
+        delete tokens[token]
+        modified = true
       }
     }
-    if (modified) await writeShareTokens(tokens);
-    res.json({ shared: false });
+    if (modified) await writeShareTokens(tokens)
+    res.json({ shared: false })
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
 // GET /api/presentations/:id/share - legacy
 router.get('/:id/share', async (req, res) => {
   try {
-    const tokens = await readShareTokens();
+    const tokens = await readShareTokens()
     // eslint-disable-next-line unused-imports/no-unused-vars
-    const entry = Object.entries(tokens).find(([t, data]) => sanitizeToken(data).presentationId === req.params.id);
-    res.json({ shared: !!entry, token: entry ? entry[0] : null });
+    const entry = Object.entries(tokens).find(
+      ([t, data]) => sanitizeToken(data).presentationId === req.params.id
+    )
+    res.json({ shared: !!entry, token: entry ? entry[0] : null })
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
-module.exports = router;
+module.exports = router

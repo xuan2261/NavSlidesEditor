@@ -1,17 +1,28 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Plus, Copy, ArrowUp, ArrowDown, Trash2, Lock, Unlock, Sparkles, ArrowDownRight } from 'lucide-react'
+import {
+  Plus,
+  Copy,
+  ArrowUp,
+  ArrowDown,
+  Trash2,
+  Lock,
+  Unlock,
+  Sparkles,
+  ArrowDownRight,
+} from 'lucide-react'
+import { Button } from './ui/Button'
 
 function getBgStyle(bg) {
-  if (!bg) return { backgroundColor: '#1e1e2e' }
-  if (bg.type === 'color') return { backgroundColor: bg.color || '#1e1e2e' }
-  if (bg.type === 'gradient') return { background: bg.gradient || '#1e1e2e' }
+  if (!bg || bg.type === 'none') return {}
+  if (bg.type === 'color') return { backgroundColor: bg.color }
+  if (bg.type === 'gradient') return { background: bg.gradient }
   if (bg.type === 'image' && bg.image)
     return {
       backgroundImage: `url(${bg.image})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     }
-  return { backgroundColor: '#1e1e2e' }
+  return {}
 }
 
 export default function SlidePanel({
@@ -38,7 +49,9 @@ export default function SlidePanel({
   useEffect(() => {
     if (!ctxMenu) return
     const close = () => setCtxMenu(null)
-    const handleKey = (e) => { if (e.key === 'Escape') close() }
+    const handleKey = (e) => {
+      if (e.key === 'Escape') close()
+    }
     document.addEventListener('mousedown', close)
     document.addEventListener('keydown', handleKey)
     return () => {
@@ -54,18 +67,18 @@ export default function SlidePanel({
   }, [])
 
   return (
-    <div className="slide-panel tour-step-slide-panel">
-      <div className="slide-panel-header">
+    <div className="slide-panel tour-step-slide-panel flex flex-col w-[200px] bg-secondary border-r border-border h-full">
+      <div className="slide-panel-header px-4 py-3 flex items-center justify-between border-b border-border bg-card font-medium text-text-primary text-sm">
         <span>Slides</span>
         <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{slides.length}</span>
       </div>
 
-      <div className="slide-list">
+      <div className="slide-list flex-1 overflow-y-auto p-2">
         {slides.map((slide, index) => {
           return (
             <div
               key={slide.id || index}
-              className={`slide-item ${index === currentIndex ? 'active' : ''} ${selectedIndices.includes(index) && index !== currentIndex ? 'multi-selected' : ''}`}
+              className={`slide-item group rounded-sm border-2 cursor-pointer relative transition-all hover:border-border-strong ${index === currentIndex ? 'border-accent' : 'border-transparent'} ${selectedIndices.includes(index) && index !== currentIndex ? 'outline outline-2 outline-accent outline-offset-[-2px]' : ''}`}
               style={
                 dragOverIndex === index
                   ? { outline: '2px solid var(--accent)', outlineOffset: '-2px' }
@@ -93,8 +106,8 @@ export default function SlidePanel({
               }}
               onClick={(e) => {
                 if (e.ctrlKey || e.metaKey) {
-                  setSelectedIndices(prev =>
-                    prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+                  setSelectedIndices((prev) =>
+                    prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
                   )
                 } else if (e.shiftKey && selectedIndices.length > 0) {
                   const last = selectedIndices[selectedIndices.length - 1]
@@ -110,14 +123,23 @@ export default function SlidePanel({
               onContextMenu={(e) => handleContextMenu(e, index)}
             >
               <span
-                className="slide-number"
+                className="absolute top-1 left-1 text-[10px] text-white/50 bg-black/40 px-1 py-[1px] rounded-[3px] z-10"
                 style={slide.locked ? { textDecoration: 'line-through', opacity: 0.5 } : undefined}
               >
                 {index + 1}
               </span>
 
               {/* Indicators */}
-              <div style={{ display: 'flex', gap: 2, position: 'absolute', top: 2, right: 2, zIndex: 10 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 2,
+                  position: 'absolute',
+                  top: 2,
+                  right: 2,
+                  zIndex: 10,
+                }}
+              >
                 {slide.locked && (
                   <span title="Slide locked" style={{ color: '#f59e0b', fontSize: 9 }}>
                     <Lock size={9} />
@@ -147,7 +169,7 @@ export default function SlidePanel({
                 </div>
               )}
               <div
-                className="slide-thumbnail"
+                className="aspect-video flex items-start p-1.5 overflow-hidden bg-bg-canvas-default relative"
                 style={{
                   ...getBgStyle(slide.background),
                   position: 'relative',
@@ -171,7 +193,10 @@ export default function SlidePanel({
                     }}
                   >
                     {el.type === 'text' && (
-                      <div className="slide-thumbnail-text" dangerouslySetInnerHTML={{ __html: el.content || '' }} />
+                      <div
+                        className="text-[5px] leading-[1.3] text-[#1a1a2e] w-full max-h-full overflow-hidden"
+                        dangerouslySetInnerHTML={{ __html: el.content || '' }}
+                      />
                     )}
                     {el.type === 'image' && (
                       <img
@@ -186,8 +211,8 @@ export default function SlidePanel({
                         draggable={false}
                       />
                     )}
-                    {el.type === 'html' && (
-                      el.content ? (
+                    {el.type === 'html' &&
+                      (el.content ? (
                         <div
                           style={{
                             width: '100%',
@@ -228,8 +253,7 @@ export default function SlidePanel({
                         >
                           &lt;/&gt;
                         </div>
-                      )
-                    )}
+                      ))}
                     {el.type === 'code' && (
                       <div
                         style={{
@@ -279,43 +303,51 @@ export default function SlidePanel({
                         &#9835;
                       </div>
                     )}
-                    {el.type === 'table' && (() => {
-                      const data = el.data || [['']]
-                      const headerBg = el.headerBgColor || 'rgba(99,102,241,0.3)'
-                      const cellBg = el.cellBgColor || 'transparent'
-                      const borderColor = el.borderColor || 'rgba(255,255,255,0.2)'
-                      const borderWidth = Math.max(0.5, (el.borderWidth ?? 1) / 4)
-                      const textColor = el.textColor || '#ffffff'
-                      return (
-                        <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
-                          <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                            <tbody>
-                              {data.map((row, ri) => (
-                                <tr key={ri}>
-                                  {(row || []).map((cell, ci) => (
-                                    <td
-                                      key={ci}
-                                      style={{
-                                        padding: 2,
-                                        border: `${borderWidth}px solid ${borderColor}`,
-                                        background: el.headerRow && ri === 0 ? headerBg : cellBg,
-                                        color: textColor,
-                                        fontSize: 4,
-                                        fontWeight: el.headerRow && ri === 0 ? 600 : 400,
-                                        verticalAlign: 'middle',
-                                        overflow: 'hidden',
-                                      }}
-                                    >
-                                      {cell || ''}
-                                    </td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )
-                    })()}
+                    {el.type === 'table' &&
+                      (() => {
+                        const data = el.data || [['']]
+                        const headerBg = el.headerBgColor || 'rgba(99,102,241,0.3)'
+                        const cellBg = el.cellBgColor || 'transparent'
+                        const borderColor = el.borderColor || 'rgba(255,255,255,0.2)'
+                        const borderWidth = Math.max(0.5, (el.borderWidth ?? 1) / 4)
+                        const textColor = el.textColor || '#ffffff'
+                        return (
+                          <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+                            <table
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                borderCollapse: 'collapse',
+                                tableLayout: 'fixed',
+                              }}
+                            >
+                              <tbody>
+                                {data.map((row, ri) => (
+                                  <tr key={ri}>
+                                    {(row || []).map((cell, ci) => (
+                                      <td
+                                        key={ci}
+                                        style={{
+                                          padding: 2,
+                                          border: `${borderWidth}px solid ${borderColor}`,
+                                          background: el.headerRow && ri === 0 ? headerBg : cellBg,
+                                          color: textColor,
+                                          fontSize: 4,
+                                          fontWeight: el.headerRow && ri === 0 ? 600 : 400,
+                                          verticalAlign: 'middle',
+                                          overflow: 'hidden',
+                                        }}
+                                      >
+                                        {cell || ''}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )
+                      })()}
                     {el.type === 'latex' && (
                       <div
                         style={{
@@ -459,19 +491,19 @@ export default function SlidePanel({
                 ))}
               </div>
 
-              <div className="slide-actions">
+              <div className="absolute top-1 right-1 flex gap-0.5 opacity-0 transition-opacity z-10 group-hover:opacity-100">
                 <button
-                  className="slide-action-btn"
+                  className="bg-black/60 border-none text-white p-1 rounded-[3px] cursor-pointer flex items-center justify-center hover:bg-accent/80"
                   title="Duplicate"
                   onClick={(e) => {
                     e.stopPropagation()
                     onDuplicate(index)
                   }}
                 >
-                  <Copy size={10} />
+                  <Copy size={12} />
                 </button>
                 <button
-                  className="slide-action-btn"
+                  className="bg-black/60 border-none text-white p-1 rounded-[3px] cursor-pointer flex items-center justify-center hover:bg-accent/80"
                   title="Delete"
                   onClick={(e) => {
                     e.stopPropagation()
@@ -479,28 +511,41 @@ export default function SlidePanel({
                   }}
                   style={{ color: slides.length > 1 ? 'white' : 'rgba(255,255,255,0.3)' }}
                 >
-                  <Trash2 size={10} />
+                  <Trash2 size={12} />
                 </button>
               </div>
 
               {/* Vertical children */}
               {(slide.children || []).length > 0 && (
-                <div style={{ marginTop: 2, paddingLeft: 8, borderLeft: '2px solid rgba(99,102,241,0.3)' }}>
+                <div
+                  style={{
+                    marginTop: 2,
+                    paddingLeft: 8,
+                    borderLeft: '2px solid rgba(99,102,241,0.3)',
+                  }}
+                >
                   {slide.children.map((child, ci) => (
                     <div
                       key={child.id || `${index}-${ci}`}
-                      className={`slide-item ${currentVerticalIndex?.parent === index && currentVerticalIndex?.child === ci ? 'active' : ''}`}
-                      style={{ marginBottom: 2, transform: 'scale(0.85)', transformOrigin: 'top left' }}
+                      className={`group rounded-sm border-2 cursor-pointer relative transition-all hover:border-border-strong ${currentVerticalIndex?.parent === index && currentVerticalIndex?.child === ci ? 'border-accent' : 'border-transparent'}`}
+                      style={{
+                        marginBottom: 2,
+                        transform: 'scale(0.85)',
+                        transformOrigin: 'top left',
+                      }}
                       onClick={(e) => {
                         e.stopPropagation()
                         onSelectVertical?.({ parent: index, child: ci })
                       }}
                     >
-                      <span className="slide-number" style={{ fontSize: 8, color: '#818cf8' }}>
+                      <span
+                        className="absolute top-1 left-1 text-[10px] text-white/50 bg-black/40 px-1 py-[1px] rounded-[3px] z-10"
+                        style={{ fontSize: 8, color: '#818cf8' }}
+                      >
                         {index + 1}.{ci + 1}
                       </span>
                       <div
-                        className="slide-thumbnail"
+                        className="aspect-video flex items-start p-1.5 overflow-hidden bg-bg-canvas-default relative"
                         style={{
                           ...getBgStyle(child.background),
                           position: 'relative',
@@ -517,37 +562,49 @@ export default function SlidePanel({
         })}
       </div>
 
-      <div className="slide-panel-footer">
-        <button className="add-slide-btn" onClick={onAdd}>
+      <div className="p-4 border-t border-border bg-secondary mt-auto flex flex-col gap-2">
+        <Button
+          variant="secondary"
+          className="add-slide-btn w-full flex items-center justify-center gap-1.5 border border-dashed border-border hover:border-accent hover:text-accent hover:bg-hover"
+          onClick={onAdd}
+        >
           <Plus size={14} />
           Add Slide
-        </button>
+        </Button>
         {onAddFromTemplate && (
-          <button className="add-slide-btn" style={{ marginTop: 8, background: 'var(--bg-card)', color: 'var(--text-secondary)' }} onClick={onAddFromTemplate}>
+          <Button
+            variant="secondary"
+            className="w-full flex items-center justify-center gap-1.5 border border-dashed border-border hover:border-accent hover:text-accent hover:bg-hover"
+            onClick={onAddFromTemplate}
+          >
             <Sparkles size={14} />
             Insert Template
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Batch operations footer when multi-selecting */}
       {selectedIndices.length > 1 && (
-        <div className="slide-panel-batch-footer">
+        <div className="flex items-center gap-2 py-1.5 px-3 border-t border-border bg-bg-surface text-xs text-text-muted">
           <span>{selectedIndices.length} selected</span>
-          <button className="btn-icon" onClick={() => {
-            const lastIdx = selectedIndices[selectedIndices.length - 1]
-            selectedIndices.forEach(i => onDuplicate(i))
-            setSelectedIndices([lastIdx])
-          }} title="Duplicate all selected">
+          <Button
+            variant="icon"
+            onClick={() => {
+              const lastIdx = selectedIndices[selectedIndices.length - 1]
+              selectedIndices.forEach((i) => onDuplicate(i))
+              setSelectedIndices([lastIdx])
+            }}
+            title="Duplicate all selected"
+          >
             <Copy size={12} /> Duplicate
-          </button>
-          <button
-            className="btn-icon"
+          </Button>
+          <Button
+            variant="icon"
             onClick={() => {
               if (slides.length - selectedIndices.length < 1) return
               const toDelete = [...selectedIndices].sort((a, b) => b - a)
               let newIdx = currentIndex
-              toDelete.forEach(i => {
+              toDelete.forEach((i) => {
                 onDelete(i)
                 if (i < currentIndex) newIdx--
               })
@@ -556,7 +613,7 @@ export default function SlidePanel({
             title="Delete all selected"
           >
             <Trash2 size={12} /> Delete
-          </button>
+          </Button>
         </div>
       )}
 
@@ -569,42 +626,67 @@ export default function SlidePanel({
             style={{ top: ctxMenu.y, left: ctxMenu.x }}
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <button onClick={() => { onDuplicate(ctxMenu.index); setCtxMenu(null) }}>
+            <button
+              onClick={() => {
+                onDuplicate(ctxMenu.index)
+                setCtxMenu(null)
+              }}
+            >
               <Copy size={14} /> Duplicate
             </button>
             <button
-              onClick={() => { onToggleLock?.(ctxMenu.index); setCtxMenu(null) }}
+              onClick={() => {
+                onToggleLock?.(ctxMenu.index)
+                setCtxMenu(null)
+              }}
             >
               {slides[ctxMenu.index]?.locked ? <Unlock size={14} /> : <Lock size={14} />}
               {slides[ctxMenu.index]?.locked ? 'Unlock' : 'Lock'}
             </button>
             <button
-              onClick={() => { onToggleAutoAnimate?.(ctxMenu.index); setCtxMenu(null) }}
+              onClick={() => {
+                onToggleAutoAnimate?.(ctxMenu.index)
+                setCtxMenu(null)
+              }}
             >
               <Sparkles size={14} />
               {slides[ctxMenu.index]?.autoAnimate ? 'Disable' : 'Enable'} Auto-Animate
             </button>
             <div className="context-separator" />
             <button
-              onClick={() => { onMove(ctxMenu.index, ctxMenu.index - 1); setCtxMenu(null) }}
+              onClick={() => {
+                onMove(ctxMenu.index, ctxMenu.index - 1)
+                setCtxMenu(null)
+              }}
               disabled={ctxMenu.index === 0}
             >
               <ArrowUp size={14} /> Move Up
             </button>
             <button
-              onClick={() => { onMove(ctxMenu.index, ctxMenu.index + 1); setCtxMenu(null) }}
+              onClick={() => {
+                onMove(ctxMenu.index, ctxMenu.index + 1)
+                setCtxMenu(null)
+              }}
               disabled={ctxMenu.index === slides.length - 1}
             >
               <ArrowDown size={14} /> Move Down
             </button>
             {onAddVerticalSlide && (
-              <button onClick={() => { onAddVerticalSlide?.(ctxMenu.index); setCtxMenu(null) }}>
+              <button
+                onClick={() => {
+                  onAddVerticalSlide?.(ctxMenu.index)
+                  setCtxMenu(null)
+                }}
+              >
                 <ArrowDownRight size={14} /> Add Vertical Slide
               </button>
             )}
             <div className="context-separator" />
             <button
-              onClick={() => { if (slides.length > 1) onDelete(ctxMenu.index); setCtxMenu(null) }}
+              onClick={() => {
+                if (slides.length > 1) onDelete(ctxMenu.index)
+                setCtxMenu(null)
+              }}
               style={{ color: slides.length > 1 ? 'var(--danger)' : 'var(--text-muted)' }}
               disabled={slides.length <= 1}
             >

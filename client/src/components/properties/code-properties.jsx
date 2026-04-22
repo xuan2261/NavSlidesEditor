@@ -1,3 +1,5 @@
+import { Input, Select } from '../../components/ui'
+import { Button } from '../../components/ui'
 /**
  * Code block properties: edit button, language, font size, border radius.
  */
@@ -32,36 +34,37 @@ const CODE_LANGUAGES = [
 export default function CodeProperties({ element, onUpdate, onEditCode }) {
   return (
     <div style={{ marginBottom: 10 }}>
-      <button
-        className="btn btn-secondary"
+      <Button
+        variant="secondary"
         style={{ width: '100%', justifyContent: 'center', fontSize: 12, marginBottom: 8 }}
         onClick={onEditCode}
       >
         Edit Code
-      </button>
+      </Button>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', gap: 8 }}>
         <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>
-            Language
-          </div>
-          <select
-            className="prop-input"
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>Language</div>
+          <Select
+            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
             style={{ padding: '4px 6px' }}
             value={element.language || 'plaintext'}
             onChange={(e) => onUpdate({ language: e.target.value })}
           >
             {CODE_LANGUAGES.map((l) => (
-              <option key={l.id} value={l.id}>{l.label}</option>
+              <option key={l.id} value={l.id}>
+                {l.label}
+              </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>
-            Font Size
-          </div>
-          <input
-            className="prop-input"
-            type="number" min="8" max="32" step="1"
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>Font Size</div>
+          <Input
+            className="w-full bg-card border border-border text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-muted"
+            type="number"
+            min="8"
+            max="32"
+            step="1"
             value={element.fontSize || 14}
             onChange={(e) =>
               onUpdate({ fontSize: Math.max(8, Math.min(32, Number(e.target.value) || 14)) })
@@ -74,7 +77,10 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
           Round Corners: {element.borderRadius || 0}px
         </div>
         <input
-          type="range" min="0" max="50"
+          type="range"
+          className="flex-1 accent-accent"
+          min="0"
+          max="50"
           value={element.borderRadius || 0}
           onChange={(e) => onUpdate({ borderRadius: Number(e.target.value) })}
           style={{ width: '100%', accentColor: 'var(--accent)' }}

@@ -16,17 +16,17 @@ export function markdownToSlides(md) {
     const slideConfigMatch = trimmed.match(/<!--\s*\.slide:\s*(.+?)\s*-->/)
     if (slideConfigMatch) {
       const configStr = slideConfigMatch[1]
-      
+
       const bgColorMatch = configStr.match(/data-background-color="([^"]+)"/)
       if (bgColorMatch) {
         background = { type: 'color', color: bgColorMatch[1] }
       }
-      
+
       const bgImageMatch = configStr.match(/data-background-image="([^"]+)"/)
       if (bgImageMatch) {
         background = { type: 'image', image: bgImageMatch[1] }
       }
-      
+
       // Remove the comment from content
       trimmed = trimmed.replace(/<!--\s*\.slide:\s*.+?\s*-->\n?/, '').trim()
     }
@@ -73,12 +73,24 @@ function simpleMarkdownToHtml(md) {
   })
 
   // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:3px;font-size:0.9em;">$1</code>')
+  html = html.replace(
+    /`([^`]+)`/g,
+    '<code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:3px;font-size:0.9em;">$1</code>'
+  )
 
   // Headings
-  html = html.replace(/^### (.+)$/gm, '<h3 style="margin:0 0 8px;font-size:24px;color:#e2e8f0;">$1</h3>')
-  html = html.replace(/^## (.+)$/gm, '<h2 style="margin:0 0 12px;font-size:32px;color:#f1f5f9;">$1</h2>')
-  html = html.replace(/^# (.+)$/gm, '<h1 style="margin:0 0 16px;font-size:42px;color:#ffffff;">$1</h1>')
+  html = html.replace(
+    /^### (.+)$/gm,
+    '<h3 style="margin:0 0 8px;font-size:24px;color:#e2e8f0;">$1</h3>'
+  )
+  html = html.replace(
+    /^## (.+)$/gm,
+    '<h2 style="margin:0 0 12px;font-size:32px;color:#f1f5f9;">$1</h2>'
+  )
+  html = html.replace(
+    /^# (.+)$/gm,
+    '<h1 style="margin:0 0 16px;font-size:42px;color:#ffffff;">$1</h1>'
+  )
 
   // Bold and italic
   html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
@@ -86,11 +98,17 @@ function simpleMarkdownToHtml(md) {
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
 
   // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:#818cf8;text-decoration:underline;">$1</a>')
+  html = html.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    '<a href="$2" style="color:#818cf8;text-decoration:underline;">$1</a>'
+  )
 
   // Unordered lists
   html = html.replace(/^[\-\*] (.+)$/gm, '<li style="margin-bottom:4px;">$1</li>')
-  html = html.replace(/(<li[^>]*>.*<\/li>\n?)+/g, (match) => `<ul style="margin:8px 0;padding-left:20px;">${match}</ul>`)
+  html = html.replace(
+    /(<li[^>]*>.*<\/li>\n?)+/g,
+    (match) => `<ul style="margin:8px 0;padding-left:20px;">${match}</ul>`
+  )
 
   // Ordered lists
   html = html.replace(/^\d+\. (.+)$/gm, '<li style="margin-bottom:4px;">$1</li>')

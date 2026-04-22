@@ -1,7 +1,7 @@
 ---
-title: "Export/Import Project — Hybrid JSON + ZIP"
+title: 'Export/Import Project — Hybrid JSON + ZIP'
 status: complete
-created: "2026-04-17"
+created: '2026-04-17'
 mode: hard
 blockedBy: []
 blocks: []
@@ -11,6 +11,7 @@ source: skill
 ## Mục tiêu
 
 Thêm 2 chức năng:
+
 1. **Export Project**: Serialize presentation JSON → download `.navslides` (ZIP + local media) hoặc `.navslides.json` (JSON thuần)
 2. **Import Project**: Upload `.navslides` hoặc `.navslides.json` → tạo presentation mới trên server
 
@@ -31,12 +32,12 @@ phase-04-tests.md           ← unit test cho export/import logic
 
 ## Progress
 
-| Phase | Trạng thái |
-|---|---|
+| Phase                     | Trạng thái  |
+| ------------------------- | ----------- |
 | Phase 01: Export (client) | ✅ complete |
 | Phase 02: Import (client) | ✅ complete |
-| Phase 03: Server routes | ✅ complete |
-| Phase 04: Tests | ✅ complete |
+| Phase 03: Server routes   | ✅ complete |
+| Phase 04: Tests           | ✅ complete |
 
 ## Dependencies
 

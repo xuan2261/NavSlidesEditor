@@ -1,9 +1,6 @@
 // Scans presentation elements for local media URLs (/uploads/*)
 
-const LOCAL_URL_PATTERNS = [
-  /^\/uploads\//,
-  /^http.*\/uploads\//,
-]
+const LOCAL_URL_PATTERNS = [/^\/uploads\//, /^http.*\/uploads\//]
 
 /**
  * Scan all slides' elements for local media URLs.
@@ -16,13 +13,13 @@ export function detectLocalMedia(presentation) {
   for (const slide of slides) {
     const elements = slide?.elements || []
     for (const el of elements) {
-      if (el.src && LOCAL_URL_PATTERNS.some(p => p.test(el.src))) {
+      if (el.src && LOCAL_URL_PATTERNS.some((p) => p.test(el.src))) {
         mediaUrls.add(el.src)
       }
     }
     // Check background image
     if (slide.background?.type === 'image' && slide.background.src) {
-      if (LOCAL_URL_PATTERNS.some(p => p.test(slide.background.src))) {
+      if (LOCAL_URL_PATTERNS.some((p) => p.test(slide.background.src))) {
         mediaUrls.add(slide.background.src)
       }
     }

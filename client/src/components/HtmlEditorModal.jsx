@@ -1,81 +1,35 @@
+import { Button } from '../components/ui'
 
 export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) {
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 10000,
-        background: 'rgba(0,0,0,0.75)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      className="fixed inset-0 z-[10000] bg-black/75 flex items-center justify-center"
       onKeyDown={(e) => {
         if (e.key === 'Escape') onCancel()
       }}
     >
-      <div
-        style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 12,
-          width: '78vw',
-          maxWidth: 960,
-          height: '78vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-        }}
-      >
-        <div
-          style={{
-            padding: '12px 16px',
-            borderBottom: '1px solid var(--border)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <span style={{ fontWeight: 600, fontSize: 14 }}>HTML / D3 Embed</span>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            D3, plain HTML, or any JavaScript — renders in an iframe
-          </span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              className="btn btn-secondary"
-              style={{ fontSize: 12 }}
-              onClick={onCancel}
-            >
+      <div className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl">
+        <div className="px-4 py-3 border-b border-border flex justify-between items-center shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+            <span className="font-semibold text-sm">HTML / D3 Embed</span>
+            <span className="text-xs text-text-muted">
+              D3, plain HTML, or any JavaScript — renders in an iframe
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="secondary" className="text-xs" onClick={onCancel}>
               Cancel
-            </button>
-            <button
-              className="btn btn-primary"
-              style={{ fontSize: 12 }}
-              onClick={onApply}
-            >
+            </Button>
+            <Button variant="primary" className="text-xs" onClick={onApply}>
               Apply
-            </button>
+            </Button>
           </div>
         </div>
         <textarea
           value={state.content}
           onChange={(e) => onChange({ ...state, content: e.target.value })}
-          style={{
-            flex: 1,
-            background: '#0d0d1a',
-            color: '#e2e8f0',
-            fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
-            fontSize: 13,
-            padding: '16px 20px',
-            border: 'none',
-            outline: 'none',
-            resize: 'none',
-            borderRadius: '0 0 12px 12px',
-            lineHeight: 1.6,
-            tabSize: 2,
-          }}
+          className="flex-1 bg-[#0d0d1a] text-[#e2e8f0] font-mono text-[13px] p-4 md:p-5 border-none outline-none resize-none rounded-b-xl leading-relaxed"
+          style={{ tabSize: 2 }}
           spellCheck={false}
           autoFocus
           onKeyDown={(e) => {

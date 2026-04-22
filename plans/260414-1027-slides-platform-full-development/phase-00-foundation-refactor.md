@@ -1,6 +1,7 @@
 # Phase 0 — Foundation Refactor
 
 ## Overview
+
 - **Priority**: P0 — PREREQUISITE cho mọi phase khác
 - **Status**: 🔄 In Progress — Server refactor + Router + Stores + Hooks + SettingsPage ✅
 - **Effort**: 2 tuần
@@ -8,16 +9,17 @@
 
 ## Vấn đề hiện tại
 
-| File | LOC | Vấn đề |
-|------|-----|--------|
-| `EditorPage.jsx` | 3448 | God component, 50+ state variables, mọi logic |
-| `server/index.js` | 1063 | Monolithic server, 29 endpoints trong 1 file |
-| `App.jsx` | 37 | useState routing thay vì React Router |
-| `PropertiesPanel.jsx` | 60435 bytes | Panel khổng lồ |
-| `SlideCanvas.jsx` | 67116 bytes | Canvas logic phức tạp |
-| `Toolbar.jsx` | 55369 bytes | Toolbar quá lớn |
+| File                  | LOC         | Vấn đề                                        |
+| --------------------- | ----------- | --------------------------------------------- |
+| `EditorPage.jsx`      | 3448        | God component, 50+ state variables, mọi logic |
+| `server/index.js`     | 1063        | Monolithic server, 29 endpoints trong 1 file  |
+| `App.jsx`             | 37          | useState routing thay vì React Router         |
+| `PropertiesPanel.jsx` | 60435 bytes | Panel khổng lồ                                |
+| `SlideCanvas.jsx`     | 67116 bytes | Canvas logic phức tạp                         |
+| `Toolbar.jsx`         | 55369 bytes | Toolbar quá lớn                               |
 
 ## Key Insights
+
 - Không cần TypeScript full migration ngay — chỉ cần shared types file
 - Zustand nhẹ nhất cho state management (2KB gzipped, no boilerplate)
 - React Router v6 cho multi-page routing
@@ -98,6 +100,7 @@ server/
 ## Implementation Steps
 
 ### Step 1: Install Dependencies
+
 ```bash
 npm install zustand react-router-dom
 ```
@@ -105,6 +108,7 @@ npm install zustand react-router-dom
 ### Step 2: Create Zustand Stores
 
 #### `stores/presentation-store.js`
+
 ```javascript
 import { create } from 'zustand'
 
@@ -112,96 +116,108 @@ export const usePresentationStore = create((set, get) => ({
   presentation: null,
   currentSlideIndex: 0,
   loading: true,
-  
+
   // Actions
   setPresentation: (p) => set({ presentation: p }),
   setCurrentSlide: (idx) => set({ currentSlideIndex: idx }),
-  
-  updateSlide: (slideIndex, updates) => set(state => ({
-    presentation: {
-      ...state.presentation,
-      slides: state.presentation.slides.map((s, i) =>
-        i === slideIndex ? { ...s, ...updates } : s
-      )
-    }
-  })),
-  
-  updateElement: (elementId, updates) => set(state => {
-    const idx = state.currentSlideIndex
-    return {
+
+  updateSlide: (slideIndex, updates) =>
+    set((state) => ({
       presentation: {
         ...state.presentation,
         slides: state.presentation.slides.map((s, i) =>
-          i === idx ? {
-            ...s,
-            elements: s.elements.map(el =>
-              el.id === elementId ? { ...el, ...updates } : el
-            )
-          } : s
-        )
+          i === slideIndex ? { ...s, ...updates } : s
+        ),
+      },
+    })),
+
+  updateElement: (elementId, updates) =>
+    set((state) => {
+      const idx = state.currentSlideIndex
+      return {
+        presentation: {
+          ...state.presentation,
+          slides: state.presentation.slides.map((s, i) =>
+            i === idx
+              ? {
+                  ...s,
+                  elements: s.elements.map((el) =>
+                    el.id === elementId ? { ...el, ...updates } : el
+                  ),
+                }
+              : s
+          ),
+        },
       }
-    }
-  }),
-  
-  addElement: (element) => set(state => {
-    const idx = state.currentSlideIndex
-    return {
-      presentation: {
-        ...state.presentation,
-        slides: state.presentation.slides.map((s, i) =>
-          i === idx ? { ...s, elements: [...s.elements, element] } : s
-        )
+    }),
+
+  addElement: (element) =>
+    set((state) => {
+      const idx = state.currentSlideIndex
+      return {
+        presentation: {
+          ...state.presentation,
+          slides: state.presentation.slides.map((s, i) =>
+            i === idx ? { ...s, elements: [...s.elements, element] } : s
+          ),
+        },
       }
-    }
-  }),
-  
-  deleteElement: (elementId) => set(state => {
-    const idx = state.currentSlideIndex
-    return {
-      presentation: {
-        ...state.presentation,
-        slides: state.presentation.slides.map((s, i) =>
-          i === idx ? {
-            ...s,
-            elements: s.elements.filter(el => el.id !== elementId)
-          } : s
-        )
+    }),
+
+  deleteElement: (elementId) =>
+    set((state) => {
+      const idx = state.currentSlideIndex
+      return {
+        presentation: {
+          ...state.presentation,
+          slides: state.presentation.slides.map((s, i) =>
+            i === idx
+              ? {
+                  ...s,
+                  elements: s.elements.filter((el) => el.id !== elementId),
+                }
+              : s
+          ),
+        },
       }
-    }
-  }),
-  
+    }),
+
   // Slide management
-  addSlide: (slide, afterIndex) => set(state => {
-    const slides = [...state.presentation.slides]
-    slides.splice(afterIndex + 1, 0, slide)
-    return {
-      presentation: { ...state.presentation, slides },
-      currentSlideIndex: afterIndex + 1
-    }
-  }),
-  
-  deleteSlide: (index) => set(state => {
-    if (state.presentation.slides.length <= 1) return state
-    const slides = state.presentation.slides.filter((_, i) => i !== index)
-    return {
-      presentation: { ...state.presentation, slides },
-      currentSlideIndex: Math.min(state.currentSlideIndex, slides.length - 1)
-    }
-  }),
-  
-  reorderSlides: (fromIndex, toIndex) => set(state => {
-    const slides = [...state.presentation.slides]
-    const [moved] = slides.splice(fromIndex, 1)
-    slides.splice(toIndex, 0, moved)
-    return {
-      presentation: { ...state.presentation, slides },
-      currentSlideIndex: toIndex
-    }
-  }),
+  addSlide: (slide, afterIndex) =>
+    set((state) => {
+      const slides = [...state.presentation.slides]
+      slides.splice(afterIndex + 1, 0, slide)
+      return {
+        presentation: { ...state.presentation, slides },
+        currentSlideIndex: afterIndex + 1,
+      }
+    }),
+
+  deleteSlide: (index) =>
+    set((state) => {
+      if (state.presentation.slides.length <= 1) return state
+      const slides = state.presentation.slides.filter((_, i) => i !== index)
+      return {
+        presentation: { ...state.presentation, slides },
+        currentSlideIndex: Math.min(state.currentSlideIndex, slides.length - 1),
+      }
+    }),
+
+  reorderSlides: (fromIndex, toIndex) =>
+    set((state) => {
+      const slides = [...state.presentation.slides]
+      const [moved] = slides.splice(fromIndex, 1)
+      slides.splice(toIndex, 0, moved)
+      return {
+        presentation: { ...state.presentation, slides },
+        currentSlideIndex: toIndex,
+      }
+    }),
 }))
 ```
 
 #### `stores/editor-store.js`
+
 ```javascript
 import { create } from 'zustand'
 
@@ -219,26 +235,28 @@ export const useEditorStore = create((set) => ({
 
   // Selection
   selectElement: (id) => set({ selectedElementIds: [id] }),
-  addToSelection: (id) => set(s => ({
-    selectedElementIds: [...s.selectedElementIds, id]
-  })),
+  addToSelection: (id) =>
+    set((s) => ({
+      selectedElementIds: [...s.selectedElementIds, id],
+    })),
   clearSelection: () => set({ selectedElementIds: [], editingElementId: null }),
-  
+
   // Editing
   startEditing: (id) => set({ editingElementId: id }),
   stopEditing: () => set({ editingElementId: null }),
-  
+
   // Clipboard
   setClipboard: (data) => set({ clipboard: data }),
-  
+
   // Grid/Guides
-  toggleGrid: () => set(s => ({ showGrid: !s.showGrid })),
-  toggleRulers: () => set(s => ({ showRulers: !s.showRulers })),
-  toggleSmartGuides: () => set(s => ({ smartGuidesEnabled: !s.smartGuidesEnabled })),
-  addGuide: (guide) => set(s => ({ guides: [...s.guides, guide] })),
-  removeGuide: (index) => set(s => ({
-    guides: s.guides.filter((_, i) => i !== index)
-  })),
+  toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
+  toggleRulers: () => set((s) => ({ showRulers: !s.showRulers })),
+  toggleSmartGuides: () => set((s) => ({ smartGuidesEnabled: !s.smartGuidesEnabled })),
+  addGuide: (guide) => set((s) => ({ guides: [...s.guides, guide] })),
+  removeGuide: (index) =>
+    set((s) => ({
+      guides: s.guides.filter((_, i) => i !== index),
+    })),
 }))
 ```
 
@@ -268,19 +286,23 @@ export default function App() {
 ### Step 4: Extract Custom Hooks
 
 #### `hooks/use-autosave.js`
+
 - Lấy logic autosave từ EditorPage useEffect (line 585-606)
 - Debounce 1500ms, gọi API save
 
 #### `hooks/use-history.js`
+
 - Lấy undo/redo logic từ EditorPage (line 609-623)
 - historyRef + redoStackRef
 - Expose: undo(), redo(), pushHistory()
 
 #### `hooks/use-keyboard.js`
+
 - Lấy keyboard shortcut handler
 - Ctrl+Z/Y, Ctrl+C/X/V/D, Delete, Escape, Ctrl+F
 
 #### `hooks/use-clipboard.js`
+
 - Copy, cut, paste, duplicate logic
 
 ### Step 5: Slim Down EditorPage
@@ -312,25 +334,25 @@ export default function App() {
 
 ## Files Modified
 
-| File | Action |
-|------|--------|
-| `client/src/App.jsx` | MODIFY — React Router |
-| `client/src/pages/EditorPage.jsx` | MAJOR MODIFY — slim down |
-| `client/src/pages/HomePage.jsx` | MODIFY — use router navigation |
-| `client/src/stores/presentation-store.js` | NEW |
-| `client/src/stores/editor-store.js` | NEW |
-| `client/src/stores/ui-store.js` | NEW |
-| `client/src/hooks/use-autosave.js` | NEW |
-| `client/src/hooks/use-history.js` | NEW |
-| `client/src/hooks/use-keyboard.js` | NEW |
-| `client/src/hooks/use-clipboard.js` | NEW |
-| `client/src/pages/SettingsPage.jsx` | NEW |
-| `client/src/components/modals/*.jsx` | NEW — extracted from EditorPage |
-| `server/routes/*.js` | NEW — extracted from server/index.js |
-| `server/services/storage.js` | NEW |
-| `server/middleware/*.js` | NEW |
-| `server/index.js` | MAJOR MODIFY — slim |
-| `package.json` | MODIFY — add zustand, react-router-dom |
+| File                                      | Action                                 |
+| ----------------------------------------- | -------------------------------------- |
+| `client/src/App.jsx`                      | MODIFY — React Router                  |
+| `client/src/pages/EditorPage.jsx`         | MAJOR MODIFY — slim down               |
+| `client/src/pages/HomePage.jsx`           | MODIFY — use router navigation         |
+| `client/src/stores/presentation-store.js` | NEW                                    |
+| `client/src/stores/editor-store.js`       | NEW                                    |
+| `client/src/stores/ui-store.js`           | NEW                                    |
+| `client/src/hooks/use-autosave.js`        | NEW                                    |
+| `client/src/hooks/use-history.js`         | NEW                                    |
+| `client/src/hooks/use-keyboard.js`        | NEW                                    |
+| `client/src/hooks/use-clipboard.js`       | NEW                                    |
+| `client/src/pages/SettingsPage.jsx`       | NEW                                    |
+| `client/src/components/modals/*.jsx`      | NEW — extracted from EditorPage        |
+| `server/routes/*.js`                      | NEW — extracted from server/index.js   |
+| `server/services/storage.js`              | NEW                                    |
+| `server/middleware/*.js`                  | NEW                                    |
+| `server/index.js`                         | MAJOR MODIFY — slim                    |
+| `package.json`                            | MODIFY — add zustand, react-router-dom |
 
 ## Todo List
 

@@ -182,7 +182,7 @@ server/data/presentations.json      ← file-based JSON storage
 | Custom hooks            | 6 hooks extracted from EditorPage for logic reuse                     |
 | Element factory         | Centralized `element-factory.js` for creating typed elements          |
 | Component decomposition | PropertiesPanel routes to 8 type-specific sub-editors                 |
-| Modular CSS             | `index.css` (global tokens) + 7 split CSS files in `styles/`         |
+| Modular CSS             | `index.css` (global tokens) + 7 split CSS files in `styles/`          |
 | Zod validation          | All mutation API endpoints validate request body via middleware       |
 | ErrorBoundary           | React class component wrapping App children — prevents white screen   |
 | JSDoc type definitions  | `shared/src/types/presentation.js` — typed element union, Slide, etc. |
@@ -191,7 +191,7 @@ server/data/presentations.json      ← file-based JSON storage
 | Socket.IO service       | `socket-handler.js` modularized from server entry                     |
 | Single TipTap instance  | One `Editor` created in EditorPage, reused across all text elements   |
 | File-based storage      | All data in JSON files; no database                                   |
-| useState routing        | `App.jsx` switches pages via `useState('page')` — no React Router    |
+| useState routing        | `App.jsx` switches pages via `useState('page')` — no React Router     |
 | Debounced autosave      | `use-autosave` hook, 1500ms after last change                         |
 | Fixed canvas            | Renders at 960×540, scales via ResizeObserver CSS transform           |
-| CDN-at-runtime          | Present mode and HTML export load reveal.js, KaTeX, Chart.js from CDN|
+| CDN-at-runtime          | Present mode and HTML export load reveal.js, KaTeX, Chart.js from CDN |

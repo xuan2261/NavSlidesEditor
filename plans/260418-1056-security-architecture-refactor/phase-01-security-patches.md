@@ -10,6 +10,7 @@
 ## Context
 
 Từ kết quả Red-team review, 3 critical + 3 high vulnerabilities đã được xác nhận:
+
 - XSS qua HTML embed + share links (Critical)
 - Password lộ trong URL query string (Critical)
 - Plaintext credentials lưu trên disk (High)
@@ -20,6 +21,7 @@ Từ kết quả Red-team review, 3 critical + 3 high vulnerabilities đã đư�
 ## Related Files
 
 ### Files to Modify:
+
 - [server/index.js](file:///d:/NCKH_2025/revealjs_gui/server/index.js) — Share password form + renderShareView
 - [server/routes/upload.js](file:///d:/NCKH_2025/revealjs_gui/server/routes/upload.js) — MIME validation
 - [server/routes/sync.js](file:///d:/NCKH_2025/revealjs_gui/server/routes/sync.js) — rclone password obscure
@@ -27,6 +29,7 @@ Từ kết quả Red-team review, 3 critical + 3 high vulnerabilities đã đư�
 - [server/package.json](file:///d:/NCKH_2025/revealjs_gui/server/package.json) — New dependencies
 
 ### New Dependencies:
+
 - `dompurify` + `jsdom` (server-side sanitization)
 - `express-rate-limit` (API rate limiting)
 - `file-type` (MIME magic bytes detection)
@@ -36,10 +39,12 @@ Từ kết quả Red-team review, 3 critical + 3 high vulnerabilities đã đư�
 ## Implementation Steps
 
 ### Task 1.1: Fix Share Password Form (GET → POST)
+
 **File:** `server/index.js`  
-**Effort:** 30 min  
+**Effort:** 30 min
 
 **Current code (line 166-175):**
+
 ```javascript
 // VULNERABLE: password in URL
 if (!req.query.pwd || !(await bcrypt.compare(req.query.pwd, tokenData.password))) {
@@ -48,6 +53,7 @@ if (!req.query.pwd || !(await bcrypt.compare(req.query.pwd, tokenData.password))
 ```
 
 **Target code:**
+
 ```javascript
 // Step 1: Change GET handler to show POST form
 if (tokenData.password && req.method === 'GET') {
@@ -73,13 +79,13 @@ app.post('/share/:token', async (req, res) => {
   if (typeof tokenData === 'string') tokenData = { presentationId: tokenData }
   if (!tokenData) return res.status(404).send('Not found')
   if (!canViewShare(tokenData)) return res.status(403).send('Expired')
-  
+
   // urlencoded body from form
   const pwd = req.body?.pwd
   if (!pwd || !(await bcrypt.compare(pwd, tokenData.password))) {
     return res.redirect(`/share/${req.params.token}`) // back to form
   }
-  
+
   tokenData.views = (tokenData.views || 0) + 1
   tokens[req.params.token] = tokenData
   await writeShareTokens(tokens)
@@ -90,6 +96,7 @@ app.post('/share/:token', async (req, res) => {
 **Cần thêm middleware:** `app.use(express.urlencoded({ extended: false }))` trước share routes.
 
 **Checklist:**
+
 - `[ ]` Thêm `express.urlencoded` middleware
 - `[ ]` Tách GET handler: chỉ show form (không check query.pwd nữa)
 - `[ ]` Thêm POST handler cho password verification
@@ -99,6 +106,7 @@ app.post('/share/:token', async (req, res) => {
 ---
 
 ### Task 1.2: DOMPurify cho HTML Embed trong Share/Present Views
+
 **File:** `shared/src/htmlGenerator.js`  
 **Effort:** 2 hours
 
@@ -119,7 +127,7 @@ async function renderShareView(presentationId, res) {
   const presentations = await readPresentations()
   const presentation = presentations.find((p) => p.id === presentationId)
   if (!presentation) return res.status(404).send('Not found')
-  
+
   // Deep clone and sanitize HTML elements for share view
   const sanitized = JSON.parse(JSON.stringify(presentation))
   for (const slide of sanitized.slides || []) {
@@ -139,7 +147,7 @@ async function renderShareView(presentationId, res) {
       .replace(/javascript\s*:/gi, '/* blocked */:')
       .replace(/url\s*\(\s*['"]?\s*javascript/gi, 'url(/* blocked */')
   }
-  
+
   const html = generateRevealHTML(sanitized)
   res.setHeader('Content-Type', 'text/html')
   res.send(html)
@@ -147,6 +155,7 @@ async function renderShareView(presentationId, res) {
 ```
 
 **Checklist:**
+
 - `[ ]` Install `dompurify` + `jsdom` vào `server/package.json`
 - `[ ]` Import và init DOMPurify với JSDOM window
 - `[ ]` Sanitize HTML elements trước khi gọi `generateRevealHTML` trong `renderShareView`
@@ -156,6 +165,7 @@ async function renderShareView(presentationId, res) {
 ---
 
 ### Task 1.3: Upload MIME Validation (Magic Bytes)
+
 **File:** `server/routes/upload.js`  
 **Effort:** 1 hour
 
@@ -170,11 +180,11 @@ const ALLOWED_MIME_PREFIXES = ['image/', 'video/', 'audio/', 'application/pdf']
 // Sau khi multer upload xong, validate MIME
 router.post('/', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
-  
+
   // Verify actual file content matches claimed type
   try {
     const detected = await fileTypeFromFile(req.file.path)
-    if (detected && !ALLOWED_MIME_PREFIXES.some(p => detected.mime.startsWith(p))) {
+    if (detected && !ALLOWED_MIME_PREFIXES.some((p) => detected.mime.startsWith(p))) {
       // Delete the uploaded file
       await fs.unlink(req.file.path).catch(() => {})
       return res.status(400).json({ error: `File type ${detected.mime} not allowed` })
@@ -182,12 +192,13 @@ router.post('/', upload.single('file'), async (req, res) => {
   } catch {
     // If file-type can't detect (e.g., SVG/text), fall back to extension check (already passed)
   }
-  
+
   res.json({ url: `/uploads/${req.file.filename}` })
 })
 ```
 
 **Checklist:**
+
 - `[ ]` Install `file-type` vào `server/package.json`
 - `[ ]` Thêm MIME validation sau multer upload
 - `[ ]` Xóa file nếu MIME không match
@@ -197,6 +208,7 @@ router.post('/', upload.single('file'), async (req, res) => {
 ---
 
 ### Task 1.4: Rate Limiting
+
 **File:** `server/index.js`  
 **Effort:** 30 min
 
@@ -229,6 +241,7 @@ app.use('/share/', shareLimiter)
 ```
 
 **Checklist:**
+
 - `[ ]` Install `express-rate-limit`
 - `[ ]` Add general API limiter (300 req/15min)
 - `[ ]` Add upload limiter (30 req/15min)
@@ -238,6 +251,7 @@ app.use('/share/', shareLimiter)
 ---
 
 ### Task 1.5: Rclone Password Obscure
+
 **File:** `server/routes/sync.js`  
 **Effort:** 1 hour
 
@@ -250,7 +264,7 @@ router.post('/config', async (req, res) => {
     const { username, password, remoteName } = req.body
     if (!username || !password) return res.status(400).json({ error: 'Required' })
     const name = remoteName || 'protondrive'
-    
+
     // Obscure password using rclone itself
     let obscuredPassword
     try {
@@ -259,7 +273,7 @@ router.post('/config', async (req, res) => {
       // Fallback: store as-is if rclone obscure fails
       obscuredPassword = password
     }
-    
+
     const configContent = [
       `[${name}]`,
       `type = protondrive`,
@@ -267,7 +281,7 @@ router.post('/config', async (req, res) => {
       `password = ${obscuredPassword}`,
       '',
     ].join('\n')
-    
+
     await fs.writeFile(RCLONE_CONFIG_FILE, configContent)
     // ... rest unchanged
   }
@@ -275,6 +289,7 @@ router.post('/config', async (req, res) => {
 ```
 
 **Checklist:**
+
 - `[ ]` Thêm `rclone obscure` call trước khi lưu password
 - `[ ]` Fallback nếu obscure fails (rclone chưa installed)
 - `[ ]` Test: configure rclone → verify password trong config file là obscured
@@ -282,12 +297,14 @@ router.post('/config', async (req, res) => {
 ---
 
 ### Task 1.6: GitHub Token — API Response Masking
+
 **File:** `server/routes/github.js`  
 **Effort:** 15 min
 
 GET `/api/github/config` đã mask token (trả `hasToken: !!config.token`). Nhưng cần verify không có endpoint nào khác leak token.
 
 **Checklist:**
+
 - `[ ]` Verify GET config chỉ trả `hasToken`, không trả token value
 - `[ ]` Verify `.gitignore` có exclude `server/data/` directory
 - `[ ]` Thêm comment ghi chú security consideration
@@ -297,6 +314,7 @@ GET `/api/github/config` đã mask token (trả `hasToken: !!config.token`). Nh�
 ## Verification Plan
 
 ### Automated Tests
+
 ```bash
 # Run E2E tests
 npx playwright test
@@ -307,6 +325,7 @@ npx playwright test tests/e2e/media.spec.js
 ```
 
 ### Manual Verification
+
 1. **XSS test:** Tạo slide chứa `<script>alert('XSS')</script>` trong HTML element → Share → Mở share link → Verify không có alert
 2. **Password test:** Mở share link protected → URL bar KHÔNG chứa `?pwd=` → Form POST hoạt động
 3. **Upload test:** Rename `.exe` → `.jpg` → Upload → Verify bị reject

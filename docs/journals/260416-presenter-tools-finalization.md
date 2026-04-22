@@ -10,19 +10,21 @@ Completed 6-phase integration of presenter-tools into reveal.js GUI. All phases 
 
 ## Bugs Fixed
 
-| # | Issue | Fix |
-|---|-------|-----|
-| 1 | `presenterTools` defaults missing in blank presentations | Added default values in SlideEditor.vue to ensure toolbar renders on empty/new slides |
-| 2 | Font Awesome icon dependency | Replaced with inline SVG — eliminates external dependency for simple icons |
+| #   | Issue                                                    | Fix                                                                                   |
+| --- | -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1   | `presenterTools` defaults missing in blank presentations | Added default values in SlideEditor.vue to ensure toolbar renders on empty/new slides |
+| 2   | Font Awesome icon dependency                             | Replaced with inline SVG — eliminates external dependency for simple icons            |
 
 ## Decisions
 
 **Inline SVG over Font Awesome:**
+
 - Simplicity wins: presenter-tools uses only 2 icons (visible/invisible), inline SVG removes entire Font Awesome bundle
 - No runtime dependency — icons render without external stylesheet
 - Better performance: smaller bundle size, no font file loading
 
 **Default values for presenterTools:**
+
 - Blank presentations had undefined presenterTools, causing toolbar to fail silently
 - Added sensible defaults in SlideEditor.vue component state
 - Ensures consistency across new and existing presentations
@@ -35,8 +37,8 @@ Completed 6-phase integration of presenter-tools into reveal.js GUI. All phases 
 
 ## Status
 
-| Phase | Status |
-|-------|--------|
-| 1-6 | Complete |
+| Phase | Status   |
+| ----- | -------- |
+| 1-6   | Complete |
 
 **Final Status:** DONE
