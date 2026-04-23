@@ -44,6 +44,26 @@ test.describe('Dashboard & Navigation', () => {
     await apiDeletePresentation(request, pres2.id)
   })
 
+  test('can open an existing presentation from All Presentations', async ({ page, request }) => {
+    const pres = await apiCreatePresentation(request, 'Open From All Regression')
+
+    try {
+      const home = new HomePage(page)
+      await home.goto()
+      await home.switchSidebarView('All Presentations')
+
+      const card = page.locator('.group.bg-card').filter({ hasText: pres.title }).first()
+      await expect(card).toBeVisible()
+      await card.click()
+
+      await page.waitForURL(new RegExp(`/editor/${pres.id}`), { timeout: 30000 })
+      await expect(page.locator('.slide-canvas')).toBeVisible()
+      await expect(page.locator('text=Presentation not found')).toHaveCount(0)
+    } finally {
+      await apiDeletePresentation(request, pres.id)
+    }
+  })
+
   test('can create a new presentation from modal', async ({ page }) => {
     const home = new HomePage(page)
     await home.goto()
@@ -52,11 +72,30 @@ test.describe('Dashboard & Navigation', () => {
     expect(page.url()).toContain('/editor/')
   })
 
+  test('new presentation modal toggles blank vs template start controls', async ({ page }) => {
+    const home = new HomePage(page)
+    await home.goto()
+
+    await page.locator('button:has-text("New")').first().click()
+    await expect(page.locator('h2:has-text("New Presentation")')).toBeVisible()
+
+    await expect(page.locator('label:has-text("Theme")')).toBeVisible()
+    await expect(page.locator('label:has-text("Transition")')).toBeVisible()
+
+    await page.locator('.fixed.inset-0 button').filter({ hasText: 'Blank Light' }).first().click()
+    await expect(page.locator('label:has-text("Theme")')).toHaveCount(0)
+    await expect(page.locator('label:has-text("Transition")')).toHaveCount(0)
+
+    await page.locator('.fixed.inset-0 button').filter({ hasText: 'Blank' }).first().click()
+    await expect(page.locator('label:has-text("Theme")')).toBeVisible()
+    await expect(page.locator('label:has-text("Transition")')).toBeVisible()
+  })
+
   test('can duplicate a presentation via API', async ({ request }) => {
     const pres = await apiCreatePresentation(request, 'Dup Source')
 
     // Duplicate via API
-    const res = await request.post(`http://localhost:5173/api/presentations/${pres.id}/duplicate`)
+    const res = await request.post(`/api/presentations/${pres.id}/duplicate`)
     expect(res.ok()).toBeTruthy()
     const copy = await res.json()
     expect(copy.title).toContain('(copy)')
@@ -70,19 +109,17 @@ test.describe('Dashboard & Navigation', () => {
     const pres = await apiCreatePresentation(request, 'Trash Flow Test')
 
     // Soft delete
-    const delRes = await request.delete(`http://localhost:5173/api/presentations/${pres.id}`)
+    const delRes = await request.delete(`/api/presentations/${pres.id}`)
     expect(delRes.ok()).toBeTruthy()
 
     // Verify in trash
-    const trashRes = await request.get('http://localhost:5173/api/presentations/trash/list')
+    const trashRes = await request.get('/api/presentations/trash/list')
     const trashData = await trashRes.json()
     const inTrash = trashData.find((t) => t.id === pres.id)
     expect(inTrash).toBeTruthy()
 
     // Restore
-    const restoreRes = await request.post(
-      `http://localhost:5173/api/presentations/${pres.id}/restore`
-    )
+    const restoreRes = await request.post(`/api/presentations/${pres.id}/restore`)
     expect(restoreRes.ok()).toBeTruthy()
 
     // Cleanup
