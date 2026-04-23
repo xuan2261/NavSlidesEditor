@@ -35,6 +35,7 @@ const copyItems = [
   { srcPkg: 'highlight.js/styles', dest: path.join(vendorDir, 'highlight.js/styles') },
   { srcPkg: 'highlight.js/lib', dest: path.join(vendorDir, 'highlight.js/lib') },
   { srcPkg: 'd3/dist', dest: path.join(vendorDir, 'd3/dist') },
+  { srcPkg: 'socket.io-client/dist', dest: path.join(vendorDir, 'socket.io') },
   { srcPkg: '@drgrice1/tikzjax/dist', dest: path.join(vendorDir, 'tikzjax') },
   { srcPkg: '@fortawesome/fontawesome-free/css', dest: path.join(vendorDir, 'font-awesome/css') },
   {

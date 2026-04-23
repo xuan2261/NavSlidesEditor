@@ -1,39 +1,27 @@
 import { test as base, expect } from '@playwright/test'
 
-const API_BASE = 'http://localhost:5173/api'
+const API_BASE = '/api'
 
-/**
- * Retry wrapper for API calls that may fail due to concurrent JSON file access.
- */
-async function withRetry(fn, retries = 3, delay = 300) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await fn()
-    } catch (err) {
-      if (i === retries - 1) throw err
-      await new Promise((r) => setTimeout(r, delay * (i + 1)))
-    }
-  }
+export function getBaseUrl() {
+  return process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:4173'
 }
 
 /**
  * Helper: create a presentation via API (bypasses UI).
  */
 export async function apiCreatePresentation(request, title = 'E2E Test Presentation') {
-  return withRetry(async () => {
-    const res = await request.post(`${API_BASE}/presentations`, {
-      data: {
-        title,
-        theme: 'black',
-        transition: 'slide',
-      },
-    })
-    if (!res.ok()) {
-      console.error('API Error:', res.status(), await res.text())
-    }
-    expect(res.ok()).toBeTruthy()
-    return res.json()
+  const res = await request.post(`${API_BASE}/presentations`, {
+    data: {
+      title,
+      theme: 'black',
+      transition: 'slide',
+    },
   })
+  if (!res.ok()) {
+    console.error('API Error:', res.status(), await res.text())
+  }
+  expect(res.ok()).toBeTruthy()
+  return res.json()
 }
 
 /**
@@ -60,37 +48,31 @@ export async function apiGetPresentation(request, id) {
  * Helper: update a presentation.
  */
 export async function apiUpdatePresentation(request, id, data) {
-  return withRetry(async () => {
-    const res = await request.put(`${API_BASE}/presentations/${id}`, { data })
-    expect(res.ok()).toBeTruthy()
-    return res.json()
-  })
+  const res = await request.put(`${API_BASE}/presentations/${id}`, { data })
+  expect(res.ok()).toBeTruthy()
+  return res.json()
 }
 
 /**
  * Helper: create a share link for a presentation.
  */
 export async function apiCreateShareLink(request, id) {
-  return withRetry(async () => {
-    const res = await request.post(`${API_BASE}/presentations/${id}/share`, {
-      data: { name: 'E2E Test Link' },
-    })
-    expect(res.ok()).toBeTruthy()
-    return res.json()
+  const res = await request.post(`${API_BASE}/presentations/${id}/share`, {
+    data: { name: 'E2E Test Link' },
   })
+  expect(res.ok()).toBeTruthy()
+  return res.json()
 }
 
 /**
  * Helper: create a version snapshot.
  */
 export async function apiCreateSnapshot(request, id, name = 'E2E Snapshot') {
-  return withRetry(async () => {
-    const res = await request.post(`${API_BASE}/presentations/${id}/snapshot`, {
-      data: { name },
-    })
-    expect(res.ok()).toBeTruthy()
-    return res.json()
+  const res = await request.post(`${API_BASE}/presentations/${id}/snapshot`, {
+    data: { name },
   })
+  expect(res.ok()).toBeTruthy()
+  return res.json()
 }
 
 /**

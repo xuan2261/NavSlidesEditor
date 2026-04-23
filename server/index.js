@@ -95,6 +95,10 @@ app.use('/share/', shareLimiter)
 express.static.mime.define({ 'application/wasm': ['wasm'] })
 
 app.use('/uploads', express.static(UPLOADS_DIR))
+const socketIoClientDist = path.join(__dirname, '..', 'node_modules', 'socket.io-client', 'dist')
+if (fs.existsSync(socketIoClientDist)) {
+  app.use('/vendor/socket.io', express.static(socketIoClientDist))
+}
 app.use('/vendor', express.static(path.join(__dirname, 'vendor')))
 
 // ── Mount routes ─────────────────────────────────────────────────────────────

@@ -18,7 +18,7 @@ router.get('/room/:code', (req, res) => {
   if (state) {
     res.json({
       exists: true,
-      viewersCount: state.viewers.length,
+      viewersCount: liveRooms.getViewerCount(code),
       hasPresenter: !!state.presenterId,
     })
   } else {

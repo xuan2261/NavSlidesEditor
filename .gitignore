@@ -18,8 +18,10 @@ server/vendor/
 *.log
 
 # Playwright
+.playwright/
 playwright-report/
 test-results/
+repomix-output.xml
 
 # Editor / OS
 .DS_Store

@@ -85,6 +85,7 @@ const aiGenerateSchema = z.object({
         title: z.string().max(500),
         bulletPoints: z.array(z.string().max(1000)).optional(),
         layout: z.string().optional(),
+        notes: z.string().max(5000).optional(),
         speakerNotes: z.string().max(5000).optional(),
       })
     )

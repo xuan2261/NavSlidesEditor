@@ -1,10 +1,8 @@
 const express = require('express')
 const { v4: uuidv4 } = require('uuid')
-const { generateRevealHTML } = require('revealjs-shared')
+const { generateRevealHTML, normalizePresentationNotes } = require('revealjs-shared')
 const {
-  // eslint-disable-next-line unused-imports/no-unused-vars
   readPresentations,
-  writePresentations,
   withPresentations,
   readShareTokens,
   writeShareTokens,
@@ -54,7 +52,7 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
     let presentation
 
     if (providedSlides && Array.isArray(providedSlides)) {
-      presentation = {
+      presentation = normalizePresentationNotes({
         ...extraFields,
         id: uuidv4(),
         title: title || 'Untitled Presentation',
@@ -67,7 +65,7 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
         })),
         createdAt: now,
         updatedAt: now,
-      }
+      })
       delete presentation.isTemplate
       delete presentation.description
       delete presentation.thumbnail
@@ -85,7 +83,7 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
       }
       if (template) {
         const cloned = JSON.parse(JSON.stringify(template))
-        presentation = {
+        presentation = normalizePresentationNotes({
           ...cloned,
           id: uuidv4(),
           title: title || cloned.title || 'Untitled Presentation',
@@ -96,13 +94,13 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
             id: uuidv4(),
             elements: (s.elements || []).map((el) => ({ ...el, id: uuidv4() })),
           })),
-        }
+        })
         delete presentation.isTemplate
       }
     }
 
     if (!presentation) {
-      presentation = {
+      presentation = normalizePresentationNotes({
         id: uuidv4(),
         title: title || 'Untitled Presentation',
         theme: theme || 'black',
@@ -135,14 +133,14 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
           slideMenu: false,
           chalkboard: false,
         },
-      }
+      })
     }
 
     const result = await withPresentations((presentations) => {
       presentations.push(presentation)
       return presentation
     })
-    res.status(201).json(result)
+    res.status(201).json(normalizePresentationNotes(result))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -173,7 +171,7 @@ router.get('/:id', async (req, res) => {
     const presentations = await readPresentations()
     const presentation = presentations.find((p) => p.id === req.params.id)
     if (!presentation) return res.status(404).json({ error: 'Not found' })
-    res.json(presentation)
+    res.json(normalizePresentationNotes(presentation))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -185,16 +183,16 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
     const result = await withPresentations((presentations) => {
       const index = presentations.findIndex((p) => p.id === req.params.id)
       if (index === -1) return null
-      presentations[index] = {
+      presentations[index] = normalizePresentationNotes({
         ...presentations[index],
         ...req.body,
         id: req.params.id,
         updatedAt: new Date().toISOString(),
-      }
+      })
       return presentations[index]
     })
     if (!result) return res.status(404).json({ error: 'Not found' })
-    res.json(result)
+    res.json(normalizePresentationNotes(result))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -284,8 +282,9 @@ router.post('/:id/duplicate', async (req, res) => {
       copy.title = (copy.title || 'Untitled') + ' (copy)'
       copy.createdAt = now
       copy.updatedAt = now
-      presentations.push(copy)
-      return copy
+      const normalizedCopy = normalizePresentationNotes(copy)
+      presentations.push(normalizedCopy)
+      return normalizedCopy
     })
     if (!result) return res.status(404).json({ error: 'Not found' })
     res.status(201).json(result)
@@ -300,7 +299,7 @@ router.get('/:id/export', async (req, res) => {
     const presentations = await readPresentations()
     const presentation = presentations.find((p) => p.id === req.params.id)
     if (!presentation) return res.status(404).json({ error: 'Not found' })
-    const html = generateRevealHTML(presentation)
+    const html = generateRevealHTML(normalizePresentationNotes(presentation))
     const filename = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
     res.setHeader('Content-Type', 'text/html')
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
@@ -332,7 +331,7 @@ router.get('/:id/present', async (req, res) => {
       }
     }
     if (!presentation) return res.status(404).json({ error: 'Not found' })
-    let html = generateRevealHTML(presentation)
+    let html = generateRevealHTML(normalizePresentationNotes(presentation))
     if (req.query.preview === 'true') {
       html = html.replace(
         '</head>',
@@ -358,14 +357,14 @@ router.post('/:id/save-as-template', async (req, res) => {
     const pres = presentations.find((p) => p.id === req.params.id)
     if (!pres) return res.status(404).json({ error: 'Not found' })
     const now = new Date().toISOString()
-    const template = {
+    const template = normalizePresentationNotes({
       ...JSON.parse(JSON.stringify(pres)),
       id: uuidv4(),
       title: (req.body.title || pres.title || 'Untitled') + ' (template)',
       isTemplate: true,
       createdAt: now,
       updatedAt: now,
-    }
+    })
     const templates = await readTemplates()
     templates.push(template)
     await writeTemplates(templates)

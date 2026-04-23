@@ -17,19 +17,37 @@ describe('live-rooms service', () => {
     const state = liveRooms.getRoomState('ROOM12')
     expect(state.presenterId).toBe('socket-1')
     expect(state.state.slideIndex).toBe(0)
+    expect(state.state.verticalIndex).toBe(0)
     expect(state.state.fragmentIndex).toBe(0)
   })
 
   it('should allow viewer to join and get current state', () => {
     liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter')
-    liveRooms.updateRoomState('ROOM12', 'socket-1', { slideIndex: 2, fragmentIndex: 1 })
+    liveRooms.updateRoomState('ROOM12', 'socket-1', {
+      slideIndex: 2,
+      verticalIndex: 1,
+      fragmentIndex: 1,
+    })
 
     // Viewer joins, we can get state
     liveRooms.joinRoom('ROOM12', 'socket-2', 'viewer')
     const state = liveRooms.getRoomState('ROOM12')
     expect(state.state.slideIndex).toBe(2)
+    expect(state.state.verticalIndex).toBe(1)
     expect(state.state.fragmentIndex).toBe(1)
     expect(state.viewers.includes('socket-2')).toBe(true)
+  })
+
+  it('should allow controller to join without taking presenter ownership', () => {
+    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter')
+    liveRooms.joinRoom('ROOM12', 'socket-2', 'controller')
+
+    const state = liveRooms.getRoomState('ROOM12')
+    expect(state.presenterId).toBe('socket-1')
+    expect(state.controllers).toContain('socket-2')
+    expect(state.viewers).not.toContain('socket-2')
+    expect(liveRooms.getViewerCount('ROOM12')).toBe(0)
+    expect(liveRooms.canControlRoom('ROOM12', 'socket-2')).toBe(true)
   })
 
   it('should handle presenter updates only if requested by presenter', () => {
@@ -48,11 +66,16 @@ describe('live-rooms service', () => {
   it('should remove socket properly on leave and clean up if presenter leaves', () => {
     liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter')
     liveRooms.joinRoom('ROOM12', 'socket-2', 'viewer')
+    liveRooms.joinRoom('ROOM12', 'socket-3', 'controller')
 
     // Viewer leaves
     liveRooms.leaveRoom('socket-2')
     let state = liveRooms.getRoomState('ROOM12')
     expect(state.viewers.includes('socket-2')).toBe(false)
+
+    liveRooms.leaveRoom('socket-3')
+    state = liveRooms.getRoomState('ROOM12')
+    expect(state.controllers.includes('socket-3')).toBe(false)
 
     // Presenter leaves
     liveRooms.leaveRoom('socket-1')

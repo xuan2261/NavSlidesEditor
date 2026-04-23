@@ -5,6 +5,7 @@ const { validate } = require('../middleware/validate')
 // eslint-disable-next-line unused-imports/no-unused-vars
 const { aiCopywriteSchema, aiTranslateSchema } = require('../middleware/schemas')
 const { z } = require('zod')
+const { escapeHtml, getSlideNotes } = require('revealjs-shared')
 
 const router = express.Router()
 
@@ -79,15 +80,15 @@ Return a JSON object containing an array called "slides". Each slide must have:
 - title: string
 - bulletPoints: array of strings
 - layout: one of ["title", "content", "two-column", "image-text", "big-number"]
-- speakerNotes: string (optional context for presenter)
+- notes: string (optional context for presenter)
 Style parameter: ${style}. Language parameter: ${language}. Expected Slides count: ${slideCount}.`
 
     const rawResult = await callAI(settings.ai, systemPrompt, topic)
 
     // strip out markdown formatting if ai returns markdown block
     let cleanedJsonPattern = rawResult
-    if (rawResult.startsWith('\`\`\`')) {
-      cleanedJsonPattern = rawResult.replace(/^\`\`\`(json)?\n/, '').replace(/\n\`\`\`$/, '')
+    if (rawResult.startsWith('```')) {
+      cleanedJsonPattern = rawResult.replace(/^```(json)?\n/, '').replace(/\n```$/, '')
     }
 
     const outline = JSON.parse(cleanedJsonPattern)
@@ -105,6 +106,7 @@ const generateSlidesSchema = z.object({
         title: z.string().max(500),
         bulletPoints: z.array(z.string().max(1000)).optional(),
         layout: z.string().optional(),
+        notes: z.string().max(5000).optional(),
         speakerNotes: z.string().max(5000).optional(),
       })
     )
@@ -121,29 +123,33 @@ router.post('/generate-slides', validate(generateSlidesSchema), async (req, res)
     // However, Phase 6 instructed: "Map outline to slide elements using template patterns".
     // For simplicity, we just generate raw HTML sections based on layouts.
     const slides = outline.map((slide) => {
+      const bulletPoints = Array.isArray(slide.bulletPoints) ? slide.bulletPoints : []
+      const safeTitle = escapeHtml(slide.title || '')
+      const safeLayout = escapeHtml(slide.layout || 'content')
+      const safeNotes = escapeHtml(getSlideNotes(slide))
       let content = ''
       if (slide.layout === 'title') {
-        content = `<h1>${slide.title}</h1>`
-        if (slide.bulletPoints && slide.bulletPoints.length > 0) {
-          content += `<h3>${slide.bulletPoints.join(' | ')}</h3>`
+        content = `<h1>${safeTitle}</h1>`
+        if (bulletPoints.length > 0) {
+          content += `<h3>${bulletPoints.map((point) => escapeHtml(point)).join(' | ')}</h3>`
         }
       } else if (slide.layout === 'content') {
-        content = `<h2>${slide.title}</h2><ul>`
-        slide.bulletPoints.forEach((bp) => {
-          content += `<li>${bp}</li>`
+        content = `<h2>${safeTitle}</h2><ul>`
+        bulletPoints.forEach((bp) => {
+          content += `<li>${escapeHtml(bp)}</li>`
         })
         content += `</ul>`
       } else {
         // Fallback for custom
-        content = `<h2>${slide.title}</h2><ul>`
-        if (slide.bulletPoints) {
-          slide.bulletPoints.forEach((bp) => {
-            content += `<li>${bp}</li>`
+        content = `<h2>${safeTitle}</h2><ul>`
+        if (bulletPoints.length > 0) {
+          bulletPoints.forEach((bp) => {
+            content += `<li>${escapeHtml(bp)}</li>`
           })
         }
         content += `</ul>`
       }
-      return `<section data-layout="${slide.layout}">${content}<aside class="notes">${slide.speakerNotes || ''}</aside></section>`
+      return `<section data-layout="${safeLayout}">${content}<aside class="notes">${safeNotes}</aside></section>`
     })
 
     res.json({ slides })
@@ -186,10 +192,10 @@ IMPORTANT INSTRUCTIONS:
     const rawResult = await callAI(settings.ai, systemPrompt, JSON.stringify(texts))
 
     let cleanedJsonPattern = rawResult.trim()
-    if (cleanedJsonPattern.startsWith('\`\`\`')) {
+    if (cleanedJsonPattern.startsWith('```')) {
       cleanedJsonPattern = cleanedJsonPattern
-        .replace(/^\`\`\`(json)?\n/, '')
-        .replace(/\n\`\`\`$/, '')
+        .replace(/^```(json)?\n/, '')
+        .replace(/\n```$/, '')
     }
 
     res.json({ translations: JSON.parse(cleanedJsonPattern) })

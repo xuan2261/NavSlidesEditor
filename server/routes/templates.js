@@ -1,6 +1,7 @@
 const express = require('express')
 const { v4: uuidv4 } = require('uuid')
 const { readTemplates, writeTemplates } = require('../services/storage')
+const { normalizePresentationNotes } = require('revealjs-shared')
 
 const router = express.Router()
 
@@ -28,17 +29,17 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const now = new Date().toISOString()
-    const template = {
+    const template = normalizePresentationNotes({
       ...req.body,
       id: uuidv4(),
       isTemplate: true,
       createdAt: now,
       updatedAt: now,
-    }
+    })
     const templates = await readTemplates()
     templates.push(template)
     await writeTemplates(templates)
-    res.status(201).json(template)
+    res.status(201).json(normalizePresentationNotes(template))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -50,7 +51,7 @@ router.get('/:id', async (req, res) => {
     const templates = await readTemplates()
     const template = templates.find((t) => t.id === req.params.id)
     if (!template) return res.status(404).json({ error: 'Not found' })
-    res.json(template)
+    res.json(normalizePresentationNotes(template))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -62,14 +63,14 @@ router.put('/:id', async (req, res) => {
     const templates = await readTemplates()
     const index = templates.findIndex((t) => t.id === req.params.id)
     if (index === -1) return res.status(404).json({ error: 'Not found' })
-    templates[index] = {
+    templates[index] = normalizePresentationNotes({
       ...templates[index],
       ...req.body,
       id: req.params.id,
       updatedAt: new Date().toISOString(),
-    }
+    })
     await writeTemplates(templates)
-    res.json(templates[index])
+    res.json(normalizePresentationNotes(templates[index]))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

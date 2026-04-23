@@ -186,7 +186,7 @@
  * @property {string}              id         - UUID v4
  * @property {SlideElement[]}      elements   - Elements on this slide
  * @property {string}              [notes=''] - Speaker notes (plain text)
- * @property {string}              [speakerNotes] - Alt speaker notes field
+ * @property {string}              [speakerNotes] - Legacy input alias for notes
  * @property {SlideBackground}     [background] - Slide background
  * @property {boolean}             [hidden=false] - Whether slide is skipped
  * @property {boolean}             [showPageNumber] - Page number toggle

@@ -7,6 +7,7 @@ const {
   getPresenterToolsInlineJS,
 } = require('./presenterTools.js')
 const { renderSlideElements, escapeHtml, absoluteSrc } = require('./element-renderers.js')
+const { getSlideNotes } = require('./slideNotes.js')
 
 function generateRevealHTML(presentation) {
   const showFooter = presentation.showFooter || false
@@ -39,7 +40,8 @@ function generateRevealHTML(presentation) {
     .map((slide, slideIndex) => {
       const bgAttrs = getBackgroundAttrs(slide.background)
       const autoAnimateAttr = slide.autoAnimate ? ' data-auto-animate' : ''
-      const notes = slide.notes ? `<aside class="notes">${slide.notes}</aside>` : ''
+      const slideNotes = getSlideNotes(slide)
+      const notes = slideNotes ? `<aside class="notes">${escapeHtml(slideNotes)}</aside>` : ''
 
       const elementsHtml = renderSlideElements(slide, { forPrint: false })
 
@@ -87,7 +89,10 @@ function generateRevealHTML(presentation) {
           .map((child) => {
             const childBg = getBackgroundAttrs(child.background)
             const childAutoAnimate = child.autoAnimate ? ' data-auto-animate' : ''
-            const childNotes = child.notes ? `<aside class="notes">${child.notes}</aside>` : ''
+            const childNotesText = getSlideNotes(child)
+            const childNotes = childNotesText
+              ? `<aside class="notes">${escapeHtml(childNotesText)}</aside>`
+              : ''
             const childElements = renderSlideElements(child, { forPrint: false })
             return `    <section${childAutoAnimate}${childBg} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${childElements}\n      ${childNotes}\n    </section>`
           })
@@ -202,24 +207,31 @@ ${slidesHtml}
           });
           // Broadcast slide changes
           Reveal.on('slidechanged', function(event) {
+            var indices = Reveal.getIndices();
             sock.emit('navigate', {
-              slideIndex: event.indexh,
-              fragmentIndex: event.indexv || 0
+              slideIndex: indices.h || 0,
+              verticalIndex: indices.v || 0,
+              fragmentIndex: indices.f || 0
             });
           });
           Reveal.on('fragmentshown', function(event) {
             var indices = Reveal.getIndices();
             sock.emit('navigate', {
-              slideIndex: indices.h,
+              slideIndex: indices.h || 0,
+              verticalIndex: indices.v || 0,
               fragmentIndex: indices.f || 0
             });
           });
           Reveal.on('fragmenthidden', function(event) {
             var indices = Reveal.getIndices();
             sock.emit('navigate', {
-              slideIndex: indices.h,
+              slideIndex: indices.h || 0,
+              verticalIndex: indices.v || 0,
               fragmentIndex: indices.f || 0
             });
+          });
+          sock.on('control-navigate', function(state) {
+            Reveal.slide(state.slideIndex || 0, state.verticalIndex || 0, state.fragmentIndex || 0);
           });
           // Track cursor for viewers
           document.addEventListener('mousemove', function(e) {

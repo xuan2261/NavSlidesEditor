@@ -67,7 +67,7 @@ async function readPresentations() {
 }
 
 async function writePresentations(data) {
-  return fs.writeJson(DATA_FILE, data, { spaces: 2 })
+  return withFileLock(DATA_FILE, async () => fs.writeJson(DATA_FILE, data, { spaces: 2 }))
 }
 
 async function withPresentations(fn) {
