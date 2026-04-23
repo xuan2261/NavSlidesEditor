@@ -1,16 +1,27 @@
 import { X } from 'lucide-react'
 import { Button } from '../components/ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 
 export default function CSSEditorModal({ customCSS, onUpdate, onClose }) {
+  useEscapeClose(onClose)
+
   return (
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(event) => {
+        if (isBackdropClick(event)) onClose()
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="css-editor-modal-title"
     >
-      <div className="bg-[#1e1e2e] rounded-xl w-[560px] max-h-[80vh] flex flex-col border border-white/10 shadow-2xl">
+      <div
+        className="bg-[#1e1e2e] rounded-xl w-[560px] max-h-[80vh] flex flex-col border border-white/10 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="px-4 py-3 border-b border-white/10 flex justify-between items-center">
-          <span className="font-semibold text-sm text-[#e0e0e0]">Custom CSS</span>
-          <Button variant="ghost" onClick={onClose} className="p-1">
+          <h2 id="css-editor-modal-title" className="font-semibold text-sm text-[#e0e0e0]">Custom CSS</h2>
+          <Button variant="ghost" onClick={onClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>

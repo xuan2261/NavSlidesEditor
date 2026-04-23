@@ -4,6 +4,7 @@ import {
   apiCreatePresentation,
   apiDeletePresentation,
   apiCreateShareLink,
+  getBaseUrl,
 } from './fixtures/test-fixtures.js'
 
 test.describe('Sharing & Privacy', () => {
@@ -22,12 +23,24 @@ test.describe('Sharing & Privacy', () => {
 
   test('can open Share Modal in editor', async ({ page }) => {
     const editor = new EditorPage(page)
+    const pageErrors = []
+    page.on('pageerror', (error) => {
+      pageErrors.push(error.message)
+    })
+
     await editor.gotoPresentation(presId)
 
     await editor.openShareModal()
+    await expect(page.getByRole('dialog', { name: 'Share Presentation' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog', { name: 'Share Presentation' })).toHaveCount(0)
 
-    // Wait for Share Modal to appear
-    await expect(page.locator('h3:has-text("Share Presentation")')).toBeVisible({ timeout: 5000 })
+    await editor.openShareModal()
+    await expect(page.getByRole('dialog', { name: 'Share Presentation' })).toBeVisible()
+    await editor.closeOverlayModal()
+    await expect(page.getByRole('dialog', { name: 'Share Presentation' })).toHaveCount(0)
+
+    expect(pageErrors, pageErrors.join('\n')).toEqual([])
   })
 
   test('share link via API returns valid token', async ({ request }) => {
@@ -44,10 +57,8 @@ test.describe('Sharing & Privacy', () => {
     const viewerContext = await browser.newContext()
     const viewerPage = await viewerContext.newPage()
 
-    await viewerPage.goto(`http://localhost:5173/api/view/${token}`, { timeout: 15000 })
-    await viewerPage.waitForTimeout(3000)
-    const pageTitle = await viewerPage.title()
-    expect(pageTitle).toBeDefined()
+    await viewerPage.goto(new URL(`/share/${token}`, getBaseUrl()).toString(), { timeout: 15000 })
+    await expect(viewerPage.locator('.reveal')).toBeVisible({ timeout: 10000 })
 
     await viewerContext.close()
   })

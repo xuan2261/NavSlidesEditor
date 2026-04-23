@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { apiCreatePresentation, apiDeletePresentation } from './fixtures/test-fixtures.js'
 
-const API_BASE = 'http://localhost:5173/api'
+const API_BASE = '/api'
 
 test.describe('Version History (Snapshots)', () => {
   let presId

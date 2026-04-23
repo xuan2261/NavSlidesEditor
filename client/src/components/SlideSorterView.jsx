@@ -12,8 +12,30 @@ function getBgStyle(bg) {
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       opacity: 0.5,
-    }
+  }
   return { backgroundColor: 'var(--bg-card)' }
+}
+
+function getMiniPreviewElementStyle(el) {
+  return {
+    position: 'absolute',
+    left: `${(el.x / 1280) * 100}%`,
+    top: `${(el.y / 720) * 100}%`,
+    width: `${((el.width ?? 100) / 1280) * 100}%`,
+    height: `${((el.height ?? 40) / 720) * 100}%`,
+    fontSize: 4,
+    overflow: 'hidden',
+    color: 'var(--text-primary)',
+    pointerEvents: 'none',
+    zIndex: el.zIndex ?? 1,
+  }
+}
+
+function getContextMenuStyle(ctxMenu) {
+  return {
+    top: ctxMenu.y,
+    left: ctxMenu.x,
+  }
 }
 
 function MiniPreview({ slide }) {
@@ -21,21 +43,7 @@ function MiniPreview({ slide }) {
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-t-md" style={getBgStyle(slide.background)}>
       {els.map((el, i) => (
-        <div
-          key={el.id || i}
-          style={{
-            position: 'absolute',
-            left: `${(el.x / 1280) * 100}%`,
-            top: `${(el.y / 720) * 100}%`,
-            width: `${((el.width ?? 100) / 1280) * 100}%`,
-            height: `${((el.height ?? 40) / 720) * 100}%`,
-            fontSize: 4,
-            overflow: 'hidden',
-            color: 'var(--text-primary)',
-            pointerEvents: 'none',
-            zIndex: el.zIndex ?? 1,
-          }}
-        >
+        <div key={el.id || i} style={getMiniPreviewElementStyle(el)}>
           {el.type === 'text' && (
             <span
               dangerouslySetInnerHTML={{
@@ -43,12 +51,12 @@ function MiniPreview({ slide }) {
               }}
             />
           )}
-          {el.type === 'image' && <span style={{ opacity: 0.4 }}>🖼</span>}
-          {el.type === 'html' && <span style={{ opacity: 0.4 }}>&lt;/&gt;</span>}
-          {el.type === 'code' && <span style={{ opacity: 0.4 }}>⌨</span>}
-          {el.type === 'latex' && <span style={{ opacity: 0.4 }}>∑</span>}
+          {el.type === 'image' && <span className="opacity-40">🖼</span>}
+          {el.type === 'html' && <span className="opacity-40">&lt;/&gt;</span>}
+          {el.type === 'code' && <span className="opacity-40">⌨</span>}
+          {el.type === 'latex' && <span className="opacity-40">∑</span>}
           {!['text', 'image', 'html', 'code', 'latex'].includes(el.type) && (
-            <span style={{ opacity: 0.3 }}>{el.type}</span>
+            <span className="opacity-30">{el.type}</span>
           )}
         </div>
       ))}
@@ -176,7 +184,7 @@ export default function SlideSorterView({
       {ctxMenu && (
         <div
           className="absolute z-[100] bg-card border border-border rounded-lg shadow-xl py-1 min-w-[160px]"
-          style={{ top: ctxMenu.y, left: ctxMenu.x }}
+          style={getContextMenuStyle(ctxMenu)}
           onClick={(e) => e.stopPropagation()}
         >
           <button

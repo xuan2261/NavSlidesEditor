@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test'
+
 export class HomePage {
   /**
    * @param {import('@playwright/test').Page} page
@@ -30,12 +32,12 @@ export class HomePage {
 
   async searchPresentation(query) {
     await this.searchInput.fill(query)
-    await this.page.waitForTimeout(500)
+    await expect(this.searchInput).toHaveValue(query)
   }
 
   async clearSearch() {
     await this.searchInput.fill('')
-    await this.page.waitForTimeout(300)
+    await expect(this.searchInput).toHaveValue('')
   }
 
   async getPresentationCount() {
@@ -43,8 +45,9 @@ export class HomePage {
   }
 
   async switchSidebarView(viewLabel) {
-    await this.page.locator('button').filter({ hasText: viewLabel }).click()
-    await this.page.waitForTimeout(500)
+    const button = this.page.locator('button').filter({ hasText: viewLabel })
+    await button.click()
+    await expect(button).toBeVisible()
   }
 
   async navigateToSettings() {
@@ -58,18 +61,20 @@ export class HomePage {
   }
 
   async duplicatePresentation(index = 0) {
+    const prevCount = await this.getPresentationCount()
     const card = this.presentationCards.nth(index)
     await card.hover()
     await card.locator('button[title="Duplicate"]').click()
-    await this.page.waitForTimeout(1000)
+    await expect(this.presentationCards).toHaveCount(prevCount + 1, { timeout: 10000 })
   }
 
   async deletePresentation(index = 0) {
     this.page.on('dialog', (dialog) => dialog.accept())
+    const prevCount = await this.getPresentationCount()
     const card = this.presentationCards.nth(index)
     await card.hover()
     await card.locator('button[title="Delete"]').click()
-    await this.page.waitForTimeout(1000)
+    await expect(this.presentationCards).toHaveCount(prevCount - 1, { timeout: 10000 })
   }
 
   async openPresentation(index = 0) {
@@ -78,9 +83,12 @@ export class HomePage {
   }
 
   async toggleTheme() {
+    const previousTheme = await this.getTheme()
     const btn = this.page.locator('button[title*="Switch to"]')
     await btn.click()
-    await this.page.waitForTimeout(300)
+    await expect
+      .poll(async () => this.getTheme(), { timeout: 5000 })
+      .not.toBe(previousTheme)
   }
 
   async getTheme() {
@@ -105,15 +113,17 @@ export class HomePage {
   }
 
   async restoreFromTrash(index = 0) {
+    const prevCount = await this.getPresentationCount()
     const card = this.presentationCards.nth(index)
     await card.locator('button[title="Restore"]').click()
-    await this.page.waitForTimeout(1000)
+    await expect(this.presentationCards).toHaveCount(prevCount - 1, { timeout: 10000 })
   }
 
   async permanentDeleteFromTrash(index = 0) {
     this.page.on('dialog', (dialog) => dialog.accept())
+    const prevCount = await this.getPresentationCount()
     const card = this.presentationCards.nth(index)
     await card.locator('button[title="Delete permanently"]').click()
-    await this.page.waitForTimeout(1000)
+    await expect(this.presentationCards).toHaveCount(prevCount - 1, { timeout: 10000 })
   }
 }

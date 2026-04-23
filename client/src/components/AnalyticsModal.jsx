@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BarChart3, X, Eye, TrendingUp, Clock, Loader2 } from 'lucide-react'
 import { Button } from '../components/ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 
 export default function AnalyticsModal({ presentationId, onClose }) {
   const [data, setData] = useState(null)
@@ -18,20 +19,27 @@ export default function AnalyticsModal({ presentationId, onClose }) {
 
   const maxDaily = data?.dailyViews?.reduce((m, d) => Math.max(m, d.count), 0) || 1
 
+  useEscapeClose(onClose)
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
-      onClick={onClose}
+      onClick={(event) => {
+        if (isBackdropClick(event)) onClose()
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="analytics-modal-title"
     >
       <div
         className="bg-card rounded-xl p-6 w-[560px] max-h-[85vh] overflow-y-auto shadow-2xl border border-border"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="m-0 flex items-center gap-2 text-base">
+          <h3 id="analytics-modal-title" className="m-0 flex items-center gap-2 text-base">
             <BarChart3 size={18} /> Analytics
           </h3>
-          <Button variant="icon" onClick={onClose} style={{ padding: 4 }}>
+          <Button variant="icon" onClick={onClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Sparkles, X, RotateCw, Check, Loader2 } from 'lucide-react'
 import { aiRewrite } from '../utils/ai'
 import { Button } from '../components/ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 
 const ACTIONS = [
   { id: 'improve', label: 'Improve', icon: '✨' },
@@ -33,20 +34,27 @@ export default function AICopywriterModal({ text, onApply, onClose }) {
     }
   }
 
+  useEscapeClose(onClose)
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
-      onClick={onClose}
+      onClick={(event) => {
+        if (isBackdropClick(event)) onClose()
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ai-copywriter-modal-title"
     >
       <div
         className="bg-card rounded-xl p-6 w-[480px] max-h-[80vh] overflow-y-auto shadow-2xl border border-border"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="m-0 flex items-center gap-2 text-base">
+          <h3 id="ai-copywriter-modal-title" className="m-0 flex items-center gap-2 text-base">
             <Sparkles size={18} /> AI Copywriter
           </h3>
-          <Button variant="icon" onClick={onClose} className="p-1">
+          <Button variant="icon" onClick={onClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>

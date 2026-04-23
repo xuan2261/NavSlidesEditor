@@ -66,6 +66,11 @@ import atomOneLightCSS from '../../../node_modules/highlight.js/styles/atom-one-
 import githubCSS from '../../../node_modules/highlight.js/styles/github.min.css?raw'
 import vsCSS from '../../../node_modules/highlight.js/styles/vs.min.css?raw'
 import { Button, Input } from '../components/ui'
+import {
+  applyTranslatedNotes,
+  getSlideNotesTranslationKey,
+  normalizePresentationNotes,
+} from '../utils/slide-notes'
 
 const CODE_THEME_CSS = {
   monokai: monokaiCSS,
@@ -96,6 +101,12 @@ const THEMES = [
 ]
 // eslint-disable-next-line unused-imports/no-unused-vars
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
+const imageUrlPromptPopoverStyle = {
+  position: 'fixed',
+  top: 100,
+  left: '50%',
+  transform: 'translateX(-50%)',
+}
 
 const migrateSlide = (slide) => {
   if (!slide.elements) {
@@ -215,10 +226,12 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     loadFn(presentationId)
       .then((data) => {
         // Migrate old slide format to new elements-based format
-        const migrated = {
+        const migrated = normalizePresentationNotes({
           ...data,
           slides: (data.slides || []).map(migrateSlide),
-        }
+        })
+        historyRef.current = [JSON.parse(JSON.stringify(migrated))]
+        redoStackRef.current = []
         setPresentation(migrated)
         if (migrated.gridSize) setGridSize(migrated.gridSize)
         setLoading(false)
@@ -320,7 +333,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     saveTimerRef.current = setTimeout(async () => {
       try {
         const saveFn = isTemplate ? api.updateTemplate : api.updatePresentation
-        await saveFn(presentation.id, presentation)
+        await saveFn(presentation.id, normalizePresentationNotes(presentation))
         setSaveStatus('saved')
         setLastSavedAt(new Date())
         setTimeout(() => setSaveStatus(''), 2000)
@@ -801,6 +814,8 @@ svg.selectAll('circle').data(data).join('circle')
     addSlide,
     deleteSlide,
     duplicateSlide,
+    deleteSlides,
+    duplicateSlides,
     moveSlide,
   } = useSlideOperations({
     presentation,
@@ -841,15 +856,7 @@ svg.selectAll('circle').data(data).join('circle')
 
   if (loading) {
     return (
-      <div
-        style={{
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--text-muted)',
-        }}
-      >
+      <div className="flex h-full items-center justify-center text-text-muted">
         Loading...
       </div>
     )
@@ -857,15 +864,7 @@ svg.selectAll('circle').data(data).join('circle')
 
   if (!presentation) {
     return (
-      <div
-        style={{
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--text-muted)',
-        }}
-      >
+      <div className="flex h-full items-center justify-center text-text-muted">
         Presentation not found.{' '}
         <Button variant="ghost" onClick={onGoHome}>
           Go back
@@ -875,10 +874,10 @@ svg.selectAll('circle').data(data).join('circle')
   }
 
   // eslint-disable-next-line
-  const hasChanges = historyRef.current.length > 0
+  const hasChanges = historyRef.current.length > 1
 
   return (
-    <div className="h-full flex flex-col overflow-hidden" style={{ position: 'relative' }}>
+    <div className="relative flex h-full flex-col overflow-hidden">
       {/* Editor Header */}
       <div className="relative z-[200] flex items-center gap-x-3 px-4 py-1.5 min-h-[44px] bg-secondary border-b border-border shrink-0">
         <Button
@@ -890,18 +889,7 @@ svg.selectAll('circle').data(data).join('circle')
           Back
         </Button>
         {isTemplate && (
-          <span
-            style={{
-              fontSize: 11,
-              background: '#f59e0b',
-              color: '#000',
-              padding: '2px 8px',
-              borderRadius: 4,
-              fontWeight: 600,
-              flexShrink: 0,
-              marginRight: 4,
-            }}
-          >
+          <span className="mr-1 shrink-0 rounded bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-black">
             TEMPLATE
           </span>
         )}
@@ -918,7 +906,7 @@ svg.selectAll('circle').data(data).join('circle')
             saveTimerRef.current = setTimeout(async () => {
               try {
                 const saveFn = isTemplate ? api.updateTemplate : api.updatePresentation
-                await saveFn(presentation.id, presentation)
+                await saveFn(presentation.id, normalizePresentationNotes(presentation))
                 setSaveStatus('saved')
                 setLastSavedAt(new Date())
                 setTimeout(() => setSaveStatus(''), 2000)
@@ -928,7 +916,6 @@ svg.selectAll('circle').data(data).join('circle')
               }
             }, 100)
           }}
-          onPresent={() => presentInWindow(presentation)}
           saving={saving}
           hasChanges={hasChanges}
         />
@@ -1028,21 +1015,8 @@ svg.selectAll('circle').data(data).join('circle')
             input.click()
           }}
           onGithub={() => setShowGithubModal(true)}
-          onSync={async () => {
-            try {
-              const s = await api.getRcloneStatus()
-              setSyncStatus(s)
-            } catch {
-              setSyncStatus({ installed: false })
-            }
-            setSyncResult(null)
-            setShowSyncModal(true)
-          }}
-          onHistory={async () => {
-            const snaps = await api.getSnapshots(presentationId)
-            setSnapshots(snaps)
-            setShowHistoryModal(true)
-          }}
+          onSync={() => setShowSyncModal(true)}
+          onHistory={() => setShowHistoryModal(true)}
           onFindReplace={() => setShowFindReplace((v) => !v)}
           onTimeline={() => setShowTimeline((v) => !v)}
           onCssEditor={() => setShowCssEditor(true)}
@@ -1152,12 +1126,15 @@ svg.selectAll('circle').data(data).join('circle')
       <div className="flex-1 flex overflow-hidden">
         <SlidePanel
           slides={presentation.slides}
+          resolution={presentation.resolution}
           currentIndex={currentSlideIndex}
           onSelect={setCurrentSlideIndex}
           onAdd={() => setShowTemplateModal(true)}
           onAddFromTemplate={() => setShowTemplateGallery(true)}
           onDelete={deleteSlide}
           onDuplicate={duplicateSlide}
+          onDeleteSelected={deleteSlides}
+          onDuplicateSelected={duplicateSlides}
           onMove={moveSlide}
           onToggleLock={(idx) =>
             setPresentation((prev) => ({
@@ -1431,7 +1408,7 @@ svg.selectAll('circle').data(data).join('circle')
                             : `<h2>${item.title}</h2><ul>${(item.bulletPoints || []).map((bp) => `<li>${bp}</li>`).join('')}</ul>`,
                       },
                     ],
-                    speakerNotes: item.speakerNotes || '',
+                    notes: item.notes || item.speakerNotes || '',
                   }))
                   setPresentation((prev) => ({
                     ...prev,
@@ -1462,14 +1439,14 @@ svg.selectAll('circle').data(data).join('circle')
                       return el
                     })
                   }
-                  const notesKey = `${si}-notes-speakerNotes`
+                  const notesKey = getSlideNotesTranslationKey(si)
                   const notesT = translationMap[notesKey]
                   if (notesT) {
-                    if (keepOriginal && updatedSlide.speakerNotes) {
-                      updatedSlide.speakerNotes = `${notesT.translatedHtml}\n\n---\n${updatedSlide.speakerNotes}`
-                    } else {
-                      updatedSlide.speakerNotes = notesT.translatedHtml
-                    }
+                    updatedSlide = applyTranslatedNotes(
+                      updatedSlide,
+                      notesT.translatedHtml,
+                      keepOriginal
+                    )
                   }
                   return updatedSlide
                 })
@@ -1562,7 +1539,7 @@ svg.selectAll('circle').data(data).join('circle')
             setShowImageUrlPrompt(false)
           }}
           onCancel={() => setShowImageUrlPrompt(false)}
-          style={{ position: 'fixed', top: 100, left: '50%', transform: 'translateX(-50%)' }}
+          style={imageUrlPromptPopoverStyle}
         />
       )}
 

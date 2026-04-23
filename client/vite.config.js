@@ -1,15 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const apiProxyTarget = process.env.VITE_API_PROXY_TARGET || 'http://localhost:3002'
+
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:3002',
-      '/uploads': 'http://localhost:3002',
-      '/vendor': 'http://localhost:3002',
+      '/api': apiProxyTarget,
+      '/share': apiProxyTarget,
+      '/uploads': apiProxyTarget,
+      '/vendor': apiProxyTarget,
       '/ws': {
-        target: 'http://localhost:3002',
+        target: apiProxyTarget,
         ws: true,
       },
     },

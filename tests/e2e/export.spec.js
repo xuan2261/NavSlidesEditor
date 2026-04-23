@@ -20,7 +20,7 @@ test.describe('Export & Present', () => {
   })
 
   test('export HTML endpoint returns valid HTML', async ({ request }) => {
-    const res = await request.get(`http://localhost:5173/api/presentations/${presId}/export`)
+    const res = await request.get(`/api/presentations/${presId}/export`)
     expect(res.ok()).toBeTruthy()
     const contentType = res.headers()['content-type']
     expect(contentType).toContain('text/html')
@@ -29,7 +29,7 @@ test.describe('Export & Present', () => {
   })
 
   test('present endpoint returns reveal.js HTML', async ({ request }) => {
-    const res = await request.get(`http://localhost:5173/api/presentations/${presId}/present`)
+    const res = await request.get(`/api/presentations/${presId}/present`)
     expect(res.ok()).toBeTruthy()
     const html = await res.text()
     expect(html).toContain('Reveal')
@@ -38,7 +38,7 @@ test.describe('Export & Present', () => {
 
   test('present mode renders reveal.js slides in browser', async ({ page }) => {
     // Navigate to present endpoint
-    await page.goto(`http://localhost:5173/api/presentations/${presId}/present`, { timeout: 15000 })
+    await page.goto(`/api/presentations/${presId}/present`, { timeout: 15000 })
     await page.waitForSelector('.reveal', { timeout: 10000 })
     await expect(page.locator('.reveal')).toBeVisible()
   })

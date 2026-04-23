@@ -73,4 +73,21 @@ describe('htmlGenerator', () => {
     expect(html).toContain('revealConfig.loop = true;')
     expect(html).toContain("revealConfig.navigationMode = 'linear';")
   })
+
+  it('should render legacy speakerNotes through canonical notes helpers', () => {
+    const html = generateRevealHTML({
+      title: 'Notes',
+      slides: [{ id: 's1', speakerNotes: 'Legacy note', elements: [] }],
+    })
+
+    expect(html).toContain('<aside class="notes">Legacy note</aside>')
+  })
+
+  it('should broadcast vertical and fragment indices separately in live mode', () => {
+    const html = generateRevealHTML({ id: 'p1', title: 'Live', slides: [] })
+
+    expect(html).toContain('verticalIndex: indices.v || 0')
+    expect(html).toContain('fragmentIndex: indices.f || 0')
+    expect(html).toContain("sock.on('control-navigate'")
+  })
 })

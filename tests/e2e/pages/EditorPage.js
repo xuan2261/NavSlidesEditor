@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test'
+
 export class EditorPage {
   /**
    * @param {import('@playwright/test').Page} page
@@ -8,10 +10,40 @@ export class EditorPage {
     this.elementsCountLocator = page.locator('.element-wrapper')
     this.thumbnailsLocator = page.locator('.slide-panel .slide-item')
     this.addSlideBtn = page.locator('.add-slide-btn').filter({ hasText: 'Add Slide' })
+    this.lastInsertedElementIndex = null
   }
 
   async waitForReady() {
     await this.page.waitForSelector('.slide-canvas', { timeout: 30000 })
+  }
+
+  async waitForAutoSave() {
+    await this.page
+      .getByText('Saving...', { exact: true })
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .catch(() => {})
+    await expect(this.page.getByText('Saved', { exact: true })).toBeVisible({ timeout: 10000 })
+  }
+
+  async waitForElementCount(expectedCount, timeout = 5000) {
+    await expect(this.elementsCountLocator).toHaveCount(expectedCount, { timeout })
+  }
+
+  async waitForSlideCount(expectedCount, timeout = 5000) {
+    await expect(this.thumbnailsLocator).toHaveCount(expectedCount, { timeout })
+  }
+
+  async waitForElementPanelSelected(timeout = 5000) {
+    await expect(this.page.locator('.properties-panel h3').filter({ hasText: 'Element' })).toBeVisible({
+      timeout,
+    })
+  }
+
+  async waitForElementPanelCleared(timeout = 5000) {
+    await expect(this.page.locator('.properties-panel h3').filter({ hasText: 'Element' })).toHaveCount(
+      0,
+      { timeout }
+    )
   }
 
   async gotoPresentation(id) {
@@ -51,6 +83,30 @@ export class EditorPage {
     await this.page.locator('.insert-dropdown .insert-item').filter({ hasText: itemName }).click()
   }
 
+  async openFileMenuItem(itemName) {
+    await this.page.click('button.menu-trigger:has-text("File")')
+    await this.page.locator('.dropdown-item').filter({ hasText: itemName }).click()
+  }
+
+  async openSyncModal() {
+    await this.openFileMenuItem('Sync to Cloud')
+    await this.page.waitForSelector('h3:has-text("Sync to Cloud")', { timeout: 5000 })
+  }
+
+  async openHistoryModal() {
+    await this.openFileMenuItem('Version History')
+    await this.page.waitForSelector('h3:has-text("Version History")', { timeout: 5000 })
+  }
+
+  async closeOverlayModal() {
+    await this.page.locator('.fixed.inset-0').last().click({ position: { x: 10, y: 10 } })
+  }
+
+  async openTemplateGallery() {
+    await this.page.locator('button').filter({ hasText: 'Insert Template' }).click()
+    await this.page.waitForSelector('h2:has-text("Template Gallery")', { timeout: 5000 })
+  }
+
   async addTextNode() {
     const prevCount = await this.getElementCount()
     await this.clickInsertMenuItem('Text')
@@ -61,6 +117,88 @@ export class EditorPage {
       prevCount,
       { timeout: 5000 }
     )
+    this.lastInsertedElementIndex = (await this.getElementCount()) - 1
+    return this.lastInsertedElementIndex
+  }
+
+  async startEditingTextElement(index = this.lastInsertedElementIndex ?? -1) {
+    const count = await this.getElementCount()
+    const resolvedIndex = index < 0 ? count + index : index
+    if (resolvedIndex < 0 || resolvedIndex >= count) {
+      throw new Error(`No element wrapper at index ${index}`)
+    }
+
+    const element = this.elementsCountLocator.nth(resolvedIndex)
+    await element.scrollIntoViewIfNeeded()
+    await element.click({ force: true })
+    await element.dblclick({ force: true })
+    await this.page.waitForSelector('.ProseMirror', { timeout: 5000 })
+  }
+
+  async typeInTextEditor(text) {
+    await this.page.locator('.ProseMirror').click({ force: true })
+    await this.page.keyboard.type(text)
+  }
+
+  async selectAllText() {
+    await this.page.locator('.ProseMirror').click({ force: true })
+    await this.page.keyboard.press('Control+a')
+  }
+
+  async clickMainToolbarButton(title) {
+    await this.page.locator(`.tour-step-toolbar button[title="${title}"]`).click()
+  }
+
+  async chooseMainToolbarOption(title, value) {
+    const select = this.page.locator(`.tour-step-toolbar select[title="${title}"]`)
+    await select.click({ force: true })
+    await select.selectOption(value)
+  }
+
+  async clickQuickAccessSave() {
+    await this.page.locator('button[title*="Save"]').first().click()
+  }
+
+  async getTextEditorState() {
+    return this.page.evaluate(() => ({
+      proseMirrorCount: document.querySelectorAll('.ProseMirror').length,
+      proseMirrorFocused: !!document.querySelector('.ProseMirror-focused'),
+      toolbarHintVisible:
+        document.querySelector('.tour-step-toolbar')?.textContent?.includes(
+          'Double-click a text box to edit'
+        ) || false,
+      html: document.querySelector('.ProseMirror')?.innerHTML || '',
+      strongCount: document.querySelectorAll('.ProseMirror strong').length,
+      firstStyledSpan: (() => {
+        const span = document.querySelector('.ProseMirror span[style]')
+        return span
+          ? {
+              fontFamily: span.style.fontFamily || '',
+              fontSize: span.style.fontSize || '',
+            }
+          : null
+      })(),
+    }))
+  }
+
+  async getToolbarOverflowMetrics() {
+    return this.page.evaluate(() => {
+      const toolbar = document.querySelector('.tour-step-toolbar')
+      if (!toolbar) return null
+      const rect = toolbar.getBoundingClientRect()
+      const overflowChildren = Array.from(toolbar.children).filter((node) => {
+        const childRect = node.getBoundingClientRect()
+        return childRect.bottom > rect.bottom + 0.5
+      }).length
+
+      return {
+        height: rect.height,
+        width: rect.width,
+        scrollHeight: toolbar.scrollHeight,
+        scrollWidth: toolbar.scrollWidth,
+        overflowChildren,
+      }
+    })
   }
 
   async addShape(shapeTitle) {
@@ -90,13 +228,7 @@ export class EditorPage {
     await this.addSlideBtn.click()
     await this.page.waitForSelector('h2:has-text("Add Slide")')
     await this.page.locator('button').filter({ hasText: 'Blank' }).click()
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.slide-panel .slide-item').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.waitForSlideCount(prevCount + 1)
   }
 
   async addSlideFromTemplate(templateName) {
@@ -104,13 +236,7 @@ export class EditorPage {
     await this.addSlideBtn.click()
     await this.page.waitForSelector('.fixed.inset-0 h2:has-text("Add Slide")')
     await this.page.locator('.fixed.inset-0 button').filter({ hasText: templateName }).click()
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.slide-panel .slide-item').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.waitForSlideCount(prevCount + 1)
   }
 
   async deleteSlide(index = 0) {
@@ -119,18 +245,26 @@ export class EditorPage {
     const slideItem = this.thumbnailsLocator.nth(index)
     await slideItem.hover()
     await slideItem.locator('button[title="Delete"]').click()
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.slide-panel .slide-item').length < prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.waitForSlideCount(prevCount - 1)
   }
 
   async selectSlide(index) {
-    await this.thumbnailsLocator.nth(index).click()
-    await this.page.waitForTimeout(300)
+    const slide = this.thumbnailsLocator.nth(index)
+    await slide.click()
+    await expect(slide).toHaveClass(/border-accent/, { timeout: 5000 })
+  }
+
+  async toggleSlideSelection(index) {
+    const slide = this.thumbnailsLocator.nth(index)
+    await slide.click({ modifiers: ['ControlOrMeta'] })
+  }
+
+  async duplicateSelectedSlides() {
+    await this.page.locator('.slide-panel button[title="Duplicate all selected"]').click()
+  }
+
+  async deleteSelectedSlides() {
+    await this.page.locator('.slide-panel button[title="Delete all selected"]').click()
   }
 
   async openMediaLibrary() {
@@ -200,15 +334,19 @@ export class EditorPage {
     await this.openFindReplace()
     const input = this.page.locator('.find-input').first()
     await input.fill(text)
-    await this.page.waitForTimeout(300)
+    await expect(input).toHaveValue(text)
   }
 
   async replaceText(searchText, replaceText) {
     await this.findText(searchText)
     // Toggle replace panel
     await this.page.locator('.find-btn[title="Toggle replace"]').click()
-    const replaceInput = this.page.locator('.find-input').nth(1)
+    const replaceInput = this.page.locator('input[placeholder="Replace..."]')
     await replaceInput.fill(replaceText)
+  }
+
+  async replaceAll() {
+    await this.page.locator('.find-replace-bar button').filter({ hasText: 'All' }).click()
   }
 
   async getMatchCount() {
@@ -341,42 +479,45 @@ export class EditorPage {
 
   async selectElement(index = 0) {
     await this.elementsCountLocator.nth(index).click()
-    await this.page.waitForTimeout(300)
+    await this.waitForElementPanelSelected()
   }
 
   async deleteSelectedElement() {
+    const prevCount = await this.getElementCount()
     await this.page.keyboard.press('Delete')
-    await this.page.waitForTimeout(500)
+    await this.waitForElementCount(prevCount - 1)
   }
 
   async undo() {
     await this.page.keyboard.press('Control+z')
-    await this.page.waitForTimeout(500)
+    await expect(this.page.locator('.slide-canvas')).toBeVisible()
   }
 
   async redo() {
     await this.page.keyboard.press('Control+y')
-    await this.page.waitForTimeout(500)
+    await expect(this.page.locator('.slide-canvas')).toBeVisible()
   }
 
   async duplicateElement() {
+    const prevCount = await this.getElementCount()
     await this.page.keyboard.press('Control+d')
-    await this.page.waitForTimeout(500)
+    await this.waitForElementCount(prevCount + 1)
   }
 
   async copyElement() {
     await this.page.keyboard.press('Control+c')
-    await this.page.waitForTimeout(200)
+    await expect(this.page.locator('.slide-canvas')).toBeVisible()
   }
 
   async pasteElement() {
+    const prevCount = await this.getElementCount()
     await this.page.keyboard.press('Control+v')
-    await this.page.waitForTimeout(500)
+    await this.waitForElementCount(prevCount + 1)
   }
 
   async deselectAll() {
     await this.page.keyboard.press('Escape')
-    await this.page.waitForTimeout(200)
+    await this.waitForElementPanelCleared()
   }
 
   async exportHTML() {

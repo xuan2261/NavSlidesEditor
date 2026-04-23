@@ -1,188 +1,191 @@
-import React, { useState } from 'react'
-import { Joyride, STATUS } from 'react-joyride'
+import React, { useState, useEffect, useCallback } from 'react'
+import { Joyride, ACTIONS, EVENTS, STATUS } from 'react-joyride'
+
+const TOUR_STORAGE_KEY = 'navSlidesTutorialSeen'
+
+/**
+ * Tour z-index must sit above every layer in the app:
+ *  - Modals / overlays:  z-[10000]
+ *  - DropdownMenu:       z-[9999]
+ *  - SlidePanel ctx:     z-[9999]
+ *  - Toolbar popups:     z-[1000]
+ *  - EditorMenuBar:      z-[200]
+ *  - Toolbar:            z-[100]
+ */
+const TOUR_Z_INDEX = 100001
+
+const TOUR_STEPS = [
+  {
+    target: 'body',
+    content: (
+      <div>
+        <h3 className="mb-2.5 text-lg text-text-primary">Welcome to NavSlidesEditor!</h3>
+        <p className="text-sm leading-relaxed text-text-secondary">
+          Let&apos;s take a quick tour to help you get familiar with the interface.
+        </p>
+      </div>
+    ),
+    placement: 'center',
+    skipBeacon: true,
+    isFixed: true,
+  },
+  {
+    target: '.tour-step-quick-access',
+    content: (
+      <div>
+        <h3 className="mb-2.5 text-base text-text-primary">Menu & Quick Access</h3>
+        <p className="text-sm leading-relaxed text-text-secondary">
+          Access file operations, view options, presentation settings, AI tools, and start your
+          slideshow.
+        </p>
+      </div>
+    ),
+    placement: 'bottom-end',
+    skipBeacon: true,
+    isFixed: true,
+  },
+  {
+    target: '.tour-step-slide-panel',
+    content: (
+      <div>
+        <h3 className="mb-2.5 text-base text-text-primary">Slide Panel</h3>
+        <p className="text-sm leading-relaxed text-text-secondary">
+          Manage your presentation slides here. Add, delete, duplicate, and reorder your slides.
+        </p>
+      </div>
+    ),
+    placement: 'right',
+    skipBeacon: true,
+    isFixed: true,
+  },
+  {
+    target: '.tour-step-toolbar',
+    content: (
+      <div>
+        <h3 className="mb-2.5 text-base text-text-primary">Toolbar</h3>
+        <p className="text-sm leading-relaxed text-text-secondary">
+          Insert elements like text, shapes, images, charts, and control grid settings.
+        </p>
+      </div>
+    ),
+    placement: 'bottom-start',
+    skipBeacon: true,
+    isFixed: true,
+  },
+  {
+    target: '.tour-step-canvas',
+    content: (
+      <div>
+        <h3 className="mb-2.5 text-base text-text-primary">Slide Canvas</h3>
+        <p className="text-sm leading-relaxed text-text-secondary">
+          This is your main workspace. Drag, drop, and edit elements directly on the slide.
+        </p>
+      </div>
+    ),
+    placement: 'center',
+    skipBeacon: true,
+    isFixed: true,
+  },
+  {
+    target: '.tour-step-properties',
+    content: (
+      <div>
+        <h3 className="mb-2.5 text-base text-text-primary">Properties Panel</h3>
+        <p className="text-sm leading-relaxed text-text-secondary">
+          Customize the selected element&apos;s appearance, position, and advanced settings here.
+        </p>
+      </div>
+    ),
+    placement: 'left',
+    skipBeacon: true,
+    isFixed: true,
+  },
+]
+
+const shouldTourRun = () => {
+  try {
+    return !localStorage.getItem(TOUR_STORAGE_KEY)
+  } catch {
+    return false
+  }
+}
+
+const persistTourSeen = () => {
+  try {
+    localStorage.setItem(TOUR_STORAGE_KEY, 'true')
+  } catch {
+    // Ignore storage failures
+  }
+}
+
+const MOUNT_DELAY_MS = 800
 
 const ProductTour = () => {
-  const [run, setRun] = useState(() => {
-    try {
-      return !localStorage.getItem('navSlidesTutorialSeen')
-    } catch {
-      return false
-    }
-  })
+  const [run, setRun] = useState(false)
+  const [stepIndex, setStepIndex] = useState(0)
 
-  const handleJoyrideCallback = (data) => {
-    const { status } = data
-    const finishedStatuses = [STATUS.FINISHED, STATUS.SKIPPED]
+  // Delay tour start so all DOM targets are mounted and positioned
+  useEffect(() => {
+    if (!shouldTourRun()) return
+    const timer = setTimeout(() => setRun(true), MOUNT_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [])
 
-    if (finishedStatuses.includes(status)) {
+  // v3 uses onEvent instead of callback
+  const handleEvent = useCallback((data) => {
+    const { action, type, status, index } = data
+
+    // Tour completed or skipped
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       setRun(false)
-      localStorage.setItem('navSlidesTutorialSeen', 'true')
+      persistTourSeen()
+      return
     }
-  }
 
-  const steps = [
-    {
-      target: 'body',
-      content: (
-        <div>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: 'var(--text-primary)' }}>
-            Welcome to NavSlidesEditor!
-          </h3>
-          <p
-            style={{
-              margin: 0,
-              fontSize: '14px',
-              lineHeight: '1.5',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            Let&apos;s take a quick tour to help you get familiar with the interface.
-          </p>
-        </div>
-      ),
-      placement: 'center',
-      disableBeacon: true,
-    },
-    {
-      target: '.tour-step-quick-access',
-      content: (
-        <div>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', color: 'var(--text-primary)' }}>
-            Menu & Quick Access
-          </h3>
-          <p
-            style={{
-              margin: 0,
-              fontSize: '14px',
-              lineHeight: '1.5',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            Access file operations, view options, presentation settings, AI tools, and start your
-            slideshow.
-          </p>
-        </div>
-      ),
-      placement: 'bottom',
-    },
-    {
-      target: '.tour-step-slide-panel',
-      content: (
-        <div>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', color: 'var(--text-primary)' }}>
-            Slide Panel
-          </h3>
-          <p
-            style={{
-              margin: 0,
-              fontSize: '14px',
-              lineHeight: '1.5',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            Manage your presentation slides here. Add, delete, duplicate, and reorder your slides.
-          </p>
-        </div>
-      ),
-      placement: 'right',
-    },
-    {
-      target: '.tour-step-toolbar',
-      content: (
-        <div>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', color: 'var(--text-primary)' }}>
-            Toolbar
-          </h3>
-          <p
-            style={{
-              margin: 0,
-              fontSize: '14px',
-              lineHeight: '1.5',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            Insert elements like text, shapes, images, charts, and control grid settings.
-          </p>
-        </div>
-      ),
-      placement: 'bottom',
-    },
-    {
-      target: '.tour-step-canvas',
-      content: (
-        <div>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', color: 'var(--text-primary)' }}>
-            Slide Canvas
-          </h3>
-          <p
-            style={{
-              margin: 0,
-              fontSize: '14px',
-              lineHeight: '1.5',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            This is your main workspace. Drag, drop, and edit elements directly on the slide.
-          </p>
-        </div>
-      ),
-      placement: 'center',
-    },
-    {
-      target: '.tour-step-properties',
-      content: (
-        <div>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', color: 'var(--text-primary)' }}>
-            Properties Panel
-          </h3>
-          <p
-            style={{
-              margin: 0,
-              fontSize: '14px',
-              lineHeight: '1.5',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            Customize the selected element&apos;s appearance, position, and advanced settings here.
-          </p>
-        </div>
-      ),
-      placement: 'left',
-    },
-  ]
+    // In controlled mode, advance step index after each step
+    if (type === EVENTS.STEP_AFTER) {
+      if (action === ACTIONS.NEXT) {
+        setStepIndex(index + 1)
+      } else if (action === ACTIONS.PREV) {
+        setStepIndex(index - 1)
+      }
+    }
+
+    // Handle close action (e.g. clicking X)
+    if (action === ACTIONS.CLOSE) {
+      setRun(false)
+      persistTourSeen()
+    }
+  }, [])
 
   return (
     <Joyride
-      steps={steps}
+      steps={TOUR_STEPS}
       run={run}
-      continuous={true}
-      showSkipButton={true}
-      showProgress={true}
-      callback={handleJoyrideCallback}
+      stepIndex={stepIndex}
+      continuous
+      skipScroll
+      onEvent={handleEvent}
+      options={{
+        skipBeacon: true,
+        blockTargetInteraction: true,
+        overlayClickAction: false,
+        dismissKeyAction: false,
+        spotlightPadding: 12,
+        showProgress: true,
+        buttons: ['back', 'skip', 'primary'],
+        arrowColor: 'var(--bg-panel)',
+        backgroundColor: 'var(--bg-panel)',
+        overlayColor: 'rgba(0, 0, 0, 0.6)',
+        primaryColor: 'var(--accent)',
+        textColor: 'var(--text-primary)',
+        zIndex: TOUR_Z_INDEX,
+      }}
       styles={{
-        options: {
-          arrowColor: 'var(--bg-panel)',
-          backgroundColor: 'var(--bg-panel)',
-          overlayColor: 'rgba(0, 0, 0, 0.6)',
-          primaryColor: 'var(--accent)',
-          textColor: 'var(--text-primary)',
-          zIndex: 99999,
-        },
-        overlay: {
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: 99999,
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        },
         tooltipContainer: {
           textAlign: 'left',
         },
-        buttonNext: {
+        buttonPrimary: {
           backgroundColor: 'var(--accent)',
           borderRadius: '4px',
           color: '#ffffff',
@@ -197,7 +200,10 @@ const ProductTour = () => {
         },
       }}
       locale={{
+        back: 'Back',
+        close: 'Close',
         last: 'Finish',
+        next: 'Next',
         skip: 'Skip Tour',
       }}
     />

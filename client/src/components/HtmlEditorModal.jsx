@@ -1,17 +1,26 @@
 import { Button } from '../components/ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 
 export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) {
+  useEscapeClose(onCancel)
+
   return (
     <div
       className="fixed inset-0 z-[10000] bg-black/75 flex items-center justify-center"
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') onCancel()
+      onClick={(event) => {
+        if (isBackdropClick(event)) onCancel()
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="html-editor-modal-title"
     >
-      <div className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl">
+      <div
+        className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="px-4 py-3 border-b border-border flex justify-between items-center shrink-0">
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-            <span className="font-semibold text-sm">HTML / D3 Embed</span>
+            <h2 id="html-editor-modal-title" className="font-semibold text-sm">HTML / D3 Embed</h2>
             <span className="text-xs text-text-muted">
               D3, plain HTML, or any JavaScript — renders in an iframe
             </span>

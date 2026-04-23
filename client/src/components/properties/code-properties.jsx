@@ -33,20 +33,19 @@ const CODE_LANGUAGES = [
 
 export default function CodeProperties({ element, onUpdate, onEditCode }) {
   return (
-    <div style={{ marginBottom: 10 }}>
+    <div className="mb-2.5">
       <Button
         variant="secondary"
-        style={{ width: '100%', justifyContent: 'center', fontSize: 12, marginBottom: 8 }}
+        className="w-full justify-center text-xs mb-2"
         onClick={onEditCode}
       >
         Edit Code
       </Button>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', gap: 8 }}>
+      <div className="grid grid-cols-[1fr_80px] gap-2">
         <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>Language</div>
+          <div className="text-[11px] text-text-muted mb-0.5">Language</div>
           <Select
-            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
-            style={{ padding: '4px 6px' }}
+            className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             value={element.language || 'plaintext'}
             onChange={(e) => onUpdate({ language: e.target.value })}
           >
@@ -58,7 +57,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
           </Select>
         </div>
         <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>Font Size</div>
+          <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
           <Input
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
@@ -72,18 +71,17 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
           />
         </div>
       </div>
-      <div style={{ marginTop: 8 }}>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>
+      <div className="mt-2">
+        <div className="text-[11px] text-text-muted mb-0.5">
           Round Corners: {element.borderRadius || 0}px
         </div>
         <input
           type="range"
-          className="flex-1 accent-accent"
+          className="w-full accent-accent"
           min="0"
           max="50"
           value={element.borderRadius || 0}
           onChange={(e) => onUpdate({ borderRadius: Number(e.target.value) })}
-          style={{ width: '100%', accentColor: 'var(--accent)' }}
         />
       </div>
     </div>

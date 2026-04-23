@@ -1,28 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Search, Replace, X, ChevronUp, ChevronDown, CaseSensitive } from 'lucide-react'
 import { Button } from '../components/ui'
-
-function stripHtml(html) {
-  const doc = new DOMParser().parseFromString(html || '', 'text/html')
-  return doc.body.textContent || ''
-}
-
-function replaceInHtml(html, searchTerm, replaceTerm, matchCase) {
-  const flags = matchCase ? 'g' : 'gi'
-  const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const regex = new RegExp(escaped, flags)
-  // Parse HTML, walk text nodes, replace
-  const doc = new DOMParser().parseFromString(html || '', 'text/html')
-  function walkTextNodes(node) {
-    if (node.nodeType === 3) {
-      node.textContent = node.textContent.replace(regex, replaceTerm)
-    } else {
-      node.childNodes.forEach(walkTextNodes)
-    }
-  }
-  walkTextNodes(doc.body)
-  return doc.body.innerHTML
-}
+import {
+  createSearchRegex,
+  replaceAllInSlides,
+  replaceInHtml,
+  stripHtml,
+} from './find-replace-helpers'
 
 export default function FindReplaceBar({
   presentation,
@@ -43,8 +27,9 @@ export default function FindReplaceBar({
     searchRef.current?.focus()
   }, [])
 
-  const matches = []
-  if (searchTerm && presentation) {
+  const matches = useMemo(() => {
+    const nextMatches = []
+    if (!searchTerm || !presentation) return nextMatches
     const term = matchCase ? searchTerm : searchTerm.toLowerCase()
     presentation.slides.forEach((slide, si) => {
       ;(slide.elements || []).forEach((el) => {
@@ -58,12 +43,13 @@ export default function FindReplaceBar({
         const compare = matchCase ? text : text.toLowerCase()
         let pos = 0
         while ((pos = compare.indexOf(term, pos)) !== -1) {
-          matches.push({ slideIndex: si, elementId: el.id, elementType: el.type, pos })
+          nextMatches.push({ slideIndex: si, elementId: el.id, elementType: el.type, pos })
           pos += term.length
         }
       })
     })
-  }
+    return nextMatches
+  }, [matchCase, presentation, searchTerm])
 
   const navigateToMatch = useCallback(
     (idx) => {
@@ -79,9 +65,10 @@ export default function FindReplaceBar({
   const handlePrev = () => navigateToMatch(currentMatchIdx - 1)
 
   const handleReplace = () => {
-    if (!matches.length || !replaceTerm) return
+    if (!matches.length) return
     const match = matches[currentMatchIdx]
     if (!match) return
+    const singleMatchRegex = createSearchRegex(searchTerm, matchCase, false)
     const newSlides = presentation.slides.map((slide, si) => {
       if (si !== match.slideIndex) return slide
       return {
@@ -89,20 +76,34 @@ export default function FindReplaceBar({
         elements: slide.elements.map((el) => {
           if (el.id !== match.elementId) return el
           if (el.type === 'text') {
-            return { ...el, content: replaceInHtml(el.content, searchTerm, replaceTerm, matchCase) }
-          }
-          if (el.type === 'code') {
-            const flags = matchCase ? '' : 'i'
-            const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
             return {
               ...el,
-              content: (el.content || '').replace(new RegExp(escaped, flags), replaceTerm),
+              content: replaceInHtml(el.content, searchTerm, replaceTerm, matchCase, false),
+            }
+          }
+          if (el.type === 'code') {
+            return {
+              ...el,
+              content: (el.content || '').replace(singleMatchRegex, replaceTerm),
+            }
+          }
+          if (el.type === 'markdown' || el.type === 'latex') {
+            return {
+              ...el,
+              content: (el.content || '').replace(singleMatchRegex, replaceTerm),
+            }
+          }
+          if (el.type === 'html') {
+            return {
+              ...el,
+              content: replaceInHtml(el.content || '', searchTerm, replaceTerm, matchCase, false),
             }
           }
           if (el.type === 'shape') {
-            const flags = matchCase ? '' : 'i'
-            const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-            return { ...el, text: (el.text || '').replace(new RegExp(escaped, flags), replaceTerm) }
+            return {
+              ...el,
+              text: (el.text || '').replace(singleMatchRegex, replaceTerm),
+            }
           }
           return el
         }),
@@ -112,29 +113,15 @@ export default function FindReplaceBar({
   }
 
   const handleReplaceAll = () => {
-    if (!matches.length || !replaceTerm) return
-    const flags = matchCase ? 'g' : 'gi'
-    const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const regex = new RegExp(escaped, flags)
-    const newSlides = presentation.slides.map((slide) => ({
-      ...slide,
-      elements: (slide.elements || []).map((el) => {
-        if (el.type === 'text')
-          return { ...el, content: replaceInHtml(el.content, searchTerm, replaceTerm, matchCase) }
-        if (el.type === 'code')
-          return { ...el, content: (el.content || '').replace(regex, replaceTerm) }
-        if (el.type === 'shape' && el.text)
-          return { ...el, text: el.text.replace(regex, replaceTerm) }
-        return el
-      }),
-    }))
+    if (!matches.length) return
+    const newSlides = replaceAllInSlides(presentation.slides, searchTerm, replaceTerm, matchCase)
     onUpdatePresentation({ slides: newSlides })
   }
 
   return (
     <div className="find-replace-bar absolute top-[46px] right-2.5 z-[9990] bg-card border border-border rounded-b-md p-2 shadow-md flex flex-col gap-1.5 min-w-[380px]">
       <div className="flex items-center gap-1.5">
-        <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+        <Search size={14} className="text-text-muted shrink-0" />
         <input
           ref={searchRef}
           type="text"
@@ -198,7 +185,7 @@ export default function FindReplaceBar({
       </div>
       {showReplace && (
         <div className="flex items-center gap-1.5">
-          <Replace size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <Replace size={14} className="text-text-muted shrink-0" />
           <input
             type="text"
             value={replaceTerm}

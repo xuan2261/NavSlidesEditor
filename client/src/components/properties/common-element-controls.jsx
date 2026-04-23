@@ -71,7 +71,7 @@ export default function CommonElementControls({
           type="checkbox"
           checked={element.locked || false}
           onChange={(e) => onUpdate({ locked: e.target.checked })}
-          style={{ accentColor: 'var(--accent)' }}
+          className="accent-accent"
         />
         <span className="text-xs text-text-secondary">
           {element.locked ? '🔒' : '🔓'} Lock element
@@ -90,7 +90,7 @@ export default function CommonElementControls({
                 fragmentIndex: element.fragmentIndex ?? 1,
               })
             }
-            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
+            className="accent-accent cursor-pointer"
           />
           <span className="text-xs text-text-secondary">Fragment (animate in)</span>
         </label>
@@ -110,8 +110,7 @@ export default function CommonElementControls({
             <div className="flex flex-col gap-1">
               <div className="text-[11px] text-text-muted">Animation</div>
               <Select
-                className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
-                style={{ padding: '4px 6px' }}
+                className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 value={element.fragmentAnimation || 'fade-in'}
                 onChange={(e) => onUpdate({ fragmentAnimation: e.target.value })}
               >

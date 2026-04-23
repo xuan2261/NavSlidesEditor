@@ -1,6 +1,31 @@
 import { test, expect } from '@playwright/test'
 import { EditorPage } from './pages/EditorPage.js'
-import { apiCreatePresentation, apiDeletePresentation } from './fixtures/test-fixtures.js'
+import {
+  apiCreatePresentation,
+  apiDeletePresentation,
+  apiGetPresentation,
+  apiUpdatePresentation,
+} from './fixtures/test-fixtures.js'
+
+function createTextSlide(id, label) {
+  return {
+    id,
+    elements: [
+      {
+        id: `${id}-text`,
+        type: 'text',
+        x: 80,
+        y: 100,
+        width: 500,
+        height: 120,
+        zIndex: 1,
+        content: `<p>${label}</p>`,
+      },
+    ],
+    notes: `${label} notes`,
+    background: { type: 'color', color: '#1e1e2e' },
+  }
+}
 
 test.describe('Slide Management Advanced', () => {
   let editorPage
@@ -58,13 +83,27 @@ test.describe('Slide Management Advanced', () => {
     await editorPage.addToolbarElement('Slide Background')
     await page.waitForSelector('.bg-popup-container')
 
+    const initialBgColor = await page.evaluate(() => {
+      const el = document.querySelector('.slide-canvas')
+      return el ? window.getComputedStyle(el).backgroundColor : ''
+    })
+
     const colorTab = page.locator('.bg-type-tab:has-text("Color")')
     if ((await colorTab.count()) > 0) {
       await colorTab.click()
       const swatch = page.locator('.bg-popup-container div[style*="background"]').first()
       if ((await swatch.count()) > 0) {
         await swatch.click()
-        await page.waitForTimeout(500)
+        await expect
+          .poll(
+            async () =>
+              page.evaluate(() => {
+                const el = document.querySelector('.slide-canvas')
+                return el ? window.getComputedStyle(el).backgroundColor : ''
+              }),
+            { timeout: 5000 }
+          )
+          .not.toBe(initialBgColor)
       }
     }
   })
@@ -84,12 +123,106 @@ test.describe('Slide Management Advanced', () => {
     expect(finalCount).toBe(initialCount + 2)
   })
 
+  test('can open slide context menu from slide panel', async ({ page }) => {
+    await page.locator('.slide-panel .slide-item').first().click({ button: 'right' })
+
+    await expect(page.locator('button').filter({ hasText: 'Duplicate' }).last()).toBeVisible()
+    await expect(page.locator('button').filter({ hasText: 'Move Down' })).toBeVisible()
+  })
+
   test('multiple slide templates are available in modal', async ({ page }) => {
+    const pageErrors = []
+    page.on('pageerror', (error) => {
+      pageErrors.push(error.message)
+    })
+
     await editorPage.addSlideBtn.click()
     await page.waitForSelector('.fixed.inset-0 h2:has-text("Add Slide")')
 
     const blankBtn = page.locator('.fixed.inset-0 button').filter({ hasText: 'Blank' })
     await expect(blankBtn).toBeVisible()
     await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog', { name: 'Add Slide' })).toHaveCount(0)
+    expect(pageErrors, pageErrors.join('\n')).toEqual([])
+  })
+
+  test('add slide modal keeps body clicks inside and closes on overlay click', async ({ page }) => {
+    const pageErrors = []
+    page.on('pageerror', (error) => {
+      pageErrors.push(error.message)
+    })
+
+    await editorPage.addSlideBtn.click()
+    await page.waitForSelector('.fixed.inset-0 h2:has-text("Add Slide")')
+
+    const overlay = page.locator('.fixed.inset-0').last()
+    const modal = page.locator('.fixed.inset-0 > div').last()
+
+    await modal.click()
+    await expect(page.locator('h2:has-text("Add Slide")')).toBeVisible()
+
+    await overlay.click({ position: { x: 10, y: 10 } })
+    await expect(page.locator('h2:has-text("Add Slide")')).toHaveCount(0)
+    expect(pageErrors, pageErrors.join('\n')).toEqual([])
+  })
+
+  test('multi-select duplicate keeps the duplicated block selected in order', async ({
+    page,
+    request,
+  }) => {
+    await apiUpdatePresentation(request, presId, {
+      slides: [
+        createTextSlide('slide-a', 'Slide A'),
+        createTextSlide('slide-b', 'Slide B'),
+        createTextSlide('slide-c', 'Slide C'),
+        createTextSlide('slide-d', 'Slide D'),
+      ],
+    })
+
+    await editorPage.gotoPresentation(presId)
+    await editorPage.selectSlide(1)
+    await editorPage.toggleSlideSelection(2)
+    await editorPage.duplicateSelectedSlides()
+
+    await editorPage.waitForSlideCount(6)
+    await expect(editorPage.thumbnailsLocator.nth(4)).toHaveClass(/border-accent/, { timeout: 5000 })
+    await editorPage.waitForAutoSave()
+
+    await expect
+      .poll(async () => {
+        const presentation = await apiGetPresentation(request, presId)
+        return presentation.slides.length
+      })
+      .toBe(6)
+  })
+
+  test('multi-select delete clamps the active slide to the remaining tail', async ({
+    page,
+    request,
+  }) => {
+    await apiUpdatePresentation(request, presId, {
+      slides: [
+        createTextSlide('slide-a', 'Slide A'),
+        createTextSlide('slide-b', 'Slide B'),
+        createTextSlide('slide-c', 'Slide C'),
+        createTextSlide('slide-d', 'Slide D'),
+      ],
+    })
+
+    await editorPage.gotoPresentation(presId)
+    await editorPage.selectSlide(2)
+    await editorPage.toggleSlideSelection(3)
+    await editorPage.deleteSelectedSlides()
+
+    await editorPage.waitForSlideCount(2)
+    await expect(editorPage.thumbnailsLocator.nth(1)).toHaveClass(/border-accent/, { timeout: 5000 })
+    await editorPage.waitForAutoSave()
+
+    await expect
+      .poll(async () => {
+        const presentation = await apiGetPresentation(request, presId)
+        return presentation.slides.map((slide) => slide.id).join(',')
+      })
+      .toBe('slide-a,slide-b')
   })
 })

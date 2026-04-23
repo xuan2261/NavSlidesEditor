@@ -82,4 +82,33 @@ test.describe('Toolbar Element Insertion', () => {
     const newCount = await editorPage.getElementCount()
     expect(newCount).toBeGreaterThan(prevCount)
   })
+
+  test('main text toolbar preserves editing and applies formatting controls', async () => {
+    await editorPage.addTextNode()
+    await editorPage.startEditingTextElement()
+    await editorPage.typeInTextEditor('Hello world')
+
+    await editorPage.selectAllText()
+    await editorPage.clickMainToolbarButton('Bold (Ctrl+B)')
+
+    let state = await editorPage.getTextEditorState()
+    expect(state.proseMirrorCount).toBe(1)
+    expect(state.toolbarHintVisible).toBe(false)
+    expect(state.strongCount).toBeGreaterThan(0)
+    expect(state.html).toContain('Hello world')
+
+    await editorPage.selectAllText()
+    await editorPage.chooseMainToolbarOption('Font size', '20px')
+
+    state = await editorPage.getTextEditorState()
+    expect(state.proseMirrorCount).toBe(1)
+    expect(state.firstStyledSpan?.fontSize).toBe('20px')
+
+    await editorPage.selectAllText()
+    await editorPage.chooseMainToolbarOption('Font family', 'Georgia, serif')
+
+    state = await editorPage.getTextEditorState()
+    expect(state.proseMirrorCount).toBe(1)
+    expect(state.firstStyledSpan?.fontFamily).toContain('Georgia')
+  })
 })

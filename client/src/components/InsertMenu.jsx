@@ -153,7 +153,7 @@ export default function InsertMenu({
             ref={fileRef}
             type="file"
             accept="image/*"
-            style={{ display: 'none' }}
+            className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0]
               if (f) {
@@ -200,15 +200,7 @@ export default function InsertMenu({
             className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
             onClick={() => doAction(onAddMarkdownElement)}
           >
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                width: 15,
-                textAlign: 'center',
-                flexShrink: 0,
-              }}
-            >
+            <span className="text-[13px] font-bold w-[15px] text-center shrink-0">
               M↓
             </span>
             <span>Markdown</span>
@@ -242,7 +234,7 @@ export default function InsertMenu({
             ref={mediaRef}
             type="file"
             accept="audio/*,video/*"
-            style={{ display: 'none' }}
+            className="hidden"
             onChange={async (e) => {
               const f = e.target.files?.[0]
               if (!f) return
@@ -279,7 +271,7 @@ export default function InsertMenu({
             onClick={() => setSubMenu(subMenu === 'shape' ? null : 'shape')}
           >
             <Shapes size={15} /> <span>Shape</span>
-            <ChevronRight size={12} style={{ marginLeft: 'auto', opacity: 0.4 }} />
+            <ChevronRight size={12} className="ml-auto opacity-40" />
           </button>
           {subMenu === 'shape' && (
             <div className="insert-sub-panel shape-picker-grid absolute left-full top-[50%] ml-1 grid w-[200px] grid-cols-4 gap-1 rounded-md border border-border-strong bg-card p-2 shadow-xl z-[120]">
@@ -291,7 +283,7 @@ export default function InsertMenu({
                   onClick={() => doAction(onAddShape, s.id)}
                 >
                   <span>{s.icon}</span>
-                  <span style={{ fontSize: 8 }}>{s.name.split(' ')[0]}</span>
+                  <span className="text-[8px]">{s.name.split(' ')[0]}</span>
                 </button>
               ))}
             </div>
@@ -306,14 +298,14 @@ export default function InsertMenu({
             className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
             onClick={() => svgRef.current?.click()}
           >
-            <span style={{ fontSize: 13, width: 15, textAlign: 'center', flexShrink: 0 }}>◇</span>
+            <span className="text-[13px] w-[15px] text-center shrink-0">◇</span>
             <span>SVG</span>
           </button>
           <input
             ref={svgRef}
             type="file"
             accept=".svg,image/svg+xml"
-            style={{ display: 'none' }}
+            className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0]
               if (!f) return
@@ -330,9 +322,9 @@ export default function InsertMenu({
             onMouseEnter={() => setSubMenu('icon')}
             onClick={() => setSubMenu(subMenu === 'icon' ? null : 'icon')}
           >
-            <span style={{ fontSize: 14, width: 15, textAlign: 'center', flexShrink: 0 }}>★</span>
+            <span className="text-sm w-[15px] text-center shrink-0">★</span>
             <span>Icon</span>
-            <ChevronRight size={12} style={{ marginLeft: 'auto', opacity: 0.4 }} />
+            <ChevronRight size={12} className="ml-auto opacity-40" />
           </button>
           {subMenu === 'icon' && (
             <div className="absolute left-full top-[50%] ml-1 w-[280px] rounded-md border border-border-strong bg-card p-2 shadow-xl z-[120] flex flex-col gap-2 max-h-[400px] overflow-y-auto">
@@ -390,21 +382,7 @@ export default function InsertMenu({
             className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
             onClick={() => doAction(onAddCallout)}
           >
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 15,
-                height: 15,
-                borderRadius: '50%',
-                background: '#ef4444',
-                color: 'white',
-                fontSize: 9,
-                fontWeight: 700,
-                flexShrink: 0,
-              }}
-            >
+            <span className="inline-flex items-center justify-center w-[15px] h-[15px] rounded-full bg-danger text-white text-[9px] font-bold shrink-0">
               1
             </span>
             <span>Callout</span>
@@ -423,11 +401,10 @@ export default function InsertMenu({
             <Minus size={15} /> <span>Divider</span>
           </button>
           <div
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
-            style={{ cursor: 'default', flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}
+            className="insert-item flex w-full cursor-default flex-col items-start rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover gap-1.5"
             onMouseEnter={() => setSubMenu('table')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="flex items-center gap-2.5">
               <Table2 size={15} /> <span>Table</span>
             </div>
             {subMenu === 'table' && (
@@ -476,7 +453,7 @@ export default function InsertMenu({
             setSubMenu(null)
           }}
           onCancel={() => setVideoPrompt(false)}
-          style={{ position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)' }}
+          className="fixed top-20 left-1/2 -translate-x-1/2"
         />
       )}
     </div>

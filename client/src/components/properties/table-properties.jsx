@@ -1,13 +1,13 @@
-import { Input, Select, ColorPicker } from '../../components/ui'
+import { Input, ColorPicker } from '../../components/ui'
 import { Button } from '../../components/ui'
 /**
  * Table properties: row/col management, header, colors, cell editor.
  */
 export default function TableProperties({ element, onUpdate }) {
-  const data = element.data || [['']]
+  const data = element.data || [['']];
   return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+    <div className="mb-2.5">
+      <div className="flex gap-1.5 mb-2">
         {[
           [
             '+Row',
@@ -34,56 +34,39 @@ export default function TableProperties({ element, onUpdate }) {
           <Button
             variant="secondary"
             key={label}
-            style={{ flex: 1, fontSize: 11, padding: '4px 6px', justifyContent: 'center' }}
+            className="flex-1 text-[11px] px-1.5 py-1 justify-center"
             onClick={fn}
           >
             {label}
           </Button>
         ))}
       </div>
-      <label
-        className="text-xs text-secondary"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          cursor: 'pointer',
-          marginBottom: 8,
-        }}
-      >
+      <label className="flex items-center gap-1.5 cursor-pointer mb-2 text-xs text-text-secondary">
         <input
           type="checkbox"
           checked={element.headerRow || false}
           onChange={(e) => onUpdate({ headerRow: e.target.checked })}
-          style={{ accentColor: 'var(--accent)' }}
+          className="accent-accent"
         />
-        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Header row</span>
+        <span className="text-xs text-text-secondary">Header row</span>
       </label>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+      <div className="grid grid-cols-2 gap-2 mb-2">
         {[
           ['Header BG', 'headerBgColor', '#6366f1'],
           ['Text Color', 'textColor', '#ffffff'],
           ['Border', 'borderColor', '#555555'],
         ].map(([l, k, d]) => (
           <div key={k}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>{l}</div>
+            <div className="text-[11px] text-text-muted mb-0.5">{l}</div>
             <ColorPicker
-              className="w-9 h-7 border border-border rounded cursor-pointer p-[1px] bg-card shrink-0"
+              className="w-full h-7 border border-border rounded cursor-pointer bg-card"
               value={element[k] || d}
               onChange={(e) => onUpdate({ [k]: e.target.value })}
-              style={{
-                width: '100%',
-                height: 28,
-                border: '1px solid var(--border)',
-                borderRadius: 4,
-                background: 'var(--bg-card)',
-                cursor: 'pointer',
-              }}
             />
           </div>
         ))}
         <div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>Font Size</div>
+          <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
           <Input
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
@@ -94,17 +77,10 @@ export default function TableProperties({ element, onUpdate }) {
           />
         </div>
       </div>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Edit Cells</div>
-      <div
-        style={{
-          maxHeight: 200,
-          overflow: 'auto',
-          border: '1px solid var(--border)',
-          borderRadius: 4,
-        }}
-      >
+      <div className="text-[11px] text-text-muted mb-1">Edit Cells</div>
+      <div className="max-h-[200px] overflow-auto border border-border rounded">
         {data.map((row, ri) => (
-          <div key={ri} style={{ display: 'flex' }}>
+          <div key={ri} className="flex">
             {(row || []).map((cell, ci) => (
               <input
                 key={ci}
@@ -115,17 +91,7 @@ export default function TableProperties({ element, onUpdate }) {
                   d[ri][ci] = e.target.value
                   onUpdate({ data: d })
                 }}
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  padding: '4px 6px',
-                  border: '1px solid var(--border)',
-                  background: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
-                  fontSize: 11,
-                  outline: 'none',
-                  borderRadius: 0,
-                }}
+                className="flex-1 min-w-0 px-1.5 py-1 border border-border bg-card text-text-primary text-[11px] outline-none rounded-none"
                 placeholder={ri === 0 ? `H${ci + 1}` : `R${ri}C${ci + 1}`}
               />
             ))}

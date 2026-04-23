@@ -5,13 +5,12 @@ import { Input, Select, ColorPicker } from '../../components/ui'
 
 export default function ChartProperties({ element, onUpdate }) {
   return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Chart Type</div>
+    <div className="mb-2.5">
+      <div className="text-[11px] text-text-muted mb-1">Chart Type</div>
       <Select
-        className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
+        className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2"
         value={element.chartType || 'bar'}
         onChange={(e) => onUpdate({ chartType: e.target.value })}
-        style={{ padding: '4px 6px', marginBottom: 8 }}
       >
         {['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea'].map((t) => (
           <option key={t} value={t}>
@@ -19,11 +18,11 @@ export default function ChartProperties({ element, onUpdate }) {
           </option>
         ))}
       </Select>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
+      <div className="text-[11px] text-text-muted mb-1">
         Labels (comma-separated)
       </div>
       <Input
-        className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
+        className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-[11px] transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-1.5"
         type="text"
         value={(element.chartData?.labels || []).join(', ')}
         onChange={(e) =>
@@ -34,13 +33,12 @@ export default function ChartProperties({ element, onUpdate }) {
             },
           })
         }
-        style={{ marginBottom: 6, fontSize: 11, padding: '4px 6px' }}
       />
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
+      <div className="text-[11px] text-text-muted mb-1">
         Values (comma-separated)
       </div>
       <Input
-        className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
+        className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-[11px] transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-1.5"
         type="text"
         value={((element.chartData?.datasets || [])[0]?.data || []).join(', ')}
         onChange={(e) => {
@@ -51,11 +49,10 @@ export default function ChartProperties({ element, onUpdate }) {
           datasets[0] = { ...datasets[0], data }
           onUpdate({ chartData: { ...element.chartData, datasets } })
         }}
-        style={{ marginBottom: 6, fontSize: 11, padding: '4px 6px' }}
       />
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Series Label</div>
+      <div className="text-[11px] text-text-muted mb-1">Series Label</div>
       <Input
-        className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
+        className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-[11px] transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-1.5"
         type="text"
         value={(element.chartData?.datasets || [])[0]?.label || ''}
         onChange={(e) => {
@@ -65,12 +62,11 @@ export default function ChartProperties({ element, onUpdate }) {
           datasets[0] = { ...datasets[0], label: e.target.value }
           onUpdate({ chartData: { ...element.chartData, datasets } })
         }}
-        style={{ marginBottom: 6, fontSize: 11, padding: '4px 6px' }}
       />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Color</div>
+      <div className="flex items-center gap-1.5">
+        <div className="text-[11px] text-text-muted">Color</div>
         <ColorPicker
-          className="w-9 h-7 border border-border rounded cursor-pointer p-[1px] bg-card shrink-0"
+          className="w-7 h-7 p-0.5 bg-card border border-border rounded cursor-pointer"
           value={(element.chartData?.datasets || [])[0]?.color || '#6366f1'}
           onChange={(e) => {
             const datasets = [
@@ -78,15 +74,6 @@ export default function ChartProperties({ element, onUpdate }) {
             ]
             datasets[0] = { ...datasets[0], color: e.target.value }
             onUpdate({ chartData: { ...element.chartData, datasets } })
-          }}
-          style={{
-            width: 28,
-            height: 28,
-            padding: 2,
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            cursor: 'pointer',
           }}
         />
       </div>

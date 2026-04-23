@@ -26,7 +26,7 @@ test.describe('Media Library & Templates', () => {
   })
 
   test('can search Unsplash with mocked response', async ({ page }) => {
-    await page.route('**/api/media/unsplash**', async (route) => {
+    await page.route('https://api.unsplash.com/**', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -55,7 +55,10 @@ test.describe('Media Library & Templates', () => {
     if (await searchInput.isVisible()) {
       await searchInput.fill('nature')
       await searchInput.press('Enter')
-      await page.waitForTimeout(2000)
+      await expect(page.locator('text=Loading...')).toHaveCount(0, { timeout: 5000 })
+      await expect(
+        page.locator('div.border.border-border.rounded-lg.overflow-hidden.cursor-pointer.bg-card').first()
+      ).toBeVisible({ timeout: 5000 })
     }
   })
 

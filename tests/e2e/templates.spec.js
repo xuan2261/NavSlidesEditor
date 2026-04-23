@@ -21,8 +21,9 @@ test.describe('Templates', () => {
     await home.switchSidebarView('Built-in')
 
     // Click Creative category
-    await page.locator('.template-category-btn').filter({ hasText: 'Creative' }).click()
-    await page.waitForTimeout(300)
+    const creativeButton = page.locator('.template-category-btn').filter({ hasText: 'Creative' })
+    await creativeButton.click()
+    await expect(creativeButton).toHaveClass(/!bg-accent/)
 
     // Should still show cards
     const cards = page.locator('.bg-card.group')
@@ -30,8 +31,9 @@ test.describe('Templates', () => {
     expect(count).toBeGreaterThanOrEqual(1)
 
     // Click Academic
-    await page.locator('.template-category-btn').filter({ hasText: 'Academic' }).click()
-    await page.waitForTimeout(300)
+    const academicButton = page.locator('.template-category-btn').filter({ hasText: 'Academic' })
+    await academicButton.click()
+    await expect(academicButton).toHaveClass(/!bg-accent/)
 
     const academicCount = await cards.count()
     expect(academicCount).toBeGreaterThanOrEqual(1)
@@ -85,7 +87,6 @@ test.describe('Templates', () => {
     await home.switchSidebarView('Marketplace')
 
     // Marketplace should load (may show templates or empty)
-    await page.waitForTimeout(1000)
     const content = page.locator('.flex-1.overflow-y-auto')
     await expect(content).toBeVisible()
   })

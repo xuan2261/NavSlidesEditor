@@ -1,7 +1,7 @@
 // QuickAccessToolbar.jsx — fixed 32px toolbar above EditorMenuBar
-// Props: { onSave, onUndo, onRedo, onPresent, saving, hasChanges }
+// Props: { onSave, onUndo, onRedo, saving, hasChanges }
 import { useRef, useCallback } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Save } from 'lucide-react'
 
 export default function QuickAccessToolbar({
   onSave,
@@ -9,7 +9,6 @@ export default function QuickAccessToolbar({
   onUndo,
   // eslint-disable-next-line unused-imports/no-unused-vars
   onRedo,
-  onPresent,
   saving,
   hasChanges,
 }) {
@@ -39,7 +38,10 @@ export default function QuickAccessToolbar({
         {saving ? (
           <Loader2 size={18} className="animate-spin" />
         ) : (
-          <span className="qat-dot" style={{ opacity: hasChanges ? 1 : 0.3 }} />
+          <Save
+            size={18}
+            className={hasChanges ? 'text-accent' : 'opacity-50'}
+          />
         )}
       </button>
 
@@ -68,10 +70,9 @@ export default function QuickAccessToolbar({
 
       {/* Redo */}
       <button
-        className="flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
+        className="flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary -scale-x-100"
         onClick={handleRedo}
         title="Redo (Ctrl+Y)"
-        style={{ transform: 'scaleX(-1)' }}
       >
         <svg
           width="18"
@@ -85,19 +86,6 @@ export default function QuickAccessToolbar({
         >
           <path d="M3 7v6h6" />
           <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.36 2.64L3 13" />
-        </svg>
-      </button>
-
-      <span className="mx-1 h-4 w-[1px] bg-border" />
-
-      {/* Present */}
-      <button
-        className="flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
-        onClick={onPresent}
-        title="Present"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <polygon points="5,3 19,12 5,21" />
         </svg>
       </button>
     </div>

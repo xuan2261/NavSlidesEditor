@@ -67,7 +67,7 @@ export default function PropertiesPanel({
     return (
       <div className="properties-panel w-60 shrink-0 bg-panel text-text-primary border-l border-border overflow-y-auto flex flex-col tour-step-properties">
         <div className="prop-section">
-          <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>No slide selected</p>
+          <p className="text-text-muted text-xs">No slide selected</p>
         </div>
       </div>
     )
@@ -84,24 +84,13 @@ export default function PropertiesPanel({
 
           {/* Multi-select badge */}
           {selectedElementIds && selectedElementIds.length > 1 && (
-            <div
-              style={{
-                background: 'var(--bg-hover)',
-                border: '1px solid var(--border)',
-                borderRadius: 6,
-                padding: '8px 10px',
-                marginBottom: 10,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+            <div className="bg-hover border border-border rounded-md px-2.5 py-2 mb-2.5 flex items-center justify-between">
+              <span className="text-xs text-text-secondary">
                 📌 {selectedElementIds.length} elements selected
               </span>
               <Button
                 variant="danger"
-                style={{ fontSize: 11, padding: '3px 8px' }}
+                className="text-[11px] px-2 py-0.5"
                 onClick={onDeleteSelectedElements}
               >
                 Delete All
@@ -227,7 +216,7 @@ export default function PropertiesPanel({
       {/* Custom CSS — template editor only */}
       {isTemplate && presentation && onUpdatePresentation && (
         <CollapsibleSection title="Custom CSS">
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>
+          <p className="text-[11px] text-text-muted mb-1.5">
             CSS applied to all slides in presentations created from this template.
           </p>
           <textarea
@@ -307,7 +296,7 @@ function SlideFooterSection({ slide, presentation, onUpdateSlide, onUpdatePresen
         <div className="mb-2.5">
           <div className="text-[11px] text-text-muted mb-1">Active Section</div>
           {(presentation.sequenceSections || []).length === 0 ? (
-            <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            <p className="text-[11px] text-text-muted">
               No sections defined. Add them in Footer Style below.
             </p>
           ) : (
@@ -366,7 +355,6 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
             key={mode}
             className={`flex-1 py-1 px-1 rounded text-[11px] text-center cursor-pointer border-none transition-all ${(presentation.footerMode || 'basic') === mode ? 'bg-accent text-white' : 'text-text-muted bg-transparent'}`}
             onClick={() => onUpdatePresentation({ footerMode: mode })}
-            style={{ flex: 1 }}
           >
             {label}
           </Button>
@@ -378,7 +366,7 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
         <div className="mb-2">
           <div className="text-[10px] text-text-muted mb-1">Section Titles</div>
           {(presentation.sequenceSections || []).map((sec, i) => (
-            <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 3 }}>
+            <div key={i} className="flex gap-1 mb-0.5">
               <Input
                 type="text"
                 value={sec}
@@ -388,12 +376,11 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
                   onUpdatePresentation({ sequenceSections: sections })
                 }}
                 placeholder={`Section ${i + 1}`}
-                className="px-2.5 py-1.5 text-xs"
-                style={{ flex: 1 }}
+                className="px-2.5 py-1.5 text-xs flex-1"
               />
               <Button
                 variant="icon"
-                style={{ width: 22, height: 22, fontSize: 12, flexShrink: 0 }}
+                className="w-[22px] h-[22px] text-xs shrink-0"
                 title="Remove section"
                 onClick={() => {
                   const sections = [...(presentation.sequenceSections || [])]
@@ -407,13 +394,7 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
           ))}
           <Button
             variant="secondary"
-            style={{
-              width: '100%',
-              justifyContent: 'center',
-              fontSize: 11,
-              padding: '3px 8px',
-              marginTop: 2,
-            }}
+            className="w-full justify-center text-[11px] px-2 py-0.5 mt-0.5"
             onClick={() => {
               const sections = [...(presentation.sequenceSections || []), '']
               onUpdatePresentation({ sequenceSections: sections })
@@ -429,7 +410,7 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
         <div className="flex flex-col gap-1">
           <div className="text-[10px] text-text-muted">Font</div>
           <Select
-            style={{ padding: '3px 4px', fontSize: 11 }}
+            className="px-1 py-0.5 text-[11px]"
             value={presentation.footerFontFamily || '-apple-system,sans-serif'}
             onChange={(e) => onUpdatePresentation({ footerFontFamily: e.target.value })}
           >

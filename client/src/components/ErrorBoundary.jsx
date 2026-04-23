@@ -21,60 +21,22 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div
-          style={{
-            padding: 40,
-            textAlign: 'center',
-            color: '#e0e0e0',
-            background: 'var(--bg-primary, #1a1a2e)',
-            minHeight: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 16,
-          }}
-        >
-          <div style={{ fontSize: 48, marginBottom: 8 }}>⚠️</div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 600 }}>Something went wrong</h2>
-          <p
-            style={{
-              color: '#a0a0b0',
-              maxWidth: 480,
-              fontSize: 14,
-              lineHeight: 1.6,
-            }}
-          >
+        <div className="p-10 text-center text-neutral-200 bg-panel min-h-screen flex flex-col items-center justify-center gap-4">
+          <div className="text-5xl mb-2">⚠️</div>
+          <h2 className="text-[22px] font-semibold">Something went wrong</h2>
+          <p className="text-neutral-400 max-w-[480px] text-sm leading-relaxed">
             {this.state.error?.message || 'An unexpected error occurred.'}
           </p>
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div className="flex gap-3">
             <button
               onClick={() => this.setState({ hasError: false, error: null })}
-              style={{
-                padding: '10px 24px',
-                borderRadius: 8,
-                border: 'none',
-                background: '#6366f1',
-                color: '#fff',
-                fontSize: 14,
-                cursor: 'pointer',
-                fontWeight: 500,
-              }}
+              className="px-6 py-2.5 rounded-lg border-none bg-accent text-white text-sm cursor-pointer font-medium hover:bg-accent-hover"
             >
               Try Again
             </button>
             <button
               onClick={() => window.location.reload()}
-              style={{
-                padding: '10px 24px',
-                borderRadius: 8,
-                border: '1px solid #444',
-                background: 'transparent',
-                color: '#e0e0e0',
-                fontSize: 14,
-                cursor: 'pointer',
-                fontWeight: 500,
-              }}
+              className="px-6 py-2.5 rounded-lg border border-border bg-transparent text-neutral-200 text-sm cursor-pointer font-medium hover:bg-hover"
             >
               Reload Page
             </button>

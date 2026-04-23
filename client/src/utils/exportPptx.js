@@ -1,4 +1,5 @@
 import pptxgen from 'pptxgenjs'
+import { getSlideNotes } from './slide-notes'
 
 function stripHtml(html) {
   const doc = new DOMParser().parseFromString(html || '', 'text/html')
@@ -166,8 +167,9 @@ export function exportToPptx(presentation) {
     }
 
     // Speaker notes
-    if (slide.notes) {
-      pptSlide.addNotes(slide.notes)
+    const speakerNotes = getSlideNotes(slide)
+    if (speakerNotes) {
+      pptSlide.addNotes(speakerNotes)
     }
   }
 

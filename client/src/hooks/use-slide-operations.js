@@ -1,6 +1,10 @@
 import { useCallback } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 import { SLIDE_TEMPLATES } from '../data/slide-templates'
+import {
+  deleteSlidesAtIndices,
+  duplicateSlidesAtIndices,
+} from './slide-operation-helpers'
 
 /**
  * Hook encapsulating multi-element operations (align, group, delete-selected)
@@ -246,32 +250,50 @@ export function useSlideOperations({
 
   const deleteSlide = useCallback(
     (index) => {
-      if (!presentation || presentation.slides.length <= 1) return
-      setPresentation((prev) => ({ ...prev, slides: prev.slides.filter((_, i) => i !== index) }))
-      setCurrentSlideIndex((prev) => Math.min(prev, presentation.slides.length - 2))
+      setPresentation((prev) => {
+        if (!prev || prev.slides.length <= 1) return prev
+        const result = deleteSlidesAtIndices(prev.slides, [index], currentSlideIndexRef.current)
+        setCurrentSlideIndex(result.currentSlideIndex)
+        return { ...prev, slides: result.slides }
+      })
     },
-    [presentation, setPresentation, setCurrentSlideIndex]
+    [setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
   )
 
   const duplicateSlide = useCallback(
     (index) => {
-      if (!presentation) return
-      const slide = {
-        ...presentation.slides[index],
-        id: crypto.randomUUID(),
-        elements: (presentation.slides[index].elements || []).map((el) => ({
-          ...el,
-          id: crypto.randomUUID(),
-        })),
-      }
       setPresentation((prev) => {
-        const slides = [...prev.slides]
-        slides.splice(index + 1, 0, slide)
-        return { ...prev, slides }
+        if (!prev) return prev
+        const result = duplicateSlidesAtIndices(prev.slides, [index])
+        setCurrentSlideIndex(result.currentSlideIndex)
+        return { ...prev, slides: result.slides }
       })
-      setCurrentSlideIndex(index + 1)
     },
-    [presentation, setPresentation, setCurrentSlideIndex]
+    [setPresentation, setCurrentSlideIndex]
+  )
+
+  const duplicateSlides = useCallback(
+    (indices) => {
+      setPresentation((prev) => {
+        if (!prev) return prev
+        const result = duplicateSlidesAtIndices(prev.slides, indices)
+        setCurrentSlideIndex(result.currentSlideIndex)
+        return { ...prev, slides: result.slides }
+      })
+    },
+    [setPresentation, setCurrentSlideIndex]
+  )
+
+  const deleteSlides = useCallback(
+    (indices) => {
+      setPresentation((prev) => {
+        if (!prev) return prev
+        const result = deleteSlidesAtIndices(prev.slides, indices, currentSlideIndexRef.current)
+        setCurrentSlideIndex(result.currentSlideIndex)
+        return { ...prev, slides: result.slides }
+      })
+    },
+    [setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
   )
 
   const moveSlide = useCallback(
@@ -298,6 +320,8 @@ export function useSlideOperations({
     addSlide,
     deleteSlide,
     duplicateSlide,
+    deleteSlides,
+    duplicateSlides,
     moveSlide,
   }
 }

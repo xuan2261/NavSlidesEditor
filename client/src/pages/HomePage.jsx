@@ -3,7 +3,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Presentation,
   Copy,
   Sun,
   Moon,
@@ -157,6 +156,8 @@ const TEMPLATE_CATEGORIES = [
   'Thuỷ khí',
 ]
 
+const LIGHT_PRESET_COLORS = new Set(['#ffffff', '#fafafa', '#fcfcfc'])
+
 function formatDate(dateStr) {
   if (!dateStr) return ''
   const date = new Date(dateStr)
@@ -173,6 +174,25 @@ function getCardBg(thumbnail) {
 
 function isGradientOrImage(thumbnail) {
   return thumbnail && (thumbnail.type === 'gradient' || thumbnail.type === 'image')
+}
+
+function getPresetTextTone(thumbnail) {
+  const isLightPreset = LIGHT_PRESET_COLORS.has((thumbnail?.color || '').toLowerCase())
+  return isLightPreset
+    ? {
+        titleClassName: 'text-base font-bold text-[#333] opacity-85',
+        metaClassName: 'text-[10px] text-[#666]',
+      }
+    : {
+        titleClassName: 'text-base font-bold text-white opacity-85',
+        metaClassName: 'text-[10px] text-white/50',
+      }
+}
+
+function getTemplateStartButtonStateClassName(isSelected) {
+  return isSelected
+    ? '!bg-accent !border-accent !text-white'
+    : 'bg-card border-border text-text-primary hover:bg-hover hover:border-border-strong'
 }
 
 // Sidebar navigation items
@@ -689,14 +709,13 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             </div>
             <label
               className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
-              style={{ cursor: 'pointer' }}
             >
               <BookOpen size={16} />
               <span>Import PDF</span>
               <input
                 type="file"
                 accept=".pdf"
-                style={{ display: 'none' }}
+                className="hidden"
                 onChange={(e) => {
                   handleImportPdf(e.target.files?.[0])
                   e.target.value = ''
@@ -705,14 +724,13 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             </label>
             <label
               className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
-              style={{ cursor: 'pointer' }}
             >
               <BookOpen size={16} />
               <span>Import Markdown</span>
               <input
                 type="file"
                 accept=".md,.markdown,.txt"
-                style={{ display: 'none' }}
+                className="hidden"
                 onChange={(e) => {
                   handleImportMarkdown(e.target.files?.[0])
                   e.target.value = ''
@@ -721,14 +739,13 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             </label>
             <label
               className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
-              style={{ cursor: 'pointer' }}
             >
               <FolderOpen size={16} />
               <span>Import Project</span>
               <input
                 type="file"
                 accept=".navslides,.json"
-                style={{ display: 'none' }}
+                className="hidden"
                 onChange={(e) => {
                   handleImportProject(e.target.files?.[0])
                   e.target.value = ''
@@ -772,7 +789,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto pt-7 px-8 pb-7">
           {loading ? (
-            <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '80px' }}>
+            <div className="text-text-muted text-center p-20">
               Loading...
             </div>
           ) : isTrashView ? (
@@ -781,13 +798,13 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-lg font-bold text-text-primary">Trash</h2>
                 {trashItems.length > 0 && (
-                  <Button variant="danger" onClick={handleEmptyTrash} style={{ fontSize: 12 }}>
+                  <Button variant="danger" onClick={handleEmptyTrash} className="text-xs">
                     <Trash2 size={14} /> Empty Trash
                   </Button>
                 )}
               </div>
               {trashItems.length === 0 ? (
-                <div className="col-span-full text-center py-20 px-5 text-text-muted anim-fade-in">
+                <div className="col-span-full text-center py-20 px-5 text-text-muted animate-fade-in">
                   <Trash size={48} />
                   <p className="text-[17px] font-semibold text-text-secondary mb-2">
                     Trash is empty
@@ -797,7 +814,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 anim-fade-in">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 animate-fade-in">
                   {trashItems.map((pres) => {
                     const bg = getCardBg(pres.thumbnail)
                     const bgProp = isGradientOrImage(pres.thumbnail)
@@ -806,14 +823,13 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     return (
                       <div
                         key={pres.id}
-                        className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
-                        style={{ opacity: 0.7, cursor: 'default' }}
+                        className="group bg-card border border-border rounded-lg overflow-hidden cursor-default transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg opacity-70"
                       >
                         <div
                           className="aspect-video flex items-center justify-center bg-surface-2 relative overflow-hidden text-[32px] text-text-muted"
                           style={bgProp}
                         >
-                          <Trash size={24} style={{ opacity: 0.3 }} />
+                          <Trash size={24} className="opacity-30" />
                         </div>
                         <div className="px-4 py-3">
                           <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
@@ -825,8 +841,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                           </p>
                         </div>
                         <div
-                          className="flex justify-end gap-1 px-3 py-2 border-t border-border opacity-0 transition-opacity group-hover:opacity-100"
-                          style={{ opacity: 1 }}
+                          className="flex justify-end gap-1 px-3 py-2 border-t border-border"
                         >
                           <Button
                             variant="icon"
@@ -839,7 +854,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                             variant="icon"
                             title="Delete permanently"
                             onClick={(e) => handlePermanentDelete(e, pres.id)}
-                            style={{ color: 'var(--danger)' }}
+                            className="text-danger"
                           >
                             <Trash2 size={14} />
                           </Button>
@@ -874,28 +889,30 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   const bgProp = isGradientOrImage(preset.thumbnail)
                     ? { background: bg }
                     : { backgroundColor: bg }
+                  const tone = getPresetTextTone(preset.thumbnail)
                   return (
                     <div
                       key={preset.id}
-                      className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
+                      className={`group bg-card border border-border rounded-lg overflow-hidden transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg ${
+                        creating ? 'cursor-wait' : 'cursor-pointer'
+                      }`}
                       onClick={() => handleCreateFromTemplate(preset.id, true)}
-                      style={{ cursor: creating ? 'wait' : 'pointer' }}
                     >
                       <div
                         className="aspect-video flex items-center justify-center relative overflow-hidden"
                         style={bgProp}
                       >
                         <div className="flex flex-col items-center justify-center gap-1 px-4 text-center">
-                          <span style={{ fontSize: 16, fontWeight: 700, color: preset.thumbnail?.color === '#ffffff' || preset.thumbnail?.color === '#fafafa' || preset.thumbnail?.color === '#fcfcfc' ? '#333' : '#fff', opacity: 0.85 }}>
+                          <span className={tone.titleClassName}>
                             {preset.title}
                           </span>
-                          <span style={{ fontSize: 10, color: preset.thumbnail?.color === '#ffffff' || preset.thumbnail?.color === '#fafafa' || preset.thumbnail?.color === '#fcfcfc' ? '#666' : 'rgba(255,255,255,0.5)' }}>
+                          <span className={tone.metaClassName}>
                             {preset.theme} · {preset.transition}
                           </span>
                         </div>
                         <Sparkles
                           size={16}
-                          style={{ position: 'absolute', top: 8, right: 8, opacity: 0.25 }}
+                          className="absolute top-2 right-2 opacity-25"
                         />
                       </div>
                       <div className="px-4 py-3">
@@ -981,7 +998,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                             variant="icon"
                             title="Delete template"
                             onClick={(e) => handleDeleteTemplate(e, tmpl.id)}
-                            style={{ color: 'var(--danger)' }}
+                            className="text-danger"
                           >
                             <Trash2 size={14} />
                           </Button>
@@ -997,7 +1014,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             <>
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-lg font-bold text-text-primary">Template Marketplace</h2>
-                <div className="relative flex-[0_1_360px]" style={{ maxWidth: 260 }}>
+                <div className="relative flex-[0_1_360px] max-w-[260px]">
                   <Search
                     size={15}
                     className="absolute left-[11px] top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
@@ -1054,7 +1071,6 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         key={tmpl.id}
                         className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
                         onClick={() => setPreviewTemplate(tmpl)}
-                        style={{ cursor: 'pointer' }}
                       >
                         <SlideThumbnail id={tmpl.id} bgProp={bgProp} />
                         <div className="px-4 py-3">
@@ -1064,7 +1080,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                           <p className="text-[12px] text-text-secondary truncate">
                             {tmpl.description}
                           </p>
-                          <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
+                          <p className="text-[10px] text-text-muted mt-0.5">
                             {tmpl.slides?.length || 0} slides · {tmpl.category}
                           </p>
                         </div>
@@ -1086,7 +1102,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             <>
               {/* Welcome screen for empty state */}
               {presentations.length === 0 && !searchQuery ? (
-                <div className="flex flex-col items-center justify-center py-20 px-10 text-center anim-fade-in">
+                <div className="flex flex-col items-center justify-center py-20 px-10 text-center animate-fade-in">
                   <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center text-white mb-6 text-[28px]">
                     <Rocket size={28} />
                   </div>
@@ -1157,7 +1173,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   </div>
 
                   {filteredPresentations.length === 0 && searchQuery ? (
-                    <div className="col-span-full text-center py-20 px-5 text-text-muted anim-fade-in">
+                    <div className="col-span-full text-center py-20 px-5 text-text-muted animate-fade-in">
                       <Search size={48} />
                       <p className="text-[17px] font-semibold text-text-secondary mb-2">
                         No matches found
@@ -1165,7 +1181,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                       <p className="text-sm text-text-muted mb-6">Try a different search term</p>
                     </div>
                   ) : viewMode === 'grid' ? (
-                    <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 anim-fade-in">
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 animate-fade-in">
                       <div
                         className="border-dashed border-2 border-border flex flex-col items-center justify-center gap-3 min-h-[200px] text-text-muted cursor-pointer transition-all rounded-lg hover:border-accent hover:text-accent hover:bg-hover"
                         onClick={handleOpenModal}
@@ -1221,7 +1237,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                                 variant="icon"
                                 title="Delete"
                                 onClick={(e) => handleDelete(e, pres.id)}
-                                style={{ color: 'var(--danger)' }}
+                                className="text-danger"
                               >
                                 <Trash2 size={14} />
                               </Button>
@@ -1232,7 +1248,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     </div>
                   ) : (
                     /* List View */
-                    <div className="flex flex-col gap-0.5 anim-fade-in">
+                    <div className="flex flex-col gap-0.5 animate-fade-in">
                       {filteredPresentations.map((pres) => {
                         const bg = getCardBg(pres.thumbnail)
                         const bgProp = isGradientOrImage(pres.thumbnail)
@@ -1282,7 +1298,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                                 variant="icon"
                                 title="Delete"
                                 onClick={(e) => handleDelete(e, pres.id)}
-                                style={{ color: 'var(--danger)' }}
+                                className="text-danger"
                               >
                                 <Trash2 size={14} />
                               </Button>
@@ -1306,9 +1322,8 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           onClick={() => setShowModal(false)}
         >
           <div
-            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full anim-zoom-in"
+            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full max-w-[560px] animate-zoom-in"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 560 }}
           >
             <h2>New Presentation</h2>
             <form onSubmit={handleCreate}>
@@ -1326,30 +1341,12 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
               {/* Template selector */}
               <div className="form-group">
                 <label>Start from</label>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: 8,
-                    marginBottom: 4,
-                  }}
-                >
+                <div className="grid grid-cols-3 gap-2 mb-1">
                   <Button
                     variant="ghost"
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, templateId: null }))}
-                    style={{
-                      padding: '10px 8px',
-                      background: !form.templateId ? 'var(--accent)' : 'var(--bg-card)',
-                      border:
-                        '2px solid ' + (!form.templateId ? 'var(--accent)' : 'var(--border)'),
-                      borderRadius: 'var(--radius-sm)',
-                      cursor: 'pointer',
-                      color: !form.templateId ? 'white' : 'var(--text-primary)',
-                      fontSize: 12,
-                      fontWeight: 500,
-                      textAlign: 'center',
-                    }}
+                    className={`h-auto min-h-[42px] px-2 py-2.5 rounded-sm border-2 text-center text-xs font-medium ${getTemplateStartButtonStateClassName(!form.templateId)}`}
                   >
                     Blank
                   </Button>
@@ -1373,31 +1370,15 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                             transition: tmpl.transition || f.transition,
                           }))
                         }
-                      style={{
-                        padding: '6px 8px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        background:
-                          form.templateId === tmpl.id ? 'var(--accent)' : 'var(--bg-card)',
-                        border:
-                          '2px solid ' +
-                          (form.templateId === tmpl.id ? 'var(--accent)' : 'var(--border)'),
-                        borderRadius: 'var(--radius-sm)',
-                        color: form.templateId === tmpl.id ? 'white' : 'var(--text-primary)',
-                        fontSize: 11,
-                        fontWeight: 500,
-                        overflow: 'hidden',
-                      }}
+                        className={`h-auto min-h-[54px] px-2 py-1.5 rounded-sm border-2 text-center text-[11px] font-medium overflow-hidden flex flex-col ${getTemplateStartButtonStateClassName(form.templateId === tmpl.id)}`}
                     >
                       <div
-                        style={{
-                          height: 28,
-                          borderRadius: 3,
-                          marginBottom: 4,
-                          ...(isGradientOrImage(tmpl.thumbnail)
+                        className="h-7 rounded-[3px] mb-1 w-full"
+                        style={
+                          isGradientOrImage(tmpl.thumbnail)
                             ? { background: getCardBg(tmpl.thumbnail) }
-                            : { backgroundColor: getCardBg(tmpl.thumbnail) }),
-                        }}
+                            : { backgroundColor: getCardBg(tmpl.thumbnail) }
+                        }
                       />
                       {tmpl.title}
                     </Button>
@@ -1485,36 +1466,23 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           onClick={() => setConfirmDialog(null)}
         >
           <div
-            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full anim-zoom-in"
+            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full max-w-[420px] animate-zoom-in"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 420 }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+            <div className="flex items-start gap-3.5">
               <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 'var(--radius-md)',
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background:
-                    confirmDialog.variant === 'danger'
-                      ? 'rgba(239,68,68,0.12)'
-                      : 'rgba(245,158,11,0.12)',
-                }}
+                className={`w-10 h-10 rounded-md shrink-0 flex items-center justify-center ${
+                  confirmDialog.variant === 'danger' ? 'bg-danger/10' : 'bg-warning/10'
+                }`}
               >
                 <AlertCircle
                   size={22}
-                  style={{
-                    color: confirmDialog.variant === 'danger' ? 'var(--danger)' : '#f59e0b',
-                  }}
+                  className={confirmDialog.variant === 'danger' ? 'text-danger' : 'text-warning'}
                 />
               </div>
-              <div style={{ flex: 1 }}>
-                <h2 style={{ fontSize: 16, marginBottom: 8 }}>{confirmDialog.title}</h2>
-                <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              <div className="flex-1">
+                <h2 className="text-base mb-2">{confirmDialog.title}</h2>
+                <p className="text-sm text-text-secondary leading-relaxed">
                   {confirmDialog.message}
                 </p>
               </div>

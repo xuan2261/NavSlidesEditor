@@ -33,12 +33,7 @@ test.describe('Explore Page', () => {
     const explore = new ExplorePage(page)
     await explore.goto()
 
-    // Wait for data to load
-    await page.waitForTimeout(2000)
-
-    // Either the presentation appears or explore is empty (depends on server state)
-    const pageContent = await page.content()
-    expect(pageContent).toBeTruthy()
+    await expect(page.locator('text=Explore Visible Pres')).toBeVisible({ timeout: 10000 })
 
     // Cleanup
     await apiDeletePresentation(request, pres.id)

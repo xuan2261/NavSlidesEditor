@@ -85,15 +85,15 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
   return (
     <div className="absolute bottom-0 left-0 right-0 z-[990] bg-card border-t border-border max-h-[200px] flex flex-col">
       <div className="flex items-center gap-2.5 py-2 px-3 border-b border-border shrink-0">
-        <span style={{ fontWeight: 600, fontSize: 13 }}>Animation Timeline</span>
-        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+        <span className="font-semibold text-[13px]">Animation Timeline</span>
+        <span className="text-[11px] text-text-muted">
           {fragmentElements.length} animated element{fragmentElements.length !== 1 ? 's' : ''}
         </span>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+        <div className="ml-auto flex gap-1.5">
           {onPreview && (
             <Button
               variant="secondary"
-              style={{ fontSize: 11, padding: '3px 10px' }}
+              className="text-[11px] px-2.5 py-0.5"
               onClick={onPreview}
             >
               <Play size={12} /> Preview
@@ -113,8 +113,7 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
             {nonFragElements.slice(0, 5).map((el) => (
               <div
                 key={el.id}
-                className="flex items-center gap-1 py-1 px-2 rounded border border-border text-[11px] cursor-grab text-text-primary"
-                style={{ background: 'rgba(255,255,255,0.08)', opacity: 0.5 }}
+                className="flex items-center gap-1 py-1 px-2 rounded border border-border text-[11px] cursor-grab text-text-primary bg-white/[0.08] opacity-50"
               >
                 <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                   {getElementLabel(el)}
@@ -122,7 +121,7 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
               </div>
             ))}
             {nonFragElements.length > 5 && (
-              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+              <span className="text-[10px] text-text-muted">
                 +{nonFragElements.length - 5} more
               </span>
             )}
@@ -150,7 +149,7 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
                     borderColor: ELEMENT_COLORS[i % ELEMENT_COLORS.length],
                   }}
                 >
-                  <GripVertical size={10} style={{ cursor: 'grab', opacity: 0.5 }} />
+                  <GripVertical size={10} className="cursor-grab opacity-50" />
                   <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                     {getElementLabel(el)}
                   </span>
@@ -179,12 +178,11 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
           onDrop={(e) => handleDrop(e, maxIndex + 1)}
         >
           <div
-            className="text-[11px] font-semibold text-text-muted mb-1.5"
-            style={{ opacity: 0.4 }}
+            className="text-[11px] font-semibold text-text-muted mb-1.5 opacity-40"
           >
             +
           </div>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Drop here for new step</span>
+          <span className="text-[11px] text-text-muted">Drop here for new step</span>
         </div>
       </div>
     </div>

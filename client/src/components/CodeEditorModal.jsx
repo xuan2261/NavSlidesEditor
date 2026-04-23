@@ -1,4 +1,5 @@
 import { Button } from '../components/ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 
 const LANGUAGES = [
   { id: 'plaintext', label: 'Plain Text' },
@@ -35,16 +36,24 @@ export default function CodeEditorModal({
   codeTheme,
   onChangeTheme,
 }) {
+  useEscapeClose(onCancel)
+
   return (
     <div
       className="fixed inset-0 z-[10000] bg-black/75 flex items-center justify-center"
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') onCancel()
+      onClick={(event) => {
+        if (isBackdropClick(event)) onCancel()
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="code-editor-modal-title"
     >
-      <div className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl">
+      <div
+        className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="px-4 py-3 border-b border-border flex justify-between items-center shrink-0 gap-3">
-          <span className="font-semibold text-sm">Code Block</span>
+          <h2 id="code-editor-modal-title" className="font-semibold text-sm">Code Block</h2>
           <select
             value={state.language}
             onChange={(e) => onChange({ ...state, language: e.target.value })}

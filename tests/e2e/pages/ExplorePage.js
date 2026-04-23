@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test'
+
 export class ExplorePage {
   /**
    * @param {import('@playwright/test').Page} page
@@ -19,8 +21,7 @@ export class ExplorePage {
   }
 
   async getCardCount() {
-    // Wait a moment for data to load
-    await this.page.waitForTimeout(1000)
+    await expect(this.page.locator('text=Loading...')).toHaveCount(0, { timeout: 5000 })
     return this.presentationCards.count()
   }
 

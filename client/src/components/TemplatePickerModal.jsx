@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { SLIDE_TEMPLATES } from '../data/slide-templates'
 import { Button } from '../components/ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 
 const iconMap = {
   blank: <Square size={24} />,
@@ -83,49 +84,35 @@ const getCategoryLabel = (category) => {
 }
 
 export default function TemplatePickerModal({ onSelect, onClose }) {
+  useEscapeClose(onClose)
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
-      onClick={onClose}
+      onClick={(event) => {
+        if (isBackdropClick(event)) onClose()
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="template-picker-modal-title"
     >
       <div
-        className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col p-6 w-full anim-zoom-in"
-        onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: 800, maxHeight: '90vh', overflowY: 'auto' }}
+        className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col p-6 w-full max-w-[800px] max-h-[90vh] overflow-y-auto animate-zoom-in"
+        onClick={(event) => event.stopPropagation()}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 20,
-          }}
-        >
-          <h2 style={{ margin: 0 }}>Add Slide</h2>
-          <Button variant="icon" onClick={onClose}>
+        <div className="flex justify-between items-center mb-5">
+          <h2 id="template-picker-modal-title" className="m-0">Add Slide</h2>
+          <Button variant="icon" onClick={onClose} aria-label="Close">
             <X size={20} />
           </Button>
         </div>
 
         {['basic', 'content', 'layout', 'ending'].map((category) => (
-          <div key={category} style={{ marginBottom: 24 }}>
-            <h3
-              style={{
-                fontSize: 14,
-                color: 'var(--text-muted)',
-                marginBottom: 12,
-                textTransform: 'capitalize',
-              }}
-            >
+          <div key={category} className="mb-6">
+            <h3 className="text-sm text-text-muted mb-3 capitalize">
               {getCategoryLabel(category)}
             </h3>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: 12,
-              }}
-            >
+            <div className="grid grid-cols-4 gap-3">
               {Object.entries(SLIDE_TEMPLATES)
                 .filter(([_, tmpl]) => tmpl.category === category)
                 .map(([key, tmpl]) => (
@@ -136,47 +123,12 @@ export default function TemplatePickerModal({ onSelect, onClose }) {
                       onSelect(key)
                       onClose()
                     }}
-                    style={{
-                      background: 'var(--bg-card)',
-                      border: '2px solid var(--border)',
-                      borderRadius: 8,
-                      padding: 12,
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: 8,
-                      transition: 'all 0.2s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = 'var(--accent)'
-                      e.currentTarget.style.background = 'var(--bg-hover)'
-                      e.currentTarget.style.transform = 'translateY(-2px)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = 'var(--border)'
-                      e.currentTarget.style.background = 'var(--bg-card)'
-                      e.currentTarget.style.transform = 'translateY(0)'
-                    }}
+                    className="bg-card border-2 border-border rounded-lg p-3 cursor-pointer text-center flex flex-col items-center gap-2 transition-all duration-200 hover:border-accent hover:bg-hover hover:-translate-y-0.5"
                   >
-                    <div
-                      style={{
-                        width: '100%',
-                        aspectRatio: '16/9',
-                        background: '#1e1e2e',
-                        borderRadius: 4,
-                        border: '1px solid var(--border)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 24,
-                        color: 'var(--accent)',
-                      }}
-                    >
+                    <div className="w-full aspect-video bg-surface-2 rounded border border-border flex items-center justify-center text-2xl text-accent">
                       {iconMap[key] || tmpl.icon}
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>
+                    <div className="text-xs font-medium text-text-primary">
                       {tmpl.label}
                     </div>
                   </Button>

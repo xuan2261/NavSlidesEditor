@@ -1,11 +1,40 @@
 import { useState } from 'react'
 import { X, ChevronLeft, ChevronRight, CheckSquare, Square, Plus } from 'lucide-react'
 import { Button } from '../../components/ui'
+import { isBackdropClick, useEscapeClose } from '../../lib/utils'
 
 /**
  * Lightweight slide thumbnail renderer — avoids full SlideCanvas
  * which requires editor-specific callbacks.
  */
+function getThumbnailFrameStyle(width, height, bgStyle, style) {
+  return { width, height, position: 'relative', overflow: 'hidden', ...bgStyle, ...style }
+}
+
+function getThumbnailElementStyle(el) {
+  return {
+    position: 'absolute',
+    left: el.x,
+    top: el.y,
+    width: el.width,
+    height: el.height,
+    overflow: 'hidden',
+    zIndex: el.zIndex || 1,
+  }
+}
+
+function getThumbnailTextStyle(el) {
+  return {
+    color: el.color || '#fff',
+  }
+}
+
+function getThumbnailImageStyle(el) {
+  return {
+    objectFit: el.objectFit || 'contain',
+  }
+}
+
 function SlideThumbnail({ slide, width = 960, height = 540, style }) {
   if (!slide) return null
   const bg = slide.background
@@ -24,28 +53,16 @@ function SlideThumbnail({ slide, width = 960, height = 540, style }) {
           : { backgroundColor: 'var(--bg-card)' }
 
   return (
-    <div style={{ width, height, position: 'relative', overflow: 'hidden', ...bgStyle, ...style }}>
+    <div className="relative overflow-hidden" style={getThumbnailFrameStyle(width, height, bgStyle, style)}>
       {(slide.elements || []).map((el) => (
         <div
           key={el.id}
-          style={{
-            position: 'absolute',
-            left: el.x,
-            top: el.y,
-            width: el.width,
-            height: el.height,
-            overflow: 'hidden',
-            zIndex: el.zIndex || 1,
-          }}
+          style={getThumbnailElementStyle(el)}
         >
           {el.type === 'text' && (
             <div
-              style={{
-                fontSize: 14,
-                lineHeight: 1.4,
-                color: el.color || '#fff',
-                wordBreak: 'break-word',
-              }}
+              className="text-sm leading-[1.4] break-words"
+              style={getThumbnailTextStyle(el)}
               dangerouslySetInnerHTML={{ __html: el.content || '' }}
             />
           )}
@@ -53,26 +70,14 @@ function SlideThumbnail({ slide, width = 960, height = 540, style }) {
             <img
               src={el.src}
               alt=""
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: el.objectFit || 'contain',
-                display: 'block',
-              }}
+              className="w-full h-full block"
+              style={getThumbnailImageStyle(el)}
               draggable={false}
             />
           )}
           {el.type === 'shape' && (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <svg viewBox={el.viewBox || '0 0 100 100'} style={{ width: '100%', height: '100%' }}>
+            <div className="w-full h-full flex items-center justify-center">
+              <svg viewBox={el.viewBox || '0 0 100 100'} className="w-full h-full">
                 <path
                   d={el.path || ''}
                   fill={el.fill || '#6366f1'}
@@ -83,103 +88,32 @@ function SlideThumbnail({ slide, width = 960, height = 540, style }) {
             </div>
           )}
           {el.type === 'code' && (
-            <pre
-              style={{
-                margin: 0,
-                padding: 12,
-                background: 'rgba(0,0,0,0.6)',
-                color: '#a5d6a7',
-                fontSize: 12,
-                borderRadius: 6,
-                overflow: 'auto',
-                width: '100%',
-                height: '100%',
-                fontFamily: 'monospace',
-              }}
-            >
+            <pre className="m-0 p-3 bg-black/60 text-lime-200 rounded-md overflow-auto w-full h-full font-mono text-xs">
               <code>{el.content || ''}</code>
             </pre>
           )}
           {el.type === 'latex' && (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: 'rgba(0,0,0,0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontFamily: 'serif',
-                fontStyle: 'italic',
-                fontSize: 18,
-              }}
-            >
+            <div className="w-full h-full bg-black/30 flex items-center justify-center text-white font-serif italic text-lg">
               TeX: {(el.content || '').substring(0, 60)}
             </div>
           )}
           {el.type === 'html' && (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: 'rgba(99,102,241,0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'rgba(255,255,255,0.5)',
-                fontSize: 14,
-              }}
-            >
+            <div className="w-full h-full bg-primary/15 flex items-center justify-center text-white/50 text-sm">
               &lt;/&gt; HTML
             </div>
           )}
           {el.type === 'chart' && (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: 'rgba(99,102,241,0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'rgba(255,255,255,0.5)',
-                fontSize: 14,
-              }}
-            >
+            <div className="w-full h-full bg-primary/15 flex items-center justify-center text-white/50 text-sm">
               📊 Chart
             </div>
           )}
           {el.type === 'table' && (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: 'rgba(99,102,241,0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'rgba(255,255,255,0.4)',
-                fontSize: 14,
-              }}
-            >
+            <div className="w-full h-full bg-primary/10 flex items-center justify-center text-white/40 text-sm">
               📋 Table
             </div>
           )}
           {el.type === 'markdown' && (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: 'rgba(255,255,255,0.05)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'rgba(255,255,255,0.5)',
-                fontWeight: 700,
-                fontSize: 14,
-              }}
-            >
+            <div className="w-full h-full bg-white/5 flex items-center justify-center text-white/50 font-bold text-sm">
               MD
             </div>
           )}
@@ -203,6 +137,7 @@ export default function TemplatePreview({
   const [insertPosition, setInsertPosition] = useState('after') // 'after' or 'end'
 
   const slides = template?.slides || []
+  useEscapeClose(onClose)
 
   if (!template) return null
 
@@ -219,136 +154,84 @@ export default function TemplatePreview({
   }
 
   const handleInsertConfirm = () => {
-    const slidesToInsert = selectedSlides.sort((a, b) => a - b).map((i) => slides[i])
+    const slidesToInsert = [...selectedSlides].sort((a, b) => a - b).map((i) => slides[i])
     onInsertSlides(slidesToInsert, insertPosition)
   }
 
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
-      onClick={onClose}
+      onClick={(event) => {
+        if (isBackdropClick(event)) onClose()
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="template-preview-title"
     >
       <div
-        className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-        style={{ width: 1000, height: '90vh', display: 'flex', flexDirection: 'column' }}
-        onClick={(e) => e.stopPropagation()}
+        className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden animate-zoom-in w-[1000px] h-[90vh]"
+        onClick={(event) => event.stopPropagation()}
       >
-        <div
-          style={{
-            padding: '16px 24px',
-            borderBottom: '1px solid var(--border)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
+        <div className="px-6 py-4 border-b border-border flex justify-between items-center">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <h2 style={{ margin: 0, fontSize: 20 }}>{template.titleVi || template.title}</h2>
+            <div className="flex items-center gap-3">
+              <h2 id="template-preview-title" className="m-0 text-xl">{template.titleVi || template.title}</h2>
               {onToggleFavorite && (
                 <Button
                   variant="icon"
                   onClick={() => onToggleFavorite(template.id)}
-                  style={{ color: isFavorite ? '#fbbf24' : 'var(--text-muted)' }}
+                  className={isFavorite ? 'text-amber-400' : 'text-text-muted'}
                   title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                  aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                 >
-                  <span style={{ fontSize: 18 }}>{isFavorite ? '★' : '☆'}</span>
+                  <span className="text-lg">{isFavorite ? '★' : '☆'}</span>
                 </Button>
               )}
             </div>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
+            <p className="mt-1 mb-0 text-[13px] text-text-muted">
               {slides.length} slides • {template.category} • {template.description}
             </p>
           </div>
-          <Button variant="icon" onClick={onClose}>
+          <Button variant="icon" onClick={onClose} aria-label="Close">
             <X size={20} />
           </Button>
         </div>
 
-        <div
-          style={{
-            flex: 1,
-            backgroundColor: '#111',
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-          }}
-        >
+        <div className="flex-1 bg-surface-0 relative flex flex-col overflow-hidden">
           {!insertMode ? (
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-              }}
-            >
+            <div className="flex-1 flex items-center justify-center relative">
               {slides.length > 0 ? (
                 <div
-                  style={{
-                    width: 960,
-                    height: 540,
-                    transform: 'scale(0.75)',
-                    transformOrigin: 'center',
-                    position: 'relative',
-                  }}
+                  className="w-[960px] h-[540px] scale-75 origin-center relative"
                 >
                   <SlideThumbnail slide={slides[currentSlide]} />
                 </div>
               ) : (
-                <div style={{ color: '#fff' }}>No slides available</div>
+                <div className="text-white">No slides available</div>
               )}
 
               {slides.length > 1 && (
                 <>
                   <Button
                     variant="icon"
-                    style={{
-                      position: 'absolute',
-                      left: 20,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'rgba(0,0,0,0.5)',
-                      width: 44,
-                      height: 44,
-                      borderRadius: '50%',
-                    }}
+                    className="absolute left-5 top-1/2 -translate-y-1/2 bg-black/50 w-11 h-11 rounded-full"
                     onClick={() => setCurrentSlide((s) => Math.max(0, s - 1))}
                     disabled={currentSlide === 0}
+                    aria-label="Previous slide"
                   >
-                    <ChevronLeft size={24} color="#fff" />
+                    <ChevronLeft size={24} className="text-white" />
                   </Button>
                   <Button
                     variant="icon"
-                    style={{
-                      position: 'absolute',
-                      right: 20,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'rgba(0,0,0,0.5)',
-                      width: 44,
-                      height: 44,
-                      borderRadius: '50%',
-                    }}
+                    className="absolute right-5 top-1/2 -translate-y-1/2 bg-black/50 w-11 h-11 rounded-full"
                     onClick={() => setCurrentSlide((s) => Math.min(slides.length - 1, s + 1))}
                     disabled={currentSlide === slides.length - 1}
+                    aria-label="Next slide"
                   >
-                    <ChevronRight size={24} color="#fff" />
+                    <ChevronRight size={24} className="text-white" />
                   </Button>
                   <div
-                    style={{
-                      position: 'absolute',
-                      bottom: 20,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      background: 'rgba(0,0,0,0.5)',
-                      color: '#fff',
-                      padding: '4px 12px',
-                      borderRadius: 12,
-                      fontSize: 12,
-                    }}
+                    className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-xl text-xs"
                   >
                     {currentSlide + 1} / {slides.length}
                   </div>
@@ -356,10 +239,10 @@ export default function TemplatePreview({
               )}
             </div>
           ) : (
-            <div style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-                <h3 style={{ color: 'white', margin: 0 }}>Select Slides to Insert</h3>
-                <div style={{ display: 'flex', gap: 12 }}>
+            <div className="flex-1 p-6 overflow-y-auto">
+              <div className="flex justify-between mb-5">
+                <h3 className="text-white m-0">Select Slides to Insert</h3>
+                <div className="flex gap-3">
                   <Button
                     variant="secondary"
                     onClick={() => setSelectedSlides(slides.map((_, i) => i))}
@@ -372,55 +255,26 @@ export default function TemplatePreview({
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+              <div className="grid grid-cols-4 gap-4">
                 {slides.map((s, i) => {
                   const isSelected = selectedSlides.includes(i)
                   return (
                     <div
                       key={i}
-                      style={{
-                        border: `2px solid ${isSelected ? '#6366f1' : 'transparent'}`,
-                        borderRadius: 8,
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        background: 'rgba(255,255,255,0.05)',
-                      }}
+                      className={`rounded-lg overflow-hidden cursor-pointer bg-white/5 ${isSelected ? 'border-2 border-indigo-500' : 'border-2 border-transparent'}`}
                       onClick={() => toggleSlideSelection(i)}
                     >
-                      <div
-                        style={{
-                          width: '100%',
-                          aspectRatio: '16/9',
-                          position: 'relative',
-                          pointerEvents: 'none',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <div
-                          style={{
-                            transform: 'scale(0.22)',
-                            transformOrigin: 'top left',
-                            width: 960,
-                            height: 540,
-                          }}
-                        >
+                      <div className="w-full aspect-video relative pointer-events-none overflow-hidden">
+                        <div className="scale-[0.22] origin-top-left w-[960px] h-[540px]">
                           <SlideThumbnail slide={s} />
                         </div>
                       </div>
-                      <div
-                        style={{
-                          padding: 8,
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          background: 'rgba(0,0,0,0.5)',
-                        }}
-                      >
-                        <span style={{ color: 'white', fontSize: 12 }}>Slide {i + 1}</span>
+                      <div className="p-2 flex justify-between items-center bg-black/50">
+                        <span className="text-white text-xs">Slide {i + 1}</span>
                         {isSelected ? (
-                          <CheckSquare size={16} color="#6366f1" />
+                          <CheckSquare size={16} className="text-primary" />
                         ) : (
-                          <Square size={16} color="#9ca3af" />
+                          <Square size={16} className="text-slate-400" />
                         )}
                       </div>
                     </div>
@@ -431,19 +285,11 @@ export default function TemplatePreview({
           )}
         </div>
 
-        <div
-          style={{
-            padding: '16px 24px',
-            borderTop: '1px solid var(--border)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
+        <div className="px-6 py-4 border-t border-border flex justify-between items-center">
           {insertMode ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 text-[13px]">
                   <input
                     type="radio"
                     checked={insertPosition === 'after'}
@@ -451,7 +297,7 @@ export default function TemplatePreview({
                   />
                   After current slide
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                <label className="flex items-center gap-2 text-[13px]">
                   <input
                     type="radio"
                     checked={insertPosition === 'end'}
@@ -460,7 +306,7 @@ export default function TemplatePreview({
                   At the end
                 </label>
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div className="flex gap-3">
                 <Button variant="secondary" onClick={() => setInsertMode(false)}>
                   Back
                 </Button>
@@ -476,23 +322,17 @@ export default function TemplatePreview({
             </>
           ) : (
             <>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div className="flex gap-2">
                 {template.tags?.map((tag) => (
                   <span
                     key={tag}
-                    style={{
-                      background: 'var(--bg-secondary)',
-                      padding: '4px 8px',
-                      borderRadius: 12,
-                      fontSize: 11,
-                      color: 'var(--text-secondary)',
-                    }}
+                    className="bg-secondary px-2 py-1 rounded-xl text-[11px] text-text-secondary"
                   >
                     #{tag}
                   </span>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div className="flex gap-3">
                 <Button variant="secondary" onClick={onClose}>
                   Cancel
                 </Button>

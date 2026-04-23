@@ -218,7 +218,7 @@ export default function EditorMenuBar({
             render: () => (
               <div className="flex items-center justify-between px-3 py-1.5 text-sm text-text-primary w-full">
                 <span>Interval</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div className="flex items-center gap-1">
                   <input
                     type="number"
                     className="w-12 rounded border border-border bg-secondary px-1 py-0.5 text-xs text-text-primary text-center focus:border-accent focus:outline-none"
@@ -393,7 +393,7 @@ export default function EditorMenuBar({
             setCustomSizePrompt(false)
           }}
           onCancel={() => setCustomSizePrompt(false)}
-          style={{ position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)' }}
+          className="fixed top-[60px] left-1/2 -translate-x-1/2"
         />
       )}
     </div>

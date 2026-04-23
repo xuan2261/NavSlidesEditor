@@ -12,6 +12,10 @@ import {
 } from 'lucide-react'
 import { Button } from './ui/Button'
 
+const DEFAULT_SLIDE_WIDTH = 960
+const DEFAULT_SLIDE_HEIGHT = 540
+const THUMBNAIL_PREVIEW_WIDTH = 180
+
 function getBgStyle(bg) {
   if (!bg || bg.type === 'none') return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
   if (bg.type === 'color') return { backgroundColor: bg.color || 'var(--bg-canvas-default, #ffffff)' }
@@ -25,6 +29,84 @@ function getBgStyle(bg) {
   return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
 }
 
+function getPreviewScale(slideWidth) {
+  return THUMBNAIL_PREVIEW_WIDTH / (slideWidth || DEFAULT_SLIDE_WIDTH)
+}
+
+function getPreviewFrameStyle(bg, slideWidth, slideHeight) {
+  return {
+    ...getBgStyle(bg),
+    aspectRatio: `${slideWidth} / ${slideHeight}`,
+  }
+}
+
+function getPreviewElementStyle(el, slideWidth, slideHeight) {
+  return {
+    position: 'absolute',
+    left: `${(el.x / slideWidth) * 100}%`,
+    top: `${(el.y / slideHeight) * 100}%`,
+    width: `${(el.width / slideWidth) * 100}%`,
+    height: `${(el.height / slideHeight) * 100}%`,
+    overflow: 'hidden',
+    zIndex: el.zIndex || 1,
+  }
+}
+
+function getPreviewIframeStyle(el, slideWidth) {
+  return {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: `${el.width || 400}px`,
+    height: `${el.height || 300}px`,
+    border: 'none',
+    pointerEvents: 'none',
+    transformOrigin: 'top left',
+    transform: `scale(${getPreviewScale(slideWidth)})`,
+  }
+}
+
+function getPreviewTextStyle(el, slideWidth) {
+  return {
+    width: `${el.width || 0}px`,
+    height: `${el.height || 0}px`,
+    overflow: 'hidden',
+    color: 'white',
+    padding: '8px 12px',
+    boxSizing: 'border-box',
+    fontSize: '16px',
+    transformOrigin: 'top left',
+    transform: `scale(${getPreviewScale(slideWidth)})`,
+  }
+}
+
+function getPreviewTableCellStyle(el, rowIndex) {
+  const headerBg = el.headerBgColor || 'rgba(99,102,241,0.3)'
+  const cellBg = el.cellBgColor || 'transparent'
+  const borderColor = el.borderColor || 'rgba(255,255,255,0.2)'
+  const borderWidth = Math.max(0.5, (el.borderWidth ?? 1) / 4)
+  const textColor = el.textColor || '#ffffff'
+
+  return {
+    padding: 2,
+    border: `${borderWidth}px solid ${borderColor}`,
+    background: el.headerRow && rowIndex === 0 ? headerBg : cellBg,
+    color: textColor,
+    fontSize: 4,
+    fontWeight: el.headerRow && rowIndex === 0 ? 600 : 400,
+    verticalAlign: 'middle',
+    overflow: 'hidden',
+  }
+}
+
+function getPreviewCalloutStyle(el) {
+  return { background: el.calloutColor || '#ef4444' }
+}
+
+function getContextMenuStyle(ctxMenu) {
+  return { top: ctxMenu.y, left: ctxMenu.x }
+}
+
 export default function SlidePanel({
   slides,
   currentIndex,
@@ -32,6 +114,8 @@ export default function SlidePanel({
   onAdd,
   onDelete,
   onDuplicate,
+  onDeleteSelected,
+  onDuplicateSelected,
   onMove,
   onToggleLock,
   onToggleAutoAnimate,
@@ -39,11 +123,14 @@ export default function SlidePanel({
   onSelectVertical,
   currentVerticalIndex,
   onAddFromTemplate,
+  resolution,
 }) {
   const [dragOverIndex, setDragOverIndex] = useState(null)
   const dragIndexRef = useRef(null)
   const [ctxMenu, setCtxMenu] = useState(null) // { x, y, index }
   const [selectedIndices, setSelectedIndices] = useState([currentIndex])
+  const slideWidth = resolution?.width || DEFAULT_SLIDE_WIDTH
+  const slideHeight = resolution?.height || DEFAULT_SLIDE_HEIGHT
 
   // Close context menu on click outside / Escape
   useEffect(() => {
@@ -64,13 +151,13 @@ export default function SlidePanel({
     e.preventDefault()
     e.stopPropagation()
     setCtxMenu({ x: e.clientX, y: e.clientY, index })
-  }, [])
+  }, [setCtxMenu])
 
   return (
     <div className="slide-panel tour-step-slide-panel flex flex-col w-[200px] bg-secondary border-r border-border h-full">
       <div className="slide-panel-header px-4 py-3 flex items-center justify-between border-b border-border bg-card font-medium text-text-primary text-sm">
         <span>Slides</span>
-        <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{slides.length}</span>
+        <span className="text-text-muted text-[11px]">{slides.length}</span>
       </div>
 
       <div className="slide-list flex-1 overflow-y-auto p-2 space-y-2">
@@ -78,12 +165,7 @@ export default function SlidePanel({
           return (
             <div
               key={slide.id || index}
-              className={`slide-item group rounded-sm border-2 cursor-pointer relative transition-all hover:border-border-strong ${index === currentIndex ? 'border-accent' : 'border-transparent'} ${selectedIndices.includes(index) && index !== currentIndex ? 'outline outline-2 outline-accent outline-offset-[-2px]' : ''}`}
-              style={
-                dragOverIndex === index
-                  ? { outline: '2px solid var(--accent)', outlineOffset: '-2px' }
-                  : undefined
-              }
+              className={`slide-item group rounded-sm border-2 cursor-pointer relative transition-all hover:border-border-strong ${index === currentIndex ? 'border-accent' : 'border-transparent'} ${selectedIndices.includes(index) && index !== currentIndex ? 'outline outline-2 outline-accent outline-offset-[-2px]' : ''} ${dragOverIndex === index ? 'outline outline-2 outline-accent outline-offset-[-2px]' : ''}`}
               draggable
               onDragStart={() => {
                 dragIndexRef.current = index
@@ -123,78 +205,45 @@ export default function SlidePanel({
               onContextMenu={(e) => handleContextMenu(e, index)}
             >
               <span
-                className="absolute top-1 left-1 text-[10px] text-white/50 bg-black/40 px-1 py-[1px] rounded-[3px] z-10"
-                style={slide.locked ? { textDecoration: 'line-through', opacity: 0.5 } : undefined}
+                className={`absolute top-1 left-1 text-[10px] text-white/50 bg-black/40 px-1 py-[1px] rounded-[3px] z-10 ${
+                  slide.locked ? 'line-through opacity-50' : ''
+                }`}
               >
                 {index + 1}
               </span>
 
               {/* Indicators */}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 2,
-                  position: 'absolute',
-                  top: 2,
-                  right: 2,
-                  zIndex: 10,
-                }}
-              >
+              <div className="flex gap-0.5 absolute top-0.5 right-0.5 z-10">
                 {slide.locked && (
-                  <span title="Slide locked" style={{ color: '#f59e0b', fontSize: 9 }}>
+                  <span title="Slide locked" className="text-amber-400 text-[9px]">
                     <Lock size={9} />
                   </span>
                 )}
                 {slide.autoAnimate && (
-                  <span title="Auto-Animate" style={{ color: '#6366f1', fontSize: 9 }}>
+                  <span title="Auto-Animate" className="text-accent text-[9px]">
                     <Sparkles size={9} />
                   </span>
                 )}
               </div>
 
               {slide.section && (
-                <div
-                  style={{
-                    fontSize: 9,
-                    color: 'rgba(255,255,255,0.5)',
-                    marginBottom: 2,
-                    paddingLeft: 2,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    maxWidth: '100%',
-                  }}
-                >
+                <div className="text-[9px] text-white/50 mb-0.5 pl-0.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
                   § {slide.section}
                 </div>
               )}
               <div
-                className="aspect-video flex items-start p-1.5 overflow-hidden relative"
-                style={{
-                  ...getBgStyle(slide.background),
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
+                className="flex items-start p-1.5 overflow-hidden relative"
+                style={getPreviewFrameStyle(slide.background, slideWidth, slideHeight)}
               >
                 {(slide.elements || []).map((el) => (
                   <div
                     key={el.id}
-                    style={{
-                      position: 'absolute',
-                      left: `${(el.x / 960) * 100}%`,
-                      top: `${(el.y / 540) * 100}%`,
-                      width: `${(el.width / 960) * 100}%`,
-                      height: `${(el.height / 540) * 100}%`,
-                      overflow: 'hidden',
-                      fontSize: '4px',
-                      lineHeight: 1.3,
-                      color: 'white',
-                      zIndex: el.zIndex || 1,
-                    }}
+                    style={getPreviewElementStyle(el, slideWidth, slideHeight)}
                   >
                     {el.type === 'text' && (
                       <div
-                        className="text-[5px] leading-[1.3] text-[#1a1a2e] w-full max-h-full overflow-hidden"
+                        className="slide-text-content ProseMirror-preview"
+                        style={getPreviewTextStyle(el, slideWidth)}
                         dangerouslySetInnerHTML={{ __html: el.content || '' }}
                       />
                     )}
@@ -202,141 +251,53 @@ export default function SlidePanel({
                       <img
                         src={el.src}
                         alt=""
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          display: 'block',
-                        }}
+                        className="w-full h-full object-cover block"
                         draggable={false}
                       />
                     )}
                     {el.type === 'html' &&
                       (el.content ? (
-                        <div
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            overflow: 'hidden',
-                            position: 'relative',
-                          }}
-                        >
+                        <div className="w-full h-full overflow-hidden relative">
                           <iframe
                             srcDoc={el.content}
-                            style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              width: `${el.width || 400}px`,
-                              height: `${el.height || 300}px`,
-                              border: 'none',
-                              pointerEvents: 'none',
-                              transformOrigin: 'top left',
-                              transform: `scale(${180 / 960})`,
-                            }}
+                            style={getPreviewIframeStyle(el, slideWidth)}
                             sandbox="allow-scripts"
                             tabIndex={-1}
                           />
                         </div>
                       ) : (
-                        <div
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            background: 'rgba(99,102,241,0.15)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 6,
-                            color: 'rgba(255,255,255,0.4)',
-                          }}
-                        >
+                        <div className="w-full h-full bg-primary/15 flex items-center justify-center text-[6px] text-white/40">
                           &lt;/&gt;
                         </div>
                       ))}
                     {el.type === 'code' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'rgba(0,0,0,0.5)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 5,
-                          color: 'rgba(180,220,120,0.7)',
-                          fontFamily: 'monospace',
-                        }}
-                      >
+                      <div className="w-full h-full bg-black/50 flex items-center justify-center text-[5px] text-lime-200/70 font-mono">
                         {el.language || 'code'}
                       </div>
                     )}
                     {el.type === 'video' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'rgba(0,0,0,0.4)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 8,
-                          color: 'rgba(255,255,255,0.5)',
-                        }}
-                      >
+                      <div className="w-full h-full bg-black/40 flex items-center justify-center text-[8px] text-white/50">
                         &#9654;
                       </div>
                     )}
                     {el.type === 'audio' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'rgba(99,102,241,0.15)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 6,
-                          color: 'rgba(255,255,255,0.4)',
-                        }}
-                      >
+                      <div className="w-full h-full bg-primary/15 flex items-center justify-center text-[6px] text-white/40">
                         &#9835;
                       </div>
                     )}
                     {el.type === 'table' &&
                       (() => {
                         const data = el.data || [['']]
-                        const headerBg = el.headerBgColor || 'rgba(99,102,241,0.3)'
-                        const cellBg = el.cellBgColor || 'transparent'
-                        const borderColor = el.borderColor || 'rgba(255,255,255,0.2)'
-                        const borderWidth = Math.max(0.5, (el.borderWidth ?? 1) / 4)
-                        const textColor = el.textColor || '#ffffff'
                         return (
-                          <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
-                            <table
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                borderCollapse: 'collapse',
-                                tableLayout: 'fixed',
-                              }}
-                            >
+                          <div className="w-full h-full overflow-hidden">
+                            <table className="w-full h-full border-collapse table-fixed">
                               <tbody>
                                 {data.map((row, ri) => (
                                   <tr key={ri}>
                                     {(row || []).map((cell, ci) => (
                                       <td
                                         key={ci}
-                                        style={{
-                                          padding: 2,
-                                          border: `${borderWidth}px solid ${borderColor}`,
-                                          background: el.headerRow && ri === 0 ? headerBg : cellBg,
-                                          color: textColor,
-                                          fontSize: 4,
-                                          fontWeight: el.headerRow && ri === 0 ? 600 : 400,
-                                          verticalAlign: 'middle',
-                                          overflow: 'hidden',
-                                        }}
+                                        style={getPreviewTableCellStyle(el, ri)}
                                       >
                                         {cell || ''}
                                       </td>
@@ -349,141 +310,47 @@ export default function SlidePanel({
                         )
                       })()}
                     {el.type === 'latex' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'rgba(99,102,241,0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 6,
-                          color: 'rgba(255,255,255,0.4)',
-                          fontFamily: 'serif',
-                          fontStyle: 'italic',
-                        }}
-                      >
+                      <div className="w-full h-full bg-primary/10 flex items-center justify-center text-[6px] text-white/40 font-serif italic">
                         TeX
                       </div>
                     )}
                     {el.type === 'markdown' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'rgba(255,255,255,0.05)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 6,
-                          color: 'rgba(255,255,255,0.4)',
-                          fontWeight: 700,
-                        }}
-                      >
+                      <div className="w-full h-full bg-white/5 flex items-center justify-center text-[6px] text-white/40 font-bold">
                         MD
                       </div>
                     )}
                     {el.type === 'chart' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'rgba(99,102,241,0.15)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 6,
-                          color: 'rgba(255,255,255,0.4)',
-                        }}
-                      >
+                      <div className="w-full h-full bg-primary/15 flex items-center justify-center text-[6px] text-white/40">
                         &#9776;
                       </div>
                     )}
                     {el.type === 'callout' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
+                      <div className="w-full h-full flex items-center justify-center">
                         <div
-                          style={{
-                            width: '60%',
-                            height: '60%',
-                            borderRadius: '50%',
-                            background: el.calloutColor || '#ef4444',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontSize: 5,
-                            fontWeight: 700,
-                          }}
+                          className="w-[60%] h-[60%] rounded-full flex items-center justify-center text-white text-[5px] font-bold"
+                          style={getPreviewCalloutStyle(el)}
                         >
                           {el.calloutNumber || 1}
                         </div>
                       </div>
                     )}
                     {el.type === 'icon' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 8,
-                          color: 'rgba(255,255,255,0.4)',
-                        }}
-                      >
+                      <div className="w-full h-full flex items-center justify-center text-[8px] text-white/40">
                         &#9733;
                       </div>
                     )}
                     {el.type === 'drawing' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 6,
-                          color: 'rgba(255,255,255,0.4)',
-                        }}
-                      >
+                      <div className="w-full h-full flex items-center justify-center text-[6px] text-white/40">
                         ✏
                       </div>
                     )}
                     {el.type === 'line' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 8,
-                          color: 'rgba(255,255,255,0.4)',
-                        }}
-                      >
+                      <div className="w-full h-full flex items-center justify-center text-[8px] text-white/40">
                         ↗
                       </div>
                     )}
                     {el.type === 'svg' && (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 6,
-                          color: 'rgba(255,255,255,0.4)',
-                        }}
-                      >
+                      <div className="w-full h-full flex items-center justify-center text-[6px] text-white/40">
                         SVG
                       </div>
                     )}
@@ -503,13 +370,12 @@ export default function SlidePanel({
                   <Copy size={12} />
                 </button>
                 <button
-                  className="bg-black/60 border-none text-white p-1 rounded-[3px] cursor-pointer flex items-center justify-center hover:bg-accent/80"
+                  className={`bg-black/60 border-none p-1 rounded-[3px] cursor-pointer flex items-center justify-center hover:bg-accent/80 ${slides.length > 1 ? 'text-white' : 'text-white/30'}`}
                   title="Delete"
                   onClick={(e) => {
                     e.stopPropagation()
                     if (slides.length > 1) onDelete(index)
                   }}
-                  style={{ color: slides.length > 1 ? 'white' : 'rgba(255,255,255,0.3)' }}
                 >
                   <Trash2 size={12} />
                 </button>
@@ -517,41 +383,24 @@ export default function SlidePanel({
 
               {/* Vertical children */}
               {(slide.children || []).length > 0 && (
-                <div
-                  style={{
-                    marginTop: 2,
-                    paddingLeft: 8,
-                    borderLeft: '2px solid rgba(99,102,241,0.3)',
-                  }}
-                >
+                <div className="mt-0.5 pl-2 border-l-2 border-accent/30">
                   {slide.children.map((child, ci) => (
                     <div
                       key={child.id || `${index}-${ci}`}
-                      className={`group rounded-sm border-2 cursor-pointer relative transition-all hover:border-border-strong ${currentVerticalIndex?.parent === index && currentVerticalIndex?.child === ci ? 'border-accent' : 'border-transparent'}`}
-                      style={{
-                        marginBottom: 2,
-                        transform: 'scale(0.85)',
-                        transformOrigin: 'top left',
-                      }}
+                      className={`group rounded-sm border-2 cursor-pointer relative transition-all hover:border-border-strong mb-0.5 origin-top-left scale-[0.85] ${currentVerticalIndex?.parent === index && currentVerticalIndex?.child === ci ? 'border-accent' : 'border-transparent'}`}
                       onClick={(e) => {
                         e.stopPropagation()
                         onSelectVertical?.({ parent: index, child: ci })
                       }}
                     >
                       <span
-                        className="absolute top-1 left-1 text-[10px] text-white/50 bg-black/40 px-1 py-[1px] rounded-[3px] z-10"
-                        style={{ fontSize: 8, color: '#818cf8' }}
+                        className="absolute top-1 left-1 text-[8px] text-indigo-400 bg-black/40 px-1 py-[1px] rounded-[3px] z-10"
                       >
                         {index + 1}.{ci + 1}
                       </span>
                       <div
-                        className="aspect-video flex items-start p-1.5 overflow-hidden relative"
-                        style={{
-                          ...getBgStyle(child.background),
-                          position: 'relative',
-                          overflow: 'hidden',
-                          minHeight: 30,
-                        }}
+                        className="flex items-start p-1.5 overflow-hidden relative min-h-[30px]"
+                        style={getPreviewFrameStyle(child.background, slideWidth, slideHeight)}
                       />
                     </div>
                   ))}
@@ -591,7 +440,11 @@ export default function SlidePanel({
             variant="icon"
             onClick={() => {
               const lastIdx = selectedIndices[selectedIndices.length - 1]
-              selectedIndices.forEach((i) => onDuplicate(i))
+              if (onDuplicateSelected) {
+                onDuplicateSelected(selectedIndices)
+              } else {
+                selectedIndices.forEach((i) => onDuplicate(i))
+              }
               setSelectedIndices([lastIdx])
             }}
             title="Duplicate all selected"
@@ -602,13 +455,14 @@ export default function SlidePanel({
             variant="icon"
             onClick={() => {
               if (slides.length - selectedIndices.length < 1) return
-              const toDelete = [...selectedIndices].sort((a, b) => b - a)
-              let newIdx = currentIndex
-              toDelete.forEach((i) => {
-                onDelete(i)
-                if (i < currentIndex) newIdx--
-              })
-              setSelectedIndices([Math.max(0, newIdx)])
+              if (onDeleteSelected) {
+                onDeleteSelected(selectedIndices)
+              } else {
+                [...selectedIndices].sort((a, b) => b - a).forEach((i) => onDelete(i))
+              }
+              setSelectedIndices([
+                Math.max(0, Math.min(currentIndex, slides.length - selectedIndices.length - 1)),
+              ])
             }}
             title="Delete all selected"
           >
@@ -623,7 +477,7 @@ export default function SlidePanel({
           <div className="fixed inset-0 z-[9998]" onMouseDown={() => setCtxMenu(null)} />
           <div
             className="absolute z-[9999] bg-card border border-border rounded-lg shadow-xl py-1 min-w-[160px]"
-            style={{ top: ctxMenu.y, left: ctxMenu.x }}
+            style={getContextMenuStyle(ctxMenu)}
             onMouseDown={(e) => e.stopPropagation()}
           >
             <button
@@ -687,7 +541,7 @@ export default function SlidePanel({
                 if (slides.length > 1) onDelete(ctxMenu.index)
                 setCtxMenu(null)
               }}
-              style={{ color: slides.length > 1 ? 'var(--danger)' : 'var(--text-muted)' }}
+              className={slides.length > 1 ? 'text-danger' : 'text-text-muted'}
               disabled={slides.length <= 1}
             >
               <Trash2 size={14} /> Delete

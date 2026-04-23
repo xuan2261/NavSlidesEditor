@@ -3,6 +3,7 @@ import { EditorPage } from './pages/EditorPage.js'
 import {
   apiCreatePresentation,
   apiDeletePresentation,
+  apiGetPresentation,
   apiUpdatePresentation,
 } from './fixtures/test-fixtures.js'
 
@@ -48,24 +49,22 @@ test.describe('Properties Panel', () => {
   })
 
   test('selecting an element shows properties panel', async ({ page }) => {
-    await page.locator('.element-wrapper').first().click()
-    await page.waitForTimeout(500)
+    await editorPage.selectElement(0)
 
     const panel = page.locator('.properties-panel')
     await expect(panel).toBeVisible({ timeout: 5000 })
   })
 
-  test('deselecting hides active element state', async ({ page }) => {
-    await page.locator('.element-wrapper').first().click()
-    await page.waitForTimeout(500)
-
-    await page.keyboard.press('Escape')
-    await page.waitForTimeout(500)
+  test('deselecting hides active element state', async () => {
+    await editorPage.selectElement(0)
+    await editorPage.deselectAll()
+    await expect(editorPage.page.locator('.properties-panel h3').filter({ hasText: 'Element' })).toHaveCount(
+      0
+    )
   })
 
   test('properties panel shows position/size inputs', async ({ page }) => {
-    await page.locator('.element-wrapper').first().click()
-    await page.waitForTimeout(500)
+    await editorPage.selectElement(0)
 
     const panel = page.locator('.properties-panel')
     await expect(panel).toBeVisible({ timeout: 5000 })
@@ -76,8 +75,7 @@ test.describe('Properties Panel', () => {
   })
 
   test('can modify element position via properties panel', async ({ page }) => {
-    await page.locator('.element-wrapper').first().click()
-    await page.waitForTimeout(500)
+    await editorPage.selectElement(0)
 
     const panel = page.locator('.properties-panel')
     await expect(panel).toBeVisible({ timeout: 5000 })
@@ -85,9 +83,19 @@ test.describe('Properties Panel', () => {
     const xInput = panel.locator('input[type="number"]').first()
     await xInput.fill('200')
     await xInput.press('Enter')
-    await page.waitForTimeout(500)
+    await expect(xInput).toHaveValue('200')
+  })
 
-    const newValue = await xInput.inputValue()
-    expect(newValue).toBe('200')
+  test('speaker notes save through the canonical notes field', async ({ page, request }) => {
+    const notesInput = page.locator('textarea[placeholder="Add speaker notes here..."]')
+
+    await expect(notesInput).toBeVisible({ timeout: 5000 })
+    await notesInput.fill('Presenter note persists across reload')
+    await editorPage.waitForAutoSave()
+
+    const saved = await apiGetPresentation(request, presId)
+    expect(saved.slides[0].notes).toBe('Presenter note persists across reload')
+    expect(saved.slides[0].speakerNotes).toBeUndefined()
+    await expect(notesInput).toHaveValue('Presenter note persists across reload')
   })
 })

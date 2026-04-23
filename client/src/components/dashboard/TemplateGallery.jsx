@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Button } from '../../components/ui'
+import { isBackdropClick, useEscapeClose } from '../../lib/utils'
 
 import {
   Shield,
@@ -112,6 +113,15 @@ const CATEGORY_GROUPS = [
 ]
 
 const badgeCls = 'inline-flex items-center gap-0.5 px-[7px] py-0.5 rounded-[10px] text-[10px] font-semibold backdrop-blur-sm'
+const galleryFilterButtonClassName =
+  'mx-auto flex w-[90%] items-center justify-between px-2.5 py-[7px] text-[13px]'
+const galleryCategoryButtonClassName =
+  'mx-auto flex w-[90%] items-center gap-1.5 px-2.5 py-1.5 text-xs'
+const difficultyBadgeClassName = {
+  basic: 'bg-[#00ff87]/10 text-[#00ff87]',
+  intermediate: 'bg-[#ffd700]/10 text-[#ffd700]',
+  advanced: 'bg-[#ff4757]/10 text-[#ff4757]',
+}
 
 export default function TemplateGallery({ onSelectTemplate, onClose }) {
   const [data, setData] = useState({ categories: [], templates: [] })
@@ -152,8 +162,10 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
     fetchTemplates()
   }, [])
 
+  useEscapeClose(onClose)
+
   const filteredTemplates = useMemo(() => {
-    let items = data.templates
+    let items = [...data.templates]
     if (activeCategory === 'favorites') {
       items = items.filter((t) => favorites.includes(t.id))
     } else if (activeCategory) {
@@ -214,26 +226,23 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
       advanced: 'Nâng cao',
     })[d] || d
 
-  const difficultyColor = (d) =>
-    ({
-      basic: '#00ff87',
-      intermediate: '#ffd700',
-      advanced: '#ff4757',
-    })[d] || 'var(--text-muted)'
-
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
-      onClick={onClose}
+      onClick={(event) => {
+        if (isBackdropClick(event)) onClose()
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="template-gallery-title"
     >
       <div
-        className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-        style={{ width: 960, maxHeight: '88vh' }}
-        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[88vh] w-[960px] flex-col overflow-hidden rounded-xl border border-border bg-panel shadow-2xl animate-zoom-in"
+        onClick={(event) => event.stopPropagation()}
       >
         {/* Header */}
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-          <h2 className="m-0 text-xl">🎓 Template Gallery</h2>
+          <h2 id="template-gallery-title" className="m-0 text-xl">🎓 Template Gallery</h2>
           <div className="relative w-[240px]">
             <Search
               size={14}
@@ -263,15 +272,7 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
           <div className="w-[210px] border-r border-border overflow-y-auto py-3 shrink-0">
             <Button
               variant={!activeCategory ? 'primary' : 'secondary'}
-              style={{
-                width: '90%',
-                margin: '0 auto 6px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '7px 10px',
-                fontSize: 13,
-              }}
+              className={`${galleryFilterButtonClassName} mb-1.5`}
               onClick={() => setActiveCategory(null)}
             >
               <span>Tất cả</span>
@@ -281,15 +282,7 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
             </Button>
             <Button
               variant={activeCategory === 'favorites' ? 'primary' : 'secondary'}
-              style={{
-                width: '90%',
-                margin: '0 auto 12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '7px 10px',
-                fontSize: 13,
-              }}
+              className={`${galleryFilterButtonClassName} mb-3`}
               onClick={() => setActiveCategory('favorites')}
             >
               <div className="flex items-center gap-1.5">
@@ -322,15 +315,7 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
                       <Button
                         variant={activeCategory === cat.id ? 'primary' : 'secondary'}
                         key={cat.id}
-                        style={{
-                          width: '90%',
-                          margin: '0 auto 3px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          padding: '6px 10px',
-                          fontSize: 12,
-                        }}
+                        className={`${galleryCategoryButtonClassName} mb-[3px]`}
                         onClick={() => setActiveCategory(cat.id)}
                       >
                         <Icon size={14} />
@@ -405,15 +390,14 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
                         <Button
                           variant="icon"
                           onClick={(e) => toggleFavorite(e, template.id)}
-                          style={{
-                            position: 'absolute',
-                            top: 6,
-                            right: 6,
-                            color: favorites.includes(template.id)
-                              ? '#fbbf24'
-                              : 'rgba(255,255,255,0.5)',
-                            zIndex: 10,
-                          }}
+                          className={`absolute right-1.5 top-1.5 z-10 ${
+                            favorites.includes(template.id) ? 'text-amber-400' : 'text-white/50'
+                          }`}
+                          aria-label={
+                            favorites.includes(template.id)
+                              ? 'Remove from favorites'
+                              : 'Add to favorites'
+                          }
                         >
                           <Star
                             size={16}
@@ -431,11 +415,9 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
                         <div className="flex gap-1 flex-wrap">
                           {template.difficulty && (
                             <span
-                              className="px-1.5 py-px rounded-lg text-[10px] font-semibold"
-                              style={{
-                                background: `${difficultyColor(template.difficulty)}18`,
-                                color: difficultyColor(template.difficulty),
-                              }}
+                              className={`px-1.5 py-px rounded-lg text-[10px] font-semibold ${
+                                difficultyBadgeClassName[template.difficulty] || 'bg-hover text-text-muted'
+                              }`}
                             >
                               {difficultyLabel(template.difficulty)}
                             </span>

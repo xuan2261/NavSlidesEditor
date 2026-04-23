@@ -4,6 +4,7 @@ import { api } from '../utils/api'
 import { searchUnsplash } from '../services/unsplash'
 import { searchGiphy } from '../services/giphy'
 import { Button } from '../components/ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 
 const TYPE_FILTERS = [
   { key: '', label: 'All', icon: null },
@@ -122,19 +123,26 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
     }
   }
 
+  useEscapeClose(onClose)
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
-      onClick={onClose}
+      onClick={(event) => {
+        if (isBackdropClick(event)) onClose()
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="media-library-modal-title"
     >
       <div
         className="bg-card rounded-xl shadow-2xl border border-border w-[850px] max-w-[90vw] max-h-[85vh] flex flex-col overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
         {/* Header */}
         <div className="flex justify-between items-center px-6 pt-5 pb-3">
-          <h2 className="m-0 text-lg text-text-primary">Media Library</h2>
-          <Button variant="icon" onClick={onClose}>
+          <h2 id="media-library-modal-title" className="m-0 text-lg text-text-primary">Media Library</h2>
+          <Button variant="icon" onClick={onClose} aria-label="Close">
             <X size={18} />
           </Button>
         </div>

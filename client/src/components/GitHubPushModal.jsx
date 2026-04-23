@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Github, Settings, Check, X } from 'lucide-react'
 import { api } from '../utils/api'
 import { Button } from '../components/ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 
 export default function GitHubPushModal({ presentationId, presentationTitle, onClose }) {
   const [config, setConfig] = useState({ owner: '', repo: '', hasToken: false })
@@ -39,17 +40,25 @@ export default function GitHubPushModal({ presentationId, presentationTitle, onC
     }
   }
 
+  useEscapeClose(onClose)
+
   return (
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
+      onClick={(event) => {
+        if (isBackdropClick(event)) onClose()
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="github-push-modal-title"
     >
-      <div className="bg-card rounded-xl p-6 w-[420px] max-w-[90vw] shadow-2xl border border-border">
+      <div
+        className="bg-card rounded-xl p-6 w-[420px] max-w-[90vw] shadow-2xl border border-border"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="m-0 text-base text-text-primary">Save to GitHub</h3>
-          <Button variant="ghost" onClick={onClose} className="p-1">
+          <h3 id="github-push-modal-title" className="m-0 text-base text-text-primary">Save to GitHub</h3>
+          <Button variant="ghost" onClick={onClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>

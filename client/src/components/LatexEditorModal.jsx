@@ -1,4 +1,5 @@
 import { Button } from '../components/ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 
 export default function LatexEditorModal({ state, onChange, onApply, onCancel }) {
   const content = state.content || ''
@@ -13,17 +14,24 @@ export default function LatexEditorModal({ state, onChange, onApply, onCancel })
     bodyContent = `<div id="math"></div><script>try{katex.render(${JSON.stringify(content)},document.getElementById('math'),{displayMode:true,throwOnError:false})}catch(e){document.getElementById('math').textContent=e.message}<\/script>`
   }
   const previewSrcDoc = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"><\/script>${tikzScript}<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:white}.katex{font-size:1.6em}svg{max-width:100%;max-height:100%}</style></head><body>${bodyContent}</body></html>`
+  useEscapeClose(onCancel)
 
   return (
     <div
       className="fixed inset-0 z-[10000] bg-black/75 flex items-center justify-center"
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') onCancel()
+      onClick={(event) => {
+        if (isBackdropClick(event)) onCancel()
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="latex-editor-modal-title"
     >
-      <div className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl">
+      <div
+        className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="px-4 py-3 border-b border-border flex justify-between items-center shrink-0 gap-3">
-          <span className="font-semibold text-sm">LaTeX / TikZ</span>
+          <h2 id="latex-editor-modal-title" className="font-semibold text-sm">LaTeX / TikZ</h2>
           <span className="text-xs text-text-muted">
             Supports KaTeX math and TikZ diagrams (via TikZJax)
           </span>

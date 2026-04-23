@@ -13,6 +13,7 @@ export default function PromptPopover({
   onCancel,
   type = 'text',
   style,
+  className: positionClassName,
 }) {
   const [value, setValue] = useState(defaultValue)
   const inputRef = useRef(null)
@@ -39,7 +40,7 @@ export default function PromptPopover({
   return (
     <>
       <div className="fixed inset-0 z-[9998] bg-black/40" onClick={onCancel} />
-      <div className="absolute z-[9999] bg-card border border-border rounded-lg shadow-xl p-3 min-w-[240px]" ref={wrapperRef} style={style}>
+      <div className={`absolute z-[9999] bg-card border border-border rounded-lg shadow-xl p-3 min-w-[240px] ${positionClassName || ''}`} ref={wrapperRef} style={style}>
         {title && <div className="text-xs font-semibold text-text-secondary mb-2">{title}</div>}
         <input
           ref={inputRef}

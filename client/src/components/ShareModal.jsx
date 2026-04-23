@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link2, X, Copy, Trash2, Plus, Lock, Clock, Eye, Loader2, Check } from 'lucide-react'
 import { Button } from '../components/ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 
 export default function ShareModal({ presentationId, onClose }) {
   const [shares, setShares] = useState([])
@@ -79,20 +80,27 @@ export default function ShareModal({ presentationId, onClose }) {
   const embedCode = (token) =>
     `<iframe src="${shareUrl(token)}" width="960" height="540" frameborder="0" allowfullscreen></iframe>`
 
+  useEscapeClose(onClose)
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
-      onClick={onClose}
+      onClick={(event) => {
+        if (isBackdropClick(event)) onClose()
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="share-modal-title"
     >
       <div
         className="bg-card rounded-xl p-6 w-[560px] max-h-[85vh] overflow-y-auto shadow-2xl border border-border"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="m-0 flex items-center gap-2 text-base text-text-primary">
+          <h3 id="share-modal-title" className="m-0 flex items-center gap-2 text-base text-text-primary">
             <Link2 size={18} /> Share Presentation
           </h3>
-          <Button variant="ghost" onClick={onClose} className="p-1">
+          <Button variant="ghost" onClick={onClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>

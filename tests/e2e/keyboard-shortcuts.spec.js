@@ -51,13 +51,8 @@ test.describe('Keyboard Shortcuts', () => {
     const initialCount = await editorPage.getElementCount()
     expect(initialCount).toBe(1)
 
-    // Click on the shape element
-    await page.locator('.element-wrapper').first().click()
-    await page.waitForTimeout(500)
-
-    // Duplicate
-    await page.keyboard.press('Control+d')
-    await page.waitForTimeout(1000)
+    await editorPage.selectElement(0)
+    await editorPage.duplicateElement()
 
     const afterDuplicate = await editorPage.getElementCount()
     expect(afterDuplicate).toBeGreaterThan(initialCount)
@@ -67,39 +62,27 @@ test.describe('Keyboard Shortcuts', () => {
     const initialCount = await editorPage.getElementCount()
     expect(initialCount).toBe(1)
 
-    // Click on shape
-    await page.locator('.element-wrapper').first().click()
-    await page.waitForTimeout(500)
-
-    // Delete
-    await page.keyboard.press('Delete')
-    await page.waitForTimeout(1000)
+    await editorPage.selectElement(0)
+    await editorPage.deleteSelectedElement()
 
     const afterDelete = await editorPage.getElementCount()
     expect(afterDelete).toBeLessThan(initialCount)
   })
 
-  test('Escape deselects element', async ({ page }) => {
-    await page.locator('.element-wrapper').first().click()
-    await page.waitForTimeout(300)
-
-    await page.keyboard.press('Escape')
-    await page.waitForTimeout(300)
-    // Test passes if no error
+  test('Escape deselects element', async () => {
+    await editorPage.selectElement(0)
+    await editorPage.deselectAll()
+    await expect(
+      editorPage.page.locator('.properties-panel h3').filter({ hasText: 'Element' })
+    ).toHaveCount(0)
   })
 
-  test('Ctrl+C / Ctrl+V copies and pastes element', async ({ page }) => {
+  test('Ctrl+C / Ctrl+V copies and pastes element', async () => {
     const initialCount = await editorPage.getElementCount()
 
-    // Click on shape
-    await page.locator('.element-wrapper').first().click()
-    await page.waitForTimeout(500)
-
-    // Copy + paste
-    await page.keyboard.press('Control+c')
-    await page.waitForTimeout(300)
-    await page.keyboard.press('Control+v')
-    await page.waitForTimeout(1000)
+    await editorPage.selectElement(0)
+    await editorPage.copyElement()
+    await editorPage.pasteElement()
 
     const afterPaste = await editorPage.getElementCount()
     expect(afterPaste).toBeGreaterThan(initialCount)

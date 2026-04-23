@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Languages, X, Loader2 } from 'lucide-react'
 import { aiTranslate } from '../utils/ai'
 import { Button } from '../components/ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { getSlideNotes, getSlideNotesTranslationKey } from '../utils/slide-notes'
 
 const LANGUAGES = [
   'English',
@@ -43,8 +45,9 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
           }
         })
       }
-      if (translateNotes && slide.speakerNotes) {
-        texts.push({ slideIdx: si, field: 'speakerNotes', html: slide.speakerNotes })
+      const notes = getSlideNotes(slide)
+      if (translateNotes && notes) {
+        texts.push({ slideIdx: si, field: 'notes', html: notes })
       }
     })
     return texts
@@ -71,7 +74,10 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
         )
         const chunk = texts.slice(i, i + chunkSize)
         const payload = chunk.map((t) => ({
-          id: `${t.slideIdx}-${t.elementIdx || 'notes'}-${t.field}`,
+          id:
+            t.field === 'notes'
+              ? getSlideNotesTranslationKey(t.slideIdx)
+              : `${t.slideIdx}-${t.elementIdx || 'notes'}-${t.field}`,
           html: t.html,
         }))
         const data = await aiTranslate(payload, targetLang)
@@ -82,7 +88,10 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
       const translationMap = {}
       // eslint-disable-next-line unused-imports/no-unused-vars
       texts.forEach((t, idx) => {
-        const key = `${t.slideIdx}-${t.elementIdx || 'notes'}-${t.field}`
+        const key =
+          t.field === 'notes'
+            ? getSlideNotesTranslationKey(t.slideIdx)
+            : `${t.slideIdx}-${t.elementIdx || 'notes'}-${t.field}`
         const translated = results.find((r) => r.id === key)
         if (translated) {
           translationMap[key] = { ...t, translatedHtml: translated.html }
@@ -101,20 +110,27 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
 
   const textCount = extractTexts().length
 
+  useEscapeClose(onClose)
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
-      onClick={onClose}
+      onClick={(event) => {
+        if (isBackdropClick(event)) onClose()
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ai-translate-modal-title"
     >
       <div
         className="bg-card rounded-xl p-6 w-[480px] max-h-[80vh] overflow-y-auto shadow-2xl border border-border"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="m-0 flex items-center gap-2 text-base">
+          <h3 id="ai-translate-modal-title" className="m-0 flex items-center gap-2 text-base">
             <Languages size={18} /> Translate Presentation
           </h3>
-          <Button variant="icon" onClick={onClose} className="p-1">
+          <Button variant="icon" onClick={onClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>

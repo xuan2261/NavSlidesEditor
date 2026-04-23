@@ -30,7 +30,7 @@ test.describe('AI Integrations', () => {
 
     await editorPage.addSlide()
     await editorPage.addTextNode()
-    await page.waitForTimeout(500)
+    await expect(page.locator('.element-wrapper').last()).toBeVisible()
 
     await editorPage.openAICopywriter()
 

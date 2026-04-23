@@ -8,6 +8,11 @@ export default {
   },
   theme: {
     extend: {
+      borderRadius: {
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+      },
       colors: {
         workspace: 'var(--bg-workspace)',
         panel: 'var(--bg-panel)',
@@ -49,6 +54,20 @@ export default {
           hover: 'var(--danger-hover)',
         },
         warning: 'var(--warning)',
+      },
+      keyframes: {
+        fadeIn: {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        zoomIn: {
+          from: { opacity: '0', transform: 'scale(0.95)' },
+          to: { opacity: '1', transform: 'scale(1)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-out',
+        'zoom-in': 'zoomIn 0.2s ease-out',
       },
     },
   },

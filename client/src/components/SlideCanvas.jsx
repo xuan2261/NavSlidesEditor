@@ -748,6 +748,239 @@ export default function SlideCanvas({
     document.addEventListener('mouseup', onUp)
   }
 
+  const topRulerStyle = {
+    position: 'absolute',
+    top: 0,
+    left: '50%',
+    transform: `translateX(calc(-50% * 1)) scale(${scale})`,
+    transformOrigin: 'top center',
+    width: SLIDE_W,
+    height: 20,
+    zIndex: 100,
+    cursor: 'crosshair',
+    overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'flex-end',
+    userSelect: 'none',
+    fontSize: 8,
+  }
+  const getTopRulerTickStyle = (index) => ({
+    position: 'absolute',
+    left: index * 50,
+    bottom: 0,
+    borderLeft: '1px solid rgba(255,255,255,0.2)',
+    height: '100%',
+    paddingLeft: 2,
+  })
+  const leftRulerStyle = {
+    position: 'absolute',
+    left: 0,
+    top: '50%',
+    transform: `translateY(calc(-50% * 1)) scale(${scale})`,
+    transformOrigin: 'left center',
+    width: 20,
+    height: SLIDE_H,
+    zIndex: 100,
+    cursor: 'crosshair',
+    overflow: 'hidden',
+    userSelect: 'none',
+    fontSize: 8,
+  }
+  const getLeftRulerTickStyle = (index) => ({
+    position: 'absolute',
+    top: index * 50,
+    left: 0,
+    borderTop: '1px solid rgba(255,255,255,0.2)',
+    width: '100%',
+    paddingLeft: 2,
+    paddingTop: 1,
+  })
+  const canvasStyle = {
+    width: SLIDE_W,
+    height: SLIDE_H,
+    transform: `scale(${scale})`,
+    transformOrigin: 'center center',
+    flexShrink: 0,
+    position: 'relative',
+    fontSize: '16px',
+    outline: dragOver ? '3px dashed #6366f1' : 'none',
+    ...getBgStyle(slide?.background),
+  }
+  const lockedSlideOverlayStyle = {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 997,
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+  const lockedSlideLabelStyle = {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 14,
+    fontFamily: 'sans-serif',
+    userSelect: 'none',
+  }
+  const gridOverlayStyle = {
+    position: 'absolute',
+    inset: 0,
+    pointerEvents: 'none',
+    zIndex: 998,
+    backgroundImage:
+      'linear-gradient(to right, rgba(99,102,241,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(99,102,241,0.18) 1px, transparent 1px)',
+    backgroundSize: `${gridSize}px ${gridSize}px`,
+  }
+  const getPersistentGuideStyle = (guide) =>
+    guide.axis === 'x'
+      ? {
+          position: 'absolute',
+          left: guide.position,
+          top: 0,
+          width: 1,
+          height: SLIDE_H,
+          background: '#22d3ee',
+          zIndex: 998,
+          pointerEvents: 'auto',
+          cursor: 'col-resize',
+        }
+      : {
+          position: 'absolute',
+          top: guide.position,
+          left: 0,
+          height: 1,
+          width: SLIDE_W,
+          background: '#22d3ee',
+          zIndex: 998,
+          pointerEvents: 'auto',
+          cursor: 'row-resize',
+        }
+  const getActiveGuideStyle = (guide) =>
+    guide.axis === 'x'
+      ? {
+          position: 'absolute',
+          left: guide.position,
+          top: 0,
+          width: 1,
+          height: SLIDE_H,
+          background: '#f59e0b',
+          zIndex: 999,
+          pointerEvents: 'none',
+        }
+      : {
+          position: 'absolute',
+          top: guide.position,
+          left: 0,
+          height: 1,
+          width: SLIDE_W,
+          background: '#f59e0b',
+          zIndex: 999,
+          pointerEvents: 'none',
+        }
+  const rubberBandStyle = rubberBand
+    ? {
+        position: 'absolute',
+        left: Math.min(rubberBand.startX, rubberBand.currentX),
+        top: Math.min(rubberBand.startY, rubberBand.currentY),
+        width: Math.abs(rubberBand.currentX - rubberBand.startX),
+        height: Math.abs(rubberBand.currentY - rubberBand.startY),
+        border: '1.5px dashed #6366f1',
+        background: 'rgba(99, 102, 241, 0.08)',
+        zIndex: 998,
+        pointerEvents: 'none',
+        borderRadius: 2,
+      }
+    : null
+  const sequenceFooterStyle = {
+    position: 'absolute',
+    bottom: 6,
+    left: 16,
+    right: 16,
+    zIndex: 900,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 0,
+    fontSize: footerFontSize,
+    fontFamily: footerFontFamily,
+    pointerEvents: 'none',
+    boxSizing: 'border-box',
+  }
+  const sequenceFooterTrackStyle = {
+    display: 'flex',
+    flex: 1,
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+  }
+  const getSequenceFooterSectionStyle = (index) => ({
+    color: activeSection === index ? footerColor || 'rgba(255,255,255,0.9)' : footerInactiveColor,
+    fontWeight: activeSection === index ? 700 : 400,
+    fontSize: footerFontSize,
+    transition: 'color 0.2s, font-weight 0.2s',
+  })
+  const sequenceFooterPageNumberStyle = {
+    color: footerColor,
+    marginLeft: 12,
+    flexShrink: 0,
+  }
+  const basicFooterStyle = {
+    position: 'absolute',
+    bottom: 8,
+    left: 16,
+    right: 16,
+    zIndex: 900,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: footerFontSize,
+    color: footerColor,
+    fontFamily: footerFontFamily,
+    pointerEvents: 'none',
+    boxSizing: 'border-box',
+  }
+  const dropHintStyle = {
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    pointerEvents: 'none',
+    zIndex: 999,
+    background: 'rgba(99,102,241,0.08)',
+    fontSize: '16px',
+    color: 'rgba(255,255,255,0.7)',
+    fontFamily: 'sans-serif',
+  }
+  const contextMenuStyle = contextMenu
+    ? {
+        top: contextMenu.y,
+        left: contextMenu.x,
+      }
+    : undefined
+  const snapReferenceLabelStyle = {
+    padding: '4px 8px 2px',
+    fontSize: 10,
+    color: 'var(--text-muted)',
+    userSelect: 'none',
+  }
+  const snapReferenceGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3,1fr)',
+    gap: 2,
+    padding: '2px 6px 6px',
+  }
+  const getSnapReferenceButtonStyle = (isActive) => ({
+    padding: '5px 4px',
+    fontSize: 11,
+    background: isActive ? 'var(--accent)' : 'var(--bg-hover)',
+    border: '1px solid var(--border)',
+    borderRadius: 4,
+    cursor: 'pointer',
+    color: 'var(--text-primary)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  })
+
   return (
     <div
       ref={containerRef}
@@ -767,36 +1000,11 @@ export default function SlideCanvas({
           {/* Top ruler */}
           <div
             className={cn('bg-panel/90 border-b border-border text-text-muted')}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: '50%',
-              transform: `translateX(calc(-50% * 1)) scale(${scale})`,
-              transformOrigin: 'top center',
-              width: SLIDE_W,
-              height: 20,
-              zIndex: 100,
-              cursor: 'crosshair',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'flex-end',
-              userSelect: 'none',
-              fontSize: 8,
-            }}
+            style={topRulerStyle}
             onMouseDown={(e) => handleRulerMouseDown('x', e)}
           >
             {Array.from({ length: Math.ceil(SLIDE_W / 50) }, (_, i) => (
-              <div
-                key={i}
-                style={{
-                  position: 'absolute',
-                  left: i * 50,
-                  bottom: 0,
-                  borderLeft: '1px solid rgba(255,255,255,0.2)',
-                  height: '100%',
-                  paddingLeft: 2,
-                }}
-              >
+              <div key={i} style={getTopRulerTickStyle(i)}>
                 {i * 50}
               </div>
             ))}
@@ -804,35 +1012,11 @@ export default function SlideCanvas({
           {/* Left ruler */}
           <div
             className={cn('bg-panel/90 border-r border-border text-text-muted')}
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: '50%',
-              transform: `translateY(calc(-50% * 1)) scale(${scale})`,
-              transformOrigin: 'left center',
-              width: 20,
-              height: SLIDE_H,
-              zIndex: 100,
-              cursor: 'crosshair',
-              overflow: 'hidden',
-              userSelect: 'none',
-              fontSize: 8,
-            }}
+            style={leftRulerStyle}
             onMouseDown={(e) => handleRulerMouseDown('y', e)}
           >
             {Array.from({ length: Math.ceil(SLIDE_H / 50) }, (_, i) => (
-              <div
-                key={i}
-                style={{
-                  position: 'absolute',
-                  top: i * 50,
-                  left: 0,
-                  borderTop: '1px solid rgba(255,255,255,0.2)',
-                  width: '100%',
-                  paddingLeft: 2,
-                  paddingTop: 1,
-                }}
-              >
+              <div key={i} style={getLeftRulerTickStyle(i)}>
                 {i * 50}
               </div>
             ))}
@@ -842,17 +1026,7 @@ export default function SlideCanvas({
       <div
         ref={canvasRef}
         className={cn('slide-canvas shadow-lg')}
-        style={{
-          width: SLIDE_W,
-          height: SLIDE_H,
-          transform: `scale(${scale})`,
-          transformOrigin: 'center center',
-          flexShrink: 0,
-          position: 'relative',
-          fontSize: '16px',
-          outline: dragOver ? '3px dashed #6366f1' : 'none',
-          ...getBgStyle(slide?.background),
-        }}
+        style={canvasStyle}
         onClick={(e) => {
           if (cropMode) return
           if (e.target === canvasRef.current) {
@@ -881,41 +1055,16 @@ export default function SlideCanvas({
         {slide?.locked && (
           <div
             className={cn('bg-black/15 dark:bg-white/10')}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 997,
-              pointerEvents: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            style={lockedSlideOverlayStyle}
           >
-            <span
-              style={{
-                color: 'rgba(255,255,255,0.3)',
-                fontSize: 14,
-                fontFamily: 'sans-serif',
-                userSelect: 'none',
-              }}
-            >
+            <span style={lockedSlideLabelStyle}>
               🔒 Slide Locked
             </span>
           </div>
         )}
         {/* Grid overlay */}
         {showGrid && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              zIndex: 998,
-              backgroundImage:
-                'linear-gradient(to right, rgba(99,102,241,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(99,102,241,0.18) 1px, transparent 1px)',
-              backgroundSize: `${gridSize}px ${gridSize}px`,
-            }}
-          />
+          <div style={gridOverlayStyle} />
         )}
 
         {/* Persistent guide lines (user-placed from rulers) */}
@@ -923,34 +1072,14 @@ export default function SlideCanvas({
           guide.axis === 'x' ? (
             <div
               key={`pg${i}`}
-              style={{
-                position: 'absolute',
-                left: guide.position,
-                top: 0,
-                width: 1,
-                height: SLIDE_H,
-                background: '#22d3ee',
-                zIndex: 998,
-                pointerEvents: 'auto',
-                cursor: 'col-resize',
-              }}
+              style={getPersistentGuideStyle(guide)}
               onDoubleClick={() => onRemoveGuide?.(i)}
               title="Double-click to remove guide"
             />
           ) : (
             <div
               key={`pg${i}`}
-              style={{
-                position: 'absolute',
-                top: guide.position,
-                left: 0,
-                height: 1,
-                width: SLIDE_W,
-                background: '#22d3ee',
-                zIndex: 998,
-                pointerEvents: 'auto',
-                cursor: 'row-resize',
-              }}
+              style={getPersistentGuideStyle(guide)}
               onDoubleClick={() => onRemoveGuide?.(i)}
               title="Double-click to remove guide"
             />
@@ -962,50 +1091,19 @@ export default function SlideCanvas({
           guide.axis === 'x' ? (
             <div
               key={`g${i}`}
-              style={{
-                position: 'absolute',
-                left: guide.position,
-                top: 0,
-                width: 1,
-                height: SLIDE_H,
-                background: '#f59e0b',
-                zIndex: 999,
-                pointerEvents: 'none',
-              }}
+              style={getActiveGuideStyle(guide)}
             />
           ) : (
             <div
               key={`g${i}`}
-              style={{
-                position: 'absolute',
-                top: guide.position,
-                left: 0,
-                height: 1,
-                width: SLIDE_W,
-                background: '#f59e0b',
-                zIndex: 999,
-                pointerEvents: 'none',
-              }}
+              style={getActiveGuideStyle(guide)}
             />
           )
         )}
 
         {/* Rubber-band selection rectangle */}
         {rubberBand && (
-          <div
-            style={{
-              position: 'absolute',
-              left: Math.min(rubberBand.startX, rubberBand.currentX),
-              top: Math.min(rubberBand.startY, rubberBand.currentY),
-              width: Math.abs(rubberBand.currentX - rubberBand.startX),
-              height: Math.abs(rubberBand.currentY - rubberBand.startY),
-              border: '1.5px dashed #6366f1',
-              background: 'rgba(99, 102, 241, 0.08)',
-              zIndex: 998,
-              pointerEvents: 'none',
-              borderRadius: 2,
-            }}
-          />
+          <div style={rubberBandStyle} />
         )}
 
         {slide?.elements
@@ -1086,72 +1184,22 @@ export default function SlideCanvas({
         {/* Footer overlay */}
         {(showFooter || showPageNumbers) &&
           (footerMode === 'sequence' && sequenceSections.length > 0 ? (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 6,
-                left: 16,
-                right: 16,
-                zIndex: 900,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 0,
-                fontSize: footerFontSize,
-                fontFamily: footerFontFamily,
-                pointerEvents: 'none',
-                boxSizing: 'border-box',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  flex: 1,
-                  justifyContent: 'space-evenly',
-                  alignItems: 'center',
-                }}
-              >
+            <div style={sequenceFooterStyle}>
+              <div style={sequenceFooterTrackStyle}>
                 {sequenceSections.map((sec, i) => (
-                  <span
-                    key={i}
-                    style={{
-                      color:
-                        activeSection === i
-                          ? footerColor || 'rgba(255,255,255,0.9)'
-                          : footerInactiveColor,
-                      fontWeight: activeSection === i ? 700 : 400,
-                      fontSize: footerFontSize,
-                      transition: 'color 0.2s, font-weight 0.2s',
-                    }}
-                  >
+                  <span key={i} style={getSequenceFooterSectionStyle(i)}>
                     {sec || `Section ${i + 1}`}
                   </span>
                 ))}
               </div>
               {showPageNumbers && pageNumber != null && (
-                <span style={{ color: footerColor, marginLeft: 12, flexShrink: 0 }}>
+                <span style={sequenceFooterPageNumberStyle}>
                   {pageNumberFormat === 'c/t' ? `${pageNumber} / ${totalSlides}` : `${pageNumber}`}
                 </span>
               )}
             </div>
           ) : (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 8,
-                left: 16,
-                right: 16,
-                zIndex: 900,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontSize: footerFontSize,
-                color: footerColor,
-                fontFamily: footerFontFamily,
-                pointerEvents: 'none',
-                boxSizing: 'border-box',
-              }}
-            >
+            <div style={basicFooterStyle}>
               <span>{showFooter ? sectionName : ''}</span>
               <span>
                 {showPageNumbers && pageNumber != null
@@ -1164,25 +1212,7 @@ export default function SlideCanvas({
           ))}
 
         {/* Drop hint */}
-        {dragOver && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              pointerEvents: 'none',
-              zIndex: 999,
-              background: 'rgba(99,102,241,0.08)',
-              fontSize: '16px',
-              color: 'rgba(255,255,255,0.7)',
-              fontFamily: 'sans-serif',
-            }}
-          >
-            Drop image here
-          </div>
-        )}
+        {dragOver && <div style={dropHintStyle}>Drop image here</div>}
       </div>
 
       {/* Context menu */}
@@ -1193,7 +1223,7 @@ export default function SlideCanvas({
           return (
             <div
               className="fixed z-[9999] bg-card border border-border shadow-md rounded-md p-1 min-w-[160px] flex flex-col gap-1"
-              style={{ top: contextMenu.y, left: contextMenu.x }}
+              style={contextMenuStyle}
               onClick={(e) => e.stopPropagation()}
             >
               {/* ── Clipboard actions (always visible when element is right-clicked) ── */}
@@ -1296,41 +1326,16 @@ export default function SlideCanvas({
                   <div className="h-px bg-border my-1" />
                 </>
               )}
-              <div
-                style={{
-                  padding: '4px 8px 2px',
-                  fontSize: 10,
-                  color: 'var(--text-muted)',
-                  userSelect: 'none',
-                }}
-              >
+              <div style={snapReferenceLabelStyle}>
                 Snap Reference
               </div>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3,1fr)',
-                  gap: 2,
-                  padding: '2px 6px 6px',
-                }}
-              >
+              <div style={snapReferenceGridStyle}>
                 {SNAP_REF_OPTIONS.map((opt) => (
                   <Button
                     variant="ghost"
                     key={opt.id}
                     title={opt.label}
-                    style={{
-                      padding: '5px 4px',
-                      fontSize: 11,
-                      background: currentRef === opt.id ? 'var(--accent)' : 'var(--bg-hover)',
-                      border: '1px solid var(--border)',
-                      borderRadius: 4,
-                      cursor: 'pointer',
-                      color: 'var(--text-primary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                    style={getSnapReferenceButtonStyle(currentRef === opt.id)}
                     onClick={() => {
                       onUpdateElement(contextMenu.elementId, { snapRef: opt.id })
                       setContextMenu(null)
@@ -1477,46 +1482,171 @@ function CanvasElement({
     })
   }, [element.content, isEditing])
 
+  const elementWrapperStyle = {
+    position: 'absolute',
+    left: element.x,
+    top: element.y,
+    width: element.width,
+    height: element.height,
+    zIndex: element.zIndex || 1,
+    pointerEvents: element.type === 'line' && !isSelected && !isEditing ? 'none' : 'auto',
+    outline: element.locked
+      ? '2px solid #f59e0b'
+      : (isSelected || isEditing) && !isCropping
+        ? '2px solid #6366f1'
+        : isCropping
+          ? '2px solid #f59e0b'
+          : 'none',
+    cursor: isCropping
+      ? 'crosshair'
+      : isEditing
+        ? 'text'
+        : isDragging
+          ? 'grabbing'
+          : element.locked
+            ? 'not-allowed'
+            : 'grab',
+    userSelect: isEditing ? 'text' : 'none',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+    borderRadius:
+      (element.type === 'image' || element.type === 'code') && element.borderRadius
+        ? element.borderRadius
+        : undefined,
+    transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
+    boxShadow:
+      element.shadowBlur || element.shadowX || element.shadowY
+        ? `${element.shadowX || 0}px ${element.shadowY || 0}px ${element.shadowBlur || 0}px ${element.shadowColor || 'rgba(0,0,0,0.5)'}`
+        : undefined,
+  }
+  const textPreviewStyle = {
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
+    color: 'white',
+    padding: '8px 12px',
+    boxSizing: 'border-box',
+    fontSize: '16px',
+  }
+  const editorContentStyle = {
+    width: '100%',
+    height: '100%',
+    color: 'white',
+    boxSizing: 'border-box',
+  }
+  const imageWrapperStyle = {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+    overflow: isCropping ? 'visible' : 'hidden',
+  }
+  const htmlFrameStyle = {
+    width: '100%',
+    height: '100%',
+    border: 'none',
+    display: 'block',
+    pointerEvents: 'none',
+  }
+  const codeBlockStyle = {
+    margin: 0,
+    padding: '10px 14px',
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+    fontFamily: "'Fira Code','JetBrains Mono','Courier New',monospace",
+    fontSize: element.fontSize || 14,
+    lineHeight: 1.5,
+    borderRadius: 0,
+  }
+  const videoStyle = {
+    width: '100%',
+    height: '100%',
+    objectFit: element.objectFit || 'contain',
+    display: 'block',
+    pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
+  }
+  const audioWrapperStyle = {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(0,0,0,0.2)',
+    borderRadius: 4,
+  }
+  const audioControlStyle = {
+    width: '90%',
+    pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
+  }
+  const fragmentBadgeStyle = {
+    position: 'absolute',
+    top: -20,
+    left: 0,
+    zIndex: 101,
+    pointerEvents: 'none',
+    background: '#8b5cf6',
+    color: 'white',
+    fontSize: '10px',
+    fontFamily: 'sans-serif',
+    padding: '2px 6px',
+    borderRadius: 3,
+    userSelect: 'none',
+    whiteSpace: 'nowrap',
+  }
+  const groupBadgeStyle = {
+    position: 'absolute',
+    top: -20,
+    right: 0,
+    zIndex: 101,
+    pointerEvents: 'none',
+    background: '#14b8a6',
+    color: 'white',
+    fontSize: '9px',
+    fontFamily: 'sans-serif',
+    padding: '1px 5px',
+    borderRadius: 3,
+    userSelect: 'none',
+  }
+  const getResizeHandleStyle = (handleStyle) => ({
+    position: 'absolute',
+    width: 10,
+    height: 10,
+    background: '#6366f1',
+    border: '2px solid white',
+    borderRadius: 2,
+    zIndex: 100,
+    ...handleStyle,
+  })
+  const rotationGuideStyle = {
+    position: 'absolute',
+    top: -30,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 1,
+    height: 20,
+    background: '#6366f1',
+    zIndex: 100,
+    pointerEvents: 'none',
+  }
+  const rotationHandleStyle = {
+    position: 'absolute',
+    top: -40,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 14,
+    height: 14,
+    borderRadius: '50%',
+    background: '#6366f1',
+    border: '2px solid white',
+    zIndex: 100,
+    cursor: 'grab',
+  }
+
   return (
     <div
       className="element-wrapper"
-      style={{
-        position: 'absolute',
-        left: element.x,
-        top: element.y,
-        width: element.width,
-        height: element.height,
-        zIndex: element.zIndex || 1,
-        pointerEvents: element.type === 'line' && !isSelected && !isEditing ? 'none' : 'auto',
-        outline: element.locked
-          ? '2px solid #f59e0b'
-          : (isSelected || isEditing) && !isCropping
-            ? '2px solid #6366f1'
-            : isCropping
-              ? '2px solid #f59e0b'
-              : 'none',
-        cursor: isCropping
-          ? 'crosshair'
-          : isEditing
-            ? 'text'
-            : isDragging
-              ? 'grabbing'
-              : element.locked
-                ? 'not-allowed'
-                : 'grab',
-        userSelect: isEditing ? 'text' : 'none',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-        borderRadius:
-          (element.type === 'image' || element.type === 'code') && element.borderRadius
-            ? element.borderRadius
-            : undefined,
-        transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
-        boxShadow:
-          element.shadowBlur || element.shadowX || element.shadowY
-            ? `${element.shadowX || 0}px ${element.shadowY || 0}px ${element.shadowBlur || 0}px ${element.shadowColor || 'rgba(0,0,0,0.5)'}`
-            : undefined,
-      }}
+      style={elementWrapperStyle}
       onMouseDown={(e) => {
         if (isEditing) {
           e.stopPropagation()
@@ -1535,25 +1665,12 @@ function CanvasElement({
         <div
           ref={contentRef}
           className="slide-text-content ProseMirror-preview"
-          style={{
-            width: '100%',
-            height: '100%',
-            overflow: 'hidden',
-            color: 'white',
-            padding: '8px 12px',
-            boxSizing: 'border-box',
-            // Match reveal.js output: text elements render inside 16px section
-            // Headings use em units, so explicit 16px base keeps preview consistent with generated HTML
-            fontSize: '16px',
-          }}
+          style={textPreviewStyle}
           dangerouslySetInnerHTML={{ __html: element.content || '' }}
         />
       )}
       {element.type === 'text' && isEditing && (
-        <EditorContent
-          editor={editor}
-          style={{ width: '100%', height: '100%', color: 'white', boxSizing: 'border-box' }}
-        />
+        <EditorContent editor={editor} style={editorContentStyle} />
       )}
       {element.type === 'image' &&
         (() => {
@@ -1570,14 +1687,7 @@ function CanvasElement({
               .filter(Boolean)
               .join(' ') || undefined
           return (
-            <div
-              style={{
-                position: 'relative',
-                width: '100%',
-                height: '100%',
-                overflow: isCropping ? 'visible' : 'hidden',
-              }}
-            >
+            <div style={imageWrapperStyle}>
               <img
                 src={element.src}
                 alt={element.alt || ''}
@@ -1621,13 +1731,7 @@ function CanvasElement({
       {element.type === 'html' && (
         <iframe
           srcDoc={element.content || ''}
-          style={{
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            display: 'block',
-            pointerEvents: 'none',
-          }}
+          style={htmlFrameStyle}
           sandbox="allow-scripts"
           title="HTML embed"
         />
@@ -1635,18 +1739,7 @@ function CanvasElement({
       {element.type === 'code' && (
         <pre
           className="hljs"
-          style={{
-            margin: 0,
-            padding: '10px 14px',
-            width: '100%',
-            height: '100%',
-            overflow: 'hidden',
-            boxSizing: 'border-box',
-            fontFamily: "'Fira Code','JetBrains Mono','Courier New',monospace",
-            fontSize: element.fontSize || 14,
-            lineHeight: 1.5,
-            borderRadius: 0,
-          }}
+          style={codeBlockStyle}
         >
           <code
             dangerouslySetInnerHTML={{
@@ -1662,32 +1755,12 @@ function CanvasElement({
           muted={element.muted || false}
           loop={element.loop || false}
           poster={element.poster || undefined}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: element.objectFit || 'contain',
-            display: 'block',
-            pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
-          }}
+          style={videoStyle}
         />
       )}
       {element.type === 'audio' && (
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0,0,0,0.2)',
-            borderRadius: 4,
-          }}
-        >
-          <audio
-            src={element.src}
-            controls
-            style={{ width: '90%', pointerEvents: isSelected && !isDragging ? 'auto' : 'none' }}
-          />
+        <div style={audioWrapperStyle}>
+          <audio src={element.src} controls style={audioControlStyle} />
         </div>
       )}
       {element.type === 'table' && (
@@ -1710,21 +1783,7 @@ function CanvasElement({
       {/* Fragment badge */}
       {element.fragment && (
         <div
-          style={{
-            position: 'absolute',
-            top: -20,
-            left: 0,
-            zIndex: 101,
-            pointerEvents: 'none',
-            background: '#8b5cf6',
-            color: 'white',
-            fontSize: '10px',
-            fontFamily: 'sans-serif',
-            padding: '2px 6px',
-            borderRadius: 3,
-            userSelect: 'none',
-            whiteSpace: 'nowrap',
-          }}
+          style={fragmentBadgeStyle}
         >
           ▶ {element.fragmentIndex ?? 1}
         </div>
@@ -1733,20 +1792,7 @@ function CanvasElement({
       {/* Group badge */}
       {element.groupId && isSelected && (
         <div
-          style={{
-            position: 'absolute',
-            top: -20,
-            right: 0,
-            zIndex: 101,
-            pointerEvents: 'none',
-            background: '#14b8a6',
-            color: 'white',
-            fontSize: '9px',
-            fontFamily: 'sans-serif',
-            padding: '1px 5px',
-            borderRadius: 3,
-            userSelect: 'none',
-          }}
+          style={groupBadgeStyle}
         >
           Group
         </div>
@@ -1760,16 +1806,7 @@ function CanvasElement({
         Object.entries(HANDLE_STYLES).map(([handle, hStyle]) => (
           <div
             key={handle}
-            style={{
-              position: 'absolute',
-              width: 10,
-              height: 10,
-              background: '#6366f1',
-              border: '2px solid white',
-              borderRadius: 2,
-              zIndex: 100,
-              ...hStyle,
-            }}
+            style={getResizeHandleStyle(hStyle)}
             onMouseDown={(e) => {
               e.stopPropagation()
               onPointerDown(e, 'resize', handle)
@@ -1781,32 +1818,10 @@ function CanvasElement({
       {isSelected && !isEditing && !isCropping && !element.locked && (
         <>
           <div
-            style={{
-              position: 'absolute',
-              top: -30,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 1,
-              height: 20,
-              background: '#6366f1',
-              zIndex: 100,
-              pointerEvents: 'none',
-            }}
+            style={rotationGuideStyle}
           />
           <div
-            style={{
-              position: 'absolute',
-              top: -40,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 14,
-              height: 14,
-              borderRadius: '50%',
-              background: '#6366f1',
-              border: '2px solid white',
-              zIndex: 100,
-              cursor: 'grab',
-            }}
+            style={rotationHandleStyle}
             onMouseDown={(e) => {
               e.stopPropagation()
               onPointerDown(e, 'rotate', null)
@@ -1830,117 +1845,126 @@ function CropOverlay({ crop, elW, elH, onHandleDown, onCommit }) {
     onHandleDown(handle, e.clientX, e.clientY)
   }
 
+  const cropOverlayStyle = {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 50,
+  }
+  const cropTopDimStyle = { ...dimStyle, top: 0, left: 0, right: 0, height: `${y * 100}%` }
+  const cropBottomDimStyle = {
+    ...dimStyle,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: `${(1 - y - h) * 100}%`,
+  }
+  const cropLeftDimStyle = {
+    ...dimStyle,
+    top: `${y * 100}%`,
+    left: 0,
+    width: `${x * 100}%`,
+    height: `${h * 100}%`,
+  }
+  const cropRightDimStyle = {
+    ...dimStyle,
+    top: `${y * 100}%`,
+    right: 0,
+    width: `${(1 - x - w) * 100}%`,
+    height: `${h * 100}%`,
+  }
+  const cropBorderStyle = {
+    position: 'absolute',
+    left: `${x * 100}%`,
+    top: `${y * 100}%`,
+    width: `${w * 100}%`,
+    height: `${h * 100}%`,
+    border: '2px solid white',
+    boxSizing: 'border-box',
+    pointerEvents: 'none',
+    boxShadow: '0 0 0 1px rgba(0,0,0,0.5)',
+  }
+  const getCropVerticalGuideStyle = (fraction) => ({
+    position: 'absolute',
+    left: `${(x + fraction * w) * 100}%`,
+    top: `${y * 100}%`,
+    width: 1,
+    height: `${h * 100}%`,
+    background: 'rgba(255,255,255,0.3)',
+    pointerEvents: 'none',
+  })
+  const getCropHorizontalGuideStyle = (fraction) => ({
+    position: 'absolute',
+    top: `${(y + fraction * h) * 100}%`,
+    left: `${x * 100}%`,
+    height: 1,
+    width: `${w * 100}%`,
+    background: 'rgba(255,255,255,0.3)',
+    pointerEvents: 'none',
+  })
+  const getCropHandleStyle = (handle) => ({
+    position: 'absolute',
+    left: `calc(${(x + handle.px * w) * 100}% - 5px)`,
+    top: `calc(${(y + handle.py * h) * 100}% - 5px)`,
+    width: 10,
+    height: 10,
+    background: 'white',
+    border: '1px solid rgba(0,0,0,0.5)',
+    borderRadius: 2,
+    cursor: handle.cursor,
+    zIndex: 51,
+  })
+  const cropCommitStyle = {
+    position: 'absolute',
+    left: `${(x + w) * 100}%`,
+    top: `${y * 100}%`,
+    transform: 'translate(6px, -28px)',
+    background: '#f59e0b',
+    color: 'white',
+    fontSize: '11px',
+    padding: '3px 8px',
+    borderRadius: 4,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    userSelect: 'none',
+    fontFamily: 'sans-serif',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+    zIndex: 52,
+  }
+
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 50 }} onDoubleClick={onCommit}>
+    <div style={cropOverlayStyle} onDoubleClick={onCommit}>
       {/* Top strip */}
-      <div style={{ ...dimStyle, top: 0, left: 0, right: 0, height: `${y * 100}%` }} />
+      <div style={cropTopDimStyle} />
       {/* Bottom strip */}
-      <div style={{ ...dimStyle, bottom: 0, left: 0, right: 0, height: `${(1 - y - h) * 100}%` }} />
+      <div style={cropBottomDimStyle} />
       {/* Left strip (between top and bottom) */}
-      <div
-        style={{
-          ...dimStyle,
-          top: `${y * 100}%`,
-          left: 0,
-          width: `${x * 100}%`,
-          height: `${h * 100}%`,
-        }}
-      />
+      <div style={cropLeftDimStyle} />
       {/* Right strip */}
-      <div
-        style={{
-          ...dimStyle,
-          top: `${y * 100}%`,
-          right: 0,
-          width: `${(1 - x - w) * 100}%`,
-          height: `${h * 100}%`,
-        }}
-      />
+      <div style={cropRightDimStyle} />
 
       {/* Crop border */}
-      <div
-        style={{
-          position: 'absolute',
-          left: `${x * 100}%`,
-          top: `${y * 100}%`,
-          width: `${w * 100}%`,
-          height: `${h * 100}%`,
-          border: '2px solid white',
-          boxSizing: 'border-box',
-          pointerEvents: 'none',
-          boxShadow: '0 0 0 1px rgba(0,0,0,0.5)',
-        }}
-      />
+      <div style={cropBorderStyle} />
 
       {/* Rule-of-thirds grid lines */}
       {[1 / 3, 2 / 3].map((f) => (
-        <div
-          key={`v${f}`}
-          style={{
-            position: 'absolute',
-            left: `${(x + f * w) * 100}%`,
-            top: `${y * 100}%`,
-            width: 1,
-            height: `${h * 100}%`,
-            background: 'rgba(255,255,255,0.3)',
-            pointerEvents: 'none',
-          }}
-        />
+        <div key={`v${f}`} style={getCropVerticalGuideStyle(f)} />
       ))}
       {[1 / 3, 2 / 3].map((f) => (
-        <div
-          key={`hz${f}`}
-          style={{
-            position: 'absolute',
-            top: `${(y + f * h) * 100}%`,
-            left: `${x * 100}%`,
-            height: 1,
-            width: `${w * 100}%`,
-            background: 'rgba(255,255,255,0.3)',
-            pointerEvents: 'none',
-          }}
-        />
+        <div key={`hz${f}`} style={getCropHorizontalGuideStyle(f)} />
       ))}
 
       {/* Crop handles */}
       {CROP_HANDLES.map((ch) => (
         <div
           key={ch.id}
-          style={{
-            position: 'absolute',
-            left: `calc(${(x + ch.px * w) * 100}% - 5px)`,
-            top: `calc(${(y + ch.py * h) * 100}% - 5px)`,
-            width: 10,
-            height: 10,
-            background: 'white',
-            border: '1px solid rgba(0,0,0,0.5)',
-            borderRadius: 2,
-            cursor: ch.cursor,
-            zIndex: 51,
-          }}
+          style={getCropHandleStyle(ch)}
           onMouseDown={(e) => handleMouseDown(e, ch.id)}
         />
       ))}
 
       {/* Commit button */}
       <div
-        style={{
-          position: 'absolute',
-          left: `${(x + w) * 100}%`,
-          top: `${y * 100}%`,
-          transform: 'translate(6px, -28px)',
-          background: '#f59e0b',
-          color: 'white',
-          fontSize: '11px',
-          padding: '3px 8px',
-          borderRadius: 4,
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
-          userSelect: 'none',
-          fontFamily: 'sans-serif',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-          zIndex: 52,
-        }}
+        style={cropCommitStyle}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={onCommit}
       >
@@ -2004,20 +2028,18 @@ function markdownToHtml(md) {
 
 function MarkdownRenderer({ element }) {
   const html = markdownToHtml(element.content || '')
+  const markdownStyle = {
+    width: '100%',
+    height: '100%',
+    overflow: 'auto',
+    padding: '8px 12px',
+    boxSizing: 'border-box',
+    color: 'white',
+    fontSize: '18px',
+    lineHeight: 1.5,
+  }
   return (
-    <div
-      style={{
-        width: '100%',
-        height: '100%',
-        overflow: 'auto',
-        padding: '8px 12px',
-        boxSizing: 'border-box',
-        color: 'white',
-        fontSize: '18px',
-        lineHeight: 1.5,
-      }}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <div style={markdownStyle} dangerouslySetInnerHTML={{ __html: html }} />
   )
 }
 
@@ -2057,21 +2079,15 @@ new Chart(document.getElementById('c'),{
 });
 <\/script></body></html>`
 
-  return (
-    <iframe
-      srcDoc={chartHtml}
-      style={{
-        width: '100%',
-        height: '100%',
-        border: 'none',
-        display: 'block',
-        pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
-        background: 'transparent',
-      }}
-      sandbox="allow-scripts"
-      title="Chart"
-    />
-  )
+  const chartFrameStyle = {
+    width: '100%',
+    height: '100%',
+    border: 'none',
+    display: 'block',
+    pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
+    background: 'transparent',
+  }
+  return <iframe srcDoc={chartHtml} style={chartFrameStyle} sandbox="allow-scripts" title="Chart" />
 }
 
 function CalloutRenderer({ element }) {
@@ -2079,26 +2095,23 @@ function CalloutRenderer({ element }) {
   const bg = element.calloutColor || '#ef4444'
   const textColor = element.calloutTextColor || '#ffffff'
   const fontSize = element.fontSize || 16
+  const calloutStyle = {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    background: bg,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: textColor,
+    fontSize,
+    fontWeight: 700,
+    fontFamily: '-apple-system, sans-serif',
+    boxSizing: 'border-box',
+    userSelect: 'none',
+  }
   return (
-    <div
-      style={{
-        width: '100%',
-        height: '100%',
-        borderRadius: '50%',
-        background: bg,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: textColor,
-        fontSize,
-        fontWeight: 700,
-        fontFamily: '-apple-system, sans-serif',
-        boxSizing: 'border-box',
-        userSelect: 'none',
-      }}
-    >
-      {num}
-    </div>
+    <div style={calloutStyle}>{num}</div>
   )
 }
 
@@ -2112,16 +2125,15 @@ function IconRenderer({ element, iconPaths }) {
   const svgPath = iconPaths[iconKey] || iconPaths['Star']
   const color = element.iconColor || '#ffffff'
   const sw = element.iconStrokeWidth || 2
+  const iconWrapperStyle = {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
   return (
-    <div
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
+    <div style={iconWrapperStyle}>
       <svg
         viewBox="0 0 24 24"
         width="100%"
@@ -2179,20 +2191,16 @@ ${tikzScript}
 
 function LatexRenderer({ element, isSelected, isDragging }) {
   const html = generateLatexIframeHtml(element.content || '')
+  const latexFrameStyle = {
+    width: '100%',
+    height: '100%',
+    border: 'none',
+    display: 'block',
+    pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
+    background: 'transparent',
+  }
   return (
-    <iframe
-      srcDoc={html}
-      style={{
-        width: '100%',
-        height: '100%',
-        border: 'none',
-        display: 'block',
-        pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
-        background: 'transparent',
-      }}
-      sandbox="allow-scripts"
-      title="LaTeX / TikZ"
-    />
+    <iframe srcDoc={html} style={latexFrameStyle} sandbox="allow-scripts" title="LaTeX / TikZ" />
   )
 }
 
@@ -2597,18 +2605,14 @@ function SvgElementRenderer({ element }) {
       `stroke="${element.strokeOverride}"`
     )
   }
-  return (
-    <div
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-      dangerouslySetInnerHTML={{ __html: modifiedContent }}
-    />
-  )
+  const svgElementStyle = {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+  return <div style={svgElementStyle} dangerouslySetInnerHTML={{ __html: modifiedContent }} />
 }
 
 function QrCodeRenderer({ element }) {
@@ -2628,26 +2632,26 @@ function QrCodeRenderer({ element }) {
       .catch(console.error)
   }, [element.qrData, element.qrColor, element.qrBgColor, element.qrErrorLevel])
 
+  const qrCodeStyle = {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: element.qrBgColor || '#ffffff',
+    borderRadius: element.borderRadius || 0,
+    overflow: 'hidden',
+  }
+  const qrImageStyle = {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
+  }
+
   return (
-    <div
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: element.qrBgColor || '#ffffff',
-        borderRadius: element.borderRadius || 0,
-        overflow: 'hidden',
-      }}
-    >
+    <div style={qrCodeStyle}>
       {dataUrl ? (
-        <img
-          src={dataUrl}
-          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-          alt="QR Code"
-          draggable={false}
-        />
+        <img src={dataUrl} style={qrImageStyle} alt="QR Code" draggable={false} />
       ) : null}
     </div>
   )

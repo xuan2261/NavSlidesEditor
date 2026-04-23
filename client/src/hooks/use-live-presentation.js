@@ -58,9 +58,9 @@ export function useLivePresentation(presentationId, role = 'viewer', roomCode = 
     }
   }, [presentationId, role, code]) // only re-run if these change
 
-  const navigate = (slideIndex, fragmentIndex) => {
+  const navigate = (slideIndex, fragmentIndex = 0, verticalIndex = 0) => {
     if (socket && role === 'presenter' && isConnected) {
-      socket.emit('navigate', { slideIndex, fragmentIndex })
+      socket.emit('navigate', { slideIndex, verticalIndex, fragmentIndex })
     }
   }
 

@@ -39,7 +39,6 @@ export default function DropdownMenu({ label, items, isOpen, onToggle, onClose, 
       {isOpen && (
         <div
           className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-1 w-56 bg-panel text-text-primary rounded-md shadow-lg border border-border z-[9999] flex flex-col py-1`}
-          style={{ zIndex: 9999 }}
         >
           {items.map((item, idx) => {
             if (item.type === 'separator') {
@@ -79,10 +78,9 @@ export default function DropdownMenu({ label, items, isOpen, onToggle, onClose, 
                 >
                   <span>{item.label}</span>
                   <select
-                    className="bg-secondary border border-border rounded px-1 py-0.5 text-xs text-text-primary focus:outline-none focus:border-accent"
+                    className="bg-secondary border border-border rounded px-1 py-0.5 text-xs text-text-primary focus:outline-none focus:border-accent max-w-[120px]"
                     value={item.value}
                     onChange={(e) => item.onChange(e.target.value)}
-                    style={{ maxWidth: 120 }}
                   >
                     {item.options.map((opt) => (
                       <option key={opt.value} value={opt.value}>

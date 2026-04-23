@@ -16,9 +16,7 @@ test.describe('Settings Page', () => {
 
     const providerSelect = page.locator('select').first()
     await providerSelect.selectOption('gemini')
-    await page.waitForTimeout(300)
-    const selectedValue = await providerSelect.inputValue()
-    expect(selectedValue).toBe('gemini')
+    await expect(providerSelect).toHaveValue('gemini')
   })
 
   test('can save settings successfully', async ({ page }) => {
@@ -33,14 +31,12 @@ test.describe('Settings Page', () => {
     const settings = new SettingsPage(page)
     await settings.goto()
 
-    // Wait for settings to fully load
-    await page.waitForTimeout(1000)
-
     // Use label-based selectors for reliability
     // Default Theme select is inside section with "Default Preferences" heading
     const prefsSection = page
       .locator('section')
       .filter({ has: page.locator('h2:has-text("Default Preferences")') })
+    await expect(prefsSection).toBeVisible()
 
     const themeSelect = prefsSection.locator('select').first()
     const transitionSelect = prefsSection.locator('select').last()

@@ -37,7 +37,7 @@ const TYPE_ICONS = {
 /** Get icon component for element type */
 function ElIcon({ type, size = 13 }) {
   const Icon = TYPE_ICONS[type] || Square
-  return <Icon size={size} style={{ flexShrink: 0, opacity: 0.6 }} />
+  return <Icon size={size} className="shrink-0 opacity-60" />
 }
 
 /**
@@ -113,14 +113,7 @@ export default function SelectionPane({
   return (
     <div className="selection-pane select-none">
       {elements.length === 0 && (
-        <div
-          style={{
-            padding: '8px 6px',
-            fontSize: 11,
-            color: 'var(--text-muted)',
-            fontStyle: 'italic',
-          }}
-        >
+        <div className="px-1.5 py-2 text-[11px] italic text-text-muted">
           No elements on this slide
         </div>
       )}
@@ -146,7 +139,7 @@ export default function SelectionPane({
             title={`${label} — ${typeLabel}${isLocked ? ' (locked)' : ''}${isHidden ? ' (hidden)' : ''}`}
           >
             {/* Drag handle */}
-            <GripVertical size={11} style={{ opacity: 0.35, flexShrink: 0, cursor: 'grab' }} />
+            <GripVertical size={11} className="shrink-0 cursor-grab opacity-35" />
 
             {/* Type icon */}
             <ElIcon type={el.type} size={12} />
@@ -167,27 +160,10 @@ export default function SelectionPane({
                   e.stopPropagation()
                 }}
                 onClick={(e) => e.stopPropagation()}
-                style={{
-                  flex: 1,
-                  fontSize: 12,
-                  background: 'var(--bg-input)',
-                  border: '1px solid var(--accent)',
-                  borderRadius: 3,
-                  padding: '0 3px',
-                  color: 'var(--text-primary)',
-                  minWidth: 0,
-                }}
+                className="min-w-0 flex-1 rounded-sm border border-accent bg-input px-[3px] text-xs text-text-primary"
               />
             ) : (
-              <span
-                style={{
-                  flex: 1,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  color: 'var(--text-secondary)',
-                }}
-              >
+              <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-text-secondary">
                 {label}
               </span>
             )}
@@ -199,16 +175,9 @@ export default function SelectionPane({
                 onToggleVisibility(el.id)
               }}
               title={isHidden ? 'Show element' : 'Hide element'}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '1px 2px',
-                color: isHidden ? 'var(--text-muted)' : 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                borderRadius: 3,
-              }}
+              className={`flex items-center rounded-sm border-none bg-transparent px-0.5 py-px ${
+                isHidden ? 'text-text-muted' : 'text-text-secondary'
+              }`}
             >
               {isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
             </button>
@@ -220,16 +189,9 @@ export default function SelectionPane({
                 onToggleLock(el.id)
               }}
               title={isLocked ? 'Unlock element' : 'Lock element'}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '1px 2px',
-                color: isLocked ? 'var(--accent, #6366f1)' : 'var(--text-muted)',
-                display: 'flex',
-                alignItems: 'center',
-                borderRadius: 3,
-              }}
+              className={`flex items-center rounded-sm border-none bg-transparent px-0.5 py-px ${
+                isLocked ? 'text-accent' : 'text-text-muted'
+              }`}
             >
               {isLocked ? <Lock size={12} /> : <Unlock size={12} />}
             </button>

@@ -1,37 +1,51 @@
-import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { io } from 'socket.io-client'
-import { ChevronLeft, ChevronRight, Pointer, Clock, Users, Home } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, Home, Pointer, Users } from 'lucide-react'
+
+const initialState = { slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 }
+
+function findFlatSlideIndex(slides, state) {
+  return (slides || []).findIndex(
+    (slide) => slide.slideIndex === state.slideIndex && slide.verticalIndex === state.verticalIndex
+  )
+}
+
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+}
 
 export default function RemoteControlPage() {
   const { roomCode } = useParams()
   const navigate = useNavigate()
   const socketRef = useRef(null)
-  const timerRef = useRef(null)
 
   const [isConnected, setIsConnected] = useState(false)
-  const [slideIndex, setSlideIndex] = useState(0)
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  const [totalSlides, setTotalSlides] = useState(0)
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  const [speakerNotes, setSpeakerNotes] = useState('')
+  const [liveState, setLiveState] = useState(initialState)
+  const [meta, setMeta] = useState({ slideCount: 0, slides: [] })
   const [elapsedTime, setElapsedTime] = useState(0)
   const [laserActive, setLaserActive] = useState(false)
-  // eslint-disable-next-line unused-imports/no-unused-vars
   const [viewersCount, setViewersCount] = useState(0)
   const [presenterLeft, setPresenterLeft] = useState(false)
+  const [roomNotFound, setRoomNotFound] = useState(false)
+  const flatSlides = useMemo(() => meta.slides || [], [meta.slides])
+  const currentFlatIndex = useMemo(
+    () => findFlatSlideIndex(flatSlides, liveState),
+    [flatSlides, liveState]
+  )
 
-  // Timer
+  const currentSlide = useMemo(
+    () =>
+      currentFlatIndex >= 0 ? flatSlides[currentFlatIndex] : null,
+    [currentFlatIndex, flatSlides]
+  )
+
   useEffect(() => {
-    timerRef.current = setInterval(() => setElapsedTime((t) => t + 1), 1000)
-    return () => clearInterval(timerRef.current)
+    const timer = setInterval(() => setElapsedTime((time) => time + 1), 1000)
+    return () => clearInterval(timer)
   }, [])
-
-  const formatTime = (s) => {
-    const m = Math.floor(s / 60)
-    const sec = s % 60
-    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-  }
 
   useEffect(() => {
     const socket = io({ path: '/ws' })
@@ -39,42 +53,74 @@ export default function RemoteControlPage() {
 
     socket.on('connect', () => {
       setIsConnected(true)
-      socket.emit('join-room', { roomId: roomCode, role: 'presenter' })
+      socket.emit('join-room', { roomId: roomCode, role: 'controller' })
     })
 
     socket.on('disconnect', () => setIsConnected(false))
-
-    socket.on('sync-state', (state) => {
-      setSlideIndex(state.slideIndex || 0)
-    })
-
+    socket.on('room-not-found', () => setRoomNotFound(true))
     socket.on('presenter-left', () => setPresenterLeft(true))
+    socket.on('viewer-count', ({ count }) => setViewersCount(count))
+    socket.on('presentation-meta', setMeta)
 
-    return () => {
-      socket.disconnect()
+    const applyState = (state) => {
+      setLiveState({
+        slideIndex: state.slideIndex || 0,
+        verticalIndex: state.verticalIndex || 0,
+        fragmentIndex: state.fragmentIndex || 0,
+      })
     }
+
+    socket.on('sync-state', applyState)
+    socket.on('navigate', applyState)
+
+    return () => socket.disconnect()
   }, [roomCode])
 
+  const sendNavigation = (nextState) => {
+    socketRef.current?.emit('control-navigate', {
+      slideIndex: nextState.slideIndex,
+      verticalIndex: nextState.verticalIndex || 0,
+      fragmentIndex: nextState.fragmentIndex || 0,
+    })
+  }
+
+  const getAdjacentState = (offset) => {
+    if (flatSlides.length > 0) {
+      const fallbackIndex = currentFlatIndex >= 0 ? currentFlatIndex : 0
+      const target = flatSlides[Math.min(flatSlides.length - 1, Math.max(0, fallbackIndex + offset))]
+      if (target) {
+        return {
+          slideIndex: target.slideIndex,
+          verticalIndex: target.verticalIndex || 0,
+          fragmentIndex: 0,
+        }
+      }
+    }
+
+    const maxIndex = Math.max(0, (meta.slideCount || 1) - 1)
+    return {
+      slideIndex: Math.min(maxIndex, Math.max(0, liveState.slideIndex + offset)),
+      verticalIndex: 0,
+      fragmentIndex: 0,
+    }
+  }
+
   const goNext = () => {
-    const next = slideIndex + 1
-    setSlideIndex(next)
-    socketRef.current?.emit('navigate', { slideIndex: next, fragmentIndex: 0 })
+    sendNavigation(getAdjacentState(1))
   }
 
   const goPrev = () => {
-    const prev = Math.max(0, slideIndex - 1)
-    setSlideIndex(prev)
-    socketRef.current?.emit('navigate', { slideIndex: prev, fragmentIndex: 0 })
+    sendNavigation(getAdjacentState(-1))
   }
 
   const toggleLaser = () => {
-    setLaserActive(!laserActive)
-    socketRef.current?.emit('laser', { x: 0.5, y: 0.5, active: !laserActive })
+    const next = !laserActive
+    setLaserActive(next)
+    socketRef.current?.emit('laser', { x: 0.5, y: 0.5, active: next })
   }
 
   return (
     <div className="min-h-screen bg-workspace text-text-primary flex flex-col font-[Inter,system-ui,sans-serif]">
-      {/* Header */}
       <div className="px-4 py-3 flex justify-between items-center border-b border-border">
         <button
           onClick={() => navigate('/')}
@@ -84,43 +130,40 @@ export default function RemoteControlPage() {
         </button>
         <div className="flex items-center gap-4 text-[13px] text-text-muted">
           <span className="flex items-center gap-1">
-            <div
-              className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success' : 'bg-danger'}`}
-            />
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success' : 'bg-danger'}`} />
             {isConnected ? 'Connected' : 'Disconnected'}
           </span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1" data-testid="remote-viewer-count">
             <Users size={14} /> {viewersCount}
           </span>
         </div>
       </div>
 
-      {/* Speaker Notes */}
       <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3">
-        <div className="bg-card rounded-xl p-4 flex-1 min-h-[100px]">
-          <h4 className="mb-2 text-[13px] text-text-muted font-medium">
-            Speaker Notes
-          </h4>
+        <div className="bg-card rounded-lg p-4 flex-1 min-h-[160px] border border-border">
+          <h4 className="mb-2 text-[13px] text-text-muted font-medium">Speaker Notes</h4>
           <p className="text-[15px] leading-relaxed text-text-primary whitespace-pre-wrap">
-            {speakerNotes || 'No speaker notes for this slide.'}
+            {currentSlide?.notes || 'No speaker notes for this slide.'}
           </p>
         </div>
       </div>
 
-      {/* Slide counter */}
       <div className="text-center px-4 py-2 text-xl font-bold text-text-primary border-t border-border">
-        Slide {slideIndex + 1}
+        Slide {currentSlide?.label || liveState.slideIndex + 1}
+        {meta.slideCount > 0 ? ` / ${meta.slideCount}` : ''}
       </div>
 
-      {/* Navigation */}
       <div className="px-4 pt-3 pb-6 flex flex-col gap-3">
         <div className="flex gap-3">
-          <button onClick={goPrev} className="flex-1 px-8 py-5 rounded-xl text-lg font-semibold border-2 border-border cursor-pointer flex items-center justify-center gap-2 bg-card text-text-primary touch-manipulation select-none hover:bg-hover transition-colors">
+          <button
+            onClick={goPrev}
+            className="flex-1 px-8 py-5 rounded-lg text-lg font-semibold border-2 border-border cursor-pointer flex items-center justify-center gap-2 bg-card text-text-primary touch-manipulation select-none hover:bg-hover transition-colors"
+          >
             <ChevronLeft size={24} /> Prev
           </button>
           <button
             onClick={goNext}
-            className="flex-1 px-8 py-5 rounded-xl text-lg font-semibold border-none cursor-pointer flex items-center justify-center gap-2 bg-accent text-white touch-manipulation select-none hover:bg-accent-hover transition-colors"
+            className="flex-1 px-8 py-5 rounded-lg text-lg font-semibold border-none cursor-pointer flex items-center justify-center gap-2 bg-accent text-white touch-manipulation select-none hover:bg-accent-hover transition-colors"
           >
             Next <ChevronRight size={24} />
           </button>
@@ -129,20 +172,20 @@ export default function RemoteControlPage() {
         <div className="flex gap-3">
           <button
             onClick={toggleLaser}
-            className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold border-2 cursor-pointer flex items-center justify-center gap-2 touch-manipulation select-none transition-colors ${laserActive ? 'bg-danger/20 border-danger text-danger' : 'bg-card border-border text-text-primary hover:bg-hover'}`}
+            className={`flex-1 px-4 py-3 rounded-lg text-sm font-semibold border-2 cursor-pointer flex items-center justify-center gap-2 touch-manipulation select-none transition-colors ${laserActive ? 'bg-danger/20 border-danger text-danger' : 'bg-card border-border text-text-primary hover:bg-hover'}`}
           >
             <Pointer size={16} /> Laser
           </button>
-          <div className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold border-2 border-border cursor-default flex items-center justify-center gap-2 bg-card text-text-primary touch-manipulation select-none">
+          <div className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold border-2 border-border cursor-default flex items-center justify-center gap-2 bg-card text-text-primary touch-manipulation select-none">
             <Clock size={16} /> {formatTime(elapsedTime)}
           </div>
         </div>
       </div>
 
-      {presenterLeft && (
+      {(presenterLeft || roomNotFound) && (
         <div className="fixed inset-0 bg-black/80 z-[1000] flex items-center justify-center">
           <div className="text-center text-white">
-            <h2>Session Ended</h2>
+            <h2>{roomNotFound ? 'Room not found' : 'Session Ended'}</h2>
             <button
               onClick={() => navigate('/')}
               className="bg-accent text-white px-4 py-2 rounded font-medium hover:bg-accent/90 transition-colors border-none mt-3"
