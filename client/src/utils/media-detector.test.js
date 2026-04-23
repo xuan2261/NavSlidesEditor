@@ -38,7 +38,7 @@ describe('detectLocalMedia', () => {
       title: 'Test',
       slides: [
         {
-          background: { type: 'image', src: '/uploads/bg.jpg' },
+          background: { type: 'image', image: '/uploads/bg.jpg' },
           elements: [],
         },
       ],
@@ -89,5 +89,21 @@ describe('detectLocalMedia', () => {
     }
     const result = detectLocalMedia(pres)
     expect(result.hasLocalMedia).toBe(true)
+  })
+
+  it('detects video posters and legacy background src', () => {
+    const pres = {
+      slides: [
+        {
+          background: { type: 'image', src: '/uploads/legacy-bg.png' },
+          elements: [
+            { type: 'video', src: 'https://cdn.example.com/video.mp4', poster: '/uploads/poster.png' },
+          ],
+        },
+      ],
+    }
+    const result = detectLocalMedia(pres)
+    expect(result.mediaUrls).toContain('/uploads/legacy-bg.png')
+    expect(result.mediaUrls).toContain('/uploads/poster.png')
   })
 })

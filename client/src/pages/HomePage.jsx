@@ -25,7 +25,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { api } from '../utils/api'
 import { markdownToSlides } from '../utils/markdown-import'
-import { parseProjectFile, validateProjectFile, rewriteMediaUrls } from '../utils/import-project'
+import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../utils/import-project'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
 import { Button, Input, Select } from '../components/ui'
 import SlideThumbnail from '../components/SlideThumbnail'
@@ -506,20 +506,9 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       if (warnings.length) console.warn('Import warnings:', warnings)
 
       let finalPres = parsed.presentation
-      if (parsed.type === 'zip' && parsed.mediaFiles && Object.keys(parsed.mediaFiles).length > 0) {
+      if (parsed.type === 'zip' && parsed.mediaFiles && parsed.mediaFiles.length > 0) {
         setImportProgress('Uploading media files...')
-        const urlMap = {}
-        for (const [name, blob] of Object.entries(parsed.mediaFiles)) {
-          try {
-            const uploaded = await api.uploadFile(new File([blob], name))
-            urlMap[`/uploads/${name}`] = uploaded.url || `/uploads/${uploaded.filename}`
-          } catch (err) {
-            console.warn('Failed to upload media:', name, err)
-          }
-        }
-        if (Object.keys(urlMap).length > 0) {
-          finalPres = rewriteMediaUrls(finalPres, urlMap)
-        }
+        finalPres = await rehydrateImportedPresentation(api, parsed)
       }
 
       setImportProgress('Creating presentation...')
@@ -626,11 +615,17 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           <Button
             variant="icon"
             onClick={onToggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </Button>
-          <Button variant="icon" onClick={() => navigate('/settings')} title="Settings">
+          <Button
+            variant="icon"
+            onClick={() => navigate('/settings')}
+            aria-label="Settings"
+            title="Settings"
+          >
             <Settings2 size={16} />
           </Button>
           <Button variant="primary" onClick={handleOpenModal}>
@@ -845,6 +840,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         >
                           <Button
                             variant="icon"
+                            aria-label="Restore"
                             title="Restore"
                             onClick={(e) => handleRestore(e, pres.id)}
                           >
@@ -852,6 +848,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                           </Button>
                           <Button
                             variant="icon"
+                            aria-label="Delete permanently"
                             title="Delete permanently"
                             onClick={(e) => handlePermanentDelete(e, pres.id)}
                             className="text-danger"
@@ -976,6 +973,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         <div className="flex justify-end gap-1 px-3 py-2 border-t border-border">
                           <Button
                             variant="icon"
+                            aria-label="Edit template"
                             title="Edit template"
                             onClick={(e) => {
                               e.stopPropagation()
@@ -986,6 +984,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                           </Button>
                           <Button
                             variant="icon"
+                            aria-label="Use template"
                             title="Use template"
                             onClick={(e) => {
                               e.stopPropagation()
@@ -996,6 +995,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                           </Button>
                           <Button
                             variant="icon"
+                            aria-label="Delete template"
                             title="Delete template"
                             onClick={(e) => handleDeleteTemplate(e, tmpl.id)}
                             className="text-danger"
@@ -1218,6 +1218,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                             <div className="flex justify-end gap-1 px-3 py-2 border-t border-border">
                               <Button
                                 variant="icon"
+                                aria-label="Edit"
                                 title="Edit"
                                 onClick={(e) => {
                                   e.stopPropagation()
@@ -1228,6 +1229,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                               </Button>
                               <Button
                                 variant="icon"
+                                aria-label="Duplicate"
                                 title="Duplicate"
                                 onClick={(e) => handleDuplicate(e, pres.id)}
                               >
@@ -1235,6 +1237,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                               </Button>
                               <Button
                                 variant="icon"
+                                aria-label="Delete"
                                 title="Delete"
                                 onClick={(e) => handleDelete(e, pres.id)}
                                 className="text-danger"
@@ -1279,6 +1282,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                             <div className="flex justify-end gap-1 px-3 py-2 border-t border-border">
                               <Button
                                 variant="icon"
+                                aria-label="Edit"
                                 title="Edit"
                                 onClick={(e) => {
                                   e.stopPropagation()
@@ -1289,6 +1293,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                               </Button>
                               <Button
                                 variant="icon"
+                                aria-label="Duplicate"
                                 title="Duplicate"
                                 onClick={(e) => handleDuplicate(e, pres.id)}
                               >
@@ -1296,6 +1301,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                               </Button>
                               <Button
                                 variant="icon"
+                                aria-label="Delete"
                                 title="Delete"
                                 onClick={(e) => handleDelete(e, pres.id)}
                                 className="text-danger"

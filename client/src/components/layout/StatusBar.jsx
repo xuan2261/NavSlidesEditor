@@ -39,7 +39,7 @@ export default function StatusBar() {
           >
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-          Designed by Bui Thanh Xuan - Department of Fundamental Engineering - Vietnam Naval Academy
+          Designed by Xuan Bui Thanh - Department of Fundamental Engineering - Vietnam Naval Academy
         </span>
         <span
           className="flex items-center gap-1.5 opacity-90 transition-opacity hover:opacity-100"
@@ -57,7 +57,7 @@ export default function StatusBar() {
             <polyline points="16 18 22 12 16 6" />
             <polyline points="8 6 2 12 8 18" />
           </svg>
-          v1.6.0
+          v1.6.1
         </span>
       </div>
     </footer>

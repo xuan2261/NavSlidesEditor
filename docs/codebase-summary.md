@@ -118,8 +118,11 @@ revealjs_gui/
   rotate, snap, and selection logic.
 - `PropertiesPanel.jsx` routes to type-specific editors under
   `components/properties/`.
-- `find-replace-helpers.js`, `slide-operation-helpers.js`, and
-  `use-reveal-preview-frame.js` keep the editor page thin.
+- `AnimationPreviewModal.jsx` now handles current-slide fragment preview for the
+  timeline without opening full presentation mode.
+- `animation-preview-helpers.js`, `find-replace-helpers.js`,
+  `slide-operation-helpers.js`, and `use-reveal-preview-frame.js` keep the
+  editor page thin.
 
 ## Server API
 

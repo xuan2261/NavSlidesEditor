@@ -56,6 +56,16 @@ describe('validateProjectFile', () => {
     const result = validateProjectFile(parsed)
     expect(result.valid).toBe(true)
   })
+
+  it('accepts 1.1 archives without warnings', () => {
+    const parsed = {
+      presentation: { title: 'Test', slides: [] },
+      manifest: { version: '1.1' },
+    }
+    const result = validateProjectFile(parsed)
+    expect(result.valid).toBe(true)
+    expect(result.warnings).toHaveLength(0)
+  })
 })
 
 describe('rewriteMediaUrls', () => {
@@ -89,14 +99,14 @@ describe('rewriteMediaUrls', () => {
     const presentation = {
       slides: [
         {
-          background: { type: 'image', src: '/uploads/old-bg.jpg' },
+          background: { type: 'image', image: '/uploads/old-bg.jpg' },
           elements: [],
         },
       ],
     }
     const urlMap = { '/uploads/old-bg.jpg': '/uploads/new-bg.jpg' }
     const result = rewriteMediaUrls(presentation, urlMap)
-    expect(result.slides[0].background.src).toBe('/uploads/new-bg.jpg')
+    expect(result.slides[0].background.image).toBe('/uploads/new-bg.jpg')
   })
 
   it('does not mutate original presentation', () => {
@@ -106,5 +116,37 @@ describe('rewriteMediaUrls', () => {
     const urlMap = { '/uploads/old.png': '/uploads/new.png' }
     rewriteMediaUrls(original, urlMap)
     expect(original.slides[0].elements[0].src).toBe('/uploads/old.png')
+  })
+
+  it('rewrites legacy background src fields to canonical image', () => {
+    const original = {
+      slides: [{ background: { type: 'image', src: '/uploads/legacy-bg.png' } }],
+    }
+    const urlMap = { '/uploads/legacy-bg.png': '/uploads/new-bg.png' }
+    const result = rewriteMediaUrls(original, urlMap)
+    expect(result.slides[0].background.image).toBe('/uploads/new-bg.png')
+    expect(result.slides[0].background.src).toBeUndefined()
+  })
+
+  it('rewrites poster URLs and absolute upload URLs', () => {
+    const original = {
+      slides: [
+        {
+          elements: [
+            {
+              type: 'video',
+              src: 'https://old-host.test/uploads/video.mp4',
+              poster: 'https://old-host.test/uploads/video-poster.png',
+            },
+          ],
+        },
+      ],
+    }
+    const result = rewriteMediaUrls(original, {
+      'https://old-host.test/uploads/video.mp4': '/uploads/video-new.mp4',
+      'https://old-host.test/uploads/video-poster.png': '/uploads/video-poster-new.png',
+    })
+    expect(result.slides[0].elements[0].src).toBe('/uploads/video-new.mp4')
+    expect(result.slides[0].elements[0].poster).toBe('/uploads/video-poster-new.png')
   })
 })

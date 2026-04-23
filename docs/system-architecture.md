@@ -159,9 +159,24 @@ server/uploads/
 
 - `generateRevealHTML()` renders the live/present HTML deck.
 - `generatePrintHTML()` expands fragments into print pages.
-- `offlineExport.js` inlines CDN assets for offline HTML export.
+- `downloadHTML()` produces the standard CDN-backed HTML export, while
+  `generateOfflineHTML(generateRevealHTML(...))` produces the fully inlined
+  offline HTML export.
+- `exportPptx.js` uses a hybrid strategy: stable primitives render as native PPT
+  objects, while complex DOM-backed content and gradient backgrounds fall back
+  to rasterized assets so exported slides keep visual fidelity instead of
+  dropping elements.
+- PPTX HTML/LaTeX rasterization uses an offscreen iframe capture path aligned
+  with print export: embed content is wrapped as a full document, common CDN
+  dependencies are resolved through local `/vendor` assets, and LaTeX/TikZ
+  output is captured at higher pixel density before insertion into PowerPoint.
 - `exportPptx.js` reuses `getSlideNotes()` so speaker notes stay aligned across
-  HTML and PPTX exports.
+  HTML and PPTX exports, and it preserves slide z-order by exporting sorted
+  element stacks.
+- `project-media-utils.js` centralizes project archive media detection,
+  canonical `background.image` handling, `.navslides` manifest `1.1` media
+  mapping, and import-time upload URL rewriting for local `/uploads/...`
+  assets.
 - `presentInWindow()` uses the server `/api/presentations/:id/present` route
   when a saved presentation ID is available.
 

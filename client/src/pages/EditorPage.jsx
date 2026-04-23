@@ -18,11 +18,11 @@ import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import { ChevronLeft } from 'lucide-react'
 import { api } from '../utils/api'
-import { presentInWindow, exportPDF, generateRevealHTML } from '../utils/generateHTML'
+import { presentInWindow, exportPDF, generateRevealHTML, downloadHTML } from '../utils/generateHTML'
 import { exportToPptx } from '../utils/exportPptx'
 import { generateOfflineHTML } from '../utils/offlineExport'
 import { exportProject } from '../utils/export-project'
-import { parseProjectFile, validateProjectFile, rewriteMediaUrls } from '../utils/import-project'
+import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../utils/import-project'
 import Toolbar from '../components/Toolbar'
 import SlidePanel from '../components/SlidePanel'
 import SlideCanvas from '../components/SlideCanvas'
@@ -31,6 +31,7 @@ import FindReplaceBar from '../components/FindReplaceBar'
 import TransitionPreview from '../components/TransitionPreview'
 import SlideSorterView from '../components/SlideSorterView'
 import AnimationTimeline from '../components/AnimationTimeline'
+import AnimationPreviewModal from '../components/AnimationPreviewModal'
 import MediaLibraryModal from '../components/MediaLibraryModal'
 import AICopywriterModal from '../components/AICopywriterModal'
 import AIGeneratorModal from '../components/AIGeneratorModal'
@@ -178,6 +179,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const [showMediaLibrary, setShowMediaLibrary] = useState(false)
   const [showGithubModal, setShowGithubModal] = useState(false)
   const [showTransitionPreview, setShowTransitionPreview] = useState(false)
+  const [showAnimationPreview, setShowAnimationPreview] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [shareStatus, setShareStatus] = useState({ shared: false, token: null })
@@ -926,18 +928,18 @@ svg.selectAll('circle').data(data).join('circle')
           saveStatus={saveStatus}
           lastSavedAt={lastSavedAt}
           onExportPDF={() => exportPDF(presentation)}
-          onExportPPTX={() => exportToPptx(presentation)}
+          onExportPPTX={async () => {
+            try {
+              const warnings = await exportToPptx(presentation)
+              if (warnings.length) alert(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
+            } catch (err) {
+              console.error('PPTX export failed:', err)
+              alert('PPTX export failed: ' + err.message)
+            }
+          }}
           onExportHTML={async () => {
             try {
-              const html = generateRevealHTML(presentation)
-              const offline = await generateOfflineHTML(html)
-              const blob = new Blob([offline], { type: 'text/html' })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              a.href = url
-              a.download = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
-              a.click()
-              URL.revokeObjectURL(url)
+              downloadHTML(presentation)
             } catch (err) {
               console.error('HTML export failed:', err)
               alert('HTML export failed: ' + err.message)
@@ -982,25 +984,7 @@ svg.selectAll('circle').data(data).join('circle')
                   return
                 }
                 if (warnings.length) console.warn('Import warnings:', warnings)
-                let finalPres = parsed.presentation
-                if (
-                  parsed.type === 'zip' &&
-                  parsed.mediaFiles &&
-                  Object.keys(parsed.mediaFiles).length > 0
-                ) {
-                  const urlMap = {}
-                  for (const [name, blob] of Object.entries(parsed.mediaFiles)) {
-                    try {
-                      const uploaded = await api.uploadFile(new File([blob], name))
-                      urlMap[`/uploads/${name}`] = uploaded.url || `/uploads/${uploaded.filename}`
-                    } catch (err) {
-                      console.warn('Failed to upload media:', name, err)
-                    }
-                  }
-                  if (Object.keys(urlMap).length > 0) {
-                    finalPres = rewriteMediaUrls(finalPres, urlMap)
-                  }
-                }
+                let finalPres = await rehydrateImportedPresentation(api, parsed)
                 finalPres.title = (finalPres.title || 'Imported') + ' (Imported)'
                 const newPres = await api.createPresentation({
                   ...finalPres,
@@ -1336,7 +1320,16 @@ svg.selectAll('circle').data(data).join('circle')
             slide={currentSlide}
             onUpdateElement={(id, updates) => updateElement(id, updates)}
             onClose={() => setShowTimeline(false)}
-            onPreview={() => presentInWindow(presentation)}
+            onPreview={() => setShowAnimationPreview(true)}
+          />
+        )}
+
+        {showAnimationPreview && presentation && currentSlide && (
+          <AnimationPreviewModal
+            key={`${presentation.id || 'preview'}-${currentSlide.id || currentSlideIndex}`}
+            presentation={presentation}
+            slideIndex={currentSlideIndex}
+            onClose={() => setShowAnimationPreview(false)}
           />
         )}
 

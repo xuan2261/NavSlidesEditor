@@ -125,6 +125,10 @@ Default font families offered in the font picker (verified in Toolbar):
 | Danger (red fill)       | Delete, Remove                   |
 | Icon button             | Toolbar small icon-only actions  |
 
+- Button variants must declare their border policy explicitly. Secondary buttons use `border border-border`; filled/ghost/icon variants use transparent borders unless a visible border is intentional.
+- Icon-only buttons require an accessible name. Prefer explicit `aria-label` at the call site for destructive or context-sensitive actions. The shared Button supports `title` as a fallback for simple icon controls.
+- Avoid broad `transition-all` on shared controls. Use property-specific transitions for color, border, shadow, opacity, or transform changes.
+
 ### Panels
 
 - Background: `--bg-secondary`
@@ -138,6 +142,9 @@ Default font families offered in the font picker (verified in Toolbar):
 - Background: `--bg-secondary`
 - Max-width varies by content (400–800px)
 - Close via Escape or explicit close button
+- Use `role="dialog"`, `aria-modal="true"`, and a labelled title for interactive overlays.
+- Move focus into the modal on open and return focus to the invoking control when the modal closes.
+- Modal headers and action rows must wrap safely at narrow browser widths. Controls should not create horizontal page overflow.
 
 ### Toolbars
 
@@ -189,6 +196,8 @@ Templates insert pre-positioned elements at standard canvas coordinates. Users c
 ### Fragment Animations
 
 Managed via `AnimationTimeline` (bottom overlay). Each element on a slide can have a fragment index — elements with higher indices appear later in presentation sequence. The timeline shows elements as horizontal blocks ordered by fragment index. Drag to reorder.
+
+The timeline `Preview` action opens an in-editor `AnimationPreviewModal` instead of launching full present mode. The modal renders only the active slide through a Reveal iframe and steps through the slide's real fragment indices, including sparse fragment orders.
 
 ### Slide Transitions
 

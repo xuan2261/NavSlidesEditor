@@ -1,9 +1,13 @@
 import JSZip from 'jszip'
+import {
+  buildLegacyArchiveEntries,
+  rewriteProjectMediaUrls,
+} from './project-media-utils'
 
 /**
  * Parse uploaded file (.navslides ZIP or .navslides.json)
  * @param {File} file
- * @returns {Promise<{ type: 'zip'|'json', presentation: object, manifest?: object, mediaFiles?: object }>}
+ * @returns {Promise<{ type: 'zip'|'json', presentation: object, manifest?: object, mediaFiles?: Array }>}
  */
 export async function parseProjectFile(file) {
   const isZip = file.name.endsWith('.navslides') && !file.name.endsWith('.json')
@@ -11,10 +15,9 @@ export async function parseProjectFile(file) {
   if (!isZip) {
     const text = await file.text()
     const data = JSON.parse(text)
-    return { type: 'json', presentation: data.presentation, manifest: data }
+    return { type: 'json', presentation: data.presentation, manifest: data, mediaFiles: [] }
   }
 
-  // ZIP file
   const zip = await JSZip.loadAsync(file)
   const manifestJson = await zip.file('manifest.json')?.async('text')
   const manifest = manifestJson ? JSON.parse(manifestJson) : null
@@ -23,21 +26,29 @@ export async function parseProjectFile(file) {
   if (!presJson) throw new Error('Invalid .navslides: missing presentation.json')
   const presentation = JSON.parse(presJson)
 
-  // Collect media files
-  const mediaFiles = {}
-  const mediaFolder = zip.folder('media')
-  if (mediaFolder) {
-    for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
-      if (relativePath.startsWith('media/') && !zipEntry.dir) {
-        const filename = relativePath.replace('media/', '')
-        if (filename) {
-          mediaFiles[filename] = await zipEntry.async('blob')
-        }
-      }
+  const archiveFiles = []
+  for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
+    if (relativePath.startsWith('media/') && !zipEntry.dir) {
+      archiveFiles.push({
+        archivePath: relativePath,
+        blob: await zipEntry.async('blob'),
+      })
     }
   }
 
-  return { type: 'zip', presentation, manifest, mediaFiles }
+  const mediaFiles =
+    Array.isArray(manifest?.media) && manifest.media.length
+      ? await Promise.all(
+          manifest.media.map(async (entry) => ({
+            archivePath: entry.archivePath,
+            blob: await zip.file(entry.archivePath)?.async('blob'),
+            filename: entry.filename || entry.archivePath.replace(/^media\//, ''),
+            originalUrl: entry.originalUrl,
+          }))
+        )
+      : buildLegacyArchiveEntries(presentation, archiveFiles)
+
+  return { type: 'zip', presentation, manifest, mediaFiles: mediaFiles.filter((entry) => entry.blob) }
 }
 
 /**
@@ -54,39 +65,36 @@ export function validateProjectFile(parsed) {
     return { valid: false, errors, warnings }
   }
 
-  if (parsed.manifest?.version && parsed.manifest.version !== '1.0') {
-    warnings.push(`Unknown version: ${parsed.manifest.version}. Expected 1.0`)
+  if (parsed.manifest?.version && !['1.0', '1.1'].includes(parsed.manifest.version)) {
+    warnings.push(`Unknown version: ${parsed.manifest.version}. Expected 1.0 or 1.1`)
   }
 
-  if (!parsed.presentation.title) {
-    warnings.push('Presentation missing title field')
-  }
-
-  if (!Array.isArray(parsed.presentation.slides)) {
-    errors.push('Invalid structure: slides must be an array')
-  }
+  if (!parsed.presentation.title) warnings.push('Presentation missing title field')
+  if (!Array.isArray(parsed.presentation.slides)) errors.push('Invalid structure: slides must be an array')
 
   return { valid: errors.length === 0, errors, warnings }
 }
 
-/**
- * Rewrite local media URLs to new uploaded server URLs.
- * Returns a deep-cloned presentation object with updated URLs.
- * @param {object} presentation
- * @param {Record<string, string>} urlMap - old path → new path
- * @returns {object}
- */
 export function rewriteMediaUrls(presentation, urlMap) {
-  const clone = JSON.parse(JSON.stringify(presentation))
-  for (const slide of clone.slides || []) {
-    for (const el of slide.elements || []) {
-      if (el.src && urlMap[el.src]) {
-        el.src = urlMap[el.src]
-      }
-    }
-    if (slide.background?.src && urlMap[slide.background.src]) {
-      slide.background.src = urlMap[slide.background.src]
+  return rewriteProjectMediaUrls(presentation, urlMap)
+}
+
+export async function rehydrateImportedPresentation(api, parsed) {
+  let finalPresentation = parsed.presentation
+  if (parsed.type !== 'zip' || !parsed.mediaFiles?.length) return finalPresentation
+
+  const urlMap = {}
+  for (const media of parsed.mediaFiles) {
+    try {
+      const uploadName = media.filename || media.archivePath.replace(/^media\//, '')
+      const uploaded = await api.uploadFile(new File([media.blob], uploadName))
+      const uploadedUrl = uploaded.url || `/uploads/${uploaded.filename}`
+      urlMap[media.originalUrl] = uploadedUrl
+    } catch (error) {
+      console.warn('Failed to upload media:', media.archivePath, error)
     }
   }
-  return clone
+
+  if (Object.keys(urlMap).length > 0) finalPresentation = rewriteProjectMediaUrls(finalPresentation, urlMap)
+  return finalPresentation
 }

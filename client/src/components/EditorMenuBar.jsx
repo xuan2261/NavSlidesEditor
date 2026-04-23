@@ -94,7 +94,7 @@ export default function EditorMenuBar({
     { type: 'button', label: 'Export Offline HTML', icon: FileDown, onClick: onExportOffline },
     {
       type: 'button',
-      label: 'Export Project (.navslides)',
+      label: 'Export Project (.navslides / .navslides.json)',
       icon: FileDown,
       onClick: onExportProject,
     },

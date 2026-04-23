@@ -1,10 +1,12 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: Tailwind refactor hardening verified
+## Current Status: Tailwind UI/UX review remediation verified
 
 All core features are operational. The token-backed Tailwind layer, route-based
 shell, live controller/viewer contract, notes normalization, persistence
-locking, and E2E gates were verified on 2026-04-23.
+locking, and E2E gates were verified on 2026-04-23. Accepted Tailwind UI/UX
+review findings for control borders, icon names, Animation Preview accessibility,
+partial project media export, and PPTX module risk were remediated on 2026-04-24.
 
 ### What Works
 
@@ -15,15 +17,16 @@ locking, and E2E gates were verified on 2026-04-23.
 | Auto-save (debounced) | Done |
 | Smart guides + snapping | Done |
 | Fragment animations + timeline | Done |
+| Animation Preview modal | Done (accessible dialog, narrow viewport checked) |
 | Slide templates (20+ layouts) | Done |
 | Interactive and quiz templates | Done |
 | Footer system (basic + sequence) | Done |
 | Present mode (reveal.js) | Done |
-| Export HTML | Done |
+| Export HTML | Done (CDN-backed deck) |
 | Export PDF | Done |
-| Export PPTX | Done (with limitations) |
-| Project export/import (.navslides) | Done |
-| Offline HTML export | Done |
+| Export PPTX | Done (hybrid native + high-res raster fallback, split helpers) |
+| Project export/import (.navslides) | Done (manifest v1.1, partial media skip warnings) |
+| Offline HTML export | Done (self-contained) |
 | Shareable links (with password option) | Done |
 | GitHub push integration | Done |
 | rclone cloud sync | Done |
@@ -59,7 +62,10 @@ locking, and E2E gates were verified on 2026-04-23.
 
 ### Export Limitations
 
-- PPTX export still flattens some element types into simpler shapes.
+- PPTX export rasterizes complex DOM-backed elements and unsupported chart
+  variants for fidelity, so those exported objects are not always editable in
+  PowerPoint. HTML and LaTeX raster fallbacks use local vendor assets where
+  possible to avoid placeholder-only output.
 - Present mode and standard HTML export still depend on CDN resources at
   runtime.
 
@@ -99,6 +105,12 @@ Validation pass for the token-backed Tailwind UI, route shell, notes
 normalization, live socket contract, storage locking, and E2E stability.
 
 **Plan:** `plans/20260423-2151-tailwind-refactor-hardening-verification/`
+
+### Phase 8 - Tailwind UI/UX Review Remediation (Complete - 2026-04-24)
+
+Closed accepted Medium findings from the Tailwind UI/UX review and fixed touched/global Low-risk control accessibility items.
+
+**Plan:** `plans/20260424-0619-tailwind-ui-ux-review-remediation/`
 
 ## Future Improvement Phases
 
