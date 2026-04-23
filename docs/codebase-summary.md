@@ -1,197 +1,199 @@
-# Codebase Summary — NavSlides Editor
+# Codebase Summary - NavSlides Editor
 
-## Project Structure
+## Snapshot
 
-npm workspace monorepo with 4 packages (post-refactor, 04/2026):
+NavSlides Editor is a self-hosted presentation editor split across four runtime areas:
+`client/`, `server/`, `shared/`, and `electron/`. Supporting docs, tests, and planning
+artifacts live alongside the app code in the repository.
 
-```
+## Repository Layout
+
+```text
 revealjs_gui/
-├── client/                    # React SPA (Vite 5)
+├── client/                  # React 18 SPA (Vite, React Router, Tailwind)
 │   └── src/
-│       ├── App.jsx            # Router + theme toggle + ErrorBoundary (62 LOC)
-│       ├── main.jsx           # React entry point (11 LOC)
-│       ├── index.css          # Global design tokens + resets (270 LOC)
-│       ├── styles/            # Split CSS per component area
-│       │   ├── editor-page.css
-│       │   ├── home-page.css
-│       │   ├── slide-panel.css
-│       │   ├── canvas-toolbar.css
-│       │   ├── properties-panel.css
-│       │   ├── modals.css
-│       │   └── components.css
-│       ├── pages/
-│       │   ├── EditorPage.jsx # Refactored editor page (1475 LOC)
-│       │   └── HomePage.jsx   # Dashboard + templates (1275 LOC)
+│       ├── App.jsx          # Route shell + theme persistence
 │       ├── components/
-│       │   ├── SlideCanvas.jsx       # Canvas interaction (2421 LOC)
-│       │   ├── Toolbar.jsx           # Insert + formatting (1229 LOC)
-│       │   ├── PropertiesPanel.jsx   # Property router (437 LOC)
-│       │   ├── SlidePanel.jsx        # Slide thumbnails (584 LOC)
-│       │   ├── ErrorBoundary.jsx     # Error recovery UI (73 LOC)
-│       │   ├── InsertMenu.jsx        # Element insertion UI
-│       │   ├── EditorMenuBar.jsx     # Menu bar actions
-│       │   ├── properties/           # Per-type property editors
-│       │   │   ├── common-element-controls.jsx
-│       │   │   ├── shape-properties.jsx
-│       │   │   ├── image-properties.jsx
-│       │   │   ├── chart-properties.jsx
-│       │   │   ├── code-properties.jsx
-│       │   │   ├── table-properties.jsx
-│       │   │   ├── media-properties.jsx
-│       │   │   └── misc-properties.jsx
-│       │   ├── dashboard/            # Dashboard subcomponents
-│       │   ├── layout/              # Layout subcomponents
-│       │   └── ... (30+ component files)
+│       │   ├── layout/MainLayout.jsx
+│       │   ├── layout/StatusBar.jsx
+│       │   ├── SlideCanvas.jsx
+│       │   ├── Toolbar.jsx
+│       │   ├── PropertiesPanel.jsx
+│       │   ├── SlidePanel.jsx
+│       │   ├── FindReplaceBar.jsx
+│       │   ├── AnimationTimeline.jsx
+│       │   └── ...
+│       ├── pages/
+│       │   ├── HomePage.jsx
+│       │   ├── EditorPage.jsx
+│       │   ├── LiveViewPage.jsx
+│       │   ├── RemoteControlPage.jsx
+│       │   ├── SpeakerViewPage.jsx
+│       │   ├── ExplorePage.jsx
+│       │   └── SettingsPage.jsx
 │       ├── hooks/
-│       │   ├── use-autosave.js       # Debounced auto-save logic
-│       │   ├── use-clipboard.js      # Copy/cut/paste/duplicate
-│       │   ├── use-history.js        # Undo/redo (50-step buffer)
-│       │   ├── use-keyboard.js       # Keyboard shortcut handler
-│       │   ├── use-live-presentation.js # Socket.IO live mode
-│       │   └── use-slide-operations.js  # Slide CRUD + element ops
-│       ├── stores/
-│       │   ├── editor-store.js       # Zustand: UI + editor state
-│       │   ├── presentation-store.js # Zustand: presentation data
-│       │   └── ui-store.js           # Zustand: UI preferences
-│       ├── data/
-│       │   ├── element-defaults.js   # Default props per element type
-│       │   ├── slide-constants.js    # Canvas size constants
-│       │   └── slide-templates.js    # Template definitions
-│       ├── extensions/
-│       │   ├── MathExtension.js      # TipTap inline KaTeX node
-│       │   ├── FontSize.js           # TipTap FontSize mark
-│       │   └── FontFamily.js         # TipTap FontFamily mark
-│       ├── services/
-│       │   ├── unsplash.js           # Unsplash image API
-│       │   └── giphy.js              # Giphy GIF API
-│       └── utils/
-│           ├── element-factory.js    # Centralized element creation (JSDoc typed)
-│           ├── api.js                # Fetch wrapper for REST API
-│           ├── generateHTML.js       # Re-exports from shared
-│           ├── exportPptx.js         # PPTX via pptxgenjs
-│           ├── offlineExport.js      # Inline CDN into HTML
-│           ├── smartGuides.js        # Snap alignment logic
-│           ├── export-project.js     # .navslides export
-│           ├── import-project.js     # .navslides import
-│           ├── pdf-import.js         # PDF slide import
-│           └── markdown-import.js    # Markdown import
+│       │   ├── use-autosave.js
+│       │   ├── use-clipboard.js
+│       │   ├── use-history.js
+│       │   ├── use-keyboard.js
+│       │   ├── use-live-presentation.js
+│       │   ├── use-slide-operations.js
+│       │   ├── use-reveal-preview-frame.js
+│       │   └── slide-operation-helpers.js
+│       ├── utils/
+│       │   ├── api.js
+│       │   ├── slide-notes.js
+│       │   ├── exportPptx.js
+│       │   ├── offlineExport.js
+│       │   └── ...
+│       ├── lib/utils.js     # cn, backdrop, Escape helpers
+│       ├── index.css        # Tailwind directives + CSS variables
+│       └── tailwind.config.js
 ├── server/
-│   ├── index.js               # Express server entry
-│   ├── routes/                # 16 route files
-│   │   ├── presentations.js   # CRUD + Zod validation
-│   │   ├── share.js           # Share tokens + Zod validation
-│   │   ├── github.js          # GitHub push + Zod validation
-│   │   ├── ai.js              # AI endpoints + Zod validation
-│   │   └── ... (12 more route files)
+│   ├── index.js             # Express entry + Socket.IO bootstrap
+│   ├── routes/
+│   │   ├── presentations.js
+│   │   ├── templates.js
+│   │   ├── share.js
+│   │   ├── github.js
+│   │   ├── ai.js
+│   │   ├── live.js
+│   │   ├── settings.js
+│   │   ├── explore.js
+│   │   ├── analytics.js
+│   │   ├── marketplace.js
+│   │   ├── upload.js
+│   │   ├── media.js
+│   │   ├── sync.js
+│   │   └── history.js
 │   ├── middleware/
-│   │   ├── validate.js        # Zod validation middleware
-│   │   ├── schemas.js         # All Zod schemas
-│   │   └── error-handler.js   # Centralized error handler
+│   │   ├── validate.js
+│   │   ├── schemas.js
+│   │   └── error-handler.js
 │   └── services/
-│       ├── storage.js         # File I/O abstraction
-│       ├── socket-handler.js  # Socket.IO event handling
-│       ├── live-rooms.js      # Live presentation rooms
-│       ├── ai-provider.js     # AI service integration
-│       └── presentation-finder.js
+│       ├── storage.js
+│       ├── socket-handler.js
+│       ├── live-rooms.js
+│       ├── presentation-finder.js
+│       └── ai-provider.js
 ├── shared/
-│   ├── src/
-│   │   ├── index.js           # Entry point
-│   │   ├── htmlGenerator.js   # HTML export engine
-│   │   ├── element-renderers.js # Shared element rendering
-│   │   ├── shapeUtils.js      # SVG path rendering
-│   │   ├── presenterTools.js  # Presenter tools
-│   │   └── types/
-│   │       └── presentation.js # JSDoc type definitions
-│   └── tests/                 # Vitest unit tests
-├── tests/
-│   └── e2e/                   # Playwright E2E testing suite
+│   └── src/
+│       ├── htmlGenerator.js
+│       ├── element-renderers.js
+│       ├── slideNotes.js
+│       ├── presenterTools.js
+│       ├── shapeUtils.js
+│       └── types/presentation.js
 ├── electron/
-│   ├── main.js                # Electron entry + safeStorage IPC (140 LOC)
-│   └── preload.js             # Context bridge for credentials
-├── package.json               # Root workspace + Electron scripts
-├── eslint.config.mjs          # ESLint Flat Config
-├── playwright.config.js       # Playwright E2E Config
-├── vitest.config.mjs          # Vitest testing config
-├── vitest.workspace.ts        # Vitest workspace definition
-├── Dockerfile                 # Multi-stage build (Node 20 alpine)
-└── docker-compose.yml         # Single service + 2 named volumes
+│   ├── main.js
+│   └── preload.js
+├── tests/e2e/
+├── docs/
+└── plans/
 ```
 
-## Component Hierarchy
+## Client App
 
-```
-App
-├── ErrorBoundary              ← catches rendering errors
-├── HomePage
-│   └── (presentation list, template manager, 6 preset themes)
-└── EditorPage
-    ├── SlidePanel              ← left: thumbnails, drag-to-reorder
-    ├── Toolbar                 ← top: insert elements, TipTap commands
-    ├── SlideCanvas             ← center: 960×540 canvas, interaction
-    ├── PropertiesPanel         ← right: routes to type-specific editors
-    │   └── properties/*        ← shape, image, chart, code, table, media, misc
-    ├── FindReplaceBar          ← overlay (Ctrl+F)
-    ├── AnimationTimeline       ← bottom overlay (fragment sequencing)
-    ├── TransitionPreview       ← modal (iframe + CDN reveal.js)
-    └── Extracted modals:
-        ├── HTML/Code/LaTeX/CSS editors
-        ├── TemplatePickerModal
-        ├── GitHubPushModal
-        ├── ShareModal / SyncModal
-        ├── HistoryModal
-        ├── MediaLibraryModal
-        ├── AIGeneratorModal / AICopywriterModal / AITranslateModal
-        └── LivePresentationModal
-```
+- `App.jsx` uses `BrowserRouter` and `Routes`, not ad-hoc page state.
+- `MainLayout.jsx` wraps the routed app shell and renders `StatusBar.jsx`.
+- Route map:
+  - `/` -> `HomePage`
+  - `/editor/:id` -> `EditorPage`
+  - `/template/:id` -> `EditorPage` in template mode
+  - `/settings` -> `SettingsPage`
+  - `/explore` -> `ExplorePage`
+  - `/live/:roomCode` -> `LiveViewPage`
+  - `/remote/:roomCode` -> `RemoteControlPage`
+  - `/speaker/:roomCode` -> `SpeakerViewPage`
+- `App.jsx` persists the editor theme in `localStorage` and mirrors it to
+  `document.documentElement.dataset.theme`.
+- Shared UI state lives in Zustand stores; editor logic is split into hooks and
+  helper modules instead of one large page component.
 
-## Data Flow
+## Editor Surface
 
-```
-User action
-    │
-    ▼
-Zustand Stores
-    ├── editor-store.js    (selection, editing, clipboard, UI flags)
-    ├── presentation-store.js (presentation data, current slide)
-    └── ui-store.js        (theme, panel visibility)
-    │
-    ├──── subscribed ────► SlideCanvas  (render + interaction)
-    ├──── subscribed ────► Toolbar      (commands → store actions)
-    ├──── subscribed ────► PropertiesPanel (per-element edits)
-    ├──── subscribed ────► SlidePanel   (slide CRUD)
-    │
-Custom Hooks
-    ├── use-autosave   → debounced PUT to server
-    ├── use-clipboard  → copy/cut/paste/duplicate
-    ├── use-history    → undo/redo (50-step circular buffer)
-    ├── use-keyboard   → keyboard shortcut dispatch
-    └── use-slide-operations → slide CRUD + element manipulation
-    │
-    ▼
-PUT /api/presentations/:id          ← Express + Zod validation
-    │
-    ▼
-server/data/presentations.json      ← file-based JSON storage
-```
+- `EditorPage.jsx` composes `SlidePanel`, `Toolbar`, `SlideCanvas`,
+  `PropertiesPanel`, search/replace, animation timeline, and modal surfaces.
+- `SlideCanvas.jsx` remains the core interaction surface for drag, resize,
+  rotate, snap, and selection logic.
+- `PropertiesPanel.jsx` routes to type-specific editors under
+  `components/properties/`.
+- `find-replace-helpers.js`, `slide-operation-helpers.js`, and
+  `use-reveal-preview-frame.js` keep the editor page thin.
 
-## Key Architectural Patterns
+## Server API
 
-| Pattern                 | Description                                                           |
-| ----------------------- | --------------------------------------------------------------------- |
-| Zustand stores          | 3 stores: editor, presentation, UI — replaced god-component state     |
-| Custom hooks            | 6 hooks extracted from EditorPage for logic reuse                     |
-| Element factory         | Centralized `element-factory.js` for creating typed elements          |
-| Component decomposition | PropertiesPanel routes to 8 type-specific sub-editors                 |
-| Modular CSS             | `index.css` (global tokens) + 7 split CSS files in `styles/`          |
-| Zod validation          | All mutation API endpoints validate request body via middleware       |
-| ErrorBoundary           | React class component wrapping App children — prevents white screen   |
-| JSDoc type definitions  | `shared/src/types/presentation.js` — typed element union, Slide, etc. |
-| safeStorage (Electron)  | OS keychain for GitHub tokens via IPC; file fallback for Docker       |
-| Element renderers       | Shared `element-renderers.js` for DRY HTML generation                 |
-| Socket.IO service       | `socket-handler.js` modularized from server entry                     |
-| Single TipTap instance  | One `Editor` created in EditorPage, reused across all text elements   |
-| File-based storage      | All data in JSON files; no database                                   |
-| useState routing        | `App.jsx` switches pages via `useState('page')` — no React Router     |
-| Debounced autosave      | `use-autosave` hook, 1500ms after last change                         |
-| Fixed canvas            | Renders at 960×540, scales via ResizeObserver CSS transform           |
-| CDN-at-runtime          | Present mode and HTML export load reveal.js, KaTeX, Chart.js from CDN |
+- `server/index.js` boots Express, installs middleware, and wires Socket.IO.
+- Route groups are split by concern:
+  - presentation CRUD and exports
+  - templates
+  - sharing and GitHub push
+  - AI generation and translation
+  - live view
+  - settings and explore
+  - analytics and marketplace
+  - uploads, media, sync, and history
+- `middleware/schemas.js` provides Zod request validation for mutation routes.
+- `services/storage.js` owns JSON persistence and serializes file access with
+  per-file locks.
+- `services/socket-handler.js` and `services/live-rooms.js` implement live room
+  coordination.
+
+## Shared Runtime Contract
+
+- `shared/src/htmlGenerator.js` generates reveal.js HTML and print HTML.
+- `shared/src/element-renderers.js` keeps export rendering DRY across pipelines.
+- `shared/src/slideNotes.js` normalizes speaker notes and strips legacy aliases.
+- `shared/src/types/presentation.js` documents the data model with JSDoc.
+- `shared/src/index.js` re-exports the shared helpers for client and server use.
+
+## Electron Wrapper
+
+- `electron/main.js` starts the embedded server and creates the desktop window.
+- `electron/preload.js` exposes the credential bridge to the renderer.
+- GitHub credentials use `safeStorage` when available and fall back to file
+  storage when they cannot be encrypted.
+
+## Styling System
+
+- Tailwind is the primary UI utility layer for app chrome.
+- `client/tailwind.config.js` maps colors, radii, and animations to CSS
+  variables defined in `client/src/index.css`.
+- Dark mode follows `[data-theme="dark"]`; the editor still uses the same token
+  names across dark and light surfaces.
+- `client/src/lib/utils.js` provides `cn`, backdrop-click, and Escape-close
+  helpers for shared component behavior.
+
+## Persistence And Export
+
+- Presentation data, templates, share tokens, GitHub config, settings, and
+  snapshot history are stored in JSON files under `server/data/`.
+- `storage.js` wraps reads and writes with a file lock to prevent concurrent
+  JSON races.
+- `exportPptx.js` and `htmlGenerator.js` both consume the canonical notes
+  helper so HTML, print, and PPTX exports stay aligned.
+- `offlineExport.js` inlines CDN assets for offline HTML export.
+
+## Test Surface
+
+- Vitest covers shared helpers, storage/service logic, and client utility
+  helpers.
+- Playwright exercises editor, dashboard, export, live, sharing, media,
+  templates, settings, and keyboard flows.
+- New regression helpers live next to the code they protect, such as
+  `tailwind-inline-style-audit.test.js` and `slide-operation-helpers.test.js`.
+
+## Behavior Notes
+
+- `Slide.notes` is canonical.
+- `speakerNotes` remains a legacy input alias and is normalized away before
+  export and save.
+- Live room state is `{ slideIndex, verticalIndex, fragmentIndex }`.
+- Controllers are separate from viewers; viewer counts exclude controllers.
+- Live controllers receive `presentation-meta` plus `control-navigate` routing.
+
+## Repository Notes
+
+- Large generated assets are still present in the repo, including built-in
+  template data and icon-path tables.
+- Historical execution reports and plan artifacts live under `plans/`.

@@ -1,10 +1,10 @@
 ---
 title: 'Complete Tailwind Migration Remediation'
 description: 'Hoàn thiện 25-30% migration còn thiếu: fix undefined CSS vars, scope important flag, migrate 6 unmigrated files, clean hardcoded colors, fix layout bugs, optimize bundle.'
-status: pending
+status: superseded
 priority: P1
 tags: ['tailwind', 'css', 'remediation', 'bugfix', 'ui']
-blockedBy: ['20260421-1920-tailwind-full-migration', '20260422-2230-fix-post-tailwind-css-audit']
+blockedBy: ['20260421-1920-tailwind-full-migration', '20260422-2230-fix-post-tailwind-css-audit', '20260423-2151-tailwind-refactor-hardening-verification']
 blocks: []
 created: '2026-04-23T03:45:00.000Z'
 createdBy: 'ck:plan'
@@ -18,6 +18,8 @@ source: skill
 Migration hiện tại đạt **70-75%** (dù plan gốc đánh dấu "Completed"). Plan này hoàn tất phần còn lại dựa trên [Code Review Report](file:///C:/Users/Z10PAD8C_Xuan2261/.gemini/antigravity/brain/bae08055-5067-410e-ba9c-c9d97fc63824/code_review_report.md).
 
 **Source**: Adversarial Code Review — 3 Critical, 4 Major, 6 Medium issues.
+
+**Superseded execution note (2026-04-23):** use `plans/20260423-2151-tailwind-refactor-hardening-verification/` as the active hard-mode execution plan. Keep this plan as historical remediation context unless the new plan explicitly reopens it.
 
 ## Phases
 
