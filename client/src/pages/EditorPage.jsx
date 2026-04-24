@@ -293,7 +293,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
             i === slideIdx
               ? {
                   ...s,
-                  elements: s.elements.map((el) =>
+                  elements: (s.elements || []).map((el) =>
                     el.id === elemId ? { ...el, content: html } : el
                   ),
                 }
@@ -389,7 +389,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
           i === currentSlideIndexRef.current
             ? {
                 ...s,
-                elements: s.elements.map((el) => (el.id === id ? { ...el, ...updates } : el)),
+                elements: (s.elements || []).map((el) => (el.id === id ? { ...el, ...updates } : el)),
               }
             : s
         ),
@@ -728,7 +728,7 @@ svg.selectAll('circle').data(data).join('circle')
   )
 
   // Undo/Redo handlers (called by QuickAccessToolbar and keyboard shortcuts)
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     const hist = historyRef.current
     if (hist.length < 2) return
     applyingUndoRef.current = true
@@ -738,9 +738,9 @@ svg.selectAll('circle').data(data).join('circle')
     const prevState = newHist[newHist.length - 1]
     setPresentation(prevState)
     setCurrentSlideIndex((ci) => Math.min(ci, prevState.slides.length - 1))
-  }
+  }, [setPresentation, setCurrentSlideIndex])
 
-  const handleRedo = () => {
+  const handleRedo = useCallback(() => {
     const stack = redoStackRef.current
     if (!stack.length) return
     applyingUndoRef.current = true
@@ -753,7 +753,7 @@ svg.selectAll('circle').data(data).join('circle')
       ]
     setPresentation(redoState)
     setCurrentSlideIndex((ci) => Math.min(ci, redoState.slides.length - 1))
-  }
+  }, [presentation, setPresentation, setCurrentSlideIndex])
 
   // Global keyboard shortcuts (undo/redo, find/replace, slide sorter)
   // NOTE: Clipboard (Ctrl+C/X/V/D) is handled by SlideCanvas via Zustand store

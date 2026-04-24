@@ -464,10 +464,11 @@ export class EditorPage {
     }
     await this.page.locator('.insert-dropdown .insert-item').filter({ hasText: 'Table' }).hover()
     await this.page.waitForSelector('.table-size-picker', { state: 'visible' })
-    await this.page
-      .locator('.table-size-picker .table-cell')
-      .nth((rows - 1) * 8 + (cols - 1))
-      .click()
+
+    // Click preset button to set size, then click Insert button
+    await this.page.locator(`.table-size-picker button`).filter({ hasText: `${rows}×${cols}` }).first().click()
+    await this.page.locator('.table-size-picker button').filter({ hasText: /Insert.*Table/ }).click()
+
     await this.page.waitForFunction(
       (prev) => {
         return document.querySelectorAll('.element-wrapper').length > prev
