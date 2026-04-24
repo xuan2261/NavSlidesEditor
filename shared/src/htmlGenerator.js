@@ -287,7 +287,11 @@ function getBgPrintStyle(bg) {
   return 'background-color:#1e1e2e;'
 }
 
-function generatePrintHTML(presentation) {
+function generatePrintHTML(presentation, options = {}) {
+  const autoPrint = options.autoPrint !== false
+  const includePrintBar = options.includePrintBar !== false
+  const fragmentMode = options.fragmentMode || 'expanded'
+  const exportReadyDelayMs = Number(options.exportReadyDelayMs ?? (autoPrint ? 3000 : 300))
   const showFooter = presentation.showFooter || false
   const showPageNumbers = presentation.showPageNumbers || false
   const pageNumberFormat = presentation.pageNumberFormat || 'c/t'
@@ -301,30 +305,39 @@ function generatePrintHTML(presentation) {
   const resW = presentation.resolution?.width || 960
   const resH = presentation.resolution?.height || 540
 
-  // Expand each slide into one page per fragment step (initial + one per unique index)
   const pages = []
   let printPageCounter = 0
   presentation.slides.forEach((slide) => {
+    if (fragmentMode === 'final') {
+      pages.push({ slide, maxIdx: Infinity, countPageNumber: true })
+      return
+    }
+
+    // Expand each slide into one page per fragment step (initial + one per unique index)
     const fragIndices = [
       ...new Set(
         (slide.elements || []).filter((el) => el.fragment).map((el) => el.fragmentIndex || 1)
       ),
     ].sort((a, b) => a - b)
-    pages.push({ slide, maxIdx: -Infinity }) // initial: no fragments
-    fragIndices.forEach((idx) => pages.push({ slide, maxIdx: idx }))
+    pages.push({ slide, maxIdx: -Infinity, countPageNumber: true }) // initial: no fragments
+    fragIndices.forEach((idx) => pages.push({ slide, maxIdx: idx, countPageNumber: false }))
   })
   const totalPages = pages.length
 
   const pagesHtml = pages
     // eslint-disable-next-line unused-imports/no-unused-vars
-    .map(({ slide, maxIdx }, pageIndex) => {
+    .map(({ slide, maxIdx, countPageNumber }, pageIndex) => {
       const bgStyle = getBgPrintStyle(slide.background)
 
-      const elementsHtml = renderSlideElements(slide, { forPrint: true, maxFragIdx: maxIdx })
+      const elementsHtml = renderSlideElements(slide, {
+        forPrint: true,
+        maxFragIdx: maxIdx,
+        exportElementIds: options.exportElementIds,
+      })
 
       // Per-slide page numbering
       const slideHasPageNum = slide.showPageNumber !== false
-      if (slideHasPageNum && maxIdx === -Infinity) printPageCounter++ // only increment on initial page of each slide
+      if (slideHasPageNum && countPageNumber) printPageCounter++
       const pageLabel =
         showPageNumbers && slideHasPageNum
           ? pageNumberFormat === 'c/t'
@@ -363,9 +376,20 @@ function generatePrintHTML(presentation) {
   // Determine base URL for resolving relative asset paths (images, vendor, etc.)
   // When PDF HTML is opened via blob: URL, relative paths like /uploads/... won't resolve
   const baseUrl =
-    typeof window !== 'undefined' && window.location && window.location.origin !== 'null'
+    options.baseUrl ||
+    (typeof window !== 'undefined' && window.location && window.location.origin !== 'null'
       ? window.location.origin
-      : ''
+      : '')
+  const printBarHtml = includePrintBar
+    ? `  <div id="print-bar">
+    <div>
+      <strong>${title}</strong>
+      <span class="hint"> &nbsp;┬╖&nbsp; ${totalPages} page${totalPages !== 1 ? 's' : ''} (${fragmentMode === 'final' ? 'final fragment state' : 'fragments expanded'})
+        &nbsp;┬╖&nbsp; enable <em>Background graphics</em> in print settings</span>
+    </div>
+    <button onclick="window.print()">Print / Save as PDF</button>
+  </div>`
+    : ''
 
   return `<!doctype html>
 <html>
@@ -378,7 +402,7 @@ function generatePrintHTML(presentation) {
     @page { size: ${resW}px ${resH}px; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
     html { width: 100%; height: auto; overflow: visible !important; background: #000; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-    body { width: 100%; height: auto; overflow: visible !important; background: #000; margin: 0; padding-top: 48px; print-color-adjust: exact; -webkit-print-color-adjust: exact; display: block; }
+    body { width: 100%; height: auto; overflow: visible !important; background: #000; margin: 0; padding-top: ${includePrintBar ? 48 : 0}px; print-color-adjust: exact; -webkit-print-color-adjust: exact; display: block; }
     .slide-page {
       width: ${resW}px; height: ${resH}px; position: relative; overflow: hidden;
       margin: 0 auto;
@@ -410,21 +434,16 @@ function generatePrintHTML(presentation) {
   </style>${presentation.customCSS ? `\n  <style>\n${presentation.customCSS}\n  </style>` : ''}
 </head>
 <body>
-  <div id="print-bar">
-    <div>
-      <strong>${title}</strong>
-      <span class="hint"> &nbsp;┬╖&nbsp; ${totalPages} page${totalPages !== 1 ? 's' : ''} (fragments expanded)
-        &nbsp;┬╖&nbsp; enable <em>Background graphics</em> in print settings</span>
-    </div>
-    <button onclick="window.print()">Print / Save as PDF</button>
-  </div>
+${printBarHtml}
 ${pagesHtml}
   <script src="/vendor/katex/dist/katex.min.js"></script>
   <script src="/vendor/reveal.js/plugin/highlight/highlight.js"></script>
   <script src="/vendor/chart.js/dist/chart.umd.js"></script>
   <script src="/vendor/qrcode/qrcode.min.js"></script>
   <script>
+    window.__navslidesExportReady = false;
     window.addEventListener('load', function() {
+      var iframePromises = [];
       // Highlight code blocks
       document.querySelectorAll('pre code').forEach(function(el) { try { hljs.highlightElement(el); } catch(e) {} });
       // Render KaTeX math
@@ -457,11 +476,23 @@ ${pagesHtml}
         try {
           var html = decodeURIComponent(el.getAttribute('data-pdf-iframe'));
           var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+          iframePromises.push(new Promise(function(resolve) {
+            var done = false;
+            var finish = function() { if (!done) { done = true; resolve(); } };
+            el.addEventListener('load', function() { setTimeout(finish, 120); }, { once: true });
+            setTimeout(finish, 3500);
+          }));
           el.src = URL.createObjectURL(blob);
         } catch(e) { console.error('Iframe PDF init error:', e); }
       });
-      // Delay print to allow all inline content (srcdoc iframes, charts, etc.) to render
-      setTimeout(function() { window.print(); }, 3000);
+      Promise.all(iframePromises.concat([
+        document.fonts && document.fonts.ready ? document.fonts.ready.catch(function(){}) : Promise.resolve()
+      ])).then(function() {
+        setTimeout(function() {
+          window.__navslidesExportReady = true;
+          if (${JSON.stringify(autoPrint)}) window.print();
+        }, ${Math.max(0, exportReadyDelayMs)});
+      });
     });
   </script>
 </body>
@@ -502,6 +533,7 @@ function presentInWindow(presentation) {
 
 module.exports = {
   generateRevealHTML,
+  generatePrintHTML,
   downloadHTML,
   exportPDF,
   presentInWindow,

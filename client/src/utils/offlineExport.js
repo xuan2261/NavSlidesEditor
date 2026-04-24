@@ -266,7 +266,7 @@ export async function generateOfflineHTML(html) {
       )
     }
 
-    result = result.split(match[0]).join(`<script>/* ${vendorPath} */\n${safe}\n<\/script>`)
+    result = result.split(match[0]).join(`<script>/* ${vendorPath} */\n${safe}\n</script>`)
   }
 
   // ── 3. Remove Google Fonts & Computer Modern links ──────────────────────

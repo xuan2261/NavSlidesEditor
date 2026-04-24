@@ -243,7 +243,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         console.error('Failed to load presentation', err)
         setLoading(false)
       })
-  }, [presentationId])
+  }, [isTemplate, presentationId, setGridSize])
 
   // Load share status
   useEffect(() => {
@@ -348,7 +348,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
-  }, [presentation])
+  }, [isTemplate, presentation])
 
   // Undo history: debounce-push presentation snapshots; skip during undo itself
   useEffect(() => {
@@ -416,7 +416,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       setSelectedElementIds((prev) => prev.filter((x) => x !== id))
       if (editingElementId === id) setEditingElementId(null)
     },
-    [editingElementId]
+    [editingElementId, setEditingElementId, setSelectedElementIds]
   )
 
   // ── Unified element creation (replaces 17 individual addXxxElement callbacks) ──
@@ -435,7 +435,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     })
     setSelectedElementIds([newEl.id])
     return newEl
-  }, [])
+  }, [setSelectedElementIds])
 
   // Thin wrappers for call-site compatibility
   const addTextElement = useCallback(() => addElement('text'), [addElement])
@@ -470,9 +470,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       }
     })
     setSelectedElementIds(withIds.map((el) => el.id))
-  }, [])
+  }, [setSelectedElementIds])
 
-  const DEFAULT_HTML = `<script src="https://cdn.jsdelivr.net/npm/d3@7"><\/script>
+  const DEFAULT_HTML = `<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <style>* { box-sizing: border-box; margin: 0; } body { background: transparent; overflow: hidden; }</style>
 <svg id="viz" width="100%" height="100%" style="display:block;"></svg>
 <script>
@@ -482,7 +482,7 @@ const data = Array.from({length: 30}, () => ({ x: Math.random()*W, y: Math.rando
 svg.selectAll('circle').data(data).join('circle')
   .attr('cx', d => d.x).attr('cy', d => d.y).attr('r', d => d.r)
   .attr('fill', (d,i) => d3.schemeTableau10[i%10]).attr('opacity', 0.8);
-<\/script>`
+</script>`
 
   const addQrCodeElement = useCallback(() => addElement('qrcode'), [addElement])
 
@@ -701,13 +701,13 @@ svg.selectAll('circle').data(data).join('circle')
       settingContent.current = false
       setTimeout(() => editor?.commands.focus(), 10)
     },
-    [presentation, editor, preserveBlockColors]
+    [editor, preserveBlockColors, presentation, setEditingElementId, setSelectedElementIds]
   )
 
   const stopEditingElement = useCallback(() => {
     setEditingElementId(null)
     editingElementIdRef.current = null
-  }, [])
+  }, [setEditingElementId])
 
   const bringElementForward = useCallback(
     (id) => {
@@ -776,7 +776,7 @@ svg.selectAll('circle').data(data).join('circle')
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [editingElementId, presentation, currentSlideIndex])
+  }, [currentSlideIndex, editingElementId, presentation, setShowFindReplace, setViewMode])
 
   // Inject hljs theme CSS into the document head for the editor preview
   useEffect(() => {
@@ -853,7 +853,7 @@ svg.selectAll('circle').data(data).join('circle')
         }
       }
     },
-    [presentation]
+    [presentation, setSelectedElementIds]
   )
 
   if (loading) {

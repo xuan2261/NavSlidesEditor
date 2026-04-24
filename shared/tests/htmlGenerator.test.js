@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateRevealHTML, getBackgroundAttrs } from '../src/htmlGenerator.js'
+import { generatePrintHTML, generateRevealHTML, getBackgroundAttrs } from '../src/htmlGenerator.js'
 
 describe('htmlGenerator', () => {
   it('should generate a basic HTML presentation structure', () => {
@@ -89,5 +89,47 @@ describe('htmlGenerator', () => {
     expect(html).toContain('verticalIndex: indices.v || 0')
     expect(html).toContain('fragmentIndex: indices.f || 0')
     expect(html).toContain("sock.on('control-navigate'")
+  })
+
+  it('should generate capture-ready print HTML without auto print', () => {
+    const html = generatePrintHTML(
+      {
+        title: 'Capture',
+        slides: [
+          {
+            id: 's1',
+            elements: [
+              { id: 't1', type: 'text', content: 'Initial', x: 0, y: 0, width: 100, height: 40 },
+              {
+                id: 'f1',
+                type: 'text',
+                content: 'Fragment',
+                x: 0,
+                y: 50,
+                width: 100,
+                height: 40,
+                fragment: true,
+                fragmentIndex: 1,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        autoPrint: false,
+        includePrintBar: false,
+        fragmentMode: 'final',
+        baseUrl: 'http://test',
+        exportElementIds: true,
+      }
+    )
+
+    expect(html.match(/class="slide-page"/g)).toHaveLength(1)
+    expect(html).toContain('<base href="http://test/">')
+    expect(html).not.toContain('id="print-bar"')
+    expect(html).toContain('window.__navslidesExportReady = true;')
+    expect(html).toContain('data-export-element-id="f1"')
+    expect(html).toContain('if (false) window.print();')
+    expect(html).toContain('Fragment')
   })
 })

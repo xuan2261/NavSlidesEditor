@@ -19,11 +19,13 @@ RUN npm run vendor
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine
+FROM mcr.microsoft.com/playwright:v1.59.1-noble
 WORKDIR /app
 
 # Install rclone for cloud sync (Proton Drive, etc.)
-RUN apk add --no-cache rclone
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends rclone \
+  && rm -rf /var/lib/apt/lists/*
 
 # Copy workspace manifests
 COPY package.json package-lock.json ./
@@ -43,6 +45,7 @@ COPY --from=builder /app/server/vendor ./server/vendor
 VOLUME ["/app/server/data", "/app/server/uploads"]
 
 ENV NODE_ENV=production
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV PORT=3002
 EXPOSE 3002
 

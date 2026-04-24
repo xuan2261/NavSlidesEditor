@@ -47,7 +47,7 @@ initDataFiles()
 
 // ── Security: UUID validation for :id and :snapshotId params ─────────────────
 function isValidId(id) {
-  return typeof id === 'string' && /^[a-zA-Z0-9_\-]+$/.test(id)
+  return typeof id === 'string' && /^[a-zA-Z0-9_-]+$/.test(id)
 }
 
 app.param('id', (req, res, next, val) => {

@@ -75,10 +75,10 @@ docker compose down -v
 
 ### Dockerfile Summary
 
-Multi-stage build (Node 20 alpine):
+Multi-stage build:
 
-1. **Builder stage** — installs all deps, runs `npm run build` (compiles React → `client/dist/`)
-2. **Production stage** — installs only server prod deps, copies `server/` + `client/dist/`, installs rclone via `apk`
+1. **Builder stage** — uses Node 20 Alpine, installs all deps, runs `npm run build` (compiles React → `client/dist/`)
+2. **Production stage** — uses the Playwright Node image so server-side PPTX element rasterization has Chromium available, installs only server prod deps, copies `server/` + `client/dist/`, and installs rclone via `apt`
 
 Final image runs: `node server/index.js`
 
@@ -178,6 +178,8 @@ Electron sets `SLIDES_DATA_DIR` and `SLIDES_UPLOADS_DIR` to subdirectories of `a
 | `SLIDES_DATA_DIR`    | `server/data/`    | Directory for JSON data files                                      |
 | `SLIDES_UPLOADS_DIR` | `server/uploads/` | Directory for uploaded files                                       |
 | `NODE_ENV`           | `development`     | Set to `production` to disable Vite proxy and serve `client/dist/` |
+| `NAVSLIDES_CHROMIUM_PATH` | bundled Playwright Chromium | Optional custom Chromium executable for server-side PPTX element rasterization |
+| `NAVSLIDES_PPTX_SCALE` | `2` | Screenshot scale used for PPTX HTML/LaTeX raster elements |
 
 Set via shell, `.env` file (manually), or Docker environment config.
 

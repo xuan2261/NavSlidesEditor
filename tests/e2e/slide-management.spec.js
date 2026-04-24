@@ -166,10 +166,7 @@ test.describe('Slide Management Advanced', () => {
     expect(pageErrors, pageErrors.join('\n')).toEqual([])
   })
 
-  test('multi-select duplicate keeps the duplicated block selected in order', async ({
-    page,
-    request,
-  }) => {
+  test('multi-select duplicate keeps the duplicated block selected in order', async ({ request }) => {
     await apiUpdatePresentation(request, presId, {
       slides: [
         createTextSlide('slide-a', 'Slide A'),
@@ -196,10 +193,7 @@ test.describe('Slide Management Advanced', () => {
       .toBe(6)
   })
 
-  test('multi-select delete clamps the active slide to the remaining tail', async ({
-    page,
-    request,
-  }) => {
+  test('multi-select delete clamps the active slide to the remaining tail', async ({ request }) => {
     await apiUpdatePresentation(request, presId, {
       slides: [
         createTextSlide('slide-a', 'Slide A'),

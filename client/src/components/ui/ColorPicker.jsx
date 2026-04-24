@@ -32,7 +32,7 @@ function parseColorToHex(color, fallback = '#000000') {
     ctx.fillStyle = color
     const computed = ctx.fillStyle
     if (/^#[0-9a-fA-F]{6}$/.test(computed)) return computed
-  } catch (e) {
+  } catch {
     // Ignore canvas errors
   }
 
@@ -44,7 +44,7 @@ export const ColorPicker = React.forwardRef(
     const hexValue = useMemo(() => parseColorToHex(value, fallback), [value, fallback])
 
     // Strip background from caller style to prevent overriding the swatch display
-    const { background, backgroundColor, ...safeStyle } = style || {}
+    const { background: _background, backgroundColor: _backgroundColor, ...safeStyle } = style || {}
 
     return (
       <input

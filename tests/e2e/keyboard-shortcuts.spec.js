@@ -47,7 +47,7 @@ test.describe('Keyboard Shortcuts', () => {
     } catch {}
   })
 
-  test('Ctrl+D duplicates selected element', async ({ page }) => {
+  test('Ctrl+D duplicates selected element', async () => {
     const initialCount = await editorPage.getElementCount()
     expect(initialCount).toBe(1)
 
@@ -58,7 +58,7 @@ test.describe('Keyboard Shortcuts', () => {
     expect(afterDuplicate).toBeGreaterThan(initialCount)
   })
 
-  test('Delete key removes selected element', async ({ page }) => {
+  test('Delete key removes selected element', async () => {
     const initialCount = await editorPage.getElementCount()
     expect(initialCount).toBe(1)
 

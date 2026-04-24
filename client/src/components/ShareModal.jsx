@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link2, X, Copy, Trash2, Plus, Lock, Clock, Eye, Loader2, Check } from 'lucide-react'
 import { Button } from '../components/ui'
 import { isBackdropClick, useEscapeClose } from '../lib/utils'
@@ -16,7 +16,7 @@ export default function ShareModal({ presentationId, onClose }) {
   const [newExpiry, setNewExpiry] = useState('')
   const [showNewForm, setShowNewForm] = useState(false)
 
-  const loadShares = async () => {
+  const loadShares = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch(`/api/presentations/${presentationId}/shares`)
@@ -27,11 +27,11 @@ export default function ShareModal({ presentationId, onClose }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [presentationId])
 
   useEffect(() => {
     loadShares()
-  }, [presentationId])
+  }, [loadShares])
 
   const handleCreate = async () => {
     setCreating(true)

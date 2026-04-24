@@ -122,9 +122,8 @@ router.delete('/:id/share', async (req, res) => {
 router.get('/:id/share', async (req, res) => {
   try {
     const tokens = await readShareTokens()
-    // eslint-disable-next-line unused-imports/no-unused-vars
     const entry = Object.entries(tokens).find(
-      ([t, data]) => sanitizeToken(data).presentationId === req.params.id
+      ([_token, data]) => sanitizeToken(data).presentationId === req.params.id
     )
     res.json({ shared: !!entry, token: entry ? entry[0] : null })
   } catch (err) {

@@ -129,7 +129,7 @@ function renderMarkdown(el, style, wrap, vis, opts) {
     return `<div style="${style}${vis}padding:8px 12px;color:white;overflow:auto;font-size:calc(16px * var(--font-zoom, 1));line-height:1.5;">${el.content || ''}</div>`
   }
   const _origin = getAssetOrigin()
-  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/marked/marked.min.js"><\/script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{background:transparent;color:white;font-family:-apple-system,sans-serif;font-size:calc(18px * var(--font-zoom, 1));line-height:1.6;padding:8px 12px;overflow:auto}h1,h2,h3,h4{margin:0 0 .4em}p{margin:0 0 .4em}ul,ol{padding-left:1.5em;margin:0 0 .4em}a{color:#60a5fa}pre{background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:6px;overflow:auto;font-size:13px}code{font-family:'Fira Code',monospace}</style></head><body><div id="out"></div><script>document.getElementById('out').innerHTML=marked.parse(${JSON.stringify(el.content || '')});<\/script></body></html>`
+  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/marked/marked.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{background:transparent;color:white;font-family:-apple-system,sans-serif;font-size:calc(18px * var(--font-zoom, 1));line-height:1.6;padding:8px 12px;overflow:auto}h1,h2,h3,h4{margin:0 0 .4em}p{margin:0 0 .4em}ul,ol{padding-left:1.5em;margin:0 0 .4em}a{color:#60a5fa}pre{background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:6px;overflow:auto;font-size:13px}code{font-family:'Fira Code',monospace}</style></head><body><div id="out"></div><script>document.getElementById('out').innerHTML=marked.parse(${JSON.stringify(el.content || '')});</script></body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(srcdoc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
 }
 
@@ -179,7 +179,7 @@ function renderChart(el, style, wrap, vis, opts) {
   const labels = JSON.stringify(chartData.labels || [])
   const datasets = JSON.stringify(datasetsArr)
   const _origin = getAssetOrigin()
-  const chartSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/chart.js/dist/chart.umd.js"><\/script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style></head><body><canvas id="c" style="width:100%;height:100%"></canvas><script>new Chart(document.getElementById('c'),{type:'${chartType}',data:{labels:${labels},datasets:${datasets}},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,0.7)',font:{size:12}}}},scales:${scalesOpt}}});<\/script></body></html>`
+  const chartSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/chart.js/dist/chart.umd.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style></head><body><canvas id="c" style="width:100%;height:100%"></canvas><script>new Chart(document.getElementById('c'),{type:'${chartType}',data:{labels:${labels},datasets:${datasets}},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,0.7)',font:{size:12}}}},scales:${scalesOpt}}});</script></body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(chartSrc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
 }
 
@@ -207,20 +207,25 @@ function renderLatex(el, style, wrap, vis, opts) {
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
 
   if (opts.forPrint) {
-    return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:white;"><span data-math-latex="${escapeHtml(content)}" data-math-display="true"></span></div>`
+    if (hasTikz) {
+      const _origin = getAssetOrigin()
+      const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" type="text/css" href="${_origin}/vendor/tikzjax/fonts.css"><script src="${_origin}/vendor/tikzjax/tikzjax.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:white;font-size:calc(16px * var(--font-zoom, 1))}svg{max-width:100%;max-height:100%}</style></head><body><script type="text/tikz">${content}</script></body></html>`
+      return `<iframe${wrap} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
+    }
+    return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:white;"><span data-math-latex="${escapeHtml(content)}" data-math-display="true"></span></div>`
   }
 
   const _origin = getAssetOrigin()
   const tikzScript = hasTikz
-    ? `<link rel="stylesheet" type="text/css" href="${_origin}/vendor/tikzjax/fonts.css"><script src="${_origin}/vendor/tikzjax/tikzjax.js"><\/script>`
+    ? `<link rel="stylesheet" type="text/css" href="${_origin}/vendor/tikzjax/fonts.css"><script src="${_origin}/vendor/tikzjax/tikzjax.js"></script>`
     : ''
   let bodyContent
   if (hasTikz) {
-    bodyContent = `<script type="text/tikz">${content}<\/script>`
+    bodyContent = `<script type="text/tikz">${content}</script>`
   } else {
-    bodyContent = `<div id="m"></div><script>try{katex.render(${JSON.stringify(content)},document.getElementById('m'),{displayMode:true,throwOnError:false})}catch(e){document.getElementById('m').textContent=e.message}<\/script>`
+    bodyContent = `<div id="m"></div><script>try{katex.render(${JSON.stringify(content)},document.getElementById('m'),{displayMode:true,throwOnError:false})}catch(e){document.getElementById('m').textContent=e.message}</script>`
   }
-  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="${_origin}/vendor/katex/dist/katex.min.css"><script src="${_origin}/vendor/katex/dist/katex.min.js"><\/script>${tikzScript}<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:white;font-size:calc(16px * var(--font-zoom, 1))}.katex{font-size:1.4em}svg{max-width:100%;max-height:100%}</style></head><body>${bodyContent}</body></html>`
+  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="${_origin}/vendor/katex/dist/katex.min.css"><script src="${_origin}/vendor/katex/dist/katex.min.js"></script>${tikzScript}<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:white;font-size:calc(16px * var(--font-zoom, 1))}.katex{font-size:1.4em}svg{max-width:100%;max-height:100%}</style></head><body>${bodyContent}</body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(srcdoc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
 }
 
@@ -345,7 +350,7 @@ function renderQrcode(el, style, wrap, vis, opts) {
   }
 
   const _origin = getAssetOrigin()
-  const qrSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/qrcode/qrcode.min.js"><\/script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:${bgColor};overflow:hidden;display:flex;align-items:center;justify-content:center}</style></head><body><canvas id="c" style="width:100%;height:100%;object-fit:contain"></canvas><script>QRCode.toCanvas(document.getElementById('c'), ${JSON.stringify(data)}, { color: { dark: '${fg}', light: '${bgColor}' }, errorCorrectionLevel: '${err}', margin: 1, width: 500 });<\/script></body></html>`
+  const qrSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/qrcode/qrcode.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:${bgColor};overflow:hidden;display:flex;align-items:center;justify-content:center}</style></head><body><canvas id="c" style="width:100%;height:100%;object-fit:contain"></canvas><script>QRCode.toCanvas(document.getElementById('c'), ${JSON.stringify(data)}, { color: { dark: '${fg}', light: '${bgColor}' }, errorCorrectionLevel: '${err}', margin: 1, width: 500 });</script></body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(qrSrc)}" style="${style}border:none;background:transparent;border-radius:${el.borderRadius || 0}px;overflow:hidden;" scrolling="no"></iframe>`
 }
 
@@ -382,7 +387,9 @@ function renderElement(el, slide, opts = {}) {
   const { dataIdAttr, fragClass, fragIdx } = opts.forPrint
     ? { dataIdAttr: '', fragClass: '', fragIdx: '' }
     : buildWrapperAttrs(el, slide)
-  const wrap = `${dataIdAttr}${fragClass}${fragIdx}`
+  const exportIdAttr =
+    opts.exportElementIds && el.id ? ` data-export-element-id="${escapeHtml(el.id)}"` : ''
+  const wrap = `${exportIdAttr}${dataIdAttr}${fragClass}${fragIdx}`
   const vis = opts.isHidden ? 'visibility:hidden;' : ''
 
   const renderer = RENDERERS[el.type]

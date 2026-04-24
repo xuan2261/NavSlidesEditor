@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const writeFileMock = vi.fn()
 const slides = []
@@ -34,9 +34,19 @@ vi.mock('pptxgenjs', () => ({
 import { exportToPptx } from './exportPptx'
 
 describe('exportPptx', () => {
+  const originalDocument = globalThis.document
+  const originalFetch = globalThis.fetch
+  const originalWindow = globalThis.window
+
   beforeEach(() => {
     slides.length = 0
     writeFileMock.mockReset()
+  })
+
+  afterEach(() => {
+    globalThis.document = originalDocument
+    globalThis.fetch = originalFetch
+    globalThis.window = originalWindow
   })
 
   it('exports native shapes without relying on static ShapeType enums', async () => {
@@ -176,5 +186,72 @@ describe('exportPptx', () => {
 
     expect(warnings).toContain('Slide 1: background fallback used during PPTX export')
     expect(slides[0].background).toEqual({ color: '1E1E2E' })
+  })
+
+  it('keeps native elements editable while using server rasters for HTML and LaTeX', async () => {
+    globalThis.window = {}
+    globalThis.document = {}
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        rasters: {
+          'html-1': 'data:image/png;base64,html',
+          'latex-1': 'data:image/png;base64,latex',
+        },
+      }),
+    })
+
+    const warnings = await exportToPptx({
+      title: 'Hybrid export',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'text-1',
+              type: 'text',
+              content: '<p>Editable</p>',
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 80,
+            },
+            {
+              id: 'html-1',
+              type: 'html',
+              content: '<div>HTML</div>',
+              x: 220,
+              y: 0,
+              width: 200,
+              height: 80,
+            },
+            {
+              id: 'latex-1',
+              type: 'latex',
+              content: String.raw`x^2`,
+              x: 440,
+              y: 0,
+              width: 200,
+              height: 80,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/presentations/raster-elements',
+      expect.objectContaining({ method: 'POST' })
+    )
+    expect(slides[0].addText).toHaveBeenCalledWith(expect.any(Array), expect.any(Object))
+    expect(slides[0].addImage).toHaveBeenCalledWith(
+      expect.objectContaining({ data: 'data:image/png;base64,html' })
+    )
+    expect(slides[0].addImage).toHaveBeenCalledWith(
+      expect.objectContaining({ data: 'data:image/png;base64,latex' })
+    )
+    expect(warnings).toEqual([
+      'Slide 1: rasterized html with server renderer',
+      'Slide 1: rasterized latex with server renderer',
+    ])
   })
 })

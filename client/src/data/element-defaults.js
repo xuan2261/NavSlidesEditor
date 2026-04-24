@@ -54,7 +54,7 @@ export const ELEMENT_DEFAULTS = {
     width: 500,
     height: 380,
     zIndex: 2,
-    content: `<script src="https://cdn.jsdelivr.net/npm/d3@7"><\/script>
+    content: `<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <style>* { box-sizing: border-box; margin: 0; } body { background: transparent; overflow: hidden; }</style>
 <svg id="viz" width="100%" height="100%" style="display:block;"></svg>
 <script>
@@ -64,7 +64,7 @@ const data = Array.from({length: 30}, () => ({ x: Math.random()*W, y: Math.rando
 svg.selectAll('circle').data(data).join('circle')
   .attr('cx', d => d.x).attr('cy', d => d.y).attr('r', d => d.r)
   .attr('fill', (d,i) => d3.schemeTableau10[i%10]).attr('opacity', 0.8);
-<\/script>`,
+</script>`,
   },
   markdown: {
     width: 600,

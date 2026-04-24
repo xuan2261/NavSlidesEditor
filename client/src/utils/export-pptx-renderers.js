@@ -19,8 +19,16 @@ export async function addElementToPptxSlide({
   pptx,
   warnings,
   slideNumber,
+  rasterOverrides = {},
 }) {
   const bounds = scaleElementBounds(element, resolution, layout)
+  const rasterData = element?.id ? rasterOverrides[element.id] : null
+
+  if (rasterData) {
+    slide.addImage({ data: rasterData, ...bounds, rotate: element.rotation || 0 })
+    warnings.push(`Slide ${slideNumber}: rasterized ${element.type} with server renderer`)
+    return
+  }
 
   try {
     switch (element.type) {

@@ -104,7 +104,7 @@ function simpleMarkdownToHtml(md) {
   )
 
   // Unordered lists
-  html = html.replace(/^[\-\*] (.+)$/gm, '<li style="margin-bottom:4px;">$1</li>')
+  html = html.replace(/^[-*] (.+)$/gm, '<li style="margin-bottom:4px;">$1</li>')
   html = html.replace(
     /(<li[^>]*>.*<\/li>\n?)+/g,
     (match) => `<ul style="margin:8px 0;padding-left:20px;">${match}</ul>`

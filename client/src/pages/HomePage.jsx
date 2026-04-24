@@ -580,7 +580,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     if (isMarketplaceView && marketplaceData.templates.length === 0) {
       api.getMarketplaceTemplates().then(setMarketplaceData).catch(console.error)
     }
-  }, [isMarketplaceView])
+  }, [isMarketplaceView, marketplaceData.templates.length])
 
   return (
     <div className="h-full flex flex-col bg-panel">

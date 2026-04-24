@@ -12,6 +12,7 @@ const fs = require('fs-extra')
 const path = require('path')
 const { validate } = require('../middleware/validate')
 const { createPresentationSchema, updatePresentationSchema } = require('../middleware/schemas')
+const { rasterizeComplexElements } = require('../services/pptx-exporter')
 
 const router = express.Router()
 
@@ -162,6 +163,29 @@ router.get('/trash/list', async (req, res) => {
     res.json(trashed)
   } catch (err) {
     res.status(500).json({ error: err.message })
+  }
+})
+
+function getLocalBaseUrl(req) {
+  const localPort = req.socket?.localPort || process.env.PORT
+  const host = req.get('host')
+  if (localPort) return `http://127.0.0.1:${localPort}`
+  return host ? `${req.protocol || 'http'}://${host}` : ''
+}
+
+// POST /api/presentations/raster-elements
+router.post('/raster-elements', async (req, res) => {
+  try {
+    const presentation = req.body?.presentation
+    if (!presentation || !Array.isArray(presentation.slides)) {
+      return res.status(400).json({ error: 'Invalid presentation payload' })
+    }
+
+    const rasters = await rasterizeComplexElements(presentation, { baseUrl: getLocalBaseUrl(req) })
+    res.json({ rasters })
+  } catch (err) {
+    console.error('PPTX element rasterization failed:', err)
+    res.status(500).json({ error: 'PPTX element rasterization failed', details: err.message })
   }
 })
 

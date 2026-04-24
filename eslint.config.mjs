@@ -20,6 +20,25 @@ export default [
       'coverage/**',
     ],
   },
+  // Root-level tool configs
+  {
+    files: ['*.config.js', 'playwright.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      sourceType: 'commonjs',
+    },
+  },
+  {
+    files: ['*.config.mjs', 'client/vite.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      sourceType: 'module',
+    },
+  },
   // Global rule overrides — downgrade common style issues to warnings
   {
     plugins: {
@@ -114,6 +133,7 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
+        ...globals.browser,
       },
       sourceType: 'module',
     },

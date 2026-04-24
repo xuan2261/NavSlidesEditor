@@ -58,7 +58,7 @@ export default function TransitionPreview({ presentation, fromIndex, onClose }) 
   <section${getBgAttrs(slide2.background)} style="padding:0;width:960px;height:540px;overflow:hidden;font-size:42px;">${renderElements(slide2.elements)}</section>
 </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script>
 Reveal.initialize({
   hash:false,width:960,height:540,margin:0,minScale:0,maxScale:10,center:false,
@@ -66,7 +66,7 @@ Reveal.initialize({
   keyboard:true,overview:false
 });
 setTimeout(()=>Reveal.next(),800);
-<\/script>
+</script>
 </body>
 </html>`
 

@@ -253,8 +253,8 @@ export default function SlideCanvas({
   const smartGuidesRef = useRef(smartGuidesEnabled)
   const rubberBandRef = useRef(null) // { startX, startY, currentX, currentY }
   const [rubberBand, setRubberBand] = useState(null) // render state
-  // eslint-disable-next-line unused-imports/no-unused-vars
   const [iconPaths, setIconPaths] = useState(_iconPathsCache || {})
+  const commitCropRef = useRef(null)
 
   // Lazy-load icon-paths.json on first mount (764KB saved from initial bundle)
   useEffect(() => {
@@ -273,6 +273,9 @@ export default function SlideCanvas({
     clipboardRef.current = clipboard
   }, [clipboard])
   const slideRef = useRef(slide)
+  useEffect(() => {
+    slideRef.current = slide
+  }, [slide])
   useEffect(() => {
     showGridRef.current = showGrid
   }, [showGrid])
@@ -305,7 +308,7 @@ export default function SlideCanvas({
     const ro = new ResizeObserver(update)
     if (containerRef.current) ro.observe(containerRef.current)
     return () => ro.disconnect()
-  }, [])
+  }, [SLIDE_H, SLIDE_W, userZoomMode])
 
   // Global mouse move/up for element drag + crop drag
   useEffect(() => {
@@ -491,7 +494,7 @@ export default function SlideCanvas({
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
     }
-  }, [onUpdateElement, onUpdateElements])
+  }, [SLIDE_H, SLIDE_W, onUpdateElement, onUpdateElements])
 
   // Keyboard shortcuts
 
@@ -499,7 +502,7 @@ export default function SlideCanvas({
     const onKeyDown = (e) => {
       if (cropMode) {
         if (e.key === 'Enter') {
-          commitCrop()
+          commitCropRef.current?.()
           e.preventDefault()
         }
         if (e.key === 'Escape') {
@@ -529,7 +532,7 @@ export default function SlideCanvas({
           (e.key === 'Delete' || e.key === 'Backspace') &&
           tag !== 'INPUT' &&
           tag !== 'TEXTAREA' &&
-          !slide?.locked
+            !slideRef.current?.locked
         ) {
           onDeleteSelectedElements()
           e.preventDefault()
@@ -544,11 +547,10 @@ export default function SlideCanvas({
         if ((e.ctrlKey || e.metaKey) && tag !== 'TEXTAREA' && tag !== 'INPUT') {
           if (e.key === 'c' || e.key === 'C') {
             // Copy selected elements
-            const clones = (slide?.elements || [])
+            const clones = (slideRef.current?.elements || [])
               .filter((el) => selectedElementIds.includes(el.id))
               .map((el) => {
-                // eslint-disable-next-line unused-imports/no-unused-vars
-                const { id, ...rest } = el
+                const { id: _id, ...rest } = el
                 return { ...rest }
               })
             setClipboard(clones)
@@ -556,11 +558,10 @@ export default function SlideCanvas({
           }
           if (e.key === 'x' || e.key === 'X') {
             // Cut: copy then delete originals (caller deletes)
-            const clones = (slide?.elements || [])
+            const clones = (slideRef.current?.elements || [])
               .filter((el) => selectedElementIds.includes(el.id))
               .map((el) => {
-                // eslint-disable-next-line unused-imports/no-unused-vars
-                const { id, ...rest } = el
+                const { id: _id, ...rest } = el
                 return { ...rest }
               })
             setClipboard(clones)
@@ -586,11 +587,10 @@ export default function SlideCanvas({
           }
           if (e.key === 'd' || e.key === 'D') {
             // Duplicate in place
-            const clones = (slide?.elements || [])
+            const clones = (slideRef.current?.elements || [])
               .filter((el) => selectedElementIds.includes(el.id))
               .map((el) => {
-                // eslint-disable-next-line unused-imports/no-unused-vars
-                const { id, ...rest } = el
+                const { id: _id, ...rest } = el
                 return {
                   ...rest,
                   id: `${rest.type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -614,6 +614,7 @@ export default function SlideCanvas({
     onToggleSelectElement,
     onDeleteSelectedElements,
     onAddElements,
+    setClipboard,
   ])
 
   // Close context menu on outside click
@@ -699,6 +700,10 @@ export default function SlideCanvas({
     })
     setCropMode(null)
   }, [cropMode, slide, onUpdateElement])
+
+  useEffect(() => {
+    commitCropRef.current = commitCrop
+  }, [commitCrop])
 
   // File drop on canvas
   const onDragOver = (e) => {
@@ -1232,9 +1237,8 @@ export default function SlideCanvas({
                 onClick={() => {
                   const clones = (slide?.elements || [])
                     .filter((el) => contextMenu.elementId === el.id)
-                    // eslint-disable-next-line unused-imports/no-unused-vars
                     .map((el) => {
-                      const { id, ...rest } = el
+                      const { id: _id, ...rest } = el
                       return { ...rest }
                     })
                   setClipboard(clones)
@@ -1248,9 +1252,8 @@ export default function SlideCanvas({
                 onClick={() => {
                   const clones = (slide?.elements || [])
                     .filter((el) => contextMenu.elementId === el.id)
-                    // eslint-disable-next-line unused-imports/no-unused-vars
                     .map((el) => {
-                      const { id, ...rest } = el
+                      const { id: _id, ...rest } = el
                       return { ...rest }
                     })
                   setClipboard(clones)
@@ -2050,7 +2053,7 @@ function ChartRenderer({ element, isSelected, isDragging }) {
 
   const chartHtml = `<!doctype html><html><head>
 <meta charset="utf-8">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style>
 </head><body>
 <canvas id="c" style="width:100%;height:100%"></canvas>
@@ -2077,7 +2080,7 @@ new Chart(document.getElementById('c'),{
     scales:${chartType === 'pie' || chartType === 'doughnut' ? '{}' : `{x:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`}
   }
 });
-<\/script></body></html>`
+</script></body></html>`
 
   const chartFrameStyle = {
     width: '100%',
@@ -2154,17 +2157,15 @@ function generateLatexIframeHtml(content) {
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
   const tikzScript = hasTikz
     ? `<link rel="stylesheet" type="text/css" href="https://tikzjax.com/v1/fonts.css">
-       <script src="https://tikzjax.com/v1/tikzjax.js"><\/script>`
+       <script src="https://tikzjax.com/v1/tikzjax.js"></script>`
     : ''
 
   // Wrap content: if it has tikzpicture, use <script type="text/tikz">, otherwise render as KaTeX display math
   let bodyContent
   if (hasTikz) {
-    bodyContent = `<script type="text/tikz">${content}<\/script>`
+    bodyContent = `<script type="text/tikz">${content}</script>`
   } else {
     // Treat as display math
-    // eslint-disable-next-line unused-imports/no-unused-vars
-    const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     bodyContent = `<div id="math"></div>
     <script>
       try {
@@ -2172,13 +2173,13 @@ function generateLatexIframeHtml(content) {
       } catch(e) {
         document.getElementById('math').textContent = e.message;
       }
-    <\/script>`
+    </script>`
   }
 
   return `<!doctype html><html><head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 ${tikzScript}
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
