@@ -12,7 +12,7 @@ export function buttonVariants({ variant = 'primary', className = '' }) {
       'bg-card text-text-primary border border-border hover:bg-hover hover:border-border-strong',
     danger: 'border border-transparent bg-danger text-white hover:bg-danger-hover',
     ghost:
-      'border border-transparent text-text-secondary px-2 py-1 rounded hover:bg-hover hover:text-text-primary',
+      'border border-transparent text-text-secondary px-2 py-1 rounded hover:bg-hover hover:text-text-primary active:bg-active active:text-text-primary',
     icon: 'w-8 h-8 !p-0 shrink-0 inline-flex items-center justify-center rounded-md border border-transparent text-text-secondary transition-colors duration-150 ease-out hover:bg-hover hover:text-text-primary',
   }
 

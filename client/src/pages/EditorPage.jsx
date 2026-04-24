@@ -727,6 +727,34 @@ svg.selectAll('circle').data(data).join('circle')
     [currentSlide, updateElement]
   )
 
+  // Undo/Redo handlers (called by QuickAccessToolbar and keyboard shortcuts)
+  const handleUndo = () => {
+    const hist = historyRef.current
+    if (hist.length < 2) return
+    applyingUndoRef.current = true
+    redoStackRef.current = [...redoStackRef.current.slice(-19), hist[hist.length - 1]]
+    const newHist = hist.slice(0, -1)
+    historyRef.current = newHist
+    const prevState = newHist[newHist.length - 1]
+    setPresentation(prevState)
+    setCurrentSlideIndex((ci) => Math.min(ci, prevState.slides.length - 1))
+  }
+
+  const handleRedo = () => {
+    const stack = redoStackRef.current
+    if (!stack.length) return
+    applyingUndoRef.current = true
+    const redoState = stack[stack.length - 1]
+    redoStackRef.current = stack.slice(0, -1)
+    if (presentation)
+      historyRef.current = [
+        ...historyRef.current.slice(-49),
+        JSON.parse(JSON.stringify(presentation)),
+      ]
+    setPresentation(redoState)
+    setCurrentSlideIndex((ci) => Math.min(ci, redoState.slides.length - 1))
+  }
+
   // Global keyboard shortcuts (undo/redo, find/replace, slide sorter)
   // NOTE: Clipboard (Ctrl+C/X/V/D) is handled by SlideCanvas via Zustand store
   useEffect(() => {
@@ -748,35 +776,16 @@ svg.selectAll('circle').data(data).join('circle')
         return
       }
       if (e.key === 'z' && !e.shiftKey) {
-        const hist = historyRef.current
-        if (hist.length < 2) return
-        applyingUndoRef.current = true
-        redoStackRef.current = [...redoStackRef.current.slice(-19), hist[hist.length - 1]]
-        const newHist = hist.slice(0, -1)
-        historyRef.current = newHist
-        const prevState = newHist[newHist.length - 1]
-        setPresentation(prevState)
-        setCurrentSlideIndex((ci) => Math.min(ci, prevState.slides.length - 1))
+        handleUndo()
         e.preventDefault()
       } else if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
-        const stack = redoStackRef.current
-        if (!stack.length) return
-        applyingUndoRef.current = true
-        const redoState = stack[stack.length - 1]
-        redoStackRef.current = stack.slice(0, -1)
-        if (presentation)
-          historyRef.current = [
-            ...historyRef.current.slice(-49),
-            JSON.parse(JSON.stringify(presentation)),
-          ]
-        setPresentation(redoState)
-        setCurrentSlideIndex((ci) => Math.min(ci, redoState.slides.length - 1))
+        handleRedo()
         e.preventDefault()
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [currentSlideIndex, editingElementId, presentation, setShowFindReplace, setViewMode])
+  }, [currentSlideIndex, editingElementId, presentation, setShowFindReplace, setViewMode, handleUndo, handleRedo])
 
   // Inject hljs theme CSS into the document head for the editor preview
   useEffect(() => {
@@ -920,6 +929,8 @@ svg.selectAll('circle').data(data).join('circle')
           }}
           saving={saving}
           hasChanges={hasChanges}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
         />
         <EditorMenuBar
           presentation={presentation}

@@ -128,6 +128,7 @@ export default function SlidePanel({
   const [dragOverIndex, setDragOverIndex] = useState(null)
   const dragIndexRef = useRef(null)
   const [ctxMenu, setCtxMenu] = useState(null) // { x, y, index }
+  const ctxMenuRef = useRef(null)
   const [selectedIndices, setSelectedIndices] = useState([currentIndex])
   const slideWidth = resolution?.width || DEFAULT_SLIDE_WIDTH
   const slideHeight = resolution?.height || DEFAULT_SLIDE_HEIGHT
@@ -205,7 +206,7 @@ export default function SlidePanel({
               onContextMenu={(e) => handleContextMenu(e, index)}
             >
               <span
-                className={`absolute top-1 left-1 text-[10px] text-white/50 bg-black/40 px-1 py-[1px] rounded-[3px] z-10 ${
+                className={`absolute top-1 left-1 text-[10px] text-text-muted bg-surface-2/80 px-1 py-[1px] rounded-[3px] z-10 ${
                   slide.locked ? 'line-through opacity-50' : ''
                 }`}
               >
@@ -370,8 +371,9 @@ export default function SlidePanel({
                   <Copy size={12} />
                 </button>
                 <button
-                  className={`bg-black/60 border-none p-1 rounded-[3px] cursor-pointer flex items-center justify-center hover:bg-accent/80 ${slides.length > 1 ? 'text-white' : 'text-white/30'}`}
-                  title="Delete"
+                  className={`bg-black/60 border-none p-1 rounded-[3px] flex items-center justify-center ${slides.length > 1 ? 'text-white hover:bg-accent/80 cursor-pointer' : 'text-white/30 cursor-not-allowed opacity-50'}`}
+                  title={slides.length <= 1 ? 'Cannot delete last slide' : 'Delete'}
+                  disabled={slides.length <= 1}
                   onClick={(e) => {
                     e.stopPropagation()
                     if (slides.length > 1) onDelete(index)
@@ -387,19 +389,19 @@ export default function SlidePanel({
                   {slide.children.map((child, ci) => (
                     <div
                       key={child.id || `${index}-${ci}`}
-                      className={`group rounded-sm border-2 cursor-pointer relative transition-all hover:border-border-strong mb-0.5 origin-top-left scale-[0.85] ${currentVerticalIndex?.parent === index && currentVerticalIndex?.child === ci ? 'border-accent' : 'border-transparent'}`}
+                      className={`group rounded-sm border-2 cursor-pointer relative transition-all hover:border-border-strong mb-0.5 ${currentVerticalIndex?.parent === index && currentVerticalIndex?.child === ci ? 'border-accent' : 'border-transparent'}`}
                       onClick={(e) => {
                         e.stopPropagation()
                         onSelectVertical?.({ parent: index, child: ci })
                       }}
                     >
                       <span
-                        className="absolute top-1 left-1 text-[8px] text-indigo-400 bg-black/40 px-1 py-[1px] rounded-[3px] z-10"
+                        className="absolute top-1 left-1 text-[8px] text-text-muted bg-surface-2/80 px-1 py-[1px] rounded-[3px] z-10"
                       >
                         {index + 1}.{ci + 1}
                       </span>
                       <div
-                        className="flex items-start p-1.5 overflow-hidden relative min-h-[30px]"
+                        className="flex items-start p-1 overflow-hidden relative min-h-[24px]"
                         style={getPreviewFrameStyle(child.background, slideWidth, slideHeight)}
                       />
                     </div>
@@ -476,11 +478,30 @@ export default function SlidePanel({
         <>
           <div className="fixed inset-0 z-[9998]" onMouseDown={() => setCtxMenu(null)} />
           <div
+            role="menu"
+            aria-label="Slide actions"
             className="absolute z-[9999] bg-card border border-border rounded-lg shadow-xl py-1 min-w-[160px]"
             style={getContextMenuStyle(ctxMenu)}
             onMouseDown={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') { setCtxMenu(null); return }
+              const items = Array.from(ctxMenuRef.current?.querySelectorAll?.('[role="menuitem"]') || [])
+              if (!items.length) return
+              const current = document.activeElement
+              const idx = items.indexOf(current)
+              if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                items[(idx + 1) % items.length]?.focus()
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                items[(idx - 1 + items.length) % items.length]?.focus()
+              }
+            }}
+            ref={ctxMenuRef}
           >
             <button
+              role="menuitem"
+              tabIndex={0}
               onClick={() => {
                 onDuplicate(ctxMenu.index)
                 setCtxMenu(null)
@@ -489,6 +510,8 @@ export default function SlidePanel({
               <Copy size={14} /> Duplicate
             </button>
             <button
+              role="menuitem"
+              tabIndex={0}
               onClick={() => {
                 onToggleLock?.(ctxMenu.index)
                 setCtxMenu(null)
@@ -498,6 +521,8 @@ export default function SlidePanel({
               {slides[ctxMenu.index]?.locked ? 'Unlock' : 'Lock'}
             </button>
             <button
+              role="menuitem"
+              tabIndex={0}
               onClick={() => {
                 onToggleAutoAnimate?.(ctxMenu.index)
                 setCtxMenu(null)
@@ -508,6 +533,8 @@ export default function SlidePanel({
             </button>
             <div className="h-px bg-border my-1 mx-2" />
             <button
+              role="menuitem"
+              tabIndex={0}
               onClick={() => {
                 onMove(ctxMenu.index, ctxMenu.index - 1)
                 setCtxMenu(null)
@@ -517,6 +544,8 @@ export default function SlidePanel({
               <ArrowUp size={14} /> Move Up
             </button>
             <button
+              role="menuitem"
+              tabIndex={0}
               onClick={() => {
                 onMove(ctxMenu.index, ctxMenu.index + 1)
                 setCtxMenu(null)
@@ -527,6 +556,8 @@ export default function SlidePanel({
             </button>
             {onAddVerticalSlide && (
               <button
+                role="menuitem"
+                tabIndex={0}
                 onClick={() => {
                   onAddVerticalSlide?.(ctxMenu.index)
                   setCtxMenu(null)
@@ -537,6 +568,8 @@ export default function SlidePanel({
             )}
             <div className="h-px bg-border my-1 mx-2" />
             <button
+              role="menuitem"
+              tabIndex={0}
               onClick={() => {
                 if (slides.length > 1) onDelete(ctxMenu.index)
                 setCtxMenu(null)

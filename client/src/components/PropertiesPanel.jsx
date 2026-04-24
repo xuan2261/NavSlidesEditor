@@ -9,6 +9,7 @@ import MediaProperties from './properties/media-properties'
 import TableProperties from './properties/table-properties'
 import MiscProperties from './properties/misc-properties'
 import { Button, Input, Select, ColorPicker } from '../components/ui'
+import { MousePointer2 } from 'lucide-react'
 
 /**
  * Type-specific property panel router.
@@ -85,8 +86,9 @@ export default function PropertiesPanel({
           {/* Multi-select badge */}
           {selectedElementIds && selectedElementIds.length > 1 && (
             <div className="bg-hover border border-border rounded-md px-2.5 py-2 mb-2.5 flex items-center justify-between">
-              <span className="text-xs text-text-secondary">
-                📌 {selectedElementIds.length} elements selected
+              <span className="flex items-center gap-1 text-xs text-text-secondary">
+                <MousePointer2 size={13} />
+                {selectedElementIds.length} elements selected
               </span>
               <Button
                 variant="danger"
@@ -224,22 +226,7 @@ export default function PropertiesPanel({
             onChange={(e) => onUpdatePresentation({ customCSS: e.target.value })}
             placeholder={`/* Example */\n.reveal .slides section h1 {\n  color: #6366f1;\n  text-transform: uppercase;\n}`}
             spellCheck={false}
-            style={{
-              width: '100%',
-              minHeight: 140,
-              background: '#0d0d1a',
-              color: '#e2e8f0',
-              fontFamily: "'Fira Code','JetBrains Mono',monospace",
-              fontSize: 11,
-              padding: '8px 10px',
-              border: '1px solid var(--border)',
-              borderRadius: 6,
-              outline: 'none',
-              resize: 'vertical',
-              lineHeight: 1.5,
-              tabSize: 2,
-              boxSizing: 'border-box',
-            }}
+            className="css-editor-textarea w-full min-h-[140px] rounded border font-mono resize-y outline-none"
             onKeyDown={(e) => {
               if (e.key === 'Tab') {
                 e.preventDefault()

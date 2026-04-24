@@ -48,73 +48,7 @@ import { Button } from '../components/ui'
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const { SHAPES } = shared
-
-const COLOR_PALETTE = [
-  '#ffffff',
-  '#e2e8f0',
-  '#94a3b8',
-  '#64748b',
-  '#334155',
-  '#1e293b',
-  '#0f172a',
-  '#000000',
-  '#fca5a5',
-  '#f87171',
-  '#ef4444',
-  '#dc2626',
-  '#fcd34d',
-  '#fbbf24',
-  '#f59e0b',
-  '#d97706',
-  '#86efac',
-  '#4ade80',
-  '#22c55e',
-  '#16a34a',
-  '#6ee7b7',
-  '#34d399',
-  '#10b981',
-  '#059669',
-  '#93c5fd',
-  '#60a5fa',
-  '#3b82f6',
-  '#2563eb',
-  '#a5b4fc',
-  '#818cf8',
-  '#6366f1',
-  '#4f46e5',
-  '#d8b4fe',
-  '#c084fc',
-  '#a855f7',
-  '#7c3aed',
-  '#f5d0fe',
-  '#f0abfc',
-  '#e879f9',
-  '#d946ef',
-]
-
-const COLOR_SWATCHES_BG = [
-  '#1e1e2e',
-  '#0a0a0f',
-  '#1a1a4e',
-  '#0d3349',
-  '#1a3a1a',
-  '#3a1a1a',
-  '#2d1b69',
-  '#000000',
-  '#ffffff',
-  '#f8f9fa',
-  '#4a4a6a',
-  '#6b3fa0',
-]
-
-const GRADIENT_PRESETS_BG = [
-  'linear-gradient(135deg, #1e1e2e, #4a0e8f)',
-  'linear-gradient(135deg, #0f2027, #203a43, #2c5364)',
-  'linear-gradient(135deg, #360033, #0b8793)',
-  'radial-gradient(ellipse at center, #1e3c72 0%, #2a5298 100%)',
-  'linear-gradient(135deg, #0f0c29, #302b63, #24243e)',
-  'linear-gradient(135deg, #2c3e50, #3498db)',
-]
+const { TEXT_COLORS, BG_COLORS, GRADIENT_PRESETS, isLightColor } = shared
 
 function getBackgroundColorStyle(color) {
   return { backgroundColor: color }
@@ -200,7 +134,7 @@ export default function Toolbar({
     if (!showBgMenu) return
     const close = (e) => {
       // Don't close if clicking inside the popup
-      if (e.target.closest?.('.bg-popup-container')) return
+      if (e.target.closest?.('#bg-menu-popup')) return
       setShowBgMenu(false)
     }
     document.addEventListener('mousedown', close)
@@ -386,7 +320,8 @@ export default function Toolbar({
               </Button>
               {showBgMenu && (
                 <div
-                  className="bg-popup-container absolute left-0 top-full mt-1 w-[260px] rounded-lg border border-border bg-card p-3 shadow-xl z-[1000]"
+                  id="bg-menu-popup"
+                  className="bg-popup-container absolute left-0 top-full mt-1 w-[260px] rounded-lg border border-border bg-card p-3 shadow-xl z-[1000] max-h-[80vh] overflow-y-auto"
                   onMouseDown={(e) => e.stopPropagation()}
                 >
                   <div className="text-xs font-semibold text-text-primary mb-2">
@@ -422,7 +357,7 @@ export default function Toolbar({
                         />
                       </div>
                       <div className="grid grid-cols-6 gap-1">
-                        {COLOR_SWATCHES_BG.map((color) => (
+                        {BG_COLORS.map((color) => (
                           <div
                             key={color}
                             onClick={() => setBgColor(color)}
@@ -430,10 +365,10 @@ export default function Toolbar({
                           className={`w-full aspect-square rounded cursor-pointer ${
                             bg.color === color
                               ? 'border-2 border-white'
-                              : color === '#ffffff' || color === '#f8f9fa'
+                              : isLightColor(color)
                                   ? 'border border-border'
                                   : 'border border-transparent'
-                            }`}
+                          }`}
                             style={getBackgroundColorStyle(color)}
                           />
                         ))}
@@ -457,7 +392,7 @@ export default function Toolbar({
                         placeholder="linear-gradient(...)"
                       />
                       <div className="flex flex-col gap-1">
-                        {GRADIENT_PRESETS_BG.map((preset, i) => (
+                        {GRADIENT_PRESETS.map((preset, i) => (
                           <Button
                             variant="ghost"
                             key={i}
@@ -863,6 +798,9 @@ export default function Toolbar({
                 setShowColorPalette((v) => !v)
               }}
               title="Text color"
+              aria-expanded={showColorPalette}
+              aria-haspopup="listbox"
+              aria-label="Text color palette"
             >
               <Type size={18} />
               <span
@@ -872,14 +810,19 @@ export default function Toolbar({
             </Button>
             {showColorPalette && (
               <div
+                role="listbox"
+                aria-label="Text color palette"
                 onMouseDown={(e) => e.stopPropagation()}
                 className="absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 z-[1000] bg-card border border-border rounded-lg p-2 shadow-xl grid grid-cols-[repeat(8,22px)] gap-[3px]"
               >
-                {COLOR_PALETTE.map((color) => (
+                {TEXT_COLORS.map((color) => (
                   <Button
                     variant="ghost"
                     key={color}
                     title={color}
+                    role="option"
+                    aria-selected={currentColor.toLowerCase() === color.toLowerCase()}
+                    aria-label={`Color ${color}`}
                     className={`w-[22px] h-[22px] p-0 rounded cursor-pointer shrink-0 ${
                       currentColor.toLowerCase() === color.toLowerCase()
                         ? 'border-2 border-white'

@@ -1,12 +1,16 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: Tailwind UI/UX review remediation verified
+## Current Status: UI/UX Tailwind Hard Mode Remediation completed
 
 All core features are operational. The token-backed Tailwind layer, route-based
 shell, live controller/viewer contract, notes normalization, persistence
-locking, and E2E gates were verified on 2026-04-23. Accepted Tailwind UI/UX
-review findings for control borders, icon names, Animation Preview accessibility,
-partial project media export, and PPTX module risk were remediated on 2026-04-24.
+locking, and E2E gates were verified on 2026-04-23. UI/UX Tailwind Hard
+Mode remediation completed on 2026-04-25 with 19 fixes across 5 phases (C-02,
+C-04, H-01..H-05, M-01..M-08, T-01, T-04, A-02, A-03). The `.pptx` parser
+benchmark completed on 2026-04-24 and selected `pptxtojson` primary with
+`pptx2json` fallback inspector. Editable PPTX import Phase 1 is implemented
+with server-side parser isolation, ZIP budget guards, text/image/shape/table
+mapping, and locked placeholders for unsupported objects.
 
 ### What Works
 
@@ -26,6 +30,7 @@ partial project media export, and PPTX module risk were remediated on 2026-04-24
 | Export PDF | Done |
 | Export PPTX | Done (hybrid native + high-res raster fallback, split helpers) |
 | Project export/import (.navslides) | Done (manifest v1.1, partial media skip warnings) |
+| Import PPTX | Done (Phase 1 editable text/image/shape/table with placeholders) |
 | Offline HTML export | Done (self-contained) |
 | Shareable links (with password option) | Done |
 | GitHub push integration | Done |
@@ -106,11 +111,37 @@ normalization, live socket contract, storage locking, and E2E stability.
 
 **Plan:** `plans/20260423-2151-tailwind-refactor-hardening-verification/`
 
+### Phase 8 - UI/UX Tailwind Hard Mode Remediation (Complete - 2026-04-25)
+
+19 fixes across 5 phases: slide index badge visibility (C-02), shared color
+config module (C-04), sidebar layout/vertical scale/popup overflow/onClick/emoji
+(H-01..H-05), ghost active state/search clear/undo-redo/swatch border/date
+locale/delete disabled/modal z-index (M-01..M-08), placeholder color/scrollbar
+light theme/ARIA palette/context menu keyboard nav (T-01, T-04, A-02, A-03).
+All 130 tests pass, production build succeeds.
+
+**Plan:** `plans/260425-0455-ui-ux-tailwind-fix-hard/`
+
 ### Phase 8 - Tailwind UI/UX Review Remediation (Complete - 2026-04-24)
 
 Closed accepted Medium findings from the Tailwind UI/UX review and fixed touched/global Low-risk control accessibility items.
 
 **Plan:** `plans/20260424-0619-tailwind-ui-ux-review-remediation/`
+
+### Phase 9 - PPTX Parser Benchmark (Complete - 2026-04-24)
+
+Benchmarked 4 JavaScript `.pptx` parser candidates against 4 real decks / 145 slides. Result: go for follow-up editable import planning with `pptxtojson` primary and `pptx2json` raw fallback.
+
+**Plan:** `plans/20260424-1508-pptx-parser-benchmark-hard/`
+
+### Phase 10 - Editable PPTX Import Phase 1 (Complete - 2026-04-24)
+
+Shipped server-side editable `.pptx` import using `pptxtojson@2.0.2`, with
+`pptx2json@0.0.10` as metadata fallback inspector only. Supports text, images,
+basic shapes/lines, and tables; charts, equations, OLE, SmartArt, and complex
+groups become locked placeholders with warnings.
+
+**Plan:** `plans/260424-1841-pptx-import/`
 
 ## Future Improvement Phases
 
@@ -182,6 +213,19 @@ Break down the remaining large component.
 - Add test step to CI before build
 - Publish release artifacts to GitHub Releases automatically on tag push
 - Add Docker image publish to GitHub Container Registry (ghcr.io)
+
+### Phase E - Advanced PPTX Import Fidelity (High Priority)
+
+Improve beyond Phase 1 editable `.pptx` import. Production importer exists for
+text, images, shapes, and tables; advanced PowerPoint object fidelity remains
+future work.
+
+**Tasks:**
+
+- Improve grouped object handling without losing editability
+- Add chart/SmartArt/OLE/equation strategies only after separate validation
+- Expand rich text style mapping for fonts, bullets, and theme colors
+- Add more fixture-driven visual regression coverage for imported decks
 
 ## Non-Roadmap Items
 

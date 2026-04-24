@@ -1,30 +1,22 @@
 // QuickAccessToolbar.jsx — fixed 32px toolbar above EditorMenuBar
 // Props: { onSave, onUndo, onRedo, saving, hasChanges }
-import { useRef, useCallback } from 'react'
+import { useCallback } from 'react'
 import { Loader2, Save } from 'lucide-react'
 
 export default function QuickAccessToolbar({
   onSave,
-  // eslint-disable-next-line unused-imports/no-unused-vars
   onUndo,
-  // eslint-disable-next-line unused-imports/no-unused-vars
   onRedo,
   saving,
   hasChanges,
 }) {
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  const undoRef = useRef(null)
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  const redoRef = useRef(null)
-
-  // Trigger undo via keyboard shortcut trick
   const handleUndo = useCallback(() => {
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }))
-  }, [])
+    onUndo?.()
+  }, [onUndo])
 
   const handleRedo = useCallback(() => {
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'y', ctrlKey: true, bubbles: true }))
-  }, [])
+    onRedo?.()
+  }, [onRedo])
 
   return (
     <div className="flex items-center gap-1">

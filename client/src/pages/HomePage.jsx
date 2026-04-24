@@ -15,17 +15,20 @@ import {
   List,
   Rocket,
   BookOpen,
+  FileUp,
   LayoutTemplate,
   Trash,
   Sparkles,
   RotateCcw,
   Globe,
   AlertCircle,
+  X,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../utils/api'
 import { markdownToSlides } from '../utils/markdown-import'
 import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../utils/import-project'
+import { summarizePptxImportWarnings } from '../utils/pptx-import-summary'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
 import { Button, Input, Select } from '../components/ui'
 import SlideThumbnail from '../components/SlideThumbnail'
@@ -161,7 +164,7 @@ const LIGHT_PRESET_COLORS = new Set(['#ffffff', '#fafafa', '#fcfcfc'])
 function formatDate(dateStr) {
   if (!dateStr) return ''
   const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return date.toLocaleDateString(navigator.language, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function getCardBg(thumbnail) {
@@ -441,8 +444,8 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     setShowModal(true)
   }
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
   const [importProgress, setImportProgress] = useState(null)
+  const [importWarningSummary, setImportWarningSummary] = useState(null)
 
   async function handleImportPdf(file) {
     if (!file) return
@@ -526,6 +529,35 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     }
   }
 
+  async function handleImportPptx(file) {
+    if (!file) return
+    if (!/\.pptx$/i.test(file.name)) {
+      alert('Only .pptx files are supported')
+      return
+    }
+
+    setImportWarningSummary(null)
+    setImportProgress('Uploading PPTX...')
+    try {
+      const importPromise = api.importPptx(file)
+      setImportProgress('Parsing PPTX...')
+      const imported = await importPromise
+      setImportProgress('Creating presentation...')
+      const pres = await api.createPresentation(imported.presentation)
+      const warningSummary = summarizePptxImportWarnings(imported)
+      if (warningSummary) {
+        setImportWarningSummary(warningSummary)
+        alert(warningSummary)
+      }
+      onOpen(pres.id)
+    } catch (err) {
+      console.error('PPTX import failed:', err)
+      alert('Failed to import PPTX: ' + err.message)
+    } finally {
+      setImportProgress(null)
+    }
+  }
+
   // ── Filtered & sorted data ──
   const filteredPresentations = useMemo(() => {
     let items = [...presentations]
@@ -602,12 +634,21 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             className="absolute left-[11px] top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
           />
           <Input
-            className="w-full pl-9"
+            className="w-full pl-9 pr-8"
             type="text"
             placeholder="Search presentations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors p-0.5 rounded"
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
 
         {/* Actions */}
@@ -705,6 +746,21 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             <label
               className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
             >
+              <FileUp size={16} />
+              <span>Import PPTX</span>
+              <input
+                type="file"
+                accept=".pptx"
+                className="hidden"
+                onChange={(e) => {
+                  handleImportPptx(e.target.files?.[0])
+                  e.target.value = ''
+                }}
+              />
+            </label>
+            <label
+              className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
+            >
               <BookOpen size={16} />
               <span>Import PDF</span>
               <input
@@ -778,6 +834,20 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                 </span>
               )}
             </Button>
+          </div>
+
+          {/* H-01: import progress/warning at sidebar bottom */}
+          <div className="mt-auto px-3 pb-2">
+            {importProgress && (
+              <div className="rounded border border-border bg-card px-2 py-1.5 text-[11px] text-text-secondary">
+                {importProgress}
+              </div>
+            )}
+            {importWarningSummary && (
+              <div className="mt-2 rounded border border-yellow-500/30 bg-yellow-500/10 px-2 py-1.5 text-[11px] text-text-secondary">
+                {importWarningSummary}
+              </div>
+            )}
           </div>
         </nav>
 
@@ -1020,11 +1090,21 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     className="absolute left-[11px] top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
                   />
                   <Input
+                    className="w-full pl-9 pr-8"
                     type="text"
                     placeholder="Search templates..."
                     value={marketplaceSearch}
                     onChange={(e) => setMarketplaceSearch(e.target.value)}
                   />
+                  {marketplaceSearch && (
+                    <button
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors p-0.5 rounded"
+                      onClick={() => setMarketplaceSearch('')}
+                      aria-label="Clear search"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex flex-wrap gap-1.5 mb-5">
@@ -1260,8 +1340,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         return (
                           <div
                             key={pres.id}
-                            className="group flex items-center gap-4 px-4 py-3 rounded cursor-pointer transition-colors hover:bg-hover"
-                            onClick={() => onOpen(pres.id)}
+                            className="group flex items-center gap-4 px-4 py-3 rounded transition-colors hover:bg-hover"
                           >
                             <div className="w-20 h-[45px] rounded flex-shrink-0 overflow-hidden relative">
                               <SlideThumbnail
@@ -1271,7 +1350,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
+                              <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate cursor-pointer" onClick={() => onOpen(pres.id)}>
                                 {pres.title || 'Untitled'}
                               </h3>
                               <p className="text-[12px] text-text-secondary truncate">
@@ -1324,7 +1403,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       {/* ════ Create Modal ════ */}
       {showModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[var(--z-modal)]"
           onClick={() => setShowModal(false)}
         >
           <div
@@ -1468,7 +1547,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       {/* ════ Confirm Dialog ════ */}
       {confirmDialog && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[var(--z-modal-overlay)]"
           onClick={() => setConfirmDialog(null)}
         >
           <div
