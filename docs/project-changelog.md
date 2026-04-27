@@ -1,7 +1,69 @@
 # Project Changelog
 
+## v1.6.x
+
+## 2026-04-27
+
+- Added `AnimationPreviewModal` feature for slide transition and animation preview with `animation-preview-helpers.js` supporting fragment timing extraction and easing curve normalization.
+- Hardened live presentation security: `POST /api/live/room` returns `presenterToken`; presenter socket join requires `presenterToken` and rejects takeover attempts.
+- Improved command layer in `use-keyboard.js`: refactored to `createKeyboardHandler` + `useMemo` pattern for better memoization. Added locked-element guards to prevent cut/duplicate of locked elements. Added paste-on-empty-selection support for post-slide-change paste scenarios. Fixed stale closure bugs with `slideRef` and `clipboardRef`.
+- Refactored `use-clipboard.js`: `performDuplicate` now uses `crypto.randomUUID()` for fresh IDs with +20/+20 offset. Added locked-element guard. Fixed null guards for slide elements.
+- Completed PPTX export hardening (12 files, ~1781 lines): added `export-pptx-basic-renderers.js` (shape/text/image/line), `export-pptx-color-utils.js`, `export-pptx-fallback-renderer.js`, `export-pptx-html-parser.js`, `export-pptx-raster-capture.js`, `export-pptx-raster.js`, comprehensive test suites (`export-pptx-core.test.js`, `export-pptx-raster.test.js`, `exportPptx.test.js` with 257 lines).
+- Removed deprecated `use-history.js` hook (history logic inlined into `EditorPage` as `handleUndo`/`handleRedo` callbacks).
+- Applied UI/UX Tailwind hard mode remediation across 31 component files (19 fixes): consistent `data-testid` attributes, accessible labels, hover/focus states, spinner elements, modal title visibility, and form accessibility.
+- Completed PPTX coordinate fidelity hardening plan `plans/260426-2128-pptx-import-coordinate-fidelity-hardening/` in tests-first flow across all 7 phases.
+- Added geometry normalization module `server/services/pptx-import/geometry.js` with nullish-safe numeric reads, line endpoint mode detection, clamp helpers, and affine transform utilities.
+- Refactored `server/services/pptx-import/mapper.js` to consume shared geometry helpers, preserve `left/top = 0`, normalize absolute line endpoints into local wrapper coordinates, and switch imported image crop to canonical editor-native model (`imageW/imageH/imageOffsetX/imageOffsetY`) with `_pptxImportMeta.cropData` sidecar.
+- Hardened grouped transform fidelity by replacing inline ad hoc math with matrix-based flattening and corner-bounds mapping; added grouped line endpoint transformation coverage.
+- Added new PPTX import fidelity test suites:
+  - `geometry.test.js`
+  - `geometry-drift.test.js`
+  - `property-mapping.test.js`
+  - `group-transform.test.js`
+  - `generated-fixtures.test.js`
+- Extended corpus harness output contract with by-type metrics:
+  - `geometryDrift.maxPx|medianPx|byType`
+  - `propertyCoverage.overall|byType`
+  - `elementCount.sourceByType|navByType`
+- Added strict per-type gate logic for generated fixture decks (geometry drift thresholds + table/chart property coverage thresholds) while preserving existing strict global gates.
+- Updated import warning summary to severity buckets (`exact`, `approximated`, `placeholder`, `failed`) without breaking existing Home import UX integration.
+- Added focused Playwright import-fidelity flow `tests/e2e/pptx-import-fidelity.spec.js` covering real API import, canvas bbox sanity audit, property edit, autosave, and reload persistence.
+- Verification passed:
+  - `npm run lint`
+  - `npm run test -- server/services/pptx-import client/src/components/properties/import-fidelity-properties.test.jsx`
+  - `npm run test:corpus`
+  - `npx playwright test tests/e2e/pptx-import-fidelity.spec.js`
+  - `npm run build`
+
+## 2026-04-26
+
+- Completed trusted hardening plan `plans/260426-1129-trusted-hardening-without-html-embed-regression/` with explicit invariant: HTML embed remains trusted programmable content (no blanket sanitizer/script stripping).
+- Hardened server correctness/privacy flows: analytics endpoint now requires a valid matching share token, share-token permanent-delete cascade handles both legacy-string and object tokens, Explore excludes trashed decks, and file-locked helpers now cover analytics/media mutation paths.
+- Hardened live session ownership: `POST /api/live/room` now returns `roomCode` + `presenterToken`; presenter socket join requires `presenterToken` and rejects takeover with `join-error` (`invalid-presenter-token`).
+- Hardened AI custom provider calls with SSRF guardrails (public `http/https` only, private/local/link-local blocked), plus stricter outline schema validation and generic client-safe provider failure messages.
+- Added client guardrails and reliability fixes: finite numeric parsing/clamping to avoid persisted `NaN`, safer live/settings error handling, markdown URL safety, import partial-failure warnings, and export cache cleanup in `finally` paths.
+- Applied targeted content safety only to text/markdown/svg/shape-text surfaces while preserving trusted HTML embed behavior for editor/present/export/share.
+- Repaired test harness and regressions: k6 scripts now use current defaults/routes, tautological E2E assertions were replaced, and added cross-phase regression E2E in `tests/e2e/hardening-regression.spec.js` (analytics gate, live hijack rejection, trusted HTML embed execution).
+- Final verification passed: `npm run lint`, `npm run test`, `npm run test:e2e` (110 tests), and `npm run build`. Load tests remain unexecuted because `k6` is not installed on this machine.
+- Recorded Electron sandbox as a follow-up hardening decision only (no implementation in this run).
+- Hardened PPTX parser worker startup for dev/Electron runtimes: parser children ignore Node watch-mode IPC messages, strip inherited `--watch*` exec flags, run in Electron Node mode when packaged, resolve both `server/node_modules` and root `node_modules`, and Electron packaging verifies `pptxtojson`/`pptx2json` before release.
+- Completed E2E hardening plan `plans/260426-1708-e2e-testing-hardening-stable-selectors/` with stable property-panel selectors (`prop-*`) and explicit selector contract: role/label/text first, `data-testid` only for ambiguous controls, and no canvas ID renames.
+- Added new API-backed E2E coverage files: `element-properties.spec.js`, `element-interactions.spec.js`, `element-lifecycle.spec.js`, and deterministic `visual-regression.spec.js` with Playwright `toHaveScreenshot()` baseline (`editor-canvas-basic-chromium-win32.png`).
+- Hardened save lifecycle semantics: editor save status now includes `error`, exposes visible `Save failed` state, preserves optimistic local edits on failed autosave, and provides explicit `Retry` action.
+- Refactored E2E page object structure by splitting `tests/e2e/pages/EditorPage.js` responsibilities into helper modules (`CanvasHelper`, `InsertMenuHelper`, `SlidePanelHelper`, `PropertiesPanelHelper`) while preserving existing `EditorPage` public API.
+- Added bounded undo/redo stress coverage (10 add, 10 undo, 10 redo), cross-slide copy/paste persistence checks, locked-element delete/duplicate guard coverage, and autosave failure/retry persistence checks.
+- Verification evidence for this hardening run:
+  - `npx playwright test --list` => 127 tests in 27 files.
+  - `npx playwright test --reporter=list` => 127/127 passed.
+  - Full E2E runtime measurement: ~74.92 seconds (`Measure-Command`).
+  - `npm run lint`, `npm test` (62 files / 358 tests), and `npm run build` passed.
+
 ## 2026-04-25
 
+- Completed round-trip harness unification (plan `260425-1802-unify-roundtrip-harness`): the fidelity tester now uses the production export pipeline, `--strict` enforces production-only export with the ≥95 semantic / ≥98 round-trip gate, and the latest 4-deck corpus run landed at 97.0% semantic fidelity and 99.0% round-trip stability.
+- Fixed PPTX full-fidelity review issues from plan `260425-1026-pptx-full-fidelity`: hardened CSS `url()` sanitization, routed grouped children through normal mappers, preserved custom SVG paths, line dash/arrow markers, image alt/crop/flip/borders, gradient backgrounds, per-slide transitions, merged/per-cell table styles, multi-series chart editing, and PPTX hyperlink export via `hyperlink.url`.
+- Added regression coverage for PPTX import/export fidelity gaps and property panels; verification passed `npm run lint`, `npm test` (49 files / 302 tests), `npm run build`, `npm run test:e2e` (106 tests), and `npm run test:corpus` against 4 real decks with 95.0% average semantic fidelity.
+- Improved PPTX fidelity harness so the default empty corpus falls back to the checked-in `PPTX/` corpus and `--roundtrip` performs a real temporary PPTX export/re-import structural check. Current round-trip stability remains low (1-7%) because the harness exporter is intentionally minimal and diagnostic, not the full client exporter.
 - Completed UI/UX Tailwind Hard Mode remediation (plan `260425-0455-ui-ux-tailwind-fix-hard`): 19 fixes across 5 phases.
   - Phase 1 (Critical): Fixed slide index badge visibility on light backgrounds (C-02); centralized hardcoded color palette into `shared/src/colorConfig.js` with `TEXT_COLORS`, `BG_COLORS`, `GRADIENT_PRESETS`, `isLightColor()` helper (C-04).
   - Phase 2 (High): Fixed sidebar import progress layout with `mt-auto` sticky (H-01); removed `scale-[0.85]` from vertical children thumbnails (H-02); added `id` + `max-h-[80vh]` to BG popup for viewport overflow (H-03); refactored list view onClick to title-only (H-04); replaced `📌` emoji with `MousePointer2` Lucide icon in PropertiesPanel (H-05).
