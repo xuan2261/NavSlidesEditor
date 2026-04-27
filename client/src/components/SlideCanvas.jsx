@@ -1,10 +1,11 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { useEditorStore } from '../stores/editor-store'
 import { EditorContent } from '@tiptap/react'
 import katex from 'katex'
 import QRCode from 'qrcode'
 import hljs from 'highlight.js'
 import { calculateGuides } from '../utils/smartGuides'
+import { sanitizeRichTextHtml, sanitizeSvgContent } from '../utils/content-safety'
+import { isSafeHref } from '../utils/url-safety'
 import MiniToolbar from './MiniToolbar'
 import { cn } from '../lib/utils'
 import { Button } from '../components/ui'
@@ -230,7 +231,11 @@ export default function SlideCanvas({
   onOpenHtmlEditor,
   onOpenCodeEditor,
   onOpenLatexEditor,
-  onAddElements, // (newElements[]) => void — for clipboard paste/duplicate
+  // Command callbacks (from useClipboard via EditorPage)
+  onCopy,
+  onCut,
+  onPaste,
+  onDuplicate,
 }) {
   const SLIDE_W = resolution?.width || 960
   const SLIDE_H = resolution?.height || 540
@@ -240,6 +245,7 @@ export default function SlideCanvas({
   const [userZoomMode, setUserZoomMode] = useState(false)
   const pendingDragRef = useRef(null)
   const draggingRef = useRef(null)
+  const suppressCanvasClickRef = useRef(false)
   const [, forceUpdate] = useState(0)
   const showGridRef = useRef(showGrid)
   const selectedElementIdsRef = useRef(selectedElementIds)
@@ -265,13 +271,6 @@ export default function SlideCanvas({
     })
   }, [])
 
-  // Clipboard state — shared via Zustand store
-  const clipboard = useEditorStore((s) => s.clipboard)
-  const setClipboard = useEditorStore((s) => s.setClipboard)
-  const clipboardRef = useRef(null)
-  useEffect(() => {
-    clipboardRef.current = clipboard
-  }, [clipboard])
   const slideRef = useRef(slide)
   useEffect(() => {
     slideRef.current = slide
@@ -484,6 +483,10 @@ export default function SlideCanvas({
       pendingDragRef.current = null
       draggingRef.current = null
       if (hadInteraction) {
+        suppressCanvasClickRef.current = true
+        setTimeout(() => {
+          suppressCanvasClickRef.current = false
+        }, 0)
         setActiveGuides([])
         forceUpdate((n) => n + 1)
       }
@@ -527,12 +530,17 @@ export default function SlideCanvas({
         }
         return // Block other keys when editing
       }
+      const selectedElements = (slideRef.current?.elements || []).filter((el) =>
+        selectedElementIds.includes(el.id)
+      )
+      const hasLockedSelection = selectedElements.some((el) => el.locked)
       if (selectedElementIds.length > 0) {
         if (
           (e.key === 'Delete' || e.key === 'Backspace') &&
           tag !== 'INPUT' &&
           tag !== 'TEXTAREA' &&
-            !slideRef.current?.locked
+            !slideRef.current?.locked &&
+            !hasLockedSelection
         ) {
           onDeleteSelectedElements()
           e.preventDefault()
@@ -541,67 +549,49 @@ export default function SlideCanvas({
           onToggleSelectElement(null, false)
           e.preventDefault()
         }
-        // ── Clipboard shortcuts ────────────────────────────────────────────
+        // ── Clipboard shortcuts — delegated to command callbacks ────────────
         // Skip clipboard shortcuts when focus is inside a textarea or input
         // (e.g. the HTML editor modal, code editor, etc.)
         if ((e.ctrlKey || e.metaKey) && tag !== 'TEXTAREA' && tag !== 'INPUT') {
           if (e.key === 'c' || e.key === 'C') {
-            // Copy selected elements
-            const clones = (slideRef.current?.elements || [])
-              .filter((el) => selectedElementIds.includes(el.id))
-              .map((el) => {
-                const { id: _id, ...rest } = el
-                return { ...rest }
-              })
-            setClipboard(clones)
+            onCopy?.()
             e.preventDefault()
           }
           if (e.key === 'x' || e.key === 'X') {
-            // Cut: copy then delete originals (caller deletes)
-            const clones = (slideRef.current?.elements || [])
-              .filter((el) => selectedElementIds.includes(el.id))
-              .map((el) => {
-                const { id: _id, ...rest } = el
-                return { ...rest }
-              })
-            setClipboard(clones)
-            // Notify parent to delete originals
-            if (typeof onDeleteSelectedElements === 'function') {
-              onDeleteSelectedElements()
+            if (hasLockedSelection) {
+              e.preventDefault()
+              return
             }
+            onCut?.()
             e.preventDefault()
           }
           if (e.key === 'v' || e.key === 'V') {
-            // Paste at offset position
-            if (clipboardRef.current && clipboardRef.current.length > 0) {
-              const newElements = clipboardRef.current.map((el) => {
-                const newId = `${el.type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-                return { ...el, id: newId, x: (el.x || 0) + 20, y: (el.y || 0) + 20 }
-              })
-              // Notify parent to add pasted elements
-              if (typeof onAddElements === 'function') {
-                onAddElements(newElements)
-              }
-              e.preventDefault()
-            }
+            onPaste?.()
+            e.preventDefault()
           }
           if (e.key === 'd' || e.key === 'D') {
-            // Duplicate in place
-            const clones = (slideRef.current?.elements || [])
-              .filter((el) => selectedElementIds.includes(el.id))
-              .map((el) => {
-                const { id: _id, ...rest } = el
-                return {
-                  ...rest,
-                  id: `${rest.type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                }
-              })
-            if (typeof onAddElements === 'function' && clones.length > 0) {
-              onAddElements(clones)
+            if (hasLockedSelection) {
+              e.preventDefault()
+              return
             }
+            onDuplicate?.()
             e.preventDefault()
           }
         }
+      }
+
+      // Allow paste even when no element is selected (e.g. after slide change).
+      // Locked slide blocks paste-on-empty.
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === 'v' || e.key === 'V') &&
+        selectedElementIds.length === 0 &&
+        tag !== 'TEXTAREA' &&
+        tag !== 'INPUT' &&
+        !slideRef.current?.locked
+      ) {
+        onPaste?.()
+        e.preventDefault()
       }
     }
     document.addEventListener('keydown', onKeyDown)
@@ -613,8 +603,10 @@ export default function SlideCanvas({
     onStopEdit,
     onToggleSelectElement,
     onDeleteSelectedElements,
-    onAddElements,
-    setClipboard,
+    onCopy,
+    onCut,
+    onPaste,
+    onDuplicate,
   ])
 
   // Close context menu on outside click
@@ -1005,6 +997,7 @@ export default function SlideCanvas({
           {/* Top ruler */}
           <div
             className={cn('bg-panel/90 border-b border-border text-text-muted')}
+            data-testid="top-ruler"
             style={topRulerStyle}
             onMouseDown={(e) => handleRulerMouseDown('x', e)}
           >
@@ -1017,6 +1010,7 @@ export default function SlideCanvas({
           {/* Left ruler */}
           <div
             className={cn('bg-panel/90 border-r border-border text-text-muted')}
+            data-testid="left-ruler"
             style={leftRulerStyle}
             onMouseDown={(e) => handleRulerMouseDown('y', e)}
           >
@@ -1034,6 +1028,10 @@ export default function SlideCanvas({
         style={canvasStyle}
         onClick={(e) => {
           if (cropMode) return
+          if (suppressCanvasClickRef.current) {
+            suppressCanvasClickRef.current = false
+            return
+          }
           if (e.target === canvasRef.current) {
             onToggleSelectElement(null, false)
             onStopEdit()
@@ -1077,6 +1075,7 @@ export default function SlideCanvas({
           guide.axis === 'x' ? (
             <div
               key={`pg${i}`}
+              data-testid={`persistent-guide-${guide.axis}`}
               style={getPersistentGuideStyle(guide)}
               onDoubleClick={() => onRemoveGuide?.(i)}
               title="Double-click to remove guide"
@@ -1084,6 +1083,7 @@ export default function SlideCanvas({
           ) : (
             <div
               key={`pg${i}`}
+              data-testid={`persistent-guide-${guide.axis}`}
               style={getPersistentGuideStyle(guide)}
               onDoubleClick={() => onRemoveGuide?.(i)}
               title="Double-click to remove guide"
@@ -1096,11 +1096,13 @@ export default function SlideCanvas({
           guide.axis === 'x' ? (
             <div
               key={`g${i}`}
+              data-testid={`smart-guide-${guide.axis}`}
               style={getActiveGuideStyle(guide)}
             />
           ) : (
             <div
               key={`g${i}`}
+              data-testid={`smart-guide-${guide.axis}`}
               style={getActiveGuideStyle(guide)}
             />
           )
@@ -1131,7 +1133,13 @@ export default function SlideCanvas({
                 if (editingElementId === element.id) return
                 if (element.locked && type === 'move') return
                 e.stopPropagation()
-                onToggleSelectElement(element.id, e.shiftKey)
+                if (
+                  type === 'move' &&
+                  !e.shiftKey &&
+                  !selectedElementIdsRef.current.includes(element.id)
+                ) {
+                  onToggleSelectElement(element.id, false)
+                }
                 startElementDrag(e, element.id, type, handle)
               }}
               onClick={(e) => {
@@ -1234,14 +1242,9 @@ export default function SlideCanvas({
               {/* ── Clipboard actions (always visible when element is right-clicked) ── */}
               <Button
                 variant="ghost"
+                disabled={!!ctxEl?.locked}
                 onClick={() => {
-                  const clones = (slide?.elements || [])
-                    .filter((el) => contextMenu.elementId === el.id)
-                    .map((el) => {
-                      const { id: _id, ...rest } = el
-                      return { ...rest }
-                    })
-                  setClipboard(clones)
+                  onCopy?.()
                   setContextMenu(null)
                 }}
               >
@@ -1250,13 +1253,7 @@ export default function SlideCanvas({
               <Button
                 variant="ghost"
                 onClick={() => {
-                  const clones = (slide?.elements || [])
-                    .filter((el) => contextMenu.elementId === el.id)
-                    .map((el) => {
-                      const { id: _id, ...rest } = el
-                      return { ...rest }
-                    })
-                  setClipboard(clones)
+                  onCut?.()
                   onDeleteElement(contextMenu.elementId)
                   setContextMenu(null)
                 }}
@@ -1266,14 +1263,7 @@ export default function SlideCanvas({
               <Button
                 variant="ghost"
                 onClick={() => {
-                  if (!clipboardRef.current || clipboardRef.current.length === 0) return
-                  const newEls = clipboardRef.current.map((el) => ({
-                    ...el,
-                    id: `${el.type || 'el'}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                    x: (el.x || 0) + 20,
-                    y: (el.y || 0) + 20,
-                  }))
-                  if (typeof onAddElements === 'function') onAddElements(newEls)
+                  onPaste?.()
                   setContextMenu(null)
                 }}
               >
@@ -1281,17 +1271,9 @@ export default function SlideCanvas({
               </Button>
               <Button
                 variant="ghost"
+                disabled={!!ctxEl?.locked}
                 onClick={() => {
-                  if (!ctxEl) return
-                  // eslint-disable-next-line unused-imports/no-unused-vars
-                  const { id, ...rest } = ctxEl
-                  const newEl = {
-                    ...rest,
-                    id: `${rest.type || 'el'}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                    x: (ctxEl.x || 0) + 20,
-                    y: (ctxEl.y || 0) + 20,
-                  }
-                  if (typeof onAddElements === 'function') onAddElements([newEl])
+                  onDuplicate?.()
                   setContextMenu(null)
                 }}
               >
@@ -1510,7 +1492,7 @@ function CanvasElement({
             ? 'not-allowed'
             : 'grab',
     userSelect: isEditing ? 'text' : 'none',
-    overflow: 'hidden',
+    overflow: (isSelected || isEditing || isCropping || element.type === 'line') ? 'visible' : 'hidden',
     boxSizing: 'border-box',
     borderRadius:
       (element.type === 'image' || element.type === 'code') && element.borderRadius
@@ -1649,6 +1631,9 @@ function CanvasElement({
   return (
     <div
       className="element-wrapper"
+      data-testid={`slide-element-${element.id}`}
+      data-element-id={element.id}
+      data-element-type={element.type}
       style={elementWrapperStyle}
       onMouseDown={(e) => {
         if (isEditing) {
@@ -1669,7 +1654,7 @@ function CanvasElement({
           ref={contentRef}
           className="slide-text-content ProseMirror-preview"
           style={textPreviewStyle}
-          dangerouslySetInnerHTML={{ __html: element.content || '' }}
+          dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(element.content || '') }}
         />
       )}
       {element.type === 'text' && isEditing && (
@@ -1809,6 +1794,7 @@ function CanvasElement({
         Object.entries(HANDLE_STYLES).map(([handle, hStyle]) => (
           <div
             key={handle}
+            data-testid={`resize-handle-${handle}`}
             style={getResizeHandleStyle(hStyle)}
             onMouseDown={(e) => {
               e.stopPropagation()
@@ -1825,6 +1811,7 @@ function CanvasElement({
           />
           <div
             style={rotationHandleStyle}
+            data-testid="rotation-handle"
             onMouseDown={(e) => {
               e.stopPropagation()
               onPointerDown(e, 'rotate', null)
@@ -2003,7 +1990,10 @@ function markdownToHtml(md) {
     // Links
     .replace(
       /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" style="color:#60a5fa;text-decoration:underline;">$1</a>'
+      (_, text, href) => {
+        const safeHref = isSafeHref(href) ? href : '#'
+        return `<a href="${safeHref}" style="color:#60a5fa;text-decoration:underline;">${text}</a>`
+      }
     )
     // Horizontal rules
     .replace(
@@ -2030,7 +2020,7 @@ function markdownToHtml(md) {
 }
 
 function MarkdownRenderer({ element }) {
-  const html = markdownToHtml(element.content || '')
+  const html = sanitizeRichTextHtml(markdownToHtml(element.content || ''))
   const markdownStyle = {
     width: '100%',
     height: '100%',
@@ -2212,8 +2202,26 @@ function TableRenderer({ element, isEditing, onUpdateElement }) {
   const borderColor = element.borderColor || 'rgba(255,255,255,0.2)'
   const borderWidth = element.borderWidth ?? 1
   const textColor = element.textColor || '#ffffff'
+  const headerTextColor = element.headerTextColor || textColor
   const fontSize = element.fontSize || 14
   const cellPadding = element.cellPadding || 8
+  const cellStyles = element.cellStyles || {}
+  const mergedCells = Array.isArray(element.mergedCells) ? element.mergedCells : []
+  const mergeByStart = new Map()
+  const coveredCells = new Set()
+  mergedCells.forEach((merge) => {
+    const row = Number(merge.row) || 0
+    const col = Number(merge.col) || 0
+    const rowSpan = Math.max(1, Number(merge.rowSpan) || 1)
+    const colSpan = Math.max(1, Number(merge.colSpan) || 1)
+    mergeByStart.set(`${row}:${col}`, { rowSpan, colSpan })
+    for (let ri = row; ri < row + rowSpan; ri++) {
+      for (let ci = col; ci < col + colSpan; ci++) {
+        if (ri !== row || ci !== col) coveredCells.add(`${ri}:${ci}`)
+      }
+    }
+  })
+  const getCellStyle = (key, ri, ci) => cellStyles[key]?.[ri]?.[ci]
 
   const [focusCell, setFocusCell] = useState(null)
   const inputRefs = useRef({})
@@ -2240,58 +2248,71 @@ function TableRenderer({ element, isEditing, onUpdateElement }) {
         <tbody>
           {data.map((row, ri) => (
             <tr key={ri}>
-              {(row || []).map((cell, ci) => (
-                <td
-                  key={ci}
-                  onMouseDown={() => {
-                    if (!isEditing) {
-                      setFocusCell({ ri, ci })
-                    }
-                  }}
-                  style={{
-                    padding: cellPadding,
-                    border: `${borderWidth}px solid ${borderColor}`,
-                    background: element.headerRow && ri === 0 ? headerBg : cellBg,
-                    color: textColor,
-                    fontSize,
-                    fontWeight: element.headerRow && ri === 0 ? 600 : 400,
-                    verticalAlign: 'top',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {isEditing ? (
-                    <textarea
-                      ref={(el) => (inputRefs.current[`${ri}-${ci}`] = el)}
-                      value={cell || ''}
-                      onChange={(e) => {
-                        const newData = data.map((r) => [...r])
-                        newData[ri][ci] = e.target.value
-                        onUpdateElement(element.id, { data: newData })
-                      }}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onKeyDown={(e) => e.stopPropagation()}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'inherit',
-                        fontSize: 'inherit',
-                        fontWeight: 'inherit',
-                        outline: 'none',
-                        textAlign: 'inherit',
-                        fontFamily: 'inherit',
-                        resize: 'none',
-                        overflow: 'hidden',
-                      }}
-                    />
-                  ) : (
-                    <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                      {cell || ''}
-                    </div>
-                  )}
-                </td>
-              ))}
+              {(row || []).map((cell, ci) => {
+                if (coveredCells.has(`${ri}:${ci}`)) return null
+                const merge = mergeByStart.get(`${ri}:${ci}`)
+                const isHeader = element.headerRow && ri === 0
+                const cellTextColor = getCellStyle('textColors', ri, ci) || (isHeader ? headerTextColor : textColor)
+                const cellBackground = getCellStyle('bgColors', ri, ci) || (isHeader ? headerBg : cellBg)
+                const cellBold = getCellStyle('isBold', ri, ci)
+                const textAlign = getCellStyle('aligns', ri, ci) || 'left'
+                const verticalAlign = getCellStyle('vAligns', ri, ci) || 'top'
+                return (
+                  <td
+                    key={ci}
+                    colSpan={merge?.colSpan}
+                    rowSpan={merge?.rowSpan}
+                    onMouseDown={() => {
+                      if (!isEditing) {
+                        setFocusCell({ ri, ci })
+                      }
+                    }}
+                    style={{
+                      padding: cellPadding,
+                      border: `${borderWidth}px solid ${borderColor}`,
+                      background: cellBackground,
+                      color: cellTextColor,
+                      fontSize,
+                      fontWeight: cellBold != null ? (cellBold ? 600 : 400) : isHeader ? 600 : 400,
+                      textAlign,
+                      verticalAlign,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {isEditing ? (
+                      <textarea
+                        ref={(el) => (inputRefs.current[`${ri}-${ci}`] = el)}
+                        value={cell || ''}
+                        onChange={(e) => {
+                          const newData = data.map((r) => [...r])
+                          newData[ri][ci] = e.target.value
+                          onUpdateElement(element.id, { data: newData })
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'inherit',
+                          fontSize: 'inherit',
+                          fontWeight: 'inherit',
+                          outline: 'none',
+                          textAlign: 'inherit',
+                          fontFamily: 'inherit',
+                          resize: 'none',
+                          overflow: 'hidden',
+                        }}
+                      />
+                    ) : (
+                      <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        {cell || ''}
+                      </div>
+                    )}
+                  </td>
+                )
+              })}
             </tr>
           ))}
         </tbody>
@@ -2613,7 +2634,7 @@ function SvgElementRenderer({ element }) {
     alignItems: 'center',
     justifyContent: 'center',
   }
-  return <div style={svgElementStyle} dangerouslySetInnerHTML={{ __html: modifiedContent }} />
+  return <div style={svgElementStyle} dangerouslySetInnerHTML={{ __html: sanitizeSvgContent(modifiedContent) }} />
 }
 
 function QrCodeRenderer({ element }) {

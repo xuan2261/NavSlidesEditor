@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 import { createElement } from '../utils/element-factory'
 import { useSlideOperations } from '../hooks/use-slide-operations'
+import { useKeyboard } from '../hooks/use-keyboard'
+import { useClipboard } from '../hooks/use-clipboard'
 import { useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -137,7 +139,8 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [saving, setSaving] = useState(false)
-  const [saveStatus, setSaveStatus] = useState('') // '', 'saving', 'saved'
+  const [saveStatus, setSaveStatus] = useState('') // '', 'saving', 'saved', 'error'
+  const [lastSaveError, setLastSaveError] = useState('')
   const [loading, setLoading] = useState(true)
 
   // ─── Zustand store (UI state) ───────────────────────────────────────────────
@@ -194,12 +197,14 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const [showAITranslate, setShowAITranslate] = useState(false)
   const [showLiveModal, setShowLiveModal] = useState(false)
   const [liveRoomCode, setLiveRoomCode] = useState(null)
+  const [livePresenterToken, setLivePresenterToken] = useState(null)
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [showImageUrlPrompt, setShowImageUrlPrompt] = useState(false)
 
   // Track if we're programmatically setting editor content (to avoid loops)
   const settingContent = useRef(false)
   const saveTimerRef = useRef(null)
+  const saveStatusResetTimerRef = useRef(null)
   const isFirstLoad = useRef(true)
   const historyRef = useRef([]) // undo history: array of presentation snapshots
   const applyingUndoRef = useRef(false)
@@ -220,6 +225,63 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   useEffect(() => {
     selectedElementIdsRef.current = selectedElementIds
   }, [selectedElementIds])
+
+  const clearSaveStatusResetTimer = useCallback(() => {
+    if (saveStatusResetTimerRef.current) {
+      clearTimeout(saveStatusResetTimerRef.current)
+      saveStatusResetTimerRef.current = null
+    }
+  }, [])
+
+  const persistPresentation = useCallback(
+    async (snapshot) => {
+      if (!snapshot?.id) return false
+
+      try {
+        const saveFn = isTemplate ? api.updateTemplate : api.updatePresentation
+        await saveFn(snapshot.id, normalizePresentationNotes(snapshot))
+        clearSaveStatusResetTimer()
+        setSaveStatus('saved')
+        setLastSaveError('')
+        setLastSavedAt(new Date())
+        saveStatusResetTimerRef.current = setTimeout(() => setSaveStatus(''), 2000)
+        return true
+      } catch (err) {
+        clearSaveStatusResetTimer()
+        const message =
+          typeof err?.message === 'string' && err.message.trim() ? err.message.trim() : 'Save failed'
+        console.error('Auto-save failed', err)
+        setSaveStatus('error')
+        setLastSaveError(message)
+        return false
+      }
+    },
+    [clearSaveStatusResetTimer, isTemplate]
+  )
+
+  const schedulePresentationSave = useCallback(
+    (snapshot, delayMs = 1500) => {
+      if (!snapshot) return
+
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = null
+      }
+      clearSaveStatusResetTimer()
+      setSaveStatus('saving')
+      setLastSaveError('')
+
+      if (delayMs <= 0) {
+        void persistPresentation(snapshot)
+        return
+      }
+
+      saveTimerRef.current = setTimeout(() => {
+        void persistPresentation(snapshot)
+      }, delayMs)
+    },
+    [clearSaveStatusResetTimer, persistPresentation]
+  )
 
   // Load presentation (or template) on mount
   useEffect(() => {
@@ -329,26 +391,21 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   // Auto-save with debounce
   useEffect(() => {
     if (!presentation || isFirstLoad.current) return
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-
-    setSaveStatus('saving')
-    saveTimerRef.current = setTimeout(async () => {
-      try {
-        const saveFn = isTemplate ? api.updateTemplate : api.updatePresentation
-        await saveFn(presentation.id, normalizePresentationNotes(presentation))
-        setSaveStatus('saved')
-        setLastSavedAt(new Date())
-        setTimeout(() => setSaveStatus(''), 2000)
-      } catch (err) {
-        console.error('Auto-save failed', err)
-        setSaveStatus('')
-      }
-    }, 1500)
+    schedulePresentationSave(presentation, 1500)
 
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = null
     }
-  }, [isTemplate, presentation])
+  }, [presentation, schedulePresentationSave])
+
+  useEffect(
+    () => () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      clearSaveStatusResetTimer()
+    },
+    [clearSaveStatusResetTimer]
+  )
 
   // Undo history: debounce-push presentation snapshots; skip during undo itself
   useEffect(() => {
@@ -399,6 +456,8 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
 
   const deleteElement = useCallback(
     (id) => {
+      const target = currentSlide?.elements?.find((el) => el.id === id)
+      if (target?.locked) return
       setPresentation((prev) => {
         if (!prev) return prev
         return {
@@ -416,7 +475,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       setSelectedElementIds((prev) => prev.filter((x) => x !== id))
       if (editingElementId === id) setEditingElementId(null)
     },
-    [editingElementId, setEditingElementId, setSelectedElementIds]
+    [currentSlide, editingElementId, setEditingElementId, setSelectedElementIds]
   )
 
   // ── Unified element creation (replaces 17 individual addXxxElement callbacks) ──
@@ -449,28 +508,6 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     },
     [addElement]
   )
-
-  // Add a batch of new elements (used by clipboard paste/duplicate)
-  const addElements = useCallback((newElements) => {
-    if (!newElements || newElements.length === 0) return
-    // Generate IDs before setState so selection works
-    const withIds = newElements.map((el) => ({
-      ...el,
-      id: el.id || crypto.randomUUID(),
-    }))
-    setPresentation((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        slides: prev.slides.map((s, i) =>
-          i === currentSlideIndexRef.current
-            ? { ...s, elements: [...(s.elements || []), ...withIds] }
-            : s
-        ),
-      }
-    })
-    setSelectedElementIds(withIds.map((el) => el.id))
-  }, [setSelectedElementIds])
 
   const DEFAULT_HTML = `<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <style>* { box-sizing: border-box; margin: 0; } body { background: transparent; overflow: hidden; }</style>
@@ -755,8 +792,8 @@ svg.selectAll('circle').data(data).join('circle')
     setCurrentSlideIndex((ci) => Math.min(ci, redoState.slides.length - 1))
   }, [presentation, setPresentation, setCurrentSlideIndex])
 
-  // Global keyboard shortcuts (undo/redo, find/replace, slide sorter)
-  // NOTE: Clipboard (Ctrl+C/X/V/D) is handled by SlideCanvas via Zustand store
+  // Global keyboard shortcuts (find/replace, slide sorter)
+  // NOTE: Undo/redo and clipboard shortcuts are now handled by useKeyboard/useClipboard
   useEffect(() => {
     const onKeyDown = (e) => {
       if (editingElementId) return
@@ -775,17 +812,10 @@ svg.selectAll('circle').data(data).join('circle')
         e.preventDefault()
         return
       }
-      if (e.key === 'z' && !e.shiftKey) {
-        handleUndo()
-        e.preventDefault()
-      } else if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
-        handleRedo()
-        e.preventDefault()
-      }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [currentSlideIndex, editingElementId, presentation, setShowFindReplace, setViewMode, handleUndo, handleRedo])
+  }, [editingElementId, setShowFindReplace, setViewMode])
 
   // Inject hljs theme CSS into the document head for the editor preview
   useEffect(() => {
@@ -838,6 +868,31 @@ svg.selectAll('circle').data(data).join('circle')
     editingElementIdRef,
   })
 
+  // ── Command layer (Phase 1: clipboard + keyboard unified via useKeyboard/useClipboard) ──
+  const { performCopy, performPaste, performCut, performDuplicate } = useClipboard()
+
+  const handleSelectAll = useCallback(() => {
+    const els = currentSlide?.elements || []
+    setSelectedElementIds(els.map((e) => e.id))
+  }, [currentSlide, setSelectedElementIds])
+
+  useKeyboard({
+    onCopy: performCopy,
+    onCut: performCut,
+    onPaste: performPaste,
+    onDuplicate: performDuplicate,
+    onUndo: handleUndo,
+    onRedo: handleRedo,
+    onDelete: deleteSelectedElements,
+    onSelectAll: handleSelectAll,
+    onToggleFindReplace: () => setShowFindReplace((v) => !v),
+    onEscape: () => {
+      setSelectedElementIds([])
+      setEditingElementId(null)
+    },
+    isEditing: !!editingElementId,
+  })
+
   const toggleElementSelection = useCallback(
     (id, multi = false) => {
       if (!id) {
@@ -884,7 +939,6 @@ svg.selectAll('circle').data(data).join('circle')
     )
   }
 
-  // eslint-disable-next-line
   const hasChanges = historyRef.current.length > 1
 
   return (
@@ -911,22 +965,7 @@ svg.selectAll('circle').data(data).join('circle')
           placeholder={isTemplate ? 'Untitled Template' : 'Untitled Presentation'}
         />
         <QuickAccessToolbar
-          onSave={() => {
-            if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-            setSaveStatus('saving')
-            saveTimerRef.current = setTimeout(async () => {
-              try {
-                const saveFn = isTemplate ? api.updateTemplate : api.updatePresentation
-                await saveFn(presentation.id, normalizePresentationNotes(presentation))
-                setSaveStatus('saved')
-                setLastSavedAt(new Date())
-                setTimeout(() => setSaveStatus(''), 2000)
-              } catch (err) {
-                console.error('Auto-save failed', err)
-                setSaveStatus('')
-              }
-            }, 100)
-          }}
+          onSave={() => schedulePresentationSave(presentation, 100)}
           saving={saving}
           hasChanges={hasChanges}
           onUndo={handleUndo}
@@ -938,6 +977,8 @@ svg.selectAll('circle').data(data).join('circle')
           presentationId={presentationId}
           saveStatus={saveStatus}
           lastSavedAt={lastSavedAt}
+          lastSaveError={lastSaveError}
+          onRetrySave={() => schedulePresentationSave(presentation, 0)}
           onExportPDF={() => exportPDF(presentation)}
           onExportPPTX={async () => {
             try {
@@ -995,7 +1036,11 @@ svg.selectAll('circle').data(data).join('circle')
                   return
                 }
                 if (warnings.length) console.warn('Import warnings:', warnings)
-                let finalPres = await rehydrateImportedPresentation(api, parsed)
+                const rehydrated = await rehydrateImportedPresentation(api, parsed)
+                if (rehydrated.warnings.length) {
+                  console.warn('Import warnings:', rehydrated.warnings)
+                }
+                let finalPres = rehydrated.presentation
                 finalPres.title = (finalPres.title || 'Imported') + ' (Imported)'
                 const newPres = await api.createPresentation({
                   ...finalPres,
@@ -1031,8 +1076,13 @@ svg.selectAll('circle').data(data).join('circle')
           onLive={async () => {
             try {
               const res = await fetch('/api/live/room', { method: 'POST' })
+              if (!res.ok) throw new Error('Live room creation failed')
               const data = await res.json()
+              if (!data?.roomCode || !data?.presenterToken) {
+                throw new Error('Invalid live room response')
+              }
               setLiveRoomCode(data.roomCode)
+              setLivePresenterToken(data.presenterToken)
               setShowLiveModal(true)
               // eslint-disable-next-line unused-imports/no-unused-vars
             } catch (err) {
@@ -1249,7 +1299,10 @@ svg.selectAll('circle').data(data).join('circle')
               onUpdateElements={updateElements}
               onDeleteElement={deleteElement}
               onDeleteSelectedElements={deleteSelectedElements}
-              onAddElements={addElements}
+              onCopy={performCopy}
+              onCut={performCut}
+              onPaste={performPaste}
+              onDuplicate={performDuplicate}
               onOpenHtmlEditor={openHtmlEditor}
               onOpenCodeEditor={openCodeEditor}
               onOpenLatexEditor={openLatexEditor}
@@ -1466,6 +1519,7 @@ svg.selectAll('circle').data(data).join('circle')
           <LivePresentationModal
             presentationId={presentationId}
             roomCode={liveRoomCode}
+            presenterToken={livePresenterToken}
             onClose={() => setShowLiveModal(false)}
           />
         )}
