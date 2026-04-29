@@ -9,6 +9,31 @@ const {
 const { renderSlideElements, escapeHtml, absoluteSrc } = require('./element-renderers.js')
 const { getSlideNotes } = require('./slideNotes.js')
 
+function formatGradientCss(bg) {
+  if (!bg || bg.type !== 'gradient') return ''
+  if (bg.gradient) return bg.gradient
+  const stops = Array.isArray(bg.stops) ? bg.stops : []
+  if (!stops.length) return ''
+  const angle = Number(bg.angle) || 0
+  const cssStops = stops
+    .map((stop) => {
+      const offset = Number(stop.offset) > 1 ? Number(stop.offset) : Number(stop.offset) * 100
+      const percent = Number.isFinite(offset) ? Math.round(offset) : 0
+      return `${stop.color || '#000000'} ${percent}%`
+    })
+    .join(', ')
+  return `linear-gradient(${angle}deg, ${cssStops})`
+}
+
+function getSlideTransitionAttrs(slide) {
+  if (!slide) return ''
+  const attrs = []
+  if (slide.transition) attrs.push(`data-transition="${escapeHtml(slide.transition)}"`)
+  if (slide.transitionDirection) attrs.push(`data-transition-direction="${escapeHtml(slide.transitionDirection)}"`)
+  if (slide.transitionDuration != null) attrs.push(`data-transition-duration="${escapeHtml(slide.transitionDuration)}"`)
+  return attrs.length ? ` ${attrs.join(' ')}` : ''
+}
+
 function generateRevealHTML(presentation) {
   const showFooter = presentation.showFooter || false
   const showPageNumbers = presentation.showPageNumbers || false
@@ -40,6 +65,7 @@ function generateRevealHTML(presentation) {
     .map((slide, slideIndex) => {
       const bgAttrs = getBackgroundAttrs(slide.background)
       const autoAnimateAttr = slide.autoAnimate ? ' data-auto-animate' : ''
+      const transitionAttrs = getSlideTransitionAttrs(slide)
       const slideNotes = getSlideNotes(slide)
       const notes = slideNotes ? `<aside class="notes">${escapeHtml(slideNotes)}</aside>` : ''
 
@@ -81,7 +107,7 @@ function generateRevealHTML(presentation) {
         ? `      <div style="position:absolute;inset:0;z-index:950;pointer-events:none;background-image:linear-gradient(to right,rgba(255,255,255,0.12) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,0.12) 1px,transparent 1px);background-size:${presentGridSize}px ${presentGridSize}px;"></div>`
         : ''
 
-      const sectionHtml = `    <section${autoAnimateAttr}${bgAttrs} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${elementsHtml}\n${footerHtml}\n${gridHtml}\n      ${notes}\n    </section>`
+      const sectionHtml = `    <section${autoAnimateAttr}${transitionAttrs}${bgAttrs} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${elementsHtml}\n${footerHtml}\n${gridHtml}\n      ${notes}\n    </section>`
 
       // Vertical slides support: if slide has children, wrap in a vertical section stack
       if (slide.children && slide.children.length > 0) {
@@ -89,12 +115,13 @@ function generateRevealHTML(presentation) {
           .map((child) => {
             const childBg = getBackgroundAttrs(child.background)
             const childAutoAnimate = child.autoAnimate ? ' data-auto-animate' : ''
+            const childTransitionAttrs = getSlideTransitionAttrs(child)
             const childNotesText = getSlideNotes(child)
             const childNotes = childNotesText
               ? `<aside class="notes">${escapeHtml(childNotesText)}</aside>`
               : ''
             const childElements = renderSlideElements(child, { forPrint: false })
-            return `    <section${childAutoAnimate}${childBg} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${childElements}\n      ${childNotes}\n    </section>`
+            return `    <section${childAutoAnimate}${childTransitionAttrs}${childBg} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${childElements}\n      ${childNotes}\n    </section>`
           })
           .join('\n')
         return `  <section>\n${sectionHtml}\n${childSections}\n  </section>`
@@ -186,6 +213,13 @@ ${slidesHtml}
       // Live presenter: connect Socket.IO and broadcast navigation
       var liveRoom = params.get('live');
       if (liveRoom) {
+        var presenterToken = '';
+        try {
+          var launchCtx = JSON.parse(window.name || '{}');
+          if (launchCtx && launchCtx.roomCode === liveRoom && launchCtx.presenterToken) {
+            presenterToken = launchCtx.presenterToken;
+          }
+        } catch (e) {}
         var script = document.createElement('script');
         script.src = '/vendor/socket.io/socket.io.min.js';
         script.onload = function() {
@@ -194,7 +228,8 @@ ${slidesHtml}
             sock.emit('join-room', {
               roomId: liveRoom,
               role: 'presenter',
-              presentationId: '${presentation.id || ''}'
+              presentationId: '${presentation.id || ''}',
+              presenterToken: presenterToken
             });
             // Show live indicator
             var badge = document.createElement('div');
@@ -204,6 +239,9 @@ ${slidesHtml}
             style.textContent = '@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.3}}';
             document.head.appendChild(style);
             document.body.appendChild(badge);
+          });
+          sock.on('join-error', function(payload) {
+            alert((payload && payload.message) || 'Presenter access denied');
           });
           // Broadcast slide changes
           Reveal.on('slidechanged', function(event) {
@@ -252,9 +290,11 @@ ${slidesHtml}
 function getBackgroundAttrs(bg) {
   if (!bg) return ''
   if (bg.type === 'color' && bg.color) return ` data-background-color="${bg.color}"`
-  if (bg.type === 'image' && bg.image)
-    return ` data-background-image="${absoluteSrc(bg.image)}" data-background-size="${bg.size || 'cover'}" data-background-position="${bg.position || 'center'}"`
-  if (bg.type === 'gradient' && bg.gradient) return ` data-background-gradient="${bg.gradient}"`
+  const imageSrc = bg.type === 'image' ? bg.image || bg.src : ''
+  if (imageSrc)
+    return ` data-background-image="${absoluteSrc(imageSrc)}" data-background-size="${bg.size || 'cover'}" data-background-position="${bg.position || 'center'}"`
+  const gradient = formatGradientCss(bg)
+  if (gradient) return ` data-background-gradient="${gradient}"`
   return ''
 }
 
@@ -279,9 +319,10 @@ function downloadHTML(presentation) {
 function getBgPrintStyle(bg) {
   if (!bg || bg.type === 'none') return 'background-color:#1e1e2e;'
   if (bg.type === 'color') return `background-color:${bg.color || '#1e1e2e'};`
-  if (bg.type === 'gradient') return `background:${bg.gradient || '#1e1e2e'};`
-  if (bg.type === 'image' && bg.image) {
-    const src = absoluteSrc(bg.image)
+  if (bg.type === 'gradient') return `background:${formatGradientCss(bg) || '#1e1e2e'};`
+  const imageSrc = bg.type === 'image' ? bg.image || bg.src : ''
+  if (imageSrc) {
+    const src = absoluteSrc(imageSrc)
     return `background-image:url('${src}');background-size:${bg.size || 'cover'};background-position:${bg.position || 'center'};`
   }
   return 'background-color:#1e1e2e;'

@@ -1,0 +1,209 @@
+# PPTX Import Fidelity Report
+
+**Phase:** Phase 7 — Full Fidelity PPTX Import
+**Generated:** 2026-04-27
+**Test Suite:** `server/services/pptx-import/`
+
+## Test Suite Summary
+
+| Test File | Tests | Status |
+|-----------|-------|--------|
+| `mapper.test.js` | 102 | ✅ Pass |
+| `geometry.test.js` | 7 | ✅ Pass |
+| `geometry-drift.test.js` | 5 | ✅ Pass |
+| `property-mapping.test.js` | 5 | ✅ Pass |
+| `group-transform.test.js` | 3 | ✅ Pass |
+| `generated-fixtures.test.js` | 3 | ✅ Pass |
+| `pptx-import-e2e-flow.test.js` | 5 | ✅ Pass |
+| `pptx-import.test.js` (route) | 2 | ✅ Pass |
+| `pptx-export.test.js` | 1 | ✅ Pass |
+| `chart-output-to-navslides-mapper.test.js` | 2 | ✅ Pass |
+| `import-fidelity-properties.test.jsx` | 2 | ✅ Pass |
+| **Total** | **130+** | **✅ All Pass** |
+
+## 2026-04-27 Coordinate Fidelity Hardening Update
+
+- Added `server/services/pptx-import/geometry.js` as canonical numeric/affine
+  normalization layer for import geometry.
+- Mapper now uses nullish-safe coordinate reads (`0` stays valid) instead of
+  `||` fallbacks for critical geometry paths.
+- Line import now normalizes absolute/global endpoints into local wrapper
+  endpoints deterministically.
+- Image crop import now standardizes to editor-native crop model:
+  `imageW/imageH/imageOffsetX/imageOffsetY`; original crop ratios preserved in
+  `_pptxImportMeta.cropData`.
+- Group flattening moved to matrix-based transform path; rotated/flipped nested
+  groups map through corner-based bounds with stable z-order.
+- Corpus harness extended with:
+  - `geometryDrift.maxPx`, `geometryDrift.medianPx`, `geometryDrift.byType`
+  - `propertyCoverage.overall`, `propertyCoverage.byType`
+  - `elementCount.sourceByType`, `elementCount.navByType`
+- Strict per-type gates added for generated fixture decks:
+  - text/shape/line/image/table max drift <= 3px
+  - group max drift <= 5px
+  - table/chart property coverage >= 0.8
+- Added focused Playwright flow `tests/e2e/pptx-import-fidelity.spec.js`
+  (import -> bbox audit -> property edit -> save/reload persistence).
+
+## Coverage by Phase
+
+| Phase | Feature | Test Count | Status |
+|-------|---------|-----------|--------|
+| Phase 0 | Sanitizer hardening | 17 | ✅ |
+| Phase 1 | Rich HTML/text preservation | 37 | ✅ |
+| Phase 2 | Shape, line, image fidelity | 21 | ✅ |
+| Phase 3 | Table full support | 9 | ✅ |
+| Phase 4 | Chart import | 9 | ✅ |
+| Phase 5 | Slide metadata | 6 | ✅ |
+| Phase 6 | Group/SmartArt flattening | 11 | ✅ |
+| Phase 7 | Fidelity harness + e2e | 5 | ✅ |
+
+## Fidelity Tester
+
+**File:** `server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tester.js`
+
+### Metrics
+
+1. **Semantic Fidelity** (pptxtojson → NavSlides)
+   - Measures how much of pptxtojson's data is captured in NavSlides schema
+   - Per-element: position, size, fill, stroke, content, type
+   - Per-category: text, shape, line, image, table, chart, group, diagram
+
+2. **Round-trip Stability** (NavSlides → PPTX → NavSlides)
+   - Optional via `--roundtrip`; `--strict` implies round-trip validation
+   - Uses the production server export pipeline (`server/utils/server-export.js`) for validation
+   - `--allow-fallback` keeps a development fallback path for non-strict runs; strict mode requires production export
+   - Uses fingerprint + proximity matching with per-type breakdown and mismatch diagnostics; only exact/proximity matches count as stable, `type-only` stays diagnostic
+
+### CLI Usage
+
+```bash
+# Run against default corpus; falls back to ./PPTX when server/data/test-corpus is empty
+npm run test:corpus
+
+# Run strict production round-trip validation
+node server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tester.js ./PPTX --roundtrip --strict
+
+# Run with development fallback (minimal exporter allowed when production fails)
+node server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tester.js ./PPTX --roundtrip --allow-fallback
+
+# Run against a specific directory
+node server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tester.js ./path/to/corpus
+```
+
+### Final Corpus Result
+
+`npm run test:corpus` on 2026-04-25 used the checked-in `PPTX/` corpus:
+
+| Corpus | Files | Passed | Avg Semantic Fidelity |
+|--------|-------|--------|-----------------------|
+| `PPTX/` | 4 | 4 | 97.0% |
+
+Round-trip validation status (2026-04-25):
+
+| Mode | Export Method | Avg Round-trip Stability |
+|------|---------------|--------------------------|
+| `--roundtrip --allow-fallback` | production (fallback available) | 99.0% |
+| `--roundtrip --strict` | production only | 99.0% |
+
+Strict run guarantees:
+- `--strict` always runs round-trip validation (even if `--roundtrip` is omitted)
+- Export method is `production` for every deck
+- Only exact/proximity matches count as stable; `type-only` remains diagnostic
+- Fails if production export is unavailable
+- Fails if average semantic fidelity drops below 95%
+- Fails if average round-trip stability drops below 98%
+
+### Adding Corpus Files
+
+Place `.pptx` files in `server/data/test-corpus/`. Recommended naming convention:
+
+```
+server/data/test-corpus/
+├── text-rich-001.pptx
+├── shape-heavy-001.pptx
+├── image-heavy-001.pptx
+├── table-complex-001.pptx
+├── chart-multi-series-001.pptx
+├── smartart-diagram-001.pptx
+├── mixed-content-001.pptx
+└── large-deck-100slides.pptx
+```
+
+### Fidelity Targets
+
+| Category | Semantic Target | Round-trip Target |
+|----------|----------------|-------------------|
+| Overall | ≥ 95% | ≥ 98% |
+| Text | ≥ 95% | ≥ 99% |
+| Shape | ≥ 95% | ≥ 99% |
+| Line | ≥ 95% | ≥ 99% |
+| Image | ≥ 90% | ≥ 99% |
+| Table | ≥ 90% | ≥ 95% |
+| Chart | ≥ 85% | ≥ 90% |
+| Group | ≥ 90% | ≥ 95% |
+| SmartArt/Diagram | ≥ 80% | ≥ 90% |
+
+## Known Gaps
+
+### Semantic Fidelity Gaps
+
+- **Chart**: Series metadata (legend, axis titles) not fully mapped
+- **SmartArt/Diagram**: Complex nested layouts may lose structural hierarchy
+- **Group**: Rotation and flip transforms applied during flattening; nested rotation compositing may differ from PowerPoint rendering
+- **Table**: Cell border styles beyond solid/dashed not preserved (pattern/gradient fills)
+- **Image**: Crop data from `element.rect` (EMUs, 0-1000 scale) mapped to 0-1 ratios; precision loss possible
+
+### Round-trip Gaps
+
+- Round-trip pipeline now runs on server-side production export modules; strict validation requires production export and counts only exact/proximity matches as stable. Residual drift risk is concentrated in parser representation changes (e.g., vector/raster remapping), not minimal-export feature loss.
+- Corpus size remains small (`n=4`), so scores should be re-verified as new decks are added.
+- Strict mode enforces production path plus average semantic/round-trip thresholds, but does not yet enforce per-type minimums as hard fail criteria.
+
+## Phase 0–6 Implementation Summary
+
+### Phase 0: Sanitizer Hardening
+- Added `SAFE_STYLE_PROPS`: `text-decoration`, `vertical-align`, `letter-spacing`, `text-shadow`, `background`
+- Added `ALLOWED_TAGS`: `a`, `s`, `strike`, `del`, `sub`, `sup`
+- Added `ALLOWED_ATTR`: `href` with protocol whitelist (`https:`, `http:`, `mailto:`, `tel:`)
+- `validateHref()` strips invalid protocol hrefs
+
+### Phase 1: Rich HTML Preservation
+- `export-pptx-html-parser.js`: Added `strike`, `sub`, `sup`, `charSpacing` parsing
+- `export-pptx-text-runs.js`: Built `buildRunOptions()` supporting all 8 text run properties
+- Hyperlinks preserved via `<a href>` tags with safe protocol validation
+
+### Phase 2: Shape/Line/Image Enhancement
+- `colorValue()`: handles `{type:'color'}/{type:'gradient'}/{type:'none'}/{type:'pattern'}` discriminated union
+- `mapImage()`: `objectFit`, `flipH`, `flipV`, `borderColor`, `borderWidth`, `cropData`
+- `mapShape()`: real `x1/y1/x2/y2` coords from pptxtojson, improved arrow detection
+- `shapeName()`: 15+ shape types, `arrow` checked before `line` to avoid misclassification
+
+### Phase 3: Table Full Support
+- `mapTable()`: full rewrite with `mergedCells`, `cellStyles` (textColors, bgColors, isBold, aligns, vAligns), `colWidths`, `rowHeights`
+- `vMerge`/`hMerge` continuation cells (rowSpan=0) properly skipped
+- Per-cell text color, background, bold, alignment, vertical alignment preserved
+
+### Phase 4: Chart Import
+- `chart-output-to-navslides-mapper.js`: `mapChartType()`, `mapCommonChart()`, `mapScatterChart()`
+- Handles both pptxtojson native `[x,y]` parallel arrays and CommonChart format
+- `_pptxChartMeta` sidecar stores original type, barDir, holeSize, marker, grouping
+
+### Phase 5: Slide Metadata
+- Background: `color`/`gradient`/`image` type preserved
+- Transition: `fade`/`slide`/`none` with duration and direction
+- Speaker notes: sanitized HTML preserved
+- `_pptxMeta` sidecar: `originalSize`, `usedFonts`, `themeColors`
+- Presentation `resolution` field preserved
+
+### Phase 6: Group/SmartArt Flattening
+- `flattenGroupElement()`: recursive with `MAX_GROUP_DEPTH=10`, absolute coordinate transform, rotation matrix, flip transform
+- `flattenDiagramElement()`: converts up to 50 diagram nodes to individual shapes
+- Depth exceeding `MAX_GROUP_DEPTH` produces a placeholder with `importPlaceholderType: 'grouped-complex'`
+
+## Next Steps
+
+1. **Expand corpus** → add at least 5-10 additional real decks to reduce variance.
+2. **Track per-type gates** → optionally enforce per-type round-trip targets in strict mode.
+3. **Address remaining semantic gaps** → chart metadata and SmartArt fidelity.
+4. **Performance benchmarks** → measure 100-slide deck import + round-trip runtime.

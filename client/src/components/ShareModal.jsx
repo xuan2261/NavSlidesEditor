@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link2, X, Copy, Trash2, Plus, Lock, Clock, Eye, Loader2, Check } from 'lucide-react'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 
 export default function ShareModal({ presentationId, onClose }) {
+  const [isOpen, setIsOpen] = useState(true)
   const [shares, setShares] = useState([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -80,13 +81,24 @@ export default function ShareModal({ presentationId, onClose }) {
   const embedCode = (token) =>
     `<iframe src="${shareUrl(token)}" width="960" height="540" frameborder="0" allowfullscreen></iframe>`
 
-  useEscapeClose(onClose)
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -100,7 +112,7 @@ export default function ShareModal({ presentationId, onClose }) {
           <h3 id="share-modal-title" className="m-0 flex items-center gap-2 text-base text-text-primary">
             <Link2 size={18} /> Share Presentation
           </h3>
-          <Button variant="ghost" onClick={onClose} className="p-1" aria-label="Close">
+          <Button variant="ghost" onClick={handleClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>

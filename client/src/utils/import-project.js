@@ -80,8 +80,11 @@ export function rewriteMediaUrls(presentation, urlMap) {
 }
 
 export async function rehydrateImportedPresentation(api, parsed) {
+  const warnings = []
   let finalPresentation = parsed.presentation
-  if (parsed.type !== 'zip' || !parsed.mediaFiles?.length) return finalPresentation
+  if (parsed.type !== 'zip' || !parsed.mediaFiles?.length) {
+    return { presentation: finalPresentation, warnings }
+  }
 
   const urlMap = {}
   for (const media of parsed.mediaFiles) {
@@ -92,9 +95,10 @@ export async function rehydrateImportedPresentation(api, parsed) {
       urlMap[media.originalUrl] = uploadedUrl
     } catch (error) {
       console.warn('Failed to upload media:', media.archivePath, error)
+      warnings.push(`Failed to upload media: ${media.archivePath}`)
     }
   }
 
   if (Object.keys(urlMap).length > 0) finalPresentation = rewriteProjectMediaUrls(finalPresentation, urlMap)
-  return finalPresentation
+  return { presentation: finalPresentation, warnings }
 }

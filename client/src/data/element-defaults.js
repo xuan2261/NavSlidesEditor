@@ -122,6 +122,23 @@ svg.selectAll('circle').data(data).join('circle')
     cellBgColor: 'transparent',
     textColor: '#ffffff',
     fontSize: 14,
+    // Phase 3: Extended schema
+    headerTextColor: '#1e40af',
+    headerIsBold: true,
+    borderStyle: 'solid', // 'solid' | 'dashed' | 'dotted'
+    // Per-cell styling (2D arrays indexed [row][col], null = inherit default)
+    cellStyles: {
+      textColors: [],   // [[null, '#ff0000', null], ...]
+      bgColors: [],      // [[null, '#ffff00', null], ...]
+      isBold: [],        // [[false, true, false], ...]
+      aligns: [],        // [['left', 'center', 'right'], ...]
+      vAligns: [],       // [['top', 'middle', 'bottom'], ...]
+    },
+    // Merged cells
+    mergedCells: [],     // [{ row: 0, col: 1, rowSpan: 1, colSpan: 2 }]
+    // Sizing
+    colWidths: [],
+    rowHeights: [],
   },
   icon: {
     width: 80,
@@ -182,6 +199,64 @@ svg.selectAll('circle').data(data).join('circle')
     fillOverride: null,
     strokeOverride: null,
   },
+  game: {
+    type: 'game',
+    width: 640,
+    height: 480,
+    zIndex: 5,
+    backgroundColor: '#1a1a2e',
+    accentColor: '#6366f1',
+    fontFamily: 'sans-serif',
+    showSoundEffects: true,
+    gameStatus: 'setup',
+    'name-picker': {
+      pickerMode: 'wheel',
+      items: ['Học sinh 1', 'Học sinh 2', 'Học sinh 3', 'Học sinh 4',
+              'Học sinh 5', 'Học sinh 6', 'Học sinh 7', 'Học sinh 8'],
+      wheelSegments: 8,
+      wheelColors: ['#FF5722', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#00BCD4', '#FF9800', '#795548'],
+      diceCount: 2,
+      weighted: false,
+      excludeAfterPick: true,
+      animationDuration: 2500,
+    },
+    'hot-potato': {
+      title: 'Hot Potato Quiz',
+      questions: [],
+      currentQuestion: 0,
+      allowLate: false,
+      showLeaderboard: true,
+      shuffleQuestions: false,
+    },
+    'jeopardy': {
+      title: 'Jeopardy',
+      teams: [],
+      categories: [],
+      questions: {},
+      dailyDouble: [],
+    },
+    'four-corners': {
+      cornerCount: 4,
+      eliminateMode: 'wrong',
+      showTimer: true,
+    },
+    'relay-race': {
+      questionsPerRound: 4,
+      shuffleTeams: true,
+      passOnWrong: true,
+    },
+    'trivia-champ': {
+      rounds: [],
+      lightningRound: { enabled: false, timePerQ: 10 },
+      jackpotRound: { enabled: false, multiplier: 2 },
+    },
+    'scattergories': {
+      timePerRound: 60,
+      letterMode: 'random',
+      categories: [],
+      scoring: 'unique',
+    },
+  },
 }
 
 // Default position for each type (can be overridden)
@@ -203,4 +278,5 @@ export const DEFAULT_POSITIONS = {
   drawing: { x: 0, y: 0 },
   line: { x: 100, y: 200 },
   svg: { x: 200, y: 100 },
+  game: { x: 160, y: 120 },
 }

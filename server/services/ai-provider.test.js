@@ -1,10 +1,19 @@
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
+import dns from 'dns'
 import { callAI } from './ai-provider.js'
 
 // Mock global fetch
 global.fetch = vi.fn()
 
 describe('AI Provider', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('should throw if no config provided', async () => {
     await expect(callAI(null, '', '')).rejects.toThrow('AI not configured')
   })
@@ -60,6 +69,31 @@ describe('AI Provider', () => {
     const config = { provider: 'openai', apiKey: 'bad-key' }
     await expect(callAI(config, 'system', 'user')).rejects.toThrow(
       'OpenAI API Error: Invalid API key'
+    )
+  })
+
+  it('blocks localhost custom endpoints', async () => {
+    const config = { provider: 'custom', customEndpoint: 'http://localhost:11434/v1' }
+    await expect(callAI(config, 'system', 'user')).rejects.toThrow(
+      'Private or local endpoints are blocked'
+    )
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  it('allows public custom endpoints and appends chat/completions', async () => {
+    vi.spyOn(dns.promises, 'lookup').mockResolvedValue([{ address: '8.8.8.8' }])
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: 'Custom OK' } }] }),
+    })
+
+    const config = { provider: 'custom', customEndpoint: 'https://api.example.com/v1' }
+    const result = await callAI(config, 'system', 'user')
+
+    expect(result).toBe('Custom OK')
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://api.example.com/v1/chat/completions',
+      expect.objectContaining({ method: 'POST' })
     )
   })
 })

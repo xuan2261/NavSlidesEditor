@@ -91,7 +91,17 @@ copyDirSync(sharedDir, targetShared, (src) => {
 rmSync(tmpDir)
 
 // ── Step 6: Verify critical modules ─────────────────────────────────────────
-const critical = ['express', 'cors', 'fs-extra', 'multer', 'uuid', 'revealjs-shared']
+const critical = [
+  'express',
+  'cors',
+  'fs-extra',
+  'jszip',
+  'multer',
+  'pptx2json',
+  'pptxtojson',
+  'revealjs-shared',
+  'uuid',
+]
 const missing = critical.filter((m) => !fs.existsSync(path.join(serverNM, m)))
 if (missing.length > 0) {
   console.error(`✗ Missing critical modules: ${missing.join(', ')}`)

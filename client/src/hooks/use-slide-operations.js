@@ -15,7 +15,7 @@ import {
 export function useSlideOperations({
   presentation,
   setPresentation,
-  currentSlideIndex,
+  currentSlideIndex: _currentSlideIndex,
   setCurrentSlideIndex,
   currentSlideIndexRef,
   selectedElementIdsRef,
@@ -39,7 +39,7 @@ export function useSlideOperations({
             i === currentSlideIndexRef.current
               ? {
                   ...s,
-                  elements: s.elements.map((el) => (map[el.id] ? { ...el, ...map[el.id] } : el)),
+                  elements: (s.elements || []).map((el) => (map[el.id] ? { ...el, ...map[el.id] } : el)),
                 }
               : s
           ),
@@ -53,21 +53,34 @@ export function useSlideOperations({
   const deleteSelectedElements = useCallback(() => {
     const ids = selectedElementIdsRef.current
     if (!ids.length) return
+    const currentSlide = presentation?.slides?.[currentSlideIndexRef.current]
+    const lockedIds = new Set(
+      (currentSlide?.elements || [])
+        .filter((el) => ids.includes(el.id) && el.locked)
+        .map((el) => el.id)
+    )
+    const deletableIds = ids.filter((id) => !lockedIds.has(id))
+    if (!deletableIds.length) return
     setPresentation((prev) => {
       if (!prev) return prev
       return {
         ...prev,
         slides: prev.slides.map((s, i) =>
           i === currentSlideIndexRef.current
-            ? { ...s, elements: s.elements.filter((el) => !ids.includes(el.id)) }
+            ? { ...s, elements: (s.elements || []).filter((el) => !deletableIds.includes(el.id)) }
             : s
         ),
       }
     })
-    setSelectedElementIds([])
-    setEditingElementId(null)
-    editingElementIdRef.current = null
+    if (lockedIds.size) {
+      setSelectedElementIds(ids.filter((id) => lockedIds.has(id)))
+    } else {
+      setSelectedElementIds([])
+      setEditingElementId(null)
+      editingElementIdRef.current = null
+    }
   }, [
+    presentation,
     setPresentation,
     selectedElementIdsRef,
     currentSlideIndexRef,
@@ -89,7 +102,7 @@ export function useSlideOperations({
           i === currentSlideIndexRef.current
             ? {
                 ...s,
-                elements: s.elements.map((el) => (ids.includes(el.id) ? { ...el, groupId } : el)),
+                elements: (s.elements || []).map((el) => (ids.includes(el.id) ? { ...el, groupId } : el)),
               }
             : s
         ),
@@ -115,7 +128,7 @@ export function useSlideOperations({
           i === currentSlideIndexRef.current
             ? {
                 ...s,
-                elements: s.elements.map((el) =>
+                elements: (s.elements || []).map((el) =>
                   groupIds.has(el.groupId) ? { ...el, groupId: undefined } : el
                 ),
               }
@@ -133,7 +146,7 @@ export function useSlideOperations({
       setPresentation((prev) => {
         if (!prev) return prev
         const slide = prev.slides[currentSlideIndexRef.current]
-        const els = slide.elements.filter((el) => ids.includes(el.id))
+        const els = (slide?.elements || []).filter((el) => ids.includes(el.id))
         const upd = {}
         if (type === 'left') {
           const v = Math.min(...els.map((e) => e.x))
@@ -200,7 +213,7 @@ export function useSlideOperations({
             i === currentSlideIndexRef.current
               ? {
                   ...sl,
-                  elements: sl.elements.map((el) => (upd[el.id] ? { ...el, ...upd[el.id] } : el)),
+                  elements: (sl.elements || []).map((el) => (upd[el.id] ? { ...el, ...upd[el.id] } : el)),
                 }
               : sl
           ),
@@ -212,7 +225,7 @@ export function useSlideOperations({
 
   // ── Slide CRUD ─────────────────────────────────────────────────────────────
   const addSlide = useCallback(
-    (templateKey = null) => {
+    (templateKey = null, afterIndex) => {
       const template =
         templateKey && SLIDE_TEMPLATES[templateKey] ? SLIDE_TEMPLATES[templateKey] : null
       const baseElements = template
@@ -230,22 +243,26 @@ export function useSlideOperations({
                 '<h2 style="text-align: center">New Slide</h2><p style="text-align: center">Double-click to edit</p>',
             },
           ]
-      const referenceSlide =
-        presentation?.slides?.[currentSlideIndex] ||
-        presentation?.slides?.[presentation.slides.length - 1]
-      const inheritedBg = referenceSlide?.background
-        ? { ...referenceSlide.background }
-        : { type: 'color', color: '#1e1e2e' }
-      const newSlide = {
-        id: crypto.randomUUID(),
-        elements: baseElements,
-        notes: '',
-        background: inheritedBg,
-      }
-      setPresentation((prev) => ({ ...prev, slides: [...prev.slides, newSlide] }))
-      setCurrentSlideIndex(presentation.slides.length)
+      setPresentation((prev) => {
+        const insertAt = afterIndex !== undefined ? afterIndex + 1 : prev.slides.length
+        const currentIdx = afterIndex !== undefined ? afterIndex : currentSlideIndexRef.current
+        const referenceSlide = prev.slides[currentIdx] || prev.slides[prev.slides.length - 1]
+        const inheritedBg = referenceSlide?.background
+          ? { ...referenceSlide.background }
+          : { type: 'color', color: '#1e1e2e' }
+        const newSlide = {
+          id: crypto.randomUUID(),
+          elements: baseElements,
+          notes: '',
+          background: inheritedBg,
+        }
+        const slides = [...prev.slides]
+        slides.splice(insertAt, 0, newSlide)
+        setCurrentSlideIndex(insertAt)
+        return { ...prev, slides }
+      })
     },
-    [presentation, currentSlideIndex, setPresentation, setCurrentSlideIndex]
+    [setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
   )
 
   const deleteSlide = useCallback(
@@ -264,24 +281,24 @@ export function useSlideOperations({
     (index) => {
       setPresentation((prev) => {
         if (!prev) return prev
-        const result = duplicateSlidesAtIndices(prev.slides, [index])
+        const result = duplicateSlidesAtIndices(prev.slides, [index], () => crypto.randomUUID(), currentSlideIndexRef.current)
         setCurrentSlideIndex(result.currentSlideIndex)
         return { ...prev, slides: result.slides }
       })
     },
-    [setPresentation, setCurrentSlideIndex]
+    [setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
   )
 
   const duplicateSlides = useCallback(
     (indices) => {
       setPresentation((prev) => {
         if (!prev) return prev
-        const result = duplicateSlidesAtIndices(prev.slides, indices)
+        const result = duplicateSlidesAtIndices(prev.slides, indices, () => crypto.randomUUID(), currentSlideIndexRef.current)
         setCurrentSlideIndex(result.currentSlideIndex)
         return { ...prev, slides: result.slides }
       })
     },
-    [setPresentation, setCurrentSlideIndex]
+    [setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
   )
 
   const deleteSlides = useCallback(

@@ -86,6 +86,20 @@ test.describe('Properties Panel', () => {
     await expect(xInput).toHaveValue('200')
   })
 
+  test('clearing numeric input does not persist NaN', async ({ page, request }) => {
+    await editorPage.selectElement(0)
+    const panel = page.locator('.properties-panel')
+    const xInput = panel.locator('input[type="number"]').first()
+
+    await xInput.fill('')
+    await xInput.blur()
+    await editorPage.waitForAutoSave()
+
+    const saved = await apiGetPresentation(request, presId)
+    const element = saved.slides[0].elements.find((el) => el.id === 'el-shape-1')
+    expect(Number.isFinite(element.x)).toBe(true)
+  })
+
   test('speaker notes save through the canonical notes field', async ({ page, request }) => {
     const notesInput = page.locator('textarea[placeholder="Add speaker notes here..."]')
 

@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, ChevronLeft, ChevronRight, CheckSquare, Square, Plus } from 'lucide-react'
 import { Button } from '../../components/ui'
-import { isBackdropClick, useEscapeClose } from '../../lib/utils'
+import { isBackdropClick } from '../../lib/utils'
 
 /**
  * Lightweight slide thumbnail renderer — avoids full SlideCanvas
@@ -137,7 +137,20 @@ export default function TemplatePreview({
   const [insertPosition, setInsertPosition] = useState('after') // 'after' or 'end'
 
   const slides = template?.slides || []
-  useEscapeClose(onClose)
+  const [isOpen, setIsOpen] = useState(true)
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!isOpen) return null
 
   if (!template) return null
 
@@ -162,7 +175,7 @@ export default function TemplatePreview({
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -192,7 +205,7 @@ export default function TemplatePreview({
               {slides.length} slides • {template.category} • {template.description}
             </p>
           </div>
-          <Button variant="icon" onClick={onClose} aria-label="Close">
+          <Button variant="icon" onClick={handleClose} aria-label="Close">
             <X size={20} />
           </Button>
         </div>
@@ -333,7 +346,7 @@ export default function TemplatePreview({
                 ))}
               </div>
               <div className="flex gap-3">
-                <Button variant="secondary" onClick={onClose}>
+                <Button variant="secondary" onClick={handleClose}>
                   Cancel
                 </Button>
                 {onInsertSlides && (

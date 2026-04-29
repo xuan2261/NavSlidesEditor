@@ -1,15 +1,22 @@
 import { ColorPicker } from '../../components/ui'
+import { clampNumber } from '../../utils/number-input'
+import GameProperties from './game-properties.jsx'
 
 /**
- * Misc element properties: callout, icon, qrcode, drawing, line/arrow, svg, html, latex, markdown.
+ * Misc element properties: callout, icon, qrcode, drawing, line/arrow, svg, html, latex, markdown, game.
  */
 export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLatex }) {
   const t = element.type
+
+  if (t === 'game') {
+    return <GameProperties element={element} onUpdate={onUpdate} onDelete={() => {}} />
+  }
 
   if (t === 'html')
     return (
       <div className="mb-2.5">
         <button
+          data-testid="prop-html-edit"
           className="btn btn-secondary w-full justify-center text-xs mb-1.5"
           onClick={onEditHtml}
         >
@@ -25,6 +32,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
     return (
       <div className="mb-2.5">
         <button
+          data-testid="prop-latex-edit"
           className="btn btn-secondary w-full justify-center text-xs mb-1.5"
           onClick={onEditLatex}
         >
@@ -43,6 +51,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
           Markdown Content
         </div>
         <textarea
+          data-testid="prop-markdown-content"
           value={element.content || ''}
           onChange={(e) => onUpdate({ content: e.target.value })}
           className="w-full min-h-[120px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] font-mono resize-y box-border"
@@ -66,7 +75,13 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
                 type={type}
                 {...extra}
                 value={element[k] || d}
-                onChange={(e) => onUpdate({ [k]: Number(e.target.value) })}
+                onChange={(e) => {
+                  const min = extra?.min ?? null
+                  const max = extra?.max ?? null
+                  const value = clampNumber(e.target.value, min, max, null)
+                  if (value === null) return
+                  onUpdate({ [k]: value })
+                }}
               />
             </div>
           ))}
@@ -108,7 +123,11 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
               max="4"
               step="0.5"
               value={element.iconStrokeWidth || 2}
-              onChange={(e) => onUpdate({ iconStrokeWidth: Number(e.target.value) })}
+              onChange={(e) => {
+                const value = clampNumber(e.target.value, 0.5, 4, null)
+                if (value === null) return
+                onUpdate({ iconStrokeWidth: value })
+              }}
             />
           </div>
         </div>
@@ -184,7 +203,11 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
               min="1"
               max="20"
               value={element.strokeWidth || 3}
-              onChange={(e) => onUpdate({ strokeWidth: Number(e.target.value) })}
+              onChange={(e) => {
+                const value = clampNumber(e.target.value, 1, 20, null)
+                if (value === null) return
+                onUpdate({ strokeWidth: value })
+              }}
             />
           </div>
         </div>
@@ -216,7 +239,11 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
               min="1"
               max="20"
               value={element.strokeWidth || 2}
-              onChange={(e) => onUpdate({ strokeWidth: Number(e.target.value) })}
+              onChange={(e) => {
+                const value = clampNumber(e.target.value, 1, 20, null)
+                if (value === null) return
+                onUpdate({ strokeWidth: value })
+              }}
             />
           </div>
         </div>

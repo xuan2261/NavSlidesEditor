@@ -1,15 +1,30 @@
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 
 export default function CSSEditorModal({ customCSS, onUpdate, onClose }) {
-  useEscapeClose(onClose)
+  const [isOpen, setIsOpen] = useState(true)
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -21,7 +36,7 @@ export default function CSSEditorModal({ customCSS, onUpdate, onClose }) {
       >
         <div className="px-4 py-3 border-b border-white/10 flex justify-between items-center">
           <h2 id="css-editor-modal-title" className="font-semibold text-sm text-[#e0e0e0]">Custom CSS</h2>
-          <Button variant="ghost" onClick={onClose} className="p-1" aria-label="Close">
+          <Button variant="ghost" onClick={handleClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>
@@ -41,7 +56,7 @@ export default function CSSEditorModal({ customCSS, onUpdate, onClose }) {
           <Button variant="secondary" onClick={() => onUpdate('')}>
             Clear
           </Button>
-          <Button variant="primary" onClick={onClose}>
+          <Button variant="primary" onClick={handleClose}>
             Done
           </Button>
         </div>

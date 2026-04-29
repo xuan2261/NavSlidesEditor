@@ -11,6 +11,7 @@ import {
   ArrowDownRight,
 } from 'lucide-react'
 import { Button } from './ui/Button'
+import { sanitizeRichTextHtml } from '../utils/content-safety'
 
 const DEFAULT_SLIDE_WIDTH = 960
 const DEFAULT_SLIDE_HEIGHT = 540
@@ -245,7 +246,7 @@ export default function SlidePanel({
                       <div
                         className="slide-text-content ProseMirror-preview"
                         style={getPreviewTextStyle(el, slideWidth)}
-                        dangerouslySetInnerHTML={{ __html: el.content || '' }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(el.content || '') }}
                       />
                     )}
                     {el.type === 'image' && (

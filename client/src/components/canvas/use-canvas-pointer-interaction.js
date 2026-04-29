@@ -1,0 +1,289 @@
+import { useCallback, useEffect } from 'react'
+import { calculateGuides } from '../../utils/smartGuides'
+
+/**
+ * Pure crop math — extracted to module level for testability.
+ * Converts pixel delta to fractional crop coordinates, enforces min/max bounds.
+ */
+export function applyCropHandle(handle, startCrop, dx, dy, elW, elH) {
+  const fdx = dx / elW
+  const fdy = dy / elH
+  let { x, y, w, h } = startCrop
+  const MIN_CROP = 0.05
+  switch (handle) {
+    case 'nw': {
+      // Clamp: x can't go below MIN_CROP; right edge (x+w) can't go below x+MIN_CROP
+      const nx = Math.max(x + fdx, MIN_CROP)
+      const ny = Math.max(y + fdy, MIN_CROP)
+      const nw = (x + w) - nx; const nh = (y + h) - ny
+      x = nx; y = ny; w = nw; h = nh
+      break
+    }
+    case 'n': {
+      const ny = Math.max(y + fdy, MIN_CROP)
+      h = (y + h) - ny; y = ny
+      break
+    }
+    case 'ne': {
+      const ny = Math.max(y + fdy, MIN_CROP)
+      h = (y + h) - ny; y = ny
+      w = Math.max(MIN_CROP, w + fdx)
+      break
+    }
+    case 'e': w = Math.max(MIN_CROP, w + fdx); break
+    case 'se': w = Math.max(MIN_CROP, w + fdx); h = Math.max(MIN_CROP, h + fdy); break
+    case 's': h = Math.max(MIN_CROP, h + fdy); break
+    case 'sw': {
+      const nx = Math.max(x + fdx, MIN_CROP)
+      w = (x + w) - nx; x = nx
+      h = Math.max(MIN_CROP, h + fdy)
+      break
+    }
+    case 'w': {
+      const nx = Math.max(x + fdx, MIN_CROP)
+      w = (x + w) - nx; x = nx
+      break
+    }
+  }
+  x = Math.max(0, x); y = Math.max(0, y)
+  w = Math.min(w, 1 - x); h = Math.min(h, 1 - y)
+  return { x, y, w, h }
+}
+
+/**
+ * use-canvas-pointer-interaction — pointer event routing for element drag/resize/rotate.
+ * Manages pending drag, active drag, and crop drag state via refs.
+ * Installs document-level mousemove/mouseup listeners.
+ *
+ * Props:
+ *   scaleRef         — ref to current scale
+ *   showGridRef      — ref to showGrid bool
+ *   gridSizeRef      — ref to gridSize number
+ *   smartGuidesRef   — ref to smartGuidesEnabled bool
+ *   slideRef         — ref to current slide
+ *   selectedElementIdsRef — ref to selected element ids
+ *   draggingRef      — ref to active drag state
+ *   pendingDragRef   — ref to pending drag state
+ *   cropDragRef      — ref to crop drag state
+ *   rubberBandRef    — ref to rubber-band state
+ *   suppressCanvasClickRef — ref to suppress-click flag
+ *   onUpdateElement  — (id, changes) => void
+ *   onUpdateElements — (updates[]) => void
+ *   snapToGrid       — (v) => number
+ *   snapWithRef     — (rawX, rawY, w, h, ref, snapFn) => { x, y }
+ *   getRotationAngle — (startEl, mouseX, mouseY, snap) => number
+ *   applyResize      — (handle, startEl, dx, dy) => { x, y, w, h }
+ *   applyResizeAspectRatio — (handle, startEl, updates) => void
+ *   clampToSlide     — (updates, startEl, snapFn, slideW, slideH) => void
+ *   startRubberBand  — (startX, startY) => void
+ *   updateRubberBand — (currentX, currentY) => void
+ *   endRubberBand    — (setRubberBand) => string[]
+ *   applyRubberBandSelection — (hitIds) => void
+ *   rubberBandRef    — ref (passed separately for read access)
+ *   setRubberBand    — React state setter
+ *   setActiveGuides  — (guides) => void
+ *   setCropMode      — React state setter (for crop updates)
+ *   setCropDragRef   — function to update cropDragRef
+ *   forceUpdate      — React forceUpdate
+ *   setSuppressCanvasClick — (bool) => void
+ *   slideW           — slide width
+ *   slideH           — slide height
+ */
+export default function useCanvasPointerInteraction({
+  scaleRef,
+  showGridRef,
+  gridSizeRef,
+  smartGuidesRef,
+  slideRef,
+  selectedElementIdsRef: _selectedElementIdsRef,
+  draggingRef,
+  pendingDragRef,
+  cropDragRef,
+  rubberBandRef,
+  suppressCanvasClickRef: _suppressCanvasClickRef,
+  onUpdateElement,
+  onUpdateElements,
+  snapToGrid,
+  snapWithRef: snapWithRef_,
+  getRotationAngle,
+  applyResize,
+  applyResizeAspectRatio,
+  clampToSlide,
+  startRubberBand: _startRubberBand,
+  updateRubberBand,
+  endRubberBand,
+  applyRubberBandSelection,
+  setRubberBand,
+  setActiveGuides,
+  forceUpdate,
+  setSuppressCanvasClick,
+  setCropMode,
+  slideW,
+  slideH,
+}) {
+  // Crop drag state ref accessor (needed by cropDragRef.current setter below)
+  const setCropDrag = useCallback((handle, startX, startY, startCrop, elW, elH) => {
+    cropDragRef.current = { handle, startX, startY, startCrop, elW, elH }
+  }, [cropDragRef])
+
+  // Install document-level global mouse move/up listeners
+  useEffect(() => {
+    const snap = (v) => snapToGrid(v, showGridRef.current, gridSizeRef.current)
+
+    const onMouseMove = (e) => {
+      // Crop drag
+      if (cropDragRef.current) {
+        const cd = cropDragRef.current
+        const dx = (e.clientX - cd.startX) / scaleRef.current
+        const dy = (e.clientY - cd.startY) / scaleRef.current
+        const newCrop = applyCropHandle(cd.handle, cd.startCrop, dx, dy, cd.elW, cd.elH)
+        setCropMode((prev) => prev ? { ...prev, ...newCrop } : prev)
+        return
+      }
+
+      // Rubber-band selection drag
+      if (rubberBandRef.current) {
+        const canvasEl = document.querySelector('.slide-canvas')
+        if (!canvasEl) return
+        const rect = canvasEl.getBoundingClientRect()
+        const mx = (e.clientX - rect.left) / scaleRef.current
+        const my = (e.clientY - rect.top) / scaleRef.current
+        updateRubberBand(mx, my)
+        setRubberBand({ ...rubberBandRef.current })
+        return
+      }
+
+      // Promote pending → active drag after 4px movement
+      if (pendingDragRef.current && !draggingRef.current) {
+        const px = pendingDragRef.current
+        if (Math.abs(e.clientX - px.startClientX) + Math.abs(e.clientY - px.startClientY) > 4) {
+          draggingRef.current = {
+            type: px.type,
+            handle: px.handle,
+            elementId: px.elementId,
+            startMouseX: px.startMouseX,
+            startMouseY: px.startMouseY,
+            startEl: px.startEl,
+            startEls: px.startEls,
+          }
+          forceUpdate((n) => n + 1)
+        }
+      }
+
+      const drag = draggingRef.current
+      if (!drag) return
+
+      const canvasEl = document.querySelector('.slide-canvas')
+      if (!canvasEl) return
+      const rect = canvasEl.getBoundingClientRect()
+      const mouseX = (e.clientX - rect.left) / scaleRef.current
+      const mouseY = (e.clientY - rect.top) / scaleRef.current
+      const dx = mouseX - drag.startMouseX
+      const dy = mouseY - drag.startMouseY
+
+      if (drag.type === 'move') {
+        if (drag.startEls && drag.startEls.length > 1) {
+          const updates = drag.startEls.map((sel) => ({
+            id: sel.id,
+            x: Math.max(0, Math.min(slideW - sel.width, sel.x + dx)),
+            y: Math.max(0, Math.min(slideH - sel.height, sel.y + dy)),
+          }))
+          onUpdateElements(updates)
+        } else {
+          const rawX = Math.max(0, Math.min(slideW - drag.startEl.width, drag.startEl.x + dx))
+          const rawY = Math.max(0, Math.min(slideH - drag.startEl.height, drag.startEl.y + dy))
+          let newX, newY
+          if (showGridRef.current) {
+            const { x: snappedX, y: snappedY } = snapWithRef_(
+              rawX, rawY, drag.startEl.width, drag.startEl.height,
+              drag.startEl.snapRef || 'ul', snap
+            )
+            newX = Math.max(0, Math.min(slideW - drag.startEl.width, snappedX))
+            newY = Math.max(0, Math.min(slideH - drag.startEl.height, snappedY))
+            setActiveGuides([])
+          } else if (smartGuidesRef.current) {
+            const allEls = slideRef.current?.elements || []
+            const draggedEl = { id: drag.elementId, x: rawX, y: rawY, width: drag.startEl.width, height: drag.startEl.height }
+            const { guides, snappedX, snappedY } = calculateGuides(draggedEl, allEls, slideW, slideH)
+            newX = Math.max(0, Math.min(slideW - drag.startEl.width, snappedX))
+            newY = Math.max(0, Math.min(slideH - drag.startEl.height, snappedY))
+            setActiveGuides(guides)
+          } else {
+            newX = rawX; newY = rawY
+            setActiveGuides([])
+          }
+          onUpdateElement(drag.elementId, { x: newX, y: newY })
+        }
+      } else if (drag.type === 'resize') {
+        let updates = applyResize(drag.handle, drag.startEl, dx, dy)
+        if (e.shiftKey) applyResizeAspectRatio(drag.handle, drag.startEl, updates)
+        clampToSlide(updates, drag.startEl, snap, slideW, slideH)
+        onUpdateElement(drag.elementId, updates)
+      } else if (drag.type === 'rotate') {
+        const rotation = getRotationAngle(drag.startEl, mouseX, mouseY, e.shiftKey)
+        onUpdateElement(drag.elementId, { rotation })
+      }
+    }
+
+    const onMouseUp = () => {
+      if (rubberBandRef.current) {
+        const hitIds = endRubberBand(setRubberBand)
+        applyRubberBandSelection(hitIds)
+      }
+
+      const hadInteraction = cropDragRef.current || pendingDragRef.current || draggingRef.current
+      cropDragRef.current = null
+      pendingDragRef.current = null
+      draggingRef.current = null
+      if (hadInteraction) {
+        setSuppressCanvasClick(true)
+        setTimeout(() => setSuppressCanvasClick(false), 0)
+        setActiveGuides([])
+        forceUpdate((n) => n + 1)
+      }
+    }
+
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [
+    snapToGrid, showGridRef, gridSizeRef, smartGuidesRef, slideRef,
+    onUpdateElement, onUpdateElements, snapWithRef_, getRotationAngle,
+    applyResize, applyResizeAspectRatio, clampToSlide,
+    slideW, slideH, setActiveGuides, setRubberBand, endRubberBand,
+    applyRubberBandSelection, updateRubberBand, forceUpdate, setSuppressCanvasClick,
+    setCropMode,
+    cropDragRef, draggingRef, pendingDragRef, rubberBandRef, scaleRef,
+  ])
+
+  // startElementDrag — called by CanvasElement on pointer down
+  const startElementDrag = useCallback((e, elementId, type, handle, slide, scale, selectedIds) => {
+    if (slide?.locked) return
+    const canvasEl = document.querySelector('.slide-canvas')
+    if (!canvasEl) return
+    const rect = canvasEl.getBoundingClientRect()
+    const element = slide?.elements?.find((el) => el.id === elementId)
+    if (!element) return
+    const allSelected = (slide?.elements || []).filter((el) => selectedIds.includes(el.id))
+    pendingDragRef.current = {
+      type,
+      handle,
+      elementId,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      startMouseX: (e.clientX - rect.left) / scale,
+      startMouseY: (e.clientY - rect.top) / scale,
+      startEl: { x: element.x, y: element.y, width: element.width, height: element.height, snapRef: element.snapRef },
+      startEls: allSelected.map((el) => ({ id: el.id, x: el.x, y: el.y, width: el.width, height: el.height })),
+    }
+  }, [pendingDragRef])
+
+  return {
+    startElementDrag,
+    setCropDrag,
+    applyCropHandle,
+  }
+}

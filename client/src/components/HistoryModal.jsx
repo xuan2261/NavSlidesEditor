@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { api } from '../utils/api'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 
 export default function HistoryModal({ presentationId, onRestore, onClose }) {
+  const [isOpen, setIsOpen] = useState(true)
   const [snapshots, setSnapshots] = useState([])
   const [snapshotName, setSnapshotName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -29,7 +30,17 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
     loadSnapshots()
   }, [loadSnapshots])
 
-  useEscapeClose(onClose)
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSave = async () => {
     setPendingAction('save')
@@ -53,7 +64,7 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
     try {
       const restored = await api.restoreSnapshot(presentationId, snapshotId)
       onRestore(restored)
-      onClose()
+      handleClose()
     } catch (err) {
       setError(err.message || 'Failed to restore snapshot.')
     } finally {
@@ -74,11 +85,13 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
     }
   }
 
+  if (!isOpen) return null
+
   return (
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -90,7 +103,7 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
       >
         <div className="flex justify-between items-center mb-4">
           <h3 id="history-modal-title" className="m-0 text-base text-text-primary">Version History</h3>
-          <Button variant="ghost" onClick={onClose} className="p-1" aria-label="Close">
+          <Button variant="ghost" onClick={handleClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>

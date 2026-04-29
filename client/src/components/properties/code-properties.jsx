@@ -1,5 +1,6 @@
 import { Input, Select } from '../../components/ui'
 import { Button } from '../../components/ui'
+import { clampNumber } from '../../utils/number-input'
 /**
  * Code block properties: edit button, language, font size, border radius.
  */
@@ -35,6 +36,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
   return (
     <div className="mb-2.5">
       <Button
+        data-testid="prop-code-edit"
         variant="secondary"
         className="w-full justify-center text-xs mb-2"
         onClick={onEditCode}
@@ -45,6 +47,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Language</div>
           <Select
+            data-testid="prop-code-language"
             className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             value={element.language || 'plaintext'}
             onChange={(e) => onUpdate({ language: e.target.value })}
@@ -59,15 +62,18 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
           <Input
+            data-testid="prop-code-font-size"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             min="8"
             max="32"
             step="1"
             value={element.fontSize || 14}
-            onChange={(e) =>
-              onUpdate({ fontSize: Math.max(8, Math.min(32, Number(e.target.value) || 14)) })
-            }
+            onChange={(e) => {
+              const value = clampNumber(e.target.value, 8, 32, null)
+              if (value === null) return
+              onUpdate({ fontSize: value })
+            }}
           />
         </div>
       </div>
@@ -76,12 +82,17 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
           Round Corners: {element.borderRadius || 0}px
         </div>
         <input
+          data-testid="prop-code-border-radius"
           type="range"
           className="w-full accent-accent"
           min="0"
           max="50"
           value={element.borderRadius || 0}
-          onChange={(e) => onUpdate({ borderRadius: Number(e.target.value) })}
+          onChange={(e) => {
+            const value = clampNumber(e.target.value, 0, 50, null)
+            if (value === null) return
+            onUpdate({ borderRadius: value })
+          }}
         />
       </div>
     </div>

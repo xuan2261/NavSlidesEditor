@@ -45,11 +45,7 @@ function MiniPreview({ slide }) {
       {els.map((el, i) => (
         <div key={el.id || i} style={getMiniPreviewElementStyle(el)}>
           {el.type === 'text' && (
-            <span
-              dangerouslySetInnerHTML={{
-                __html: (el.content || '').replace(/<[^>]+>/g, ' ').slice(0, 20),
-              }}
-            />
+            <span>{(el.content || '').replace(/<[^>]+>/g, ' ').slice(0, 20)}</span>
           )}
           {el.type === 'image' && <span className="opacity-40">🖼</span>}
           {el.type === 'html' && <span className="opacity-40">&lt;/&gt;</span>}

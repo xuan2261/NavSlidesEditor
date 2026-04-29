@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { EditorPage } from './pages/EditorPage.js'
-import { apiCreatePresentation, apiDeletePresentation } from './fixtures/test-fixtures.js'
+import { apiCreatePresentation, apiDeletePresentation, apiUpdatePresentation } from './fixtures/test-fixtures.js'
 
 test.describe('Undo / Redo', () => {
   let editorPage
@@ -60,5 +60,57 @@ test.describe('Undo / Redo', () => {
     await page.keyboard.press('Control+y')
     await expect(page.locator('.slide-canvas')).toBeVisible()
     // If we reach here without error, shortcuts work
+  })
+
+  test('bounded stress: 10 adds, 10 undo, 10 redo', async ({ request }) => {
+    await apiUpdatePresentation(request, presId, {
+      slides: [
+        {
+          id: 'slide-1',
+          elements: [
+            {
+              id: 'stress-shape-1',
+              type: 'shape',
+              shape: 'rectangle',
+              x: 200,
+              y: 200,
+              width: 150,
+              height: 100,
+              zIndex: 1,
+              color: '#6366f1',
+              text: '',
+            },
+          ],
+          notes: '',
+          background: { type: 'color', color: '#1e1e2e' },
+        },
+      ],
+    })
+    await editorPage.gotoPresentation(presId)
+
+    const initialCount = await editorPage.getElementCount()
+
+    await editorPage.selectElement(0)
+    for (let i = 0; i < 10; i += 1) {
+      await editorPage.duplicateElement()
+      await editorPage.page.waitForTimeout(550)
+    }
+
+    await expect.poll(async () => editorPage.getElementCount(), { timeout: 10000 }).toBe(initialCount + 10)
+
+    await editorPage.deselectAll()
+    for (let i = 0; i < 10; i += 1) {
+      await editorPage.undo()
+      await editorPage.page.waitForTimeout(75)
+    }
+
+    await expect.poll(async () => editorPage.getElementCount(), { timeout: 10000 }).toBe(initialCount)
+
+    for (let i = 0; i < 10; i += 1) {
+      await editorPage.redo()
+      await editorPage.page.waitForTimeout(75)
+    }
+
+    await expect.poll(async () => editorPage.getElementCount(), { timeout: 10000 }).toBe(initialCount + 10)
   })
 })

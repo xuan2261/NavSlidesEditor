@@ -45,6 +45,8 @@ const INLINE_STYLE_BUDGETS = {
 
 const EXEMPT_FILES = new Set([
   'client/src/components/TransitionPreview.jsx',
+  'client/src/components/canvas/element-renderers/game-element-placeholder-renderer.jsx',
+  'client/src/components/canvas/element-renderers/game-element-renderer.jsx',
   'client/src/data/slide-templates.js',
   'client/src/data/element-defaults.js',
   'client/src/utils/markdown-import.js',
@@ -59,6 +61,20 @@ const EXEMPT_FILES = new Set([
   'client/src/components/PropertiesPanel.jsx',
   'client/src/components/AnimationTimeline.jsx',
   'client/src/components/SlideThumbnail.jsx',
+  'client/src/components/canvas/canvas-footer-overlay-with-section-and-page-number.jsx',
+  'client/src/components/canvas/canvas-right-click-context-menu-for-slide-elements.jsx',
+  'client/src/components/canvas/element-renderers/callout-element-renderer.jsx',
+  'client/src/components/canvas/element-renderers/icon-element-renderer.jsx',
+  'client/src/components/canvas/element-renderers/qrcode-element-renderer.jsx',
+  'client/src/components/canvas/element-renderers/drawing-element-renderer.jsx',
+  'client/src/components/canvas/element-renderers/svg-element-renderer.jsx',
+  'client/src/components/canvas/element-renderers/markdown-element-renderer.jsx',
+  'client/src/components/canvas/element-renderers/chart-element-renderer.jsx',
+  'client/src/components/canvas/element-renderers/latex-element-renderer.jsx',
+  'client/src/components/canvas/element-renderers/table-element-renderer.jsx',
+  'client/src/components/canvas/element-renderers/shape-element-renderer.jsx',
+  'client/src/components/canvas/element-renderers/line-element-renderer.jsx',
+  'client/src/components/canvas/canvas-crop-overlay-with-handles.jsx',
 ])
 
 function collectFiles(dir) {

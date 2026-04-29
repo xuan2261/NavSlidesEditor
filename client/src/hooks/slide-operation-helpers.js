@@ -21,7 +21,13 @@ function cloneSlideWithNewIds(slide, createId) {
   }
 }
 
-export function duplicateSlidesAtIndices(slides, indices, createId = () => crypto.randomUUID()) {
+/**
+ * @param {Object[]} slides
+ * @param {number[]} indices
+ * @param {() => string} [createId] - factory for new slide/element IDs (defaults to crypto.randomUUID)
+ * @param {number} [currentSlideIndex] - for future undo/redo context tracking
+ */
+export function duplicateSlidesAtIndices(slides, indices, createId = () => crypto.randomUUID(), _currentSlideIndex = 0) {
   const selected = uniqueSortedIndices(indices, slides.length)
   const selectedSet = new Set(selected)
   const duplicatedIndices = []

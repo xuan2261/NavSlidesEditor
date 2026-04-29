@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   X,
   Square,
@@ -27,7 +28,7 @@ import {
 } from 'lucide-react'
 import { SLIDE_TEMPLATES } from '../data/slide-templates'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 
 const iconMap = {
   blank: <Square size={24} />,
@@ -84,13 +85,26 @@ const getCategoryLabel = (category) => {
 }
 
 export default function TemplatePickerModal({ onSelect, onClose }) {
-  useEscapeClose(onClose)
+  const [isOpen, setIsOpen] = useState(true)
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -102,7 +116,7 @@ export default function TemplatePickerModal({ onSelect, onClose }) {
       >
         <div className="flex justify-between items-center mb-5">
           <h2 id="template-picker-modal-title" className="m-0">Add Slide</h2>
-          <Button variant="icon" onClick={onClose} aria-label="Close">
+          <Button variant="icon" onClick={handleClose} aria-label="Close">
             <X size={20} />
           </Button>
         </div>
@@ -121,7 +135,7 @@ export default function TemplatePickerModal({ onSelect, onClose }) {
                     key={key}
                     onClick={() => {
                       onSelect(key)
-                      onClose()
+                      handleClose()
                     }}
                     className="bg-card border-2 border-border rounded-lg p-3 cursor-pointer text-center flex flex-col items-center gap-2 transition-all duration-200 hover:border-accent hover:bg-hover hover:-translate-y-0.5"
                   >
@@ -137,7 +151,7 @@ export default function TemplatePickerModal({ onSelect, onClose }) {
           </div>
         ))}
         <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={handleClose}>
             Cancel
           </Button>
         </div>

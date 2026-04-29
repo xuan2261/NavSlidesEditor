@@ -1,0 +1,51 @@
+{
+  "deck": "Bai_2_1.pptx",
+  "durationMs": 1188.59,
+  "error": null,
+  "ok": true,
+  "packageModifiedDate": "2022-06-24T12:53:21.439Z",
+  "packageVersion": "1.0.0",
+  "parser": "pptx-compose",
+  "peakMemoryMb": 97.97,
+  "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptx-compose\\Bai_2_1.redacted.json",
+  "rawOutputSizeMb": 24.87,
+  "resourceLimits": {
+    "entryCount": 185,
+    "uncompressedBytes": 3374700
+  },
+  "summary": {
+    "chartCount": 0,
+    "compare": {
+      "inventoryMediaCount": 43,
+      "inventoryNoteCount": 0,
+      "inventorySlideCount": 41,
+      "slideCountDelta": 0,
+      "slideCountMatches": true
+    },
+    "connectorCount": 1,
+    "groupCount": 6,
+    "hasFontInfo": false,
+    "hasLayoutElements": true,
+    "hasThemeColors": true,
+    "imageCount": 33,
+    "mediaCount": 43,
+    "noteCount": 0,
+    "parser": "pptx-compose",
+    "placeholderCount": 82,
+    "shapeCount": 46,
+    "size": {
+      "height": null,
+      "width": null
+    },
+    "slideCount": 41,
+    "tableCount": 5,
+    "textCount": 1684,
+    "unsupportedObjects": [
+      "ole"
+    ],
+    "verdict": "partial"
+  },
+  "warnings": [
+    "Raw OOXML JSON baseline; package is older."
+  ]
+}

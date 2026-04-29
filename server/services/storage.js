@@ -14,6 +14,8 @@ const RCLONE_CONFIG_FILE = path.join(DATA_DIR, 'rclone.conf')
 const SYNC_DIR = path.join(DATA_DIR, 'sync-export')
 const HISTORY_DIR = path.join(DATA_DIR, 'history')
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json')
+const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics.json')
+const MEDIA_DB_FILE = path.join(DATA_DIR, 'media.json')
 
 // ── File locking to prevent race conditions ──────────────────────────────────
 const fileLocks = new Map()
@@ -47,6 +49,8 @@ function initDataFiles() {
   if (!fs.existsSync(DATA_FILE)) fs.writeJsonSync(DATA_FILE, [])
   if (!fs.existsSync(SHARE_FILE)) fs.writeJsonSync(SHARE_FILE, {})
   if (!fs.existsSync(TEMPLATES_FILE)) fs.writeJsonSync(TEMPLATES_FILE, [])
+  if (!fs.existsSync(ANALYTICS_FILE)) fs.writeJsonSync(ANALYTICS_FILE, {})
+  if (!fs.existsSync(MEDIA_DB_FILE)) fs.writeJsonSync(MEDIA_DB_FILE, [])
   if (!fs.existsSync(GITHUB_CONFIG_FILE)) {
     fs.writeJsonSync(GITHUB_CONFIG_FILE, { token: '', owner: '', repo: '' })
   }
@@ -97,6 +101,15 @@ async function writeShareTokens(data) {
   return withFileLock(SHARE_FILE, async () => fs.writeJson(SHARE_FILE, data, { spaces: 2 }))
 }
 
+async function withShareTokens(fn) {
+  return withFileLock(SHARE_FILE, async () => {
+    const tokens = await fs.readJson(SHARE_FILE)
+    const result = await fn(tokens)
+    await fs.writeJson(SHARE_FILE, tokens, { spaces: 2 })
+    return result
+  })
+}
+
 // ── GitHub Config ────────────────────────────────────────────────────────────
 async function readGithubConfig() {
   return withFileLock(GITHUB_CONFIG_FILE, async () => fs.readJson(GITHUB_CONFIG_FILE))
@@ -117,6 +130,42 @@ async function writeSettings(data) {
   return withFileLock(SETTINGS_FILE, async () => fs.writeJson(SETTINGS_FILE, data, { spaces: 2 }))
 }
 
+// ── Analytics ────────────────────────────────────────────────────────────────
+async function readAnalytics() {
+  return withFileLock(ANALYTICS_FILE, async () => fs.readJson(ANALYTICS_FILE))
+}
+
+async function writeAnalytics(data) {
+  return withFileLock(ANALYTICS_FILE, async () => fs.writeJson(ANALYTICS_FILE, data, { spaces: 2 }))
+}
+
+async function withAnalytics(fn) {
+  return withFileLock(ANALYTICS_FILE, async () => {
+    const analytics = await fs.readJson(ANALYTICS_FILE)
+    const result = await fn(analytics)
+    await fs.writeJson(ANALYTICS_FILE, analytics, { spaces: 2 })
+    return result
+  })
+}
+
+// ── Media DB ─────────────────────────────────────────────────────────────────
+async function readMediaDb() {
+  return withFileLock(MEDIA_DB_FILE, async () => fs.readJson(MEDIA_DB_FILE))
+}
+
+async function writeMediaDb(data) {
+  return withFileLock(MEDIA_DB_FILE, async () => fs.writeJson(MEDIA_DB_FILE, data, { spaces: 2 }))
+}
+
+async function withMediaDb(fn) {
+  return withFileLock(MEDIA_DB_FILE, async () => {
+    const mediaDb = await fs.readJson(MEDIA_DB_FILE)
+    const result = await fn(mediaDb)
+    await fs.writeJson(MEDIA_DB_FILE, mediaDb, { spaces: 2 })
+    return result
+  })
+}
+
 module.exports = {
   // Paths
   DATA_DIR,
@@ -128,6 +177,8 @@ module.exports = {
   RCLONE_CONFIG_FILE,
   SYNC_DIR,
   SETTINGS_FILE,
+  ANALYTICS_FILE,
+  MEDIA_DB_FILE,
 
   // Init
   initDataFiles,
@@ -143,8 +194,15 @@ module.exports = {
   writeTemplates,
   readShareTokens,
   writeShareTokens,
+  withShareTokens,
   readGithubConfig,
   writeGithubConfig,
   readSettings,
   writeSettings,
+  readAnalytics,
+  writeAnalytics,
+  withAnalytics,
+  readMediaDb,
+  writeMediaDb,
+  withMediaDb,
 }

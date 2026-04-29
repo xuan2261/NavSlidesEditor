@@ -112,9 +112,14 @@ export function mapArrowType(marker) {
     case 'arrow':
       return 'arrow'
     case 'circle':
+    case 'oval':
       return 'oval'
     case 'diamond':
       return 'diamond'
+    case 'stealth':
+      return 'stealth'
+    case 'triangle':
+      return 'triangle'
     case 'square':
       return 'triangle'
     default:

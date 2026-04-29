@@ -16,7 +16,6 @@ export function useEscapeClose(onClose) {
 
     const handleKeyDown = (event) => {
       if (event.key !== 'Escape') return
-      event.preventDefault()
       onClose()
     }
 

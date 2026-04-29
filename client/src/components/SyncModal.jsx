@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { CloudUpload, Check, X } from 'lucide-react'
 import { api } from '../utils/api'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 
 export default function SyncModal({ presentationId, onClose }) {
+  const [isOpen, setIsOpen] = useState(true)
   const [syncStatus, setSyncStatus] = useState(null)
   const [syncConfig, setSyncConfig] = useState({
     username: '',
@@ -13,6 +14,17 @@ export default function SyncModal({ presentationId, onClose }) {
   })
   const [syncResult, setSyncResult] = useState(null)
   const [syncing, setSyncing] = useState(false)
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     api
@@ -72,13 +84,13 @@ export default function SyncModal({ presentationId, onClose }) {
     }
   }
 
-  useEscapeClose(onClose)
+  if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -90,7 +102,7 @@ export default function SyncModal({ presentationId, onClose }) {
       >
         <div className="flex justify-between items-center mb-4">
           <h3 id="sync-modal-title" className="m-0 text-base text-text-primary">Sync to Cloud</h3>
-          <Button variant="ghost" onClick={onClose} className="p-1" aria-label="Close">
+          <Button variant="ghost" onClick={handleClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>

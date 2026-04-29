@@ -1,5 +1,5 @@
 const express = require('express')
-const { v4: uuidv4 } = require('uuid')
+const uuidv4 = () => require('node:crypto').randomUUID()
 const { validate } = require('../middleware/validate')
 const { z } = require('zod')
 const bcrypt = require('bcryptjs')

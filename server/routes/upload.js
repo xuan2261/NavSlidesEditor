@@ -2,7 +2,7 @@ const express = require('express')
 const multer = require('multer')
 const path = require('path')
 const fs = require('fs').promises
-const { v4: uuidv4 } = require('uuid')
+const uuidv4 = () => require('node:crypto').randomUUID()
 const { UPLOADS_DIR } = require('../services/storage')
 
 const ALLOWED_UPLOAD_EXTENSIONS = new Set([

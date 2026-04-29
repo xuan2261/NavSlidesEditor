@@ -1,5 +1,5 @@
 const express = require('express')
-const { v4: uuidv4 } = require('uuid')
+const uuidv4 = () => require('node:crypto').randomUUID()
 const { readShareTokens, readPresentations, writePresentations } = require('../services/storage')
 
 const router = express.Router()
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
     const uniqueIds = [...new Set(publicShares.map((t) => t.presentationId))]
 
     const publicDecks = presentations
-      .filter((p) => uniqueIds.includes(p.id))
+      .filter((p) => uniqueIds.includes(p.id) && !p.deletedAt)
       .map((p) => ({
         id: p.id,
         title: p.title || 'Untitled Presentation',

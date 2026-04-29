@@ -1,3 +1,4 @@
+/* global __ENV */
 import http from 'k6/http'
 import { check, sleep } from 'k6'
 
@@ -10,7 +11,7 @@ export const options = {
   },
 }
 
-const BASE_URL = 'http://localhost:3000/api'
+const BASE_URL = __ENV.API_BASE_URL || 'http://localhost:3002/api'
 
 // Create a pseudo-large payload (simulating Base64 data)
 const largePayload = {

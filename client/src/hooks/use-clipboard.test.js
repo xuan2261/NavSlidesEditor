@@ -87,8 +87,8 @@ describe('createPasteOperation', () => {
   beforeEach(() => { uuidIndex = 0 })
 
   it('returns empty when clipboard is null/empty', () => {
-    expect(createPasteOperation({ clipboardElements: null })).toEqual({ elements: [], lastId: null })
-    expect(createPasteOperation({ clipboardElements: [] })).toEqual({ elements: [], lastId: null })
+    expect(createPasteOperation({ clipboardElements: null })).toEqual({ elements: [], allIds: [], lastId: null })
+    expect(createPasteOperation({ clipboardElements: [] })).toEqual({ elements: [], allIds: [], lastId: null })
   })
 
   it('creates elements with fresh UUIDs and +20/+20 offset', () => {
@@ -100,6 +100,7 @@ describe('createPasteOperation', () => {
     expect(result.elements[0].x).toBe(70) // 50 + 20
     expect(result.elements[0].y).toBe(95) // 75 + 20
     expect(result.lastId).toBe('uuid-0')
+    expect(result.allIds).toEqual(['uuid-0'])
   })
 
   it('selects last element (lastId) when pasting multiple', () => {
@@ -115,6 +116,7 @@ describe('createPasteOperation', () => {
     expect(result.elements[1].id).toBe('uuid-1')
     expect(result.elements[2].id).toBe('uuid-2')
     expect(result.lastId).toBe('uuid-2')
+    expect(result.allIds).toEqual(['uuid-0', 'uuid-1', 'uuid-2'])
   })
 
   it('handles missing x/y with default 0 offset', () => {

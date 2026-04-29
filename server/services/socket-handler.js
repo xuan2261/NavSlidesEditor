@@ -44,9 +44,9 @@ function buildPresentationMeta(presentation) {
   }
 }
 
-async function emitPresentationPayload(socket, roomId, presentationId) {
+async function emitPresentationPayload(socket, presentationId, findById) {
   if (!presentationId) return
-  const pres = await findPresentationById(presentationId)
+  const pres = await findById(presentationId)
   if (!pres) return
   const normalized = normalizePresentationNotes(pres)
   const html = generateRevealHTML(normalized)
@@ -58,19 +58,30 @@ async function emitPresentationPayload(socket, roomId, presentationId) {
  * Attach all Socket.IO event handlers to the given io instance.
  * Extracted from server/index.js to reduce file size and improve modularity.
  */
-function setupSocketHandlers(io) {
+function setupSocketHandlers(io, dependencies = {}) {
+  const liveRooms = dependencies.liveRoomsService || liveRoomsService
+  const findById = dependencies.findPresentationById || findPresentationById
+
   io.on('connection', (socket) => {
     // Helper: broadcast viewer count for a room
     function broadcastViewerCount(roomId) {
-      const count = liveRoomsService.getViewerCount(roomId)
+      const count = liveRooms.getViewerCount(roomId)
       io.to(roomId).emit('viewer-count', { count })
     }
 
     // Join presentation room
-    socket.on('join-room', async ({ roomId, role, presentationId }) => {
-      const joined = liveRoomsService.joinRoom(roomId, socket.id, role)
-      if (!joined) {
-        socket.emit('room-not-found', { roomId })
+    socket.on('join-room', async ({ roomId, role, presentationId, presenterToken }) => {
+      const joinResult = liveRooms.joinRoom(roomId, socket.id, role, { presenterToken })
+      if (!joinResult.ok) {
+        if (joinResult.error === 'invalid-presenter-token') {
+          socket.emit('join-error', {
+            roomId,
+            reason: 'invalid-presenter-token',
+            message: 'Presenter access denied',
+          })
+        } else {
+          socket.emit('room-not-found', { roomId })
+        }
         return
       }
       socket.join(roomId)
@@ -80,11 +91,11 @@ function setupSocketHandlers(io) {
 
       if (role === 'presenter' && presentationId) {
         try {
-          const pres = await findPresentationById(presentationId)
+          const pres = await findById(presentationId)
           if (pres) {
             const normalized = normalizePresentationNotes(pres)
             const html = generateRevealHTML(normalized)
-            const roomState = liveRoomsService.getRoomState(roomId)
+            const roomState = liveRooms.getRoomState(roomId)
             if (roomState) roomState.presentationId = presentationId
             io.to(roomId).emit('presentation-data', { html })
             io.to(roomId).emit('presentation-meta', buildPresentationMeta(normalized))
@@ -96,12 +107,12 @@ function setupSocketHandlers(io) {
       }
 
       if (role === 'viewer' || role === 'controller') {
-        const state = liveRoomsService.getRoomState(roomId)
+        const state = liveRooms.getRoomState(roomId)
         if (state) {
           socket.emit('sync-state', state.state)
           if (state.presentationId) {
             try {
-              await emitPresentationPayload(socket, roomId, state.presentationId)
+              await emitPresentationPayload(socket, state.presentationId, findById)
             } catch {
               /* ignore */
             }
@@ -115,7 +126,7 @@ function setupSocketHandlers(io) {
     // Presenter navigates
     socket.on('navigate', ({ slideIndex, verticalIndex = 0, fragmentIndex = 0 }) => {
       const state = { slideIndex, verticalIndex, fragmentIndex }
-      const success = liveRoomsService.updateRoomState(socket.data.roomId, socket.id, {
+      const success = liveRooms.updateRoomState(socket.data.roomId, socket.id, {
         ...state,
       })
       if (success) {
@@ -125,8 +136,8 @@ function setupSocketHandlers(io) {
     })
 
     socket.on('control-navigate', ({ slideIndex, verticalIndex = 0, fragmentIndex = 0 }) => {
-      const roomState = liveRoomsService.getRoomState(socket.data.roomId)
-      if (!roomState || !liveRoomsService.canControlRoom(socket.data.roomId, socket.id)) return
+      const roomState = liveRooms.getRoomState(socket.data.roomId)
+      if (!roomState || !liveRooms.canControlRoom(socket.data.roomId, socket.id)) return
       if (!roomState.presenterId) return
       io.to(roomState.presenterId).emit('control-navigate', {
         slideIndex,
@@ -137,7 +148,7 @@ function setupSocketHandlers(io) {
 
     // Presenter moves cursor
     socket.on('cursor-move', ({ x, y }) => {
-      const roomState = liveRoomsService.getRoomState(socket.data.roomId)
+      const roomState = liveRooms.getRoomState(socket.data.roomId)
       if (roomState && roomState.presenterId === socket.id) {
         socket.to(socket.data.roomId).emit('cursor-move', { x, y })
       }
@@ -145,7 +156,7 @@ function setupSocketHandlers(io) {
 
     // Presenter draws annotation
     socket.on('annotation', ({ type, data }) => {
-      const roomState = liveRoomsService.getRoomState(socket.data.roomId)
+      const roomState = liveRooms.getRoomState(socket.data.roomId)
       if (roomState && roomState.presenterId === socket.id) {
         socket.to(socket.data.roomId).emit('annotation', { type, data })
       }
@@ -153,14 +164,14 @@ function setupSocketHandlers(io) {
 
     // Presenter sends laser pointer
     socket.on('laser', ({ x, y, active }) => {
-      const roomState = liveRoomsService.getRoomState(socket.data.roomId)
-      if (roomState && liveRoomsService.canControlRoom(socket.data.roomId, socket.id)) {
+      const roomState = liveRooms.getRoomState(socket.data.roomId)
+      if (roomState && liveRooms.canControlRoom(socket.data.roomId, socket.id)) {
         socket.to(socket.data.roomId).emit('laser', { x, y, active })
       }
     })
 
     socket.on('disconnect', () => {
-      const result = liveRoomsService.leaveRoom(socket.id)
+      const result = liveRooms.leaveRoom(socket.id)
       if (result) {
         if (result.role === 'presenter') {
           io.to(result.roomId).emit('presenter-left')

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Button } from '../../components/ui'
-import { isBackdropClick, useEscapeClose } from '../../lib/utils'
+import { isBackdropClick } from '../../lib/utils'
 
 import {
   Shield,
@@ -162,7 +162,18 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
     fetchTemplates()
   }, [])
 
-  useEscapeClose(onClose)
+  const [isOpen, setIsOpen] = useState(true)
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredTemplates = useMemo(() => {
     let items = [...data.templates]
@@ -226,11 +237,13 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
       advanced: 'Nâng cao',
     })[d] || d
 
+  if (!isOpen) return null
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -436,7 +449,7 @@ export default function TemplateGallery({ onSelectTemplate, onClose }) {
           <span className="text-xs text-text-muted">
             {filteredTemplates.length} / {data.templates.length} templates
           </span>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={handleClose}>
             Đóng
           </Button>
         </div>

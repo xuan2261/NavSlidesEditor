@@ -46,9 +46,7 @@ import * as shared from 'revealjs-shared'
 import InsertMenu from './InsertMenu'
 import { Button } from '../components/ui'
 
-// eslint-disable-next-line unused-imports/no-unused-vars
-const { SHAPES } = shared
-const { TEXT_COLORS, BG_COLORS, GRADIENT_PRESETS, isLightColor } = shared
+const { TEXT_COLORS = [], BG_COLORS = [], GRADIENT_PRESETS = [], isLightColor = () => false } = shared
 
 function getBackgroundColorStyle(color) {
   return { backgroundColor: color }
@@ -89,6 +87,7 @@ export default function Toolbar({
   onOpenMediaLibrary,
   onAddQrCode,
   onAddDivider,
+  onAddGame,
   selectedCount,
   onAlignElements,
   smartGuidesEnabled,
@@ -249,6 +248,7 @@ export default function Toolbar({
         onAddDrawing={onAddDrawing}
         onAddQrCode={onAddQrCode}
         onAddDivider={onAddDivider}
+        onAddGame={onAddGame}
       />
 
       <Button

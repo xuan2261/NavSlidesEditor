@@ -1,0 +1,128 @@
+import { useRef, useEffect } from 'react'
+import { EditorContent } from '@tiptap/react'
+import hljs from 'highlight.js'
+import katex from 'katex'
+import { sanitizeRichTextHtml } from '../../utils/content-safety'
+import { getElementRenderer, CropOverlay } from './element-renderers/registry'
+import { HANDLE_STYLES } from './use-canvas-resize-rotate'
+
+export default function CanvasElement({
+  element,
+  isSelected,
+  isEditing,
+  isCropping,
+  cropState,
+  isDragging,
+  editor,
+  onPointerDown,
+  onClick,
+  onDoubleClick,
+  onContextMenu,
+  onCropHandleDown,
+  onCommitCrop,
+  onUpdateElement,
+  iconPaths,
+}) {
+  const contentRef = useRef(null)
+
+  // Render KaTeX math in preview
+  useEffect(() => {
+    if (isEditing || !contentRef.current) return
+    contentRef.current.querySelectorAll('span[data-math-latex]').forEach((el) => {
+      if (el.getAttribute('data-katex-done')) return
+      try {
+        katex.render(el.getAttribute('data-math-latex'), el, { throwOnError: false, displayMode: el.getAttribute('data-math-display') === 'true' })
+        el.setAttribute('data-katex-done', '1')
+        // eslint-disable-next-line unused-imports/no-unused-vars
+      } catch (e) {}
+    })
+  }, [element.content, isEditing])
+
+  const elementWrapperStyle = {
+    position: 'absolute', left: element.x, top: element.y,
+    width: element.width, height: element.height,
+    zIndex: element.zIndex || 1,
+    pointerEvents: element.type === 'line' && !isSelected && !isEditing ? 'none' : 'auto',
+    outline: element.locked ? '2px solid #f59e0b'
+      : (isSelected || isEditing) && !isCropping ? '2px solid #6366f1'
+      : isCropping ? '2px solid #f59e0b' : 'none',
+    cursor: isCropping ? 'crosshair' : isEditing ? 'text' : isDragging ? 'grabbing'
+      : element.locked ? 'not-allowed' : 'grab',
+    userSelect: isEditing ? 'text' : 'none',
+    overflow: (isSelected || isEditing || isCropping || element.type === 'line') ? 'visible' : 'hidden',
+    boxSizing: 'border-box',
+    borderRadius: (element.type === 'image' || element.type === 'code') && element.borderRadius ? element.borderRadius : undefined,
+    transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
+    boxShadow: element.shadowBlur || element.shadowX || element.shadowY
+      ? `${element.shadowX || 0}px ${element.shadowY || 0}px ${element.shadowBlur || 0}px ${element.shadowColor || 'rgba(0,0,0,0.5)'}`
+      : undefined,
+  }
+  const textPreviewStyle = { width: '100%', height: '100%', overflow: 'hidden', color: 'white', padding: '8px 12px', boxSizing: 'border-box', fontSize: '16px' }
+  const editorContentStyle = { width: '100%', height: '100%', color: 'white', boxSizing: 'border-box' }
+  const imageWrapperStyle = { position: 'relative', width: '100%', height: '100%', overflow: isCropping ? 'visible' : 'hidden' }
+  const htmlFrameStyle = { width: '100%', height: '100%', border: 'none', display: 'block', pointerEvents: 'none' }
+  const codeBlockStyle = { margin: 0, padding: '10px 14px', width: '100%', height: '100%', overflow: 'hidden', boxSizing: 'border-box', fontFamily: "'Fira Code','JetBrains Mono','Courier New',monospace", fontSize: element.fontSize || 14, lineHeight: 1.5, borderRadius: 0 }
+  const videoStyle = { width: '100%', height: '100%', objectFit: element.objectFit || 'contain', display: 'block', pointerEvents: isSelected && !isDragging ? 'auto' : 'none' }
+  const audioWrapperStyle = { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: 4 }
+  const audioControlStyle = { width: '90%', pointerEvents: isSelected && !isDragging ? 'auto' : 'none' }
+  const fragmentBadgeStyle = { position: 'absolute', top: -20, left: 0, zIndex: 101, pointerEvents: 'none', background: '#8b5cf6', color: 'white', fontSize: '10px', fontFamily: 'sans-serif', padding: '2px 6px', borderRadius: 3, userSelect: 'none', whiteSpace: 'nowrap' }
+  const groupBadgeStyle = { position: 'absolute', top: -20, right: 0, zIndex: 101, pointerEvents: 'none', background: '#14b8a6', color: 'white', fontSize: '9px', fontFamily: 'sans-serif', padding: '1px 5px', borderRadius: 3, userSelect: 'none' }
+  const getResizeHandleStyle = (handleStyle) => ({ position: 'absolute', width: 10, height: 10, background: '#6366f1', border: '2px solid white', borderRadius: 2, zIndex: 100, ...handleStyle })
+  const rotationGuideStyle = { position: 'absolute', top: -30, left: '50%', transform: 'translateX(-50%)', width: 1, height: 20, background: '#6366f1', zIndex: 100, pointerEvents: 'none' }
+  const rotationHandleStyle = { position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)', width: 14, height: 14, borderRadius: '50%', background: '#6366f1', border: '2px solid white', zIndex: 100, cursor: 'grab' }
+
+  return (
+    <div
+      className="element-wrapper"
+      data-testid={`slide-element-${element.id}`}
+      data-element-id={element.id}
+      data-element-type={element.type}
+      style={elementWrapperStyle}
+      onMouseDown={(e) => { if (isEditing) { e.stopPropagation(); return }; if (!isCropping) onPointerDown(e, 'move', null) }}
+      onClick={(e) => { if (!isEditing) onClick(e); else e.stopPropagation() }}
+      onDoubleClick={onDoubleClick}
+      onContextMenu={onContextMenu}
+    >
+      {element.type === 'text' && !isEditing && (
+        <div ref={contentRef} className="slide-text-content ProseMirror-preview" style={textPreviewStyle} dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(element.content || '') }} />
+      )}
+      {element.type === 'text' && isEditing && (
+        <EditorContent editor={editor} style={editorContentStyle} />
+      )}
+      {element.type === 'image' && (() => {
+        const imgFilter = [element.filterBrightness != null && element.filterBrightness !== 100 ? `brightness(${element.filterBrightness}%)` : '', element.filterContrast != null && element.filterContrast !== 100 ? `contrast(${element.filterContrast}%)` : '', element.filterGrayscale ? `grayscale(${element.filterGrayscale}%)` : ''].filter(Boolean).join(' ') || undefined
+        return (
+          <div style={imageWrapperStyle}>
+            <img src={element.src} alt={element.alt || ''} style={element.imageW != null ? { position: 'absolute', left: element.imageOffsetX ?? 0, top: element.imageOffsetY ?? 0, width: element.imageW, height: element.imageH, objectFit: element.objectFit || 'contain', pointerEvents: 'none', filter: imgFilter } : { width: '100%', height: '100%', objectFit: element.objectFit || 'contain', display: 'block', pointerEvents: 'none', filter: imgFilter }} draggable={false} />
+            {isCropping && cropState && <CropOverlay crop={cropState} elW={element.width} elH={element.height} onHandleDown={onCropHandleDown} onCommit={onCommitCrop} />}
+          </div>
+        )
+      })()}
+      {element.type !== 'text' && element.type !== 'image' && (() => {
+        const Renderer = getElementRenderer(element.type)
+        if (element.type === 'html') return <iframe srcDoc={element.content || ''} style={htmlFrameStyle} sandbox="allow-scripts" title="HTML embed" />
+        if (element.type === 'code') return <pre className="hljs" style={codeBlockStyle}><code dangerouslySetInnerHTML={{ __html: hljs.highlight(element.content || '', { language: element.language || 'plaintext' }).value }} /></pre>
+        if (element.type === 'video') return <video src={element.src} controls={element.controls !== false} muted={element.muted || false} loop={element.loop || false} poster={element.poster || undefined} style={videoStyle} />
+        if (element.type === 'audio') return <div style={audioWrapperStyle}><audio src={element.src} controls style={audioControlStyle} /></div>
+        if (Renderer) {
+          if (element.type === 'table') return <Renderer element={element} isEditing={isEditing} onUpdateElement={onUpdateElement} />
+          if (element.type === 'chart' || element.type === 'latex') return <Renderer element={element} isSelected={isSelected} isDragging={isDragging} />
+          if (element.type === 'icon') return <Renderer element={element} iconPaths={iconPaths} />
+          return <Renderer element={element} />
+        }
+        return null
+      })()}
+      {element.fragment && <div style={fragmentBadgeStyle}>▶ {element.fragmentIndex ?? 1}</div>}
+      {element.groupId && isSelected && <div style={groupBadgeStyle}>Group</div>}
+      {isSelected && !isEditing && !isCropping && !element.locked && Object.entries(HANDLE_STYLES).map(([handle, hStyle]) => (
+        <div key={handle} data-testid={`resize-handle-${handle}`} style={getResizeHandleStyle(hStyle)} onMouseDown={(e) => { e.stopPropagation(); onPointerDown(e, 'resize', handle) }} />
+      ))}
+      {isSelected && !isEditing && !isCropping && !element.locked && (
+        <>
+          <div style={rotationGuideStyle} />
+          <div style={rotationHandleStyle} data-testid="rotation-handle" onMouseDown={(e) => { e.stopPropagation(); onPointerDown(e, 'rotate', null) }} />
+        </>
+      )}
+    </div>
+  )
+}

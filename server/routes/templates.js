@@ -1,5 +1,5 @@
 const express = require('express')
-const { v4: uuidv4 } = require('uuid')
+const uuidv4 = () => require('node:crypto').randomUUID()
 const { readTemplates, writeTemplates } = require('../services/storage')
 const { normalizePresentationNotes } = require('revealjs-shared')
 

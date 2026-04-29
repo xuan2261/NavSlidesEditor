@@ -12,6 +12,27 @@ const {
 
 const router = express.Router()
 
+// Validate remote name: alphanumeric + dash + underscore only, max 256 chars
+function validateRemoteName(name, required = false) {
+  if (!name || typeof name !== 'string') return required ? null : null
+  const sanitized = name.trim()
+  if (!/^[a-zA-Z0-9_-]{1,256}$/.test(sanitized)) return null
+  return sanitized
+}
+
+// Sanitize string inputs: strip newlines/carriage returns (prevents injection)
+function sanitizeInput(value) {
+  if (!value || typeof value !== 'string') return ''
+  return value.replace(/[\r\n]/g, '').slice(0, 1024)
+}
+
+// Validate remote path: disallow path traversal, max 512 chars
+function validateRemotePath(pathValue) {
+  if (!pathValue || typeof pathValue !== 'string') return '/slides-backup'
+  const sanitized = pathValue.replace(/\.\./g, '').trim().slice(0, 512)
+  return sanitized.startsWith('/') ? sanitized : '/' + sanitized
+}
+
 function runRclone(args, env = {}) {
   return new Promise((resolve, reject) => {
     const mergedEnv = { ...process.env, RCLONE_CONFIG: RCLONE_CONFIG_FILE, ...env }
@@ -54,24 +75,31 @@ router.post('/config', async (req, res) => {
     const { username, password, remoteName } = req.body
     if (!username || !password)
       return res.status(400).json({ error: 'Username and password required' })
-    const name = remoteName || 'protondrive'
+
+    const safeName = validateRemoteName(remoteName, false) || 'protondrive'
+    const safeUsername = sanitizeInput(username)
+    const safePassword = sanitizeInput(password)
+
+    if (!safeUsername) return res.status(400).json({ error: 'Username cannot be empty' })
+    if (!safePassword) return res.status(400).json({ error: 'Password cannot be empty' })
 
     // Security: obscure password using rclone itself (prevents plaintext on disk)
-    let obscuredPassword = password
+    // Fail hard if rclone obscure is unavailable — no plaintext fallback
+    let obscuredPassword
     try {
-      obscuredPassword = await runRclone(['obscure', password])
+      obscuredPassword = await runRclone(['obscure', safePassword])
     } catch {
-      // Fallback: store as-is if rclone obscure fails (rclone may not be installed)
+      return res.status(500).json({ error: 'Failed to obscure password. rclone must be installed and functional.' })
     }
 
-    const configContent = `[${name}]\ntype = protondrive\nusername = ${username}\npassword = ${obscuredPassword}\n`
+    const configContent = `[${safeName}]\ntype = protondrive\nusername = ${safeUsername}\npassword = ${obscuredPassword}\n`
     await fs.writeFile(RCLONE_CONFIG_FILE, configContent)
     try {
-      await runRclone(['lsd', `${name}:`])
+      await runRclone(['lsd', `${safeName}:`])
     } catch (err) {
       return res.status(400).json({ error: 'Connection failed: ' + err.message })
     }
-    res.json({ success: true, remote: name })
+    res.json({ success: true, remote: safeName })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -81,8 +109,9 @@ router.post('/config', async (req, res) => {
 router.post('/sync', async (req, res) => {
   try {
     const { remote, remotePath } = req.body
-    if (!remote) return res.status(400).json({ error: 'Remote name required' })
-    const dest = remotePath || '/slides-backup'
+    const safeRemote = validateRemoteName(remote)
+    if (!safeRemote) return res.status(400).json({ error: 'Invalid remote name' })
+    const dest = validateRemotePath(remotePath)
 
     fs.ensureDirSync(SYNC_DIR)
     fs.emptyDirSync(SYNC_DIR)
@@ -99,7 +128,7 @@ router.post('/sync', async (req, res) => {
     const uploadsSync = path.join(SYNC_DIR, '_uploads')
     if (fs.existsSync(UPLOADS_DIR)) fs.copySync(UPLOADS_DIR, uploadsSync)
 
-    const remoteDest = `${remote}:${dest}`
+    const remoteDest = `${safeRemote}:${dest}`
     await runRclone(['sync', SYNC_DIR, remoteDest, '--progress'])
     fs.removeSync(SYNC_DIR)
     res.json({ success: true, synced: presentations.length, destination: remoteDest })
@@ -115,9 +144,10 @@ router.post('/sync', async (req, res) => {
 router.post('/sync-single', async (req, res) => {
   try {
     const { remote, remotePath, presentationId } = req.body
-    if (!remote || !presentationId)
+    const safeRemote = validateRemoteName(remote)
+    if (!safeRemote || !presentationId)
       return res.status(400).json({ error: 'Remote and presentationId required' })
-    const dest = remotePath || '/slides-backup'
+    const dest = validateRemotePath(remotePath)
 
     const presentations = await readPresentations()
     const pres = presentations.find((p) => p.id === presentationId)
@@ -131,7 +161,7 @@ router.post('/sync-single', async (req, res) => {
     fs.writeFileSync(path.join(folder, 'presentation.html'), generateRevealHTML(pres))
     fs.writeFileSync(path.join(folder, 'presentation.json'), JSON.stringify(pres, null, 2))
 
-    const remoteDest = `${remote}:${dest}/${folderName}`
+    const remoteDest = `${safeRemote}:${dest}/${folderName}`
     await runRclone(['sync', folder, remoteDest])
     fs.removeSync(SYNC_DIR)
     res.json({ success: true, destination: remoteDest })

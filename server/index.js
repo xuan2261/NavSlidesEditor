@@ -4,27 +4,21 @@ const path = require('path')
 const fs = require('fs-extra')
 const http = require('http')
 const { Server } = require('socket.io')
-// eslint-disable-next-line unused-imports/no-unused-vars
-const { validate: uuidValidate } = require('uuid')
 const bcrypt = require('bcryptjs')
 const rateLimit = require('express-rate-limit')
-const createDOMPurify = require('dompurify')
-const { JSDOM } = require('jsdom')
 const {
   initDataFiles,
   UPLOADS_DIR,
   readShareTokens,
   writeShareTokens,
+  withShareTokens,
   readPresentations,
 } = require('./services/storage')
 const { errorHandler } = require('./middleware/error-handler')
 const { generateRevealHTML } = require('revealjs-shared')
 const { recordView } = require('./routes/analytics')
 const { setupSocketHandlers } = require('./services/socket-handler')
-
-// ── Security: DOMPurify setup for server-side HTML sanitization ──────────────
-const purifyWindow = new JSDOM('').window
-const DOMPurify = createDOMPurify(purifyWindow)
+const { setupGameSocketHandlers } = require('./services/game-socket-handler')
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const presentationsRouter = require('./routes/presentations')
@@ -37,6 +31,8 @@ const historyRouter = require('./routes/history')
 const settingsRouter = require('./routes/settings')
 const mediaRouter = require('./routes/media')
 const liveRouter = require('./routes/live')
+const pptxImportRouter = require('./routes/pptx-import')
+const gamesRouter = require('./routes/games-rest-api-handler')
 
 // ── App setup ────────────────────────────────────────────────────────────────
 const app = express()
@@ -72,7 +68,7 @@ app.use(express.urlencoded({ extended: false }))
 // ── Rate limiting ────────────────────────────────────────────────────────────
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'production' ? 300 : 3000,
+  max: process.env.NODE_ENV === 'production' ? 300 : 200000,
   message: { error: 'Too many requests, please try again later' },
 })
 app.use('/api/', apiLimiter)
@@ -108,11 +104,13 @@ app.use('/api/presentations', historyRouter) // /:id/snapshot(s), /:id/restore
 app.use('/api/presentations', presentationsRouter) // CRUD + export + present + duplicate + save-as-template
 app.use('/api/templates', templatesRouter)
 app.use('/api/upload', uploadRouter)
+app.use('/api/pptx', pptxImportRouter)
 app.use('/api/github', githubRouter)
 app.use('/api/rclone', syncRouter)
 app.use('/api/settings', settingsRouter)
 app.use('/api/media', mediaRouter)
 app.use('/api/live', liveRouter)
+app.use('/api/games', gamesRouter)
 app.use('/api/explore', require('./routes/explore'))
 app.use('/api/ai', require('./routes/ai'))
 app.use('/api/marketplace', require('./routes/marketplace'))
@@ -146,18 +144,9 @@ async function renderShareView(presentationId, res) {
   const presentation = presentations.find((p) => p.id === presentationId)
   if (!presentation) return res.status(404).send('Presentation not found')
 
-  // Deep clone and sanitize HTML elements for share view
+  // Keep html embeds trusted and programmable in share mode too.
+  // We only normalize customCSS risky URL/expression patterns.
   const sanitized = JSON.parse(JSON.stringify(presentation))
-  for (const slide of sanitized.slides || []) {
-    for (const el of slide.elements || []) {
-      if (el.type === 'html') {
-        el.content = DOMPurify.sanitize(el.content, {
-          FORBID_TAGS: ['script', 'iframe', 'object', 'embed'],
-          FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
-        })
-      }
-    }
-  }
   // Sanitize customCSS to prevent expression() / javascript: injection
   if (sanitized.customCSS) {
     sanitized.customCSS = sanitized.customCSS
@@ -177,6 +166,19 @@ function canViewShare(tokenData) {
     return false
   }
   return true
+}
+
+async function incrementShareViews(token) {
+  return withShareTokens((tokens) => {
+    let tokenData = tokens[token]
+    if (!tokenData) return null
+    if (typeof tokenData === 'string') {
+      tokenData = { presentationId: tokenData, views: 0 }
+    }
+    tokenData.views = (tokenData.views || 0) + 1
+    tokens[token] = tokenData
+    return tokenData
+  })
 }
 
 // Verify password for protected link
@@ -234,16 +236,15 @@ app.get('/share/:token', async (req, res) => {
     }
 
     // Increment views safely
-    tokenData.views = (tokenData.views || 0) + 1
-    tokens[req.params.token] = tokenData
-    await writeShareTokens(tokens)
+    const updatedTokenData = await incrementShareViews(req.params.token)
+    if (!updatedTokenData) return res.status(404).send('Presentation not found or sharing disabled')
 
     // Record analytics
     try {
-      await recordView(tokenData.presentationId, req.params.token, req.get('referer') || '')
+      await recordView(updatedTokenData.presentationId, req.params.token, req.get('referer') || '')
     } catch {}
 
-    await renderShareView(tokenData.presentationId, res)
+    await renderShareView(updatedTokenData.presentationId, res)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -264,16 +265,15 @@ app.post('/share/:token', async (req, res) => {
     }
 
     // Increment views safely
-    tokenData.views = (tokenData.views || 0) + 1
-    tokens[req.params.token] = tokenData
-    await writeShareTokens(tokens)
+    const updatedTokenData = await incrementShareViews(req.params.token)
+    if (!updatedTokenData) return res.status(404).send('Not found')
 
     // Record analytics
     try {
-      await recordView(tokenData.presentationId, req.params.token, req.get('referer') || '')
+      await recordView(updatedTokenData.presentationId, req.params.token, req.get('referer') || '')
     } catch {}
 
-    await renderShareView(tokenData.presentationId, res)
+    await renderShareView(updatedTokenData.presentationId, res)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -307,6 +307,7 @@ function startServer(port) {
     const io = new Server(server, { cors: corsOptions, path: '/ws' })
 
     setupSocketHandlers(io)
+    setupGameSocketHandlers(io)
 
     server.listen(p, () => {
       console.log(`Server running on http://localhost:${p}`)

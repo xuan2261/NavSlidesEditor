@@ -1,3 +1,5 @@
+const { assertSafeAiEndpoint } = require('./ai-endpoint-guard')
+
 async function callAI(config, systemPrompt, userPrompt) {
   if (!config) throw new Error('AI not configured')
 
@@ -65,11 +67,12 @@ async function callGemini(config, system, user) {
 async function callCustom(config, system, user) {
   if (!config.customEndpoint) throw new Error('Custom endpoint not configured')
 
-  // Clean endpoint
-  let url = config.customEndpoint
-  if (!url.endsWith('/chat/completions')) {
-    url = url.replace(/\/+$/, '') + '/chat/completions'
+  const safeEndpoint = await assertSafeAiEndpoint(config.customEndpoint)
+  const endpointUrl = new URL(safeEndpoint)
+  if (!endpointUrl.pathname.endsWith('/chat/completions')) {
+    endpointUrl.pathname = `${endpointUrl.pathname.replace(/\/+$/, '')}/chat/completions`
   }
+  const url = endpointUrl.toString()
 
   const response = await fetch(url, {
     method: 'POST',

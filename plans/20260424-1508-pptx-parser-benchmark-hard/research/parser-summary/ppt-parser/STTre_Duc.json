@@ -1,0 +1,47 @@
+{
+  "deck": "STTre_Duc.pptx",
+  "durationMs": 661.1,
+  "error": null,
+  "ok": true,
+  "packageModifiedDate": "2024-12-24T11:33:06.482Z",
+  "packageVersion": "0.0.8",
+  "parser": "ppt-parser",
+  "peakMemoryMb": 111.89,
+  "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\ppt-parser\\STTre_Duc.redacted.json",
+  "rawOutputSizeMb": 0.52,
+  "resourceLimits": {
+    "entryCount": 131,
+    "uncompressedBytes": 3916574
+  },
+  "summary": {
+    "chartCount": 0,
+    "compare": {
+      "inventoryMediaCount": 15,
+      "inventoryNoteCount": 15,
+      "inventorySlideCount": 20,
+      "slideCountDelta": 0,
+      "slideCountMatches": true
+    },
+    "connectorCount": 0,
+    "groupCount": 0,
+    "hasFontInfo": false,
+    "hasLayoutElements": false,
+    "hasThemeColors": false,
+    "imageCount": 28,
+    "mediaCount": 28,
+    "noteCount": 0,
+    "parser": "ppt-parser",
+    "placeholderCount": 0,
+    "shapeCount": 73,
+    "size": {
+      "height": 720,
+      "width": 1280
+    },
+    "slideCount": 20,
+    "tableCount": 0,
+    "textCount": 30,
+    "unsupportedObjects": [],
+    "verdict": "pass"
+  },
+  "warnings": []
+}

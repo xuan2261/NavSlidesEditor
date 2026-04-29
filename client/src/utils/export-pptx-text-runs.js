@@ -13,8 +13,13 @@ function buildRunOptions(style) {
   if (style.bold) options.bold = true
   if (style.italic) options.italic = true
   if (style.underline) options.underline = true
+  if (style.strike) options.strike = true   // Phase 1
+  if (style.subscript) options.subscript = true  // Phase 1
+  if (style.superscript) options.superscript = true // Phase 1
   if (style.fontFace) options.fontFace = style.fontFace
   if (style.fontSize) options.fontSize = style.fontSize
+  if (style.charSpacing) options.charSpacing = style.charSpacing // Phase 1
+  if (style.link) options.hyperlink = { url: style.link } // Phase 1: hyperlink
   if (style.color) {
     const normalized = normalizeCssColor(style.color, DEFAULT_TEXT_COLOR)
     options.color = normalized.color
@@ -44,7 +49,11 @@ function collectInlineRuns(nodes, inheritedStyle = {}) {
       runs.push({ text: '', options: { breakLine: true } })
       continue
     }
-    const nextStyle = mergeInlineStyle(inheritedStyle, node)
+    let nextStyle = mergeInlineStyle(inheritedStyle, node)
+    // Phase 1: hyperlink — attach href to style
+    if (node.tag === 'a' && node.attrs?.href) {
+      nextStyle = { ...nextStyle, link: node.attrs.href }
+    }
     runs.push(...collectInlineRuns(node.children, nextStyle))
   }
   return runs

@@ -2,8 +2,12 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import liveRooms from './live-rooms.js'
 
 describe('live-rooms service', () => {
+  let presenterToken
+
   beforeEach(() => {
     liveRooms._resetRooms() // Internal method to clear state between tests
+    presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM12', presenterToken)
   })
 
   it('should generate a 6-character room code', () => {
@@ -13,7 +17,8 @@ describe('live-rooms service', () => {
   })
 
   it('should allow presenter to join and initialize room state', () => {
-    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter')
+    const joined = liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
+    expect(joined.ok).toBe(true)
     const state = liveRooms.getRoomState('ROOM12')
     expect(state.presenterId).toBe('socket-1')
     expect(state.state.slideIndex).toBe(0)
@@ -22,7 +27,7 @@ describe('live-rooms service', () => {
   })
 
   it('should allow viewer to join and get current state', () => {
-    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter')
+    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
     liveRooms.updateRoomState('ROOM12', 'socket-1', {
       slideIndex: 2,
       verticalIndex: 1,
@@ -39,7 +44,7 @@ describe('live-rooms service', () => {
   })
 
   it('should allow controller to join without taking presenter ownership', () => {
-    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter')
+    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
     liveRooms.joinRoom('ROOM12', 'socket-2', 'controller')
 
     const state = liveRooms.getRoomState('ROOM12')
@@ -51,7 +56,7 @@ describe('live-rooms service', () => {
   })
 
   it('should handle presenter updates only if requested by presenter', () => {
-    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter')
+    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
 
     const success = liveRooms.updateRoomState('ROOM12', 'socket-1', { slideIndex: 1 })
     expect(success).toBe(true)
@@ -64,7 +69,7 @@ describe('live-rooms service', () => {
   })
 
   it('should remove socket properly on leave and clean up if presenter leaves', () => {
-    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter')
+    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
     liveRooms.joinRoom('ROOM12', 'socket-2', 'viewer')
     liveRooms.joinRoom('ROOM12', 'socket-3', 'controller')
 
@@ -81,5 +86,15 @@ describe('live-rooms service', () => {
     liveRooms.leaveRoom('socket-1')
     state = liveRooms.getRoomState('ROOM12')
     expect(state).toBeUndefined() // Room should be deleted
+  })
+
+  it('rejects presenter join without valid presenter token', () => {
+    const withoutToken = liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter')
+    expect(withoutToken).toEqual({ ok: false, error: 'invalid-presenter-token' })
+
+    const wrongToken = liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', {
+      presenterToken: 'bad-token',
+    })
+    expect(wrongToken).toEqual({ ok: false, error: 'invalid-presenter-token' })
   })
 })

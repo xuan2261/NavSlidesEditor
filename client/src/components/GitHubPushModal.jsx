@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { Github, Settings, Check, X } from 'lucide-react'
 import { api } from '../utils/api'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 
 export default function GitHubPushModal({ presentationId, presentationTitle, onClose }) {
+  const [isOpen, setIsOpen] = useState(true)
   const [config, setConfig] = useState({ owner: '', repo: '', hasToken: false })
   const [token, setToken] = useState('')
   const [pushing, setPushing] = useState(false)
@@ -17,6 +18,19 @@ export default function GitHubPushModal({ presentationId, presentationTitle, onC
       .then(setConfig)
       .catch(() => {})
   }, [])
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!isOpen) return null
 
   const handleSaveConfig = async () => {
     const data = { owner: config.owner, repo: config.repo }
@@ -40,7 +54,6 @@ export default function GitHubPushModal({ presentationId, presentationTitle, onC
     }
   }
 
-  useEscapeClose(onClose)
 
   return (
     <div

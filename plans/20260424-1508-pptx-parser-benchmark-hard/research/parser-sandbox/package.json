@@ -1,0 +1,18 @@
+{
+  "name": "pptx-parser-benchmark-sandbox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plan-scoped dependency sandbox for PPTX parser benchmark candidates.",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "ppt-parser": "^0.0.8",
+    "pptx-compose": "^1.0.0",
+    "pptx2json": "^0.0.10",
+    "pptxtojson": "^2.0.2"
+  }
+}

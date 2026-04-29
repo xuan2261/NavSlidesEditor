@@ -7,6 +7,7 @@ import { ChevronDown } from 'lucide-react'
  */
 export default function DropdownMenu({ label, items, isOpen, onToggle, onClose, align = 'left' }) {
   const menuRef = useRef(null)
+  const safeItems = Array.isArray(items) ? items.filter(Boolean) : []
 
   useEffect(() => {
     if (!isOpen) return
@@ -40,7 +41,7 @@ export default function DropdownMenu({ label, items, isOpen, onToggle, onClose, 
         <div
           className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-1 w-56 bg-panel text-text-primary rounded-md shadow-lg border border-border z-[9999] flex flex-col py-1`}
         >
-          {items.map((item, idx) => {
+          {safeItems.map((item, idx) => {
             if (item.type === 'separator') {
               return <div key={`sep-${idx}`} className="h-px bg-border my-1 w-full" />
             }

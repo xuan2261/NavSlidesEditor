@@ -15,6 +15,7 @@ const SHAPES = [
   { id: 'trapezoid', name: 'Trapezoid', icon: '⏢' },
   { id: 'bracket', name: 'Bracket', icon: '{' },
 ]
+const { escapePlainText } = require('./content-safety.js')
 
 function shapeSvgString(el) {
   const w = el.width,
@@ -99,7 +100,7 @@ function shapeSvgString(el) {
   if (el.text) {
     const fs = el.fontSize || 16
     const tc = el.textColor || '#ffffff'
-    textEl = `<text x="${w / 2}" y="${h / 2}" dominant-baseline="middle" text-anchor="middle" font-size="${fs}" fill="${tc}" style="font-family:inherit;">${el.text}</text>`
+    textEl = `<text x="${w / 2}" y="${h / 2}" dominant-baseline="middle" text-anchor="middle" font-size="${fs}" fill="${tc}" style="font-family:inherit;">${escapePlainText(el.text)}</text>`
   }
 
   return `<svg width="100%" height="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;">${inner}${textEl}</svg>`

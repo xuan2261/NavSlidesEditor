@@ -1,0 +1,51 @@
+{
+  "deck": "Bai_2_1.pptx",
+  "durationMs": 1299.78,
+  "error": null,
+  "ok": true,
+  "packageModifiedDate": "2024-07-07T15:24:30.383Z",
+  "packageVersion": "0.0.10",
+  "parser": "pptx2json",
+  "peakMemoryMb": 98.24,
+  "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptx2json\\Bai_2_1.redacted.json",
+  "rawOutputSizeMb": 24.87,
+  "resourceLimits": {
+    "entryCount": 185,
+    "uncompressedBytes": 3374700
+  },
+  "summary": {
+    "chartCount": 0,
+    "compare": {
+      "inventoryMediaCount": 43,
+      "inventoryNoteCount": 0,
+      "inventorySlideCount": 41,
+      "slideCountDelta": 0,
+      "slideCountMatches": true
+    },
+    "connectorCount": 1,
+    "groupCount": 6,
+    "hasFontInfo": false,
+    "hasLayoutElements": true,
+    "hasThemeColors": true,
+    "imageCount": 33,
+    "mediaCount": 43,
+    "noteCount": 0,
+    "parser": "pptx2json",
+    "placeholderCount": 82,
+    "shapeCount": 46,
+    "size": {
+      "height": null,
+      "width": null
+    },
+    "slideCount": 41,
+    "tableCount": 5,
+    "textCount": 1684,
+    "unsupportedObjects": [
+      "ole"
+    ],
+    "verdict": "partial"
+  },
+  "warnings": [
+    "Raw OOXML JSON; mapper complexity expected high."
+  ]
+}

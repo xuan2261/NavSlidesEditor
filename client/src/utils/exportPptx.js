@@ -2,6 +2,7 @@ import pptxgen from 'pptxgenjs'
 import { applySlideBackground } from './export-pptx-background'
 import { getPptxLayout, getPresentationResolution } from './export-pptx-core'
 import { addElementToPptxSlide } from './export-pptx-renderers'
+import { clearPptxRasterAssetCaches } from './export-pptx-raster'
 import { getSlideNotes } from './slide-notes'
 
 function getSafeFilename(title) {
@@ -103,6 +104,10 @@ async function exportToPptxClient(presentation, rasterOverrides = {}) {
 }
 
 export async function exportToPptx(presentation) {
-  const rasterOverrides = await fetchComplexElementRasters(presentation)
-  return await exportToPptxClient(presentation, rasterOverrides)
+  try {
+    const rasterOverrides = await fetchComplexElementRasters(presentation)
+    return await exportToPptxClient(presentation, rasterOverrides)
+  } finally {
+    clearPptxRasterAssetCaches()
+  }
 }

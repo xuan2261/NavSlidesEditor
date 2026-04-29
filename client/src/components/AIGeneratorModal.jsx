@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sparkles, X, Loader2, FileText, Edit3, Check } from 'lucide-react'
 import { aiGenerateOutline } from '../utils/ai'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 
 const STYLES = ['Professional', 'Academic', 'Casual', 'Military Briefing', 'Technical', 'Creative']
 const LANGUAGES = [
@@ -68,13 +68,27 @@ export default function AIGeneratorModal({ onCreatePresentation, onClose }) {
     }
   }
 
-  useEscapeClose(onClose)
+  const [isOpen, setIsOpen] = useState(true)
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -88,7 +102,7 @@ export default function AIGeneratorModal({ onCreatePresentation, onClose }) {
           <h3 id="ai-generator-modal-title" className="m-0 flex items-center gap-2 text-base">
             <FileText size={18} /> AI Slide Generator
           </h3>
-          <Button variant="icon" onClick={onClose} className="p-1" aria-label="Close">
+          <Button variant="icon" onClick={handleClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>

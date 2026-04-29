@@ -1,0 +1,51 @@
+{
+  "deck": "Bai_2_2.pptx",
+  "durationMs": 902,
+  "error": null,
+  "ok": true,
+  "packageModifiedDate": "2026-04-19T03:23:10.561Z",
+  "packageVersion": "2.0.2",
+  "parser": "pptxtojson",
+  "peakMemoryMb": 91.14,
+  "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptxtojson\\Bai_2_2.redacted.json",
+  "rawOutputSizeMb": 2.78,
+  "resourceLimits": {
+    "entryCount": 220,
+    "uncompressedBytes": 3629120
+  },
+  "summary": {
+    "chartCount": 0,
+    "compare": {
+      "inventoryMediaCount": 35,
+      "inventoryNoteCount": 1,
+      "inventorySlideCount": 39,
+      "slideCountDelta": 0,
+      "slideCountMatches": true
+    },
+    "connectorCount": 0,
+    "groupCount": 41,
+    "hasFontInfo": false,
+    "hasLayoutElements": true,
+    "hasThemeColors": true,
+    "imageCount": 2,
+    "mediaCount": 2,
+    "noteCount": 1,
+    "parser": "pptxtojson",
+    "placeholderCount": 0,
+    "shapeCount": 277,
+    "size": {
+      "height": 540,
+      "width": 960
+    },
+    "slideCount": 39,
+    "tableCount": 15,
+    "textCount": 294,
+    "unsupportedObjects": [
+      "equation"
+    ],
+    "verdict": "pass"
+  },
+  "warnings": [
+    "Parsed with media payload extraction disabled."
+  ]
+}

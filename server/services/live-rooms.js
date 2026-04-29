@@ -1,12 +1,23 @@
 // Room = presentationId or room code
 // Roles: presenter (1 per room), controller (remote/speaker), viewer (many)
-const rooms = new Map() // roomId -> { presenterId, controllers, viewers, presentationId, state }
+const crypto = require('crypto')
+
+const rooms = new Map() // roomId -> { presenterId, presenterTokenHash, controllers, viewers, ... }
 const socketToRoom = new Map() // socketId -> roomId
 const socketRoles = new Map() // socketId -> role
 
-function createRoom(presenterId = null) {
+function hashToken(token) {
+  return crypto.createHash('sha256').update(String(token || '')).digest('hex')
+}
+
+function createPresenterToken() {
+  return crypto.randomBytes(24).toString('base64url')
+}
+
+function createRoom(presenterToken, presenterId = null) {
   return {
     presenterId,
+    presenterTokenHash: hashToken(presenterToken),
     controllers: [],
     viewers: [],
     presentationId: null,
@@ -16,47 +27,51 @@ function createRoom(presenterId = null) {
 
 function generateRoomCode() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let result = ''
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return result
+  const bytes = crypto.randomBytes(6)
+  return Array.from(bytes, (value) => chars[value % chars.length]).join('')
+}
+
+function isValidPresenterToken(room, presenterToken) {
+  if (!room || !presenterToken) return false
+  return room.presenterTokenHash === hashToken(presenterToken)
 }
 
 // Pre-register a room (before presenter connects via Socket.IO)
-function registerRoom(roomId) {
+function registerRoom(roomId, presenterToken) {
   if (!rooms.has(roomId)) {
-    rooms.set(roomId, createRoom())
+    rooms.set(roomId, createRoom(presenterToken))
   }
 }
 
-function joinRoom(roomId, socketId, role) {
-  let room = rooms.get(roomId)
+function joinRoom(roomId, socketId, role, options = {}) {
+  const { presenterToken } = options
+  const room = rooms.get(roomId)
 
   if (role === 'presenter') {
     if (!room) {
-      room = createRoom(socketId)
-      rooms.set(roomId, room)
-    } else {
-      room.presenterId = socketId
+      return { ok: false, error: 'room-not-found' }
     }
+    if (!isValidPresenterToken(room, presenterToken)) {
+      return { ok: false, error: 'invalid-presenter-token' }
+    }
+    room.presenterId = socketId
   } else if (role === 'controller') {
     if (!room) {
-      return false
+      return { ok: false, error: 'room-not-found' }
     }
     if (!room.controllers.includes(socketId)) {
       room.controllers.push(socketId)
     }
   } else {
     // Viewer — allow joining pre-registered rooms even without presenter
-    if (!room) return false
+    if (!room) return { ok: false, error: 'room-not-found' }
     if (!room.viewers.includes(socketId)) {
       room.viewers.push(socketId)
     }
   }
   socketToRoom.set(socketId, roomId)
   socketRoles.set(socketId, role)
-  return true
+  return { ok: true }
 }
 
 function leaveRoom(socketId) {
@@ -110,6 +125,7 @@ function _resetRooms() {
 }
 
 module.exports = {
+  createPresenterToken,
   generateRoomCode,
   registerRoom,
   joinRoom,

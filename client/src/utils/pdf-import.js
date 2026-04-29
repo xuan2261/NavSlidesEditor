@@ -16,13 +16,14 @@ async function loadPdfJs() {
 /**
  * @param {File} file - PDF file from input
  * @param {function} onProgress - called with (current, total) page numbers
- * @returns {Promise<Array>} slides array
+ * @returns {Promise<{slides:Array, warnings:string[]}>}
  */
 export async function pdfToSlides(file, onProgress) {
   const pdfjs = await loadPdfJs()
   const arrayBuffer = await file.arrayBuffer()
   const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise
   const slides = []
+  const warnings = []
 
   for (let i = 1; i <= pdf.numPages; i++) {
     if (onProgress) onProgress(i, pdf.numPages)
@@ -38,9 +39,6 @@ export async function pdfToSlides(file, onProgress) {
 
     // Convert canvas to blob and upload
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
-    const formData = new FormData()
-    formData.append('file', blob, `pdf-page-${i}.png`)
-
     try {
       const result = await api.uploadFile(blob)
       if (result.url) {
@@ -64,8 +62,13 @@ export async function pdfToSlides(file, onProgress) {
       }
     } catch (err) {
       console.error(`Failed to upload PDF page ${i}:`, err)
+      warnings.push(`Failed to import page ${i}`)
     }
   }
 
-  return slides
+  if (slides.length === 0) {
+    throw new Error('All PDF pages failed to import')
+  }
+
+  return { slides, warnings }
 }

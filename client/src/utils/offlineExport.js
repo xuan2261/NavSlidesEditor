@@ -189,18 +189,19 @@ async function inlineSrcdocDeps(inner) {
 
 export async function generateOfflineHTML(html) {
   let result = html
+  try {
 
-  // ── 1. Inline all <link> vendor CSS ──────────────────────────────────────
-  const cssMatches = [
-    ...result.matchAll(
-      /<link[^>]*href=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+\.css)["'][^>]*\/?>/g
-    ),
-  ]
-  for (const match of cssMatches) {
-    const rawUrl = match[1]
-    const vendorPath = toVendorPath(rawUrl)
-    let css = await cachedFetchText(vendorPath)
-    const origin = window.location.origin
+    // ── 1. Inline all <link> vendor CSS ──────────────────────────────────────
+    const cssMatches = [
+      ...result.matchAll(
+        /<link[^>]*href=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+\.css)["'][^>]*\/?>/g
+      ),
+    ]
+    for (const match of cssMatches) {
+      const rawUrl = match[1]
+      const vendorPath = toVendorPath(rawUrl)
+      let css = await cachedFetchText(vendorPath)
+      const origin = window.location.origin
 
     // Resolve KaTeX font relative paths to absolute URLs
     if (vendorPath.includes('katex') && vendorPath.endsWith('.css')) {
@@ -218,20 +219,20 @@ export async function generateOfflineHTML(html) {
       css = css.replace(/url\('\.\.\/webfonts\//g, `url('${faWebfontsBase}/`)
     }
 
-    result = result.replace(match[0], () => `<style>/* ${vendorPath} */\n${css}\n</style>`)
-  }
+      result = result.replace(match[0], () => `<style>/* ${vendorPath} */\n${css}\n</style>`)
+    }
 
-  // ── 2. Inline all <script> vendor JS ─────────────────────────────────────
-  const jsMatches = [
-    ...result.matchAll(
-      /<script[^>]*src=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+)["'][^>]*>\s*<\/script>/g
-    ),
-  ]
-  for (const match of jsMatches) {
-    const rawUrl = match[1]
-    const vendorPath = toVendorPath(rawUrl)
-    let js = await cachedFetchText(vendorPath)
-    let safe = safeInlineJS(js)
+    // ── 2. Inline all <script> vendor JS ─────────────────────────────────────
+    const jsMatches = [
+      ...result.matchAll(
+        /<script[^>]*src=["']((?:https?:\/\/[^"']*)?\/(vendor)\/[^"']+)["'][^>]*>\s*<\/script>/g
+      ),
+    ]
+    for (const match of jsMatches) {
+      const rawUrl = match[1]
+      const vendorPath = toVendorPath(rawUrl)
+      let js = await cachedFetchText(vendorPath)
+      let safe = safeInlineJS(js)
 
     // Patch plugin scriptPath() after inlining — plugins use
     // document.currentScript.src to locate their images/assets.
@@ -266,20 +267,20 @@ export async function generateOfflineHTML(html) {
       )
     }
 
-    result = result.split(match[0]).join(`<script>/* ${vendorPath} */\n${safe}\n</script>`)
-  }
+      result = result.split(match[0]).join(`<script>/* ${vendorPath} */\n${safe}\n</script>`)
+    }
 
-  // ── 3. Remove Google Fonts & Computer Modern links ──────────────────────
-  result = result.replace(
-    /<link[^>]*href=["']https:\/\/fonts\.googleapis\.com[^"']*["'][^>]*\/?>/g,
-    '<!-- Google Fonts removed for offline mode -->'
-  )
-  result = result.replace(
-    /<link[^>]*href=["']https:\/\/cdn\.jsdelivr\.net\/gh\/dreampulse\/computer-modern[^"']*["'][^>]*\/?>/g,
-    '<!-- Computer Modern fonts removed for offline mode -->'
-  )
+    // ── 3. Remove Google Fonts & Computer Modern links ──────────────────────
+    result = result.replace(
+      /<link[^>]*href=["']https:\/\/fonts\.googleapis\.com[^"']*["'][^>]*\/?>/g,
+      '<!-- Google Fonts removed for offline mode -->'
+    )
+    result = result.replace(
+      /<link[^>]*href=["']https:\/\/cdn\.jsdelivr\.net\/gh\/dreampulse\/computer-modern[^"']*["'][^>]*\/?>/g,
+      '<!-- Computer Modern fonts removed for offline mode -->'
+    )
 
-  // ── 4. Convert iframes from srcdoc to blob-URL based loading ─────────────
+    // ── 4. Convert iframes from srcdoc to blob-URL based loading ─────────────
   // The srcdoc approach breaks when inlined libraries are very large (280KB+ D3,
   // 200KB+ Chart.js). Browser HTML parsers can struggle with huge srcdoc attributes
   // encoded as HTML entities. Instead, we store iframe HTML content in a JS object
@@ -314,8 +315,8 @@ export async function generateOfflineHTML(html) {
     result = result.split(r.original).join(r.replacement)
   }
 
-  // ── 5. Inject iframe initialization script ───────────────────────────────
-  if (iframeEntries.length > 0) {
+    // ── 5. Inject iframe initialization script ───────────────────────────────
+    if (iframeEntries.length > 0) {
     // Build the iframe data as base64-encoded strings to avoid any escaping issues
     const iframeDataParts = iframeEntries.map((entry) => {
       // Convert HTML to base64 to completely avoid escaping issues
@@ -432,7 +433,7 @@ ${iframeDataParts.join(',\n')}
     }
   }
 
-  // ── 6. Inline uploaded images as base64 data URIs ─────────────────────────
+    // ── 6. Inline uploaded images as base64 data URIs ─────────────────────────
   // This makes the offline HTML truly self-contained — images won't depend on the server
   const imgSrcMatches = [
     ...new Set(
@@ -450,13 +451,13 @@ ${iframeDataParts.join(',\n')}
     }
   }
 
-  // ── 7. Remove base href to avoid cross-origin SecurityError on file:// protocol ──
+    // ── 7. Remove base href to avoid cross-origin SecurityError on file:// protocol ──
   // The htmlGenerator might inject a <base href="..."> for live presentations,
   // but for offline HTML this causes Reveal.js history API to crash.
   result = result.replace(/<base[^>]*>/i, '')
 
-  // Clear cache after export completes
-  fetchCache.clear()
-
-  return result
+    return result
+  } finally {
+    fetchCache.clear()
+  }
 }

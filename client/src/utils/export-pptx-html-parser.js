@@ -118,10 +118,13 @@ export function mergeInlineStyle(base, node) {
   const style = parseStyleAttribute(node.attrs?.style)
   const tag = node.tag
 
+  // Bold
   if (tag === 'b' || tag === 'strong' || Number(style['font-weight']) >= 600 || style['font-weight'] === 'bold') {
     merged.bold = true
   }
+  // Italic
   if (tag === 'i' || tag === 'em' || style['font-style'] === 'italic') merged.italic = true
+  // Underline
   if (
     tag === 'u' ||
     String(style['text-decoration'] || '').includes('underline') ||
@@ -129,15 +132,36 @@ export function mergeInlineStyle(base, node) {
   ) {
     merged.underline = true
   }
+  // Strike (Phase 1)
+  if (
+    tag === 's' || tag === 'strike' || tag === 'del' ||
+    String(style['text-decoration'] || '').includes('line-through')
+  ) {
+    merged.strike = true
+  }
+  // Subscript (Phase 1)
+  if (tag === 'sub' || String(style['vertical-align'] || '').includes('sub')) merged.subscript = true
+  // Superscript (Phase 1)
+  if (tag === 'sup' || String(style['vertical-align'] || '').includes('super')) merged.superscript = true
+  // Code
   if (tag === 'code') merged.fontFace = 'Courier New'
+  // Color (Phase 1: preserve original format, not normalized)
   if (style.color) merged.color = style.color
+  // Font family
   if (style['font-family']) merged.fontFace = style['font-family'].split(',')[0].replace(/['"]/g, '')
+  // Font size
   if (style['font-size']) {
     const size = parseFloat(style['font-size'])
     if (Number.isFinite(size)) merged.fontSize = size
   }
+  // Text alignment
   if (style['text-align']) merged.align = style['text-align']
-
+  // Letter-spacing (Phase 1)
+  if (style['letter-spacing']) {
+    const spacing = parseFloat(style['letter-spacing'])
+    if (Number.isFinite(spacing)) merged.charSpacing = spacing
+  }
+  // Heading sizes
   if (tag in HEADING_SIZES) {
     merged.bold = true
     merged.fontSize = HEADING_SIZES[tag]

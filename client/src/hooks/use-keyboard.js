@@ -1,20 +1,53 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useMemo } from 'react'
+import { normalizeKey } from '../utils/shortcut-normalizer'
+import { getShortcuts } from '../utils/default-keyboard-shortcut-definitions-registry'
+import { loadOverrides } from '../utils/shortcut-local-storage-persistence'
+
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+
+/**
+ * Create keyboard event handler that dispatches from shortcut registry.
+ */
+export function createKeyboardHandler({
+  shortcuts,
+  isEditing = false,
+  getActiveElement = () => document.activeElement,
+  ...callbacks
+}) {
+  return (e) => {
+    if (isEditing) return
+    const tag = getActiveElement()?.tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+
+    const ctrl = e.ctrlKey || e.metaKey
+
+    if ((e.key === 'Delete' || e.key === 'Backspace') && !ctrl) {
+      callbacks.onDelete?.()
+      e.preventDefault()
+      return
+    }
+
+    if (e.key === 'Escape') {
+      callbacks.onEscape?.()
+      return
+    }
+
+    if (ctrl) {
+      const chord = normalizeKey(e)
+      const shortcut = shortcuts.find((s) => s.activeKey === chord)
+      if (shortcut) {
+        const cbName = `on${capitalize(shortcut.id)}`
+        callbacks[cbName]?.()
+        e.preventDefault()
+      }
+    }
+  }
+}
 
 /**
  * Custom hook for keyboard shortcuts in the editor.
  *
- * @param {Object} opts
- * @param {Function} opts.onCopy - copy selected element
- * @param {Function} opts.onCut - cut selected element
- * @param {Function} opts.onPaste - paste from clipboard
- * @param {Function} opts.onDuplicate - duplicate selected element
- * @param {Function} opts.onUndo - undo last action
- * @param {Function} opts.onRedo - redo last undone action
- * @param {Function} opts.onDelete - delete selected elements
- * @param {Function} opts.onSelectAll - select all elements
- * @param {Function} opts.onToggleFindReplace - toggle find/replace bar
- * @param {Function} opts.onEscape - deselect / close modals
- * @param {boolean}  opts.isEditing - whether a text element is being edited (skip shortcuts)
+ * Reads overrides from localStorage and resolves active shortcuts from the registry.
  */
 export function useKeyboard({
   onCopy,
@@ -29,73 +62,26 @@ export function useKeyboard({
   onEscape,
   isEditing = false,
 }) {
-  const handleKeyDown = useCallback(
-    (e) => {
-      // Skip when editing text or in input fields
-      if (isEditing) return
-      const tag = document.activeElement?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+  const shortcuts = getShortcuts(loadOverrides())
 
-      const ctrl = e.ctrlKey || e.metaKey
-
-      // Delete / Backspace
-      if ((e.key === 'Delete' || e.key === 'Backspace') && !ctrl) {
-        onDelete?.()
-        e.preventDefault()
-        return
-      }
-
-      // Escape
-      if (e.key === 'Escape') {
-        onEscape?.()
-        e.preventDefault()
-        return
-      }
-
-      if (!ctrl) return
-
-      switch (e.key.toLowerCase()) {
-        case 'c':
-          onCopy?.()
-          e.preventDefault()
-          break
-        case 'x':
-          onCut?.()
-          e.preventDefault()
-          break
-        case 'v':
-          onPaste?.()
-          e.preventDefault()
-          break
-        case 'd':
-          onDuplicate?.()
-          e.preventDefault()
-          break
-        case 'z':
-          if (e.shiftKey) {
-            onRedo?.()
-          } else {
-            onUndo?.()
-          }
-          e.preventDefault()
-          break
-        case 'y':
-          onRedo?.()
-          e.preventDefault()
-          break
-        case 'a':
-          onSelectAll?.()
-          e.preventDefault()
-          break
-        case 'f':
-          onToggleFindReplace?.()
-          e.preventDefault()
-          break
-        default:
-          break
-      }
-    },
+  const handleKeyDown = useMemo(
+    () =>
+      createKeyboardHandler({
+        shortcuts,
+        isEditing,
+        onCopy,
+        onCut,
+        onPaste,
+        onDuplicate,
+        onUndo,
+        onRedo,
+        onDelete,
+        onSelectAll,
+        onToggleFindReplace,
+        onEscape,
+      }),
     [
+      shortcuts,
       isEditing,
       onCopy,
       onCut,

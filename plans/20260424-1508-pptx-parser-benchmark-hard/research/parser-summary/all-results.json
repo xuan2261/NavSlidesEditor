@@ -1,0 +1,801 @@
+{
+  "generatedAt": "2026-04-24T13:14:08.022Z",
+  "results": [
+    {
+      "deck": "Bai_2_1.pptx",
+      "durationMs": 606.77,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2026-04-19T03:23:10.561Z",
+      "packageVersion": "2.0.2",
+      "parser": "pptxtojson",
+      "peakMemoryMb": 88.85,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptxtojson\\Bai_2_1.redacted.json",
+      "rawOutputSizeMb": 1.25,
+      "resourceLimits": {
+        "entryCount": 185,
+        "uncompressedBytes": 3374700
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 43,
+          "inventoryNoteCount": 0,
+          "inventorySlideCount": 41,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 0,
+        "groupCount": 6,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 27,
+        "mediaCount": 27,
+        "noteCount": 0,
+        "parser": "pptxtojson",
+        "placeholderCount": 0,
+        "shapeCount": 161,
+        "size": {
+          "height": 540,
+          "width": 960
+        },
+        "slideCount": 41,
+        "tableCount": 5,
+        "textCount": 207,
+        "unsupportedObjects": [],
+        "verdict": "pass"
+      },
+      "warnings": [
+        "Parsed with media payload extraction disabled."
+      ]
+    },
+    {
+      "deck": "Bai_2_2.pptx",
+      "durationMs": 902,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2026-04-19T03:23:10.561Z",
+      "packageVersion": "2.0.2",
+      "parser": "pptxtojson",
+      "peakMemoryMb": 91.14,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptxtojson\\Bai_2_2.redacted.json",
+      "rawOutputSizeMb": 2.78,
+      "resourceLimits": {
+        "entryCount": 220,
+        "uncompressedBytes": 3629120
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 35,
+          "inventoryNoteCount": 1,
+          "inventorySlideCount": 39,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 0,
+        "groupCount": 41,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 2,
+        "mediaCount": 2,
+        "noteCount": 1,
+        "parser": "pptxtojson",
+        "placeholderCount": 0,
+        "shapeCount": 277,
+        "size": {
+          "height": 540,
+          "width": 960
+        },
+        "slideCount": 39,
+        "tableCount": 15,
+        "textCount": 294,
+        "unsupportedObjects": [
+          "equation"
+        ],
+        "verdict": "pass"
+      },
+      "warnings": [
+        "Parsed with media payload extraction disabled."
+      ]
+    },
+    {
+      "deck": "Bai_2_5.pptx",
+      "durationMs": 872.73,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2026-04-19T03:23:10.561Z",
+      "packageVersion": "2.0.2",
+      "parser": "pptxtojson",
+      "peakMemoryMb": 95.11,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptxtojson\\Bai_2_5.redacted.json",
+      "rawOutputSizeMb": 2.48,
+      "resourceLimits": {
+        "entryCount": 225,
+        "uncompressedBytes": 3877181
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 63,
+          "inventoryNoteCount": 4,
+          "inventorySlideCount": 45,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 0,
+        "groupCount": 31,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 31,
+        "mediaCount": 31,
+        "noteCount": 4,
+        "parser": "pptxtojson",
+        "placeholderCount": 0,
+        "shapeCount": 335,
+        "size": {
+          "height": 540,
+          "width": 960
+        },
+        "slideCount": 45,
+        "tableCount": 18,
+        "textCount": 267,
+        "unsupportedObjects": [
+          "equation"
+        ],
+        "verdict": "pass"
+      },
+      "warnings": [
+        "Parsed with media payload extraction disabled."
+      ]
+    },
+    {
+      "deck": "STTre_Duc.pptx",
+      "durationMs": 476.24,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2026-04-19T03:23:10.561Z",
+      "packageVersion": "2.0.2",
+      "parser": "pptxtojson",
+      "peakMemoryMb": 87.65,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptxtojson\\STTre_Duc.redacted.json",
+      "rawOutputSizeMb": 0.63,
+      "resourceLimits": {
+        "entryCount": 131,
+        "uncompressedBytes": 3916574
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 15,
+          "inventoryNoteCount": 15,
+          "inventorySlideCount": 20,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 0,
+        "groupCount": 0,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 28,
+        "mediaCount": 28,
+        "noteCount": 15,
+        "parser": "pptxtojson",
+        "placeholderCount": 0,
+        "shapeCount": 193,
+        "size": {
+          "height": 540,
+          "width": 960
+        },
+        "slideCount": 20,
+        "tableCount": 0,
+        "textCount": 90,
+        "unsupportedObjects": [],
+        "verdict": "pass"
+      },
+      "warnings": [
+        "Parsed with media payload extraction disabled."
+      ]
+    },
+    {
+      "deck": "Bai_2_1.pptx",
+      "durationMs": 1299.78,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2024-07-07T15:24:30.383Z",
+      "packageVersion": "0.0.10",
+      "parser": "pptx2json",
+      "peakMemoryMb": 98.24,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptx2json\\Bai_2_1.redacted.json",
+      "rawOutputSizeMb": 24.87,
+      "resourceLimits": {
+        "entryCount": 185,
+        "uncompressedBytes": 3374700
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 43,
+          "inventoryNoteCount": 0,
+          "inventorySlideCount": 41,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 1,
+        "groupCount": 6,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 33,
+        "mediaCount": 43,
+        "noteCount": 0,
+        "parser": "pptx2json",
+        "placeholderCount": 82,
+        "shapeCount": 46,
+        "size": {
+          "height": null,
+          "width": null
+        },
+        "slideCount": 41,
+        "tableCount": 5,
+        "textCount": 1684,
+        "unsupportedObjects": [
+          "ole"
+        ],
+        "verdict": "partial"
+      },
+      "warnings": [
+        "Raw OOXML JSON; mapper complexity expected high."
+      ]
+    },
+    {
+      "deck": "Bai_2_2.pptx",
+      "durationMs": 2942.86,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2024-07-07T15:24:30.383Z",
+      "packageVersion": "0.0.10",
+      "parser": "pptx2json",
+      "peakMemoryMb": 122.9,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptx2json\\Bai_2_2.redacted.json",
+      "rawOutputSizeMb": 66.55,
+      "resourceLimits": {
+        "entryCount": 220,
+        "uncompressedBytes": 3629120
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 35,
+          "inventoryNoteCount": 1,
+          "inventorySlideCount": 39,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 19,
+        "groupCount": 28,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 34,
+        "mediaCount": 35,
+        "noteCount": 1,
+        "parser": "pptx2json",
+        "placeholderCount": 78,
+        "shapeCount": 87,
+        "size": {
+          "height": null,
+          "width": null
+        },
+        "slideCount": 39,
+        "tableCount": 15,
+        "textCount": 2921,
+        "unsupportedObjects": [
+          "ole"
+        ],
+        "verdict": "partial"
+      },
+      "warnings": [
+        "Raw OOXML JSON; mapper complexity expected high."
+      ]
+    },
+    {
+      "deck": "Bai_2_5.pptx",
+      "durationMs": 2118.37,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2024-07-07T15:24:30.383Z",
+      "packageVersion": "0.0.10",
+      "parser": "pptx2json",
+      "peakMemoryMb": 122.09,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptx2json\\Bai_2_5.redacted.json",
+      "rawOutputSizeMb": 47.39,
+      "resourceLimits": {
+        "entryCount": 225,
+        "uncompressedBytes": 3877181
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 63,
+          "inventoryNoteCount": 4,
+          "inventorySlideCount": 45,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 11,
+        "groupCount": 24,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 46,
+        "mediaCount": 63,
+        "noteCount": 4,
+        "parser": "pptx2json",
+        "placeholderCount": 90,
+        "shapeCount": 102,
+        "size": {
+          "height": null,
+          "width": null
+        },
+        "slideCount": 45,
+        "tableCount": 18,
+        "textCount": 3347,
+        "unsupportedObjects": [
+          "ole"
+        ],
+        "verdict": "partial"
+      },
+      "warnings": [
+        "Raw OOXML JSON; mapper complexity expected high."
+      ]
+    },
+    {
+      "deck": "STTre_Duc.pptx",
+      "durationMs": 960.76,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2024-07-07T15:24:30.383Z",
+      "packageVersion": "0.0.10",
+      "parser": "pptx2json",
+      "peakMemoryMb": 95.74,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptx2json\\STTre_Duc.redacted.json",
+      "rawOutputSizeMb": 16.28,
+      "resourceLimits": {
+        "entryCount": 131,
+        "uncompressedBytes": 3916574
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 15,
+          "inventoryNoteCount": 15,
+          "inventorySlideCount": 20,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 3,
+        "groupCount": 0,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 23,
+        "mediaCount": 15,
+        "noteCount": 15,
+        "parser": "pptx2json",
+        "placeholderCount": 40,
+        "shapeCount": 20,
+        "size": {
+          "height": null,
+          "width": null
+        },
+        "slideCount": 20,
+        "tableCount": 0,
+        "textCount": 486,
+        "unsupportedObjects": [
+          "ole"
+        ],
+        "verdict": "partial"
+      },
+      "warnings": [
+        "Raw OOXML JSON; mapper complexity expected high."
+      ]
+    },
+    {
+      "deck": "Bai_2_1.pptx",
+      "durationMs": 744.85,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2024-12-24T11:33:06.482Z",
+      "packageVersion": "0.0.8",
+      "parser": "ppt-parser",
+      "peakMemoryMb": 95.08,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\ppt-parser\\Bai_2_1.redacted.json",
+      "rawOutputSizeMb": 1.06,
+      "resourceLimits": {
+        "entryCount": 185,
+        "uncompressedBytes": 3374700
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 43,
+          "inventoryNoteCount": 0,
+          "inventorySlideCount": 41,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 0,
+        "groupCount": 6,
+        "hasFontInfo": false,
+        "hasLayoutElements": false,
+        "hasThemeColors": false,
+        "imageCount": 27,
+        "mediaCount": 27,
+        "noteCount": 0,
+        "parser": "ppt-parser",
+        "placeholderCount": 0,
+        "shapeCount": 79,
+        "size": {
+          "height": 720,
+          "width": 1280
+        },
+        "slideCount": 41,
+        "tableCount": 5,
+        "textCount": 125,
+        "unsupportedObjects": [],
+        "verdict": "pass"
+      },
+      "warnings": []
+    },
+    {
+      "deck": "Bai_2_2.pptx",
+      "durationMs": 1144.01,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2024-12-24T11:33:06.482Z",
+      "packageVersion": "0.0.8",
+      "parser": "ppt-parser",
+      "peakMemoryMb": 99.74,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\ppt-parser\\Bai_2_2.redacted.json",
+      "rawOutputSizeMb": 1.86,
+      "resourceLimits": {
+        "entryCount": 220,
+        "uncompressedBytes": 3629120
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 35,
+          "inventoryNoteCount": 1,
+          "inventorySlideCount": 39,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 0,
+        "groupCount": 41,
+        "hasFontInfo": false,
+        "hasLayoutElements": false,
+        "hasThemeColors": false,
+        "imageCount": 2,
+        "mediaCount": 2,
+        "noteCount": 0,
+        "parser": "ppt-parser",
+        "placeholderCount": 0,
+        "shapeCount": 199,
+        "size": {
+          "height": 720,
+          "width": 1280
+        },
+        "slideCount": 39,
+        "tableCount": 15,
+        "textCount": 216,
+        "unsupportedObjects": [],
+        "verdict": "pass"
+      },
+      "warnings": []
+    },
+    {
+      "deck": "Bai_2_5.pptx",
+      "durationMs": 1018.11,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2024-12-24T11:33:06.482Z",
+      "packageVersion": "0.0.8",
+      "parser": "ppt-parser",
+      "peakMemoryMb": 93.48,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\ppt-parser\\Bai_2_5.redacted.json",
+      "rawOutputSizeMb": 1.99,
+      "resourceLimits": {
+        "entryCount": 225,
+        "uncompressedBytes": 3877181
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 63,
+          "inventoryNoteCount": 4,
+          "inventorySlideCount": 45,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 0,
+        "groupCount": 31,
+        "hasFontInfo": false,
+        "hasLayoutElements": false,
+        "hasThemeColors": false,
+        "imageCount": 31,
+        "mediaCount": 31,
+        "noteCount": 0,
+        "parser": "ppt-parser",
+        "placeholderCount": 0,
+        "shapeCount": 245,
+        "size": {
+          "height": 720,
+          "width": 1280
+        },
+        "slideCount": 45,
+        "tableCount": 18,
+        "textCount": 177,
+        "unsupportedObjects": [],
+        "verdict": "pass"
+      },
+      "warnings": []
+    },
+    {
+      "deck": "STTre_Duc.pptx",
+      "durationMs": 661.1,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2024-12-24T11:33:06.482Z",
+      "packageVersion": "0.0.8",
+      "parser": "ppt-parser",
+      "peakMemoryMb": 111.89,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\ppt-parser\\STTre_Duc.redacted.json",
+      "rawOutputSizeMb": 0.52,
+      "resourceLimits": {
+        "entryCount": 131,
+        "uncompressedBytes": 3916574
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 15,
+          "inventoryNoteCount": 15,
+          "inventorySlideCount": 20,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 0,
+        "groupCount": 0,
+        "hasFontInfo": false,
+        "hasLayoutElements": false,
+        "hasThemeColors": false,
+        "imageCount": 28,
+        "mediaCount": 28,
+        "noteCount": 0,
+        "parser": "ppt-parser",
+        "placeholderCount": 0,
+        "shapeCount": 73,
+        "size": {
+          "height": 720,
+          "width": 1280
+        },
+        "slideCount": 20,
+        "tableCount": 0,
+        "textCount": 30,
+        "unsupportedObjects": [],
+        "verdict": "pass"
+      },
+      "warnings": []
+    },
+    {
+      "deck": "Bai_2_1.pptx",
+      "durationMs": 1188.59,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2022-06-24T12:53:21.439Z",
+      "packageVersion": "1.0.0",
+      "parser": "pptx-compose",
+      "peakMemoryMb": 97.97,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptx-compose\\Bai_2_1.redacted.json",
+      "rawOutputSizeMb": 24.87,
+      "resourceLimits": {
+        "entryCount": 185,
+        "uncompressedBytes": 3374700
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 43,
+          "inventoryNoteCount": 0,
+          "inventorySlideCount": 41,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 1,
+        "groupCount": 6,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 33,
+        "mediaCount": 43,
+        "noteCount": 0,
+        "parser": "pptx-compose",
+        "placeholderCount": 82,
+        "shapeCount": 46,
+        "size": {
+          "height": null,
+          "width": null
+        },
+        "slideCount": 41,
+        "tableCount": 5,
+        "textCount": 1684,
+        "unsupportedObjects": [
+          "ole"
+        ],
+        "verdict": "partial"
+      },
+      "warnings": [
+        "Raw OOXML JSON baseline; package is older."
+      ]
+    },
+    {
+      "deck": "Bai_2_2.pptx",
+      "durationMs": 2555.2,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2022-06-24T12:53:21.439Z",
+      "packageVersion": "1.0.0",
+      "parser": "pptx-compose",
+      "peakMemoryMb": 118.88,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptx-compose\\Bai_2_2.redacted.json",
+      "rawOutputSizeMb": 66.55,
+      "resourceLimits": {
+        "entryCount": 220,
+        "uncompressedBytes": 3629120
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 35,
+          "inventoryNoteCount": 1,
+          "inventorySlideCount": 39,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 19,
+        "groupCount": 28,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 34,
+        "mediaCount": 35,
+        "noteCount": 1,
+        "parser": "pptx-compose",
+        "placeholderCount": 78,
+        "shapeCount": 87,
+        "size": {
+          "height": null,
+          "width": null
+        },
+        "slideCount": 39,
+        "tableCount": 15,
+        "textCount": 2921,
+        "unsupportedObjects": [
+          "ole"
+        ],
+        "verdict": "partial"
+      },
+      "warnings": [
+        "Raw OOXML JSON baseline; package is older."
+      ]
+    },
+    {
+      "deck": "Bai_2_5.pptx",
+      "durationMs": 1893.54,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2022-06-24T12:53:21.439Z",
+      "packageVersion": "1.0.0",
+      "parser": "pptx-compose",
+      "peakMemoryMb": 111.33,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptx-compose\\Bai_2_5.redacted.json",
+      "rawOutputSizeMb": 47.39,
+      "resourceLimits": {
+        "entryCount": 225,
+        "uncompressedBytes": 3877181
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 63,
+          "inventoryNoteCount": 4,
+          "inventorySlideCount": 45,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 11,
+        "groupCount": 24,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 46,
+        "mediaCount": 63,
+        "noteCount": 4,
+        "parser": "pptx-compose",
+        "placeholderCount": 90,
+        "shapeCount": 102,
+        "size": {
+          "height": null,
+          "width": null
+        },
+        "slideCount": 45,
+        "tableCount": 18,
+        "textCount": 3347,
+        "unsupportedObjects": [
+          "ole"
+        ],
+        "verdict": "partial"
+      },
+      "warnings": [
+        "Raw OOXML JSON baseline; package is older."
+      ]
+    },
+    {
+      "deck": "STTre_Duc.pptx",
+      "durationMs": 939.19,
+      "error": null,
+      "ok": true,
+      "packageModifiedDate": "2022-06-24T12:53:21.439Z",
+      "packageVersion": "1.0.0",
+      "parser": "pptx-compose",
+      "peakMemoryMb": 92.74,
+      "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptx-compose\\STTre_Duc.redacted.json",
+      "rawOutputSizeMb": 16.28,
+      "resourceLimits": {
+        "entryCount": 131,
+        "uncompressedBytes": 3916574
+      },
+      "summary": {
+        "chartCount": 0,
+        "compare": {
+          "inventoryMediaCount": 15,
+          "inventoryNoteCount": 15,
+          "inventorySlideCount": 20,
+          "slideCountDelta": 0,
+          "slideCountMatches": true
+        },
+        "connectorCount": 3,
+        "groupCount": 0,
+        "hasFontInfo": false,
+        "hasLayoutElements": true,
+        "hasThemeColors": true,
+        "imageCount": 23,
+        "mediaCount": 15,
+        "noteCount": 15,
+        "parser": "pptx-compose",
+        "placeholderCount": 40,
+        "shapeCount": 20,
+        "size": {
+          "height": null,
+          "width": null
+        },
+        "slideCount": 20,
+        "tableCount": 0,
+        "textCount": 486,
+        "unsupportedObjects": [
+          "ole"
+        ],
+        "verdict": "partial"
+      },
+      "warnings": [
+        "Raw OOXML JSON baseline; package is older."
+      ]
+    }
+  ]
+}

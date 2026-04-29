@@ -1,0 +1,105 @@
+import { test, expect } from '@playwright/test'
+import {
+  apiCreatePresentation,
+  apiDeletePresentation,
+  apiUpdatePresentation,
+} from './fixtures/test-fixtures.js'
+
+function seededSlide(elements = []) {
+  return {
+    id: 'slide-1',
+    elements,
+    notes: '',
+    background: { type: 'color', color: '#1e1e2e' },
+  }
+}
+
+test.describe('Visual Regression', () => {
+  let presentationId
+
+  test.afterEach(async ({ request }) => {
+    if (presentationId) {
+      await apiDeletePresentation(request, presentationId)
+    }
+  })
+
+  test('editor canvas baseline remains stable', async ({ page, request }) => {
+    const pres = await apiCreatePresentation(request, 'Visual Regression Baseline')
+    presentationId = pres.id
+
+    await apiUpdatePresentation(request, presentationId, {
+      title: 'Visual Regression Baseline',
+      slides: [
+        seededSlide([
+          {
+            id: 'visual-shape-1',
+            type: 'shape',
+            shape: 'rect',
+            x: 80,
+            y: 90,
+            width: 240,
+            height: 140,
+            zIndex: 1,
+            fill: '#6366f1',
+            stroke: '#ffffff',
+            strokeWidth: 2,
+            text: 'Stable Box',
+            fontSize: 24,
+            textColor: '#ffffff',
+          },
+          {
+            id: 'visual-chart-1',
+            type: 'chart',
+            x: 360,
+            y: 90,
+            width: 480,
+            height: 280,
+            zIndex: 2,
+            chartType: 'bar',
+            chartData: {
+              labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+              datasets: [{ label: 'Revenue', data: [10, 18, 14, 22], color: '#22c55e' }],
+            },
+          },
+          {
+            id: 'visual-table-1',
+            type: 'table',
+            x: 120,
+            y: 280,
+            width: 420,
+            height: 180,
+            zIndex: 3,
+            data: [
+              ['Metric', 'Value'],
+              ['Users', '1200'],
+              ['NPS', '62'],
+            ],
+            headerRow: true,
+            headerBgColor: '#334155',
+            textColor: '#f8fafc',
+            borderColor: '#64748b',
+            fontSize: 14,
+          },
+        ]),
+      ],
+    })
+
+    await page.addInitScript(() => {
+      window.localStorage.setItem('navSlidesTutorialSeen', 'true')
+    })
+
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto(`/editor/${presentationId}`)
+    await expect(page.locator('.slide-canvas')).toBeVisible()
+
+    await page.addStyleTag({
+      content: '* { animation: none !important; transition: none !important; }',
+    })
+
+    await expect(page).toHaveScreenshot('editor-canvas-basic.png', {
+      animations: 'disabled',
+      maxDiffPixelRatio: 0.01,
+      mask: [page.locator('.tour-step-quick-access')],
+    })
+  })
+})

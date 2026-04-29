@@ -2,8 +2,58 @@
 
 ## v1.6.x
 
+## 2026-04-29
+
+- Completed Gamification Game Controls feature (Phases 1-11, 161 tests passing):
+
+  **Phase 1 - Game Element Types Foundation:**
+  Added `game` element type with 7 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories). Created `game-element-types-constants.js` with `GAME_TYPES`, `DEFAULT_GAME_COLORS`, `createGameElement`/`createQuestion`/`createTeam` factories. Created placeholder renderer `game-element-placeholder-renderer.jsx`. Registered renderer in `registry.js`. Added `ELEMENT_DEFAULTS.game` and `DEFAULT_POSITIONS.game` in `element-defaults.js`. 68 unit tests added (592 total tests passing).
+
+  **Phase 2 - Backend Game Engine:**
+  Added Socket.IO room management for game sessions (`server/services/game-engine.js`, `server/routes/games.js`), random picker with weights, leaderboard generation, scoring, team management, timer/question lifecycle, and game state persistence. REST endpoints: `POST/GET/DELETE /api/games/:sessionId`, `POST /api/games/:sessionId/join`, `POST /api/games/:sessionId/action`, `GET /api/games/:sessionId/leaderboard`, `DELETE /api/games/:sessionId/leave`.
+
+  **Phase 3 - Canvas Renderer with Static SVG Previews:**
+  Added `GameElementRenderer.jsx` with SVG previews for all 7 game types: spinning wheel (name-picker), ticking bomb (hot-potato), Jeopardy board (jeopardy), corner grid (four-corners), relay baton (relay-race), trophy (trivia-champ), letter grid (scattergories). Integrated into canvas element registry. Element defaults and positions updated.
+
+  **Phase 4 - Game Properties Panel:**
+  Added Content/Display/Scoring tabbed properties panel for game elements. Content tab: game type selector, team count/names, question list with add/edit/delete, timer duration, difficulty, topic tags, auto-advance toggle. Display tab: primary/secondary/accent colors, background, font, show answers toggle, custom rules text. Scoring tab: points per difficulty, bonus multipliers, streak bonus, penalty settings, tiebreaker rules. Backed by `game-properties.jsx`.
+
+  **Phase 5 - Toolbar Integration:**
+  Integrated game element insertion via `InsertMenu.jsx`. Added "Games" category with icon grid for all 7 game types. `createGameElement` factory wired to `EditorPage` insert handler. Default element sizes set per game type.
+
+  **Phase 6 - Player Join Page:**
+  Added `/player/:slideId/:elementId` route with `PlayerJoinPage.jsx`. `useGameSocket` hook manages Socket.IO connection, join flow (name + optional team selection), connection status, and session state. Team assignment, spectator mode, and game element ID validation implemented.
+
+  **Phase 7-10 - Interactive Renderers:**
+  - Phase 7: Wheel spin animation (CSS keyframes + SVG, pointer-based landing), confetti burst on selection, player list with avatars, timer ring countdown, hot-potato bomb SVG with fuse animation
+  - Phase 8: Jeopardy board with 5 categories, 5 questions each, dollar values 100-500, reveal animation, double-jeopardy round support, final round with wagers
+  - Phase 9: Four-corners room picker with corner icons, countdown timer, random selection animation with suspense effects, scattergories letter generator with timer, category display grid
+  - Phase 10: Relay race timer with baton handoff animation, trivia champion leaderboard with podium display, score tracking with streak bonuses, penalty system
+
+  **Phase 11 - Integration Tests:**
+  161 tests total passing across all game types. Test suites cover: game engine room lifecycle, Socket.IO event handling, leaderboard generation, scoring calculations, timer behavior, team management, player join/leave flows, SVG preview rendering, properties panel interactions, and element creation factories.
+
+- Files created (key): `client/src/constants/game-element-types-constants.js`, `client/src/components/canvas/element-renderers/game-element-placeholder-renderer.jsx`, `client/src/components/canvas/element-renderers/game-element-renderer.jsx`, `client/src/components/properties/game-properties.jsx`, `client/src/pages/PlayerJoinPage.jsx`, `client/src/hooks/use-game-socket.js`, `server/services/game-engine.js`, `server/routes/games.js`, game element test suites.
+- Files modified: `client/src/data/element-defaults.js`, `client/src/components/canvas/element-renderers/registry.js`, `client/src/components/InsertMenu.jsx`, `client/src/components/EditorMenuBar.jsx`, `client/src/App.jsx`, `client/src/stores/editor-store.js` (game element insert handler), server `index.js` (game routes wired).
+
+## 2026-04-29 (continued)
+
+- Completed Phase 1 of Gamification Feature (Phase 1-11 total): Added `game` element type with 7 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories). Created `game-element-types-constants.js` with `GAME_TYPES`, `DEFAULT_GAME_COLORS`, `createGameElement`/`createQuestion`/`createTeam` factories. Created placeholder renderer `game-element-placeholder-renderer.jsx` (full rendering deferred to Phase 3). Registered renderer in `registry.js`. Added `ELEMENT_DEFAULTS.game` and `DEFAULT_POSITIONS.game` in `element-defaults.js`. 68 unit tests added (592 total tests passing).
+- Files created: `client/src/constants/game-element-types-constants.js`, `client/src/components/canvas/element-renderers/game-element-placeholder-renderer.jsx`, `client/src/hooks/game-element-foundation.test.js`.
+- Files modified: `client/src/data/element-defaults.js`, `client/src/components/canvas/element-renderers/registry.js`, `client/src/utils/tailwind-inline-style-audit.test.js`.
+
+## 2026-04-28
+
+- Completed Phase 1 command layer unification: clipboard operations (copy/cut/paste/duplicate) refactored to pure functions in `use-clipboard.js` (`createCopyOperation`, `createPasteOperation`, `createCutOperation`, `createDuplicateOperation`). `SlideCanvas` no longer owns keyboard listeners or clipboard state. `handleUndo`/`handleRedo` wrapped in `useCallback`. Deprecated `use-history.js` removed (history logic inlined into `EditorPage`). Unit test added in `use-clipboard.test.js`. SlideCanvas reduced by 79 LOC.
+- Updated changelog with recent features and fixes covering AnimationPreviewModal, presenterToken hardening, command layer, PPTX export hardening, and UI/UX Tailwind remediation.
+
 ## 2026-04-27
 
+- Completed command layer unification (Phase 1): `SlideCanvas` no longer owns clipboard/keyboard. `use-keyboard.js` refactored to `createKeyboardHandler` + registry-based dispatch.
+- Completed canvas render decomposition (Phase 2): `SlideCanvas` reduced from 2759 → 841 LOC. Extracted 11 element renderers to `canvas/element-renderers/`, `CanvasElement` wrapper, `CropOverlay`, chrome components, and interaction hooks. Text/image/media/html/code renderers remain inline in `canvas-element-wrapper.jsx` due to TipTap/DOM coupling.
+- Completed canvas chrome & interaction extraction (Phase 3): Grid, rulers, zoom, footer, context menu extracted to `canvas/` components. Pointer, resize, rotate, selection, snapping hooks created.
+- Added custom shortcut registry (Phase 4): `shortcut-registry.js` (10 default shortcuts), `shortcut-storage.js` (localStorage persistence), `shortcut-normalizer.js` (key chord normalization). `use-keyboard.js` now resolves from registry with localStorage override support. Conflict detection prevents ambiguous bindings. SettingsPage now includes a Keyboard Shortcuts manager section with per-shortcut record/reset and conflict warning UI.
+- Completed PPTX import fidelity hardening (Phase 5): Fixed SmartArt node positioning bug (`readCoord(node.left, node.x)` instead of array index), added connector preservation warning, extended `chart-output-to-navslides-mapper.js` with legend, axis titles, combo chart, 3D metadata. Added 20-unit chart metadata test suite.
 - Added `AnimationPreviewModal` feature for slide transition and animation preview with `animation-preview-helpers.js` supporting fragment timing extraction and easing curve normalization.
 - Hardened live presentation security: `POST /api/live/room` returns `presenterToken`; presenter socket join requires `presenterToken` and rejects takeover attempts.
 - Improved command layer in `use-keyboard.js`: refactored to `createKeyboardHandler` + `useMemo` pattern for better memoization. Added locked-element guards to prevent cut/duplicate of locked elements. Added paste-on-empty-selection support for post-slide-change paste scenarios. Fixed stale closure bugs with `slideRef` and `clipboardRef`.

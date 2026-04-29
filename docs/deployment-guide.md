@@ -5,8 +5,8 @@
 | Method               | Best For                        | Requirements                      |
 | -------------------- | ------------------------------- | --------------------------------- |
 | Docker (recommended) | Server / VPS                    | Docker 20.10+, Docker Compose v2+ |
-| Node.js from source  | Development, lightweight server | Node.js 18+, npm 8+               |
-| Electron desktop     | Single-user desktop app         | Node.js 18+ (build only)          |
+| Node.js from source  | Development, lightweight server | Node.js 20+, npm 8+               |
+| Electron desktop     | Single-user desktop app         | Node.js 20+ (build only)          |
 
 ---
 
@@ -15,8 +15,8 @@
 ### Quick Start
 
 ```bash
-git clone https://github.com/jbirky/revealjs_gui.git
-cd revealjs_gui
+git clone https://github.com/Xuan2261/navslides-editor.git
+cd navslides-editor
 docker compose up -d
 ```
 
@@ -75,10 +75,10 @@ docker compose down -v
 
 ### Dockerfile Summary
 
-Multi-stage build:
+Multi-stage build (confirmed at `Dockerfile` in root):
 
-1. **Builder stage** — uses Node 20 Alpine, installs all deps, runs `npm run build` (compiles React → `client/dist/`)
-2. **Production stage** — uses the Playwright Node image so server-side PPTX element rasterization has Chromium available, installs only server prod deps, copies `server/` + `client/dist/`, and installs rclone via `apt`
+1. **Builder stage** — uses Node 20 Alpine, installs all deps, runs `npm run vendor` + `npm run build` (compiles React → `client/dist/`)
+2. **Production stage** — uses `mcr.microsoft.com/playwright:v1.59.1-noble` so server-side PPTX element rasterization has Chromium available, installs only server prod deps, copies `server/` + `client/dist/` + `server/vendor/`, and installs rclone via `apt`
 
 Final image runs: `node server/index.js`
 
@@ -91,8 +91,8 @@ Final image runs: `node server/index.js`
 Runs Vite dev server + Express API concurrently with hot-reload:
 
 ```bash
-git clone https://github.com/jbirky/revealjs_gui.git
-cd revealjs_gui
+git clone https://github.com/Xuan2261/navslides-editor.git
+cd navslides-editor
 npm install
 npm run dev
 ```
@@ -125,7 +125,7 @@ PORT=8080 npm start
 
 ### Pre-built Packages
 
-Download from the [Releases](https://github.com/jbirky/revealjs_gui/releases) page:
+Download from the [Releases](https://github.com/Xuan2261/navslides-editor/releases) page:
 
 | Platform | Format                              |
 | -------- | ----------------------------------- |
@@ -262,13 +262,34 @@ The repository includes a GitHub Actions workflow that builds the Windows Electr
 
 Current state:
 
-- Windows build only (Linux and macOS targets not yet configured)
-- No automated tests in CI
-- No automatic publish to GitHub Releases
+- Windows build only (Linux and macOS targets planned — see `docs/project-roadmap.md` Phase D)
+- 510 Vitest unit tests + 127 Playwright E2E tests verified before each push
+- No automatic publish to GitHub Releases yet
 
 To trigger a release build manually: push a tag matching `v*` (e.g. `v1.0.1`).
 
-Planned improvements: see `docs/project-roadmap.md` Phase 6.
+Test commands run locally:
+```bash
+npm run lint     # ESLint flat config
+npm run test     # Vitest — 510 tests
+npm run test:e2e # Playwright — 127 tests in 27 spec files
+npm run build    # Vite production build
+```
+
+---
+
+## E2E Visual Baseline
+
+Visual regression uses Playwright built-in screenshots. Update baseline snapshots
+only when intentional UI changes are reviewed:
+
+```bash
+npx playwright test tests/e2e/visual-regression.spec.js --update-snapshots
+```
+
+Current baseline file:
+
+- `tests/e2e/visual-regression.spec.js-snapshots/editor-canvas-basic-chromium-win32.png`
 
 ---
 

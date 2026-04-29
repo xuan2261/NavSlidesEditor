@@ -1,4 +1,8 @@
 import { expect } from '@playwright/test'
+import { CanvasHelper } from './CanvasHelper.js'
+import { InsertMenuHelper } from './InsertMenuHelper.js'
+import { PropertiesPanelHelper } from './PropertiesPanelHelper.js'
+import { SlidePanelHelper } from './SlidePanelHelper.js'
 
 export class EditorPage {
   /**
@@ -11,6 +15,28 @@ export class EditorPage {
     this.thumbnailsLocator = page.locator('.slide-panel .slide-item')
     this.addSlideBtn = page.locator('.add-slide-btn').filter({ hasText: 'Add Slide' })
     this.lastInsertedElementIndex = null
+
+    this.properties = new PropertiesPanelHelper({ page })
+    this.insert = new InsertMenuHelper({
+      page,
+      getElementCount: () => this.getElementCount(),
+      setLastInsertedElementIndex: (index) => {
+        this.lastInsertedElementIndex = index
+      },
+    })
+    this.slidePanel = new SlidePanelHelper({
+      page,
+      thumbnailsLocator: this.thumbnailsLocator,
+      addSlideBtn: this.addSlideBtn,
+      waitForSlideCount: (expectedCount, timeout) => this.waitForSlideCount(expectedCount, timeout),
+    })
+    this.canvas = new CanvasHelper({
+      page,
+      elementsCountLocator: this.elementsCountLocator,
+      waitForElementCount: (expectedCount, timeout) => this.waitForElementCount(expectedCount, timeout),
+      waitForElementPanelSelected: (timeout) => this.waitForElementPanelSelected(timeout),
+      waitForElementPanelCleared: (timeout) => this.waitForElementPanelCleared(timeout),
+    })
   }
 
   async waitForReady() {
@@ -18,11 +44,12 @@ export class EditorPage {
   }
 
   async waitForAutoSave() {
+    const savingBadge = this.page.getByText('Saving...', { exact: true })
     await this.page
       .getByText('Saving...', { exact: true })
       .waitFor({ state: 'visible', timeout: 5000 })
       .catch(() => {})
-    await expect(this.page.getByText('Saved', { exact: true })).toBeVisible({ timeout: 10000 })
+    await expect(savingBadge).toHaveCount(0, { timeout: 10000 })
   }
 
   async waitForElementCount(expectedCount, timeout = 5000) {
@@ -34,16 +61,11 @@ export class EditorPage {
   }
 
   async waitForElementPanelSelected(timeout = 5000) {
-    await expect(this.page.locator('.properties-panel h3').filter({ hasText: 'Element' })).toBeVisible({
-      timeout,
-    })
+    await this.properties.waitForElementPanelSelected(timeout)
   }
 
   async waitForElementPanelCleared(timeout = 5000) {
-    await expect(this.page.locator('.properties-panel h3').filter({ hasText: 'Element' })).toHaveCount(
-      0,
-      { timeout }
-    )
+    await this.properties.waitForElementPanelCleared(timeout)
   }
 
   async gotoPresentation(id) {
@@ -72,15 +94,7 @@ export class EditorPage {
   }
 
   async clickInsertMenuItem(itemName) {
-    const insertMenuOpen = await this.page
-      .locator('.insert-dropdown')
-      .isVisible()
-      .catch(() => false)
-    if (!insertMenuOpen) {
-      await this.page.click('button.insert-trigger:has-text("Insert")')
-      await this.page.waitForSelector('.insert-dropdown', { state: 'visible' })
-    }
-    await this.page.locator('.insert-dropdown .insert-item').filter({ hasText: itemName }).click()
+    await this.insert.clickInsertMenuItem(itemName)
   }
 
   async openFileMenuItem(itemName) {
@@ -108,17 +122,7 @@ export class EditorPage {
   }
 
   async addTextNode() {
-    const prevCount = await this.getElementCount()
-    await this.clickInsertMenuItem('Text')
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.element-wrapper').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
-    this.lastInsertedElementIndex = (await this.getElementCount()) - 1
-    return this.lastInsertedElementIndex
+    return await this.insert.addTextNode()
   }
 
   async startEditingTextElement(index = this.lastInsertedElementIndex ?? -1) {
@@ -202,74 +206,39 @@ export class EditorPage {
   }
 
   async addShape(shapeTitle) {
-    const prevCount = await this.getElementCount()
-    const insertMenuOpen = await this.page
-      .locator('.insert-dropdown')
-      .isVisible()
-      .catch(() => false)
-    if (!insertMenuOpen) {
-      await this.page.click('button.insert-trigger:has-text("Insert")')
-      await this.page.waitForSelector('.insert-dropdown', { state: 'visible' })
-    }
-    await this.page.locator('.insert-dropdown .insert-item').filter({ hasText: 'Shape' }).click()
-    await this.page.waitForSelector('.insert-sub-panel.shape-picker-grid', { state: 'visible' })
-    await this.page.click(`button.shape-pick-btn[title="${shapeTitle}"]`)
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.element-wrapper').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.insert.addShape(shapeTitle)
   }
 
   async addSlide() {
-    const prevCount = await this.getSlideCount()
-    await this.addSlideBtn.click()
-    await this.page.waitForSelector('h2:has-text("Add Slide")')
-    await this.page.locator('button').filter({ hasText: 'Blank' }).click()
-    await this.waitForSlideCount(prevCount + 1)
+    await this.slidePanel.addSlide()
   }
 
   async addSlideFromTemplate(templateName) {
-    const prevCount = await this.getSlideCount()
-    await this.addSlideBtn.click()
-    await this.page.waitForSelector('.fixed.inset-0 h2:has-text("Add Slide")')
-    await this.page.locator('.fixed.inset-0 button').filter({ hasText: templateName }).click()
-    await this.waitForSlideCount(prevCount + 1)
+    await this.slidePanel.addSlideFromTemplate(templateName)
   }
 
   async deleteSlide(index = 0) {
-    const prevCount = await this.getSlideCount()
-    // Hover slide then click delete button inside it
-    const slideItem = this.thumbnailsLocator.nth(index)
-    await slideItem.hover()
-    await slideItem.locator('button[title="Delete"]').click()
-    await this.waitForSlideCount(prevCount - 1)
+    await this.slidePanel.deleteSlide(index)
   }
 
   async selectSlide(index) {
-    const slide = this.thumbnailsLocator.nth(index)
-    await slide.click()
-    await expect(slide).toHaveClass(/border-accent/, { timeout: 5000 })
+    await this.slidePanel.selectSlide(index)
   }
 
   async toggleSlideSelection(index) {
-    const slide = this.thumbnailsLocator.nth(index)
-    await slide.click({ modifiers: ['ControlOrMeta'] })
+    await this.slidePanel.toggleSlideSelection(index)
   }
 
   async duplicateSelectedSlides() {
-    await this.page.locator('.slide-panel button[title="Duplicate all selected"]').click()
+    await this.slidePanel.duplicateSelectedSlides()
   }
 
   async deleteSelectedSlides() {
-    await this.page.locator('.slide-panel button[title="Delete all selected"]').click()
+    await this.slidePanel.deleteSelectedSlides()
   }
 
   async openMediaLibrary() {
-    await this.clickInsertMenuItem('Media Library')
-    await this.page.waitForSelector('h2:has-text("Media Library")')
+    await this.insert.openMediaLibrary()
   }
 
   async openShareModal() {
@@ -357,168 +326,71 @@ export class EditorPage {
   }
 
   async addCodeBlock() {
-    const prevCount = await this.getElementCount()
-    await this.clickInsertMenuItem('Code Block')
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.element-wrapper').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.insert.addCodeBlock()
   }
 
   async addLatexBlock() {
-    const prevCount = await this.getElementCount()
-    await this.clickInsertMenuItem('LaTeX / TikZ')
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.element-wrapper').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.insert.addLatexBlock()
   }
 
   async addMarkdownBlock() {
-    const prevCount = await this.getElementCount()
-    await this.clickInsertMenuItem('Markdown')
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.element-wrapper').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.insert.addMarkdownBlock()
   }
 
   async addChart() {
-    const prevCount = await this.getElementCount()
-    await this.clickInsertMenuItem('Chart')
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.element-wrapper').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.insert.addChart()
   }
 
   async addCallout() {
-    const prevCount = await this.getElementCount()
-    await this.clickInsertMenuItem('Callout')
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.element-wrapper').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.insert.addCallout()
   }
 
   async addHtmlEmbed() {
-    const prevCount = await this.getElementCount()
-    await this.clickInsertMenuItem('Embed HTML')
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.element-wrapper').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.insert.addHtmlEmbed()
   }
 
   async addDrawing() {
-    const prevCount = await this.getElementCount()
-    await this.clickInsertMenuItem('Drawing Canvas')
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.element-wrapper').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.insert.addDrawing()
   }
 
   async addLine() {
-    const prevCount = await this.getElementCount()
-    await this.clickInsertMenuItem('Line / Arrow')
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.element-wrapper').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.insert.addLine()
   }
 
   async addTable(rows = 3, cols = 3) {
-    const prevCount = await this.getElementCount()
-    const insertMenuOpen = await this.page
-      .locator('.insert-dropdown')
-      .isVisible()
-      .catch(() => false)
-    if (!insertMenuOpen) {
-      await this.page.click('button.insert-trigger:has-text("Insert")')
-      await this.page.waitForSelector('.insert-dropdown', { state: 'visible' })
-    }
-    await this.page.locator('.insert-dropdown .insert-item').filter({ hasText: 'Table' }).hover()
-    await this.page.waitForSelector('.table-size-picker', { state: 'visible' })
-
-    // Click preset button to set size, then click Insert button
-    await this.page.locator(`.table-size-picker button`).filter({ hasText: `${rows}×${cols}` }).first().click()
-    await this.page.locator('.table-size-picker button').filter({ hasText: /Insert.*Table/ }).click()
-
-    await this.page.waitForFunction(
-      (prev) => {
-        return document.querySelectorAll('.element-wrapper').length > prev
-      },
-      prevCount,
-      { timeout: 5000 }
-    )
+    await this.insert.addTable(rows, cols)
   }
 
   async selectElement(index = 0) {
-    await this.elementsCountLocator.nth(index).click()
-    await this.waitForElementPanelSelected()
+    await this.canvas.selectElement(index)
   }
 
   async deleteSelectedElement() {
-    const prevCount = await this.getElementCount()
-    await this.page.keyboard.press('Delete')
-    await this.waitForElementCount(prevCount - 1)
+    await this.canvas.deleteSelectedElement()
   }
 
   async undo() {
-    await this.page.keyboard.press('Control+z')
-    await expect(this.page.locator('.slide-canvas')).toBeVisible()
+    await this.canvas.undo()
   }
 
   async redo() {
-    await this.page.keyboard.press('Control+y')
-    await expect(this.page.locator('.slide-canvas')).toBeVisible()
+    await this.canvas.redo()
   }
 
   async duplicateElement() {
-    const prevCount = await this.getElementCount()
-    await this.page.keyboard.press('Control+d')
-    await this.waitForElementCount(prevCount + 1)
+    await this.canvas.duplicateElement()
   }
 
   async copyElement() {
-    await this.page.keyboard.press('Control+c')
-    await expect(this.page.locator('.slide-canvas')).toBeVisible()
+    await this.canvas.copyElement()
   }
 
   async pasteElement() {
-    const prevCount = await this.getElementCount()
-    await this.page.keyboard.press('Control+v')
-    await this.waitForElementCount(prevCount + 1)
+    await this.canvas.pasteElement()
   }
 
   async deselectAll() {
-    await this.page.keyboard.press('Escape')
-    await this.waitForElementPanelCleared()
+    await this.canvas.deselectAll()
   }
 
   async exportHTML() {
@@ -531,6 +403,6 @@ export class EditorPage {
   }
 
   async isPropertiesPanelVisible() {
-    return this.page.locator('.properties-panel').isVisible()
+    return await this.properties.isPropertiesPanelVisible()
   }
 }

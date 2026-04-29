@@ -41,8 +41,26 @@ export function addImageElement(slide, element, bounds, resolution, layout) {
     ...bounds,
     rotate: element.rotation || 0,
   }
+  if (element.flipH) imageOptions.flipH = true
+  if (element.flipV) imageOptions.flipV = true
+  if (element.alt || element.altText) imageOptions.altText = element.alt || element.altText
 
-  if (element.imageW != null && element.imageH != null) {
+  if (element.cropData) {
+    const crop = element.cropData || {}
+    const left = Number(crop.left) || 0
+    const right = Number(crop.right) || 0
+    const top = Number(crop.top) || 0
+    const bottom = Number(crop.bottom) || 0
+    const visibleW = Math.max(0.01, 1 - left - right)
+    const visibleH = Math.max(0.01, 1 - top - bottom)
+    imageOptions.sizing = {
+      type: 'crop',
+      x: bounds.x - (bounds.w * left) / visibleW,
+      y: bounds.y - (bounds.h * top) / visibleH,
+      w: bounds.w / visibleW,
+      h: bounds.h / visibleH,
+    }
+  } else if (element.imageW != null && element.imageH != null) {
     imageOptions.sizing = {
       type: 'crop',
       x: Math.max(0, (-(element.imageOffsetX || 0) * layout.width) / resolution.width),
@@ -59,6 +77,16 @@ export function addImageElement(slide, element, bounds, resolution, layout) {
   }
 
   slide.addImage(imageOptions)
+
+  if (element.borderColor && element.borderWidth) {
+    const border = normalizeCssColor(element.borderColor)
+    slide.addShape('rect', {
+      ...bounds,
+      fill: { color: 'FFFFFF', transparency: 100 },
+      line: { color: border.color, transparency: border.transparency, width: element.borderWidth },
+      rotate: element.rotation || 0,
+    })
+  }
 }
 
 export function addShapeElement(slide, element, bounds) {
@@ -86,18 +114,28 @@ export function addShapeElement(slide, element, bounds) {
 
   slide.addShape(shapeType || 'rect', shapeOptions)
 
-  if (element.text) {
+  if (element.text || element.textHtml) {
     const textColor = normalizeCssColor(element.textColor || '#ffffff', DEFAULT_TEXT_COLOR)
-    slide.addText(element.text, {
+    const textOptions = {
       ...bounds,
       color: textColor.color,
+      fontFace: element.fontFamily,
       fontSize: element.fontSize || 16,
       margin: 0.05,
-      align: 'center',
+      align: element.textAlign || 'center',
       valign: 'mid',
       fit: 'shrink',
       rotate: element.rotation || 0,
-    })
+    }
+    const runs = element.textHtml
+      ? htmlToPptTextRuns(element.textHtml, {
+        align: element.textAlign || 'center',
+        color: element.textColor || '#ffffff',
+        fontFace: element.fontFamily,
+        fontSize: element.fontSize || 16,
+      })
+      : []
+    if (runs.length || element.text) slide.addText(runs.length ? runs : element.text, textOptions)
   }
 }
 
@@ -162,18 +200,45 @@ export function addCalloutElement(slide, element, bounds) {
 }
 
 export function addTableElement(slide, element, bounds) {
+  const mergedCells = Array.isArray(element.mergedCells) ? element.mergedCells : []
+  const mergeByStart = new Map()
+  const covered = new Set()
+  mergedCells.forEach((merge) => {
+    const row = Number(merge.row) || 0
+    const col = Number(merge.col) || 0
+    const rowSpan = Math.max(1, Number(merge.rowSpan) || 1)
+    const colSpan = Math.max(1, Number(merge.colSpan) || 1)
+    mergeByStart.set(`${row}:${col}`, { rowSpan, colSpan })
+    for (let ri = row; ri < row + rowSpan; ri++) {
+      for (let ci = col; ci < col + colSpan; ci++) {
+        if (ri !== row || ci !== col) covered.add(`${ri}:${ci}`)
+      }
+    }
+  })
+
+  const cellStyles = element.cellStyles || {}
+  const getCellStyle = (key, rowIndex, colIndex) => cellStyles[key]?.[rowIndex]?.[colIndex]
+  const mapVAlign = (value) => (value === 'middle' ? 'mid' : value || undefined)
+
   const rows = (element.data || []).map((row, rowIndex) =>
-    (row || []).map((cell) => {
+    (row || []).reduce((cells, cell, colIndex) => {
+      if (covered.has(`${rowIndex}:${colIndex}`)) return cells
+      const merge = mergeByStart.get(`${rowIndex}:${colIndex}`)
       const fillColor = normalizeCssColor(
-        element.headerRow && rowIndex === 0
-          ? element.headerBgColor || '#6366f1'
-          : element.cellBgColor || '#1e1e2e',
+        getCellStyle('bgColors', rowIndex, colIndex) ||
+          (element.headerRow && rowIndex === 0
+            ? element.headerBgColor || '#6366f1'
+            : element.cellBgColor || '#1e1e2e'),
         DEFAULT_BACKGROUND_COLOR
       )
-      return {
+      const textColor = normalizeCssColor(
+        getCellStyle('textColors', rowIndex, colIndex) || element.textColor || '#ffffff',
+        DEFAULT_TEXT_COLOR
+      )
+      cells.push({
         text: cell || '',
         options: {
-          color: normalizeCssColor(element.textColor || '#ffffff', DEFAULT_TEXT_COLOR).color,
+          color: textColor.color,
           fontSize: element.fontSize || 12,
           margin: 0.04,
           fill: { color: fillColor.color, transparency: fillColor.transparency },
@@ -181,9 +246,15 @@ export function addTableElement(slide, element, bounds) {
             color: normalizeCssColor(element.borderColor || '#475569').color,
             pt: element.borderWidth || 1,
           },
+          ...(getCellStyle('isBold', rowIndex, colIndex) != null && { bold: Boolean(getCellStyle('isBold', rowIndex, colIndex)) }),
+          ...(getCellStyle('aligns', rowIndex, colIndex) && { align: getCellStyle('aligns', rowIndex, colIndex) }),
+          ...(getCellStyle('vAligns', rowIndex, colIndex) && { valign: mapVAlign(getCellStyle('vAligns', rowIndex, colIndex)) }),
+          ...(merge?.colSpan > 1 && { colspan: merge.colSpan }),
+          ...(merge?.rowSpan > 1 && { rowspan: merge.rowSpan }),
         },
-      }
-    })
+      })
+      return cells
+    }, [])
   )
 
   if (rows.length) slide.addTable(rows, { ...bounds, margin: 0.04 })

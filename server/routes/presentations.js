@@ -1,11 +1,10 @@
 const express = require('express')
-const { v4: uuidv4 } = require('uuid')
+const uuidv4 = () => require('node:crypto').randomUUID()
 const { generateRevealHTML, normalizePresentationNotes } = require('revealjs-shared')
 const {
   readPresentations,
   withPresentations,
-  readShareTokens,
-  writeShareTokens,
+  withShareTokens,
   HISTORY_DIR,
 } = require('../services/storage')
 const fs = require('fs-extra')
@@ -271,15 +270,15 @@ router.delete('/:id/permanent', async (req, res) => {
 
     // Cascade: remove share tokens
     try {
-      const tokens = await readShareTokens()
-      let changed = false
-      for (const [token, id] of Object.entries(tokens)) {
-        if (id === presId) {
-          delete tokens[token]
-          changed = true
+      await withShareTokens((tokens) => {
+        for (const [token, tokenData] of Object.entries(tokens)) {
+          const presentationId =
+            typeof tokenData === 'string' ? tokenData : tokenData?.presentationId
+          if (presentationId === presId) {
+            delete tokens[token]
+          }
         }
-      }
-      if (changed) await writeShareTokens(tokens)
+      })
     } catch {}
 
     // Cascade: remove history snapshots

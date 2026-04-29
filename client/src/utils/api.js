@@ -38,6 +38,11 @@ export const api = {
     fd.append('file', file)
     return fetch('/api/upload', { method: 'POST', body: fd }).then(handleResponse)
   },
+  importPptx: (file) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    return fetch(`${BASE}/pptx/import`, { method: 'POST', body: fd }).then(handleResponse)
+  },
   getGithubConfig: () => fetch(`${BASE}/github/config`).then(handleResponse),
   saveGithubConfig: (data) =>
     fetch(`${BASE}/github/config`, {

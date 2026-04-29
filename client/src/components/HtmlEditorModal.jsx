@@ -1,14 +1,29 @@
+import { useState, useEffect } from 'react'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 
 export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) {
-  useEscapeClose(onCancel)
+  const [isOpen, setIsOpen] = useState(true)
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onCancel()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 z-[10000] bg-black/75 flex items-center justify-center"
       onClick={(event) => {
-        if (isBackdropClick(event)) onCancel()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"

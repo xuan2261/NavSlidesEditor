@@ -1,52 +1,65 @@
 import { useState, useEffect, useRef } from 'react'
 import PromptPopover from './PromptPopover'
 import {
-  Plus,
-  Type,
-  Image as ImageIcon,
-  Upload,
-  FileCode,
-  Code,
-  Video,
-  Music,
-  Table2,
-  Shapes,
-  ChevronRight,
-  FolderOpen,
-  Pencil,
-  ArrowUpRight,
-  BarChart3,
-  QrCode,
-  Minus,
-  Sigma,
+  // ── Menu items (used directly in JSX) ──
+  Plus, Type, Image as ImageIcon, Upload, FileCode, Code, Video, Music, Table2,
+  Shapes, ChevronRight, FolderOpen, Pencil, ArrowUpRight, BarChart3, QrCode,
+  Minus, Sigma,
+  // ── Icon picker catalog (~100 curated icons) ──
+  Search, Settings, Bell, Bookmark, Calendar, Camera, Check, CheckCircle,
+  ChevronDown, ChevronLeft, ChevronUp, Circle, Clock, Cloud,
+  Copy, Download, Edit, Eye, EyeOff, Globe, Hash, Heart, Home, Info,
+  Layers, Layout, Link, Lock, Mail, MapPin, Menu, MessageSquare,
+  MinusCircle, MoreHorizontal, MoreVertical, Move, Package, Palette, Pause,
+  Play, PlayCircle, PlusCircle, Power, RefreshCw, Repeat, RotateCcw,
+  RotateCw, Save, Send, Settings2, Share2, Shield, ShoppingCart,
+  Sidebar, Star, Sun, Tag, Target, Thermometer, ThumbsUp, ToggleLeft,
+  ToggleRight, Trash2, TrendingUp, Truck, Umbrella, Unlock,
+  User, Users, Volume2, VolumeX, Wifi, Wind, X, XCircle, Zap,
+  ZoomIn, ZoomOut, File, Folder, FileText, CreditCard, DollarSign, Award,
+  Flag, ExternalLink, Maximize, Minimize, PlusSquare, Shuffle, SkipBack,
+  SkipForward, Square, Triangle, Hexagon, Pentagon, Octagon, Command,
+  Crosshair, Feather, Crown, Gem, Flame, Leaf, Moon, Sunrise, Sunset,
 } from 'lucide-react'
-import * as LucideIcons from 'lucide-react'
 import * as shared from 'revealjs-shared'
-const { SHAPES } = shared
+const { SHAPES = [] } = shared
 
-// Dynamic Lucide icon list — all named exports that are React components
-const ICON_NAMES = Object.keys(LucideIcons)
-  .filter((name) => /^[A-Z]/.test(name)) // PascalCase = component
-  .filter((name) => !name.endsWith('Icon')) // Exclude duplicate *Icon aliases
-  .filter(
-    (name) =>
-      ![
-        'createContext',
-        'useCallback',
-        'useContext',
-        'useEffect',
-        'useMemo',
-        'useRef',
-        'useState',
-        'useReducer',
-        'createElement',
-        'forwardRef',
-        'lazy',
-        'memo',
-        'Suspense',
-        'Fragment',
-      ].includes(name)
-  )
+// Curated subset (~100) — avoids importing entire ~1000-icon lucide-react bundle
+const ICON_CATALOG = [
+  'Search', 'Settings', 'Bell', 'Bookmark', 'Calendar', 'Camera', 'Check', 'CheckCircle',
+  'ChevronDown', 'ChevronLeft', 'ChevronRight', 'ChevronUp', 'Circle', 'Clock', 'Cloud',
+  'Copy', 'Download', 'Edit', 'Eye', 'EyeOff', 'Globe', 'Hash', 'Heart', 'Home', 'Info',
+  'Layers', 'Layout', 'Link', 'Lock', 'Mail', 'MapPin', 'Menu', 'MessageSquare',
+  'MinusCircle', 'MoreHorizontal', 'MoreVertical', 'Move', 'Package', 'Palette', 'Pause',
+  'Play', 'PlayCircle', 'PlusCircle', 'Power', 'RefreshCw', 'Repeat', 'RotateCcw',
+  'RotateCw', 'Save', 'Send', 'Settings2', 'Share2', 'Shield', 'ShoppingCart',
+  'Sidebar', 'Star', 'Sun', 'Tag', 'Target', 'Thermometer', 'ThumbsUp', 'ToggleLeft',
+  'ToggleRight', 'Trash2', 'TrendingUp', 'Truck', 'Umbrella', 'Unlock', 'User', 'Users',
+  'Volume2', 'VolumeX', 'Wifi', 'Wind', 'X', 'XCircle', 'Zap', 'ZoomIn', 'ZoomOut',
+  'File', 'Folder', 'FileText', 'CreditCard', 'DollarSign', 'Award', 'Flag',
+  'ExternalLink', 'Maximize', 'Minimize', 'PlusSquare', 'Shuffle', 'SkipBack',
+  'SkipForward', 'Square', 'Triangle', 'Hexagon', 'Pentagon', 'Octagon', 'Command',
+  'Crosshair', 'Feather', 'Crown', 'Gem', 'Flame', 'Leaf', 'Moon', 'Sunrise', 'Sunset',
+]
+
+// Icon map: name → component (used by icon picker grid renderer)
+const ICON_MAP = {
+  Search, Settings, Bell, Bookmark, Calendar, Camera, Check, CheckCircle,
+  ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Circle, Clock, Cloud,
+  Copy, Download, Edit, Eye, EyeOff, Globe, Hash, Heart, Home, Info,
+  Layers, Layout, Link, Lock, Mail, MapPin, Menu, MessageSquare,
+  MinusCircle, MoreHorizontal, MoreVertical, Move, Package, Palette, Pause,
+  Play, PlayCircle, PlusCircle, Power, RefreshCw, Repeat, RotateCcw,
+  RotateCw, Save, Send, Settings2, Share2, Shield, ShoppingCart,
+  Sidebar, Star, Sun, Tag, Target, Thermometer, ThumbsUp, ToggleLeft,
+  ToggleRight, Trash2, TrendingUp, Truck, Umbrella, Unlock, User, Users,
+  Volume2, VolumeX, Wifi, Wind, X, XCircle, Zap, ZoomIn, ZoomOut,
+  File, Folder, FileText, CreditCard, DollarSign, Award, Flag,
+  ExternalLink, Maximize, Minimize, PlusSquare, Shuffle, SkipBack,
+  SkipForward, Square, Triangle, Hexagon, Pentagon, Octagon, Command,
+  Crosshair, Feather, Crown, Gem, Flame, Leaf, Moon, Sunrise, Sunset,
+}
+const ICON_NAMES = ICON_CATALOG
 
 export default function InsertMenu({
   onAddText,
@@ -69,6 +82,7 @@ export default function InsertMenu({
   onAddDrawing,
   onAddQrCode,
   onAddDivider,
+  onAddGame,
 }) {
   const [open, setOpen] = useState(false)
   const [subMenu, setSubMenu] = useState(null) // 'shape' | 'icon'
@@ -77,6 +91,7 @@ export default function InsertMenu({
   const ICON_PAGE_SIZE = 20
   const [tableSize, setTableSize] = useState({ r: 0, c: 0 })
   const [videoPrompt, setVideoPrompt] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
   const menuRef = useRef(null)
   const fileRef = useRef(null)
   const svgRef = useRef(null)
@@ -241,17 +256,30 @@ export default function InsertMenu({
               e.target.value = ''
               const fd = new FormData()
               fd.append('file', f)
-              const res = await fetch('/api/upload', { method: 'POST', body: fd }).then((r) =>
-                r.json()
-              )
-              if (res.url) {
-                if (f.type.startsWith('video/')) onAddVideo?.(res.url)
-                else onAddAudio?.(res.url)
+              try {
+                const res = await fetch('/api/upload', { method: 'POST', body: fd })
+                const data = await res.json()
+                if (!res.ok || !data.url) {
+                  console.error('Upload failed:', data.error || `HTTP ${res.status}`)
+                  setUploadError(data.error || 'Upload failed')
+                  return
+                }
+                if (f.type.startsWith('video/')) onAddVideo?.(data.url)
+                else onAddAudio?.(data.url)
+              } catch (err) {
+                console.error('Upload failed:', err)
+                setUploadError('Upload failed. Check your connection.')
+              } finally {
+                setOpen(false)
+                setSubMenu(null)
               }
-              setOpen(false)
-              setSubMenu(null)
             }}
           />
+          {uploadError && (
+            <div className="mx-3 mb-1 rounded bg-red-500/10 px-2 py-1 text-xs text-red-400">
+              {uploadError}
+            </div>
+          )}
           <button
             className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
             onClick={() => doAction(onOpenMediaLibrary)}
@@ -345,7 +373,7 @@ export default function InsertMenu({
                 )
                   .slice(0, iconPage * ICON_PAGE_SIZE)
                   .map((name) => {
-                    const IconComp = LucideIcons[name]
+                    const IconComp = ICON_MAP[name]
                     return (
                       <button
                         key={name}
@@ -408,27 +436,82 @@ export default function InsertMenu({
               <Table2 size={15} /> <span>Table</span>
             </div>
             {subMenu === 'table' && (
-              <div className="table-size-picker pt-1" onClick={(e) => e.stopPropagation()}>
-                <div className="table-size-label mb-1.5 text-center text-[11px] font-medium text-text-secondary">
-                  {tableSize.r > 0 ? `${tableSize.r} × ${tableSize.c}` : 'Select size'}
+              <div className="table-size-picker pt-2 pb-1" onClick={(e) => e.stopPropagation()}>
+                {/* Preset quick buttons */}
+                <div className="flex gap-1 mb-2 flex-wrap">
+                  {[2, 3, 4, 5, 6, 8].map((n) => (
+                    <button
+                      key={n}
+                      className="px-1.5 py-0.5 rounded text-[10px] font-medium border border-border bg-surface-2 text-text-secondary hover:border-accent hover:text-accent transition-colors cursor-pointer"
+                      onClick={() => setTableSize({ r: n, c: n })}
+                    >
+                      {n}×{n}
+                    </button>
+                  ))}
                 </div>
-                <div className="table-size-grid grid grid-cols-8 gap-[2px]">
-                  {Array.from({ length: 8 }, (_, r) =>
-                    Array.from({ length: 8 }, (_, c) => (
+
+                {/* Numeric inputs */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1">
+                    <label className="text-[10px] text-text-muted">Rows</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={tableSize.r || ''}
+                      placeholder="1"
+                      className="w-10 bg-surface-2 border border-border rounded px-1 py-0.5 text-[11px] text-text-primary text-center focus:outline-none focus:border-accent"
+                      onChange={(e) => {
+                        const v = Math.max(1, Math.min(20, Number(e.target.value) || 1))
+                        setTableSize((s) => ({ ...s, r: v }))
+                      }}
+                    />
+                  </div>
+                  <span className="text-text-muted text-xs">×</span>
+                  <div className="flex items-center gap-1">
+                    <label className="text-[10px] text-text-muted">Cols</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={tableSize.c || ''}
+                      placeholder="1"
+                      className="w-10 bg-surface-2 border border-border rounded px-1 py-0.5 text-[11px] text-text-primary text-center focus:outline-none focus:border-accent"
+                      onChange={(e) => {
+                        const v = Math.max(1, Math.min(20, Number(e.target.value) || 1))
+                        setTableSize((s) => ({ ...s, c: v }))
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Visual grid preview (max 8x8) */}
+                <div className="table-size-grid grid gap-[2px] mb-2" style={{ gridTemplateColumns: `repeat(${Math.min(tableSize.c || 3, 8)}, 1fr)` }}>
+                  {Array.from({ length: Math.min(tableSize.r || 3, 8) }, (_, r) =>
+                    Array.from({ length: Math.min(tableSize.c || 3, 8) }, (_, c) => (
                       <div
                         key={`${r}-${c}`}
-                        className={`table-cell h-[18px] w-[18px] cursor-pointer rounded-sm border transition-all duration-75 hover:border-accent ${r < tableSize.r && c < tableSize.c ? 'border-accent bg-accent' : 'border-border-strong'}`}
-                        onMouseEnter={() => setTableSize({ r: r + 1, c: c + 1 })}
-                        onClick={() => {
-                          onAddTable?.(tableSize.r, tableSize.c)
-                          setOpen(false)
-                          setSubMenu(null)
-                          setTableSize({ r: 0, c: 0 })
-                        }}
+                        className="aspect-square rounded-sm border border-border-strong bg-surface-2"
                       />
                     ))
                   )}
                 </div>
+
+                {/* Insert button */}
+                <button
+                  className="w-full py-1 rounded text-[11px] font-medium bg-accent text-white hover:bg-accent-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={!tableSize.r || !tableSize.c}
+                  onClick={() => {
+                    if (tableSize.r > 0 && tableSize.c > 0) {
+                      onAddTable?.(tableSize.r, tableSize.c)
+                      setOpen(false)
+                      setSubMenu(null)
+                      setTableSize({ r: 0, c: 0 })
+                    }
+                  }}
+                >
+                  Insert {tableSize.r > 0 && tableSize.c > 0 ? `${tableSize.r}×${tableSize.c}` : ''} Table
+                </button>
               </div>
             )}
           </div>
@@ -438,6 +521,31 @@ export default function InsertMenu({
           >
             <Pencil size={15} /> <span>Drawing Canvas</span>
           </button>
+
+          <div className="insert-separator my-1 h-[1px] bg-border" />
+
+          {/* GAMES */}
+          <div className="insert-category mt-1 px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+            Games
+          </div>
+          {[
+            ['name-picker', '🎡', 'Name Picker'],
+            ['hot-potato', '🔥', 'Hot Potato Quiz'],
+            ['jeopardy', '🏆', 'Jeopardy'],
+            ['four-corners', '🧭', 'Four Corners'],
+            ['relay-race', '🏃', 'Relay Race'],
+            ['trivia-champ', '💡', 'Trivia Championship'],
+            ['scattergories', '📝', 'Scattergories'],
+          ].map(([type, icon, label]) => (
+            <button
+              key={type}
+              className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+              onClick={() => doAction(onAddGame, type)}
+            >
+              <span className="text-sm w-[15px] text-center shrink-0">{icon}</span>
+              <span>{label}</span>
+            </button>
+          ))}
           </div>
         </div>
       )}

@@ -1,31 +1,75 @@
 import { useState, useEffect } from 'react'
 import { BarChart3, X, Eye, TrendingUp, Clock, Loader2 } from 'lucide-react'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 
 export default function AnalyticsModal({ presentationId, onClose }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch(`/api/analytics/${presentationId}`)
-      .then((r) => r.json())
-      .then((d) => {
-        setData(d)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+    let mounted = true
+    const load = async () => {
+      try {
+        setLoading(true)
+        setError('')
+        const shareRes = await fetch(`/api/presentations/${presentationId}/shares`)
+        if (!shareRes.ok) throw new Error('Failed to load share links')
+        const shareData = await shareRes.json()
+        const token = shareData?.shares?.[0]?.token
+        if (!token) {
+          if (mounted) {
+            setData(null)
+            setError('Create a share link first to view analytics.')
+          }
+          return
+        }
+
+        const analyticsRes = await fetch(
+          `/api/analytics/${presentationId}?token=${encodeURIComponent(token)}`
+        )
+        if (!analyticsRes.ok) throw new Error('Failed to load analytics')
+        const analyticsData = await analyticsRes.json()
+        if (mounted) setData(analyticsData)
+      } catch (err) {
+        if (mounted) {
+          setData(null)
+          setError(err.message || 'Failed to load analytics')
+        }
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+    load()
+    return () => {
+      mounted = false
+    }
   }, [presentationId])
 
   const maxDaily = data?.dailyViews?.reduce((m, d) => Math.max(m, d.count), 0) || 1
 
-  useEscapeClose(onClose)
+  const [isOpen, setIsOpen] = useState(true)
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -39,7 +83,7 @@ export default function AnalyticsModal({ presentationId, onClose }) {
           <h3 id="analytics-modal-title" className="m-0 flex items-center gap-2 text-base">
             <BarChart3 size={18} /> Analytics
           </h3>
-          <Button variant="icon" onClick={onClose} className="p-1" aria-label="Close">
+          <Button variant="icon" onClick={handleClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>
@@ -48,6 +92,8 @@ export default function AnalyticsModal({ presentationId, onClose }) {
           <div className="text-center p-10 text-text-muted">
             <Loader2 size={20} className="animate-spin" /> Loading...
           </div>
+        ) : error ? (
+          <p className="text-text-muted text-center">{error}</p>
         ) : !data ? (
           <p className="text-text-muted text-center">No analytics data yet.</p>
         ) : (

@@ -1,0 +1,51 @@
+{
+  "deck": "STTre_Duc.pptx",
+  "durationMs": 939.19,
+  "error": null,
+  "ok": true,
+  "packageModifiedDate": "2022-06-24T12:53:21.439Z",
+  "packageVersion": "1.0.0",
+  "parser": "pptx-compose",
+  "peakMemoryMb": 92.74,
+  "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptx-compose\\STTre_Duc.redacted.json",
+  "rawOutputSizeMb": 16.28,
+  "resourceLimits": {
+    "entryCount": 131,
+    "uncompressedBytes": 3916574
+  },
+  "summary": {
+    "chartCount": 0,
+    "compare": {
+      "inventoryMediaCount": 15,
+      "inventoryNoteCount": 15,
+      "inventorySlideCount": 20,
+      "slideCountDelta": 0,
+      "slideCountMatches": true
+    },
+    "connectorCount": 3,
+    "groupCount": 0,
+    "hasFontInfo": false,
+    "hasLayoutElements": true,
+    "hasThemeColors": true,
+    "imageCount": 23,
+    "mediaCount": 15,
+    "noteCount": 15,
+    "parser": "pptx-compose",
+    "placeholderCount": 40,
+    "shapeCount": 20,
+    "size": {
+      "height": null,
+      "width": null
+    },
+    "slideCount": 20,
+    "tableCount": 0,
+    "textCount": 486,
+    "unsupportedObjects": [
+      "ole"
+    ],
+    "verdict": "partial"
+  },
+  "warnings": [
+    "Raw OOXML JSON baseline; package is older."
+  ]
+}

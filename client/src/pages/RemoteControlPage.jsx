@@ -48,8 +48,12 @@ export default function RemoteControlPage() {
   }, [])
 
   useEffect(() => {
-    const socket = io({ path: '/ws' })
+    const socket = io({ path: '/ws', reconnection: true })
     socketRef.current = socket
+
+    socket.on('connect_error', (err) => {
+      console.error('Remote control socket connection error:', err.message)
+    })
 
     socket.on('connect', () => {
       setIsConnected(true)

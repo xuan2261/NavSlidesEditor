@@ -76,6 +76,8 @@ export default function EditorMenuBar({
   // Save status
   saveStatus,
   lastSavedAt,
+  lastSaveError,
+  onRetrySave,
 }) {
   const [openMenu, setOpenMenu] = useState(null)
   const [customSizePrompt, setCustomSizePrompt] = useState(false)
@@ -312,6 +314,23 @@ export default function EditorMenuBar({
       {/* Save Status */}
       {saveStatus === 'saving' && <span className="text-[11px] text-text-muted">Saving...</span>}
       {saveStatus === 'saved' && <span className="text-[11px] text-success">Saved</span>}
+      {saveStatus === 'error' && (
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-danger" title={lastSaveError || 'Save failed'}>
+            Save failed
+          </span>
+          {typeof onRetrySave === 'function' && (
+            <Button
+              data-testid="save-retry-btn"
+              variant="secondary"
+              className="h-6 px-2 text-[11px]"
+              onClick={onRetrySave}
+            >
+              Retry
+            </Button>
+          )}
+        </div>
+      )}
       {!saveStatus && lastSavedAt && (
         <span className="text-[10px] text-text-muted" title={lastSavedAt.toLocaleString()}>
           {lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

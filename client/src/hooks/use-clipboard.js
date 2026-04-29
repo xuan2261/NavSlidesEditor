@@ -1,5 +1,4 @@
 import { useCallback } from 'react'
-import { usePresentationStore } from '../stores/presentation-store'
 import { useEditorStore } from '../stores/editor-store'
 
 /**
@@ -34,16 +33,18 @@ export function createCopyOperation({ slideElements, selectedElementIds }) {
  */
 export function createPasteOperation({ clipboardElements }) {
   if (!clipboardElements || clipboardElements.length === 0) {
-    return { elements: [], lastId: null }
+    return { elements: [], allIds: [], lastId: null }
   }
   const elements = []
+  const allIds = []
   let lastId = null
   for (const el of clipboardElements) {
     const newId = crypto.randomUUID()
     lastId = newId
+    allIds.push(newId)
     elements.push({ ...el, id: newId, x: (el.x || 0) + 20, y: (el.y || 0) + 20 })
   }
-  return { elements, lastId }
+  return { elements, allIds, lastId }
 }
 
 /**
@@ -114,68 +115,86 @@ export function createCutOperation({ slideElements, selectedElementIds }) {
   return { clipboardData, idsToDelete }
 }
 
-export function useClipboard() {
-  const presentation = usePresentationStore((s) => s.presentation)
-  const currentSlideIndex = usePresentationStore((s) => s.currentSlideIndex)
-  const addElement = usePresentationStore((s) => s.addElement)
-  const deleteElement = usePresentationStore((s) => s.deleteElement)
-
+/**
+ * @param {Object} opts
+ * @param {() => number} opts.getCurrentSlideIndex - getter for current slide index
+ * @param {(presentation: Object) => void} opts.setPresentation - presentation store setter
+ */
+export function useClipboard({ getCurrentSlideIndex, setPresentation }) {
   const selectedElementIds = useEditorStore((s) => s.selectedElementIds)
-  const clipboard = useEditorStore((s) => s.clipboard)
   const setClipboard = useEditorStore((s) => s.setClipboard)
   const selectElement = useEditorStore((s) => s.selectElement)
   const clearSelection = useEditorStore((s) => s.clearSelection)
 
-  const performCopy = useCallback(() => {
-    const slide = presentation?.slides?.[currentSlideIndex]
-    const data = createCopyOperation({
-      slideElements: slide?.elements,
-      selectedElementIds,
-    })
-    if (data) setClipboard(data)
-  }, [presentation, currentSlideIndex, selectedElementIds, setClipboard])
+  const performCopy = useCallback(
+    (slideElements) => {
+      const data = createCopyOperation({
+        slideElements: slideElements || [],
+        selectedElementIds,
+      })
+      if (data) setClipboard(data)
+    },
+    [selectedElementIds, setClipboard]
+  )
 
-  const performPaste = useCallback(() => {
-    const { elements, lastId } = createPasteOperation({ clipboardElements: clipboard })
-    elements.forEach((el) => addElement(el))
-    if (lastId) selectElement(lastId)
-  }, [clipboard, addElement, selectElement])
+  const performPaste = useCallback(
+    (clipboardElements) => {
+      const { elements, allIds } = createPasteOperation({ clipboardElements })
+      if (!elements.length) return
+      const idx = getCurrentSlideIndex()
+      setPresentation((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          slides: prev.slides.map((s, i) =>
+            i === idx ? { ...s, elements: [...(s.elements || []), ...elements] } : s
+          ),
+        }
+      })
+      if (allIds.length) selectElement(allIds)
+    },
+    [getCurrentSlideIndex, setPresentation, selectElement]
+  )
 
-  const performCut = useCallback(() => {
-    const slide = presentation?.slides?.[currentSlideIndex]
-    const { clipboardData, idsToDelete } = createCutOperation({
-      slideElements: slide?.elements,
-      selectedElementIds,
-    })
-    if (clipboardData) setClipboard(clipboardData)
-    idsToDelete.forEach((id) => deleteElement(id))
-    clearSelection()
-  }, [
-    presentation,
-    currentSlideIndex,
-    selectedElementIds,
-    setClipboard,
-    deleteElement,
-    clearSelection,
-  ])
+  const performCut = useCallback(
+    (slideElements, idsToDelete) => {
+      const { clipboardData } = createCutOperation({ slideElements: slideElements || [], selectedElementIds: idsToDelete || [] })
+      if (clipboardData) setClipboard(clipboardData)
+      if (!idsToDelete?.length) return
+      const idx = getCurrentSlideIndex()
+      setPresentation((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          slides: prev.slides.map((s, i) =>
+            i === idx
+              ? { ...s, elements: (s.elements || []).filter((el) => !idsToDelete.includes(el.id)) }
+              : s
+          ),
+        }
+      })
+      clearSelection()
+    },
+    [getCurrentSlideIndex, setPresentation, setClipboard, clearSelection]
+  )
 
-  const performDuplicate = useCallback(() => {
-    const slide = presentation?.slides?.[currentSlideIndex]
-    const { toAdd, clipboardData, lastId } = createDuplicateOperation({
-      slideElements: slide?.elements,
-      selectedElementIds,
-    })
-    if (clipboardData) setClipboard(clipboardData)
-    toAdd.forEach((el) => addElement(el))
-    if (lastId) selectElement(lastId)
-  }, [
-    presentation,
-    currentSlideIndex,
-    selectedElementIds,
-    setClipboard,
-    addElement,
-    selectElement,
-  ])
+  const performDuplicate = useCallback(
+    (clipboardElements) => {
+      const toAdd = (clipboardElements || []).filter((el) => !el.locked)
+      if (!toAdd.length) return
+      const idx = getCurrentSlideIndex()
+      setPresentation((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          slides: prev.slides.map((s, i) =>
+            i === idx ? { ...s, elements: [...(s.elements || []), ...toAdd] } : s
+          ),
+        }
+      })
+    },
+    [getCurrentSlideIndex, setPresentation]
+  )
 
   return { performCopy, performPaste, performCut, performDuplicate }
 }

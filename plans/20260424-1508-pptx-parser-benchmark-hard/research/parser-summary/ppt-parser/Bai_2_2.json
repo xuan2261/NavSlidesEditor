@@ -1,0 +1,47 @@
+{
+  "deck": "Bai_2_2.pptx",
+  "durationMs": 1144.01,
+  "error": null,
+  "ok": true,
+  "packageModifiedDate": "2024-12-24T11:33:06.482Z",
+  "packageVersion": "0.0.8",
+  "parser": "ppt-parser",
+  "peakMemoryMb": 99.74,
+  "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\ppt-parser\\Bai_2_2.redacted.json",
+  "rawOutputSizeMb": 1.86,
+  "resourceLimits": {
+    "entryCount": 220,
+    "uncompressedBytes": 3629120
+  },
+  "summary": {
+    "chartCount": 0,
+    "compare": {
+      "inventoryMediaCount": 35,
+      "inventoryNoteCount": 1,
+      "inventorySlideCount": 39,
+      "slideCountDelta": 0,
+      "slideCountMatches": true
+    },
+    "connectorCount": 0,
+    "groupCount": 41,
+    "hasFontInfo": false,
+    "hasLayoutElements": false,
+    "hasThemeColors": false,
+    "imageCount": 2,
+    "mediaCount": 2,
+    "noteCount": 0,
+    "parser": "ppt-parser",
+    "placeholderCount": 0,
+    "shapeCount": 199,
+    "size": {
+      "height": 720,
+      "width": 1280
+    },
+    "slideCount": 39,
+    "tableCount": 15,
+    "textCount": 216,
+    "unsupportedObjects": [],
+    "verdict": "pass"
+  },
+  "warnings": []
+}

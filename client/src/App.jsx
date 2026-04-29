@@ -8,6 +8,7 @@ import LiveViewPage from './pages/LiveViewPage'
 import RemoteControlPage from './pages/RemoteControlPage'
 import SpeakerViewPage from './pages/SpeakerViewPage'
 import ExplorePage from './pages/ExplorePage'
+import GamePlayerPage from './pages/game-player-join-page'
 import MainLayout from './components/layout/MainLayout'
 
 function EditorRoute({ isTemplate = false }) {
@@ -48,6 +49,7 @@ function AppRoutes() {
       <Route path="/live/:roomCode" element={<LiveViewPage />} />
       <Route path="/remote/:roomCode" element={<RemoteControlPage />} />
       <Route path="/speaker/:roomCode" element={<SpeakerViewPage />} />
+      <Route path="/player/:slideId/:elementId" element={<GamePlayerPage />} />
     </Routes>
   )
 }

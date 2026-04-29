@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { X, RotateCcw } from 'lucide-react'
 import { Button } from '../components/ui'
+import { sanitizeRichTextHtml } from '../utils/content-safety'
 
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
 
@@ -27,7 +28,7 @@ export default function TransitionPreview({ presentation, fromIndex, onClose }) 
       .map((el) => {
         const style = `position:absolute;left:${el.x}px;top:${el.y}px;width:${el.width}px;height:${el.height}px;z-index:${el.zIndex || 1};overflow:hidden;box-sizing:border-box;`
         if (el.type === 'text')
-          return `<div style="${style}padding:8px 12px;color:white;">${el.content || ''}</div>`
+          return `<div style="${style}padding:8px 12px;color:white;">${sanitizeRichTextHtml(el.content || '')}</div>`
         if (el.type === 'shape')
           return `<div style="${style}background:${el.fill || '#6366f1'};border-radius:${el.shape === 'circle' ? '50%' : '0'};"></div>`
         return `<div style="${style}background:rgba(99,102,241,0.2);"></div>`

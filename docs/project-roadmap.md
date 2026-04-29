@@ -1,6 +1,6 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: UI/UX Tailwind Hard Mode Remediation completed
+## Current Status: Gamification Game Controls (Phases 1-11) completed
 
 All core features are operational. The token-backed Tailwind layer, route-based
 shell, live controller/viewer contract, notes normalization, persistence
@@ -10,13 +10,32 @@ C-04, H-01..H-05, M-01..M-08, T-01, T-04, A-02, A-03). The `.pptx` parser
 benchmark completed on 2026-04-24 and selected `pptxtojson` primary with
 `pptx2json` fallback inspector. Editable PPTX import Phase 1 is implemented
 with server-side parser isolation, ZIP budget guards, text/image/shape/table
-mapping, and locked placeholders for unsupported objects.
+mapping, full-fidelity remediation for sanitizer/group/table/chart/export gaps,
+and locked placeholders for unsupported objects. Corpus verification now uses
+the 4 checked-in `PPTX/` decks when `server/data/test-corpus/` is empty. The
+round-trip harness unification plan completed on 2026-04-25, locking strict
+production-only validation to the ≥95 semantic / ≥98 round-trip gate and the
+latest 4-deck result at 97.0% semantic fidelity and 99.0% round-trip stability.
+Trusted hardening without HTML embed regression completed on 2026-04-26:
+analytics token gating, presenter token anti-hijack flow, AI endpoint SSRF
+guard, client NaN/settings/live guardrails, import/export reliability fixes,
+and targeted text/markdown/svg safety while preserving trusted HTML embeds.
+PPTX parser worker startup is hardened for dev watch mode and Electron/packaged runtime.
+Electron sandbox hardening is documented as follow-up only.
+E2E hardening with stable selectors completed on 2026-04-26: property-panel
+`prop-*` selectors are standardized, autosave failure/retry behavior is covered,
+EditorPage POM helpers are split by concern, and deterministic visual regression
+baseline is active.
+PPTX import coordinate fidelity hardening completed on 2026-04-27:
+geometry normalization layer, nullish-safe coordinate mapping, matrix-based
+group flattening, canonical editor-native image crop mapping, corpus by-type
+drift/coverage/count gates, and focused import-fidelity Playwright flow.
 
 ### What Works
 
 | Area | Status |
 | --- | --- |
-| WYSIWYG editing (15+ element types) | Done |
+| WYSIWYG editing (17 element types) | Done |
 | Undo/redo (50-step) | Done |
 | Auto-save (debounced) | Done |
 | Smart guides + snapping | Done |
@@ -30,7 +49,7 @@ mapping, and locked placeholders for unsupported objects.
 | Export PDF | Done |
 | Export PPTX | Done (hybrid native + high-res raster fallback, split helpers) |
 | Project export/import (.navslides) | Done (manifest v1.1, partial media skip warnings) |
-| Import PPTX | Done (Phase 1 editable text/image/shape/table with placeholders) |
+| Import PPTX | Done (editable objects plus fidelity remediation; semantic corpus avg 95.0%) |
 | Offline HTML export | Done (self-contained) |
 | Shareable links (with password option) | Done |
 | GitHub push integration | Done |
@@ -41,15 +60,16 @@ mapping, and locked placeholders for unsupported objects.
 | Dark/light editor theme | Done |
 | AI copywriting + translation | Done |
 | Media library (Unsplash, Giphy) | Done |
+| Gamification Game Controls (7 game types) | Done |
 
-### What'"'"'s New in v1.4.x (Security & Architecture Refactor)
+### What's New in v1.5.x / v1.6.x (Security & Architecture Refactor)
 
 | Area | Status |
 | --- | --- |
 | Zod request validation on all mutation APIs | Done |
 | CSS modularization (57KB -> split files) | Done |
 | Zustand state management (3 stores) | Done |
-| Custom hooks (6 hooks extracted) | Done |
+| Custom hooks (7 hooks extracted) | Done |
 | PropertiesPanel decomposition (8 sub-editors) | Done |
 | Element factory (centralized creation) | Done |
 | ErrorBoundary (crash recovery UI) | Done |
@@ -73,6 +93,9 @@ mapping, and locked placeholders for unsupported objects.
   possible to avoid placeholder-only output.
 - Present mode and standard HTML export still depend on CDN resources at
   runtime.
+- PPTX harness `--roundtrip` now uses the production export pipeline; strict
+  mode keeps the ≥95 semantic / ≥98 round-trip gate. Corpus size is still
+  small (`n=4`), so scores should be re-verified as new decks are added.
 
 ### Code Quality
 
@@ -81,9 +104,34 @@ mapping, and locked placeholders for unsupported objects.
 
 ### CI/CD
 
-- GitHub Actions builds for Windows only.
+- GitHub Actions builds for Windows only (Linux/macOS targets planned).
+- 510 Vitest unit tests + 127 Playwright E2E tests in 27 spec files (as of 2026-04-28).
 
 ## Completed Phases
+
+### Gamification Game Controls (Complete - 2026-04-29)
+
+11-phase implementation of interactive game elements for presentations. 161 tests passing.
+
+**Sub-phases:**
+
+1. Phase 1: Game element types foundation — 7 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories), `createGameElement`/`createQuestion`/`createTeam` factories, placeholder renderer, 68 unit tests added
+2. Phase 2: Backend game engine — Socket.IO room management (`server/services/game-engine.js`, `server/routes/games.js`), random picker, leaderboard, scoring, team management, timer/question lifecycle
+3. Phase 3: Canvas renderer — SVG previews for all 7 game types (wheel, bomb, Jeopardy board, corner grid, relay baton, trophy, letter grid) with `GameElementRenderer.jsx`
+4. Phase 4: Game properties panel — Content/Display/Scoring tabs with team config, question list, timer, difficulty, colors, scoring rules, bonus/penalty settings
+5. Phase 5: Toolbar integration — InsertMenu "Games" category with icon grid for all 7 types, `createGameElement` wired to EditorPage insert handler
+6. Phase 6: Player join page — `/player/:slideId/:elementId` route, `useGameSocket` hook, Socket.IO connection, team assignment, spectator mode
+7. Phase 7: Interactive wheel spin, confetti burst, hot-potato bomb animation, timer ring countdown
+8. Phase 8: Jeopardy board — 5 categories, 5 questions each, dollar values 100-500, reveal animation, double-jeopardy + final round
+9. Phase 9: Four-corners room picker, scattergories letter generator with timer, suspense selection effects
+10. Phase 10: Relay race timer, trivia podium leaderboard, streak bonuses, penalty system
+11. Phase 11: Integration tests — 161 tests covering room lifecycle, Socket.IO events, leaderboard, scoring, timer, team management, player join/leave, SVG rendering, properties panel
+
+**Files created:** `client/src/constants/game-element-types-constants.js`, `client/src/components/canvas/element-renderers/game-element-placeholder-renderer.jsx`, `client/src/components/canvas/element-renderers/game-element-renderer.jsx`, `client/src/components/properties/game-properties.jsx`, `client/src/pages/PlayerJoinPage.jsx`, `client/src/hooks/use-game-socket.js`, `server/services/game-engine.js`, `server/routes/games.js`
+
+**Files modified:** `client/src/data/element-defaults.js`, `client/src/components/canvas/element-renderers/registry.js`, `client/src/components/InsertMenu.jsx`, `client/src/components/EditorMenuBar.jsx`, `client/src/App.jsx`, `client/src/stores/editor-store.js`, `server/index.js`
+
+**Status:** Complete — 2026-04-29
 
 ### Phase 1 - Controls UX: Critical Fixes (Complete - 2026-04-16)
 
@@ -111,7 +159,7 @@ normalization, live socket contract, storage locking, and E2E stability.
 
 **Plan:** `plans/20260423-2151-tailwind-refactor-hardening-verification/`
 
-### Phase 8 - UI/UX Tailwind Hard Mode Remediation (Complete - 2026-04-25)
+### Phase 8b - UI/UX Tailwind Hard Mode Remediation (Complete - 2026-04-25)
 
 19 fixes across 5 phases: slide index badge visibility (C-02), shared color
 config module (C-04), sidebar layout/vertical scale/popup overflow/onClick/emoji
@@ -122,7 +170,7 @@ All 130 tests pass, production build succeeds.
 
 **Plan:** `plans/260425-0455-ui-ux-tailwind-fix-hard/`
 
-### Phase 8 - Tailwind UI/UX Review Remediation (Complete - 2026-04-24)
+### Phase 8a - Tailwind UI/UX Review Remediation (Complete - 2026-04-24)
 
 Closed accepted Medium findings from the Tailwind UI/UX review and fixed touched/global Low-risk control accessibility items.
 
@@ -142,6 +190,72 @@ basic shapes/lines, and tables; charts, equations, OLE, SmartArt, and complex
 groups become locked placeholders with warnings.
 
 **Plan:** `plans/260424-1841-pptx-import/`
+
+### PPTX Round-trip Harness Unification (Complete - 2026-04-25)
+
+Unified the round-trip harness with the production export pipeline. Strict mode
+now requires production export and keeps the ≥95 semantic / ≥98 round-trip
+gate; latest 4-deck corpus result: 97.0% semantic fidelity, 99.0% round-trip
+stability.
+
+**Plan:** `plans/260425-1802-unify-roundtrip-harness/`
+
+### Trusted Hardening Without HTML Embed Regression (Complete - 2026-04-26)
+
+Completed hardening plan focused on correctness/privacy/security issues while
+preserving HTML embed as trusted programmable content.
+
+**Delivered:**
+
+- analytics share-token gate and storage-locking updates
+- live presenter anti-hijack via `presenterToken`
+- AI custom endpoint SSRF guard + outline schema checks
+- client finite-number + settings/live fetch guardrails
+- import/export warning + cache-finalizer reliability fixes
+- targeted text/markdown/svg/shape-text safety with no blanket HTML embed sanitize
+- cross-phase E2E regressions for analytics, live takeover rejection, and trusted embed execution
+
+**Verification:** `npm run lint`, `npm run test`, `npm run test:e2e`, `npm run build` passed.
+`k6` load tests were prepared but not run because `k6` is not installed.
+
+**Plan:** `plans/260426-1129-trusted-hardening-without-html-embed-regression/`
+
+### E2E Testing Hardening With Stable Selectors (Complete - 2026-04-26)
+
+Completed full E2E hardening plan for selector stability, lifecycle/failure
+coverage, POM maintainability, and CI-friendly visual regression.
+
+**Delivered:**
+
+- selector contract in `docs/code-standards.md` (semantic selectors first,
+  targeted `data-testid`, frozen canvas IDs)
+- stable property control test IDs across common/shape/image/chart/code/table/misc panels
+- new API-backed E2E suites for property persistence and lifecycle/error paths
+- autosave error state (`Save failed`) plus explicit `Retry` UX path
+- EditorPage POM split into helper modules with preserved public methods
+- deterministic Playwright screenshot baseline test and snapshot asset
+- E2E suite baseline is now 127 tests in 27 files (`npx playwright test --list`)
+- full gates green: lint, unit, targeted E2E, full E2E, and repeat-each flake pass
+
+**Plan:** `plans/260426-1708-e2e-testing-hardening-stable-selectors/`
+
+### PPTX Import Coordinate Fidelity Hardening (Complete - 2026-04-27)
+
+Completed full execution plan `260426-2128-pptx-import-coordinate-fidelity-hardening`.
+
+**Delivered:**
+
+- new pure geometry helper module (`server/services/pptx-import/geometry.js`)
+- drift-focused unit suites (`geometry.test.js`, `geometry-drift.test.js`)
+- property hardening coverage (`property-mapping.test.js`)
+- matrix-based group/line transform coverage (`group-transform.test.js`)
+- corpus harness by-type drift/property/count metrics + generated-fixture gates
+- import summary severity buckets (`exact/approximated/placeholder/failed`)
+- focused e2e import fidelity verification (`tests/e2e/pptx-import-fidelity.spec.js`)
+
+**Verification:** lint, targeted/import suites, strict corpus run, targeted Playwright import flow, and production build passed.
+
+**Plan:** `plans/260426-2128-pptx-import-coordinate-fidelity-hardening/`
 
 ## Future Improvement Phases
 
@@ -191,19 +305,70 @@ foundation.
 - Standardized typography and UI elements.
 - Executed via a zero-regression, TDD-driven approach.
 
-### Phase C - SlideCanvas Decomposition (Medium Priority)
+### Phase G - Command Layer Unification (Complete - 2026-04-28)
+
+Refactored clipboard operations (copy/cut/paste/duplicate) to pure functions in `use-clipboard.js`. `SlideCanvas` no longer owns keyboard listeners or clipboard state. `handleUndo`/`handleRedo` wrapped in `useCallback`. Deprecated `use-history.js` removed (logic inlined into `EditorPage`). Unit test added in `use-clipboard.test.js`. SlideCanvas reduced by 79 LOC.
+
+**Commit:** `3107731`
+
+### Phase H - Anime.js Integration for UI & Live Overlays (Planned)
+
+Add Anime.js as a controlled enhancement to the client. Zero disruption to reveal.js fragment system or presentation HTML generation. Two separate hooks: one for editor UI animations, one for live presentation overlay animations.
+
+**Scope:** Hướng 1 (UI Editor Enhancement) + Hướng 2 (Live Presentation Overlay Enhancement)
+
+**Current animation system:** Reveal.js 5.1.0 powers all slide transitions (6 types) and fragment animations (12 built-in CSS classes). Client UI uses only Tailwind CSS transitions. Live presentation overlays use raw CSS `transition` properties. No Framer Motion, GSAP, or anime.js.
+
+**Anime.js context:** v4.3.6 (Feb 2026), ~67.5k GitHub stars, MIT. API: `import { animate, stagger } from 'animejs'`. Bundle: ESM/UMD/CJS/IIFE. Pros: tiny footprint, clean API, CSS/SVG/JS animation. Cons: fewer features than GSAP, smaller community.
+
+**Tasks — Hướng 1: UI Editor Enhancement:**
+
+- Install `animejs` in `client/package.json` (npm workspace dev dependency)
+- Create `client/src/hooks/use-anime-ui.js` — reusable hook for editor UI animations:
+  - Modal entrance/exit (slide + fade, scale effects, replacing Tailwind `animate-zoom-in`/`animate-fade-in`)
+  - Toolbar button hover stagger animations
+  - `AnimationTimeline` drag feedback (element snap animation on drop)
+  - RemoteControlPage button press feedback
+- Replace `LiveViewPage.jsx` cursor dot CSS `transition: all 0.08s linear` with `animate()` + spring easing
+- Replace `LiveViewPage.jsx` laser pointer CSS `transition: all 0.05s linear` with `animate()` + glow pulse
+- No changes to reveal.js, fragment system, or HTML generation pipeline
+
+**Tasks — Hướng 2: Live Presentation Overlay Enhancement:**
+
+- Create `client/src/hooks/use-anime-overlays.js` — hook for live presentation overlay animations:
+  - Cursor dot animation with spring physics (replacing CSS transitions)
+  - Laser pointer with radial glow pulse effect
+  - Annotation SVG path drawing animation (stroke-dasharray/dashoffset via anime.js)
+  - Viewer count badge entrance/exit animations (join/leave)
+  - Connection status transitions
+- All overlays are viewer-side React components, completely isolated from reveal.js iframe
+- Socket.IO data flow unchanged (only the visual presentation layer is enhanced)
+
+**Files to modify:** `client/package.json`, create `client/src/hooks/use-anime-ui.js`, create `client/src/hooks/use-anime-overlays.js`, modify `LiveViewPage.jsx`, modify `RemoteControlPage.jsx`, modify modal components as needed.
+
+**Files NOT modified (zero disruption):** `shared/src/htmlGenerator.js`, `shared/src/element-renderers.js`, `TransitionPreview.jsx`, `AnimationTimeline.jsx`, `AnimationPreviewModal`, reveal.js configuration.
+
+**Estimated scope:** Low — isolated hooks, no shared state changes, no reveal.js modifications.
+
+**Priority:** Enhancement only (Phase H does not block any other phase). Defer until after current active work.
+
+**Status:** Planned — not started
+
+### Phase C - SlideCanvas Decomposition (Complete - 2026-04-27)
 
 Break down the remaining large component.
 
-**Tasks:**
+**Delivered:**
 
-- Extract drag/resize logic -> `use-drag-resize` hook
-- Extract selection logic -> `use-selection` hook
-- Extract context menu -> `CanvasContextMenu` component
-- Extract ruler/guides -> `RulerOverlay` component
-- Extract crop mode -> `CropOverlay` component
+- SlideCanvas reduced from 2759 → 841 LOC (target was <=1200, exceeded)
+- 15 element renderers extracted to `canvas/element-renderers/` (registry-based dispatch)
+- `CanvasElement` wrapper (128 LOC) for selection/rotation/crop handles
+- `CropOverlay` (139 LOC) extracted
+- Chrome: grid, rulers (120 LOC), zoom controls, footer overlay
+- Interaction hooks: snapping helpers, rubber-band drag, resize-rotate
+- Phase 3: canvas pointer interaction (283 LOC)
 
-**Success criteria:** SlideCanvas <= 1200 LOC; all interaction logic in hooks.
+**Plan:** `plans/260427-0900-deep-feature-hardening-master-plan/`
 
 ### Phase D - CI/CD (Lower Priority)
 
@@ -226,6 +391,26 @@ future work.
 - Add chart/SmartArt/OLE/equation strategies only after separate validation
 - Expand rich text style mapping for fonts, bullets, and theme colors
 - Add more fixture-driven visual regression coverage for imported decks
+
+### Deep Feature Hardening Master Plan (Complete - 2026-04-27)
+
+Full execution of `plans/260427-0900-deep-feature-hardening-master-plan/`.
+
+**Delivered (Phases 0-5):**
+
+- Phase 0: Baseline audit (SlideCanvas LOC count, command layer state, test inventory)
+- Phase 1: Command layer cleanup (inline clipboard/keyboard removed from SlideCanvas)
+- Phase 2: Canvas render decomposition (15 renderers extracted, registry dispatch, 841 LOC achieved)
+- Phase 3: Canvas chrome + interaction extraction (hooks + chrome components isolated)
+- Phase 4: Custom shortcut registry (`shortcut-registry.js`, `shortcut-storage.js`, `shortcut-normalizer.js`, 95 tests)
+- Phase 5: PPTX import fidelity hardening (SmartArt fix, chart metadata, 20-unit test suite, 168 pptx-import tests)
+- Phase 6: Slide Master — **Deferred** (20 slide layouts exist, `showMasterPanel` reserved but never wired, demand not validated)
+- Phase 7: PDF editable spike — **Deferred** (P2, needs packaging decision)
+- Phase 8: Analytics — **Deferred** (P2, needs privacy/retention rules decision)
+
+**Verification:** 510 tests pass, lint clean, build succeeds.
+
+**Plan:** `plans/260427-0900-deep-feature-hardening-master-plan/`
 
 ## Non-Roadmap Items
 

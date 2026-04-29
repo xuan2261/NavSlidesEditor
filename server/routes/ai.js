@@ -9,6 +9,34 @@ const { escapeHtml, getSlideNotes } = require('revealjs-shared')
 
 const router = express.Router()
 
+function logAiError(context, err) {
+  console.error(`[AI:${context}]`, err)
+}
+
+function sendAiProviderFailure(res) {
+  return res.status(502).json({ error: 'AI provider request failed' })
+}
+
+function cleanJsonBlock(rawResult) {
+  const raw = String(rawResult || '').trim()
+  if (!raw.startsWith('```')) return raw
+  return raw.replace(/^```(json)?\n/, '').replace(/\n```$/, '')
+}
+
+const outlineResponseSchema = z.object({
+  slides: z
+    .array(
+      z.object({
+        title: z.string(),
+        bulletPoints: z.array(z.string()).optional(),
+        layout: z.string().optional(),
+        notes: z.string().optional(),
+      })
+    )
+    .min(1)
+    .max(100),
+})
+
 function getActionPrompt(action) {
   const prompts = {
     improve:
@@ -50,10 +78,17 @@ router.post(
         systemPrompt = `You are an expert presentation copywriter. ${customPrompt}. Return ONLY the requested modified text.`
       }
 
-      const result = await callAI(settings.ai, systemPrompt, text)
+      let result
+      try {
+        result = await callAI(settings.ai, systemPrompt, text)
+      } catch (err) {
+        logAiError('rewrite', err)
+        return sendAiProviderFailure(res)
+      }
       res.json({ result: result.trim() })
     } catch (err) {
-      res.status(500).json({ error: err.message })
+      logAiError('rewrite', err)
+      res.status(500).json({ error: 'Internal server error' })
     }
   }
 )
@@ -83,18 +118,33 @@ Return a JSON object containing an array called "slides". Each slide must have:
 - notes: string (optional context for presenter)
 Style parameter: ${style}. Language parameter: ${language}. Expected Slides count: ${slideCount}.`
 
-    const rawResult = await callAI(settings.ai, systemPrompt, topic)
-
-    // strip out markdown formatting if ai returns markdown block
-    let cleanedJsonPattern = rawResult
-    if (rawResult.startsWith('```')) {
-      cleanedJsonPattern = rawResult.replace(/^```(json)?\n/, '').replace(/\n```$/, '')
+    let rawResult
+    try {
+      rawResult = await callAI(settings.ai, systemPrompt, topic)
+    } catch (err) {
+      logAiError('generate-outline-provider', err)
+      return sendAiProviderFailure(res)
     }
 
-    const outline = JSON.parse(cleanedJsonPattern)
-    res.json({ outline: outline.slides || outline })
+    let parsed
+    try {
+      parsed = JSON.parse(cleanJsonBlock(rawResult))
+    } catch (err) {
+      logAiError('generate-outline-json', err)
+      return res.status(502).json({ error: 'AI returned invalid outline' })
+    }
+
+    const normalized = Array.isArray(parsed) ? { slides: parsed } : parsed
+    const validated = outlineResponseSchema.safeParse(normalized)
+    if (!validated.success) {
+      logAiError('generate-outline-schema', validated.error)
+      return res.status(502).json({ error: 'AI returned invalid outline' })
+    }
+
+    res.json({ outline: validated.data.slides })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    logAiError('generate-outline', err)
+    res.status(500).json({ error: 'Internal server error' })
   }
 })
 
@@ -189,18 +239,26 @@ IMPORTANT INSTRUCTIONS:
 3. Return the exact same JSON array structure.
 4. Respond ONLY with valid JSON. Do NOT wrap with markdown \`\`\`json.`
 
-    const rawResult = await callAI(settings.ai, systemPrompt, JSON.stringify(texts))
-
-    let cleanedJsonPattern = rawResult.trim()
-    if (cleanedJsonPattern.startsWith('```')) {
-      cleanedJsonPattern = cleanedJsonPattern
-        .replace(/^```(json)?\n/, '')
-        .replace(/\n```$/, '')
+    let rawResult
+    try {
+      rawResult = await callAI(settings.ai, systemPrompt, JSON.stringify(texts))
+    } catch (err) {
+      logAiError('translate-provider', err)
+      return sendAiProviderFailure(res)
     }
 
-    res.json({ translations: JSON.parse(cleanedJsonPattern) })
+    let parsed
+    try {
+      parsed = JSON.parse(cleanJsonBlock(rawResult))
+    } catch (err) {
+      logAiError('translate-json', err)
+      return res.status(502).json({ error: 'AI provider request failed' })
+    }
+
+    res.json({ translations: parsed })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    logAiError('translate', err)
+    res.status(500).json({ error: 'Internal server error' })
   }
 })
 

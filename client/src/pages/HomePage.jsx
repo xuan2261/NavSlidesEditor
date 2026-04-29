@@ -26,7 +26,7 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../utils/api'
-import { markdownToSlides } from '../utils/markdown-import'
+import { markdownToSlidesWithWarnings } from '../utils/markdown-import'
 import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../utils/import-project'
 import { summarizePptxImportWarnings } from '../utils/pptx-import-summary'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
@@ -449,15 +449,20 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
   async function handleImportPdf(file) {
     if (!file) return
+    setImportWarningSummary(null)
     setImportProgress('Loading PDF...')
     try {
       const { pdfToSlides } = await import('../utils/pdf-import.js')
-      const slides = await pdfToSlides(file, (cur, total) => {
+      const { slides, warnings } = await pdfToSlides(file, (cur, total) => {
         setImportProgress(`Converting page ${cur}/${total}...`)
       })
       if (slides.length === 0) {
         alert('No pages found in PDF')
         return
+      }
+      if (warnings.length) {
+        const message = `PDF import completed with warnings:\n- ${warnings.join('\n- ')}`
+        setImportWarningSummary(message)
       }
       const pres = await api.createPresentation({
         title: file.name.replace(/\.pdf$/i, ''),
@@ -476,12 +481,17 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
   async function handleImportMarkdown(file) {
     if (!file) return
+    setImportWarningSummary(null)
     try {
       const text = await file.text()
-      const slides = markdownToSlides(text)
+      const { slides, warnings } = markdownToSlidesWithWarnings(text)
       if (slides.length === 0) {
         alert('No content found in Markdown')
         return
+      }
+      if (warnings.length) {
+        const message = `Markdown import warnings:\n- ${warnings.join('\n- ')}`
+        setImportWarningSummary(message)
       }
       const pres = await api.createPresentation({
         title: file.name.replace(/\.(md|markdown|txt)$/i, ''),
@@ -498,6 +508,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
   async function handleImportProject(file) {
     if (!file) return
+    setImportWarningSummary(null)
     setImportProgress('Parsing project file...')
     try {
       const parsed = await parseProjectFile(file)
@@ -509,9 +520,12 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       if (warnings.length) console.warn('Import warnings:', warnings)
 
       let finalPres = parsed.presentation
+      const importWarnings = [...warnings]
       if (parsed.type === 'zip' && parsed.mediaFiles && parsed.mediaFiles.length > 0) {
         setImportProgress('Uploading media files...')
-        finalPres = await rehydrateImportedPresentation(api, parsed)
+        const rehydrated = await rehydrateImportedPresentation(api, parsed)
+        finalPres = rehydrated.presentation
+        importWarnings.push(...rehydrated.warnings)
       }
 
       setImportProgress('Creating presentation...')
@@ -520,6 +534,10 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         ...finalPres,
         slides: finalPres.slides,
       })
+      if (importWarnings.length) {
+        const message = `Project import warnings:\n- ${importWarnings.join('\n- ')}`
+        setImportWarningSummary(message)
+      }
       onOpen(pres.id)
     } catch (err) {
       console.error('Project import failed:', err)

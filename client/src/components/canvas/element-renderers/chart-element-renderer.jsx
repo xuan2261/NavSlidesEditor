@@ -1,0 +1,46 @@
+export function ChartRenderer({ element, isSelected, isDragging }) {
+  const { chartType = 'bar', chartData = {} } = element
+  const labels = chartData.labels || []
+  const datasets = chartData.datasets || []
+
+  const chartHtml = `<!doctype html><html><head>
+<meta charset="utf-8">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style>
+</head><body>
+<canvas id="c" style="width:100%;height:100%"></canvas>
+<script>
+new Chart(document.getElementById('c'),{
+  type:'${chartType}',
+  data:{
+    labels:${JSON.stringify(labels)},
+    datasets:${JSON.stringify(
+      datasets.map((ds) => ({
+        label: ds.label || '',
+        data: ds.data || [],
+        backgroundColor: ds.color || '#6366f1',
+        borderColor: ds.color || '#6366f1',
+        borderWidth: chartType === 'line' ? 2 : 0,
+        fill: chartType === 'line' ? false : undefined,
+      }))
+    )}
+  },
+  options:{
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'rgba(255,255,255,0.7)',font:{size:12}}}},
+    scales:${chartType === 'pie' || chartType === 'doughnut' ? '{}' : `{x:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`}
+  }
+});
+</script></body></html>`
+
+  const chartFrameStyle = {
+    width: '100%',
+    height: '100%',
+    border: 'none',
+    display: 'block',
+    pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
+    background: 'transparent',
+  }
+  return <iframe srcDoc={chartHtml} style={chartFrameStyle} sandbox="allow-scripts" title="Chart" />
+}

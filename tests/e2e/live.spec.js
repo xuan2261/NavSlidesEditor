@@ -30,11 +30,20 @@ function createLiveSlide(id, label, notes, children = []) {
 async function createRoom(request) {
   const res = await request.post('/api/live/room')
   expect(res.ok()).toBeTruthy()
-  return (await res.json()).roomCode
+  const body = await res.json()
+  expect(body.presenterToken).toBeTruthy()
+  return body
 }
 
-async function openPresenter(context, presId, roomCode) {
+async function openPresenter(context, presId, roomCode, presenterToken) {
   const page = await context.newPage()
+  await page.goto('about:blank')
+  await page.evaluate(
+    ({ code, token }) => {
+      window.name = JSON.stringify({ roomCode: code, presenterToken: token })
+    },
+    { code: roomCode, token: presenterToken }
+  )
   await page.goto(`/api/presentations/${presId}/present?live=${roomCode}`)
   await expect(page.locator('body')).toBeVisible()
   return page
@@ -81,6 +90,7 @@ test.describe('Live Presentation & WebSockets', () => {
     expect(res.ok()).toBeTruthy()
     const data = await res.json()
     expect(data.roomCode).toBeTruthy()
+    expect(data.presenterToken).toBeTruthy()
   })
 
   test('can open Present Live button and see modal', async ({ page }) => {
@@ -134,16 +144,16 @@ test.describe('Live Presentation & WebSockets', () => {
         createLiveSlide('slide-b', 'Slide B', 'Notes B'),
       ],
     })
-    const roomCode = await createRoom(request)
-    await openPresenter(context, presId, roomCode)
+    const room = await createRoom(request)
+    await openPresenter(context, presId, room.roomCode, room.presenterToken)
 
     const viewer = await context.newPage()
-    await viewer.goto(`/live/${roomCode}`)
+    await viewer.goto(`/live/${room.roomCode}`)
     await waitForRevealIndex(viewer, 'Live Presentation', '0:0:0')
 
     const remote = await context.newPage()
     await remote.setViewportSize({ width: 390, height: 844 })
-    await remote.goto(`/remote/${roomCode}`)
+    await remote.goto(`/remote/${room.roomCode}`)
     await expect(remote.getByText('Notes A')).toBeVisible({ timeout: 10000 })
     await expect(remote.getByTestId('remote-viewer-count')).toContainText('1')
 
@@ -163,16 +173,16 @@ test.describe('Live Presentation & WebSockets', () => {
         createLiveSlide('slide-b', 'Slide B', 'Notes B'),
       ],
     })
-    const roomCode = await createRoom(request)
-    await openPresenter(context, presId, roomCode)
+    const room = await createRoom(request)
+    await openPresenter(context, presId, room.roomCode, room.presenterToken)
 
     const viewer = await context.newPage()
-    await viewer.goto(`/live/${roomCode}`)
+    await viewer.goto(`/live/${room.roomCode}`)
     await waitForRevealIndex(viewer, 'Live Presentation', '0:0:0')
 
     const remote = await context.newPage()
     await remote.setViewportSize({ width: 390, height: 844 })
-    await remote.goto(`/remote/${roomCode}`)
+    await remote.goto(`/remote/${room.roomCode}`)
     await expect(remote.getByText('Notes A')).toBeVisible({ timeout: 10000 })
 
     await remote.getByRole('button', { name: /Next/ }).click()
@@ -198,15 +208,15 @@ test.describe('Live Presentation & WebSockets', () => {
         createLiveSlide('slide-b', 'Slide B', 'Speaker notes B'),
       ],
     })
-    const roomCode = await createRoom(request)
-    await openPresenter(context, presId, roomCode)
+    const room = await createRoom(request)
+    await openPresenter(context, presId, room.roomCode, room.presenterToken)
 
     const viewer = await context.newPage()
-    await viewer.goto(`/live/${roomCode}`)
+    await viewer.goto(`/live/${room.roomCode}`)
     await waitForRevealIndex(viewer, 'Live Presentation', '0:0:0')
 
     const speaker = await context.newPage()
-    await speaker.goto(`/speaker/${roomCode}`)
+    await speaker.goto(`/speaker/${room.roomCode}`)
     await expect(speaker.getByText('Speaker notes A')).toBeVisible({ timeout: 10000 })
     await expect(speaker.locator('iframe[title="Current Slide"]')).toBeVisible()
     await expect(speaker.locator('iframe[title="Next Slide"]')).toBeVisible()
@@ -225,15 +235,15 @@ test.describe('Live Presentation & WebSockets', () => {
         createLiveSlide('slide-b', 'Slide B', 'Slide B notes'),
       ],
     })
-    const roomCode = await createRoom(request)
-    await openPresenter(context, presId, roomCode)
+    const room = await createRoom(request)
+    await openPresenter(context, presId, room.roomCode, room.presenterToken)
 
     const viewer = await context.newPage()
-    await viewer.goto(`/live/${roomCode}`)
+    await viewer.goto(`/live/${room.roomCode}`)
     await waitForRevealIndex(viewer, 'Live Presentation', '0:0:0')
 
     const speaker = await context.newPage()
-    await speaker.goto(`/speaker/${roomCode}`)
+    await speaker.goto(`/speaker/${room.roomCode}`)
     await expect(speaker.getByRole('button', { name: '1.1' })).toBeVisible({ timeout: 10000 })
     await speaker.getByRole('button', { name: '1.1' }).click()
 

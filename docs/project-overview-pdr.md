@@ -20,7 +20,7 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 ## Core Value Propositions
 
 1. **Privacy-first** — All data in local JSON files + filesystem. Zero telemetry.
-2. **Rich elements** — 15+ element types: text, image, shape, html, code, latex, markdown, chart, callout, icon, video, audio, table, qr, divider.
+2. **Rich elements** — 17 element types: text, image, shape, html, code, latex, markdown, chart, callout, icon, video, audio, table, qrcode, drawing, line, svg.
 3. **WYSIWYG editing** — Direct on-canvas editing via TipTap, smart guides, snapping, rulers.
 4. **Multiple deployment models** — Docker, Node.js, Electron desktop app.
 5. **Export flexibility** — HTML, offline HTML, PDF, PPTX, shareable links, GitHub push.
@@ -35,13 +35,13 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 - Drag, resize (with aspect-ratio lock), rotate elements
 - Smart guides with 6px snap threshold
 - Rulers and persistent drag-from-ruler guide lines
-- Undo/redo (50-step history via historyRef)
+- Undo/redo (50-step bounded history)
 - Find & replace across all slides (Ctrl+F)
 - Auto-save with 1500ms debounce
 - Copy/cut/paste/duplicate elements
 - Interactive step-by-step product tour (React-Joyride)
 
-### Elements (14 types)
+### Elements (17 types)
 
 | Type     | Description                                            |
 | -------- | ------------------------------------------------------ |
@@ -58,8 +58,10 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 | video    | URL or upload, autoplay/loop/muted                     |
 | audio    | URL or upload with playback controls                   |
 | table    | Drag/resize table with inline cell editing             |
-| qr       | QR Code generator for URLs or text                     |
-| divider  | Visual dividing line with adjustable thickness/color   |
+| qrcode   | QR Code generator for URLs or text                     |
+| drawing  | Freehand pen/drawing tool                              |
+| line     | Straight line with adjustable stroke and arrow heads    |
+| svg      | Inline SVG markup                                      |
 
 ### Slides
 
@@ -122,7 +124,7 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 ## Acceptance Criteria (MVP)
 
 - [ ] User can create, edit, and delete presentations
-- [ ] All 14 element types render correctly in editor and export
+- [ ] All 17 element types render correctly in editor and export
 - [ ] Present mode works with fragment animations and transitions
 - [ ] Export HTML generates valid reveal.js presentation
 - [ ] Docker deployment starts cleanly and data persists across restarts
@@ -132,18 +134,17 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 
 ## Known Limitations (Post-Refactor)
 
-- `SlideCanvas.jsx` is 2421 LOC — complex canvas interaction, difficult to decompose further
+- `SlideCanvas.jsx` was reduced from ~2659 LOC to ~841 LOC via Phase C decomposition — canvas interaction is now split across 10+ focused hooks and components
 - JSDoc types only (no full TypeScript migration)
-- PPTX export skips chart, html, latex, video, audio, icon elements
-- PPTX shapes all render as rectangles
+- PPTX export uses a hybrid strategy: text/image/shape/line/callout/table/code/native charts stay as editable PPT objects; markdown/html/latex/icon/qrcode/drawing/svg/unsupported charts and gradient backgrounds fall back to Playwright-rasterized PNG assets
 - No auth — not suitable for multi-tenant hosting
 - CDN dependency at runtime for standard HTML export and present mode
 
-## Completed Refactoring (v1.4.x)
+## Completed Refactoring (v1.5.x / v1.6.x)
 
-- ✅ EditorPage reduced from 3400 → 1475 LOC
+- ✅ EditorPage reduced from 3400 → 1475 LOC (now ~1609+ LOC)
 - ✅ Zustand state management (3 stores)
-- ✅ 6 custom hooks extracted
+- ✅ 7 editor hooks in `client/src/hooks`
 - ✅ PropertiesPanel decomposed into 8 sub-editors
 - ✅ Zod request validation on all mutation endpoints
 - ✅ CSS split from monolithic 57KB into modular files

@@ -1,4 +1,5 @@
 import { Input, Select, ColorPicker } from '../../components/ui'
+import { clampNumber } from '../../utils/number-input'
 /**
  * Shape and Line specific properties.
  */
@@ -13,6 +14,7 @@ export default function ShapeProperties({ element, onUpdate }) {
           <div className="flex flex-col gap-1">
             <div className="text-[11px] text-text-muted">Fill</div>
             <ColorPicker
+              data-testid="prop-shape-fill"
               className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
               value={element.fill || '#6366f1'}
               onChange={(e) => onUpdate({ fill: e.target.value })}
@@ -21,7 +23,8 @@ export default function ShapeProperties({ element, onUpdate }) {
         )}
         <div className="flex flex-col gap-1">
           <div className="text-[11px] text-text-muted">Stroke Color</div>
-            <ColorPicker
+          <ColorPicker
+            data-testid="prop-shape-stroke"
             className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
             value={element.stroke === 'none' || !element.stroke ? '#ffffff' : element.stroke}
             onChange={(e) => onUpdate({ stroke: e.target.value })}
@@ -34,12 +37,17 @@ export default function ShapeProperties({ element, onUpdate }) {
           Stroke Width: {element.strokeWidth || (isLine ? 2 : 0)}px
         </div>
         <input
+          data-testid="prop-shape-stroke-width"
           type="range"
           className="w-full accent-accent"
           min={isLine ? '1' : '0'}
           max="20"
           value={element.strokeWidth || (isLine ? 2 : 0)}
-          onChange={(e) => onUpdate({ strokeWidth: Number(e.target.value) })}
+          onChange={(e) => {
+            const value = clampNumber(e.target.value, isLine ? 1 : 0, 20, null)
+            if (value === null) return
+            onUpdate({ strokeWidth: value })
+          }}
         />
       </div>
 
@@ -96,12 +104,17 @@ export default function ShapeProperties({ element, onUpdate }) {
           Opacity: {Math.round((element.opacity ?? 1) * 100)}%
         </div>
         <input
+          data-testid="prop-shape-opacity"
           type="range"
           className="w-full accent-accent"
           min="0"
           max="100"
           value={Math.round((element.opacity ?? 1) * 100)}
-          onChange={(e) => onUpdate({ opacity: Number(e.target.value) / 100 })}
+          onChange={(e) => {
+            const value = clampNumber(e.target.value, 0, 100, null)
+            if (value === null) return
+            onUpdate({ opacity: value / 100 })
+          }}
         />
       </div>
 
@@ -111,12 +124,17 @@ export default function ShapeProperties({ element, onUpdate }) {
             Corner Radius: {element.borderRadius || 0}px
           </div>
           <input
+            data-testid="prop-shape-border-radius"
             type="range"
             className="w-full accent-accent"
             min="0"
             max="100"
             value={element.borderRadius || 0}
-            onChange={(e) => onUpdate({ borderRadius: Number(e.target.value) })}
+            onChange={(e) => {
+              const value = clampNumber(e.target.value, 0, 100, null)
+              if (value === null) return
+              onUpdate({ borderRadius: value })
+            }}
           />
         </div>
       )}
@@ -125,6 +143,7 @@ export default function ShapeProperties({ element, onUpdate }) {
         <div className="flex flex-col gap-1 mb-2.5">
           <div className="text-[11px] text-text-muted">Label Text</div>
           <Input
+            data-testid="prop-shape-label"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="text"
             value={element.text || ''}
@@ -139,17 +158,23 @@ export default function ShapeProperties({ element, onUpdate }) {
           <div className="flex flex-col gap-1">
             <div className="text-[11px] text-text-muted">Text Size</div>
             <Input
+              data-testid="prop-shape-text-size"
               className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
               type="number"
               min="8"
               max="144"
               value={element.fontSize || 16}
-              onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
+              onChange={(e) => {
+                const value = clampNumber(e.target.value, 8, 144, null)
+                if (value === null) return
+                onUpdate({ fontSize: value })
+              }}
             />
           </div>
           <div className="flex flex-col gap-1">
             <div className="text-[11px] text-text-muted">Text Color</div>
             <ColorPicker
+              data-testid="prop-shape-text-color"
               className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
               value={element.textColor || '#ffffff'}
               onChange={(e) => onUpdate({ textColor: e.target.value })}

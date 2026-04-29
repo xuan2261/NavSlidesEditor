@@ -25,6 +25,7 @@
     "@tiptap/react": "^2.6.6",
     "@tiptap/starter-kit": "^2.6.6",
     "autoprefixer": "^10.5.0",
+    "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "highlight.js": "^11.11.1",
     "katex": "^0.16.40",

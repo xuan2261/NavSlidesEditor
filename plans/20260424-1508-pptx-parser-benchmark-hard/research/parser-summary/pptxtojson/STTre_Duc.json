@@ -1,0 +1,49 @@
+{
+  "deck": "STTre_Duc.pptx",
+  "durationMs": 476.24,
+  "error": null,
+  "ok": true,
+  "packageModifiedDate": "2026-04-19T03:23:10.561Z",
+  "packageVersion": "2.0.2",
+  "parser": "pptxtojson",
+  "peakMemoryMb": 87.65,
+  "rawOutputPath": "plans\\20260424-1508-pptx-parser-benchmark-hard\\research\\parser-raw\\pptxtojson\\STTre_Duc.redacted.json",
+  "rawOutputSizeMb": 0.63,
+  "resourceLimits": {
+    "entryCount": 131,
+    "uncompressedBytes": 3916574
+  },
+  "summary": {
+    "chartCount": 0,
+    "compare": {
+      "inventoryMediaCount": 15,
+      "inventoryNoteCount": 15,
+      "inventorySlideCount": 20,
+      "slideCountDelta": 0,
+      "slideCountMatches": true
+    },
+    "connectorCount": 0,
+    "groupCount": 0,
+    "hasFontInfo": false,
+    "hasLayoutElements": true,
+    "hasThemeColors": true,
+    "imageCount": 28,
+    "mediaCount": 28,
+    "noteCount": 15,
+    "parser": "pptxtojson",
+    "placeholderCount": 0,
+    "shapeCount": 193,
+    "size": {
+      "height": 540,
+      "width": 960
+    },
+    "slideCount": 20,
+    "tableCount": 0,
+    "textCount": 90,
+    "unsupportedObjects": [],
+    "verdict": "pass"
+  },
+  "warnings": [
+    "Parsed with media payload extraction disabled."
+  ]
+}

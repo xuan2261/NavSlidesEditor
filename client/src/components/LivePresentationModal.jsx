@@ -1,15 +1,30 @@
+import { useState, useEffect } from 'react'
 import { Radio, Play, X } from 'lucide-react'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 
-export default function LivePresentationModal({ presentationId, roomCode, onClose }) {
-  useEscapeClose(onClose)
+export default function LivePresentationModal({ presentationId, roomCode, presenterToken, onClose }) {
+  const [isOpen, setIsOpen] = useState(true)
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -23,7 +38,7 @@ export default function LivePresentationModal({ presentationId, roomCode, onClos
           <h3 id="live-presentation-modal-title" className="m-0 text-base flex items-center gap-2 text-text-primary">
             <Radio size={18} /> Present Live
           </h3>
-          <Button variant="icon" onClick={onClose} className="w-6 h-6" aria-label="Close">
+          <Button variant="icon" onClick={handleClose} className="w-6 h-6" aria-label="Close">
             <X size={16} />
           </Button>
         </div>
@@ -83,8 +98,17 @@ export default function LivePresentationModal({ presentationId, roomCode, onClos
         <Button
           variant="primary"
           onClick={() => {
-            window.open(`/api/presentations/${presentationId}/present?live=${roomCode}`, '_blank')
-            onClose()
+            const presenterWindow = window.open(
+              `/api/presentations/${presentationId}/present?live=${roomCode}`,
+              '_blank'
+            )
+            if (presenterWindow) {
+              presenterWindow.name = JSON.stringify({
+                roomCode,
+                presenterToken: presenterToken || '',
+              })
+            }
+            handleClose()
           }}
           className="w-full mt-4 justify-center"
         >

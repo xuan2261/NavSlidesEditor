@@ -43,20 +43,96 @@ Browser / Electron
 
 - Editor state is split into three Zustand stores: editor, presentation, and UI.
 - Logic extracted from `EditorPage` lives in hooks such as
-  `use-autosave.js`, `use-clipboard.js`, `use-history.js`,
+  `use-autosave.js`, `use-clipboard.js`,
   `use-keyboard.js`, `use-live-presentation.js`, `use-slide-operations.js`,
   and `use-reveal-preview-frame.js`.
-- `slide-operation-helpers.js` keeps slide duplication and deletion logic
-  isolated from the page component.
+- `animation-preview-helpers.js` and `find-replace-helpers.js` keep
+  animation preview and find-replace logic isolated from the page component.
 
 ### Editor Composition
 
-- `EditorPage.jsx` composes `SlidePanel`, `Toolbar`, `SlideCanvas`,
-  `PropertiesPanel`, `FindReplaceBar`, `AnimationTimeline`, and modal surfaces.
-- `SlideCanvas.jsx` still owns the core drag, resize, rotate, and snap
+- `EditorPage.jsx` composes `EditorMenuBar`, `QuickAccessToolbar`,
+  `SlideSorterView`, `InsertMenu`, `MiniToolbar`, `SelectionPane`,
+  `PromptPopover`, `ProductTour`, `SlidePanel`, `Toolbar`, `SlideCanvas`,
+  `PropertiesPanel`, `FindReplaceBar`, `AnimationTimeline`,
+  `AnimationPreviewModal`, and modal surfaces.
+- Editor save lifecycle status is explicit in the shell (`saving` / `saved` /
+  `error`) with non-destructive autosave failure handling and retry action.
+- `SlideCanvas.jsx` owns the core drag, resize, rotate, and snap
   interaction model.
 - `PropertiesPanel.jsx` routes to type-specific editors in
   `components/properties/`.
+- Layout sub-components live in `components/layout/` (`MainLayout`,
+  `StatusBar`); shared UI primitives live in `components/ui/`
+  (`Button`, `Select`, `Input`, `ColorPicker`).
+
+### Canvas Decomposition
+
+`SlideCanvas.jsx` was decomposed from ~2759 LOC down to ~841 LOC. All renderers and chrome components live under `client/src/components/canvas/`:
+
+```
+client/src/components/canvas/
+├── canvas-element-wrapper.jsx              # Selection/rotation handles + dispatch
+├── canvas-crop-overlay-with-handles.jsx   # Image crop overlay + CROP_HANDLES
+├── canvas-grid-overlay.jsx                # Grid background overlay
+├── canvas-rulers.jsx                      # Horizontal + vertical rulers
+├── canvas-floating-zoom-in-out-fit-controls.jsx  # Zoom in/out/fit controls
+├── canvas-footer-overlay-with-section-and-page-number.jsx  # Page number + section
+├── canvas-right-click-context-menu-for-slide-elements.jsx  # Context menu
+├── use-canvas-pointer-interaction.js     # Drag/resize/rotate pointer routing
+├── use-canvas-resize-rotate.js           # Resize math + 15-degree rotation snap
+├── use-canvas-snapping-helpers-for-grid-and-smart-guides.js  # Snap + smart guide math
+├── use-canvas-rubber-band-drag-selection.js  # Rubber-band selection
+└── element-renderers/
+    ├── registry.js                        # elementRendererRegistry + getElementRenderer
+    ├── callout-element-renderer.jsx
+    ├── icon-element-renderer.jsx
+    ├── qrcode-element-renderer.jsx
+    ├── drawing-element-renderer.jsx
+    ├── svg-element-renderer.jsx
+    ├── markdown-element-renderer.jsx
+    ├── chart-element-renderer.jsx
+    ├── latex-element-renderer.jsx
+    ├── table-element-renderer.jsx
+    ├── shape-element-renderer.jsx
+    ├── line-element-renderer.jsx
+    └── game-element-placeholder-renderer.jsx  # game element (Phase 3 full render deferred)
+
+Constants:
+- `client/src/constants/` holds typed constants and factory functions. Each
+  element group gets its own file (`*-element-*-constants.js`).
+- `game-element-types-constants.js` exports `GAME_TYPES` (7 game types), `DEFAULT_GAME_COLORS`,
+  `createGameElement()`, `createQuestion()`, and `createTeam()`.
+```
+
+Text, image, media (video/audio), HTML embed, and code renderers remain inline in `canvas-element-wrapper.jsx` due to TipTap editor coupling. Each extracted renderer stays under ~150 LOC.
+
+### Command Layer Architecture
+
+Clipboard and keyboard commands are unified through a callback-only interface. `SlideCanvas` no longer owns keyboard listeners or clipboard state.
+
+```
+use-clipboard.js         # performCopy/Cut/Paste/Duplicate — owns clipboard semantics
+use-keyboard.js          # createKeyboardHandler — dispatches from registry to callbacks
+SlideCanvas.jsx          # Receives onCopy/onCut/onPaste/onDuplicate as props; no inline clipboard
+EditorPage.jsx           # Wires useKeyboard + useClipboard; passes callbacks to SlideCanvas
+Context menu             # Calls same command callbacks as keyboard shortcuts
+```
+
+`createDuplicateOperation` is synchronous (uses `crypto.randomUUID()`) with a +20/+20 offset; includes locked-element guard. `useKeyboard` uses a registry-based dispatch: `shortcut.id → on{capitalize(id)}` callback.
+
+### Shortcut Registry
+
+User-defined keyboard shortcut overrides are stored in `localStorage` and merged with defaults at runtime.
+
+| Module | File | Purpose |
+| --- | --- | --- |
+| Definitions | `default-keyboard-shortcut-definitions-registry.js` | DEFAULT_SHORTCUTS (10 shortcuts), getShortcuts(), getShortcutById() |
+| Normalization | `shortcut-normalizer.js` | normalizeKey(), isReservedChord(), isModifierKey() |
+| Persistence | `shortcut-local-storage-persistence.js` | loadOverrides(), saveOverride(), resetOverride(), resetAll(), detectConflict() |
+| UI | `SettingsPage.jsx` | Shortcut manager with record/conflict-warn/reset per shortcut |
+
+Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Shortcuts are grouped by category (clipboard, navigation, view) in the Settings UI.
 
 ## Server Architecture
 
@@ -89,10 +165,12 @@ Browser / Electron
 | `live-rooms.js` | In-memory room state and role tracking |
 | `presentation-finder.js` | Presentation lookup utility |
 | `ai-provider.js` | AI service integration |
+| `services/pptx-import/geometry.js` | Nullish-safe geometry normalization + affine transform helpers for PPTX import |
 
 ### Live Protocol
 
 - Room roles are `presenter`, `controller`, and `viewer`.
+- Presenter join requires a server-issued `presenterToken` tied to the room.
 - Remote control and speaker surfaces join as `controller`, not `presenter`.
 - `control-navigate` is sent from a controller to the presenter, then the
   presenter broadcasts `navigate` and `sync-state` to other clients.
@@ -132,6 +210,7 @@ server/uploads/
 | `element-renderers.js` | Shared element rendering helpers |
 | `slideNotes.js` | Canonical notes normalization helpers |
 | `shapeUtils.js` | SVG shape/path helpers |
+| `shared-toolbar-text-bg-color-palette-gradient-presets-config.js` | Color palette, gradient presets, and `isLightColor()` helper |
 | `presenterTools.js` | Presenter UI controls and scripts |
 | `types/presentation.js` | JSDoc data model for presentation objects |
 
@@ -162,14 +241,21 @@ server/uploads/
 - `downloadHTML()` produces the standard CDN-backed HTML export, while
   `generateOfflineHTML(generateRevealHTML(...))` produces the fully inlined
   offline HTML export.
-- `exportPptx.js` uses a hybrid strategy: stable primitives render as native PPT
+- `server/services/pptx-exporter.js` uses a hybrid strategy: stable primitives render as native PPT
   objects, while complex DOM-backed content and gradient backgrounds fall back
   to rasterized assets so exported slides keep visual fidelity instead of
   dropping elements.
+- `server/routes/pptx-import.js` exposes `POST /api/pptx/import`, which
+  parses `.pptx` files via `pptxtojson` (primary) with `pptx2json` fallback,
+  applies ZIP/package budget guards, and maps text/images/shapes/tables to
+  NavSlides element types via shared geometry normalization; charts/equations/SmartArt become locked placeholders.
 - PPTX HTML/LaTeX rasterization uses an offscreen iframe capture path aligned
   with print export: embed content is wrapped as a full document, common CDN
   dependencies are resolved through local `/vendor` assets, and LaTeX/TikZ
   output is captured at higher pixel density before insertion into PowerPoint.
+- Corpus strict validation now includes by-type geometry drift and property
+  coverage metrics from the PPTX fidelity harness, with generated-fixture
+  per-type hard gates layered on top of existing global strict thresholds.
 - `exportPptx.js` reuses `getSlideNotes()` so speaker notes stay aligned across
   HTML and PPTX exports, and it preserves slide z-order by exporting sorted
   element stacks.
@@ -184,8 +270,11 @@ server/uploads/
 
 - `shared/src/types/presentation.js` defines the JSDoc model used by client and
   server.
-- Element types are kept in sync with the editor, export pipeline, and Zod
-  schemas.
+- Element types are kept in sync with the editor, export pipeline, and Zod schemas.
+  The current type set includes: text, image, shape, code, video, audio, html, latex,
+  icon, qrcode, drawing, svg, markdown, chart, table, line, divider, callout, and game.
+  Typed constants and factory functions live in `client/src/constants/` (e.g.
+  `game-element-types-constants.js`).
 - Runtime validation uses `server/middleware/schemas.js`; the schemas allow
   type-specific fields via `.passthrough()`.
 
@@ -213,10 +302,21 @@ server/uploads/
 
 - No authentication is built into the app.
 - Zod validates all mutation requests.
-- DOMPurify sanitizes embedded HTML before render.
+- Content safety is targeted: text/markdown/svg/shape-text surfaces are
+  sanitized or escaped.
+- HTML embed remains trusted programmable content by product policy; script
+  execution is intentionally preserved in editor/present/export/share paths.
 - Upload routes enforce MIME validation and rate limiting.
+- `/api/analytics/:id` requires a valid share token mapped to that
+  presentation.
+- Live presenter takeover is blocked by `presenterToken` validation in
+  `join-room`.
+- AI custom endpoints are restricted to public `http/https` targets and block
+  localhost/private/link-local ranges.
 - Share links use server-side tokens and optional passwords.
 - `ErrorBoundary` guards the React app against render crashes.
+- Electron sandbox hardening remains a tracked follow-up; no sandbox change was
+  applied in this hardening pass.
 
 ## Operational Notes
 

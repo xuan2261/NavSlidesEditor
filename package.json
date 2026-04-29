@@ -25,6 +25,7 @@
     "test:e2e": "playwright test",
     "test:load:ws": "k6 run tests/load/websocket-load.js",
     "test:load:api": "k6 run tests/load/api-load.js",
+    "test:corpus": "node server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tester.js ./PPTX --roundtrip --strict",
     "electron:dev": "npm run build && electron .",
     "electron:prepare": "npm run build && node scripts/prepare-electron.js",
     "electron:build": "npm run electron:prepare && npx electron-builder",
@@ -35,7 +36,9 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.59.1",
-    "concurrently": "^8.2.2",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "concurrently": "^9.2.1",
     "electron": "^33.4.11",
     "electron-builder": "^25.1.8",
     "eslint": "^9.39.4",
@@ -43,6 +46,8 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.4.0",
+    "happy-dom": "^20.9.0",
+    "jsdom": "^21.1.2",
     "playwright": "^1.59.1",
     "prettier": "^3.8.2",
     "vitest": "^4.1.4"
@@ -50,5 +55,9 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
     "jszip": "^3.10.1"
+  },
+  "overrides": {
+    "@xmldom/xmldom": ">=0.9.5",
+    "tar": ">=6.2.1"
   }
 }

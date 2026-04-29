@@ -32,6 +32,35 @@ describe('htmlGenerator', () => {
     expect(
       getBackgroundAttrs({ type: 'gradient', gradient: 'linear-gradient(to right, red, blue)' })
     ).toContain('data-background-gradient="linear-gradient(to right, red, blue)"')
+    expect(
+      getBackgroundAttrs({
+        type: 'gradient',
+        angle: 90,
+        stops: [
+          { offset: 0, color: '#ff0000' },
+          { offset: 1, color: '#0000ff' },
+        ],
+      })
+    ).toContain('data-background-gradient="linear-gradient(90deg, #ff0000 0%, #0000ff 100%)"')
+  })
+
+  it('should emit per-slide reveal transition attributes', () => {
+    const html = generateRevealHTML({
+      title: 'Transitions',
+      slides: [
+        {
+          id: 's1',
+          transition: 'fade',
+          transitionDirection: 'left',
+          transitionDuration: 800,
+          elements: [],
+        },
+      ],
+    })
+
+    expect(html).toContain('data-transition="fade"')
+    expect(html).toContain('data-transition-direction="left"')
+    expect(html).toContain('data-transition-duration="800"')
   })
 
   it('should not contain the old hardcoded fs-btn in body, but inject it in presenter-toolbar', () => {
@@ -72,6 +101,40 @@ describe('htmlGenerator', () => {
     expect(html).toContain('revealConfig.autoSlide = 5000;')
     expect(html).toContain('revealConfig.loop = true;')
     expect(html).toContain("revealConfig.navigationMode = 'linear';")
+  })
+
+  it('renders basic and sequence footer modes in reveal and print HTML', () => {
+    const presentation = {
+      title: 'Footers',
+      showFooter: true,
+      showPageNumbers: true,
+      footerMode: 'sequence',
+      footerFontSize: 16,
+      footerColor: '#ffffff',
+      footerInactiveColor: '#777777',
+      sequenceSections: ['Intro', 'Methods', 'Results'],
+      slides: [
+        { id: 's1', activeSection: 0, elements: [] },
+        { id: 's2', activeSection: 2, elements: [] },
+      ],
+    }
+
+    const reveal = generateRevealHTML(presentation)
+    expect(reveal).toContain('Intro')
+    expect(reveal).toContain('Methods')
+    expect(reveal).toContain('Results')
+    expect(reveal).toContain('font-weight:700')
+    expect(reveal).toContain('#777777')
+
+    const basicPrint = generatePrintHTML({
+      title: 'Basic Footer',
+      showFooter: true,
+      showPageNumbers: true,
+      footerMode: 'basic',
+      slides: [{ id: 's1', section: 'Section A', elements: [] }],
+    }, { autoPrint: false, includePrintBar: false })
+    expect(basicPrint).toContain('Section A')
+    expect(basicPrint).toContain('1 / 1')
   })
 
   it('should render legacy speakerNotes through canonical notes helpers', () => {

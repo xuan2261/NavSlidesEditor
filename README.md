@@ -25,29 +25,11 @@ A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revea
 
 ### Element Types
 
-- **Text boxes** — rich HTML content with full TipTap formatting
-- **Images** — upload or URL, crop, pan, brightness/contrast/grayscale filters, round corners
-- **Shapes** — rectangle, circle, triangle, arrow, star, line with fill/stroke/opacity/corner radius
-- **Code blocks** — syntax-highlighted code with 10 themes and 25+ languages, round corners
-- **LaTeX / TikZ** — full LaTeX math blocks and TikZ diagrams rendered via KaTeX and TikZJax, with a split-pane editor showing live preview
-- **Inline math** — inline and display KaTeX math within text elements
-- **HTML embeds** — arbitrary HTML/CSS/JS or D3 visualizations in iframes
-- **Markdown blocks** — write raw Markdown that renders as formatted content
-- **Charts** — bar, line, pie, doughnut, radar, and polar area charts via Chart.js with editable data
-- **Video / audio** — embed media files via URL or upload with playback controls, autoplay, loop, and muted options
-- **Tables** — first-class drag/resize table elements with header row, inline cell editing, and style controls
-- **Icons** — searchable library of 60+ Lucide-style SVG icons with color and stroke customization
-- **Callout bubbles** — numbered annotation circles with customizable color and size
+17 element types: text (TipTap rich text), image (upload/URL, crop, filters, round corners), shape (16 shapes), code (10 themes, 25+ languages), LaTeX / TikZ (KaTeX + TikZJax), HTML embeds, Markdown, Chart.js charts, video / audio, table (drag-resize, inline editing), QR code, icon (60+ Lucide icons), callout, drawing, line, SVG.
 
 ### Slides
 
-- **Full-Deck Templates** — gallery of 10+ high-quality presentation themes available directly from the homepage
-- **Slide templates** — blank, title, two-column, three-column, image+text, section header, comparison, big number
-- **Global Settings** — centrally manage Reveal.js configurations (auto-slide, loop, navigation modes)
-- **Slide backgrounds** — solid color, CSS gradient, or image per slide via toolbar popup
-- **Fragment animations** — per-element appear animations with visual timeline editor for sequencing
-- **Per-slide page numbers** — toggle page numbers on/off per slide; skipped slides don't count in numbering
-- **Hidden slides** — mark slides as hidden to skip during presentation
+8 layouts (blank, title, two-column, three-column, image+text, section header, comparison, big number) + 20+ full-deck templates. Per-slide backgrounds (solid, gradient, image), fragment animations with visual timeline, per-slide page numbers, hidden slides, footer system (basic / sequence modes).
 
 ### Footer System
 
@@ -57,27 +39,15 @@ A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revea
 
 ### Themes & Templates
 
-- **11 reveal.js themes** — black, white, league, beige, sky, night, serif, simple, solarized, moon, dracula
-- **Transitions** — none, fade, slide, convex, concave, zoom
-- **Preset themes** — 6 built-in design presets: Minimal Dark, Minimal Light, Academic, Gradient, Corporate, Neon
-- **Custom templates** — create, edit, and manage your own reusable presentation templates; start new presentations from any template
-- **Dark / light editor theme** — toggle the editor UI between dark and light mode
+11 reveal.js themes (black, white, league, beige, sky, night, serif, simple, solarized, moon, dracula), 6 transitions, 6 preset design themes, custom templates, and dark/light editor theme toggle.
 
 ### Export & Sharing
 
-- **Present mode** — full-screen reveal.js presentation with speaker notes (press `S`)
-- **Advanced Markdown Import** — generate full decks from Markdown with support for advanced slide attributes
-- **Export HTML** — download as a self-contained HTML file
-- **Export offline HTML** — inlines all CDN resources (Reveal.js, KaTeX, highlight.js) and correctly resolves local iframes/plugins so the file works entirely without internet
-- **Export PDF** — print-ready layout with one page per slide, fragment states expanded, with improved iframe initialization for embeds
-- **Export PPTX** — generate a PowerPoint file for sharing with non-technical users
-- **Shareable links** — generate public URLs to view presentations without the editor; toggle on/off per presentation
-- **GitHub integration** — push presentations directly to a GitHub repo with auto-generated README
+Present mode (reveal.js, press `S` for speaker notes), export HTML (CDN-backed or fully offline), export PDF, export PPTX (hybrid native + raster), shareable links (with optional password), GitHub push with auto-generated README, Markdown import, rclone cloud sync to Proton Drive or any supported provider.
 
 ### Cloud Sync
 
-- **Proton Drive sync** — sync presentations to Proton Drive via rclone; configure credentials in-app, sync individual presentations or all at once
-- **Configurable remote** — works with any rclone-supported cloud provider (Proton Drive, Google Drive, S3, etc.)
+rclone-based sync to Proton Drive or any supported cloud provider (Google Drive, S3, etc.). Configure credentials in-app; sync single presentation or all at once.
 
 ### Version History
 
@@ -91,249 +61,67 @@ A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revea
 
 ### Option A — Desktop App (Electron)
 
-Run NavSlides Editor as a native desktop application. No server, no Docker, no browser needed.
-
-#### Pre-built packages
-
-Download from the [Releases](https://github.com/jbirky/revealjs_gui/releases) page:
-
-| Platform | Format                                                  |
-| -------- | ------------------------------------------------------- |
-| Linux    | `.AppImage` (run directly) or `.deb` (install via dpkg) |
-| macOS    | `.zip` (extract and open the `.app`)                    |
-| Windows  | `.exe` installer or portable `.exe`                     |
-
-**Linux `.deb` install:**
+Run as a native desktop app (no server, no Docker). Download pre-built packages from [Releases](https://github.com/Xuan2261/navslides-editor/releases): Linux (`.AppImage`, `.deb`), macOS (`.zip`), Windows (`.exe`). Or build from source (requires **Node.js 20+**):
 
 ```bash
-sudo dpkg -i revealjs-editor_1.0.0_amd64.deb
-```
-
-**Linux `.AppImage`:**
-
-```bash
-chmod +x Slides\ Editor-1.0.0.AppImage
-./Slides\ Editor-1.0.0.AppImage
-```
-
-#### Build from source
-
-Requires **Node.js 18+**.
-
-```bash
-git clone https://github.com/jbirky/revealjs_gui.git
-cd revealjs_gui
-npm install
-```
-
-Build for your platform:
-
-```bash
+git clone https://github.com/Xuan2261/navslides-editor.git && cd navslides-editor && npm install
 npm run electron:build:linux   # → .AppImage + .deb
-npm run electron:build:mac     # → .zip (extract for .app)
-npm run electron:build:win     # → .exe installer + portable
+npm run electron:build:mac     # → .zip
+npm run electron:build:win     # → .exe
+npm run electron:dev           # dev mode (no package)
 ```
 
-Output goes to `dist-electron/`.
-
-Or run in dev mode without building a package:
-
-```bash
-npm run electron:dev
-```
-
-#### Data location
-
-The desktop app stores data in your OS app data folder:
-
-| Platform | Path                                              |
-| -------- | ------------------------------------------------- |
-| Linux    | `~/.config/NavSlides Editor/`                     |
-| macOS    | `~/Library/Application Support/NavSlides Editor/` |
-| Windows  | `%APPDATA%/NavSlides Editor/`                     |
-
----
+Data stored at: Linux `~/.config/NavSlides Editor/`, macOS `~/Library/Application Support/NavSlides Editor/`, Windows `%APPDATA%/NavSlides Editor/`.
 
 ### Option B — Docker (recommended for servers)
 
-Requires [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/).
-
-#### 1. Clone the repository
+Requires Docker 20.10+ and Docker Compose v2+.
 
 ```bash
-git clone https://github.com/jbirky/revealjs_gui.git
-cd revealjs_gui
-```
-
-#### 2. Start with Docker Compose
-
-```bash
+git clone https://github.com/Xuan2261/navslides-editor.git && cd navslides-editor
 docker compose up -d
 ```
 
-This will:
+Opens at `http://localhost:3002`. Use `docker compose logs -f`, `docker compose down`, `docker compose up -d --build` to rebuild. Edit `docker-compose.yml` port mapping for a custom port.
 
-- Build the React frontend and bundle it with the Express server
-- Install rclone for cloud sync support
-- Start the container on port **3002**
-- Create two named Docker volumes to persist your data across restarts:
-  - `revealjs-data` — presentation data, templates, share tokens, version history
-  - `revealjs-uploads` — uploaded images, videos, and audio files
+### Option C — Node.js from source
 
-Open `http://localhost:3002` in your browser.
-
-#### Useful commands
+Requires **Node.js 20+** and npm 8+.
 
 ```bash
-# View logs
-docker compose logs -f
-
-# Stop the container
-docker compose down
-
-# Rebuild after pulling new source changes
-docker compose up -d --build
-
-# Remove containers AND volumes (deletes all presentations and uploads)
-docker compose down -v
+git clone https://github.com/Xuan2261/navslides-editor.git && cd navslides-editor && npm install
+npm run dev          # Vite dev (5173) + Express API (3002) concurrently
+npm run build && npm start   # production: builds React, serves on port 3002
+PORT=8080 npm start  # custom port
 ```
-
-#### Run on a custom port
-
-Edit `docker-compose.yml` and change the host port (left side of the mapping):
-
-```yaml
-ports:
-  - '8080:3002' # now accessible at http://localhost:8080
-```
-
----
-
-### Option C — Node.js / npm from source
-
-Requires **Node.js 18+** and npm 8+.
-
-#### 1. Clone the repository
-
-```bash
-git clone https://github.com/jbirky/revealjs_gui.git
-cd revealjs_gui
-```
-
-#### 2. Install dependencies
-
-```bash
-npm install
-```
-
-#### 3a. Development mode
-
-Runs the Vite dev server and the Express API server concurrently with hot-reload:
-
-```bash
-npm run dev
-```
-
-| Service               | URL                   |
-| --------------------- | --------------------- |
-| Frontend (Vite)       | http://localhost:5173 |
-| Backend (Express API) | http://localhost:3002 |
-
-Open `http://localhost:5173`. The Vite dev server proxies `/api` and `/uploads` to the Express server automatically.
-
-#### 3b. Production mode
-
-Build the frontend, then serve everything from the Express server on a single port:
-
-```bash
-npm run build   # compiles React → client/dist/
-npm start       # serves client/dist/ + API on port 3002
-```
-
-Open `http://localhost:3002`.
-
-#### Run on a custom port
-
-```bash
-PORT=8080 npm start
-```
-
----
 
 ## Data & Persistence
 
-| Path                             | Contents                                 |
-| -------------------------------- | ---------------------------------------- |
-| `server/data/presentations.json` | All presentation data                    |
-| `server/data/templates.json`     | Custom presentation templates            |
-| `server/data/share-tokens.json`  | Shareable link tokens                    |
-| `server/data/github-config.json` | GitHub integration credentials           |
-| `server/data/history/`           | Version history snapshots                |
-| `server/uploads/`                | Uploaded images, videos, and audio files |
-
-All locations are created automatically on first run. Back them up to preserve your work.
-
-**Docker:** data lives in named volumes (`revealjs-data`, `revealjs-uploads`). To back up:
-
-```bash
-# Copy presentations JSON out of the volume
-docker run --rm \
-  -v revealjs-data:/data \
-  -v $(pwd):/backup \
-  alpine cp /data/presentations.json /backup/presentations.json
-```
+All data lives in `server/data/` (presentations, templates, share tokens, GitHub config, history snapshots) and `server/uploads/` (media). Docker uses named volumes `revealjs-data` and `revealjs-uploads`. All locations are created automatically on first run.
 
 ---
 
 ## Save to GitHub
 
-Push presentations directly to a GitHub repository from the editor.
+1. Create a [fine-grained PAT](https://github.com/settings/personal-access-tokens/new) with repository contents read/write.
+2. Click **GitHub** in the editor, enter owner, repo name, and token → **Save Settings**.
+3. Click **Push to GitHub** (optionally with a commit message).
 
-### 1. Create a GitHub Personal Access Token
-
-Go to **GitHub → Settings → Developer settings → [Fine-grained personal access tokens](https://github.com/settings/personal-access-tokens/new)** and create a token with:
-
-| Setting                    | Value                                                  |
-| -------------------------- | ------------------------------------------------------ |
-| **Repository access**      | **Only select repositories** → select your target repo |
-| **Permissions → Contents** | **Read and write**                                     |
-
-### 2. Create a target repository
-
-Create a new repo on GitHub (e.g. `presentations`). It can be empty.
-
-### 3. Configure in the editor
-
-1. Open any presentation and click the **GitHub** button.
-2. Enter your GitHub username as **Repository Owner**.
-3. Enter the repository name.
-4. Paste your token and click **Save Settings**.
-
-### 4. Push a presentation
-
-Click **GitHub** → optionally enter a commit message → **Push to GitHub**.
-
+Output structure:
 ```
 my-repo/
-├── README.md                          ← auto-generated with links
+├── README.md                          ← auto-generated
 ├── my_first_talk/
 │   ├── presentation.html              ← viewable in browser
 │   └── presentation.json              ← full project data
 └── another_presentation/
-    ├── presentation.html
-    └── presentation.json
 ```
 
 ---
 
-## Cloud Sync (Proton Drive)
+## Cloud Sync (rclone)
 
-Sync presentations to Proton Drive or any rclone-supported cloud provider.
-
-1. Click the **Sync** button in the editor header.
-2. Enter your Proton Drive username and password.
-3. Click **Connect** to verify the connection.
-4. Use **Sync This Presentation** or **Sync All** to upload.
+Sync via in-app Sync button. Configure Proton Drive (or any rclone provider) credentials, then use **Sync This Presentation** or **Sync All**. Docker includes rclone; for the desktop app, install rclone separately.
 
 Files are exported as HTML + JSON and uploaded via rclone. The Docker image includes rclone pre-installed. For the desktop app, install rclone separately on your system.
 
@@ -397,9 +185,9 @@ slides.example.com {
 
 | Method       | Requirement                                        |
 | ------------ | -------------------------------------------------- |
-| Desktop app  | Node.js 18+ (build only)                           |
+| Desktop app  | Node.js 20+ (build only)                           |
 | Docker       | Docker 20.10+ and Docker Compose v2+               |
-| Node.js      | Node.js 18+ and npm 8+                             |
+| Node.js      | Node.js 20+ and npm 8+                             |
 | Load Testing | [k6](https://k6.io/docs/get-started/installation/) |
 
 ---

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 import { createElement } from '../utils/element-factory'
+import { createGameElement } from '../constants/game-element-types-constants'
 import { useSlideOperations } from '../hooks/use-slide-operations'
 import { useKeyboard } from '../hooks/use-keyboard'
-import { useClipboard } from '../hooks/use-clipboard'
+import { useClipboard, createDuplicateOperation } from '../hooks/use-clipboard'
 import { useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -148,9 +149,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds)
   const editingElementId = useEditorStore((s) => s.editingElementId)
   const setEditingElementId = useEditorStore((s) => s.setEditingElementId)
-  // eslint-disable-next-line unused-imports/no-unused-vars
   const clipboard = useEditorStore((s) => s.clipboard)
-  // eslint-disable-next-line unused-imports/no-unused-vars
   const setClipboard = useEditorStore((s) => s.setClipboard)
   const showGrid = useEditorStore((s) => s.showGrid)
   const setShowGrid = useEditorStore((s) => s.setShowGrid)
@@ -539,6 +538,23 @@ svg.selectAll('circle').data(data).join('circle')
     })
   }, [addElement])
 
+  const addGameElement = useCallback((gameType) => {
+    const newEl = createGameElement(gameType)
+    setPresentation((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        slides: prev.slides.map((s, i) =>
+          i === currentSlideIndexRef.current
+            ? { ...s, elements: [...(s.elements || []), newEl] }
+            : s
+        ),
+      }
+    })
+    setSelectedElementIds([newEl.id])
+    return newEl
+  }, [setSelectedElementIds])
+
   const addHtmlElement = useCallback(() => {
     const newEl = addElement('html', { content: DEFAULT_HTML })
     setHtmlEditorState({ elementId: newEl.id, content: DEFAULT_HTML })
@@ -869,18 +885,57 @@ svg.selectAll('circle').data(data).join('circle')
   })
 
   // ── Command layer (Phase 1: clipboard + keyboard unified via useKeyboard/useClipboard) ──
-  const { performCopy, performPaste, performCut, performDuplicate } = useClipboard()
+  const { performCopy, performPaste, performCut } = useClipboard({
+    getCurrentSlideIndex: () => currentSlideIndex,
+    setPresentation,
+  })
 
   const handleSelectAll = useCallback(() => {
     const els = currentSlide?.elements || []
     setSelectedElementIds(els.map((e) => e.id))
   }, [currentSlide, setSelectedElementIds])
 
+  // Wrappers that pass required context to useClipboard callbacks
+  const handleCopy = useCallback(() => {
+    performCopy(currentSlide?.elements)
+  }, [currentSlide, performCopy])
+
+  const handlePaste = useCallback(() => {
+    performPaste(clipboard)
+  }, [clipboard, performPaste])
+
+  const handleCut = useCallback(() => {
+    performCut(currentSlide?.elements, selectedElementIds)
+  }, [currentSlide, selectedElementIds, performCut])
+
+  const handleDuplicate = useCallback(() => {
+    // Use createDuplicateOperation directly — reads current selection from store,
+    // matching the original SlideCanvas behavior (no clipboard required)
+    const { selectedElementIds: liveSelectedIds } = useEditorStore.getState()
+    const slideEls = currentSlide?.elements || []
+    const { toAdd, clipboardData } = createDuplicateOperation({
+      slideElements: slideEls,
+      selectedElementIds: liveSelectedIds,
+    })
+    if (!toAdd.length) return
+    if (clipboardData) setClipboard(clipboardData)
+    const idx = currentSlideIndex
+    setPresentation((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        slides: prev.slides.map((s, i) =>
+          i === idx ? { ...s, elements: [...(s.elements || []), ...toAdd] } : s
+        ),
+      }
+    })
+  }, [currentSlide, currentSlideIndex, setPresentation, setClipboard])
+
   useKeyboard({
-    onCopy: performCopy,
-    onCut: performCut,
-    onPaste: performPaste,
-    onDuplicate: performDuplicate,
+    onCopy: handleCopy,
+    onCut: handleCut,
+    onPaste: handlePaste,
+    onDuplicate: handleDuplicate,
     onUndo: handleUndo,
     onRedo: handleRedo,
     onDelete: deleteSelectedElements,
@@ -1244,6 +1299,7 @@ svg.selectAll('circle').data(data).join('circle')
             onAddSvg={addSvgElement}
             onAddQrCode={addQrCodeElement}
             onAddDivider={addDividerElement}
+            onAddGame={addGameElement}
             onOpenMediaLibrary={() => setShowMediaLibrary(true)}
             selectedCount={selectedElementIds.length}
             onAlignElements={alignElements}
@@ -1299,10 +1355,10 @@ svg.selectAll('circle').data(data).join('circle')
               onUpdateElements={updateElements}
               onDeleteElement={deleteElement}
               onDeleteSelectedElements={deleteSelectedElements}
-              onCopy={performCopy}
-              onCut={performCut}
-              onPaste={performPaste}
-              onDuplicate={performDuplicate}
+              onCopy={handleCopy}
+              onCut={handleCut}
+              onPaste={handlePaste}
+              onDuplicate={handleDuplicate}
               onOpenHtmlEditor={openHtmlEditor}
               onOpenCodeEditor={openCodeEditor}
               onOpenLatexEditor={openLatexEditor}

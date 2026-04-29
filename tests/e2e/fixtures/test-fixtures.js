@@ -28,11 +28,13 @@ export async function apiCreatePresentation(request, title = 'E2E Test Presentat
  * Helper: delete presentation permanently via API.
  */
 export async function apiDeletePresentation(request, id) {
-  try {
-    await request.delete(`${API_BASE}/presentations/${id}`)
-    await request.delete(`${API_BASE}/presentations/${id}/permanent`)
-  } catch {
-    // Ignore cleanup errors
+  const softDelete = await request.delete(`${API_BASE}/presentations/${id}`)
+  const hardDelete = await request.delete(`${API_BASE}/presentations/${id}/permanent`)
+  const acceptable = new Set([200, 404])
+  if (!acceptable.has(softDelete.status()) || !acceptable.has(hardDelete.status())) {
+    throw new Error(
+      `Cleanup failed for ${id}: soft=${softDelete.status()} hard=${hardDelete.status()}`
+    )
   }
 }
 
@@ -41,6 +43,9 @@ export async function apiDeletePresentation(request, id) {
  */
 export async function apiGetPresentation(request, id) {
   const res = await request.get(`${API_BASE}/presentations/${id}`)
+  if (!res.ok()) {
+    throw new Error(`Failed to fetch presentation ${id}: ${res.status()} ${await res.text()}`)
+  }
   return res.json()
 }
 

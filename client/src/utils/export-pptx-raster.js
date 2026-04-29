@@ -13,6 +13,11 @@ const LATEX_RASTER_SCALE = 3
 const assetTextCache = new Map()
 const assetDataUriCache = new Map()
 
+export function clearPptxRasterAssetCaches() {
+  assetTextCache.clear()
+  assetDataUriCache.clear()
+}
+
 const CDN_TO_VENDOR = [
   {
     pattern: /cdn\.jsdelivr\.net\/npm\/d3(?:@[^/"']*)?(?:\/[^"']*)?/i,
@@ -280,12 +285,17 @@ function renderDrawingSvg(element) {
 }
 
 export async function renderGradientBackgroundDataUri(background, width, height) {
+  const stops = Array.isArray(background?.stops) ? background.stops : []
+  const cssStops = stops
+    .map((stop) => `${stop.color || '#000000'} ${Math.round((Number(stop.offset) || 0) * 100)}%`)
+    .join(', ')
+  const gradient = background?.gradient || (cssStops ? `linear-gradient(${Number(background?.angle) || 0}deg, ${cssStops})` : '')
   return await renderHtmlToPngDataUri({
     html: '',
     width,
     height,
     style: 'border:none;',
-    background: background?.gradient || '#1e1e2e',
+    background: gradient || '#1e1e2e',
   })
 }
 

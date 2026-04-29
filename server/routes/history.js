@@ -1,5 +1,5 @@
 const express = require('express')
-const { v4: uuidv4 } = require('uuid')
+const uuidv4 = () => require('node:crypto').randomUUID()
 const fs = require('fs-extra')
 const path = require('path')
 const { readPresentations, writePresentations, HISTORY_DIR } = require('../services/storage')

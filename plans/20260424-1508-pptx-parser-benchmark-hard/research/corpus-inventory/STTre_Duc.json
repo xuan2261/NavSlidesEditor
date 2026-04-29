@@ -1,0 +1,514 @@
+{
+  "deck": "STTre_Duc",
+  "fileName": "STTre_Duc.pptx",
+  "fileSizeBytes": 2879091,
+  "highRiskSlides": [
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 2,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 4,
+        "pictures": 3,
+        "placeholders": 2,
+        "shapes": 8,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [
+        "ole",
+        "graphic-frame"
+      ],
+      "riskScore": 6,
+      "slideIndex": 9,
+      "slidePath": "ppt/slides/slide9.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 1,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 2,
+        "pictures": 2,
+        "placeholders": 2,
+        "shapes": 7,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [
+        "ole",
+        "graphic-frame"
+      ],
+      "riskScore": 4,
+      "slideIndex": 8,
+      "slidePath": "ppt/slides/slide8.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 1,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 1,
+        "placeholders": 2,
+        "shapes": 6,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [
+        "connector"
+      ],
+      "riskScore": 1,
+      "slideIndex": 1,
+      "slidePath": "ppt/slides/slide1.xml"
+    }
+  ],
+  "mediaExtensions": {
+    "jpeg": 1,
+    "png": 12,
+    "wmf": 2
+  },
+  "packageCounts": {
+    "charts": 0,
+    "embeddings": 3,
+    "media": 15,
+    "notesSlides": 15,
+    "slideLayouts": 12,
+    "slideMasters": 1,
+    "slides": 20
+  },
+  "size": {
+    "emu": {
+      "height": 6858000,
+      "width": 12192000
+    },
+    "px": {
+      "height": 720,
+      "width": 1280
+    }
+  },
+  "slideCount": 20,
+  "slides": [
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 1,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 1,
+        "placeholders": 2,
+        "shapes": 6,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [
+        "connector"
+      ],
+      "riskScore": 1,
+      "slideIndex": 1,
+      "slidePath": "ppt/slides/slide1.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 1,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 1,
+        "placeholders": 2,
+        "shapes": 6,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [
+        "connector"
+      ],
+      "riskScore": 1,
+      "slideIndex": 2,
+      "slidePath": "ppt/slides/slide2.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 1,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 1,
+        "placeholders": 2,
+        "shapes": 6,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [
+        "connector"
+      ],
+      "riskScore": 1,
+      "slideIndex": 3,
+      "slidePath": "ppt/slides/slide3.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 1,
+        "placeholders": 2,
+        "shapes": 9,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 4,
+      "slidePath": "ppt/slides/slide4.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 1,
+        "placeholders": 2,
+        "shapes": 7,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 5,
+      "slidePath": "ppt/slides/slide5.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 2,
+        "placeholders": 2,
+        "shapes": 7,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 6,
+      "slidePath": "ppt/slides/slide6.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 1,
+        "placeholders": 2,
+        "shapes": 8,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 7,
+      "slidePath": "ppt/slides/slide7.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 1,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 2,
+        "pictures": 2,
+        "placeholders": 2,
+        "shapes": 7,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [
+        "ole",
+        "graphic-frame"
+      ],
+      "riskScore": 4,
+      "slideIndex": 8,
+      "slidePath": "ppt/slides/slide8.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 2,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 4,
+        "pictures": 3,
+        "placeholders": 2,
+        "shapes": 8,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [
+        "ole",
+        "graphic-frame"
+      ],
+      "riskScore": 6,
+      "slideIndex": 9,
+      "slidePath": "ppt/slides/slide9.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 2,
+        "placeholders": 2,
+        "shapes": 7,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 10,
+      "slidePath": "ppt/slides/slide10.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 2,
+        "placeholders": 2,
+        "shapes": 7,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 11,
+      "slidePath": "ppt/slides/slide11.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 2,
+        "placeholders": 2,
+        "shapes": 7,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 12,
+      "slidePath": "ppt/slides/slide12.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 2,
+        "placeholders": 2,
+        "shapes": 7,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 13,
+      "slidePath": "ppt/slides/slide13.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 2,
+        "placeholders": 2,
+        "shapes": 6,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 14,
+      "slidePath": "ppt/slides/slide14.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 2,
+        "placeholders": 2,
+        "shapes": 7,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 15,
+      "slidePath": "ppt/slides/slide15.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 2,
+        "placeholders": 2,
+        "shapes": 7,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 16,
+      "slidePath": "ppt/slides/slide16.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 1,
+        "placeholders": 2,
+        "shapes": 6,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 17,
+      "slidePath": "ppt/slides/slide17.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 1,
+        "placeholders": 2,
+        "shapes": 6,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 18,
+      "slidePath": "ppt/slides/slide18.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 1,
+        "placeholders": 2,
+        "shapes": 7,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 19,
+      "slidePath": "ppt/slides/slide19.xml"
+    },
+    {
+      "counts": {
+        "charts": 0,
+        "connectors": 0,
+        "graphicFrames": 0,
+        "groups": 0,
+        "hyperlinks": 0,
+        "mathNodes": 0,
+        "oleObjects": 0,
+        "pictures": 1,
+        "placeholders": 2,
+        "shapes": 9,
+        "smartArtRefs": 0,
+        "tables": 0
+      },
+      "riskReasons": [],
+      "riskScore": 0,
+      "slideIndex": 20,
+      "slidePath": "ppt/slides/slide20.xml"
+    }
+  ]
+}

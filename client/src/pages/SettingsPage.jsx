@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronLeft,
@@ -9,9 +9,21 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  Keyboard,
+  RotateCcw,
+  AlertTriangle,
 } from 'lucide-react'
 import { testAIConnection } from '../utils/ai'
 import { Button } from '../components/ui'
+import { getShortcuts } from '../utils/default-keyboard-shortcut-definitions-registry'
+import {
+  loadOverrides,
+  saveOverride,
+  resetOverride,
+  resetAll,
+  detectConflict,
+} from '../utils/shortcut-local-storage-persistence'
+import { normalizeKey, isReservedChord } from '../utils/shortcut-normalizer'
 
 const THEMES = [
   'black',
@@ -39,25 +51,132 @@ const PROVIDERS = [
 ]
 
 const fieldClass = 'w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:outline-none focus:border-accent'
+const DEFAULT_SETTINGS = {
+  ai: {
+    provider: 'openai',
+    apiKey: '',
+    model: 'gpt-4o-mini',
+    customEndpoint: '',
+    customModel: '',
+  },
+  defaultTheme: 'black',
+  defaultTransition: 'slide',
+}
 
 export default function SettingsPage() {
   const navigate = useNavigate()
-  const [settings, setSettings] = useState(null)
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
+  const [loadError, setLoadError] = useState('')
   const [testStatus, setTestStatus] = useState(null) // null | 'testing' | 'ok' | 'fail'
   const [testError, setTestError] = useState('')
+  const [shortcuts, setShortcuts] = useState([])
+  const [overrides, setOverrides] = useState({})
+  const [recordingId, setRecordingId] = useState(null) // which shortcut id is being recorded
+  const [conflictId, setConflictId] = useState(null) // shortcut id that has a conflict
+  const [conflictWith, setConflictWith] = useState(null) // what it's conflicting with
+  const [reservedWarning, setReservedWarning] = useState(null) // reserved chord warning
+  const recordCancelRef = useRef(null)
 
   useEffect(() => {
     fetch('/api/settings')
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('Failed to load settings')
+        return r.json()
+      })
       .then((data) => {
-        setSettings(data)
+        setSettings({
+          ...DEFAULT_SETTINGS,
+          ...data,
+          ai: { ...DEFAULT_SETTINGS.ai, ...(data.ai || {}) },
+        })
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch((err) => {
+        setLoadError(err.message || 'Failed to load settings')
+        setSettings(DEFAULT_SETTINGS)
+        setLoading(false)
+      })
   }, [])
+
+  // Load and refresh shortcut registry
+  const refreshShortcuts = useCallback(() => {
+    const loaded = loadOverrides()
+    setOverrides(loaded)
+    setShortcuts(getShortcuts(loaded))
+  }, [])
+  useEffect(() => { refreshShortcuts() }, [refreshShortcuts])
+
+  // Global key listener for shortcut recording
+  useEffect(() => {
+    if (recordingId === null) return
+    setConflictId(null)
+    setConflictWith(null)
+    setReservedWarning(null)
+
+    const handleKeyDown = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      // Escape cancels recording
+      if (e.key === 'Escape') {
+        setRecordingId(null)
+        return
+      }
+
+      const chord = normalizeKey(e)
+
+      if (isReservedChord(chord)) {
+        setReservedWarning(chord)
+        return
+      }
+
+      const current = getShortcuts(overrides)
+      const conflict = detectConflict(recordingId, chord, current)
+
+      if (conflict) {
+        const conflicting = current.find((s) => s.id !== recordingId && s.activeKey === chord)
+        setConflictId(recordingId)
+        setConflictWith(conflicting?.label || chord)
+        return
+      }
+
+      // Save and exit recording mode
+      saveOverride(recordingId, chord)
+      setRecordingId(null)
+      setReservedWarning(null)
+      refreshShortcuts()
+    }
+
+    window.addEventListener('keydown', handleKeyDown, { capture: true })
+    recordCancelRef.current = () => {
+      window.removeEventListener('keydown', handleKeyDown, { capture: true })
+      setRecordingId(null)
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, { capture: true })
+    }
+  }, [recordingId, overrides, refreshShortcuts])
+
+  const handleResetOne = (id) => {
+    resetOverride(id)
+    refreshShortcuts()
+    if (recordingId === id) setRecordingId(null)
+  }
+  const handleResetAll = () => {
+    resetAll()
+    refreshShortcuts()
+    setRecordingId(null)
+  }
+  const handleStartRecord = (id) => {
+    setRecordingId(id)
+    setConflictId(null)
+    setConflictWith(null)
+    setReservedWarning(null)
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -70,7 +189,11 @@ export default function SettingsPage() {
       })
       if (!res.ok) throw new Error('Save failed')
       const data = await res.json()
-      setSettings(data)
+      setSettings({
+        ...DEFAULT_SETTINGS,
+        ...data,
+        ai: { ...DEFAULT_SETTINGS.ai, ...(data.ai || {}) },
+      })
       setSaveMsg('Settings saved!')
       setTimeout(() => setSaveMsg(''), 2000)
     } catch (err) {
@@ -84,8 +207,7 @@ export default function SettingsPage() {
     setTestStatus('testing')
     setTestError('')
     try {
-      // Must save first so the server has the latest config
-      await handleSave()
+      // testAIConnection sends test payload directly — no server-side settings read needed
       await testAIConnection()
       setTestStatus('ok')
     } catch (err) {
@@ -94,8 +216,13 @@ export default function SettingsPage() {
     }
   }
 
-  const update = (key, val) => setSettings((s) => ({ ...s, [key]: val }))
-  const updateAI = (key, val) => setSettings((s) => ({ ...s, ai: { ...s.ai, [key]: val } }))
+  const update = (key, val) =>
+    setSettings((s) => ({ ...(s || DEFAULT_SETTINGS), [key]: val }))
+  const updateAI = (key, val) =>
+    setSettings((s) => ({
+      ...(s || DEFAULT_SETTINGS),
+      ai: { ...(s?.ai || DEFAULT_SETTINGS.ai), [key]: val },
+    }))
 
   const currentProvider =
     PROVIDERS.find((p) => p.value === (settings?.ai?.provider || 'openai')) || PROVIDERS[0]
@@ -121,6 +248,7 @@ export default function SettingsPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          {loadError && <span className="text-[13px] text-danger">{loadError}</span>}
           {saveMsg && (
             <span
               className={`text-[13px] ${saveMsg.startsWith('Error') ? 'text-danger' : 'text-success'}`}
@@ -257,6 +385,117 @@ export default function SettingsPage() {
               )}
             </div>
           </div>
+        </section>
+
+        {/* Keyboard Shortcuts */}
+        <section className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="flex items-center gap-2">
+              <Keyboard size={18} /> Keyboard Shortcuts
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleResetAll}
+              className="text-[13px] flex items-center gap-1.5 text-text-muted hover:text-danger"
+            >
+              <RotateCcw size={13} /> Reset All
+            </Button>
+          </div>
+
+          {recordingId !== null && (
+            <div className="mb-4 px-4 py-3 rounded-md border border-accent bg-accent/10 text-[13px]">
+              <span className="font-medium text-accent">Recording shortcut —</span>
+              {' '}Press any key combination, or{' '}
+              <kbd className="px-1.5 py-0.5 rounded bg-accent/20 text-accent font-mono text-xs">Esc</kbd>
+              {' '}to cancel
+            </div>
+          )}
+
+          {reservedWarning && (
+            <div className="mb-4 px-4 py-3 rounded-md border border-amber-500 bg-amber-500/10 text-[13px] flex items-center gap-2">
+              <AlertTriangle size={14} className="text-amber-500 shrink-0" />
+              <span>
+                <span className="font-medium text-amber-500">{reservedWarning}</span>
+                {' '}is reserved by the browser and cannot be used.
+              </span>
+            </div>
+          )}
+
+          {conflictId && (
+            <div className="mb-4 px-4 py-3 rounded-md border border-amber-500 bg-amber-500/10 text-[13px] flex items-center gap-2">
+              <AlertTriangle size={14} className="text-amber-500 shrink-0" />
+              <span>
+                Shortcut <span className="font-mono font-medium">{conflictWith}</span> is already assigned to another command.
+              </span>
+            </div>
+          )}
+
+          {['clipboard', 'navigation', 'view'].map((category) => {
+            const items = shortcuts.filter((s) => s.category === category)
+            if (items.length === 0) return null
+            const labels = { clipboard: 'Clipboard', navigation: 'Navigation', view: 'View' }
+            return (
+              <div key={category} className="mb-5">
+                <h3 className="text-[12px] text-text-muted uppercase tracking-wider mb-2 font-medium">
+                  {labels[category]}
+                </h3>
+                <div className="flex flex-col gap-1">
+                  {items.map((shortcut) => {
+                    const isRecording = recordingId === shortcut.id
+                    const isOverridden = shortcut.activeKey !== shortcut.defaultKey
+                    return (
+                      <div
+                        key={shortcut.id}
+                        className="flex items-center justify-between py-1.5 px-3 rounded hover:bg-secondary/50 group"
+                      >
+                        <span className="text-[13px] text-text-primary">{shortcut.label}</span>
+                        <div className="flex items-center gap-2">
+                          {isRecording ? (
+                            <span className="text-[12px] text-accent font-medium animate-pulse">
+                              Press a key...
+                            </span>
+                          ) : (
+                            <kbd className="text-[12px] px-2 py-0.5 rounded border border-border bg-secondary font-mono text-text-secondary">
+                              {shortcut.activeKey}
+                            </kbd>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              isRecording ? setRecordingId(null) : handleStartRecord(shortcut.id)
+                            }
+                            className={`h-6 px-2 text-[11px] ${
+                              isRecording
+                                ? 'text-danger hover:text-danger'
+                                : 'text-text-muted opacity-0 group-hover:opacity-100 hover:text-accent'
+                            }`}
+                          >
+                            {isRecording ? 'Cancel' : 'Edit'}
+                          </Button>
+                          {isOverridden && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleResetOne(shortcut.id)}
+                              className="h-6 px-1.5 text-[11px] text-text-muted opacity-0 group-hover:opacity-100 hover:text-danger"
+                              title="Reset to default"
+                            >
+                              <RotateCcw size={11} />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+          <p className="text-[11px] text-text-muted mt-1">
+            Click Edit to record a new shortcut. Conflicts are detected automatically.
+          </p>
         </section>
 
         {/* Default Preferences */}

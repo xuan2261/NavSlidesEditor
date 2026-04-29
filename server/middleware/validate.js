@@ -17,7 +17,7 @@ function validate(schema) {
       if (err instanceof ZodError) {
         return res.status(400).json({
           error: 'Validation failed',
-          details: err.errors.map((e) => ({
+          details: (err.issues || err.errors || []).map((e) => ({
             path: e.path.join('.'),
             message: e.message,
           })),

@@ -4,7 +4,7 @@ import { api } from '../utils/api'
 import { searchUnsplash } from '../services/unsplash'
 import { searchGiphy } from '../services/giphy'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 
 const TYPE_FILTERS = [
   { key: '', label: 'All', icon: null },
@@ -123,13 +123,26 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
     }
   }
 
-  useEscapeClose(onClose)
+  const [isOpen, setIsOpen] = useState(true)
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -142,7 +155,7 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
         {/* Header */}
         <div className="flex justify-between items-center px-6 pt-5 pb-3">
           <h2 id="media-library-modal-title" className="m-0 text-lg text-text-primary">Media Library</h2>
-          <Button variant="icon" onClick={onClose} aria-label="Close">
+          <Button variant="icon" onClick={handleClose} aria-label="Close">
             <X size={18} />
           </Button>
         </div>

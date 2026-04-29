@@ -18,11 +18,12 @@ test.describe('Explore Page', () => {
     const explore = new ExplorePage(page)
     await explore.goto()
 
-    // Either shows cards or empty state
-    const hasEmpty = await explore.isEmptyState()
     const cardCount = await explore.getCardCount()
-    // One of these should be true
-    expect(hasEmpty || cardCount >= 0).toBeTruthy()
+    if (cardCount === 0) {
+      await expect(page.locator('text=No public presentations yet')).toBeVisible()
+    } else {
+      await expect(explore.presentationCards).toHaveCount(cardCount)
+    }
   })
 
   test('shows shared presentations after sharing one', async ({ page, request }) => {

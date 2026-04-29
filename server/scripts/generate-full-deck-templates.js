@@ -1,6 +1,6 @@
 const fs = require('fs-extra')
 const path = require('path')
-const { v4: uuidv4 } = require('uuid')
+const uuidv4 = () => require('node:crypto').randomUUID()
 
 const DATA_PATH = path.join(__dirname, '..', 'data', 'built-in-templates.json')
 

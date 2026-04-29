@@ -3,6 +3,7 @@
  * Eliminates ~300 lines of duplicated rendering logic.
  */
 const { shapeSvgString } = require('./shapeUtils.js')
+const { sanitizeRichTextHtml, sanitizeSvgHtml } = require('./content-safety.js')
 const iconPathsData = require('../data/icon-paths.json')
 const ICON_PATHS = iconPathsData
 
@@ -69,7 +70,7 @@ function renderText(el, style, wrap, vis) {
   const tc = el.textColor ? `;color:${el.textColor}` : ''
   const ff = el.fontFamily ? `;font-family:${el.fontFamily}` : ''
   const fs = el.fontSize ? `;font-size:calc(${el.fontSize}px * var(--font-zoom, 1))` : ''
-  return `<div${wrap} style="${style}${vis}padding:8px 12px;color:white${tc}${ff}${fs}">${el.content || ''}</div>`
+  return `<div${wrap} style="${style}${vis}padding:8px 12px;color:white${tc}${ff}${fs}">${sanitizeRichTextHtml(el.content || '')}</div>`
 }
 
 function renderImage(el, style, wrap, vis, opts) {
@@ -126,10 +127,10 @@ function renderHtml(el, style, wrap, vis, opts) {
 
 function renderMarkdown(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
-    return `<div style="${style}${vis}padding:8px 12px;color:white;overflow:auto;font-size:calc(16px * var(--font-zoom, 1));line-height:1.5;">${el.content || ''}</div>`
+    return `<div style="${style}${vis}padding:8px 12px;color:white;overflow:auto;font-size:calc(16px * var(--font-zoom, 1));line-height:1.5;">${escapeHtml(el.content || '')}</div>`
   }
   const _origin = getAssetOrigin()
-  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/marked/marked.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{background:transparent;color:white;font-family:-apple-system,sans-serif;font-size:calc(18px * var(--font-zoom, 1));line-height:1.6;padding:8px 12px;overflow:auto}h1,h2,h3,h4{margin:0 0 .4em}p{margin:0 0 .4em}ul,ol{padding-left:1.5em;margin:0 0 .4em}a{color:#60a5fa}pre{background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:6px;overflow:auto;font-size:13px}code{font-family:'Fira Code',monospace}</style></head><body><div id="out"></div><script>document.getElementById('out').innerHTML=marked.parse(${JSON.stringify(el.content || '')});</script></body></html>`
+  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/marked/marked.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{background:transparent;color:white;font-family:-apple-system,sans-serif;font-size:calc(18px * var(--font-zoom, 1));line-height:1.6;padding:8px 12px;overflow:auto}h1,h2,h3,h4{margin:0 0 .4em}p{margin:0 0 .4em}ul,ol{padding-left:1.5em;margin:0 0 .4em}a{color:#60a5fa}pre{background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:6px;overflow:auto;font-size:13px}code{font-family:'Fira Code',monospace}</style></head><body><div id="out"></div><script>function __safeHref(v){v=String(v||'').trim();if(!v)return '#';if(v[0]==='#'||v[0]==='/'||v.startsWith('./')||v.startsWith('../'))return v;if(/^(https?:|mailto:)/i.test(v))return v;return '#'}function __sanitize(html){return String(html||'').replace(/<script[\\s\\S]*?<\\/script>/gi,'').replace(/\\son[a-z-]+\\s*=\\s*(['"]).*?\\1/gi,'').replace(/\\s(href|src)\\s*=\\s*(['"])(.*?)\\2/gi,function(_,a,q,v){return ' '+a+'='+q+__safeHref(v)+q})}document.getElementById('out').innerHTML=__sanitize(marked.parse(${JSON.stringify(el.content || '')}));</script></body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(srcdoc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
 }
 
@@ -334,7 +335,7 @@ function renderSvg(el, style, wrap, vis) {
   if (el.fillOverride) svgContent = svgContent.replace(/fill="[^"]*"/g, `fill="${el.fillOverride}"`)
   if (el.strokeOverride)
     svgContent = svgContent.replace(/stroke="[^"]*"/g, `stroke="${el.strokeOverride}"`)
-  return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;">${svgContent}</div>`
+  return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;">${sanitizeSvgHtml(svgContent)}</div>`
 }
 
 function renderQrcode(el, style, wrap, vis, opts) {

@@ -15,14 +15,20 @@ export default function LiveViewPage() {
   const [annotations, setAnnotations] = useState([])
   const [viewerCount, setViewerCount] = useState(0)
   const [roomNotFound, setRoomNotFound] = useState(false)
+  const [joinError, setJoinError] = useState('')
   const { iframeRef } = useRevealPreviewFrame(htmlContent, liveState)
 
   // 1. Socket.IO connection
   useEffect(() => {
-    const socket = io({ path: '/ws' })
+    const socket = io({ path: '/ws', reconnection: true })
+
+    socket.on('connect_error', (err) => {
+      setJoinError(err.message || 'Connection failed')
+    })
 
     socket.on('connect', () => {
       setIsConnected(true)
+      setJoinError('')
       socket.emit('join-room', { roomId: roomCode, role: 'viewer' })
     })
 
@@ -57,6 +63,10 @@ export default function LiveViewPage() {
     socket.on('presenter-left', () => setPresenterLeft(true))
     socket.on('viewer-count', ({ count }) => setViewerCount(count))
     socket.on('room-not-found', () => setRoomNotFound(true))
+    socket.on('join-error', ({ message }) => {
+      setJoinError(message || 'Failed to join live room')
+      setRoomNotFound(true)
+    })
 
     // When we receive presentation data (HTML), render it
     socket.on('presentation-data', (data) => {
@@ -67,12 +77,14 @@ export default function LiveViewPage() {
     const checkRoom = async () => {
       try {
         const roomRes = await fetch(`/api/live/room/${roomCode}`)
+        if (!roomRes.ok) throw new Error('Failed to check room')
         const roomData = await roomRes.json()
         if (!roomData.exists) {
           setRoomNotFound(true)
         }
       } catch (err) {
         console.error('Failed to check room', err)
+        setRoomNotFound(true)
       }
     }
     checkRoom()
@@ -88,7 +100,7 @@ export default function LiveViewPage() {
         <div className="text-center">
           <h2 className="text-2xl mb-2">Room not found</h2>
           <p className="text-text-secondary mb-4">
-            This live session does not exist or has ended.
+            {joinError || 'This live session does not exist or has ended.'}
           </p>
           <a href="/" className="text-primary text-sm">
             ← Back to Home

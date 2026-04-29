@@ -1,3 +1,4 @@
+/* global __ENV */
 import ws from 'k6/ws'
 import { check } from 'k6'
 
@@ -8,7 +9,7 @@ export const options = {
 
 export default function () {
   // Socket.IO uses Engine.IO underneath. We connect to Engine.IO protocol v4 over WS.
-  const url = 'ws://localhost:3000/socket.io/?EIO=4&transport=websocket'
+  const url = __ENV.WS_URL || 'ws://localhost:3002/ws/?EIO=4&transport=websocket'
 
   const res = ws.connect(url, {}, function (socket) {
     socket.on('open', () => {
@@ -23,8 +24,8 @@ export default function () {
       }
       // 40 = connected to default namespace
       else if (msg.startsWith('40')) {
-        // Connected to namespace, now emit a join event
-        socket.send('42["join-presentation", "test-presentation-id"]')
+        // Connected to namespace, now emit current join-room event format.
+        socket.send('42["join-room",{"roomId":"ROOM12","role":"viewer"}]')
       }
       // 2 = ping from server
       else if (msg.startsWith('2')) {

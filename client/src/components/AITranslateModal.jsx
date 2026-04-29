@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Languages, X, Loader2 } from 'lucide-react'
 import { aiTranslate } from '../utils/ai'
 import { Button } from '../components/ui'
-import { isBackdropClick, useEscapeClose } from '../lib/utils'
+import { isBackdropClick } from '../lib/utils'
 import { getSlideNotes, getSlideNotesTranslationKey } from '../utils/slide-notes'
 
 const LANGUAGES = [
@@ -99,7 +99,7 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
       })
 
       onApplyTranslations(translationMap, keepOriginalAsNotes)
-      onClose()
+      handleClose()
     } catch (err) {
       setError(err.message)
     } finally {
@@ -110,13 +110,27 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
 
   const textCount = extractTexts().length
 
-  useEscapeClose(onClose)
+  const [isOpen, setIsOpen] = useState(true)
+
+  const handleClose = () => {
+    setIsOpen(false)
+    onClose()
+  }
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
       onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
+        if (isBackdropClick(event)) handleClose()
       }}
       role="dialog"
       aria-modal="true"
@@ -130,7 +144,7 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
           <h3 id="ai-translate-modal-title" className="m-0 flex items-center gap-2 text-base">
             <Languages size={18} /> Translate Presentation
           </h3>
-          <Button variant="icon" onClick={onClose} className="p-1" aria-label="Close">
+          <Button variant="icon" onClick={handleClose} className="p-1" aria-label="Close">
             <X size={16} />
           </Button>
         </div>

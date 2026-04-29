@@ -146,6 +146,12 @@ Default font families offered in the font picker (verified in Toolbar):
 - Move focus into the modal on open and return focus to the invoking control when the modal closes.
 - Modal headers and action rows must wrap safely at narrow browser widths. Controls should not create horizontal page overflow.
 
+### Product Tour
+
+- `ProductTour.jsx` provides an interactive onboarding sequence via React-Joyride.
+- Steps use explicit placements (`top`, `bottom`, `left`, `right`) with continuous navigation.
+- The tour uses a `Joyride` callback to track completion and avoid manual `close => next` wiring.
+
 ### Toolbars
 
 - Background: `--bg-secondary`
@@ -207,7 +213,7 @@ Selected per presentation (not per slide). Available: none, fade, slide, convex,
 
 ## Preset Themes (6)
 
-Applied from `HomePage` and affect all element default styles and backgrounds. Defined as hardcoded objects in `HomePage.jsx`.
+Applied from `HomePage` and affect all element default styles and backgrounds. Color palettes and gradient presets are defined in `shared/src/shared-toolbar-text-bg-color-palette-gradient-presets-config.js`.
 
 | Theme         | Character                                     |
 | ------------- | --------------------------------------------- |

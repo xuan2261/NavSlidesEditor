@@ -73,7 +73,7 @@ export default function FindReplaceBar({
       if (si !== match.slideIndex) return slide
       return {
         ...slide,
-        elements: slide.elements.map((el) => {
+        elements: (slide.elements || []).map((el) => {
           if (el.id !== match.elementId) return el
           if (el.type === 'text') {
             return {

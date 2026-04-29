@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { markdownToSlides } from './markdown-import.js'
+import { markdownToSlides, markdownToSlidesWithWarnings } from './markdown-import.js'
 
 describe('markdownToSlides', () => {
   it('should split markdown by --- into multiple slides', () => {
@@ -51,5 +51,12 @@ describe('markdownToSlides', () => {
     expect(slides[0].background).toBeDefined()
     expect(slides[0].background.type).toBe('image')
     expect(slides[0].background.image).toBe('https://example.com/img.jpg')
+  })
+
+  it('blocks unsafe javascript links and reports warnings', () => {
+    const md = `[Click me](javascript:alert(1))`
+    const result = markdownToSlidesWithWarnings(md)
+    expect(result.slides[0].elements[0].content).not.toContain('javascript:alert(1)')
+    expect(result.warnings.some((w) => w.includes('Blocked unsafe markdown link'))).toBe(true)
   })
 })

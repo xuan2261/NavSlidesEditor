@@ -1,14 +1,21 @@
+import { isSafeHref } from './url-safety'
+
 /**
  * Convert a Markdown document into an array of slide objects.
  * Splits by `---` (horizontal rule) or `## ` headings.
  */
 export function markdownToSlides(md) {
-  if (!md || !md.trim()) return []
+  return markdownToSlidesWithWarnings(md).slides
+}
+
+export function markdownToSlidesWithWarnings(md) {
+  if (!md || !md.trim()) return { slides: [], warnings: [] }
+  const warnings = []
 
   // Split by --- or ## headings (keep heading in the section)
   const sections = md.split(/\n---\n|\n(?=## )/).filter((s) => s.trim())
 
-  return sections.map((section) => {
+  const slides = sections.map((section) => {
     let trimmed = section.trim()
     let background = { type: 'color', color: '#1e1e2e' }
 
@@ -35,7 +42,7 @@ export function markdownToSlides(md) {
     const isTitle = /^#{1,2}\s/.test(trimmed) && !trimmed.includes('\n\n')
 
     // Convert markdown to simple HTML
-    const html = simpleMarkdownToHtml(trimmed)
+    const html = simpleMarkdownToHtml(trimmed, warnings)
 
     return {
       id: crypto.randomUUID(),
@@ -54,13 +61,15 @@ export function markdownToSlides(md) {
       background,
     }
   })
+  return { slides, warnings }
 }
 
 /**
  * Simple markdown → HTML converter (no external deps).
  * Handles: headings, bold, italic, code, lists, links, paragraphs.
  */
-function simpleMarkdownToHtml(md) {
+
+function simpleMarkdownToHtml(md, warnings = []) {
   let html = md
     // Escape HTML entities first
     .replace(/&/g, '&amp;')
@@ -98,10 +107,13 @@ function simpleMarkdownToHtml(md) {
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
 
   // Links
-  html = html.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" style="color:#818cf8;text-decoration:underline;">$1</a>'
-  )
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, href) => {
+    if (!isSafeHref(href)) {
+      warnings.push(`Blocked unsafe markdown link: ${href}`)
+      return `<span style="color:#94a3b8;">${text}</span>`
+    }
+    return `<a href="${href}" style="color:#818cf8;text-decoration:underline;">${text}</a>`
+  })
 
   // Unordered lists
   html = html.replace(/^[-*] (.+)$/gm, '<li style="margin-bottom:4px;">$1</li>')
@@ -112,6 +124,10 @@ function simpleMarkdownToHtml(md) {
 
   // Ordered lists
   html = html.replace(/^\d+\. (.+)$/gm, '<li style="margin-bottom:4px;">$1</li>')
+  html = html.replace(
+    /(<li[^>]*>.*<\/li>\n?)+/g,
+    (match) => `<ol style="margin:8px 0;padding-left:20px;list-style:decimal;">${match}</ol>`
+  )
 
   // Paragraphs (lines that aren't already wrapped)
   html = html

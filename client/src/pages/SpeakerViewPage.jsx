@@ -90,8 +90,12 @@ export default function SpeakerViewPage() {
   }, [])
 
   useEffect(() => {
-    const socket = io({ path: '/ws' })
+    const socket = io({ path: '/ws', reconnection: true })
     socketRef.current = socket
+
+    socket.on('connect_error', (err) => {
+      console.error('Speaker socket connection error:', err.message)
+    })
 
     socket.on('connect', () => {
       setIsConnected(true)
