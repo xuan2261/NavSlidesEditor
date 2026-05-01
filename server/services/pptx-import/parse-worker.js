@@ -40,8 +40,8 @@ async function parseFile(filePath) {
   const buffer = await fs.readFile(filePath)
   const output = await parse(toArrayBuffer(buffer), {
     imageMode: 'base64',
-    videoMode: 'none',
-    audioMode: 'none',
+    videoMode: 'blob',
+    audioMode: 'blob',
   })
   const fallback = needsFallbackInspector(output)
     ? await inspectWithPptx2Json(filePath, 'primary-output-missing-object-evidence')

@@ -1,6 +1,6 @@
 const uuidv4 = () => require('node:crypto').randomUUID()
 const { CANVAS_SIZE } = require('./constants')
-const { createMediaIndex, persistImageForElement } = require('./media')
+const { createMediaIndex, persistImageForElement, persistZipMediaRef, persistMediaBlob } = require('./media')
 const { sanitizeHtml } = require('./sanitize')
 const { mapChart } = require('./chart-output-to-navslides-mapper')
 const { mergeInlineStyle, normalizeAlign, parseHtmlTree } = require('revealjs-shared')
@@ -207,6 +207,17 @@ function warning(warnings, slideIndex, type, message) {
   warnings.push({ slideIndex, type, message })
 }
 
+function extractShadow(element) {
+  const s = element.shadow
+  if (!s || typeof s !== 'object') return null
+  return {
+    shadowX: typeof s.h === 'number' ? s.h : 0,
+    shadowY: typeof s.v === 'number' ? s.v : 0,
+    shadowBlur: typeof s.blur === 'number' ? s.blur : 0,
+    shadowColor: typeof s.color === 'string' ? s.color : '#000000',
+  }
+}
+
 function placeholder(element, scale, zIndex, slideIndex, warnings, type, label) {
   warning(warnings, slideIndex, type, label)
   return {
@@ -254,6 +265,29 @@ async function mapImage(element, context) {
   // border
   if (element.borderColor) img.borderColor = element.borderColor
   if (readNumber(element.borderWidth, 0) > 0) img.borderWidth = readNumber(element.borderWidth, 0)
+  // [FIX #3] Extract image filters — pptxtojson uses fixed-point (e.g., 15000 = 150%) → /1000 = CSS percentage
+  if (element.filters) {
+    const f = element.filters
+    if (typeof f.brightness === 'number' && f.brightness !== 100000) {
+      img.filterBrightness = Math.round(f.brightness / 1000)
+    }
+    if (typeof f.contrast === 'number' && f.contrast !== 100000) {
+      img.filterContrast = Math.round(f.contrast / 1000)
+    }
+    if (typeof f.saturation === 'number' && f.saturation !== 100000) {
+      if (f.saturation === 0) {
+        img.filterGrayscale = 100
+      } else if (f.saturation < 50000) {
+        img.filterGrayscale = Math.round((1 - f.saturation / 100000) * 100)
+      }
+    }
+    if (typeof f.sharpen === 'number' && f.sharpen > 0) {
+      img._pptxImportMeta = { ...(img._pptxImportMeta || {}), _pptxSharpen: f.sharpen }
+    }
+    if (typeof f.colorTemperature === 'number') {
+      img._pptxImportMeta = { ...(img._pptxImportMeta || {}), _pptxColorTemp: f.colorTemperature }
+    }
+  }
   // Canonical crop model for editor fidelity: imageW/imageH/imageOffset*
   if (element.rect) {
     const rawL = readNumber(element.rect.l, 0)
@@ -399,6 +433,64 @@ function mapTable(element, context) {
   return [table]
 }
 
+async function mapVideo(element, context) {
+  const ref = element.ref || ''
+  if (/^https?:\/\//i.test(ref)) {
+    context.stats.videoCount = (context.stats.videoCount || 0) + 1
+    return [{
+      ...baseElement(element, context.scale, context.zIndex),
+      type: 'video',
+      src: ref,
+      controls: true,
+      autoplay: false,
+      loop: false,
+      muted: false,
+    }]
+  }
+  const src = await persistMediaBlob(context.mediaIndex, ref, context.uploadsDir)
+  if (!src) {
+    return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'video-missing', 'Video media unavailable')]
+  }
+  context.stats.videoCount = (context.stats.videoCount || 0) + 1
+  return [{
+    ...baseElement(element, context.scale, context.zIndex),
+    type: 'video',
+    src,
+    controls: true,
+    autoplay: false,
+    loop: false,
+    muted: false,
+  }]
+}
+
+async function mapAudio(element, context) {
+  const ref = element.ref || ''
+  if (/^https?:\/\//i.test(ref)) {
+    context.stats.audioCount = (context.stats.audioCount || 0) + 1
+    return [{
+      ...baseElement(element, context.scale, context.zIndex),
+      type: 'audio',
+      src: ref,
+      autoplay: false,
+      loop: false,
+      muted: false,
+    }]
+  }
+  const src = await persistMediaBlob(context.mediaIndex, ref, context.uploadsDir)
+  if (!src) {
+    return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'audio-missing', 'Audio media unavailable')]
+  }
+  context.stats.audioCount = (context.stats.audioCount || 0) + 1
+  return [{
+    ...baseElement(element, context.scale, context.zIndex),
+    type: 'audio',
+    src,
+    autoplay: false,
+    loop: false,
+    muted: false,
+  }]
+}
+
 function mapShape(element, context) {
   const shape = shapeName(element.shapType)
   if (element.path) {
@@ -469,7 +561,42 @@ function mapShape(element, context) {
   if (element.fill?.type === 'gradient') {
     mapped.fillGradient = gradientBackground(element.fill)
   }
+  // [FIX #4] Apply flat shadow fields — renderer reads el.shadowX, el.shadowY, etc.
+  const shadow = extractShadow(element)
+  if (shadow) {
+    mapped.shadowX = shadow.shadowX
+    mapped.shadowY = shadow.shadowY
+    mapped.shadowBlur = shadow.shadowBlur
+    mapped.shadowColor = shadow.shadowColor
+  }
   return [mapped]
+}
+
+function mapMath(element, context) {
+  const latex = element.latex || element.text || ''
+  if (!latex) {
+    if (element.picBase64) {
+      const mathEl = { ...element, type: 'image', base64: element.picBase64 }
+      return mapImage(mathEl, context)
+    }
+    return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'math', 'Math equation')]
+  }
+  const cleanLatex = latex.replace(/<[a-z][^>]*>/gi, '').trim()
+  if (!cleanLatex) {
+    if (element.picBase64) {
+      const mathEl = { ...element, type: 'image', base64: element.picBase64 }
+      return mapImage(mathEl, context)
+    }
+    return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'math', 'Math equation')]
+  }
+  context.stats.mathCount = (context.stats.mathCount || 0) + 1
+  return [{
+    ...baseElement(element, context.scale, context.zIndex),
+    type: 'latex',
+    content: cleanLatex,
+    latex: cleanLatex,
+    _fallbackSrc: element.picBase64 || null,
+  }]
 }
 
 async function mapElement(element, context) {
@@ -479,6 +606,8 @@ async function mapElement(element, context) {
   }
   if (element.type === 'image') return mapImage(element, context)
   if (element.type === 'table') return mapTable(element, context)
+  if (element.type === 'video') return mapVideo(element, context)
+  if (element.type === 'audio') return mapAudio(element, context)
   if (element.type === 'shape') return mapShape(element, context)
   // Phase 6: SmartArt/Diagram — convert to individual shapes
   if (element.type === 'diagram') {
@@ -492,13 +621,7 @@ async function mapElement(element, context) {
     }
     return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'chart-unsupported', 'Chart type unsupported')]
   }
-  if (element.type === 'math') {
-    if (element.picBase64) {
-      const mathEl = { ...element, type: 'image', base64: element.picBase64 }
-      return mapImage(mathEl, context)
-    }
-    return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'math', 'Math equation')]
-  }
+  if (element.type === 'math') return mapMath(element, context)
   if (element.type === 'text' || element.content) {
     context.stats.textCount += 1
     const content = sanitizeHtml(element.content)
@@ -514,6 +637,14 @@ async function mapElement(element, context) {
         ...(text._pptxImportMeta || {}),
         textInsets,
       }
+    }
+    // [FIX #4] Apply flat shadow fields to text elements
+    const textShadow = extractShadow(element)
+    if (textShadow) {
+      text.shadowX = textShadow.shadowX
+      text.shadowY = textShadow.shadowY
+      text.shadowBlur = textShadow.shadowBlur
+      text.shadowColor = textShadow.shadowColor
     }
     return [text]
   }
@@ -640,35 +771,30 @@ function flattenDiagramElement(element, context) {
 
   const boxWidth = readNumber(element.width, 300, 0)
   const boxHeight = readNumber(element.height, 200, 0)
+  const diagramLeft = readCoord(element.left, element.x, 0)
+  const diagramTop = readCoord(element.top, element.y, 0)
 
-  // Limit to 50 nodes per plan
   const maxNodes = Math.min(nodes.length, 50)
   if (nodes.length > 50) {
     context.warnings.push({ slideIndex: context.slideIndex, type: 'diagram-truncated', message: `Diagram has ${nodes.length} nodes, using first 50` })
   }
 
-  // Preserve connectors/arrows if present
-  const connectors = element.connectors || element.arrows || []
-  if (connectors.length > 0) {
-    context.warnings.push({
-      slideIndex: context.slideIndex,
-      type: 'diagram-connectors',
-      message: `Diagram has ${connectors.length} connector(s) — preserved as shapes`,
-    })
+  // [FIX #7] Detect connector nodes inside elements[] by shapType — pptxtojson does NOT have connectors[]/arrows[] arrays
+  const isConnectorNode = (node) => {
+    const s = String(node.shapType || '').toLowerCase()
+    return s.includes('line') || s.includes('connector') || s.includes('straight')
   }
 
+  // [FIX #8] Process BOX nodes FIRST (higher z-index), then connectors (lower z-index)
   for (let i = 0; i < maxNodes; i++) {
     const node = nodes[i]
-    context.zIndex += 1
+    if (isConnectorNode(node)) continue // skip connectors in this pass
 
-    // Extract text content from textList if available
+    context.zIndex += 1
     const nodeText = textList[i]?.text || node.text || node.content || ''
     const sanitizedText = plainText(nodeText)
-
-    // Create a shape for each diagram node
-    // FIX: read node.left/node.x instead of using array index i for horizontal position
-    const nodeX = readCoord(element.left, element.x, 0) + readCoord(node.left, node.x, (i * boxWidth) / maxNodes)
-    const nodeY = readCoord(element.top, element.y, 0) + readCoord(node.top, node.y, 0)
+    const nodeX = diagramLeft + readCoord(node.left, node.x, (i * boxWidth) / maxNodes)
+    const nodeY = diagramTop + readCoord(node.top, node.y, 0)
 
     results.push({
       id: uuidv4(),
@@ -689,6 +815,48 @@ function flattenDiagramElement(element, context) {
     })
   }
 
+  // [FIX #7] Process CONNECTOR nodes SECOND — detect line-type shapes inside elements[]
+  for (let i = 0; i < maxNodes; i++) {
+    const node = nodes[i]
+    if (!isConnectorNode(node)) continue // only process connectors here
+
+    context.zIndex += 1
+
+    let cx1 = node.x1 ?? node.left ?? 0
+    let cy1 = node.y1 ?? node.top ?? 0
+    let cx2 = node.x2 ?? (node.left ?? 0) + (node.width ?? 100)
+    let cy2 = node.y2 ?? (node.top ?? 0) + (node.height ?? 10)
+
+    const mappedX1 = Math.round((diagramLeft + cx1) * context.scale.x)
+    const mappedY1 = Math.round((diagramTop + cy1) * context.scale.y)
+    const mappedX2 = Math.round((diagramLeft + cx2) * context.scale.x)
+    const mappedY2 = Math.round((diagramTop + cy2) * context.scale.y)
+
+    // [FIX #17] Reuse arrowMarker() helper from mapper.js:152-160
+    const normType = String(node.shapType || '').toLowerCase()
+    const arrowEnd = arrowMarker(normType)
+    const arrowStart = normType.includes('triangle') || normType.includes('diamond')
+      ? arrowMarker(normType.replace(/end|start/gi, ''))
+      : 'none'
+
+    results.push({
+      id: uuidv4(),
+      x1: mappedX1,
+      y1: mappedY1,
+      x2: mappedX2,
+      y2: mappedY2,
+      rotation: 0,
+      opacity: typeof node.opacity === 'number' ? node.opacity : 1,
+      zIndex: context.zIndex,
+      type: 'line',
+      stroke: colorValue(node.borderColor, '#6b7280'),
+      strokeWidth: Math.max(1, readNumber(node.borderWidth, 2)),
+      dashArray: node.borderStrokeDasharray || undefined,
+      arrowStart,
+      arrowEnd,
+    })
+  }
+
   return results
 }
 
@@ -697,7 +865,7 @@ async function mapPptxOutput({ output, zip, originalName, uploadsDir }) {
   const scale = sourceSize.scale
   const mediaIndex = createMediaIndex(zip)
   const warnings = []
-  const stats = { textCount: 0, imageCount: 0, shapeCount: 0, tableCount: 0, chartCount: 0, placeholderCount: 0 }
+  const stats = { textCount: 0, imageCount: 0, shapeCount: 0, tableCount: 0, chartCount: 0, placeholderCount: 0, videoCount: 0, audioCount: 0, mathCount: 0 }
 
   const slides = []
   for (const [slideIndex, slide] of (output.slides || []).entries()) {
@@ -824,4 +992,8 @@ async function mapPptxOutput({ output, zip, originalName, uploadsDir }) {
 module.exports = {
   mapPptxOutput,
   sanitizeHtml,
+  mapVideo,
+  mapAudio,
+  extractShadow,
+  mapMath,
 }

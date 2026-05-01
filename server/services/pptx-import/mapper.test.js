@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import mapper from './mapper.js'
 import schemas from '../../middleware/schemas.js'
 
-const { mapPptxOutput, sanitizeHtml } = mapper
+const { mapPptxOutput, sanitizeHtml, mapVideo, mapAudio, extractShadow, mapMath } = mapper
 const { createPresentationSchema } = schemas
 
 const PNG_DATA_URL =
@@ -1104,5 +1104,405 @@ describe('pptx mapper', () => {
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
     }
+  })
+
+  // ─── Phase 6: Video Import ─────────────────────────────────────────────
+  describe('mapVideo', () => {
+    it('maps type=video ZIP ref to video element with /uploads/ src', async () => {
+      const mockEntry = { async: () => Promise.resolve(Buffer.from('fake-video-data')) }
+      const mockMediaIndex = { files: new Map([['ppt/media/video1.mp4', mockEntry]]) }
+      const element = { type: 'video', left: 10, top: 20, width: 100, height: 80, ref: 'ppt/media/video1.mp4' }
+      const context = { mediaIndex: mockMediaIndex, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { videoCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
+      const results = await mapVideo(element, context)
+      expect(results.length).toBe(1)
+      expect(results[0].type).toBe('video')
+      expect(results[0].src).toMatch(/^\/uploads\//)
+      expect(results[0].src).toMatch(/\.mp4$/)
+      expect(results[0].controls).toBe(true)
+      expect(results[0].autoplay).toBe(false)
+    })
+
+    it('maps type=video external URL ref directly as src', async () => {
+      const element = { type: 'video', left: 10, top: 20, width: 100, height: 80, ref: 'https://example.com/video.mp4' }
+      const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { videoCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
+      const results = await mapVideo(element, context)
+      expect(results[0].src).toBe('https://example.com/video.mp4')
+      expect(results[0].type).toBe('video')
+    })
+
+    it('returns placeholder when ref missing', async () => {
+      const element = { type: 'video', left: 10, top: 20, width: 100, height: 80 }
+      const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { videoCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
+      const results = await mapVideo(element, context)
+      expect(results[0].importPlaceholderType).toBe('video-missing')
+    })
+
+    it('increments videoCount in stats', async () => {
+      const element = { type: 'video', left: 10, top: 20, width: 100, height: 80, ref: 'https://example.com/v.mp4' }
+      const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { videoCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
+      await mapVideo(element, context)
+      expect(context.stats.videoCount).toBe(1)
+    })
+  })
+
+  // ─── Phase 6: Audio Import ─────────────────────────────────────────────
+  describe('mapAudio', () => {
+    it('maps type=audio ZIP ref to audio element', async () => {
+      const mockEntry = { async: () => Promise.resolve(Buffer.from('fake-audio')) }
+      const mockMediaIndex = { files: new Map([['ppt/media/audio1.mp3', mockEntry]]) }
+      const element = { type: 'audio', left: 10, top: 20, width: 100, height: 80, ref: 'ppt/media/audio1.mp3' }
+      const context = { mediaIndex: mockMediaIndex, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { audioCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
+      const results = await mapAudio(element, context)
+      expect(results[0].type).toBe('audio')
+      expect(results[0].src).toMatch(/^\/uploads\//)
+      expect(results[0].src).toMatch(/\.mp3$/)
+    })
+
+    it('maps type=audio external URL ref directly', async () => {
+      const element = { type: 'audio', left: 10, top: 20, width: 100, height: 80, ref: 'https://example.com/audio.mp3' }
+      const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { audioCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
+      const results = await mapAudio(element, context)
+      expect(results[0].src).toBe('https://example.com/audio.mp3')
+      expect(results[0].type).toBe('audio')
+    })
+  })
+
+  // ─── Phase 6: Math LaTeX Import ────────────────────────────────────────
+  describe('mapMath via mapPptxOutput', () => {
+    it('maps type=math with latex string to latex element', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-math-'))
+      try {
+        const result = await mapPptxOutput({
+          zip: new JSZip(),
+          originalName: 'sample.pptx',
+          uploadsDir: dir,
+          output: {
+            size: { width: 960, height: 540 },
+            slides: [{ elements: [{ type: 'math', left: 10, top: 20, width: 100, height: 50, latex: '\\frac{a}{b}' }] }],
+          },
+        })
+        const el = result.presentation.slides[0].elements[0]
+        expect(el.type).toBe('latex')
+        expect(el.content).toBe('\\frac{a}{b}')
+        expect(el.latex).toBe('\\frac{a}{b}')
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+
+    it('preserves picBase64 as _fallbackSrc', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-math-fb-'))
+      try {
+        const result = await mapPptxOutput({
+          zip: new JSZip(),
+          originalName: 'sample.pptx',
+          uploadsDir: dir,
+          output: {
+            size: { width: 960, height: 540 },
+            slides: [{ elements: [{ type: 'math', left: 10, top: 20, width: 100, height: 50, latex: '\\frac{a}{b}', picBase64: 'data:image/png;base64,xyz' }] }],
+          },
+        })
+        const el = result.presentation.slides[0].elements[0]
+        expect(el._fallbackSrc).toBe('data:image/png;base64,xyz')
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+
+    it('falls back to image when no latex text', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-math-img-'))
+      try {
+        const result = await mapPptxOutput({
+          zip: new JSZip(),
+          originalName: 'sample.pptx',
+          uploadsDir: dir,
+          output: {
+            size: { width: 960, height: 540 },
+            slides: [{ elements: [{ type: 'math', left: 10, top: 20, width: 100, height: 50, picBase64: PNG_DATA_URL }] }],
+          },
+        })
+        const el = result.presentation.slides[0].elements[0]
+        expect(el.type).toBe('image')
+        expect(el.src).toMatch(/^\/uploads\//)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+
+    it('increments mathCount in stats', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-math-count-'))
+      try {
+        const result = await mapPptxOutput({
+          zip: new JSZip(),
+          originalName: 'sample.pptx',
+          uploadsDir: dir,
+          output: {
+            size: { width: 960, height: 540 },
+            slides: [{ elements: [{ type: 'math', left: 10, top: 20, width: 100, height: 50, latex: 'x^2' }] }],
+          },
+        })
+        expect(result.stats.mathCount).toBe(1)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  // ─── Phase 6: Shadow Extraction ─────────────────────────────────────────
+  describe('extractShadow', () => {
+    it('maps pptxtojson shadow to flat NavSlides fields', () => {
+      const el = { shadow: { h: 5, v: 3, blur: 4, color: '#333333' } }
+      const shadow = extractShadow(el)
+      expect(shadow.shadowX).toBe(5)
+      expect(shadow.shadowY).toBe(3)
+      expect(shadow.shadowBlur).toBe(4)
+      expect(shadow.shadowColor).toBe('#333333')
+    })
+
+    it('returns null when no shadow', () => {
+      const el = {}
+      const shadow = extractShadow(el)
+      expect(shadow).toBe(null)
+    })
+
+    it('handles partial shadow object with defaults', () => {
+      const el = { shadow: { h: 5 } }
+      const shadow = extractShadow(el)
+      expect(shadow.shadowX).toBe(5)
+      expect(shadow.shadowY).toBe(0)
+      expect(shadow.shadowBlur).toBe(0)
+      expect(shadow.shadowColor).toBe('#000000')
+    })
+  })
+
+  describe('mapShape — shadow', () => {
+    it('applies flat shadow fields to shape element', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-shape-shadow-'))
+      try {
+        const result = await mapPptxOutput({
+          zip: new JSZip(),
+          originalName: 'sample.pptx',
+          uploadsDir: dir,
+          output: {
+            size: { width: 960, height: 540 },
+            slides: [{ elements: [{ type: 'shape', shapType: 'rect', left: 10, top: 10, width: 100, height: 50, fill: '#f00', shadow: { h: 5, v: 3, blur: 4, color: '#333333' } }] }],
+          },
+        })
+        const el = result.presentation.slides[0].elements[0]
+        expect(el.shadowX).toBe(5)
+        expect(el.shadowY).toBe(3)
+        expect(el.shadowBlur).toBe(4)
+        expect(el.shadowColor).toBe('#333333')
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  describe('mapText — shadow', () => {
+    it('applies flat shadow fields to text element', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-text-shadow-'))
+      try {
+        const result = await mapPptxOutput({
+          zip: new JSZip(),
+          originalName: 'sample.pptx',
+          uploadsDir: dir,
+          output: {
+            size: { width: 960, height: 540 },
+            slides: [{ elements: [{ type: 'text', left: 10, top: 10, width: 100, height: 50, content: '<p>Hello</p>', shadow: { h: 2, v: 2, blur: 3, color: '#888888' } }] }],
+          },
+        })
+        const el = result.presentation.slides[0].elements[0]
+        expect(el.shadowX).toBe(2)
+        expect(el.shadowY).toBe(2)
+        expect(el.shadowBlur).toBe(3)
+        expect(el.shadowColor).toBe('#888888')
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  // ─── Phase 6: Image Filter Extraction ──────────────────────────────────
+  describe('mapImage — filters', () => {
+    it('extracts brightness/contrast with /1000 divisor', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-img-filter-'))
+      try {
+        const result = await mapPptxOutput({
+          zip: new JSZip(),
+          originalName: 'sample.pptx',
+          uploadsDir: dir,
+          output: {
+            size: { width: 960, height: 540 },
+            slides: [{ elements: [{ type: 'image', left: 0, top: 0, width: 100, height: 100, base64: PNG_DATA_URL, filters: { brightness: 15000, contrast: 12000 } }] }],
+          },
+        })
+        const el = result.presentation.slides[0].elements[0]
+        expect(el.filterBrightness).toBe(15)
+        expect(el.filterContrast).toBe(12)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+
+    it('maps saturation=0 to grayscale=100', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-img-gray-'))
+      try {
+        const result = await mapPptxOutput({
+          zip: new JSZip(),
+          originalName: 'sample.pptx',
+          uploadsDir: dir,
+          output: {
+            size: { width: 960, height: 540 },
+            slides: [{ elements: [{ type: 'image', left: 0, top: 0, width: 100, height: 100, base64: PNG_DATA_URL, filters: { saturation: 0 } }] }],
+          },
+        })
+        const el = result.presentation.slides[0].elements[0]
+        expect(el.filterGrayscale).toBe(100)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+
+    it('skips brightness=100000 (no-op)', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-img-none-'))
+      try {
+        const result = await mapPptxOutput({
+          zip: new JSZip(),
+          originalName: 'sample.pptx',
+          uploadsDir: dir,
+          output: {
+            size: { width: 960, height: 540 },
+            slides: [{ elements: [{ type: 'image', left: 0, top: 0, width: 100, height: 100, base64: PNG_DATA_URL, filters: { brightness: 100000 } }] }],
+          },
+        })
+        const el = result.presentation.slides[0].elements[0]
+        expect(el.filterBrightness).toBeUndefined()
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  // ─── Phase 6: Diagram Connector Preservation ─────────────────────────────
+  describe('flattenDiagramElement — connector detection', () => {
+    it('detects connector nodes inside elements[] by shapType', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-diagram-conn-'))
+      try {
+        const result = await mapPptxOutput({
+          zip: new JSZip(),
+          originalName: 'sample.pptx',
+          uploadsDir: dir,
+          output: {
+            size: { width: 960, height: 540 },
+            slides: [{
+              elements: [{
+                type: 'diagram', left: 50, top: 50, width: 300, height: 200,
+                elements: [
+                  { text: 'Node 1', left: 0, top: 0, width: 100, height: 50, shapType: 'rect', fill: '#f00' },
+                  { text: 'Node 2', left: 100, top: 0, width: 100, height: 50, shapType: 'rect', fill: '#0f0' },
+                  { left: 10, top: 10, width: 80, height: 5, shapType: 'lineConnector', borderColor: '#333', borderWidth: 2 },
+                ],
+                textList: [{ text: 'Node 1' }, { text: 'Node 2' }],
+              }],
+            }],
+          },
+        })
+        const els = result.presentation.slides[0].elements
+        const shapes = els.filter(e => e.type === 'shape')
+        const lines = els.filter(e => e.type === 'line')
+        expect(shapes.length).toBe(2)
+        expect(lines.length).toBe(1)
+        expect(lines[0].type).toBe('line')
+        expect(lines[0].stroke).toBe('#333')
+        expect(lines[0].strokeWidth).toBe(2)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+
+    it('processes box nodes before connector nodes (z-index order)', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-diagram-z-'))
+      try {
+        const result = await mapPptxOutput({
+          zip: new JSZip(),
+          originalName: 'sample.pptx',
+          uploadsDir: dir,
+          output: {
+            size: { width: 960, height: 540 },
+            slides: [{
+              elements: [{
+                type: 'diagram', left: 0, top: 0, width: 300, height: 200,
+                elements: [
+                  { left: 0, top: 0, width: 100, height: 50, shapType: 'rect', fill: '#f00' },
+                  { left: 0, top: 0, width: 80, height: 5, shapType: 'straightLine', borderColor: '#333', borderWidth: 2 },
+                ],
+              }],
+            }],
+          },
+        })
+        const els = result.presentation.slides[0].elements
+        expect(els[0].type).toBe('shape')
+        expect(els[1].type).toBe('line')
+        expect(els[0].zIndex).toBeLessThan(els[1].zIndex)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  // ─── Bug Fix: placeholderCount single-increment ───────────────────────
+  it('placeholderCount increments exactly once when video ref missing', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-video-ph-count-'))
+    try {
+      const result = await mapPptxOutput({
+        zip: new JSZip(),
+        originalName: 'sample.pptx',
+        uploadsDir: dir,
+        output: {
+          size: { width: 960, height: 540 },
+          slides: [{ elements: [{ type: 'video', left: 10, top: 20, width: 100, height: 80 }] }],
+        },
+      })
+      expect(result.stats.placeholderCount).toBe(1)
+      expect(result.presentation.slides[0].elements[0].importPlaceholderType).toBe('video-missing')
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('placeholderCount increments exactly once when audio ref missing', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-audio-ph-count-'))
+    try {
+      const result = await mapPptxOutput({
+        zip: new JSZip(),
+        originalName: 'sample.pptx',
+        uploadsDir: dir,
+        output: {
+          size: { width: 960, height: 540 },
+          slides: [{ elements: [{ type: 'audio', left: 10, top: 20, width: 100, height: 80 }] }],
+        },
+      })
+      expect(result.stats.placeholderCount).toBe(1)
+      expect(result.presentation.slides[0].elements[0].importPlaceholderType).toBe('audio-missing')
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  // ─── Bug Fix: mapMath direct export ─────────────────────────────────
+  it('mapMath is exported and callable directly', async () => {
+    const context = { scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { mathCount: 0 } }
+    const results = mapMath({ type: 'math', left: 10, top: 20, width: 100, height: 50, latex: '\\int_0^1 x dx' }, context)
+    expect(results.length).toBe(1)
+    expect(results[0].type).toBe('latex')
+    expect(results[0].content).toBe('\\int_0^1 x dx')
+    expect(results[0].latex).toBe('\\int_0^1 x dx')
+  })
+
+  it('mapMath increments mathCount on direct call', async () => {
+    const context = { scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { mathCount: 0 } }
+    mapMath({ type: 'math', left: 10, top: 20, width: 100, height: 50, latex: 'x^2' }, context)
+    expect(context.stats.mathCount).toBe(1)
   })
 })

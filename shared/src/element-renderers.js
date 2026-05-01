@@ -207,6 +207,15 @@ function renderLatex(el, style, wrap, vis, opts) {
   const content = el.content || ''
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
 
+  // [FIX #13] If _fallbackSrc is available and content doesn't look like valid LaTeX, use image fallback.
+  // This handles malformed LaTeX strings imported from PPTX that KaTeX cannot render.
+  const hasFallbackImg = el._fallbackSrc && /^(data:image|\/uploads\/)/.test(String(el._fallbackSrc))
+  const looksLikeLatex = /\\[a-zA-Z]+|[\^\$_]|\\frac|\\sqrt|\\begin|\\left|\\right/.test(content)
+  if (hasFallbackImg && !looksLikeLatex) {
+    const fallbackSrc = absoluteSrc(el._fallbackSrc)
+    return `<div${wrap} style="${style}${vis}"><img src="${fallbackSrc}" alt="Math equation" style="display:block;width:100%;height:100%;object-fit:contain;" /></div>`
+  }
+
   if (opts.forPrint) {
     if (hasTikz) {
       const _origin = getAssetOrigin()
@@ -224,7 +233,7 @@ function renderLatex(el, style, wrap, vis, opts) {
   if (hasTikz) {
     bodyContent = `<script type="text/tikz">${content}</script>`
   } else {
-    bodyContent = `<div id="m"></div><script>try{katex.render(${JSON.stringify(content)},document.getElementById('m'),{displayMode:true,throwOnError:false})}catch(e){document.getElementById('m').textContent=e.message}</script>`
+    bodyContent = `<div id="m"></div><script>katex.render(${JSON.stringify(content)},document.getElementById('m'),{displayMode:true,throwOnError:false})</script>`
   }
   const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="${_origin}/vendor/katex/dist/katex.min.css"><script src="${_origin}/vendor/katex/dist/katex.min.js"></script>${tikzScript}<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:white;font-size:calc(16px * var(--font-zoom, 1))}.katex{font-size:1.4em}svg{max-width:100%;max-height:100%}</style></head><body>${bodyContent}</body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(srcdoc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`

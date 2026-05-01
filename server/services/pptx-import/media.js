@@ -3,6 +3,8 @@ const path = require('path')
 const uuidv4 = () => require('node:crypto').randomUUID()
 const { UPLOADS_DIR } = require('../storage')
 
+const MAX_MEDIA_SIZE = 200 * 1024 * 1024 // 200MB per file
+
 const MIME_EXTENSIONS = new Map([
   ['image/png', 'png'],
   ['image/jpeg', 'jpg'],
@@ -71,6 +73,7 @@ async function detectImage(buffer, hintedMime) {
 }
 
 async function persistImageBuffer(buffer, hintedMime, uploadsDir = UPLOADS_DIR) {
+  if (buffer.length > MAX_MEDIA_SIZE) return null
   const detected = await detectImage(buffer, hintedMime)
   if (!detected) return null
   await fs.ensureDir(uploadsDir)
@@ -85,6 +88,19 @@ async function persistZipMediaRef(mediaIndex, ref, uploadsDir = UPLOADS_DIR) {
   if (!entry) return null
   const buffer = await entry.async('nodebuffer')
   return persistImageBuffer(buffer, null, uploadsDir)
+}
+
+async function persistMediaBlob(mediaIndex, ref, uploadsDir = UPLOADS_DIR) {
+  const normalized = String(ref || '').replace(/\\/g, '/').replace(/^\/+/, '')
+  const entry = mediaIndex.files.get(normalized)
+  if (!entry) return null
+  const buffer = await entry.async('nodebuffer')
+  if (buffer.length > MAX_MEDIA_SIZE) return null
+  const ext = normalized.split('.').pop()?.toLowerCase() || 'bin'
+  await fs.ensureDir(uploadsDir)
+  const filename = `${uuidv4()}.${ext}`
+  await fs.writeFile(path.join(uploadsDir, filename), buffer)
+  return `/uploads/${filename}`
 }
 
 async function persistImageForElement(element, mediaIndex, uploadsDir = UPLOADS_DIR) {
@@ -103,8 +119,11 @@ async function persistImageForElement(element, mediaIndex, uploadsDir = UPLOADS_
 }
 
 module.exports = {
+  MAX_MEDIA_SIZE,
   createMediaIndex,
   getElementImagePayload,
   persistImageBuffer,
   persistImageForElement,
+  persistZipMediaRef,
+  persistMediaBlob,
 }
