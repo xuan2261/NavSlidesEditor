@@ -582,7 +582,7 @@ function evaluateCapture(pptxEl, navEl) {
   }
 
   if (type === 'shape' || type === 'diagram' || type === 'line' || type === 'other') {
-    if (type === 'shape' && navType === 'svg') return { score: 0.95, gaps }
+    if (type === 'shape' && navType === 'svg') return { score: 1.0, gaps }
     if (type === 'diagram' && navType === 'svg') return { score: 0.9, gaps }
     if (type === 'line' && navType === 'svg') return { score: 0.9, gaps }
 
