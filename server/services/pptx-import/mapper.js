@@ -678,15 +678,60 @@ async function mapPptxOutput({ output, zip, originalName, uploadsDir }) {
   for (const [slideIndex, slide] of (output.slides || []).entries()) {
     const elements = []
     let zIndex = 1
-    const sorted = [...(slide.elements || [])].sort((a, b) => readNumber(a?.order, 0) - readNumber(b?.order, 0))
+    const sorted = [...(slide.elements || [])].sort((a, b) => {
+      const aOrder = a?.order
+      const bOrder = b?.order
+      const aDefined = aOrder != null && Number.isFinite(Number(aOrder))
+      const bDefined = bOrder != null && Number.isFinite(Number(bOrder))
+      if (aDefined && !bDefined) return -1
+      if (!aDefined && bDefined) return 1
+      if (!aDefined && !bDefined) return 0
+      return Number(aOrder) - Number(bOrder)
+    })
+    // Phase 8: Separate group flattening from zIndex assignment.
+    // Groups flatten to children that inherit the group's zIndex layer.
+    // Non-group elements get sequential zIndex. Then merge and sort by zIndex+childOrder.
+    const nonGroupResults = []
+    const groupChildResults = [] // { result, groupOrder, childOrder }
+    let nextZIndex = 1
+
     for (const element of sorted) {
-      const results = await mapElement(element, { mediaIndex, scale, slideIndex, warnings, stats, zIndex, uploadsDir })
-      for (const result of results) {
-        if (result.importPlaceholderType) stats.placeholderCount += 1
-        elements.push(result)
-        zIndex += 1
+      if (element.type === 'group') {
+        // All children of this group share the same zIndex = group's order
+        const groupOrder = Number(element.order) || 0
+        const children = await flattenGroupElement(element, {
+          mediaIndex, scale, slideIndex, warnings, stats,
+          zIndex: groupOrder,
+          uploadsDir,
+        })
+        for (const result of children) {
+          if (result.importPlaceholderType) stats.placeholderCount += 1
+          const childOrder = Number(result.order) || 0
+          groupChildResults.push({ result, groupOrder, childOrder })
+        }
+      } else {
+        const results = await mapElement(element, {
+          mediaIndex, scale, slideIndex, warnings, stats,
+          zIndex: nextZIndex,
+          uploadsDir,
+        })
+        for (const result of results) {
+          if (result.importPlaceholderType) stats.placeholderCount += 1
+          nonGroupResults.push(result)
+        }
+        nextZIndex += 1
       }
     }
+
+    // Sort group children by childOrder within same group layer
+    groupChildResults.sort((a, b) => {
+      if (a.groupOrder !== b.groupOrder) return a.groupOrder - b.groupOrder
+      return a.childOrder - b.childOrder
+    })
+
+    // Merge: group children first (sorted by group order + child order), then non-group results
+    for (const { result } of groupChildResults) elements.push(result)
+    for (const result of nonGroupResults) elements.push(result)
 
     // Phase 5: Handle background — color, gradient, or image
     let background = { type: 'color', color: colorValue(slide.fill, '#ffffff') }
