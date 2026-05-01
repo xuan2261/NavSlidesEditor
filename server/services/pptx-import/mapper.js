@@ -256,10 +256,28 @@ async function mapImage(element, context) {
   if (readNumber(element.borderWidth, 0) > 0) img.borderWidth = readNumber(element.borderWidth, 0)
   // Canonical crop model for editor fidelity: imageW/imageH/imageOffset*
   if (element.rect) {
-    const left = Math.min(1, Math.max(0, readNumber(element.rect.l, 0) / 1000))
-    const right = Math.min(1, Math.max(0, readNumber(element.rect.r, 0) / 1000))
-    const top = Math.min(1, Math.max(0, readNumber(element.rect.t, 0) / 1000))
-    const bottom = Math.min(1, Math.max(0, readNumber(element.rect.b, 0) / 1000))
+    const rawL = readNumber(element.rect.l, 0)
+    const rawR = readNumber(element.rect.r, 0)
+    const rawT = readNumber(element.rect.t, 0)
+    const rawB = readNumber(element.rect.b, 0)
+    const maxVal = Math.max(Math.abs(rawL), Math.abs(rawR), Math.abs(rawT), Math.abs(rawB))
+    let left, right, top, bottom
+    if (maxVal > 100) {
+      left = Math.min(1, Math.max(0, rawL / 1000))
+      right = Math.min(1, Math.max(0, rawR / 1000))
+      top = Math.min(1, Math.max(0, rawT / 1000))
+      bottom = Math.min(1, Math.max(0, rawB / 1000))
+    } else if (maxVal >= 1) {
+      left = Math.min(1, Math.max(0, rawL / 100))
+      right = Math.min(1, Math.max(0, rawR / 100))
+      top = Math.min(1, Math.max(0, rawT / 100))
+      bottom = Math.min(1, Math.max(0, rawB / 100))
+    } else {
+      left = Math.min(1, Math.max(0, rawL))
+      right = Math.min(1, Math.max(0, rawR))
+      top = Math.min(1, Math.max(0, rawT))
+      bottom = Math.min(1, Math.max(0, rawB))
+    }
     const visibleW = Math.max(0.01, 1 - left - right)
     const visibleH = Math.max(0.01, 1 - top - bottom)
     const imageW = Math.max(1, Math.round(box.width / visibleW))
@@ -473,6 +491,13 @@ async function mapElement(element, context) {
       return [{ ...baseElement(element, context.scale, context.zIndex), ...chartEl }]
     }
     return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'chart-unsupported', 'Chart type unsupported')]
+  }
+  if (element.type === 'math') {
+    if (element.picBase64) {
+      const mathEl = { ...element, type: 'image', base64: element.picBase64 }
+      return mapImage(mathEl, context)
+    }
+    return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'math', 'Math equation')]
   }
   if (element.type === 'text' || element.content) {
     context.stats.textCount += 1

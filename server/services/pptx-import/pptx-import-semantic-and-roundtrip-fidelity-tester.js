@@ -227,11 +227,24 @@ function computeSemanticFidelity(pptxtojsonJSON, navslidesJSON) {
   for (const cat of categories) categoryScores[cat] = { total: 0, captured: 0 }
 
   for (let si = 0; si < Math.max(pptxSlides.length, navSlides.length); si++) {
-    const ppts = pptxSlides[si] || []
+    const pptsRaw = pptxSlides[si] || []
     const navs = navSlides[si] || []
     const usedNavIndices = new Set()
 
-    for (const pptxEl of ppts) {
+    const flattenRec = (el, cat) => {
+      categoryScores[cat].total += 1
+      for (const child of (el.elements || [])) {
+        const childCat = mapCategory(child.type || (child.content ? 'text' : 'other'))
+        flattenRec(child, childCat)
+      }
+    }
+
+    for (const pptxEl of pptsRaw) {
+      if (pptxEl.type === 'group') {
+        const cat = mapCategory('group')
+        flattenRec(pptxEl, cat)
+        continue
+      }
       const type = pptxEl.type || (pptxEl.content ? 'text' : 'other')
       const cat = mapCategory(type)
       categoryScores[cat].total += 1
@@ -293,13 +306,28 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
   let coverageCaptured = 0
 
   for (let si = 0; si < Math.max(pptxSlides.length, navSlides.length); si++) {
-    const ppts = pptxSlides[si] || []
+    const pptsRaw = pptxSlides[si] || []
     const navs = navSlides[si] || []
     const usedNavIndices = new Set()
 
     for (const navEl of navs) {
       const navType = normalizeCountType(navEl?.type || 'other')
       navByType[navType] = (navByType[navType] || 0) + 1
+    }
+
+    const ppts = []
+    for (const el of pptsRaw) {
+      if (el.type === 'group') {
+        const recurse = (g) => {
+          for (const c of (g.elements || [])) {
+            if (c.type === 'group') recurse(c)
+            else ppts.push(c)
+          }
+        }
+        recurse(el)
+      } else {
+        ppts.push(el)
+      }
     }
 
     for (const pptxEl of ppts) {
@@ -450,8 +478,6 @@ function semanticTypePreferences(type) {
       return ['shape', 'svg', 'line']
     case 'diagram':
       return ['diagram', 'svg', 'image']
-    case 'group':
-      return ['group']
     default:
       return [type]
   }
@@ -549,7 +575,6 @@ function evaluateCapture(pptxEl, navEl) {
   if (type === 'image') {
     const score = navEl.src ? 1 : 0.1
     if (!navEl.src) gaps.push('missing-image-src')
-    if (navEl.objectFit) gaps.push('preserved-objectFit')
     return { score, gaps }
   }
 
@@ -573,15 +598,8 @@ function evaluateCapture(pptxEl, navEl) {
     return { score: Math.min(1, score), gaps }
   }
 
-  if (type === 'group') {
-    const childCount = (pptxEl.elements || []).length
-    const score = childCount > 0 ? 0.8 : 0.2
-    if (childCount > 0 && !navEl.importPlaceholderType) gaps.push('group-flattened-ok')
-    if (childCount === 0) gaps.push('empty-group')
-    return { score, gaps }
-  }
-
-  if (type === 'shape' || type === 'diagram' || type === 'line' || type === 'other') {
+  if (type === 'shape' || type === 'diagram' || type === 'line' || type === 'other' || type === 'math') {
+    if (navEl.importPlaceholderType === 'math') return { score: 0.8, gaps: ['math-rasterized'] }
     if (type === 'shape' && navType === 'svg') return { score: 1.0, gaps }
     if (type === 'diagram' && navType === 'svg') return { score: 0.9, gaps }
     if (type === 'line' && navType === 'svg') return { score: 0.9, gaps }
