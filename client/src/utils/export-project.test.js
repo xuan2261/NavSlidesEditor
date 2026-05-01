@@ -60,6 +60,21 @@ describe('exportProject', () => {
         }
       })
     )
+        // Polyfill Blob.prototype.arrayBuffer for JSDOM
+    if (!Blob.prototype.arrayBuffer) {
+      Blob.prototype.arrayBuffer = async function () {
+        // Blob is not iterable in JSDOM; use FileReader as a polyfill
+        const reader = new FileReader()
+        return new Promise((resolve) => {
+          reader.onload = () => {
+            // reader.result is an ArrayBuffer from readAsArrayBuffer
+            const result = reader.result
+            resolve(result)
+          }
+          reader.readAsArrayBuffer(this)
+        })
+      }
+    }
     vi.spyOn(console, 'warn').mockImplementation(() => {})
   })
 

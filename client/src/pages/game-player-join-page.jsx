@@ -218,6 +218,13 @@ export default function GamePlayerPage() {
     error,
   } = useGamePlayer({ gameId, playerName: resolvedName || undefined })
 
+  // Router: update URL to persist name — must be called before any conditional returns
+  useEffect(() => {
+    if (playerName && !urlName) {
+      navigate(`/player/${slideId}/${elementId}?name=${encodeURIComponent(playerName)}`, { replace: true })
+    }
+  }, [playerName, urlName, slideId, elementId, navigate])
+
   // If name in URL, it's already joined — go straight to game
   if (urlName && status === 'joining') {
     return <WaitingRoom playerCount={0} error={null} />
@@ -229,12 +236,6 @@ export default function GamePlayerPage() {
   }
 
   // Router: update URL to persist name
-  useEffect(() => {
-    if (playerName && !urlName) {
-      navigate(`/player/${slideId}/${elementId}?name=${encodeURIComponent(playerName)}`, { replace: true })
-    }
-  }, [playerName, urlName, slideId, elementId, navigate])
-
   // Status-based rendering
   if (status === 'waiting' || status === 'joining') {
     return <WaitingRoom playerCount={playerCount} error={error} />

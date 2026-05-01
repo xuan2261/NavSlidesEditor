@@ -7,10 +7,18 @@ const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
 /**
  * Create keyboard event handler that dispatches from shortcut registry.
+ * Supports scope filtering via isPresenting flag and activeGameType.
+ *
+ * Scope resolution:
+ *   - isPresenting && activeGameType  → 'presentation-game'
+ *   - isPresenting && !activeGameType → 'presentation'
+ *   - !isPresenting                  → 'editor'
  */
 export function createKeyboardHandler({
   shortcuts,
   isEditing = false,
+  isPresenting = false,
+  activeGameType = null,
   getActiveElement = () => document.activeElement,
   ...callbacks
 }) {
@@ -21,25 +29,59 @@ export function createKeyboardHandler({
 
     const ctrl = e.ctrlKey || e.metaKey
 
+    // Resolve active scope
+    const activeScope =
+      isPresenting && activeGameType ? 'presentation-game' : isPresenting ? 'presentation' : 'editor'
+
+    // Determine which shortcuts are active in the current scope.
+    // In editor mode, include canvas shortcuts too (editor IS the canvas).
+    const scopeShortcuts = shortcuts.filter(
+      (s) =>
+        s.scopes.includes(activeScope) ||
+        (!isPresenting && !activeGameType && s.scopes.includes('canvas'))
+    )
+
+    // Standalone keys (no Ctrl) — F5, arrows, B, W, Home, End, Escape in presentation
+    if (!ctrl) {
+      const normalized = normalizeKey(e)
+      const match = scopeShortcuts.find((s) => s.activeKey === normalized)
+      if (match) {
+        // Explicit map for camelCase shortcut IDs (teamSelect1 → onTeamSelect1, not onTeamselect1)
+        const explicitMap = {
+          teamSelect1: callbacks.onTeamSelect1,
+          teamSelect2: callbacks.onTeamSelect2,
+          teamSelect3: callbacks.onTeamSelect3,
+          teamSelect4: callbacks.onTeamSelect4,
+        }
+        const cb = explicitMap[match.id] ?? callbacks[`on${capitalize(match.id)}`]
+        cb?.()
+        e.preventDefault()
+        return
+      }
+    }
+
+    // Ctrl chords
+    if (ctrl) {
+      const chord = normalizeKey(e)
+      const shortcut = scopeShortcuts.find((s) => s.activeKey === chord)
+      if (shortcut) {
+        const cbName = `on${capitalize(shortcut.id)}`
+        callbacks[cbName]?.()
+        e.preventDefault()
+        return
+      }
+    }
+
+    // Delete/Backspace
     if ((e.key === 'Delete' || e.key === 'Backspace') && !ctrl) {
       callbacks.onDelete?.()
       e.preventDefault()
       return
     }
 
-    if (e.key === 'Escape') {
+    // Escape — only in canvas/editor scope (presentation uses endSlideshow shortcut)
+    if (e.key === 'Escape' && !isPresenting) {
       callbacks.onEscape?.()
-      return
-    }
-
-    if (ctrl) {
-      const chord = normalizeKey(e)
-      const shortcut = shortcuts.find((s) => s.activeKey === chord)
-      if (shortcut) {
-        const cbName = `on${capitalize(shortcut.id)}`
-        callbacks[cbName]?.()
-        e.preventDefault()
-      }
     }
   }
 }
@@ -60,7 +102,31 @@ export function useKeyboard({
   onSelectAll,
   onToggleFindReplace,
   onEscape,
+  onStartSlideshow,
+  onStartSlideshowCurrent,
+  onSlideNext,
+  onSlidePrev,
+  onSlideFirst,
+  onSlideLast,
+  onBlackScreen,
+  onWhiteScreen,
+  onEndSlideshow,
+  // Game callbacks
+  onGameHud,
+  onGameTimer,
+  onGameNext,
+  onGameReveal,
+  onGameLeaderboard,
+  onGamePause,
+  onTimerAdd,
+  onTimerSub,
+  onTeamSelect1,
+  onTeamSelect2,
+  onTeamSelect3,
+  onTeamSelect4,
   isEditing = false,
+  isPresenting = false,
+  activeGameType = null,
 }) {
   const shortcuts = getShortcuts(loadOverrides())
 
@@ -69,6 +135,8 @@ export function useKeyboard({
       createKeyboardHandler({
         shortcuts,
         isEditing,
+        isPresenting,
+        activeGameType,
         onCopy,
         onCut,
         onPaste,
@@ -79,10 +147,33 @@ export function useKeyboard({
         onSelectAll,
         onToggleFindReplace,
         onEscape,
+        onStartSlideshow,
+        onStartSlideshowCurrent,
+        onSlideNext,
+        onSlidePrev,
+        onSlideFirst,
+        onSlideLast,
+        onBlackScreen,
+        onWhiteScreen,
+        onEndSlideshow,
+        onGameHud,
+        onGameTimer,
+        onGameNext,
+        onGameReveal,
+        onGameLeaderboard,
+        onGamePause,
+        onTimerAdd,
+        onTimerSub,
+        onTeamSelect1,
+        onTeamSelect2,
+        onTeamSelect3,
+        onTeamSelect4,
       }),
     [
       shortcuts,
       isEditing,
+      isPresenting,
+      activeGameType,
       onCopy,
       onCut,
       onPaste,
@@ -93,6 +184,27 @@ export function useKeyboard({
       onSelectAll,
       onToggleFindReplace,
       onEscape,
+      onStartSlideshow,
+      onStartSlideshowCurrent,
+      onSlideNext,
+      onSlidePrev,
+      onSlideFirst,
+      onSlideLast,
+      onBlackScreen,
+      onWhiteScreen,
+      onEndSlideshow,
+      onGameHud,
+      onGameTimer,
+      onGameNext,
+      onGameReveal,
+      onGameLeaderboard,
+      onGamePause,
+      onTimerAdd,
+      onTimerSub,
+      onTeamSelect1,
+      onTeamSelect2,
+      onTeamSelect3,
+      onTeamSelect4,
     ]
   )
 

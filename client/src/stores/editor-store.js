@@ -66,4 +66,11 @@ export const useEditorStore = create((set, get) => ({
   setShowFindReplace: (v) =>
     set({ showFindReplace: typeof v === 'function' ? v(get().showFindReplace) : v }),
   setViewMode: (v) => set({ viewMode: typeof v === 'function' ? v(get().viewMode) : v }),
+
+  // ─── Zoom (0.25 to 4.0) ───────────────────────────────────────────────────
+  zoom: 1,
+  setZoom: (zoom) => set({ zoom: Math.min(4, Math.max(0.25, zoom)) }),
+  zoomIn: () => set((s) => ({ zoom: Math.min(4, s.zoom + 0.25) })),
+  zoomOut: () => set((s) => ({ zoom: Math.max(0.25, s.zoom - 0.25) })),
+  resetZoom: () => set({ zoom: 1 }),
 }))

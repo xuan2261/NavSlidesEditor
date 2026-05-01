@@ -40,8 +40,19 @@ describe('pdfToSlides', () => {
     globalThis.document = {
       createElement: (tag) => {
         if (tag === 'canvas') return canvas
-        throw new Error(`Unsupported element: ${tag}`)
+        throw new Error('Unsupported element: ' + tag)
       },
+    }
+    // Polyfill Blob.prototype.arrayBuffer for JSDOM (not available in older JSDOM)
+    if (!Blob.prototype.arrayBuffer) {
+      Blob.prototype.arrayBuffer = function () {
+        const blob = this
+        return new Promise((resolve) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result)
+          reader.readAsArrayBuffer(blob)
+        })
+      }
     }
   })
 

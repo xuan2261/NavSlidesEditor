@@ -22,6 +22,9 @@ function createRoom(presenterToken, presenterId = null) {
     viewers: [],
     presentationId: null,
     state: { slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 },
+    annotations: {},    // slideIndex -> Annotation[]
+    timers: {},         // elementId -> TimerState
+    timerTimeouts: {},  // elementId -> setTimeout ID
   }
 }
 
@@ -29,6 +32,13 @@ function generateRoomCode() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
   const bytes = crypto.randomBytes(6)
   return Array.from(bytes, (value) => chars[value % chars.length]).join('')
+}
+
+function computeTimerRemaining(timer) {
+  if (!timer.running || timer.endedAt === null) {
+    return timer.pausedRemaining ?? timer.duration
+  }
+  return Math.max(0, Math.ceil((timer.endedAt - Date.now()) / 1000))
 }
 
 function isValidPresenterToken(room, presenterToken) {
@@ -85,7 +95,15 @@ function leaveRoom(socketId) {
   if (!room) return null
 
   if (room.presenterId === socketId) {
-    rooms.delete(roomId)
+    room.presenterId = null  // Keep room alive; annotations survive presenter disconnect
+    // Clear orphaned timer timeouts — they were scheduled for the disconnected presenter.
+    // When the presenter reconnects, new timers can be created from scratch.
+    if (room.timerTimeouts) {
+      for (const id of Object.values(room.timerTimeouts)) {
+        clearTimeout(id)
+      }
+      room.timerTimeouts = {}
+    }
     return { roomId, role: 'presenter' }
   }
 
@@ -135,5 +153,7 @@ module.exports = {
   updateRoomState,
   canControlRoom,
   getViewerCount,
+  isValidPresenterToken,
   _resetRooms,
+  computeTimerRemaining,
 }

@@ -27,4 +27,20 @@ router.get('/room/:code', (req, res) => {
   }
 })
 
+// Get annotations for a room (presenter-only via token auth)
+router.get('/room/:code/annotations', (req, res) => {
+  const { code } = req.params
+  const { token } = req.query
+  const room = liveRooms.getRoomState(code)
+  if (!room) return res.status(404).json({ error: 'Room not found' })
+  if (!token || !liveRooms.isValidPresenterToken(room, token)) {
+    return res.status(403).json({ error: 'Invalid presenter token' })
+  }
+  const slideAnnotations = {}
+  for (const [idx, anns] of Object.entries(room.annotations)) {
+    slideAnnotations[idx] = anns
+  }
+  res.json({ roomCode: code, slideAnnotations })
+})
+
 module.exports = router

@@ -1,0 +1,78 @@
+/**
+ * Per-game-type shortcut configuration.
+ * Maps game type to available shortcuts (null = not available for that game).
+ */
+export const GAME_SHORTCUT_CONFIG = {
+  'name-picker': {
+    timer: { label: 'Spin', key: 'Space', action: 'startSpin' },
+    reveal: null,
+    leaderboard: null,
+    nextPhase: null,
+    pause: null,
+    teamSelect: null,
+    timerAdd: null,
+    timerSub: null,
+  },
+  'hot-potato': {
+    timer: { label: 'Start Timer', key: 'Space', action: 'startTimer' },
+    reveal: { label: 'Reveal Answer', key: 'R', action: 'revealAnswer' },
+    leaderboard: { label: 'Leaderboard', key: 'L', action: 'toggleLeaderboard' },
+    nextPhase: { label: 'Next Question', key: 'Enter', action: 'nextQuestion' },
+    pause: { label: 'Pause', key: 'P', action: 'pauseGame' },
+    teamSelect: null,
+    timerAdd: { label: '+10s', key: '+', action: 'addTime', delta: 10 },
+    timerSub: { label: '-10s', key: '-', action: 'subTime', delta: -10 },
+  },
+  'jeopardy': {
+    timer: { label: 'Start Timer', key: 'Space', action: 'startTimer' },
+    reveal: { label: 'Reveal Answer', key: 'R', action: 'revealAnswer' },
+    leaderboard: { label: 'Scores', key: 'L', action: 'toggleLeaderboard' },
+    nextPhase: { label: 'Next', key: 'Enter', action: 'nextPhase' },
+    pause: { label: 'Pause', key: 'P', action: 'pauseGame' },
+    teamSelect: { label: 'Select Team', keys: ['1', '2', '3', '4'], action: 'selectTeam' },
+    timerAdd: { label: '+10s', key: '+', action: 'addTime', delta: 10 },
+    timerSub: { label: '-10s', key: '-', action: 'subTime', delta: -10 },
+  },
+  'four-corners': {
+    timer: { label: 'Start Countdown', key: 'Space', action: 'startTimer' },
+    reveal: null,
+    leaderboard: { label: 'Scores', key: 'L', action: 'toggleLeaderboard' },
+    nextPhase: { label: 'Next Round', key: 'Enter', action: 'nextPhase' },
+    pause: { label: 'Pause', key: 'P', action: 'pauseGame' },
+    teamSelect: null,
+    timerAdd: { label: '+10s', key: '+', action: 'addTime', delta: 10 },
+    timerSub: { label: '-10s', key: '-', action: 'subTime', delta: -10 },
+  },
+  'relay-race': {
+    timer: null,
+    reveal: null,
+    leaderboard: { label: 'Standings', key: 'L', action: 'toggleLeaderboard' },
+    nextPhase: { label: 'Next Team', key: 'Enter', action: 'nextTeam' },
+    pause: { label: 'Pause', key: 'P', action: 'pauseGame' },
+    teamSelect: { label: 'Select Team', keys: ['1', '2', '3', '4'], action: 'selectTeam' },
+    timerAdd: null,
+    timerSub: null,
+  },
+  'trivia-champ': {
+    timer: { label: 'Start Timer', key: 'Space', action: 'startTimer' },
+    reveal: { label: 'Reveal', key: 'R', action: 'revealAnswer' },
+    leaderboard: { label: 'Leaderboard', key: 'L', action: 'toggleLeaderboard' },
+    nextPhase: { label: 'Next', key: 'Enter', action: 'nextPhase' },
+    pause: { label: 'Pause', key: 'P', action: 'pauseGame' },
+    teamSelect: null,
+    timerAdd: { label: '+10s', key: '+', action: 'addTime', delta: 10 },
+    timerSub: { label: '-10s', key: '-', action: 'subTime', delta: -10 },
+  },
+  'scattergories': {
+    timer: { label: 'Start Timer', key: 'Space', action: 'startTimer' },
+    reveal: { label: 'Reveal All', key: 'R', action: 'revealAll' },
+    leaderboard: { label: 'Scores', key: 'L', action: 'toggleLeaderboard' },
+    nextPhase: null,
+    pause: { label: 'Pause', key: 'P', action: 'pauseGame' },
+    teamSelect: null,
+    timerAdd: { label: '+30s', key: '+', action: 'addTime', delta: 30 },
+    timerSub: { label: '-30s', key: '-', action: 'subTime', delta: -30 },
+  },
+}
+
+export const GAME_TYPES = Object.keys(GAME_SHORTCUT_CONFIG)

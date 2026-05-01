@@ -56,7 +56,7 @@ describe('DEFAULT_SHORTCUTS', () => {
   })
 
   it('has valid categories', () => {
-    const valid = ['clipboard', 'editing', 'navigation', 'view']
+    const valid = ['annotation', 'clipboard', 'editing', 'game', 'navigation', 'slideshow', 'view']
     for (const shortcut of DEFAULT_SHORTCUTS) {
       expect(valid).toContain(shortcut.category)
     }

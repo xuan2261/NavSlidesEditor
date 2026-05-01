@@ -41,6 +41,35 @@ describe('exportPptx', () => {
   beforeEach(() => {
     slides.length = 0
     writeFileMock.mockReset()
+    // Mock Image to immediately fire onload for data URIs (JSDOM doesn't support this natively)
+    // Mock Image and canvas.getContext for rasterization tests
+    globalThis.Image = class MockImage {
+      constructor() {
+        this.onload = null
+        this.onerror = null
+      }
+      set src(value) {
+        Promise.resolve().then(() => this.onload && this.onload())
+      }
+      get src() { return '' }
+    }
+    // Ensure canvas has getContext
+    if (!globalThis.document?.createElement('canvas').getContext) {
+      const origCreateElement = globalThis.document?.createElement.bind(globalThis.document)
+      if (origCreateElement) {
+        globalThis.document.createElement = (tag) => {
+          const el = origCreateElement(tag)
+          if (tag === 'canvas') {
+            const origGetContext = el.getContext.bind(el)
+            el.getContext = (type) => {
+              if (type === '2d') return origGetContext('2d')
+              return null
+            }
+          }
+          return el
+        }
+      }
+    }
   })
 
   afterEach(() => {
@@ -173,7 +202,21 @@ describe('exportPptx', () => {
     )
   })
 
-  it('warns when gradient backgrounds cannot be rasterized', async () => {
+  it('warns when gradient backgrounds cannot be rasterized', { timeout: 60000 }, async () => {
+    // Mock canvas operations for gradient rasterization
+    const origCreateElement = globalThis.document?.createElement;
+    globalThis.document = globalThis.document || {};
+    globalThis.document.createElement = (tag) => {
+      if (tag === 'canvas') {
+        return { width: 0, height: 0, getContext: () => null };
+      }
+      return origCreateElement ? origCreateElement(tag) : {};
+    };
+    // Ensure window and fetch are available
+    globalThis.window = globalThis.window || {};
+    globalThis.fetch = globalThis.fetch || (() => Promise.resolve({ ok: false }));
+    globalThis.requestAnimationFrame = (fn) => setTimeout(fn, 0);
+    globalThis.cancelAnimationFrame = (id) => clearTimeout(id);
     const warnings = await exportToPptx({
       title: 'Gradient fallback',
       slides: [

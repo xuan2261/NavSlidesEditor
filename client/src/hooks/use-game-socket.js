@@ -88,6 +88,7 @@ export function useGameSocket(gameId, playerName, role = 'player') {
     })
 
     socketRef.current = sock
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSocket(sock)
 
     return () => {

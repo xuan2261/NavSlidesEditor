@@ -2,7 +2,7 @@
  * GamePropertiesQuestionEditor — modal for adding/editing quiz questions.
  * Used inside game-properties.jsx ContentTab.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, startTransition } from 'react'
 import { X } from 'lucide-react'
 
 export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, question }) {
@@ -13,8 +13,10 @@ export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, questio
 
   // Rebuild form when question prop changes
   useEffect(() => {
-    setForm(buildDefaultForm(question))
-    setErrors({})
+    startTransition(() => {
+      setForm(buildDefaultForm(question))
+      setErrors({})
+    })
   }, [question, isOpen])
 
   // Focus first input on open

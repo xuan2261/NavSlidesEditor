@@ -1,5 +1,64 @@
 # Project Changelog
 
+## v1.7.x
+
+## 2026-04-30
+
+### PowerPoint-Style Controls & Game Presenter Shortcuts (5 phases, 55 new tests)
+
+**Phase 1 - Slideshow Controls:**
+Added 9 PowerPoint-style slideshow shortcuts: F5/Shift+F5 (start), ArrowLeft/Right, Home/End (navigate), B/W (black/white overlay), Escape (end). Extended `createKeyboardHandler` with scope system (`editor`/`presentation`), standalone key support, and scope-based dispatch. Created `BlackScreenOverlay` component. Fixed broken import path in `name-picker-interactive-game-renderer.jsx`. 19 tests pass (17 new + 2 backward-compatible).
+
+**Phase 2 - Game Presenter Shortcuts:**
+Added 12 game presenter shortcuts with scope `presentation-game`: G (HUD), Space (timer), Enter (next phase), R (reveal), L (leaderboard), P (pause), +/- (timer adjust), 1-4 (team select). Created `game-shortcut-config.js` with per-game-type shortcut mapping. Created `GameHudOverlay` and `GameLeaderboardOverlay` components. 24 tests pass.
+
+**Phase 3 - Editor Enhancements:**
+Added 11 editor shortcuts: Ctrl+M (insert slide), Ctrl+G/Ctrl+Shift+G (group/ungroup), Ctrl+]/[ (z-order), Tab/Shift+Tab (cycle selection), Ctrl+0/+/- (zoom), Ctrl+K (command palette). Added zoom state/actions to `editor-store.js`. Created `use-element-cycle.js` and `CommandPalette.jsx` component. 11 tests pass.
+
+**Phase 4 - Touch Gesture Layer:**
+Created `use-touch-gestures.js` (tap, double-tap, long-press, drag via Pointer Events), `use-swipe-navigation.js` (swipe left/right/down), `use-pinch-zoom.js` (2-finger pinch zoom [0.25-4.0]), `PresentationTouchOverlay.jsx` (3-zone touch overlay). 20 tests pass.
+
+**Phase 5 - Annotation Tools:**
+Created annotation system for presenter mode: `AnnotationCanvas.jsx` (SVG-based freehand drawing), `LaserPointer.jsx` (animated cursor), `AnnotationToolbar.jsx` (pen/laser/highlighter/eraser selector), `annotation-colors.js`. Added 4 annotation shortcuts to registry (Ctrl+P/Ctrl+I/Y/E). 18 tests pass.
+
+### Annotation Persistence (Phase 1)
+
+**Annotation real-time sync:** Annotations drawn by presenter in `SpeakerViewPage` now sync to all viewers in `LiveViewPage` in real-time via Socket.IO. Per-slide annotation storage (keyed by `slideIndex`) ensures each slide retains its own annotation layer.
+
+**Room survival on presenter disconnect:** `leaveRoom` sets `presenterId = null` instead of deleting the room, preserving all annotations and timer state. Viewers remain connected during presenter rejoin.
+
+**Socket.IO events:**
+- `annotation:add` / `annotation:remove` / `annotation:clear` (presenter emits)
+- `annotation:removed` / `annotation:cleared` (server broadcasts to room)
+- `annotations:sync` (full slide annotations sent on viewer join)
+- `presenter-disconnected` (replaces `presenter-left`)
+
+**REST endpoint:** `GET /api/live/room/:code/annotations?token=PRESENTER_TOKEN` allows presenter rejoin to fetch persisted annotations.
+
+**New hook:** `useAnnotationSync` consumes annotation events in React components, filtering by current slide index. Viewers render annotations as an SVG overlay; presenters emit events from the annotation canvas toolbar.
+
+**Files created:** `useAnnotationSync` hook, `annotation-colors.js`, `AnnotationCanvas.jsx`, `AnnotationToolbar.jsx`, `LaserPointer.jsx`.
+
+### Server-Authoritative Timer Sync (Phase 2)
+
+**Server-authoritative model:** Game timers store `endedAt` timestamp on the server. Clients compute remaining time locally via `computeTimerRemaining(endedAt)`, eliminating clock drift.
+
+**Timer lifecycle events:** `game-timer-start`, `game-timer-pause`, `game-timer-resume`, `game-timer-adjust`, `game-timer-stop`.
+
+**Socket.IO events:** `timer:sync` (full state broadcast on join/change), `timer:ended` (server emits when a timer reaches zero).
+
+**Iframe bridge:** `window.__timerStates` exposes timer state to game renderers running inside the reveal.js iframe, enabling game UI to reflect live timer values without a direct socket connection.
+
+**Context architecture:** `TimerContext` + `LiveSocketContext` share timer and socket state across the presenter surface. Keyboard shortcuts (`+`/`-` for adjust, `Space` for start) are wired through `LiveSocketContext`.
+
+**Input validation:** Timer delta capped at ±3600s, duration validated 1-7200s, elementId validated by regex + length check.
+
+### Command Palette Scope (Phase 3)
+
+CommandPalette is editor-only. It renders only inside `EditorPage`. `LiveViewPage` does not mount the palette. Presentation-mode palette was considered but deferred (YAGNI).
+
+**Files modified:** 37 tests pass (9 new `useAnnotationSync` tests, 8 REST route tests, updated socket-handler and live-rooms tests).
+
 ## v1.6.x
 
 ## 2026-04-29

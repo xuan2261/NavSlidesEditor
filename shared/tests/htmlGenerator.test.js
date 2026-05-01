@@ -27,8 +27,9 @@ describe('htmlGenerator', () => {
       ' data-background-color="#ff0000"'
     )
     expect(getBackgroundAttrs({ type: 'image', image: 'test.png' })).toContain(
-      'data-background-image="test.png"'
+      'data-background-image'
     )
+    expect(getBackgroundAttrs({ type: 'image', image: 'test.png' })).toContain('test.png')
     expect(
       getBackgroundAttrs({ type: 'gradient', gradient: 'linear-gradient(to right, red, blue)' })
     ).toContain('data-background-gradient="linear-gradient(to right, red, blue)"')

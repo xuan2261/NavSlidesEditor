@@ -242,16 +242,18 @@ function getDailyDoubleKeys(element) {
 // Interactive Jeopardy Board — full game UI (presentation mode only, uses hooks)
 function InteractiveJeopardyBoard({ element }) {
   // Lazy-load useGameSocket only when needed (renderToString safe: hooks never execute)
-  const [useGameSocket, setUseGameSocket] = React.useState(null)
+  const [gameSocketFn, setGameSocketFn] = React.useState(
+    () => (_id, _name, _role) => ({})
+  )
   React.useEffect(() => {
     import('../../../hooks/use-game-socket.js').then(m => {
-      setUseGameSocket(() => m.useGameSocket)
+      setGameSocketFn(() => m.useGameSocket)
     })
   }, [])
 
   const gameId = element.id || 'jeopardy'
-  const socketResult = useGameSocket ? useGameSocket(gameId, 'presenter', 'presenter') : {}
-  const { gameState, lastEvent } = socketResult
+  const socketResult = gameSocketFn(gameId, 'presenter', 'presenter')
+  const { lastEvent } = socketResult
 
   // Local game state
   const [scores, setScores] = React.useState(() => {

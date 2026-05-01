@@ -68,12 +68,11 @@ describe('live-rooms service', () => {
     expect(liveRooms.getRoomState('ROOM12').state.slideIndex).toBe(1)
   })
 
-  it('should remove socket properly on leave and clean up if presenter leaves', () => {
+  it('should remove socket properly on leave and keep room alive if presenter leaves', () => {
     liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
     liveRooms.joinRoom('ROOM12', 'socket-2', 'viewer')
     liveRooms.joinRoom('ROOM12', 'socket-3', 'controller')
 
-    // Viewer leaves
     liveRooms.leaveRoom('socket-2')
     let state = liveRooms.getRoomState('ROOM12')
     expect(state.viewers.includes('socket-2')).toBe(false)
@@ -82,10 +81,11 @@ describe('live-rooms service', () => {
     state = liveRooms.getRoomState('ROOM12')
     expect(state.controllers.includes('socket-3')).toBe(false)
 
-    // Presenter leaves
+    // Presenter leaves — room stays alive with presenterId = null
     liveRooms.leaveRoom('socket-1')
     state = liveRooms.getRoomState('ROOM12')
-    expect(state).toBeUndefined() // Room should be deleted
+    expect(state).not.toBeNull()
+    expect(state.presenterId).toBeNull()
   })
 
   it('rejects presenter join without valid presenter token', () => {
@@ -96,5 +96,26 @@ describe('live-rooms service', () => {
       presenterToken: 'bad-token',
     })
     expect(wrongToken).toEqual({ ok: false, error: 'invalid-presenter-token' })
+  })
+
+  it('should initialize annotations, timers, and timerTimeouts fields on room creation', () => {
+    const state = liveRooms.getRoomState('ROOM12')
+    expect(state.annotations).toEqual({})
+    expect(state.timers).toEqual({})
+    expect(state.timerTimeouts).toEqual({})
+  })
+
+  it('should compute timer remaining correctly', () => {
+    // Timer not started — returns duration
+    expect(liveRooms.computeTimerRemaining({ running: false, duration: 60, pausedRemaining: null, endedAt: null })).toBe(60)
+    // Timer paused — returns pausedRemaining
+    expect(liveRooms.computeTimerRemaining({ running: false, duration: 60, pausedRemaining: 45, endedAt: null })).toBe(45)
+    // Timer running — returns elapsed remaining
+    const timer = { running: true, duration: 60, pausedRemaining: null, endedAt: Date.now() + 30000 }
+    const remaining = liveRooms.computeTimerRemaining(timer)
+    expect(remaining).toBeGreaterThanOrEqual(29)
+    expect(remaining).toBeLessThanOrEqual(31)
+    // endedAt in the past — returns 0
+    expect(liveRooms.computeTimerRemaining({ running: true, duration: 60, pausedRemaining: null, endedAt: Date.now() - 5000 })).toBe(0)
   })
 })

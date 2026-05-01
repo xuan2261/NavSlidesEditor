@@ -133,18 +133,24 @@ function ScatterLive({ element }) {
   const timePerRound = element.timePerRound || 60
   const [letter, setLetter] = useState(null)
   const [spinning, setSpinning] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(timePerRound)
   const [gamePhase, setGamePhase] = useState('setup') // setup | spinning | playing | scoring | ended
   const [answers, setAnswers] = useState({}) // category -> team -> answer text
   const [winner, setWinner] = useState(null)
   const [showScoring, setShowScoring] = useState(false)
 
+  // Server-authoritative timer: read from window.__timerStates (set by parent LiveViewPage)
+  const timerState = (typeof window !== 'undefined' && window.parent && window.parent.__timerStates)
+    ? (window.parent.__timerStates[element.id] || {})
+    : {}
+  const timeLeft = timerState.remaining ?? timePerRound
+  const isTimerRunning = timerState.running ?? false
+
   useEffect(() => {
-    if (gamePhase !== 'playing') return
-    if (timeLeft <= 0) { setGamePhase('scoring'); setShowScoring(true); return }
-    const id = setTimeout(() => setTimeLeft(s => s - 1), 1000)
-    return () => clearTimeout(id)
-  }, [gamePhase, timeLeft])
+    if (gamePhase === 'playing' && !isTimerRunning && timeLeft <= 0) {
+      setGamePhase('scoring')
+      setShowScoring(true)
+    }
+  }, [gamePhase, isTimerRunning, timeLeft])
 
   const handleSpin = useCallback(() => {
     setSpinning(true)
@@ -159,13 +165,16 @@ function ScatterLive({ element }) {
           const finalLetter = ALPHABET[Math.floor(Math.random() * ALPHABET.length)]
           setLetter(finalLetter)
           setSpinning(false)
-          setTimeLeft(timePerRound)
           setGamePhase('playing')
           setAnswers({})
+          // Emit timer-start via parent bridge
+          if (typeof window !== 'undefined' && window.parent && typeof window.parent.__emitTimerEvent === 'function') {
+            window.parent.__emitTimerEvent('game-timer-start', { elementId: element.id, duration: timePerRound })
+          }
         }, 400)
       }
     }, 80)
-  }, [timePerRound])
+  }, [timePerRound, element.id])
 
   const handleAnswer = useCallback((category, text) => {
     setAnswers(prev => ({ ...prev, [category]: text }))
@@ -178,15 +187,14 @@ function ScatterLive({ element }) {
 
   const handleNewRound = useCallback(() => {
     setLetter(null)
-    setTimeLeft(timePerRound)
     setGamePhase('setup')
     setAnswers({})
     setShowScoring(false)
     setWinner(null)
-  }, [timePerRound])
+  }, [])
 
   const accent = element.accentColor || '#ec4899'
-  const pct = (timeLeft / timePerRound) * 100
+  const pct = (timeLeft / (timerState.duration ?? timePerRound)) * 100
 
   if (!element.isPresenting) {
     return (

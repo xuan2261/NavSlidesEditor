@@ -94,7 +94,7 @@ export default function CanvasRulers({ scale, onAddGuide }) {
         className={cn('bg-panel/90 border-b border-border text-text-muted')}
         data-testid="top-ruler"
         style={topStyle}
-        onMouseDown={(e) => handleRulerMouseDown('y', e)}
+        onMouseDown={(e) => handleRulerMouseDown('x', e)}
       >
         {Array.from({ length: Math.ceil(SLIDE_W / 50) }, (_, i) => (
           <div key={i} style={getTopRulerTickStyle(i)}>
@@ -107,7 +107,7 @@ export default function CanvasRulers({ scale, onAddGuide }) {
         className={cn('bg-panel/90 border-r border-border text-text-muted')}
         data-testid="left-ruler"
         style={leftStyle}
-        onMouseDown={(e) => handleRulerMouseDown('x', e)}
+        onMouseDown={(e) => handleRulerMouseDown('y', e)}
       >
         {Array.from({ length: Math.ceil(SLIDE_H / 50) }, (_, i) => (
           <div key={i} style={getLeftRulerTickStyle(i)}>

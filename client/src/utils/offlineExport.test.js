@@ -11,18 +11,17 @@ describe('generateOfflineHTML', () => {
     vi.stubGlobal('window', {
       location: new URL('http://localhost:4173/editor/deck-1'),
     })
-    vi.stubGlobal(
-      'FileReader',
-      class {
-        readAsDataURL(blob) {
-          blob.arrayBuffer().then((buffer) => {
-            const bytes = Buffer.from(buffer).toString('base64')
-            this.result = `data:${blob.type};base64,${bytes}`
-            this.onloadend?.()
-          })
-        }
+    vi.stubGlobal('FileReader', class {
+      readAsDataURL(blob) {
+        // Convert Blob chunks to base64 using Response.arrayBuffer
+        const resp = new Response(blob)
+        resp.arrayBuffer().then((ab) => {
+          const bytes = Buffer.from(ab)
+          this.result = `data:${blob.type || 'image/png'};base64,${bytes.toString('base64')}`
+          this.onloadend?.()
+        })
       }
-    )
+    })
     vi.stubGlobal('fetch', vi.fn(async (url) => {
       const requestUrl = String(url)
       if (requestUrl.includes('theme/black.css')) {

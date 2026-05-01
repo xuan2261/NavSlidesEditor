@@ -2,7 +2,7 @@
  * Four Corners Interactive — Phase 10.
  * Phase 3: static grid. Phase 10: animated corner selection, timer, predictions, elimination, winner.
  */
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 
 const CORNERS = [
   { id: 'NW', label: 'A', icon: '◤' },
@@ -66,30 +66,51 @@ function LeaderboardOverlay({ scores, visible }) {
 
 function FourCornersLive({ element }) {
   const [gamePhase, setGamePhase] = useState('setup')
-  const [secondsLeft, setSecondsLeft] = useState(element.timerDuration || 30)
   const [correctCorner, setCorrectCorner] = useState(null)
   const [eliminated, setEliminated] = useState([])
   const [playerCornerVotes, setPlayerCornerVotes] = useState({})
   const [scores, setScores] = useState(() => (element.players || []).map(p => ({ name: p, score: 0 })))
   const [winner, setWinner] = useState(null)
+  const didTransitionRef = useRef(false)
 
+  // Server-authoritative timer: read from window.__timerStates (set by parent LiveViewPage)
+  const timerState = (typeof window !== 'undefined' && window.parent && window.parent.__timerStates)
+    ? (window.parent.__timerStates[element.id] || {})
+    : {}
+  const secondsLeft = timerState.remaining ?? element.timerDuration ?? 30
+  const isTimerRunning = timerState.running ?? false
+
+  // Poll server timer to detect when guessing phase ends (server-authoritative)
   useEffect(() => {
     if (gamePhase !== 'guessing') return
-    if (secondsLeft <= 0) { setGamePhase('revealed'); return }
-    const id = setTimeout(() => setSecondsLeft(s => s - 1), 1000)
-    return () => clearTimeout(id)
-  }, [gamePhase, secondsLeft])
+    const id = setInterval(() => {
+      const state = (typeof window !== 'undefined' && window.parent && window.parent.__timerStates)
+        ? (window.parent.__timerStates[element.id] || {})
+        : {}
+      const running = state.running ?? false
+      const remaining = state.remaining ?? (element.timerDuration ?? 30)
+      if (!running && remaining <= 0 && didTransitionRef.current === false) {
+        didTransitionRef.current = true
+        setGamePhase('revealed')
+      }
+    }, 200)
+    return () => clearInterval(id)
+  }, [gamePhase, element.id, element.timerDuration])
 
   const handleStartRound = useCallback(() => {
     const questions = element.questions || []
     if (questions.length === 0) return
     const q = questions[Math.floor(Math.random() * questions.length)]
     setCorrectCorner(q.corner || CORNERS[Math.floor(Math.random() * CORNERS.length)].id)
-    setSecondsLeft(element.timerDuration || 30)
     setGamePhase('guessing')
     setEliminated([])
     setPlayerCornerVotes({})
-  }, [element.questions, element.timerDuration])
+    didTransitionRef.current = false
+    // Emit timer-start via parent bridge
+    if (typeof window !== 'undefined' && window.parent && typeof window.parent.__emitTimerEvent === 'function') {
+      window.parent.__emitTimerEvent('game-timer-start', { elementId: element.id, duration: element.timerDuration || 30 })
+    }
+  }, [element.questions, element.timerDuration, element.id])
 
   const handleReveal = useCallback(() => {
     setGamePhase('revealed')

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useContext } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 import { createElement } from '../utils/element-factory'
 import { createGameElement } from '../constants/game-element-types-constants'
@@ -70,6 +70,13 @@ import atomOneLightCSS from '../../../node_modules/highlight.js/styles/atom-one-
 import githubCSS from '../../../node_modules/highlight.js/styles/github.min.css?raw'
 import vsCSS from '../../../node_modules/highlight.js/styles/vs.min.css?raw'
 import { Button, Input } from '../components/ui'
+import { BlackScreenOverlay } from '../components/black-screen-overlay'
+import { CommandPalette } from '../components/command-palette'
+import { GameHudOverlay } from '../components/game-hud-overlay'
+import { GameLeaderboardOverlay } from '../components/game-leaderboard-overlay'
+import { AnnotationToolbar } from '../components/annotation-toolbar'
+import { LiveSocketContext } from '../contexts/live-socket-context-provider.jsx'
+import { GAME_SHORTCUT_CONFIG } from '../utils/game-shortcut-config.js'
 import {
   applyTranslatedNotes,
   getSlideNotesTranslationKey,
@@ -144,6 +151,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const [lastSaveError, setLastSaveError] = useState('')
   const [loading, setLoading] = useState(true)
 
+  // ─── Live socket context (Phase 2: timer sync) ───────────────────────────────
+  const liveSocket = useContext(LiveSocketContext)
+
   // ─── Zustand store (UI state) ───────────────────────────────────────────────
   const selectedElementIds = useEditorStore((s) => s.selectedElementIds)
   const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds)
@@ -199,6 +209,23 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const [livePresenterToken, setLivePresenterToken] = useState(null)
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [showImageUrlPrompt, setShowImageUrlPrompt] = useState(false)
+
+  // Slideshow/Presentation mode overlays
+  const [overlayColor, setOverlayColor] = useState(null) // 'black' | 'white' | null
+  const [isPresenting, setIsPresenting] = useState(false)
+
+  // Game presenter overlays
+  const [showGameHud, setShowGameHud] = useState(false)
+  const [showGameLeaderboard, setShowGameLeaderboard] = useState(false)
+  const [activeGameType, setActiveGameType] = useState(null) // e.g. 'name-picker'
+
+  // Annotation state
+  const [annotationTool, setAnnotationTool] = useState('none') // 'none'|'pen'|'laser'|'highlighter'|'eraser'
+  const [annotationColor, setAnnotationColor] = useState('#FF0000')
+  const [annotationStrokes, setAnnotationStrokes] = useState([])
+
+  // Command palette
+  const [showCommandPalette, setShowCommandPalette] = useState(false)
 
   // Track if we're programmatically setting editor content (to avoid loops)
   const settingContent = useRef(false)
@@ -931,6 +958,24 @@ svg.selectAll('circle').data(data).join('circle')
     })
   }, [currentSlide, currentSlideIndex, setPresentation, setClipboard])
 
+  // Command palette commands
+  const commands = [
+    { id: 'insertSlide', label: 'Insert Slide', shortcut: 'Ctrl+M', action: () => setShowTemplateModal(true) },
+    { id: 'group', label: 'Group Elements', shortcut: 'Ctrl+G', action: () => groupElements() },
+    { id: 'ungroup', label: 'Ungroup Elements', shortcut: 'Ctrl+Shift+G', action: () => ungroupElements() },
+    { id: 'zoomIn', label: 'Zoom In', shortcut: 'Ctrl+=', action: () => console.log('[zoom] in') },
+    { id: 'zoomOut', label: 'Zoom Out', shortcut: 'Ctrl+-', action: () => console.log('[zoom] out') },
+    { id: 'resetZoom', label: 'Reset Zoom', shortcut: 'Ctrl+0', action: () => console.log('[zoom] reset') },
+    { id: 'startSlideshow', label: 'Start Slideshow', shortcut: 'F5', action: () => console.log('[slideshow] start') },
+    { id: 'commandPalette', label: 'Command Palette', shortcut: 'Ctrl+K', action: () => setShowCommandPalette(false) },
+  ]
+
+  // Detect active game type from current slide elements
+  const activeGameElement = presentation?.slides?.[currentSlideIndex]?.elements?.find(
+    (el) => el.type === 'game'
+  )
+  const currentGameType = activeGameElement?.gameType || null
+
   useKeyboard({
     onCopy: handleCopy,
     onCut: handleCut,
@@ -942,10 +987,62 @@ svg.selectAll('circle').data(data).join('circle')
     onSelectAll: handleSelectAll,
     onToggleFindReplace: () => setShowFindReplace((v) => !v),
     onEscape: () => {
+      if (showCommandPalette) { setShowCommandPalette(false); return }
+      if (showGameHud) { setShowGameHud(false); return }
+      if (showGameLeaderboard) { setShowGameLeaderboard(false); return }
+      if (overlayColor) { setOverlayColor(null); return }
+      if (annotationTool !== 'none') { setAnnotationTool('none'); return }
       setSelectedElementIds([])
       setEditingElementId(null)
     },
     isEditing: !!editingElementId,
+    isPresenting,
+    activeGameType: currentGameType,
+    // Slideshow
+    onStartSlideshow: () => console.log('[slideshow] start'),
+    onStartSlideshowCurrent: () => console.log('[slideshow] start from current'),
+    onSlideNext: () => setCurrentSlideIndex((i) => Math.min(i + 1, (presentation?.slides?.length ?? 1) - 1)),
+    onSlidePrev: () => setCurrentSlideIndex((i) => Math.max(i - 1, 0)),
+    onSlideFirst: () => setCurrentSlideIndex(0),
+    onSlideLast: () => setCurrentSlideIndex((presentation?.slides?.length ?? 1) - 1),
+    onBlackScreen: () => setOverlayColor('black'),
+    onWhiteScreen: () => setOverlayColor('white'),
+    onEndSlideshow: () => { setOverlayColor(null); setIsPresenting(false) },
+    // Game
+    onGameHud: () => setShowGameHud((v) => !v),
+    onGameTimer: () => {
+      const el = activeGameElement
+      if (!el || !liveSocket?.connected) return
+      const defaultDuration = GAME_SHORTCUT_CONFIG[currentGameType]?.timer?.duration ?? 30
+      liveSocket.emit('game-timer-start', { elementId: el.id, duration: defaultDuration })
+    },
+    onGameNext: () => console.log('[game] next phase'),
+    onGameReveal: () => console.log('[game] reveal'),
+    onGameLeaderboard: () => setShowGameLeaderboard((v) => !v),
+    onGamePause: () => console.log('[game] pause'),
+    onTimerAdd: () => {
+      const el = activeGameElement
+      if (!el || !liveSocket?.connected) return
+      const delta = GAME_SHORTCUT_CONFIG[currentGameType]?.timerAdd?.delta ?? 10
+      liveSocket.emit('game-timer-adjust', { elementId: el.id, delta })
+    },
+    onTimerSub: () => {
+      const el = activeGameElement
+      if (!el || !liveSocket?.connected) return
+      const delta = GAME_SHORTCUT_CONFIG[currentGameType]?.timerSub?.delta ?? -10
+      liveSocket.emit('game-timer-adjust', { elementId: el.id, delta })
+    },
+    onTeamSelect1: () => console.log('[game] team 1'),
+    onTeamSelect2: () => console.log('[game] team 2'),
+    onTeamSelect3: () => console.log('[game] team 3'),
+    onTeamSelect4: () => console.log('[game] team 4'),
+    // Annotations
+    onPenTool: () => setAnnotationTool((t) => (t === 'pen' ? 'none' : 'pen')),
+    onLaserPointer: () => setAnnotationTool((t) => (t === 'laser' ? 'none' : 'laser')),
+    onHighlighterTool: () => setAnnotationTool((t) => (t === 'highlighter' ? 'none' : 'highlighter')),
+    onEraseAnnotations: () => setAnnotationStrokes([]),
+    // Editor
+    onCommandPalette: () => setShowCommandPalette((v) => !v),
   })
 
   const toggleElementSelection = useCallback(
@@ -1640,6 +1737,44 @@ svg.selectAll('circle').data(data).join('circle')
             }}
           />
         )}
+
+        {/* Black Screen Overlay */}
+        <BlackScreenOverlay
+          visible={overlayColor !== null}
+          color={overlayColor}
+          onDismiss={() => setOverlayColor(null)}
+        />
+
+        {/* Game HUD Overlay */}
+        <GameHudOverlay
+          visible={showGameHud}
+          gameType={currentGameType}
+          onClose={() => setShowGameHud(false)}
+        />
+
+        {/* Game Leaderboard Overlay */}
+        <GameLeaderboardOverlay
+          visible={showGameLeaderboard}
+          scores={[]}
+          onClose={() => setShowGameLeaderboard(false)}
+        />
+
+        {/* Command Palette */}
+        <CommandPalette
+          open={showCommandPalette}
+          onClose={() => setShowCommandPalette(false)}
+          commands={commands}
+        />
+
+        {/* Annotation Toolbar */}
+        <AnnotationToolbar
+          tool={annotationTool}
+          color={annotationColor}
+          onToolChange={setAnnotationTool}
+          onColorChange={setAnnotationColor}
+          onClear={() => setAnnotationStrokes([])}
+          visible={annotationTool !== 'none'}
+        />
       </div>
 
       {/* Image URL Prompt Popover */}

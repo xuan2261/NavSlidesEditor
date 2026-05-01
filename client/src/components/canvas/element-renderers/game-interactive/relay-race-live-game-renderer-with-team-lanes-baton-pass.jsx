@@ -65,7 +65,6 @@ function RelayLive({ element }) {
   const [positions, setPositions] = useState(teams.map(() => 0))
   const [currentTeam, setCurrentTeam] = useState(0)
   const [round, setRound] = useState(1)
-  const [secondsLeft, setSecondsLeft] = useState(element.timerDuration || 30)
   const [gamePhase, setGamePhase] = useState('setup') // setup | active | waiting | ended
   const [showResult, setShowResult] = useState(null) // null | true | false
   const [questions, setQuestions] = useState(element.questions || [])
@@ -74,29 +73,27 @@ function RelayLive({ element }) {
 
   const totalPositions = element.questionsPerRound || 4
 
-  useEffect(() => {
-    if (gamePhase !== 'active') return
-    if (secondsLeft <= 0) {
-      if (element.passOnWrong) {
-        passToNextTeam(false)
-      }
-      return
-    }
-    const id = setTimeout(() => setSecondsLeft(s => s - 1), 1000)
-    return () => clearTimeout(id)
-  }, [gamePhase, secondsLeft])
+  // Server-authoritative timer: read from window.__timerStates (set by parent LiveViewPage)
+  const timerState = (typeof window !== 'undefined' && window.parent && window.parent.__timerStates)
+    ? (window.parent.__timerStates[element.id] || {})
+    : {}
+  const secondsLeft = timerState.remaining ?? element.timerDuration ?? 30
+  const isTimerRunning = timerState.running ?? false
 
   const startRound = useCallback(() => {
     if (questions.length === 0) return
     const q = questions[Math.floor(Math.random() * questions.length)]
     setCurrentQ(q)
-    setSecondsLeft(element.timerDuration || 30)
     setGamePhase('active')
     setShowResult(null)
     if (element.shuffleTeams) {
       setPositions(prev => prev.map(() => 0))
     }
-  }, [questions, element.timerDuration, element.shuffleTeams])
+    // Emit timer-start via parent bridge
+    if (typeof window !== 'undefined' && window.parent && typeof window.parent.__emitTimerEvent === 'function') {
+      window.parent.__emitTimerEvent('game-timer-start', { elementId: element.id, duration: element.timerDuration || 30 })
+    }
+  }, [questions, element.timerDuration, element.shuffleTeams, element.id])
 
   const passToNextTeam = useCallback((wasCorrect) => {
     setShowResult(wasCorrect)
@@ -139,16 +136,37 @@ function RelayLive({ element }) {
       // Pick next question
       const nextQ = questions[Math.floor(Math.random() * questions.length)]
       setCurrentQ(nextQ)
-      setSecondsLeft(element.timerDuration || 30)
       setGamePhase('active')
+      // Restart server timer for next round
+      if (typeof window !== 'undefined' && window.parent && typeof window.parent.__emitTimerEvent === 'function') {
+        window.parent.__emitTimerEvent('game-timer-start', { elementId: element.id, duration: element.timerDuration || 30 })
+      }
     }, 1200)
-  }, [positions, currentTeam, teams, totalPositions, questions, element.timerDuration, element.passOnWrong])
+  }, [positions, currentTeam, teams, totalPositions, questions, element.timerDuration, element.passOnWrong, element.id])
+
+  // Poll server timer to detect when 'active' phase ends with passOnWrong
+  useEffect(() => {
+    if (gamePhase !== 'active' || !element.passOnWrong) return
+    const didTriggerRef = { current: false }
+    const id = setInterval(() => {
+      const state = (typeof window !== 'undefined' && window.parent && window.parent.__timerStates)
+        ? (window.parent.__timerStates[element.id] || {})
+        : {}
+      const running = state.running ?? false
+      const remaining = state.remaining ?? (element.timerDuration || 30)
+      if (!running && remaining <= 0 && !didTriggerRef.current) {
+        didTriggerRef.current = true
+        passToNextTeam(false)
+      }
+    }, 200)
+    return () => clearInterval(id)
+  }, [gamePhase, element.id, element.timerDuration, element.passOnWrong, passToNextTeam])
 
   const handleCorrect = () => { passToNextTeam(true) }
   const handleWrong = () => { passToNextTeam(false) }
 
   const accent = element.accentColor || '#f97316'
-  const totalSeconds = element.timerDuration || 30
+  const totalSeconds = timerState.duration ?? element.timerDuration ?? 30
 
   if (!element.isPresenting) {
     return (
@@ -188,7 +206,7 @@ function RelayLive({ element }) {
             <div style={{ fontSize: 12, color: 'white', fontFamily: 'sans-serif', textAlign: 'center' }}>{currentQ.question}</div>
           </div>
           <div style={{ fontSize: 10, color: teams[currentTeam]?.color || accent, fontFamily: 'sans-serif', fontWeight: 'bold' }}>
-            → {teams[currentTeam]?.name || 'Team'}'s turn
+            → {teams[currentTeam]?.name || 'Team'}&apos;s turn
           </div>
           {gamePhase === 'active' && (
             <div style={{ display: 'flex', gap: 8 }}>

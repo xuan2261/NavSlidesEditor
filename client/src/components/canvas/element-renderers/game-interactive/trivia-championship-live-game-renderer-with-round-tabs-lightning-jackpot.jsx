@@ -2,7 +2,7 @@
  * Trivia Championship Interactive — Phase 10.
  * Phase 3: static preview. Phase 10: round tabs, lightning round, jackpot round, buzzer, crown.
  */
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, startTransition } from 'react'
 
 const ROUND_DEFS = [
   { id: 0, name: 'Round 1', mode: 'individual', timeLimit: 10, label: 'Individual' },
@@ -34,7 +34,7 @@ function LightningDisplay({ questions, currentQ, qIndex, scores, accent }) {
 
   useEffect(() => {
     if (phase !== 'question') return
-    if (secondsLeft <= 0) { setPhase('revealed'); return }
+    if (secondsLeft <= 0) { startTransition(() => { setPhase('revealed') }); return }
     const id = setTimeout(() => setSecondsLeft(s => s - 1), 1000)
     return () => clearTimeout(id)
   }, [phase, secondsLeft])

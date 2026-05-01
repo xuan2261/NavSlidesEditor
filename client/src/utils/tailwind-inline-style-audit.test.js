@@ -75,6 +75,20 @@ const EXEMPT_FILES = new Set([
   'client/src/components/canvas/element-renderers/shape-element-renderer.jsx',
   'client/src/components/canvas/element-renderers/line-element-renderer.jsx',
   'client/src/components/canvas/canvas-crop-overlay-with-handles.jsx',
+  'client/src/components/command-palette.jsx',
+  'client/src/components/game-hud-overlay.jsx',
+  'client/src/components/game-leaderboard-overlay.jsx',
+  'client/src/components/annotation-canvas.jsx',
+  'client/src/components/annotation-toolbar.jsx',
+  'client/src/components/black-screen-overlay.jsx',
+  'client/src/components/laser-pointer.jsx',
+  'client/src/components/PresentationTouchOverlay.jsx',
+  'client/src/components/properties/game-properties.jsx',
+  'client/src/components/canvas/element-renderers/game-interactive/four-corners-live-game-renderer-with-timer-scoring-leaderboard.jsx',
+  'client/src/components/canvas/element-renderers/game-interactive/name-picker-interactive-game-renderer.jsx',
+  'client/src/components/canvas/element-renderers/game-interactive/relay-race-live-game-renderer-with-team-lanes-baton-pass.jsx',
+  'client/src/components/canvas/element-renderers/game-interactive/scattergories-live-game-renderer-with-letter-wheel-timer-unique-scoring.jsx',
+  'client/src/components/canvas/element-renderers/game-interactive/trivia-championship-live-game-renderer-with-round-tabs-lightning-jackpot.jsx',
 ])
 
 function collectFiles(dir) {

@@ -127,12 +127,12 @@ User-defined keyboard shortcut overrides are stored in `localStorage` and merged
 
 | Module | File | Purpose |
 | --- | --- | --- |
-| Definitions | `default-keyboard-shortcut-definitions-registry.js` | DEFAULT_SHORTCUTS (10 shortcuts), getShortcuts(), getShortcutById() |
+| Definitions | `default-keyboard-shortcut-definitions-registry.js` | DEFAULT_SHORTCUTS (40+ shortcuts across 6 categories), scope-gated dispatch, getShortcuts(), getShortcutById() |
 | Normalization | `shortcut-normalizer.js` | normalizeKey(), isReservedChord(), isModifierKey() |
 | Persistence | `shortcut-local-storage-persistence.js` | loadOverrides(), saveOverride(), resetOverride(), resetAll(), detectConflict() |
 | UI | `SettingsPage.jsx` | Shortcut manager with record/conflict-warn/reset per shortcut |
 
-Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Shortcuts are grouped by category (clipboard, navigation, view) in the Settings UI.
+Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: `'editor'` (default), `'presentation'` (slideshow controls), `'presentation-game'` (game presenter). Shortcuts are grouped by category (clipboard, navigation, slideshow, game, annotation, editing, view) in the Settings UI.
 
 ## Server Architecture
 
@@ -178,6 +178,37 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Shortcut
 - `presentation-meta` carries slide labels, slide count, and notes for the
   controller UI.
 - Viewer count excludes controllers.
+
+### Socket.IO Events
+
+**Navigation and state:**
+`navigate` | `sync-state` | `control-navigate` | `presentation-meta` | `viewer-count`
+
+**Annotation events:**
+| Event | Direction | Payload |
+| --- | --- | --- |
+| `annotation:add` | presenter → server | `{ id, slideIndex, points, color, width, tool }` |
+| `annotation:remove` | presenter → server | `{ id, slideIndex }` |
+| `annotation:clear` | presenter → server | `{ slideIndex }` |
+| `annotation:removed` | server → room | `{ id, slideIndex }` |
+| `annotation:cleared` | server → room | `{ slideIndex }` |
+| `annotations:sync` | server → client | `{ slideIndex, annotations[] }` |
+| `presenter-disconnected` | server → room | — (room survives, presenterId = null) |
+
+Annotations are stored per `slideIndex` in room state. `presenter-disconnected` replaces the previous `presenter-left` event; the room is preserved rather than deleted.
+
+**Timer events:**
+| Event | Direction | Payload |
+| --- | --- | --- |
+| `game-timer-start` | presenter → server | `{ elementId, endedAt }` |
+| `game-timer-pause` | presenter → server | `{ elementId, pausedAt }` |
+| `game-timer-resume` | presenter → server | `{ elementId }` |
+| `game-timer-adjust` | presenter → server | `{ elementId, delta }` |
+| `game-timer-stop` | presenter → server | `{ elementId }` |
+| `timer:sync` | server → room | `{ timers: { elementId, endedAt, pausedAt, duration } }` |
+| `timer:ended` | server → room | `{ elementId }` |
+
+Timer state is server-authoritative: server stores `endedAt` / `pausedAt`, clients compute remaining via `computeTimerRemaining(endedAt)`. `window.__timerStates` bridges timer state into reveal.js iframes. Input validation: delta capped at ±3600s, duration 1-7200s, elementId validated by regex + length check.
 
 ### Storage Layout
 

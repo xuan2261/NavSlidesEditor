@@ -1,10 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import { useRevealPreviewFrame } from '../hooks/use-reveal-preview-frame'
+import { useAnnotationSync } from '../hooks/use-annotation-sync.js'
+import { useLiveTimerSync } from '../hooks/use-live-timer-sync.js'
+import { TimerContext } from '../contexts/timer-context-state-provider.jsx'
+import { BlackScreenOverlay } from '../components/black-screen-overlay.jsx'
+import { getShortcuts } from '../utils/default-keyboard-shortcut-definitions-registry.js'
 
 export default function LiveViewPage() {
   const { roomCode } = useParams()
+
+  // Socket reference shared across callbacks
+  const socketRef = useRef(null)
+
+  // Annotation strokes — unified state for display
+  const [annotationStrokes, setAnnotationStrokes] = useState([])
+
+  // Slideshow overlay
+  const [overlayColor, setOverlayColor] = useState(null) // 'black' | 'white' | null
 
   const [isConnected, setIsConnected] = useState(false)
   const [presenterLeft, setPresenterLeft] = useState(false)
@@ -12,15 +26,45 @@ export default function LiveViewPage() {
   const [liveState, setLiveState] = useState({ slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 })
   const [cursorPos, setCursorPos] = useState(null)
   const [laserPos, setLaserPos] = useState(null)
-  const [annotations, setAnnotations] = useState([])
   const [viewerCount, setViewerCount] = useState(0)
   const [roomNotFound, setRoomNotFound] = useState(false)
   const [joinError, setJoinError] = useState('')
   const { iframeRef } = useRevealPreviewFrame(htmlContent, liveState)
 
+  // Keyboard shortcuts for viewer (black/white overlays, escape to dismiss)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const shortcuts = getShortcuts({})
+
+      const normalizeKey = (ev) => {
+        const mods = []
+        if (ev.ctrlKey || ev.metaKey) mods.push('Ctrl')
+        if (ev.shiftKey) mods.push('Shift')
+        if (ev.altKey) mods.push('Alt')
+        const key = ev.key.length === 1 ? ev.key.toUpperCase() : ev.key
+        return mods.length > 0 ? [...mods, key].join('+') : key
+      }
+
+      const chord = normalizeKey(e)
+      const shortcut = shortcuts.find((s) => s.activeKey === chord)
+      if (!shortcut) return
+
+      if (shortcut.id === 'blackScreen') { e.preventDefault(); setOverlayColor('black'); return }
+      if (shortcut.id === 'whiteScreen') { e.preventDefault(); setOverlayColor('white'); return }
+      if (shortcut.id === 'escape') {
+        e.preventDefault()
+        if (overlayColor) { setOverlayColor(null); return }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [overlayColor])
+
   // 1. Socket.IO connection
   useEffect(() => {
     const socket = io({ path: '/ws', reconnection: true })
+    socketRef.current = socket  // make available for timer/event bridge hooks immediately
 
     socket.on('connect_error', (err) => {
       setJoinError(err.message || 'Connection failed')
@@ -52,15 +96,10 @@ export default function LiveViewPage() {
       setLaserPos(active ? { x, y } : null)
     })
 
-    socket.on('annotation', ({ type, data }) => {
-      if (type === 'clear') {
-        setAnnotations([])
-      } else if (type === 'path') {
-        setAnnotations((prev) => [...prev, data])
-      }
-    })
-
+    // Presenter disconnected (room survives, may reconnect) or left (room ended)
+    socket.on('presenter-disconnected', () => setPresenterLeft(true))
     socket.on('presenter-left', () => setPresenterLeft(true))
+
     socket.on('viewer-count', ({ count }) => setViewerCount(count))
     socket.on('room-not-found', () => setRoomNotFound(true))
     socket.on('join-error', ({ message }) => {
@@ -94,6 +133,76 @@ export default function LiveViewPage() {
     }
   }, [roomCode])
 
+
+  // Annotation sync — handlers for incoming Socket.IO events
+  const handleAnnotationAdd = useCallback((annotation) => {
+    setAnnotationStrokes((prev) => [...prev, annotation])
+  }, [])
+
+  const handleAnnotationRemove = useCallback((annotationId) => {
+    setAnnotationStrokes((prev) => prev.filter((a) => a.id !== annotationId))
+  }, [])
+
+  const handleAnnotationsClear = useCallback(() => {
+    setAnnotationStrokes([])
+  }, [])
+
+  useAnnotationSync({
+    socket: socketRef.current,
+    slideIndex: liveState.slideIndex,
+    onAnnotationAdd: handleAnnotationAdd,
+    onAnnotationRemove: handleAnnotationRemove,
+    onAnnotationsClear: handleAnnotationsClear,
+  })
+
+  // Timer sync (Phase 2): subscribe to server timer events
+  const timerStatesRef = useLiveTimerSync(socketRef.current, (elementId) => {
+    // Optional: handle timer end (e.g., log or notify)
+    console.log('[timer] ended:', elementId)
+  })
+
+  // Expose timer states via window for iframe consumers (game renderers)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const states = {}
+      for (const [id, state] of Object.entries(timerStatesRef.current)) {
+        states[id] = {
+          remaining: state.running && state.endedAt
+            ? Math.max(0, Math.ceil((state.endedAt - Date.now()) / 1000))
+            : (state.pausedRemaining ?? state.duration),
+          duration: state.duration,
+          running: state.running,
+          endedAt: state.endedAt,
+        }
+      }
+      window.__timerStates = states
+    }, 100)
+    return () => clearInterval(interval)
+  }, [timerStatesRef])
+
+  // Bridge: iframe game renderers emit timer events via postMessage
+  useEffect(() => {
+    const handler = (event) => {
+      if (!socketRef.current?.connected) return
+      const [type, data] = event.data || []
+      if (type === '__timer-event' && data) {
+        socketRef.current.emit(data.event, data.payload)
+      }
+    }
+    window.addEventListener('message', handler)
+    return () => window.removeEventListener('message', handler)
+  }, [])
+
+  // Expose emit bridge on window for iframe children
+  useEffect(() => {
+    window.__emitTimerEvent = (event, payload) => {
+      if (socketRef.current?.connected) {
+        socketRef.current.emit(event, payload)
+      }
+    }
+    return () => { delete window.__emitTimerEvent }
+  }, [])
+
   if (roomNotFound && !htmlContent) {
     return (
       <div className="w-screen h-screen flex items-center justify-center bg-black text-white font-sans">
@@ -111,6 +220,7 @@ export default function LiveViewPage() {
   }
 
   return (
+    <TimerContext.Provider value={timerStatesRef}>
     <div className="w-screen h-screen relative bg-black overflow-hidden">
       {/* Connection status */}
       {!isConnected && (
@@ -189,8 +299,17 @@ export default function LiveViewPage() {
         />
       )}
 
+      {/* Black screen overlay */}
+      <BlackScreenOverlay
+        visible={overlayColor !== null}
+        color={overlayColor}
+        onDismiss={() => setOverlayColor(null)}
+      />
+
+
+
       {/* Annotation overlay — KEEP inline: dynamic SVG paths */}
-      {annotations.length > 0 && (
+      {annotationStrokes.length > 0 && (
         <svg
           style={{
             position: 'absolute',
@@ -201,11 +320,11 @@ export default function LiveViewPage() {
             zIndex: 9998,
           }}
         >
-          {annotations.map((a, i) => (
+          {annotationStrokes.map((a, i) => (
             <path
               key={i}
               d={a.d}
-              stroke={a.stroke || '#ff0000'}
+              stroke={a.color || '#ff0000'}
               strokeWidth={a.strokeWidth || 3}
               fill="none"
             />
@@ -221,5 +340,6 @@ export default function LiveViewPage() {
         sandbox="allow-scripts allow-same-origin"
       />
     </div>
+    </TimerContext.Provider>
   )
 }

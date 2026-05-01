@@ -1,8 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import { Clock, Home, Layers, Users } from 'lucide-react'
 import { useRevealPreviewFrame } from '../hooks/use-reveal-preview-frame'
+import { useAnnotationSync } from '../hooks/use-annotation-sync.js'
+
+import { AnnotationCanvas } from '../components/annotation-canvas.jsx'
+import { AnnotationToolbar } from '../components/annotation-toolbar.jsx'
+import { LiveSocketContext } from '../contexts/live-socket-context-provider.jsx'
 
 const initialState = { slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 }
 
@@ -52,6 +57,7 @@ export default function SpeakerViewPage() {
   const { roomCode } = useParams()
   const navigate = useNavigate()
   const socketRef = useRef(null)
+  const [socket, setSocket] = useState(null)
 
   const [isConnected, setIsConnected] = useState(false)
   const [htmlContent, setHtmlContent] = useState('')
@@ -62,6 +68,11 @@ export default function SpeakerViewPage() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [presenterLeft, setPresenterLeft] = useState(false)
   const [roomNotFound, setRoomNotFound] = useState(false)
+
+  // Annotation state
+  const [annotationTool, setAnnotationTool] = useState('none') // 'none'|'pen'|'highlighter'|'eraser'
+  const [annotationColor, setAnnotationColor] = useState('#FF0000')
+  const [annotationStrokes, setAnnotationStrokes] = useState([])
 
   const flatSlides = useMemo(() => meta.slides || [], [meta.slides])
   const currentSlide = useMemo(() => findSlide(flatSlides, liveState), [flatSlides, liveState])
@@ -99,6 +110,7 @@ export default function SpeakerViewPage() {
 
     socket.on('connect', () => {
       setIsConnected(true)
+      setSocket(socket)
       socket.emit('join-room', { roomId: roomCode, role: 'controller' })
     })
 
@@ -125,6 +137,45 @@ export default function SpeakerViewPage() {
     return () => socket.disconnect()
   }, [roomCode])
 
+  // Annotation event handlers
+  const handleAnnotationAdd = useCallback((annotation) => {
+    setAnnotationStrokes((prev) => [...prev, annotation])
+  }, [])
+
+  const handleAnnotationRemove = useCallback((annotationId) => {
+    setAnnotationStrokes((prev) => prev.filter((a) => a.id !== annotationId))
+  }, [])
+
+  const handleAnnotationsClear = useCallback(() => {
+    setAnnotationStrokes([])
+  }, [])
+
+  // Emit annotation:add on stroke complete
+  const handleStrokeComplete = useCallback((stroke) => {
+    if (!socket) return
+    const d = stroke.points.reduce((acc, p, i) =>
+      acc + (i === 0 ? `M ${p.x} ${p.y}` : ` L ${p.x} ${p.y}`), '')
+    const annotation = {
+      id: crypto.randomUUID(),
+      d,
+      color: stroke.color,
+      strokeWidth: stroke.strokeWidth,
+      type: stroke.type || 'path',
+      createdAt: new Date().toISOString(),
+      createdBy: 'presenter',
+    }
+    socket.emit('annotation:add', { slideIndex: liveState.slideIndex, annotation })
+    setAnnotationStrokes((prev) => [...prev, { ...stroke, id: annotation.id }])
+  }, [liveState.slideIndex, socket])
+
+  useAnnotationSync({
+    socket,
+    slideIndex: liveState.slideIndex,
+    onAnnotationAdd: handleAnnotationAdd,
+    onAnnotationRemove: handleAnnotationRemove,
+    onAnnotationsClear: handleAnnotationsClear,
+  })
+
   const navigateToSlide = (slide) => {
     socketRef.current?.emit('control-navigate', {
       slideIndex: slide.slideIndex,
@@ -134,6 +185,7 @@ export default function SpeakerViewPage() {
   }
 
   return (
+    <LiveSocketContext.Provider value={socket}>
     <div className="w-screen h-screen bg-surface-0 text-text-primary grid grid-rows-[auto_1fr_auto] font-sans overflow-hidden">
       <div className="px-4 py-2 flex justify-between items-center border-b border-border-strong bg-surface-1">
         <div className="flex items-center gap-4">
@@ -176,6 +228,34 @@ export default function SpeakerViewPage() {
         </div>
       </div>
 
+      {/* Annotation canvas overlay (absolute positioned) */}
+      <AnnotationCanvas
+        tool={annotationTool}
+        color={annotationColor}
+        strokeWidth={3}
+        strokes={annotationStrokes}
+        onStrokeComplete={handleStrokeComplete}
+        onErase={(strokeId) => {
+          if (socketRef.current) socketRef.current.emit('annotation:remove', { slideIndex: liveState.slideIndex, annotationId: strokeId })
+        }}
+        onClear={() => {
+          if (socketRef.current) socketRef.current.emit('annotation:clear', { slideIndex: liveState.slideIndex })
+        }}
+      />
+
+      {/* Annotation toolbar */}
+      <AnnotationToolbar
+        tool={annotationTool}
+        color={annotationColor}
+        onToolChange={setAnnotationTool}
+        onColorChange={setAnnotationColor}
+        onClear={() => {
+          if (socketRef.current) socketRef.current.emit('annotation:clear', { slideIndex: liveState.slideIndex })
+          setAnnotationStrokes([])
+        }}
+        visible={annotationTool !== 'none'}
+      />
+
       <div className="px-4 py-2 border-t border-border-strong bg-surface-1 flex gap-1 overflow-x-auto">
         {flatSlides.map((slide) => {
           const active =
@@ -211,5 +291,6 @@ export default function SpeakerViewPage() {
         </div>
       )}
     </div>
+    </LiveSocketContext.Provider>
   )
 }

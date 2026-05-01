@@ -8,7 +8,7 @@
  * by game-element-renderer.jsx.
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { useGameSocket } from '../../../hooks/use-game-socket'
+import { useGameSocket } from '../../../../hooks/use-game-socket'
 
 // ---------------------------------------------------------------------------
 // CSS keyframes (injected once)
