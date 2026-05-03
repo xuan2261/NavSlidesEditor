@@ -9,6 +9,8 @@
  *   these tests verify the module shape and socket wiring at the integration level.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
 
 const mockOn = vi.fn()
 const mockEmit = vi.fn()
@@ -48,9 +50,7 @@ describe('useGameSocket module', () => {
     expect(mod.useGameSocket).toBeDefined()
 
     // Verify the expected event names exist in the source code pattern
-    const source = await import('fs').then(fs => fs.default.readFileSync(
-      new URL('./use-game-socket.js', import.meta.url).pathname, 'utf8'
-    ))
+    const source = readFileSync(fileURLToPath(new URL('./use-game-socket.js', import.meta.url)), 'utf8')
     expect(source).toContain("'game-player-joined'")
     expect(source).toContain("'game-answer-result'")
     expect(source).toContain("'game-random-result'")
@@ -71,10 +71,8 @@ describe('useGameSocket module', () => {
     // We can't call the hook without React rendering, but we verified the export
   })
 
-  it('source code contains correct initial state keys', async () => {
-    const source = await import('fs').then(fs => fs.default.readFileSync(
-      new URL('./use-game-socket.js', import.meta.url).pathname, 'utf8'
-    ))
+  it('source code contains correct initial state keys', () => {
+    const source = readFileSync(fileURLToPath(new URL('./use-game-socket.js', import.meta.url)), 'utf8')
     // Verify the hook returns all expected keys
     expect(source).toContain('socket')
     expect(source).toContain('isConnected')

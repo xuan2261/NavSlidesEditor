@@ -9,10 +9,13 @@ import { describe, expect, it } from 'vitest'
 import path from 'node:path'
 import os from 'node:os'
 import fs from 'node:fs/promises'
+import fsSync from 'node:fs'
 import JSZip from 'jszip'
 import { mapPptxOutput } from './mapper.js'
 
 const CORPUS_DIR = path.join(__dirname, '..', '..', 'data', 'test-corpus')
+const hasCorpus = fsSync.existsSync(CORPUS_DIR)
+const itSkipIfNoCorpus = hasCorpus ? it : it.skip
 
 // ---------------------------------------------------------------------------
 // Schema validation
@@ -203,7 +206,7 @@ describe('PPTX import e2e flow', () => {
     }
   })
 
-  it('corpus directory is accessible', async () => {
+  itSkipIfNoCorpus('corpus directory is accessible', async () => {
     const corpusExists = await fs.access(CORPUS_DIR).then(() => true).catch(() => false)
     expect(corpusExists).toBe(true)
 
