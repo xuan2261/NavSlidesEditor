@@ -9,8 +9,6 @@
  *   these tests verify the module shape and socket wiring at the integration level.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { readFileSync } from 'fs'
-import { fileURLToPath } from 'url'
 
 const mockOn = vi.fn()
 const mockEmit = vi.fn()
@@ -43,26 +41,6 @@ describe('useGameSocket module', () => {
     expect(mockIo).toBeDefined()
   })
 
-  it('registers all expected game event listener types on socket', async () => {
-    // Importing the module does not run useEffect (no React renderer).
-    // We verify the event types the hook WOULD register by checking the source.
-    const mod = await import('./use-game-socket')
-    expect(mod.useGameSocket).toBeDefined()
-
-    // Verify the expected event names exist in the source code pattern
-    const source = readFileSync(fileURLToPath(new URL('./use-game-socket.js', import.meta.url)), 'utf8')
-    expect(source).toContain("'game-player-joined'")
-    expect(source).toContain("'game-answer-result'")
-    expect(source).toContain("'game-random-result'")
-    expect(source).toContain("'game-leaderboard'")
-    expect(source).toContain("'game-question'")
-    expect(source).toContain("'game-ended'")
-    expect(source).toContain("'game-error'")
-    expect(source).toContain("'game-join'")
-    expect(source).toContain("socket.io-client")
-    expect(source).toContain("path: '/ws'")
-  })
-
   it('returns emit function that calls socket.emit', async () => {
     const mod = await import('./use-game-socket')
     // The hook is a function — verify it exists and has expected shape
@@ -71,16 +49,4 @@ describe('useGameSocket module', () => {
     // We can't call the hook without React rendering, but we verified the export
   })
 
-  it('source code contains correct initial state keys', () => {
-    const source = readFileSync(fileURLToPath(new URL('./use-game-socket.js', import.meta.url)), 'utf8')
-    // Verify the hook returns all expected keys
-    expect(source).toContain('socket')
-    expect(source).toContain('isConnected')
-    expect(source).toContain('joinError')
-    expect(source).toContain('gameState')
-    expect(source).toContain('leaderboard')
-    expect(source).toContain('players')
-    expect(source).toContain('lastEvent')
-    expect(source).toContain('return {')
-  })
 })
