@@ -41,7 +41,7 @@ jobs:
         shell: bash
         run: |
           echo "=== Checking critical server modules ==="
-          for mod in express cors fs-extra multer uuid revealjs-shared; do
+          for mod in express cors fs-extra multer revealjs-shared; do
             if [ -d "server/node_modules/$mod" ]; then
               echo "✓ $mod"
             else
