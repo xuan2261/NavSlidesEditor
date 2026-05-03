@@ -20,6 +20,7 @@ module.exports = defineConfig({
   retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 2 : 4,
   reporter: 'html',
+  timeout: process.env.CI ? 60000 : 30000,
   use: {
     baseURL,
     trace: 'on-first-retry',

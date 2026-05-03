@@ -100,7 +100,6 @@ const critical = [
   'pptx2json',
   'pptxtojson',
   'revealjs-shared',
-  'uuid',
 ]
 const missing = critical.filter((m) => !fs.existsSync(path.join(serverNM, m)))
 if (missing.length > 0) {

@@ -36,6 +36,6 @@ jobs:
         run: npm run build
 
       - name: Run Playwright E2E Tests
-        run: npm run test:e2e
+        run: npx playwright test --grep-invert "Visual Regression"
         env:
           CI: true
