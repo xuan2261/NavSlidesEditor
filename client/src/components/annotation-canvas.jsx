@@ -7,7 +7,7 @@ export function AnnotationCanvas({
   strokes = [],
   onStrokeComplete,
   onErase,
-  onClear,
+  _onClear,
 }) {
   const svgRef = useRef(null)
   const [currentStroke, setCurrentStroke] = useState(null)

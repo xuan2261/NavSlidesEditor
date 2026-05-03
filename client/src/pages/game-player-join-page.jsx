@@ -204,7 +204,7 @@ export default function GamePlayerPage() {
 
   const {
     status,
-    players,
+    _players,
     playerCount,
     currentQuestion,
     timeLeft,
@@ -214,7 +214,7 @@ export default function GamePlayerPage() {
     myScore,
     myRank,
     leaderboard,
-    isConnected,
+    _isConnected,
     error,
   } = useGamePlayer({ gameId, playerName: resolvedName || undefined })
 

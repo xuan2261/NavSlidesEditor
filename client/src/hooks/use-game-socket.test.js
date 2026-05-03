@@ -49,7 +49,7 @@ describe('useGameSocket module', () => {
 
     // Verify the expected event names exist in the source code pattern
     const source = await import('fs').then(fs => fs.default.readFileSync(
-      require.resolve('./use-game-socket.js'), 'utf8'
+      new URL('./use-game-socket.js', import.meta.url).pathname, 'utf8'
     ))
     expect(source).toContain("'game-player-joined'")
     expect(source).toContain("'game-answer-result'")
@@ -73,7 +73,7 @@ describe('useGameSocket module', () => {
 
   it('source code contains correct initial state keys', async () => {
     const source = await import('fs').then(fs => fs.default.readFileSync(
-      require.resolve('./use-game-socket.js'), 'utf8'
+      new URL('./use-game-socket.js', import.meta.url).pathname, 'utf8'
     ))
     // Verify the hook returns all expected keys
     expect(source).toContain('socket')

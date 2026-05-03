@@ -10,7 +10,7 @@ const ROUND_DEFS = [
   { id: 2, name: 'Final', mode: 'buzzer', label: 'Buzzer' },
 ]
 
-function BuzzerDisplay({ activePlayer, scores, accent }) {
+function BuzzerDisplay({ activePlayer, _scores, _accent }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
       <div style={{ fontSize: 64, lineHeight: 1, animation: 'pulse 0.5s infinite alternate' }}>
@@ -28,7 +28,7 @@ function BuzzerDisplay({ activePlayer, scores, accent }) {
   )
 }
 
-function LightningDisplay({ questions, currentQ, qIndex, scores, accent }) {
+function LightningDisplay({ questions, _currentQ, qIndex, _scores, _accent }) {
   const [secondsLeft, setSecondsLeft] = useState(10)
   const [phase, setPhase] = useState('question') // question | revealed | done
 
@@ -69,7 +69,7 @@ function LightningDisplay({ questions, currentQ, qIndex, scores, accent }) {
   )
 }
 
-function JackpotDisplay({ question, accent }) {
+function JackpotDisplay({ question, _accent }) {
   const [revealed, setRevealed] = useState(false)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>

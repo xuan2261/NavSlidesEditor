@@ -71,6 +71,7 @@ export default [
   // Client (React)
   {
     files: ['client/**/*.{js,jsx}'],
+    ignores: ['client/**/*.test.{js,jsx}'],
     plugins: {
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
@@ -78,6 +79,33 @@ export default [
     languageOptions: {
       globals: {
         ...globals.browser,
+      },
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    settings: {
+      react: { version: 'detect' },
+    },
+    rules: {
+      ...reactPlugin.configs.recommended.rules,
+      ...reactHooksPlugin.configs.recommended.rules,
+      'react/prop-types': 'off',
+      'react/react-in-jsx-scope': 'off',
+    },
+  },
+  // Client unit tests
+  {
+    files: ['client/**/*.test.{js,jsx}'],
+    plugins: {
+      react: reactPlugin,
+      'react-hooks': reactHooksPlugin,
+    },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.vitest,
       },
       parserOptions: {
         ecmaFeatures: { jsx: true },

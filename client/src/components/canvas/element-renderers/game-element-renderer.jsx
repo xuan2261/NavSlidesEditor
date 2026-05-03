@@ -12,7 +12,7 @@
  *  - Present mode (isPresenting === true): live game UI with controls
  */
 import React from 'react'
-/* eslint-disable no-undef */
+ 
 
 // Phase 10: Interactive sub-renderers (lazy-loaded via dynamic import for ESM compatibility)
 let _FourCornersP, _RelayRaceP, _TriviaChampP, _ScattergoriesP, _NamePickerP
@@ -133,7 +133,7 @@ function WheelRenderer({ element }) {
 // ---------------------------------------------------------------------------
 function DiceRenderer({ element }) {
   const diceCount = element.diceCount || 2
-  const face = 6
+  const _face = 6
   const diceSize = 28
   const gap = 8
 
@@ -162,7 +162,7 @@ function DiceRenderer({ element }) {
 // ---------------------------------------------------------------------------
 // Name Picker renderer
 // ---------------------------------------------------------------------------
-function NamePickerRenderer({ element, isPresenting }) {
+function NamePickerRenderer({ element, _isPresenting }) {
   const mode = element.pickerMode || 'wheel'
 
   return (
@@ -193,7 +193,7 @@ function NamePickerRenderer({ element, isPresenting }) {
 // ---------------------------------------------------------------------------
 // Hot Potato renderer
 // ---------------------------------------------------------------------------
-function HotPotatoRenderer({ element, isPresenting }) {
+function HotPotatoRenderer({ element, _isPresenting }) {
   const question = element.questions && element.questions[0]
 
   return (
@@ -268,8 +268,8 @@ function InteractiveJeopardyBoard({ element }) {
   const [isDailyDouble, setIsDailyDouble] = React.useState(false)
   const [wager, setWager] = React.useState(0)
   const [showWagerModal, setShowWagerModal] = React.useState(false)
-  const [wagerTeamId, setWagerTeamId] = React.useState(null)
-  const [timerSecs, setTimerSecs] = React.useState(element.timerDuration || 30)
+  const [_wagerTeamId, _setWagerTeamId] = React.useState(null)
+  const [_timerSecs, _setTimerSecs] = React.useState(element.timerDuration || 30)
   const [timeLeft, setTimeLeft] = React.useState(null)
   const [timerInterval, setTimerInterval] = React.useState(null)
   const [gameEnded, setGameEnded] = React.useState(false)
@@ -313,7 +313,7 @@ function InteractiveJeopardyBoard({ element }) {
       if (lastEvent.scores) setScores(prev => ({ ...prev, ...lastEvent.scores }))
     }
     if (lastEvent.type === 'game-ended') setGameEnded(true)
-  }, [lastEvent])
+  }, [lastEvent, activeTeam, ddKeys, qLookup, element.teams])
 
   // Timer
   React.useEffect(() => {
@@ -329,6 +329,7 @@ function InteractiveJeopardyBoard({ element }) {
     }, 1000)
     setTimerInterval(id)
     return () => clearInterval(id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft != null])
 
   const startTimer = React.useCallback((seconds) => {
@@ -363,7 +364,7 @@ function InteractiveJeopardyBoard({ element }) {
   }, [usedCells, qLookup, ddKeys, element.timerDuration, element.showTimer, stopTimer, startTimer])
 
   const handleWagerSubmit = React.useCallback((teamId, wagerAmount) => {
-    setWagerTeamId(teamId)
+    _setWagerTeamId(teamId)
     setWager(wagerAmount)
     setShowWagerModal(false)
     setActiveTeam(teamId)
@@ -379,7 +380,7 @@ function InteractiveJeopardyBoard({ element }) {
     setShowAnswer(false)
     setIsDailyDouble(false)
     setWager(0)
-    setWagerTeamId(null)
+    _setWagerTeamId(null)
     // Check game end
     const allUsed = Object.keys(qLookup).every(k => usedCells[k] || k === `${selectedCell?.catIdx}-${selectedCell?.pts}`)
     if (allUsed) setGameEnded(true)
@@ -560,7 +561,7 @@ function JeopardyBoard({ element, usedCells, qLookup, ddKeys, onCellClick }) {
               const key = `${catIdx}-${pts}`
               const used = !!usedCells?.[key]
               const isDD = ddKeys?.has(key)
-              const hasQuestion = !!qLookup?.[key]
+              const _hasQuestion = !!qLookup?.[key]
               const interactive = !!onCellClick
 
               return (
@@ -926,7 +927,7 @@ function TeamScorePanel({ teams, scores, activeTeam, onSelectTeam }) {
 // ---------------------------------------------------------------------------
 // PresenterControls
 // ---------------------------------------------------------------------------
-function PresenterControls({ teams, activeTeam, onSelectTeam, onReveal, onReturn, accentColor, showFinalJeopardy }) {
+function PresenterControls({ teams, activeTeam, onSelectTeam, _onReveal, _onReturn, _accentColor, showFinalJeopardy }) {
   return (
     <div style={{
       display: 'flex',
@@ -1031,7 +1032,7 @@ function FourCornersRenderer({ element, isPresenting }) {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', height: '100%' }}>
       <div style={{ fontSize: 48, lineHeight: 1 }}>🧭</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, width: 120, height: 80 }}>
-        {corners.slice(0, count).map((corner, i) => (
+        {corners.slice(0, count).map((corner, _i) => (
           <div key={corner} style={{
             border: `2px solid ${element.accentColor || '#10b981'}`,
             borderRadius: 6,

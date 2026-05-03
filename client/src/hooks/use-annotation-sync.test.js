@@ -5,8 +5,8 @@ import { useAnnotationSync } from './use-annotation-sync.js'
 function createMockSocket() {
   const handlers = {}
   return {
-    on: vi.fn((event, handler) => { handlers[event] = handler }),
-    off: vi.fn((event, handler) => { delete handlers[event] }),
+    on: vi.fn((event, _handler) => { handlers[event] = _handler }),
+    off: vi.fn((event, _handler) => { delete handlers[event] }),
     _trigger: (event, payload) => handlers[event]?.(payload),
     _handlers: handlers,
   }
@@ -170,7 +170,7 @@ describe('useAnnotationSync', () => {
   })
 
   it('does nothing when socket is null', () => {
-    const { result } = renderHook(() =>
+    const { result: _result } = renderHook(() =>
       useAnnotationSync({
         socket: null,
         slideIndex: 0,

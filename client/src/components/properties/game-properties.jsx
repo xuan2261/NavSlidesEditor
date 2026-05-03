@@ -133,7 +133,7 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
   )
 }
 
-function ContentTab({ gt, element, gameConfig, onUpdate, onItemsChange, onPickerModeChange, onTimerChange, onOpenQuestionEditor }) {
+function ContentTab({ gt, _element, gameConfig, onUpdate, onItemsChange, onPickerModeChange, onTimerChange, onOpenQuestionEditor }) {
   const hasTeams = gt === 'jeopardy'
   const hasQuestions = ['hot-potato', 'jeopardy', 'relay-race', 'trivia-champ'].includes(gt)
   const hasNameList = gt === 'name-picker'

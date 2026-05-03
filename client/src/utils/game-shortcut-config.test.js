@@ -50,8 +50,8 @@ describe('GAME_SHORTCUT_CONFIG', () => {
   })
 
   it('each non-null shortcut entry has label, key, and action fields', () => {
-    for (const [gameType, config] of Object.entries(GAME_SHORTCUT_CONFIG)) {
-      for (const [action, entry] of Object.entries(config)) {
+    for (const [_gameType, config] of Object.entries(GAME_SHORTCUT_CONFIG)) {
+      for (const [_action, entry] of Object.entries(config)) {
         if (entry === null) continue
         if (Array.isArray(entry.keys)) {
           expect(entry).toHaveProperty('label')

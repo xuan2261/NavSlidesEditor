@@ -12,7 +12,7 @@ function setupGameSocketHandlers(io) {
     let currentGameId = null
 
     // Player joins a game room
-    socket.on('game-join', ({ gameId, playerName, playerId }) => {
+    socket.on('game-join', ({ gameId, playerName, _playerId }) => {
       if (!gameId || !playerName) {
         socket.emit('game-error', { message: 'gameId and playerName are required' })
         return
@@ -60,7 +60,7 @@ function setupGameSocketHandlers(io) {
     })
 
     // Presenter triggers random picker
-    socket.on('game-random', ({ gameId, action }) => {
+    socket.on('game-random', ({ gameId, _action }) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -74,7 +74,7 @@ function setupGameSocketHandlers(io) {
     })
 
     // Presenter advances to next question
-    socket.on('game-next', ({ gameId, questionId }) => {
+    socket.on('game-next', ({ gameId, _questionId }) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return

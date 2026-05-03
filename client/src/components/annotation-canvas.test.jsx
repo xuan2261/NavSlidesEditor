@@ -1,6 +1,6 @@
 import React from 'react'
 import { render, act } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AnnotationCanvas } from './annotation-canvas.jsx'
 
 // Mock SVG methods and PointerEvent for jsdom

@@ -78,7 +78,7 @@ function FourCornersLive({ element }) {
     ? (window.parent.__timerStates[element.id] || {})
     : {}
   const secondsLeft = timerState.remaining ?? element.timerDuration ?? 30
-  const isTimerRunning = timerState.running ?? false
+  const _isTimerRunning = timerState.running ?? false
 
   // Poll server timer to detect when guessing phase ends (server-authoritative)
   useEffect(() => {

@@ -65,7 +65,7 @@ function CategoryGrid({ categories, answers, letter, accent }) {
   )
 }
 
-function UniqueScoringOverlay({ answers, letter, teams, visible }) {
+function UniqueScoringOverlay({ answers, _letter, teams, visible }) {
   if (!visible) return null
   const cats = Object.keys(answers)
   const allAnswers = {} // category -> { team -> answer }
@@ -176,7 +176,7 @@ function ScatterLive({ element }) {
     }, 80)
   }, [timePerRound, element.id])
 
-  const handleAnswer = useCallback((category, text) => {
+  const _handleAnswer = useCallback((category, text) => {
     setAnswers(prev => ({ ...prev, [category]: text }))
   }, [])
 

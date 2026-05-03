@@ -101,7 +101,7 @@ describe('Game Properties — element update pipeline', () => {
   })
 
   it('changing gameType in properties creates correct element', () => {
-    const el = createGameElement('name-picker')
+    const _el = createGameElement('name-picker')
     // Simulate gameType change → new element with correct defaults
     const newEl = createGameElement('jeopardy')
     expect(newEl.gameType).toBe('jeopardy')

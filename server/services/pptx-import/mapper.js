@@ -1,6 +1,6 @@
 const uuidv4 = () => require('node:crypto').randomUUID()
 const { CANVAS_SIZE } = require('./constants')
-const { createMediaIndex, persistImageForElement, persistZipMediaRef, persistMediaBlob } = require('./media')
+const { createMediaIndex, persistImageForElement, _persistZipMediaRef, persistMediaBlob } = require('./media')
 const { sanitizeHtml } = require('./sanitize')
 const { mapChart } = require('./chart-output-to-navslides-mapper')
 const { mergeInlineStyle, normalizeAlign, parseHtmlTree } = require('revealjs-shared')
@@ -870,7 +870,7 @@ async function mapPptxOutput({ output, zip, originalName, uploadsDir }) {
   const slides = []
   for (const [slideIndex, slide] of (output.slides || []).entries()) {
     const elements = []
-    let zIndex = 1
+    let _zIndex = 1
     const sorted = [...(slide.elements || [])].sort((a, b) => {
       const aOrder = a?.order
       const bOrder = b?.order

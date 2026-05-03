@@ -217,12 +217,12 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   // Game presenter overlays
   const [showGameHud, setShowGameHud] = useState(false)
   const [showGameLeaderboard, setShowGameLeaderboard] = useState(false)
-  const [activeGameType, setActiveGameType] = useState(null) // e.g. 'name-picker'
+  const [_activeGameType, _setActiveGameType] = useState(null) // e.g. 'name-picker'
 
   // Annotation state
   const [annotationTool, setAnnotationTool] = useState('none') // 'none'|'pen'|'laser'|'highlighter'|'eraser'
   const [annotationColor, setAnnotationColor] = useState('#FF0000')
-  const [annotationStrokes, setAnnotationStrokes] = useState([])
+  const [_annotationStrokes, _setAnnotationStrokes] = useState([])
 
   // Command palette
   const [showCommandPalette, setShowCommandPalette] = useState(false)
@@ -1040,7 +1040,7 @@ svg.selectAll('circle').data(data).join('circle')
     onPenTool: () => setAnnotationTool((t) => (t === 'pen' ? 'none' : 'pen')),
     onLaserPointer: () => setAnnotationTool((t) => (t === 'laser' ? 'none' : 'laser')),
     onHighlighterTool: () => setAnnotationTool((t) => (t === 'highlighter' ? 'none' : 'highlighter')),
-    onEraseAnnotations: () => setAnnotationStrokes([]),
+    onEraseAnnotations: () => _setAnnotationStrokes([]),
     // Editor
     onCommandPalette: () => setShowCommandPalette((v) => !v),
   })
@@ -1772,7 +1772,7 @@ svg.selectAll('circle').data(data).join('circle')
           color={annotationColor}
           onToolChange={setAnnotationTool}
           onColorChange={setAnnotationColor}
-          onClear={() => setAnnotationStrokes([])}
+          onClear={() => _setAnnotationStrokes([])}
           visible={annotationTool !== 'none'}
         />
       </div>

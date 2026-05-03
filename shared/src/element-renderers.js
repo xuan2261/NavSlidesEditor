@@ -210,7 +210,7 @@ function renderLatex(el, style, wrap, vis, opts) {
   // [FIX #13] If _fallbackSrc is available and content doesn't look like valid LaTeX, use image fallback.
   // This handles malformed LaTeX strings imported from PPTX that KaTeX cannot render.
   const hasFallbackImg = el._fallbackSrc && /^(data:image|\/uploads\/)/.test(String(el._fallbackSrc))
-  const looksLikeLatex = /\\[a-zA-Z]+|[\^\$_]|\\frac|\\sqrt|\\begin|\\left|\\right/.test(content)
+  const looksLikeLatex = /\\[a-zA-Z]+|[\^$_]|\\frac|\\sqrt|\\begin|\\left|\\right/.test(content)
   if (hasFallbackImg && !looksLikeLatex) {
     const fallbackSrc = absoluteSrc(el._fallbackSrc)
     return `<div${wrap} style="${style}${vis}"><img src="${fallbackSrc}" alt="Math equation" style="display:block;width:100%;height:100%;object-fit:contain;" /></div>`

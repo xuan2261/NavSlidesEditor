@@ -5,7 +5,7 @@ export function PresentationTouchOverlay({
   onPrev,
   onNext,
   onToggleControls,
-  onBlackScreen,
+  _onBlackScreen,
 }) {
   if (!visible) return null
 
