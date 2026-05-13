@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { api } from '../utils/api'
-import { Button } from '../components/ui'
-import { isBackdropClick } from '../lib/utils'
+import { Button, ModalShell } from '../components/ui'
 
 export default function HistoryModal({ presentationId, onRestore, onClose }) {
   const [isOpen, setIsOpen] = useState(true)
@@ -34,13 +33,6 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
     setIsOpen(false)
     onClose()
   }
-
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') handleClose() }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const handleSave = async () => {
     setPendingAction('save')
@@ -88,29 +80,17 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
-      onClick={(event) => {
-        if (isBackdropClick(event)) handleClose()
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="history-modal-title"
+    <ModalShell
+      titleId="history-modal-title"
+      title="Version History"
+      size="md"
+      onClose={handleClose}
+      className="max-h-[70vh]"
+      bodyClassName="flex min-h-0 flex-1 flex-col"
     >
-      <div
-        className="bg-card border border-border rounded-xl p-6 w-[480px] max-w-[90vw] max-h-[70vh] shadow-2xl flex flex-col"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h3 id="history-modal-title" className="m-0 text-base text-text-primary">Version History</h3>
-          <Button variant="ghost" onClick={handleClose} className="p-1" aria-label="Close">
-            <X size={16} />
-          </Button>
-        </div>
-
         <div className="flex gap-2 mb-4 shrink-0">
           <input
-            className="flex-1 px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-[13px] box-border focus:border-accent focus:outline-none transition-colors"
+            className="flex-1 px-3 py-2 rounded-md border border-border bg-card text-text-primary text-[13px] box-border focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/25 transition-colors"
             value={snapshotName}
             onChange={(e) => setSnapshotName(e.target.value)}
             placeholder="Snapshot name (optional)"
@@ -130,7 +110,10 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
         </div>
 
         {error && (
-          <div className="mb-3 rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-[13px] text-danger">
+          <div
+            className="mb-3 rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-[13px] text-danger"
+            role="alert"
+          >
             <div>{error}</div>
             <div className="mt-2">
               <Button variant="secondary" onClick={loadSnapshots} disabled={loading || pendingAction !== ''}>
@@ -192,7 +175,6 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
             ))
           )}
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }

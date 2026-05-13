@@ -12,7 +12,7 @@
 ## Overview
 
 - Priority: P1
-- Status: Pending
+- Status: Complete
 - Effort: 6h
 - Goal: make shared controls visually coherent, accessible, and tactile.
 
@@ -71,11 +71,11 @@ Shared primitive contract remains:
 
 ## Todo List
 
-- [ ] Refactor button variants.
-- [ ] Refactor input/select visual states.
-- [ ] Refactor color picker focus state.
-- [ ] Update tests.
-- [ ] Run unit tests.
+- [x] Refactor button variants.
+- [x] Refactor input/select visual states.
+- [x] Refactor color picker focus state.
+- [x] Update tests.
+- [x] Run unit tests.
 
 ## Verify / Tests
 
@@ -103,6 +103,12 @@ Shared primitive contract remains:
 
 - Phase 03 dashboard.
 
+## Implementation Notes
+
+- Existing `primary` variant maps to brand; no new Button API.
+- Icon-only `Button` still derives `aria-label` from `title`.
+- Input, Select, and ColorPicker now share visible focus treatment.
+
 ## Unresolved Questions
 
-- Whether to add a new `brand` variant or map existing `primary` to brand.
+- None.

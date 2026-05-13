@@ -2,59 +2,59 @@
 
 ## Current Status: v1.7.0 docs sync and live/game/PPTX stack complete
 
-Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The current docs baseline reflects Node.js 20+, the route-based shell, in-memory live room state, and the hybrid PPTX export/import pipeline. Corpus checks now land at 97.0% semantic fidelity and 99.0% round-trip stability on the checked-in decks.
+Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The current docs baseline reflects Node.js 20+, the route-based shell, in-memory live room state, and the hybrid PPTX export/import pipeline. The UI/UX warm editorial overhaul has landed the warm dashboard/editor chrome slice plus a shared modal shell across high-use AI/share/media/template dialogs, with targeted build, lint, unit, dashboard, visual, responsive, and keyboard gates passing. Corpus checks now land at 97.0% semantic fidelity and 99.0% round-trip stability on the checked-in decks.
 
 ### What Works
 
-| Area | Status |
-| --- | --- |
-| WYSIWYG editing (core element set, including game) | Done |
-| Undo/redo (50-step) | Done |
-| Auto-save (debounced) | Done |
-| Smart guides + snapping | Done |
-| Fragment animations + timeline | Done |
-| Animation Preview modal | Done (accessible dialog, narrow viewport checked) |
-| Slide templates (20+ layouts) | Done |
-| Interactive and quiz templates | Done |
-| Footer system (basic + sequence) | Done |
-| Present mode (reveal.js) | Done |
-| Export HTML | Done (CDN-backed deck) |
-| Export PDF | Done |
-| Export PPTX | Done (hybrid native + high-res raster fallback, split helpers) |
-| Project export/import (.navslides) | Done (manifest v1.1, partial media skip warnings) |
-| Import PPTX | Done (editable objects plus fidelity remediation; 97.0% semantic / 99.0% round-trip on checked-in corpus) |
-| Offline HTML export | Done (self-contained) |
-| Shareable links (with password option) | Done |
-| GitHub push integration | Done |
-| rclone cloud sync | Done |
-| Version history (snapshots) | Done |
-| Docker deployment | Done |
-| Electron desktop (Linux/macOS/Windows) | Done |
-| Dark/light editor theme | Done |
-| AI copywriting + translation | Done |
-| Media library (Unsplash, Giphy) | Done |
-| Gamification Game Controls (7 game types) | Done |
+| Area                                               | Status                                                                                                    |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| WYSIWYG editing (core element set, including game) | Done                                                                                                      |
+| Undo/redo (50-step)                                | Done                                                                                                      |
+| Auto-save (debounced)                              | Done                                                                                                      |
+| Smart guides + snapping                            | Done                                                                                                      |
+| Fragment animations + timeline                     | Done                                                                                                      |
+| Animation Preview modal                            | Done (accessible dialog, narrow viewport checked)                                                         |
+| Slide templates (20+ layouts)                      | Done                                                                                                      |
+| Interactive and quiz templates                     | Done                                                                                                      |
+| Footer system (basic + sequence)                   | Done                                                                                                      |
+| Present mode (reveal.js)                           | Done                                                                                                      |
+| Export HTML                                        | Done (CDN-backed deck)                                                                                    |
+| Export PDF                                         | Done                                                                                                      |
+| Export PPTX                                        | Done (hybrid native + high-res raster fallback, split helpers)                                            |
+| Project export/import (.navslides)                 | Done (manifest v1.1, partial media skip warnings)                                                         |
+| Import PPTX                                        | Done (editable objects plus fidelity remediation; 97.0% semantic / 99.0% round-trip on checked-in corpus) |
+| Offline HTML export                                | Done (self-contained)                                                                                     |
+| Shareable links (with password option)             | Done                                                                                                      |
+| GitHub push integration                            | Done                                                                                                      |
+| rclone cloud sync                                  | Done                                                                                                      |
+| Version history (snapshots)                        | Done                                                                                                      |
+| Docker deployment                                  | Done                                                                                                      |
+| Electron desktop (Linux/macOS/Windows)             | Done                                                                                                      |
+| Dark/light editor theme                            | Done                                                                                                      |
+| AI copywriting + translation                       | Done                                                                                                      |
+| Media library (Unsplash, Giphy)                    | Done                                                                                                      |
+| Gamification Game Controls (7 game types)          | Done                                                                                                      |
 
 ### What's New in v1.5.x / v1.6.x (Security & Architecture Refactor)
 
-| Area | Status |
-| --- | --- |
-| Zod request validation on all mutation APIs | Done |
-| CSS modularization (57KB -> split files) | Done |
-| Zustand state management (3 stores) | Done |
-| Custom hooks (7 hooks extracted) | Done |
-| PropertiesPanel decomposition (8 sub-editors) | Done |
-| Element factory (centralized creation) | Done |
-| ErrorBoundary (crash recovery UI) | Done |
-| JSDoc type definitions (shared/types) | Done |
-| Electron safeStorage (credential encryption) | Done |
-| DOMPurify sanitization (XSS prevention) | Done |
-| MIME-type validation (upload security) | Done |
-| Rate limiting (sensitive endpoints) | Done |
-| DRY rendering pipeline (element-renderers.js) | Done |
-| Socket.IO modularization (socket-handler.js) | Done |
-| EditorPage reduction (3400 -> 1475 LOC) | Done |
-| Tailwind token hardening, route shell, live sync, and persistence locking | Done |
+| Area                                                                      | Status |
+| ------------------------------------------------------------------------- | ------ |
+| Zod request validation on all mutation APIs                               | Done   |
+| CSS modularization (57KB -> split files)                                  | Done   |
+| Zustand state management (3 stores)                                       | Done   |
+| Custom hooks (7 hooks extracted)                                          | Done   |
+| PropertiesPanel decomposition (8 sub-editors)                             | Done   |
+| Element factory (centralized creation)                                    | Done   |
+| ErrorBoundary (crash recovery UI)                                         | Done   |
+| JSDoc type definitions (shared/types)                                     | Done   |
+| Electron safeStorage (credential encryption)                              | Done   |
+| DOMPurify sanitization (XSS prevention)                                   | Done   |
+| MIME-type validation (upload security)                                    | Done   |
+| Rate limiting (sensitive endpoints)                                       | Done   |
+| DRY rendering pipeline (element-renderers.js)                             | Done   |
+| Socket.IO modularization (socket-handler.js)                              | Done   |
+| EditorPage reduction (3400 -> 1475 LOC)                                   | Done   |
+| Tailwind token hardening, route shell, live sync, and persistence locking | Done   |
 
 ## Known Limitations
 

@@ -29,20 +29,39 @@ All colors are defined as CSS custom properties. Theme is applied via `data-them
 
 ```css
 :root {
-  --bg-primary: #1a1a1a; /* main app background */
-  --bg-secondary: #252525; /* panels, sidebars */
-  --bg-tertiary: #2e2e2e; /* inputs, hover states */
-  --text-primary: #e8e8e8;
-  --text-secondary: #a0a0a0;
-  --accent: #4f8ef7; /* primary action color */
-  --border: #3a3a3a;
-  --danger: #e05555;
+  --bg-primary: #14110f; /* main app background */
+  --bg-secondary: #1b1714; /* panels, sidebars */
+  --bg-card: #241f1a; /* inputs, cards, raised surfaces */
+  --text-primary: #f4eee7;
+  --text-secondary: #c1b3a6;
+  --brand: #c96442; /* primary action color */
+  --focus: #4f8ef7; /* keyboard focus */
+  --selection: #4f8ef7; /* editor selection */
+  --border: rgba(244, 238, 231, 0.08);
+  --danger: #ef4444;
 }
 ```
 
 ### Light Theme
 
-Overrides via `[data-theme="light"]` selector. Background and text values are inverted; accent color remains consistent.
+Overrides via `[data-theme="light"]` selector. The app chrome uses parchment and ivory surfaces, while the authored slide canvas stays pure white through `--bg-canvas-default: #ffffff`.
+
+```css
+[data-theme='light'] {
+  --bg-primary: #f8f3ea;
+  --bg-secondary: #fffaf2;
+  --bg-card: #fffdf8;
+  --text-primary: #241915;
+  --text-secondary: #5f5147;
+  --brand: #b95736;
+  --focus: #2563eb;
+  --selection: #2563eb;
+}
+```
+
+`--accent` remains an alias for `--brand` for backward compatibility. New UI chrome should use `brand` for CTAs, `focus` for keyboard rings, and `selection` for editor selection or technical active states.
+
+The implementation also defines these supporting tokens in `client/src/index.css`: `--surface-0` through `--surface-4`, `--bg-panel`, `--bg-hover`, `--bg-active`, `--bg-workspace`, `--border-light`, `--border-strong`, `--accent-hover`, `--accent-light`, `--brand-hover`, `--brand-muted`, `--selection-muted`, `--success`, `--danger-hover`, `--warning`, plus shared radius and z-index tokens.
 
 ### Theme Toggle
 
@@ -127,6 +146,7 @@ Default font families offered in the font picker (verified in Toolbar):
 
 - Button variants must declare their border policy explicitly. Secondary buttons use `border border-border`; filled/ghost/icon variants use transparent borders unless a visible border is intentional.
 - Icon-only buttons require an accessible name. Prefer explicit `aria-label` at the call site for destructive or context-sensitive actions. The shared Button supports `title` as a fallback for simple icon controls.
+- Shared buttons use visible `focus-visible` rings with the blue focus token, not the brand color.
 - Avoid broad `transition-all` on shared controls. Use property-specific transitions for color, border, shadow, opacity, or transform changes.
 
 ### Panels
@@ -135,6 +155,7 @@ Default font families offered in the font picker (verified in Toolbar):
 - Border: 1px `--border` on the edge facing the canvas
 - Padding: 12px internal
 - Section headers: 11px uppercase label, `--text-secondary`
+- Collapsible section headers should be real disclosure buttons with `aria-expanded` and visible keyboard focus. Slide thumbnail actions and selection controls should keep explicit labels and stable focus states.
 
 ### Modals
 
@@ -145,6 +166,7 @@ Default font families offered in the font picker (verified in Toolbar):
 - Use `role="dialog"`, `aria-modal="true"`, and a labelled title for interactive overlays.
 - Move focus into the modal on open and return focus to the invoking control when the modal closes.
 - Modal headers and action rows must wrap safely at narrow browser widths. Controls should not create horizontal page overflow.
+- Shared `ModalShell` now covers the common dialog contract for migrated modals (`SyncModal`, `HistoryModal`, Home create/confirm, AI generator/copywriter/translate, share, media library, template picker): Escape/backdrop close, focus entry/trap/restore, latest-callback Escape handling after rerenders, and viewport-safe sizing.
 
 ### Product Tour
 
@@ -158,14 +180,21 @@ Default font families offered in the font picker (verified in Toolbar):
 - Icon buttons: 32×32px, `--text-secondary` idle, `--text-primary` hover, `--accent` active/selected
 - Separator: 1px vertical `--border` between groups
 - Dropdowns open below the trigger button
+- Toggle buttons must expose `aria-pressed` when they represent stateful editor chrome or active rich-text commands.
+- Slide background swatches must be keyboard reachable and carry explicit labels.
+- Highlight color controls use `listbox`/`option` semantics instead of plain button groups.
+- Keep accessible names stable on icon-only toolbar controls.
 
 ### Property Inputs
 
-- Text inputs: full width, `--bg-tertiary` background, `--border` border, 4px radius
+- Text inputs: full width, `--bg-card` background, `--border` border, 6px radius, blue focus ring
+- Text inputs and selects use `focus:border-focus` plus a blue `focus:ring-focus/25` contract.
 - Number inputs: typically 60–80px wide with unit label
-- Color pickers: small swatch + hex input
+- Color pickers: small swatch + hex input, with a visible blue focus ring and neutral surface ring offset
 - Sliders: custom range input styled with accent color
 - Toggles: checkbox-style or pill-switch
+- `PropertiesPanel` uses `role="complementary"` with the accessible name `Properties panel`.
+- Common property lock/layer actions should use Lucide icons rather than structural emoji or arrow glyphs.
 
 ---
 

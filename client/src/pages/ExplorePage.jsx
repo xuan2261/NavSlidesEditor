@@ -75,7 +75,7 @@ export default function ExplorePage() {
             {presentations.map((p) => (
               <div
                 key={p.id}
-                className="bg-card border border-border rounded-xl p-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                className="cursor-pointer rounded-xl border border-border bg-card p-4 transition-[background-color,border-color,box-shadow] duration-150 hover:border-border-strong hover:shadow-[0_12px_28px_rgba(36,25,21,0.14)] focus-within:ring-2 focus-within:ring-focus/25"
               >
                 {/* Thumbnail placeholder */}
                 <div className="h-[140px] rounded-lg mb-3 bg-gradient-to-br from-secondary to-hover flex items-center justify-center text-[32px] text-text-muted opacity-50">

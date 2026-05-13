@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { CloudUpload, Check, X } from 'lucide-react'
 import { api } from '../utils/api'
-import { Button } from '../components/ui'
-import { isBackdropClick } from '../lib/utils'
+import { Button, ModalShell } from '../components/ui'
 
 export default function SyncModal({ presentationId, onClose }) {
   const [isOpen, setIsOpen] = useState(true)
@@ -19,12 +18,6 @@ export default function SyncModal({ presentationId, onClose }) {
     setIsOpen(false)
     onClose()
   }
-
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') handleClose() }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     api
@@ -87,28 +80,12 @@ export default function SyncModal({ presentationId, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
-      onClick={(event) => {
-        if (isBackdropClick(event)) handleClose()
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="sync-modal-title"
-    >
-      <div
-        className="bg-card border border-border rounded-xl p-6 w-[440px] max-w-[90vw] shadow-2xl"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h3 id="sync-modal-title" className="m-0 text-base text-text-primary">Sync to Cloud</h3>
-          <Button variant="ghost" onClick={handleClose} className="p-1" aria-label="Close">
-            <X size={16} />
-          </Button>
-        </div>
-
+    <ModalShell titleId="sync-modal-title" title="Sync to Cloud" size="md" onClose={handleClose}>
         {!syncStatus?.installed ? (
-          <div className="p-4 bg-danger/10 rounded-lg border border-danger/20 text-[13px] text-danger">
+          <div
+            className="rounded-lg border border-danger/20 bg-danger/10 p-4 text-[13px] text-danger"
+            role="alert"
+          >
             rclone is not installed in the container. Rebuild with the updated Dockerfile to enable
             cloud sync.
           </div>
@@ -125,7 +102,7 @@ export default function SyncModal({ presentationId, onClose }) {
                 <div>
                   <label className="text-xs text-text-muted block mb-1">Remote Path</label>
                   <input
-                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors box-border"
+                    className="w-full px-3 py-2 rounded-md border border-border bg-card text-text-primary text-sm focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/25 transition-colors box-border"
                     value={syncConfig.remotePath || '/slides-backup'}
                     onChange={(e) =>
                       setSyncConfig((prev) => ({ ...prev, remotePath: e.target.value }))
@@ -161,7 +138,7 @@ export default function SyncModal({ presentationId, onClose }) {
                 <div>
                   <label className="text-xs text-text-muted block mb-1">Proton Username</label>
                   <input
-                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors box-border"
+                    className="w-full px-3 py-2 rounded-md border border-border bg-card text-text-primary text-sm focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/25 transition-colors box-border"
                     value={syncConfig.username}
                     onChange={(e) =>
                       setSyncConfig((prev) => ({ ...prev, username: e.target.value }))
@@ -173,7 +150,7 @@ export default function SyncModal({ presentationId, onClose }) {
                   <label className="text-xs text-text-muted block mb-1">Proton Password</label>
                   <input
                     type="password"
-                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors box-border"
+                    className="w-full px-3 py-2 rounded-md border border-border bg-card text-text-primary text-sm focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/25 transition-colors box-border"
                     value={syncConfig.password}
                     onChange={(e) =>
                       setSyncConfig((prev) => ({ ...prev, password: e.target.value }))
@@ -184,7 +161,7 @@ export default function SyncModal({ presentationId, onClose }) {
                 <div>
                   <label className="text-xs text-text-muted block mb-1">Remote Name</label>
                   <input
-                    className="w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors box-border"
+                    className="w-full px-3 py-2 rounded-md border border-border bg-card text-text-primary text-sm focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/25 transition-colors box-border"
                     value={syncConfig.remoteName}
                     onChange={(e) =>
                       setSyncConfig((prev) => ({ ...prev, remoteName: e.target.value }))
@@ -206,6 +183,8 @@ export default function SyncModal({ presentationId, onClose }) {
             {syncResult && (
               <div
                 className={`px-3 py-2 rounded-md text-[13px] flex items-center gap-2 ${syncResult.type === 'success' ? 'bg-[#22c55e]/15 text-[#22c55e]' : 'bg-danger/15 text-danger'}`}
+                role={syncResult.type === 'error' ? 'alert' : 'status'}
+                aria-live={syncResult.type === 'error' ? 'assertive' : 'polite'}
               >
                 {syncResult.type === 'success' ? <Check size={14} /> : <X size={14} />}
                 <span>{syncResult.message}</span>
@@ -213,7 +192,6 @@ export default function SyncModal({ presentationId, onClose }) {
             )}
           </div>
         )}
-      </div>
-    </div>
+    </ModalShell>
   )
 }

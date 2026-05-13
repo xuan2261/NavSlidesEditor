@@ -1,5 +1,6 @@
 import { Input, Select, Button, ColorPicker } from '../../components/ui'
 import { clampNumber, parseFiniteNumber } from '../../utils/number-input'
+import { ArrowDown, ArrowUp, Lock, Unlock } from 'lucide-react'
 
 /**
  * Common element controls shared across all element types:
@@ -90,8 +91,13 @@ export default function CommonElementControls({
           onChange={(e) => onUpdate({ locked: e.target.checked })}
           className="accent-accent"
         />
-        <span className="text-xs text-text-secondary">
-          {element.locked ? '🔒' : '🔓'} Lock element
+        <span className="inline-flex items-center gap-1 text-xs text-text-secondary">
+          {element.locked ? (
+            <Lock size={13} aria-hidden="true" />
+          ) : (
+            <Unlock size={13} aria-hidden="true" />
+          )}
+          Lock element
         </span>
       </label>
 
@@ -209,7 +215,8 @@ export default function CommonElementControls({
           className="flex-1 text-[11px] py-1 justify-center"
           onClick={onBringForward}
         >
-          ↑ Forward
+          <ArrowUp size={13} aria-hidden="true" />
+          Forward
         </Button>
         <Button
           data-testid="prop-layer-backward"
@@ -217,7 +224,8 @@ export default function CommonElementControls({
           className="flex-1 text-[11px] py-1 justify-center"
           onClick={onSendBackward}
         >
-          ↓ Backward
+          <ArrowDown size={13} aria-hidden="true" />
+          Backward
         </Button>
       </div>
 

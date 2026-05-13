@@ -334,6 +334,7 @@ export default function Toolbar({
                         key={type}
                         className={`bg-type-tab px-2 py-1 text-xs rounded-md ${bgType === type ? 'bg-active text-accent' : 'text-text-secondary hover:bg-hover'}`}
                         onClick={() => setBgType(type)}
+                        aria-pressed={bgType === type}
                       >
                         {type.charAt(0).toUpperCase() + type.slice(1)}
                       </Button>
@@ -361,8 +362,17 @@ export default function Toolbar({
                           <div
                             key={color}
                             onClick={() => setBgColor(color)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                setBgColor(color)
+                              }
+                            }}
                             title={color}
-                          className={`w-full aspect-square rounded cursor-pointer ${
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Set slide background ${color}`}
+                            className={`w-full aspect-square rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-focus ${
                             bg.color === color
                               ? 'border-2 border-white'
                               : isLightColor(color)
@@ -404,6 +414,8 @@ export default function Toolbar({
                             }`}
                             style={getBackgroundStyle(preset)}
                             title={preset}
+                            aria-label={`Apply gradient preset ${i + 1}`}
+                            aria-pressed={bg.gradient === preset}
                           />
                         ))}
                       </div>
@@ -515,6 +527,7 @@ export default function Toolbar({
         className={showGrid ? 'bg-primary-light text-accent' : ''}
         onClick={onToggleGrid}
         title={showGrid ? 'Hide grid / disable snap' : 'Show grid + snap to grid'}
+        aria-pressed={showGrid}
       >
         <Grid size={18} />
       </Button>
@@ -529,6 +542,7 @@ export default function Toolbar({
             onGridSizeChange(Math.max(5, Math.min(200, Number(e.target.value) || 40)))
           }
           title="Grid size (px)"
+          aria-label="Grid size in pixels"
           className="w-12 px-1.5 py-0.5 bg-card border border-border text-text-primary rounded text-xs text-center"
         />
       )}
@@ -539,6 +553,7 @@ export default function Toolbar({
         className={smartGuidesEnabled ? 'bg-primary-light text-accent' : ''}
         onClick={onToggleSmartGuides}
         title={smartGuidesEnabled ? 'Disable smart guides' : 'Enable smart guides'}
+        aria-pressed={smartGuidesEnabled}
       >
         <Magnet size={18} />
       </Button>
@@ -549,6 +564,7 @@ export default function Toolbar({
         className={showRulers ? 'bg-primary-light text-accent' : ''}
         onClick={onToggleRulers}
         title={showRulers ? 'Hide rulers' : 'Show rulers (drag to add guides)'}
+        aria-pressed={showRulers}
       >
         <Ruler size={18} />
       </Button>
@@ -717,6 +733,7 @@ export default function Toolbar({
             className={`text-xs font-bold w-auto px-1.5 ${editor.isActive('heading', { level: 1 }) ? 'bg-primary-light text-accent' : ''}`}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleHeading({ level: 1 }))}
             title="Heading 1"
+            aria-pressed={editor.isActive('heading', { level: 1 })}
           >
             H1
           </Button>
@@ -725,6 +742,7 @@ export default function Toolbar({
             className={`text-xs font-bold w-auto px-1.5 ${editor.isActive('heading', { level: 2 }) ? 'bg-primary-light text-accent' : ''}`}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleHeading({ level: 2 }))}
             title="Heading 2"
+            aria-pressed={editor.isActive('heading', { level: 2 })}
           >
             H2
           </Button>
@@ -733,6 +751,7 @@ export default function Toolbar({
             className={`text-xs font-bold w-auto px-1.5 ${editor.isActive('heading', { level: 3 }) ? 'bg-primary-light text-accent' : ''}`}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleHeading({ level: 3 }))}
             title="Heading 3"
+            aria-pressed={editor.isActive('heading', { level: 3 })}
           >
             H3
           </Button>
@@ -745,6 +764,7 @@ export default function Toolbar({
             }
             onMouseDown={handleTextCommandMouseDown((chain) => chain.setParagraph())}
             title="Normal text"
+            aria-pressed={editor.isActive('paragraph') && !editor.isActive('heading')}
           >
             <Type size={18} />
           </Button>
@@ -757,6 +777,7 @@ export default function Toolbar({
             className={editor.isActive('bold') ? 'bg-primary-light text-accent' : ''}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleBold())}
             title="Bold (Ctrl+B)"
+            aria-pressed={editor.isActive('bold')}
           >
             <Bold size={18} />
           </Button>
@@ -765,6 +786,7 @@ export default function Toolbar({
             className={editor.isActive('italic') ? 'bg-primary-light text-accent' : ''}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleItalic())}
             title="Italic (Ctrl+I)"
+            aria-pressed={editor.isActive('italic')}
           >
             <Italic size={18} />
           </Button>
@@ -773,6 +795,7 @@ export default function Toolbar({
             className={editor.isActive('underline') ? 'bg-primary-light text-accent' : ''}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleUnderline())}
             title="Underline (Ctrl+U)"
+            aria-pressed={editor.isActive('underline')}
           >
             <Underline size={18} />
           </Button>
@@ -781,6 +804,7 @@ export default function Toolbar({
             className={editor.isActive('strike') ? 'bg-primary-light text-accent' : ''}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleStrike())}
             title="Strikethrough"
+            aria-pressed={editor.isActive('strike')}
           >
             <Strikethrough size={18} />
           </Button>
@@ -873,6 +897,9 @@ export default function Toolbar({
                 setShowHighlightPalette((v) => !v)
               }}
               title="Highlight color"
+              aria-expanded={showHighlightPalette}
+              aria-haspopup="listbox"
+              aria-label="Highlight color palette"
             >
               <Highlighter size={18} />
               <span
@@ -884,6 +911,8 @@ export default function Toolbar({
             </Button>
             {showHighlightPalette && (
               <div
+                role="listbox"
+                aria-label="Highlight color palette"
                 onMouseDown={(e) => e.stopPropagation()}
                 className="absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 z-[1000] bg-card border border-border rounded-lg p-2 shadow-xl grid grid-cols-[repeat(6,26px)] gap-[3px]"
               >
@@ -917,6 +946,12 @@ export default function Toolbar({
                     variant="ghost"
                     key={color}
                     title={color}
+                    role="option"
+                    aria-label={`Highlight ${color}`}
+                    aria-selected={
+                      (editor.getAttributes('highlight').color || '').toLowerCase() ===
+                      color.toLowerCase()
+                    }
                     className="w-[26px] h-[26px] p-0 border border-black/[0.15] rounded cursor-pointer"
                     style={getBackgroundStyle(color)}
                     onMouseDown={handleTextCommandMouseDown(
@@ -948,6 +983,8 @@ export default function Toolbar({
             className={editor.isActive({ textAlign: 'left' }) ? 'bg-primary-light text-accent' : ''}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.setTextAlign('left'))}
             title="Align left"
+            aria-label="Align left"
+            aria-pressed={editor.isActive({ textAlign: 'left' })}
           >
             <AlignLeft size={18} />
           </Button>
@@ -958,6 +995,8 @@ export default function Toolbar({
             }
             onMouseDown={handleTextCommandMouseDown((chain) => chain.setTextAlign('center'))}
             title="Align center"
+            aria-label="Align center"
+            aria-pressed={editor.isActive({ textAlign: 'center' })}
           >
             <AlignCenter size={18} />
           </Button>
@@ -968,6 +1007,8 @@ export default function Toolbar({
             }
             onMouseDown={handleTextCommandMouseDown((chain) => chain.setTextAlign('right'))}
             title="Align right"
+            aria-label="Align right"
+            aria-pressed={editor.isActive({ textAlign: 'right' })}
           >
             <AlignRight size={18} />
           </Button>
@@ -980,6 +1021,7 @@ export default function Toolbar({
             className={editor.isActive('bulletList') ? 'bg-primary-light text-accent' : ''}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleBulletList())}
             title="Bullet list"
+            aria-pressed={editor.isActive('bulletList')}
           >
             <List size={18} />
           </Button>
@@ -988,6 +1030,7 @@ export default function Toolbar({
             className={editor.isActive('orderedList') ? 'bg-primary-light text-accent' : ''}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleOrderedList())}
             title="Ordered list"
+            aria-pressed={editor.isActive('orderedList')}
           >
             <ListOrdered size={18} />
           </Button>
@@ -1000,6 +1043,7 @@ export default function Toolbar({
             className={editor.isActive('code') ? 'bg-primary-light text-accent' : ''}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleCode())}
             title="Inline code"
+            aria-pressed={editor.isActive('code')}
           >
             <Code size={18} />
           </Button>
@@ -1008,6 +1052,7 @@ export default function Toolbar({
             className={editor.isActive('codeBlock') ? 'bg-primary-light text-accent' : ''}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleCodeBlock())}
             title="Code block"
+            aria-pressed={editor.isActive('codeBlock')}
           >
             <FileCode size={18} />
           </Button>
@@ -1016,6 +1061,7 @@ export default function Toolbar({
             className={editor.isActive('blockquote') ? 'bg-primary-light text-accent' : ''}
             onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleBlockquote())}
             title="Blockquote"
+            aria-pressed={editor.isActive('blockquote')}
           >
             <Quote size={18} />
           </Button>
@@ -1028,6 +1074,7 @@ export default function Toolbar({
               variant="icon"
               className={`text-[13px] ${editor.isActive('table') ? 'bg-primary-light text-accent' : ''}`}
               title="Table"
+              aria-pressed={editor.isActive('table')}
               onMouseDown={(e) => {
                 e.preventDefault()
                 rememberSelection()
@@ -1094,6 +1141,7 @@ export default function Toolbar({
               handleLink()
             }}
             title="Add link"
+            aria-pressed={editor.isActive('link')}
           >
             <Link size={18} />
           </Button>

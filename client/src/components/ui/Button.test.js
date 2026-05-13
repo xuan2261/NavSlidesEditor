@@ -9,11 +9,15 @@ describe('buttonVariants', () => {
     expect(classes).toContain('inline-flex')
     expect(classes).toContain('items-center')
     expect(classes).toContain('rounded-md')
+    expect(classes).toContain('focus-visible:ring-2')
+    expect(classes).toContain('focus-visible:ring-focus')
+    expect(classes).toContain('focus-visible:ring-offset-secondary')
+    expect(classes).not.toContain('focus-visible:ring-offset-primary')
   })
 
   it('should return primary classes', () => {
     const classes = buttonVariants({ variant: 'primary' })
-    expect(classes).toContain('bg-accent')
+    expect(classes).toContain('bg-brand')
     expect(classes).toContain('text-white')
   })
 
@@ -33,6 +37,7 @@ describe('buttonVariants', () => {
   it('should return ghost classes', () => {
     const classes = buttonVariants({ variant: 'ghost' })
     expect(classes).toContain('hover:bg-hover')
+    expect(classes).toContain('min-h-0')
   })
 
   it('should return icon classes', () => {
@@ -41,6 +46,7 @@ describe('buttonVariants', () => {
     expect(classes).toContain('h-8')
     expect(classes).toContain('justify-center')
     expect(classes).toContain('border-transparent')
+    expect(classes).toContain('focus-visible:ring-2')
   })
 
   it('should allow custom className to override or append', () => {

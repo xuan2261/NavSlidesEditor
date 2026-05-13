@@ -15,7 +15,7 @@
 ## Overview
 
 - Priority: P1
-- Status: Pending
+- Status: Complete
 - Effort: 7h
 - Goal: standardize modal layout, focus, scrim, and async feedback.
 
@@ -77,12 +77,12 @@ If component creation is rejected, create shared class helpers in existing UI mo
 
 ## Todo List
 
-- [ ] Modal inventory.
-- [ ] Implement shared shell or shared style helpers.
-- [ ] Migrate low-risk modals.
-- [ ] Add tests.
-- [ ] Migrate remaining modals.
-- [ ] Verify async states.
+- [x] Modal inventory.
+- [x] Implement shared shell or shared style helpers.
+- [x] Migrate low-risk modals.
+- [x] Add tests.
+- [x] Migrate remaining modals.
+- [x] Verify async states.
 
 ## Verify / Tests
 
@@ -115,6 +115,20 @@ If component creation is rejected, create shared class helpers in existing UI mo
 
 - Phase 05 editor chrome.
 
+## Implementation Notes
+
+- Added shared `ModalShell` with viewport-safe sizing, Escape/backdrop close, focus entry, focus trap, focus restore, ARIA dialog semantics, and close label.
+- Migrated `SyncModal`, `HistoryModal`, Home create modal, and Home confirm dialog to the shell.
+- Added `ModalShell` unit coverage.
+- Added alert/status semantics to migrated modal error/result feedback.
+- Migrated `AIGeneratorModal`, `AICopywriterModal`, `AITranslateModal`, `ShareModal`, `MediaLibraryModal`, and `TemplatePickerModal` to `ModalShell`.
+- Added a `2xl` `ModalShell` size for viewport-safe wide product modals.
+- Added alert/status semantics to migrated AI/share/media modal feedback.
+- Addressed code-review feedback by replacing Share/Media async `alert()` / console-only error paths with inline `role="alert"` and `role="status"` feedback.
+- Media remote fallback delays modal close briefly so the inline status can render before the inserted remote URL flow finishes.
+- Fixed the shared Escape close hook to keep one stable document listener and call the latest close callback after modal rerenders.
+- Added regression coverage for Escape close after `ModalShell` rerender.
+
 ## Unresolved Questions
 
-- Should modal shell be created now or deferred until 3+ migrations confirm common API?
+- None.

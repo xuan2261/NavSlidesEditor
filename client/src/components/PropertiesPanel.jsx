@@ -66,7 +66,11 @@ export default function PropertiesPanel({
 }) {
   if (!slide) {
     return (
-      <div className="properties-panel w-60 shrink-0 bg-panel text-text-primary border-l border-border overflow-y-auto flex flex-col tour-step-properties">
+      <div
+        className="properties-panel w-60 shrink-0 bg-panel text-text-primary border-l border-border overflow-y-auto flex flex-col tour-step-properties"
+        role="complementary"
+        aria-label="Properties panel"
+      >
         <div className="prop-section">
           <p className="text-text-muted text-xs">No slide selected</p>
         </div>
@@ -75,7 +79,11 @@ export default function PropertiesPanel({
   }
 
   return (
-    <div className="properties-panel w-60 shrink-0 bg-panel text-text-primary border-l border-border overflow-y-auto flex flex-col tour-step-properties">
+    <div
+      className="properties-panel w-60 shrink-0 bg-panel text-text-primary border-l border-border overflow-y-auto flex flex-col tour-step-properties"
+      role="complementary"
+      aria-label="Properties panel"
+    >
       {/* Element Section */}
       {selectedElement && (
         <div className="p-4 border-b border-border">

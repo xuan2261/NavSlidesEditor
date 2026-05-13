@@ -118,8 +118,14 @@ export default function FindReplaceBar({
     onUpdatePresentation({ slides: newSlides })
   }
 
+  const resultMessage = searchTerm
+    ? matches.length > 0
+      ? `${matches.length} match${matches.length === 1 ? '' : 'es'} found`
+      : 'No matches found'
+    : 'Enter text to search'
+
   return (
-    <div className="find-replace-bar absolute top-[46px] right-2.5 z-[9990] bg-card border border-border rounded-b-md p-2 shadow-md flex flex-col gap-1.5 min-w-[380px]">
+    <div className="find-replace-bar absolute right-2.5 top-[46px] z-[9990] flex min-w-[380px] flex-col gap-1.5 rounded-b-md border border-border bg-card p-2 shadow-[0_14px_36px_rgba(0,0,0,0.22)]">
       <div className="flex items-center gap-1.5">
         <Search size={14} className="text-text-muted shrink-0" />
         <input
@@ -131,7 +137,7 @@ export default function FindReplaceBar({
             setCurrentMatchIdx(0)
           }}
           placeholder="Find..."
-          className="find-input flex-1 bg-secondary border border-border text-text-primary py-1 px-2 rounded text-[13px] outline-none min-w-0 focus:border-accent"
+          className="find-input min-w-0 flex-1 rounded border border-border bg-secondary px-2 py-1 text-[13px] text-text-primary outline-none transition-[border-color,box-shadow] duration-150 focus:border-focus focus:ring-2 focus:ring-focus/25"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.shiftKey ? handlePrev() : handleNext()
@@ -147,6 +153,7 @@ export default function FindReplaceBar({
           className={`find-btn h-6 w-6 p-0 shrink-0 ${matchCase ? 'bg-accent text-white hover:bg-accent' : ''}`}
           onClick={() => setMatchCase((v) => !v)}
           title="Match case"
+          aria-pressed={matchCase}
         >
           <CaseSensitive size={14} />
         </Button>
@@ -171,6 +178,7 @@ export default function FindReplaceBar({
           className={`find-btn h-6 w-6 p-0 shrink-0 ${showReplace ? 'bg-accent text-white hover:bg-accent' : ''}`}
           onClick={() => setShowReplace((v) => !v)}
           title="Toggle replace"
+          aria-pressed={showReplace}
         >
           <Replace size={14} />
         </Button>
@@ -191,7 +199,7 @@ export default function FindReplaceBar({
             value={replaceTerm}
             onChange={(e) => setReplaceTerm(e.target.value)}
             placeholder="Replace..."
-            className="flex-1 bg-secondary border border-border text-text-primary py-1 px-2 rounded text-[13px] outline-none min-w-0 focus:border-accent"
+            className="min-w-0 flex-1 rounded border border-border bg-secondary px-2 py-1 text-[13px] text-text-primary outline-none transition-[border-color,box-shadow] duration-150 focus:border-focus focus:ring-2 focus:ring-focus/25"
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleReplace()
             }}
@@ -214,6 +222,13 @@ export default function FindReplaceBar({
           </Button>
         </div>
       )}
+      <div
+        className={`px-5 text-[11px] ${searchTerm && matches.length === 0 ? 'text-warning' : 'text-text-muted'}`}
+        role="status"
+        aria-live="polite"
+      >
+        {resultMessage}
+      </div>
     </div>
   )
 }

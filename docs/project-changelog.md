@@ -2,6 +2,21 @@
 
 ## v1.7.x
 
+## 2026-05-13
+
+### UI/UX Warm Editorial Overhaul Slice
+
+- Added shared `ModalShell` with ARIA dialog semantics, Escape/backdrop close, focus entry/trap/restore, and viewport-safe sizing.
+- Migrated `SyncModal`, `HistoryModal`, Home create modal, and Home confirm dialog to the shared shell.
+- Migrated AI generator, AI copywriter, AI translate, share, media library, and template picker modals to `ModalShell`; added wide shell sizing and alert/status semantics for migrated async feedback.
+- Replaced Share/Media modal async `alert()` / console-only error paths with inline alert/status feedback.
+- Updated HomePage and Explore dashboard surfaces to warm tokenized branding, removed layout-shifting hover in touched card paths, and added keyboard activation plus import alert/status feedback.
+- Refined DropdownMenu, InsertMenu, FindReplaceBar, CollapsibleSection, SlidePanel, and SelectionPane surfaces for better focus/label feedback without changing command logic.
+- Tightened editor chrome a11y: stateful toolbar toggles and active rich-text commands now expose `aria-pressed`, slide background swatches are keyboard reachable and labelled, the highlight palette uses `listbox`/`option` semantics, `PropertiesPanel` is labelled as `role="complementary"`, and shared property lock/layer actions now use Lucide icons instead of structural emoji/glyph arrows.
+- Added `ModalShell` and `CollapsibleSection` unit tests, including Escape-close coverage after modal rerenders.
+- Fixed a shared Escape-close regression in `useEscapeClose` where async modal rerenders could briefly detach the document listener.
+- Verification passed: targeted Vitest, `npm run lint` (existing warnings in `tests/e2e/games/game-elements.spec.js`), `npm run build` (existing bundle size warning), dashboard e2e 11/11, visual regression 1/1, and responsive/keyboard Playwright gate 10/10.
+
 ## 2026-04-30
 
 ### PowerPoint-Style Controls & Game Presenter Shortcuts
@@ -28,6 +43,7 @@ Created annotation system for presenter mode: `AnnotationCanvas.jsx` (SVG-based 
 **Room survival on presenter disconnect:** `leaveRoom` sets `presenterId = null` instead of deleting the room, preserving all annotations and timer state. Viewers remain connected during presenter rejoin.
 
 **Socket.IO events:**
+
 - `annotation:add` / `annotation:remove` / `annotation:clear` (presenter emits)
 - `annotation:removed` / `annotation:cleared` (server broadcasts to room)
 - `annotations:sync` (full slide annotations sent on viewer join)

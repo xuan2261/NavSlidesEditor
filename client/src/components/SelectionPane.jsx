@@ -175,6 +175,7 @@ export default function SelectionPane({
                 onToggleVisibility(el.id)
               }}
               title={isHidden ? 'Show element' : 'Hide element'}
+              aria-label={isHidden ? 'Show element' : 'Hide element'}
               className={`flex items-center rounded-sm border-none bg-transparent px-0.5 py-px ${
                 isHidden ? 'text-text-muted' : 'text-text-secondary'
               }`}
@@ -189,6 +190,7 @@ export default function SelectionPane({
                 onToggleLock(el.id)
               }}
               title={isLocked ? 'Unlock element' : 'Lock element'}
+              aria-label={isLocked ? 'Unlock element' : 'Lock element'}
               className={`flex items-center rounded-sm border-none bg-transparent px-0.5 py-px ${
                 isLocked ? 'text-accent' : 'text-text-muted'
               }`}

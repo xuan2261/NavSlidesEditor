@@ -30,7 +30,7 @@ import { markdownToSlidesWithWarnings } from '../utils/markdown-import'
 import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../utils/import-project'
 import { summarizePptxImportWarnings } from '../utils/pptx-import-summary'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
-import { Button, Input, Select } from '../components/ui'
+import { Button, Input, ModalShell, Select } from '../components/ui'
 import SlideThumbnail from '../components/SlideThumbnail'
 
 const THEMES = [
@@ -197,6 +197,21 @@ function getTemplateStartButtonStateClassName(isSelected) {
     ? '!bg-accent !border-accent !text-white'
     : 'bg-card border-border text-text-primary hover:bg-hover hover:border-border-strong'
 }
+
+function handleKeyboardClick(event, callback) {
+  if (event.key !== 'Enter' && event.key !== ' ') return
+  event.preventDefault()
+  callback(event)
+}
+
+const DASHBOARD_CARD_CLASS =
+  'group bg-card border border-border rounded-lg overflow-hidden transition-[background-color,border-color,box-shadow,opacity] duration-150 hover:border-border-strong hover:shadow-[0_12px_28px_rgba(36,25,21,0.14)] focus-within:ring-2 focus-within:ring-focus/25'
+
+const DASHBOARD_ACTION_TILE_CLASS =
+  'flex items-center gap-2.5 px-5 py-3.5 bg-card border border-border rounded-md text-text-primary text-sm font-medium cursor-pointer transition-[background-color,border-color,box-shadow,color] duration-150 hover:bg-hover hover:border-accent hover:shadow-[0_8px_20px_rgba(36,25,21,0.12)]'
+
+const CATEGORY_PILL_CLASS =
+  'px-3.5 py-1.5 rounded-full text-xs font-medium bg-card border border-border text-text-secondary cursor-pointer transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-border-strong hover:text-text-primary focus-visible:ring-2 focus-visible:ring-focus/30'
 
 // Sidebar navigation items
 const SIDEBAR_VIEWS = [
@@ -635,10 +650,10 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   return (
     <div className="h-full flex flex-col bg-panel">
       {/* ════ Header ════ */}
-      <div className="flex items-center justify-between px-6 h-14 border-b border-border bg-secondary shrink-0">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-secondary px-4 sm:px-6">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-[17px] font-bold text-text-primary tracking-tight">
-            <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center text-white font-extrabold text-sm">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-brand/30 bg-brand text-sm font-extrabold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
               N
             </div>
             <span>NavSlides Editor</span>
@@ -646,7 +661,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         </div>
 
         {/* Search */}
-        <div className="relative w-full max-w-md">
+        <div className="relative w-full max-w-md min-w-0">
           <Search
             size={15}
             className="absolute left-[11px] top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
@@ -857,12 +872,19 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           {/* H-01: import progress/warning at sidebar bottom */}
           <div className="mt-auto px-3 pb-2">
             {importProgress && (
-              <div className="rounded border border-border bg-card px-2 py-1.5 text-[11px] text-text-secondary">
+              <div
+                className="rounded border border-border bg-card px-2 py-1.5 text-[11px] text-text-secondary"
+                role="status"
+                aria-live="polite"
+              >
                 {importProgress}
               </div>
             )}
             {importWarningSummary && (
-              <div className="mt-2 rounded border border-yellow-500/30 bg-yellow-500/10 px-2 py-1.5 text-[11px] text-text-secondary">
+              <div
+                className="mt-2 rounded border border-yellow-500/30 bg-yellow-500/10 px-2 py-1.5 text-[11px] text-text-secondary"
+                role="alert"
+              >
                 {importWarningSummary}
               </div>
             )}
@@ -870,7 +892,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         </nav>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto pt-7 px-8 pb-7">
+        <div className="flex-1 overflow-y-auto px-4 pb-7 pt-7 sm:px-8">
           {loading ? (
             <div className="text-text-muted text-center p-20">
               Loading...
@@ -904,10 +926,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                       ? { background: bg }
                       : { backgroundColor: bg }
                     return (
-                      <div
-                        key={pres.id}
-                        className="group bg-card border border-border rounded-lg overflow-hidden cursor-default transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg opacity-70"
-                      >
+                      <div key={pres.id} className={`${DASHBOARD_CARD_CLASS} cursor-default opacity-70`}>
                         <div
                           className="aspect-video flex items-center justify-center bg-surface-2 relative overflow-hidden text-[32px] text-text-muted"
                           style={bgProp}
@@ -961,7 +980,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   <Button
                     variant="ghost"
                     key={cat}
-                    className={`template-category-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-card border border-border text-text-secondary cursor-pointer transition-all hover:border-border-strong hover:text-text-primary ${templateCategory === cat ? '!bg-accent !border-accent !text-white' : ''}`}
+                    className={`template-category-btn ${CATEGORY_PILL_CLASS} ${templateCategory === cat ? '!bg-accent !border-accent !text-white' : ''}`}
                     onClick={() => setTemplateCategory(cat)}
                   >
                     {cat}
@@ -978,10 +997,15 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   return (
                     <div
                       key={preset.id}
-                      className={`group bg-card border border-border rounded-lg overflow-hidden transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg ${
+                      className={`${DASHBOARD_CARD_CLASS} ${
                         creating ? 'cursor-wait' : 'cursor-pointer'
                       }`}
+                      role="button"
+                      tabIndex={creating ? -1 : 0}
                       onClick={() => handleCreateFromTemplate(preset.id, true)}
+                      onKeyDown={(event) =>
+                        handleKeyboardClick(event, () => handleCreateFromTemplate(preset.id, true))
+                      }
                     >
                       <div
                         className="aspect-video flex items-center justify-center relative overflow-hidden"
@@ -1045,8 +1069,11 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     return (
                       <div
                         key={tmpl.id}
-                        className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
+                        className={`${DASHBOARD_CARD_CLASS} cursor-pointer`}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => onOpen(tmpl.id, true)}
+                        onKeyDown={(event) => handleKeyboardClick(event, () => onOpen(tmpl.id, true))}
                       >
                         <SlideThumbnail id={tmpl.id} bgProp={bgProp} />
                         <div className="px-4 py-3">
@@ -1128,7 +1155,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
               <div className="flex flex-wrap gap-1.5 mb-5">
                 <Button
                   variant="ghost"
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium bg-card border border-border text-text-secondary cursor-pointer transition-all hover:border-border-strong hover:text-text-primary ${!marketplaceCategory ? '!bg-accent !border-accent !text-white' : ''}`}
+                  className={`${CATEGORY_PILL_CLASS} ${!marketplaceCategory ? '!bg-accent !border-accent !text-white' : ''}`}
                   onClick={() => setMarketplaceCategory('')}
                 >
                   All
@@ -1137,7 +1164,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   <Button
                     variant="ghost"
                     key={cat.id}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium bg-card border border-border text-text-secondary cursor-pointer transition-all hover:border-border-strong hover:text-text-primary ${marketplaceCategory === cat.id ? '!bg-accent !border-accent !text-white' : ''}`}
+                    className={`${CATEGORY_PILL_CLASS} ${marketplaceCategory === cat.id ? '!bg-accent !border-accent !text-white' : ''}`}
                     onClick={() => setMarketplaceCategory(cat.id)}
                   >
                     {cat.name}
@@ -1167,8 +1194,13 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     return (
                       <div
                         key={tmpl.id}
-                        className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg"
+                        className={`${DASHBOARD_CARD_CLASS} cursor-pointer`}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setPreviewTemplate(tmpl)}
+                        onKeyDown={(event) =>
+                          handleKeyboardClick(event, () => setPreviewTemplate(tmpl))
+                        }
                       >
                         <SlideThumbnail id={tmpl.id} bgProp={bgProp} />
                         <div className="px-4 py-3">
@@ -1201,7 +1233,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
               {/* Welcome screen for empty state */}
               {presentations.length === 0 && !searchQuery ? (
                 <div className="flex flex-col items-center justify-center py-20 px-10 text-center animate-fade-in">
-                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center text-white mb-6 text-[28px]">
+                  <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-brand/25 bg-brand-muted text-brand shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]">
                     <Rocket size={28} />
                   </div>
                   <h1 className="text-2xl font-bold mb-2 tracking-tight text-text-primary">
@@ -1213,7 +1245,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   <div className="flex gap-3 flex-wrap justify-center">
                     <Button
                       variant="ghost"
-                      className="flex items-center gap-2.5 px-5 py-3.5 bg-card border border-border rounded-md text-text-primary text-sm font-medium cursor-pointer transition-all hover:bg-hover hover:border-accent hover:shadow-md hover:-translate-y-[1px]"
+                      className={DASHBOARD_ACTION_TILE_CLASS}
                       onClick={handleOpenModal}
                     >
                       <Plus size={18} />
@@ -1221,7 +1253,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     </Button>
                     <Button
                       variant="ghost"
-                      className="flex items-center gap-2.5 px-5 py-3.5 bg-card border border-border rounded-md text-text-primary text-sm font-medium cursor-pointer transition-all hover:bg-hover hover:border-accent hover:shadow-md hover:-translate-y-[1px]"
+                      className={DASHBOARD_ACTION_TILE_CLASS}
                       onClick={() => setSidebarView('templates')}
                     >
                       <LayoutTemplate size={18} />
@@ -1281,8 +1313,11 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   ) : viewMode === 'grid' ? (
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 animate-fade-in">
                       <div
-                        className="border-dashed border-2 border-border flex flex-col items-center justify-center gap-3 min-h-[200px] text-text-muted cursor-pointer transition-all rounded-lg hover:border-accent hover:text-accent hover:bg-hover"
+                        className="border-dashed border-2 border-border flex flex-col items-center justify-center gap-3 min-h-[200px] text-text-muted cursor-pointer transition-[background-color,border-color,color,box-shadow] duration-150 rounded-lg hover:border-accent hover:text-accent hover:bg-hover focus-visible:ring-2 focus-visible:ring-focus/30"
+                        role="button"
+                        tabIndex={0}
                         onClick={handleOpenModal}
+                        onKeyDown={(event) => handleKeyboardClick(event, handleOpenModal)}
                       >
                         <Plus size={28} />
                         <span>New Presentation</span>
@@ -1295,8 +1330,11 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         return (
                           <div
                             key={pres.id}
-                            className="group bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-all hover:border-border-strong hover:-translate-y-[3px] hover:shadow-lg flex flex-col h-full"
+                            className={`${DASHBOARD_CARD_CLASS} flex h-full cursor-pointer flex-col`}
+                            role="button"
+                            tabIndex={0}
                             onClick={() => onOpen(pres.id)}
+                            onKeyDown={(event) => handleKeyboardClick(event, () => onOpen(pres.id))}
                           >
                             <SlideThumbnail
                               id={pres.id}
@@ -1368,7 +1406,15 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate cursor-pointer" onClick={() => onOpen(pres.id)}>
+                              <h3
+                                className="mb-1 cursor-pointer truncate rounded text-[14px] font-semibold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/30"
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => onOpen(pres.id)}
+                                onKeyDown={(event) =>
+                                  handleKeyboardClick(event, () => onOpen(pres.id))
+                                }
+                              >
                                 {pres.title || 'Untitled'}
                               </h3>
                               <p className="text-[12px] text-text-secondary truncate">
@@ -1420,19 +1466,22 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
       {/* ════ Create Modal ════ */}
       {showModal && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[var(--z-modal)]"
-          onClick={() => setShowModal(false)}
+        <ModalShell
+          titleId="create-presentation-title"
+          title="New Presentation"
+          size="lg"
+          onClose={() => setShowModal(false)}
         >
-          <div
-            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full max-w-[560px] animate-zoom-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2>New Presentation</h2>
             <form onSubmit={handleCreate}>
-              <div className="form-group">
-                <label>Title</label>
+              <div className="mb-3">
+                <label
+                  className="mb-1 block text-xs font-medium text-text-secondary"
+                  htmlFor="create-presentation-title-input"
+                >
+                  Title
+                </label>
                 <Input
+                  id="create-presentation-title-input"
                   type="text"
                   placeholder="My Presentation"
                   value={form.title}
@@ -1442,9 +1491,18 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
               </div>
 
               {/* Template selector */}
-              <div className="form-group">
-                <label>Start from</label>
-                <div className="grid grid-cols-3 gap-2 mb-1">
+              <div className="mb-3">
+                <div
+                  id="create-presentation-template-label"
+                  className="mb-1 block text-xs font-medium text-text-secondary"
+                >
+                  Start from
+                </div>
+                <div
+                  className="grid grid-cols-3 gap-2 mb-1"
+                  role="group"
+                  aria-labelledby="create-presentation-template-label"
+                >
                   <Button
                     variant="ghost"
                     type="button"
@@ -1492,8 +1550,14 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
               {!form.templateId && (
                 <>
                   <div className="mb-3">
-                    <label>Theme</label>
+                    <label
+                      className="mb-1 block text-xs font-medium text-text-secondary"
+                      htmlFor="create-presentation-theme"
+                    >
+                      Theme
+                    </label>
                     <Select
+                      id="create-presentation-theme"
                       value={form.theme}
                       onChange={(e) => setForm((f) => ({ ...f, theme: e.target.value }))}
                     >
@@ -1505,8 +1569,14 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     </Select>
                   </div>
                   <div className="mb-3">
-                    <label>Transition</label>
+                    <label
+                      className="mb-1 block text-xs font-medium text-text-secondary"
+                      htmlFor="create-presentation-transition"
+                    >
+                      Transition
+                    </label>
                     <Select
+                      id="create-presentation-transition"
                       value={form.transition}
                       onChange={(e) => setForm((f) => ({ ...f, transition: e.target.value }))}
                     >
@@ -1528,8 +1598,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
+        </ModalShell>
       )}
 
       {/* ════ Template Preview Modal ════ */}
@@ -1564,14 +1633,12 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
       {/* ════ Confirm Dialog ════ */}
       {confirmDialog && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[var(--z-modal-overlay)]"
-          onClick={() => setConfirmDialog(null)}
+        <ModalShell
+          titleId="confirm-dialog-title"
+          title={confirmDialog.title}
+          size="sm"
+          onClose={() => setConfirmDialog(null)}
         >
-          <div
-            className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden p-6 w-full max-w-[420px] animate-zoom-in"
-            onClick={(e) => e.stopPropagation()}
-          >
             <div className="flex items-start gap-3.5">
               <div
                 className={`w-10 h-10 rounded-md shrink-0 flex items-center justify-center ${
@@ -1584,7 +1651,6 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                 />
               </div>
               <div className="flex-1">
-                <h2 className="text-base mb-2">{confirmDialog.title}</h2>
                 <p className="text-sm text-text-secondary leading-relaxed">
                   {confirmDialog.message}
                 </p>
@@ -1604,8 +1670,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                 {confirmDialog.variant === 'danger' ? 'Delete' : 'Confirm'}
               </Button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   )

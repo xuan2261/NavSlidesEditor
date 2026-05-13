@@ -39,7 +39,7 @@ test.describe('Game Elements — Insert & Render', () => {
   })
 
   for (const game of GAME_TYPES) {
-    test(`inserts ${game.label} via Insert menu`, async ({ page }) => {
+    test(`inserts ${game.label} via Insert menu`, async () => {
       const prevCount = await editorPage.getElementCount()
       await editorPage.clickInsertMenuItem(game.label)
       await editorPage.waitForElementCount(prevCount + 1)
@@ -53,7 +53,7 @@ test.describe('Game Elements — Insert & Render', () => {
     })
   }
 
-  test('game element increments canvas element count', async ({ page }) => {
+  test('game element increments canvas element count', async () => {
     const initialCount = await editorPage.getElementCount()
     await editorPage.clickInsertMenuItem('Name Picker')
     await editorPage.waitForElementCount(initialCount + 1)
@@ -245,7 +245,7 @@ test.describe('Game Element — Stability & Coexistence', () => {
     await expect(page.getByText(/Name Picker/).first()).toBeVisible({ timeout: 5000 })
   })
 
-  test('game elements coexist with shape elements', async ({ page }) => {
+  test('game elements coexist with shape elements', async () => {
     await editorPage.addShape('Rectangle')
     await editorPage.waitForElementCount(await editorPage.getElementCount())
     await editorPage.clickInsertMenuItem('Hot Potato Quiz')

@@ -14,7 +14,7 @@
 ## Overview
 
 - Priority: P1
-- Status: Pending
+- Status: Complete
 - Effort: 6h
 - Goal: make editor commands scan better without reducing workspace.
 
@@ -72,11 +72,11 @@ EditorPage top shell
 
 ## Todo List
 
-- [ ] Audit toolbar accessible names.
-- [ ] Normalize toolbar button styles.
-- [ ] Normalize dropdown/insert menu surfaces.
-- [ ] Normalize find/replace feedback states.
-- [ ] Run toolbar/shortcut tests.
+- [x] Audit toolbar accessible names.
+- [x] Normalize toolbar button styles.
+- [x] Normalize dropdown/insert menu surfaces.
+- [x] Normalize find/replace feedback states.
+- [x] Run toolbar/shortcut tests.
 
 ## Verify / Tests
 
@@ -104,6 +104,16 @@ EditorPage top shell
 ## Next Steps
 
 - Phase 06 panels.
+
+## Implementation Notes
+
+- Updated `DropdownMenu` trigger/menu styling without forcing incorrect ARIA menu semantics onto mixed checkbox/select/custom content.
+- Updated `InsertMenu` transition/focus/feedback styles and added alert semantics for upload failure.
+- Updated `FindReplaceBar` focus styling, active toggle states, and live no-match/match feedback.
+- Added toolbar unit coverage for toggle and rich-text command `aria-pressed` states.
+- Added `aria-pressed` to editor chrome toggles and rich-text active commands where applicable.
+- Improved keyboard/label contract for slide background swatches and palette controls.
+- Targeted e2e toolbar and keyboard shortcut tests passed on 2026-05-13.
 
 ## Unresolved Questions
 

@@ -104,12 +104,12 @@ export class EditorPage {
 
   async openSyncModal() {
     await this.openFileMenuItem('Sync to Cloud')
-    await this.page.waitForSelector('h3:has-text("Sync to Cloud")', { timeout: 5000 })
+    await expect(this.page.getByRole('dialog', { name: 'Sync to Cloud' })).toBeVisible()
   }
 
   async openHistoryModal() {
     await this.openFileMenuItem('Version History')
-    await this.page.waitForSelector('h3:has-text("Version History")', { timeout: 5000 })
+    await expect(this.page.getByRole('dialog', { name: 'Version History' })).toBeVisible()
   }
 
   async closeOverlayModal() {
@@ -244,13 +244,13 @@ export class EditorPage {
   async openShareModal() {
     await this.page.click('button.menu-trigger:has-text("Share")')
     await this.page.locator('.dropdown-item').filter({ hasText: 'Share Link' }).click()
-    await this.page.waitForSelector('h3:has-text("Share Presentation")')
+    await expect(this.page.getByRole('dialog', { name: 'Share Presentation' })).toBeVisible()
   }
 
   async openAICopywriter() {
     await this.page.click('button.menu-trigger:has-text("AI")')
     await this.page.locator('.dropdown-item').filter({ hasText: 'AI Copywriter' }).click()
-    await this.page.waitForSelector('h3:has-text("AI Copywriter")')
+    await expect(this.page.getByRole('dialog', { name: 'AI Copywriter' })).toBeVisible()
   }
 
   async startBroadcast() {

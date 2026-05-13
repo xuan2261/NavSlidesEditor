@@ -30,16 +30,18 @@ export default function DropdownMenu({ label, items, isOpen, onToggle, onClose, 
   return (
     <div className="relative inline-block text-left" ref={menuRef}>
       <button
-        className={`menu-trigger flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md hover:bg-hover transition-colors ${
+        className={`menu-trigger flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium transition-[background-color,color,box-shadow] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/30 ${
           isOpen ? 'bg-active text-accent' : 'text-text-secondary'
         }`}
         onClick={onToggle}
+        aria-haspopup="true"
+        aria-expanded={isOpen}
       >
         {label} <ChevronDown size={14} className="opacity-60 ml-1" />
       </button>
       {isOpen && (
         <div
-          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-1 w-56 bg-panel text-text-primary rounded-md shadow-lg border border-border z-[9999] flex flex-col py-1`}
+          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full z-[9999] mt-1 flex w-56 flex-col rounded-md border border-border bg-panel py-1 text-text-primary shadow-[0_16px_44px_rgba(0,0,0,0.28)]`}
         >
           {safeItems.map((item, idx) => {
             if (item.type === 'separator') {
@@ -59,7 +61,7 @@ export default function DropdownMenu({ label, items, isOpen, onToggle, onClose, 
               return (
                 <label
                   key={item.label}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm text-text-primary hover:bg-hover cursor-pointer transition-colors w-full"
+                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-sm text-text-primary transition-colors hover:bg-hover"
                 >
                   <input
                     type="checkbox"
@@ -103,7 +105,7 @@ export default function DropdownMenu({ label, items, isOpen, onToggle, onClose, 
             return (
               <button
                 key={item.label}
-                className={`dropdown-item flex items-center gap-2 px-3 py-1.5 text-sm w-full text-left transition-colors ${item.disabled ? 'opacity-50 cursor-not-allowed text-text-muted' : 'hover:bg-hover'} ${item.danger ? 'text-danger hover:text-danger hover:bg-danger/10' : 'text-text-primary'}`}
+                className={`dropdown-item flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-[background-color,color,opacity] duration-150 focus:outline-none ${item.disabled ? 'cursor-not-allowed text-text-muted opacity-50' : 'hover:bg-hover focus:bg-hover'} ${item.danger ? 'text-danger hover:bg-danger/10 hover:text-danger focus:bg-danger/10' : 'text-text-primary'}`}
                 onClick={() => {
                   item.onClick?.()
                   if (!item.keepOpen) onClose()

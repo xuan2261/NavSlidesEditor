@@ -16,6 +16,10 @@ import { sanitizeRichTextHtml } from '../utils/content-safety'
 const DEFAULT_SLIDE_WIDTH = 960
 const DEFAULT_SLIDE_HEIGHT = 540
 const THUMBNAIL_PREVIEW_WIDTH = 180
+const SLIDE_THUMBNAIL_CLASS =
+  'group rounded-md border-2 cursor-pointer relative transition-[border-color,box-shadow,outline-color] duration-150 hover:border-border-strong focus-within:ring-2 focus-within:ring-focus/25'
+const CONTEXT_MENU_ITEM_CLASS =
+  'flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-text-secondary transition-[background-color,color,opacity] duration-150 hover:bg-hover hover:text-text-primary focus:bg-hover focus:text-text-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-45'
 
 function getBgStyle(bg) {
   if (!bg || bg.type === 'none') return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
@@ -39,6 +43,10 @@ function getPreviewFrameStyle(bg, slideWidth, slideHeight) {
     ...getBgStyle(bg),
     aspectRatio: `${slideWidth} / ${slideHeight}`,
   }
+}
+
+function isKeyboardActivation(event) {
+  return event.key === 'Enter' || event.key === ' '
 }
 
 function getPreviewElementStyle(el, slideWidth, slideHeight) {
@@ -156,8 +164,8 @@ export default function SlidePanel({
   }, [setCtxMenu])
 
   return (
-    <div className="slide-panel tour-step-slide-panel flex flex-col w-[200px] bg-secondary border-r border-border h-full">
-      <div className="slide-panel-header px-4 py-3 flex items-center justify-between border-b border-border bg-card font-medium text-text-primary text-sm">
+    <div className="slide-panel tour-step-slide-panel flex h-full w-[200px] flex-col border-r border-border bg-secondary">
+      <div className="slide-panel-header flex items-center justify-between border-b border-border bg-card px-4 py-3 text-sm font-semibold text-text-primary">
         <span>Slides</span>
         <span className="text-text-muted text-[11px]">{slides.length}</span>
       </div>
@@ -167,7 +175,11 @@ export default function SlidePanel({
           return (
             <div
               key={slide.id || index}
-              className={`slide-item group rounded-sm border-2 cursor-pointer relative transition-all hover:border-border-strong ${index === currentIndex ? 'border-accent' : 'border-transparent'} ${selectedIndices.includes(index) && index !== currentIndex ? 'outline outline-2 outline-accent outline-offset-[-2px]' : ''} ${dragOverIndex === index ? 'outline outline-2 outline-accent outline-offset-[-2px]' : ''}`}
+              className={`slide-item ${SLIDE_THUMBNAIL_CLASS} ${index === currentIndex ? 'border-accent shadow-[0_0_0_2px_var(--selection-muted)]' : 'border-transparent'} ${selectedIndices.includes(index) && index !== currentIndex ? 'outline outline-2 outline-accent outline-offset-[-2px]' : ''} ${dragOverIndex === index ? 'outline outline-2 outline-accent outline-offset-[-2px]' : ''}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`Select slide ${index + 1}`}
+              aria-current={index === currentIndex ? 'true' : undefined}
               draggable
               onDragStart={() => {
                 dragIndexRef.current = index
@@ -205,6 +217,17 @@ export default function SlidePanel({
                 onSelect(index)
               }}
               onContextMenu={(e) => handleContextMenu(e, index)}
+              onKeyDown={(e) => {
+                if (isKeyboardActivation(e)) {
+                  e.preventDefault()
+                  setSelectedIndices([index])
+                  onSelect(index)
+                } else if (e.key === 'F10' && e.shiftKey) {
+                  e.preventDefault()
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  setCtxMenu({ x: rect.left + 12, y: rect.top + 12, index })
+                }
+              }}
             >
               <span
                 className={`absolute top-1 left-1 text-[10px] text-text-muted bg-surface-2/80 px-1 py-[1px] rounded-[3px] z-10 ${
@@ -390,8 +413,22 @@ export default function SlidePanel({
                   {slide.children.map((child, ci) => (
                     <div
                       key={child.id || `${index}-${ci}`}
-                      className={`group rounded-sm border-2 cursor-pointer relative transition-all hover:border-border-strong mb-0.5 ${currentVerticalIndex?.parent === index && currentVerticalIndex?.child === ci ? 'border-accent' : 'border-transparent'}`}
+                      className={`${SLIDE_THUMBNAIL_CLASS} mb-0.5 ${currentVerticalIndex?.parent === index && currentVerticalIndex?.child === ci ? 'border-accent shadow-[0_0_0_2px_var(--selection-muted)]' : 'border-transparent'}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Select vertical slide ${index + 1}.${ci + 1}`}
+                      aria-current={
+                        currentVerticalIndex?.parent === index && currentVerticalIndex?.child === ci
+                          ? 'true'
+                          : undefined
+                      }
                       onClick={(e) => {
+                        e.stopPropagation()
+                        onSelectVertical?.({ parent: index, child: ci })
+                      }}
+                      onKeyDown={(e) => {
+                        if (!isKeyboardActivation(e)) return
+                        e.preventDefault()
                         e.stopPropagation()
                         onSelectVertical?.({ parent: index, child: ci })
                       }}
@@ -481,7 +518,7 @@ export default function SlidePanel({
           <div
             role="menu"
             aria-label="Slide actions"
-            className="absolute z-[9999] bg-card border border-border rounded-lg shadow-xl py-1 min-w-[160px]"
+            className="absolute z-[9999] min-w-[180px] overflow-hidden rounded-lg border border-border bg-card py-1 shadow-[0_18px_50px_rgba(0,0,0,0.32)]"
             style={getContextMenuStyle(ctxMenu)}
             onMouseDown={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
@@ -503,6 +540,7 @@ export default function SlidePanel({
             <button
               role="menuitem"
               tabIndex={0}
+              className={CONTEXT_MENU_ITEM_CLASS}
               onClick={() => {
                 onDuplicate(ctxMenu.index)
                 setCtxMenu(null)
@@ -513,6 +551,7 @@ export default function SlidePanel({
             <button
               role="menuitem"
               tabIndex={0}
+              className={CONTEXT_MENU_ITEM_CLASS}
               onClick={() => {
                 onToggleLock?.(ctxMenu.index)
                 setCtxMenu(null)
@@ -524,6 +563,7 @@ export default function SlidePanel({
             <button
               role="menuitem"
               tabIndex={0}
+              className={CONTEXT_MENU_ITEM_CLASS}
               onClick={() => {
                 onToggleAutoAnimate?.(ctxMenu.index)
                 setCtxMenu(null)
@@ -536,6 +576,7 @@ export default function SlidePanel({
             <button
               role="menuitem"
               tabIndex={0}
+              className={CONTEXT_MENU_ITEM_CLASS}
               onClick={() => {
                 onMove(ctxMenu.index, ctxMenu.index - 1)
                 setCtxMenu(null)
@@ -547,6 +588,7 @@ export default function SlidePanel({
             <button
               role="menuitem"
               tabIndex={0}
+              className={CONTEXT_MENU_ITEM_CLASS}
               onClick={() => {
                 onMove(ctxMenu.index, ctxMenu.index + 1)
                 setCtxMenu(null)
@@ -559,6 +601,7 @@ export default function SlidePanel({
               <button
                 role="menuitem"
                 tabIndex={0}
+                className={CONTEXT_MENU_ITEM_CLASS}
                 onClick={() => {
                   onAddVerticalSlide?.(ctxMenu.index)
                   setCtxMenu(null)
@@ -575,7 +618,7 @@ export default function SlidePanel({
                 if (slides.length > 1) onDelete(ctxMenu.index)
                 setCtxMenu(null)
               }}
-              className={slides.length > 1 ? 'text-danger' : 'text-text-muted'}
+              className={`${CONTEXT_MENU_ITEM_CLASS} ${slides.length > 1 ? '!text-danger' : 'text-text-muted'}`}
               disabled={slides.length <= 1}
             >
               <Trash2 size={14} /> Delete

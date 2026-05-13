@@ -12,7 +12,7 @@
 ## Overview
 
 - Priority: P1
-- Status: Pending
+- Status: Complete
 - Effort: 7h
 - Goal: make dense side panels easier to scan and operate.
 
@@ -71,12 +71,12 @@ properties/* -> focused control groups
 
 ## Todo List
 
-- [ ] Update panel shell styles.
-- [ ] Update CollapsibleSection.
-- [ ] Update SlidePanel overlays/context menu.
-- [ ] Update PropertiesPanel common areas.
-- [ ] Update high-use property groups.
-- [ ] Run panel tests.
+- [x] Update panel shell styles.
+- [x] Update CollapsibleSection.
+- [x] Update SlidePanel overlays/context menu.
+- [x] Update PropertiesPanel common areas.
+- [x] Update high-use property groups.
+- [x] Run panel tests.
 
 ## Verify / Tests
 
@@ -107,6 +107,16 @@ properties/* -> focused control groups
 ## Next Steps
 
 - Phase 07 a11y/responsive/motion.
+
+## Implementation Notes
+
+- Converted `CollapsibleSection` header to a real button with `aria-expanded` and visible focus.
+- Added unit coverage for disclosure semantics.
+- Updated slide thumbnail active/focus/context menu styling and keyboard selection support.
+- Added accessible labels to SelectionPane visibility/lock controls.
+- Added `PropertiesPanel` labelled complementary landmark coverage.
+- Updated common property lock/layer controls to use Lucide icons instead of structural emoji/glyphs.
+- Targeted properties panel e2e tests passed on 2026-05-13.
 
 ## Unresolved Questions
 

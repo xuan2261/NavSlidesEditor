@@ -12,7 +12,7 @@
 ## Overview
 
 - Priority: P1
-- Status: Pending
+- Status: Complete
 - Effort: 5h
 - Goal: verify interaction quality after visual changes.
 
@@ -56,11 +56,11 @@ Global CSS handles reduced motion and focus baseline. Component fixes remain loc
 
 ## Todo List
 
-- [ ] Add reduced-motion CSS.
-- [ ] Fix unlabeled icon buttons.
-- [ ] Replace risky `transition-all`.
-- [ ] Add alert/live roles.
-- [ ] Verify small viewport behavior.
+- [x] Add reduced-motion CSS.
+- [x] Fix unlabeled icon buttons.
+- [x] Replace risky `transition-all`.
+- [x] Add alert/live roles.
+- [x] Verify small viewport behavior.
 
 ## Verify / Tests
 
@@ -91,6 +91,15 @@ Global CSS handles reduced motion and focus baseline. Component fixes remain loc
 ## Next Steps
 
 - Phase 08 final tests/docs.
+
+## Implementation Notes
+
+- Added a global `prefers-reduced-motion: reduce` baseline for app UI transitions and animations.
+- Added keyboard activation for touched dashboard cards and slide thumbnails.
+- Added focus trap/restore to the shared modal shell.
+- Replaced high-impact `transition-all` / hover translate patterns in touched dashboard/editor/panel surfaces.
+- Verification passed: targeted Vitest, lint, production build, keyboard shortcuts e2e, narrow viewport animation modal e2e, and coverage-gaps responsive/keyboard smoke.
+- `npm run test:e2e -- tests/e2e/keyboard-shortcuts.spec.js tests/e2e/animation-preview.spec.js tests/e2e/coverage-gaps.spec.js` passed on 2026-05-14: 10/10.
 
 ## Unresolved Questions
 

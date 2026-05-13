@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -11,15 +11,21 @@ export function isBackdropClick(event) {
 }
 
 export function useEscapeClose(onClose) {
-  useEffect(() => {
-    if (typeof onClose !== 'function') return undefined
+  const onCloseRef = useRef(onClose)
 
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
+
+  useLayoutEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key !== 'Escape') return
-      onClose()
+      if (typeof onCloseRef.current === 'function') {
+        onCloseRef.current()
+      }
     }
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  }, [])
 }

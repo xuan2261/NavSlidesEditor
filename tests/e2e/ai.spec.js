@@ -45,7 +45,7 @@ test.describe('AI Integrations', () => {
     ).toBeVisible({ timeout: 5000 })
     await page.locator('button', { hasText: 'Apply' }).click()
 
-    await expect(page.locator('h3:has-text("AI Copywriter")')).toBeHidden()
+    await expect(page.getByRole('dialog', { name: 'AI Copywriter' })).toHaveCount(0)
 
     const wrapper = page.locator('.element-wrapper').last()
     const textContent = await wrapper.innerText()
@@ -55,16 +55,16 @@ test.describe('AI Integrations', () => {
   test('can use AI Slide Generator modal', async ({ page }) => {
     await page.click('button.menu-trigger:has-text("AI")')
     await page.locator('.dropdown-item').filter({ hasText: 'AI Slide Generator' }).click()
-    await expect(page.locator('h3:has-text("AI Slide Generator")')).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'AI Slide Generator' })).toBeVisible()
     await page.locator('button:has(svg.lucide-x)').click()
-    await expect(page.locator('h3:has-text("AI Slide Generator")')).toBeHidden()
+    await expect(page.getByRole('dialog', { name: 'AI Slide Generator' })).toHaveCount(0)
   })
 
   test('can use Translate Presentation modal', async ({ page }) => {
     await page.click('button.menu-trigger:has-text("AI")')
     await page.locator('.dropdown-item').filter({ hasText: 'Translate' }).click()
-    await expect(page.locator('h3:has-text("Translate Presentation")')).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Translate Presentation' })).toBeVisible()
     await page.locator('button:has(svg.lucide-x)').click()
-    await expect(page.locator('h3:has-text("Translate Presentation")')).toBeHidden()
+    await expect(page.getByRole('dialog', { name: 'Translate Presentation' })).toHaveCount(0)
   })
 })

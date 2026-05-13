@@ -37,7 +37,15 @@ navslides-editor/
 ### Editor Model
 
 - `EditorPage.jsx` composes the editor shell, overlays, menus, toolbars, and
-  modal surfaces.
+  modal surfaces. Shared dialogs now flow through `ModalShell`; dense panel
+  sections use disclosure semantics in `CollapsibleSection`.
+- Editor chrome a11y is tightened: toolbar state toggles and active rich-text
+  commands expose `aria-pressed`, slide background swatches are keyboard
+  reachable and labelled, the highlight palette uses `listbox` / `option`
+  semantics, and `PropertiesPanel` is exposed as `role="complementary"` with
+  the accessible name `Properties panel`.
+- Common property lock/layer actions now use Lucide icons instead of structural
+  emoji or arrow glyphs.
 - `SlideCanvas.jsx` owns core canvas interaction; clipboard and keyboard logic
   are pushed into hooks.
 - `game-player-join-page.jsx` is the standalone player route for interactive

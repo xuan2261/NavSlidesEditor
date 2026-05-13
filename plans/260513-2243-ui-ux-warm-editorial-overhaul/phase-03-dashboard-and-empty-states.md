@@ -11,7 +11,7 @@
 ## Overview
 
 - Priority: P1
-- Status: Pending
+- Status: Complete
 - Effort: 7h
 - Goal: make first screen clearer, warmer, and faster to operate.
 
@@ -71,11 +71,11 @@ HomePage
 
 ## Todo List
 
-- [ ] Update dashboard header and sidebar styling.
-- [ ] Update empty states.
-- [ ] Update cards/list rows.
-- [ ] Improve loading/import warning feedback.
-- [ ] Run dashboard and template tests.
+- [x] Update dashboard header and sidebar styling.
+- [x] Update empty states.
+- [x] Update cards/list rows.
+- [x] Improve loading/import warning feedback.
+- [x] Run dashboard and template tests.
 
 ## Verify / Tests
 
@@ -105,6 +105,16 @@ HomePage
 ## Next Steps
 
 - Phase 04 modal shell.
+
+## Implementation Notes
+
+- Replaced indigo-purple dashboard marks with warm brand/token styling.
+- Replaced layout-shifting card hover movement with border/ring/elevation states.
+- Added keyboard activation to dashboard cards and the new-presentation tile.
+- Added `role="status"` / `role="alert"` to import progress and warnings.
+- Targeted unit tests, lint, and production build passed.
+- `npm run test:e2e -- tests/e2e/dashboard.spec.js` passed on 2026-05-14: 11/11.
+- `npm run test:e2e -- tests/e2e/visual-regression.spec.js` passed on 2026-05-14: 1/1.
 
 ## Unresolved Questions
 

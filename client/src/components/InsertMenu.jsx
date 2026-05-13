@@ -128,7 +128,7 @@ export default function InsertMenu({
   return (
     <div className="insert-menu relative" ref={menuRef}>
       <button
-        className={`insert-trigger inline-flex cursor-pointer items-center gap-1.5 rounded-sm bg-accent px-3 py-1.5 text-[13px] font-medium text-white transition-all hover:bg-accent-hover ${open ? 'bg-accent-hover' : ''}`}
+        className={`insert-trigger inline-flex cursor-pointer items-center gap-1.5 rounded-sm bg-accent px-3 py-1.5 text-[13px] font-medium text-white transition-[background-color,box-shadow,color] duration-150 hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/30 ${open ? 'bg-accent-hover' : ''}`}
         onClick={() => {
           setOpen((v) => !v)
           setSubMenu(null)
@@ -138,26 +138,26 @@ export default function InsertMenu({
       </button>
 
       {open && (
-        <div className="insert-dropdown absolute left-0 top-[calc(100%+4px)] z-[110] w-[240px] overflow-visible rounded-md border border-border-strong bg-card p-1 shadow-xl">
+        <div className="insert-dropdown absolute left-0 top-[calc(100%+4px)] z-[110] w-[240px] overflow-visible rounded-md border border-border-strong bg-card p-1 shadow-[0_16px_44px_rgba(0,0,0,0.28)]">
           <div className="overflow-y-auto max-h-[520px] w-full flex flex-col">
           {/* BASIC */}
           <div className="insert-category mt-1 px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
             Basic
           </div>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddText)}
           >
             <Type size={15} /> <span>Text</span>
           </button>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddImage)}
           >
             <ImageIcon size={15} /> <span>Image (URL)</span>
           </button>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => {
               fileRef.current?.click()
             }}
@@ -187,32 +187,32 @@ export default function InsertMenu({
             Content
           </div>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddHtmlElement)}
           >
             <FileCode size={15} /> <span>Embed HTML</span>
           </button>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddQrCode)}
           >
             <QrCode size={15} /> <span>QR Code</span>
           </button>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddCodeElement)}
           >
             <Code size={15} /> <span>Code Block</span>
           </button>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddLatexElement)}
           >
             <Sigma size={15} />
             <span>LaTeX / TikZ</span>
           </button>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddMarkdownElement)}
           >
             <span className="text-[13px] font-bold w-[15px] text-center shrink-0">
@@ -221,7 +221,7 @@ export default function InsertMenu({
             <span>Markdown</span>
           </button>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddChart)}
           >
             <BarChart3 size={15} /> <span>Chart</span>
@@ -234,13 +234,13 @@ export default function InsertMenu({
             Media
           </div>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => setVideoPrompt(true)}
           >
             <Video size={15} /> <span>Video</span>
           </button>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => mediaRef.current?.click()}
           >
             <Music size={15} /> <span>Audio / Upload</span>
@@ -276,12 +276,15 @@ export default function InsertMenu({
             }}
           />
           {uploadError && (
-            <div className="mx-3 mb-1 rounded bg-red-500/10 px-2 py-1 text-xs text-red-400">
+            <div
+              className="mx-3 mb-1 rounded bg-danger/10 px-2 py-1 text-xs text-danger"
+              role="alert"
+            >
               {uploadError}
             </div>
           )}
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onOpenMediaLibrary)}
           >
             <FolderOpen size={15} /> <span>Media Library</span>
@@ -294,7 +297,7 @@ export default function InsertMenu({
             Shapes & Lines
           </div>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onMouseEnter={() => setSubMenu('shape')}
             onClick={() => setSubMenu(subMenu === 'shape' ? null : 'shape')}
           >
@@ -302,7 +305,7 @@ export default function InsertMenu({
             <ChevronRight size={12} className="ml-auto opacity-40" />
           </button>
           {subMenu === 'shape' && (
-            <div className="insert-sub-panel shape-picker-grid absolute left-full top-[50%] ml-1 grid w-[200px] grid-cols-4 gap-1 rounded-md border border-border-strong bg-card p-2 shadow-xl z-[120]">
+            <div className="insert-sub-panel shape-picker-grid absolute left-full top-[50%] ml-1 grid w-[200px] grid-cols-4 gap-1 rounded-md border border-border-strong bg-card p-2 shadow-[0_16px_44px_rgba(0,0,0,0.28)] z-[120]">
               {SHAPES.map((s) => (
                 <button
                   key={s.id}
@@ -317,13 +320,13 @@ export default function InsertMenu({
             </div>
           )}
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddLine)}
           >
             <ArrowUpRight size={15} /> <span>Line / Arrow</span>
           </button>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => svgRef.current?.click()}
           >
             <span className="text-[13px] w-[15px] text-center shrink-0">◇</span>
@@ -346,7 +349,7 @@ export default function InsertMenu({
             }}
           />
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onMouseEnter={() => setSubMenu('icon')}
             onClick={() => setSubMenu(subMenu === 'icon' ? null : 'icon')}
           >
@@ -355,7 +358,7 @@ export default function InsertMenu({
             <ChevronRight size={12} className="ml-auto opacity-40" />
           </button>
           {subMenu === 'icon' && (
-            <div className="absolute left-full top-[50%] ml-1 w-[280px] rounded-md border border-border-strong bg-card p-2 shadow-xl z-[120] flex flex-col gap-2 max-h-[400px] overflow-y-auto">
+            <div className="absolute left-full top-[50%] ml-1 w-[280px] rounded-md border border-border-strong bg-card p-2 shadow-[0_16px_44px_rgba(0,0,0,0.28)] z-[120] flex flex-col gap-2 max-h-[400px] overflow-y-auto">
               <input
                 type="text"
                 placeholder="Search icons..."
@@ -407,7 +410,7 @@ export default function InsertMenu({
             </div>
           )}
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddCallout)}
           >
             <span className="inline-flex items-center justify-center w-[15px] h-[15px] rounded-full bg-danger text-white text-[9px] font-bold shrink-0">
@@ -423,13 +426,13 @@ export default function InsertMenu({
             Layout
           </div>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddDivider)}
           >
             <Minus size={15} /> <span>Divider</span>
           </button>
           <div
-            className="insert-item flex w-full cursor-default flex-col items-start rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover gap-1.5"
+            className="insert-item flex w-full cursor-default flex-col items-start rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25 gap-1.5"
             onMouseEnter={() => setSubMenu('table')}
           >
             <div className="flex items-center gap-2.5">
@@ -516,7 +519,7 @@ export default function InsertMenu({
             )}
           </div>
           <button
-            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+            className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
             onClick={() => doAction(onAddDrawing)}
           >
             <Pencil size={15} /> <span>Drawing Canvas</span>
@@ -539,7 +542,7 @@ export default function InsertMenu({
           ].map(([type, icon, label]) => (
             <button
               key={type}
-              className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-colors hover:bg-hover"
+              className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
               onClick={() => doAction(onAddGame, type)}
             >
               <span className="text-sm w-[15px] text-center shrink-0">{icon}</span>

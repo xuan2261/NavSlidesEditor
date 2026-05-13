@@ -50,7 +50,7 @@ export const ColorPicker = React.forwardRef(
       <input
         type="color"
         className={cn(
-          'color-picker-swatch cursor-pointer shrink-0 rounded border border-border p-0',
+          'color-picker-swatch cursor-pointer shrink-0 rounded border border-border p-0 transition-[border-color,box-shadow,opacity] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-secondary disabled:cursor-not-allowed disabled:opacity-50',
           className
         )}
         style={safeStyle}

@@ -48,6 +48,16 @@ export default {
           hover: 'var(--accent-hover)',
           light: 'var(--accent-light)',
         },
+        brand: {
+          DEFAULT: 'var(--brand)',
+          hover: 'var(--brand-hover)',
+          muted: 'var(--brand-muted)',
+        },
+        focus: 'var(--focus)',
+        selection: {
+          DEFAULT: 'var(--selection)',
+          muted: 'var(--selection-muted)',
+        },
         success: 'var(--success)',
         danger: {
           DEFAULT: 'var(--danger)',

@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Search, Trash2, X, Upload, Image, Film, Music, Download } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Search, Trash2, Upload, Image, Film, Music, Download } from 'lucide-react'
 import { api } from '../utils/api'
 import { searchUnsplash } from '../services/unsplash'
 import { searchGiphy } from '../services/giphy'
-import { Button } from '../components/ui'
-import { isBackdropClick } from '../lib/utils'
+import { Button, ModalShell } from '../components/ui'
 
 const TYPE_FILTERS = [
   { key: '', label: 'All', icon: null },
@@ -27,9 +26,13 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const [statusMessage, setStatusMessage] = useState('')
+  const closeTimerRef = useRef(null)
 
   const loadMedia = useCallback(async () => {
     setLoading(true)
+    setError('')
     try {
       if (activeTab === 'local') {
         const params = {}
@@ -45,7 +48,7 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
         setMedia(data)
       }
     } catch (err) {
-      console.error('Failed to load media:', err)
+      setError(err.message || 'Failed to load media')
       setMedia([])
     } finally {
       setLoading(false)
@@ -59,18 +62,27 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
     return () => clearTimeout(delayDebounceFn)
   }, [loadMedia])
 
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    }
+  }, [])
+
   async function handleUpload(e) {
     const files = e.target.files
     if (!files?.length) return
     setUploading(true)
+    setError('')
+    setStatusMessage('')
     try {
       for (const file of files) {
         await api.uploadFile(file)
       }
       setActiveTab('local')
       await loadMedia()
+      setStatusMessage(files.length === 1 ? 'File uploaded.' : `${files.length} files uploaded.`)
     } catch (err) {
-      console.error('Upload failed:', err)
+      setError(err.message || 'Upload failed')
     } finally {
       setUploading(false)
       e.target.value = ''
@@ -80,15 +92,19 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
   async function handleDelete(filename) {
     if (activeTab !== 'local') return
     if (!confirm('Delete this file?')) return
+    setError('')
+    setStatusMessage('')
     try {
       await api.deleteMedia(filename)
       setMedia((prev) => prev.filter((m) => m.filename !== filename))
+      setStatusMessage('File deleted.')
     } catch (err) {
-      console.error('Delete failed:', err)
+      setError(err.message || 'Delete failed')
     }
   }
 
   async function handleInsert(item) {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
     if (activeTab === 'local') {
       if (onInsert) onInsert(item)
       onClose()
@@ -96,6 +112,8 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
       // For Unsplash/Giphy, download to local server first
       try {
         setUploading(true)
+        setError('')
+        setStatusMessage('')
         // Here we'd ideally fetch the blob and upload to api.uploadFile
         // For simplicity in this demo without proxy, we just return the remote URL
         // OR we can fetch it via browser and upload.
@@ -110,13 +128,13 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
           onInsert({ url: uploaded.url || item.url, type: 'image' })
         }
         onClose()
-      } catch (err) {
-        console.error('Failed to download from external source:', err)
+      } catch {
+        setStatusMessage('Could not save remote media locally. Inserted remote URL instead.')
         // fallback to just inserting url directly
         if (onInsert) {
           onInsert({ url: item.downloadUrl, type: 'image' })
         }
-        onClose()
+        closeTimerRef.current = window.setTimeout(onClose, 1800)
       } finally {
         setUploading(false)
       }
@@ -126,173 +144,162 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
   const [isOpen, setIsOpen] = useState(true)
 
   const handleClose = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
     setIsOpen(false)
     onClose()
   }
 
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') handleClose() }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
-      onClick={(event) => {
-        if (isBackdropClick(event)) handleClose()
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="media-library-modal-title"
+    <ModalShell
+      title="Media Library"
+      titleId="media-library-modal-title"
+      size="2xl"
+      onClose={handleClose}
+      bodyClassName="p-0 flex min-h-[70vh] flex-col"
     >
-      <div
-        className="bg-card rounded-xl shadow-2xl border border-border w-[850px] max-w-[90vw] max-h-[85vh] flex flex-col overflow-hidden"
-        onClick={(event) => event.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex justify-between items-center px-6 pt-5 pb-3">
-          <h2 id="media-library-modal-title" className="m-0 text-lg text-text-primary">Media Library</h2>
-          <Button variant="icon" onClick={handleClose} aria-label="Close">
-            <X size={18} />
+      {(error || statusMessage) && (
+        <div
+          className={`mx-6 mb-3 rounded-md border px-3 py-2 text-[13px] ${
+            error
+              ? 'border-danger/30 bg-danger/10 text-danger'
+              : 'border-accent/30 bg-accent/10 text-text-primary'
+          }`}
+          role={error ? 'alert' : 'status'}
+        >
+          {error || statusMessage}
+        </div>
+      )}
+      {/* Tabs */}
+      <div className="flex gap-3 border-b border-border px-6 pb-3 mb-4">
+        {['local', 'unsplash', 'giphy'].map((tab) => (
+          <Button
+            variant="ghost"
+            key={tab}
+            className={`capitalize px-4 py-1.5 text-[13px] rounded-md transition-colors ${activeTab === tab ? 'bg-accent/15 text-accent font-medium' : 'text-text-muted hover:bg-hover'}`}
+            onClick={() => {
+              setActiveTab(tab)
+              setSearch('')
+            }}
+          >
+            {tab === 'local' ? 'My Media' : tab}
           </Button>
-        </div>
+        ))}
+      </div>
 
-        {/* Tabs */}
-        <div className="flex gap-3 border-b border-border px-6 pb-3 mb-4">
-          {['local', 'unsplash', 'giphy'].map((tab) => (
-            <Button
-              variant="ghost"
-              key={tab}
-              className={`capitalize px-4 py-1.5 text-[13px] rounded-md transition-colors ${activeTab === tab ? 'bg-accent/15 text-accent font-medium' : 'text-text-muted hover:bg-hover'}`}
-              onClick={() => {
-                setActiveTab(tab)
-                setSearch('')
-              }}
-            >
-              {tab === 'local' ? 'My Media' : tab}
-            </Button>
-          ))}
+      {/* Toolbar: Search + Filter + Upload */}
+      <div className="flex gap-2 items-center px-6 mb-4">
+        <div className="relative flex-1">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+          <input
+            className="w-full pl-9 pr-3 py-1.5 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors"
+            type="text"
+            placeholder={`Search ${activeTab === 'local' ? 'files' : activeTab}...`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-
-        {/* Toolbar: Search + Filter + Upload */}
-        <div className="flex gap-2 items-center px-6 mb-4">
-          <div className="relative flex-1">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
-            />
-            <input
-              className="w-full pl-9 pr-3 py-1.5 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors"
-              type="text"
-              placeholder={`Search ${activeTab === 'local' ? 'files' : activeTab}...`}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+        {activeTab === 'local' && (
+          <div className="flex gap-1">
+            {TYPE_FILTERS.map((f) => (
+              <Button
+                variant="ghost"
+                key={f.key}
+                className={`px-3 py-1.5 text-[11px] rounded-md transition-colors ${typeFilter === f.key ? 'bg-accent text-white' : 'bg-secondary text-text-muted hover:bg-hover border border-border'}`}
+                onClick={() => setTypeFilter(f.key)}
+              >
+                {f.label}
+              </Button>
+            ))}
           </div>
-          {activeTab === 'local' && (
-            <div className="flex gap-1">
-              {TYPE_FILTERS.map((f) => (
-                <Button
-                  variant="ghost"
-                  key={f.key}
-                  className={`px-3 py-1.5 text-[11px] rounded-md transition-colors ${typeFilter === f.key ? 'bg-accent text-white' : 'bg-secondary text-text-muted hover:bg-hover border border-border'}`}
-                  onClick={() => setTypeFilter(f.key)}
-                >
-                  {f.label}
-                </Button>
-              ))}
-            </div>
-          )}
-          <label className="flex items-center justify-center gap-1.5 px-4 py-1.5 text-[13px] bg-accent hover:bg-accent-hover text-white rounded-md cursor-pointer transition-colors font-medium ml-2">
-            <Upload size={14} />
-            {uploading ? 'Uploading...' : 'Upload'}
-            <input
-              type="file"
-              multiple
-              accept="image/*,video/*,audio/*,.svg"
-              className="hidden"
-              onChange={handleUpload}
-              disabled={uploading}
-            />
-          </label>
-        </div>
+        )}
+        <label className="flex items-center justify-center gap-1.5 px-4 py-1.5 text-[13px] bg-accent hover:bg-accent-hover text-white rounded-md cursor-pointer transition-colors font-medium ml-2">
+          <Upload size={14} />
+          {uploading ? 'Uploading...' : 'Upload'}
+          <input
+            type="file"
+            multiple
+            accept="image/*,video/*,audio/*,.svg"
+            className="hidden"
+            onChange={handleUpload}
+            disabled={uploading}
+          />
+        </label>
+      </div>
 
-        {/* Grid */}
-        <div className="flex-1 overflow-y-auto min-h-[300px] px-6 pb-6">
-          {loading ? (
-            <div className="text-center py-16 text-text-muted text-[13px]">Loading...</div>
-          ) : media.length === 0 ? (
-            <div className="text-center py-16 text-text-muted flex flex-col items-center">
-              <Image size={48} className="mb-3 opacity-30" />
-              <p className="text-[13px] font-medium text-text-primary">No media files found</p>
-              {activeTab === 'local' && (
-                <p className="text-xs mt-1">Upload images, videos, or audio to get started</p>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
-              {media.map((item) => (
-                <div
-                  key={item.id || item.filename}
-                  className="border border-border rounded-lg overflow-hidden cursor-pointer bg-card transition-colors hover:border-accent relative flex flex-col"
-                  onClick={() => handleInsert(item)}
-                >
-                  {/* Preview */}
-                  <div className="h-[120px] bg-[#111] flex items-center justify-center overflow-hidden">
-                    {item.type === 'video' ? (
-                      <Film size={28} className="text-white/30" />
-                    ) : item.type === 'audio' ? (
-                      <Music size={28} className="text-white/30" />
-                    ) : (
-                      <img
-                        src={item.url}
-                        alt={item.originalName || item.author}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
+      {/* Grid */}
+      <div className="flex-1 overflow-y-auto min-h-[300px] px-6 pb-6">
+        {loading ? (
+          <div className="text-center py-16 text-text-muted text-[13px]" role="status">
+            Loading...
+          </div>
+        ) : media.length === 0 ? (
+          <div className="text-center py-16 text-text-muted flex flex-col items-center">
+            <Image size={48} className="mb-3 opacity-30" />
+            <p className="text-[13px] font-medium text-text-primary">No media files found</p>
+            {activeTab === 'local' && (
+              <p className="text-xs mt-1">Upload images, videos, or audio to get started</p>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+            {media.map((item) => (
+              <div
+                key={item.id || item.filename}
+                className="border border-border rounded-lg overflow-hidden cursor-pointer bg-card transition-colors hover:border-accent relative flex flex-col"
+                onClick={() => handleInsert(item)}
+              >
+                {/* Preview */}
+                <div className="h-[120px] bg-[#111] flex items-center justify-center overflow-hidden">
+                  {item.type === 'video' ? (
+                    <Film size={28} className="text-white/30" />
+                  ) : item.type === 'audio' ? (
+                    <Music size={28} className="text-white/30" />
+                  ) : (
+                    <img
+                      src={item.url}
+                      alt={item.originalName || item.author}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+                {/* Info */}
+                <div className="p-2 flex flex-col flex-1">
+                  <div className="text-xs text-text-primary overflow-hidden text-ellipsis whitespace-nowrap">
+                    {item.originalName || item.author || 'Image'}
+                  </div>
+                  <div className="mt-auto">
+                    {activeTab === 'local' && (
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-[11px] text-text-muted">{formatSize(item.size)}</span>
+                        <Button
+                          variant="icon"
+                          className="w-[22px] h-[22px] text-text-muted hover:text-danger hover:bg-danger/10 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(item.filename)
+                          }}
+                          title="Delete"
+                        >
+                          <Trash2 size={13} />
+                        </Button>
+                      </div>
+                    )}
+                    {activeTab !== 'local' && (
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-[11px] text-text-muted">From {activeTab}</span>
+                        <Download size={13} className="text-text-muted" />
+                      </div>
                     )}
                   </div>
-                  {/* Info */}
-                  <div className="p-2 flex flex-col flex-1">
-                    <div className="text-xs text-text-primary overflow-hidden text-ellipsis whitespace-nowrap">
-                      {item.originalName || item.author || 'Image'}
-                    </div>
-                    <div className="mt-auto">
-                      {activeTab === 'local' && (
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-[11px] text-text-muted">
-                            {formatSize(item.size)}
-                          </span>
-                          <Button
-                            variant="icon"
-                            className="w-[22px] h-[22px] text-text-muted hover:text-danger hover:bg-danger/10 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDelete(item.filename)
-                            }}
-                            title="Delete"
-                          >
-                            <Trash2 size={13} />
-                          </Button>
-                        </div>
-                      )}
-                      {activeTab !== 'local' && (
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-[11px] text-text-muted">From {activeTab}</span>
-                          <Download size={13} className="text-text-muted" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </ModalShell>
   )
 }

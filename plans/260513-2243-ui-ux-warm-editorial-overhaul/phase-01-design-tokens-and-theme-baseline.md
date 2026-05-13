@@ -12,7 +12,7 @@
 ## Overview
 
 - Priority: P1
-- Status: Pending
+- Status: Complete
 - Effort: 5h
 - Goal: create warm editorial semantic tokens without changing component behavior yet.
 
@@ -64,11 +64,11 @@ index.css :root / [data-theme='light']
 
 ## Todo List
 
-- [ ] Define final token palette.
-- [ ] Update CSS variables.
-- [ ] Check light/dark contrast manually.
-- [ ] Update design docs.
-- [ ] Run build.
+- [x] Define final token palette.
+- [x] Update CSS variables.
+- [x] Check light/dark contrast manually.
+- [x] Update design docs.
+- [x] Run build.
 
 ## Verify / Tests
 
@@ -96,6 +96,13 @@ index.css :root / [data-theme='light']
 
 - Phase 02 shared primitives.
 
+## Implementation Notes
+
+- `--brand` / `--brand-hover` use terracotta for primary CTAs.
+- `--focus` and `--selection` remain blue so keyboard focus and editor selection stay technical and distinct.
+- `--accent` remains a backward-compatible alias for brand.
+- `--bg-canvas-default` remains `#ffffff`.
+
 ## Unresolved Questions
 
-- Final accent split: terracotta CTA only or broader brand token.
+- None.

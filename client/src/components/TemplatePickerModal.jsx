@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
-  X,
   Square,
   Heading1,
   Heading2,
@@ -27,8 +26,7 @@ import {
   PanelLeftClose,
 } from 'lucide-react'
 import { SLIDE_TEMPLATES } from '../data/slide-templates'
-import { Button } from '../components/ui'
-import { isBackdropClick } from '../lib/utils'
+import { Button, ModalShell } from '../components/ui'
 
 const iconMap = {
   blank: <Square size={24} />,
@@ -92,70 +90,45 @@ export default function TemplatePickerModal({ onSelect, onClose }) {
     onClose()
   }
 
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') handleClose() }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
-      onClick={(event) => {
-        if (isBackdropClick(event)) handleClose()
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="template-picker-modal-title"
+    <ModalShell
+      title="Add Slide"
+      titleId="template-picker-modal-title"
+      size="xl"
+      onClose={handleClose}
     >
-      <div
-        className="bg-panel rounded-xl border border-border shadow-2xl flex flex-col p-6 w-full max-w-[800px] max-h-[90vh] overflow-y-auto animate-zoom-in"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-5">
-          <h2 id="template-picker-modal-title" className="m-0">Add Slide</h2>
-          <Button variant="icon" onClick={handleClose} aria-label="Close">
-            <X size={20} />
-          </Button>
-        </div>
-
-        {['basic', 'content', 'layout', 'ending'].map((category) => (
-          <div key={category} className="mb-6">
-            <h3 className="text-sm text-text-muted mb-3 capitalize">
-              {getCategoryLabel(category)}
-            </h3>
-            <div className="grid grid-cols-4 gap-3">
-              {Object.entries(SLIDE_TEMPLATES)
-                .filter(([_, tmpl]) => tmpl.category === category)
-                .map(([key, tmpl]) => (
-                  <Button
-                    variant="ghost"
-                    key={key}
-                    onClick={() => {
-                      onSelect(key)
-                      handleClose()
-                    }}
-                    className="bg-card border-2 border-border rounded-lg p-3 cursor-pointer text-center flex flex-col items-center gap-2 transition-all duration-200 hover:border-accent hover:bg-hover hover:-translate-y-0.5"
-                  >
-                    <div className="w-full aspect-video bg-surface-2 rounded border border-border flex items-center justify-center text-2xl text-accent">
-                      {iconMap[key] || tmpl.icon}
-                    </div>
-                    <div className="text-xs font-medium text-text-primary">
-                      {tmpl.label}
-                    </div>
-                  </Button>
-                ))}
-            </div>
+      {['basic', 'content', 'layout', 'ending'].map((category) => (
+        <div key={category} className="mb-6">
+          <h3 className="text-sm text-text-muted mb-3 capitalize">{getCategoryLabel(category)}</h3>
+          <div className="grid grid-cols-4 gap-3">
+            {Object.entries(SLIDE_TEMPLATES)
+              .filter(([_, tmpl]) => tmpl.category === category)
+              .map(([key, tmpl]) => (
+                <Button
+                  variant="ghost"
+                  key={key}
+                  onClick={() => {
+                    onSelect(key)
+                    handleClose()
+                  }}
+                  className="bg-card border-2 border-border rounded-lg p-3 cursor-pointer text-center flex flex-col items-center gap-2 transition-[border-color,background-color,box-shadow] duration-200 hover:border-accent hover:bg-hover hover:shadow-sm"
+                >
+                  <div className="w-full aspect-video bg-surface-2 rounded border border-border flex items-center justify-center text-2xl text-accent">
+                    {iconMap[key] || tmpl.icon}
+                  </div>
+                  <div className="text-xs font-medium text-text-primary">{tmpl.label}</div>
+                </Button>
+              ))}
           </div>
-        ))}
-        <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
-          <Button variant="secondary" onClick={handleClose}>
-            Cancel
-          </Button>
         </div>
+      ))}
+      <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
+        <Button variant="secondary" onClick={handleClose}>
+          Cancel
+        </Button>
       </div>
-    </div>
+    </ModalShell>
   )
 }

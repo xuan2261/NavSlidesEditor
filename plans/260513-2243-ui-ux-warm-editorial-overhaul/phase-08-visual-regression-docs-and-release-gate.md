@@ -13,7 +13,7 @@
 ## Overview
 
 - Priority: P1
-- Status: Pending
+- Status: Complete
 - Effort: 5h
 - Goal: lock the overhaul with tests, screenshots, docs, and release notes.
 
@@ -67,13 +67,13 @@ Evergreen docs updated in `docs/`.
 
 ## Todo List
 
-- [ ] Run build.
-- [ ] Run unit tests.
-- [ ] Run e2e smoke/dashboard/visual tests.
-- [ ] Review visual diffs.
-- [ ] Update docs.
-- [ ] Write final verification report.
-- [ ] Complete code review.
+- [x] Run build.
+- [x] Run unit tests.
+- [x] Run e2e smoke/dashboard/visual tests.
+- [x] Review visual diffs.
+- [x] Update docs.
+- [x] Write final verification report.
+- [x] Complete code review.
 
 ## Verify / Tests
 
@@ -106,6 +106,28 @@ Evergreen docs updated in `docs/`.
 
 - Commit with conventional message after user approval.
 
+## Implementation Notes
+
+- Production build passed on 2026-05-13 after the final toolbar a11y fix.
+- Targeted unit tests passed for toolbar/properties/common UI contracts.
+- Targeted e2e passed for toolbar insertion, properties panel, and keyboard shortcuts.
+- Docs synced for design guidelines, changelog, roadmap, and codebase summary.
+- Code review completed; low-priority highlight palette selected-state finding fixed with `aria-selected`.
+- 2026-05-14 verification after modal-shell migrations:
+  - `npm run test -- --run client/src/components/ui/ModalShell.test.jsx client/src/components/AnimationPreviewModal.test.jsx client/src/components/Toolbar.test.jsx client/src/components/PropertiesPanel.test.jsx client/src/components/CollapsibleSection.test.jsx client/src/components/ui/Button.test.js client/src/components/ui/form-primitives.test.jsx` passed: 7 files, 20 tests.
+  - `npm run build` passed with existing bundle-size and empty `vendor-reveal` warnings.
+  - `npm run lint` passed with 3 existing unused-arg warnings in `tests/e2e/games/game-elements.spec.js`.
+  - `npm run test:e2e -- tests/e2e/smoke.spec.js` passed: 1 test.
+  - `npm run test:e2e -- tests/e2e/dashboard.spec.js` passed after restoring `ModalShell` titles to `h2`: 11 tests.
+  - Visual diff reviewed: authored slide canvas content stayed stable; app chrome/token drift was intended by the overhaul.
+  - `npx playwright test tests/e2e/visual-regression.spec.js --update-snapshots` updated the intended warm editor chrome baseline.
+  - `npm run test:e2e -- tests/e2e/visual-regression.spec.js` passed: 1 test.
+  - Code-review medium feedback fixed: Share/Media async failures now render inline alert/status feedback.
+  - Post-fix verification passed: targeted Vitest 7 files / 20 tests, lint with only existing game test warnings, build, dashboard e2e 11/11, visual e2e 1/1.
+  - 2026-05-14 Escape rerender regression fixed in shared `useEscapeClose`; targeted Vitest now passes 7 files / 22 tests.
+  - 2026-05-14 small viewport / keyboard release gate passed: keyboard shortcuts, animation preview narrow viewport, and coverage-gaps responsive smoke passed 10/10.
+  - 2026-05-14 EditorPage POM modal waits updated from heading-level selectors to role-based dialog locators; Sync/History modal e2e passed 1/1.
+
 ## Unresolved Questions
 
-- Whether final release gate requires full e2e or targeted e2e only.
+- Whether to run full e2e before commit/release, beyond the targeted release gate already passed.

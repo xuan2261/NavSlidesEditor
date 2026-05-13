@@ -14,17 +14,19 @@ export default function CollapsibleSection({
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
   return (
-    <div className={`p-4 border-b border-border ${className}`}>
-      <div
-        className={`flex items-center justify-between cursor-pointer select-none mb-3`}
+    <div className={`border-b border-border p-4 ${className}`}>
+      <button
+        type="button"
+        className="mb-3 flex w-full items-center justify-between rounded-md text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/30"
         onClick={() => setIsOpen((v) => !v)}
+        aria-expanded={isOpen}
       >
-        <h3 className="text-[12px] font-medium text-text-secondary capitalize mb-0">{title}</h3>
+        <h3 className="mb-0 text-[12px] font-semibold capitalize text-text-secondary">{title}</h3>
         <ChevronDown
           size={18}
           className={`text-text-muted transition-transform duration-200 ${!isOpen ? '-rotate-90' : ''}`}
         />
-      </div>
+      </button>
       {isOpen && <div className="overflow-hidden">{children}</div>}
     </div>
   )

@@ -281,7 +281,7 @@ test.describe('Editor POM Workflow', () => {
     expect(textState.proseMirrorCount).toBe(1)
 
     await editor.openHistoryModal()
-    await expect(page.locator('h3:has-text("Version History")')).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Version History' })).toBeVisible()
     textState = await editor.getTextEditorState()
     expect(textState.proseMirrorCount).toBe(1)
     await editor.closeOverlayModal()
