@@ -1,41 +1,14 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: Gamification Game Controls (Phases 1-11) completed
+## Current Status: v1.7.0 docs sync and live/game/PPTX stack complete
 
-All core features are operational. The token-backed Tailwind layer, route-based
-shell, live controller/viewer contract, notes normalization, persistence
-locking, and E2E gates were verified on 2026-04-23. UI/UX Tailwind Hard
-Mode remediation completed on 2026-04-25 with 19 fixes across 5 phases (C-02,
-C-04, H-01..H-05, M-01..M-08, T-01, T-04, A-02, A-03). The `.pptx` parser
-benchmark completed on 2026-04-24 and selected `pptxtojson` primary with
-`pptx2json` fallback inspector. Editable PPTX import Phase 1 is implemented
-with server-side parser isolation, ZIP budget guards, text/image/shape/table
-mapping, full-fidelity remediation for sanitizer/group/table/chart/export gaps,
-and locked placeholders for unsupported objects. Corpus verification now uses
-the 4 checked-in `PPTX/` decks when `server/data/test-corpus/` is empty. The
-round-trip harness unification plan completed on 2026-04-25, locking strict
-production-only validation to the ≥95 semantic / ≥98 round-trip gate and the
-latest 4-deck result at 97.0% semantic fidelity and 99.0% round-trip stability.
-Trusted hardening without HTML embed regression completed on 2026-04-26:
-analytics token gating, presenter token anti-hijack flow, AI endpoint SSRF
-guard, client NaN/settings/live guardrails, import/export reliability fixes,
-and targeted text/markdown/svg safety while preserving trusted HTML embeds.
-PPTX parser worker startup is hardened for dev watch mode and Electron/packaged runtime.
-Electron sandbox hardening is documented as follow-up only.
-E2E hardening with stable selectors completed on 2026-04-26: property-panel
-`prop-*` selectors are standardized, autosave failure/retry behavior is covered,
-EditorPage POM helpers are split by concern, and deterministic visual regression
-baseline is active.
-PPTX import coordinate fidelity hardening completed on 2026-04-27:
-geometry normalization layer, nullish-safe coordinate mapping, matrix-based
-group flattening, canonical editor-native image crop mapping, corpus by-type
-drift/coverage/count gates, and focused import-fidelity Playwright flow.
+Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The current docs baseline reflects Node.js 20+, the route-based shell, in-memory live room state, and the hybrid PPTX export/import pipeline. Corpus checks now land at 97.0% semantic fidelity and 99.0% round-trip stability on the checked-in decks.
 
 ### What Works
 
 | Area | Status |
 | --- | --- |
-| WYSIWYG editing (17 element types) | Done |
+| WYSIWYG editing (core element set, including game) | Done |
 | Undo/redo (50-step) | Done |
 | Auto-save (debounced) | Done |
 | Smart guides + snapping | Done |
@@ -49,7 +22,7 @@ drift/coverage/count gates, and focused import-fidelity Playwright flow.
 | Export PDF | Done |
 | Export PPTX | Done (hybrid native + high-res raster fallback, split helpers) |
 | Project export/import (.navslides) | Done (manifest v1.1, partial media skip warnings) |
-| Import PPTX | Done (editable objects plus fidelity remediation; semantic corpus avg 95.0%) |
+| Import PPTX | Done (editable objects plus fidelity remediation; 97.0% semantic / 99.0% round-trip on checked-in corpus) |
 | Offline HTML export | Done (self-contained) |
 | Shareable links (with password option) | Done |
 | GitHub push integration | Done |
@@ -104,30 +77,30 @@ drift/coverage/count gates, and focused import-fidelity Playwright flow.
 
 ### CI/CD
 
-- GitHub Actions builds for Windows only (Linux/macOS targets planned).
-- 510 Vitest unit tests + 127 Playwright E2E tests in 27 spec files (as of 2026-04-28).
+- GitHub Actions builds for Windows only; local electron-builder scripts cover Linux/macOS too.
+- Vitest/Playwright suites remain the main regression gates.
 
 ## Completed Phases
 
 ### Gamification Game Controls (Complete - 2026-04-29)
 
-11-phase implementation of interactive game elements for presentations. 161 tests passing.
+11-phase implementation of interactive game elements for presentations.
 
 **Sub-phases:**
 
 1. Phase 1: Game element types foundation — 7 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories), `createGameElement`/`createQuestion`/`createTeam` factories, placeholder renderer, 68 unit tests added
-2. Phase 2: Backend game engine — Socket.IO room management (`server/services/game-engine.js`, `server/routes/games.js`), random picker, leaderboard, scoring, team management, timer/question lifecycle
+2. Phase 2: Backend game engine — Socket.IO room management (`server/services/game-room-manager-singleton-service.js`, `server/routes/games-rest-api-handler.js`), random picker, leaderboard, scoring, team management, timer/question lifecycle
 3. Phase 3: Canvas renderer — SVG previews for all 7 game types (wheel, bomb, Jeopardy board, corner grid, relay baton, trophy, letter grid) with `GameElementRenderer.jsx`
 4. Phase 4: Game properties panel — Content/Display/Scoring tabs with team config, question list, timer, difficulty, colors, scoring rules, bonus/penalty settings
 5. Phase 5: Toolbar integration — InsertMenu "Games" category with icon grid for all 7 types, `createGameElement` wired to EditorPage insert handler
-6. Phase 6: Player join page — `/player/:slideId/:elementId` route, `useGameSocket` hook, Socket.IO connection, team assignment, spectator mode
+6. Phase 6: Player join page — `/player/:slideId/:elementId` route, `game-player-join-page.jsx`, `useGameSocket` hook, Socket.IO connection, team assignment, spectator mode
 7. Phase 7: Interactive wheel spin, confetti burst, hot-potato bomb animation, timer ring countdown
 8. Phase 8: Jeopardy board — 5 categories, 5 questions each, dollar values 100-500, reveal animation, double-jeopardy + final round
 9. Phase 9: Four-corners room picker, scattergories letter generator with timer, suspense selection effects
 10. Phase 10: Relay race timer, trivia podium leaderboard, streak bonuses, penalty system
-11. Phase 11: Integration tests — 161 tests covering room lifecycle, Socket.IO events, leaderboard, scoring, timer, team management, player join/leave, SVG rendering, properties panel
+11. Phase 11: Integration tests — room lifecycle, Socket.IO events, leaderboard, scoring, timer, team management, player join/leave, SVG rendering, properties panel
 
-**Files created:** `client/src/constants/game-element-types-constants.js`, `client/src/components/canvas/element-renderers/game-element-placeholder-renderer.jsx`, `client/src/components/canvas/element-renderers/game-element-renderer.jsx`, `client/src/components/properties/game-properties.jsx`, `client/src/pages/PlayerJoinPage.jsx`, `client/src/hooks/use-game-socket.js`, `server/services/game-engine.js`, `server/routes/games.js`
+**Files created:** `client/src/constants/game-element-types-constants.js`, `client/src/components/canvas/element-renderers/game-element-placeholder-renderer.jsx`, `client/src/components/canvas/element-renderers/game-element-renderer.jsx`, `client/src/components/properties/game-properties.jsx`, `client/src/pages/game-player-join-page.jsx`, `client/src/hooks/use-game-socket.js`, `server/services/game-room-manager-singleton-service.js`, `server/routes/games-rest-api-handler.js`
 
 **Files modified:** `client/src/data/element-defaults.js`, `client/src/components/canvas/element-renderers/registry.js`, `client/src/components/InsertMenu.jsx`, `client/src/components/EditorMenuBar.jsx`, `client/src/App.jsx`, `client/src/stores/editor-store.js`, `server/index.js`
 

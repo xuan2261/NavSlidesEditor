@@ -2,174 +2,141 @@
 
 ## Snapshot
 
-NavSlides Editor là trình soạn thảo presentation tự host, chia thành 4 vùng runtime:
-`client/`, `server/`, `shared/`, và `electron/`. Docs, tests, và planning artifacts
-sống cùng code trong repository. Phiên bản v1.6.1, ~141 file trong `client/src`.
+NavSlides Editor is a self-hostable presentation editor built as a monorepo with
+`client/`, `server/`, `shared/`, and `electron/` runtimes. Current release is
+`v1.7.0`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
+checked-in corpus / report artifacts used for verification.
 
 ## Repository Layout
 
 ```text
-navslides-editor/              # npm workspace root (navslides-editor v1.6.1)
-├── client/                   # React 18 SPA (Vite, React Router v7, Tailwind)
-│   └── src/
-│       ├── App.jsx           # BrowserRouter + Routes + ErrorBoundary
-│       ├── main.jsx         # Vite entry, StrictMode
-│       ├── index.html
-│       ├── pages/            # 8 route-level components
-│       ├── components/       # ~60 components
-│       │   ├── layout/       # MainLayout, StatusBar
-│       │   ├── ui/           # Button, Input, Select, ColorPicker primitives
-│       │   ├── dashboard/    # TemplateGallery, TemplatePreview
-│       │   └── properties/   # Per-element-type panels (shape, image, table…)
-│       ├── stores/           # Zustand: editor-store, presentation-store, ui-store
-│       ├── hooks/            # use-autosave, use-clipboard, use-keyboard, use-live-presentation, use-slide-operations, use-reveal-preview-frame, slide-operation-helpers…
-│       ├── utils/            # api, export (PPTX/raster/HTML), import (PDF/PPTX/markdown)
-│       ├── extensions/       # TipTap: FontFamily, FontSize, MathExtension
-│       ├── services/        # Giphy, Unsplash integrations
-│       ├── data/             # Slide templates, constants, icon paths
-│       └── lib/utils.js      # cn(), backdrop, Escape helpers
-├── server/                   # Express + Socket.IO (revealjs-editor-server v1.6.1)
-│   ├── index.js             # Entry: app, HTTP server, route mounts
-│   ├── routes/              # 23 files total (15 runtime routes + 8 route tests)
-│   ├── services/            # storage, socket-handler, live-rooms, ai-endpoint-guard, pptx-exporter…
-│   ├── middleware/          # validate, schemas, error-handler
-│   ├── scripts/             # Template generators
-│   ├── data/                # JSON persistence (presentations, share-tokens…)
-│   ├── uploads/             # User-uploaded media
-│   └── vendor/              # Bundled 3rd-party: reveal.js, highlight, chart, katex…
-├── shared/                   # revealjs-shared npm package (v1.0.0)
-│   └── src/
-│       ├── index.js         # Barrel: re-exports everything
-│       ├── htmlGenerator.js # generateRevealHTML, generatePrintHTML, downloadHTML…
-│       ├── element-renderers.js
-│       ├── shapeUtils.js    # 16 shapes: rect, circle, triangle, star, arrow…
-│       ├── slideNotes.js
-│       ├── presenterTools.js
-│       ├── shared-toolbar-text-bg-color-palette-gradient-presets-config.js  # Toolbar color palettes + gradient presets
-│       ├── shared-color-utils.js / content-safety.js / shared-html-parser.js / shared-pptx-core.js / shared-text-runs.js
-│       ├── types/presentation.js
-│       └── data/icon-paths.json  # 1000+ Lucide icon SVG paths
-├── vitest.workspace.ts       # Vitest workspace config
-├── vitest.config.mjs         # Vitest test runner config
-├── electron/                 # Desktop shell
-│   ├── main.js             # Main process, --no-sandbox, 1400×900 window
-│   └── preload.js           # safeStorage credential bridge
-├── scripts/                 # Build & content utilities
-│   └── pptx-parser-benchmark/  # PPTX import benchmark suite
-├── tests/                   # Playwright E2E + Vitest + k6 load
-└── plans/, docs/           # Planning artifacts & documentation
+navslides-editor/
+├── client/        # React + Vite SPA
+├── server/        # Express API + Socket.IO + file persistence
+├── shared/        # Shared HTML/export/render helpers
+├── electron/      # Desktop wrapper
+├── docs/          # Project docs
+├── plans/         # Plans, reports, archived notes
+├── scripts/       # Build / maintenance scripts
+└── tests/         # Playwright, Vitest, k6, corpus checks
 ```
 
-## Client App
+## Client Runtime
 
-- **React Router v7** (`BrowserRouter`). Hai nhóm routes:
-  - Layout routes (wrapped by `MainLayout`/`Outlet`): `/`, `/editor/:id`, `/template/:id`, `/settings`, `/explore`
-  - Standalone routes: `/live/:roomCode`, `/remote/:roomCode`, `/speaker/:roomCode`
-- **EditorRoute** factory component đọc `:id` param và truyền `isTemplate` flag.
-- **State: 3 Zustand stores:**
-  - `useEditorStore` — editor UI: selection, clipboard, canvas controls
-  - `usePresentationStore` — presentation data: slides, elements, CRUD actions
-  - `useUIStore` — modal visibility, theme, panel open/closed state
-- **TipTap** cho rich text editing trong `SlideCanvas`.
-- **Key dependencies**: Reveal.js, Socket.io-client, Tailwind CSS, KaTeX, pdfjs-dist, pptxgenjs.
-- `SlideCanvas.jsx` hiện ~841 LOC (đã tách Phase C: 11 renderer, CanvasElement wrapper, CropOverlay, chrome components, interaction hooks).
+| Area | Key Files | Notes |
+| --- | --- | --- |
+| App shell | `client/src/App.jsx` | `BrowserRouter` + `Routes`; `MainLayout` wraps app chrome; live/game routes stay outside the editor shell |
+| Pages | `client/src/pages/` | Route-level pages for home, editor, settings, explore, live, remote, speaker, and game player join |
+| Editor canvas | `client/src/components/SlideCanvas.jsx`, `client/src/components/canvas/*` | Drag / resize / rotate / snap surface split into focused chrome, renderer, and interaction modules |
+| Element renderers | `client/src/components/canvas/element-renderers/` | Registry-based renderers for callout, icon, qrcode, drawing, svg, markdown, chart, latex, table, shape, line, and game |
+| Properties panels | `client/src/components/properties/` | Type-specific property editors, including game Content/Display/Scoring tabs |
+| Hooks | `client/src/hooks/` | Autosave, clipboard, keyboard, annotation sync, live timer, swipe/pinch/touch, game socket, and slide operations |
+| Stores | `client/src/stores/` | Zustand stores for editor, presentation, and UI state |
+| Utilities | `client/src/utils/` | API wrapper, content safety, export helpers, project archive helpers, PPTX import/export helpers |
 
-## Editor Surface
+### Editor Model
 
-- `EditorPage.jsx` là god component, chứa presentation state (useState) + TipTap editor instance + auto-save debounce (1500ms) + undo/redo history (max 50 entries). Hiện ~1700 LOC.
-- `SlideCanvas.jsx` (~841 LOC) là core interaction surface: drag, resize, rotate, snap, rubber-band selection, context menu, crop mode, grid/ruler overlays, smart guides.
-- `PropertiesPanel.jsx` route đến type-specific editors: `properties/shape.jsx`, `properties/image.jsx`, `properties/table.jsx`, `properties/media.jsx`, `properties/chart.jsx`, `properties/code.jsx`, `properties/misc.jsx`.
-- `InsertMenu.jsx` — insert shapes (15 loại), text, image, chart, code, table, media.
-- `Toolbar.jsx` — format toolbar với color pickers sử dụng `SHAPES`, `TEXT_COLORS`, `BG_COLORS`, `GRADIENT_PRESETS` từ `shared/`.
-- `AnimationPreviewModal.jsx` — preview fragment cho timeline mà không mở full presentation.
-- Helpers: `animation-preview-helpers.js`, `find-replace-helpers.js`.
+- `EditorPage.jsx` composes the editor shell, overlays, menus, toolbars, and
+  modal surfaces.
+- `SlideCanvas.jsx` owns core canvas interaction; clipboard and keyboard logic
+  are pushed into hooks.
+- `game-player-join-page.jsx` is the standalone player route for interactive
+  game elements.
+- `use-annotation-sync.js`, `use-live-timer-sync.js`, and `use-live-presentation.js`
+  keep presenter-side live state in sync with Socket.IO.
 
-## Server API
+## Server Runtime
 
-- `server/index.js`: Express app, HTTP server, Socket.IO attach, tất cả route mounts.
-- **15 runtime REST route files (+8 route tests):**
-  - `presentations.js` — CRUD, duplicate, save-as-template, pptx-export, present mode
-  - `templates.js`, `share.js`, `history.js`, `upload.js`, `github.js`, `sync.js`
-  - `live.js`, `settings.js`, `explore.js`, `analytics.js`, `marketplace.js`
-  - `media.js`, `ai.js`, `pptx-import.js` — import PPTX files
-  - Inline: `DELETE /api/shares/:token`, `POST /api/presentations/:id/github/push`, `GET/POST /share/:token`
-- **AI routes** (`server/routes/ai.js`): `/rewrite`, `/generate-outline`, `/generate-slides`, `/translate` — pluggable provider (OpenAI/Gemini/custom), SSRF guard enforced.
-- **Socket.IO** (path: `/ws`, namespace `/`): `join-room`, `navigate`, `control-navigate`, `cursor-move`, `annotation`, `laser`, `viewer-count`, `sync-state`. Presenter join requires `presenterToken` (anti-hijack hardening).
-- `middleware/schemas.js` — Zod validation cho mutation routes.
-- `services/storage.js` — JSON file persistence với promise-chain locking (`withFileLock`).
-- `services/live-rooms.js` (~52 LOC) — in-memory room state và role tracking.
-- `services/presentation-finder.js` — unified lookup across presentations/templates/built-in-templates.
-- `services/pptx-exporter.js` — export presentation sang PPTX.
-- `services/pptx-import/` — PPTX import service (Phase 1 + fidelity hardening).
-  - `geometry.js` — canonical import geometry normalizer + affine transform helpers.
+| Area | Key Files | Notes |
+| --- | --- | --- |
+| Entry | `server/index.js` | Mounts REST routes, static `/uploads` and `/vendor`, and Socket.IO at `/ws` |
+| Storage | `server/services/storage.js` | File-backed JSON persistence with per-file locks |
+| Live rooms | `server/services/live-rooms.js` | In-memory room state, presenter tokens, annotations, and timer state |
+| Game engine | `server/services/game-room-manager-singleton-service.js`, `server/services/game-socket-handler.js` | Game room lifecycle, scoring, timers, leaderboard, player join flow |
+| PPTX import | `server/routes/pptx-import.js`, `server/services/pptx-import/*` | `.pptx` upload route, parser isolation, geometry normalization, fidelity harness |
+| REST routes | `server/routes/*.js` | Presentations, templates, share, history, upload, GitHub, sync, settings, media, live, games, explore, analytics, marketplace, AI |
 
-## Shared Runtime Contract
+### Live Model
 
-- **`shared/` (package: `revealjs-shared`)** — consumed bởi cả client (Vite build) và server (runtime).
-- `src/index.js` — barrel export tất cả.
-- `src/htmlGenerator.js`:
-  - `generateRevealHTML(presentation)` → Reveal.js HTML (live nav, Socket.IO sync, presenter toolbar)
-  - `generatePrintHTML(presentation, options)` → print-ready HTML với fragment expansion
-  - `downloadHTML(presentation)`, `exportPDF(presentation)`, `presentInWindow(presentation)`
-- `src/shapeUtils.js` — 15 shapes: rect, rounded-rect, circle, triangle, diamond, arrow-right, star, line, hexagon, pentagon, cloud, cylinder, parallelogram, trapezoid, bracket.
-- `src/element-renderers.js` — per-element-type HTML renderers (text, image, shape, code, latex, chart).
-- `src/slideNotes.js` — `getSlideNotes`, `normalizeSlideNotes`, `normalizePresentationNotes`.
-- `src/shared-toolbar-text-bg-color-palette-gradient-presets-config.js` — color palette + `isLightColor`.
-- `src/data/icon-paths.json` — 1000+ Lucide icon SVG paths.
-- Client: `Toolbar.jsx`, `InsertMenu.jsx`, `generateHTML.js` import từ `shared/`.
-- Server: `routes/presentations.js`, `pptx-exporter.js`, `socket-handler.js` import từ `shared/`.
+- Presenter join requires a server-issued `presenterToken`.
+- Remote and speaker routes connect as controller surfaces, not as presenters.
+- Viewer count excludes controllers.
+- Live annotations and timers are in memory; restart clears live room state.
+- There is no real-time collaborative slide editing.
+
+## Shared Runtime
+
+| Module | Purpose |
+| --- | --- |
+| `shared/src/htmlGenerator.js` | Reveal.js HTML, print HTML, offline HTML, and present-mode generation |
+| `shared/src/element-renderers.js` | Shared render helpers for export and preview |
+| `shared/src/slideNotes.js` | Canonical notes normalization |
+| `shared/src/shapeUtils.js` | SVG shape/path helpers |
+| `shared/src/presenterTools.js` | Presenter overlay tools |
+| `shared/src/types/presentation.js` | JSDoc data model used by client and server |
+
+### Export and Import
+
+- Standard HTML export is CDN-backed.
+- Offline HTML inlines runtime assets.
+- PPTX export is hybrid: stable primitives stay editable, while complex DOM-backed
+  content and unsupported cases fall back to raster assets.
+- PPTX import uses `pptxtojson` as the primary parser with `pptx2json` fallback
+  inspection and a checked-in fidelity corpus.
 
 ## Electron Wrapper
 
-- `electron/main.js`: Disable sandbox (`ELECTRON_DISABLE_SANDBOX=1`, `--no-sandbox` — deliberate trade-off for CI compatibility). Start embedded Express on port 3002 (production). Set `SLIDES_DATA_DIR` và `SLIDES_UPLOADS_DIR` đến `userData` subdirs. Create 1400×900 `BrowserWindow` (min 1000×600).
-- `electron/preload.js`: Expose `window.electronAPI` với 4 methods: `saveCredential`, `getCredential`, `deleteCredential`, `isSecureStorageAvailable`. Dùng `safeStorage` (OS keychain) với file fallback.
-- Không có auth — share tokens là cơ chế authorization duy nhất.
+- `electron/main.js` starts the embedded server on port `3002`, sets
+  `SLIDES_DATA_DIR` and `SLIDES_UPLOADS_DIR` under Electron `userData`, and
+  launches the desktop window.
+- Sandbox is disabled for the current desktop build path.
+- `electron/preload.js` exposes credential helpers backed by `safeStorage`
+  when the OS supports it.
 
-## Styling System
+## Data and Persistence
 
-- Tailwind is the primary UI utility layer for app chrome.
-- `client/tailwind.config.js` maps colors, radii, and animations to CSS
-  variables defined in `client/src/index.css`.
-- Dark mode follows `[data-theme="dark"]`; the editor still uses the same token
-  names across dark and light surfaces.
-- `client/src/lib/utils.js` provides `cn`, backdrop-click, and Escape-close
-  helpers for shared component behavior.
+| Path | Purpose |
+| --- | --- |
+| `server/data/presentations.json` | Presentation data |
+| `server/data/templates.json` | Custom templates |
+| `server/data/share-tokens.json` | Share links and passwords |
+| `server/data/github-config.json` | GitHub integration config |
+| `server/data/settings.json` | App settings and AI API key |
+| `server/data/analytics.json` | Share-view analytics |
+| `server/data/media.json` | Uploaded media metadata |
+| `server/data/history/` | Version snapshots |
+| `server/data/rclone.conf` | rclone config |
+| `server/data/sync-export/` | Sync staging |
+| `server/data/tmp-pptx-imports/` | Temporary PPTX import uploads |
+| `server/uploads/` | Uploaded media files |
 
-## Persistence And Export
+- `storage.js` initializes the data folders on first run.
+- File writes are serialized with per-file locks.
+- File-backed settings may contain sensitive values and must not be committed
+  or deployed publicly.
 
-- Presentation data, templates, share tokens, GitHub config, settings, and
-  snapshot history are stored in JSON files under `server/data/`.
-- `storage.js` wraps reads and writes with a file lock to prevent concurrent
-  JSON races.
-- `server/services/pptx-exporter.js` and `htmlGenerator.js` both consume the canonical notes
-  helper so HTML, print, and PPTX exports stay aligned. The hybrid PPTX exporter
-  renders stable types as native PPTX objects and falls back to Playwright rasterization
-  for complex DOM elements.
-- `offlineExport.js` inlines CDN assets for offline HTML export.
+## Testing Surface
 
-## Test Surface
-
-- **Vitest** (v4): 510 tests passing. shared helpers, server routes/services, client utils, PPTX guards & utils, clipboard unit tests (`use-clipboard.test.js`).
-- **Playwright** (v1.59): 27 spec files — editor, slides, elements, animation-preview, keyboard-shortcuts, undo-redo, find-replace, export, live, sharing, media, templates, settings, dashboard, ai, explore, properties-panel, toolbar, slide-management, smoke, version-history, visual-regression, and hardening regression suites.
-  - Includes focused PPTX import fidelity flow: `tests/e2e/pptx-import-fidelity.spec.js`.
-  - Page Objects and helpers: `HomePage`, `ExplorePage`, `EditorPage`, `SettingsPage`, `LiveViewPage`, `RemoteControlPage`, `SpeakerViewPage`, `CanvasHelper`, `InsertMenuHelper`, `PropertiesPanelHelper`, `SlidePanelHelper`.
-- **k6 load tests**: `tests/load/api-load.js`, `tests/load/websocket-load.js`.
-- **PPTX benchmark**: `scripts/pptx-parser-benchmark/` với 4 runners (pptx2json, pptxtojson, ppt-parser, pptx-compose), corpus validator, và benchmark inventory.
+- Vitest covers client utilities, stores, hooks, server routes, and PPTX helpers.
+- Playwright covers editor flows, live flows, game flows, import/export, and
+  visual regression.
+- `k6` load tests target REST and WebSocket paths.
+- The PPTX corpus harness validates semantic fidelity and round-trip stability.
 
 ## Behavior Notes
 
-- `slide.notes` là canonical; `speakerNotes` là legacy alias và được normalize trước save/export.
-- Clipboard commands (copy/cut/paste/duplicate) are pure functions in `use-clipboard.js`, owned by EditorPage, consumed by SlideCanvas via callback props and by the context menu.
-- Live room state: `{ slideIndex, verticalIndex, fragmentIndex }`.
-- Controllers tách biệt khỏi viewers; viewer count exclude controllers.
-- Live controllers nhận `presentation-meta` + `control-navigate` routing.
-- PPTX import Phase 1 đã hoàn thành (2026-04-24): `POST /api/pptx/import` dùng `pptxtojson` với `pptx2json` fallback, hỗ trợ text/image/shape/table; chart/equation/SmartArt thành locked placeholders.
+- `slide.notes` is canonical; `speakerNotes` is a legacy alias.
+- `client/src/index.css` is the single global stylesheet.
+- New code should stay under the 200 LOC guideline where practical; legacy
+  oversize files are refactor targets, not automatic violations.
+- Game elements are first-class slide elements with dedicated presenter/player
+  flows and 7 game types.
 
-## Repository Notes
+## Repo Notes
 
-- **npm workspaces**: root (`revealjs-editor` v1.6.1), `client` (revealjs-editor-client v1.6.1), `server` (revealjs-editor-server v1.6.1), `shared` (revealjs-shared v1.0.0).
-- Tooling: Vite 5 (`client/vite.config.js`), ESLint 9 flat config, Prettier, Vitest 4, Playwright 1.59, Electron 33, electron-builder 25.
-- Tailwind CSS 3.4.19 applied app-wide; 19 UI/UX fixes across 5 phases completed 2026-04-25 (data-testid, a11y, hover states, z-index, scrollbar, ARIA).
-- No TypeScript (JSDoc only), no database (pure JSON file storage), no account/session auth (share token + live `presenterToken` only).
-- Large generated assets trong repo: template data, `icon-paths.json`.
-- Plans, reports, và journals sống trong `plans/`, `plans/reports/`, `docs/journals/`.
+- Root package version is `1.7.0`.
+- Runtime baseline is Node.js 20+.
+- There is no database layer; persistence is file-based by design.
+- There is no full TypeScript migration; JSDoc is the type system.
+- The repo includes large generated artifacts such as template assets, icon
+  path data, plans, and report archives.

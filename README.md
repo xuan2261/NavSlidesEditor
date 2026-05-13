@@ -61,7 +61,7 @@ rclone-based sync to Proton Drive or any supported cloud provider (Google Drive,
 
 ### Option A — Desktop App (Electron)
 
-Run as a native desktop app (no server, no Docker). Download pre-built packages from [Releases](https://github.com/Xuan2261/navslides-editor/releases): Linux (`.AppImage`, `.deb`), macOS (`.zip`), Windows (`.exe`). Or build from source (requires **Node.js 20+**):
+Run as a native desktop app (no server, no Docker). Download pre-built packages from [Releases](https://github.com/Xuan2261/navslides-editor/releases). The current GitHub release workflow publishes a Windows artifact automatically; Linux/macOS packages can still be built locally with the scripts below (requires **Node.js 20+**):
 
 ```bash
 git clone https://github.com/Xuan2261/navslides-editor.git && cd navslides-editor && npm install
@@ -98,6 +98,24 @@ PORT=8080 npm start  # custom port
 ## Data & Persistence
 
 All data lives in `server/data/` (presentations, templates, share tokens, GitHub config, history snapshots) and `server/uploads/` (media). Docker uses named volumes `revealjs-data` and `revealjs-uploads`. All locations are created automatically on first run.
+
+---
+
+## Security Model
+
+NavSlides Editor is designed as a single-user, self-hosted presentation tool where rich programmable content is a core feature. HTML embeds, custom CSS, inline SVG, Markdown-generated HTML, and exported reveal.js HTML are treated as **trusted author content**.
+
+Code reviews and security scans should not flag trusted author-controlled HTML/CSS/JS execution as a blocking XSS issue by itself. This behavior is intentional because the editor must support interactive embeds, simulations, diagrams, and custom presentation styling.
+
+Still review issues that cross a trust boundary, including:
+
+- untrusted uploads or imported files executing outside the author's intent
+- public share links exposing admin/editor capabilities
+- stored content from one user/session affecting another user
+- credential leakage, path traversal, SSRF, command injection, or data loss
+- missing auth protections when deploying beyond local/private single-user use
+
+For internet-facing or multi-user deployments, place NavSlides Editor behind an external authentication layer and treat all shared/editable content as privileged.
 
 ---
 
@@ -194,18 +212,32 @@ slides.example.com {
 
 ## Testing & Performance
 
-This project uses `k6` for load testing to simulate high traffic on the REST API and WebSockets.
+Verification typically runs in this order:
 
-1. Install k6 on your system ([Installation Guide](https://k6.io/docs/get-started/installation/)).
-2. Make sure your server is running (`npm run dev` or `npm start`).
-3. Run the API load test (HTTP POST with large JSON payloads):
+1. Lint and build:
+   ```bash
+   npm run lint
+   npm run build
+   ```
+2. Unit tests:
+   ```bash
+   npm run test
+   ```
+3. Browser tests:
+   ```bash
+   npm run test:e2e
+   ```
+4. PPTX corpus check:
+   ```bash
+   npm run test:corpus
+   ```
+5. Load tests with `k6`:
    ```bash
    npm run test:load:api
-   ```
-4. Run the WebSocket load test (Socket.IO Engine.IO handshake and real-time events):
-   ```bash
    npm run test:load:ws
    ```
+
+Install `k6` from the official guide if you want to run the load suite locally.
 
 ---
 

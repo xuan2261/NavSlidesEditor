@@ -2,7 +2,7 @@
 
 ## Product Vision
 
-**NavSlides Editor** is a self-hostable, WYSIWYG presentation editor powered by reveal.js. Users build, edit, and present slides entirely in the browser — no account, no cloud, no tracking. Available as a web app (Docker / Node.js) and a standalone desktop app via Electron.
+**NavSlides Editor** is a self-hostable, WYSIWYG presentation editor powered by reveal.js. Users build, edit, and present slides entirely in the browser - no account, no cloud, no tracking. Available as a web app (Docker / Node.js) and a standalone desktop app via Electron. Current release: v1.7.0.
 
 ## Problem Statement
 
@@ -19,12 +19,13 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 
 ## Core Value Propositions
 
-1. **Privacy-first** — All data in local JSON files + filesystem. Zero telemetry.
-2. **Rich elements** — 17 element types: text, image, shape, html, code, latex, markdown, chart, callout, icon, video, audio, table, qrcode, drawing, line, svg.
-3. **WYSIWYG editing** — Direct on-canvas editing via TipTap, smart guides, snapping, rulers.
-4. **Multiple deployment models** — Docker, Node.js, Electron desktop app.
-5. **Export flexibility** — HTML, offline HTML, PDF, PPTX, shareable links, GitHub push.
-6. **Cloud sync** — rclone-based sync to Proton Drive or any supported provider.
+1. **Privacy-first** - All data in local JSON files + filesystem. Zero telemetry.
+2. **Rich elements** - 18+ element categories: text, image, shape, html, code, latex, markdown, chart, callout, icon, video, audio, table, qrcode, drawing, line, svg, divider, and game.
+3. **WYSIWYG editing** - Direct on-canvas editing via TipTap, smart guides, snapping, rulers.
+4. **Live presenter tools** - Remote, speaker, viewer, cursor/laser, annotations, timers, and game controls for classroom or event use.
+5. **Multiple deployment models** - Docker, Node.js, Electron desktop app.
+6. **Export flexibility** - HTML, offline HTML, PDF, PPTX, shareable links, GitHub push.
+7. **Cloud sync** - rclone-based sync to Proton Drive or any supported provider.
 
 ## Feature Categories
 
@@ -40,6 +41,7 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 - Auto-save with 1500ms debounce
 - Copy/cut/paste/duplicate elements
 - Interactive step-by-step product tour (React-Joyride)
+- No real-time collaborative slide editing; live mode is presenter/viewer control, annotations, and timer sync
 
 ### Elements (17 types)
 
@@ -84,15 +86,15 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 
 ### Export & Sharing
 
-| Format              | Notes                                            |
-| ------------------- | ------------------------------------------------ |
-| Present mode        | Full-screen reveal.js with speaker notes (S key) |
-| Export HTML         | Self-contained HTML file (CDN dependent)         |
-| Export offline HTML | Inlines CDN resources for true offline support   |
-| Export PDF          | Print layout, one page per slide                 |
-| Export PPTX         | Via pptxgenjs (shape/media limitations)          |
-| Shareable link      | UUID token, view-only public URL                 |
-| GitHub push         | Git Data API, auto-generated README              |
+| Format              | Notes                                             |
+| ------------------- | ------------------------------------------------- |
+| Present mode        | Full-screen reveal.js with speaker notes (S key)  |
+| Export HTML         | Self-contained HTML file (CDN dependent)          |
+| Export offline HTML | Inlines CDN resources for true offline support    |
+| Export PDF          | Print layout, one page per slide                  |
+| Export PPTX         | Hybrid export via pptxgenjs + raster fallback     |
+| Shareable link      | UUID token, view-only public URL                  |
+| GitHub push         | Git Data API, auto-generated README               |
 
 ### Cloud Sync
 
@@ -116,7 +118,7 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 ## Non-Goals
 
 - No multi-user authentication or authorization
-- No real-time collaboration
+- No real-time collaborative slide editing
 - No cloud-hosted SaaS version
 - No mobile app
 - No plugin/extension marketplace
@@ -124,8 +126,9 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 ## Acceptance Criteria (MVP)
 
 - [ ] User can create, edit, and delete presentations
-- [ ] All 17 element types render correctly in editor and export
+- [ ] Core element categories render correctly in editor and export
 - [ ] Present mode works with fragment animations and transitions
+- [ ] Live presenter tools work across remote, speaker, viewer, and player flows
 - [ ] Export HTML generates valid reveal.js presentation
 - [ ] Docker deployment starts cleanly and data persists across restarts
 - [ ] Electron desktop app works on Linux, macOS, Windows
@@ -139,6 +142,7 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 - PPTX export uses a hybrid strategy: text/image/shape/line/callout/table/code/native charts stay as editable PPT objects; markdown/html/latex/icon/qrcode/drawing/svg/unsupported charts and gradient backgrounds fall back to Playwright-rasterized PNG assets
 - No auth — not suitable for multi-tenant hosting
 - CDN dependency at runtime for standard HTML export and present mode
+- Live room state, annotations, and timers are in memory; restart clears them
 
 ## Completed Refactoring (v1.5.x / v1.6.x)
 

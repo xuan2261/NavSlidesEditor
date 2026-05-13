@@ -4,22 +4,22 @@
 
 ## 2026-04-30
 
-### PowerPoint-Style Controls & Game Presenter Shortcuts (5 phases, 55 new tests)
+### PowerPoint-Style Controls & Game Presenter Shortcuts
 
 **Phase 1 - Slideshow Controls:**
-Added 9 PowerPoint-style slideshow shortcuts: F5/Shift+F5 (start), ArrowLeft/Right, Home/End (navigate), B/W (black/white overlay), Escape (end). Extended `createKeyboardHandler` with scope system (`editor`/`presentation`), standalone key support, and scope-based dispatch. Created `BlackScreenOverlay` component. Fixed broken import path in `name-picker-interactive-game-renderer.jsx`. 19 tests pass (17 new + 2 backward-compatible).
+Added 9 PowerPoint-style slideshow shortcuts: F5/Shift+F5 (start), ArrowLeft/Right, Home/End (navigate), B/W (black/white overlay), Escape (end). Extended `createKeyboardHandler` with scope system (`editor`/`presentation`), standalone key support, and scope-based dispatch. Created `BlackScreenOverlay` component. Fixed broken import path in `name-picker-interactive-game-renderer.jsx`.
 
 **Phase 2 - Game Presenter Shortcuts:**
-Added 12 game presenter shortcuts with scope `presentation-game`: G (HUD), Space (timer), Enter (next phase), R (reveal), L (leaderboard), P (pause), +/- (timer adjust), 1-4 (team select). Created `game-shortcut-config.js` with per-game-type shortcut mapping. Created `GameHudOverlay` and `GameLeaderboardOverlay` components. 24 tests pass.
+Added 12 game presenter shortcuts with scope `presentation-game`: G (HUD), Space (timer), Enter (next phase), R (reveal), L (leaderboard), P (pause), +/- (timer adjust), 1-4 (team select). Created `game-shortcut-config.js` with per-game-type shortcut mapping. Created `GameHudOverlay` and `GameLeaderboardOverlay` components.
 
 **Phase 3 - Editor Enhancements:**
-Added 11 editor shortcuts: Ctrl+M (insert slide), Ctrl+G/Ctrl+Shift+G (group/ungroup), Ctrl+]/[ (z-order), Tab/Shift+Tab (cycle selection), Ctrl+0/+/- (zoom), Ctrl+K (command palette). Added zoom state/actions to `editor-store.js`. Created `use-element-cycle.js` and `CommandPalette.jsx` component. 11 tests pass.
+Added 11 editor shortcuts: Ctrl+M (insert slide), Ctrl+G/Ctrl+Shift+G (group/ungroup), Ctrl+]/[ (z-order), Tab/Shift+Tab (cycle selection), Ctrl+0/+/- (zoom), Ctrl+K (command palette). Added zoom state/actions to `editor-store.js`. Created `use-element-cycle.js` and `CommandPalette.jsx` component.
 
 **Phase 4 - Touch Gesture Layer:**
 Created `use-touch-gestures.js` (tap, double-tap, long-press, drag via Pointer Events), `use-swipe-navigation.js` (swipe left/right/down), `use-pinch-zoom.js` (2-finger pinch zoom [0.25-4.0]), `PresentationTouchOverlay.jsx` (3-zone touch overlay). 20 tests pass.
 
 **Phase 5 - Annotation Tools:**
-Created annotation system for presenter mode: `AnnotationCanvas.jsx` (SVG-based freehand drawing), `LaserPointer.jsx` (animated cursor), `AnnotationToolbar.jsx` (pen/laser/highlighter/eraser selector), `annotation-colors.js`. Added 4 annotation shortcuts to registry (Ctrl+P/Ctrl+I/Y/E). 18 tests pass.
+Created annotation system for presenter mode: `AnnotationCanvas.jsx` (SVG-based freehand drawing), `LaserPointer.jsx` (animated cursor), `AnnotationToolbar.jsx` (pen/laser/highlighter/eraser selector), `annotation-colors.js`. Added 4 annotation shortcuts to registry (Ctrl+P/Ctrl+I/Y/E).
 
 ### Annotation Persistence (Phase 1)
 
@@ -57,19 +57,19 @@ Created annotation system for presenter mode: `AnnotationCanvas.jsx` (SVG-based 
 
 CommandPalette is editor-only. It renders only inside `EditorPage`. `LiveViewPage` does not mount the palette. Presentation-mode palette was considered but deferred (YAGNI).
 
-**Files modified:** 37 tests pass (9 new `useAnnotationSync` tests, 8 REST route tests, updated socket-handler and live-rooms tests).
+**Files modified:** updated `useAnnotationSync` tests, REST route tests, socket-handler tests, and live-rooms tests.
 
 ## v1.6.x
 
 ## 2026-04-29
 
-- Completed Gamification Game Controls feature (Phases 1-11, 161 tests passing):
+- Completed Gamification Game Controls feature (Phases 1-11):
 
   **Phase 1 - Game Element Types Foundation:**
-  Added `game` element type with 7 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories). Created `game-element-types-constants.js` with `GAME_TYPES`, `DEFAULT_GAME_COLORS`, `createGameElement`/`createQuestion`/`createTeam` factories. Created placeholder renderer `game-element-placeholder-renderer.jsx`. Registered renderer in `registry.js`. Added `ELEMENT_DEFAULTS.game` and `DEFAULT_POSITIONS.game` in `element-defaults.js`. 68 unit tests added (592 total tests passing).
+  Added `game` element type with 7 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories). Created `game-element-types-constants.js` with `GAME_TYPES`, `DEFAULT_GAME_COLORS`, `createGameElement`/`createQuestion`/`createTeam` factories. Created placeholder renderer `game-element-placeholder-renderer.jsx`. Registered renderer in `registry.js`. Added `ELEMENT_DEFAULTS.game` and `DEFAULT_POSITIONS.game` in `element-defaults.js`.
 
   **Phase 2 - Backend Game Engine:**
-  Added Socket.IO room management for game sessions (`server/services/game-engine.js`, `server/routes/games.js`), random picker with weights, leaderboard generation, scoring, team management, timer/question lifecycle, and game state persistence. REST endpoints: `POST/GET/DELETE /api/games/:sessionId`, `POST /api/games/:sessionId/join`, `POST /api/games/:sessionId/action`, `GET /api/games/:sessionId/leaderboard`, `DELETE /api/games/:sessionId/leave`.
+  Added Socket.IO room management for game sessions (`server/services/game-room-manager-singleton-service.js`, `server/routes/games-rest-api-handler.js`), random picker with weights, leaderboard generation, scoring, team management, timer/question lifecycle, and game state persistence. REST endpoints: `POST/GET/DELETE /api/games/:sessionId`, `POST /api/games/:sessionId/join`, `POST /api/games/:sessionId/action`, `GET /api/games/:sessionId/leaderboard`, `DELETE /api/games/:sessionId/leave`.
 
   **Phase 3 - Canvas Renderer with Static SVG Previews:**
   Added `GameElementRenderer.jsx` with SVG previews for all 7 game types: spinning wheel (name-picker), ticking bomb (hot-potato), Jeopardy board (jeopardy), corner grid (four-corners), relay baton (relay-race), trophy (trivia-champ), letter grid (scattergories). Integrated into canvas element registry. Element defaults and positions updated.
@@ -81,7 +81,7 @@ CommandPalette is editor-only. It renders only inside `EditorPage`. `LiveViewPag
   Integrated game element insertion via `InsertMenu.jsx`. Added "Games" category with icon grid for all 7 game types. `createGameElement` factory wired to `EditorPage` insert handler. Default element sizes set per game type.
 
   **Phase 6 - Player Join Page:**
-  Added `/player/:slideId/:elementId` route with `PlayerJoinPage.jsx`. `useGameSocket` hook manages Socket.IO connection, join flow (name + optional team selection), connection status, and session state. Team assignment, spectator mode, and game element ID validation implemented.
+  Added `/player/:slideId/:elementId` route with `game-player-join-page.jsx`. `useGameSocket` hook manages Socket.IO connection, join flow (name + optional team selection), connection status, and session state. Team assignment, spectator mode, and game element ID validation implemented.
 
   **Phase 7-10 - Interactive Renderers:**
   - Phase 7: Wheel spin animation (CSS keyframes + SVG, pointer-based landing), confetti burst on selection, player list with avatars, timer ring countdown, hot-potato bomb SVG with fuse animation
@@ -90,9 +90,9 @@ CommandPalette is editor-only. It renders only inside `EditorPage`. `LiveViewPag
   - Phase 10: Relay race timer with baton handoff animation, trivia champion leaderboard with podium display, score tracking with streak bonuses, penalty system
 
   **Phase 11 - Integration Tests:**
-  161 tests total passing across all game types. Test suites cover: game engine room lifecycle, Socket.IO event handling, leaderboard generation, scoring calculations, timer behavior, team management, player join/leave flows, SVG preview rendering, properties panel interactions, and element creation factories.
+  Test suites cover: game engine room lifecycle, Socket.IO event handling, leaderboard generation, scoring calculations, timer behavior, team management, player join/leave flows, SVG preview rendering, properties panel interactions, and element creation factories.
 
-- Files created (key): `client/src/constants/game-element-types-constants.js`, `client/src/components/canvas/element-renderers/game-element-placeholder-renderer.jsx`, `client/src/components/canvas/element-renderers/game-element-renderer.jsx`, `client/src/components/properties/game-properties.jsx`, `client/src/pages/PlayerJoinPage.jsx`, `client/src/hooks/use-game-socket.js`, `server/services/game-engine.js`, `server/routes/games.js`, game element test suites.
+- Files created (key): `client/src/constants/game-element-types-constants.js`, `client/src/components/canvas/element-renderers/game-element-placeholder-renderer.jsx`, `client/src/components/canvas/element-renderers/game-element-renderer.jsx`, `client/src/components/properties/game-properties.jsx`, `client/src/pages/game-player-join-page.jsx`, `client/src/hooks/use-game-socket.js`, `server/services/game-room-manager-singleton-service.js`, `server/routes/games-rest-api-handler.js`, game element test suites.
 - Files modified: `client/src/data/element-defaults.js`, `client/src/components/canvas/element-renderers/registry.js`, `client/src/components/InsertMenu.jsx`, `client/src/components/EditorMenuBar.jsx`, `client/src/App.jsx`, `client/src/stores/editor-store.js` (game element insert handler), server `index.js` (game routes wired).
 
 ## 2026-04-29 (continued)
@@ -171,7 +171,7 @@ CommandPalette is editor-only. It renders only inside `EditorPage`. `LiveViewPag
 
 - Completed round-trip harness unification (plan `260425-1802-unify-roundtrip-harness`): the fidelity tester now uses the production export pipeline, `--strict` enforces production-only export with the ≥95 semantic / ≥98 round-trip gate, and the latest 4-deck corpus run landed at 97.0% semantic fidelity and 99.0% round-trip stability.
 - Fixed PPTX full-fidelity review issues from plan `260425-1026-pptx-full-fidelity`: hardened CSS `url()` sanitization, routed grouped children through normal mappers, preserved custom SVG paths, line dash/arrow markers, image alt/crop/flip/borders, gradient backgrounds, per-slide transitions, merged/per-cell table styles, multi-series chart editing, and PPTX hyperlink export via `hyperlink.url`.
-- Added regression coverage for PPTX import/export fidelity gaps and property panels; verification passed `npm run lint`, `npm test` (49 files / 302 tests), `npm run build`, `npm run test:e2e` (106 tests), and `npm run test:corpus` against 4 real decks with 95.0% average semantic fidelity.
+- Added regression coverage for PPTX import/export fidelity gaps and property panels; verification passed `npm run lint`, `npm test`, `npm run build`, `npm run test:e2e`, and `npm run test:corpus` against 4 real decks with 97.0% average semantic fidelity and 99.0% round-trip stability.
 - Improved PPTX fidelity harness so the default empty corpus falls back to the checked-in `PPTX/` corpus and `--roundtrip` performs a real temporary PPTX export/re-import structural check. Current round-trip stability remains low (1-7%) because the harness exporter is intentionally minimal and diagnostic, not the full client exporter.
 - Completed UI/UX Tailwind Hard Mode remediation (plan `260425-0455-ui-ux-tailwind-fix-hard`): 19 fixes across 5 phases.
   - Phase 1 (Critical): Fixed slide index badge visibility on light backgrounds (C-02); centralized hardcoded color palette into `shared/src/colorConfig.js` with `TEXT_COLORS`, `BG_COLORS`, `GRADIENT_PRESETS`, `isLightColor()` helper (C-04).

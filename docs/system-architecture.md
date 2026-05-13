@@ -23,8 +23,7 @@ Browser / Electron
 - `MainLayout.jsx` wraps the route tree and renders `StatusBar.jsx`.
 - The root app stores the editor theme in `localStorage` and mirrors it to
   `document.documentElement.dataset.theme`.
-- Live routes (`/live/:roomCode`, `/remote/:roomCode`, `/speaker/:roomCode`)
-  are separate top-level routes, not nested inside the editor shell.
+- Live routes (`/live/:roomCode`, `/remote/:roomCode`, `/speaker/:roomCode`) and the game player route (`/player/:slideId/:elementId`) are separate top-level routes, not nested inside the editor shell.
 
 ### Route Map
 
@@ -38,6 +37,7 @@ Browser / Electron
 | `/live/:roomCode` | `LiveViewPage` |
 | `/remote/:roomCode` | `RemoteControlPage` |
 | `/speaker/:roomCode` | `SpeakerViewPage` |
+| `/player/:slideId/:elementId` | `game-player-join-page.jsx` |
 
 ### State And Hooks
 
@@ -65,6 +65,7 @@ Browser / Electron
 - Layout sub-components live in `components/layout/` (`MainLayout`,
   `StatusBar`); shared UI primitives live in `components/ui/`
   (`Button`, `Select`, `Input`, `ColorPicker`).
+- Game elements render through `client/src/components/canvas/element-renderers/game-element-renderer.jsx` with a placeholder fallback while presenter/player flows use dedicated sockets and overlays.
 
 ### Canvas Decomposition
 
@@ -144,6 +145,7 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
   - sharing and GitHub push
   - AI generation and translation
   - live view
+  - games and player join
   - settings and explore
   - analytics and marketplace
   - upload, media, sync, and history
@@ -163,6 +165,7 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 | `storage.js` | File I/O abstraction with per-file locking |
 | `socket-handler.js` | Socket.IO event wiring |
 | `live-rooms.js` | In-memory room state and role tracking |
+| `game-socket-handler.js` | Game Socket.IO wiring |
 | `presentation-finder.js` | Presentation lookup utility |
 | `ai-provider.js` | AI service integration |
 | `services/pptx-import/geometry.js` | Nullish-safe geometry normalization + affine transform helpers for PPTX import |
@@ -178,6 +181,7 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 - `presentation-meta` carries slide labels, slide count, and notes for the
   controller UI.
 - Viewer count excludes controllers.
+- Room annotations and timers live in memory; a restart clears live room state even though presentation JSON persists.
 
 ### Socket.IO Events
 
@@ -218,9 +222,13 @@ server/data/
 ├── templates.json
 ├── share-tokens.json
 ├── github-config.json
+├── analytics.json
+├── media.json
 ├── settings.json
+├── rclone.conf
 ├── history/
-└── sync-export/
+├── sync-export/
+└── tmp-pptx-imports/
 
 server/uploads/
 └── {uuid}.{ext}
@@ -230,6 +238,7 @@ server/uploads/
   write/read races.
 - `initDataFiles()` creates the data directories and default JSON files on
   first run.
+- `tmp-pptx-imports/` is a temporary workspace for PPTX import uploads and is cleaned after each import.
 
 ## Shared Runtime Contract
 

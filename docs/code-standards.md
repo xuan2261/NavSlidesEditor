@@ -20,7 +20,7 @@
 | Icons (editor UI) | Lucide | 0.441.0 (local npm) |
 | Backend | Express | 4 |
 | Request validation | Zod | 4.3.6 |
-| Runtime | Node.js | 18+ |
+| Runtime | Node.js | 20+ |
 | Desktop | Electron | 33 |
 | Cloud sync | rclone | system / Docker |
 | Storage | JSON files + filesystem | - |
@@ -46,6 +46,12 @@ Canvas selector IDs are stable and must not be renamed:
 - `smart-guide-*`
 
 Property controls use `prop-*` IDs and should stay stable once adopted in tests.
+
+## File Size Budget
+
+- Keep new code files under 200 LOC where practical.
+- Legacy files that exceed that target are refactor candidates, not automatic violations.
+- Split behavior into hooks, stores, or focused components before adding more logic to a large file.
 
 ## Element Constants and Factory Functions
 
@@ -77,8 +83,8 @@ Factory functions:
   can override any field.
 - Generate IDs with `Date.now()` + random suffix; no `crypto.randomUUID()` for
   user-facing objects.
-- Keep a module-level counter for deterministic sequences (e.g. team colors) and
-  expose a `_resetCounter()` helper for tests.
+- Keep deterministic sequences local to the module when needed; prefer explicit
+  test setup/teardown over undocumented reset helpers.
 
 | Type | Convention | Example |
 | --- | --- | --- |
@@ -116,10 +122,18 @@ const selectedElements = useEditorStore((s) => s.selectedElements)
 ### Routing
 
 - `App.jsx` uses `BrowserRouter`, `Routes`, and `Route`.
-- Shared app chrome lives in `MainLayout`; live routes render outside that
-  layout.
-- Route-aware pages live in `client/src/pages/`, not in a global page-state
-  switch.
+- Shared app chrome lives in `MainLayout`; live routes render outside that layout.
+- Current route map:
+  - `/` -> `HomePage`
+  - `/editor/:id` -> `EditorPage`
+  - `/template/:id` -> `EditorPage` template mode
+  - `/settings` -> `SettingsPage`
+  - `/explore` -> `ExplorePage`
+  - `/live/:roomCode` -> `LiveViewPage`
+  - `/remote/:roomCode` -> `RemoteControlPage`
+  - `/speaker/:roomCode` -> `SpeakerViewPage`
+  - `/player/:slideId/:elementId` -> `game-player-join-page.jsx`
+- Route-aware pages live in `client/src/pages/`, not in a global page-state switch.
 
 ### Custom Hooks
 
@@ -131,8 +145,15 @@ Logic extracted from `EditorPage` lives in `hooks/`.
 | `useClipboard` | `use-clipboard.js` | Copy/cut/paste/duplicate elements |
 | `useKeyboard` | `use-keyboard.js` | Keyboard shortcut dispatch |
 | `useLivePresentation` | `use-live-presentation.js` | Socket.IO live mode |
+| `useLiveTimer` | `use-live-timer.js` | Presenter timer UI state |
+| `useLiveTimerSync` | `use-live-timer-sync.js` | Socket timer sync |
 | `useSlideOperations` | `use-slide-operations.js` | Slide CRUD + element manipulation |
 | `useRevealPreviewFrame` | `use-reveal-preview-frame.js` | Reveal iframe management for present mode |
+| `useAnnotationSync` | `use-annotation-sync.js` | Presenter annotation sync |
+| `useGameSocket` | `use-game-socket.js` | Game player Socket.IO join/updates |
+| `useTouchGestures` | `use-touch-gestures.js` | Touch gesture normalization |
+| `useSwipeNavigation` | `use-swipe-navigation.js` | Swipe navigation |
+| `usePinchZoom` | `use-pinch-zoom.js` | Pinch zoom |
 
 Rule: new editor logic goes into a hook or store. `EditorPage` handles
 composition.
@@ -149,6 +170,7 @@ composition.
 - `element-factory.js` creates typed elements and replaces inline callbacks.
 - Canvas coordinates stay in logical px at 960 x 540; scaling is CSS-only.
 - `MainLayout` owns the shared shell, while live routes stay outside it.
+- Game elements are first-class `type: 'game'` elements with 7 game types and a dedicated presenter/player flow; they are not collaborative slide-editing primitives.
 
 ### Canvas Extraction Patterns
 
@@ -238,6 +260,8 @@ Server reads and writes JSON files via `fs-extra`.
 | `share-tokens.json` | `{}` |
 | `github-config.json` | `{ token: '', owner: '', repo: '' }` |
 | `settings.json` | `{ aiApiKey: '', defaultTheme: 'black', defaultTransition: 'slide' }` |
+| `analytics.json` | `{}` |
+| `media.json` | `[]` |
 
 `storage.js` wraps each file in an in-memory lock queue so concurrent requests
 do not race. There is still no database layer and no cross-file transaction
@@ -246,13 +270,11 @@ support.
 ## Styling Conventions
 
 - Tailwind utilities are the primary source for app chrome styling.
-- `client/src/index.css` contains the Tailwind directives and design tokens.
-- `client/tailwind.config.js` maps colors, radii, and animations to CSS
-  variables.
-- Use CSS custom properties for theme tokens; `data-theme` selects dark
-  (default) or light surfaces.
-- Keep CSS Modules out of the app; split `.css` files and Tailwind utilities are
-  the standard.
+- `client/src/index.css` is the single global stylesheet; it contains the Tailwind directives, design tokens, resets, and shared component rules.
+- There is no `client/src/styles/` directory in the current codebase.
+- `client/tailwind.config.js` maps colors, radii, and animations to CSS variables.
+- Use CSS custom properties for theme tokens; `data-theme` selects dark (default) or light surfaces.
+- Keep CSS Modules out of the app; split `.css` files and Tailwind utilities are the standard.
 - Use `cn()` from `client/src/lib/utils.js` when class merging is needed.
 - `App.jsx` sets `document.documentElement.dataset.theme` and persists
   `localStorage('editor-theme')`.
@@ -311,6 +333,26 @@ highlight.js 11, KaTeX, Chart.js 4, marked.js, and TikZJax.
   `try/catch`.
 
 ## Security Measures
+
+### Trusted Programmable Content Policy
+
+NavSlides Editor intentionally supports author-controlled executable presentation content:
+
+- HTML embeds can contain HTML, CSS, and JavaScript.
+- Custom presentation CSS can affect exported and presented slides.
+- Inline SVG, Markdown output, reveal.js exports, and iframe-based renderers are part of the authoring surface.
+
+Do not treat trusted author-controlled HTML/CSS/JS execution as an automatic blocking XSS finding. This is product scope, not a bug, for the single-user self-hosted model.
+
+Security reviews should still block issues that cross trust boundaries:
+
+- untrusted import/upload content executing outside the author's intent
+- share/viewer routes gaining editor/admin capabilities
+- one user's stored content affecting another user
+- credential exposure, SSRF, path traversal, command injection, or data loss
+- public deployment without an external auth boundary
+
+If deployment is internet-facing or multi-user, require external authentication and document the content trust boundary before release.
 
 | Measure | Implementation |
 | --- | --- |

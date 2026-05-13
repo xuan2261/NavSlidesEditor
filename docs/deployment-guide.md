@@ -119,6 +119,8 @@ Open `http://localhost:3002`.
 PORT=8080 npm start
 ```
 
+On Windows PowerShell, use `$env:PORT=8080; npm start` or run the command inside Git Bash / WSL.
+
 ---
 
 ## Electron Desktop
@@ -195,8 +197,13 @@ Set via shell, `.env` file (manually), or Docker environment config.
 | `server/data/templates.json`     | Custom presentation templates  |
 | `server/data/share-tokens.json`  | Shareable link tokens          |
 | `server/data/github-config.json` | GitHub integration credentials |
+| `server/data/settings.json`      | Editor settings and AI API key |
+| `server/data/analytics.json`     | Share-view analytics records    |
+| `server/data/media.json`         | Uploaded media metadata        |
 | `server/data/rclone.conf`        | rclone configuration           |
 | `server/data/history/`           | Version history snapshots      |
+| `server/data/sync-export/`       | rclone export staging          |
+| `server/data/tmp-pptx-imports/`  | Temporary PPTX import uploads  |
 | `server/uploads/`                | Uploaded images, videos, audio |
 
 All directories are created automatically on first run.
@@ -258,22 +265,18 @@ Note: Set `client_max_body_size` (Nginx) or the equivalent to at least 100MB to 
 
 ## CI/CD
 
-The repository includes a GitHub Actions workflow that builds the Windows Electron package on push/tag.
+The repository includes GitHub Actions workflows for validation and Electron release.
 
-Current state:
-
-- Windows build only (Linux and macOS targets planned — see `docs/project-roadmap.md` Phase D)
-- 510 Vitest unit tests + 127 Playwright E2E tests verified before each push
-- No automatic publish to GitHub Releases yet
-
-To trigger a release build manually: push a tag matching `v*` (e.g. `v1.0.1`).
+- `CI/CD Pipeline` runs lint, Vitest, build, and Playwright on push / pull request.
+- `Build & Release Electron` currently builds the Windows Electron package only, then creates a GitHub Release asset when a `v*` tag is pushed or a manual dispatch is used.
+- Linux and macOS Electron packages exist as local `electron-builder` scripts, but they are not part of the current release workflow.
 
 Test commands run locally:
 ```bash
-npm run lint     # ESLint flat config
-npm run test     # Vitest — 510 tests
-npm run test:e2e # Playwright — 127 tests in 27 spec files
-npm run build    # Vite production build
+npm run lint
+npm run test
+npm run test:e2e
+npm run build
 ```
 
 ---
@@ -297,4 +300,5 @@ Current baseline file:
 
 - The application has **no built-in authentication**. Do not expose port 3002 directly to the internet without a reverse proxy + auth layer (e.g., Nginx + HTTP Basic Auth, Authelia, Cloudflare Access).
 - GitHub tokens are stored in plaintext in `github-config.json`. Restrict filesystem access accordingly.
+- File-backed settings may contain sensitive values such as API keys or sync credentials. Do not commit or deploy those files publicly.
 - CORS is open (all origins). In a restricted environment, add a CORS origin list to `server/index.js`.

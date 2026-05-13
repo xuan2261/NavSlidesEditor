@@ -95,7 +95,7 @@ Chạy NavSlides Editor dưới dạng ứng dụng desktop native. Không cần
 
 #### Pre-built packages
 
-Tải xuống từ trang [Releases](https://github.com/jbirky/revealjs_gui/releases):
+Tải xuống từ trang [Releases](https://github.com/Xuan2261/navslides-editor/releases). Workflow phát hành hiện tại tự động build artifact Windows; Linux/macOS vẫn build được bằng script local bên dưới:
 
 | Platform | Format                                                  |
 | -------- | ------------------------------------------------------- |
@@ -118,11 +118,11 @@ chmod +x Slides\ Editor-1.0.0.AppImage
 
 #### Build from source
 
-Yêu cầu **Node.js 18+**.
+Yêu cầu **Node.js 20+**.
 
 ```bash
-git clone https://github.com/jbirky/revealjs_gui.git
-cd revealjs_gui
+git clone https://github.com/Xuan2261/navslides-editor.git
+cd navslides-editor
 npm install
 ```
 
@@ -161,8 +161,8 @@ Yêu cầu [Docker](https://docs.docker.com/get-docker/) và [Docker Compose](ht
 #### 1. Clone repository
 
 ```bash
-git clone https://github.com/jbirky/revealjs_gui.git
-cd revealjs_gui
+git clone https://github.com/Xuan2261/navslides-editor.git
+cd navslides-editor
 ```
 
 #### 2. Khởi chạy với Docker Compose
@@ -211,13 +211,13 @@ ports:
 
 ### Option C — Node.js / npm from source
 
-Yêu cầu **Node.js 18+** và npm 8+.
+Yêu cầu **Node.js 20+** và npm 8+.
 
 #### 1. Clone repository
 
 ```bash
-git clone https://github.com/jbirky/revealjs_gui.git
-cd revealjs_gui
+git clone https://github.com/Xuan2261/navslides-editor.git
+cd navslides-editor
 ```
 
 #### 2. Cài đặt các dependencies
@@ -397,27 +397,41 @@ slides.example.com {
 
 | Method       | Requirement                                        |
 | ------------ | -------------------------------------------------- |
-| Desktop app  | Node.js 18+ (chỉ dành cho quá trình build)         |
+| Desktop app  | Node.js 20+ (chỉ dành cho quá trình build)         |
 | Docker       | Docker 20.10+ và Docker Compose v2+                |
-| Node.js      | Node.js 18+ và npm 8+                              |
+| Node.js      | Node.js 20+ và npm 8+                              |
 | Load Testing | [k6](https://k6.io/docs/get-started/installation/) |
 
 ---
 
 ## Testing & Performance
 
-Dự án này sử dụng công cụ `k6` cho việc load testing bằng cách mô phỏng lượng tương tác cao đến API REST và WebSockets.
+Quy trình kiểm tra thường chạy theo thứ tự:
 
-1. Hãy chắc chắn cài `k6` vào hệ thống ([Installation Guide](https://k6.io/docs/get-started/installation/)).
-2. Chắc chắn server của bạn đã khởi chạy (`npm run dev` hoặc `npm start`).
-3. Khởi chạy thử nghiệm tải API (các lệnh HTTP POST sử dụng JSON payloads lớn):
+1. Lint và build:
+   ```bash
+   npm run lint
+   npm run build
+   ```
+2. Unit tests:
+   ```bash
+   npm run test
+   ```
+3. Browser tests:
+   ```bash
+   npm run test:e2e
+   ```
+4. PPTX corpus check:
+   ```bash
+   npm run test:corpus
+   ```
+5. Load tests với `k6`:
    ```bash
    npm run test:load:api
-   ```
-4. Thử nghiệm kết nối WebSockets (Socket.IO Engine.IO handshake và real-time events):
-   ```bash
    npm run test:load:ws
    ```
+
+Cài `k6` theo hướng dẫn chính thức nếu muốn chạy load suite local.
 
 ---
 
