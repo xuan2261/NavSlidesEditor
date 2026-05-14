@@ -106,10 +106,10 @@ npm run lint
 
 ## Next Steps
 
-- Commit with conventional message after gates:
-  - `docs(plan): add upstream feature audit port roadmap`
-  - later implementation commits split by batch.
+- Completed.
+- Merged into `master` via merge commit `43f6d7c3`.
+- Strict corpus gate resolved and passed before merge.
 
 ## Unresolved Questions
 
-- Phase 08 corpus blocker must be resolved or explicitly accepted before merge.
+- None.

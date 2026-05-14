@@ -9,7 +9,7 @@ Docs updated to reflect actual state:
 - upstream small ports implemented
 - timeline/plugin deferred
 - normal gates passed
-- merge blocked by corpus strict gate
+- strict corpus gate resolved and passed before merge
 
 ## Updated Docs
 
@@ -33,4 +33,4 @@ rg -n "upstream|timeline|plugin|Copy URL|HTML embed|LaTeX|fragment" docs plans/2
 
 ## Unresolved Questions
 
-- Phase 08 corpus blocker must be resolved or explicitly accepted before merge.
+- None.
