@@ -117,4 +117,39 @@ describe('roundtrip fingerprint matching', () => {
       semantic.diffs.some((diff) => Array.isArray(diff.gaps) && diff.gaps.includes('missing-text-content'))
     ).toBe(false)
   })
+
+  it('scores flattened group children instead of leaving them uncaptured', () => {
+    const semantic = computeSemanticFidelity(
+      {
+        slides: [
+          {
+            elements: [
+              {
+                type: 'group',
+                elements: [
+                  { type: 'shape', shapType: 'rect', left: 10, top: 10, width: 80, height: 30 },
+                  { type: 'text', content: '<p>Grouped label</p>', left: 20, top: 20, width: 120, height: 40 },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        slides: [
+          {
+            elements: [
+              { type: 'svg', x: 10, y: 10, width: 80, height: 30 },
+              { type: 'text', content: '<p>Grouped label</p>', x: 20, y: 20, width: 120, height: 40 },
+            ],
+          },
+        ],
+      }
+    )
+
+    expect(semantic.scores.shape).toBe(1)
+    expect(semantic.scores.text).toBe(1)
+    expect(semantic.scores.group).toBeNull()
+    expect(semantic.overall).toBe(1)
+  })
 })

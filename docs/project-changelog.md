@@ -4,6 +4,10 @@
 
 ## 2026-05-14
 
+- Implemented scoped upstream-inspired ports from `plans/260514-1024-upstream-feature-audit-and-port-roadmap/`: reveal/print text spacing now uses fixed px spacing, HTML embed print output keeps trusted author content through `data-pdf-iframe`, LaTeX/TikZ elements expose font size/color controls with canvas/export parity, reveal-supported `strike` fragment option is selectable, video elements support start/end trim and playback speed in canvas/export, and `.ogv` uploads are accepted/listed as video media.
+- Deferred upstream timeline element and plugin/Manim architecture to separate go/no-go epics; neither was implemented in the sync branch.
+- Fixed the PPTX corpus semantic fidelity harness for flattened grouped source elements. Strict corpus now passes at 98.0% semantic fidelity and 99.0% round-trip stability.
+- Verification passed for the upstream port branch: targeted Vitest (4 files / 22 tests), corpus harness regression test, `npm run lint`, `npm run build`, full Vitest (106 files / 935 tests), targeted Playwright (9 tests), full Playwright (155 tests), and strict corpus.
 - Completed selective upstream port plan `plans/260514-1045-upstream-main-selective-port-workflow/`: avoided unrelated-history merge and ported only the Copy URL context menu feature from upstream concept `93816b88`.
 - Added `Copy URL` to image/video right-click context menu. Copies `http(s)`, `blob:`, `data:`, protocol-relative, and browser-relative media URLs after safe normalization; blocks executable/unsupported schemes.
 - Hardened clipboard behavior so synchronous clipboard failures and rejected clipboard promises do not crash or leave the menu stuck open.

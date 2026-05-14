@@ -108,6 +108,22 @@ describe('API surface routes', () => {
     expect(deleteRes.status).toBe(200)
   })
 
+  it('accepts ogv uploads and lists them as video media', async () => {
+    const uploadRes = await request(app)
+      .post('/api/upload')
+      .attach('file', Buffer.from('ogv placeholder bytes'), 'clip.ogv')
+    expect(uploadRes.status).toBe(200)
+    expect(uploadRes.body.url).toMatch(/^\/uploads\//)
+
+    const filename = path.basename(uploadRes.body.url)
+    const listRes = await request(app).get('/api/media?type=video')
+    expect(listRes.status).toBe(200)
+    expect(listRes.body.some((item) => item.filename === filename && item.type === 'video')).toBe(true)
+
+    const deleteRes = await request(app).delete(`/api/media/${filename}`)
+    expect(deleteRes.status).toBe(200)
+  })
+
   it('covers history snapshot create/list/restore/delete', async () => {
     const presId = `history-${Date.now()}`
     await storage.writePresentations([

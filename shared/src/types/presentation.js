@@ -73,7 +73,9 @@
 /**
  * @typedef {BaseElement & {
  *   latex: string,
- *   displayMode?: boolean
+ *   displayMode?: boolean,
+ *   fontSize?: number,
+ *   textColor?: string
  * }} LatexElement
  */
 
@@ -96,9 +98,15 @@
 /**
  * @typedef {BaseElement & {
  *   src: string,
+ *   controls?: boolean,
  *   autoplay?: boolean,
  *   loop?: boolean,
- *   muted?: boolean
+ *   muted?: boolean,
+ *   objectFit?: 'cover'|'contain'|'fill'|'none',
+ *   poster?: string,
+ *   startTime?: number,
+ *   endTime?: number,
+ *   playbackRate?: number
  * }} VideoElement
  */
 

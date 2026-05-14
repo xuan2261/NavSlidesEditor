@@ -16,6 +16,23 @@ function absoluteSrc(src) {
   return src
 }
 
+function getMediaFragmentSrc(src, startTime, endTime) {
+  if (!src) return src
+  const start = Number(startTime)
+  const end = Number(endTime)
+  const hasStart = Number.isFinite(start) && start > 0
+  const hasEnd = Number.isFinite(end) && end > 0
+  if (!hasStart && !hasEnd) return src
+  const rangeStart = hasStart ? start : 0
+  const rangeEnd = hasEnd && end > rangeStart ? `,${end}` : ''
+  return `${String(src).split('#')[0]}#t=${rangeStart}${rangeEnd}`
+}
+
+function getPlaybackRate(value) {
+  const rate = Number(value)
+  return Number.isFinite(rate) && rate > 0 ? rate : null
+}
+
 function getAssetOrigin() {
   if (typeof window !== 'undefined' && window.location && window.location.origin !== 'null') {
     return window.location.origin
@@ -206,6 +223,8 @@ function renderIcon(el, style, wrap, vis) {
 function renderLatex(el, style, wrap, vis, opts) {
   const content = el.content || ''
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
+  const fontSize = el.fontSize || 16
+  const textColor = el.textColor || el.fontColor || '#ffffff'
 
   // [FIX #13] If _fallbackSrc is available and content doesn't look like valid LaTeX, use image fallback.
   // This handles malformed LaTeX strings imported from PPTX that KaTeX cannot render.
@@ -219,10 +238,10 @@ function renderLatex(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
     if (hasTikz) {
       const _origin = getAssetOrigin()
-      const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" type="text/css" href="${_origin}/vendor/tikzjax/fonts.css"><script src="${_origin}/vendor/tikzjax/tikzjax.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:white;font-size:calc(16px * var(--font-zoom, 1))}svg{max-width:100%;max-height:100%}</style></head><body><script type="text/tikz">${content}</script></body></html>`
+      const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" type="text/css" href="${_origin}/vendor/tikzjax/fonts.css"><script src="${_origin}/vendor/tikzjax/tikzjax.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1))}svg{max-width:100%;max-height:100%}</style></head><body><script type="text/tikz">${content}</script></body></html>`
       return `<iframe${wrap} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
     }
-    return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:white;"><span data-math-latex="${escapeHtml(content)}" data-math-display="true"></span></div>`
+    return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));"><span data-math-latex="${escapeHtml(content)}" data-math-display="true"></span></div>`
   }
 
   const _origin = getAssetOrigin()
@@ -235,7 +254,7 @@ function renderLatex(el, style, wrap, vis, opts) {
   } else {
     bodyContent = `<div id="m"></div><script>katex.render(${JSON.stringify(content)},document.getElementById('m'),{displayMode:true,throwOnError:false})</script>`
   }
-  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="${_origin}/vendor/katex/dist/katex.min.css"><script src="${_origin}/vendor/katex/dist/katex.min.js"></script>${tikzScript}<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:white;font-size:calc(16px * var(--font-zoom, 1))}.katex{font-size:1.4em}svg{max-width:100%;max-height:100%}</style></head><body>${bodyContent}</body></html>`
+  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="${_origin}/vendor/katex/dist/katex.min.css"><script src="${_origin}/vendor/katex/dist/katex.min.js"></script>${tikzScript}<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1))}.katex{font-size:1.4em;color:inherit}svg{max-width:100%;max-height:100%}</style></head><body>${bodyContent}</body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(srcdoc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
 }
 
@@ -243,14 +262,17 @@ function renderVideo(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
     return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));">&#9654; Video</div>`
   }
-  const src = absoluteSrc(el.src)
+  const src = getMediaFragmentSrc(absoluteSrc(el.src), el.startTime, el.endTime)
   const attrs = []
   if (el.controls !== false) attrs.push('controls')
   if (el.autoplay) attrs.push('autoplay')
   if (el.loop) attrs.push('loop')
   if (el.muted) attrs.push('muted')
+  const playbackRate = getPlaybackRate(el.playbackRate)
+  const playbackAttr =
+    playbackRate && playbackRate !== 1 ? ` onloadedmetadata="this.playbackRate=${playbackRate}"` : ''
   const posterAttr = el.poster ? ` poster="${absoluteSrc(el.poster)}"` : ''
-  return `<div${wrap} style="${style}"><video src="${src}" ${attrs.join(' ')}${posterAttr} style="width:100%;height:100%;object-fit:${el.objectFit || 'contain'};display:block;"></video></div>`
+  return `<div${wrap} style="${style}"><video src="${src}" ${attrs.join(' ')}${posterAttr}${playbackAttr} style="width:100%;height:100%;object-fit:${el.objectFit || 'contain'};display:block;"></video></div>`
 }
 
 function renderAudio(el, style, wrap, vis, opts) {
@@ -431,6 +453,8 @@ module.exports = {
   escapeHtml,
   escapeSrcdoc,
   absoluteSrc,
+  getMediaFragmentSrc,
+  getPlaybackRate,
   getAssetOrigin,
   getBackgroundAttrs: null, // will be set from htmlGenerator
 }

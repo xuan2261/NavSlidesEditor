@@ -7,7 +7,7 @@ const router = express.Router()
 
 function getMediaType(ext) {
   const imageExts = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'])
-  const videoExts = new Set(['.mp4', '.webm', '.ogg', '.mov', '.avi'])
+  const videoExts = new Set(['.mp4', '.webm', '.ogg', '.ogv', '.mov', '.avi'])
   const audioExts = new Set(['.mp3', '.wav', '.flac', '.aac', '.m4a'])
   if (imageExts.has(ext)) return 'image'
   if (videoExts.has(ext)) return 'video'
