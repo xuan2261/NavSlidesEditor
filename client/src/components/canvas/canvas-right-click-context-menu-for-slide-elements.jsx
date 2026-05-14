@@ -1,3 +1,4 @@
+import { Clipboard } from 'lucide-react'
 import { Button } from '../ui'
 
 const SNAP_REF_OPTIONS = [
@@ -47,6 +48,20 @@ const SNAP_ICONS = {
   ll: '↙', lc: '↓', lr: '↘',
 }
 
+export function getCopyableMediaUrl(element, origin = globalThis.location?.origin) {
+  const raw = typeof element?.src === 'string' ? element.src.trim() : ''
+  if (!raw || /^(javascript|vbscript):/i.test(raw)) return null
+  if (/^(https?:|blob:|data:)/i.test(raw)) return raw
+  if (!origin) return null
+
+  try {
+    const url = new URL(raw, origin)
+    return /^https?:$/i.test(url.protocol) ? url.toString() : null
+  } catch {
+    return null
+  }
+}
+
 /**
  * CanvasContextMenu — right-click context menu for slide elements.
  * Props:
@@ -72,11 +87,26 @@ export default function CanvasContextMenu({
   onUpdateElement,
   onStartCrop,
   onClose,
+  clipboard = globalThis.navigator?.clipboard,
+  origin = globalThis.location?.origin,
 }) {
   if (!contextMenu) return null
 
   const ctxEl = slide?.elements?.find((e) => e.id === contextMenu.elementId)
   const currentRef = ctxEl?.snapRef || 'ul'
+  const copyableUrl = ['image', 'video'].includes(contextMenu.elementType)
+    ? getCopyableMediaUrl(ctxEl, origin)
+    : null
+  const copyUrl = () => {
+    if (copyableUrl && clipboard?.writeText) {
+      try {
+        Promise.resolve(clipboard.writeText(copyableUrl)).catch(() => {})
+      } catch {
+        // Clipboard failures should not keep the context menu open or break editing.
+      }
+    }
+    onClose()
+  }
 
   return (
     <div
@@ -138,6 +168,20 @@ export default function CanvasContextMenu({
             }}
           >
             ↺ Reset crop
+          </Button>
+          {copyableUrl && (
+            <Button variant="ghost" onClick={copyUrl}>
+              <Clipboard size={14} /> Copy URL
+            </Button>
+          )}
+          <div className="h-px bg-border my-1" />
+        </>
+      )}
+
+      {contextMenu.elementType === 'video' && copyableUrl && (
+        <>
+          <Button variant="ghost" onClick={copyUrl}>
+            <Clipboard size={14} /> Copy URL
           </Button>
           <div className="h-px bg-border my-1" />
         </>
