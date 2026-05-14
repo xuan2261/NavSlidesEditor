@@ -4,11 +4,11 @@ Date: 2026-05-14
 
 ## Summary
 
-Phase 08 is `Ready for Merge`.
+Phase 08 is `Complete`.
 
 All regular gates passed, including full Vitest and full Playwright E2E. Conditional corpus strict gate now passes after fixing the semantic fidelity scorer for flattened PPTX groups.
 
-No merge performed.
+Merged into `master` with merge commit `43f6d7c3`.
 
 ## Diff Review
 
@@ -122,8 +122,18 @@ Results:
 
 ## Merge Status
 
-Ready, but not merged.
+Merged into `master` via:
+
+```powershell
+git switch master
+git merge --no-ff sync/upstream-feature-audit-port-260514 -m "merge: upstream feature audit ports"
+```
+
+Commits:
+
+- Port commit: `d0de64f6 feat(upstream): port audited presentation improvements`
+- Merge commit: `43f6d7c3 merge: upstream feature audit ports`
 
 ## Unresolved Questions
 
-- Merge not performed yet.
+- None.

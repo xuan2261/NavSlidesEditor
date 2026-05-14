@@ -8,7 +8,7 @@
 ## Overview
 
 - Priority: P0
-- Status: Ready for Merge
+- Status: Complete
 - Estimate: 4h
 - Goal: validate accepted batches and merge back only after gates pass.
 
@@ -85,7 +85,7 @@ topic branches
 - [x] Run full E2E.
 - [x] Run corpus if needed.
 - [x] Security scan unstaged diff.
-- [ ] Merge only after pass.
+- [x] Merge only after pass.
 
 ## Success Criteria
 
@@ -123,8 +123,8 @@ npm run test:load:ws
 
 ## Next Steps
 
-- Proceed to docs release audit.
+- Complete. Docs release audit and future backlog were recorded in phase 09.
 
 ## Unresolved Questions
 
-- Merge not performed yet.
+- None.
