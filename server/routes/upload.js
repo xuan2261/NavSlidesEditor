@@ -17,6 +17,7 @@ const ALLOWED_UPLOAD_EXTENSIONS = new Set([
   '.mp4',
   '.webm',
   '.ogg',
+  '.ogv',
   '.mov',
   '.avi',
   '.mp3',

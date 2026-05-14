@@ -146,6 +146,7 @@ export default function CommonElementControls({
                 <option value="fade-down">Fade Down</option>
                 <option value="fade-left">Fade Left</option>
                 <option value="fade-right">Fade Right</option>
+                <option value="strike">Strike</option>
                 <option value="grow">Grow</option>
                 <option value="shrink">Shrink</option>
                 <option value="zoom-in">Zoom In</option>

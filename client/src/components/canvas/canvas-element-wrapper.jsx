@@ -6,6 +6,23 @@ import { sanitizeRichTextHtml } from '../../utils/content-safety'
 import { getElementRenderer, CropOverlay } from './element-renderers/registry'
 import { HANDLE_STYLES } from './use-canvas-resize-rotate'
 
+function getMediaFragmentSrc(src, startTime, endTime) {
+  if (!src) return src
+  const start = Number(startTime)
+  const end = Number(endTime)
+  const hasStart = Number.isFinite(start) && start > 0
+  const hasEnd = Number.isFinite(end) && end > 0
+  if (!hasStart && !hasEnd) return src
+  const rangeStart = hasStart ? start : 0
+  const rangeEnd = hasEnd && end > rangeStart ? `,${end}` : ''
+  return `${String(src).split('#')[0]}#t=${rangeStart}${rangeEnd}`
+}
+
+function getPlaybackRate(value) {
+  const rate = Number(value)
+  return Number.isFinite(rate) && rate > 0 ? rate : null
+}
+
 export default function CanvasElement({
   element,
   isSelected,
@@ -24,6 +41,7 @@ export default function CanvasElement({
   iconPaths,
 }) {
   const contentRef = useRef(null)
+  const videoRef = useRef(null)
 
   // Render KaTeX math in preview
   useEffect(() => {
@@ -37,6 +55,12 @@ export default function CanvasElement({
       } catch (e) {}
     })
   }, [element.content, isEditing])
+
+  useEffect(() => {
+    if (element.type !== 'video' || !videoRef.current) return
+    const playbackRate = getPlaybackRate(element.playbackRate)
+    videoRef.current.playbackRate = playbackRate || 1
+  }, [element.playbackRate, element.type])
 
   const elementWrapperStyle = {
     position: 'absolute', left: element.x, top: element.y,
@@ -102,7 +126,23 @@ export default function CanvasElement({
         const Renderer = getElementRenderer(element.type)
         if (element.type === 'html') return <iframe srcDoc={element.content || ''} style={htmlFrameStyle} sandbox="allow-scripts" title="HTML embed" />
         if (element.type === 'code') return <pre className="hljs" style={codeBlockStyle}><code dangerouslySetInnerHTML={{ __html: hljs.highlight(element.content || '', { language: element.language || 'plaintext' }).value }} /></pre>
-        if (element.type === 'video') return <video src={element.src} controls={element.controls !== false} muted={element.muted || false} loop={element.loop || false} poster={element.poster || undefined} style={videoStyle} />
+        if (element.type === 'video') {
+          const playbackRate = getPlaybackRate(element.playbackRate)
+          return (
+            <video
+              ref={videoRef}
+              src={getMediaFragmentSrc(element.src, element.startTime, element.endTime)}
+              controls={element.controls !== false}
+              muted={element.muted || false}
+              loop={element.loop || false}
+              poster={element.poster || undefined}
+              style={videoStyle}
+              onLoadedMetadata={(event) => {
+                if (playbackRate && playbackRate !== 1) event.currentTarget.playbackRate = playbackRate
+              }}
+            />
+          )
+        }
         if (element.type === 'audio') return <div style={audioWrapperStyle}><audio src={element.src} controls style={audioControlStyle} /></div>
         if (Renderer) {
           if (element.type === 'table') return <Renderer element={element} isEditing={isEditing} onUpdateElement={onUpdateElement} />

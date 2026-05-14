@@ -231,20 +231,17 @@ function computeSemanticFidelity(pptxtojsonJSON, navslidesJSON) {
     const navs = navSlides[si] || []
     const usedNavIndices = new Set()
 
-    const flattenRec = (el, cat) => {
-      categoryScores[cat].total += 1
-      for (const child of (el.elements || [])) {
-        const childCat = mapCategory(child.type || (child.content ? 'text' : 'other'))
-        flattenRec(child, childCat)
+    const ppts = []
+    const flattenSource = (el) => {
+      if (el?.type === 'group' && Array.isArray(el.elements) && el.elements.length > 0) {
+        for (const child of el.elements) flattenSource(child)
+        return
       }
+      ppts.push(el)
     }
+    for (const el of pptsRaw) flattenSource(el)
 
-    for (const pptxEl of pptsRaw) {
-      if (pptxEl.type === 'group') {
-        const cat = mapCategory('group')
-        flattenRec(pptxEl, cat)
-        continue
-      }
+    for (const pptxEl of ppts) {
       const type = pptxEl.type || (pptxEl.content ? 'text' : 'other')
       const cat = mapCategory(type)
       categoryScores[cat].total += 1

@@ -43,6 +43,8 @@ export const ELEMENT_DEFAULTS = {
     width: 500,
     height: 380,
     zIndex: 2,
+    fontSize: 16,
+    textColor: '#ffffff',
     content: `\\\\begin{tikzpicture}
   \\\\draw[thick,->] (0,0) -- (4,0) node[right] {$x$};
   \\\\draw[thick,->] (0,0) -- (0,3) node[above] {$y$};
@@ -94,6 +96,9 @@ svg.selectAll('circle').data(data).join('circle')
     muted: false,
     objectFit: 'contain',
     poster: '',
+    startTime: 0,
+    endTime: 0,
+    playbackRate: 1,
   },
   audio: {
     width: 400,

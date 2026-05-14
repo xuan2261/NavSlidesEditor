@@ -634,7 +634,12 @@ svg.selectAll('circle').data(data).join('circle')
 
   const addLatexElement = useCallback(() => {
     const newEl = addElement('latex')
-    setLatexEditorState({ elementId: newEl.id, content: newEl.content })
+    setLatexEditorState({
+      elementId: newEl.id,
+      content: newEl.content,
+      fontSize: newEl.fontSize,
+      textColor: newEl.textColor,
+    })
   }, [addElement])
 
   const openLatexEditor = useCallback(
@@ -643,14 +648,23 @@ svg.selectAll('circle').data(data).join('circle')
         (el) => el.id === elementId
       )
       if (!element || element.type !== 'latex') return
-      setLatexEditorState({ elementId, content: element.content || '' })
+      setLatexEditorState({
+        elementId,
+        content: element.content || '',
+        fontSize: element.fontSize,
+        textColor: element.textColor,
+      })
     },
     [presentation]
   )
 
   const commitLatexEdit = useCallback(() => {
     if (!latexEditorState) return
-    updateElement(latexEditorState.elementId, { content: latexEditorState.content })
+    updateElement(latexEditorState.elementId, {
+      content: latexEditorState.content,
+      fontSize: latexEditorState.fontSize,
+      textColor: latexEditorState.textColor,
+    })
     setLatexEditorState(null)
   }, [latexEditorState, updateElement])
 

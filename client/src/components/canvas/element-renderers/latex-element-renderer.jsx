@@ -1,5 +1,7 @@
-function generateLatexIframeHtml(content) {
+function generateLatexIframeHtml(content, options = {}) {
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
+  const fontSize = options.fontSize || 16
+  const textColor = options.textColor || options.fontColor || '#ffffff'
   const tikzScript = hasTikz
     ? `<link rel="stylesheet" type="text/css" href="https://tikzjax.com/v1/fonts.css">
        <script src="https://tikzjax.com/v1/tikzjax.js"></script>`
@@ -26,15 +28,19 @@ function generateLatexIframeHtml(content) {
 ${tikzScript}
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: transparent; overflow: hidden; color: white; }
-  .katex { font-size: 1.4em; }
+  html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: transparent; overflow: hidden; color: ${textColor}; font-size: ${fontSize}px; }
+  .katex { font-size: 1.4em; color: inherit; }
   svg { max-width: 100%; max-height: 100%; }
 </style>
 </head><body>${bodyContent}</body></html>`
 }
 
 export function LatexRenderer({ element, isSelected, isDragging }) {
-  const html = generateLatexIframeHtml(element.content || '')
+  const html = generateLatexIframeHtml(element.content || '', {
+    fontSize: element.fontSize,
+    textColor: element.textColor,
+    fontColor: element.fontColor,
+  })
   const latexFrameStyle = {
     width: '100%',
     height: '100%',

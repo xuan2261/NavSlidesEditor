@@ -31,6 +31,33 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
   if (t === 'latex')
     return (
       <div className="mb-2.5">
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          <div>
+            <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
+            <input
+              data-testid="prop-latex-font-size"
+              className="prop-input"
+              type="number"
+              min="8"
+              max="96"
+              value={element.fontSize || 16}
+              onChange={(e) => {
+                const value = clampNumber(e.target.value, 8, 96, null)
+                if (value === null) return
+                onUpdate({ fontSize: value })
+              }}
+            />
+          </div>
+          <div>
+            <div className="text-[11px] text-text-muted mb-0.5">Color</div>
+            <ColorPicker
+              data-testid="prop-latex-text-color"
+              value={element.textColor || '#ffffff'}
+              onChange={(e) => onUpdate({ textColor: e.target.value })}
+              className="w-full h-7 border border-border rounded cursor-pointer"
+            />
+          </div>
+        </div>
         <button
           data-testid="prop-latex-edit"
           className="btn btn-secondary w-full justify-center text-xs mb-1.5"

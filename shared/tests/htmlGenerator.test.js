@@ -155,6 +155,28 @@ describe('htmlGenerator', () => {
     expect(html).toContain("sock.on('control-navigate'")
   })
 
+  it('uses 16px section base font size and px text spacing in reveal HTML', () => {
+    const html = generateRevealHTML({
+      title: 'Spacing',
+      slides: [
+        {
+          id: 's1',
+          elements: [
+            { id: 't1', type: 'text', content: '<p>Body</p>', x: 12, y: 34, width: 200, height: 80 },
+          ],
+        },
+      ],
+    })
+
+    expect(html).toContain('font-size:calc(16px * var(--font-zoom, 1));')
+    expect(html).toContain('left:12px;top:34px;width:200px;height:80px')
+    expect(html).toContain('.reveal .slides section p  { margin: 0 0 6px;')
+    expect(html).toContain('.reveal .slides section ol { padding-left: 24px; margin: 0 0 6px; }')
+    expect(html).toContain('.reveal .slides section li { margin-bottom: 3px;')
+    expect(html).not.toContain('.reveal .slides section p  { margin: 0 0 0.4em;')
+    expect(html).not.toContain('padding-left: 1.5em; margin: 0 0 0.4em;')
+  })
+
   it('should generate capture-ready print HTML without auto print', () => {
     const html = generatePrintHTML(
       {
@@ -195,5 +217,28 @@ describe('htmlGenerator', () => {
     expect(html).toContain('data-export-element-id="f1"')
     expect(html).toContain('if (false) window.print();')
     expect(html).toContain('Fragment')
+  })
+
+  it('uses px text spacing in print HTML', () => {
+    const html = generatePrintHTML(
+      {
+        title: 'Print Spacing',
+        slides: [
+          {
+            id: 's1',
+            elements: [
+              { id: 't1', type: 'text', content: '<p>Body</p>', x: 0, y: 0, width: 100, height: 40 },
+            ],
+          },
+        ],
+      },
+      { autoPrint: false, includePrintBar: false }
+    )
+
+    expect(html).toContain('.slide-page p  { margin: 0 0 6px;')
+    expect(html).toContain('.slide-page ul, .slide-page ol { padding-left: 24px; margin: 0 0 6px; }')
+    expect(html).toContain('.slide-page li { margin-bottom: 3px;')
+    expect(html).not.toContain('.slide-page p  { margin: 0 0 0.4em;')
+    expect(html).not.toContain('.slide-page ul, .slide-page ol { padding-left: 1.5em;')
   })
 })

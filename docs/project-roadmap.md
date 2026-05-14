@@ -2,7 +2,7 @@
 
 ## Current Status: v1.7.0 docs sync and live/game/PPTX stack complete
 
-Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The current docs baseline reflects Node.js 20+, the route-based shell, in-memory live room state, and the hybrid PPTX export/import pipeline. The UI/UX warm editorial overhaul has landed the warm dashboard/editor chrome slice plus a shared modal shell across high-use AI/share/media/template dialogs, with targeted build, lint, unit, dashboard, visual, responsive, and keyboard gates passing. Corpus checks now land at 97.0% semantic fidelity and 99.0% round-trip stability on the checked-in decks.
+Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The current docs baseline reflects Node.js 20+, the route-based shell, in-memory live room state, and the hybrid PPTX export/import pipeline. The UI/UX warm editorial overhaul has landed the warm dashboard/editor chrome slice plus a shared modal shell across high-use AI/share/media/template dialogs, with targeted build, lint, unit, dashboard, visual, responsive, and keyboard gates passing. A 2026-05-14 upstream selective port branch passed lint/build/unit/E2E gates and strict PPTX corpus after fixing grouped-source semantic scoring.
 
 ### What Works
 
@@ -34,6 +34,7 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | AI copywriting + translation                       | Done                                                                                                      |
 | Media library (Unsplash, Giphy)                    | Done                                                                                                      |
 | Gamification Game Controls (7 game types)          | Done                                                                                                      |
+| Upstream small-port sync                            | Ready for merge (ports implemented; strict gates passed)                                                  |
 
 ### What's New in v1.5.x / v1.6.x (Security & Architecture Refactor)
 
@@ -67,8 +68,16 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 - Present mode and standard HTML export still depend on CDN resources at
   runtime.
 - PPTX harness `--roundtrip` now uses the production export pipeline; strict
-  mode keeps the ≥95 semantic / ≥98 round-trip gate. Corpus size is still
-  small (`n=4`), so scores should be re-verified as new decks are added.
+  mode keeps the >=95 semantic / >=98 round-trip gate. Corpus size is still
+  small (`n=4`). The 2026-05-14 sync branch run passes at 98.0% semantic
+  fidelity and 99.0% round-trip stability.
+
+### Future Backlog
+
+- Timeline as a first-class element: deferred to a separate P2 plan; current
+  timeline slide template and fragment animation timeline remain unchanged.
+- Plugin/Manim architecture: deferred to a separate security-reviewed epic;
+  no plugin loader, marketplace, install API, or sandbox bridge is shipped.
 
 ### Code Quality
 
