@@ -2,6 +2,14 @@
 
 ## v1.7.x
 
+## 2026-05-14
+
+- Completed selective upstream port plan `plans/260514-1045-upstream-main-selective-port-workflow/`: avoided unrelated-history merge and ported only the Copy URL context menu feature from upstream concept `93816b88`.
+- Added `Copy URL` to image/video right-click context menu. Copies `http(s)`, `blob:`, `data:`, protocol-relative, and browser-relative media URLs after safe normalization; blocks executable/unsupported schemes.
+- Hardened clipboard behavior so synchronous clipboard failures and rejected clipboard promises do not crash or leave the menu stuck open.
+- Stabilized Vitest file execution for storage-backed server route tests by disabling file-level parallelism; this removes the shared `server/data` race seen in full-suite runs.
+- Verification passed on `master`: `npm run lint`, `npm run build`, `npm run test` (105 files / 922 tests passed), and targeted Playwright regression sweep (31 passed on sync branch).
+
 ## 2026-05-13
 
 ### UI/UX Warm Editorial Overhaul Slice

@@ -1,13 +1,13 @@
 ---
 title: "Upstream Main Merge Sync"
 description: "Safely merge upstream/main from jbirky/parallax-presentations into the customized NavSlidesEditor repository using a dedicated sync branch and validation gates."
-status: pending
+status: cancelled
 priority: P1
 effort: 10h
 issue:
 branch: master
 tags: [infra, git, maintenance, critical]
-blockedBy: []
+blockedBy: [260514-1045-upstream-main-selective-port-workflow]
 blocks: []
 created: 2026-05-14
 ---
@@ -16,12 +16,15 @@ created: 2026-05-14
 
 ## Overview
 
-Merge latest `upstream/main` from `https://github.com/jbirky/parallax-presentations` into local customized repo. Use a dedicated branch `sync/upstream-20260514`. Do not rebase. Preserve local history and changes.
+Cancelled after Phase 02 because `HEAD` and `upstream/main` have no merge-base. A full unrelated-history merge would touch about 9,609 files and is too risky for the customized repo. Use [Upstream Selective Port Workflow](../260514-1045-upstream-main-selective-port-workflow/plan.md) instead.
+
+Original goal was to merge latest `upstream/main` from `https://github.com/jbirky/parallax-presentations` into local customized repo. This is no longer the selected approach.
 
 ## Cross-Plan Dependencies
 
 | Relationship | Plan | Status |
 | --- | --- | --- |
+| Superseded by | [Upstream Selective Port Workflow](../260514-1045-upstream-main-selective-port-workflow/plan.md) | complete |
 | Related context | [UI/UX Warm Editorial Overhaul](../260513-2243-ui-ux-warm-editorial-overhaul/plan.md) | complete |
 
 ## Key Decisions
