@@ -2,8 +2,39 @@ const express = require('express')
 const multer = require('multer')
 const path = require('path')
 const fs = require('fs').promises
+const crypto = require('crypto')
 const uuidv4 = () => require('node:crypto').randomUUID()
-const { UPLOADS_DIR } = require('../services/storage')
+const { DATA_DIR, UPLOADS_DIR, withFileLock } = require('../services/storage')
+
+const HASHES_FILE = path.join(DATA_DIR, 'upload-hashes.json')
+
+async function loadHashes() {
+  try {
+    const data = await fs.readFile(HASHES_FILE, 'utf-8')
+    return JSON.parse(data)
+  } catch {
+    return {}
+  }
+}
+
+async function saveHashes(hashes) {
+  await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
+  await fs.writeFile(HASHES_FILE, JSON.stringify(hashes, null, 2))
+}
+
+async function withUploadHashes(fn) {
+  return withFileLock(HASHES_FILE, async () => {
+    const hashes = await loadHashes()
+    const result = await fn(hashes)
+    await saveHashes(hashes)
+    return result
+  })
+}
+
+async function computeFileHash(filePath) {
+  const buffer = await fs.readFile(filePath)
+  return crypto.createHash('sha256').update(buffer).digest('hex')
+}
 
 const ALLOWED_UPLOAD_EXTENSIONS = new Set([
   '.jpg',
@@ -70,7 +101,38 @@ router.post('/', upload.single('file'), async (req, res) => {
     // file-type can't detect some formats (SVG, text) — fall back to extension check (already passed)
   }
 
-  res.json({ url: `/uploads/${req.file.filename}` })
+  // SHA-256 deduplication
+  const presentationId = req.body.presentationId || 'global'
+  const fileHash = await computeFileHash(req.file.path)
+  const result = await withUploadHashes(async (hashes) => {
+    const presHashes = hashes[presentationId] || {}
+
+    if (presHashes[fileHash]) {
+      const existingFilename = presHashes[fileHash].filename
+      const existingPath = path.join(UPLOADS_DIR, existingFilename)
+      try {
+        await fs.access(existingPath)
+        await fs.unlink(req.file.path).catch(() => {})
+        return { url: `/uploads/${existingFilename}`, deduped: true }
+      } catch {
+        // Existing file was deleted — fall through to store new file
+        delete presHashes[fileHash]
+      }
+    }
+
+    const stats = await fs.stat(req.file.path)
+    presHashes[fileHash] = {
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      size: stats.size,
+      mimeType: req.file.mimetype,
+      uploadedAt: new Date().toISOString(),
+    }
+    hashes[presentationId] = presHashes
+    return { url: `/uploads/${req.file.filename}`, deduped: false }
+  })
+
+  res.json(result)
 })
 
 module.exports = router

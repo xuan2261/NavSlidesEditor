@@ -59,6 +59,8 @@ import PromptPopover from '../components/PromptPopover'
 import { MathNode } from '../extensions/MathExtension'
 import { FontSize } from '../extensions/FontSize'
 import { FontFamily } from '../extensions/FontFamily'
+import { FontWeight } from '../extensions/tiptap-font-weight-extension'
+import { LineHeight } from '../extensions/tiptap-line-height-extension'
 import monokaiCSS from '../../../node_modules/highlight.js/styles/monokai.min.css?raw'
 import githubDarkCSS from '../../../node_modules/highlight.js/styles/github-dark.min.css?raw'
 import atomOneDarkCSS from '../../../node_modules/highlight.js/styles/atom-one-dark.min.css?raw'
@@ -75,6 +77,11 @@ import { CommandPalette } from '../components/command-palette'
 import { GameHudOverlay } from '../components/game-hud-overlay'
 import { GameLeaderboardOverlay } from '../components/game-leaderboard-overlay'
 import { AnnotationToolbar } from '../components/annotation-toolbar'
+import KineticTextAnimationTemplateSelectorModal from '../components/kinetic-text-animation-template-selector-modal'
+import ParametricMathGridSurfacePlotterModal from '../components/parametric-math-grid-surface-plotter-modal'
+import AnimeJsAnimationTemplateSelectorModal from '../components/anime-js-animation-template-selector-modal'
+import ThreeJs3DSceneTemplateSelectorModal from '../components/three-js-3d-scene-template-selector-modal'
+import FileBrowserModal from '../components/file-browser-modal-to-select-and-insert-media'
 import { LiveSocketContext } from '../contexts/live-socket-context-provider.jsx'
 import { GAME_SHORTCUT_CONFIG } from '../utils/game-shortcut-config.js'
 import {
@@ -227,6 +234,13 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   // Command palette
   const [showCommandPalette, setShowCommandPalette] = useState(false)
 
+  // Embed modals
+  const [showKineticTextModal, setShowKineticTextModal] = useState(false)
+  const [showMathGridModal, setShowMathGridModal] = useState(false)
+  const [showAnimeModal, setShowAnimeModal] = useState(false)
+  const [showThreeModal, setShowThreeModal] = useState(false)
+  const [showFileBrowser, setShowFileBrowser] = useState(false)
+
   // Track if we're programmatically setting editor content (to avoid loops)
   const settingContent = useRef(false)
   const saveTimerRef = useRef(null)
@@ -359,6 +373,8 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       MathNode,
       FontFamily,
       FontSize,
+      FontWeight,
+      LineHeight,
       Highlight.configure({ multicolor: true }),
       Table.configure({ resizable: false }),
       TableRow,
@@ -548,6 +564,34 @@ svg.selectAll('circle').data(data).join('circle')
 </script>`
 
   const addQrCodeElement = useCallback(() => addElement('qrcode'), [addElement])
+
+  const addTimelineElement = useCallback(() => addElement('timeline', {
+    timelineStart: '2000',
+    timelineEnd: '2025',
+    startDate: '2000',
+    endDate: '2025',
+    tickSpacing: 'auto',
+    lineColor: '#6366f1',
+    dotColor: '#6366f1',
+    textColor: '#ffffff',
+    fontSize: 11,
+    events: [],
+    items: [],
+  }), [addElement])
+
+  const insertEmbedHtml = useCallback((html) => {
+    addElement('html', { content: html })
+  }, [addElement])
+
+  const handleInsertFromFileBrowser = useCallback((file) => {
+    if (file.type === 'image') {
+      addElement('image', { src: file.src })
+    } else if (file.type === 'video') {
+      addElement('video', { src: file.src })
+    } else if (file.type === 'audio') {
+      addElement('audio', { src: file.src })
+    }
+  }, [addElement])
 
   const addDividerElement = useCallback(() => {
     return addElement('line', {
@@ -975,6 +1019,7 @@ svg.selectAll('circle').data(data).join('circle')
   // Command palette commands
   const commands = [
     { id: 'insertSlide', label: 'Insert Slide', shortcut: 'Ctrl+M', action: () => setShowTemplateModal(true) },
+    { id: 'insertLink', label: 'Insert Link', shortcut: '', action: () => { setShowCommandPalette(false); document.querySelector('[title="Add link"]')?.click() } },
     { id: 'group', label: 'Group Elements', shortcut: 'Ctrl+G', action: () => groupElements() },
     { id: 'ungroup', label: 'Ungroup Elements', shortcut: 'Ctrl+Shift+G', action: () => ungroupElements() },
     { id: 'zoomIn', label: 'Zoom In', shortcut: 'Ctrl+=', action: () => console.log('[zoom] in') },
@@ -1409,6 +1454,12 @@ svg.selectAll('circle').data(data).join('circle')
             onAddLine={addLineElement}
             onAddSvg={addSvgElement}
             onAddQrCode={addQrCodeElement}
+            onAddTimeline={addTimelineElement}
+            onAddKineticText={() => setShowKineticTextModal(true)}
+            onAddMathGrid={() => setShowMathGridModal(true)}
+            onAddAnime={() => setShowAnimeModal(true)}
+            onAddThree={() => setShowThreeModal(true)}
+            onOpenFileBrowser={() => setShowFileBrowser(true)}
             onAddDivider={addDividerElement}
             onAddGame={addGameElement}
             onOpenMediaLibrary={() => setShowMediaLibrary(true)}
@@ -1779,6 +1830,39 @@ svg.selectAll('circle').data(data).join('circle')
           onClose={() => setShowCommandPalette(false)}
           commands={commands}
         />
+
+        {/* Embed Modals */}
+        {showKineticTextModal && (
+          <KineticTextAnimationTemplateSelectorModal
+            onInsert={insertEmbedHtml}
+            onClose={() => setShowKineticTextModal(false)}
+          />
+        )}
+        {showMathGridModal && (
+          <ParametricMathGridSurfacePlotterModal
+            onInsert={insertEmbedHtml}
+            onClose={() => setShowMathGridModal(false)}
+          />
+        )}
+        {showAnimeModal && (
+          <AnimeJsAnimationTemplateSelectorModal
+            onInsert={insertEmbedHtml}
+            onClose={() => setShowAnimeModal(false)}
+          />
+        )}
+        {showThreeModal && (
+          <ThreeJs3DSceneTemplateSelectorModal
+            onInsert={insertEmbedHtml}
+            onClose={() => setShowThreeModal(false)}
+          />
+        )}
+        {showFileBrowser && (
+          <FileBrowserModal
+            presentationId={presentationId}
+            onInsert={handleInsertFromFileBrowser}
+            onClose={() => setShowFileBrowser(false)}
+          />
+        )}
 
         {/* Annotation Toolbar */}
         <AnnotationToolbar

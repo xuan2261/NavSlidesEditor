@@ -1,0 +1,16 @@
+.reveal section {
+  line-height: normal !important;
+  overflow: hidden;
+}
+
+.reveal section p {
+  line-height: inherit !important;
+}
+
+.reveal .fragment {
+  visibility: hidden !important;
+}
+
+.reveal .fragment.visible {
+  visibility: visible !important;
+}

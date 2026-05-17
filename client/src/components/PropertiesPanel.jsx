@@ -8,6 +8,7 @@ import CodeProperties from './properties/code-properties'
 import MediaProperties from './properties/media-properties'
 import TableProperties from './properties/table-properties'
 import MiscProperties from './properties/misc-properties'
+import TimelineProperties from './properties/timeline-properties'
 import { Button, Input, Select, ColorPicker } from '../components/ui'
 import { MousePointer2 } from 'lucide-react'
 
@@ -31,6 +32,8 @@ function ElementTypeProperties({ element, onUpdate, onEditHtml, onEditCode, onEd
       return <MediaProperties element={element} onUpdate={onUpdate} />
     case 'table':
       return <TableProperties element={element} onUpdate={onUpdate} />
+    case 'timeline':
+      return <TimelineProperties element={element} onUpdate={onUpdate} />
     case 'text':
       return null // Text editing is handled by TipTap directly
     default:

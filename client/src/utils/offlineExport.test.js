@@ -30,6 +30,12 @@ describe('generateOfflineHTML', () => {
           text: async () => '.reveal{background:#000}',
         }
       }
+      if (requestUrl.includes('reveal-overrides.css')) {
+        return {
+          ok: true,
+          text: async () => '.reveal section{line-height:normal!important}',
+        }
+      }
       if (requestUrl.includes('reveal.js')) {
         return {
           ok: true,
@@ -58,6 +64,7 @@ describe('generateOfflineHTML', () => {
     const html = `<!doctype html><html><head>
 <base href="http://localhost:4173/">
 <link rel="stylesheet" href="/vendor/reveal.js/dist/theme/black.css">
+<link rel="stylesheet" href="/reveal-overrides.css">
 </head><body>
 <img src="/uploads/image.png">
 <script src="/vendor/reveal.js/dist/reveal.js"></script>
@@ -68,8 +75,10 @@ describe('generateOfflineHTML', () => {
 
     expect(offline).not.toContain('<base')
     expect(offline).not.toContain('href="/vendor/reveal.js/dist/theme/black.css"')
+    expect(offline).not.toContain('href="/reveal-overrides.css"')
     expect(offline).not.toContain('src="/vendor/reveal.js/dist/reveal.js"')
     expect(offline).toContain('<style>/* /vendor/reveal.js/dist/theme/black.css */')
+    expect(offline).toContain('<style>/* /reveal-overrides.css */')
     expect(offline).toContain('<\\/script safe')
     expect(offline).toContain('data:image/png;base64')
   })

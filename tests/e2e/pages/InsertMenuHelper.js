@@ -16,7 +16,7 @@ export class InsertMenuHelper {
       await this.page.waitForSelector('.insert-dropdown', { state: 'visible' })
     }
 
-    await this.page.locator('.insert-dropdown .insert-item').filter({ hasText: itemName }).click()
+    await this.page.locator(`button.insert-item:has(span:text-is("${itemName}"))`).click()
   }
 
   async addTextNode() {

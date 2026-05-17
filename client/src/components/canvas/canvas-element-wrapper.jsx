@@ -128,10 +128,11 @@ export default function CanvasElement({
         if (element.type === 'code') return <pre className="hljs" style={codeBlockStyle}><code dangerouslySetInnerHTML={{ __html: hljs.highlight(element.content || '', { language: element.language || 'plaintext' }).value }} /></pre>
         if (element.type === 'video') {
           const playbackRate = getPlaybackRate(element.playbackRate)
+          const videoSrc = element.videoUrl || element.src
           return (
             <video
               ref={videoRef}
-              src={getMediaFragmentSrc(element.src, element.startTime, element.endTime)}
+              src={getMediaFragmentSrc(videoSrc, element.startTime, element.endTime)}
               controls={element.controls !== false}
               muted={element.muted || false}
               loop={element.loop || false}

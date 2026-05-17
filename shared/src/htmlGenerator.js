@@ -142,11 +142,12 @@ function generateRevealHTML(presentation) {
   <link rel="stylesheet" href="/vendor/reveal.js/dist/theme/${presentation.theme || 'black'}.css">
   <link rel="stylesheet" href="/vendor/highlight.js/styles/${codeTheme}.min.css">
   <link rel="stylesheet" href="/vendor/katex/dist/katex.min.css">
+  <link rel="stylesheet" href="/reveal-overrides.css">
 
   <style>
     html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; background: #000; }
     /* Reset reveal.js section padding/alignment so absolute positions match the 960x540 editor canvas exactly */
-    .reveal .slides section { padding: 0 !important; text-align: left !important; }
+    .reveal .slides section { padding: 0 !important; text-align: left !important; line-height: normal !important; overflow: hidden; }
     /* Neutralise theme typography overrides so presentation matches editor exactly */
     /* font-family only on section (inherited) so KaTeX's explicit rules take precedence */
     .reveal .slides section { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }

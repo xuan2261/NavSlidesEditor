@@ -1,4 +1,4 @@
-import { Select } from '../../components/ui'
+import { Select, Input, ColorPicker } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
 /**
  * Image-specific properties: object fit, brightness, contrast, grayscale, round corners.
@@ -91,6 +91,51 @@ export default function ImageProperties({ element, onUpdate }) {
             onUpdate({ borderRadius: value })
           }}
         />
+      </div>
+      <div className="border-t border-border pt-2 mt-1">
+        <div className="text-[11px] text-text-muted mb-1.5 font-medium">Citation</div>
+        <div className="text-[11px] text-text-muted mb-1">Citation Text</div>
+        <Input
+          data-testid="prop-image-citation-text"
+          className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2"
+          type="text"
+          value={element.citationText || ''}
+          onChange={(e) => onUpdate({ citationText: e.target.value || null })}
+          placeholder="Photo credit or source"
+        />
+        <div className="text-[11px] text-text-muted mb-1">Citation Link</div>
+        <Input
+          data-testid="prop-image-citation-link"
+          className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2"
+          type="text"
+          value={element.citationLink || ''}
+          onChange={(e) => onUpdate({ citationLink: e.target.value || null })}
+          placeholder="https://..."
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <div className="text-[11px] text-text-muted mb-1">Citation Color</div>
+            <ColorPicker
+              data-testid="prop-image-citation-color"
+              value={element.citationColor || '#808080'}
+              onChange={(e) => onUpdate({ citationColor: e.target.value })}
+              className="w-full h-7 border border-border rounded cursor-pointer"
+            />
+          </div>
+          <div>
+            <div className="text-[11px] text-text-muted mb-1">Alignment</div>
+            <Select
+              data-testid="prop-image-citation-align"
+              className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent"
+              value={element.citationAlign || 'left'}
+              onChange={(e) => onUpdate({ citationAlign: e.target.value })}
+            >
+              {['left', 'center', 'right'].map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </Select>
+          </div>
+        </div>
       </div>
     </div>
   )

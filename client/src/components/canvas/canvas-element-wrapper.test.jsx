@@ -68,4 +68,18 @@ describe('CanvasElement video playback', () => {
 
     expect(video.playbackRate).toBe(1.25)
   })
+
+  it('uses videoUrl when provided for URL-based video elements', () => {
+    renderCanvasElement({
+      ...baseElement,
+      src: '',
+      videoUrl: 'https://example.com/from-url.mp4',
+      startTime: 5,
+      endTime: 12,
+    })
+    const wrapper = screen.getByTestId('slide-element-video-1')
+    const video = wrapper.querySelector('video')
+
+    expect(video.getAttribute('src')).toBe('https://example.com/from-url.mp4#t=5,12')
+  })
 })

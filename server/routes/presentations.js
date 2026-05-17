@@ -5,7 +5,10 @@ const {
   readPresentations,
   withPresentations,
   withShareTokens,
+  DATA_DIR,
   HISTORY_DIR,
+  UPLOADS_DIR,
+  withFileLock,
 } = require('../services/storage')
 const fs = require('fs-extra')
 const path = require('path')
@@ -14,6 +17,59 @@ const { createPresentationSchema, updatePresentationSchema } = require('../middl
 const { rasterizeComplexElements } = require('../services/pptx-exporter')
 
 const router = express.Router()
+const UPLOAD_HASHES_FILE = path.join(DATA_DIR, 'upload-hashes.json')
+
+function getUploadMimeType(filename) {
+  const ext = path.extname(filename).toLowerCase()
+  const mimeMap = {
+    '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+    '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
+    '.bmp': 'image/bmp', '.ico': 'image/x-icon',
+    '.mp4': 'video/mp4', '.webm': 'video/webm', '.ogv': 'video/ogg',
+    '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg', '.wav': 'audio/wav',
+    '.flac': 'audio/flac', '.aac': 'audio/aac', '.m4a': 'audio/mp4',
+    '.pdf': 'application/pdf',
+  }
+  return mimeMap[ext] || 'application/octet-stream'
+}
+
+function getUploadFilenameFromUrl(value) {
+  if (!value || typeof value !== 'string') return null
+  const match = value.match(/\/uploads\/([^?#]+)/)
+  if (!match) return null
+  return path.basename(decodeURIComponent(match[1]))
+}
+
+function collectPresentationUploadRefs(presentation) {
+  const refs = new Set()
+  for (const slide of presentation?.slides || []) {
+    for (const element of slide.elements || []) {
+      ;[element.src, element.videoUrl, element.poster].forEach((value) => {
+        const filename = getUploadFilenameFromUrl(value)
+        if (filename) refs.add(filename)
+      })
+    }
+  }
+  return refs
+}
+
+async function readUploadHashes() {
+  try {
+    return await fs.readJson(UPLOAD_HASHES_FILE)
+  } catch {
+    return {}
+  }
+}
+
+async function withUploadHashes(fn) {
+  return withFileLock(UPLOAD_HASHES_FILE, async () => {
+    const hashes = await readUploadHashes()
+    const result = await fn(hashes)
+    await fs.ensureDir(path.dirname(UPLOAD_HASHES_FILE))
+    await fs.writeJson(UPLOAD_HASHES_FILE, hashes, { spaces: 2 })
+    return result
+  })
+}
 
 // GET /api/presentations - list summaries (excludes trashed)
 router.get('/', async (req, res) => {
@@ -392,6 +448,85 @@ router.post('/:id/save-as-template', async (req, res) => {
     templates.push(template)
     await writeTemplates(templates)
     res.status(201).json(template)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// GET /api/presentations/:id/uploads — list uploaded files for a presentation
+router.get('/:id/uploads', async (req, res) => {
+  try {
+    if (!fs.existsSync(UPLOADS_DIR)) return res.json([])
+
+    const [presentations, allHashes] = await Promise.all([
+      readPresentations(),
+      readUploadHashes(),
+    ])
+    const presentation = presentations.find((p) => p.id === req.params.id)
+    if (!presentation) return res.status(404).json({ error: 'Not found' })
+
+    const presHashes = allHashes[req.params.id] || {}
+    const referencedFiles = collectPresentationUploadRefs(presentation)
+    const byFilename = new Map()
+
+    for (const [hash, info] of Object.entries(presHashes)) {
+      if (info?.filename) byFilename.set(info.filename, { ...info, hash })
+    }
+    for (const filename of referencedFiles) {
+      if (!byFilename.has(filename)) byFilename.set(filename, { filename, hash: null })
+    }
+
+    const files = []
+    for (const info of byFilename.values()) {
+      const safeFilename = path.basename(info.filename)
+      const filePath = path.join(UPLOADS_DIR, safeFilename)
+      try {
+        const stats = await fs.stat(filePath)
+        files.push({
+          filename: safeFilename,
+          originalName: info.originalName || safeFilename,
+          url: `/uploads/${safeFilename}`,
+          size: stats.size,
+          type: info.mimeType || getUploadMimeType(safeFilename),
+          uploadedAt: stats.mtime,
+          hash: info.hash,
+          referenced: referencedFiles.has(safeFilename),
+        })
+      } catch {
+        // File was deleted from disk but still in hash index
+      }
+    }
+
+    res.json(files)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// DELETE /api/presentations/:id/uploads/:filename — remove an uploaded file and hash entry
+router.delete('/:id/uploads/:filename', async (req, res) => {
+  try {
+    const safeFilename = path.basename(req.params.filename)
+    if (!safeFilename || safeFilename !== req.params.filename) {
+      return res.status(400).json({ error: 'Invalid filename' })
+    }
+
+    const presentations = await readPresentations()
+    const presentation = presentations.find((p) => p.id === req.params.id)
+    if (!presentation) return res.status(404).json({ error: 'Not found' })
+
+    const filePath = path.join(UPLOADS_DIR, safeFilename)
+    await fs.remove(filePath)
+
+    await withUploadHashes(async (hashes) => {
+      const presHashes = hashes[req.params.id] || {}
+      for (const [hash, info] of Object.entries(presHashes)) {
+        if (info?.filename === safeFilename) delete presHashes[hash]
+      }
+      hashes[req.params.id] = presHashes
+    })
+
+    res.json({ deleted: true })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

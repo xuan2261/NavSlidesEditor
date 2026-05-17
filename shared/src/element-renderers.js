@@ -3,7 +3,7 @@
  * Eliminates ~300 lines of duplicated rendering logic.
  */
 const { shapeSvgString } = require('./shapeUtils.js')
-const { sanitizeRichTextHtml, sanitizeSvgHtml } = require('./content-safety.js')
+const { sanitizeRichTextHtml, sanitizeSvgHtml, sanitizeHref } = require('./content-safety.js')
 const iconPathsData = require('../data/icon-paths.json')
 const ICON_PATHS = iconPathsData
 
@@ -57,6 +57,10 @@ function escapeSrcdoc(html) {
     .replace(/>/g, '&gt;')
 }
 
+function toHtmlDataUrl(html) {
+  return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
+}
+
 /** Build the shared base positioning style for an element */
 // eslint-disable-next-line unused-imports/no-unused-vars
 function buildBaseStyle(el, opts = {}) {
@@ -90,6 +94,20 @@ function renderText(el, style, wrap, vis) {
   return `<div${wrap} style="${style}${vis}padding:8px 12px;color:white${tc}${ff}${fs}">${sanitizeRichTextHtml(el.content || '')}</div>`
 }
 
+function buildCitationHtml(el) {
+  const text = el.citationText || el.citationLink
+  if (!text) return ''
+  const color = el.citationColor || 'rgba(255,255,255,0.5)'
+  const align = el.citationAlign || 'left'
+  const citeStyle = `position:absolute;left:0;right:0;top:100%;font-size:10px;color:${color};line-height:1.3;padding:3px 2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;text-align:${align};`
+  if (el.citationLink) {
+    const href = sanitizeHref(el.citationLink)
+    const display = escapeHtml(text)
+    return `<a href="${href}" target="_blank" rel="noopener" style="${citeStyle}text-decoration:none;cursor:pointer;">${display}</a>`
+  }
+  return `<div style="${citeStyle}">${escapeHtml(text)}</div>`
+}
+
 function renderImage(el, style, wrap, vis, opts) {
   const src = absoluteSrc(el.src)
   const imgFilterParts = [
@@ -103,13 +121,14 @@ function renderImage(el, style, wrap, vis, opts) {
     .join(' ')
   const filterStyle = imgFilterParts ? `filter:${imgFilterParts};` : ''
   const imgReset = opts.forPrint ? 'max-width:none;max-height:none;' : ''
+  const citationHtml = buildCitationHtml(el)
   if (el.imageW != null) {
     const offX = el.imageOffsetX ?? 0
     const offY = el.imageOffsetY ?? 0
     const imgStyle = `position:absolute;left:${offX}px;top:${offY}px;width:${el.imageW}px;height:${el.imageH}px;object-fit:${el.objectFit || 'contain'};${filterStyle}${imgReset}`
-    return `<div${wrap} style="${style}${vis}"><img src="${src}" alt="${el.alt || ''}" style="${imgStyle}" /></div>`
+    return `<div${wrap} style="${style}${vis}overflow:visible;"><img src="${src}" alt="${el.alt || ''}" style="${imgStyle}" />${citationHtml}</div>`
   }
-  return `<div${wrap} style="${style}${vis}"><img src="${src}" alt="${el.alt || ''}" style="display:block;width:100%;height:100%;object-fit:${el.objectFit || 'contain'};${filterStyle}${imgReset}" /></div>`
+  return `<div${wrap} style="${style}${vis}overflow:visible;"><img src="${src}" alt="${el.alt || ''}" style="display:block;width:100%;height:100%;object-fit:${el.objectFit || 'contain'};${filterStyle}${imgReset}" />${citationHtml}</div>`
 }
 
 function renderShape(el, style, wrap, vis) {
@@ -137,9 +156,13 @@ function renderHtml(el, style, wrap, vis, opts) {
     return `<iframe${wrap} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
   }
 
-  // Normal (present) mode: use iframe + srcdoc to isolate CSS/JS.
-  const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style></head><body>${content}</body></html>`
-  return `<iframe${wrap} srcdoc="${escapeSrcdoc(wrappedContent)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
+  // Normal (present) mode: use iframe + data URL to isolate CSS/JS without
+  // relying on srcdoc, which has inconsistent export behavior in reveal views.
+  // Wrapped in a div so reveal.js fragment animations work correctly.
+  const _origin = getAssetOrigin()
+  const base = _origin ? `<base href="${_origin}/">` : ''
+  const wrappedContent = `<!doctype html><html><head><meta charset="utf-8">${base}<style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style></head><body>${content}</body></html>`
+  return `<div${wrap} style="${style}${vis}"><iframe src="${toHtmlDataUrl(wrappedContent)}" style="width:100%;height:100%;border:none;background:transparent;" scrolling="no"></iframe></div>`
 }
 
 function renderMarkdown(el, style, wrap, vis, opts) {
@@ -223,8 +246,8 @@ function renderIcon(el, style, wrap, vis) {
 function renderLatex(el, style, wrap, vis, opts) {
   const content = el.content || ''
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
-  const fontSize = el.fontSize || 16
-  const textColor = el.textColor || el.fontColor || '#ffffff'
+  const fontSize = el.latexFontSize || el.fontSize || 16
+  const textColor = el.latexColor || el.textColor || el.fontColor || '#ffffff'
 
   // [FIX #13] If _fallbackSrc is available and content doesn't look like valid LaTeX, use image fallback.
   // This handles malformed LaTeX strings imported from PPTX that KaTeX cannot render.
@@ -241,6 +264,10 @@ function renderLatex(el, style, wrap, vis, opts) {
       const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" type="text/css" href="${_origin}/vendor/tikzjax/fonts.css"><script src="${_origin}/vendor/tikzjax/tikzjax.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1))}svg{max-width:100%;max-height:100%}</style></head><body><script type="text/tikz">${content}</script></body></html>`
       return `<iframe${wrap} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
     }
+    return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));"><span data-math-latex="${escapeHtml(content)}" data-math-display="true"></span></div>`
+  }
+
+  if (!hasTikz) {
     return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));"><span data-math-latex="${escapeHtml(content)}" data-math-display="true"></span></div>`
   }
 
@@ -262,7 +289,8 @@ function renderVideo(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
     return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));">&#9654; Video</div>`
   }
-  const src = getMediaFragmentSrc(absoluteSrc(el.src), el.startTime, el.endTime)
+  const videoSrc = el.videoUrl || el.src
+  const src = getMediaFragmentSrc(absoluteSrc(videoSrc), el.startTime, el.endTime)
   const attrs = []
   if (el.controls !== false) attrs.push('controls')
   if (el.autoplay) attrs.push('autoplay')
@@ -386,6 +414,81 @@ function renderQrcode(el, style, wrap, vis, opts) {
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(qrSrc)}" style="${style}border:none;background:transparent;border-radius:${el.borderRadius || 0}px;overflow:hidden;" scrolling="no"></iframe>`
 }
 
+function renderTimeline(el, style, wrap, vis, _opts) {
+  const w = el.width || 800
+  const h = el.height || 400
+  const lineY = h * 0.5
+  const pad = 30
+  const lineColor = el.lineColor || '#6366f1'
+  const dotColor = el.dotColor || lineColor
+  const textColor = el.textColor || '#fff'
+  const fs = el.fontSize || 11
+  const startDate = el.timelineStart ?? el.startDate ?? '2000'
+  const endDate = el.timelineEnd ?? el.endDate ?? '2025'
+  const items = (el.events || el.items || []).map((item) => ({
+    ...item,
+    label: item.title ?? item.label ?? '',
+    image: item.imageUrl ?? item.image ?? '',
+    connectorLength: item.connectorLength ?? item.connectorOffset ?? el.connectorOffset ?? 0,
+  }))
+  const spacing = el.tickSpacing || 'auto'
+  const yearMode = ['year', '10year', '100year', '1000year'].includes(spacing) ||
+    (spacing === 'auto' && /^-?\d+$/.test(String(startDate)))
+
+  function datePos(d) {
+    if (yearMode) {
+      const y0 = parseInt(startDate) || 0
+      const y1 = parseInt(endDate) || 0
+      const yr = y1 - y0 || 1
+      return pad + (((parseInt(d) || 0) - y0) / yr) * (w - pad * 2)
+    }
+    const t0 = new Date(startDate).getTime()
+    const t1 = new Date(endDate).getTime()
+    const range = t1 - t0 || 1
+    return pad + ((new Date(d).getTime() - t0) / range) * (w - pad * 2)
+  }
+
+  const ticks = []
+  if (yearMode) {
+    const y0 = parseInt(startDate) || 0
+    const y1 = parseInt(endDate) || 0
+    const step = spacing === '1000year' ? 1000 : spacing === '100year' ? 100 : spacing === '10year' ? 10 : Math.abs(y1 - y0) > 8 ? 2 : 1
+    const sY = y0 < y1 ? Math.ceil(y0 / step) * step : Math.floor(y0 / step) * step
+    for (let y = sY; y0 < y1 ? y <= y1 : y >= y1; y += y0 < y1 ? step : -step) ticks.push({ date: String(y), label: String(y) })
+  }
+
+  let svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;overflow:visible">`
+  svg += `<line x1="${pad}" y1="${lineY}" x2="${w - pad}" y2="${lineY}" stroke="${lineColor}" stroke-width="2"/>`
+  ticks.forEach((t) => {
+    const x = datePos(t.date)
+    svg += `<line x1="${x}" y1="${lineY - 4}" x2="${x}" y2="${lineY + 4}" stroke="${lineColor}" stroke-width="1.5"/>`
+    svg += `<text x="${x}" y="${lineY + 14}" text-anchor="end" fill="${textColor}" font-size="${fs - 1}" opacity="0.5" transform="rotate(-45,${x},${lineY + 14})">${escapeHtml(t.label)}</text>`
+  })
+  items.forEach((item) => {
+    const x = datePos(item.date)
+    const isTop = item.side !== 'bottom'
+    const cl = item.connectorLength ?? 0
+    const cardY = isTop ? 8 - cl : lineY + 28 + cl
+    const cardH = isTop ? lineY - 36 : h - lineY - 36
+    const connY1 = isTop ? cardY + cardH : lineY
+    const connY2 = isTop ? lineY : cardY
+    svg += `<line x1="${x}" y1="${connY1}" x2="${x}" y2="${connY2}" stroke="${lineColor}" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>`
+    svg += `<circle cx="${x}" cy="${lineY}" r="4" fill="${dotColor}"/>`
+    let ty = cardY + fs
+    svg += `<text x="${x}" y="${ty}" text-anchor="middle" fill="${textColor}" font-size="${fs}" font-weight="600">${escapeHtml(item.label || '')}</text>`
+    ty += fs + 2
+    if (item.description) {
+      svg += `<text x="${x}" y="${ty}" text-anchor="middle" fill="${textColor}" font-size="${fs - 1}" opacity="0.6">${escapeHtml(item.description)}</text>`
+      ty += fs
+    }
+    const dateLabel = yearMode ? String(parseInt(item.date) || item.date) : item.date
+    svg += `<text x="${x}" y="${ty}" text-anchor="middle" fill="${textColor}" font-size="${fs - 2}" opacity="0.35">${escapeHtml(dateLabel)}</text>`
+  })
+  svg += '</svg>'
+
+  return `<div${wrap} style="${style}${vis}">${svg}</div>`
+}
+
 // ─── Dispatcher ──────────────────────────────────────────────────────────────
 
 const RENDERERS = {
@@ -406,6 +509,7 @@ const RENDERERS = {
   line: renderLine,
   svg: renderSvg,
   qrcode: renderQrcode,
+  timeline: renderTimeline,
 }
 
 /**

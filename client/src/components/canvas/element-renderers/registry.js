@@ -11,6 +11,7 @@ import { TableRenderer } from './table-element-renderer'
 import { ShapeRenderer } from './shape-element-renderer'
 import { LineArrowRenderer, ARROWHEAD_MARKERS } from './line-element-renderer'
 import { GameElementRenderer } from './game-element-renderer'
+import { TimelineRenderer } from './timeline-element-renderer'
 
 export const elementRendererRegistry = {
   callout: CalloutRenderer,
@@ -25,6 +26,7 @@ export const elementRendererRegistry = {
   shape: ShapeRenderer,
   line: LineArrowRenderer,
   game: GameElementRenderer,
+  timeline: TimelineRenderer,
 }
 
 export function getElementRenderer(type) {

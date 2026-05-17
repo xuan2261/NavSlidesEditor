@@ -47,6 +47,7 @@ function escapePlainText(text) {
 }
 
 module.exports = {
+  sanitizeHref,
   sanitizeRichTextHtml,
   sanitizeMarkdownHtml,
   sanitizeSvgHtml,

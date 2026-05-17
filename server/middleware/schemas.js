@@ -25,6 +25,7 @@ const elementSchema = z
       'markdown',
       'svg',
       'qrcode',
+      'timeline',
       'divider',
     ]),
     x: z.number(),

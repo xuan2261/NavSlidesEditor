@@ -83,6 +83,12 @@ export default function InsertMenu({
   onAddQrCode,
   onAddDivider,
   onAddGame,
+  onAddTimeline,
+  onOpenFileBrowser,
+  onAddKineticText,
+  onAddMathGrid,
+  onAddAnime,
+  onAddThree,
 }) {
   const [open, setOpen] = useState(false)
   const [subMenu, setSubMenu] = useState(null) // 'shape' | 'icon'
@@ -289,6 +295,14 @@ export default function InsertMenu({
           >
             <FolderOpen size={15} /> <span>Media Library</span>
           </button>
+          {onOpenFileBrowser && (
+            <button
+              className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
+              onClick={() => doAction(onOpenFileBrowser)}
+            >
+              <FolderOpen size={15} /> <span>File Browser</span>
+            </button>
+          )}
 
           <div className="insert-separator my-1 h-[1px] bg-border" />
 
@@ -526,6 +540,41 @@ export default function InsertMenu({
           </button>
 
           <div className="insert-separator my-1 h-[1px] bg-border" />
+
+          {/* EMBED */}
+          {onAddKineticText && (
+            <>
+              <div className="insert-category mt-1 px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+                Embed
+              </div>
+              {[
+                ['kinetic-text', '✨', 'Kinetic Text', onAddKineticText],
+                ['math-grid', '📐', 'Math Grid', onAddMathGrid],
+                ['anime', '💫', 'Anime.js', onAddAnime],
+                ['three-js', '🧊', 'Three.js', onAddThree],
+              ].map(([id, icon, label, handler]) => (
+                <button
+                  key={id}
+                  className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
+                  onClick={() => doAction(handler)}
+                >
+                  <span className="text-sm w-[15px] text-center shrink-0">{icon}</span>
+                  <span>{label}</span>
+                </button>
+              ))}
+            </>
+          )}
+
+          {/* TIMELINE */}
+          {onAddTimeline && (
+            <button
+              className="insert-item flex w-full cursor-pointer items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] text-text-primary transition-[background-color,color] duration-150 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/25"
+              onClick={() => doAction(onAddTimeline)}
+            >
+              <span className="text-sm w-[15px] text-center shrink-0">📅</span>
+              <span>Timeline</span>
+            </button>
+          )}
 
           {/* GAMES */}
           <div className="insert-category mt-1 px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-text-muted">

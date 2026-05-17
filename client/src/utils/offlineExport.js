@@ -222,6 +222,17 @@ export async function generateOfflineHTML(html) {
       result = result.replace(match[0], () => `<style>/* ${vendorPath} */\n${css}\n</style>`)
     }
 
+    // Public CSS files copied by Vite are not under /vendor but must still be
+    // inlined for a self-contained offline export.
+    const publicCssMatches = [
+      ...result.matchAll(/<link[^>]*href=["'](\/reveal-overrides\.css)["'][^>]*\/?>/g),
+    ]
+    for (const match of publicCssMatches) {
+      const publicPath = match[1]
+      const css = await cachedFetchText(publicPath)
+      result = result.replace(match[0], () => `<style>/* ${publicPath} */\n${css}\n</style>`)
+    }
+
     // ── 2. Inline all <script> vendor JS ─────────────────────────────────────
     const jsMatches = [
       ...result.matchAll(

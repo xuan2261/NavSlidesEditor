@@ -2,6 +2,19 @@
 
 ## v1.7.x
 
+## 2026-05-17
+
+- Completed Phase 04 parallax present-mode fixes: generated reveal HTML now links `reveal-overrides.css`, resets section line-height/overflow, present HTML embeds use `data:text/html` iframes with app-origin `<base>` instead of `srcdoc`, and regular LaTeX present rendering uses direct `data-math-latex` hooks while print/TikZ iframe paths remain intact.
+- Added/updated regression tests for reveal overrides, trusted HTML data URL embeds, local asset resolution in embeds, direct KaTeX present rendering, offline override inlining, and parallax export decoding. Verification passed: focused Vitest renderer/offline sweep, `npm run lint`, `npm run build`, and targeted parallax Playwright E2E.
+- Fixed parallax feature port review blockers from `plans/parallax-features-port/port-features-from-parallax-presentations-plan.md`: wired TipTap font weight/line height extensions into the editor toolbar, made URL video playback use `videoUrl` in canvas and export, and added timeline compatibility for both plan schema (`timelineStart`/`timelineEnd`/`events`) and existing implementation schema (`startDate`/`endDate`/`items`).
+- Hardened upload/file browser flow: SHA-256 dedup hash writes now use the existing storage file lock, file browser lists both hash-indexed and presentation-referenced uploads, and uploaded files can be deleted from the browser with hash-index cleanup.
+- Completed missing modal template coverage for Kinetic Text, Math Grid, Anime.js, and Three.js selectors to match planned template counts.
+- Added regression coverage for URL video canvas rendering, timeline plan-schema export, file browser deletion, and modal template options.
+- Verification passed: targeted Vitest (9 files / 60 tests), file browser focused Vitest (1 file / 9 tests), `npm run lint`, and `npm run build`.
+- Closed remaining parallax test gaps: made the parallax E2E/UI assertions mandatory instead of conditional, added full reveal export/persistence coverage for font weight, line height, URL video trim/speed, timeline, and image citations, and replaced upload dedup simulation with route-level tests.
+- Fixed two runtime integration blockers found by stricter E2E: `timeline` is now accepted by API validation and has editor element defaults, so Insert menu creation and save/load both work.
+- Full verification passed: `npm run lint`, `npm run build`, `npm run test` (118 files / 1030 tests), `npm run test:e2e` (169 tests), and `npm run test:corpus` (4 PPTX files). Load tests not run because `k6` is not installed in local PATH.
+
 ## 2026-05-14
 
 - Implemented scoped upstream-inspired ports from `plans/260514-1024-upstream-feature-audit-and-port-roadmap/`: reveal/print text spacing now uses fixed px spacing, HTML embed print output keeps trusted author content through `data-pdf-iframe`, LaTeX/TikZ elements expose font size/color controls with canvas/export parity, reveal-supported `strike` fragment option is selectable, video elements support start/end trim and playback speed in canvas/export, and `.ogv` uploads are accepted/listed as video media.

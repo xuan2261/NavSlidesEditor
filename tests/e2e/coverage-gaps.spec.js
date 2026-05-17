@@ -106,7 +106,7 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
     await expect(page.locator('.element-wrapper')).toHaveCount(2)
 
     await (await getInsertItem(page, 'Video')).click()
-    await page.locator('input[placeholder="https://..."]').fill('https://example.com/video.mp4')
+    await page.locator('input[placeholder="https://..."]').first().fill('https://example.com/video.mp4')
     await page.getByRole('button', { name: 'OK' }).click()
     await expect(page.locator('.element-wrapper')).toHaveCount(3)
 

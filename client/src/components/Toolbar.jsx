@@ -88,6 +88,12 @@ export default function Toolbar({
   onAddQrCode,
   onAddDivider,
   onAddGame,
+  onAddTimeline,
+  onOpenFileBrowser,
+  onAddKineticText,
+  onAddMathGrid,
+  onAddAnime,
+  onAddThree,
   selectedCount,
   onAlignElements,
   smartGuidesEnabled,
@@ -249,6 +255,12 @@ export default function Toolbar({
         onAddQrCode={onAddQrCode}
         onAddDivider={onAddDivider}
         onAddGame={onAddGame}
+        onAddTimeline={onAddTimeline}
+        onOpenFileBrowser={onOpenFileBrowser}
+        onAddKineticText={onAddKineticText}
+        onAddMathGrid={onAddMathGrid}
+        onAddAnime={onAddAnime}
+        onAddThree={onAddThree}
       />
 
       <Button
@@ -701,6 +713,52 @@ export default function Toolbar({
             ].map((s) => (
               <option key={s} value={s}>
                 {s.replace('px', '')}
+              </option>
+            ))}
+          </select>
+
+          {/* Font Weight */}
+          <select
+            data-testid="font-weight-select"
+            className="bg-card border border-border text-text-primary px-1.5 py-0.5 rounded text-xs w-[74px] cursor-pointer"
+            value={editor.getAttributes('textStyle').fontWeight || ''}
+            onMouseDown={() => rememberSelection()}
+            onChange={(e) =>
+              e.target.value
+                ? runTextCommand((chain) => chain.setFontWeight(e.target.value))
+                : runTextCommand((chain) => chain.unsetFontWeight())
+            }
+            title="Font weight"
+          >
+            <option value="">Weight</option>
+            {[100, 200, 300, 400, 500, 600, 700, 800, 900].map((weight) => (
+              <option key={weight} value={String(weight)}>
+                {weight}
+              </option>
+            ))}
+          </select>
+
+          {/* Line Height */}
+          <select
+            data-testid="line-height-select"
+            className="bg-card border border-border text-text-primary px-1.5 py-0.5 rounded text-xs w-[68px] cursor-pointer"
+            value={
+              editor.getAttributes('paragraph').lineHeight ||
+              editor.getAttributes('heading').lineHeight ||
+              ''
+            }
+            onMouseDown={() => rememberSelection()}
+            onChange={(e) =>
+              e.target.value
+                ? runTextCommand((chain) => chain.setLineHeight(e.target.value))
+                : runTextCommand((chain) => chain.unsetLineHeight())
+            }
+            title="Line height"
+          >
+            <option value="">Line</option>
+            {['1', '1.15', '1.5', '2', '2.5', '3'].map((height) => (
+              <option key={height} value={height}>
+                {height}
               </option>
             ))}
           </select>
