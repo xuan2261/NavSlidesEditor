@@ -69,7 +69,7 @@ This phase runs after all feature phases are complete. It verifies that all port
 | Video URL | | | |
 | Video Trim | | | |
 | Video Speed | | | |
-| Ctrl+K Link | | | |
+| Ctrl+K Command Palette retained; link insertion through existing controls | | | |
 | LaTeX Font Size | | | |
 | LaTeX Color | | | |
 | Citation Color | | | |
@@ -232,9 +232,10 @@ test.describe('Parallax features E2E', () => {
     await expect(page.locator('.file-browser-modal')).toBeVisible()
   })
 
-  test('Ctrl+K link modal', async ({ page }) => {
+  test('Ctrl+K opens command palette and preserves link command access', async ({ page }) => {
     await page.keyboard.press('Control+k')
-    await expect(page.locator('.link-modal')).toBeVisible()
+    await expect(page.getByRole('dialog', { name: /command palette/i })).toBeVisible()
+    await expect(page.getByText('Insert Link')).toBeVisible()
   })
 })
 ```
@@ -275,7 +276,7 @@ test.describe('Parallax features E2E', () => {
 
 - `npm run lint`: PASS
 - `npm run build`: PASS
-- `npm run test`: PASS, 118 files / 1030 tests
+- `npm run test`: PASS, 118 files / 1036 tests
 - `npm run test:e2e`: PASS, 169 Playwright tests
 - `npm run test:corpus`: PASS, 4 PPTX files, avg semantic fidelity 98.0%, avg round-trip stability 99.0%
 - `npm run test:load:api` / `npm run test:load:ws`: BLOCKED locally, `k6` not installed in PATH

@@ -1,6 +1,6 @@
 # Phase 06: Kinetic Text + Math Grid + Anime.js + Three.js Elements
 
-**Priority:** P2 | **Effort:** Medium | **Status:** Pending
+**Priority:** P2 | **Effort:** Medium | **Status:** Complete
 
 ---
 
@@ -186,12 +186,12 @@ describe('KineticTextModal', () => {
 
 ## Success Criteria
 
-- [ ] `KineticTextModal.jsx` created with 10 templates, under 200 LOC
-- [ ] `MathGridModal.jsx` created with 10 presets, under 200 LOC
-- [ ] `AnimeModal.jsx` created with 12 templates, under 200 LOC
-- [ ] `ThreeModal.jsx` created with 9 templates, under 200 LOC
-- [ ] All 4 accessible from Toolbar insert menu
-- [ ] All insert as `html` element type
-- [ ] Export HTML includes all 4 types
-- [ ] Unit tests pass for all 4 modals
-- [ ] `npm run build` succeeds
+- [x] Kinetic Text selector created with 10 templates, under 200 LOC
+- [x] Math Grid selector created with 10 presets, under 200 LOC
+- [x] Anime.js selector created with 12 templates/options, under 200 LOC
+- [x] Three.js selector created with 9 templates/options, under 200 LOC
+- [x] All 4 accessible from Toolbar/Insert flow
+- [x] All insert as `html` element type
+- [x] Export HTML includes all 4 types
+- [x] Unit tests pass for all 4 modals
+- [x] `npm run build` succeeds

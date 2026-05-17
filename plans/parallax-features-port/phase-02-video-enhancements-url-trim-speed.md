@@ -1,6 +1,6 @@
 # Phase 02: Video Enhancements — URL, Trim, Speed
 
-**Priority:** P1 | **Effort:** Low | **Status:** Pending
+**Priority:** P1 | **Effort:** Low | **Status:** Complete
 
 ---
 
@@ -122,10 +122,10 @@ describe('renderVideo', () => {
 
 ## Success Criteria
 
-- [ ] Video URL input available in PropertiesPanel
-- [ ] "Video from URL" button in Toolbar insert menu
-- [ ] Trim start/end controls functional
-- [ ] Playback speed dropdown (0.25x-2x) functional
-- [ ] .ogv in upload accept list
-- [ ] Unit tests pass: `npx vitest run shared/src/video-element.test.js`
-- [ ] `npm run build` succeeds
+- [x] Video URL input available in PropertiesPanel
+- [x] "Video from URL" insert flow available
+- [x] Trim start/end controls functional
+- [x] Playback speed dropdown/control functional
+- [x] `.ogv` in upload accept list
+- [x] Renderer/schema tests cover URL video, trim, speed, and `.ogv`
+- [x] `npm run build` succeeds

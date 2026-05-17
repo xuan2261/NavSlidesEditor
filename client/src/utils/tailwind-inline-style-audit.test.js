@@ -85,6 +85,7 @@ const EXEMPT_FILES = new Set([
   'client/src/components/PresentationTouchOverlay.jsx',
   'client/src/components/properties/game-properties.jsx',
   'client/src/components/timeline-element.jsx',
+  'client/src/components/timeline-expanded-details.jsx',
   'client/src/components/canvas/element-renderers/game-interactive/four-corners-live-game-renderer-with-timer-scoring-leaderboard.jsx',
   'client/src/components/canvas/element-renderers/game-interactive/name-picker-interactive-game-renderer.jsx',
   'client/src/components/canvas/element-renderers/game-interactive/relay-race-live-game-renderer-with-team-lanes-baton-pass.jsx',

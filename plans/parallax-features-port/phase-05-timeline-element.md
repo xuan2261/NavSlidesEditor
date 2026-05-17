@@ -1,6 +1,6 @@
 # Phase 05: Timeline Element
 
-**Priority:** P2 | **Effort:** Medium | **Status:** Pending
+**Priority:** P2 | **Effort:** Medium | **Status:** Complete
 
 ---
 
@@ -27,7 +27,7 @@
   - Export support in HTML generator
 
 ### Non-functional
-- Timeline component under 200 LOC
+- Timeline renderer component under 200 LOC after helper split
 - Self-contained — no external dependencies
 - Works in both editor and present mode
 
@@ -37,7 +37,9 @@
 
 | File | Description |
 |------|-------------|
-| `client/src/components/TimelineElement.jsx` | Timeline renderer component |
+| `client/src/components/timeline-element.jsx` | Timeline renderer component |
+| `client/src/components/timeline-element-utils.js` | Timeline date/range/item helpers |
+| `client/src/components/timeline-expanded-details.jsx` | Expanded event overlay |
 
 ## Files to Modify
 
@@ -201,12 +203,12 @@ describe('renderTimeline', () => {
 
 ## Success Criteria
 
-- [ ] `TimelineElement.jsx` created, under 200 LOC
-- [ ] Timeline renders on SlideCanvas
-- [ ] Date range and tick spacing configurable
-- [ ] Events with title, description, image, side
-- [ ] Click-to-expand works
-- [ ] BCE dates supported
-- [ ] Export HTML includes timeline
-- [ ] Unit tests pass
-- [ ] `npm run build` succeeds
+- [x] `timeline-element.jsx` created, under 200 LOC
+- [x] Timeline renders on SlideCanvas
+- [x] Date range and tick spacing configurable
+- [x] Events with title, description, image, side
+- [x] Click-to-expand works
+- [x] BCE dates supported
+- [x] Export HTML includes timeline
+- [x] Unit tests pass
+- [x] `npm run build` succeeds

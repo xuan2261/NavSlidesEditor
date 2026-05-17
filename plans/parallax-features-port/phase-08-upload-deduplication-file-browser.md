@@ -1,6 +1,6 @@
 # Phase 08: Upload Deduplication + File Browser
 
-**Priority:** P2 | **Effort:** Medium | **Status:** Pending
+**Priority:** P2 | **Effort:** Medium | **Status:** Complete
 
 ---
 
@@ -231,10 +231,10 @@ describe('FileBrowserModal', () => {
 
 ## Success Criteria
 
-- [ ] SHA-256 deduplication implemented in upload route
-- [ ] `GET /api/presentations/:id/uploads` endpoint works
-- [ ] `FileBrowserModal.jsx` created with file grid, filters, insert action
-- [ ] "Files" button in Toolbar insert menu
-- [ ] File browser opens, lists files, allows insert
-- [ ] Unit tests pass
-- [ ] `npm run build` succeeds
+- [x] SHA-256 deduplication implemented in upload route
+- [x] `GET /api/presentations/:id/uploads` endpoint works
+- [x] File browser modal created with file grid, filters, insert/delete action
+- [x] "Files" button available in insert flow
+- [x] File browser opens, lists files, allows insert
+- [x] Unit tests pass
+- [x] `npm run build` succeeds

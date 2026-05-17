@@ -1,6 +1,6 @@
 # Phase 07: Bug Fixes from parallax-presentations Commits
 
-**Priority:** P2 | **Effort:** Low | **Status:** Pending
+**Priority:** P2 | **Effort:** Low | **Status:** Complete
 
 ---
 
@@ -142,11 +142,11 @@ describe('Bug fixes', () => {
 
 ## Success Criteria
 
-- [ ] Cropped images show only crop region
-- [ ] Iframes render on animated slides
-- [ ] No phantom images from position conflicts
-- [ ] Title slide spacing correct
-- [ ] Image citation overflow fixed
-- [ ] No import errors in build
-- [ ] Unit tests pass
-- [ ] `npm run build` succeeds
+- [x] Cropped images show only crop region
+- [x] Iframes render on animated slides
+- [x] No phantom images from position conflicts
+- [x] Title slide spacing correct
+- [x] Image citation overflow fixed
+- [x] No import errors in build
+- [x] Unit tests pass
+- [x] `npm run build` succeeds

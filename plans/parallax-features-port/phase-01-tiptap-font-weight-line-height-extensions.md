@@ -1,6 +1,6 @@
 # Phase 01: TipTap Extensions — FontWeight + LineHeight
 
-**Priority:** P1 | **Effort:** Low | **Status:** Pending
+**Priority:** P1 | **Effort:** Low | **Status:** Complete
 
 ---
 
@@ -190,10 +190,10 @@ describe('LineHeight extension', () => {
 
 ## Success Criteria
 
-- [ ] `FontWeight.js` created, < 30 LOC
-- [ ] `LineHeight.js` created, < 30 LOC
-- [ ] Both extensions registered in EditorPage TipTap config
-- [ ] PropertiesPanel shows font-weight dropdown (100-900)
-- [ ] PropertiesPanel shows line-height control (1-3)
-- [ ] Unit tests pass: `npx vitest run client/src/extensions/`
-- [ ] `npm run build` succeeds with no errors
+- [x] FontWeight extension created as `tiptap-font-weight-extension.js`
+- [x] LineHeight extension created as `tiptap-line-height-extension.js`
+- [x] Both extensions registered in EditorPage TipTap config
+- [x] Toolbar text controls expose font-weight dropdown (100-900)
+- [x] Toolbar text controls expose line-height control
+- [x] Unit tests pass for `client/src/extensions/`
+- [x] `npm run build` succeeds with no errors

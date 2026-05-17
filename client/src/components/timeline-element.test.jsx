@@ -1,24 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { TimelineExpandedDetails } from './timeline-expanded-details'
+import { buildTicks, getTimelineItems, getTimelineRange, parseDatePos } from './timeline-element-utils'
 
 // Test the pure utility functions extracted from timeline-element.jsx
 // We import the module and test parseDatePos and buildTicks indirectly
 // through the component's rendering behavior
 
 describe('TimelineElement utilities', () => {
-  // Test parseDatePos logic (year mode)
-  function parseDatePos(d, startDate, endDate, w, pad, yearMode) {
-    if (yearMode) {
-      const y0 = parseInt(startDate) || 0
-      const y1 = parseInt(endDate) || 0
-      const yr = y1 - y0 || 1
-      return pad + (((parseInt(d) || 0) - y0) / yr) * (w - pad * 2)
-    }
-    const t0 = new Date(startDate).getTime()
-    const t1 = new Date(endDate).getTime()
-    const range = t1 - t0 || 1
-    return pad + ((new Date(d).getTime() - t0) / range) * (w - pad * 2)
-  }
-
   describe('parseDatePos', () => {
     it('maps start date to left padding', () => {
       const pos = parseDatePos('2000', '2000', '2025', 800, 30, true)
@@ -49,22 +38,6 @@ describe('TimelineElement utilities', () => {
   })
 
   describe('buildTicks', () => {
-    function buildTicks(startDate, endDate, spacing) {
-      const y0 = parseInt(startDate) || 0
-      const y1 = parseInt(endDate) || 0
-      const step =
-        spacing === '1000year' ? 1000
-        : spacing === '100year' ? 100
-        : spacing === '10year' ? 10
-        : Math.abs(y1 - y0) > 8 ? 2 : 1
-      const ticks = []
-      const sY = y0 < y1 ? Math.ceil(y0 / step) * step : Math.floor(y0 / step) * step
-      for (let y = sY; y0 < y1 ? y <= y1 : y >= y1; y += y0 < y1 ? step : -step) {
-        ticks.push({ date: String(y), label: String(y) })
-      }
-      return ticks
-    }
-
     it('generates yearly ticks for short ranges', () => {
       const ticks = buildTicks('2020', '2025', 'year')
       expect(ticks.length).toBeGreaterThan(0)
@@ -87,5 +60,68 @@ describe('TimelineElement utilities', () => {
       expect(ticks.some((t) => parseInt(t.label) < 0)).toBe(true)
       expect(ticks.some((t) => parseInt(t.label) > 0)).toBe(true)
     })
+  })
+
+  describe('getTimelineRange', () => {
+    it('prefers plan schema range fields', () => {
+      expect(getTimelineRange({ timelineStart: '1990', timelineEnd: '2020' })).toEqual({
+        startDate: '1990',
+        endDate: '2020',
+      })
+    })
+
+    it('falls back to legacy range fields and defaults', () => {
+      expect(getTimelineRange({ startDate: '2001', endDate: '2010' })).toEqual({
+        startDate: '2001',
+        endDate: '2010',
+      })
+      expect(getTimelineRange({})).toEqual({ startDate: '2000', endDate: '2025' })
+    })
+  })
+
+  describe('getTimelineItems', () => {
+    it('normalizes plan and legacy event fields', () => {
+      const items = getTimelineItems({
+        connectorOffset: 12,
+        events: [
+          {
+            id: 'evt-1',
+            title: 'Launch',
+            imageUrl: '/uploads/a.png',
+            details: 'Long detail',
+            date: '2010',
+          },
+        ],
+      })
+
+      expect(items[0]).toMatchObject({
+        id: 'evt-1',
+        label: 'Launch',
+        image: '/uploads/a.png',
+        detailedDescription: 'Long detail',
+        connectorLength: 12,
+      })
+    })
+  })
+})
+
+describe('TimelineExpandedDetails', () => {
+  it('renders expanded details and closes on click', () => {
+    const onClose = vi.fn()
+    render(
+      <TimelineExpandedDetails
+        item={{ label: 'Launch', date: '2010', description: 'Short', detailedDescription: 'Long detail' }}
+        textColor="#fff"
+        fontSize={12}
+        dateLabel={(date) => `Year ${date}`}
+        onClose={onClose}
+      />
+    )
+
+    expect(screen.getByText('Launch')).toBeTruthy()
+    expect(screen.getByText('Year 2010')).toBeTruthy()
+    expect(screen.getByText('Long detail')).toBeTruthy()
+    fireEvent.click(screen.getByTestId('timeline-expanded'))
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 })

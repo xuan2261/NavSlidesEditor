@@ -13,7 +13,9 @@
 - Verification passed: targeted Vitest (9 files / 60 tests), file browser focused Vitest (1 file / 9 tests), `npm run lint`, and `npm run build`.
 - Closed remaining parallax test gaps: made the parallax E2E/UI assertions mandatory instead of conditional, added full reveal export/persistence coverage for font weight, line height, URL video trim/speed, timeline, and image citations, and replaced upload dedup simulation with route-level tests.
 - Fixed two runtime integration blockers found by stricter E2E: `timeline` is now accepted by API validation and has editor element defaults, so Insert menu creation and save/load both work.
-- Full verification passed: `npm run lint`, `npm run build`, `npm run test` (118 files / 1030 tests), `npm run test:e2e` (169 tests), and `npm run test:corpus` (4 PPTX files). Load tests not run because `k6` is not installed in local PATH.
+- Split the timeline renderer into `timeline-element.jsx`, `timeline-element-utils.js`, and `timeline-expanded-details.jsx` so the main renderer stays under the 200-line file-size guideline without changing behavior.
+- Synced `plans/parallax-features-port/*` to actual implementation state and recorded the shortcut decision: `Ctrl+K` remains Command Palette; link insertion stays available through existing editor controls.
+- Full verification passed: `npm run lint`, `npm run build`, `npm run test` (118 files / 1036 tests), `npm run test:e2e` (169 tests), and `npm run test:corpus` (4 PPTX files). Load tests not run because `k6` is not installed in local PATH.
 
 ## 2026-05-14
 

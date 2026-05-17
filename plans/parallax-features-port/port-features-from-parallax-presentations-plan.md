@@ -11,14 +11,14 @@
 
 | # | Phase | Priority | Effort | Files Created | Files Modified | Status |
 |---|-------|----------|--------|---------------|----------------|--------|
-| 01 | [TipTap Extensions (FontWeight + LineHeight)](phase-01-tiptap-font-weight-line-height-extensions.md) | P1 | Low | 2 | 3 | Pending |
-| 02 | [Video Enhancements (URL, Trim, Speed)](phase-02-video-enhancements-url-trim-speed.md) | P1 | Low | 0 | 5 | Pending |
-| 03 | [Editor UX (Ctrl+K, LaTeX, Citations, Context Menu)](phase-03-editor-ux-ctrl-k-latex-citations-context-menu.md) | P1 | Low | 1 | 4 | Pending |
+| 01 | [TipTap Extensions (FontWeight + LineHeight)](phase-01-tiptap-font-weight-line-height-extensions.md) | P1 | Low | 2 | 3 | Complete |
+| 02 | [Video Enhancements (URL, Trim, Speed)](phase-02-video-enhancements-url-trim-speed.md) | P1 | Low | 0 | 5 | Complete |
+| 03 | [Editor UX (Ctrl+K, LaTeX, Citations, Context Menu)](phase-03-editor-ux-ctrl-k-latex-citations-context-menu.md) | P1 | Low | 1 | 4 | Complete |
 | 04 | [Present Mode CSS Fixes](phase-04-present-mode-css-fixes.md) | P1 | Medium | 1 | 3 | Complete |
-| 05 | [Timeline Element](phase-05-timeline-element.md) | P2 | Medium | 1 | 6 | Pending |
-| 06 | [Kinetic Text + Math Grid + Anime + Three.js](phase-06-kinetic-text-math-grid-anime-threejs-elements.md) | P2 | Medium | 4 | 3 | Pending |
-| 07 | [Bug Fixes from parallax commits](phase-07-bug-fixes-from-parallax-commits.md) | P2 | Low | 0 | 4 | Pending |
-| 08 | [Upload Deduplication + File Browser](phase-08-upload-deduplication-file-browser.md) | P2 | Medium | 1 | 3 | Pending |
+| 05 | [Timeline Element](phase-05-timeline-element.md) | P2 | Medium | 3 | 6 | Complete |
+| 06 | [Kinetic Text + Math Grid + Anime + Three.js](phase-06-kinetic-text-math-grid-anime-threejs-elements.md) | P2 | Medium | 4 | 3 | Complete |
+| 07 | [Bug Fixes from parallax commits](phase-07-bug-fixes-from-parallax-commits.md) | P2 | Low | 0 | 4 | Complete |
+| 08 | [Upload Deduplication + File Browser](phase-08-upload-deduplication-file-browser.md) | P2 | Medium | 1 | 3 | Complete |
 | 09 | [Integration Testing + Verification](phase-09-integration-testing-verification.md) | All | Medium | 1 | 0 | Complete |
 
 **Total new files:** 11 | **Total modified files:** ~15 unique
@@ -72,10 +72,11 @@ Phase 09 (Integration Testing) depends on all prior phases being complete.
 ## Scope Decisions
 
 ### Included (Port)
-- All editor features: FontWeight, LineHeight, Ctrl+K, LaTeX controls, citation settings
+- All editor features: FontWeight, LineHeight, LaTeX controls, citation settings, Copy URL context action
 - All element types: Timeline, Kinetic Text, Math Grid, Anime.js, Three.js
 - All bug fixes: CSS mismatches, iframe rendering, position conflicts, overflow
 - Infrastructure: Upload deduplication, file browser, present mode CSS overrides
+- Ctrl+K link modal is intentionally not ported because NavSlidesEditor reserves Ctrl+K for Command Palette. Link insertion remains available through existing editor controls.
 
 ### Excluded (Skip)
 - **Clerk auth** — NavSlidesEditor is self-hosted, no auth needed
