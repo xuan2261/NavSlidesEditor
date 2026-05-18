@@ -140,15 +140,23 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 ### Express Entry
 
 - `server/index.js` starts Express and mounts Socket.IO.
-- Route modules are grouped by concern:
-  - presentations and templates
-  - sharing and GitHub push
-  - AI generation and translation
-  - live view
-  - games and player join
-  - settings and explore
-  - analytics and marketplace
-  - upload, media, sync, and history
+- Routes are split into individual files in `server/routes/`:
+  - `presentations.js` - presentation CRUD
+  - `templates.js` - template management
+  - `share.js` - shareable links
+  - `github.js` - GitHub push integration
+  - `ai.js` - AI generation and translation
+  - `live.js` - live presentation rooms
+  - `games-rest-api-handler.js` - game REST endpoints
+  - `settings.js` - app settings
+  - `explore.js` - explore/discover
+  - `analytics.js` - share analytics
+  - `marketplace.js` - marketplace integration
+  - `upload.js` - file upload with SHA256 dedup
+  - `media.js` - media library
+  - `sync.js` - rclone sync
+  - `history.js` - version snapshots
+  - `pptx-import.js` - PPTX import
 
 ### Middleware
 
@@ -311,8 +319,8 @@ server/uploads/
 - `shared/src/types/presentation.js` defines the JSDoc model used by client and
   server.
 - Element types are kept in sync with the editor, export pipeline, and Zod schemas.
-  The current type set includes: text, image, shape, code, video, audio, html, latex,
-  icon, qrcode, drawing, svg, markdown, chart, table, line, divider, callout, and game.
+  The current type set includes 20 types: text, image, shape, code, video, audio, html, latex,
+  icon, qrcode, drawing, svg, markdown, chart, table, line, divider, callout, timeline, and game.
   Typed constants and factory functions live in `client/src/constants/` (e.g.
   `game-element-types-constants.js`).
 - Runtime validation uses `server/middleware/schemas.js`; the schemas allow

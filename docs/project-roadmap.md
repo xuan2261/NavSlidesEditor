@@ -1,8 +1,8 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: v1.7.0 docs sync and live/game/PPTX stack complete
+## Current Status: v1.7.1 ribbon UI, parallax port, and upstream sync complete
 
-Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The current docs baseline reflects Node.js 20+, the route-based shell, in-memory live room state, and the hybrid PPTX export/import pipeline. The UI/UX warm editorial overhaul has landed the warm dashboard/editor chrome slice plus a shared modal shell across high-use AI/share/media/template dialogs, with targeted build, lint, unit, dashboard, visual, responsive, and keyboard gates passing. A 2026-05-14 upstream selective port branch passed lint/build/unit/E2E gates and strict PPTX corpus after fixing grouped-source semantic scoring.
+Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system. Parallax feature port (font-weight, line-height, timeline element, video controls, LaTeX improvements) landed in v1.7.1. Upstream selective port merged on 2026-05-14. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state, and the hybrid PPTX export/import pipeline.
 
 ### What Works
 
@@ -34,7 +34,9 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | AI copywriting + translation                       | Done                                                                                                      |
 | Media library (Unsplash, Giphy)                    | Done                                                                                                      |
 | Gamification Game Controls (7 game types)          | Done                                                                                                      |
-| Upstream small-port sync                            | Ready for merge (ports implemented; strict gates passed)                                                  |
+| Ribbon UI migration                                 | Done (replaced Toolbar.jsx, InsertMenu.jsx, EditorMenuBar.jsx with tab-based ribbon)                     |
+| Parallax feature port                               | Done (font-weight, line-height, timeline element, video controls, LaTeX improvements)                    |
+| Upstream selective port                             | Done (merged 2026-05-14; copy URL context menu, typography/export consistency)                            |
 
 ### What's New in v1.5.x / v1.6.x (Security & Architecture Refactor)
 
@@ -293,15 +295,25 @@ Refactored clipboard operations (copy/cut/paste/duplicate) to pure functions in 
 
 **Commit:** `3107731`
 
-### Phase H - Anime.js Integration for UI & Live Overlays (Planned)
+### Phase H - Anime.js Integration for UI & Live Overlays (Partial - 2026-05-17)
 
-Add Anime.js as a controlled enhancement to the client. Zero disruption to reveal.js fragment system or presentation HTML generation. Two separate hooks: one for editor UI animations, one for live presentation overlay animations.
+Added Anime.js template selector modal for animation presets. Core Anime.js runtime integration for UI and live overlays deferred.
 
-**Scope:** Hướng 1 (UI Editor Enhancement) + Hướng 2 (Live Presentation Overlay Enhancement)
+**Delivered:**
+- `anime-js-animation-template-selector-modal.jsx` component for animation template selection
 
-**Current animation system:** Reveal.js 5.1.0 powers all slide transitions (6 types) and fragment animations (12 built-in CSS classes). Client UI uses only Tailwind CSS transitions. Live presentation overlays use raw CSS `transition` properties. No Framer Motion, GSAP, or anime.js.
+**Deferred (future enhancement):**
+- UI editor animations (modal entrance/exit, toolbar stagger, timeline feedback)
+- Live overlay animations (cursor dot spring physics, laser pointer glow, annotation drawing)
+- No changes to reveal.js, fragment system, or HTML generation pipeline
+
+**Status:** Template selector complete — runtime hooks deferred to P2
+
+**Current animation system:** Reveal.js 5.1.0 powers all slide transitions (6 types) and fragment animations (12 built-in CSS classes). Client UI uses only Tailwind CSS transitions. Live presentation overlays use raw CSS `transition` properties. No Framer Motion, GSAP, or anime.js runtime integration yet.
 
 **Anime.js context:** v4.3.6 (Feb 2026), ~67.5k GitHub stars, MIT. API: `import { animate, stagger } from 'animejs'`. Bundle: ESM/UMD/CJS/IIFE. Pros: tiny footprint, clean API, CSS/SVG/JS animation. Cons: fewer features than GSAP, smaller community.
+
+**Status:** Template selector modal complete — runtime integration deferred
 
 **Tasks — Hướng 1: UI Editor Enhancement:**
 
@@ -393,6 +405,39 @@ Full execution of `plans/260427-0900-deep-feature-hardening-master-plan/`.
 **Verification:** 510 tests pass, lint clean, build succeeds.
 
 **Plan:** `plans/260427-0900-deep-feature-hardening-master-plan/`
+
+### Ribbon UI Migration (Complete - 2026-05-17)
+
+Replaced legacy toolbar/menu system with tab-based ribbon interface.
+
+**Delivered:**
+- `RibbonHeaderBar` with 6 tabs: Home, Insert, Design, Transitions, Animations, View
+- `RibbonPanel` with tab-specific controls
+- Active tab state in `ui-store.activeTab` with localStorage persistence
+- Removed: `Toolbar.jsx`, `InsertMenu.jsx`, `EditorMenuBar.jsx`
+- Updated: `EditorPage.jsx`, `QuickAccessToolbar.jsx`, `ProductTour.jsx`
+
+**Verification:** Lint, unit tests, E2E tests passed
+
+### Parallax Feature Port (Complete - 2026-05-17/18)
+
+Ported upstream parallax features and enhancements.
+
+**Delivered:**
+- TipTap extensions: `tiptap-font-weight-extension.js`, `tiptap-line-height-extension.js`
+- Timeline element type with renderer
+- Video URL/trim/speed controls
+- LaTeX rendering improvements
+- Fragment animation options expansion
+- File browser modal
+- Template selector modals: kinetic text, parametric math grid, Three.js 3D scene, Anime.js
+- Server route extraction: `presentations.js` from `index.js`
+- Upload deduplication via SHA256
+
+**Files added:** Multiple new modals, extensions, and element renderers
+**Files modified:** `element-renderers.js` (+150 LOC), shared package tests
+
+**Verification:** Build, lint, unit tests passed
 
 ## Non-Roadmap Items
 

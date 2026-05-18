@@ -11,10 +11,11 @@ The editor uses a fixed 3-column layout:
 │  thumbnails  │   960×540 scaled canvas      │  per-element    │
 │  + CRUD      │   drag / resize / rotate     │  property form  │
 └──────────────┴──────────────────────────────┴─────────────────┘
-                         Toolbar (top bar)
+                    Ribbon Header + Panel (top)
 ```
 
-- **Toolbar** spans the full width above the 3-column area
+- **RibbonHeaderBar** spans the full width with tabs (Home/Insert/Design/Transitions/Animations/View)
+- **RibbonPanel** displays controls for the active tab below the header
 - **FindReplaceBar** overlays the top of the canvas (activated by Ctrl+F)
 - **AnimationTimeline** overlays the bottom of the canvas
 - **Modals** render inline in `EditorPage` via conditional JSX (not portals)
@@ -174,8 +175,15 @@ Default font families offered in the font picker (verified in Toolbar):
 - Steps use explicit placements (`top`, `bottom`, `left`, `right`) with continuous navigation.
 - The tour uses a `Joyride` callback to track completion and avoid manual `close => next` wiring.
 
-### Toolbars
+### Toolbars and Ribbon
 
+**Ribbon Architecture (default):**
+- `RibbonHeaderBar` displays tabs: Home, Insert, Design, Transitions, Animations, View
+- `RibbonPanel` shows controls for the active tab
+- Active tab persists to `localStorage` and syncs via `ui-store.activeTab`
+- Tab-based organization groups related commands (insert elements, apply design, configure animations)
+
+**Toolbar styling:**
 - Background: `--bg-secondary`
 - Icon buttons: 32×32px, `--text-secondary` idle, `--text-primary` hover, `--accent` active/selected
 - Separator: 1px vertical `--border` between groups

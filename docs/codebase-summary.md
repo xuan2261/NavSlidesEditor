@@ -4,8 +4,9 @@
 
 NavSlides Editor is a self-hostable presentation editor built as a monorepo with
 `client/`, `server/`, `shared/`, and `electron/` runtimes. Current release is
-`v1.7.0`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
-checked-in corpus / report artifacts used for verification.
+`v1.7.1`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
+checked-in corpus / report artifacts used for verification. The editor shell now
+uses the tab-based ribbon as the default controls surface.
 
 ## Repository Layout
 
@@ -28,6 +29,7 @@ navslides-editor/
 | App shell | `client/src/App.jsx` | `BrowserRouter` + `Routes`; `MainLayout` wraps app chrome; live/game routes stay outside the editor shell |
 | Pages | `client/src/pages/` | Route-level pages for home, editor, settings, explore, live, remote, speaker, and game player join |
 | Editor canvas | `client/src/components/SlideCanvas.jsx`, `client/src/components/canvas/*` | Drag / resize / rotate / snap surface split into focused chrome, renderer, and interaction modules |
+| Ribbon shell | `client/src/components/ribbon/*`, `client/src/stores/ui-store.js` | `RibbonHeaderBar` and `RibbonPanel` are the default editor controls; active tab persists to localStorage and syncs through `ui-store.activeTab`; Home/View canvas controls share grid-size persistence |
 | Element renderers | `client/src/components/canvas/element-renderers/` | Registry-based renderers for callout, icon, qrcode, drawing, svg, markdown, chart, latex, table, shape, line, and game |
 | Properties panels | `client/src/components/properties/` | Type-specific property editors, including game Content/Display/Scoring tabs |
 | Hooks | `client/src/hooks/` | Autosave, clipboard, keyboard, annotation sync, live timer, swipe/pinch/touch, game socket, and slide operations |
@@ -39,6 +41,13 @@ navslides-editor/
 - `EditorPage.jsx` composes the editor shell, overlays, menus, toolbars, and
   modal surfaces. Shared dialogs now flow through `ModalShell`; dense panel
   sections use disclosure semantics in `CollapsibleSection`.
+- `EditorPage.jsx` composes `RibbonHeaderBar` and `RibbonPanel` directly. The
+  old `EditorMenuBar`, `Toolbar`, and `InsertMenu` surfaces have been removed.
+  Tab selection is stored in `ui-store.activeTab`, validated on load, and
+  persisted in localStorage.
+- `QuickAccessToolbar` surfaces save progress, visible save failures, and an
+  explicit retry action so autosave errors remain recoverable after the menu
+  bar removal.
 - Editor chrome a11y is tightened: toolbar state toggles and active rich-text
   commands expose `aria-pressed`, slide background swatches are keyboard
   reachable and labelled, the highlight palette uses `listbox` / `option`
@@ -142,7 +151,7 @@ navslides-editor/
 
 ## Repo Notes
 
-- Root package version is `1.7.0`.
+- Root package version is `1.7.1`.
 - Runtime baseline is Node.js 20+.
 - There is no database layer; persistence is file-based by design.
 - There is no full TypeScript migration; JSDoc is the type system.

@@ -124,15 +124,15 @@ const selectedElements = useEditorStore((s) => s.selectedElements)
 - `App.jsx` uses `BrowserRouter`, `Routes`, and `Route`.
 - Shared app chrome lives in `MainLayout`; live routes render outside that layout.
 - Current route map:
-  - `/` -> `HomePage`
-  - `/editor/:id` -> `EditorPage`
-  - `/template/:id` -> `EditorPage` template mode
-  - `/settings` -> `SettingsPage`
-  - `/explore` -> `ExplorePage`
-  - `/live/:roomCode` -> `LiveViewPage`
-  - `/remote/:roomCode` -> `RemoteControlPage`
-  - `/speaker/:roomCode` -> `SpeakerViewPage`
-  - `/player/:slideId/:elementId` -> `game-player-join-page.jsx`
+  - `/` → `HomePage`
+  - `/editor/:id` → `EditorPage`
+  - `/template/:id` → `EditorPage` template mode
+  - `/settings` → `SettingsPage`
+  - `/explore` → `ExplorePage`
+  - `/live/:roomCode` → `LiveViewPage`
+  - `/remote/:roomCode` → `RemoteControlPage`
+  - `/speaker/:roomCode` → `SpeakerViewPage`
+  - `/player/:slideId/:elementId` → `game-player-join-page.jsx`
 - Route-aware pages live in `client/src/pages/`, not in a global page-state switch.
 
 ### Custom Hooks
@@ -154,6 +154,10 @@ Logic extracted from `EditorPage` lives in `hooks/`.
 | `useTouchGestures` | `use-touch-gestures.js` | Touch gesture normalization |
 | `useSwipeNavigation` | `use-swipe-navigation.js` | Swipe navigation |
 | `usePinchZoom` | `use-pinch-zoom.js` | Pinch zoom |
+| `useCanvasPointerInteraction` | `use-canvas-pointer-interaction.js` | Canvas drag/resize/rotate routing |
+| `useCanvasResizeRotate` | `use-canvas-resize-rotate.js` | Resize math + rotation snap |
+| `useCanvasSnappingHelpers` | `use-canvas-snapping-helpers-for-grid-and-smart-guides.js` | Snap + smart guide math |
+| `useCanvasRubberBandDrag` | `use-canvas-rubber-band-drag-selection.js` | Rubber-band selection |
 
 Rule: new editor logic goes into a hook or store. `EditorPage` handles
 composition.
@@ -171,6 +175,7 @@ composition.
 - Canvas coordinates stay in logical px at 960 x 540; scaling is CSS-only.
 - `MainLayout` owns the shared shell, while live routes stay outside it.
 - Game elements are first-class `type: 'game'` elements with 7 game types and a dedicated presenter/player flow; they are not collaborative slide-editing primitives.
+- **Ribbon UI**: `EditorPage` composes `RibbonHeaderBar` and `RibbonPanel`. Active tab state lives in `ui-store.activeTab` and persists to localStorage. The old `Toolbar.jsx`, `InsertMenu.jsx`, and `EditorMenuBar.jsx` components have been removed in favor of the tab-based ribbon.
 
 ### Canvas Extraction Patterns
 
