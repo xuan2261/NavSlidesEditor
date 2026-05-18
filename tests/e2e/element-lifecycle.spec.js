@@ -84,7 +84,7 @@ test.describe('Element Lifecycle And Autosave', () => {
 
     await editor.gotoPresentation(presentationId)
     await page.getByTestId(`slide-element-${elementId}`).click({ button: 'right' })
-    await page.getByRole('button', { name: /Cut/ }).click()
+    await page.getByRole('button', { name: '✂ Cut (Ctrl+X)' }).click()
 
     await expect.poll(async () => (await getSlideElements(request, presentationId)).length).toBe(0)
   })
@@ -236,7 +236,8 @@ test.describe('Element Lifecycle And Autosave', () => {
 
     let failOnce = true
     await page.route(`**/api/presentations/${presentationId}`, async (route) => {
-      if (route.request().method() === 'PUT' && failOnce) {
+      const postData = route.request().postData() || ''
+      if (route.request().method() === 'PUT' && failOnce && postData.includes('"x":260')) {
         failOnce = false
         await route.fulfill({
           status: 500,

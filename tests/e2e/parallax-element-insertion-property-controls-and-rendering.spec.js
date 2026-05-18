@@ -28,20 +28,14 @@ test.describe('Parallax Features E2E', () => {
 
   test('insert Timeline element from insert menu', async ({ page }) => {
     const prevCount = await editorPage.getElementCount()
-    await page.locator('button.insert-trigger:has-text("Insert")').click()
-    await expect(page.locator('.insert-dropdown')).toBeVisible()
-
-    await page.locator('.insert-item').filter({ hasText: 'Timeline' }).first().click()
+    await editorPage.clickInsertMenuItem('Timeline')
     await editorPage.waitForElementCount(prevCount + 1)
     await expect(page.locator('[data-testid="timeline-svg"]')).toBeVisible()
   })
 
   test('insert Kinetic Text from insert menu opens modal', async ({ page }) => {
     const prevCount = await editorPage.getElementCount()
-    await page.locator('button.insert-trigger:has-text("Insert")').click()
-    await expect(page.locator('.insert-dropdown')).toBeVisible()
-
-    await page.locator('.insert-item').filter({ hasText: 'Kinetic Text' }).first().click()
+    await editorPage.clickInsertMenuItem('Kinetic Text')
     await expect(page.locator('.fixed').filter({ hasText: 'Kinetic Text' })).toBeVisible()
     await page.locator('.fixed button:has-text("Insert")').first().click()
     await page.waitForFunction(
@@ -54,10 +48,7 @@ test.describe('Parallax Features E2E', () => {
 
   test('insert Math Grid from insert menu opens modal', async ({ page }) => {
     const prevCount = await editorPage.getElementCount()
-    await page.locator('button.insert-trigger:has-text("Insert")').click()
-    await expect(page.locator('.insert-dropdown')).toBeVisible()
-
-    await page.locator('.insert-item').filter({ hasText: 'Math Grid' }).first().click()
+    await editorPage.clickInsertMenuItem('Math Grid')
     await expect(page.locator('.fixed').filter({ hasText: 'Math Grid' })).toBeVisible()
     await page.locator('.fixed button:has-text("Insert")').first().click()
     await page.waitForFunction(
@@ -70,10 +61,7 @@ test.describe('Parallax Features E2E', () => {
 
   test('insert Anime.js animation from insert menu opens modal', async ({ page }) => {
     const prevCount = await editorPage.getElementCount()
-    await page.locator('button.insert-trigger:has-text("Insert")').click()
-    await expect(page.locator('.insert-dropdown')).toBeVisible()
-
-    await page.locator('.insert-item').filter({ hasText: 'Anime.js' }).first().click()
+    await editorPage.clickInsertMenuItem('Anime.js')
     await expect(page.locator('.fixed').filter({ hasText: 'Anime.js Animation' })).toBeVisible()
     await page.locator('.fixed button:has-text("Insert")').first().click()
     await page.waitForFunction(
@@ -86,10 +74,7 @@ test.describe('Parallax Features E2E', () => {
 
   test('insert Three.js scene from insert menu opens modal', async ({ page }) => {
     const prevCount = await editorPage.getElementCount()
-    await page.locator('button.insert-trigger:has-text("Insert")').click()
-    await expect(page.locator('.insert-dropdown')).toBeVisible()
-
-    await page.locator('.insert-item').filter({ hasText: 'Three.js' }).first().click()
+    await editorPage.clickInsertMenuItem('Three.js')
     await expect(page.locator('.fixed').filter({ hasText: 'Three.js 3D Scene' })).toBeVisible()
     await page.locator('.fixed button:has-text("Insert")').first().click()
     await page.waitForFunction(

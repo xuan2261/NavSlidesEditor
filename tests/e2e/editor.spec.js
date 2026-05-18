@@ -271,11 +271,11 @@ test.describe('Editor POM Workflow', () => {
     expect(toolbarMetrics.scrollHeight).toBeLessThanOrEqual(toolbarMetrics.height + 1)
     expect(toolbarMetrics.overflowChildren).toBe(0)
 
-    await page.click('button.insert-trigger:has-text("Insert")')
+    await page.getByRole('tab', { name: 'Insert' }).click()
     textState = await editor.getTextEditorState()
     expect(textState.proseMirrorCount).toBe(1)
 
-    await page.click('button.insert-trigger:has-text("Insert")')
+    await page.getByRole('tab', { name: 'Home' }).click()
     await editor.clickQuickAccessSave()
     textState = await editor.getTextEditorState()
     expect(textState.proseMirrorCount).toBe(1)

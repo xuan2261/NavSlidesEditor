@@ -31,18 +31,25 @@ function seededSlide(elements = []) {
 }
 
 async function openInsert(page) {
-  const menu = page.locator('.insert-dropdown')
-  if (!(await menu.isVisible().catch(() => false))) {
-    await page.click('button.insert-trigger:has-text("Insert")')
-    await expect(menu).toBeVisible()
-  }
+  await page.getByRole('tab', { name: 'Insert' }).click()
+  await expect(page.getByRole('tabpanel', { name: 'Insert' })).toBeVisible()
 }
 
 async function getInsertItem(page, label) {
   await openInsert(page)
-  const item = page.locator('.insert-dropdown .insert-item').filter({ hasText: label }).first()
-  await item.scrollIntoViewIfNeeded()
-  return item
+  const aliases = {
+    'Image (URL)': 'Add image',
+    Video: 'Add video',
+    Audio: 'Audio / Upload',
+    'Audio / Upload': 'Audio / Upload',
+    'QR Code': 'Add QR code',
+    Icon: 'Add icon',
+    'Drawing Canvas': 'Add drawing',
+    SVG: 'Add SVG',
+  }
+  const panel = page.getByRole('tabpanel', { name: 'Insert' })
+  const target = aliases[label] || label
+  return panel.getByRole('button', { name: target, exact: true })
 }
 
 async function insertItem(page, label) {
@@ -77,7 +84,7 @@ async function selectElements(page, ids) {
     await expect.poll(() => selectedCanvasElementIds(page)).toEqual([...expected].sort())
   }
 
-  await expect(page.locator('.tour-step-toolbar')).toContainText('Align:', { timeout: 5000 })
+  await expect(page.locator('.tour-step-ribbon')).toContainText('Arrange', { timeout: 5000 })
 }
 
 test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
@@ -113,9 +120,7 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
     await insertItem(page, 'QR Code')
     await insertItem(page, 'Drawing Canvas')
 
-    await (await getInsertItem(page, 'Icon')).click()
-    await page.getByPlaceholder('Search icons...').fill('Star')
-    await page.locator('button[title="Star"]').first().click()
+    await insertItem(page, 'Icon')
     await expect(page.locator('.element-wrapper')).toHaveCount(6)
 
     const svgChooser = page.waitForEvent('filechooser')
@@ -168,7 +173,7 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
 
     await selectElements(page, ['a', 'b', 'c'])
     await page.locator('button[title="Distribute H"]').click()
-    await page.locator('button[title="Group selected elements"]').click()
+    await page.locator('button[title="Group elements"]').click()
     await expect
       .poll(async () => {
         const saved = await apiGetPresentation(request, presId)
@@ -253,7 +258,7 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
       })
       .toBe(0)
 
-    await page.locator('button[title^="Show rulers"]').click()
+    await page.getByRole('button', { name: 'Toggle rulers' }).click()
     await expect(page.getByTestId('top-ruler')).toBeVisible()
     const topRuler = await page.getByTestId('top-ruler').boundingBox()
     expect(topRuler).toBeTruthy()
@@ -292,8 +297,8 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
     await expect(page.getByText('Push to GitHub')).toBeVisible()
     await page.keyboard.press('Escape')
 
-    await page.click('button.menu-trigger:has-text("View")')
-    await page.locator('.dropdown-item').filter({ hasText: 'Custom CSS' }).click()
+    await page.getByRole('tab', { name: 'View' }).click()
+    await page.getByRole('button', { name: 'Custom CSS' }).click()
     await expect(page.getByText('Custom CSS')).toBeVisible()
     await page.keyboard.press('Escape')
 

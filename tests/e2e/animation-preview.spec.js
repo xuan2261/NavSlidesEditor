@@ -51,8 +51,10 @@ test.describe('Animation Preview', () => {
       const editor = new EditorPage(page)
       await editor.gotoPresentation(pres.id)
 
-      await page.locator('button.menu-trigger').filter({ hasText: 'View' }).click()
-      await page.locator('.dropdown-item').filter({ hasText: 'Animation Timeline' }).click()
+      await page.getByRole('tab', { name: 'View' }).evaluate((tab) => tab.click())
+      const viewPanel = page.getByRole('tabpanel', { name: 'View' })
+      await viewPanel.evaluate((panel) => panel.scrollIntoView({ block: 'nearest', inline: 'start' }))
+      await viewPanel.getByRole('button', { name: 'Animation Timeline' }).evaluate((button) => button.click())
       await expect(page.getByText('Animation Timeline')).toBeVisible()
 
       await page.getByRole('button', { name: /Preview/ }).click()

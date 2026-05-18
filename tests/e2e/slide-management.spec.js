@@ -81,30 +81,27 @@ test.describe('Slide Management Advanced', () => {
 
   test('can change slide background to solid color', async ({ page }) => {
     await editorPage.addToolbarElement('Slide Background')
-    await page.waitForSelector('.bg-popup-container')
+    await expect(page.getByText('Slide Background')).toBeVisible()
 
     const initialBgColor = await page.evaluate(() => {
       const el = document.querySelector('.slide-canvas')
       return el ? window.getComputedStyle(el).backgroundColor : ''
     })
 
-    const colorTab = page.locator('.bg-type-tab:has-text("Color")')
-    if ((await colorTab.count()) > 0) {
-      await colorTab.click()
-      const swatch = page.locator('.bg-popup-container div[style*="background"]').first()
-      if ((await swatch.count()) > 0) {
-        await swatch.click()
-        await expect
-          .poll(
-            async () =>
-              page.evaluate(() => {
-                const el = document.querySelector('.slide-canvas')
-                return el ? window.getComputedStyle(el).backgroundColor : ''
-              }),
-            { timeout: 5000 }
-          )
-          .not.toBe(initialBgColor)
-      }
+    await page.getByRole('button', { name: 'color' }).click()
+    const swatches = page.getByRole('button', { name: /^Background / })
+    if ((await swatches.count()) > 1) {
+      await swatches.nth(1).click()
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(() => {
+              const el = document.querySelector('.slide-canvas')
+              return el ? window.getComputedStyle(el).backgroundColor : ''
+            }),
+          { timeout: 5000 }
+        )
+        .not.toBe(initialBgColor)
     }
   })
 
