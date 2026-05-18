@@ -1,7 +1,7 @@
 ---
 title: "Plugin Manim Architecture Epic"
 description: "Evaluate and implement a local-only plugin MVP before any plugin marketplace or Manim plugin work."
-status: proposed
+status: cancelled
 priority: P1/P2
 effort: 30-46h before Manim
 created: 2026-05-14
@@ -58,14 +58,14 @@ shared/src/element-renderers.js
 
 | Phase | Status | Goal |
 | --- | --- | --- |
-| 1 | Pending | Security model and API contract |
-| 2 | Pending | Local manifest + asset serving |
-| 3 | Pending | Client registry/loader |
-| 4 | Pending | Sandbox bridge with validation |
-| 5 | Pending | Export fallback |
-| 6 | Pending | Example local plugin |
-| 7 | Pending | Security/E2E/docs |
-| 8 | Pending | Manim plugin feasibility after MVP |
+| 1 | Cancelled | Security model and API contract |
+| 2 | Cancelled | Local manifest + asset serving |
+| 3 | Cancelled | Client registry/loader |
+| 4 | Cancelled | Sandbox bridge with validation |
+| 5 | Cancelled | Export fallback |
+| 6 | Cancelled | Example local plugin |
+| 7 | Cancelled | Security/E2E/docs |
+| 8 | Cancelled | Manim plugin feasibility after MVP |
 
 ## Success Criteria
 

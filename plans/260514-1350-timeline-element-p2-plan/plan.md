@@ -1,7 +1,7 @@
 ---
 title: "Timeline Element P2 Plan"
 description: "Implement a first-class timeline slide element using local NavSlides architecture, not upstream cherry-picks."
-status: proposed
+status: cancelled
 priority: P2
 effort: 16-23h
 created: 2026-05-14
@@ -48,12 +48,12 @@ shared/src/element-renderers.js
 
 | Phase | Status | Goal |
 | --- | --- | --- |
-| 1 | Pending | Final UX/schema decision |
-| 2 | Pending | Shared type/default/renderer tests |
-| 3 | Pending | Canvas renderer |
-| 4 | Pending | Properties panel |
-| 5 | Pending | Insert/persistence/export integration |
-| 6 | Pending | E2E and docs |
+| 1 | Cancelled | Final UX/schema decision |
+| 2 | Cancelled | Shared type/default/renderer tests |
+| 3 | Cancelled | Canvas renderer |
+| 4 | Cancelled | Properties panel |
+| 5 | Cancelled | Insert/persistence/export integration |
+| 6 | Cancelled | E2E and docs |
 
 ## Success Criteria
 
