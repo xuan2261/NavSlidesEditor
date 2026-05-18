@@ -73,4 +73,19 @@ describe('createKeyboardHandler', () => {
     })(createEvent('c', { ctrlKey: true }))
     expect(onCopy).not.toHaveBeenCalled()
   })
+
+  it('leaves removed ribbon toggle shortcut unhandled', () => {
+    const shortcuts = getShortcuts({})
+    const onToggleRibbon = vi.fn()
+    const event = createEvent('r', { ctrlKey: true, altKey: true })
+
+    createKeyboardHandler({
+      shortcuts,
+      onToggleRibbon,
+      getActiveElement: () => null,
+    })(event)
+
+    expect(onToggleRibbon).not.toHaveBeenCalled()
+    expect(event.preventDefault).not.toHaveBeenCalled()
+  })
 })

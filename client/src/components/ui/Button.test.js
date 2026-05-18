@@ -40,19 +40,31 @@ describe('buttonVariants', () => {
     expect(classes).toContain('min-h-0')
   })
 
-  it('should return icon classes', () => {
+  it('should return icon classes with fixed 32x32 size', () => {
     const classes = buttonVariants({ variant: 'icon' })
     expect(classes).toContain('w-8')
     expect(classes).toContain('h-8')
+    expect(classes).toContain('!p-0')
     expect(classes).toContain('justify-center')
     expect(classes).toContain('border-transparent')
     expect(classes).toContain('focus-visible:ring-2')
   })
 
+  it('should return ribbon classes with auto width and padding', () => {
+    const classes = buttonVariants({ variant: 'ribbon' })
+    expect(classes).toContain('w-auto')
+    expect(classes).toContain('min-w-8')
+    expect(classes).toContain('h-8')
+    expect(classes).toContain('px-2')
+    expect(classes).not.toContain('!p-0')
+    expect(classes).toContain('gap-1.5')
+    expect(classes).toContain('text-[11px]')
+  })
+
   it('should allow custom className to override or append', () => {
     const classes = buttonVariants({ variant: 'primary', className: 'custom-class bg-red-500' })
     expect(classes).toContain('custom-class')
-    expect(classes).toContain('bg-red-500') // Assuming twMerge correctly handles this
+    expect(classes).toContain('bg-red-500')
   })
 
   it('should derive icon button aria-label from title as fallback', () => {
@@ -62,5 +74,14 @@ describe('buttonVariants', () => {
 
     expect(html).toContain('title="Settings"')
     expect(html).toContain('aria-label="Settings"')
+  })
+
+  it('should derive ribbon button aria-label from title as fallback', () => {
+    const html = renderToString(
+      React.createElement(Button, { variant: 'ribbon', title: 'Add text' }, 'Text')
+    )
+
+    expect(html).toContain('title="Add text"')
+    expect(html).toContain('aria-label="Add text"')
   })
 })

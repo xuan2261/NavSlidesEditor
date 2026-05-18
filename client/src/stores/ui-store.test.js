@@ -9,7 +9,6 @@ describe('ui-store', () => {
       showHistoryModal: false,
       showSyncModal: false,
       showTemplateModal: false,
-      showMasterPanel: false,
       theme: 'dark',
       leftPanelOpen: true,
       rightPanelOpen: true,

@@ -8,9 +8,9 @@ const TOUR_STORAGE_KEY = 'navSlidesTutorialSeen'
  *  - Modals / overlays:  z-[10000]
  *  - DropdownMenu:       z-[9999]
  *  - SlidePanel ctx:     z-[9999]
- *  - Toolbar popups:     z-[1000]
- *  - EditorMenuBar:      z-[200]
- *  - Toolbar:            z-[100]
+ *  - Ribbon popups:      z-[1000]
+ *  - Ribbon header:      z-[200]
+ *  - Ribbon panel:       z-[100]
  */
 const TOUR_Z_INDEX = 100001
 
@@ -59,10 +59,10 @@ const TOUR_STEPS = [
     isFixed: true,
   },
   {
-    target: '.tour-step-toolbar',
+    target: '.tour-step-ribbon',
     content: (
       <div>
-        <h3 className="mb-2.5 text-base text-text-primary">Toolbar</h3>
+        <h3 className="mb-2.5 text-base text-text-primary">Ribbon</h3>
         <p className="text-sm leading-relaxed text-text-secondary">
           Insert elements like text, shapes, images, charts, and control grid settings.
         </p>

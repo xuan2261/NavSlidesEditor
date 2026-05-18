@@ -1,21 +1,9 @@
 import { useState } from 'react'
 import { Play, X, GripVertical } from 'lucide-react'
 import { Button } from '../components/ui'
+import { FRAGMENT_ANIMATION_TYPES } from '../constants/fragment-animation-types'
 
-const ANIMATION_TYPES = [
-  { value: 'fade-in', label: 'Fade In' },
-  { value: 'fade-out', label: 'Fade Out' },
-  { value: 'fade-up', label: 'Fade Up' },
-  { value: 'fade-down', label: 'Fade Down' },
-  { value: 'fade-left', label: 'Fade Left' },
-  { value: 'fade-right', label: 'Fade Right' },
-  { value: 'grow', label: 'Grow' },
-  { value: 'shrink', label: 'Shrink' },
-  { value: 'zoom-in', label: 'Zoom In' },
-  { value: 'highlight-red', label: 'Highlight Red' },
-  { value: 'highlight-green', label: 'Highlight Green' },
-  { value: 'highlight-blue', label: 'Highlight Blue' },
-]
+const ANIMATION_TYPES = FRAGMENT_ANIMATION_TYPES
 
 const ELEMENT_COLORS = [
   '#6366f1',

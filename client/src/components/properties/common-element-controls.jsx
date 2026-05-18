@@ -1,6 +1,7 @@
 import { Input, Select, Button, ColorPicker } from '../../components/ui'
 import { clampNumber, parseFiniteNumber } from '../../utils/number-input'
 import { ArrowDown, ArrowUp, Lock, Unlock } from 'lucide-react'
+import { FRAGMENT_ANIMATION_TYPES } from '../../constants/fragment-animation-types'
 
 /**
  * Common element controls shared across all element types:
@@ -140,19 +141,9 @@ export default function CommonElementControls({
                 value={element.fragmentAnimation || 'fade-in'}
                 onChange={(e) => onUpdate({ fragmentAnimation: e.target.value })}
               >
-                <option value="fade-in">Fade In</option>
-                <option value="fade-out">Fade Out</option>
-                <option value="fade-up">Fade Up</option>
-                <option value="fade-down">Fade Down</option>
-                <option value="fade-left">Fade Left</option>
-                <option value="fade-right">Fade Right</option>
-                <option value="strike">Strike</option>
-                <option value="grow">Grow</option>
-                <option value="shrink">Shrink</option>
-                <option value="zoom-in">Zoom In</option>
-                <option value="highlight-red">Highlight Red</option>
-                <option value="highlight-green">Highlight Green</option>
-                <option value="highlight-blue">Highlight Blue</option>
+                {FRAGMENT_ANIMATION_TYPES.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
               </Select>
             </div>
           </div>

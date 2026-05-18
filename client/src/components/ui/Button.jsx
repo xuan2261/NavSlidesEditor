@@ -14,6 +14,8 @@ export function buttonVariants({ variant = 'primary', className = '' }) {
     ghost:
       'min-h-0 border border-transparent text-text-secondary px-2 py-1 rounded hover:bg-hover hover:text-text-primary active:bg-active active:text-text-primary',
     icon: 'w-8 h-8 min-h-8 !p-0 shrink-0 inline-flex items-center justify-center rounded-md border border-transparent text-text-secondary hover:bg-hover hover:text-text-primary',
+    ribbon:
+      'w-auto min-w-8 h-8 min-h-8 px-2 py-0 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-md border border-transparent text-[11px] text-text-secondary hover:bg-hover hover:text-text-primary',
   }
 
   return cn(baseClasses, variants[variant], className)
@@ -21,7 +23,7 @@ export function buttonVariants({ variant = 'primary', className = '' }) {
 
 export const Button = React.forwardRef(
   ({ className, variant = 'primary', type = 'button', title, 'aria-label': ariaLabel, ...props }, ref) => {
-    const computedAriaLabel = ariaLabel || (variant === 'icon' ? title : undefined)
+    const computedAriaLabel = ariaLabel || ((variant === 'icon' || variant === 'ribbon') ? title : undefined)
 
     return (
       <button

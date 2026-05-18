@@ -1,5 +1,15 @@
 import { create } from 'zustand'
 
+const VALID_RIBBON_TABS = new Set([
+  'home',
+  'insert',
+  'design',
+  'format',
+  'transitions',
+  'animations',
+  'view',
+])
+
 export const useUIStore = create((set) => ({
   // Modals — individual booleans matching EditorPage
   showGithubModal: false,
@@ -7,7 +17,6 @@ export const useUIStore = create((set) => ({
   showHistoryModal: false,
   showSyncModal: false,
   showTemplateModal: false,
-  showMasterPanel: false,
 
   // Theme
   theme: 'dark', // 'light' | 'dark'
@@ -15,6 +24,15 @@ export const useUIStore = create((set) => ({
   // Panels
   leftPanelOpen: true,
   rightPanelOpen: true,
+
+  // Ribbon
+  activeTab: (() => {
+    try {
+      localStorage.removeItem('navslides-ribbon-use-ribbon')
+      const storedTab = localStorage.getItem('navslides-ribbon-active-tab')
+      return VALID_RIBBON_TABS.has(storedTab) ? storedTab : 'home'
+    } catch { return 'home' }
+  })(),
 
   // Actions — Modals
   openModal: (name) => set({ [`show${name}Modal`]: true }),
@@ -27,7 +45,6 @@ export const useUIStore = create((set) => ({
   setShowHistoryModal: (v) => set({ showHistoryModal: v }),
   setShowSyncModal: (v) => set({ showSyncModal: v }),
   setShowTemplateModal: (v) => set({ showTemplateModal: v }),
-  setShowMasterPanel: (v) => set({ showMasterPanel: v }),
 
   // Theme
   setTheme: (theme) => set({ theme }),
@@ -37,4 +54,11 @@ export const useUIStore = create((set) => ({
   toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
   setLeftPanelOpen: (isOpen) => set({ leftPanelOpen: isOpen }),
   setRightPanelOpen: (isOpen) => set({ rightPanelOpen: isOpen }),
+
+  // Ribbon
+  setActiveTab: (tab) => {
+    if (!VALID_RIBBON_TABS.has(tab)) tab = 'home'
+    try { localStorage.setItem('navslides-ribbon-active-tab', tab) } catch { /* ignore */ }
+    set({ activeTab: tab })
+  },
 }))

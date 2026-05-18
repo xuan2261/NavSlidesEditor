@@ -24,7 +24,6 @@ const REMOVED_FILES = ['client/src/pages/dashboard/TemplatePreview.jsx']
 const INLINE_STYLE_BUDGETS = {
   'client/src/pages/SpeakerViewPage.jsx': 0,
   'client/src/pages/LiveViewPage.jsx': 3,
-  'client/src/components/Toolbar.jsx': 0,
   'client/src/components/SlidePanel.jsx': 0,
   'client/src/components/SlideSorterView.jsx': 0,
   'client/src/components/SelectionPane.jsx': 0,
@@ -32,7 +31,6 @@ const INLINE_STYLE_BUDGETS = {
   'client/src/components/QuickAccessToolbar.jsx': 0,
   'client/src/components/LivePresentationModal.jsx': 0,
   'client/src/components/FindReplaceBar.jsx': 0,
-  'client/src/components/EditorMenuBar.jsx': 0,
   'client/src/components/DropdownMenu.jsx': 0,
   'client/src/pages/ExplorePage.jsx': 0,
   'client/src/components/TemplatePickerModal.jsx': 0,
@@ -40,7 +38,6 @@ const INLINE_STYLE_BUDGETS = {
   'client/src/pages/EditorPage.jsx': 0,
   'client/src/pages/SettingsPage.jsx': 0,
   'client/src/components/SlideCanvas.jsx': 13,
-  'client/src/components/InsertMenu.jsx': 1,
 }
 
 const EXEMPT_FILES = new Set([
@@ -59,6 +56,8 @@ const EXEMPT_FILES = new Set([
   'client/src/components/HtmlEditorModal.jsx',
   'client/src/components/AnalyticsModal.jsx',
   'client/src/components/PropertiesPanel.jsx',
+  'client/src/components/ribbon/controls/ribbon-text-formatting-controls.jsx',
+  'client/src/components/ribbon/design-tab-content.jsx',
   'client/src/components/AnimationTimeline.jsx',
   'client/src/components/SlideThumbnail.jsx',
   'client/src/components/canvas/canvas-footer-overlay-with-section-and-page-number.jsx',
