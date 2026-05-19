@@ -12,7 +12,8 @@
   "workspaces": [
     "server",
     "client",
-    "shared"
+    "shared",
+    "website"
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=server\" \"npm run dev --workspace=client\"",
@@ -22,6 +23,9 @@
     "start": "NODE_ENV=production npm run start --workspace=server",
     "format": "prettier --write .",
     "lint": "eslint .",
+    "docs:dev": "npm run docs:dev --workspace=website",
+    "docs:build": "npm run docs:build --workspace=website",
+    "docs:preview": "npm run docs:preview --workspace=website",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:coverage:summary": "node scripts/summarize-vitest-coverage.js",
