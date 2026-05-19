@@ -15,8 +15,8 @@
 ### Quick Start
 
 ```bash
-git clone https://github.com/Xuan2261/navslides-editor.git
-cd navslides-editor
+git clone https://github.com/xuan2261/NavSlidesEditor.git
+cd NavSlidesEditor
 docker compose up -d
 ```
 
@@ -91,8 +91,8 @@ Final image runs: `node server/index.js`
 Runs Vite dev server + Express API concurrently with hot-reload:
 
 ```bash
-git clone https://github.com/Xuan2261/navslides-editor.git
-cd navslides-editor
+git clone https://github.com/xuan2261/NavSlidesEditor.git
+cd NavSlidesEditor
 npm install
 npm run dev
 ```
@@ -127,7 +127,7 @@ On Windows PowerShell, use `$env:PORT=8080; npm start` or run the command inside
 
 ### Pre-built Packages
 
-Download from the [Releases](https://github.com/Xuan2261/navslides-editor/releases) page:
+Download from the [Releases](https://github.com/xuan2261/NavSlidesEditor/releases) page:
 
 | Platform | Format                              |
 | -------- | ----------------------------------- |

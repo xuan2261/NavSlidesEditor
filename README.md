@@ -73,10 +73,10 @@ Named snapshots saved per presentation, restore any previous version, delete ind
 
 ### Option A — Desktop App (Electron)
 
-Run as a native desktop app (no server, no Docker). Download pre-built packages from [Releases](https://github.com/Xuan2261/navslides-editor/releases). The current GitHub release workflow publishes a Windows artifact automatically; Linux/macOS packages can still be built locally with the scripts below (requires **Node.js 20+**):
+Run as a native desktop app (no server, no Docker). Download pre-built packages from [Releases](https://github.com/xuan2261/NavSlidesEditor/releases). The current GitHub release workflow publishes a Windows artifact automatically; Linux/macOS packages can still be built locally with the scripts below (requires **Node.js 20+**):
 
 ```bash
-git clone https://github.com/Xuan2261/navslides-editor.git && cd navslides-editor && npm install
+git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
 npm run electron:build:linux   # → .AppImage + .deb
 npm run electron:build:mac     # → .zip
 npm run electron:build:win     # → .exe
@@ -90,7 +90,7 @@ Data stored at: Linux `~/.config/NavSlides Editor/`, macOS `~/Library/Applicatio
 Requires Docker 20.10+ and Docker Compose v2+.
 
 ```bash
-git clone https://github.com/Xuan2261/navslides-editor.git && cd navslides-editor
+git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor
 docker compose up -d
 ```
 
@@ -101,7 +101,7 @@ Opens at `http://localhost:3002`. Use `docker compose logs -f`, `docker compose 
 Requires **Node.js 20+** and npm 8+.
 
 ```bash
-git clone https://github.com/Xuan2261/navslides-editor.git && cd navslides-editor && npm install
+git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
 npm run dev          # Vite dev (5173) + Express API (3002) concurrently
 npm run build && npm start   # production: builds React, serves on port 3002
 PORT=8080 npm start  # custom port
@@ -311,3 +311,9 @@ Install `k6` from the official guide if you want to run the load suite locally.
 | Testing              | Vitest, Playwright, k6                        |
 | Linting & Formatting | ESLint 9 (flat config), Prettier              |
 | Storage              | JSON files + local filesystem                 |
+
+---
+
+## License
+
+NavSlides Editor is licensed under the GNU Affero General Public License v3.0. See [LICENSE](LICENSE).

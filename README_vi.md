@@ -95,7 +95,7 @@ Chạy NavSlides Editor dưới dạng ứng dụng desktop native. Không cần
 
 #### Pre-built packages
 
-Tải xuống từ trang [Releases](https://github.com/Xuan2261/navslides-editor/releases). Workflow phát hành hiện tại tự động build artifact Windows; Linux/macOS vẫn build được bằng script local bên dưới:
+Tải xuống từ trang [Releases](https://github.com/xuan2261/NavSlidesEditor/releases). Workflow phát hành hiện tại tự động build artifact Windows; Linux/macOS vẫn build được bằng script local bên dưới:
 
 | Platform | Format                                                  |
 | -------- | ------------------------------------------------------- |
@@ -121,8 +121,8 @@ chmod +x Slides\ Editor-1.0.0.AppImage
 Yêu cầu **Node.js 20+**.
 
 ```bash
-git clone https://github.com/Xuan2261/navslides-editor.git
-cd navslides-editor
+git clone https://github.com/xuan2261/NavSlidesEditor.git
+cd NavSlidesEditor
 npm install
 ```
 
@@ -161,8 +161,8 @@ Yêu cầu [Docker](https://docs.docker.com/get-docker/) và [Docker Compose](ht
 #### 1. Clone repository
 
 ```bash
-git clone https://github.com/Xuan2261/navslides-editor.git
-cd navslides-editor
+git clone https://github.com/xuan2261/NavSlidesEditor.git
+cd NavSlidesEditor
 ```
 
 #### 2. Khởi chạy với Docker Compose
@@ -216,8 +216,8 @@ Yêu cầu **Node.js 20+** và npm 8+.
 #### 1. Clone repository
 
 ```bash
-git clone https://github.com/Xuan2261/navslides-editor.git
-cd navslides-editor
+git clone https://github.com/xuan2261/NavSlidesEditor.git
+cd NavSlidesEditor
 ```
 
 #### 2. Cài đặt các dependencies
@@ -455,3 +455,9 @@ Cài `k6` theo hướng dẫn chính thức nếu muốn chạy load suite local
 | Testing              | Vitest, Playwright, k6                                    |
 | Linting & Formatting | ESLint, Prettier                                          |
 | Storage              | JSON files + local filesystem                             |
+
+---
+
+## License
+
+NavSlides Editor được cấp phép theo GNU Affero General Public License v3.0. Xem [LICENSE](LICENSE).
