@@ -19,17 +19,36 @@ module.exports = defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 2 : 4,
-  reporter: 'html',
+  reporter: process.env.CI ? [['html', { open: 'never' }], ['github']] : 'html',
   timeout: process.env.CI ? 60000 : 30000,
   use: {
     baseURL,
-    trace: 'on-first-retry',
+    trace: process.env.CI ? 'retain-on-failure' : 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+  expect: {
+    toHaveScreenshot: {
+      threshold: 0.2,
+      maxDiffPixels: 100,
+      animations: 'disabled',
+    },
   },
   projects: [
     {
       name: 'chromium',
+      testIgnore: /tests\/e2e\/live\/.*\.spec\.js/,
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'chromium-live',
+      testMatch: /tests\/e2e\/live\/.*\.spec\.js/,
+      workers: 1,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    ...(process.env.PLAYWRIGHT_MOBILE_CHROMIUM
+      ? [{ name: 'mobile-chromium', use: { ...devices['Pixel 7'] } }]
+      : []),
   ],
   webServer: {
     command: `npx concurrently "npm run dev --workspace=server" "npm run dev --workspace=client -- --host 127.0.0.1 --port ${clientPort}"`,

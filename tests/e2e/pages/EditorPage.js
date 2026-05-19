@@ -3,6 +3,9 @@ import { CanvasHelper } from './CanvasHelper.js'
 import { RibbonInsertHelper } from './RibbonInsertHelper.js'
 import { PropertiesPanelHelper } from './PropertiesPanelHelper.js'
 import { SlidePanelHelper } from './SlidePanelHelper.js'
+import { RibbonTabToolbarHelper } from './ribbon-tab-toolbar-helper.js'
+import { MenuBarDropdownHelper } from './menu-bar-dropdown-helper.js'
+import { TextEditorProseMirrorHelper } from './text-editor-prosemirror-and-find-replace-helper.js'
 
 export class EditorPage {
   /**
@@ -17,6 +20,8 @@ export class EditorPage {
     this.lastInsertedElementIndex = null
 
     this.properties = new PropertiesPanelHelper({ page })
+    this.ribbon = new RibbonTabToolbarHelper({ page })
+    this.menubar = new MenuBarDropdownHelper({ page })
     this.insert = new RibbonInsertHelper({
       page,
       getElementCount: () => this.getElementCount(),
@@ -36,6 +41,12 @@ export class EditorPage {
       waitForElementCount: (expectedCount, timeout) => this.waitForElementCount(expectedCount, timeout),
       waitForElementPanelSelected: (timeout) => this.waitForElementPanelSelected(timeout),
       waitForElementPanelCleared: (timeout) => this.waitForElementPanelCleared(timeout),
+    })
+    this.text = new TextEditorProseMirrorHelper({
+      page,
+      elementsCountLocator: this.elementsCountLocator,
+      getElementCount: () => this.getElementCount(),
+      getLastInsertedElementIndex: () => this.lastInsertedElementIndex,
     })
   }
 
@@ -60,13 +71,8 @@ export class EditorPage {
     await expect(this.thumbnailsLocator).toHaveCount(expectedCount, { timeout })
   }
 
-  async waitForElementPanelSelected(timeout = 5000) {
-    await this.properties.waitForElementPanelSelected(timeout)
-  }
-
-  async waitForElementPanelCleared(timeout = 5000) {
-    await this.properties.waitForElementPanelCleared(timeout)
-  }
+  async waitForElementPanelSelected(t = 5000) { await this.properties.waitForElementPanelSelected(t) }
+  async waitForElementPanelCleared(t = 5000) { await this.properties.waitForElementPanelCleared(t) }
 
   async gotoPresentation(id) {
     await this.page.addInitScript(() => {
@@ -76,16 +82,10 @@ export class EditorPage {
     await this.waitForReady()
   }
 
-  async getElementCount() {
-    return await this.elementsCountLocator.count()
-  }
-
-  async getSlideCount() {
-    return await this.thumbnailsLocator.count()
-  }
+  async getElementCount() { return this.elementsCountLocator.count() }
+  async getSlideCount() { return this.thumbnailsLocator.count() }
 
   async overridePromptDialog(mockValue = '3') {
-    // Override default prompt handling
     this.page.on('dialog', (dialog) => dialog.accept(mockValue))
   }
 
@@ -98,24 +98,10 @@ export class EditorPage {
     await this.page.locator(`button[title="${target.title}"]`).click()
   }
 
-  async clickInsertMenuItem(itemName) {
-    await this.insert.clickInsertMenuItem(itemName)
-  }
-
-  async openFileMenuItem(itemName) {
-    await this.page.click('button.menu-trigger:has-text("File")')
-    await this.page.locator('.dropdown-item').filter({ hasText: itemName }).click()
-  }
-
-  async openSyncModal() {
-    await this.openFileMenuItem('Sync to Cloud')
-    await expect(this.page.getByRole('dialog', { name: 'Sync to Cloud' })).toBeVisible()
-  }
-
-  async openHistoryModal() {
-    await this.openFileMenuItem('Version History')
-    await expect(this.page.getByRole('dialog', { name: 'Version History' })).toBeVisible()
-  }
+  async clickInsertMenuItem(name) { await this.insert.clickInsertMenuItem(name) }
+  async openFileMenuItem(name) { await this.menubar.openFileMenuItem(name) }
+  async openSyncModal() { await this.menubar.openSyncModal() }
+  async openHistoryModal() { await this.menubar.openHistoryModal() }
 
   async closeOverlayModal() {
     await this.page.locator('.fixed.inset-0').last().click({ position: { x: 10, y: 10 } })
@@ -126,293 +112,63 @@ export class EditorPage {
     await this.page.waitForSelector('h2:has-text("Template Gallery")', { timeout: 5000 })
   }
 
-  async addTextNode() {
-    return await this.insert.addTextNode()
-  }
+  async addTextNode() { return this.insert.addTextNode() }
 
-  async startEditingTextElement(index = this.lastInsertedElementIndex ?? -1) {
-    const count = await this.getElementCount()
-    const resolvedIndex = index < 0 ? count + index : index
-    if (resolvedIndex < 0 || resolvedIndex >= count) {
-      throw new Error(`No element wrapper at index ${index}`)
-    }
+  async startEditingTextElement(i) { await this.text.startEditingTextElement(i) }
+  async typeInTextEditor(t) { await this.text.typeInTextEditor(t) }
+  async selectAllText() { await this.text.selectAllText() }
+  async getTextEditorState() { return this.text.getTextEditorState() }
+  async openFindReplace() { await this.text.openFindReplace() }
+  async closeFindReplace() { await this.text.closeFindReplace() }
+  async findText(t) { await this.text.findText(t) }
+  async replaceText(s, r) { await this.text.replaceText(s, r) }
+  async replaceAll() { await this.text.replaceAll() }
+  async getMatchCount() { return this.text.getMatchCount() }
 
-    const element = this.elementsCountLocator.nth(resolvedIndex)
-    await element.scrollIntoViewIfNeeded()
-    await element.click({ force: true })
-    await element.dblclick({ force: true })
-    await this.page.waitForSelector('.ProseMirror', { timeout: 5000 })
-  }
+  async clickMainToolbarButton(t) { await this.ribbon.clickMainToolbarButton(t) }
+  async chooseMainToolbarOption(t, v) { await this.ribbon.chooseMainToolbarOption(t, v) }
+  async clickQuickAccessSave() { await this.ribbon.clickQuickAccessSave() }
+  async getToolbarOverflowMetrics() { return this.ribbon.getToolbarOverflowMetrics() }
+  async switchRibbonTab(name) { await this.ribbon.switchRibbonTab(name) }
+  async getRibbonLayoutMetrics(name) { return this.ribbon.getRibbonLayoutMetrics(name) }
+  async getButtonClippingStatus(labels) { return this.ribbon.getButtonClippingStatus(labels) }
 
-  async typeInTextEditor(text) {
-    await this.page.locator('.ProseMirror').click({ force: true })
-    await this.page.keyboard.type(text)
-  }
+  async addShape(t) { await this.insert.addShape(t) }
+  async addCodeBlock() { await this.insert.addCodeBlock() }
+  async addLatexBlock() { await this.insert.addLatexBlock() }
+  async addMarkdownBlock() { await this.insert.addMarkdownBlock() }
+  async addChart() { await this.insert.addChart() }
+  async addCallout() { await this.insert.addCallout() }
+  async addHtmlEmbed() { await this.insert.addHtmlEmbed() }
+  async addDrawing() { await this.insert.addDrawing() }
+  async addLine() { await this.insert.addLine() }
+  async addTable(rows = 3, cols = 3) { await this.insert.addTable(rows, cols) }
+  async openMediaLibrary() { await this.insert.openMediaLibrary() }
 
-  async selectAllText() {
-    await this.page.locator('.ProseMirror').click({ force: true })
-    await this.page.keyboard.press('Control+a')
-  }
+  async addSlide() { await this.slidePanel.addSlide() }
+  async addSlideFromTemplate(t) { await this.slidePanel.addSlideFromTemplate(t) }
+  async deleteSlide(i = 0) { await this.slidePanel.deleteSlide(i) }
+  async selectSlide(i) { await this.slidePanel.selectSlide(i) }
+  async toggleSlideSelection(i) { await this.slidePanel.toggleSlideSelection(i) }
+  async duplicateSelectedSlides() { await this.slidePanel.duplicateSelectedSlides() }
+  async deleteSelectedSlides() { await this.slidePanel.deleteSelectedSlides() }
 
-  async clickMainToolbarButton(title) {
-    const titleMap = {
-      'Bold (Ctrl+B)': 'Bold (Ctrl+B)',
-    }
-    await this.page.getByRole('tab', { name: 'Home' }).click()
-    await this.page.locator(`.tour-step-ribbon button[title="${titleMap[title] || title}"]`).click()
-  }
+  async openShareModal() { await this.menubar.openShareModal() }
+  async openAICopywriter() { await this.menubar.openAICopywriter() }
+  async startBroadcast() { await this.menubar.startBroadcast() }
+  async exportHTML() { await this.menubar.exportHTML() }
 
-  async chooseMainToolbarOption(title, value) {
-    await this.page.getByRole('tab', { name: 'Home' }).click()
-    const select = this.page.locator(`.tour-step-ribbon select[title="${title}"]`)
-    await select.click({ force: true })
-    await select.selectOption(value)
-  }
+  async selectElement(i = 0) { await this.canvas.selectElement(i) }
+  async deleteSelectedElement() { await this.canvas.deleteSelectedElement() }
+  async undo() { await this.canvas.undo() }
+  async redo() { await this.canvas.redo() }
+  async duplicateElement() { await this.canvas.duplicateElement() }
+  async copyElement() { await this.canvas.copyElement() }
+  async pasteElement() { await this.canvas.pasteElement() }
+  async deselectAll() { await this.canvas.deselectAll() }
 
-  async clickQuickAccessSave() {
-    await this.page.locator('button[title*="Save"]').first().click()
-  }
-
-  async getTextEditorState() {
-    return this.page.evaluate(() => ({
-      proseMirrorCount: document.querySelectorAll('.ProseMirror').length,
-      proseMirrorFocused: !!document.querySelector('.ProseMirror-focused'),
-      toolbarHintVisible:
-        document.querySelector('.tour-step-ribbon')?.textContent?.includes(
-          'Double-click a text box to edit'
-        ) || false,
-      html: document.querySelector('.ProseMirror')?.innerHTML || '',
-      strongCount: document.querySelectorAll('.ProseMirror strong').length,
-      firstStyledSpan: (() => {
-        const span = document.querySelector('.ProseMirror span[style]')
-        return span
-          ? {
-              fontFamily: span.style.fontFamily || '',
-              fontSize: span.style.fontSize || '',
-            }
-          : null
-      })(),
-    }))
-  }
-
-  async getToolbarOverflowMetrics() {
-    return this.page.evaluate(() => {
-      const toolbar = document.querySelector('.tour-step-ribbon')
-      if (!toolbar) return null
-      const rect = toolbar.getBoundingClientRect()
-      const overflowChildren = Array.from(toolbar.children).filter((node) => {
-        const childRect = node.getBoundingClientRect()
-        return childRect.bottom > rect.bottom + 0.5
-      }).length
-
-      return {
-        height: rect.height,
-        width: rect.width,
-        scrollHeight: toolbar.scrollHeight,
-        scrollWidth: toolbar.scrollWidth,
-        overflowChildren,
-      }
-    })
-  }
-
-  async switchRibbonTab(tabName) {
-    await this.page.getByRole('tab', { name: tabName }).click()
-    await this.page.waitForTimeout(100)
-  }
-
-  async getRibbonLayoutMetrics(tabName) {
-    if (tabName) {
-      await this.switchRibbonTab(tabName)
-    }
-    return this.page.evaluate((tab) => {
-      const panel = document.querySelector('.tour-step-ribbon')
-      if (!panel) return null
-
-      const panelRect = panel.getBoundingClientRect()
-      const buttons = panel.querySelectorAll('button')
-      const clippedControls = []
-      const outsideControls = []
-      const getVisibleText = (node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          const parent = node.parentElement
-          if (!parent) return ''
-          const style = window.getComputedStyle(parent)
-          if (style.display === 'none' || style.visibility === 'hidden') return ''
-          return node.textContent || ''
-        }
-        if (node.nodeType !== Node.ELEMENT_NODE) return ''
-        const style = window.getComputedStyle(node)
-        if (style.display === 'none' || style.visibility === 'hidden') return ''
-        return Array.from(node.childNodes).map(getVisibleText).join('')
-      }
-
-      buttons.forEach((btn) => {
-        const rect = btn.getBoundingClientRect()
-        const label = btn.getAttribute('aria-label') || btn.getAttribute('title') || btn.textContent?.trim() || 'unknown'
-        const visibleText = getVisibleText(btn).trim()
-
-        // Check visible label clipping only; icon-only buttons may have long aria-labels/titles.
-        if (visibleText && btn.scrollWidth > btn.clientWidth + 1) {
-          clippedControls.push({
-            label,
-            visibleText,
-            clientWidth: btn.clientWidth,
-            scrollWidth: btn.scrollWidth,
-          })
-        }
-
-        // Check if button is outside visible panel bounds
-        if (rect.right > panelRect.right + 1 || rect.left < panelRect.left - 1) {
-          outsideControls.push({
-            label,
-            rect: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom },
-          })
-        }
-      })
-
-      // Check for overlapping controls
-      const overlaps = []
-      const allControls = Array.from(buttons)
-      for (let i = 0; i < allControls.length; i++) {
-        for (let j = i + 1; j < allControls.length; j++) {
-          const a = allControls[i].getBoundingClientRect()
-          const b = allControls[j].getBoundingClientRect()
-          const overlapX = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
-          const overlapY = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top))
-          const area = overlapX * overlapY
-          if (area > 4) {
-            overlaps.push({
-              a: allControls[i].getAttribute('aria-label') || allControls[i].textContent?.trim(),
-              b: allControls[j].getAttribute('aria-label') || allControls[j].textContent?.trim(),
-              area,
-            })
-          }
-        }
-      }
-
-      // Get section labels for visibility check - RibbonSection uses flex-col with text-[10px] label
-      const sectionContainers = panel.querySelectorAll('.flex.flex-col')
-      const visibleSections = Array.from(sectionContainers)
-        .map((s) => {
-          const labelEl = s.querySelector('span.text-\\[10px\\]')
-          const label = labelEl?.textContent?.trim()
-          if (!label) return null
-          const rect = s.getBoundingClientRect()
-          return {
-            label,
-            visible: rect.right <= panelRect.right + 1 && rect.left >= panelRect.left - 1,
-            rect: { left: rect.left, right: rect.right },
-          }
-        })
-        .filter(Boolean)
-
-      return {
-        tab,
-        viewport: { width: window.innerWidth, height: window.innerHeight },
-        panel: {
-          clientWidth: panel.clientWidth,
-          scrollWidth: panel.scrollWidth,
-          clientHeight: panel.clientHeight,
-          scrollHeight: panel.scrollHeight,
-          hasHorizontalOverflow: panel.scrollWidth > panel.clientWidth + 1,
-        },
-        clippedControls,
-        outsideControls,
-        overlaps,
-        visibleSections,
-        buttonCount: buttons.length,
-      }
-    }, tabName)
-  }
-
-  async getButtonClippingStatus(buttonLabels) {
-    return this.page.evaluate((labels) => {
-      const results = {}
-      const getVisibleText = (node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          const parent = node.parentElement
-          if (!parent) return ''
-          const style = window.getComputedStyle(parent)
-          if (style.display === 'none' || style.visibility === 'hidden') return ''
-          return node.textContent || ''
-        }
-        if (node.nodeType !== Node.ELEMENT_NODE) return ''
-        const style = window.getComputedStyle(node)
-        if (style.display === 'none' || style.visibility === 'hidden') return ''
-        return Array.from(node.childNodes).map(getVisibleText).join('')
-      }
-      labels.forEach((label) => {
-        const btn = document.querySelector(`button[aria-label="${label}"], button[title="${label}"]`)
-        if (btn) {
-          const visibleText = getVisibleText(btn).trim()
-          results[label] = {
-            found: true,
-            visibleText,
-            clientWidth: btn.clientWidth,
-            scrollWidth: btn.scrollWidth,
-            isClipped: !!visibleText && btn.scrollWidth > btn.clientWidth + 1,
-          }
-        } else {
-          results[label] = { found: false }
-        }
-      })
-      return results
-    }, buttonLabels)
-  }
-
-  async addShape(shapeTitle) {
-    await this.insert.addShape(shapeTitle)
-  }
-
-  async addSlide() {
-    await this.slidePanel.addSlide()
-  }
-
-  async addSlideFromTemplate(templateName) {
-    await this.slidePanel.addSlideFromTemplate(templateName)
-  }
-
-  async deleteSlide(index = 0) {
-    await this.slidePanel.deleteSlide(index)
-  }
-
-  async selectSlide(index) {
-    await this.slidePanel.selectSlide(index)
-  }
-
-  async toggleSlideSelection(index) {
-    await this.slidePanel.toggleSlideSelection(index)
-  }
-
-  async duplicateSelectedSlides() {
-    await this.slidePanel.duplicateSelectedSlides()
-  }
-
-  async deleteSelectedSlides() {
-    await this.slidePanel.deleteSelectedSlides()
-  }
-
-  async openMediaLibrary() {
-    await this.insert.openMediaLibrary()
-  }
-
-  async openShareModal() {
-    await this.page.click('button.menu-trigger:has-text("Share")')
-    await this.page.locator('.dropdown-item').filter({ hasText: 'Share Link' }).click()
-    await expect(this.page.getByRole('dialog', { name: 'Share Presentation' })).toBeVisible()
-  }
-
-  async openAICopywriter() {
-    await this.page.click('button.menu-trigger:has-text("AI")')
-    await this.page.locator('.dropdown-item').filter({ hasText: 'AI Copywriter' }).click()
-    await expect(this.page.getByRole('dialog', { name: 'AI Copywriter' })).toBeVisible()
-  }
-
-  async startBroadcast() {
-    await this.page.click('button.menu-trigger:has-text("Share")')
-    await this.page.locator('.dropdown-item').filter({ hasText: 'Present Live' }).click()
-    await this.page.waitForSelector('h3:has-text("Present Live")')
-  }
+  async openPresentMode() { await this.page.click('button[title="Present"]') }
+  async isPropertiesPanelVisible() { return this.properties.isPropertiesPanelVisible() }
 
   async changeBackgroundToGradient() {
     await this.addToolbarElement('Slide Background')
@@ -438,126 +194,5 @@ export class EditorPage {
         )
         .catch(() => {})
     }
-  }
-
-  // ── New methods for extended coverage ──
-
-  async openFindReplace() {
-    await this.page.keyboard.press('Control+f')
-    await this.page.waitForSelector('.find-replace-bar', { timeout: 5000 })
-  }
-
-  async closeFindReplace() {
-    await this.page.keyboard.press('Escape')
-    await this.page
-      .waitForSelector('.find-replace-bar', { state: 'hidden', timeout: 5000 })
-      .catch(() => {})
-  }
-
-  async findText(text) {
-    await this.openFindReplace()
-    const input = this.page.locator('.find-input').first()
-    await input.fill(text)
-    await expect(input).toHaveValue(text)
-  }
-
-  async replaceText(searchText, replaceText) {
-    await this.findText(searchText)
-    // Toggle replace panel
-    await this.page.locator('.find-btn[title="Toggle replace"]').click()
-    const replaceInput = this.page.locator('input[placeholder="Replace..."]')
-    await replaceInput.fill(replaceText)
-  }
-
-  async replaceAll() {
-    await this.page.locator('.find-replace-bar button').filter({ hasText: 'All' }).click()
-  }
-
-  async getMatchCount() {
-    const countText = await this.page.locator('.find-count').textContent()
-    if (countText === '0') return 0
-    const parts = countText.split('/')
-    return parts.length === 2 ? parseInt(parts[1]) : 0
-  }
-
-  async addCodeBlock() {
-    await this.insert.addCodeBlock()
-  }
-
-  async addLatexBlock() {
-    await this.insert.addLatexBlock()
-  }
-
-  async addMarkdownBlock() {
-    await this.insert.addMarkdownBlock()
-  }
-
-  async addChart() {
-    await this.insert.addChart()
-  }
-
-  async addCallout() {
-    await this.insert.addCallout()
-  }
-
-  async addHtmlEmbed() {
-    await this.insert.addHtmlEmbed()
-  }
-
-  async addDrawing() {
-    await this.insert.addDrawing()
-  }
-
-  async addLine() {
-    await this.insert.addLine()
-  }
-
-  async addTable(rows = 3, cols = 3) {
-    await this.insert.addTable(rows, cols)
-  }
-
-  async selectElement(index = 0) {
-    await this.canvas.selectElement(index)
-  }
-
-  async deleteSelectedElement() {
-    await this.canvas.deleteSelectedElement()
-  }
-
-  async undo() {
-    await this.canvas.undo()
-  }
-
-  async redo() {
-    await this.canvas.redo()
-  }
-
-  async duplicateElement() {
-    await this.canvas.duplicateElement()
-  }
-
-  async copyElement() {
-    await this.canvas.copyElement()
-  }
-
-  async pasteElement() {
-    await this.canvas.pasteElement()
-  }
-
-  async deselectAll() {
-    await this.canvas.deselectAll()
-  }
-
-  async exportHTML() {
-    await this.page.click('button.menu-trigger:has-text("File")')
-    await this.page.locator('.dropdown-item').filter({ hasText: 'Export HTML' }).click()
-  }
-
-  async openPresentMode() {
-    await this.page.click('button[title="Present"]')
-  }
-
-  async isPropertiesPanelVisible() {
-    return await this.properties.isPropertiesPanelVisible()
   }
 }

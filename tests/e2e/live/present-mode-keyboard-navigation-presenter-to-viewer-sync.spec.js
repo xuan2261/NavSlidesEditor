@@ -1,0 +1,150 @@
+import { test, expect } from '@playwright/test'
+import {
+  apiCreatePresentation,
+  apiDeletePresentation,
+  apiUpdatePresentation,
+} from '../fixtures/test-fixtures.js'
+import { waitWithLastSample } from '../helpers/playwright-tolerant-poll-wait-helpers-for-live-presentation-e2e.js'
+
+const SLIDES = [
+  { id: 's1', elements: [{ id: 't1', type: 'text', x: 80, y: 100, width: 760, height: 80, content: '<h2>Slide A</h2>' }], notes: '', background: { type: 'color', color: '#1e1e2e' } },
+  { id: 's2', elements: [{ id: 't2', type: 'text', x: 80, y: 100, width: 760, height: 80, content: '<h2>Slide B</h2>' }], notes: '', background: { type: 'color', color: '#0f172a' } },
+  { id: 's3', elements: [{ id: 't3', type: 'text', x: 80, y: 100, width: 760, height: 80, content: '<h2>Slide C</h2>' }], notes: '', background: { type: 'color', color: '#1e1e2e' } },
+]
+
+async function openPresenter(context, presId, roomCode, token) {
+  const page = await context.newPage()
+  await page.goto('about:blank')
+  await page.evaluate(
+    ({ code, t }) => { window.name = JSON.stringify({ roomCode: code, presenterToken: t }) },
+    { code: roomCode, t: token }
+  )
+  await page.goto(`/api/presentations/${presId}/present?live=${roomCode}`)
+  await expect(page.locator('body')).toBeVisible()
+  return page
+}
+
+async function waitForPresenterRevealReady(page) {
+  await expect
+    .poll(
+      async () => page.evaluate(() => window.Reveal && window.Reveal.isReady?.() === true),
+      { timeout: 15000 }
+    )
+    .toBe(true)
+}
+
+async function getRevealIndex(page, title) {
+  const handle = await page.locator(`iframe[title="${title}"]`).elementHandle()
+  if (!handle) return null
+  const frame = await handle.contentFrame()
+  if (!frame) return null
+  return frame.evaluate(() => {
+    const r = window.Reveal
+    if (!r || !r.isReady?.()) return null
+    const idx = r.getIndices()
+    return `${idx.h || 0}:${idx.v || 0}:${idx.f || 0}`
+  })
+}
+
+test.describe('Present mode keyboard navigation propagates from presenter to viewer Reveal indices', () => {
+  let presId, roomCode, token
+
+  test.beforeEach(async ({ request }) => {
+    const pres = await apiCreatePresentation(request, 'Keyboard Nav E2E')
+    presId = pres.id
+    await apiUpdatePresentation(request, presId, { slides: SLIDES })
+    const r = await request.post('/api/live/room')
+    const room = await r.json()
+    roomCode = room.roomCode
+    token = room.presenterToken
+  })
+
+  test.afterEach(async ({ request }) => {
+    try { await apiDeletePresentation(request, presId) } catch {}
+  })
+
+  test('ArrowRight on presenter advances viewer slide index', async ({ context }) => {
+    const presenter = await openPresenter(context, presId, roomCode, token)
+    const viewer = await context.newPage()
+    await viewer.goto(`/live/${roomCode}`)
+    await waitForPresenterRevealReady(presenter)
+    await waitWithLastSample(
+      'viewer initial reveal index 0:0:0',
+      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
+    )
+
+    await presenter.evaluate(() => window.Reveal.next())
+
+    await waitWithLastSample(
+      'viewer advanced to slide 1',
+      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '1:0:0'
+    )
+  })
+
+  test('Reveal.left on presenter goes back to previous slide on viewer', async ({ context }) => {
+    const presenter = await openPresenter(context, presId, roomCode, token)
+    const viewer = await context.newPage()
+    await viewer.goto(`/live/${roomCode}`)
+    await waitForPresenterRevealReady(presenter)
+    await waitWithLastSample(
+      'viewer at 0:0:0',
+      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
+    )
+
+    await presenter.evaluate(() => window.Reveal.next())
+    await waitWithLastSample(
+      'viewer at 1:0:0',
+      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '1:0:0'
+    )
+
+    await presenter.evaluate(() => window.Reveal.prev())
+    await waitWithLastSample(
+      'viewer back at 0:0:0',
+      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
+    )
+  })
+
+  test('Reveal.slide(0) brings presenter and viewer back to first slide', async ({ context }) => {
+    const presenter = await openPresenter(context, presId, roomCode, token)
+    const viewer = await context.newPage()
+    await viewer.goto(`/live/${roomCode}`)
+    await waitForPresenterRevealReady(presenter)
+    await waitWithLastSample(
+      'viewer at first',
+      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
+    )
+
+    await presenter.evaluate(() => window.Reveal.slide(2))
+    await waitWithLastSample(
+      'viewer at 2:0:0',
+      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '2:0:0'
+    )
+
+    await presenter.evaluate(() => window.Reveal.slide(0))
+    await waitWithLastSample(
+      'viewer back at first',
+      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
+    )
+  })
+
+  test('end-of-deck navigation lands on last slide for viewer', async ({ context }) => {
+    const presenter = await openPresenter(context, presId, roomCode, token)
+    const viewer = await context.newPage()
+    await viewer.goto(`/live/${roomCode}`)
+    await waitForPresenterRevealReady(presenter)
+    await waitWithLastSample(
+      'viewer ready',
+      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
+    )
+
+    await presenter.evaluate(() => {
+      const total = window.Reveal.getTotalSlides()
+      window.Reveal.slide(total - 1)
+    })
+
+    await waitWithLastSample(
+      'viewer at last slide (index 2)',
+      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '2:0:0'
+    )
+  })
+})

@@ -1,0 +1,39 @@
+name: Nightly 768px Ribbon Warning
+
+on:
+  schedule:
+    - cron: '15 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  ribbon-768-warning:
+    name: Ribbon 768px overflow soft check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - name: Run ribbon-layout 768px specs (warn-only)
+        id: run
+        continue-on-error: true
+        run: |
+          set +e
+          npx playwright test tests/e2e/ribbon-layout.spec.js --project=chromium --reporter=line --grep "768px" | tee 768-warn.log
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+        env:
+          CI: 'true'
+          PLAYWRIGHT_CLIENT_PORT: '4173'
+          PLAYWRIGHT_SERVER_PORT: '3202'
+      - name: Note status (does not gate)
+        if: steps.run.outputs.code != '0'
+        run: echo "::warning::Nightly 768px ribbon overflow check failed — investigate but do not block PRs."

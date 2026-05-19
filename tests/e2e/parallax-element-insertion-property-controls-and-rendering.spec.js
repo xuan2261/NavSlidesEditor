@@ -99,7 +99,9 @@ test.describe('Parallax Features E2E', () => {
     await editorPage.insert.addTextNode()
     await editorPage.startEditingTextElement(0)
 
-    const lineHeightSelect = page.locator('[data-testid="line-height-select"]').first()
+    await page.getByRole('button', { name: 'Paragraph' }).click()
+    const menu = page.getByRole('menu')
+    const lineHeightSelect = menu.locator('select')
     await expect(lineHeightSelect).toBeVisible()
     await lineHeightSelect.selectOption('1.5')
     await expect(editorPage.elementsCountLocator).toHaveCount(1)

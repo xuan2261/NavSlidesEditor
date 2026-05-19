@@ -253,12 +253,12 @@ test.describe('Element Lifecycle And Autosave', () => {
     await page.getByTestId(`slide-element-${elementId}`).click()
     await page.getByTestId('prop-x').fill('260')
 
-    await expect(page.getByText('Save failed')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible()
+    await expect(page.getByLabel('Quick actions').getByText('Save failed')).toBeVisible()
+    await expect(page.getByLabel('Quick actions').getByRole('button', { name: 'Retry' })).toBeVisible()
     await expect(page.getByTestId(`slide-element-${elementId}`)).toBeVisible()
     await expect(page.getByTestId('prop-x')).toHaveValue('260')
 
-    await page.getByRole('button', { name: 'Retry' }).click()
+    await page.getByLabel('Quick actions').getByRole('button', { name: 'Retry' }).click()
 
     await expect
       .poll(async () => {

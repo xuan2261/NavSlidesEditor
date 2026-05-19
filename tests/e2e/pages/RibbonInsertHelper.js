@@ -215,13 +215,9 @@ export class RibbonInsertHelper {
     const insertPanel = this.page.getByRole('tabpanel', { name: 'Insert' })
     await insertPanel.waitFor({ state: 'visible' })
     await insertPanel.getByRole('button', { name: 'Add table' }).click()
-    const targetIndex = (rows - 1) * 8 + (cols - 1)
     await this.page
-      .locator('div.grid.grid-cols-8.gap-0\\.5 > div')
-      .nth(targetIndex)
-      .evaluate((cell) => {
-        cell.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
-      })
+      .getByRole('button', { name: `Insert ${rows} by ${cols} table`, exact: true })
+      .dispatchEvent('click')
 
     await this.page.waitForFunction(
       (prev) => document.querySelectorAll('.element-wrapper').length > prev,

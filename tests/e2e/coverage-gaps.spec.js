@@ -258,6 +258,7 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
       })
       .toBe(0)
 
+    await page.getByRole('tab', { name: 'View' }).click()
     await page.getByRole('button', { name: 'Toggle rulers' }).click()
     await expect(page.getByTestId('top-ruler')).toBeVisible()
     const topRuler = await page.getByTestId('top-ruler').boundingBox()
@@ -302,8 +303,7 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
     await expect(page.getByText('Custom CSS')).toBeVisible()
     await page.keyboard.press('Escape')
 
-    await page.click('button.menu-trigger:has-text("Share")')
-    await page.locator('.dropdown-item').filter({ hasText: 'View Analytics' }).click()
+    await editor.menubar.openAnalytics()
     await expect(page.getByRole('heading', { name: 'Analytics' })).toBeVisible()
     await page.keyboard.press('Escape')
 

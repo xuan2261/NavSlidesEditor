@@ -1,19 +1,16 @@
 /* global __ENV */
 import http from 'k6/http'
 import { check, sleep } from 'k6'
+import { buildOptions, getProfile } from './k6-shared-load-test-profile-options-smoke-load-stress.js'
 
-export const options = {
-  vus: 50,
-  duration: '30s',
-  thresholds: {
-    http_req_duration: ['p(95)<2000'], // 95% of requests must complete below 2000ms (due to large payload)
-    http_req_failed: ['rate<0.01'], // Error rate must be less than 1%
-  },
-}
+export const options = buildOptions({
+  http_req_duration: ['p(95)<2000'],
+  http_req_failed: ['rate<0.01'],
+  iteration_duration: ['p(95)<5000'],
+})
 
 const BASE_URL = __ENV.API_BASE_URL || 'http://localhost:3002/api'
 
-// Create a pseudo-large payload (simulating Base64 data)
 const largePayload = {
   title: 'Load Test Presentation',
   slides: Array(30).fill({
@@ -21,15 +18,15 @@ const largePayload = {
   }),
 }
 
+export function setup() {
+  const p = getProfile()
+  console.log(`[api-load] profile=${p.name} vus=${p.vus} duration=${p.duration}`)
+  return p
+}
+
 export default function () {
   const payload = JSON.stringify(largePayload)
-
-  const params = {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }
-
+  const params = { headers: { 'Content-Type': 'application/json' } }
   const res = http.post(`${BASE_URL}/presentations`, payload, params)
 
   check(res, {

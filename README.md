@@ -1,59 +1,71 @@
 # NavSlides Editor
 
-A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build and present slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
+[![CI](https://github.com/xuan2261/NavSlidesEditor/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/badge.svg?branch=master)](https://github.com/xuan2261/NavSlidesEditor/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml)
+
+A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
+
+Current release: **v1.9.0** — ribbon UI accessibility & contrast pass: focusable inline save status, surfaced `Ctrl+Alt+R` ribbon toggle in View, typography minimum 11 px on interactive controls, and tighter 72 px ribbon body.
 
 ## Features
 
 ### Editing
 
 - **WYSIWYG editing** — click and type directly on slides with TipTap rich text
-- **Rich formatting** — headings, bold/italic/underline/strikethrough, text color, text highlighting, font family, font size, alignment, lists, tables, code blocks, links, images
+- **Tab-based ribbon UI** — Home / Insert / Design / Transitions / Animations / View / Format tabs replace the old toolbar/menu system; active tab persists across sessions (`Ctrl+Alt+R` toggles)
+- **Rich formatting** — headings, bold/italic/underline/strikethrough, text color, highlight, font family, font size, font weight, line height, alignment, lists, tables, code blocks, links, images, inline math
 - **Multi-select** — shift-click to select multiple elements, move or delete them together
-- **Group / ungroup** — group multiple elements so they select, move, and resize as a unit
+- **Group / ungroup** — group multiple elements so they select, move, and resize as a unit (`Ctrl+G` / `Ctrl+Shift+G`)
 - **Align & distribute** — align selected elements left/center/right/top/middle/bottom, or distribute evenly
-- **Element rotation** — rotate any element by dragging the rotation handle or entering a degree value
+- **Element rotation** — rotate any element by dragging the rotation handle or entering a degree value (`Shift` snaps to 15°)
 - **Smart guides & snapping** — alignment lines appear when dragging near other elements' edges or the canvas center; toggle with the magnet icon
 - **Rulers & guides** — toggle pixel rulers on the top/left edges; drag from a ruler onto the canvas to place persistent guide lines; double-click a guide to remove it
-- **Element controls** — resize, reposition, lock, z-order, drop shadow, aspect-ratio lock (hold Shift while resizing)
+- **Element controls** — resize, reposition, lock, z-order, drop shadow, aspect-ratio lock (`Shift` while resizing)
 - **Round corners** — adjustable border radius on images and code blocks
-- **Find & replace** — Ctrl+F to search text across all slides with case-sensitive matching, navigate between matches, replace one or all
-- **Undo / redo** — Ctrl+Z / Ctrl+Y with 50-step history
-- **Clipboard** — Ctrl+C/X/V and Ctrl+D to copy/cut/paste/duplicate elements
-- **Auto-save** — debounced saves every 1.5 s with last-saved timestamp display
-- **Translucent Presenter UI** — floating tools and slide navigation dim to 15% opacity when idle to minimize distraction during presentations
-- **Interactive Onboarding** — comprehensive step-by-step product tour using React-Joyride to guide new users
+- **Find & replace** — `Ctrl+F` to search text across all slides with case-sensitive matching, navigate matches, replace one or all
+- **Undo / redo** — `Ctrl+Z` / `Ctrl+Y` with 50-step bounded history
+- **Clipboard** — `Ctrl+C/X/V` and `Ctrl+D` to copy/cut/paste/duplicate elements
+- **Auto-save** — debounced saves every 1.5 s with last-saved timestamp; visible failure status with `Retry` action
+- **Command palette** — `Ctrl+K` for quick command lookup
+- **Touch gestures** — tap, double-tap, long-press, swipe, and 2-finger pinch zoom for tablets and trackpads
+- **Translucent presenter UI** — floating tools and slide navigation dim to 15% opacity when idle
+- **Interactive onboarding** — step-by-step product tour via React-Joyride
+- **Copy URL** — right-click images/videos to copy their resolved media URL
 
 ### Element Types
 
-17 element types: text (TipTap rich text), image (upload/URL, crop, filters, round corners), shape (16 shapes), code (10 themes, 25+ languages), LaTeX / TikZ (KaTeX + TikZJax), HTML embeds, Markdown, Chart.js charts, video / audio, table (drag-resize, inline editing), QR code, icon (60+ Lucide icons), callout, drawing, line, SVG.
+20 element types: text (TipTap rich text), image (upload/URL, crop, filters, round corners), shape (rectangle, circle, triangle, arrow, star), code (10 themes, 25+ languages), LaTeX / TikZ (KaTeX + TikZJax), inline math, HTML embeds, Markdown, Chart.js charts (bar, line, pie, doughnut, radar, polar area), video / audio (with start/end trim, playback speed), table (drag-resize, inline editing), QR code, icon (60+ Lucide icons), callout, drawing, line, SVG, divider, timeline, and **game** (7 interactive game types).
 
 ### Slides
 
-8 layouts (blank, title, two-column, three-column, image+text, section header, comparison, big number) + 20+ full-deck templates. Per-slide backgrounds (solid, gradient, image), fragment animations with visual timeline, per-slide page numbers, hidden slides, footer system (basic / sequence modes).
+8 layouts (blank, title, two-column, three-column, image+text, section header, comparison, big number) + 20+ full-deck templates including interactive simulations and quiz decks. Per-slide backgrounds (solid, gradient, image), fragment animations with visual timeline editor and preview modal, per-slide page numbers, hidden slides, footer system (basic / sequence modes), and global presentation settings (auto-slide, loop, navigation modes).
 
-### Footer System
+### Live Presentation
 
-- **Basic mode** — section label on the left, page number on the right
-- **Sequence mode** — define section titles (e.g., Intro / Methods / Results / Discussion) that display evenly spaced at the bottom; the active section appears bold, others appear faded; customizable active and inactive colors
-- **Footer styling** — configurable font family, size, active color, and inactive color
+Broadcast to viewers via Socket.IO with a server-issued presenter token. Includes a separate **speaker view** (notes, next-slide preview, timer), **remote control** from a phone or second device, **annotation tools** (pen, laser pointer, highlighter, eraser) that sync to viewers in real time and persist per slide on rejoin, **black/white screen overlays** (`B` / `W`), shared **live timer**, and PowerPoint-style navigation (`F5`, `Home`, `End`, arrows).
+
+### Game Mode
+
+7 interactive game element types with a dedicated player join page (`/player/:slideId/:elementId`), game-specific socket handler, leaderboard, scoring, and presenter shortcuts (HUD, timer, reveal, leaderboard, pause, team select).
+
+### AI Tools
+
+AI copywriter (rewrite slide text), AI generator (full presentation drafts from a prompt), AI translate (translate slide content), and a media library with Unsplash and Giphy search.
 
 ### Themes & Templates
 
-11 reveal.js themes (black, white, league, beige, sky, night, serif, simple, solarized, moon, dracula), 6 transitions, 6 preset design themes, custom templates, and dark/light editor theme toggle.
+11 reveal.js themes (black, white, league, beige, sky, night, serif, simple, solarized, moon, dracula), 6 transitions (none, fade, slide, convex, concave, zoom), 6 preset design themes (Minimal Dark, Minimal Light, Academic, Gradient, Corporate, Neon), custom user templates, and a dark/light editor theme toggle.
 
 ### Export & Sharing
 
-Present mode (reveal.js, press `S` for speaker notes), export HTML (CDN-backed or fully offline), export PDF, export PPTX (hybrid native + raster), shareable links (with optional password), GitHub push with auto-generated README, Markdown import, rclone cloud sync to Proton Drive or any supported provider.
+Present mode (reveal.js, press `S` for speaker notes), export HTML (CDN-backed), export offline HTML (inlined runtime assets), export PDF (one page per slide with expanded fragments), export PPTX (hybrid: editable primitives + Playwright-rasterized fallback for unsupported elements), shareable links with optional password, GitHub push with auto-generated README, Markdown import, project export/import (`.navslides` archive with manifest v1.1).
 
 ### Cloud Sync
 
-rclone-based sync to Proton Drive or any supported cloud provider (Google Drive, S3, etc.). Configure credentials in-app; sync single presentation or all at once.
+rclone-based sync to Proton Drive or any rclone-supported provider (Google Drive, S3, etc.). Configure credentials in-app; sync a single presentation or all at once. Docker image ships with rclone preinstalled.
 
 ### Version History
 
-- **Named snapshots** — save named versions of your presentation at any point
-- **Restore** — restore any previous snapshot, overwriting the current state
-- **Delete** — remove individual snapshots
+Named snapshots saved per presentation, restore any previous version, delete individual snapshots.
 
 ---
 
@@ -97,7 +109,7 @@ PORT=8080 npm start  # custom port
 
 ## Data & Persistence
 
-All data lives in `server/data/` (presentations, templates, share tokens, GitHub config, history snapshots) and `server/uploads/` (media). Docker uses named volumes `revealjs-data` and `revealjs-uploads`. All locations are created automatically on first run.
+All data lives in `server/data/` (presentations, templates, share tokens, GitHub config, settings, analytics, media metadata, history snapshots, rclone config) and `server/uploads/` (media). Docker uses named volumes `revealjs-data` and `revealjs-uploads`. All locations are created automatically on first run.
 
 ---
 
@@ -182,20 +194,54 @@ slides.example.com {
 
 ## Keyboard Shortcuts
 
-| Shortcut                  | Action                                |
-| ------------------------- | ------------------------------------- |
-| `Ctrl+Z`                  | Undo                                  |
-| `Ctrl+Y` / `Ctrl+Shift+Z` | Redo                                  |
-| `Ctrl+C`                  | Copy element                          |
-| `Ctrl+X`                  | Cut element                           |
-| `Ctrl+V`                  | Paste element                         |
-| `Ctrl+D`                  | Duplicate element                     |
-| `Ctrl+F`                  | Find & replace                        |
-| `Delete` / `Backspace`    | Delete selected element(s)            |
-| `Escape`                  | Deselect / stop editing / close panel |
-| `Shift+drag`              | Maintain aspect ratio while resizing  |
-| `Shift+rotate`            | Snap rotation to 15-degree increments |
-| `S` (in presentation)     | Open speaker notes view               |
+### Editor
+
+| Shortcut                       | Action                                |
+| ------------------------------ | ------------------------------------- |
+| `Ctrl+Z`                       | Undo                                  |
+| `Ctrl+Y` / `Ctrl+Shift+Z`      | Redo                                  |
+| `Ctrl+C` / `Ctrl+X` / `Ctrl+V` | Copy / cut / paste element            |
+| `Ctrl+D`                       | Duplicate element                     |
+| `Ctrl+F`                       | Find & replace                        |
+| `Ctrl+K`                       | Command palette                       |
+| `Ctrl+M`                       | Insert new slide                      |
+| `Ctrl+G` / `Ctrl+Shift+G`      | Group / ungroup elements              |
+| `Ctrl+]` / `Ctrl+[`            | Bring forward / send backward         |
+| `Ctrl+0` / `Ctrl++` / `Ctrl+-` | Zoom fit / zoom in / zoom out         |
+| `Tab` / `Shift+Tab`            | Cycle through elements                |
+| `Delete` / `Backspace`         | Delete selected element(s)            |
+| `Escape`                       | Deselect / stop editing / close panel |
+| `Shift+drag`                   | Maintain aspect ratio while resizing  |
+| `Shift+rotate`                 | Snap rotation to 15-degree increments |
+| `Ctrl+Alt+R`                   | Toggle ribbon panel                   |
+
+### Presentation Mode
+
+| Shortcut                     | Action                                  |
+| ---------------------------- | --------------------------------------- |
+| `F5` / `Shift+F5`            | Start presentation / from current slide |
+| `Arrow Left` / `Arrow Right` | Previous / next slide                   |
+| `Home` / `End`               | First / last slide                      |
+| `B` / `W`                    | Black / white screen overlay            |
+| `Escape`                     | End presentation                        |
+| `S`                          | Open speaker notes view                 |
+| `Ctrl+P`                     | Pen annotation                          |
+| `Ctrl+I`                     | Highlighter                             |
+| `Y`                          | Laser pointer                           |
+| `E`                          | Eraser                                  |
+
+### Game Mode (presenter)
+
+| Shortcut  | Action              |
+| --------- | ------------------- |
+| `G`       | Toggle HUD          |
+| `Space`   | Start / pause timer |
+| `Enter`   | Next phase          |
+| `R`       | Reveal answer       |
+| `L`       | Show leaderboard    |
+| `P`       | Pause game          |
+| `+` / `-` | Adjust timer        |
+| `1`–`4`   | Select team         |
 
 ---
 
@@ -245,7 +291,8 @@ Install `k6` from the official guide if you want to run the load suite locally.
 
 | Layer                | Technology                                    |
 | -------------------- | --------------------------------------------- |
-| Frontend             | React 18, Vite 5                              |
+| Frontend             | React 18, Vite 5, React Router 7              |
+| State management     | Zustand (3 stores: editor, presentation, UI)  |
 | Rich text editor     | TipTap 2                                      |
 | Presentation engine  | reveal.js 5                                   |
 | Math rendering       | KaTeX                                         |
@@ -254,10 +301,13 @@ Install `k6` from the official guide if you want to run the load suite locally.
 | Syntax highlighting  | highlight.js                                  |
 | Markdown             | Built-in converter + marked.js (export)       |
 | Icons                | Lucide (editor UI) + inline SVG (slide icons) |
-| PowerPoint export    | pptxgenjs                                     |
-| Backend              | Node.js, Express 4                            |
-| Desktop app          | Electron                                      |
+| PowerPoint export    | pptxgenjs + Playwright raster fallback        |
+| PowerPoint import    | pptxtojson with pptx2json fallback            |
+| Backend              | Node.js 20+, Express 4                        |
+| Real-time transport  | Socket.IO                                     |
+| Desktop app          | Electron 33                                   |
 | Cloud sync           | rclone                                        |
+| Validation           | Zod (mutation endpoints)                      |
 | Testing              | Vitest, Playwright, k6                        |
-| Linting & Formatting | ESLint, Prettier                              |
+| Linting & Formatting | ESLint 9 (flat config), Prettier              |
 | Storage              | JSON files + local filesystem                 |

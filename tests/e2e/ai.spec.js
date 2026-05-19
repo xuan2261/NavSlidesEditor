@@ -53,17 +53,13 @@ test.describe('AI Integrations', () => {
   })
 
   test('can use AI Slide Generator modal', async ({ page }) => {
-    await page.click('button.menu-trigger:has-text("AI")')
-    await page.locator('.dropdown-item').filter({ hasText: 'AI Slide Generator' }).click()
-    await expect(page.getByRole('dialog', { name: 'AI Slide Generator' })).toBeVisible()
+    await editorPage.menubar.openAISlideGenerator()
     await page.locator('button:has(svg.lucide-x)').click()
     await expect(page.getByRole('dialog', { name: 'AI Slide Generator' })).toHaveCount(0)
   })
 
   test('can use Translate Presentation modal', async ({ page }) => {
-    await page.click('button.menu-trigger:has-text("AI")')
-    await page.locator('.dropdown-item').filter({ hasText: 'Translate' }).click()
-    await expect(page.getByRole('dialog', { name: 'Translate Presentation' })).toBeVisible()
+    await editorPage.menubar.openAITranslate()
     await page.locator('button:has(svg.lucide-x)').click()
     await expect(page.getByRole('dialog', { name: 'Translate Presentation' })).toHaveCount(0)
   })

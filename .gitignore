@@ -23,6 +23,12 @@ playwright-report/
 test-results/
 repomix-output.xml
 
+# Coverage (Vitest v8)
+coverage/
+
+# GitHub PAT runtime config
+server/data/github.json
+
 # Editor / OS
 .DS_Store
 Thumbs.db

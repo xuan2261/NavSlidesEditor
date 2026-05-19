@@ -1,0 +1,244 @@
+name: CI
+
+on:
+  push:
+    branches: ['master', 'main']
+  pull_request:
+    branches: ['master', 'main']
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  NODE_VERSION: '20'
+  PLAYWRIGHT_IMAGE: mcr.microsoft.com/playwright:v1.59.1-jammy
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - run: npm run lint
+
+  unit-coverage:
+    name: Unit + Coverage Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - run: npm run test:coverage
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage/
+          retention-days: 14
+
+  build:
+    name: Build client
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - run: npm run build
+
+  e2e-chromium:
+    name: 'E2E chromium (shard ${{ matrix.shard }}/4)'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [build]
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - name: Playwright shard ${{ matrix.shard }}/4 (chromium project)
+        run: npx playwright test --project=chromium --shard=${{ matrix.shard }}/4
+        env:
+          CI: 'true'
+          PLAYWRIGHT_CLIENT_PORT: '4173'
+          PLAYWRIGHT_SERVER_PORT: '3202'
+      - name: Upload report (shard ${{ matrix.shard }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-chromium-${{ matrix.shard }}
+          path: playwright-report/
+          retention-days: 14
+
+  e2e-live:
+    name: E2E live (workers:1)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [build]
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - name: Playwright live project
+        run: npx playwright test --project=chromium-live
+        env:
+          CI: 'true'
+          PLAYWRIGHT_CLIENT_PORT: '4173'
+          PLAYWRIGHT_SERVER_PORT: '3202'
+      - name: Upload live report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-live
+          path: playwright-report/
+          retention-days: 14
+
+  e2e-mobile:
+    name: E2E mobile-chromium (Phase 7 a11y)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build]
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - name: Playwright a11y suite on mobile-chromium
+        run: npx playwright test tests/e2e/a11y/ --project=mobile-chromium
+        env:
+          CI: 'true'
+          PLAYWRIGHT_MOBILE_CHROMIUM: '1'
+          PLAYWRIGHT_CLIENT_PORT: '4173'
+          PLAYWRIGHT_SERVER_PORT: '3202'
+      - name: Upload mobile report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-mobile
+          path: playwright-report/
+          retention-days: 14
+
+  e2e-visual:
+    name: E2E visual regression (Linux baseline only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build]
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - name: Playwright visual suite
+        run: npx playwright test tests/e2e/visual/
+        env:
+          CI: 'true'
+          PLAYWRIGHT_CLIENT_PORT: '4173'
+          PLAYWRIGHT_SERVER_PORT: '3202'
+      - name: Upload visual report (drift artifacts)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-visual
+          path: playwright-report/
+          retention-days: 14
+
+  pptx-corpus:
+    name: PPTX corpus fidelity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - name: Skip if PPTX corpus absent
+        id: check
+        run: |
+          if [ -d "./PPTX" ]; then echo "exists=1" >> "$GITHUB_OUTPUT"; else echo "exists=0" >> "$GITHUB_OUTPUT"; fi
+      - name: Run PPTX corpus tester
+        if: steps.check.outputs.exists == '1'
+        run: npm run test:corpus
+
+  load-smoke:
+    name: k6 load smoke (api + ws)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - uses: grafana/setup-k6-action@v1
+      - run: npm ci
+      - run: npm run build
+      - name: Start server in background
+        run: |
+          NODE_ENV=production PORT=3002 node server/index.js &
+          echo $! > server.pid
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:3002/api/presentations > /dev/null; then break; fi
+            sleep 1
+          done
+      - name: k6 smoke — REST presentations endpoint
+        run: npm run test:load:api:smoke
+        env:
+          API_BASE_URL: 'http://127.0.0.1:3002/api'
+      - name: k6 smoke — Socket.IO room join
+        run: npm run test:load:ws:smoke
+        env:
+          WS_URL: 'ws://127.0.0.1:3002/ws/?EIO=4&transport=websocket'
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill "$(cat server.pid)" || true; fi
+
+  required-checks:
+    name: Required checks summary
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - unit-coverage
+      - build
+      - e2e-chromium
+      - e2e-live
+      - e2e-mobile
+      - e2e-visual
+      - pptx-corpus
+      - load-smoke
+    if: always()
+    steps:
+      - name: Fail if any required job failed
+        run: |
+          status='${{ join(needs.*.result, ',') }}'
+          echo "results=$status"
+          case "$status" in
+            *failure*|*cancelled*|*timed_out*) exit 1 ;;
+          esac
