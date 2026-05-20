@@ -83,13 +83,7 @@ export default function PluginSandbox({
       title="Plugin sandbox"
       sandbox="allow-scripts"
       srcDoc={srcDoc}
-      style={{
-        width: '100%',
-        height: '100%',
-        border: 'none',
-        display: 'block',
-        pointerEvents: interactive ? 'auto' : 'none',
-      }}
+      className={`block h-full w-full border-0 ${interactive ? 'pointer-events-auto' : 'pointer-events-none'}`}
     />
   )
 }
