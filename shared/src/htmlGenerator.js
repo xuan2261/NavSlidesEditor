@@ -34,6 +34,36 @@ function getSlideTransitionAttrs(slide) {
   return attrs.length ? ` ${attrs.join(' ')}` : ''
 }
 
+function getPluginRuntimeInitScript() {
+  return `
+      function initPluginRuntime(root) {
+        var iframe = root.querySelector('iframe');
+        if (!iframe || !iframe.contentWindow) return;
+        var pluginData = {};
+        try { pluginData = JSON.parse(root.getAttribute('data-plugin-data') || '{}'); } catch (e) {}
+        iframe.contentWindow.postMessage({
+          source: 'navslides-host',
+          type: 'init',
+          pluginData: pluginData,
+          size: { width: root.offsetWidth || 0, height: root.offsetHeight || 0 }
+        }, '*');
+      }
+      document.querySelectorAll('[data-plugin-runtime="true"]').forEach(function(root) {
+        var iframe = root.querySelector('iframe');
+        if (!iframe) return;
+        iframe.addEventListener('load', function() { initPluginRuntime(root); });
+        setTimeout(function() { initPluginRuntime(root); }, 250);
+      });
+      window.addEventListener('message', function(event) {
+        var message = event.data || {};
+        if (message.source !== 'navslides-plugin' || message.type !== 'ready') return;
+        document.querySelectorAll('[data-plugin-runtime="true"]').forEach(function(root) {
+          var iframe = root.querySelector('iframe');
+          if (iframe && iframe.contentWindow === event.source) initPluginRuntime(root);
+        });
+      });`
+}
+
 function generateRevealHTML(presentation) {
   const showFooter = presentation.showFooter || false
   const showPageNumbers = presentation.showPageNumbers || false
@@ -210,6 +240,7 @@ ${slidesHtml}
           });
         } catch(e) {}
       });
+${getPluginRuntimeInitScript()}
 
       // Live presenter: connect Socket.IO and broadcast navigation
       var liveRoom = params.get('live');

@@ -2,6 +2,19 @@
 
 ## v1.7.x
 
+## 2026-05-20
+
+- Added local/self-hosted plugin runtime Phase 1: read-only `/api/plugins`
+  discovery, bundled/user plugin manifest scanning, safe `dist/` asset serving,
+  client plugin registry/loader, sandboxed `plugin:*` canvas rendering, Insert
+  ribbon plugin action, and bundled `Animated Counter` sample plugin.
+- Added shared export fallback for plugin elements so reveal/share can use the
+  sandbox iframe when metadata is present, while print/PDF/offline paths keep a
+  static escaped fallback instead of dropping the element.
+- Verification passed: targeted plugin/server/ribbon/canvas/shared Vitest suite
+  (20 files / 148 tests), focused Playwright plugin runtime E2E, `npm run lint`
+  (0 errors, existing warnings only), and `npm run build`.
+
 ## 2026-05-18
 
 - Refined Insert ribbon Media/Embed UX: Video URL, Audio/Upload, Media Library, optional File Browser, HTML Embed, SVG File, Drawing Canvas, and Divider are direct icon-only buttons with stable accessible labels; Advanced remains grouped in a wider keyboard-accessible flyout.

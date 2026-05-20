@@ -148,6 +148,7 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
   - `ai.js` - AI generation and translation
   - `live.js` - live presentation rooms
   - `games-rest-api-handler.js` - game REST endpoints
+  - `plugins.js` - local plugin discovery and asset API
   - `settings.js` - app settings
   - `explore.js` - explore/discover
   - `analytics.js` - share analytics
@@ -174,6 +175,7 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 | `socket-handler.js` | Socket.IO event wiring |
 | `live-rooms.js` | In-memory room state and role tracking |
 | `game-socket-handler.js` | Game Socket.IO wiring |
+| `plugin-runtime.js` | Bundled/user plugin manifest discovery and safe asset path resolution |
 | `presentation-finder.js` | Presentation lookup utility |
 | `ai-provider.js` | AI service integration |
 | `services/pptx-import/geometry.js` | Nullish-safe geometry normalization + affine transform helpers for PPTX import |
@@ -236,6 +238,7 @@ server/data/
 ├── rclone.conf
 ├── history/
 ├── sync-export/
+├── plugins/
 └── tmp-pptx-imports/
 
 server/uploads/
@@ -247,6 +250,38 @@ server/uploads/
 - `initDataFiles()` creates the data directories and default JSON files on
   first run.
 - `tmp-pptx-imports/` is a temporary workspace for PPTX import uploads and is cleaned after each import.
+- Optional user plugins live under `server/data/plugins/<slug>/`; bundled
+  plugins live under top-level `plugins/<slug>/`.
+
+## Plugin Runtime
+
+Phase 1 supports local trusted plugin packages only. The server scans
+`plugins/<slug>/parallax-plugin.json` and
+`server/data/plugins/<slug>/parallax-plugin.json`, normalizes contributed
+element metadata, and exposes read-only routes:
+
+| Route | Purpose |
+| --- | --- |
+| `GET /api/plugins` | List normalized plugin manifests |
+| `GET /api/plugins/:slug` | Read one normalized plugin |
+| `GET /api/plugins/:slug/manifest` | Read one manifest |
+| `GET /api/plugins/:slug/assets/*` | Serve files from plugin `dist/` only |
+
+Client registry modules in `client/src/plugins/` register contributed element
+types as `plugin:<type>`. `EditorPage` loads the registry once, the Insert
+ribbon exposes loaded plugin actions, and `canvas-element-wrapper.jsx` renders
+plugin elements through `PluginSandbox`.
+
+The sandbox runtime fetches plugin HTML from the asset route, injects a minimal
+`window.navslides.updateData()` bridge, and renders it in an iframe with
+`sandbox="allow-scripts"` only. Parent message handling checks
+`event.source === iframe.contentWindow` before merging data patches into
+`element.pluginData`.
+
+Shared export rendering treats plugin elements as dynamic types. Reveal/share
+HTML uses the stored plugin asset path when safe; print/PDF/offline paths render
+a static escaped fallback. Marketplace, install ZIP, plugin KV storage, auth,
+billing, and offline sandbox inlining are not part of Phase 1.
 
 ## Shared Runtime Contract
 
@@ -319,8 +354,10 @@ server/uploads/
 - `shared/src/types/presentation.js` defines the JSDoc model used by client and
   server.
 - Element types are kept in sync with the editor, export pipeline, and Zod schemas.
-  The current type set includes 20 types: text, image, shape, code, video, audio, html, latex,
+  The current base type set includes 20 types: text, image, shape, code, video, audio, html, latex,
   icon, qrcode, drawing, svg, markdown, chart, table, line, divider, callout, timeline, and game.
+  Plugin elements use dynamic `plugin:<contributed-type>` values with
+  `pluginId`, `pluginSlug`, `pluginData`, and `pluginRuntime` metadata.
   Typed constants and factory functions live in `client/src/constants/` (e.g.
   `game-element-types-constants.js`).
 - Runtime validation uses `server/middleware/schemas.js`; the schemas allow

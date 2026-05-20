@@ -18,6 +18,7 @@ export default [
       'playwright-report/**',
       'test-results/**',
       'coverage/**',
+      'website/.vitepress/dist/**',
     ],
   },
   // Root-level tool configs

@@ -1,0 +1,25 @@
+{
+  "id": "navslides.animated-counter",
+  "name": "Animated Counter",
+  "version": "1.0.0",
+  "description": "Animated numeric counter for local NavSlides plugin runtime.",
+  "contributes": {
+    "elements": [
+      {
+        "type": "counter",
+        "label": "Animated Counter",
+        "defaultSize": { "width": 360, "height": 180 },
+        "defaultData": {
+          "value": 100,
+          "prefix": "",
+          "suffix": "%",
+          "duration": 1200,
+          "color": "#22c55e",
+          "fontSize": 64,
+          "label": "Progress"
+        },
+        "sandbox": "sandbox.html"
+      }
+    ]
+  }
+}

@@ -489,6 +489,43 @@ function renderTimeline(el, style, wrap, vis, _opts) {
   return `<div${wrap} style="${style}${vis}">${svg}</div>`
 }
 
+function isPluginType(type) {
+  return typeof type === 'string' && type.startsWith('plugin:')
+}
+
+function isSafePluginAssetPath(value) {
+  return typeof value === 'string' && /^[a-z0-9][a-z0-9-]{0,63}$/.test(value)
+}
+
+function isSafeSandboxFile(value) {
+  return typeof value === 'string' && /^[a-zA-Z0-9][a-zA-Z0-9._/-]{0,127}$/.test(value) && !value.includes('..')
+}
+
+function getPluginFallbackText(el) {
+  const data = el.pluginData || {}
+  if (data.value !== undefined) return `${data.prefix || ''}${data.value}${data.suffix || ''}`
+  return el.pluginRuntime?.label || el.pluginSlug || el.type.replace('plugin:', '')
+}
+
+function renderPluginFallback(el, style, wrap, vis) {
+  const label = escapeHtml(el.pluginRuntime?.label || 'Plugin')
+  const text = escapeHtml(getPluginFallbackText(el))
+  return `<div${wrap} data-plugin-fallback="true" style="${style}${vis}display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(15,23,42,0.72);border:1px solid rgba(148,163,184,0.35);border-radius:6px;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong style="font-size:calc(18px * var(--font-zoom, 1));">${text}</strong><span style="font-size:calc(12px * var(--font-zoom, 1));opacity:.72;">${label}</span></div>`
+}
+
+function renderPlugin(el, style, wrap, vis, opts) {
+  if (opts.forPrint) return renderPluginFallback(el, style, wrap, vis)
+  const slug = el.pluginSlug
+  const sandbox = el.pluginRuntime?.sandbox
+  if (!isSafePluginAssetPath(slug) || !isSafeSandboxFile(sandbox)) {
+    return renderPluginFallback(el, style, wrap, vis)
+  }
+  const src = `/api/plugins/${slug}/assets/${sandbox}`
+  const title = escapeHtml(el.pluginRuntime?.label || 'Plugin')
+  const dataJson = escapeHtml(JSON.stringify(el.pluginData || {}))
+  return `<div${wrap} data-plugin-runtime="true" data-plugin-data="${dataJson}" style="${style}${vis}"><iframe title="${title}" src="${src}" sandbox="allow-scripts" style="width:100%;height:100%;border:none;background:transparent;" scrolling="no"></iframe></div>`
+}
+
 // ─── Dispatcher ──────────────────────────────────────────────────────────────
 
 const RENDERERS = {
@@ -528,7 +565,7 @@ function renderElement(el, slide, opts = {}) {
   const wrap = `${exportIdAttr}${dataIdAttr}${fragClass}${fragIdx}`
   const vis = opts.isHidden ? 'visibility:hidden;' : ''
 
-  const renderer = RENDERERS[el.type]
+  const renderer = isPluginType(el.type) ? renderPlugin : RENDERERS[el.type]
   if (!renderer) return ''
   return renderer(el, style, wrap, vis, opts)
 }

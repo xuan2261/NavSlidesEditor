@@ -86,6 +86,11 @@ Factory functions:
 - Keep deterministic sequences local to the module when needed; prefer explicit
   test setup/teardown over undocumented reset helpers.
 
+Plugin element factories live in `client/src/plugins/plugin-loader.js` because
+`plugin:*` types are discovered at runtime and must not be added to
+`ELEMENT_DEFAULTS`. Plugin elements must persist `pluginId`, `pluginSlug`,
+`pluginData`, and `pluginRuntime`.
+
 | Type | Convention | Example |
 | --- | --- | --- |
 | React components | PascalCase `.jsx` | `SlideCanvas.jsx`, `PropertiesPanel.jsx` |
@@ -237,6 +242,21 @@ Base URL: `/api` (Vite dev proxy -> Express; same origin in production).
 | Success response | Resource object or `{ success: true, ...data }` |
 | Error response | `{ error: 'message' }` with HTTP 4xx/5xx |
 | Validation error | `{ error: 'Validation failed', details: [...] }` with HTTP 400 |
+
+### Plugin Runtime Conventions
+
+- Bundled plugins live under `plugins/<slug>/`; optional user plugins live under
+  `server/data/plugins/<slug>/`.
+- Plugin slugs must match `/^[a-z0-9][a-z0-9-]{0,63}$/`.
+- Manifests are named `parallax-plugin.json` and must include `id`, `name`,
+  `version`, and `contributes.elements`.
+- Server routes are read-only: no install/write endpoint in Phase 1.
+- Asset serving is limited to each plugin `dist/` directory through
+  `/api/plugins/:slug/assets/*`; reject traversal and unsafe slugs.
+- Plugin canvas rendering must use an iframe with `sandbox="allow-scripts"`
+  only. Do not add `allow-same-origin`.
+- Parent/sandbox message handlers must include a source marker and verify
+  `event.source` before applying data patches.
 
 ### Zod Validation
 

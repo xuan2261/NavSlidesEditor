@@ -37,6 +37,7 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | Ribbon UI migration                                 | Done (replaced Toolbar.jsx, InsertMenu.jsx, EditorMenuBar.jsx with tab-based ribbon)                     |
 | Parallax feature port                               | Done (font-weight, line-height, timeline element, video controls, LaTeX improvements)                    |
 | Upstream selective port                             | Done (merged 2026-05-14; copy URL context menu, typography/export consistency)                            |
+| Local plugin runtime Phase 1                        | Done (bundled plugin discovery, sandbox canvas runtime, Animated Counter sample, export fallback)         |
 
 ### What's New in v1.5.x / v1.6.x (Security & Architecture Refactor)
 
@@ -78,8 +79,11 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 
 - Timeline as a first-class element: deferred to a separate P2 plan; current
   timeline slide template and fragment animation timeline remain unchanged.
-- Plugin/Manim architecture: deferred to a separate security-reviewed epic;
-  no plugin loader, marketplace, install API, or sandbox bridge is shipped.
+- Plugin runtime Phase 1 is shipped for local/self-hosted bundled plugins:
+  read-only discovery API, sandboxed canvas rendering, Insert ribbon entry,
+  persisted `plugin:*` elements, and static export fallback. Marketplace,
+  install ZIP, billing/auth, plugin KV storage, and offline sandbox inlining
+  remain deferred.
 
 ### Code Quality
 
@@ -439,6 +443,25 @@ Ported upstream parallax features and enhancements.
 
 **Verification:** Build, lint, unit tests passed
 
+### Local Plugin Runtime Phase 1 (Complete - 2026-05-20)
+
+Implemented scoped self-hosted plugin runtime from
+`plans/260520-1430-port-plugin-runtime-from-parallax/`.
+
+**Delivered:**
+
+- Read-only `/api/plugins` API with bundled/user plugin discovery and safe
+  `dist/` asset serving.
+- Client plugin registry/loader for `plugin:*` element types.
+- Sandboxed canvas iframe runtime with `allow-scripts` only and source-checked
+  message bridge.
+- Insert ribbon plugin action and bundled `Animated Counter` sample plugin.
+- Shared reveal/print renderer fallback so plugin elements do not disappear in
+  share/export/PDF paths.
+
+**Deferred:** marketplace, install ZIP, billing/auth, plugin KV storage,
+property panel extensions, and offline sandbox asset inlining.
+
 ## Non-Roadmap Items
 
 These are explicitly out of scope:
@@ -446,4 +469,4 @@ These are explicitly out of scope:
 - Real-time multi-user collaboration
 - Cloud-hosted SaaS version
 - Mobile / tablet editing interface
-- Plugin / extension marketplace
+- Plugin / extension marketplace and install flow

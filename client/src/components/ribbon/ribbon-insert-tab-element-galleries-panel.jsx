@@ -181,6 +181,8 @@ export default function InsertTabContent({
   onAddThree,
   onAddTimeline,
   onAddGame,
+  pluginTypes = [],
+  onAddPluginElement,
 }) {
   const [showShapeGallery, setShowShapeGallery] = useState(false)
   const [showTablePicker, setShowTablePicker] = useState(false)
@@ -392,6 +394,12 @@ export default function InsertTabContent({
             { id: 'three', icon: Box, label: 'Three.js', onAction: () => onAddThree?.() },
             { id: 'timeline', icon: Clock, label: 'Timeline', onAction: () => onAddTimeline?.() },
             { id: 'games', icon: Gamepad2, label: 'Games...', onAction: () => setShowGameGallery(true) },
+            ...pluginTypes.map((plugin) => ({
+              id: plugin.fullType,
+              icon: Package,
+              label: plugin.label,
+              onAction: () => onAddPluginElement?.(plugin.fullType),
+            })),
           ]}
           menuClassName="w-[260px] min-w-[260px]"
           itemsClassName="grid grid-cols-2 gap-1"

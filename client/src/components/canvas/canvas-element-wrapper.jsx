@@ -5,6 +5,8 @@ import katex from 'katex'
 import { sanitizeRichTextHtml } from '../../utils/content-safety'
 import { getElementRenderer, CropOverlay } from './element-renderers/registry'
 import { HANDLE_STYLES } from './use-canvas-resize-rotate'
+import PluginSandbox from '../../plugins/plugin-sandbox'
+import { isPluginElementType } from '../../plugins'
 
 function getMediaFragmentSrc(src, startTime, endTime) {
   if (!src) return src
@@ -124,6 +126,25 @@ export default function CanvasElement({
       })()}
       {element.type !== 'text' && element.type !== 'image' && (() => {
         const Renderer = getElementRenderer(element.type)
+        if (isPluginElementType(element.type)) {
+          const sandbox = element.pluginRuntime?.sandbox
+          const sandboxUrl = sandbox && element.pluginSlug
+            ? `/api/plugins/${element.pluginSlug}/assets/${sandbox}`
+            : ''
+          if (!sandboxUrl) {
+            return <div className="flex h-full w-full items-center justify-center text-xs text-text-muted">Plugin unavailable</div>
+          }
+          return (
+            <PluginSandbox
+              sandboxUrl={sandboxUrl}
+              pluginData={element.pluginData || {}}
+              width={element.width}
+              height={element.height}
+              interactive={isSelected && !isDragging}
+              onDataUpdate={(patch) => onUpdateElement?.({ pluginData: { ...(element.pluginData || {}), ...patch } })}
+            />
+          )
+        }
         if (element.type === 'html') return <iframe srcDoc={element.content || ''} style={htmlFrameStyle} sandbox="allow-scripts" title="HTML embed" />
         if (element.type === 'code') return <pre className="hljs" style={codeBlockStyle}><code dangerouslySetInnerHTML={{ __html: hljs.highlight(element.content || '', { language: element.language || 'plaintext' }).value }} /></pre>
         if (element.type === 'video') {

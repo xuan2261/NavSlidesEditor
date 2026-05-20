@@ -3,31 +3,37 @@
  */
 const { z } = require('zod')
 
+const builtInElementTypeSchema = z.enum([
+  'text',
+  'image',
+  'shape',
+  'code',
+  'html',
+  'chart',
+  'table',
+  'video',
+  'audio',
+  'callout',
+  'icon',
+  'line',
+  'drawing',
+  'latex',
+  'markdown',
+  'svg',
+  'qrcode',
+  'timeline',
+  'divider',
+])
+
+const pluginElementTypeSchema = z
+  .string()
+  .regex(/^plugin:[a-z0-9][a-z0-9-]{0,63}$/, 'Invalid plugin element type')
+
 // ─── Element Schema ──────────────────────────────────────────────────────────
 const elementSchema = z
   .object({
     id: z.string().optional(),
-    type: z.enum([
-      'text',
-      'image',
-      'shape',
-      'code',
-      'html',
-      'chart',
-      'table',
-      'video',
-      'audio',
-      'callout',
-      'icon',
-      'line',
-      'drawing',
-      'latex',
-      'markdown',
-      'svg',
-      'qrcode',
-      'timeline',
-      'divider',
-    ]),
+    type: z.union([builtInElementTypeSchema, pluginElementTypeSchema]),
     x: z.number(),
     y: z.number(),
     width: z.number().positive(),

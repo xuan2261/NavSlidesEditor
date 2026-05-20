@@ -112,6 +112,38 @@ describe('Presentations API', () => {
     expect((await request(app).get('/api/presentations/missing/export')).status).toBe(404)
   })
 
+  it('accepts persisted plugin elements in presentation payloads', async () => {
+    const pluginElement = {
+      id: 'plugin-counter-1',
+      type: 'plugin:counter',
+      x: 120,
+      y: 140,
+      width: 320,
+      height: 180,
+      pluginId: 'animated-counter',
+      pluginSlug: 'animated-counter',
+      pluginData: { value: 100 },
+      pluginRuntime: { label: 'Animated Counter', sandbox: 'sandbox.html' },
+    }
+    const createRes = await request(app).post('/api/presentations').send({
+      title: 'Plugin persistence route test',
+      slides: [{ id: 'slide-plugin', elements: [pluginElement] }],
+    })
+
+    expect(createRes.status).toBe(201)
+    expect(createRes.body.slides[0].elements[0]).toMatchObject(pluginElement)
+
+    const updateRes = await request(app)
+      .put(`/api/presentations/${createRes.body.id}`)
+      .send({ slides: createRes.body.slides })
+
+    expect(updateRes.status).toBe(200)
+    expect(updateRes.body.slides[0].elements[0].type).toBe('plugin:counter')
+    expect(updateRes.body.slides[0].elements[0].pluginRuntime.sandbox).toBe('sandbox.html')
+
+    await request(app).delete(`/api/presentations/${createRes.body.id}/permanent`)
+  })
+
   it('removes both legacy and object-format share tokens on permanent delete', async () => {
     const created = await request(app).post('/api/presentations').send({ title: 'Cascade test' })
     expect(created.status).toBe(201)

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useContext } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 import { createElement } from '../utils/element-factory'
 import { createGameElement } from '../constants/game-element-types-constants'
+import { createPluginElement, loadPlugins } from '../plugins'
 import { useSlideOperations } from '../hooks/use-slide-operations'
 import { useKeyboard } from '../hooks/use-keyboard'
 import { useClipboard, createDuplicateOperation } from '../hooks/use-clipboard'
@@ -216,6 +217,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const [livePresenterToken, setLivePresenterToken] = useState(null)
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [showImageUrlPrompt, setShowImageUrlPrompt] = useState(false)
+  const [pluginTypes, setPluginTypes] = useState([])
 
   // Slideshow/Presentation mode overlays
   const [overlayColor, setOverlayColor] = useState(null) // 'black' | 'white' | null
@@ -651,6 +653,33 @@ svg.selectAll('circle').data(data).join('circle')
     setSelectedElementIds([newEl.id])
     return newEl
   }, [setSelectedElementIds])
+
+  const addPluginElement = useCallback((fullType) => {
+    const newEl = createPluginElement(fullType)
+    setPresentation((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        slides: prev.slides.map((s, i) =>
+          i === currentSlideIndexRef.current
+            ? { ...s, elements: [...(s.elements || []), newEl] }
+            : s
+        ),
+      }
+    })
+    setSelectedElementIds([newEl.id])
+    return newEl
+  }, [setSelectedElementIds])
+
+  useEffect(() => {
+    let cancelled = false
+    loadPlugins().then((types) => {
+      if (!cancelled) setPluginTypes(types)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const addHtmlElement = useCallback(() => {
     const newEl = addElement('html', { content: DEFAULT_HTML })
@@ -1508,6 +1537,8 @@ svg.selectAll('circle').data(data).join('circle')
             onAddThree={() => setShowThreeModal(true)}
             onAddTimeline={addTimelineElement}
             onAddGame={addGameElement}
+            pluginTypes={pluginTypes}
+            onAddPluginElement={addPluginElement}
             onCssEditor={() => setShowCssEditor(true)}
             viewMode={viewMode}
             onFindReplace={() => setShowFindReplace((v) => !v)}

@@ -241,4 +241,55 @@ describe('htmlGenerator', () => {
     expect(html).not.toContain('.slide-page p  { margin: 0 0 0.4em;')
     expect(html).not.toContain('.slide-page ul, .slide-page ol { padding-left: 1.5em;')
   })
+
+  it('renders plugin elements with sandbox iframe in reveal HTML', () => {
+    const html = generateRevealHTML({
+      title: 'Plugin',
+      slides: [{
+        id: 's1',
+        elements: [{
+          id: 'p1',
+          type: 'plugin:counter',
+          x: 1,
+          y: 2,
+          width: 300,
+          height: 120,
+          pluginSlug: 'animated-counter',
+          pluginData: { value: '<7>' },
+          pluginRuntime: { label: 'Animated Counter', sandbox: 'sandbox.html' },
+        }],
+      }],
+    })
+
+    expect(html).toContain('/api/plugins/animated-counter/assets/sandbox.html')
+    expect(html).toContain('sandbox="allow-scripts"')
+    expect(html).toContain('data-plugin-runtime="true"')
+    expect(html).toContain("type: 'init'")
+    expect(html).toContain("pluginData: pluginData")
+    expect(html).toContain('&lt;7&gt;')
+  })
+
+  it('renders plugin elements as static fallback in print HTML', () => {
+    const html = generatePrintHTML({
+      title: 'Plugin Print',
+      slides: [{
+        id: 's1',
+        elements: [{
+          id: 'p1',
+          type: 'plugin:counter',
+          x: 1,
+          y: 2,
+          width: 300,
+          height: 120,
+          pluginSlug: 'animated-counter',
+          pluginData: { value: 99, suffix: '%' },
+          pluginRuntime: { label: 'Animated Counter', sandbox: 'sandbox.html' },
+        }],
+      }],
+    }, { autoPrint: false, includePrintBar: false })
+
+    expect(html).toContain('data-plugin-fallback="true"')
+    expect(html).toContain('99%')
+    expect(html).not.toContain('/api/plugins/')
+  })
 })
