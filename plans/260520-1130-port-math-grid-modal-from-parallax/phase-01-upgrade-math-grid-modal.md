@@ -1,7 +1,7 @@
 # Phase 01: Upgrade ParametricMathGridSurfacePlotterModal (TDD)
 
 Plan: `port-math-grid-modal-from-parallax-overview.md`
-Status: completed
+Status: in_progress
 Priority: P2 (cherry-pick from sibling repo; UI quality + security uplift)
 Effort: M (1 session)
 Risk: 2/5
@@ -293,6 +293,6 @@ After this phase ships:
 
 ## Status
 
-**DONE** -- plan ready for `/ck:cook --tdd`.
+**IN_PROGRESS** -- data module landed earlier; modal + tests still on canvas stub. TDD steps 1, 3, 4, 5, 6 outstanding.
 **Summary:** TDD upgrade of the canvas-based math-grid stub: replace with SVG-only port mirroring source's `generateGrid` + `GridSVG` while keeping (and tightening) local's regex sanitizer. Split into Tailwind modal + AGPL-headed data module, drop "Lissajous" preset, add line-width/opacity/bg/u-line/v-line controls, ship 16 tests including sanitizer regression guards.
 **Concerns/Blockers:** None.

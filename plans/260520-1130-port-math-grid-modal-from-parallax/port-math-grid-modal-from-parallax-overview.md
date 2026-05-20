@@ -27,7 +27,9 @@ Local has a canvas-based stub that generates self-contained iframe HTML via `eva
 
 | # | Phase | Status | Effort |
 |---|-------|--------|--------|
-| 1 | Upgrade modal + extract data module + extend tests (TDD) | completed | M (1 session) |
+| 1 | Upgrade modal + extract data module + extend tests (TDD) | in_progress | M (1 session) |
+
+> Status note (2026-05-20): data module landed at `client/src/data/parametric-math-grid-templates.js` but the modal shell + tests still ship the canvas+`eval2` stub. Status flipped back to `in_progress` to reflect reality. TDD steps 1, 3, 4, 5, 6 still pending.
 
 ## Source Manifest
 
@@ -128,6 +130,6 @@ None. All decisions resolved by sibling-pattern alignment + source-fidelity pref
 
 ## Status
 
-**DONE** -- plan ready for `/ck:cook --tdd`.
+**IN_PROGRESS** -- data module merged, modal/tests pending.
 **Summary:** Replace canvas+JS stub with SVG-only port of source's MathGridModal, keep local's regex sanitizer (tightened), split into Tailwind modal + AGPL-headed data module, adopt source's 10 presets with per-preset range/div metadata, adopt `GridSVG` preview + line toggles + opacity + line width + bg controls. Tests-first: rewrite test file to 16 cases mirroring sibling depth.
 **Concerns/Blockers:** None.
