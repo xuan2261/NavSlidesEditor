@@ -50,6 +50,7 @@
     "electron:build:win": "npm run electron:prepare && npx electron-builder --win"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.59.1",
     "@testing-library/dom": "^10.4.1",
