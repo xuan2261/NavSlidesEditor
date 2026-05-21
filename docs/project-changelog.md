@@ -2,6 +2,11 @@
 
 ## v1.7.x
 
+## 2026-05-21
+
+- Added a manual GitHub Actions workflow for Linux-only Playwright visual baseline regeneration in `mcr.microsoft.com/playwright:v1.59.1-jammy`, with a Vitest contract test covering manual-only trigger, read-only permissions, update/verify commands, and narrow snapshot PNG artifacts.
+- Documented the GitHub Actions fallback for maintainers without local Docker. Current branch dispatch is blocked until the new manual workflow exists on the default branch.
+
 ## 2026-05-20
 
 - Added local/self-hosted plugin runtime Phase 1: read-only `/api/plugins`

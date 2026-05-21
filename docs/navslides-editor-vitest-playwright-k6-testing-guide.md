@@ -100,6 +100,25 @@ Then commit only files under `tests/e2e/visual/*-snapshots/`. Regeneration on a 
 
 The mobile spec uses an explicit `deviceScaleFactor: 2` (Patch-09) instead of relying on `devices['Pixel 5']` defaults, so version updates to `@playwright/test` do not silently shift the baseline.
 
+### GitHub Actions fallback for baseline regeneration
+
+If local Docker is unavailable, use the manual workflow after it exists on the default branch:
+
+```bash
+gh workflow run manual-update-playwright-visual-baselines.yml --ref <branch>
+gh run list --workflow manual-update-playwright-visual-baselines.yml --branch <branch> --limit 3
+gh run download <run-id> --name linux-playwright-visual-baseline-snapshots --dir .tmp/visual-baselines
+```
+
+The workflow runs in `mcr.microsoft.com/playwright:v1.59.1-jammy`, updates and verifies both `tests/e2e/visual/` and `tests/e2e/visual-regression.spec.js`, then uploads only:
+
+```text
+tests/e2e/visual/**/*-snapshots/*.png
+tests/e2e/visual-regression.spec.js-snapshots/*.png
+```
+
+Do not dispatch this path from a branch until the workflow file has landed on the default branch; GitHub returns `workflow not found on the default branch` for brand-new manual workflows. Do not regenerate or commit visual snapshots from Windows/macOS hosts.
+
 ## k6 load testing (Phase 8)
 
 Two scenarios live under `tests/load/`:
@@ -172,6 +191,8 @@ docker run --rm -v "${PWD}:/work" -w /work \
 ```
 
 Then commit only files under `tests/e2e/visual/*-snapshots/`.
+
+If Docker is unavailable, use the manual GitHub Actions fallback above after the workflow exists on the default branch.
 
 ### Local dev parity
 
