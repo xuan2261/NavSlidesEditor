@@ -82,6 +82,8 @@ This follows user-selected direction 1 for the active icon consistency PR. Local
 - 2026-05-21: Phase 3 blocked. `gh workflow run manual-update-playwright-visual-baselines.yml --ref refactor/icon-consistency-pass` returns `HTTP 404: workflow ... not found on the default branch`. GitHub requires a brand-new manual workflow to exist on the default branch before it can be dispatched.
 - 2026-05-21: Phase 3 unblocked. Cherry-picked the workflow bootstrap commit onto `master` as `6aeb3191`, pushed it, confirmed `gh workflow list --all` now shows `Manual Update Playwright Visual Baselines`, and dispatched run `26240623328` on `refactor/icon-consistency-pass`.
 - 2026-05-21: Run `26240623328` failed at `npm ci` due lockfile drift (`esbuild@0.28.0` missing from `package-lock.json`). Updated lockfile with npm 10 and verified `npx npm@10.8.2 ci --dry-run` passes before rerunning workflow.
+- 2026-05-21: Pushed lockfile fix `2da23289` and dispatched rerun `26241153971`; `npm ci` and `npm run build` passed, visual update is running.
+- 2026-05-21: Run `26241153971` failed visual verify only on `live-viewer-no-presenter.png`; the screenshot included random `Room: {roomCode}` text. Masked that dynamic line before rerun.
 
 ## Unresolved Questions
 

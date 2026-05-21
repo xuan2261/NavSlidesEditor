@@ -133,6 +133,8 @@ Run visual and full verification gates in Phase 4.
 - `gh workflow run manual-update-playwright-visual-baselines.yml --ref refactor/icon-consistency-pass` now succeeds and created run `26240623328`: https://github.com/xuan2261/NavSlidesEditor/actions/runs/26240623328
 - Run `26240623328` completed with failure at `npm ci` because `package-lock.json` was missing npm 10 lock entries for `esbuild@0.28.0` and related `@esbuild/*@0.28.0` optional packages. This is a new lockfile-sync blocker after dispatch registration was fixed.
 - Updated `package-lock.json` with `npx npm@10.8.2 install --package-lock-only`; `npx npm@10.8.2 ci --dry-run` now passes the lockfile sync check.
+- Pushed lockfile fix as `2da23289` and dispatched rerun `26241153971`: https://github.com/xuan2261/NavSlidesEditor/actions/runs/26241153971. This run passed `npm ci` and `npm run build`; visual update is running.
+- Run `26241153971` failed at verify with 16 passed and 1 failed: `live-viewer-no-presenter.png` differed by ~303-323 pixels because the screenshot included a random room code. Masked the dynamic `Room: {roomCode}` line in `present-speaker-share-and-live-viewer-baselines.spec.js` before rerun.
 
 ## Unresolved Questions
 
