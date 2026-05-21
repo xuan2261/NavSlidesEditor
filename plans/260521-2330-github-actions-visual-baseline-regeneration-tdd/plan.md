@@ -87,6 +87,7 @@ This follows user-selected direction 1 for the active icon consistency PR. Local
 - 2026-05-21: Run `26241432529` on `138584bf` passed `npm ci`, `npm run build`, visual update, and visual verify. It failed only on artifact upload because repository GitHub Actions artifact storage quota is exhausted, so snapshot artifact download/application remains blocked outside code.
 - 2026-05-22: Deleted 10 old `electron-win` Actions artifacts (~2.3 GB). Rerun `26253132404` on `0f5f1d41` again passed update+verify but upload still hit artifact quota because GitHub storage usage has not recalculated yet.
 - 2026-05-22: Deleted all visible Actions artifacts across `xuan2261` repos (~28.6 GB total). Rerun `26253710975` still passed update+verify but upload failed because GitHub quota recalculation is delayed; no artifact exists to download yet.
+- 2026-05-22: Rerun `26258526849` on `bae62815` again passed update+verify, but upload still failed with artifact quota while visible artifact count is `0`. Further reruns should wait for GitHub storage recalculation.
 
 ## Unresolved Questions
 

@@ -141,6 +141,7 @@ Run visual and full verification gates in Phase 4.
 - Rerun `26253132404` on commit `0f5f1d41` passed `npm ci`, `npm run build`, `Update visual baselines`, and `Verify regenerated visual baselines`, but artifact upload still failed with `Artifact storage quota has been hit`; GitHub notes usage recalculation can take 6-12 hours. `gh run download 26253132404 --name linux-playwright-visual-baseline-snapshots` confirms no artifact was created yet.
 - Deleted all remaining visible GitHub Actions artifacts across `xuan2261` repos: 146 expired artifacts from `nano-banana-slides-prompter` (~25.0 GB), 7 expired artifacts from `PPTAgent` (~1.1 GB), 10 old artifacts from this repo (~2.3 GB), and remaining Pages artifacts (~163 MB). Account artifact scan now reports no artifacts remain.
 - Rerun `26253710975` on commit `0f5f1d41` again passed `npm ci`, `npm run build`, `Update visual baselines`, and `Verify regenerated visual baselines`, but failed at upload because GitHub still has not recalculated artifact storage quota. Next action: rerun after GitHub's 6-12 hour quota recalculation window.
+- Rerun `26258526849` on commit `bae62815` again passed `npm ci`, `npm run build`, `Update visual baselines`, and `Verify regenerated visual baselines`, but failed at upload with the same quota message while repo artifact count remains `0`. Stop rerunning until GitHub backend recalculates artifact storage.
 
 ## Unresolved Questions
 
