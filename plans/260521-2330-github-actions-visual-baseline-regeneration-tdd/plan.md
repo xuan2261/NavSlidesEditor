@@ -1,7 +1,7 @@
 ---
 title: "GitHub Actions Visual Baseline Regeneration TDD"
 description: "Manual CI path to regenerate Playwright visual baselines in canonical Linux Playwright container when local Docker is unavailable."
-status: in-progress
+status: blocked
 priority: P1
 branch: "refactor/icon-consistency-pass"
 tags: [testing, playwright, github-actions, visual-regression, tdd, ci]
@@ -42,7 +42,7 @@ This follows user-selected direction 1 for the active icon consistency PR. Local
 |---|---|---|---|
 | 1 | [Scout & Workflow Contract Tests](./phase-01-scout-and-workflow-contract-tests.md) | Complete | P1 |
 | 2 | [Add Manual GitHub Actions Workflow](./phase-02-add-manual-github-actions-workflow.md) | Complete | P1 |
-| 3 | [Run Workflow and Apply Artifact](./phase-03-run-workflow-and-apply-artifact.md) | In-progress | P1 |
+| 3 | [Run Workflow and Apply Artifact](./phase-03-run-workflow-and-apply-artifact.md) | Blocked | P1 |
 | 4 | [Verify Visual and Full Gates](./phase-04-verify-visual-and-full-gates.md) | Blocked | P1 |
 | 5 | [Docs and PR Finalization](./phase-05-docs-and-pr-finalization.md) | In-progress | P2 |
 
@@ -84,6 +84,7 @@ This follows user-selected direction 1 for the active icon consistency PR. Local
 - 2026-05-21: Run `26240623328` failed at `npm ci` due lockfile drift (`esbuild@0.28.0` missing from `package-lock.json`). Updated lockfile with npm 10 and verified `npx npm@10.8.2 ci --dry-run` passes before rerunning workflow.
 - 2026-05-21: Pushed lockfile fix `2da23289` and dispatched rerun `26241153971`; `npm ci` and `npm run build` passed, visual update is running.
 - 2026-05-21: Run `26241153971` failed visual verify only on `live-viewer-no-presenter.png`; the screenshot included random `Room: {roomCode}` text. Masked that dynamic line before rerun.
+- 2026-05-21: Run `26241432529` on `138584bf` passed `npm ci`, `npm run build`, visual update, and visual verify. It failed only on artifact upload because repository GitHub Actions artifact storage quota is exhausted, so snapshot artifact download/application remains blocked outside code.
 
 ## Unresolved Questions
 

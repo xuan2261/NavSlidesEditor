@@ -112,6 +112,7 @@ Update docs and finish the PR handoff in Phase 5.
 - Linux visual verification run `26240623328` dispatched after registering the workflow on `master`, but completed with failure at `npm ci` before build/visual steps. Root cause: `package-lock.json` missing npm 10 lock entries for `esbuild@0.28.0`; lockfile sync fix is in progress before rerun.
 - Rerun `26241153971` on commit `2da23289` passed `npm ci` and `npm run build`; awaiting visual update/verify result.
 - Run `26241153971` visual verify failed only on `live-viewer-no-presenter.png`; root cause was random room code text in the screenshot. Added a Playwright screenshot mask for the dynamic room code line and will rerun the workflow.
+- Run `26241432529` on commit `138584bf` passed the Linux visual update and verify steps. The job conclusion is failure only because artifact uploads hit the repository GitHub Actions storage quota.
 
 ## Unresolved Questions
 

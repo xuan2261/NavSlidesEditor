@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Run Workflow and Apply Artifact"
-status: in-progress
+status: blocked
 priority: P1
 effort: "0.5-1h plus CI time"
 dependencies: [1, 2]
@@ -135,6 +135,8 @@ Run visual and full verification gates in Phase 4.
 - Updated `package-lock.json` with `npx npm@10.8.2 install --package-lock-only`; `npx npm@10.8.2 ci --dry-run` now passes the lockfile sync check.
 - Pushed lockfile fix as `2da23289` and dispatched rerun `26241153971`: https://github.com/xuan2261/NavSlidesEditor/actions/runs/26241153971. This run passed `npm ci` and `npm run build`; visual update is running.
 - Run `26241153971` failed at verify with 16 passed and 1 failed: `live-viewer-no-presenter.png` differed by ~303-323 pixels because the screenshot included a random room code. Masked the dynamic `Room: {roomCode}` line in `present-speaker-share-and-live-viewer-baselines.spec.js` before rerun.
+- Run `26241432529` on commit `138584bf` passed `npm ci`, `npm run build`, `Update visual baselines`, and `Verify regenerated visual baselines`.
+- Run `26241432529` failed only at `Upload Linux visual baseline snapshots` and `Upload Playwright report` because GitHub Actions artifact storage quota is exhausted: `Failed to CreateArtifact: Artifact storage quota has been hit`. Artifact download/application remains blocked until quota is freed or recalculated.
 
 ## Unresolved Questions
 
