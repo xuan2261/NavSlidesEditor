@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  Sparkles, Play, ChevronDown, ToggleLeft, ToggleRight,
+  Wand2, Play, ChevronDown, ToggleLeft, ToggleRight,
 } from 'lucide-react'
 import RibbonSection from './ribbon-section'
 import { Button } from '../ui'
@@ -68,7 +68,7 @@ export default function AnimationsTabContent({ selectedElement, slideElements = 
               <Button variant="ribbon" className="h-7"
                 title="Animation type" aria-label="Change animation type"
                 onMouseDown={(e) => { e.preventDefault(); setShowPicker((v) => !v) }}>
-                <Sparkles size={14} />
+                <Wand2 size={14} />
                 <span className="text-[11px] hidden lg:inline">{currentLabel}</span>
                 <ChevronDown size={10} />
               </Button>

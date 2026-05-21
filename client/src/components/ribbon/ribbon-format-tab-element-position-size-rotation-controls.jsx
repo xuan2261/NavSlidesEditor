@@ -1,5 +1,5 @@
 import {
-  Lock, Unlock, RotateCw, AlignStartVertical, AlignCenterVertical, AlignEndVertical,
+  Lock, Unlock, RotateCw, AlignStartVertical, AlignHorizontalJustifyCenter, AlignEndVertical,
 } from 'lucide-react'
 import RibbonSection from './ribbon-section'
 import { Button } from '../ui'
@@ -300,7 +300,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement }) {
               e.preventDefault()
               onUpdateElement?.({ x: Math.round((CANVAS_WIDTH - (selectedElement.width || 0)) / 2) })
             }}>
-            <AlignCenterVertical size={14} />
+            <AlignHorizontalJustifyCenter size={14} />
           </Button>
           <Button variant="icon" className="h-7 w-7"
             title="Align right" aria-label="Align right"

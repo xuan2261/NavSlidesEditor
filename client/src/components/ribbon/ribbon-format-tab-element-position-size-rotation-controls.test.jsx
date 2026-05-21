@@ -96,3 +96,58 @@ describe('FormatTabContent', () => {
     expect(onUpdateElement).toHaveBeenCalledWith({ x: 330 })
   })
 })
+
+describe('icon consistency pass — align identity', () => {
+  it('Format tab align L/C-h/R icons match arrange-controls.jsx by component identity', async () => {
+    const formatModule = await import(
+      './ribbon-format-tab-element-position-size-rotation-controls.jsx?raw'
+    ).catch(() => null)
+
+    const { readFileSync } = await import('node:fs')
+    const path = await import('node:path')
+    const { fileURLToPath } = await import('node:url')
+    const here = path.dirname(fileURLToPath(import.meta.url))
+
+    const formatSrc =
+      formatModule?.default ??
+      readFileSync(
+        path.resolve(here, 'ribbon-format-tab-element-position-size-rotation-controls.jsx'),
+        'utf8',
+      )
+    const arrangeSrc = readFileSync(
+      path.resolve(here, 'controls/arrange-controls.jsx'),
+      'utf8',
+    )
+
+    function pickAlign(src, ariaLabel) {
+      const m = src.match(
+        new RegExp(
+          `aria-label="${ariaLabel}"[\\s\\S]*?<([A-Z][A-Za-z0-9]+)\\s+size=\\{14\\}`,
+        ),
+      )
+      return m?.[1]
+    }
+
+    const formatLeft = pickAlign(formatSrc, 'Align left')
+    const formatCenterH = pickAlign(formatSrc, 'Align center horizontal')
+    const formatRight = pickAlign(formatSrc, 'Align right')
+
+    // arrange-controls drives align icons through ALIGN_ACTIONS array; pull
+    // the icon component by name from that table.
+    function pickArrange(name) {
+      const m = arrangeSrc.match(
+        new RegExp(`\\['${name}',\\s*([A-Z][A-Za-z0-9]+),`),
+      )
+      return m?.[1]
+    }
+    const arrangeLeft = pickArrange('left')
+    const arrangeCenterH = pickArrange('center-h')
+    const arrangeRight = pickArrange('right')
+
+    expect(formatLeft).toBeTruthy()
+    expect(arrangeLeft).toBeTruthy()
+    expect(formatLeft).toBe(arrangeLeft)
+    expect(formatCenterH).toBe(arrangeCenterH)
+    expect(formatRight).toBe(arrangeRight)
+  })
+})

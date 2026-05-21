@@ -1,4 +1,20 @@
-import { Clipboard } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowDownLeft,
+  ArrowDownRight,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpLeft,
+  ArrowUpRight,
+  Clipboard,
+  Copy,
+  CopyPlus,
+  Crop,
+  Crosshair,
+  Scissors,
+  Undo2,
+} from 'lucide-react'
 import { Button } from '../ui'
 
 const SNAP_REF_OPTIONS = [
@@ -43,9 +59,15 @@ function getSnapReferenceButtonStyle(isActive) {
 }
 
 const SNAP_ICONS = {
-  ul: '↖', uc: '↑', ur: '↗',
-  ml: '←', mc: '⊕', mr: '→',
-  ll: '↙', lc: '↓', lr: '↘',
+  ul: ArrowUpLeft,
+  uc: ArrowUp,
+  ur: ArrowUpRight,
+  ml: ArrowLeft,
+  mc: Crosshair,
+  mr: ArrowRight,
+  ll: ArrowDownLeft,
+  lc: ArrowDown,
+  lr: ArrowDownRight,
 }
 
 export function getCopyableMediaUrl(element, origin = globalThis.location?.origin) {
@@ -119,33 +141,33 @@ export default function CanvasContextMenu({
         disabled={!!ctxEl?.locked}
         onClick={() => { onCopy?.(); onClose() }}
       >
-        📋 Copy (Ctrl+C)
+        <Copy size={14} /> Copy (Ctrl+C)
       </Button>
       <Button
         variant="ghost"
         onClick={() => { onCut?.(); onDeleteElement(contextMenu.elementId); onClose() }}
       >
-        ✂ Cut (Ctrl+X)
+        <Scissors size={14} /> Cut (Ctrl+X)
       </Button>
       <Button
         variant="ghost"
         onClick={() => { onPaste?.(); onClose() }}
       >
-        📌 Paste (Ctrl+V)
+        <Clipboard size={14} /> Paste (Ctrl+V)
       </Button>
       <Button
         variant="ghost"
         disabled={!!ctxEl?.locked}
         onClick={() => { onDuplicate?.(); onClose() }}
       >
-        ⧉ Duplicate (Ctrl+D)
+        <CopyPlus size={14} /> Duplicate (Ctrl+D)
       </Button>
       <div className="h-px bg-border my-1" />
 
       {contextMenu.elementType === 'image' && (
         <>
           <Button variant="ghost" onClick={() => { onStartCrop?.(contextMenu.elementId); onClose() }}>
-            ✂ Crop
+            <Crop size={14} /> Crop
           </Button>
           <Button
             variant="ghost"
@@ -167,7 +189,7 @@ export default function CanvasContextMenu({
               onClose()
             }}
           >
-            ↺ Reset crop
+            <Undo2 size={14} /> Reset crop
           </Button>
           {copyableUrl && (
             <Button variant="ghost" onClick={copyUrl}>
@@ -189,20 +211,24 @@ export default function CanvasContextMenu({
 
       <div style={snapReferenceLabelStyle}>Snap Reference</div>
       <div style={snapReferenceGridStyle}>
-        {SNAP_REF_OPTIONS.map((opt) => (
-          <Button
-            variant="ghost"
-            key={opt.id}
-            title={opt.label}
-            style={getSnapReferenceButtonStyle(currentRef === opt.id)}
-            onClick={() => {
-              onUpdateElement(contextMenu.elementId, { snapRef: opt.id })
-              onClose()
-            }}
-          >
-            {SNAP_ICONS[opt.id]}
-          </Button>
-        ))}
+        {SNAP_REF_OPTIONS.map((opt) => {
+          const Icon = SNAP_ICONS[opt.id]
+          return (
+            <Button
+              variant="ghost"
+              key={opt.id}
+              title={opt.label}
+              aria-label={opt.label}
+              style={getSnapReferenceButtonStyle(currentRef === opt.id)}
+              onClick={() => {
+                onUpdateElement(contextMenu.elementId, { snapRef: opt.id })
+                onClose()
+              }}
+            >
+              <Icon size={14} aria-hidden="true" />
+            </Button>
+          )
+        })}
       </div>
     </div>
   )

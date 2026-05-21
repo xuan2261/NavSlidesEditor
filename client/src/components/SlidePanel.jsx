@@ -7,7 +7,8 @@ import {
   Trash2,
   Lock,
   Unlock,
-  Sparkles,
+  Wand2,
+  LayoutTemplate,
   ArrowDownRight,
 } from 'lucide-react'
 import { Button } from './ui/Button'
@@ -246,7 +247,7 @@ export default function SlidePanel({
                 )}
                 {slide.autoAnimate && (
                   <span title="Auto-Animate" className="text-accent text-[9px]">
-                    <Sparkles size={9} />
+                    <Wand2 size={9} />
                   </span>
                 )}
               </div>
@@ -466,7 +467,7 @@ export default function SlidePanel({
             className="w-full flex items-center justify-center gap-1.5 border border-dashed border-border hover:border-accent hover:text-accent hover:bg-hover"
             onClick={onAddFromTemplate}
           >
-            <Sparkles size={14} />
+            <LayoutTemplate size={14} />
             Insert Template
           </Button>
         )}
@@ -569,7 +570,7 @@ export default function SlidePanel({
                 setCtxMenu(null)
               }}
             >
-              <Sparkles size={14} />
+              <Wand2 size={14} />
               {slides[ctxMenu.index]?.autoAnimate ? 'Disable' : 'Enable'} Auto-Animate
             </button>
             <div className="h-px bg-border my-1 mx-2" />
