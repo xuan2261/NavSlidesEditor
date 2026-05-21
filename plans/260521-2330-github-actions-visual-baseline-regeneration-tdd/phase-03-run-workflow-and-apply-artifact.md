@@ -137,6 +137,10 @@ Run visual and full verification gates in Phase 4.
 - Run `26241153971` failed at verify with 16 passed and 1 failed: `live-viewer-no-presenter.png` differed by ~303-323 pixels because the screenshot included a random room code. Masked the dynamic `Room: {roomCode}` line in `present-speaker-share-and-live-viewer-baselines.spec.js` before rerun.
 - Run `26241432529` on commit `138584bf` passed `npm ci`, `npm run build`, `Update visual baselines`, and `Verify regenerated visual baselines`.
 - Run `26241432529` failed only at `Upload Linux visual baseline snapshots` and `Upload Playwright report` because GitHub Actions artifact storage quota is exhausted: `Failed to CreateArtifact: Artifact storage quota has been hit`. Artifact download/application remains blocked until quota is freed or recalculated.
+- 2026-05-22: Deleted 10 old `electron-win` GitHub Actions artifacts via API, freeing about 2.3 GB from the repository artifact list. `gh api repos/xuan2261/NavSlidesEditor/actions/artifacts` now reports `0` artifacts.
+- Rerun `26253132404` on commit `0f5f1d41` passed `npm ci`, `npm run build`, `Update visual baselines`, and `Verify regenerated visual baselines`, but artifact upload still failed with `Artifact storage quota has been hit`; GitHub notes usage recalculation can take 6-12 hours. `gh run download 26253132404 --name linux-playwright-visual-baseline-snapshots` confirms no artifact was created yet.
+- Deleted all remaining visible GitHub Actions artifacts across `xuan2261` repos: 146 expired artifacts from `nano-banana-slides-prompter` (~25.0 GB), 7 expired artifacts from `PPTAgent` (~1.1 GB), 10 old artifacts from this repo (~2.3 GB), and remaining Pages artifacts (~163 MB). Account artifact scan now reports no artifacts remain.
+- Rerun `26253710975` on commit `0f5f1d41` again passed `npm ci`, `npm run build`, `Update visual baselines`, and `Verify regenerated visual baselines`, but failed at upload because GitHub still has not recalculated artifact storage quota. Next action: rerun after GitHub's 6-12 hour quota recalculation window.
 
 ## Unresolved Questions
 
