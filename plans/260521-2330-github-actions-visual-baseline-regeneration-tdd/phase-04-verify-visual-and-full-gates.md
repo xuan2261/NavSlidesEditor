@@ -109,7 +109,7 @@ Update docs and finish the PR handoff in Phase 5.
 
 - Local contract gate is green: `npm run test -- tests/unit/github-actions-manual-visual-baseline-workflow-contract.test.js`.
 - Local lint gate is green: `npm run lint` exits 0 with 36 existing warnings.
-- Linux visual verification cannot run yet because Phase 3 cannot dispatch the brand-new manual workflow until GitHub registers it from the default branch.
+- Linux visual verification run `26240623328` dispatched after registering the workflow on `master`, but completed with failure at `npm ci` before build/visual steps. Root cause: `package-lock.json` missing npm 10 lock entries for `esbuild@0.28.0`; lockfile sync fix is in progress before rerun.
 
 ## Unresolved Questions
 

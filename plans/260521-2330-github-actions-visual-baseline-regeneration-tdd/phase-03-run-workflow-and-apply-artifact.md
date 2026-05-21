@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Run Workflow and Apply Artifact"
-status: blocked
+status: in-progress
 priority: P1
 effort: "0.5-1h plus CI time"
 dependencies: [1, 2]
@@ -81,7 +81,7 @@ Execute the new workflow on the feature branch, download the snapshot artifact, 
 ## Todo List
 
 - [x] Push branch with workflow.
-- [ ] Trigger manual run.
+- [x] Trigger manual run.
 - [ ] Confirm run green.
 - [ ] Download snapshot artifact.
 - [ ] Verify artifact file allowlist.
@@ -128,6 +128,11 @@ Run visual and full verification gates in Phase 4.
   HTTP 404: workflow manual-update-playwright-visual-baselines.yml not found on the default branch
   ```
 - This is a GitHub Actions registration constraint for brand-new manual workflows. Phase 3 can continue after the workflow file lands on the default branch, or after a maintainer triggers it through another accepted bootstrap path.
+- 2026-05-21: Resolved registration blocker by cherry-picking workflow commit `9331885c` onto default branch `master` as `6aeb3191` and pushing it.
+- `gh workflow list --all` now shows `Manual Update Playwright Visual Baselines`.
+- `gh workflow run manual-update-playwright-visual-baselines.yml --ref refactor/icon-consistency-pass` now succeeds and created run `26240623328`: https://github.com/xuan2261/NavSlidesEditor/actions/runs/26240623328
+- Run `26240623328` completed with failure at `npm ci` because `package-lock.json` was missing npm 10 lock entries for `esbuild@0.28.0` and related `@esbuild/*@0.28.0` optional packages. This is a new lockfile-sync blocker after dispatch registration was fixed.
+- Updated `package-lock.json` with `npx npm@10.8.2 install --package-lock-only`; `npx npm@10.8.2 ci --dry-run` now passes the lockfile sync check.
 
 ## Unresolved Questions
 

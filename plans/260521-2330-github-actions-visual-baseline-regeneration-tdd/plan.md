@@ -1,7 +1,7 @@
 ---
 title: "GitHub Actions Visual Baseline Regeneration TDD"
 description: "Manual CI path to regenerate Playwright visual baselines in canonical Linux Playwright container when local Docker is unavailable."
-status: blocked
+status: in-progress
 priority: P1
 branch: "refactor/icon-consistency-pass"
 tags: [testing, playwright, github-actions, visual-regression, tdd, ci]
@@ -42,7 +42,7 @@ This follows user-selected direction 1 for the active icon consistency PR. Local
 |---|---|---|---|
 | 1 | [Scout & Workflow Contract Tests](./phase-01-scout-and-workflow-contract-tests.md) | Complete | P1 |
 | 2 | [Add Manual GitHub Actions Workflow](./phase-02-add-manual-github-actions-workflow.md) | Complete | P1 |
-| 3 | [Run Workflow and Apply Artifact](./phase-03-run-workflow-and-apply-artifact.md) | Blocked | P1 |
+| 3 | [Run Workflow and Apply Artifact](./phase-03-run-workflow-and-apply-artifact.md) | In-progress | P1 |
 | 4 | [Verify Visual and Full Gates](./phase-04-verify-visual-and-full-gates.md) | Blocked | P1 |
 | 5 | [Docs and PR Finalization](./phase-05-docs-and-pr-finalization.md) | In-progress | P2 |
 
@@ -80,6 +80,8 @@ This follows user-selected direction 1 for the active icon consistency PR. Local
 - 2026-05-21: Phase 1 complete. Added `tests/unit/github-actions-manual-visual-baseline-workflow-contract.test.js`. Red run failed because `.github/workflows/manual-update-playwright-visual-baselines.yml` was missing; green run passed 4/4 after workflow was added.
 - 2026-05-21: Phase 2 complete. Added `.github/workflows/manual-update-playwright-visual-baselines.yml` and committed/pushed `9331885c test: add manual visual baseline workflow` to `refactor/icon-consistency-pass`.
 - 2026-05-21: Phase 3 blocked. `gh workflow run manual-update-playwright-visual-baselines.yml --ref refactor/icon-consistency-pass` returns `HTTP 404: workflow ... not found on the default branch`. GitHub requires a brand-new manual workflow to exist on the default branch before it can be dispatched.
+- 2026-05-21: Phase 3 unblocked. Cherry-picked the workflow bootstrap commit onto `master` as `6aeb3191`, pushed it, confirmed `gh workflow list --all` now shows `Manual Update Playwright Visual Baselines`, and dispatched run `26240623328` on `refactor/icon-consistency-pass`.
+- 2026-05-21: Run `26240623328` failed at `npm ci` due lockfile drift (`esbuild@0.28.0` missing from `package-lock.json`). Updated lockfile with npm 10 and verified `npx npm@10.8.2 ci --dry-run` passes before rerunning workflow.
 
 ## Unresolved Questions
 

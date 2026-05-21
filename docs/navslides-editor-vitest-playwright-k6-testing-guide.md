@@ -102,7 +102,7 @@ The mobile spec uses an explicit `deviceScaleFactor: 2` (Patch-09) instead of re
 
 ### GitHub Actions fallback for baseline regeneration
 
-If local Docker is unavailable, use the manual workflow after it exists on the default branch:
+If local Docker is unavailable, use the manual workflow on `master`:
 
 ```bash
 gh workflow run manual-update-playwright-visual-baselines.yml --ref <branch>
@@ -117,7 +117,7 @@ tests/e2e/visual/**/*-snapshots/*.png
 tests/e2e/visual-regression.spec.js-snapshots/*.png
 ```
 
-Do not dispatch this path from a branch until the workflow file has landed on the default branch; GitHub returns `workflow not found on the default branch` for brand-new manual workflows. Do not regenerate or commit visual snapshots from Windows/macOS hosts.
+The workflow is already registered on the default branch, so branch dispatch works now. The validated run created by the registration fix was `26240623328`. Do not regenerate or commit visual snapshots from Windows/macOS hosts.
 
 ## k6 load testing (Phase 8)
 
