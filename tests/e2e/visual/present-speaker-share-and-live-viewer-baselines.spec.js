@@ -53,7 +53,9 @@ test.describe('Present, speaker, share landing, live viewer visual baselines', (
     await page.goto(`/live/${room.roomCode}`)
     await page.waitForSelector('iframe[title="Live Presentation"], body', { timeout: 15000 })
     await page.waitForTimeout(500)
-    await expectStableScreenshot(page, 'live-viewer-no-presenter.png')
+    await expectStableScreenshot(page, 'live-viewer-no-presenter.png', {
+      mask: [page.getByText(`Room: ${room.roomCode}`)],
+    })
   })
 
   test('speaker view renders notes panel and thumbnails', async ({ page, request }) => {

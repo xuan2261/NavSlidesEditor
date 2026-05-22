@@ -3,8 +3,8 @@ import {
   Type, Image as ImageIcon, Upload, Shapes, Minus, ArrowUpRight,
   BarChart3, Table2, FileCode, Code, Sigma, QrCode,
   Video, Music, FolderOpen, Monitor,
-  Globe, Pencil, Scissors,
-  Sparkles, Grid3x3, Clapperboard, Box, Clock,
+  Globe, Pencil, Scissors, FileImage,
+  Wand2, Grid3x3, Clapperboard, Box, Clock,
   Gamepad2, MessageSquare, Smile, Package,
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
@@ -368,7 +368,7 @@ export default function InsertTabContent({
           <Button variant="icon" className="h-7 w-7" title="Add SVG" aria-label="Add SVG"
             onMouseDown={(e) => { e.preventDefault(); handleSvgFileUpload() }}
             onKeyDown={(e) => handleKeyboardActivation(e, handleSvgFileUpload)}>
-            <Pencil size={14} />
+            <FileImage size={14} />
           </Button>
           <Button variant="icon" className="h-7 w-7" title="Add drawing" aria-label="Add drawing"
             onMouseDown={(e) => { e.preventDefault(); onAddDrawing?.() }}
@@ -388,7 +388,7 @@ export default function InsertTabContent({
           icon={Package}
           label="Advanced"
           items={[
-            { id: 'kinetic', icon: Sparkles, label: 'Kinetic Text', onAction: () => onAddKineticText?.() },
+            { id: 'kinetic', icon: Wand2, label: 'Kinetic Text', onAction: () => onAddKineticText?.() },
             { id: 'mathgrid', icon: Grid3x3, label: 'Math Grid', onAction: () => onAddMathGrid?.() },
             { id: 'anime', icon: Clapperboard, label: 'Anime.js', onAction: () => onAddAnime?.() },
             { id: 'three', icon: Box, label: 'Three.js', onAction: () => onAddThree?.() },

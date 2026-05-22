@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Search, Trash2, Upload, Image, Film, Music, Download } from 'lucide-react'
+import { Search, Trash2, Upload, Image as ImageIcon, Film, Music, Download } from 'lucide-react'
 import { api } from '../utils/api'
 import { searchUnsplash } from '../services/unsplash'
 import { searchGiphy } from '../services/giphy'
@@ -7,7 +7,7 @@ import { Button, ModalShell } from '../components/ui'
 
 const TYPE_FILTERS = [
   { key: '', label: 'All', icon: null },
-  { key: 'image', label: 'Images', icon: Image },
+  { key: 'image', label: 'Images', icon: ImageIcon },
   { key: 'video', label: 'Videos', icon: Film },
   { key: 'audio', label: 'Audio', icon: Music },
 ]
@@ -236,7 +236,7 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
           </div>
         ) : media.length === 0 ? (
           <div className="text-center py-16 text-text-muted flex flex-col items-center">
-            <Image size={48} className="mb-3 opacity-30" />
+            <ImageIcon size={48} className="mb-3 opacity-30" />
             <p className="text-[13px] font-medium text-text-primary">No media files found</p>
             {activeTab === 'local' && (
               <p className="text-xs mt-1">Upload images, videos, or audio to get started</p>

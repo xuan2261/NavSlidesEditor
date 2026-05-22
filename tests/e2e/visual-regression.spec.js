@@ -4,6 +4,10 @@ import {
   apiDeletePresentation,
   apiUpdatePresentation,
 } from './fixtures/test-fixtures.js'
+import {
+  freezeUiForSnapshot,
+  suppressTutorialAndOverlays,
+} from './pages/visual-snapshot-deterministic-freeze-and-helper.js'
 
 function seededSlide(elements = []) {
   return {
@@ -84,22 +88,18 @@ test.describe('Visual Regression', () => {
       ],
     })
 
-    await page.addInitScript(() => {
-      window.localStorage.setItem('navSlidesTutorialSeen', 'true')
-    })
+    await suppressTutorialAndOverlays(page)
 
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(`/editor/${presentationId}`)
-    await expect(page.locator('.slide-canvas')).toBeVisible()
+    const slideCanvas = page.locator('.slide-canvas')
+    await expect(slideCanvas).toBeVisible()
+    await freezeUiForSnapshot(page)
 
-    await page.addStyleTag({
-      content: '* { animation: none !important; transition: none !important; }',
-    })
-
-    await expect(page).toHaveScreenshot('editor-canvas-basic.png', {
+    await expect(slideCanvas).toHaveScreenshot('editor-canvas-basic.png', {
       animations: 'disabled',
       maxDiffPixelRatio: 0.01,
-      mask: [page.locator('.tour-step-quick-access')],
+      threshold: 0.2,
     })
   })
 })

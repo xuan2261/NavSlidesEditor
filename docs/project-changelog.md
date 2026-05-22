@@ -2,6 +2,16 @@
 
 ## v1.7.x
 
+## 2026-05-22
+
+- Registered the manual Playwright visual-baseline workflow on default branch `master` by cherry-picking `9331885c` as `6aeb3191`; `workflow_dispatch` now succeeds. The initial dispatch run was `26240623328`; the successful fallback run was `26262072930`.
+- Completed the GitHub Actions fallback path for Linux Playwright visual baseline regeneration. Run `26262072930` passed update, verify, and artifact upload in `mcr.microsoft.com/playwright:v1.59.1-jammy`; Linux `*-chromium-linux.png` baselines were applied from the artifact only.
+
+## 2026-05-21
+
+- Added a manual GitHub Actions workflow for Linux-only Playwright visual baseline regeneration in `mcr.microsoft.com/playwright:v1.59.1-jammy`, with a Vitest contract test covering manual-only trigger, read-only permissions, update/verify commands, and narrow snapshot PNG artifacts.
+- Documented the GitHub Actions fallback for maintainers without local Docker. Current branch dispatch is blocked until the new manual workflow exists on the default branch.
+
 ## 2026-05-20
 
 - Added local/self-hosted plugin runtime Phase 1: read-only `/api/plugins`

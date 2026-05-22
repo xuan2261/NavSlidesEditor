@@ -97,3 +97,65 @@ describe('CanvasContextMenu copy URL action', () => {
     expect(onClose).toHaveBeenCalled()
   })
 })
+
+describe('icon consistency pass — Lucide ctx-menu', () => {
+  const ICON_GLYPHS = ['↖', '↑', '↗', '←', '⊕', '→', '↙', '↓', '↘', '↺', '⧉']
+
+  function getMenuRoot() {
+    // Container is the fixed positioned div with z-[9999].
+    return document.querySelector('div[class*="z-[9999]"]')
+  }
+
+  it('top-level item buttons render Lucide SVG (no emoji, no unicode arrows)', () => {
+    renderMenu({ id: 'rect-1', type: 'shape' })
+    const root = getMenuRoot()
+    expect(root).toBeTruthy()
+    const text = root?.textContent || ''
+    // Extended_Pictographic catches 📋 ✂ 📌 and similar emoji code points.
+    expect(text.match(/\p{Extended_Pictographic}/gu) || []).toEqual([])
+    for (const glyph of ICON_GLYPHS) {
+      expect(text).not.toContain(glyph)
+    }
+    // Lucide-react renders <svg class="lucide ..."> — every top-level menu
+    // item button now contains at least one such svg.
+    const topLevelButtons = root?.querySelectorAll(':scope > button') || []
+    expect(topLevelButtons.length).toBeGreaterThan(0)
+    for (const btn of topLevelButtons) {
+      expect(btn.querySelector('svg.lucide')).toBeTruthy()
+    }
+  })
+
+  it('image element variant exposes Crop and Reset crop with Lucide icons', () => {
+    renderMenu({ id: 'img-x', type: 'image', src: 'https://example.test/x.png' })
+    const cropBtn = screen.getByRole('button', { name: /^Crop$/ })
+    const resetBtn = screen.getByRole('button', { name: /Reset crop/ })
+    expect(cropBtn.querySelector('svg.lucide')).toBeTruthy()
+    expect(resetBtn.querySelector('svg.lucide')).toBeTruthy()
+    // No raw glyphs in the rendered text content.
+    expect(cropBtn.textContent || '').not.toContain('✂')
+    expect(resetBtn.textContent || '').not.toContain('↺')
+  })
+
+  it('SNAP grid renders 9 Lucide icons and keeps aria-labels (Upper/Middle/Lower × Left/Center/Right)', () => {
+    renderMenu({ id: 'rect-2', type: 'shape' })
+    const root = getMenuRoot()
+    const snapLabel = Array.from(root?.querySelectorAll('div') || []).find(
+      (d) => d.textContent === 'Snap Reference',
+    )
+    expect(snapLabel).toBeTruthy()
+    const grid = snapLabel?.nextElementSibling
+    const cells = grid?.querySelectorAll('button') || []
+    expect(cells.length).toBe(9)
+    for (const cell of cells) {
+      expect(cell.querySelector('svg.lucide')).toBeTruthy()
+      // accessible name comes from `title` attribute (Upper Left etc.)
+      const title = cell.getAttribute('title') || ''
+      expect(title.length).toBeGreaterThan(0)
+      // No legacy unicode arrows leaking through.
+      const text = cell.textContent || ''
+      for (const glyph of ICON_GLYPHS) {
+        expect(text).not.toContain(glyph)
+      }
+    }
+  })
+})

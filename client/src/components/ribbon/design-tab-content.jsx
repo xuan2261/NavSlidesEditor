@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
-  Palette, MonitorSmartphone, Layout, Hash, Navigation, Upload, Grid3X3,
+  Palette, MonitorSmartphone, PanelBottom, Hash, Navigation, Upload, Grid3X3,
+  Layout, Monitor, Square, MonitorPlay, MonitorSpeaker,
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import RibbonSection from './ribbon-section'
@@ -14,10 +15,10 @@ const THEMES = [
 ]
 
 const SIZE_PRESETS = [
-  { label: '16:9', w: 960, h: 540 },
-  { label: '4:3', w: 960, h: 720 },
-  { label: 'Wide', w: 1280, h: 720 },
-  { label: 'Ultra', w: 1920, h: 1080 },
+  { label: '16:9', w: 960, h: 540, icon: Monitor },
+  { label: '4:3', w: 960, h: 720, icon: Square },
+  { label: 'Wide', w: 1280, h: 720, icon: MonitorPlay },
+  { label: 'Ultra', w: 1920, h: 1080, icon: MonitorSpeaker },
 ]
 
 function ThemeGallery({ current, onSelect }) {
@@ -207,15 +208,15 @@ export default function DesignTabContent({
 
       <RibbonSection label="Slide Size" className="border-r border-border">
         <div className="flex items-center gap-0.5">
-          {SIZE_PRESETS.map(({ label, w, h }) => (
-            <Button key={label} variant="ribbon" className="h-7 px-1.5 text-[10px]"
-              title={`${w}×${h}`} aria-label={`Set size ${label}`}
+          {SIZE_PRESETS.map((preset) => (
+            <Button key={preset.label} variant="ribbon" className="h-7 px-1.5 text-[10px]"
+              title={`${preset.w}×${preset.h}`} aria-label={`Set size ${preset.label}`}
               onMouseDown={(e) => {
                 e.preventDefault()
-                onUpdatePresentation?.({ resolution: { width: w, height: h } })
+                onUpdatePresentation?.({ resolution: { width: preset.w, height: preset.h } })
               }}>
-              <MonitorSmartphone size={12} />
-              <span className="hidden xl:inline">{label}</span>
+              <preset.icon size={12} />
+              <span className="hidden xl:inline">{preset.label}</span>
             </Button>
           ))}
         </div>
@@ -229,7 +230,7 @@ export default function DesignTabContent({
               e.preventDefault()
               onUpdatePresentation?.({ showFooter: !presentation?.showFooter })
             }}>
-            <Layout size={14} />
+            <PanelBottom size={14} />
             <span className="text-[11px] hidden lg:inline">
               {presentation?.showFooter ? 'Footer On' : 'Footer Off'}
             </span>
