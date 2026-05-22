@@ -10,7 +10,7 @@
 ## Overview
 
 Priority: P1  
-Status: In Progress  
+Status: Complete  
 Goal: document the final classic ribbon contract, run final gates, and prepare review handoff.
 
 <!-- Updated: Validation Session 1 - full E2E remains conditional unless implementation blast radius expands outside ribbon. -->
@@ -84,7 +84,7 @@ Optional if time:
 - [x] Update docs.
 - [x] Write final verification report.
 - [x] Run final targeted non-visual gates.
-- [ ] Refresh canonical Linux visual baselines and re-run visual gate.
+- [x] Refresh canonical Linux visual baselines and re-run visual gate.
 - [x] Run code review.
 - [x] Update plan status/progress.
 

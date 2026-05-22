@@ -9,7 +9,7 @@
 ## Overview
 
 Priority: P1  
-Status: Blocked on canonical snapshot refresh  
+Status: Complete  
 Goal: verify classic ribbon visual consistency and keyboard/a11y behavior after layout changes.
 
 <!-- Updated: Validation Session 1 - visual snapshot updates remain downstream of geometry and keyboard/a11y gates, using canonical Playwright/Linux workflow. -->
@@ -66,7 +66,7 @@ Canonical required tabs: Home, Insert, Design, Format, Transitions, Animations, 
 - [x] Add Format empty/selected visual cases if geometry gates pass.
 - [x] Validate tab keyboard navigation.
 - [x] Validate dropdown keyboard behavior still passes.
-- [ ] Update intended snapshots only in canonical environment.
+- [x] Update intended snapshots only in canonical environment.
 
 ## Success Criteria
 

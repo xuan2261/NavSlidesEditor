@@ -31,22 +31,26 @@ jobs:
 
       - run: npm run build
 
-      - name: Update ribbon visual baselines
+      - name: Update visual baselines
         run: >
           npx playwright test
-          tests/e2e/visual/ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js
+          tests/e2e/visual/
+          tests/e2e/visual-regression.spec.js
           --update-snapshots
 
-      - name: Verify regenerated ribbon visual baselines
+      - name: Verify regenerated visual baselines
         run: >
           npx playwright test
-          tests/e2e/visual/ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js
+          tests/e2e/visual/
+          tests/e2e/visual-regression.spec.js
 
       - name: Upload Linux visual baseline snapshots
         uses: actions/upload-artifact@v4
         with:
           name: linux-playwright-visual-baseline-snapshots
-          path: tests/e2e/visual/ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js-snapshots/*.png
+          path: |
+            tests/e2e/visual/**/*-snapshots/*.png
+            tests/e2e/visual-regression.spec.js-snapshots/*.png
           if-no-files-found: error
           retention-days: 14
 

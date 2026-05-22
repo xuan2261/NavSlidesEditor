@@ -25,18 +25,23 @@ Passed:
 - `npm run lint` => 0 errors, existing warnings only.
 - `npm run build` => passed, existing bundle-size warnings only.
 - `npm run test` => 147 files passed; 1287 tests passed, 1 skipped.
+- Canonical Linux ribbon visual baseline workflow:
+  - Run: https://github.com/xuan2261/NavSlidesEditor/actions/runs/26281998063
+  - Branch/ref: `cook/ribbon-classic-alignment-260522` at `b621b21b4940e1fd407a1e8b1a1043f8faebbd38`
+  - Update step: `tests/e2e/visual/ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js --update-snapshots` => 7/7 passed.
+  - Verify step: `tests/e2e/visual/ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js` => 7/7 passed.
+  - Artifact applied: `linux-playwright-visual-baseline-snapshots`.
 - Code review subagent: `DONE_WITH_CONCERNS`; raised row-level vertical overflow and exactly-one-row assertions. Both concerns were addressed, and `ribbon-layout.spec.js` passed again afterward.
 
-Not passed yet:
+Known local/CI notes:
 
 - `npx playwright test tests/e2e/visual/ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js --project=chromium`
-  - Result: 1 passed, 6 failed from intended visual snapshot drift after the ribbon panel fill/Format canonical tab changes.
-  - Affected snapshots/artifacts:
-    - `test-results/visual-ribbon-tabs-across--bf599-renders-dark-theme-baseline-chromium/ribbon-insert-dark-diff.png`
-    - `test-results/visual-ribbon-tabs-across--7b76d-renders-dark-theme-baseline-chromium/ribbon-design-dark-diff.png`
-    - `test-results/visual-ribbon-tabs-across--99ce6-renders-dark-theme-baseline-chromium/ribbon-animations-dark-diff.png`
-    - `test-results/visual-ribbon-tabs-across--19a83-renders-dark-theme-baseline-chromium/ribbon-view-dark-diff.png`
-  - Snapshot update not performed in this Windows session because the plan requires canonical Playwright/Linux regeneration.
+  - Local Windows run before Linux artifact application: 1 passed, 6 failed from intended visual snapshot drift.
+  - Windows snapshots were not regenerated or applied.
+- First full visual-baseline workflow attempt:
+  - Run: https://github.com/xuan2261/NavSlidesEditor/actions/runs/26281791694
+  - Result: failed in `tests/e2e/visual/editor-canvas-states-empty-and-with-content.spec.js`, outside this ribbon plan scope.
+  - The targeted Linux ribbon workflow above passed and produced the applied artifact.
 
 ## Package Status
 
@@ -45,8 +50,7 @@ Not passed yet:
 
 ## Remaining Gate
 
-- Regenerate and verify intended ribbon visual baselines through the canonical Playwright/Linux workflow.
-- Re-run the visual spec after applying canonical baseline artifacts.
+- None for the ribbon plan. Local Windows visual baselines remain intentionally unchanged.
 
 ## Unresolved Questions
 

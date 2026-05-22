@@ -1,7 +1,7 @@
 ---
 title: "PowerPoint Classic Ribbon Alignment TDD"
 description: "Fix ribbon classic alignment outliers with narrow TDD gates and minimal shared-contract hardening."
-status: in-progress
+status: complete
 priority: P1
 effort: 10h
 branch: master
@@ -34,8 +34,8 @@ Fix the remaining PowerPoint classic ribbon alignment outliers without a broad r
 | 3 | [Tab Group State Matrix And Ordering](./phase-03-tab-group-taxonomy-and-ordering.md) | Complete | 100% |
 | 4 | [Contextual Format Tab Rhythm](./phase-04-contextual-format-tab-rhythm.md) | Complete | 100% |
 | 5 | [Density Overflow And Responsive Gates](./phase-05-density-overflow-and-responsive-gates.md) | Complete | 100% |
-| 6 | [Visual Accessibility And Keyboard Verification](./phase-06-visual-accessibility-and-keyboard-verification.md) | Blocked on snapshot refresh | 70% |
-| 7 | [Docs Review And Release Gate](./phase-07-docs-review-and-release-gate.md) | In Progress | 80% |
+| 6 | [Visual Accessibility And Keyboard Verification](./phase-06-visual-accessibility-and-keyboard-verification.md) | Complete | 100% |
+| 7 | [Docs Review And Release Gate](./phase-07-docs-review-and-release-gate.md) | Complete | 100% |
 
 ## Dependencies
 
@@ -105,4 +105,4 @@ Cook command: `/ck:cook --tdd C:\Work\NavSlidesEditor\plans\260522-1527-powerpoi
 - Phase 07: final gate keeps full E2E conditional unless implementation blast radius expands.
 
 ## Unresolved Questions
-- Visual baselines need canonical Playwright/Linux regeneration for intended ribbon diffs before final completion. Height stays `80px` for this plan.
+- None.
