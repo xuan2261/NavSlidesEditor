@@ -124,6 +124,11 @@ Tail phase. Run lint + tests + e2e + build, manual visual smoke on the affected 
   - `npm run build`: pass, existing chunk-size warnings.
   - `npx playwright test --grep-invert "visual|Visual" --reporter=list`: exit 0, 377 passed / 1 skipped / 1 flaky retried/pass.
   - Linux visual workflow `26262072930`: update 17 passed, verify 17 passed, snapshot artifact uploaded.
+- Follow-up keyboard coverage verification 2026-05-22:
+  - `npx vitest run client/src/components/ribbon/ribbon-file-dropdown-menu.test.jsx client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx client/src/components/QuickAccessToolbar.test.jsx`: pass, 3 files / 30 tests.
+  - `npm run lint`: pass, 36 existing warnings.
+  - `npm run build`: pass, existing chunk-size warnings.
+  - `npx playwright test tests/e2e/element-lifecycle.spec.js --reporter=list`: pass, 7/7.
 - PR opened: https://github.com/xuan2261/NavSlidesEditor/pull/2
 
 ## Risk Assessment

@@ -215,9 +215,12 @@ export class RibbonInsertHelper {
     const insertPanel = this.page.getByRole('tabpanel', { name: 'Insert' })
     await insertPanel.waitFor({ state: 'visible' })
     await insertPanel.getByRole('button', { name: 'Add table' }).click()
-    await this.page
-      .getByRole('button', { name: `Insert ${rows} by ${cols} table`, exact: true })
-      .dispatchEvent('click')
+    const tableCell = this.page.getByRole('button', {
+      name: `Insert ${rows} by ${cols} table`,
+      exact: true,
+    })
+    await tableCell.focus()
+    await this.page.keyboard.press('Enter')
 
     await this.page.waitForFunction(
       (prev) => document.querySelectorAll('.element-wrapper').length > prev,

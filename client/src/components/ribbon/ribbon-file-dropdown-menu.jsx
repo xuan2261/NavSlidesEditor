@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FileText, FolderOpen, Download, FileDown, History, Github, CloudUpload } from 'lucide-react'
 import { Button } from '../ui'
 
@@ -46,6 +46,7 @@ export default function FileDropdown({
   onHistory,
 }) {
   const [open, setOpen] = useState(false)
+  const triggerRef = useRef(null)
 
   const callbacks = {
     onOpenProject, onExportPDF, onExportPPTX, onExportHTML,
@@ -57,9 +58,33 @@ export default function FileDropdown({
     setOpen(false)
   }
 
+  const closeMenu = useCallback(() => {
+    setOpen(false)
+    triggerRef.current?.focus()
+  }, [])
+
+  const handleKeyboardActivation = (event, action) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    action()
+  }
+
+  useEffect(() => {
+    if (!open) return undefined
+    const closeOnEscape = (event) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      event.stopPropagation()
+      closeMenu()
+    }
+    document.addEventListener('keydown', closeOnEscape, true)
+    return () => document.removeEventListener('keydown', closeOnEscape, true)
+  }, [closeMenu, open])
+
   return (
     <div className="relative">
       <Button
+        ref={triggerRef}
         variant="icon"
         className="menu-trigger h-7 px-2 flex items-center gap-1"
         title="File"
@@ -69,6 +94,7 @@ export default function FileDropdown({
           e.preventDefault()
           setOpen((v) => !v)
         }}
+        onKeyDown={(e) => handleKeyboardActivation(e, () => setOpen((v) => !v))}
       >
         <FileText size={14} />
         <span className="text-[11px] hidden sm:inline">File</span>
@@ -79,6 +105,8 @@ export default function FileDropdown({
           <div className="fixed inset-0 z-[999]" onMouseDown={() => setOpen(false)} />
           <div
             className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg shadow-xl z-[1000] w-[220px] py-1"
+            role="menu"
+            aria-label="File menu"
             onMouseDown={(e) => e.stopPropagation()}
           >
             {MENU_GROUPS.map((group) => (
@@ -92,10 +120,12 @@ export default function FileDropdown({
                     <button
                       key={item.id}
                       className="dropdown-item w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-text-primary hover:bg-secondary cursor-pointer transition-colors text-left"
+                      role="menuitem"
                       onMouseDown={(e) => {
                         e.preventDefault()
                         handleAction(item.action)
                       }}
+                      onKeyDown={(e) => handleKeyboardActivation(e, () => handleAction(item.action))}
                     >
                       <Icon size={14} className="text-text-muted" />
                       {item.label}

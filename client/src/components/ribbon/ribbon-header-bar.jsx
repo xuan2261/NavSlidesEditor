@@ -1,6 +1,6 @@
 import * as Tabs from '@radix-ui/react-tabs'
 import { BarChart3, Bot, FileText, Languages, Play, Radio, Share2, Sparkles } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useUIStore } from '../../stores/ui-store'
 import { Button } from '../ui'
 import FileDropdown from './ribbon-file-dropdown-menu'
@@ -8,15 +8,33 @@ import TabBar from './tab-bar-with-scroll-and-icons'
 
 function RibbonActionDropdown({ label, icon: Icon, items }) {
   const [open, setOpen] = useState(false)
+  const triggerRef = useRef(null)
   const toggleOpen = () => setOpen((v) => !v)
   const runItem = (item) => {
     item.onClick?.()
     setOpen(false)
   }
+  const closeMenu = useCallback(() => {
+    setOpen(false)
+    triggerRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    if (!open) return undefined
+    const closeOnEscape = (event) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      event.stopPropagation()
+      closeMenu()
+    }
+    document.addEventListener('keydown', closeOnEscape, true)
+    return () => document.removeEventListener('keydown', closeOnEscape, true)
+  }, [closeMenu, open])
 
   return (
     <div className="relative">
       <Button
+        ref={triggerRef}
         variant="ribbon"
         className="menu-trigger h-8"
         title={label}
@@ -40,6 +58,8 @@ function RibbonActionDropdown({ label, icon: Icon, items }) {
           <div className="fixed inset-0 z-[999]" onMouseDown={() => setOpen(false)} />
           <div
             className="absolute right-0 top-full z-[1000] mt-1 w-[190px] rounded-lg border border-border bg-card py-1 shadow-xl"
+            role="menu"
+            aria-label={`${label} menu`}
             onMouseDown={(e) => e.stopPropagation()}
           >
             {items.map((item) => {
@@ -48,6 +68,7 @@ function RibbonActionDropdown({ label, icon: Icon, items }) {
                 <button
                   key={item.label}
                   className="dropdown-item flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-[11px] text-text-primary transition-colors hover:bg-secondary"
+                  role="menuitem"
                   onMouseDown={(e) => {
                     e.preventDefault()
                     runItem(item)

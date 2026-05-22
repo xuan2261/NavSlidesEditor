@@ -2,7 +2,7 @@
 
 ## Product Vision
 
-**NavSlides Editor** is a self-hostable, WYSIWYG presentation editor powered by reveal.js. Users build, edit, and present slides entirely in the browser - no account, no cloud, no tracking. Available as a web app (Docker / Node.js) and a standalone desktop app via Electron. Current release: v1.7.1.
+**NavSlides Editor** is a self-hostable, WYSIWYG presentation editor powered by reveal.js. Users build, edit, and present slides entirely in the browser - no account, no cloud, no tracking. Available as a web app (Docker / Node.js) and a standalone desktop app via Electron. Current release: v1.9.1.
 
 ## Problem Statement
 
