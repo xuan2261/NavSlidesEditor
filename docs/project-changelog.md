@@ -4,6 +4,7 @@
 
 ## 2026-05-22
 
+- Released `v1.9.2`: classic ribbon alignment hardening, Linux visual baseline refresh, and QA confidence coverage are tagged for the next Windows Electron release workflow.
 - Hardened the classic ribbon alignment contract: active tab panels now fill the fixed 80px ribbon area, inactive panels no longer intercept pointer events, tab rows expose stable `data-ribbon-*` selectors, Format empty state renders as a `Selection` group, and ribbon layout E2E now covers group order, left-flow, and scroll-aware responsive gates.
 - Fixed Home dashboard Grid/List view toggle clipping: the segmented control no longer shrinks under header pressure, List View remains fully visible, and a Playwright regression covers the button bounds.
 - Prepared the `v1.9.1` Windows Electron release path: README and release-facing docs now match the root package version, deployment docs clarify that GitHub Releases publish Windows packages only, and a Vitest contract guards release/version drift.
