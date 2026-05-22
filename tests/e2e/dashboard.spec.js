@@ -44,6 +44,50 @@ test.describe('Dashboard & Navigation', () => {
     await apiDeletePresentation(request, pres2.id)
   })
 
+  test('view toggle buttons remain fully visible', async ({ page, request }) => {
+    const pres = await apiCreatePresentation(request, 'View Toggle Layout Regression')
+
+    try {
+      const home = new HomePage(page)
+      await home.goto()
+      await home.switchSidebarView('All Presentations')
+
+      const toggle = page.locator('button[title="List view"]').locator('..')
+      const gridButton = page.locator('button[title="Grid view"]')
+      const listButton = page.locator('button[title="List view"]')
+
+      await expect(gridButton).toBeVisible()
+      await expect(listButton).toBeVisible()
+
+      const metrics = await page.evaluate(() => {
+        const grid = document.querySelector('button[title="Grid view"]')
+        const list = document.querySelector('button[title="List view"]')
+        const wrap = list?.parentElement
+        const rect = (node) => {
+          const box = node.getBoundingClientRect()
+          return {
+            left: box.left,
+            right: box.right,
+            width: box.width,
+          }
+        }
+
+        return {
+          wrap: rect(wrap),
+          grid: rect(grid),
+          list: rect(list),
+        }
+      })
+
+      expect(metrics.grid.left).toBeGreaterThanOrEqual(metrics.wrap.left)
+      expect(metrics.list.right).toBeLessThanOrEqual(metrics.wrap.right)
+      expect(metrics.wrap.width).toBeGreaterThanOrEqual(metrics.grid.width + metrics.list.width)
+      await expect(toggle).toBeVisible()
+    } finally {
+      await apiDeletePresentation(request, pres.id)
+    }
+  })
+
   test('can open an existing presentation from All Presentations', async ({ page, request }) => {
     const pres = await apiCreatePresentation(request, 'Open From All Regression')
 

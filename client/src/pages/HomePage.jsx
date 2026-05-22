@@ -1281,20 +1281,22 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         <option value="title">Name</option>
                         <option value="slides">Slide count</option>
                       </Select>
-                      <div className="flex bg-card border border-border rounded overflow-hidden">
+                      <div className="flex shrink-0 bg-card border border-border rounded overflow-hidden">
                         <Button
                           variant="ghost"
-                          className={`px-2.5 py-1.5 text-text-muted border-none bg-transparent cursor-pointer transition-colors hover:text-text-primary ${viewMode === 'grid' ? 'bg-accent text-white' : ''}`}
+                          className={`h-7 w-8 shrink-0 rounded-none border-none bg-transparent !px-0 !py-0 text-text-muted transition-colors hover:text-text-primary ${viewMode === 'grid' ? 'bg-accent text-white' : ''}`}
                           onClick={() => setViewMode('grid')}
                           title="Grid view"
+                          aria-label="Grid view"
                         >
                           <Grid3x3 size={14} />
                         </Button>
                         <Button
                           variant="ghost"
-                          className={`px-2.5 py-1.5 text-text-muted border-none bg-transparent cursor-pointer transition-colors hover:text-text-primary ${viewMode === 'list' ? 'bg-accent text-white' : ''}`}
+                          className={`h-7 w-8 shrink-0 rounded-none border-none bg-transparent !px-0 !py-0 text-text-muted transition-colors hover:text-text-primary ${viewMode === 'list' ? 'bg-accent text-white' : ''}`}
                           onClick={() => setViewMode('list')}
                           title="List view"
+                          aria-label="List view"
                         >
                           <List size={14} />
                         </Button>
