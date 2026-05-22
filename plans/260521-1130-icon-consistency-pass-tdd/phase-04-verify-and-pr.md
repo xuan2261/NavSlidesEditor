@@ -94,8 +94,8 @@ Tail phase. Run lint + tests + e2e + build, manual visual smoke on the affected 
   - 2026-05-21: non-visual Playwright gate passes with `npx playwright test --grep-invert "visual|Visual" --reporter=list` (`377 passed`, `1 skipped`, `1 flaky` retried/pass).
   - 2026-05-22: visual baseline regeneration workflow `26262072930` passed update + verify in `mcr.microsoft.com/playwright:v1.59.1-jammy`; Linux baselines committed in `c340ef0b`.
 - [x] Visual smoke complete for affected icon panels via component tests + non-visual Playwright coverage; screenshot baselines remain pending
-- [ ] Single PR opened with conventional commit title
-- [ ] PR description notes issue #7 deferred with link to Red Team Review
+- [x] Single PR opened with conventional commit title
+- [x] PR description notes issue #7 deferred with link to Red Team Review
 
 ## Verification Notes — 2026-05-21
 
@@ -124,6 +124,7 @@ Tail phase. Run lint + tests + e2e + build, manual visual smoke on the affected 
   - `npm run build`: pass, existing chunk-size warnings.
   - `npx playwright test --grep-invert "visual|Visual" --reporter=list`: exit 0, 377 passed / 1 skipped / 1 flaky retried/pass.
   - Linux visual workflow `26262072930`: update 17 passed, verify 17 passed, snapshot artifact uploaded.
+- PR opened: https://github.com/xuan2261/NavSlidesEditor/pull/2
 
 ## Risk Assessment
 

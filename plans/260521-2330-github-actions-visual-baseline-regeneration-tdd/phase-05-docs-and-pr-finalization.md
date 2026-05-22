@@ -115,6 +115,7 @@ Return to the icon plan Phase 4 and complete PR creation.
 - Added 2026-05-21 changelog entry for the manual baseline workflow and default-branch dispatch blocker.
 - Added 2026-05-22 changelog/testing-guide updates for the successful fallback run.
 - Run `26262072930` generated and verified Linux baselines, uploaded artifacts, and unblocked the original icon consistency plan. Focused commits pushed: `bfd7f11c test: stabilize editor canvas visual baseline` and `c340ef0b test: add linux visual baselines`.
+- Created PR: https://github.com/xuan2261/NavSlidesEditor/pull/2
 
 ## Unresolved Questions
 

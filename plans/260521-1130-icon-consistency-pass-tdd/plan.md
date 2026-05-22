@@ -117,7 +117,7 @@ Phase 4 visual baseline blocker is resolved by manual workflow run `26262072930`
 - [x] `icon-policy-invariants.test.js` all 5 `it` blocks green
 - [x] All existing unit tests green; Playwright E2E not rerun in this session
 - [x] Single commit exists: `1798929c refactor(icons): consistency pass for editor page`
-- [ ] PR description notes #7 deferred + links to Red Team Review section
+- [x] PR description notes #7 deferred + links to Red Team Review section
 - [x] Visual smoke per panel (Phase 4 checklist) complete
 
 ## Completion Verification — 2026-05-21
@@ -133,6 +133,7 @@ Phase 4 visual baseline blocker is resolved by manual workflow run `26262072930`
 - Incremental E2E/accessibility fixes after `1798929c`: dropdown menu roles + keyboard activation + Escape close, QuickAccessToolbar accessible toolbar label, context-menu selector update, table helper accessible keyboard activation.
 - Not completed in this session: visual snapshot baseline regeneration, PR creation.
 - Completed 2026-05-22: visual snapshot baseline regeneration via manual workflow run `26262072930`; Linux baselines committed in `c340ef0b`.
+- PR opened 2026-05-22: https://github.com/xuan2261/NavSlidesEditor/pull/2
 
 ## Validation Log
 
