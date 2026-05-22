@@ -4,7 +4,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.9.0** — ribbon UI accessibility & contrast pass: focusable inline save status, surfaced `Ctrl+Alt+R` ribbon toggle in View, typography minimum 11 px on interactive controls, and tighter 72 px ribbon body.
+Current release: **v1.9.1** — ribbon UI accessibility follow-up, local plugin runtime, and icon consistency pass.
 
 ## Features
 
@@ -73,7 +73,7 @@ Named snapshots saved per presentation, restore any previous version, delete ind
 
 ### Option A — Desktop App (Electron)
 
-Run as a native desktop app (no server, no Docker). Download pre-built packages from [Releases](https://github.com/xuan2261/NavSlidesEditor/releases). The current GitHub release workflow publishes a Windows artifact automatically; Linux/macOS packages can still be built locally with the scripts below (requires **Node.js 20+**):
+Run as a native desktop app (no server, no Docker). Download pre-built Windows packages from [Releases](https://github.com/xuan2261/NavSlidesEditor/releases). The current GitHub release workflow publishes Windows artifacts automatically; Linux/macOS packages can still be built locally with the scripts below (requires **Node.js 20+**):
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install

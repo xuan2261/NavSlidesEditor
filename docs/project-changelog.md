@@ -4,6 +4,7 @@
 
 ## 2026-05-22
 
+- Prepared the `v1.9.1` Windows Electron release path: README and release-facing docs now match the root package version, deployment docs clarify that GitHub Releases publish Windows packages only, and a Vitest contract guards release/version drift.
 - Closed icon consistency pass follow-up gaps: File, AI, and Share ribbon dropdowns now have covered Enter/Space activation, Escape close, and focus return behavior; Quick Access exposes a labelled toolbar; E2E selectors match Lucide-era context menu labels.
 - Registered the manual Playwright visual-baseline workflow on default branch `master` by cherry-picking `9331885c` as `6aeb3191`; `workflow_dispatch` now succeeds. The initial dispatch run was `26240623328`; the successful fallback run was `26262072930`.
 - Completed the GitHub Actions fallback path for Linux Playwright visual baseline regeneration. Run `26262072930` passed update, verify, and artifact upload in `mcr.microsoft.com/playwright:v1.59.1-jammy`; Linux `*-chromium-linux.png` baselines were applied from the artifact only.

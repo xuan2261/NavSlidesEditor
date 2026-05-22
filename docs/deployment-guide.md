@@ -127,21 +127,21 @@ On Windows PowerShell, use `$env:PORT=8080; npm start` or run the command inside
 
 ### Pre-built Packages
 
-Download from the [Releases](https://github.com/xuan2261/NavSlidesEditor/releases) page:
+Download Windows packages from the [Releases](https://github.com/xuan2261/NavSlidesEditor/releases) page. The current GitHub release workflow publishes Windows packages only; Linux and macOS packages can be built locally from source.
 
 | Platform | Format                              |
 | -------- | ----------------------------------- |
-| Linux    | `.AppImage` or `.deb`               |
-| macOS    | `.zip` (extract → `.app`)           |
 | Windows  | `.exe` installer or portable `.exe` |
+| Linux    | local build: `.AppImage` or `.deb`  |
+| macOS    | local build: `.zip`                 |
 
 ```bash
 # Linux .deb
-sudo dpkg -i revealjs-editor_1.0.0_amd64.deb
+sudo dpkg -i "NavSlides Editor_<version>_amd64.deb"
 
 # Linux AppImage
-chmod +x "NavSlides Editor-1.0.0.AppImage"
-./"NavSlides Editor-1.0.0.AppImage"
+chmod +x "NavSlides Editor-<version>.AppImage"
+./"NavSlides Editor-<version>.AppImage"
 ```
 
 ### Build from Source
