@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import RibbonSection from './ribbon-section'
+import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 
 const { BG_COLORS = [], GRADIENT_PRESETS = [] } = shared
@@ -161,7 +162,7 @@ export default function DesignTabContent({
   }
 
   return (
-    <div className="flex items-stretch gap-0 h-full overflow-x-auto">
+    <RibbonTabContentRow>
       <RibbonSection label="Themes" className="border-r border-border">
         <div className="relative">
           <Button variant="ribbon" className="h-7"
@@ -308,6 +309,6 @@ export default function DesignTabContent({
           </Button>
         </div>
       </RibbonSection>
-    </div>
+    </RibbonTabContentRow>
   )
 }

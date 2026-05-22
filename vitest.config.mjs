@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   test: {
-    exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/dist-electron/**', 'tests/e2e/**'],
     fileParallelism: false,
     globals: true,
     environment: 'jsdom',
@@ -34,6 +34,7 @@ export default defineConfig({
         '**/__tests__/**',
         '**/node_modules/**',
         '**/dist/**',
+        '**/dist-electron/**',
         'tests/**',
         'client/src/main.jsx',
         'client/public/**',

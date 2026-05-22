@@ -89,6 +89,20 @@ describe('Ribbon UI Consistency', () => {
       const section = container.firstChild
       expect(section.className).toContain('py-1.5')
     })
+
+    it('exposes the classic ribbon section DOM contract', () => {
+      const { container } = render(
+        <RibbonSection label="Classic">
+          <button>Command</button>
+        </RibbonSection>
+      )
+
+      const section = container.querySelector('[data-ribbon-section]')
+      const label = container.querySelector('[data-ribbon-section-label]')
+      expect(section).toBeTruthy()
+      expect(label?.textContent).toBe('Classic')
+      expect(section.querySelector('button')?.textContent).toBe('Command')
+    })
   })
 
   describe('Issue #3: Separator height consistency', () => {

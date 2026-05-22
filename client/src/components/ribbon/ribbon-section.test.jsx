@@ -44,6 +44,16 @@ describe('RibbonSection', () => {
     expect(section.className).toContain('shrink-0')
   })
 
+  it('exposes stable ribbon section selectors', () => {
+    const { container } = render(
+      <RibbonSection label="Test">
+        <span>Content</span>
+      </RibbonSection>
+    )
+    expect(container.querySelector('[data-ribbon-section]')).toBeTruthy()
+    expect(container.querySelector('[data-ribbon-section-label]')?.textContent).toBe('Test')
+  })
+
   it('maintains minimum content width in flex container', () => {
     const { container } = render(
       <div className="flex w-[100px] overflow-x-auto">

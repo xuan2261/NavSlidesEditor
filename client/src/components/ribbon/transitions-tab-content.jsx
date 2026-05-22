@@ -3,6 +3,7 @@ import {
   Zap, Timer, Play, ChevronDown, RotateCcw,
 } from 'lucide-react'
 import RibbonSection from './ribbon-section'
+import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
@@ -65,7 +66,7 @@ export default function TransitionsTabContent({
   }
 
   return (
-    <div className="flex items-stretch gap-0 h-full overflow-x-auto">
+    <RibbonTabContentRow>
       <RibbonSection label="Transition" className="border-r border-border">
         <div className="relative">
           <Button variant="ribbon" className="h-7"
@@ -179,6 +180,6 @@ export default function TransitionsTabContent({
           <span className="text-[11px] hidden lg:inline">Preview</span>
         </Button>
       </RibbonSection>
-    </div>
+    </RibbonTabContentRow>
   )
 }

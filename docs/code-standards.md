@@ -47,6 +47,16 @@ Canvas selector IDs are stable and must not be renamed:
 
 Property controls use `prop-*` IDs and should stay stable once adopted in tests.
 
+Ribbon layout metrics use a dedicated DOM contract instead of Tailwind-class or
+DOM-shape queries:
+
+- `data-ribbon-content-row`: active tab command row and horizontal scroll owner.
+- `data-ribbon-section`: command group container.
+- `data-ribbon-section-label`: visible group label.
+
+Tests should measure the active `tabpanel` and its `data-ribbon-content-row`.
+The outer `.tour-step-ribbon` is the fixed shell, not the scroll owner.
+
 ## File Size Budget
 
 - Keep new code files under 200 LOC where practical.
@@ -181,6 +191,7 @@ composition.
 - `MainLayout` owns the shared shell, while live routes stay outside it.
 - Game elements are first-class `type: 'game'` elements with 7 game types and a dedicated presenter/player flow; they are not collaborative slide-editing primitives.
 - **Ribbon UI**: `EditorPage` composes `RibbonHeaderBar` and `RibbonPanel`. Active tab state lives in `ui-store.activeTab` and persists to localStorage. The old `Toolbar.jsx`, `InsertMenu.jsx`, and `EditorMenuBar.jsx` components have been removed in favor of the tab-based ribbon.
+- **Ribbon layout primitive**: tab content should render through `RibbonTabContentRow` when it participates in the classic ribbon command-row contract. Keep horizontal scrolling on that row only; do not add nested scroll owners inside individual groups.
 
 ### Canvas Extraction Patterns
 
