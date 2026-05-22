@@ -1,4 +1,5 @@
 import RibbonSection from './ribbon-section'
+import RibbonTabContentRow from './ribbon-tab-content-row'
 import ClipboardButtons from './controls/clipboard-buttons'
 import FontControls from './controls/ribbon-text-formatting-controls'
 import ParagraphCompactControls from './controls/paragraph-compact-dropdown-controls'
@@ -25,7 +26,7 @@ export default function HomeTabContent({
   const { rememberSelection, runTextCommand, handleTextCommandMouseDown } = useSelectionPreservation(editor)
 
   return (
-    <div className="flex items-stretch gap-0 h-full overflow-x-auto">
+    <RibbonTabContentRow>
       <RibbonSection label="Clipboard" className="border-r border-border">
         <ClipboardButtons
           onPaste={onPaste}
@@ -81,6 +82,6 @@ export default function HomeTabContent({
           onSendToBack={onSendToBack}
         />
       </RibbonSection>
-    </div>
+    </RibbonTabContentRow>
   )
 }

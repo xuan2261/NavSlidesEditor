@@ -11,11 +11,12 @@ const mockElement = {
 }
 
 describe('AnimationsTabContent', () => {
-  it('renders Animation and Preview sections', () => {
+  it('renders Animation, Order, and Preview sections', () => {
     const { container } = render(<AnimationsTabContent selectedElement={mockElement} />)
-    const labels = container.querySelectorAll('.text-text-muted')
+    const labels = container.querySelectorAll('[data-ribbon-section-label]')
     const labelTexts = [...labels].map((el) => el.textContent)
     expect(labelTexts).toContain('Animation')
+    expect(labelTexts).toContain('Order')
     expect(labelTexts).toContain('Preview')
   })
 
@@ -71,9 +72,9 @@ describe('AnimationsTabContent', () => {
     expect(screen.getByText('Step')).toBeTruthy()
   })
 
-  it('does not show order section when animation is off', () => {
+  it('keeps order section visible when animation is off', () => {
     render(<AnimationsTabContent selectedElement={{ ...mockElement, fragment: false }} />)
-    expect(screen.queryByLabelText('Animation order')).toBeNull()
+    expect(screen.getByLabelText('Animation order')).toBeTruthy()
   })
 
   it('calls onUpdateElement for order change', () => {

@@ -51,9 +51,19 @@ export class RibbonTabToolbarHelper {
     return this.page.evaluate((tab) => {
       const panel = document.querySelector('.tour-step-ribbon')
       if (!panel) return null
+      const activePanel =
+        document.querySelector('[role="tabpanel"][data-state="active"]') ||
+        Array.from(document.querySelectorAll('[role="tabpanel"]')).find((node) => {
+          const style = window.getComputedStyle(node)
+          return style.display !== 'none' && style.visibility !== 'hidden'
+        })
+      const rows = activePanel
+        ? Array.from(activePanel.querySelectorAll('[data-ribbon-content-row]'))
+        : []
+      const row = rows[0] || activePanel || panel
 
-      const panelRect = panel.getBoundingClientRect()
-      const buttons = panel.querySelectorAll('button')
+      const rowRect = row.getBoundingClientRect()
+      const buttons = row.querySelectorAll('button')
       const clippedControls = []
       const outsideControls = []
       const getVisibleText = (node) => {
@@ -85,7 +95,7 @@ export class RibbonTabToolbarHelper {
           })
         }
 
-        if (rect.right > panelRect.right + 1 || rect.left < panelRect.left - 1) {
+        if (rect.right > rowRect.right + 1 || rect.left < rowRect.left - 1) {
           outsideControls.push({
             label,
             rect: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom },
@@ -112,20 +122,21 @@ export class RibbonTabToolbarHelper {
         }
       }
 
-      const sectionContainers = panel.querySelectorAll('.flex.flex-col')
+      const sectionContainers = row.querySelectorAll('[data-ribbon-section]')
       const visibleSections = Array.from(sectionContainers)
         .map((s) => {
-          const labelEl = s.querySelector('span.text-\\[10px\\], span.text-\\[11px\\]')
+          const labelEl = s.querySelector('[data-ribbon-section-label]')
           const label = labelEl?.textContent?.trim()
           if (!label) return null
           const rect = s.getBoundingClientRect()
           return {
             label,
-            visible: rect.right <= panelRect.right + 1 && rect.left >= panelRect.left - 1,
+            visible: rect.right <= rowRect.right + 1 && rect.left >= rowRect.left - 1,
             rect: { left: rect.left, right: rect.right },
           }
         })
         .filter(Boolean)
+      const firstSection = sectionContainers[0]?.getBoundingClientRect()
 
       return {
         tab,
@@ -136,6 +147,18 @@ export class RibbonTabToolbarHelper {
           clientHeight: panel.clientHeight,
           scrollHeight: panel.scrollHeight,
           hasHorizontalOverflow: panel.scrollWidth > panel.clientWidth + 1,
+        },
+        row: {
+          contentRowCount: rows.length,
+          nestedContentRowCount: rows.filter((candidate) =>
+            candidate.querySelector('[data-ribbon-content-row]')
+          ).length,
+          clientWidth: row.clientWidth,
+          scrollWidth: row.scrollWidth,
+          clientHeight: row.clientHeight,
+          scrollHeight: row.scrollHeight,
+          hasHorizontalOverflow: row.scrollWidth > row.clientWidth + 1,
+          firstSectionLeftDelta: firstSection ? Math.round(firstSection.left - rowRect.left) : null,
         },
         clippedControls,
         outsideControls,

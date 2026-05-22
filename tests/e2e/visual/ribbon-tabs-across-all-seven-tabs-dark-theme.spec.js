@@ -1,4 +1,4 @@
-import { test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
   apiCreatePresentation,
   apiDeletePresentation,
@@ -12,8 +12,8 @@ import {
 const TABS = [
   { id: 'home', label: 'Home' },
   { id: 'insert', label: 'Insert' },
-  { id: 'draw', label: 'Draw' },
   { id: 'design', label: 'Design' },
+  { id: 'format', label: 'Format' },
   { id: 'transitions', label: 'Transitions' },
   { id: 'animations', label: 'Animations' },
   { id: 'view', label: 'View' },
@@ -47,8 +47,9 @@ test.describe('Ribbon tabs visual baseline across all 7 tabs and dark theme', ()
     test(`ribbon tab ${tab.id} renders dark theme baseline`, async ({ page }) => {
       await page.goto(`/editor/${presId}`)
       await page.waitForSelector('.slide-canvas', { timeout: 15000 })
-      const tabButton = page.getByRole('tab', { name: new RegExp(tab.label, 'i') })
-      if (await tabButton.count()) await tabButton.first().click()
+      const requiredTabs = page.getByRole('tab')
+      await expect(requiredTabs).toHaveText(TABS.map((item) => item.label))
+      await page.getByRole('tab', { name: tab.label, exact: true }).click()
       await page.waitForTimeout(150)
       await expectStableScreenshot(page, `ribbon-${tab.id}-dark.png`, {
         clip: { x: 0, y: 0, width: 1280, height: 240 },

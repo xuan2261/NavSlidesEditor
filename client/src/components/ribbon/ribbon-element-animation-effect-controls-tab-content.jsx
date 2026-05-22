@@ -3,6 +3,7 @@ import {
   Wand2, Play, ChevronDown, ToggleLeft, ToggleRight,
 } from 'lucide-react'
 import RibbonSection from './ribbon-section'
+import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 import { FRAGMENT_ANIMATION_TYPES } from '../../constants/fragment-animation-types'
 
@@ -47,7 +48,7 @@ export default function AnimationsTabContent({ selectedElement, slideElements = 
   const currentLabel = ANIMATION_TYPES.find((a) => a.value === currentAnimation)?.label || currentAnimation
 
   return (
-    <div className="flex items-stretch gap-0 h-full overflow-x-auto">
+    <RibbonTabContentRow>
       <RibbonSection label="Animation" className="border-r border-border">
         <div className="flex items-center gap-1">
           <Button variant="ribbon"
@@ -84,25 +85,24 @@ export default function AnimationsTabContent({ selectedElement, slideElements = 
         </div>
       </RibbonSection>
 
-      {hasAnimation && (
-        <RibbonSection label="Order" className="border-r border-border">
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] text-text-muted">Step</span>
-            <input
-              type="number"
-              className="w-10 rounded border border-border bg-secondary px-1 py-0.5 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-              value={fragmentIndex}
-              onChange={(e) => onUpdateElement?.({ fragmentIndex: clampFragmentIndex(e.target.value) })}
-              min={1}
-              max={20}
-              aria-label="Animation order"
-            />
-            {hasDuplicateOrder && (
-              <span className="text-[10px] text-warning" role="status">Duplicate order</span>
-            )}
-          </div>
-        </RibbonSection>
-      )}
+      <RibbonSection label="Order" className="border-r border-border">
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-text-muted">Step</span>
+          <input
+            type="number"
+            className="w-10 rounded border border-border bg-secondary px-1 py-0.5 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none disabled:opacity-50"
+            value={fragmentIndex}
+            onChange={(e) => onUpdateElement?.({ fragmentIndex: clampFragmentIndex(e.target.value) })}
+            min={1}
+            max={20}
+            disabled={!selectedElement}
+            aria-label="Animation order"
+          />
+          {hasDuplicateOrder && (
+            <span className="text-[10px] text-warning" role="status">Duplicate order</span>
+          )}
+        </div>
+      </RibbonSection>
 
       <RibbonSection label="Preview">
         <Button variant="ribbon" className="h-7"
@@ -112,6 +112,6 @@ export default function AnimationsTabContent({ selectedElement, slideElements = 
           <span className="text-[11px] hidden lg:inline">Preview</span>
         </Button>
       </RibbonSection>
-    </div>
+    </RibbonTabContentRow>
   )
 }

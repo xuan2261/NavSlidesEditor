@@ -178,10 +178,18 @@ Default font families offered in the font picker (verified in Toolbar):
 ### Toolbars and Ribbon
 
 **Ribbon Architecture (default):**
-- `RibbonHeaderBar` displays tabs: Home, Insert, Design, Transitions, Animations, View
+- `RibbonHeaderBar` displays tabs: Home, Insert, Design, Format, Transitions, Animations, View
 - `RibbonPanel` shows controls for the active tab
 - Active tab persists to `localStorage` and syncs via `ui-store.activeTab`
 - Tab-based organization groups related commands (insert elements, apply design, configure animations)
+
+**PowerPoint classic ribbon layout contract:**
+- The `RibbonPanel` keeps a fixed `80px` command area.
+- The active tab panel fills the full ribbon command area; inactive tab panels must be hidden and must not intercept pointer events.
+- Each active tab has one command row marked with `data-ribbon-content-row`; that row is the horizontal scroll owner under viewport pressure.
+- Ribbon groups are marked with `data-ribbon-section`; visible group labels are marked with `data-ribbon-section-label`.
+- Tab command rows flow from the left edge. Group content stays centered inside each group, and group labels stay centered at the bottom.
+- The contextual Format tab uses the same row/group rhythm in both empty and selected states; the empty state is a `Selection` group, not free-floating text.
 
 **Toolbar styling:**
 - Background: `--bg-secondary`

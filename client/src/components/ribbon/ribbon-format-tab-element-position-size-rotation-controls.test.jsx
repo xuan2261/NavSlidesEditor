@@ -19,9 +19,21 @@ describe('FormatTabContent', () => {
     expect(screen.getByText('Select an element to format')).toBeTruthy()
   })
 
+  it('renders no-selection state inside the classic row and Selection section', () => {
+    const { container } = render(<FormatTabContent />)
+    const row = container.querySelector('[data-ribbon-content-row]')
+    const section = container.querySelector('[data-ribbon-section]')
+    const label = container.querySelector('[data-ribbon-section-label]')
+
+    expect(row).toBeTruthy()
+    expect(section).toBeTruthy()
+    expect(label?.textContent).toBe('Selection')
+    expect(section?.textContent).toContain('Select an element to format')
+  })
+
   it('renders all five sections when element selected', () => {
     const { container } = render(<FormatTabContent selectedElement={mockElement} />)
-    const labels = container.querySelectorAll('.text-text-muted')
+    const labels = container.querySelectorAll('[data-ribbon-section-label]')
     const labelTexts = [...labels].map((el) => el.textContent)
     expect(labelTexts).toContain('Position')
     expect(labelTexts).toContain('Size')

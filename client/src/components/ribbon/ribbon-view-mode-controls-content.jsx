@@ -1,5 +1,6 @@
 import { Code2, Film, LayoutGrid, PanelLeft, PanelRight, Search, StickyNote } from 'lucide-react'
 import RibbonSection from './ribbon-section'
+import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 import CanvasControls from './controls/canvas-controls'
 import { useUIStore } from '../../stores/ui-store'
@@ -21,7 +22,7 @@ export default function ViewTabContent({
   const setShowTimeline = useEditorStore((s) => s.setShowTimeline)
 
   return (
-    <div className="flex items-stretch gap-0 h-full overflow-x-auto">
+    <RibbonTabContentRow>
       <RibbonSection label="Show" className="border-r border-border">
         <CanvasControls onGridSizeChange={(gridSize) => onUpdatePresentation?.({ gridSize })} />
       </RibbonSection>
@@ -99,6 +100,6 @@ export default function ViewTabContent({
           </Button>
         </div>
       </RibbonSection>
-    </div>
+    </RibbonTabContentRow>
   )
 }

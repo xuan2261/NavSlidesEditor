@@ -33,6 +33,60 @@ const CRITICAL_VISIBLE_CONTROLS = {
   View: ['Find & Replace', 'Animation Timeline', 'Custom CSS', 'Speaker Notes'],
 }
 
+const GROUP_STATE_EXPECTATIONS = [
+  {
+    name: 'Home idle',
+    tab: 'Home',
+    expected: ['Clipboard', 'Text', 'Canvas', 'Arrange'],
+  },
+  {
+    name: 'Format empty',
+    tab: 'Format',
+    expected: ['Selection'],
+  },
+  {
+    name: 'Insert default',
+    tab: 'Insert',
+    expected: ['Basic', 'Shapes', 'Content', 'Media', 'Embed', 'Advanced'],
+  },
+  {
+    name: 'Transitions default',
+    tab: 'Transitions',
+    expected: ['Transition', 'Slide', 'Speed', 'Auto-Advance', 'Preview'],
+  },
+  {
+    name: 'Animations default',
+    tab: 'Animations',
+    expected: ['Animation', 'Order', 'Preview'],
+  },
+  {
+    name: 'View default',
+    tab: 'View',
+    expected: ['Show', 'Tools', 'Window'],
+  },
+]
+
+function sectionLabels(metrics) {
+  return metrics.visibleSections.map((section) => section.label)
+}
+
+function expectClassicRibbonRow(metrics, label) {
+  expect(metrics.row.contentRowCount, `${label} should have one command row`).toBe(1)
+  expect(metrics.row.nestedContentRowCount, `${label} should not nest command rows`).toBe(0)
+  expect(
+    metrics.row.firstSectionLeftDelta,
+    `${label} first group should start at the content row left edge`
+  ).toBeGreaterThanOrEqual(0)
+  expect(metrics.row.firstSectionLeftDelta).toBeLessThanOrEqual(2)
+}
+
+function expectNoRowVerticalOverflow(metrics, label) {
+  expect(
+    metrics.row.scrollHeight,
+    `${label} active row should not vertically overflow`
+  ).toBeLessThanOrEqual(metrics.row.clientHeight + 1)
+}
+
 test.describe('Ribbon Layout Baseline Tests', () => {
   let editor
   let presId
@@ -142,22 +196,47 @@ test.describe('Ribbon Layout Baseline Tests', () => {
 
     for (const viewport of VIEWPORTS) {
       test(`Insert tab should not have hidden overflow at ${viewport.label}`, async ({ page }) => {
-        test.fixme(
-          viewport.width === 1024,
-          'Pre-existing Insert tab overflow at 1024px — Phase 0 scope: no UI fix this round; tracked separately as ribbon overflow ticket'
-        )
         await page.setViewportSize({ width: viewport.width, height: viewport.height })
         const metrics = await editor.getRibbonLayoutMetrics('Insert')
 
         expect(metrics).not.toBeNull()
-        if (viewport.width >= 1024) {
-          expect(
-            metrics.panel.hasHorizontalOverflow,
-            `Insert tab should not overflow at ${viewport.label}`
-          ).toBe(false)
-        }
+        expectClassicRibbonRow(metrics, `Insert ${viewport.label}`)
+        expectNoRowVerticalOverflow(metrics, `Insert ${viewport.label}`)
+        expect(
+          metrics.clippedControls,
+          `Insert tab should not clip visible control text at ${viewport.label}`
+        ).toHaveLength(0)
+        expect(
+          metrics.overlaps,
+          `Insert tab should not overlap controls at ${viewport.label}`
+        ).toHaveLength(0)
       })
     }
+  })
+
+  test.describe('Classic Ribbon Group Contract', () => {
+    for (const scenario of GROUP_STATE_EXPECTATIONS) {
+      test(`${scenario.name} exposes expected groups in order`, async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 })
+        const metrics = await editor.getRibbonLayoutMetrics(scenario.tab)
+
+        expect(metrics).not.toBeNull()
+        expectClassicRibbonRow(metrics, scenario.name)
+        expect(sectionLabels(metrics)).toEqual(scenario.expected)
+      })
+    }
+
+    test('Home text editing exposes Font and Paragraph groups in order', async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 })
+
+      await editor.addTextNode()
+      await editor.startEditingTextElement()
+      await editor.typeInTextEditor('Test text')
+
+      const metrics = await editor.getRibbonLayoutMetrics('Home')
+      expect(metrics).not.toBeNull()
+      expect(sectionLabels(metrics)).toEqual(['Clipboard', 'Font', 'Paragraph', 'Canvas', 'Arrange'])
+    })
   })
 
   test.describe('Home Tab Text-Editing State', () => {
@@ -202,11 +281,48 @@ test.describe('Ribbon Layout Baseline Tests', () => {
       // Verify core controls exist and ribbon is scrollable
       expect(metrics.buttonCount).toBeGreaterThan(0)
       // No vertical overflow
-      expect(metrics.panel.scrollHeight).toBeLessThanOrEqual(metrics.panel.clientHeight + 1)
+      expectClassicRibbonRow(metrics, 'Home text editing 1024px')
+      expectNoRowVerticalOverflow(metrics, 'Home text editing 1024px')
     })
   })
 
   test.describe('Format Tab Vertical Rhythm', () => {
+    test('Format tab no-selection state uses classic Selection section', async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 })
+      const metrics = await editor.getRibbonLayoutMetrics('Format')
+
+      expect(metrics).not.toBeNull()
+      expect(sectionLabels(metrics)).toEqual(['Selection'])
+      expectClassicRibbonRow(metrics, 'Format empty')
+      expectNoRowVerticalOverflow(metrics, 'Format empty')
+      await expect(
+        page.getByRole('tabpanel', { name: 'Format' }).getByText('Select an element to format')
+      ).toBeVisible()
+    })
+
+    test('Format tab selected shape exposes contextual groups in order', async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 })
+
+      await editor.addShape('Rectangle')
+      await page.locator('.element-wrapper[data-element-type="shape"]').first().click({ force: true })
+      await expect(page.getByRole('complementary', { name: 'Properties panel' })).toContainText('Element')
+
+      const metrics = await editor.getRibbonLayoutMetrics('Format')
+      expect(metrics).not.toBeNull()
+      expect(sectionLabels(metrics)).toEqual([
+        'Fill',
+        'Stroke',
+        'Position',
+        'Size',
+        'Rotate',
+        'Opacity',
+        'Align',
+        'Properties',
+      ])
+      expect(metrics.clippedControls).toHaveLength(0)
+      expect(metrics.overlaps).toHaveLength(0)
+    })
+
     test('Format tab controls should have consistent row height', async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 })
 
@@ -252,10 +368,8 @@ test.describe('Ribbon Layout Baseline Tests', () => {
         const metrics = await editor.getRibbonLayoutMetrics(tab)
 
         expect(metrics).not.toBeNull()
-        expect(
-          metrics.panel.scrollHeight,
-          `${tab} tab should not have vertical overflow`
-        ).toBeLessThanOrEqual(metrics.panel.clientHeight + 1)
+        expectClassicRibbonRow(metrics, tab)
+        expectNoRowVerticalOverflow(metrics, tab)
       })
     }
 

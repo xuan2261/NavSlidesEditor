@@ -2,6 +2,7 @@ import {
   Lock, Unlock, RotateCw, AlignStartVertical, AlignHorizontalJustifyCenter, AlignEndVertical,
 } from 'lucide-react'
 import RibbonSection from './ribbon-section'
+import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 import { CANVAS_WIDTH } from '../../data/slide-constants'
 
@@ -192,9 +193,13 @@ function ContextualControls({ selectedElement, onUpdateElement }) {
 export default function FormatTabContent({ selectedElement, onUpdateElement }) {
   if (!selectedElement) {
     return (
-      <div className="flex items-center gap-2 px-3 text-[11px] text-text-muted">
-        Select an element to format
-      </div>
+      <RibbonTabContentRow>
+        <RibbonSection label="Selection">
+          <span className="text-[11px] text-text-muted whitespace-nowrap">
+            Select an element to format
+          </span>
+        </RibbonSection>
+      </RibbonTabContentRow>
     )
   }
 
@@ -206,7 +211,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement }) {
   }
 
   return (
-    <div className="flex items-stretch gap-0 h-full overflow-x-auto">
+    <RibbonTabContentRow>
       <ContextualControls selectedElement={selectedElement} onUpdateElement={onUpdateElement} />
 
       <RibbonSection label="Position" className="border-r border-border">
@@ -327,6 +332,6 @@ export default function FormatTabContent({ selectedElement, onUpdateElement }) {
           <span className="hidden lg:inline">{selectedElement.locked ? 'Locked' : 'Lock'}</span>
         </Button>
       </RibbonSection>
-    </div>
+    </RibbonTabContentRow>
   )
 }

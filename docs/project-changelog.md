@@ -4,6 +4,8 @@
 
 ## 2026-05-22
 
+- Hardened the classic ribbon alignment contract: active tab panels now fill the fixed 80px ribbon area, inactive panels no longer intercept pointer events, tab rows expose stable `data-ribbon-*` selectors, Format empty state renders as a `Selection` group, and ribbon layout E2E now covers group order, left-flow, and scroll-aware responsive gates.
+- Fixed Home dashboard Grid/List view toggle clipping: the segmented control no longer shrinks under header pressure, List View remains fully visible, and a Playwright regression covers the button bounds.
 - Prepared the `v1.9.1` Windows Electron release path: README and release-facing docs now match the root package version, deployment docs clarify that GitHub Releases publish Windows packages only, and a Vitest contract guards release/version drift.
 - Closed icon consistency pass follow-up gaps: File, AI, and Share ribbon dropdowns now have covered Enter/Space activation, Escape close, and focus return behavior; Quick Access exposes a labelled toolbar; E2E selectors match Lucide-era context menu labels.
 - Registered the manual Playwright visual-baseline workflow on default branch `master` by cherry-picking `9331885c` as `6aeb3191`; `workflow_dispatch` now succeeds. The initial dispatch run was `26240623328`; the successful fallback run was `26262072930`.

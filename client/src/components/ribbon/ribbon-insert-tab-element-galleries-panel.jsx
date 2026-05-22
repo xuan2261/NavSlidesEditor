@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import RibbonSection from './ribbon-section'
+import RibbonTabContentRow from './ribbon-tab-content-row'
 import RibbonDropdownMenuGroup from './ribbon-dropdown-menu-group-trigger'
 import { Button } from '../ui'
 import { GAME_TYPES } from '../../constants/game-element-types-constants'
@@ -231,7 +232,7 @@ export default function InsertTabContent({
   }
 
   return (
-    <div className="flex items-stretch gap-0 h-full overflow-x-auto">
+    <RibbonTabContentRow>
       <RibbonSection label="Basic" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5">
           <Button variant="ribbon" title="Add text" aria-label="Add text"
@@ -432,6 +433,6 @@ export default function InsertTabContent({
           {uploadError}
         </div>
       )}
-    </div>
+    </RibbonTabContentRow>
   )
 }
