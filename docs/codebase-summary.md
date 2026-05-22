@@ -4,8 +4,8 @@
 
 NavSlides Editor is a self-hostable presentation editor built as a monorepo with
 `client/`, `server/`, `shared/`, and `electron/` runtimes. Current release is
-`v1.7.1`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
-checked-in corpus / report artifacts used for verification. The editor shell now
+`v1.9.1`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
+checked-in corpus / report artifacts used for verification. The editor shell
 uses the tab-based ribbon as the default controls surface.
 
 ## Repository Layout

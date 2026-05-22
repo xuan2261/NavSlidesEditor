@@ -57,7 +57,7 @@ Phase 4 visual baseline blocker is resolved by manual workflow run `26262072930`
 | 1 | [Foundation & Regression Guard](./phase-01-foundation-baseline-tests.md) | Complete | P1 | infra (lean) |
 | 2 | [Critical Fixes — Context Menu + Sparkles Separation](./phase-02-critical-fixes.md) | Complete | P1 | #1 Critical, #2 High |
 | 3 | [Standardization Sweep](./phase-03-standardization-sweep.md) | Complete | P2 | #3 #4 #5 #6 #8 #9 #10 |
-| 4 | [Verify and PR](./phase-04-verify-and-pr.md) | In Progress | P1 | regression + PR |
+| 4 | [Verify and PR](./phase-04-verify-and-pr.md) | Complete | P1 | regression + PR |
 
 **Deferred:** Phase 7 (issue #7 PropertiesPanel section icons) — see Red Team Review.
 
@@ -134,6 +134,7 @@ Phase 4 visual baseline blocker is resolved by manual workflow run `26262072930`
 - Not completed in this session: visual snapshot baseline regeneration, PR creation.
 - Completed 2026-05-22: visual snapshot baseline regeneration via manual workflow run `26262072930`; Linux baselines committed in `c340ef0b`.
 - PR opened 2026-05-22: https://github.com/xuan2261/NavSlidesEditor/pull/2
+- Follow-up verification 2026-05-22: closed keyboard coverage gaps for File/AI/Share dropdown Enter/Space/Escape behavior; targeted Vitest `3 files / 30 tests` passed, `npm run lint` passed with 36 existing warnings, `npm run build` passed, and `tests/e2e/element-lifecycle.spec.js` passed `7/7`.
 
 ## Validation Log
 

@@ -129,4 +129,48 @@ describe('RibbonShell', () => {
     expect(onShare).toHaveBeenCalledTimes(1)
     expect(onPresent).toHaveBeenCalledTimes(1)
   })
+
+  it('supports keyboard operation for AI and Share action menus', () => {
+    const onAICopywriter = vi.fn()
+    const onShare = vi.fn()
+
+    render(
+      <RibbonHeaderBar
+        onAICopywriter={onAICopywriter}
+        onShare={onShare}
+      />
+    )
+
+    const aiTrigger = screen.getByRole('button', { name: /^AI$/i })
+    fireEvent.keyDown(aiTrigger, { key: 'Enter' })
+    expect(screen.getByRole('menu', { name: 'AI menu' })).toBeTruthy()
+
+    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'AI Copywriter' }), { key: ' ' })
+    expect(onAICopywriter).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('menu', { name: 'AI menu' })).toBeNull()
+
+    const shareTrigger = screen.getByRole('button', { name: /^Share$/i })
+    fireEvent.keyDown(shareTrigger, { key: ' ' })
+    expect(screen.getByRole('menu', { name: 'Share menu' })).toBeTruthy()
+
+    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Share Link' }), { key: 'Enter' })
+    expect(onShare).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('menu', { name: 'Share menu' })).toBeNull()
+  })
+
+  it('closes AI and Share action menus on Escape and restores trigger focus', () => {
+    render(<RibbonHeaderBar />)
+
+    const aiTrigger = screen.getByRole('button', { name: /^AI$/i })
+    fireEvent.mouseDown(aiTrigger)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('menu', { name: 'AI menu' })).toBeNull()
+    expect(document.activeElement).toBe(aiTrigger)
+
+    const shareTrigger = screen.getByRole('button', { name: /^Share$/i })
+    fireEvent.mouseDown(shareTrigger)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('menu', { name: 'Share menu' })).toBeNull()
+    expect(document.activeElement).toBe(shareTrigger)
+  })
 })

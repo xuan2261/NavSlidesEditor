@@ -84,7 +84,7 @@ test.describe('Element Lifecycle And Autosave', () => {
 
     await editor.gotoPresentation(presentationId)
     await page.getByTestId(`slide-element-${elementId}`).click({ button: 'right' })
-    await page.getByRole('button', { name: '✂ Cut (Ctrl+X)' }).click()
+    await page.getByRole('button', { name: 'Cut (Ctrl+X)' }).click()
 
     await expect.poll(async () => (await getSlideElements(request, presentationId)).length).toBe(0)
   })

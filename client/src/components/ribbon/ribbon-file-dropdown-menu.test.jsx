@@ -60,4 +60,37 @@ describe('FileDropdown', () => {
     fireEvent.mouseDown(screen.getByText('Export PDF'))
     expect(screen.queryByText('Open Project')).toBeNull()
   })
+
+  it('opens with keyboard and activates menu items with Enter', () => {
+    const onExportPDF = vi.fn()
+    render(<FileDropdown onExportPDF={onExportPDF} />)
+
+    fireEvent.keyDown(screen.getByLabelText('File menu'), { key: 'Enter' })
+    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Export PDF' }), { key: 'Enter' })
+
+    expect(onExportPDF).toHaveBeenCalled()
+    expect(screen.queryByText('Open Project')).toBeNull()
+  })
+
+  it('opens with Space and activates menu items with Space', () => {
+    const onHistory = vi.fn()
+    render(<FileDropdown onHistory={onHistory} />)
+
+    fireEvent.keyDown(screen.getByLabelText('File menu'), { key: ' ' })
+    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Version History' }), { key: ' ' })
+
+    expect(onHistory).toHaveBeenCalled()
+    expect(screen.queryByText('Open Project')).toBeNull()
+  })
+
+  it('closes on Escape and restores focus to the trigger', () => {
+    render(<FileDropdown />)
+    const trigger = screen.getByLabelText('File menu')
+
+    fireEvent.mouseDown(trigger)
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(screen.queryByText('Open Project')).toBeNull()
+    expect(document.activeElement).toBe(trigger)
+  })
 })

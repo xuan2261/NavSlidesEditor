@@ -29,7 +29,11 @@ export default function QuickAccessToolbar({
     : ''
 
   return (
-    <div className="tour-step-quick-access flex items-center gap-1 shrink-0">
+    <div
+      className="tour-step-quick-access flex items-center gap-1 shrink-0"
+      role="toolbar"
+      aria-label="Quick actions"
+    >
       {/* Save */}
       <button
         className="flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
