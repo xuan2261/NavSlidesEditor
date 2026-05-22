@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Docs and PR Finalization"
-status: in-progress
+status: complete
 priority: P2
 effort: "0.5-1h"
 dependencies: [1, 2, 3, 4]
@@ -73,10 +73,10 @@ Document the new manual baseline path and finish the existing icon PR with a cle
 
 - [x] Update testing guide.
 - [x] Update changelog if scope warrants.
-- [ ] Update icon plan verification notes.
-- [ ] Prepare PR body.
-- [ ] Commit focused changes.
-- [ ] Create/update PR.
+- [x] Update icon plan verification notes.
+- [x] Prepare PR body.
+- [x] Commit focused changes.
+- [x] Create/update PR.
 
 ## Test Strategy
 
@@ -88,9 +88,9 @@ Document the new manual baseline path and finish the existing icon PR with a cle
 
 ## Success Criteria
 
-- [ ] Maintainers can regenerate baselines without local Docker by following docs.
-- [ ] Original icon plan no longer blocked on visual baselines.
-- [ ] PR is ready for review with concrete verification evidence.
+- [x] Maintainers can regenerate baselines without local Docker by following docs.
+- [x] Original icon plan no longer blocked on visual baselines.
+- [x] PR is ready for review with concrete verification evidence.
 
 ## Risk Assessment
 
@@ -113,7 +113,8 @@ Return to the icon plan Phase 4 and complete PR creation.
 
 - Added GitHub Actions fallback instructions to `docs/navslides-editor-vitest-playwright-k6-testing-guide.md`.
 - Added 2026-05-21 changelog entry for the manual baseline workflow and default-branch dispatch blocker.
-- PR finalization remains blocked until Phase 3 can run the workflow and apply Linux-generated snapshot artifacts.
+- Added 2026-05-22 changelog/testing-guide updates for the successful fallback run.
+- Run `26262072930` generated and verified Linux baselines, uploaded artifacts, and unblocked the original icon consistency plan. Focused commits pushed: `bfd7f11c test: stabilize editor canvas visual baseline` and `c340ef0b test: add linux visual baselines`.
 
 ## Unresolved Questions
 

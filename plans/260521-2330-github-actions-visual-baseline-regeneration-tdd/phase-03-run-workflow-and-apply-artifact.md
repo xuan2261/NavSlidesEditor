@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Run Workflow and Apply Artifact"
-status: blocked
+status: complete
 priority: P1
 effort: "0.5-1h plus CI time"
 dependencies: [1, 2]
@@ -82,11 +82,11 @@ Execute the new workflow on the feature branch, download the snapshot artifact, 
 
 - [x] Push branch with workflow.
 - [x] Trigger manual run.
-- [ ] Confirm run green.
-- [ ] Download snapshot artifact.
-- [ ] Verify artifact file allowlist.
-- [ ] Apply PNGs.
-- [ ] Inspect diff/stat.
+- [x] Confirm run green.
+- [x] Download snapshot artifact.
+- [x] Verify artifact file allowlist.
+- [x] Apply PNGs.
+- [x] Inspect diff/stat.
 
 ## Test Strategy
 
@@ -98,10 +98,10 @@ Execute the new workflow on the feature branch, download the snapshot artifact, 
 
 ## Success Criteria
 
-- [ ] Workflow run succeeds.
-- [ ] Artifact is available and narrow.
-- [ ] Repo contains updated Linux-generated snapshot PNGs.
-- [ ] No local Windows snapshot generation occurred.
+- [x] Workflow run succeeds.
+- [x] Artifact is available and narrow.
+- [x] Repo contains updated Linux-generated snapshot PNGs.
+- [x] No local Windows snapshot generation occurred.
 
 ## Risk Assessment
 
@@ -142,6 +142,8 @@ Run visual and full verification gates in Phase 4.
 - Deleted all remaining visible GitHub Actions artifacts across `xuan2261` repos: 146 expired artifacts from `nano-banana-slides-prompter` (~25.0 GB), 7 expired artifacts from `PPTAgent` (~1.1 GB), 10 old artifacts from this repo (~2.3 GB), and remaining Pages artifacts (~163 MB). Account artifact scan now reports no artifacts remain.
 - Rerun `26253710975` on commit `0f5f1d41` again passed `npm ci`, `npm run build`, `Update visual baselines`, and `Verify regenerated visual baselines`, but failed at upload because GitHub still has not recalculated artifact storage quota. Next action: rerun after GitHub's 6-12 hour quota recalculation window.
 - Rerun `26258526849` on commit `bae62815` again passed `npm ci`, `npm run build`, `Update visual baselines`, and `Verify regenerated visual baselines`, but failed at upload with the same quota message while repo artifact count remains `0`. Stop rerunning until GitHub backend recalculates artifact storage.
+- Run `26262072930` on commit `bfd7f11c` passed update, verify, snapshot artifact upload, and report upload. Artifact `linux-playwright-visual-baseline-snapshots` was downloaded to `.tmp/visual-baselines`, audited, and only `*-chromium-linux.png` files were copied into `tests/e2e/visual/**/*-snapshots/` and `tests/e2e/visual-regression.spec.js-snapshots/`.
+- Applied Linux-generated PNGs were committed as `c340ef0b test: add linux visual baselines`. `.tmp` was deleted after artifact review.
 
 ## Unresolved Questions
 

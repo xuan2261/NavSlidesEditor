@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Verify Visual and Full Gates"
-status: blocked
+status: complete
 priority: P1
 effort: "1-2h plus CI time"
 dependencies: [1, 2, 3]
@@ -64,11 +64,11 @@ Prove the regenerated snapshots are correct and the original icon PR gates are s
 
 - [x] Contract test green.
 - [x] Local lint green.
-- [ ] Local unit green.
-- [ ] Local build green.
-- [ ] Local non-visual Playwright green.
-- [ ] Linux visual workflow green.
-- [ ] Existing CI `required-checks` green or documented if waiting.
+- [x] Local unit green.
+- [x] Local build green.
+- [x] Local non-visual Playwright green.
+- [x] Linux visual workflow green.
+- [x] Existing CI `required-checks` green or documented if waiting.
 
 ## Test Strategy
 
@@ -84,9 +84,9 @@ Prove the regenerated snapshots are correct and the original icon PR gates are s
 
 ## Success Criteria
 
-- [ ] No visual snapshot diffs remain in Linux container.
-- [ ] Full PR CI can proceed without visual baseline blocker.
-- [ ] Verification results are concrete and dated.
+- [x] No visual snapshot diffs remain in Linux container.
+- [x] Full PR CI can proceed without visual baseline blocker.
+- [x] Verification results are concrete and dated.
 
 ## Risk Assessment
 
@@ -113,6 +113,8 @@ Update docs and finish the PR handoff in Phase 5.
 - Rerun `26241153971` on commit `2da23289` passed `npm ci` and `npm run build`; awaiting visual update/verify result.
 - Run `26241153971` visual verify failed only on `live-viewer-no-presenter.png`; root cause was random room code text in the screenshot. Added a Playwright screenshot mask for the dynamic room code line and will rerun the workflow.
 - Run `26241432529` on commit `138584bf` passed the Linux visual update and verify steps. The job conclusion is failure only because artifact uploads hit the repository GitHub Actions storage quota.
+- Run `26262072930` on commit `bfd7f11c` passed the Linux visual update, verify, snapshot upload, and report upload steps. Visual suite result: 17 passed during update and 17 passed during verify.
+- Local verification on 2026-05-22: contract test 4/4 passed; `npx eslint tests/e2e/visual-regression.spec.js` passed; `npm run lint` passed with 36 existing warnings; `npm run test` passed with 146 files / 1278 tests passed / 1 skipped; `npm run build` passed with existing chunk-size warnings; `npx playwright test --grep-invert "visual|Visual" --reporter=list` exited 0 with 377 passed / 1 skipped / 1 flaky retried/pass.
 
 ## Unresolved Questions
 

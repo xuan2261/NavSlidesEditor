@@ -1,7 +1,7 @@
 ---
 title: "GitHub Actions Visual Baseline Regeneration TDD"
 description: "Manual CI path to regenerate Playwright visual baselines in canonical Linux Playwright container when local Docker is unavailable."
-status: blocked
+status: complete
 priority: P1
 branch: "refactor/icon-consistency-pass"
 tags: [testing, playwright, github-actions, visual-regression, tdd, ci]
@@ -42,9 +42,9 @@ This follows user-selected direction 1 for the active icon consistency PR. Local
 |---|---|---|---|
 | 1 | [Scout & Workflow Contract Tests](./phase-01-scout-and-workflow-contract-tests.md) | Complete | P1 |
 | 2 | [Add Manual GitHub Actions Workflow](./phase-02-add-manual-github-actions-workflow.md) | Complete | P1 |
-| 3 | [Run Workflow and Apply Artifact](./phase-03-run-workflow-and-apply-artifact.md) | Blocked | P1 |
-| 4 | [Verify Visual and Full Gates](./phase-04-verify-visual-and-full-gates.md) | Blocked | P1 |
-| 5 | [Docs and PR Finalization](./phase-05-docs-and-pr-finalization.md) | In-progress | P2 |
+| 3 | [Run Workflow and Apply Artifact](./phase-03-run-workflow-and-apply-artifact.md) | Complete | P1 |
+| 4 | [Verify Visual and Full Gates](./phase-04-verify-visual-and-full-gates.md) | Complete | P1 |
+| 5 | [Docs and PR Finalization](./phase-05-docs-and-pr-finalization.md) | Complete | P2 |
 
 ## Out of Scope
 
@@ -70,10 +70,10 @@ This follows user-selected direction 1 for the active icon consistency PR. Local
 
 - [x] Manual workflow exists at `.github/workflows/manual-update-playwright-visual-baselines.yml`.
 - [x] Contract test prevents accidental drift from manual-only Linux snapshot regeneration.
-- [ ] GitHub Actions artifact contains updated PNGs only for `tests/e2e/visual/**/*-snapshots/*.png` and `tests/e2e/visual-regression.spec.js-snapshots/*.png`.
-- [ ] Snapshot PNGs applied to repo are Linux-generated, reviewed, and limited to intended visual diffs.
-- [ ] Visual Playwright suite green in canonical container.
-- [ ] Existing icon plan Phase 4 can resume and complete PR creation.
+- [x] GitHub Actions artifact contains updated PNGs only for `tests/e2e/visual/**/*-snapshots/*.png` and `tests/e2e/visual-regression.spec.js-snapshots/*.png`.
+- [x] Snapshot PNGs applied to repo are Linux-generated, reviewed, and limited to intended visual diffs.
+- [x] Visual Playwright suite green in canonical container.
+- [x] Existing icon plan Phase 4 can resume and complete PR creation.
 
 ## Progress Notes
 
@@ -88,6 +88,8 @@ This follows user-selected direction 1 for the active icon consistency PR. Local
 - 2026-05-22: Deleted 10 old `electron-win` Actions artifacts (~2.3 GB). Rerun `26253132404` on `0f5f1d41` again passed update+verify but upload still hit artifact quota because GitHub storage usage has not recalculated yet.
 - 2026-05-22: Deleted all visible Actions artifacts across `xuan2261` repos (~28.6 GB total). Rerun `26253710975` still passed update+verify but upload failed because GitHub quota recalculation is delayed; no artifact exists to download yet.
 - 2026-05-22: Rerun `26258526849` on `bae62815` again passed update+verify, but upload still failed with artifact quota while visible artifact count is `0`. Further reruns should wait for GitHub storage recalculation.
+- 2026-05-22: Run `26262072930` on `bfd7f11c` passed `npm ci`, `npm run build`, Linux visual update, Linux visual verify, snapshot artifact upload, and Playwright report upload. Downloaded artifact, applied only `*-chromium-linux.png` files under approved snapshot dirs, and committed them as `c340ef0b`.
+- 2026-05-22: Local gates passed after temp artifact cleanup: workflow contract test 4/4, `npx eslint tests/e2e/visual-regression.spec.js`, `npm run lint` with 36 existing warnings, `npm run test` with 146 files / 1278 passed / 1 skipped, `npm run build`, and non-visual Playwright with 377 passed / 1 skipped / 1 flaky retried/pass.
 
 ## Unresolved Questions
 

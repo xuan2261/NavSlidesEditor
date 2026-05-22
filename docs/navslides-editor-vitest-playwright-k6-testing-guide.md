@@ -117,7 +117,7 @@ tests/e2e/visual/**/*-snapshots/*.png
 tests/e2e/visual-regression.spec.js-snapshots/*.png
 ```
 
-The workflow is already registered on the default branch, so branch dispatch works now. The validated run created by the registration fix was `26240623328`. Do not regenerate or commit visual snapshots from Windows/macOS hosts.
+The workflow is already registered on the default branch, so branch dispatch works now. The successful fallback run for the icon consistency branch was `26262072930`: update, verify, snapshot upload, and report upload all passed. Do not regenerate or commit visual snapshots from Windows/macOS hosts.
 
 ## k6 load testing (Phase 8)
 
