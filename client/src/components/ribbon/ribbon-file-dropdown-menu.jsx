@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { FileText, FolderOpen, Download, FileDown, History, Github, CloudUpload } from 'lucide-react'
 import { Button } from '../ui'
+import RibbonFloatingOverlay from './ribbon-floating-overlay'
 
 const MENU_GROUPS = [
   {
@@ -58,10 +59,7 @@ export default function FileDropdown({
     setOpen(false)
   }
 
-  const closeMenu = useCallback(() => {
-    setOpen(false)
-    triggerRef.current?.focus()
-  }, [])
+  const closeMenu = useCallback(() => setOpen(false), [])
 
   const handleKeyboardActivation = (event, action) => {
     if (event.key !== 'Enter' && event.key !== ' ') return
@@ -101,14 +99,15 @@ export default function FileDropdown({
       </Button>
 
       {open && (
-        <>
-          <div className="fixed inset-0 z-[999]" onMouseDown={() => setOpen(false)} />
-          <div
-            className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg shadow-xl z-[1000] w-[220px] py-1"
-            role="menu"
-            aria-label="File menu"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
+        <RibbonFloatingOverlay
+          open={open}
+          anchorRef={triggerRef}
+          onClose={closeMenu}
+          className="bg-card border border-border rounded-lg shadow-xl w-[220px] py-1"
+          role="menu"
+          ariaLabel="File menu"
+          dataRibbonPopup="file-menu"
+        >
             {MENU_GROUPS.map((group) => (
               <div key={group.label}>
                 <div className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
@@ -135,8 +134,7 @@ export default function FileDropdown({
                 <div className="mx-2 my-0.5 border-t border-border" />
               </div>
             ))}
-          </div>
-        </>
+        </RibbonFloatingOverlay>
       )}
     </div>
   )

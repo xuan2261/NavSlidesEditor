@@ -89,7 +89,7 @@ test.describe('Slide Management Advanced', () => {
     })
 
     await page.getByRole('button', { name: 'color' }).click()
-    const swatches = page.getByRole('button', { name: /^Background / })
+    const swatches = page.getByRole('button', { name: /^Background / }).filter({ visible: true })
     if ((await swatches.count()) > 1) {
       await swatches.nth(1).click()
       await expect

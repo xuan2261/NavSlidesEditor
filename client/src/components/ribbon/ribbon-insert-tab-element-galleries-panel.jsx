@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Type, Image as ImageIcon, Upload, Shapes, Minus, ArrowUpRight,
   BarChart3, Table2, FileCode, Code, Sigma, QrCode,
@@ -11,6 +11,7 @@ import * as shared from 'revealjs-shared'
 import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import RibbonDropdownMenuGroup from './ribbon-dropdown-menu-group-trigger'
+import RibbonFloatingOverlay from './ribbon-floating-overlay'
 import { Button } from '../ui'
 import { GAME_TYPES } from '../../constants/game-element-types-constants'
 import PromptPopover from '../PromptPopover'
@@ -25,10 +26,15 @@ const SHAPE_GROUPS = {
   '3D': ['cylinder', 'parallelogram', 'trapezoid'],
 }
 
-function ShapeGallery({ onSelect, onClose }) {
+function ShapeGallery({ open, anchorRef, onSelect, onClose }) {
   return (
-    <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg p-3 shadow-xl z-[1000] w-[280px]"
-      onMouseDown={(e) => e.stopPropagation()}>
+    <RibbonFloatingOverlay
+      open={open}
+      anchorRef={anchorRef}
+      onClose={onClose}
+      dataRibbonPopup="shape-gallery"
+      className="bg-card border border-border rounded-lg p-3 shadow-xl w-[280px]"
+    >
       <div className="text-xs font-semibold text-text-primary mb-2">Shapes</div>
       {Object.entries(SHAPE_GROUPS).map(([group, shapes]) => (
         <div key={group} className="mb-2">
@@ -41,7 +47,7 @@ function ShapeGallery({ onSelect, onClose }) {
                 <Button
                   key={shapeType}
                   variant="ghost"
-                  className="w-8 h-8 p-0 flex items-center justify-center"
+                  className="ribbon-shape-gallery-button p-0 flex items-center justify-center border border-border bg-secondary"
                   title={shapeLabel}
                   aria-label={shapeLabel}
                   onMouseDown={(e) => {
@@ -54,7 +60,13 @@ function ShapeGallery({ onSelect, onClose }) {
                     onClose()
                   })}
                 >
-                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="ribbon-shape-gallery-icon text-text-primary"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     {shape?.svgPath ? <path d={shape.svgPath} /> : <rect x="2" y="2" width="20" height="20" />}
                   </svg>
                 </Button>
@@ -63,7 +75,7 @@ function ShapeGallery({ onSelect, onClose }) {
           </div>
         </div>
       ))}
-    </div>
+    </RibbonFloatingOverlay>
   )
 }
 
@@ -85,24 +97,41 @@ const handleKeyboardActivation = (event, action) => {
   action?.()
 }
 
-function GameGalleryDropdown({ onSelect, onClose }) {
+function GameGalleryDropdown({ open, anchorRef, onSelect, onClose }) {
+  const firstGameButtonRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    firstGameButtonRef.current?.focus()
+  }, [open])
+
+  const handleSelect = (type) => {
+    onSelect(type)
+    anchorRef?.current?.focus?.()
+    onClose()
+  }
+
   return (
-    <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg p-2 shadow-xl z-[1000] w-[160px]"
-      onMouseDown={(e) => e.stopPropagation()}>
+    <RibbonFloatingOverlay
+      open={open}
+      anchorRef={anchorRef}
+      onClose={onClose}
+      dataRibbonPopup="games-gallery"
+      className="bg-card border border-border rounded-lg p-2 shadow-xl w-[160px]"
+    >
       <div className="text-[10px] font-semibold text-text-primary mb-1.5">Games</div>
       <div className="flex flex-col gap-0.5">
-        {GAME_TYPES.all.map((type) => (
+        {GAME_TYPES.all.map((type, index) => (
           <button
             key={type}
+            ref={index === 0 ? firstGameButtonRef : undefined}
             className="flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left cursor-pointer transition-colors hover:bg-secondary text-text-primary"
             onMouseDown={(e) => {
               e.preventDefault()
-              onSelect(type)
-              onClose()
+              handleSelect(type)
             }}
             onKeyDown={(e) => handleKeyboardActivation(e, () => {
-              onSelect(type)
-              onClose()
+              handleSelect(type)
             })}
           >
             <Gamepad2 size={12} />
@@ -110,18 +139,23 @@ function GameGalleryDropdown({ onSelect, onClose }) {
           </button>
         ))}
       </div>
-    </div>
+    </RibbonFloatingOverlay>
   )
 }
 
-function TableSizePicker({ onSelect, onClose }) {
+function TableSizePicker({ open, anchorRef, onSelect, onClose }) {
   const [hoverR, setHoverR] = useState(0)
   const [hoverC, setHoverC] = useState(0)
 
   return (
-    <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg p-2 shadow-xl z-[1000]"
-      onMouseDown={(e) => e.stopPropagation()}
-      onMouseLeave={() => { setHoverR(0); setHoverC(0); onClose() }}>
+    <RibbonFloatingOverlay
+      open={open}
+      anchorRef={anchorRef}
+      onClose={onClose}
+      dataRibbonPopup="table-picker"
+      className="bg-card border border-border rounded-lg p-2 shadow-xl"
+    >
+      <div onMouseLeave={() => { setHoverR(0); setHoverC(0); onClose() }}>
       <div className="text-[10px] text-text-muted mb-1">
         {hoverR > 0 ? `${hoverR}×${hoverC}` : '3×3 default'}
       </div>
@@ -130,7 +164,7 @@ function TableSizePicker({ onSelect, onClose }) {
           Array.from({ length: 8 }, (_, c) => (
             <div
               key={`${r}-${c}`}
-              className={`w-3 h-3 rounded-sm cursor-pointer ${
+              className={`ribbon-table-picker-cell rounded-sm cursor-pointer ${
                 r < hoverR && c < hoverC ? 'bg-primary' : 'bg-border'
               }`}
               onMouseEnter={() => { setHoverR(r + 1); setHoverC(c + 1) }}
@@ -150,7 +184,23 @@ function TableSizePicker({ onSelect, onClose }) {
           ))
         )}
       </div>
-    </div>
+      </div>
+    </RibbonFloatingOverlay>
+  )
+}
+
+function AdvancedActionButton({ label, title, icon: Icon, onAction }) {
+  return (
+    <Button
+      variant="icon"
+      className="h-7 w-7"
+      title={title}
+      aria-label={label}
+      onMouseDown={(e) => { e.preventDefault(); onAction?.() }}
+      onKeyDown={(e) => handleKeyboardActivation(e, onAction)}
+    >
+      <Icon size={14} />
+    </Button>
   )
 }
 
@@ -190,6 +240,9 @@ export default function InsertTabContent({
   const [showVideoPrompt, setShowVideoPrompt] = useState(false)
   const [showGameGallery, setShowGameGallery] = useState(false)
   const [uploadError, setUploadError] = useState(null)
+  const shapeTriggerRef = useRef(null)
+  const tableTriggerRef = useRef(null)
+  const advancedLauncherRef = useRef(null)
 
   const handleFileUpload = (accept, handler) => {
     const input = document.createElement('input')
@@ -256,12 +309,15 @@ export default function InsertTabContent({
       <RibbonSection label="Shapes" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5 relative">
           <Button variant="ribbon" title="Shapes" aria-label="Insert shape"
+            ref={shapeTriggerRef}
             onMouseDown={(e) => { e.preventDefault(); setShowShapeGallery((v) => !v) }}
             onKeyDown={(e) => handleKeyboardActivation(e, () => setShowShapeGallery((v) => !v))}>
             <Shapes size={14} />
           </Button>
           {showShapeGallery && (
             <ShapeGallery
+              open={showShapeGallery}
+              anchorRef={shapeTriggerRef}
               onSelect={(type) => onAddShape?.(type)}
               onClose={() => setShowShapeGallery(false)}
             />
@@ -298,12 +354,15 @@ export default function InsertTabContent({
           </Button>
           <div className="relative">
             <Button variant="icon" className="h-7 w-7" title="Table" aria-label="Add table"
+              ref={tableTriggerRef}
               onMouseDown={(e) => { e.preventDefault(); setShowTablePicker((v) => !v) }}
               onKeyDown={(e) => handleKeyboardActivation(e, () => setShowTablePicker((v) => !v))}>
               <Table2 size={14} />
             </Button>
             {showTablePicker && (
               <TableSizePicker
+                open={showTablePicker}
+                anchorRef={tableTriggerRef}
                 onSelect={(r, c) => onAddTable?.(r, c)}
                 onClose={() => setShowTablePicker(false)}
               />
@@ -385,26 +444,31 @@ export default function InsertTabContent({
       </RibbonSection>
 
       <RibbonSection label="Advanced" className="px-1">
-        <RibbonDropdownMenuGroup
-          icon={Package}
-          label="Advanced"
-          items={[
-            { id: 'kinetic', icon: Wand2, label: 'Kinetic Text', onAction: () => onAddKineticText?.() },
-            { id: 'mathgrid', icon: Grid3x3, label: 'Math Grid', onAction: () => onAddMathGrid?.() },
-            { id: 'anime', icon: Clapperboard, label: 'Anime.js', onAction: () => onAddAnime?.() },
-            { id: 'three', icon: Box, label: 'Three.js', onAction: () => onAddThree?.() },
-            { id: 'timeline', icon: Clock, label: 'Timeline', onAction: () => onAddTimeline?.() },
-            { id: 'games', icon: Gamepad2, label: 'Games...', onAction: () => setShowGameGallery(true) },
-            ...pluginTypes.map((plugin) => ({
-              id: plugin.fullType,
-              icon: Package,
-              label: plugin.label,
-              onAction: () => onAddPluginElement?.(plugin.fullType),
-            })),
-          ]}
-          menuClassName="w-[260px] min-w-[260px]"
-          itemsClassName="grid grid-cols-2 gap-1"
-        />
+        <div className="flex items-center gap-0.5">
+          <AdvancedActionButton label="Add kinetic text" title="Kinetic Text" icon={Wand2} onAction={onAddKineticText} />
+          <AdvancedActionButton label="Add math grid" title="Math Grid" icon={Grid3x3} onAction={onAddMathGrid} />
+          <AdvancedActionButton label="Add Anime.js" title="Anime.js" icon={Clapperboard} onAction={onAddAnime} />
+          <AdvancedActionButton label="Add Three.js" title="Three.js" icon={Box} onAction={onAddThree} />
+          <AdvancedActionButton label="Add timeline" title="Timeline" icon={Clock} onAction={onAddTimeline} />
+          <RibbonDropdownMenuGroup
+            triggerRef={advancedLauncherRef}
+            icon={Package}
+            label="More advanced insert options"
+            triggerVariant="icon"
+            triggerClassName="h-7 w-7"
+            items={[
+              { id: 'games', icon: Gamepad2, label: 'Games...', onAction: () => setShowGameGallery(true) },
+              ...pluginTypes.map((plugin) => ({
+                id: plugin.fullType,
+                icon: Package,
+                label: plugin.label,
+                onAction: () => onAddPluginElement?.(plugin.fullType),
+              })),
+            ]}
+            menuClassName="w-[260px] min-w-[260px]"
+            itemsClassName="grid grid-cols-2 gap-1"
+          />
+        </div>
       </RibbonSection>
 
       {showVideoPrompt && (
@@ -421,12 +485,12 @@ export default function InsertTabContent({
         />
       )}
       {showGameGallery && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[1100]">
-          <GameGalleryDropdown
-            onSelect={(type) => onAddGame?.(type)}
-            onClose={() => setShowGameGallery(false)}
-          />
-        </div>
+        <GameGalleryDropdown
+          open={showGameGallery}
+          anchorRef={advancedLauncherRef}
+          onSelect={(type) => onAddGame?.(type)}
+          onClose={() => setShowGameGallery(false)}
+        />
       )}
       {uploadError && (
         <div className="fixed top-20 left-1/2 z-[1100] -translate-x-1/2 rounded-md border border-danger bg-danger/10 px-3 py-2 text-xs text-danger">

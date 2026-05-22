@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useUIStore } from '../../stores/ui-store'
 import { Button } from '../ui'
 import FileDropdown from './ribbon-file-dropdown-menu'
+import RibbonFloatingOverlay from './ribbon-floating-overlay'
 import TabBar from './tab-bar-with-scroll-and-icons'
 
 function RibbonActionDropdown({ label, icon: Icon, items }) {
@@ -14,10 +15,7 @@ function RibbonActionDropdown({ label, icon: Icon, items }) {
     item.onClick?.()
     setOpen(false)
   }
-  const closeMenu = useCallback(() => {
-    setOpen(false)
-    triggerRef.current?.focus()
-  }, [])
+  const closeMenu = useCallback(() => setOpen(false), [])
 
   useEffect(() => {
     if (!open) return undefined
@@ -54,14 +52,16 @@ function RibbonActionDropdown({ label, icon: Icon, items }) {
         <span className="text-[11px] hidden md:inline">{label}</span>
       </Button>
       {open && (
-        <>
-          <div className="fixed inset-0 z-[999]" onMouseDown={() => setOpen(false)} />
-          <div
-            className="absolute right-0 top-full z-[1000] mt-1 w-[190px] rounded-lg border border-border bg-card py-1 shadow-xl"
-            role="menu"
-            aria-label={`${label} menu`}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
+        <RibbonFloatingOverlay
+          open={open}
+          anchorRef={triggerRef}
+          onClose={closeMenu}
+          align="right"
+          className="w-[190px] rounded-lg border border-border bg-card py-1 shadow-xl"
+          role="menu"
+          ariaLabel={`${label} menu`}
+          dataRibbonPopup={`${label.toLowerCase()}-menu`}
+        >
             {items.map((item) => {
               const ItemIcon = item.icon
               return (
@@ -84,8 +84,7 @@ function RibbonActionDropdown({ label, icon: Icon, items }) {
                 </button>
               )
             })}
-          </div>
-        </>
+        </RibbonFloatingOverlay>
       )}
     </div>
   )

@@ -53,9 +53,14 @@ DOM-shape queries:
 - `data-ribbon-content-row`: active tab command row and horizontal scroll owner.
 - `data-ribbon-section`: command group container.
 - `data-ribbon-section-label`: visible group label.
+- `data-ribbon-popup`: popup surface rendered through `RibbonFloatingOverlay`.
 
 Tests should measure the active `tabpanel` and its `data-ribbon-content-row`.
 The outer `.tour-step-ribbon` is the fixed shell, not the scroll owner.
+Popup geometry tests should target `data-ribbon-popup` instead of relying on
+portal DOM position or Tailwind placement classes. Ribbon popups must be anchored
+to the trigger, escape ribbon clipping via body portal, clamp inside the viewport,
+close on Escape/outside click, and restore focus to the invoking trigger.
 
 ## File Size Budget
 

@@ -1,7 +1,10 @@
 // Issue #3: Insert/Embed adjacent dup. Add SVG must use FileImage; Add drawing
 // keeps Pencil. Embed row must have no two adjacent buttons sharing an icon.
 
-import { describe, expect, it } from 'vitest'
+import React from 'react'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import InsertTabContent from './ribbon-insert-tab-element-galleries-panel.jsx'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -59,5 +62,66 @@ describe('Insert/Embed icon consistency', () => {
     )
     expect(lucideImport).toBeTruthy()
     expect(lucideImport[1]).toMatch(/\bFileImage\b/)
+  })
+})
+
+describe('Insert Advanced direct action contract', () => {
+  it('renders fixed Advanced commands as direct buttons outside the launcher menu', () => {
+    render(<InsertTabContent pluginTypes={[]} />)
+
+    for (const label of [
+      'Add kinetic text',
+      'Add math grid',
+      'Add Anime.js',
+      'Add Three.js',
+      'Add timeline',
+    ]) {
+      expect(screen.getByRole('button', { name: label })).toBeTruthy()
+      expect(screen.queryByRole('menuitem', { name: label })).toBeNull()
+    }
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'More advanced insert options' }))
+
+    expect(screen.getByRole('menuitem', { name: 'Games...' })).toBeTruthy()
+    for (const oldMenuLabel of ['Kinetic Text', 'Math Grid', 'Anime.js', 'Three.js', 'Timeline']) {
+      expect(screen.queryByRole('menuitem', { name: oldMenuLabel })).toBeNull()
+    }
+  })
+
+  it('fires fixed Advanced callbacks from direct buttons', () => {
+    const callbacks = {
+      onAddKineticText: vi.fn(),
+      onAddMathGrid: vi.fn(),
+      onAddAnime: vi.fn(),
+      onAddThree: vi.fn(),
+      onAddTimeline: vi.fn(),
+    }
+    render(<InsertTabContent {...callbacks} />)
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Add kinetic text' }))
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Add math grid' }), { key: 'Enter' })
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Add Anime.js' }))
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Add Three.js' }))
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Add timeline' }))
+
+    expect(callbacks.onAddKineticText).toHaveBeenCalledTimes(1)
+    expect(callbacks.onAddMathGrid).toHaveBeenCalledTimes(1)
+    expect(callbacks.onAddAnime).toHaveBeenCalledTimes(1)
+    expect(callbacks.onAddThree).toHaveBeenCalledTimes(1)
+    expect(callbacks.onAddTimeline).toHaveBeenCalledTimes(1)
+  })
+
+  it('restores focus to the Advanced launcher after selecting a game', () => {
+    const onAddGame = vi.fn()
+    render(<InsertTabContent onAddGame={onAddGame} pluginTypes={[]} />)
+
+    const launcher = screen.getByRole('button', { name: 'More advanced insert options' })
+    fireEvent.mouseDown(launcher)
+    fireEvent.mouseDown(screen.getByRole('menuitem', { name: 'Games...' }))
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Name Picker' }))
+
+    expect(onAddGame).toHaveBeenCalledWith('name-picker')
+    expect(document.activeElement).toBe(launcher)
+    expect(screen.queryByRole('button', { name: 'Name Picker' })).toBeNull()
   })
 })

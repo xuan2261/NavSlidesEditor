@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '../ui'
+import RibbonFloatingOverlay from './ribbon-floating-overlay'
 
 export default function RibbonDropdownMenuGroup({
   icon: Icon,
@@ -9,43 +10,29 @@ export default function RibbonDropdownMenuGroup({
   className = '',
   menuClassName = '',
   itemsClassName = '',
+  triggerRef: externalTriggerRef,
+  triggerVariant = 'ribbon',
+  triggerClassName = '',
 }) {
   const [open, setOpen] = useState(false)
-  const containerRef = useRef(null)
-  const triggerRef = useRef(null)
+  const localTriggerRef = useRef(null)
+  const triggerRef = externalTriggerRef || localTriggerRef
   const toggleOpen = () => setOpen((v) => !v)
-  const runItem = (item) => {
-    item.onAction?.()
+  const closeMenu = () => {
+    triggerRef.current?.focus()
     setOpen(false)
   }
-
-  useEffect(() => {
-    if (!open) return
-    const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const handleEscape = (e) => {
-      if (e.key !== 'Escape') return
-      setOpen(false)
-      triggerRef.current?.focus()
-    }
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [open])
+  const runItem = (item) => {
+    item.onAction?.()
+    closeMenu()
+  }
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div className={className}>
       <Button
         ref={triggerRef}
-        variant="ribbon"
+        variant={triggerVariant}
+        className={triggerClassName}
         aria-expanded={open}
         aria-haspopup="menu"
         onMouseDown={(e) => {
@@ -66,10 +53,13 @@ export default function RibbonDropdownMenuGroup({
       </Button>
 
       {open && (
-        <div
+        <RibbonFloatingOverlay
+          open={open}
+          anchorRef={triggerRef}
+          onClose={() => setOpen(false)}
           role="menu"
-          className={`absolute top-full left-0 mt-1 bg-card border border-border rounded-lg p-1.5 shadow-xl z-[1000] min-w-[140px] ${menuClassName}`}
-          onMouseDown={(e) => e.stopPropagation()}
+          dataRibbonPopup={label}
+          className={`bg-card border border-border rounded-lg p-1.5 shadow-xl min-w-[140px] ${menuClassName}`}
         >
           <div className={itemsClassName}>
             {items.map((item) => {
@@ -95,7 +85,7 @@ export default function RibbonDropdownMenuGroup({
               )
             })}
           </div>
-        </div>
+        </RibbonFloatingOverlay>
       )}
     </div>
   )

@@ -38,6 +38,7 @@ const INLINE_STYLE_BUDGETS = {
   'client/src/pages/EditorPage.jsx': 0,
   'client/src/pages/SettingsPage.jsx': 0,
   'client/src/components/SlideCanvas.jsx': 13,
+  'client/src/components/ribbon/ribbon-floating-overlay.jsx': 1,
 }
 
 const EXEMPT_FILES = new Set([

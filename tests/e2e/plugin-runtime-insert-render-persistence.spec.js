@@ -61,8 +61,8 @@ test.describe('Plugin runtime insert, render, and persistence', () => {
 
     const insertPanel = page.getByRole('tabpanel', { name: 'Insert' })
     await expect(insertPanel).toBeVisible()
-    await expect(insertPanel.getByRole('button', { name: 'Advanced' })).toBeVisible()
-    await insertPanel.getByRole('button', { name: 'Advanced' }).click()
+    await expect(insertPanel.getByRole('button', { name: 'More advanced insert options' })).toBeVisible()
+    await insertPanel.getByRole('button', { name: 'More advanced insert options' }).click()
     await page.getByRole('menuitem', { name: 'Animated Counter' }).click()
 
     const pluginElement = page.locator('[data-element-type="plugin:counter"]').first()

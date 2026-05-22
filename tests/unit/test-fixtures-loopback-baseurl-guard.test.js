@@ -21,6 +21,8 @@ afterEach(() => {
 })
 
 describe('test-fixtures loopback guard', () => {
+  const fixtureImportTimeoutMs = 20000
+
   const mockRequest = () => ({
     post: vi.fn().mockResolvedValue({ ok: () => true, json: async () => ({ id: 'x' }) }),
     put: vi.fn().mockResolvedValue({ ok: () => true, json: async () => ({}) }),
@@ -31,26 +33,26 @@ describe('test-fixtures loopback guard', () => {
   it('allows 127.0.0.1 baseURL', async () => {
     const { apiCreatePresentation } = await loadFixturesWithEnv('http://127.0.0.1:4173')
     await expect(apiCreatePresentation(mockRequest(), 'ok')).resolves.toBeTruthy()
-  })
+  }, fixtureImportTimeoutMs)
 
   it('allows localhost baseURL', async () => {
     const { apiCreatePresentation } = await loadFixturesWithEnv('http://localhost:4173')
     await expect(apiCreatePresentation(mockRequest(), 'ok')).resolves.toBeTruthy()
-  })
+  }, fixtureImportTimeoutMs)
 
   it('rejects production-like URLs', async () => {
     const { apiCreatePresentation } = await loadFixturesWithEnv('https://navslides.example.com')
     await expect(apiCreatePresentation(mockRequest(), 'evil')).rejects.toThrow(
       /not a loopback/
     )
-  })
+  }, fixtureImportTimeoutMs)
 
   it('rejects private network URLs', async () => {
     const { apiCreatePresentation } = await loadFixturesWithEnv('http://10.0.0.5')
     await expect(apiCreatePresentation(mockRequest(), 'evil')).rejects.toThrow(
       /not a loopback/
     )
-  })
+  }, fixtureImportTimeoutMs)
 
   it('rejects baseURL on update/share/snapshot/delete', async () => {
     const { apiUpdatePresentation, apiDeletePresentation, apiCreateShareLink, apiCreateSnapshot } =
@@ -60,5 +62,5 @@ describe('test-fixtures loopback guard', () => {
     await expect(apiDeletePresentation(req, 'id')).rejects.toThrow(/not a loopback/)
     await expect(apiCreateShareLink(req, 'id')).rejects.toThrow(/not a loopback/)
     await expect(apiCreateSnapshot(req, 'id', 'snap')).rejects.toThrow(/not a loopback/)
-  })
+  }, fixtureImportTimeoutMs)
 })

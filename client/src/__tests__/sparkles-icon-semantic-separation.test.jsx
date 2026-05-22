@@ -34,16 +34,16 @@ describe('sparkles semantic separation', () => {
     expect(content).not.toMatch(/\bSparkles\b/)
   })
 
-  it('Insert tab Advanced "Kinetic Text" item uses Wand2 (not Sparkles)', () => {
+  it('Insert tab Advanced "Kinetic Text" direct action uses Wand2 (not Sparkles)', () => {
     const content = readSrc(
       'components/ribbon/ribbon-insert-tab-element-galleries-panel.jsx',
     )
-    const kineticLine = content
-      .split('\n')
-      .find((l) => /id:\s*'kinetic'/.test(l))
-    expect(kineticLine).toBeTruthy()
-    expect(kineticLine).toMatch(/icon:\s*Wand2/)
-    expect(kineticLine).not.toMatch(/icon:\s*Sparkles/)
+    expect(content).toMatch(
+      /<AdvancedActionButton\s+label="Add kinetic text"\s+title="Kinetic Text"\s+icon=\{Wand2\}/,
+    )
+    expect(content).not.toMatch(
+      /<AdvancedActionButton\s+label="Add kinetic text"[^>]*icon=\{Sparkles\}/,
+    )
   })
 
   it('SlidePanel autoAnimate badge + ctx-menu item + Insert Template use Wand2/LayoutTemplate', () => {

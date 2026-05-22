@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   Palette, MonitorSmartphone, PanelBottom, Hash, Navigation, Upload, Grid3X3,
   Layout, Monitor, Square, MonitorPlay, MonitorSpeaker,
@@ -7,6 +7,7 @@ import * as shared from 'revealjs-shared'
 import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
+import RibbonFloatingOverlay from './ribbon-floating-overlay'
 
 const { BG_COLORS = [], GRADIENT_PRESETS = [] } = shared
 
@@ -22,10 +23,15 @@ const SIZE_PRESETS = [
   { label: 'Ultra', w: 1920, h: 1080, icon: MonitorSpeaker },
 ]
 
-function ThemeGallery({ current, onSelect }) {
+function ThemeGallery({ open, anchorRef, current, onSelect, onClose }) {
   return (
-    <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg p-2 shadow-xl z-[1000] w-[220px]"
-      onMouseDown={(e) => e.stopPropagation()}>
+    <RibbonFloatingOverlay
+      open={open}
+      anchorRef={anchorRef}
+      onClose={onClose}
+      dataRibbonPopup="theme-gallery"
+      className="bg-card border border-border rounded-lg p-2 shadow-xl w-[220px]"
+    >
       <div className="text-[10px] font-semibold text-text-primary mb-1.5">Themes</div>
       <div className="grid grid-cols-3 gap-1">
         {THEMES.map((t) => (
@@ -39,11 +45,11 @@ function ThemeGallery({ current, onSelect }) {
           </button>
         ))}
       </div>
-    </div>
+    </RibbonFloatingOverlay>
   )
 }
 
-function BackgroundControls({ slide, onUpdateSlide }) {
+function BackgroundControls({ open, anchorRef, slide, onUpdateSlide, onClose }) {
   const bg = slide?.background || { type: 'color', color: '#1e1e2e' }
   const bgType = bg.type || 'color'
 
@@ -63,8 +69,13 @@ function BackgroundControls({ slide, onUpdateSlide }) {
   }
 
   return (
-    <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg p-2 shadow-xl z-[1000] w-[200px]"
-      onMouseDown={(e) => e.stopPropagation()}>
+    <RibbonFloatingOverlay
+      open={open}
+      anchorRef={anchorRef}
+      onClose={onClose}
+      dataRibbonPopup="background-controls"
+      className="bg-card border border-border rounded-lg p-2 shadow-xl w-[200px]"
+    >
       <div className="text-[10px] font-semibold text-text-primary mb-1.5">Slide Background</div>
       <div className="flex gap-1 mb-2">
         {['color', 'gradient', 'image', 'none'].map((type) => (
@@ -142,7 +153,7 @@ function BackgroundControls({ slide, onUpdateSlide }) {
           </label>
         </div>
       )}
-    </div>
+    </RibbonFloatingOverlay>
   )
 }
 
@@ -154,6 +165,8 @@ export default function DesignTabContent({
 }) {
   const [showThemes, setShowThemes] = useState(false)
   const [showBg, setShowBg] = useState(false)
+  const themeTriggerRef = useRef(null)
+  const bgTriggerRef = useRef(null)
 
   const currentTheme = presentation?.theme || 'black'
   const presenterTools = presentation?.presenterTools || {}
@@ -166,6 +179,7 @@ export default function DesignTabContent({
       <RibbonSection label="Themes" className="border-r border-border">
         <div className="relative">
           <Button variant="ribbon" className="h-7"
+            ref={themeTriggerRef}
             title="Presentation theme" aria-label="Change theme"
             onMouseDown={(e) => { e.preventDefault(); setShowThemes((v) => !v) }}>
             <Palette size={14} />
@@ -173,8 +187,11 @@ export default function DesignTabContent({
           </Button>
           {showThemes && (
             <ThemeGallery
+              open={showThemes}
+              anchorRef={themeTriggerRef}
               current={currentTheme}
               onSelect={(t) => { onUpdatePresentation?.({ theme: t }); setShowThemes(false) }}
+              onClose={() => setShowThemes(false)}
             />
           )}
         </div>
@@ -183,6 +200,7 @@ export default function DesignTabContent({
       <RibbonSection label="Background" className="border-r border-border">
         <div className="relative">
           <Button variant="ribbon" className="h-7"
+            ref={bgTriggerRef}
             title="Slide background" aria-label="Change slide background"
             onMouseDown={(e) => { e.preventDefault(); setShowBg((v) => !v) }}>
             <div
@@ -202,7 +220,13 @@ export default function DesignTabContent({
             <span className="text-[11px] hidden lg:inline">Background</span>
           </Button>
           {showBg && slide && onUpdateSlide && (
-            <BackgroundControls slide={slide} onUpdateSlide={onUpdateSlide} />
+            <BackgroundControls
+              open={showBg}
+              anchorRef={bgTriggerRef}
+              slide={slide}
+              onUpdateSlide={onUpdateSlide}
+              onClose={() => setShowBg(false)}
+            />
           )}
         </div>
       </RibbonSection>

@@ -6,10 +6,13 @@ import {
 } from '../fixtures/test-fixtures.js'
 import {
   expectStableScreenshot,
+  skipNonLinuxVisualSnapshots,
   suppressTutorialAndOverlays,
 } from '../pages/visual-snapshot-deterministic-freeze-and-helper.js'
 
 test.describe('Mobile editor visual baseline pinned to deviceScaleFactor 2', () => {
+  skipNonLinuxVisualSnapshots()
+
   let presId
 
   test.afterEach(async ({ request }) => {

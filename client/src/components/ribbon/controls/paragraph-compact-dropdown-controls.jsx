@@ -1,30 +1,11 @@
-import { useState, useRef, useEffect } from 'react'
+import { useRef, useState } from 'react'
 import { AlignLeft, AlignCenter, AlignRight, List, ListOrdered, RemoveFormatting, ChevronDown, Pilcrow } from 'lucide-react'
 import { Button } from '../../ui'
+import RibbonFloatingOverlay from '../ribbon-floating-overlay'
 
 export default function ParagraphCompactControls({ editor, rememberSelection, runTextCommand }) {
   const [open, setOpen] = useState(false)
-  const containerRef = useRef(null)
-
-  useEffect(() => {
-    if (!open) return
-    const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [open])
+  const triggerRef = useRef(null)
 
   if (!editor) return null
 
@@ -42,8 +23,9 @@ export default function ParagraphCompactControls({ editor, rememberSelection, ru
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div>
       <Button
+        ref={triggerRef}
         variant="ribbon"
         aria-expanded={open}
         aria-haspopup="menu"
@@ -65,10 +47,13 @@ export default function ParagraphCompactControls({ editor, rememberSelection, ru
       </Button>
 
       {open && (
-        <div
+        <RibbonFloatingOverlay
+          open={open}
+          anchorRef={triggerRef}
+          onClose={() => setOpen(false)}
           role="menu"
-          className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg p-2 shadow-xl z-[1000] min-w-[160px]"
-          onMouseDown={(e) => e.stopPropagation()}
+          dataRibbonPopup="paragraph-compact"
+          className="bg-card border border-border rounded-lg p-2 shadow-xl min-w-[160px]"
         >
           <div className="text-[10px] text-text-muted mb-1.5">Alignment</div>
           <div className="flex items-center gap-0.5 mb-2">
@@ -167,7 +152,7 @@ export default function ParagraphCompactControls({ editor, rememberSelection, ru
             <RemoveFormatting size={14} />
             Clear Formatting
           </button>
-        </div>
+        </RibbonFloatingOverlay>
       )}
     </div>
   )

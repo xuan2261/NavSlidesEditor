@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 /**
  * Freeze UI for visual snapshot determinism. Disables animations, hides
@@ -14,6 +14,13 @@ export async function freezeUiForSnapshot(page) {
             ::cursor { display: none !important; }
             *[data-blink], .blinking, .cursor-blink { animation: none !important; }`,
   })
+}
+
+export function skipNonLinuxVisualSnapshots() {
+  test.skip(
+    process.platform !== 'linux',
+    'Visual screenshot baselines are canonical only in the Linux Playwright container.',
+  )
 }
 
 export async function suppressTutorialAndOverlays(page) {

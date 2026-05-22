@@ -6,6 +6,7 @@ import {
 } from './fixtures/test-fixtures.js'
 import {
   freezeUiForSnapshot,
+  skipNonLinuxVisualSnapshots,
   suppressTutorialAndOverlays,
 } from './pages/visual-snapshot-deterministic-freeze-and-helper.js'
 
@@ -19,6 +20,8 @@ function seededSlide(elements = []) {
 }
 
 test.describe('Visual Regression', () => {
+  skipNonLinuxVisualSnapshots()
+
   let presentationId
 
   test.afterEach(async ({ request }) => {

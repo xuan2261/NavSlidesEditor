@@ -6,14 +6,7 @@ export class RibbonInsertHelper {
   }
 
   // Items that remain inside dropdown menus
-  static GROUPED_ITEMS = {
-    // Advanced group
-    'Add kinetic text': 'Advanced',
-    'Add math grid': 'Advanced',
-    'Add Anime.js': 'Advanced',
-    'Add Three.js': 'Advanced',
-    'Add timeline': 'Advanced',
-  }
+  static GROUPED_ITEMS = {}
 
   static GAME_LABELS = {
     'Name Picker': 'Name Picker',
@@ -29,11 +22,7 @@ export class RibbonInsertHelper {
 
   // Menu item labels inside remaining dropdowns
   static MENU_ITEM_LABELS = {
-    'Add kinetic text': 'Kinetic Text',
-    'Add math grid': 'Math Grid',
-    'Add Anime.js': 'Anime.js',
-    'Add Three.js': 'Three.js',
-    'Add timeline': 'Timeline',
+    'More advanced insert options': 'Games...',
   }
 
   async clickInsertMenuItem(itemName) {
@@ -71,7 +60,7 @@ export class RibbonInsertHelper {
 
     const gameLabel = RibbonInsertHelper.GAME_LABELS[label]
     if (gameLabel) {
-      await insertPanel.getByRole('button', { name: 'Advanced' }).click()
+      await insertPanel.getByRole('button', { name: 'More advanced insert options' }).click()
       await this.page.getByRole('menuitem', { name: 'Games...' }).click()
       await this.page.getByRole('button', { name: gameLabel, exact: true }).click()
       return
@@ -115,7 +104,12 @@ export class RibbonInsertHelper {
     const insertPanel = this.page.getByRole('tabpanel', { name: 'Insert' })
     await insertPanel.waitFor({ state: 'visible' })
     await insertPanel.getByRole('button', { name: 'Insert shape' }).click()
-    await this.page.getByRole('button', { name: shapeTitle, exact: true }).click()
+    const shapeGallery = this.page.locator('[data-ribbon-popup="shape-gallery"]').filter({ visible: true })
+    await shapeGallery.waitFor({ state: 'visible', timeout: 5000 })
+    await shapeGallery
+      .getByRole('button', { name: shapeTitle, exact: true })
+      .filter({ visible: true })
+      .click()
 
     await this.page.waitForFunction(
       (prev) => document.querySelectorAll('.element-wrapper').length > prev,
@@ -215,12 +209,15 @@ export class RibbonInsertHelper {
     const insertPanel = this.page.getByRole('tabpanel', { name: 'Insert' })
     await insertPanel.waitFor({ state: 'visible' })
     await insertPanel.getByRole('button', { name: 'Add table' }).click()
-    const tableCell = this.page.getByRole('button', {
-      name: `Insert ${rows} by ${cols} table`,
-      exact: true,
-    })
-    await tableCell.focus()
-    await this.page.keyboard.press('Enter')
+    const tablePicker = this.page.locator('[data-ribbon-popup="table-picker"]').filter({ visible: true })
+    await tablePicker.waitFor({ state: 'visible', timeout: 5000 })
+    const tableCell = tablePicker
+      .getByRole('button', {
+        name: `Insert ${rows} by ${cols} table`,
+        exact: true,
+      })
+      .filter({ visible: true })
+    await tableCell.click()
 
     await this.page.waitForFunction(
       (prev) => document.querySelectorAll('.element-wrapper').length > prev,

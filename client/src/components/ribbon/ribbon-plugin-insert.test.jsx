@@ -19,10 +19,19 @@ describe('InsertTabContent plugin section', () => {
       />
     )
 
-    fireEvent.mouseDown(screen.getByLabelText('Advanced'))
+    fireEvent.mouseDown(screen.getByLabelText('More advanced insert options'))
     const action = screen.getByText('Animated Counter')
     fireEvent.keyDown(action, { key: 'Enter' })
 
     expect(onAddPluginElement).toHaveBeenCalledWith('plugin:counter')
+  })
+
+  it('keeps the launcher visible for games when no plugin types are loaded', () => {
+    render(<InsertTabContent pluginTypes={[]} />)
+
+    fireEvent.mouseDown(screen.getByLabelText('More advanced insert options'))
+
+    expect(screen.getByRole('menuitem', { name: 'Games...' })).toBeTruthy()
+    expect(screen.queryByText('Animated Counter')).toBeNull()
   })
 })

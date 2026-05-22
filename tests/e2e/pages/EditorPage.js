@@ -180,7 +180,7 @@ export class EditorPage {
     })
 
     await this.page.getByRole('button', { name: 'gradient' }).click()
-    const swatches = this.page.getByRole('button', { name: /^Gradient / })
+    const swatches = this.page.getByRole('button', { name: /^Gradient / }).filter({ visible: true })
     if ((await swatches.count()) > 0) {
       await swatches.nth(1).click()
       await this.page

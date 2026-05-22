@@ -152,7 +152,7 @@ test.describe('Game Element — Toolbar Integration', () => {
     await page.getByRole('tab', { name: 'Insert' }).click()
     const insertPanel = page.getByRole('tabpanel', { name: 'Insert' })
     await expect(insertPanel).toBeVisible({ timeout: 5000 })
-    await insertPanel.getByRole('button', { name: 'Advanced' }).click()
+    await insertPanel.getByRole('button', { name: 'More advanced insert options' }).click()
     await page.getByRole('menuitem', { name: 'Games...' }).click()
     await expect(page.getByText('Games')).toBeVisible({ timeout: 3000 })
     await expect(page.getByRole('button', { name: 'Name Picker' })).toBeVisible()

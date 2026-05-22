@@ -198,6 +198,23 @@ button {
   font-size: inherit;
   font-family: inherit;
 }
+
+.ribbon-shape-gallery-button {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+}
+
+.ribbon-shape-gallery-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.ribbon-table-picker-cell {
+  width: 12px;
+  height: 12px;
+}
+
 input,
 textarea,
 select {

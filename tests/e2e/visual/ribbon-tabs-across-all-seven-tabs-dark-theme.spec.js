@@ -6,6 +6,7 @@ import {
 } from '../fixtures/test-fixtures.js'
 import {
   expectStableScreenshot,
+  skipNonLinuxVisualSnapshots,
   suppressTutorialAndOverlays,
 } from '../pages/visual-snapshot-deterministic-freeze-and-helper.js'
 
@@ -30,6 +31,8 @@ async function seedPresentation(request) {
 }
 
 test.describe('Ribbon tabs visual baseline across all 7 tabs and dark theme', () => {
+  skipNonLinuxVisualSnapshots()
+
   let presId
 
   test.beforeEach(async ({ page, request }) => {

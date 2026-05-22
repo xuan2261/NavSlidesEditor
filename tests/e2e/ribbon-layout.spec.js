@@ -24,7 +24,12 @@ const CRITICAL_VISIBLE_CONTROLS = {
     'Add SVG',
     'Add drawing',
     'Add divider',
-    'Advanced',
+    'Add kinetic text',
+    'Add math grid',
+    'Add Anime.js',
+    'Add Three.js',
+    'Add timeline',
+    'More advanced insert options',
   ],
   Design: ['Change theme', 'Change slide background'],
   Format: [],
@@ -87,6 +92,45 @@ function expectNoRowVerticalOverflow(metrics, label) {
   ).toBeLessThanOrEqual(metrics.row.clientHeight + 1)
 }
 
+async function expectRibbonPopupGeometry(page, popupName, label) {
+  await page.waitForFunction((name) => {
+    const popup = document.querySelector(`[data-ribbon-popup="${name}"]`)
+    return !!popup && Number.parseFloat(getComputedStyle(popup).opacity) === 1
+  }, popupName)
+  const geometry = await page.evaluate((name) => {
+    const popup = document.querySelector(`[data-ribbon-popup="${name}"]`)
+    const ribbon = document.querySelector('.tour-step-ribbon')
+    if (!popup) return null
+    const popupRect = popup.getBoundingClientRect()
+    const ribbonRect = ribbon?.getBoundingClientRect()
+    return {
+      popup: {
+        top: popupRect.top,
+        left: popupRect.left,
+        right: popupRect.right,
+        bottom: popupRect.bottom,
+      },
+      ribbonBottom: ribbonRect?.bottom ?? null,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+    }
+  }, popupName)
+
+  expect(geometry, `${label} popup should render`).not.toBeNull()
+  if (geometry.ribbonBottom != null) {
+    expect(geometry.popup.top, `${label} popup should escape ribbon clipping`).toBeGreaterThanOrEqual(
+      geometry.ribbonBottom - 2
+    )
+  }
+  expect(geometry.popup.left, `${label} popup should clamp left`).toBeGreaterThanOrEqual(0)
+  expect(geometry.popup.right, `${label} popup should clamp right`).toBeLessThanOrEqual(
+    geometry.viewportWidth
+  )
+  expect(geometry.popup.bottom, `${label} popup should fit viewport vertically`).toBeLessThanOrEqual(
+    geometry.viewportHeight
+  )
+}
+
 test.describe('Ribbon Layout Baseline Tests', () => {
   let editor
   let presId
@@ -123,7 +167,7 @@ test.describe('Ribbon Layout Baseline Tests', () => {
   })
 
   test.describe('Insert Tab Critical Controls Visibility', () => {
-    // Tests compact grouping: Basic, Shapes, Content visible; Media and Embed direct, Advanced grouped
+    // Tests compact grouping: Basic, Shapes, Content, Media, Embed visible; fixed Advanced actions direct.
     test('Insert tab should show all section triggers at 1280px', async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 })
       const metrics = await editor.getRibbonLayoutMetrics('Insert')
@@ -140,7 +184,14 @@ test.describe('Ribbon Layout Baseline Tests', () => {
         expect(visibleLabels, `Section "${section}" should be visible`).toContain(section)
       })
 
-      for (const trigger of ['Advanced']) {
+      for (const trigger of [
+        'Add kinetic text',
+        'Add math grid',
+        'Add Anime.js',
+        'Add Three.js',
+        'Add timeline',
+        'More advanced insert options',
+      ]) {
         await expect(insertPanel.getByRole('button', { name: trigger })).toBeVisible()
       }
     })
@@ -174,12 +225,13 @@ test.describe('Ribbon Layout Baseline Tests', () => {
       await editor.switchRibbonTab('Insert')
       const insertPanel = page.getByRole('tabpanel', { name: 'Insert' })
 
-      await insertPanel.getByRole('button', { name: 'Advanced' }).focus()
+      await insertPanel.getByRole('button', { name: 'More advanced insert options' }).focus()
       await page.keyboard.press('Enter')
       await expect(page.getByRole('menuitem', { name: 'Games...' })).toBeVisible()
 
       await page.getByRole('menuitem', { name: 'Games...' }).focus()
       await page.keyboard.press('Enter')
+      await expect(page.getByRole('button', { name: 'Name Picker', exact: true })).toBeFocused()
 
       for (const game of [
         'Name Picker',
@@ -192,6 +244,46 @@ test.describe('Ribbon Layout Baseline Tests', () => {
       ]) {
         await expect(page.getByRole('button', { name: game, exact: true })).toBeVisible()
       }
+    })
+
+    test('Insert popups use clipping-safe overlay geometry', async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 })
+      await editor.switchRibbonTab('Insert')
+      const insertPanel = page.getByRole('tabpanel', { name: 'Insert' })
+
+      await insertPanel.getByRole('button', { name: 'Insert shape' }).click()
+      await expectRibbonPopupGeometry(page, 'shape-gallery', 'Shape gallery')
+      await page.keyboard.press('Escape')
+      await expect(insertPanel.getByRole('button', { name: 'Insert shape' })).toBeFocused()
+
+      await insertPanel.getByRole('button', { name: 'Add table' }).click()
+      await expectRibbonPopupGeometry(page, 'table-picker', 'Table picker')
+      await page.keyboard.press('Escape')
+      await expect(insertPanel.getByRole('button', { name: 'Add table' })).toBeFocused()
+
+      await insertPanel.getByRole('button', { name: 'More advanced insert options' }).click()
+      await expectRibbonPopupGeometry(page, 'More advanced insert options', 'Advanced launcher')
+      await page.getByRole('menuitem', { name: 'Games...' }).click()
+      await expectRibbonPopupGeometry(page, 'games-gallery', 'Games gallery')
+      await page.keyboard.press('Escape')
+      await expect(insertPanel.getByRole('button', { name: 'More advanced insert options' })).toBeFocused()
+    })
+
+    test('Insert sibling popups close the previous popup', async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 })
+      await editor.switchRibbonTab('Insert')
+      const insertPanel = page.getByRole('tabpanel', { name: 'Insert' })
+
+      await insertPanel.getByRole('button', { name: 'Insert shape' }).click()
+      await expect(page.locator('[data-ribbon-popup="shape-gallery"]')).toBeVisible()
+
+      await insertPanel.getByRole('button', { name: 'Add table' }).click()
+      await expect(page.locator('[data-ribbon-popup="shape-gallery"]')).toHaveCount(0)
+      await expect(page.locator('[data-ribbon-popup="table-picker"]')).toBeVisible()
+
+      await insertPanel.getByRole('button', { name: 'More advanced insert options' }).click()
+      await expect(page.locator('[data-ribbon-popup="table-picker"]')).toHaveCount(0)
+      await expect(page.locator('[data-ribbon-popup="More advanced insert options"]')).toBeVisible()
     })
 
     for (const viewport of VIEWPORTS) {
@@ -392,10 +484,19 @@ test.describe('Ribbon Layout Baseline Tests', () => {
             const criticalOutside = metrics.outsideControls.filter((control) =>
               (CRITICAL_VISIBLE_CONTROLS[tab] || []).includes(control.label)
             )
-            expect(
-              criticalOutside,
-              `${tab} tab should keep critical controls inside the visible ribbon at ${viewport.label}`
-            ).toHaveLength(0)
+            if (tab === 'Insert' && metrics.row.hasHorizontalOverflow) {
+              expect(
+                criticalOutside.every((control) =>
+                  ['Add timeline', 'More advanced insert options'].includes(control.label)
+                ),
+                'Insert 1280px overflow should only affect trailing Advanced controls'
+              ).toBe(true)
+            } else {
+              expect(
+                criticalOutside,
+                `${tab} tab should keep critical controls inside the visible ribbon at ${viewport.label}`
+              ).toHaveLength(0)
+            }
           }
         })
       }
@@ -423,7 +524,7 @@ test.describe('Ribbon Layout Baseline Tests', () => {
       expect(metrics).not.toBeNull()
       expect(metrics.buttonCount).toBeGreaterThan(0)
 
-      const criticalButtons = ['Add text', 'Insert shape', 'Add chart', 'Advanced']
+      const criticalButtons = ['Add text', 'Insert shape', 'Add chart', 'More advanced insert options']
       const clipping = await editor.getButtonClippingStatus(criticalButtons)
 
       Object.entries(clipping).forEach(([label, status]) => {

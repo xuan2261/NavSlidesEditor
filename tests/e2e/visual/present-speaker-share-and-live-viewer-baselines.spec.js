@@ -7,6 +7,7 @@ import {
 } from '../fixtures/test-fixtures.js'
 import {
   expectStableScreenshot,
+  skipNonLinuxVisualSnapshots,
   suppressTutorialAndOverlays,
 } from '../pages/visual-snapshot-deterministic-freeze-and-helper.js'
 
@@ -16,6 +17,8 @@ const SLIDES = [
 ]
 
 test.describe('Present, speaker, share landing, live viewer visual baselines', () => {
+  skipNonLinuxVisualSnapshots()
+
   let presId
 
   test.beforeEach(async ({ request }) => {

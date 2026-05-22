@@ -4,6 +4,9 @@
 
 ## 2026-05-22
 
+- Released `v1.9.3`: Insert Advanced direct actions and clipping-safe ribbon popup overlays are tagged for the next Windows Electron release workflow.
+- Completed Insert Advanced direct-actions and ribbon popup overlay hardening: fixed Advanced actions now render as direct icon buttons, Games/plugin inserts remain in the `More advanced insert options` launcher, and File/Header AI/Share/Design/Transitions/Animations/Paragraph/Advanced/Shape/Table/Games popups now use the clipping-safe `RibbonFloatingOverlay` portal contract.
+- Added overlay regression coverage for portal rendering, Escape/outside close, focus restore, viewport clamping, scroll/resize recompute, Insert responsive geometry, game-selection focus restore, and game/plugin insertion paths. Verification passed: ribbon Vitest slice (16 files / 141 tests), Insert Playwright slice (19 passed), targeted game/plugin/parallax Playwright insertion sweep (42 passed), targeted ESLint on changed files, and `npm run build`; full `npm run lint` is blocked locally by existing `.claude` EPERM scan access.
 - Released `v1.9.2`: classic ribbon alignment hardening, Linux visual baseline refresh, and QA confidence coverage are tagged for the next Windows Electron release workflow.
 - Hardened the classic ribbon alignment contract: active tab panels now fill the fixed 80px ribbon area, inactive panels no longer intercept pointer events, tab rows expose stable `data-ribbon-*` selectors, Format empty state renders as a `Selection` group, and ribbon layout E2E now covers group order, left-flow, and scroll-aware responsive gates.
 - Fixed Home dashboard Grid/List view toggle clipping: the segmented control no longer shrinks under header pressure, List View remains fully visible, and a Playwright regression covers the button bounds.

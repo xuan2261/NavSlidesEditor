@@ -200,6 +200,9 @@ Default font families offered in the font picker (verified in Toolbar):
 - Slide background swatches must be keyboard reachable and carry explicit labels.
 - Highlight color controls use `listbox`/`option` semantics instead of plain button groups.
 - Keep accessible names stable on icon-only toolbar controls.
+- Ribbon popups that can escape the 80px command area use `RibbonFloatingOverlay` instead of inline `absolute top-full` panels. The overlay portals to `document.body`, anchors to the invoking control, clamps to the viewport on both axes, recomputes on scroll/resize, closes on Escape/outside click, and restores focus to the trigger.
+- Migrated popup surfaces: File, header AI, header Share, Design theme/background, Transitions, Animations effect controls, Paragraph compact controls, Insert Advanced launcher, Shape, Table, and Games.
+- Insert Advanced exposes fixed commands as direct icon buttons: Add kinetic text, Add math grid, Add Anime.js, Add Three.js, and Add timeline. Dynamic or multi-choice commands stay behind the icon-only `More advanced insert options` launcher, including Games and plugin insert items.
 
 ### Property Inputs
 

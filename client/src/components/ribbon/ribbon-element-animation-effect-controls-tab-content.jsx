@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   Wand2, Play, ChevronDown, ToggleLeft, ToggleRight,
 } from 'lucide-react'
@@ -6,13 +6,19 @@ import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 import { FRAGMENT_ANIMATION_TYPES } from '../../constants/fragment-animation-types'
+import RibbonFloatingOverlay from './ribbon-floating-overlay'
 
 const ANIMATION_TYPES = FRAGMENT_ANIMATION_TYPES
 
-function AnimationPicker({ current, onSelect, onClose }) {
+function AnimationPicker({ open, anchorRef, current, onSelect, onClose }) {
   return (
-    <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg p-2 shadow-xl z-[1000] w-[160px]"
-      onMouseDown={(e) => e.stopPropagation()}>
+    <RibbonFloatingOverlay
+      open={open}
+      anchorRef={anchorRef}
+      onClose={onClose}
+      dataRibbonPopup="animation-picker"
+      className="bg-card border border-border rounded-lg p-2 shadow-xl w-[160px]"
+    >
       <div className="text-[10px] font-semibold text-text-primary mb-1.5">Animation</div>
       <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto">
         {ANIMATION_TYPES.map(({ value, label }) => (
@@ -26,7 +32,7 @@ function AnimationPicker({ current, onSelect, onClose }) {
           </button>
         ))}
       </div>
-    </div>
+    </RibbonFloatingOverlay>
   )
 }
 
@@ -34,6 +40,7 @@ const clampFragmentIndex = (value) => Math.min(20, Math.max(1, parseInt(value, 1
 
 export default function AnimationsTabContent({ selectedElement, slideElements = [], onUpdateElement }) {
   const [showPicker, setShowPicker] = useState(false)
+  const animationTriggerRef = useRef(null)
 
   const hasAnimation = selectedElement?.fragment || false
   const currentAnimation = selectedElement?.fragmentAnimation || 'fade-in'
@@ -67,6 +74,7 @@ export default function AnimationsTabContent({ selectedElement, slideElements = 
           {hasAnimation && (
             <div className="relative">
               <Button variant="ribbon" className="h-7"
+                ref={animationTriggerRef}
                 title="Animation type" aria-label="Change animation type"
                 onMouseDown={(e) => { e.preventDefault(); setShowPicker((v) => !v) }}>
                 <Wand2 size={14} />
@@ -75,6 +83,8 @@ export default function AnimationsTabContent({ selectedElement, slideElements = 
               </Button>
               {showPicker && (
                 <AnimationPicker
+                  open={showPicker}
+                  anchorRef={animationTriggerRef}
                   current={currentAnimation}
                   onSelect={(a) => onUpdateElement?.({ fragmentAnimation: a })}
                   onClose={() => setShowPicker(false)}

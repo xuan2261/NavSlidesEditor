@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   Zap, Timer, Play, ChevronDown, RotateCcw,
 } from 'lucide-react'
 import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
+import RibbonFloatingOverlay from './ribbon-floating-overlay'
 
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
 
@@ -18,10 +19,15 @@ const DIRECTIONS = ['default', 'left', 'right', 'up', 'down']
 
 const clampDuration = (value) => Math.min(10000, Math.max(0, parseInt(value, 10) || 0))
 
-function TransitionPicker({ current, onSelect }) {
+function TransitionPicker({ open, anchorRef, current, onSelect, onClose }) {
   return (
-    <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg p-2 shadow-xl z-[1000] w-[160px]"
-      onMouseDown={(e) => e.stopPropagation()}>
+    <RibbonFloatingOverlay
+      open={open}
+      anchorRef={anchorRef}
+      onClose={onClose}
+      dataRibbonPopup="transition-picker"
+      className="bg-card border border-border rounded-lg p-2 shadow-xl w-[160px]"
+    >
       <div className="text-[10px] font-semibold text-text-primary mb-1.5">Transition</div>
       <div className="flex flex-col gap-0.5">
         {TRANSITIONS.map((t) => (
@@ -35,7 +41,7 @@ function TransitionPicker({ current, onSelect }) {
           </button>
         ))}
       </div>
-    </div>
+    </RibbonFloatingOverlay>
   )
 }
 
@@ -46,6 +52,7 @@ export default function TransitionsTabContent({
   onUpdateSlide,
 }) {
   const [showPicker, setShowPicker] = useState(false)
+  const transitionTriggerRef = useRef(null)
 
   const hasSlideOverride = slide?.transition != null
   const currentTransition = slide?.transition || presentation?.transition || 'slide'
@@ -70,6 +77,7 @@ export default function TransitionsTabContent({
       <RibbonSection label="Transition" className="border-r border-border">
         <div className="relative">
           <Button variant="ribbon" className="h-7"
+            ref={transitionTriggerRef}
             title="Slide transition" aria-label="Change transition"
             onMouseDown={(e) => { e.preventDefault(); setShowPicker((v) => !v) }}>
             <Zap size={14} />
@@ -78,8 +86,11 @@ export default function TransitionsTabContent({
           </Button>
           {showPicker && (
             <TransitionPicker
+              open={showPicker}
+              anchorRef={transitionTriggerRef}
               current={currentTransition}
               onSelect={(t) => { updateTransition(t); setShowPicker(false) }}
+              onClose={() => setShowPicker(false)}
             />
           )}
         </div>

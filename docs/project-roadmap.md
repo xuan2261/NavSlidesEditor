@@ -1,8 +1,8 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: v1.9.2 classic ribbon alignment hardening and QA confidence coverage complete
+## Current Status: v1.9.3 Insert Advanced direct actions and popup overlay hardening complete
 
-Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system. Parallax feature port (font-weight, line-height, timeline element, video controls, LaTeX improvements) landed in v1.7.1. Upstream selective port merged on 2026-05-14. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state, and the hybrid PPTX export/import pipeline.
+Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system and now has clipping-safe portal popups for File, header AI/Share, Design, Transitions, Animations, Paragraph, Insert Advanced, Shape, Table, and Games surfaces. Parallax feature port (font-weight, line-height, timeline element, video controls, LaTeX improvements) landed in v1.7.1. Upstream selective port merged on 2026-05-14. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state, and the hybrid PPTX export/import pipeline.
 
 ### What Works
 
@@ -34,7 +34,7 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | AI copywriting + translation                       | Done                                                                                                      |
 | Media library (Unsplash, Giphy)                    | Done                                                                                                      |
 | Gamification Game Controls (7 game types)          | Done                                                                                                      |
-| Ribbon UI migration                                 | Done (replaced Toolbar.jsx, InsertMenu.jsx, EditorMenuBar.jsx with tab-based ribbon)                     |
+| Ribbon UI migration                                 | Done (replaced Toolbar.jsx, InsertMenu.jsx, EditorMenuBar.jsx with tab-based ribbon; Advanced direct actions and portal popup overlay hardening complete) |
 | Parallax feature port                               | Done (font-weight, line-height, timeline element, video controls, LaTeX improvements)                    |
 | Upstream selective port                             | Done (merged 2026-05-14; copy URL context menu, typography/export consistency)                            |
 | Local plugin runtime Phase 1                        | Done (bundled plugin discovery, sandbox canvas runtime, Animated Counter sample, export fallback)         |
