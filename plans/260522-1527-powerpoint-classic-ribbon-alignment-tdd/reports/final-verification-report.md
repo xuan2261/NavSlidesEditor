@@ -54,4 +54,4 @@ Known local/CI notes:
 
 ## Unresolved Questions
 
-- None. Remaining work is the already-defined canonical visual snapshot refresh gate.
+- None.

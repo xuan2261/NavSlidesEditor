@@ -96,7 +96,7 @@ Cook command: `/ck:cook --tdd C:\Work\NavSlidesEditor\plans\260522-1527-powerpoi
 - Final gates: targeted ribbon/a11y/visual Chromium gates plus lint/build are required; full E2E is conditional when changes spill outside ribbon.
 
 #### Action Items
-- [ ] Preserve these defaults during implementation and code review.
+- [x] Preserve these defaults during implementation and code review.
 
 #### Impact on Phases
 - Phase 02: shared primitive remains conditional, not automatic.
