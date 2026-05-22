@@ -4,7 +4,7 @@
 
 ## 2026-05-22
 
-- Registered the manual Playwright visual-baseline workflow on default branch `master` by cherry-picking `9331885c` as `6aeb3191`; `workflow_dispatch` now succeeds, and the validated run was `26240623328`.
+- Registered the manual Playwright visual-baseline workflow on default branch `master` by cherry-picking `9331885c` as `6aeb3191`; `workflow_dispatch` now succeeds. The initial dispatch run was `26240623328`; the successful fallback run was `26262072930`.
 - Completed the GitHub Actions fallback path for Linux Playwright visual baseline regeneration. Run `26262072930` passed update, verify, and artifact upload in `mcr.microsoft.com/playwright:v1.59.1-jammy`; Linux `*-chromium-linux.png` baselines were applied from the artifact only.
 
 ## 2026-05-21

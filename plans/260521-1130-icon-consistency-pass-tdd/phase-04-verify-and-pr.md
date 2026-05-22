@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Verify and PR"
-status: in-progress
+status: complete
 priority: P1
 effort: "0.5-1h"
 dependencies: [1, 2, 3]
