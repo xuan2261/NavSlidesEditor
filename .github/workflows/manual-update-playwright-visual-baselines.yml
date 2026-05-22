@@ -1,0 +1,64 @@
+name: Manual Update Playwright Visual Baselines
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '20'
+  CI: 'true'
+  PLAYWRIGHT_CLIENT_PORT: '4173'
+  PLAYWRIGHT_SERVER_PORT: '3202'
+
+jobs:
+  update-visual-baselines:
+    name: Update visual baselines in Linux container
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Update visual baselines
+        run: >
+          npx playwright test
+          tests/e2e/visual/
+          tests/e2e/visual-regression.spec.js
+          --update-snapshots
+
+      - name: Verify regenerated visual baselines
+        run: >
+          npx playwright test
+          tests/e2e/visual/
+          tests/e2e/visual-regression.spec.js
+
+      - name: Upload Linux visual baseline snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-playwright-visual-baseline-snapshots
+          path: |
+            tests/e2e/visual/**/*-snapshots/*.png
+            tests/e2e/visual-regression.spec.js-snapshots/*.png
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-manual-visual-baselines
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
