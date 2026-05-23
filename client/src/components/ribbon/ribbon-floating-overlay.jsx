@@ -96,6 +96,8 @@ export default function RibbonFloatingOverlay({
 
   if (!open || typeof document === 'undefined') return null
 
+  const portalTarget = document.getElementById('root') ?? document.body
+
   return createPortal(
     <div
       ref={overlayRef}
@@ -116,6 +118,6 @@ export default function RibbonFloatingOverlay({
     >
       {children}
     </div>,
-    document.body,
+    portalTarget,
   )
 }

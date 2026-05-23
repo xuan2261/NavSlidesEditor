@@ -103,6 +103,7 @@ async function expectRibbonPopupGeometry(page, popupName, label) {
     if (!popup) return null
     const popupRect = popup.getBoundingClientRect()
     const ribbonRect = ribbon?.getBoundingClientRect()
+    const popupStyle = getComputedStyle(popup)
     return {
       popup: {
         top: popupRect.top,
@@ -110,6 +111,7 @@ async function expectRibbonPopupGeometry(page, popupName, label) {
         right: popupRect.right,
         bottom: popupRect.bottom,
       },
+      backgroundColor: popupStyle.backgroundColor,
       ribbonBottom: ribbonRect?.bottom ?? null,
       viewportWidth: window.innerWidth,
       viewportHeight: window.innerHeight,
@@ -117,6 +119,14 @@ async function expectRibbonPopupGeometry(page, popupName, label) {
   }, popupName)
 
   expect(geometry, `${label} popup should render`).not.toBeNull()
+  expect(
+    geometry.backgroundColor,
+    `${label} popup must have a visible background (not transparent)`
+  ).not.toBe('rgba(0, 0, 0, 0)')
+  expect(
+    geometry.backgroundColor,
+    `${label} popup must have a visible background (not 'transparent')`
+  ).not.toBe('transparent')
   if (geometry.ribbonBottom != null) {
     expect(geometry.popup.top, `${label} popup should escape ribbon clipping`).toBeGreaterThanOrEqual(
       geometry.ribbonBottom - 2

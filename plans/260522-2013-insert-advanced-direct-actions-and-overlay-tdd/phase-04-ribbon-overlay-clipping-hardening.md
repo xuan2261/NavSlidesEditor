@@ -48,9 +48,11 @@ Recommended primitive:
 // client/src/components/ribbon/ribbon-floating-overlay.jsx
 createPortal(
   <div style={{ position: 'fixed', top, left, minWidth }}>...</div>,
-  document.body
+  document.getElementById('root') ?? document.body
 )
 ```
+
+Portal target rationale: Tailwind is configured with `important: '#root'` in `client/tailwind.config.js`, so every utility class is emitted as `#root .className`. Mounting the portal directly onto `document.body` would put the overlay outside `#root`, breaking utility classes like `bg-card`, `border-border`, and `shadow-xl` — the popup would render but appear transparent. Mounting inside `#root` preserves `position: fixed` viewport anchoring (no transform/filter/perspective on `#root`, so it does not become a fixed containing block) while keeping Tailwind specificity intact. `document.body` remains a fallback for SSR/test environments where `#root` is absent.
 
 Behavior:
 
@@ -171,4 +173,4 @@ Geometry assertion:
 
 ## Unresolved Questions
 
-- None.
+- Portal target was initially mounted on `document.body`, which caused popups to render transparent because Tailwind's `important: '#root'` specificity gate excluded utility classes outside `#root`. Resolved by mounting on `document.getElementById('root') ?? document.body`. E2E `expectRibbonPopupGeometry` now also asserts non-transparent `backgroundColor` to guard against the same regression class.

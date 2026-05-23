@@ -53,6 +53,22 @@ describe('RibbonFloatingOverlay', () => {
     expect(popup.contains(screen.getByRole('menuitem', { name: 'Action' }))).toBe(true)
   })
 
+  it('mounts the portal inside #root when present so Tailwind #root-scoped utility classes apply', () => {
+    const rootEl = document.createElement('div')
+    rootEl.id = 'root'
+    document.body.appendChild(rootEl)
+
+    try {
+      render(<Harness />, { container: rootEl })
+
+      const popup = document.querySelector('[data-ribbon-popup="test-popup"]')
+      expect(popup).toBeTruthy()
+      expect(rootEl.contains(popup)).toBe(true)
+    } finally {
+      document.body.removeChild(rootEl)
+    }
+  })
+
   it('closes on Escape and restores focus to the anchor', () => {
     render(<Harness />)
 
