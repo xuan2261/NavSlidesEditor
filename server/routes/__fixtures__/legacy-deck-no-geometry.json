@@ -1,0 +1,18 @@
+{
+  "title": "Legacy fixture (no geometry)",
+  "slides": [
+    {
+      "id": "slide-1",
+      "elements": [
+        { "id": "el-1", "type": "text", "content": "<p>Title slide</p>" },
+        { "id": "el-2", "type": "text", "content": "<p>Subtitle</p>" }
+      ]
+    },
+    {
+      "id": "slide-2",
+      "elements": [
+        { "id": "el-3", "type": "shape", "shapeType": "rect" }
+      ]
+    }
+  ]
+}

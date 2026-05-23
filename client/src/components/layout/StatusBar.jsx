@@ -57,7 +57,7 @@ export default function StatusBar() {
             <polyline points="16 18 22 12 16 6" />
             <polyline points="8 6 2 12 8 18" />
           </svg>
-          v1.6.1
+          {`v${typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}`}
         </span>
       </div>
     </footer>

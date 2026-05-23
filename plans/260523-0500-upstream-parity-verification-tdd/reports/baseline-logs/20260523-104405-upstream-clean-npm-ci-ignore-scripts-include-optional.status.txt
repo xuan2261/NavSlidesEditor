@@ -1,0 +1,8 @@
+command=npm ci --ignore-scripts --include=optional
+workdir=C:\Work\NavSlidesEditor-upstream-clean
+start=2026-05-23T10:44:05.9158430+07:00
+end=2026-05-23T10:44:28.0959812+07:00
+exit=0
+rollupNativePresent=False
+dirtyStatusScoped=
+ M node_modules/.package-lock.json

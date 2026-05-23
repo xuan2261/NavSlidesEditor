@@ -42,3 +42,6 @@ brainstorm-report.md
 # Plan-scoped benchmark artifacts
 plans/**/research/parser-raw/
 plans/**/research/parser-sandbox/node_modules/
+
+# Local Claude Code session data
+.claude/

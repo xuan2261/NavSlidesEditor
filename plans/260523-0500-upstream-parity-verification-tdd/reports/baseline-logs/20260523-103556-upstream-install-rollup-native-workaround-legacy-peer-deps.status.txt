@@ -1,0 +1,7 @@
+command=npm install --ignore-scripts --no-save --package-lock=false --legacy-peer-deps @rollup/rollup-win32-x64-msvc@4.59.0
+workdir=C:\Work\NavSlidesEditor-upstream
+start=2026-05-23T10:35:56.5785802+07:00
+end=2026-05-23T10:36:30.1388929+07:00
+exit=0
+dirtyStatusScoped=
+ M node_modules/.package-lock.json

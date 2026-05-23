@@ -1,0 +1,14 @@
+name=npm-run-lint
+command=npm run lint
+start=2026-05-23T08:53:25.8120342+07:00
+end=2026-05-23T08:53:48.6057394+07:00
+exitCode=0
+log=plans\260523-0500-upstream-parity-verification-tdd\reports\baseline-logs\20260523-085325-npm-run-lint.log
+dirtyStatus=BEGIN
+ M README.md
+ M docs/codebase-summary.md
+ M docs/project-changelog.md
+ M docs/project-roadmap.md
+?? .claude/
+?? plans/260523-0500-upstream-parity-verification-tdd/
+dirtyStatus=END

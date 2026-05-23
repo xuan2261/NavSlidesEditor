@@ -1,0 +1,7 @@
+command=npm run build
+workdir=C:\Work\NavSlidesEditor-upstream
+start=2026-05-23T10:36:46.3966599+07:00
+end=2026-05-23T10:37:00.7300908+07:00
+exit=1
+dirtyStatusScoped=
+ M node_modules/.package-lock.json

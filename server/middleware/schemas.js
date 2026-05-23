@@ -34,10 +34,10 @@ const elementSchema = z
   .object({
     id: z.string().optional(),
     type: z.union([builtInElementTypeSchema, pluginElementTypeSchema]),
-    x: z.number(),
-    y: z.number(),
-    width: z.number().positive(),
-    height: z.number().positive(),
+    x: z.number().default(0),
+    y: z.number().default(0),
+    width: z.number().positive().default(100),
+    height: z.number().positive().default(100),
     zIndex: z.number().int().optional(),
   })
   .passthrough() // Allow type-specific fields like content, src, etc.

@@ -1,0 +1,14 @@
+name=npm-run-test-corpus
+command=npm run test:corpus
+start=2026-05-23T09:03:01.7337757+07:00
+end=2026-05-23T09:04:52.4099018+07:00
+exitCode=0
+log=plans\260523-0500-upstream-parity-verification-tdd\reports\baseline-logs\20260523-090301-npm-run-test-corpus.log
+dirtyStatus=BEGIN
+ M README.md
+ M docs/codebase-summary.md
+ M docs/project-changelog.md
+ M docs/project-roadmap.md
+?? .claude/
+?? plans/260523-0500-upstream-parity-verification-tdd/
+dirtyStatus=END

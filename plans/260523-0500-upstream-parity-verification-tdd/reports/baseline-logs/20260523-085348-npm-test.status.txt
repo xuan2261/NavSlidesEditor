@@ -1,0 +1,14 @@
+name=npm-test
+command=npm test
+start=2026-05-23T08:53:48.6628819+07:00
+end=2026-05-23T08:58:51.6207489+07:00
+exitCode=0
+log=plans\260523-0500-upstream-parity-verification-tdd\reports\baseline-logs\20260523-085348-npm-test.log
+dirtyStatus=BEGIN
+ M README.md
+ M docs/codebase-summary.md
+ M docs/project-changelog.md
+ M docs/project-roadmap.md
+?? .claude/
+?? plans/260523-0500-upstream-parity-verification-tdd/
+dirtyStatus=END

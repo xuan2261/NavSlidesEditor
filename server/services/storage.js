@@ -40,6 +40,42 @@ async function withFileLock(filePath, fn) {
   }
 }
 
+// ── Atomic JSON writes (write to tmp + rename) ───────────────────────────────
+// rename() of files within the same directory is atomic on POSIX and
+// effectively atomic on Windows NTFS; readers see either old or new content,
+// never a truncated state. This guards against crash mid-write (node --watch
+// reload, Ctrl+C, OS kill) corrupting the JSON file.
+let atomicCounter = 0
+
+async function renameWithRetry(src, dest, attempts = 5) {
+  // Windows occasionally fails rename with EPERM/EBUSY when antivirus or
+  // another reader holds the target briefly. Retry with bounded backoff.
+  let lastErr
+  for (let i = 0; i < attempts; i++) {
+    try {
+      await fs.rename(src, dest)
+      return
+    } catch (err) {
+      lastErr = err
+      const retriable = ['EPERM', 'EBUSY', 'EACCES', 'EEXIST'].includes(err.code)
+      if (!retriable || i === attempts - 1) throw err
+      await new Promise((r) => setTimeout(r, 25 * (i + 1)))
+    }
+  }
+  throw lastErr
+}
+
+async function writeJsonAtomic(filePath, data, options) {
+  const tmpPath = `${filePath}.tmp.${process.pid}.${++atomicCounter}`
+  try {
+    await fs.writeJson(tmpPath, data, options)
+    await renameWithRetry(tmpPath, filePath)
+  } catch (err) {
+    await fs.remove(tmpPath).catch(() => {})
+    throw err
+  }
+}
+
 // ── Initialize data files ────────────────────────────────────────────────────
 function initDataFiles() {
   fs.ensureDirSync(DATA_DIR)
@@ -61,6 +97,26 @@ function initDataFiles() {
       defaultTransition: 'slide',
     })
   }
+
+  // Clean up stale .tmp files from prior crashes. Async + non-blocking so
+  // startup is not delayed by directory scans on slow disks. Only removes
+  // files belonging to OTHER process IDs — in-flight writes from this
+  // process must never be deleted mid-rename.
+  setImmediate(async () => {
+    try {
+      const names = await fs.readdir(DATA_DIR)
+      const tmpRe = /\.tmp\.(\d+)\.\d+$/
+      const stale = names.filter((n) => {
+        const m = n.match(tmpRe)
+        return m && Number(m[1]) !== process.pid
+      })
+      await Promise.all(
+        stale.map((n) => fs.remove(path.join(DATA_DIR, n)).catch(() => {}))
+      )
+    } catch {
+      /* non-fatal */
+    }
+  })
 }
 
 // ── Presentations ────────────────────────────────────────────────────────────
@@ -71,14 +127,14 @@ async function readPresentations() {
 }
 
 async function writePresentations(data) {
-  return withFileLock(DATA_FILE, async () => fs.writeJson(DATA_FILE, data, { spaces: 2 }))
+  return withFileLock(DATA_FILE, async () => writeJsonAtomic(DATA_FILE, data, { spaces: 2 }))
 }
 
 async function withPresentations(fn) {
   return withFileLock(DATA_FILE, async () => {
     const presentations = await fs.readJson(DATA_FILE)
     const result = await fn(presentations)
-    await fs.writeJson(DATA_FILE, presentations, { spaces: 2 })
+    await writeJsonAtomic(DATA_FILE, presentations, { spaces: 2 })
     return result
   })
 }
@@ -89,7 +145,7 @@ async function readTemplates() {
 }
 
 async function writeTemplates(data) {
-  return withFileLock(TEMPLATES_FILE, async () => fs.writeJson(TEMPLATES_FILE, data, { spaces: 2 }))
+  return withFileLock(TEMPLATES_FILE, async () => writeJsonAtomic(TEMPLATES_FILE, data, { spaces: 2 }))
 }
 
 // ── Share Tokens ─────────────────────────────────────────────────────────────
@@ -98,14 +154,14 @@ async function readShareTokens() {
 }
 
 async function writeShareTokens(data) {
-  return withFileLock(SHARE_FILE, async () => fs.writeJson(SHARE_FILE, data, { spaces: 2 }))
+  return withFileLock(SHARE_FILE, async () => writeJsonAtomic(SHARE_FILE, data, { spaces: 2 }))
 }
 
 async function withShareTokens(fn) {
   return withFileLock(SHARE_FILE, async () => {
     const tokens = await fs.readJson(SHARE_FILE)
     const result = await fn(tokens)
-    await fs.writeJson(SHARE_FILE, tokens, { spaces: 2 })
+    await writeJsonAtomic(SHARE_FILE, tokens, { spaces: 2 })
     return result
   })
 }
@@ -117,7 +173,7 @@ async function readGithubConfig() {
 
 async function writeGithubConfig(data) {
   return withFileLock(GITHUB_CONFIG_FILE, async () =>
-    fs.writeJson(GITHUB_CONFIG_FILE, data, { spaces: 2 })
+    writeJsonAtomic(GITHUB_CONFIG_FILE, data, { spaces: 2 })
   )
 }
 
@@ -127,7 +183,7 @@ async function readSettings() {
 }
 
 async function writeSettings(data) {
-  return withFileLock(SETTINGS_FILE, async () => fs.writeJson(SETTINGS_FILE, data, { spaces: 2 }))
+  return withFileLock(SETTINGS_FILE, async () => writeJsonAtomic(SETTINGS_FILE, data, { spaces: 2 }))
 }
 
 // ── Analytics ────────────────────────────────────────────────────────────────
@@ -136,14 +192,14 @@ async function readAnalytics() {
 }
 
 async function writeAnalytics(data) {
-  return withFileLock(ANALYTICS_FILE, async () => fs.writeJson(ANALYTICS_FILE, data, { spaces: 2 }))
+  return withFileLock(ANALYTICS_FILE, async () => writeJsonAtomic(ANALYTICS_FILE, data, { spaces: 2 }))
 }
 
 async function withAnalytics(fn) {
   return withFileLock(ANALYTICS_FILE, async () => {
     const analytics = await fs.readJson(ANALYTICS_FILE)
     const result = await fn(analytics)
-    await fs.writeJson(ANALYTICS_FILE, analytics, { spaces: 2 })
+    await writeJsonAtomic(ANALYTICS_FILE, analytics, { spaces: 2 })
     return result
   })
 }
@@ -154,14 +210,14 @@ async function readMediaDb() {
 }
 
 async function writeMediaDb(data) {
-  return withFileLock(MEDIA_DB_FILE, async () => fs.writeJson(MEDIA_DB_FILE, data, { spaces: 2 }))
+  return withFileLock(MEDIA_DB_FILE, async () => writeJsonAtomic(MEDIA_DB_FILE, data, { spaces: 2 }))
 }
 
 async function withMediaDb(fn) {
   return withFileLock(MEDIA_DB_FILE, async () => {
     const mediaDb = await fs.readJson(MEDIA_DB_FILE)
     const result = await fn(mediaDb)
-    await fs.writeJson(MEDIA_DB_FILE, mediaDb, { spaces: 2 })
+    await writeJsonAtomic(MEDIA_DB_FILE, mediaDb, { spaces: 2 })
     return result
   })
 }

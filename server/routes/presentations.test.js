@@ -1,9 +1,15 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import request from 'supertest'
 import express from 'express'
+import fs from 'fs-extra'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import * as storage from '../services/storage.js'
 import presentationsRouter from './presentations.js'
 import templatesRouter from './templates.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 function createApp() {
   const app = express()
@@ -162,5 +168,95 @@ describe('Presentations API', () => {
     expect(tokens.legacyToken).toBeUndefined()
     expect(tokens.objectToken).toBeUndefined()
     expect(tokens.otherToken).toBeDefined()
+  })
+})
+
+describe('Legacy fixture compatibility (I-002)', () => {
+  const app = createApp()
+
+  beforeAll(() => {
+    storage.initDataFiles()
+  })
+
+  it('accepts elements that omit x/y/w/h and persists defaults', async () => {
+    const createRes = await request(app)
+      .post('/api/presentations')
+      .send({
+        title: `Legacy fixture test ${Date.now()}`,
+        slides: [
+          {
+            id: 'slide-legacy',
+            elements: [
+              // Element shape from a pre-geometry-required era.
+              { id: 'el-legacy', type: 'text', content: '<p>Legacy</p>' },
+            ],
+          },
+        ],
+      })
+    expect(createRes.status).toBe(201)
+
+    // GREEN must persist defaults — not just accept the request.
+    const id = createRes.body.id
+    const fetched = await request(app).get(`/api/presentations/${id}`)
+    expect(fetched.status).toBe(200)
+    const el = fetched.body.slides[0].elements[0]
+    expect(el).toMatchObject({
+      type: 'text',
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+    })
+
+    // PUT path: also surfaced the original bug. Mutate one element + add a fresh
+    // legacy element and ensure round-trip still applies defaults.
+    const updateRes = await request(app)
+      .put(`/api/presentations/${id}`)
+      .send({
+        title: fetched.body.title,
+        slides: [
+          {
+            id: 'slide-legacy',
+            elements: [
+              el, // already-defaulted
+              { id: 'el-legacy-2', type: 'text', content: '<p>Legacy 2</p>' },
+            ],
+          },
+        ],
+      })
+    expect(updateRes.status).toBe(200)
+    const reFetched = await request(app).get(`/api/presentations/${id}`)
+    expect(reFetched.body.slides[0].elements[1]).toMatchObject({
+      type: 'text',
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+    })
+
+    await request(app).delete(`/api/presentations/${id}/permanent`)
+  })
+
+  it('accepts the canonical legacy fixture from disk', async () => {
+    const fixturePath = path.join(__dirname, '__fixtures__', 'legacy-deck-no-geometry.json')
+    const fixture = await fs.readJson(fixturePath)
+    const res = await request(app).post('/api/presentations').send(fixture)
+    expect(res.status).toBe(201)
+
+    // Persisted record should have geometry on every element.
+    const id = res.body.id
+    const fetched = await request(app).get(`/api/presentations/${id}`)
+    for (const slide of fetched.body.slides) {
+      for (const element of slide.elements) {
+        expect(element).toMatchObject({
+          x: expect.any(Number),
+          y: expect.any(Number),
+          width: expect.any(Number),
+          height: expect.any(Number),
+        })
+      }
+    }
+
+    await request(app).delete(`/api/presentations/${id}/permanent`)
   })
 })

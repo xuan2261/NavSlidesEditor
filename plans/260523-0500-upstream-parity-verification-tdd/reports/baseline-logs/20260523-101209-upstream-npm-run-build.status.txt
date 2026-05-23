@@ -1,0 +1,6 @@
+command=npm run build
+workdir=C:\Work\NavSlidesEditor-upstream
+start=2026-05-23T10:12:09.5847334+07:00
+end=2026-05-23T10:12:11.0689506+07:00
+exit=1
+dirtyStatusSummary=upstream worktree shows generated node_modules changes after npm install; detailed full status intentionally omitted from this status file to keep evidence concise.

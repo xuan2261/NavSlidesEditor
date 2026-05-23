@@ -853,7 +853,8 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
           <div className="h-px bg-border my-2 mx-3" />
 
-          <div className="px-3 mb-2">
+          {/* Sticky Trash entry — always reachable at viewport bottom */}
+          <div className="sticky bottom-0 bg-secondary z-10 px-3 mb-2 pt-2 border-t border-border/40">
             <Button
               variant="ghost"
               className={`flex items-center gap-3 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary ${sidebarView === 'trash' ? 'bg-primary/10 text-primary' : ''}`}
@@ -869,8 +870,8 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             </Button>
           </div>
 
-          {/* H-01: import progress/warning at sidebar bottom */}
-          <div className="mt-auto px-3 pb-2">
+          {/* Import progress / warnings — flow below Trash in normal order */}
+          <div className="px-3 pb-2">
             {importProgress && (
               <div
                 className="rounded border border-border bg-card px-2 py-1.5 text-[11px] text-text-secondary"

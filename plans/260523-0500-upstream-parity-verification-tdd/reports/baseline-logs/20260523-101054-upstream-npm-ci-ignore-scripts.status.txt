@@ -1,0 +1,6 @@
+command=npm ci --ignore-scripts
+workdir=C:\Work\NavSlidesEditor-upstream
+start=2026-05-23T10:10:54.4632033+07:00
+end=2026-05-23T10:11:52.1041960+07:00
+exit=0
+dirtyStatusSummary=upstream worktree shows generated node_modules changes after npm install; detailed full status intentionally omitted from this status file to keep evidence concise.
