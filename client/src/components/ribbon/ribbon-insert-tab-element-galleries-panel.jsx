@@ -17,13 +17,24 @@ import { GAME_TYPES } from '../../constants/game-element-types-constants'
 import PromptPopover from '../PromptPopover'
 import { api } from '../../utils/api'
 
-const { SHAPES = [] } = shared
+const { SHAPES = [], shapeSvgString = () => '' } = shared
 
 const SHAPE_GROUPS = {
   Geometric: ['rect', 'rounded-rect', 'circle', 'triangle', 'diamond', 'hexagon', 'pentagon'],
   Directional: ['arrow-right', 'line'],
   Organic: ['cloud', 'star', 'bracket'],
   '3D': ['cylinder', 'parallelogram', 'trapezoid'],
+}
+
+function renderShapePreviewMarkup(shapeType) {
+  return shapeSvgString({
+    shape: shapeType,
+    width: 20,
+    height: 20,
+    fill: 'currentColor',
+    stroke: 'currentColor',
+    strokeWidth: shapeType === 'line' || shapeType === 'bracket' ? 2 : 0,
+  })
 }
 
 function ShapeGallery({ open, anchorRef, onSelect, onClose }) {
@@ -60,15 +71,11 @@ function ShapeGallery({ open, anchorRef, onSelect, onClose }) {
                     onClose()
                   })}
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="ribbon-shape-gallery-icon text-text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    {shape?.svgPath ? <path d={shape.svgPath} /> : <rect x="2" y="2" width="20" height="20" />}
-                  </svg>
+                  <span
+                    className="ribbon-shape-gallery-icon relative inline-block text-text-primary"
+                    aria-hidden="true"
+                    dangerouslySetInnerHTML={{ __html: renderShapePreviewMarkup(shapeType) }}
+                  />
                 </Button>
               )
             })}

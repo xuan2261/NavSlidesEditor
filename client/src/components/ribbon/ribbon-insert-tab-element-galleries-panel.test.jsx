@@ -125,3 +125,43 @@ describe('Insert Advanced direct action contract', () => {
     expect(screen.queryByRole('button', { name: 'Name Picker' })).toBeNull()
   })
 })
+
+describe('Shape gallery preview icons', () => {
+  function openShapeGallery() {
+    render(<InsertTabContent pluginTypes={[]} />)
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Insert shape' }))
+  }
+
+  it('renders shape-specific primitives, not identical fallback rectangles', () => {
+    openShapeGallery()
+    const popup = document.body.querySelector('[data-ribbon-popup="shape-gallery"]')
+    expect(popup, 'shape gallery popup must be in DOM').toBeTruthy()
+
+    const circleBtn = popup.querySelector('button[aria-label="Circle"]')
+    const triangleBtn = popup.querySelector('button[aria-label="Triangle"]')
+    const lineBtn = popup.querySelector('button[aria-label="Line"]')
+    const starBtn = popup.querySelector('button[aria-label="Star"]')
+
+    expect(circleBtn?.querySelector('ellipse'), 'Circle preview must render <ellipse>').toBeTruthy()
+    expect(triangleBtn?.querySelector('polygon'), 'Triangle preview must render <polygon>').toBeTruthy()
+    expect(lineBtn?.querySelector('line'), 'Line preview must render <line>').toBeTruthy()
+    expect(starBtn?.querySelector('polygon'), 'Star preview must render <polygon>').toBeTruthy()
+  })
+
+  it('does not fall back to identical empty rectangles for every shape', () => {
+    openShapeGallery()
+    const popup = document.body.querySelector('[data-ribbon-popup="shape-gallery"]')
+    const buttons = popup.querySelectorAll('button[aria-label]')
+    expect(buttons.length).toBeGreaterThan(10)
+
+    const primitives = Array.from(buttons).map((b) => {
+      const svg = b.querySelector('svg')
+      const child = svg?.firstElementChild?.tagName?.toLowerCase()
+      // shapeSvgString wraps fillable shapes in <g>, so peek inside <g>
+      if (child === 'g') return svg.firstElementChild.firstElementChild?.tagName?.toLowerCase()
+      return child
+    })
+    const unique = new Set(primitives.filter(Boolean))
+    expect(unique.size, `expected multiple distinct primitives, got ${[...unique]}`).toBeGreaterThan(2)
+  })
+})
