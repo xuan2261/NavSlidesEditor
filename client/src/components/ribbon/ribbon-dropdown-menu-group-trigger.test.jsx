@@ -77,4 +77,33 @@ describe('RibbonDropdownMenuGroup', () => {
 
     expect(screen.queryByRole('menu')).toBeNull()
   })
+
+  it('omits visible label text when triggerVariant is icon (still accessible via aria-label)', () => {
+    render(
+      <RibbonDropdownMenuGroup
+        icon={Package}
+        label="More advanced insert options"
+        triggerVariant="icon"
+        triggerClassName="h-7 w-7"
+        items={[{ id: 'x', icon: Sparkles, label: 'X', onAction: vi.fn() }]}
+      />
+    )
+
+    const trigger = screen.getByRole('button', { name: 'More advanced insert options' })
+    expect(trigger.getAttribute('aria-label')).toBe('More advanced insert options')
+    expect(trigger.textContent ?? '').not.toContain('More advanced insert options')
+  })
+
+  it('keeps visible label text for the default ribbon-variant trigger', () => {
+    render(
+      <RibbonDropdownMenuGroup
+        icon={Package}
+        label="Advanced"
+        items={[{ id: 'x', icon: Sparkles, label: 'X', onAction: vi.fn() }]}
+      />
+    )
+
+    const trigger = screen.getByRole('button', { name: 'Advanced' })
+    expect(trigger.textContent).toContain('Advanced')
+  })
 })

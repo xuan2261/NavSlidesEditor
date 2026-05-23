@@ -48,7 +48,9 @@ export default function RibbonDropdownMenuGroup({
         aria-label={label}
       >
         <Icon size={14} />
-        <span className="hidden 2xl:inline">{label}</span>
+        {triggerVariant !== 'icon' && (
+          <span className="hidden 2xl:inline">{label}</span>
+        )}
         <ChevronDown size={10} className="ml-0.5 opacity-60" />
       </Button>
 
