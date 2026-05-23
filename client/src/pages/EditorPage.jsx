@@ -182,6 +182,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const setShowFindReplace = useEditorStore((s) => s.setShowFindReplace)
   const viewMode = useEditorStore((s) => s.viewMode)
   const setViewMode = useEditorStore((s) => s.setViewMode)
+  const zoomIn = useEditorStore((s) => s.zoomIn)
+  const zoomOut = useEditorStore((s) => s.zoomOut)
+  const resetZoom = useEditorStore((s) => s.resetZoom)
   const leftPanelOpen = useUIStore((s) => s.leftPanelOpen)
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen)
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen)
@@ -1103,9 +1106,9 @@ svg.selectAll('circle').data(data).join('circle')
     { id: 'insertLink', label: 'Insert Link', shortcut: '', action: () => { setShowCommandPalette(false); document.querySelector('[title="Add link"]')?.click() } },
     { id: 'group', label: 'Group Elements', shortcut: 'Ctrl+G', action: () => groupElements() },
     { id: 'ungroup', label: 'Ungroup Elements', shortcut: 'Ctrl+Shift+G', action: () => ungroupElements() },
-    { id: 'zoomIn', label: 'Zoom In', shortcut: 'Ctrl+=', action: () => console.log('[zoom] in') },
-    { id: 'zoomOut', label: 'Zoom Out', shortcut: 'Ctrl+-', action: () => console.log('[zoom] out') },
-    { id: 'resetZoom', label: 'Reset Zoom', shortcut: 'Ctrl+0', action: () => console.log('[zoom] reset') },
+    { id: 'zoomIn', label: 'Zoom In', shortcut: 'Ctrl+=', action: () => zoomIn() },
+    { id: 'zoomOut', label: 'Zoom Out', shortcut: 'Ctrl+-', action: () => zoomOut() },
+    { id: 'resetZoom', label: 'Reset Zoom', shortcut: 'Ctrl+0', action: () => resetZoom() },
     { id: 'startSlideshow', label: 'Start Slideshow', shortcut: 'F5', action: () => console.log('[slideshow] start') },
     { id: 'commandPalette', label: 'Command Palette', shortcut: 'Ctrl+K', action: () => setShowCommandPalette(false) },
   ]
@@ -1183,6 +1186,19 @@ svg.selectAll('circle').data(data).join('circle')
     onEraseAnnotations: () => _setAnnotationStrokes([]),
     // Editor
     onCommandPalette: () => setShowCommandPalette((v) => !v),
+    // Editor shortcuts (260523-1230 cleanup plan)
+    onInsertSlide: () => setShowTemplateModal(true),
+    onGroup: () => groupElements(),
+    onUngroup: () => ungroupElements(),
+    onBringForward: () => {
+      if (selectedElementIds.length === 1) bringElementForward(selectedElementIds[0])
+    },
+    onSendBackward: () => {
+      if (selectedElementIds.length === 1) sendElementBackward(selectedElementIds[0])
+    },
+    onResetZoom: () => resetZoom(),
+    onZoomIn: () => zoomIn(),
+    onZoomOut: () => zoomOut(),
     // Ribbon
   })
 

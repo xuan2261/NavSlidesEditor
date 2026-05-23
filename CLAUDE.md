@@ -171,3 +171,10 @@ Game mode uses separate `game-socket-handler.js` + `game-room-manager-singleton-
 - **No secrets**: Never commit `.env`, credentials, or tokens to git.
 - **YAGNI / KISS / DRY**: Do not over-engineer; prefer composition over inheritance.
 - **Shared code lives in `shared/`**: Any logic used by both client and server belongs in `shared/src/`, not duplicated.
+
+## Documentation Drift
+
+- Element type count: canonical list = `Object.keys(ELEMENT_DEFAULTS)` in `client/src/data/element-defaults.js`. When adding a new type, update that file first.
+- README "N element types" count must equal `Object.keys(ELEMENT_DEFAULTS).length`. Guarded by `client/src/data/element-defaults.test.js`.
+- "divider" is a `line` preset, not a type — do not count it. Same for "inline math" (a TipTap text feature on `text` elements).
+- The element-renderer registry (`client/src/components/canvas/element-renderers/registry.js`) and Insert ribbon panel count differ from the canonical 19 by design and should NOT be used as the type count source.

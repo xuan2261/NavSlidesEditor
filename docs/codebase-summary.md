@@ -4,7 +4,7 @@
 
 NavSlides Editor is a self-hostable presentation editor built as a monorepo with
 `client/`, `server/`, `shared/`, and `electron/` runtimes. Current release is
-`v1.9.2`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
+`v1.9.4`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
 checked-in corpus / report artifacts used for verification. The editor shell
 uses the tab-based ribbon as the default controls surface.
 
@@ -32,7 +32,7 @@ navslides-editor/
 | Ribbon shell | `client/src/components/ribbon/*`, `client/src/stores/ui-store.js` | `RibbonHeaderBar` and `RibbonPanel` are the default editor controls; active tab persists to localStorage and syncs through `ui-store.activeTab`; Home/View canvas controls share grid-size persistence |
 | Element renderers | `client/src/components/canvas/element-renderers/` | Registry-based renderers for callout, icon, qrcode, drawing, svg, markdown, chart, latex, table, shape, line, and game |
 | Properties panels | `client/src/components/properties/` | Type-specific property editors, including game Content/Display/Scoring tabs |
-| Hooks | `client/src/hooks/` | Autosave, clipboard, keyboard, annotation sync, live timer, swipe/pinch/touch, game socket, and slide operations |
+| Hooks | `client/src/hooks/` | Autosave, clipboard, keyboard, annotation sync, live timer, swipe/pinch/touch, game socket, and slide operations; `use-keyboard-contract.test.js` guards registry→hook forwarding |
 | Stores | `client/src/stores/` | Zustand stores for editor, presentation, and UI state |
 | Utilities | `client/src/utils/` | API wrapper, content safety, export helpers, project archive helpers, PPTX import/export helpers |
 
@@ -129,6 +129,11 @@ navslides-editor/
 
 - `storage.js` initializes the data folders on first run.
 - File writes are serialized with per-file locks.
+- All JSON state files in `server/data/` are written through `writeJsonAtomic`
+  (temp file + rename) to guarantee crash safety under concurrent reads,
+  `node --watch` restarts, or process termination mid-write. Direct calls to
+  `fs.writeJson` for persistent state are forbidden — extend the helper if a
+  new file is added.
 - File-backed settings may contain sensitive values and must not be committed
   or deployed publicly.
 
@@ -151,7 +156,7 @@ navslides-editor/
 
 ## Repo Notes
 
-- Root package version is `1.9.2`.
+- Root package version is `1.9.4`.
 - Runtime baseline is Node.js 20+.
 - There is no database layer; persistence is file-based by design.
 - There is no full TypeScript migration; JSDoc is the type system.

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createKeyboardHandler } from './use-keyboard'
+import { renderHook } from '@testing-library/react'
+import { createKeyboardHandler, useKeyboard } from './use-keyboard'
 import { getShortcuts } from '../utils/default-keyboard-shortcut-definitions-registry'
 
 function createEvent(key, extra = {}) {
@@ -87,5 +88,40 @@ describe('createKeyboardHandler', () => {
 
     expect(onToggleRibbon).not.toHaveBeenCalled()
     expect(event.preventDefault).not.toHaveBeenCalled()
+  })
+
+  it('invokes onCommandPalette when Ctrl+K is pressed in editor scope (I-003)', () => {
+    const shortcuts = getShortcuts({})
+    const onCommandPalette = vi.fn()
+    const event = createEvent('k', { ctrlKey: true })
+
+    createKeyboardHandler({
+      shortcuts,
+      onCommandPalette,
+      getActiveElement: () => null,
+    })(event)
+
+    expect(onCommandPalette).toHaveBeenCalledTimes(1)
+    expect(event.preventDefault).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('useKeyboard hook integration', () => {
+  it('forwards onCommandPalette through hook → handler (regression I-003)', () => {
+    // Pre-fix bug: useKeyboard did not destructure or forward onCommandPalette,
+    // so Ctrl+K matched the editor-scoped shortcut but the callback was never
+    // invoked. This integration test would FAIL against the pre-fix hook.
+    const onCommandPalette = vi.fn()
+    renderHook(() => useKeyboard({ onCommandPalette }))
+
+    const event = new KeyboardEvent('keydown', {
+      key: 'k',
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+    document.dispatchEvent(event)
+
+    expect(onCommandPalette).toHaveBeenCalledTimes(1)
   })
 })

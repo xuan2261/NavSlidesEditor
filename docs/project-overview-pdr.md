@@ -20,7 +20,7 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 ## Core Value Propositions
 
 1. **Privacy-first** - All data in local JSON files + filesystem. Zero telemetry.
-2. **Rich elements** - 20 element types: text, image, shape, html, code, latex, markdown, chart, callout, icon, video, audio, table, qrcode, drawing, line, svg, divider, timeline, and game.
+2. **Rich elements** - 19 element types: text, image, shape, html, code, latex, markdown, chart, callout, icon, video, audio, table, qrcode, drawing, line, svg, timeline, and game.
 3. **WYSIWYG editing** - Direct on-canvas editing via TipTap, smart guides, snapping, rulers.
 4. **Live presenter tools** - Remote, speaker, viewer, cursor/laser, annotations, timers, and game controls for classroom or event use.
 5. **Multiple deployment models** - Docker, Node.js, Electron desktop app.
@@ -43,7 +43,7 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 - Interactive step-by-step product tour (React-Joyride)
 - No real-time collaborative slide editing; live mode is presenter/viewer control, annotations, and timer sync
 
-### Elements (20 types)
+### Elements (19 types)
 
 | Type     | Description                                            |
 | -------- | ------------------------------------------------------ |
@@ -64,7 +64,6 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 | drawing  | Freehand pen/drawing tool                              |
 | line     | Straight line with adjustable stroke and arrow heads   |
 | svg      | Inline SVG markup                                      |
-| divider  | Horizontal divider line                                |
 | timeline | Timeline element with events                           |
 | game     | Interactive game elements (7 game types)               |
 

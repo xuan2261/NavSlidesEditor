@@ -2,8 +2,37 @@
 
 ## v1.7.x
 
+## 2026-05-23
+
+- Closed Q1/Q2 keyboard + README follow-ups from prior smoke-test plan via TDD plan `plans/260523-1230-keyboard-shortcut-and-readme-cleanup-tdd/`. 8 editor-scope shortcuts now fire their store actions; README element-count claim reconciled with `ELEMENT_DEFAULTS`.
+
+### Fixed
+- **Q1 (P1 latent)**: 8 editor-scope keyboard shortcuts (`Ctrl+M` insert slide, `Ctrl+G` group, `Ctrl+Shift+G` ungroup, `Ctrl+]` bring-forward, `Ctrl+[` send-backward, `Ctrl+0` reset zoom, `Ctrl+=` zoom in, `Ctrl+-` zoom out) now invoke their canonical actions. Root cause: 8 callbacks were dispatched by the shortcut registry but never destructured by `useKeyboard`, so the dispatcher silently no-op'd (same bug class as I-003 `Ctrl+K`). Hook now destructures + forwards the 8 props; `EditorPage` wires them to `editor-store` zoom actions, slide-operations `groupElements`/`ungroupElements`, and existing `bringElementForward`/`sendElementBackward` (1-element guard). `client/src/hooks/use-keyboard.js`, `client/src/pages/EditorPage.jsx`.
+- **Q2 (P2 docs)**: README "20 element types" reconciled to 19 (matches `Object.keys(ELEMENT_DEFAULTS).length`); false items "divider" (a `line` preset) and "inline math" (a TipTap text feature, not a type) removed from the prose enumeration. Insert ribbon footnote added explaining the ~27 actions reflect shape/game sub-variants of single types. `README.md`, `docs/project-overview-pdr.md`.
+
+### Added
+- `client/src/hooks/use-keyboard-contract.test.js`: registry-driven `test.each` contract test asserting every editor-scope shortcut in the registry has a forwarded callback in `useKeyboard`. Adding a new editor-scope shortcut without wiring it now fails CI.
+- `client/src/data/element-defaults.test.js`: 10-line count guard pinning `Object.keys(ELEMENT_DEFAULTS).length` to 19; future drift fails CI before README can desync.
+- "Documentation Drift" section in `CLAUDE.md` documenting element-count canonical source and the divider/inline-math non-types.
+
+## 2026-05-23
+
+- Closed 2026-05-23 manual smoke-test issues I-001..I-005 via TDD plan `plans/260523-0900-smoke-test-bug-fixes-tdd/`. Two release-blockers (I-002, I-005) and three minor UX/cosmetic issues (I-001, I-003, I-004) resolved.
+
+### Fixed
+- **I-002 (Medium)**: Legacy fixture decks no longer fail save validation. `elementSchema` in `server/middleware/schemas.js` now defaults missing geometry to `(x=0, y=0, width=100, height=100)`; `.positive()` invariant on width/height preserved so zero/negative still rejects.
+- **I-005 (Medium)**: Storage writes are now atomic (`writeJsonAtomic`: write to `*.tmp.<pid>.<seq>` then rename with Windows-tolerant EPERM/EBUSY/EACCES/EEXIST retries). Prevents `presentations.json` truncation under concurrent reads, `node --watch` restarts, or crash-mid-write. Startup cleanup is PID-scoped to avoid removing in-flight tmp files from the current process. `server/services/storage.js`.
+- **I-001 (Low)**: Trash entry in dashboard sidebar is now `position: sticky bottom-0` with `bg-secondary z-10` and a subtle border-top divider, pinned to the viewport bottom regardless of viewport height or import-warning verbosity. `client/src/pages/HomePage.jsx`.
+- **I-003 (Low)**: `Ctrl+K` reliably opens the command palette in the editor. Real root cause was missing callback forwarding in `useKeyboard` hook (not the plan's three hypothesized causes); `onCommandPalette` was not destructured from props, so the dispatcher always saw `undefined`. `client/src/hooks/use-keyboard.js`.
+- **I-004 (Low)**: Footer version is now derived from `package.json` at build time via Vite `define: { __APP_VERSION__: JSON.stringify(pkg.version) }`. `createRequire(import.meta.url)` keeps the build portable across Node 18/20/22/24. Footer displays `vdev` if the define is not applied (jsdom unit tests). `client/vite.config.js`, `client/src/components/layout/StatusBar.jsx`, `eslint.config.mjs`.
+
+### Added
+- `writeJsonAtomic` helper in `server/services/storage.js` (atomic temp+rename pattern with Windows-tolerant retry).
+- Regression test suites: `server/services/storage.test.js` (atomic-write coverage including crash-simulation, PID-scoped cleanup, retry behavior), `client/src/hooks/use-keyboard.test.js` (Ctrl+K dispatcher + hook-integration with `renderHook`), `tests/e2e/regression-smoke-fixes.spec.js` (I-001 default & small viewport, I-003 Ctrl+K, I-004 footer-version-from-package-json).
+
 ## 2026-05-22
 
+- Released `v1.9.4`: upstream parity verification planning is in progress, and release-facing docs now match the root package version again.
 - Released `v1.9.3`: Insert Advanced direct actions and clipping-safe ribbon popup overlays are tagged for the next Windows Electron release workflow.
 - Completed Insert Advanced direct-actions and ribbon popup overlay hardening: fixed Advanced actions now render as direct icon buttons, Games/plugin inserts remain in the `More advanced insert options` launcher, and File/Header AI/Share/Design/Transitions/Animations/Paragraph/Advanced/Shape/Table/Games popups now use the clipping-safe `RibbonFloatingOverlay` portal contract.
 - Added overlay regression coverage for portal rendering, Escape/outside close, focus restore, viewport clamping, scroll/resize recompute, Insert responsive geometry, game-selection focus restore, and game/plugin insertion paths. Verification passed: ribbon Vitest slice (16 files / 141 tests), Insert Playwright slice (19 passed), targeted game/plugin/parallax Playwright insertion sweep (42 passed), targeted ESLint on changed files, and `npm run build`; full `npm run lint` is blocked locally by existing `.claude` EPERM scan access.
