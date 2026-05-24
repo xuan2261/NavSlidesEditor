@@ -4,7 +4,6 @@ import {
   apiDeletePresentation,
   apiUpdatePresentation,
 } from '../fixtures/test-fixtures.js'
-import { waitWithLastSample } from '../helpers/playwright-tolerant-poll-wait-helpers-for-live-presentation-e2e.js'
 
 const SLIDES = [
   { id: 's1', elements: [{ id: 't1', type: 'text', x: 80, y: 100, width: 760, height: 80, content: '<h2>Slide A</h2>' }], notes: '', background: { type: 'color', color: '#1e1e2e' } },
@@ -33,6 +32,20 @@ async function waitForPresenterRevealReady(page) {
     .toBe(true)
 }
 
+async function waitForPresenterSocketJoined(request, roomCode) {
+  await expect
+    .poll(
+      async () => {
+        const response = await request.get(`/api/live/room/${roomCode}`)
+        if (!response.ok()) return false
+        const room = await response.json()
+        return room.exists === true && room.hasPresenter === true
+      },
+      { timeout: 15000, intervals: [250, 500, 1000, 2000, 3000] }
+    )
+    .toBe(true)
+}
+
 async function getRevealIndex(page, title) {
   const handle = await page.locator(`iframe[title="${title}"]`).elementHandle()
   if (!handle) return null
@@ -47,11 +60,12 @@ async function getRevealIndex(page, title) {
 }
 
 async function waitForViewerRevealIndex(viewer, expectedIndex, label) {
-  await waitWithLastSample(
-    label,
-    async () => (await getRevealIndex(viewer, 'Live Presentation')) === expectedIndex,
-    { timeout: 15000, intervals: [250, 500, 1000, 2000, 3000] }
-  )
+  await expect
+    .poll(
+      () => getRevealIndex(viewer, 'Live Presentation'),
+      { timeout: 15000, intervals: [250, 500, 1000, 2000, 3000], message: label }
+    )
+    .toBe(expectedIndex)
 }
 
 test.describe('Present mode keyboard navigation propagates from presenter to viewer Reveal indices', () => {
@@ -71,11 +85,12 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     try { await apiDeletePresentation(request, presId) } catch {}
   })
 
-  test('ArrowRight on presenter advances viewer slide index', async ({ context }) => {
+  test('ArrowRight on presenter advances viewer slide index', async ({ context, request }) => {
     const presenter = await openPresenter(context, presId, roomCode, token)
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
+    await waitForPresenterSocketJoined(request, roomCode)
     await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer initial reveal index 0:0:0')
 
     await presenter.evaluate(() => window.Reveal.next())
@@ -83,11 +98,12 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     await waitForViewerRevealIndex(viewer, '1:0:0', 'viewer advanced to slide 1')
   })
 
-  test('Reveal.left on presenter goes back to previous slide on viewer', async ({ context }) => {
+  test('Reveal.left on presenter goes back to previous slide on viewer', async ({ context, request }) => {
     const presenter = await openPresenter(context, presId, roomCode, token)
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
+    await waitForPresenterSocketJoined(request, roomCode)
     await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer at 0:0:0')
 
     await presenter.evaluate(() => window.Reveal.next())
@@ -97,11 +113,12 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer back at 0:0:0')
   })
 
-  test('Reveal.slide(0) brings presenter and viewer back to first slide', async ({ context }) => {
+  test('Reveal.slide(0) brings presenter and viewer back to first slide', async ({ context, request }) => {
     const presenter = await openPresenter(context, presId, roomCode, token)
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
+    await waitForPresenterSocketJoined(request, roomCode)
     await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer at first')
 
     await presenter.evaluate(() => window.Reveal.slide(2))
@@ -111,11 +128,12 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer back at first')
   })
 
-  test('end-of-deck navigation lands on last slide for viewer', async ({ context }) => {
+  test('end-of-deck navigation lands on last slide for viewer', async ({ context, request }) => {
     const presenter = await openPresenter(context, presId, roomCode, token)
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
+    await waitForPresenterSocketJoined(request, roomCode)
     await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer ready')
 
     await presenter.evaluate(() => {

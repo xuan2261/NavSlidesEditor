@@ -34,6 +34,7 @@ After Phases 1-7 land, run a regression sweep + measure final state vs. the base
 - Follow-up patch verification: `npm run test:coverage` → 169 files passed, 1 skipped; 1439 tests passed, 9 skipped; `npx playwright test tests/e2e/live/present-mode-keyboard-navigation-presenter-to-viewer-sync.spec.js --project=chromium-live` → 4 passed; `npm run lint` → 0 errors, 109 existing warnings; `npm run build` → passed.
 - PR CI run `26360447117` passed lint, unit+coverage, PPTX corpus, build, mobile a11y, k6, live, and most chromium shards; remaining failures were six Linux visual baseline drifts.
 - Refreshed the six Linux visual baselines from run `26360447117` artifacts: editor empty canvas (1280x800, 1024x768), editor text/shape, editor chart/code, mobile editor DPR2, and dark Insert ribbon. CI remains pending until the baseline refresh is pushed and GitHub Actions reruns green.
+- PR CI run `26360768570` passed all jobs except `E2E live (workers:1)`. Root cause: presenter-to-viewer Reveal navigation spec could emit navigation immediately after Reveal readiness but before the presenter socket had joined the live room, so slower Linux CI dropped early `navigate` events. The spec now waits for `/api/live/room/:code` to report `hasPresenter: true` before driving Reveal navigation; targeted local `chromium-live` spec and lint pass.
 
 ## Architecture
 
