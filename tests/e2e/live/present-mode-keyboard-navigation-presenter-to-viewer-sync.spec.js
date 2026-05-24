@@ -46,6 +46,14 @@ async function getRevealIndex(page, title) {
   })
 }
 
+async function waitForViewerRevealIndex(viewer, expectedIndex, label) {
+  await waitWithLastSample(
+    label,
+    async () => (await getRevealIndex(viewer, 'Live Presentation')) === expectedIndex,
+    { timeout: 15000, intervals: [250, 500, 1000, 2000, 3000] }
+  )
+}
+
 test.describe('Present mode keyboard navigation propagates from presenter to viewer Reveal indices', () => {
   let presId, roomCode, token
 
@@ -68,17 +76,11 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
-    await waitWithLastSample(
-      'viewer initial reveal index 0:0:0',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer initial reveal index 0:0:0')
 
     await presenter.evaluate(() => window.Reveal.next())
 
-    await waitWithLastSample(
-      'viewer advanced to slide 1',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '1:0:0'
-    )
+    await waitForViewerRevealIndex(viewer, '1:0:0', 'viewer advanced to slide 1')
   })
 
   test('Reveal.left on presenter goes back to previous slide on viewer', async ({ context }) => {
@@ -86,22 +88,13 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
-    await waitWithLastSample(
-      'viewer at 0:0:0',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer at 0:0:0')
 
     await presenter.evaluate(() => window.Reveal.next())
-    await waitWithLastSample(
-      'viewer at 1:0:0',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '1:0:0'
-    )
+    await waitForViewerRevealIndex(viewer, '1:0:0', 'viewer at 1:0:0')
 
     await presenter.evaluate(() => window.Reveal.prev())
-    await waitWithLastSample(
-      'viewer back at 0:0:0',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer back at 0:0:0')
   })
 
   test('Reveal.slide(0) brings presenter and viewer back to first slide', async ({ context }) => {
@@ -109,22 +102,13 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
-    await waitWithLastSample(
-      'viewer at first',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer at first')
 
     await presenter.evaluate(() => window.Reveal.slide(2))
-    await waitWithLastSample(
-      'viewer at 2:0:0',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '2:0:0'
-    )
+    await waitForViewerRevealIndex(viewer, '2:0:0', 'viewer at 2:0:0')
 
     await presenter.evaluate(() => window.Reveal.slide(0))
-    await waitWithLastSample(
-      'viewer back at first',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer back at first')
   })
 
   test('end-of-deck navigation lands on last slide for viewer', async ({ context }) => {
@@ -132,19 +116,13 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
-    await waitWithLastSample(
-      'viewer ready',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await waitForViewerRevealIndex(viewer, '0:0:0', 'viewer ready')
 
     await presenter.evaluate(() => {
       const total = window.Reveal.getTotalSlides()
       window.Reveal.slide(total - 1)
     })
 
-    await waitWithLastSample(
-      'viewer at last slide (index 2)',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '2:0:0'
-    )
+    await waitForViewerRevealIndex(viewer, '2:0:0', 'viewer at last slide (index 2)')
   })
 })

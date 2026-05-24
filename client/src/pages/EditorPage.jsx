@@ -443,7 +443,6 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   // When presentation first loads, clear editor content
   useEffect(() => {
     if (editor && presentation && isFirstLoad.current) {
-      isFirstLoad.current = false
       settingContent.current = true
       editor.commands.setContent('', false)
       settingContent.current = false
@@ -464,7 +463,11 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
 
   // Auto-save with debounce
   useEffect(() => {
-    if (!presentation || isFirstLoad.current) return
+    if (!presentation) return
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false
+      return
+    }
     schedulePresentationSave(presentation, 1500)
 
     return () => {

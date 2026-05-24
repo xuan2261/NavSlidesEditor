@@ -30,7 +30,9 @@ After Phases 1-7 land, run a regression sweep + measure final state vs. the base
 - `npm run lint` → 0 errors, 109 existing warnings.
 - `npm run build` → passed with existing chunk-size / empty `vendor-reveal` warnings.
 - `npm run test:coverage` → 169 files passed, 1 skipped; 1439 tests passed, 9 skipped.
-- CI remains pending because this worktree has not been committed/pushed for GitHub Actions.
+- First PR CI run `26359690209` failed on Linux-only environment gaps: unit/corpus jobs had no Playwright Chromium installed, editor visual snapshots captured a false first-load autosave error, and live presenter/viewer navigation polling was too tight for CI load.
+- Follow-up patch verification: `npm run test:coverage` → 169 files passed, 1 skipped; 1439 tests passed, 9 skipped; `npx playwright test tests/e2e/live/present-mode-keyboard-navigation-presenter-to-viewer-sync.spec.js --project=chromium-live` → 4 passed; `npm run lint` → 0 errors, 109 existing warnings; `npm run build` → passed.
+- CI remains pending until the follow-up commit is pushed and GitHub Actions reruns green.
 
 ## Architecture
 
