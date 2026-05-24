@@ -59,6 +59,24 @@ async function getCurrentSlideTitle(page, title) {
   })
 }
 
+async function getPresenterSlideTitle(page) {
+  return page.evaluate(() => {
+    const r = window.Reveal
+    if (!r || !r.isReady?.()) return null
+    const slide = r.getCurrentSlide?.()
+    return slide?.querySelector('h1,h2,h3,h4,p')?.textContent?.trim() || null
+  })
+}
+
+async function waitForPresenterSlideTitle(presenter, expectedTitle, label) {
+  await expect
+    .poll(
+      () => getPresenterSlideTitle(presenter),
+      { timeout: 15000, intervals: [250, 500, 1000, 2000, 3000], message: label }
+    )
+    .toBe(expectedTitle)
+}
+
 async function waitForViewerSlideTitle(viewer, expectedTitle, label) {
   await expect
     .poll(
@@ -66,6 +84,13 @@ async function waitForViewerSlideTitle(viewer, expectedTitle, label) {
       { timeout: 15000, intervals: [250, 500, 1000, 2000, 3000], message: label }
     )
     .toBe(expectedTitle)
+}
+
+async function pressPresenterKeyAndWait(presenter, key, expectedTitle) {
+  await presenter.bringToFront()
+  await presenter.locator('body').focus()
+  await presenter.keyboard.press(key)
+  await waitForPresenterSlideTitle(presenter, expectedTitle, `presenter reached ${expectedTitle}`)
 }
 
 test.describe('Present mode keyboard navigation propagates from presenter to viewer slide content', () => {
@@ -93,12 +118,12 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     await waitForPresenterSocketJoined(request, roomCode)
     await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer initial slide')
 
-    await presenter.evaluate(() => window.Reveal.next())
+    await pressPresenterKeyAndWait(presenter, 'ArrowRight', 'Slide B')
 
     await waitForViewerSlideTitle(viewer, 'Slide B', 'viewer advanced to slide 1')
   })
 
-  test('Reveal.left on presenter goes back to previous slide on viewer', async ({ context, request }) => {
+  test('ArrowLeft on presenter goes back to previous slide on viewer', async ({ context, request }) => {
     const presenter = await openPresenter(context, presId, roomCode, token)
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
@@ -106,14 +131,14 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     await waitForPresenterSocketJoined(request, roomCode)
     await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer at first slide')
 
-    await presenter.evaluate(() => window.Reveal.next())
+    await pressPresenterKeyAndWait(presenter, 'ArrowRight', 'Slide B')
     await waitForViewerSlideTitle(viewer, 'Slide B', 'viewer at second slide')
 
-    await presenter.evaluate(() => window.Reveal.prev())
+    await pressPresenterKeyAndWait(presenter, 'ArrowLeft', 'Slide A')
     await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer back at first slide')
   })
 
-  test('Reveal.slide(0) brings presenter and viewer back to first slide', async ({ context, request }) => {
+  test('Home key brings presenter and viewer back to first slide', async ({ context, request }) => {
     const presenter = await openPresenter(context, presId, roomCode, token)
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
@@ -121,10 +146,10 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     await waitForPresenterSocketJoined(request, roomCode)
     await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer at first')
 
-    await presenter.evaluate(() => window.Reveal.slide(2))
+    await pressPresenterKeyAndWait(presenter, 'End', 'Slide C')
     await waitForViewerSlideTitle(viewer, 'Slide C', 'viewer at third slide')
 
-    await presenter.evaluate(() => window.Reveal.slide(0))
+    await pressPresenterKeyAndWait(presenter, 'Home', 'Slide A')
     await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer back at first')
   })
 
@@ -136,10 +161,7 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     await waitForPresenterSocketJoined(request, roomCode)
     await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer ready')
 
-    await presenter.evaluate(() => {
-      const total = window.Reveal.getTotalSlides()
-      window.Reveal.slide(total - 1)
-    })
+    await pressPresenterKeyAndWait(presenter, 'End', 'Slide C')
 
     await waitForViewerSlideTitle(viewer, 'Slide C', 'viewer at last slide')
   })
