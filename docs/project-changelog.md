@@ -14,6 +14,7 @@
 - Completed Phase 7 of `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: migrated remaining root presentation creation to `testPresentation`, renamed E2E page objects to kebab-case, split ribbon layout coverage into 8 concern files, updated the nightly 768px ribbon workflow, and split remaining oversized E2E specs so the 200-LOC guard passes.
 - Completed local Phase 8 verification for `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: unit, E2E, repeat-each=3, lint, build, and coverage gates pass locally; CI verification remains pending until the worktree is committed and pushed.
 - Addressed first PR CI follow-up for `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: unit/corpus jobs now install Playwright Chromium, editor initial-load autosave no longer fires a false first save, and live presenter/viewer navigation waits tolerate slower Linux CI convergence.
+- Refreshed six Linux visual baselines from PR CI run `26360447117` after all remaining failures were snapshot drift in editor canvas, mobile editor, and Insert ribbon visual tests.
 
 ## 2026-05-23
 
