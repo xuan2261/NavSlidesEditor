@@ -176,6 +176,7 @@ export default function SlidePanel({
           return (
             <div
               key={slide.id || index}
+              data-testid="slide-panel-item"
               className={`slide-item ${SLIDE_THUMBNAIL_CLASS} ${index === currentIndex ? 'border-accent shadow-[0_0_0_2px_var(--selection-muted)]' : 'border-transparent'} ${selectedIndices.includes(index) && index !== currentIndex ? 'outline outline-2 outline-accent outline-offset-[-2px]' : ''} ${dragOverIndex === index ? 'outline outline-2 outline-accent outline-offset-[-2px]' : ''}`}
               role="button"
               tabIndex={0}

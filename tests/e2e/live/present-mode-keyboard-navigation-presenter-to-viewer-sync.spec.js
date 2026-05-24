@@ -4,7 +4,6 @@ import {
   apiDeletePresentation,
   apiUpdatePresentation,
 } from '../fixtures/test-fixtures.js'
-import { waitWithLastSample } from '../helpers/playwright-tolerant-poll-wait-helpers-for-live-presentation-e2e.js'
 
 const SLIDES = [
   { id: 's1', elements: [{ id: 't1', type: 'text', x: 80, y: 100, width: 760, height: 80, content: '<h2>Slide A</h2>' }], notes: '', background: { type: 'color', color: '#1e1e2e' } },
@@ -33,7 +32,21 @@ async function waitForPresenterRevealReady(page) {
     .toBe(true)
 }
 
-async function getRevealIndex(page, title) {
+async function waitForPresenterSocketJoined(request, roomCode) {
+  await expect
+    .poll(
+      async () => {
+        const response = await request.get(`/api/live/room/${roomCode}`)
+        if (!response.ok()) return false
+        const room = await response.json()
+        return room.exists === true && room.hasPresenter === true
+      },
+      { timeout: 15000, intervals: [250, 500, 1000, 2000, 3000] }
+    )
+    .toBe(true)
+}
+
+async function getCurrentSlideTitle(page, title) {
   const handle = await page.locator(`iframe[title="${title}"]`).elementHandle()
   if (!handle) return null
   const frame = await handle.contentFrame()
@@ -41,12 +54,46 @@ async function getRevealIndex(page, title) {
   return frame.evaluate(() => {
     const r = window.Reveal
     if (!r || !r.isReady?.()) return null
-    const idx = r.getIndices()
-    return `${idx.h || 0}:${idx.v || 0}:${idx.f || 0}`
+    const slide = r.getCurrentSlide?.()
+    return slide?.querySelector('h1,h2,h3,h4,p')?.textContent?.trim() || null
   })
 }
 
-test.describe('Present mode keyboard navigation propagates from presenter to viewer Reveal indices', () => {
+async function getPresenterSlideTitle(page) {
+  return page.evaluate(() => {
+    const r = window.Reveal
+    if (!r || !r.isReady?.()) return null
+    const slide = r.getCurrentSlide?.()
+    return slide?.querySelector('h1,h2,h3,h4,p')?.textContent?.trim() || null
+  })
+}
+
+async function waitForPresenterSlideTitle(presenter, expectedTitle, label) {
+  await expect
+    .poll(
+      () => getPresenterSlideTitle(presenter),
+      { timeout: 15000, intervals: [250, 500, 1000, 2000, 3000], message: label }
+    )
+    .toBe(expectedTitle)
+}
+
+async function waitForViewerSlideTitle(viewer, expectedTitle, label) {
+  await expect
+    .poll(
+      () => getCurrentSlideTitle(viewer, 'Live Presentation'),
+      { timeout: 15000, intervals: [250, 500, 1000, 2000, 3000], message: label }
+    )
+    .toBe(expectedTitle)
+}
+
+async function pressPresenterKeyAndWait(presenter, key, expectedTitle) {
+  await presenter.bringToFront()
+  await presenter.locator('body').focus()
+  await presenter.keyboard.press(key)
+  await waitForPresenterSlideTitle(presenter, expectedTitle, `presenter reached ${expectedTitle}`)
+}
+
+test.describe('Present mode keyboard navigation propagates from presenter to viewer slide content', () => {
   let presId, roomCode, token
 
   test.beforeEach(async ({ request }) => {
@@ -63,88 +110,59 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     try { await apiDeletePresentation(request, presId) } catch {}
   })
 
-  test('ArrowRight on presenter advances viewer slide index', async ({ context }) => {
+  test('ArrowRight on presenter advances viewer slide index', async ({ context, request }) => {
     const presenter = await openPresenter(context, presId, roomCode, token)
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
-    await waitWithLastSample(
-      'viewer initial reveal index 0:0:0',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await waitForPresenterSocketJoined(request, roomCode)
+    await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer initial slide')
 
-    await presenter.evaluate(() => window.Reveal.next())
+    await pressPresenterKeyAndWait(presenter, 'ArrowRight', 'Slide B')
 
-    await waitWithLastSample(
-      'viewer advanced to slide 1',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '1:0:0'
-    )
+    await waitForViewerSlideTitle(viewer, 'Slide B', 'viewer advanced to slide 1')
   })
 
-  test('Reveal.left on presenter goes back to previous slide on viewer', async ({ context }) => {
+  test('ArrowLeft on presenter goes back to previous slide on viewer', async ({ context, request }) => {
     const presenter = await openPresenter(context, presId, roomCode, token)
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
-    await waitWithLastSample(
-      'viewer at 0:0:0',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await waitForPresenterSocketJoined(request, roomCode)
+    await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer at first slide')
 
-    await presenter.evaluate(() => window.Reveal.next())
-    await waitWithLastSample(
-      'viewer at 1:0:0',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '1:0:0'
-    )
+    await pressPresenterKeyAndWait(presenter, 'ArrowRight', 'Slide B')
+    await waitForViewerSlideTitle(viewer, 'Slide B', 'viewer at second slide')
 
-    await presenter.evaluate(() => window.Reveal.prev())
-    await waitWithLastSample(
-      'viewer back at 0:0:0',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await pressPresenterKeyAndWait(presenter, 'ArrowLeft', 'Slide A')
+    await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer back at first slide')
   })
 
-  test('Reveal.slide(0) brings presenter and viewer back to first slide', async ({ context }) => {
+  test('Home key brings presenter and viewer back to first slide', async ({ context, request }) => {
     const presenter = await openPresenter(context, presId, roomCode, token)
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
-    await waitWithLastSample(
-      'viewer at first',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await waitForPresenterSocketJoined(request, roomCode)
+    await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer at first')
 
-    await presenter.evaluate(() => window.Reveal.slide(2))
-    await waitWithLastSample(
-      'viewer at 2:0:0',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '2:0:0'
-    )
+    await pressPresenterKeyAndWait(presenter, 'End', 'Slide C')
+    await waitForViewerSlideTitle(viewer, 'Slide C', 'viewer at third slide')
 
-    await presenter.evaluate(() => window.Reveal.slide(0))
-    await waitWithLastSample(
-      'viewer back at first',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await pressPresenterKeyAndWait(presenter, 'Home', 'Slide A')
+    await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer back at first')
   })
 
-  test('end-of-deck navigation lands on last slide for viewer', async ({ context }) => {
+  test('end-of-deck navigation lands on last slide for viewer', async ({ context, request }) => {
     const presenter = await openPresenter(context, presId, roomCode, token)
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
-    await waitWithLastSample(
-      'viewer ready',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '0:0:0'
-    )
+    await waitForPresenterSocketJoined(request, roomCode)
+    await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer ready')
 
-    await presenter.evaluate(() => {
-      const total = window.Reveal.getTotalSlides()
-      window.Reveal.slide(total - 1)
-    })
+    await pressPresenterKeyAndWait(presenter, 'End', 'Slide C')
 
-    await waitWithLastSample(
-      'viewer at last slide (index 2)',
-      async () => (await getRevealIndex(viewer, 'Live Presentation')) === '2:0:0'
-    )
+    await waitForViewerSlideTitle(viewer, 'Slide C', 'viewer at last slide')
   })
 })

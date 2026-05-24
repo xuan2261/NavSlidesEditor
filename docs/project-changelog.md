@@ -5,6 +5,19 @@
 ## 2026-05-24
 
 - Released `v1.9.6`: upstream parity evidence reports, animation UI refinements, icon/status bar coverage, and release-facing docs are tagged for the next GitHub release.
+- Completed Phase 1 of `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: fixed Playwright live-spec routing, added config/fixture regression tests, modernized legacy elements/slides/export/visual-regression specs onto `testPresentation`, made fixture cleanup failures fail tests, captured coverage/E2E baselines, and corrected the `docs/codebase-summary.md` package-version drift.
+- Completed Phase 2 of `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: removed all 20 `waitForTimeout` calls from `tests/e2e/**`, added a lint/unit guard against sleep-based waits, replaced sleeps with state-based waits and E2E-gated history instrumentation, and recorded de-flake wallclock evidence.
+- Completed Phase 3 of `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: added the full `data-testid` selector catalog, introduced unit/runtime selector contracts, migrated page objects to stable selectors, and documented Sync/Game catalog mismatches for downstream phases.
+- Completed Phase 4 of `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: added editor coverage specs for smart guides, clipboard offsets, and Selection Pane hide/show persistence; fixed the `EditorPage` properties-panel update adapter so per-element visibility toggles apply to the intended element.
+- Completed Phase 5 of `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: added PPTX export, Markdown import, and rclone Proton Drive sync E2E coverage against real `/api/rclone/*` contracts; added server/no-fabricated-sync route guards; corrected the HomePage Markdown import testid placement.
+- Completed Phase 6 of `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: added game shortcut E2E/unit coverage, fixed active-game keyboard scope dispatch, and introduced a 36-cell themes/transitions/layouts visual matrix with Linux-gated snapshot capture.
+- Completed Phase 7 of `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: migrated remaining root presentation creation to `testPresentation`, renamed E2E page objects to kebab-case, split ribbon layout coverage into 8 concern files, updated the nightly 768px ribbon workflow, and split remaining oversized E2E specs so the 200-LOC guard passes.
+- Completed local Phase 8 verification for `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: unit, E2E, repeat-each=3, lint, build, and coverage gates pass locally; CI verification remains pending until the worktree is committed and pushed.
+- Addressed first PR CI follow-up for `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: unit/corpus jobs now install Playwright Chromium, editor initial-load autosave no longer fires a false first save, and live presenter/viewer navigation waits tolerate slower Linux CI convergence.
+- Refreshed six Linux visual baselines from PR CI run `26360447117` after all remaining failures were snapshot drift in editor canvas, mobile editor, and Insert ribbon visual tests.
+- Addressed PR CI live E2E follow-up: presenter-to-viewer navigation tests now wait for the presenter socket to join the live room before emitting Reveal navigation and assert the viewer's visible slide content instead of stale `Reveal.getIndices()` values from the iframe on Linux CI.
+- Refreshed the Linux speaker-view visual baseline from PR CI run `26361925614` after live E2E passed and only a sub-1k-pixel speaker view snapshot drift remained.
+- Stabilized the remaining PR CI live E2E failure by driving presenter navigation through real keyboard input (`ArrowRight`, `ArrowLeft`, `Home`, `End`) and waiting for the presenter slide content before asserting viewer socket sync.
 
 ## 2026-05-23
 

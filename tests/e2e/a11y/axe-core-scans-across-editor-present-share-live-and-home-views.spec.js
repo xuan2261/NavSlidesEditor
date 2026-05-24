@@ -6,6 +6,7 @@ import {
   apiCreateShareLink,
 } from '../fixtures/test-fixtures.js'
 import { scanA11y, newCriticalViolations } from '../pages/axe-a11y-scan-helper-with-stable-dom-wait.js'
+import { waitForVisibleText } from '../pages/wait-helpers.js'
 
 const SLIDES = [
   { id: 's1', elements: [{ id: 't1', type: 'text', x: 100, y: 100, width: 600, height: 80, content: '<h1>Slide A</h1>' }], notes: 'Notes A', background: { type: 'color', color: '#1e1e2e' } },
@@ -74,7 +75,7 @@ test.describe('axe core scans across editor present share live and home views wi
     const r = await request.post('/api/live/room')
     const room = await r.json()
     await page.goto(`/live/${room.roomCode}`)
-    await page.waitForTimeout(500)
+    await waitForVisibleText(page, /waiting|presenter|room|live/i)
     const { critical } = await scanA11y(page, 'live-viewer', { disableRules: SHARED_DISABLE_RULES })
     const fresh = newCriticalViolations(critical, 'live-viewer')
     if (fresh.length) console.log('[axe live NEW critical]', JSON.stringify(fresh.map((c) => c.id), null, 2))

@@ -35,7 +35,7 @@ export default function SyncModal({ presentationId, onClose }) {
         remotePath: syncConfig.remotePath || '/slides-backup',
         presentationId,
       })
-      setSyncResult({ type: 'success', message: `Synced to ${r.destination}` })
+      setSyncResult({ type: 'success', scope: 'push', message: `Synced to ${r.destination}` })
     } catch (err) {
       setSyncResult({ type: 'error', message: err.message })
     } finally {
@@ -53,6 +53,7 @@ export default function SyncModal({ presentationId, onClose }) {
       })
       setSyncResult({
         type: 'success',
+        scope: 'pull',
         message: `Synced ${r.synced} presentations to ${r.destination}`,
       })
     } catch (err) {
@@ -69,7 +70,7 @@ export default function SyncModal({ presentationId, onClose }) {
       await api.configureRclone(syncConfig)
       const s = await api.getRcloneStatus()
       setSyncStatus(s)
-      setSyncResult({ type: 'success', message: 'Connected to Proton Drive' })
+      setSyncResult({ type: 'success', scope: 'push', message: 'Connected to Proton Drive' })
     } catch (err) {
       setSyncResult({ type: 'error', message: err.message })
     } finally {
@@ -81,6 +82,7 @@ export default function SyncModal({ presentationId, onClose }) {
 
   return (
     <ModalShell titleId="sync-modal-title" title="Sync to Cloud" size="md" onClose={handleClose}>
+      <div data-testid="sync-modal-dialog">
         {!syncStatus?.installed ? (
           <div
             className="rounded-lg border border-danger/20 bg-danger/10 p-4 text-[13px] text-danger"
@@ -95,7 +97,10 @@ export default function SyncModal({ presentationId, onClose }) {
 
             {syncStatus.remotes?.length > 0 ? (
               <>
-                <div className="px-3.5 py-2.5 bg-[#22c55e]/10 rounded-lg border border-[#22c55e]/20 text-xs text-[#22c55e]">
+                <div
+                  data-testid="sync-status-configured"
+                  className="px-3.5 py-2.5 bg-[#22c55e]/10 rounded-lg border border-[#22c55e]/20 text-xs text-[#22c55e]"
+                >
                   Configured remote{syncStatus.remotes.length > 1 ? 's' : ''}:{' '}
                   {syncStatus.remotes.join(', ')}
                 </div>
@@ -113,14 +118,16 @@ export default function SyncModal({ presentationId, onClose }) {
                 <div className="flex gap-2">
                   <Button
                     variant="primary"
+                    data-testid="sync-push-btn"
                     className="flex-1 justify-center flex items-center gap-1.5"
-                    disabled={syncing}
+                    disabled={syncing || !presentationId}
                     onClick={handleSyncThis}
                   >
                     <CloudUpload size={14} /> {syncing ? 'Syncing...' : 'Sync This Presentation'}
                   </Button>
                   <Button
                     variant="secondary"
+                    data-testid="sync-pull-btn"
                     className="justify-center"
                     disabled={syncing}
                     onClick={handleSyncAll}
@@ -131,7 +138,7 @@ export default function SyncModal({ presentationId, onClose }) {
               </>
             ) : (
               <>
-                <p className="text-[13px] text-text-muted">
+                <p data-testid="sync-provider-proton-drive" className="text-[13px] text-text-muted">
                   Configure Proton Drive credentials. Your password is stored in the rclone config
                   file on the server.
                 </p>
@@ -171,6 +178,7 @@ export default function SyncModal({ presentationId, onClose }) {
                 </div>
                 <Button
                   variant="primary"
+                  data-testid="sync-configure-confirm"
                   className="w-full justify-center"
                   disabled={syncing || !syncConfig.username || !syncConfig.password}
                   onClick={handleConnect}
@@ -180,18 +188,42 @@ export default function SyncModal({ presentationId, onClose }) {
               </>
             )}
 
-            {syncResult && (
+            {syncResult?.type === 'error' && (
               <div
-                className={`px-3 py-2 rounded-md text-[13px] flex items-center gap-2 ${syncResult.type === 'success' ? 'bg-[#22c55e]/15 text-[#22c55e]' : 'bg-danger/15 text-danger'}`}
-                role={syncResult.type === 'error' ? 'alert' : 'status'}
-                aria-live={syncResult.type === 'error' ? 'assertive' : 'polite'}
+                data-testid="sync-error-toast"
+                className="px-3 py-2 rounded-md text-[13px] flex items-center gap-2 bg-danger/15 text-danger"
+                role="alert"
+                aria-live="assertive"
               >
-                {syncResult.type === 'success' ? <Check size={14} /> : <X size={14} />}
+                <X size={14} />
+                <span>{syncResult.message}</span>
+              </div>
+            )}
+            {syncResult?.type === 'success' && syncResult.scope === 'pull' && (
+              <div
+                data-testid="sync-pull-result"
+                className="px-3 py-2 rounded-md text-[13px] flex items-center gap-2 bg-[#22c55e]/15 text-[#22c55e]"
+                role="status"
+                aria-live="polite"
+              >
+                <Check size={14} />
+                <span>{syncResult.message}</span>
+              </div>
+            )}
+            {syncResult?.type === 'success' && syncResult.scope !== 'pull' && (
+              <div
+                data-testid="sync-push-result"
+                className="px-3 py-2 rounded-md text-[13px] flex items-center gap-2 bg-[#22c55e]/15 text-[#22c55e]"
+                role="status"
+                aria-live="polite"
+              >
+                <Check size={14} />
                 <span>{syncResult.message}</span>
               </div>
             )}
           </div>
         )}
+      </div>
     </ModalShell>
   )
 }

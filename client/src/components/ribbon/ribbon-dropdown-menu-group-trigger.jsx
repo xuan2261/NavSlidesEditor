@@ -13,6 +13,7 @@ export default function RibbonDropdownMenuGroup({
   triggerRef: externalTriggerRef,
   triggerVariant = 'ribbon',
   triggerClassName = '',
+  triggerTestId,
 }) {
   const [open, setOpen] = useState(false)
   const localTriggerRef = useRef(null)
@@ -31,6 +32,7 @@ export default function RibbonDropdownMenuGroup({
     <div className={className}>
       <Button
         ref={triggerRef}
+        data-testid={triggerTestId}
         variant={triggerVariant}
         className={triggerClassName}
         aria-expanded={open}

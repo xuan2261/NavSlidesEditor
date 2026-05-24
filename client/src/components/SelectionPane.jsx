@@ -170,6 +170,7 @@ export default function SelectionPane({
 
             {/* Visibility toggle */}
             <button
+              data-testid={`selection-pane-toggle-visibility-${el.id}`}
               onClick={(e) => {
                 e.stopPropagation()
                 onToggleVisibility(el.id)

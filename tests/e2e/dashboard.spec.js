@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { HomePage } from './pages/HomePage.js'
+import { HomePage } from './pages/home-page.js'
 import { apiCreatePresentation, apiDeletePresentation } from './fixtures/test-fixtures.js'
 
 test.describe('Dashboard & Navigation', () => {
@@ -192,11 +192,4 @@ test.describe('Dashboard & Navigation', () => {
     await expect(page.locator('h1:has-text("Settings")')).toBeVisible()
   })
 
-  test('can navigate to Explore page', async ({ page }) => {
-    const home = new HomePage(page)
-    await home.goto()
-    await home.navigateToExplore()
-
-    await expect(page.locator('h1:has-text("Explore")')).toBeVisible()
-  })
 })

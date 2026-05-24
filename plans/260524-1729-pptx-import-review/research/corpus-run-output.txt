@@ -1,0 +1,139 @@
+
+=== PPTX Fidelity Test Report ===
+Corpus: ./PPTX
+Run: 2026-05-24T10:32:36.382Z
+Files: 4 total, 4 passed, 0 failed
+Avg Semantic Fidelity: 98.0%
+Avg Round-trip Stability: 99.0%
+
+--- Bai_2_1.pptx (1867352 bytes, 18985ms) ---
+  Semantic Fidelity: 97.0%
+  Geometry Drift: max 682.0px, median 0.5px
+  Geometry per-type breakdown:
+    shape: max 682.0px, median 364.5px, count 79
+    image: max 0.5px, median 0.4px, count 19
+    text: max 412.8px, median 0.5px, count 207
+    table: max 0.5px, median 0.4px, count 5
+  Property Coverage: 97.0%
+  Property per-type breakdown:
+    shape: 99.0%
+    image: 70.0%
+    text: 100.0%
+    table: 90.0%
+  Element counts (source -> nav):
+    image: 27 -> 19
+    shape: 79 -> 87
+    table: 5 -> 5
+    text: 207 -> 207
+    text: 100%
+    shape: 99%
+    image: 70%
+    table: 90%
+  Round-trip Stability: 96.0%
+  Round-trip per-type breakdown:
+    text: stable 207/207, partial 0, unmatched 0
+    svg: stable 79/79, partial 0, unmatched 0
+    image: stable 16/19, partial 3, unmatched 0
+    table: stable 5/5, partial 0, unmatched 0
+    shape: stable 8/8, partial 0, unmatched 0
+  Export Method: production
+  Warnings: 8
+
+--- Bai_2_2.pptx (531145 bytes, 34687ms) ---
+  Semantic Fidelity: 99.0%
+  Geometry Drift: max 817.3px, median 0.5px
+  Geometry per-type breakdown:
+    text: max 766.4px, median 0.5px, count 294
+    shape: max 817.3px, median 121.0px, count 199
+    table: max 0.5px, median 0.4px, count 15
+    image: max 0.4px, median 0.3px, count 2
+  Property Coverage: 99.0%
+  Property per-type breakdown:
+    text: 100.0%
+    shape: 100.0%
+    table: 90.0%
+    other: 0.0%
+    image: 100.0%
+  Element counts (source -> nav):
+    image: 2 -> 2
+    other: 4 -> 4
+    shape: 199 -> 199
+    table: 15 -> 15
+    text: 294 -> 294
+    text: 100%
+    shape: 100%
+    image: 100%
+    table: 90%
+    other: 0%
+  Round-trip Stability: 100.0%
+  Round-trip per-type breakdown:
+    text: stable 294/294, partial 0, unmatched 0
+    svg: stable 199/199, partial 0, unmatched 0
+    table: stable 15/15, partial 0, unmatched 0
+    latex: stable 4/4, partial 0, unmatched 0
+    image: stable 2/2, partial 0, unmatched 0
+  Export Method: production
+
+--- Bai_2_5.pptx (1133172 bytes, 45131ms) ---
+  Semantic Fidelity: 97.0%
+  Geometry Drift: max 829.0px, median 1.0px
+  Geometry per-type breakdown:
+    text: max 776.0px, median 0.5px, count 267
+    image: max 488.4px, median 0.4px, count 26
+    shape: max 829.0px, median 326.4px, count 245
+    table: max 0.5px, median 0.4px, count 18
+  Property Coverage: 97.0%
+  Property per-type breakdown:
+    text: 100.0%
+    image: 84.0%
+    shape: 100.0%
+    table: 90.0%
+    other: 0.0%
+  Element counts (source -> nav):
+    image: 31 -> 26
+    other: 13 -> 13
+    shape: 245 -> 250
+    table: 18 -> 18
+    text: 267 -> 267
+    text: 100%
+    shape: 100%
+    image: 84%
+    table: 90%
+    other: 0%
+  Round-trip Stability: 99.0%
+  Round-trip per-type breakdown:
+    text: stable 267/267, partial 0, unmatched 0
+    image: stable 25/26, partial 1, unmatched 0
+    svg: stable 245/245, partial 0, unmatched 0
+    table: stable 18/18, partial 0, unmatched 0
+    shape: stable 5/5, partial 0, unmatched 0
+    latex: stable 13/13, partial 0, unmatched 0
+  Export Method: production
+  Warnings: 5
+
+--- STTre_Duc.pptx (2879091 bytes, 10783ms) ---
+  Semantic Fidelity: 100.0%
+  Geometry Drift: max 1.0px, median 0.4px
+  Geometry per-type breakdown:
+    text: max 0.5px, median 0.3px, count 70
+    shape: max 1.0px, median 0.4px, count 73
+    image: max 0.5px, median 0.5px, count 28
+  Property Coverage: 100.0%
+  Property per-type breakdown:
+    text: 100.0%
+    shape: 100.0%
+    image: 100.0%
+  Element counts (source -> nav):
+    image: 28 -> 28
+    shape: 73 -> 73
+    text: 70 -> 70
+    text: 100%
+    shape: 100%
+    image: 100%
+  Round-trip Stability: 100.0%
+  Round-trip per-type breakdown:
+    text: stable 70/70, partial 0, unmatched 0
+    image: stable 28/28, partial 0, unmatched 0
+    svg: stable 73/73, partial 0, unmatched 0
+  Export Method: production
+

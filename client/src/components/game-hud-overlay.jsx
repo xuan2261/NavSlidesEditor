@@ -10,6 +10,7 @@ export function GameHudOverlay({ visible, gameType, onClose }) {
 
   return (
     <div
+      data-testid="game-hud"
       className="game-hud-overlay"
       style={{
         position: 'fixed',

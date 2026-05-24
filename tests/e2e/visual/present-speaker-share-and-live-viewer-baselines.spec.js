@@ -55,7 +55,6 @@ test.describe('Present, speaker, share landing, live viewer visual baselines', (
     await page.setViewportSize({ width: 1280, height: 800 })
     await page.goto(`/live/${room.roomCode}`)
     await page.waitForSelector('iframe[title="Live Presentation"], body', { timeout: 15000 })
-    await page.waitForTimeout(500)
     await expectStableScreenshot(page, 'live-viewer-no-presenter.png', {
       mask: [page.getByText(`Room: ${room.roomCode}`)],
     })
@@ -67,7 +66,7 @@ test.describe('Present, speaker, share landing, live viewer visual baselines', (
     const room = await r.json()
     await page.setViewportSize({ width: 1280, height: 800 })
     await page.goto(`/speaker/${room.roomCode}`)
-    await page.waitForTimeout(800)
+    await page.waitForSelector('body', { timeout: 15000 })
     await expectStableScreenshot(page, 'speaker-view-1280x800.png')
   })
 })

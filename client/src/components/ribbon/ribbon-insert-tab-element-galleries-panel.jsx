@@ -298,7 +298,7 @@ export default function InsertTabContent({
     <RibbonTabContentRow>
       <RibbonSection label="Basic" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5">
-          <Button variant="ribbon" title="Add text" aria-label="Add text"
+          <Button variant="ribbon" title="Add text" aria-label="Add text" data-testid="ribbon-insert-text"
             onMouseDown={(e) => { e.preventDefault(); onAddText?.() }}
             onKeyDown={(e) => handleKeyboardActivation(e, onAddText)}>
             <Type size={14} />
@@ -319,6 +319,7 @@ export default function InsertTabContent({
       <RibbonSection label="Shapes" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5 relative">
           <Button variant="ribbon" title="Shapes" aria-label="Insert shape"
+            data-testid="ribbon-insert-shape"
             ref={shapeTriggerRef}
             onMouseDown={(e) => { e.preventDefault(); setShowShapeGallery((v) => !v) }}
             onKeyDown={(e) => handleKeyboardActivation(e, () => setShowShapeGallery((v) => !v))}>
@@ -471,6 +472,7 @@ export default function InsertTabContent({
           <AdvancedActionButton label="Add timeline" title="Timeline" icon={Clock} onAction={onAddTimeline} />
           <RibbonDropdownMenuGroup
             triggerRef={advancedLauncherRef}
+            triggerTestId="ribbon-insert-game"
             icon={Package}
             label="More advanced insert options"
             triggerVariant="icon"

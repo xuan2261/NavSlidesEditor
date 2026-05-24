@@ -33,7 +33,15 @@ export async function suppressTutorialAndOverlays(page) {
 }
 
 export async function expectStableScreenshot(page, name, opts = {}) {
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => {})
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
   await freezeUiForSnapshot(page)
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+      })
+  )
   await expect(page).toHaveScreenshot(name, {
     animations: 'disabled',
     maxDiffPixelRatio: 0.01,

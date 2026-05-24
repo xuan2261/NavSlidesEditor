@@ -247,6 +247,7 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
             {media.map((item) => (
               <div
                 key={item.id || item.filename}
+                data-testid="media-library-item"
                 className="border border-border rounded-lg overflow-hidden cursor-pointer bg-card transition-colors hover:border-accent relative flex flex-col"
                 onClick={() => handleInsert(item)}
               >

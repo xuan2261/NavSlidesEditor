@@ -717,7 +717,7 @@ function JeopardyQuestionModal({ question, pts, isDailyDouble, showAnswer, timeL
                 Click to reveal answer
               </div>
             )}
-            <div style={{ fontSize: 14, color: 'white', textAlign: 'center', lineHeight: 1.5, fontFamily: 'sans-serif', maxHeight: 160, overflow: 'auto', width: '100%' }}>
+            <div data-testid="game-question" style={{ fontSize: 14, color: 'white', textAlign: 'center', lineHeight: 1.5, fontFamily: 'sans-serif', maxHeight: 160, overflow: 'auto', width: '100%' }}>
               {questionText}
             </div>
             {question?.options && question.options.length > 0 && (
@@ -914,7 +914,7 @@ function TeamScorePanel({ teams, scores, activeTeam, onSelectTeam }) {
             <div style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: team.color, flexShrink: 0 }} />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', lineHeight: 1.2 }}>{team.name}</span>
-              <span style={{ fontSize: 13, fontWeight: 'bold', color: team.color, lineHeight: 1.2 }}>{score}</span>
+              <span data-testid="game-score" style={{ fontSize: 13, fontWeight: 'bold', color: team.color, lineHeight: 1.2 }}>{score}</span>
             </div>
             {isActive && <span style={{ fontSize: 9, color: team.color }}>▶</span>}
           </div>

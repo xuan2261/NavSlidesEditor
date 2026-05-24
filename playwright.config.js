@@ -37,12 +37,12 @@ module.exports = defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: /tests\/e2e\/live\/.*\.spec\.js/,
+      testIgnore: /tests\/e2e\/live(?:\.spec\.js$|\/.*\.spec\.js$)/,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'chromium-live',
-      testMatch: /tests\/e2e\/live\/.*\.spec\.js/,
+      testMatch: /tests\/e2e\/live(?:\.spec\.js$|\/.*\.spec\.js$)/,
       workers: 1,
       use: { ...devices['Desktop Chrome'] },
     },

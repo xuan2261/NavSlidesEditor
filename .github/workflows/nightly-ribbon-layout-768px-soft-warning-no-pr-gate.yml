@@ -23,12 +23,12 @@ jobs:
         with: { node-version: '20', cache: npm }
       - run: npm ci
       - run: npm run build
-      - name: Run ribbon-layout 768px specs (warn-only)
+      - name: Run ribbon 768px specs (warn-only)
         id: run
         continue-on-error: true
         run: |
           set +e
-          npx playwright test tests/e2e/ribbon-layout.spec.js --project=chromium --reporter=line --grep "768px" | tee 768-warn.log
+          npx playwright test tests/e2e/ribbon/ --project=chromium --reporter=line --grep "768px" | tee 768-warn.log
           echo "code=$?" >> "$GITHUB_OUTPUT"
         env:
           CI: 'true'

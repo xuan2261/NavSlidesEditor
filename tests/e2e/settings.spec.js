@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { SettingsPage } from './pages/SettingsPage.js'
+import { SettingsPage } from './pages/settings-page.js'
 
 test.describe('Settings Page', () => {
   test('can navigate to Settings and see AI Configuration', async ({ page }) => {

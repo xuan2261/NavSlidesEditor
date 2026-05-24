@@ -52,8 +52,9 @@ test.describe('Ribbon tabs visual baseline across all 7 tabs and dark theme', ()
       await page.waitForSelector('.slide-canvas', { timeout: 15000 })
       const requiredTabs = page.getByRole('tab')
       await expect(requiredTabs).toHaveText(TABS.map((item) => item.label))
-      await page.getByRole('tab', { name: tab.label, exact: true }).click()
-      await page.waitForTimeout(150)
+      const tabButton = page.getByRole('tab', { name: tab.label, exact: true })
+      await tabButton.click()
+      await expect(tabButton).toHaveAttribute('aria-selected', 'true')
       await expectStableScreenshot(page, `ribbon-${tab.id}-dark.png`, {
         clip: { x: 0, y: 0, width: 1280, height: 240 },
       })

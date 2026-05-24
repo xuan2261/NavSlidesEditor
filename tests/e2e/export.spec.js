@@ -1,26 +1,18 @@
-import { test, expect } from '@playwright/test'
-import { EditorPage } from './pages/EditorPage.js'
-import { apiCreatePresentation, apiDeletePresentation } from './fixtures/test-fixtures.js'
+import { EditorPage } from './pages/editor-page.js'
+import { test, expect } from './fixtures/test-fixtures.js'
 
 test.describe('Export & Present', () => {
-  let presId
   let editorPage
+  let presentationId
 
-  test.beforeEach(async ({ page, request }) => {
-    const pres = await apiCreatePresentation(request, 'Export Test')
-    presId = pres.id
+  test.beforeEach(async ({ page, testPresentation }) => {
+    presentationId = testPresentation.id
     editorPage = new EditorPage(page)
-    await editorPage.gotoPresentation(presId)
-  })
-
-  test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await editorPage.gotoPresentation(presentationId)
   })
 
   test('export HTML endpoint returns valid HTML', async ({ request }) => {
-    const res = await request.get(`/api/presentations/${presId}/export`)
+    const res = await request.get(`/api/presentations/${presentationId}/export`)
     expect(res.ok()).toBeTruthy()
     const contentType = res.headers()['content-type']
     expect(contentType).toContain('text/html')
@@ -29,7 +21,7 @@ test.describe('Export & Present', () => {
   })
 
   test('present endpoint returns reveal.js HTML', async ({ request }) => {
-    const res = await request.get(`/api/presentations/${presId}/present`)
+    const res = await request.get(`/api/presentations/${presentationId}/present`)
     expect(res.ok()).toBeTruthy()
     const html = await res.text()
     expect(html).toContain('Reveal')
@@ -38,7 +30,7 @@ test.describe('Export & Present', () => {
 
   test('present mode renders reveal.js slides in browser', async ({ page }) => {
     // Navigate to present endpoint
-    await page.goto(`/api/presentations/${presId}/present`, { timeout: 15000 })
+    await page.goto(`/api/presentations/${presentationId}/present`, { timeout: 15000 })
     await page.waitForSelector('.reveal', { timeout: 10000 })
     await expect(page.locator('.reveal')).toBeVisible()
   })

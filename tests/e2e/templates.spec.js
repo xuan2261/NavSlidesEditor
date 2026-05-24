@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { HomePage } from './pages/HomePage.js'
+import { HomePage } from './pages/home-page.js'
 
 test.describe('Templates', () => {
   test('can view Built-in template gallery', async ({ page }) => {

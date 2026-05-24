@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { EditorPage } from './pages/EditorPage.js'
+import { EditorPage } from './pages/editor-page.js'
 import { apiCreatePresentation, apiDeletePresentation } from './fixtures/test-fixtures.js'
 
 test.describe('Toolbar Element Insertion', () => {

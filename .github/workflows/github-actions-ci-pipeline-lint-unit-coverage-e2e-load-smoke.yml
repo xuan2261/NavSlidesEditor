@@ -35,6 +35,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '20', cache: npm }
       - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - run: npm run test:coverage
       - name: Upload coverage report
         if: always()
@@ -179,6 +180,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '20', cache: npm }
       - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - name: Skip if PPTX corpus absent
         id: check
         run: |

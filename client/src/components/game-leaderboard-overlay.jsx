@@ -6,6 +6,7 @@ export function GameLeaderboardOverlay({ visible, scores = [], onClose }) {
 
   return (
     <div
+      data-testid="game-leaderboard"
       onClick={onClose}
       style={{
         position: 'fixed',

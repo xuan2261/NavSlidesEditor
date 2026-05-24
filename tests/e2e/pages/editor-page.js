@@ -1,8 +1,8 @@
 import { expect } from '@playwright/test'
-import { CanvasHelper } from './CanvasHelper.js'
-import { RibbonInsertHelper } from './RibbonInsertHelper.js'
-import { PropertiesPanelHelper } from './PropertiesPanelHelper.js'
-import { SlidePanelHelper } from './SlidePanelHelper.js'
+import { CanvasHelper } from './canvas-helper.js'
+import { RibbonInsertHelper } from './ribbon-insert-helper.js'
+import { PropertiesPanelHelper } from './properties-panel-helper.js'
+import { SlidePanelHelper } from './slide-panel-helper.js'
 import { RibbonTabToolbarHelper } from './ribbon-tab-toolbar-helper.js'
 import { MenuBarDropdownHelper } from './menu-bar-dropdown-helper.js'
 import { TextEditorProseMirrorHelper } from './text-editor-prosemirror-and-find-replace-helper.js'
@@ -13,9 +13,9 @@ export class EditorPage {
    */
   constructor(page) {
     this.page = page
-    this.canvasLocator = page.locator('.slide-canvas')
+    this.canvasLocator = page.getByTestId('canvas-area')
     this.elementsCountLocator = page.locator('.element-wrapper')
-    this.thumbnailsLocator = page.locator('.slide-panel .slide-item')
+    this.thumbnailsLocator = page.getByTestId('slide-panel-item')
     this.addSlideBtn = page.locator('.add-slide-btn').filter({ hasText: 'Add Slide' })
     this.lastInsertedElementIndex = null
 
@@ -51,7 +51,7 @@ export class EditorPage {
   }
 
   async waitForReady() {
-    await this.page.waitForSelector('.slide-canvas', { timeout: 30000 })
+    await this.canvasLocator.waitFor({ state: 'visible', timeout: 30000 })
   }
 
   async waitForAutoSave() {
@@ -76,6 +76,7 @@ export class EditorPage {
 
   async gotoPresentation(id) {
     await this.page.addInitScript(() => {
+      window.__E2E__ = true
       window.localStorage.setItem('navSlidesTutorialSeen', 'true')
     })
     await this.page.goto(`/editor/${id}`, { timeout: 30000 })

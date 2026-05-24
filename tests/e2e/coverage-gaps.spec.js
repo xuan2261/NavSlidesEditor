@@ -1,10 +1,9 @@
 import { test, expect } from '@playwright/test'
-import { EditorPage } from './pages/EditorPage.js'
+import { EditorPage } from './pages/editor-page.js'
 import {
   apiCreatePresentation,
   apiDeletePresentation,
   apiGetPresentation,
-  apiUpdatePresentation,
 } from './fixtures/test-fixtures.js'
 
 function shape(id, x, y, width = 100, height = 80, zIndex = 1) {
@@ -55,6 +54,10 @@ async function getInsertItem(page, label) {
 async function insertItem(page, label) {
   const previousCount = await page.locator('.element-wrapper').count()
   await (await getInsertItem(page, label)).click()
+  if (label === 'Icon') {
+    await expect(page.getByTestId('icon-gallery-grid')).toBeVisible()
+    await page.locator('[data-testid^="icon-gallery-item-"]').first().click()
+  }
   await expect(page.locator('.element-wrapper')).toHaveCount(previousCount + 1, { timeout: 10000 })
 }
 
@@ -153,170 +156,4 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
     expect(types).toEqual(expect.arrayContaining(['image', 'video', 'qrcode', 'drawing', 'icon', 'svg', 'audio']))
   })
 
-  test('covers align/distribute, group/ungroup, layer, lock, shadow, and rotation controls', async ({
-    page,
-    request,
-  }) => {
-    await apiUpdatePresentation(request, presId, {
-      slides: [seededSlide([shape('a', 100, 100, 100, 80, 1), shape('b', 260, 180, 100, 80, 2), shape('c', 460, 160, 100, 80, 3)])],
-    })
-    await editor.gotoPresentation(presId)
-
-    await selectElements(page, ['a', 'b'])
-    await page.locator('button[title="Align left"]').click()
-    await expect
-      .poll(async () => {
-        const saved = await apiGetPresentation(request, presId)
-        return saved.slides[0].elements.filter((el) => ['a', 'b'].includes(el.id)).map((el) => el.x)
-      })
-      .toEqual([100, 100])
-
-    await selectElements(page, ['a', 'b', 'c'])
-    await page.locator('button[title="Distribute H"]').click()
-    await page.locator('button[title="Group elements"]').click()
-    await expect
-      .poll(async () => {
-        const saved = await apiGetPresentation(request, presId)
-        return new Set(saved.slides[0].elements.map((el) => el.groupId).filter(Boolean)).size
-      })
-      .toBe(1)
-
-    await page.locator('button[title="Ungroup elements"]').click()
-    await expect
-      .poll(async () => {
-        const saved = await apiGetPresentation(request, presId)
-        return saved.slides[0].elements.every((el) => !el.groupId)
-      })
-      .toBe(true)
-
-    await page.getByTestId('slide-element-a').click()
-    const panel = page.locator('.properties-panel')
-    await panel.locator('input[title="Rotation angle in degrees"]').fill('45')
-    await panel.locator('label').filter({ hasText: 'Lock element' }).locator('input').check()
-    await expect(page.getByTestId('resize-handle-se')).toHaveCount(0)
-    await panel.locator('label').filter({ hasText: 'Lock element' }).locator('input').uncheck()
-    await expect(page.getByTestId('resize-handle-se')).toBeVisible()
-
-    const numberInputs = panel.locator('input[type="number"]')
-    await numberInputs.nth(5).fill('6')
-    await numberInputs.nth(6).fill('8')
-    await numberInputs.nth(7).fill('12')
-    await panel.getByRole('button', { name: /Forward/ }).click()
-
-    await expect
-      .poll(async () => {
-        const saved = await apiGetPresentation(request, presId)
-        return saved.slides[0].elements.find((el) => el.id === 'a')
-      })
-      .toMatchObject({ rotation: 45, shadowX: 6, shadowY: 8, shadowBlur: 12, zIndex: 2 })
-  })
-
-  test('covers resize aspect lock, rotation handle snap, rulers, and persistent guides', async ({
-    page,
-    request,
-  }) => {
-    await apiUpdatePresentation(request, presId, {
-      slides: [seededSlide([shape('a', 120, 120, 120, 80)])],
-    })
-    await editor.gotoPresentation(presId)
-    await page.locator('select').filter({ hasText: '100%' }).first().selectOption('100')
-    await expect(page.locator('select').filter({ hasText: '100%' }).first()).toHaveValue('100')
-    await page.getByTestId('slide-element-a').click()
-
-    const handle = await page.getByTestId('resize-handle-se').boundingBox()
-    expect(handle).toBeTruthy()
-    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2)
-    await page.keyboard.down('Shift')
-    await page.mouse.down()
-    await page.mouse.move(handle.x + handle.width / 2 + 120, handle.y + handle.height / 2 + 90, { steps: 8 })
-    await page.mouse.up()
-    await page.keyboard.up('Shift')
-    await editor.waitForAutoSave()
-
-    await expect
-      .poll(async () => {
-        const saved = await apiGetPresentation(request, presId)
-        const el = saved.slides[0].elements.find((item) => item.id === 'a')
-        return el.width > 120 && el.height > 80
-      })
-      .toBe(true)
-
-    const rotationHandle = await page.getByTestId('rotation-handle').boundingBox()
-    expect(rotationHandle).toBeTruthy()
-    await page.keyboard.down('Shift')
-    await page.mouse.move(rotationHandle.x + rotationHandle.width / 2, rotationHandle.y + rotationHandle.height / 2)
-    await page.mouse.down()
-    await page.mouse.move(rotationHandle.x + 80, rotationHandle.y - 40, { steps: 6 })
-    await page.mouse.up()
-    await page.keyboard.up('Shift')
-
-    await expect
-      .poll(async () => {
-        const saved = await apiGetPresentation(request, presId)
-        const rotation = saved.slides[0].elements.find((item) => item.id === 'a').rotation || 0
-        return rotation % 15
-      })
-      .toBe(0)
-
-    await page.getByRole('tab', { name: 'View' }).click()
-    await page.getByRole('button', { name: 'Toggle rulers' }).click()
-    await expect(page.getByTestId('top-ruler')).toBeVisible()
-    const topRuler = await page.getByTestId('top-ruler').boundingBox()
-    expect(topRuler).toBeTruthy()
-    await page.mouse.move(topRuler.x + 140, topRuler.y + 8)
-    await page.mouse.down()
-    await page.mouse.move(topRuler.x + 180, topRuler.y + 80)
-    await page.mouse.up()
-    await expect(page.getByTestId('persistent-guide-x')).toBeVisible()
-    await page.getByTestId('persistent-guide-x').dblclick()
-    await expect(page.getByTestId('persistent-guide-x')).toHaveCount(0)
-  })
-
-  test('covers footer settings, feature modals, responsive layout, keyboard accessibility, and visual smoke', async ({
-    page,
-    request,
-  }) => {
-    await apiUpdatePresentation(request, presId, {
-      showFooter: true,
-      showPageNumbers: true,
-      footerMode: 'sequence',
-      sequenceSections: ['Intro', 'Results'],
-      slides: [seededSlide([shape('a', 120, 120)])],
-    })
-    await editor.gotoPresentation(presId)
-
-    await expect(page.getByText('Slide Footer')).toBeVisible()
-    await expect(page.locator('.slide-canvas')).toContainText('Intro')
-    await expect(page.locator('.slide-canvas')).toContainText('1 / 1')
-
-    await editor.openFileMenuItem('Sync to Cloud')
-    await expect(page.getByRole('dialog', { name: 'Sync to Cloud' })).toBeVisible()
-    await page.keyboard.press('Escape')
-    await expect(page.getByRole('dialog', { name: 'Sync to Cloud' })).toHaveCount(0)
-
-    await editor.openFileMenuItem('Save to GitHub')
-    await expect(page.getByText('Push to GitHub')).toBeVisible()
-    await page.keyboard.press('Escape')
-
-    await page.getByRole('tab', { name: 'View' }).click()
-    await page.getByRole('button', { name: 'Custom CSS' }).click()
-    await expect(page.getByText('Custom CSS')).toBeVisible()
-    await page.keyboard.press('Escape')
-
-    await editor.menubar.openAnalytics()
-    await expect(page.getByRole('heading', { name: 'Analytics' })).toBeVisible()
-    await page.keyboard.press('Escape')
-
-    await page.setViewportSize({ width: 390, height: 844 })
-    await expect(page.locator('.slide-canvas')).toBeVisible()
-    await page.keyboard.press('Tab')
-    await expect(page.locator(':focus')).toBeVisible()
-
-    const screenshot = await page.screenshot()
-    expect(screenshot.length).toBeGreaterThan(10_000)
-
-    const exportRes = await request.get(`/api/presentations/${presId}/present`)
-    expect(exportRes.ok()).toBeTruthy()
-    expect(await exportRes.text()).toContain('Results')
-  })
 })

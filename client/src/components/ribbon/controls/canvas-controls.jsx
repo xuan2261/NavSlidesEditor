@@ -47,6 +47,7 @@ export default function CanvasControls({ onGridSizeChange }) {
       />
       <Button
         variant="icon"
+        data-testid="canvas-controls-toggle-smart-guides"
         className={`h-7 w-7 ${smartGuidesEnabled ? 'bg-primary-light text-accent' : ''}`}
         onClick={() => setSmartGuidesEnabled(!smartGuidesEnabled)}
         title="Toggle smart guides"

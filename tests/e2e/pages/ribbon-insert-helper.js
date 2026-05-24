@@ -72,11 +72,11 @@ export class RibbonInsertHelper {
       // Open the dropdown first
       const groupTrigger = insertPanel.getByRole('button', { name: groupName })
       await groupTrigger.click()
-      await this.page.waitForTimeout(100)
 
       // Click the menu item
       const menuLabel = RibbonInsertHelper.MENU_ITEM_LABELS[label] || label
       const menuItem = this.page.getByRole('menuitem', { name: menuLabel })
+      await menuItem.waitFor({ state: 'visible', timeout: 5000 })
       await menuItem.click()
     } else {
       const button = insertPanel.getByRole('button', { name: label, exact: true })

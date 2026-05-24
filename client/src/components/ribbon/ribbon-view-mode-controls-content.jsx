@@ -85,6 +85,7 @@ export default function ViewTabContent({
             <span className="text-[11px] hidden lg:inline">Slides</span>
           </Button>
           <Button variant="ribbon"
+            data-testid="view-toggle-selection-pane"
             className={`h-7 ${rightPanelOpen ? 'bg-primary-light text-accent' : ''}`}
             title="Toggle properties panel" aria-label="Toggle properties panel" aria-pressed={rightPanelOpen}
             onMouseDown={(e) => { e.preventDefault(); toggleRightPanel() }}>

@@ -83,6 +83,7 @@ export default function FileDropdown({
     <div className="relative">
       <Button
         ref={triggerRef}
+        data-testid="ribbon-file-menu-trigger"
         variant="icon"
         className="menu-trigger h-7 px-2 flex items-center gap-1"
         title="File"
@@ -118,6 +119,13 @@ export default function FileDropdown({
                   return (
                     <button
                       key={item.id}
+                      data-testid={
+                        item.id === 'pptx'
+                          ? 'ribbon-file-export-pptx'
+                          : item.id === 'html'
+                            ? 'ribbon-file-export-html'
+                            : undefined
+                      }
                       className="dropdown-item w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-text-primary hover:bg-secondary cursor-pointer transition-colors text-left"
                       role="menuitem"
                       onMouseDown={(e) => {

@@ -1,11 +1,14 @@
+import { expect } from '@playwright/test'
+
 export class RibbonTabToolbarHelper {
   constructor({ page }) {
     this.page = page
   }
 
   async switchRibbonTab(tabName) {
-    await this.page.getByRole('tab', { name: tabName }).click()
-    await this.page.waitForTimeout(100)
+    const tab = this.page.getByRole('tab', { name: tabName })
+    await tab.click()
+    await expect(tab).toHaveAttribute('aria-selected', 'true')
   }
 
   async clickMainToolbarButton(title) {

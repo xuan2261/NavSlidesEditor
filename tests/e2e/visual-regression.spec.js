@@ -1,8 +1,7 @@
-import { test, expect } from '@playwright/test'
 import {
-  apiCreatePresentation,
-  apiDeletePresentation,
   apiUpdatePresentation,
+  test,
+  expect,
 } from './fixtures/test-fixtures.js'
 import {
   freezeUiForSnapshot,
@@ -22,18 +21,8 @@ function seededSlide(elements = []) {
 test.describe('Visual Regression', () => {
   skipNonLinuxVisualSnapshots()
 
-  let presentationId
-
-  test.afterEach(async ({ request }) => {
-    if (presentationId) {
-      await apiDeletePresentation(request, presentationId)
-    }
-  })
-
-  test('editor canvas baseline remains stable', async ({ page, request }) => {
-    const pres = await apiCreatePresentation(request, 'Visual Regression Baseline')
-    presentationId = pres.id
-
+  test('editor canvas baseline remains stable', async ({ page, request, testPresentation }) => {
+    const presentationId = testPresentation.id
     await apiUpdatePresentation(request, presentationId, {
       title: 'Visual Regression Baseline',
       slides: [
