@@ -46,6 +46,20 @@ async function waitForPresenterSocketJoined(request, roomCode) {
     .toBe(true)
 }
 
+async function waitForViewerSocketJoined(request, roomCode) {
+  await expect
+    .poll(
+      async () => {
+        const response = await request.get(`/api/live/room/${roomCode}`)
+        if (!response.ok()) return false
+        const room = await response.json()
+        return room.exists === true && room.viewersCount >= 1
+      },
+      { timeout: 15000, intervals: [250, 500, 1000, 2000, 3000] }
+    )
+    .toBe(true)
+}
+
 async function getCurrentSlideTitle(page, title) {
   const handle = await page.locator(`iframe[title="${title}"]`).elementHandle()
   if (!handle) return null
@@ -116,6 +130,7 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
     await waitForPresenterSocketJoined(request, roomCode)
+    await waitForViewerSocketJoined(request, roomCode)
     await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer initial slide')
 
     await pressPresenterKeyAndWait(presenter, 'ArrowRight', 'Slide B')
@@ -129,6 +144,7 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
     await waitForPresenterSocketJoined(request, roomCode)
+    await waitForViewerSocketJoined(request, roomCode)
     await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer at first slide')
 
     await pressPresenterKeyAndWait(presenter, 'ArrowRight', 'Slide B')
@@ -144,6 +160,7 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
     await waitForPresenterSocketJoined(request, roomCode)
+    await waitForViewerSocketJoined(request, roomCode)
     await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer at first')
 
     await pressPresenterKeyAndWait(presenter, 'End', 'Slide C')
@@ -159,6 +176,7 @@ test.describe('Present mode keyboard navigation propagates from presenter to vie
     await viewer.goto(`/live/${roomCode}`)
     await waitForPresenterRevealReady(presenter)
     await waitForPresenterSocketJoined(request, roomCode)
+    await waitForViewerSocketJoined(request, roomCode)
     await waitForViewerSlideTitle(viewer, 'Slide A', 'viewer ready')
 
     await pressPresenterKeyAndWait(presenter, 'End', 'Slide C')

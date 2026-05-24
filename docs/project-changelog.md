@@ -18,6 +18,7 @@
 - Addressed PR CI live E2E follow-up: presenter-to-viewer navigation tests now wait for the presenter socket to join the live room before emitting Reveal navigation and assert the viewer's visible slide content instead of stale `Reveal.getIndices()` values from the iframe on Linux CI.
 - Refreshed the Linux speaker-view visual baseline from PR CI run `26361925614` after live E2E passed and only a sub-1k-pixel speaker view snapshot drift remained.
 - Stabilized the remaining PR CI live E2E failure by driving presenter navigation through real keyboard input (`ArrowRight`, `ArrowLeft`, `Home`, `End`) and waiting for the presenter slide content before asserting viewer socket sync.
+- Hardened the live presenter-to-viewer keyboard spec against the final master CI race by waiting for the server to count a joined viewer before emitting presenter navigation.
 
 ## 2026-05-23
 
