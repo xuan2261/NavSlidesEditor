@@ -66,6 +66,7 @@ export function ModalShell({
 
   return (
     <div
+      data-testid="modal-shell-overlay"
       className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
       onClick={(event) => {
         if (closeOnBackdrop && isBackdropClick(event)) handleClose()
@@ -77,6 +78,7 @@ export function ModalShell({
     >
       <div
         ref={dialogRef}
+        data-testid="modal-shell-dialog"
         className={cn(
           'flex w-full flex-col overflow-hidden rounded-xl border border-border bg-panel shadow-[0_22px_70px_rgba(0,0,0,0.36)] max-h-[90vh]',
           sizeClasses[size],
@@ -90,6 +92,7 @@ export function ModalShell({
           </h2>
           <Button
             ref={closeButtonRef}
+            data-testid="modal-shell-close-btn"
             variant="icon"
             onClick={handleClose}
             aria-label={closeLabel || `Close ${title}`}

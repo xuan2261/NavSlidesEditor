@@ -1,26 +1,15 @@
-import { test, expect } from '@playwright/test'
-import { EditorPage } from './pages/EditorPage.js'
-import { apiCreatePresentation, apiDeletePresentation } from './fixtures/test-fixtures.js'
+import { EditorPage } from './pages/editor-page.js'
+import { test, expect } from './fixtures/test-fixtures.js'
 
 test.describe('Elements Insertion', () => {
   let editorPage
-  let presId
 
-  test.beforeEach(async ({ page, request }) => {
-    const pres = await apiCreatePresentation(request, 'Elements E2E Testing')
-    presId = pres.id
+  test.beforeEach(async ({ page, testPresentation }) => {
     editorPage = new EditorPage(page)
-    await editorPage.gotoPresentation(presId)
+    await editorPage.gotoPresentation(testPresentation.id)
   })
 
-  test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
-  })
-
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  test('can insert text, shape and handle prompt for table', async ({ page }) => {
+  test('can insert text, shape and handle prompt for table', async () => {
     let initialCount = await editorPage.getElementCount()
 
     // 1. Thêm Text node
@@ -34,8 +23,6 @@ test.describe('Elements Insertion', () => {
     expect(shapeCount).toBeGreaterThan(textCount)
 
     // 3. Xử lý Prompts (Table không còn dùng prompt, dùng grid picker)
-    // eslint-disable-next-line unused-imports/no-unused-vars
-    const prevCount = await editorPage.getElementCount()
     await editorPage.addTable(3, 3)
 
     let finalCount = await editorPage.getElementCount()

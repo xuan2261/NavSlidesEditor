@@ -1,0 +1,14 @@
+
+Days              : 0
+Hours             : 0
+Minutes           : 4
+Seconds           : 51
+Milliseconds      : 50
+Ticks             : 2910503472
+TotalDays         : 0.00336863827777778
+TotalHours        : 0.0808473186666667
+TotalMinutes      : 4.85083912
+TotalSeconds      : 291.0503472
+TotalMilliseconds : 291050.3472
+
+E2E_EXIT_CODE=1

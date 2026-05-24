@@ -1,0 +1,509 @@
+
+> navslides-editor@1.9.6 test:e2e
+> playwright test
+
+
+Running 413 tests using 4 workers
+
+[1A[2K[1/413] [chromium] › tests\e2e\a11y\touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js:27:7 › Touch gestures on tablet viewport for slide navigation and tap interactions › touch tap on present mode body fires native click handler
+[1A[2K[2/413] [chromium] › tests\e2e\ai.spec.js:22:7 › AI Integrations › can use AI Copywriter with mocked API response
+[1A[2K[3/413] [chromium] › tests\e2e\a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:46:7 › axe core scans across editor present share live and home views with stable DOM wait › editor page emits no critical axe violations beyond known baseline
+[1A[2K[4/413] [chromium] › tests\e2e\a11y\keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js:30:7 › Keyboard only navigation across editor ribbon tabs and modals › Tab key cycles focus through ribbon tab bar with role tab
+[1A[2K[5/413] [chromium] › tests\e2e\a11y\touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js:43:7 › Touch gestures on tablet viewport for slide navigation and tap interactions › mobile editor at Pixel-7 viewport renders slide canvas with touch enabled
+[1A[2K[6/413] [chromium] › tests\e2e\a11y\touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js:57:7 › Touch gestures on tablet viewport for slide navigation and tap interactions › horizontal swipe across reveal area is non-throwing and surface remains stable
+[1A[2K[7/413] [chromium] › tests\e2e\a11y\touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js:82:7 › Touch gestures on tablet viewport for slide navigation and tap interactions › double-tap registers as two distinct touch events
+[1A[2K[8/413] [chromium] › tests\e2e\ai.spec.js:55:7 › AI Integrations › can use AI Slide Generator modal
+[1A[2K[9/413] [chromium] › tests\e2e\animation-preview.spec.js:10:7 › Animation Preview › opens as an accessible narrow-viewport dialog and closes on Escape
+[1A[2K[10/413] [chromium] › tests\e2e\a11y\keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js:45:7 › Keyboard only navigation across editor ribbon tabs and modals › ArrowLeft and ArrowRight roving navigates ribbon tabs without leaving tablist
+[1A[2K[11/413] [chromium] › tests\e2e\a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:55:7 › axe core scans across editor present share live and home views with stable DOM wait › present preview page emits zero critical axe violations
+[1A[2K[12/413] [chromium] › tests\e2e\ai.spec.js:61:7 › AI Integrations › can use Translate Presentation modal
+[1A[2K[13/413] [chromium] › tests\e2e\coverage-gaps.spec.js:104:7 › Coverage Gaps: Editor controls and UI contracts › covers extended insert menu elements: image, video, audio, QR, icon, drawing, SVG
+[1A[2K[14/413] [chromium] › tests\e2e\a11y\keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js:62:7 › Keyboard only navigation across editor ribbon tabs and modals › Home and End keys jump to first and last ribbon tab via roving focus
+[1A[2K[15/413] [chromium] › tests\e2e\a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:64:7 › axe core scans across editor present share live and home views with stable DOM wait › share landing page emits zero critical axe violations
+[1A[2K[16/413] [chromium] › tests\e2e\dashboard.spec.js:6:7 › Dashboard & Navigation › sidebar navigation shows correct views
+[1A[2K[17/413] [chromium] › tests\e2e\a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:74:7 › axe core scans across editor present share live and home views with stable DOM wait › live viewer initial state emits zero critical axe violations
+[1A[2K[18/413] [chromium] › tests\e2e\dashboard.spec.js:19:7 › Dashboard & Navigation › can switch sidebar views
+[1A[2K[19/413] [chromium] › tests\e2e\a11y\keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js:80:7 › Keyboard only navigation across editor ribbon tabs and modals › Escape key closes File menu without trapping focus
+[1A[2K[20/413] [chromium] › tests\e2e\dashboard.spec.js:30:7 › Dashboard & Navigation › can search presentations
+[1A[2K[21/413] [chromium] › tests\e2e\a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:85:7 › axe core scans across editor present share live and home views with stable DOM wait › home dashboard emits no critical axe violations beyond known baseline
+[1A[2K[22/413] [chromium] › tests\e2e\dashboard.spec.js:47:7 › Dashboard & Navigation › view toggle buttons remain fully visible
+[1A[2K[23/413] [chromium] › tests\e2e\editor.spec.js:10:7 › Editor POM Workflow › should create presentation and change background using POM
+[1A[2K[24/413] [chromium] › tests\e2e\dashboard.spec.js:91:7 › Dashboard & Navigation › can open an existing presentation from All Presentations
+[1A[2K[25/413] [chromium] › tests\e2e\editor.spec.js:22:7 › Editor POM Workflow › Sync and Version History modals close on Escape and overlay without runtime errors
+[1A[2K[26/413] [chromium] › tests\e2e\a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:94:7 › axe core scans across editor present share live and home views with stable DOM wait › axe scan returns ruleset and full violations array shape
+[1A[2K[27/413] [chromium] › tests\e2e\dashboard.spec.js:111:7 › Dashboard & Navigation › can create a new presentation from modal
+[1A[2K[28/413] [chromium] › tests\e2e\editor.spec.js:60:7 › Editor POM Workflow › Version History shows inline errors and retry flows without crashing the page
+[1A[2K[29/413] [chromium] › tests\e2e\dashboard.spec.js:119:7 › Dashboard & Navigation › new presentation modal toggles blank vs template start controls
+[1A[2K[30/413] [chromium] › tests\e2e\element-interactions.spec.js:44:7 › Element Property Interactions › latex edit flow opens dialog and persists applied content
+[1A[2K[31/413] [chromium] › tests\e2e\dashboard.spec.js:138:7 › Dashboard & Navigation › can duplicate a presentation via API
+[1A[2K[32/413] (retries) [chromium] › tests\e2e\coverage-gaps.spec.js:104:7 › Coverage Gaps: Editor controls and UI contracts › covers extended insert menu elements: image, video, audio, QR, icon, drawing, SVG (retry #1)
+[1A[2K[33/413] [chromium] › tests\e2e\dashboard.spec.js:152:7 › Dashboard & Navigation › can delete to trash and restore via API
+[1A[2K[34/413] [chromium] › tests\e2e\dashboard.spec.js:173:7 › Dashboard & Navigation › theme toggle switches between dark and light
+[1A[2K[35/413] [chromium] › tests\e2e\editor.spec.js:166:7 › Editor POM Workflow › template gallery restores default ordering after sort, filter, and favorites changes
+[1A[2K[36/413] [chromium] › tests\e2e\dashboard.spec.js:187:7 › Dashboard & Navigation › can navigate to Settings page
+[1A[2K[37/413] [chromium] › tests\e2e\element-interactions.spec.js:74:7 › Element Property Interactions › html edit flow opens dialog and persists trusted content
+[1A[2K[38/413] [chromium] › tests\e2e\editor.spec.js:253:7 › Editor POM Workflow › editor chrome keeps text editing mounted and toolbar stays within bounds
+[1A[2K[39/413] [chromium] › tests\e2e\dashboard.spec.js:195:7 › Dashboard & Navigation › can navigate to Explore page
+[1A[2K[40/413] [chromium] › tests\e2e\element-lifecycle.spec.js:42:7 › Element Lifecycle And Autosave › keyboard delete removes selected element
+[1A[2K[41/413] [chromium] › tests\e2e\element-properties.spec.js:53:7 › Element Properties Persistence › persists common position, rotation, lock, and shadow controls
+[1A[2K[42/413] [chromium] › tests\e2e\elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders bar chart from seed
+[1A[2K[43/413] [chromium] › tests\e2e\element-lifecycle.spec.js:67:7 › Element Lifecycle And Autosave › context menu cut removes selected element
+[1A[2K[44/413] [chromium] › tests\e2e\elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders line chart from seed
+[1A[2K[45/413] [chromium] › tests\e2e\element-properties.spec.js:118:7 › Element Properties Persistence › persists shape controls including fill, stroke, radius, and label styling
+[1A[2K[46/413] [chromium] › tests\e2e\elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders pie chart from seed
+[1A[2K[47/413] [chromium] › tests\e2e\element-lifecycle.spec.js:92:7 › Element Lifecycle And Autosave › properties panel delete removes selected element
+[1A[2K[48/413] [chromium] › tests\e2e\elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders doughnut chart from seed
+[1A[2K[49/413] [chromium] › tests\e2e\elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders radar chart from seed
+[1A[2K[50/413] [chromium] › tests\e2e\element-properties.spec.js:180:7 › Element Properties Persistence › persists image controls including object fit and filters
+[1A[2K  1) [chromium] › tests\e2e\coverage-gaps.spec.js:104:7 › Coverage Gaps: Editor controls and UI contracts › covers extended insert menu elements: image, video, audio, QR, icon, drawing, SVG
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveCount[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  locator('.element-wrapper')
+    Expected: [32m6[39m
+    Received: [31m5[39m
+    Timeout:  10000ms
+
+    Call log:
+    [2m  - Expect "toHaveCount" with timeout 10000ms[22m
+    [2m  - waiting for locator('.element-wrapper')[22m
+    [2m    14 × locator resolved to 5 elements[22m
+    [2m       - unexpected value "5"[22m
+
+
+      56 |   const previousCount = await page.locator('.element-wrapper').count()
+      57 |   await (await getInsertItem(page, label)).click()
+    > 58 |   await expect(page.locator('.element-wrapper')).toHaveCount(previousCount + 1, { timeout: 10000 })
+         |                                                  ^
+      59 | }
+      60 |
+      61 | async function selectedCanvasElementIds(page) {
+        at insertItem (C:\Work\NavSlidesEditor\tests\e2e\coverage-gaps.spec.js:58:50)
+        at C:\Work\NavSlidesEditor\tests\e2e\coverage-gaps.spec.js:123:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\coverage-gaps-Coverage-Gap-85e1f-o-audio-QR-icon-drawing-SVG-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\coverage-gaps-Coverage-Gap-85e1f-o-audio-QR-icon-drawing-SVG-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\coverage-gaps-Coverage-Gap-85e1f-o-audio-QR-icon-drawing-SVG-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveCount[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  locator('.element-wrapper')
+    Expected: [32m6[39m
+    Received: [31m5[39m
+    Timeout:  10000ms
+
+    Call log:
+    [2m  - Expect "toHaveCount" with timeout 10000ms[22m
+    [2m  - waiting for locator('.element-wrapper')[22m
+    [2m    14 × locator resolved to 5 elements[22m
+    [2m       - unexpected value "5"[22m
+
+
+      56 |   const previousCount = await page.locator('.element-wrapper').count()
+      57 |   await (await getInsertItem(page, label)).click()
+    > 58 |   await expect(page.locator('.element-wrapper')).toHaveCount(previousCount + 1, { timeout: 10000 })
+         |                                                  ^
+      59 | }
+      60 |
+      61 | async function selectedCanvasElementIds(page) {
+        at insertItem (C:\Work\NavSlidesEditor\tests\e2e\coverage-gaps.spec.js:58:50)
+        at C:\Work\NavSlidesEditor\tests\e2e\coverage-gaps.spec.js:123:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\coverage-gaps-Coverage-Gap-85e1f-o-audio-QR-icon-drawing-SVG-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\coverage-gaps-Coverage-Gap-85e1f-o-audio-QR-icon-drawing-SVG-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\coverage-gaps-Coverage-Gap-85e1f-o-audio-QR-icon-drawing-SVG-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\coverage-gaps-Coverage-Gap-85e1f-o-audio-QR-icon-drawing-SVG-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\coverage-gaps-Coverage-Gap-85e1f-o-audio-QR-icon-drawing-SVG-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[51/413] [chromium] › tests\e2e\elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders polarArea chart from seed
+[1A[2K[52/413] [chromium] › tests\e2e\element-lifecycle.spec.js:117:7 › Element Lifecycle And Autosave › locked element blocks keyboard delete and duplicate
+[1A[2K[53/413] [chromium] › tests\e2e\coverage-gaps.spec.js:156:7 › Coverage Gaps: Editor controls and UI contracts › covers align/distribute, group/ungroup, layer, lock, shadow, and rotation controls
+[1A[2K[54/413] [chromium] › tests\e2e\elements\chart-types-smoke.spec.js:65:7 › Chart Types Smoke › switches chart type via property panel
+[1A[2K[55/413] [chromium] › tests\e2e\element-lifecycle.spec.js:145:7 › Element Lifecycle And Autosave › copy and paste on same slide preserves type and key properties
+[1A[2K[56/413] [chromium] › tests\e2e\element-properties.spec.js:227:7 › Element Properties Persistence › persists code properties and edit dialog changes
+[1A[2K[57/413] [chromium] › tests\e2e\elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in javascript
+[1A[2K[58/413] [chromium] › tests\e2e\element-lifecycle.spec.js:182:7 › Element Lifecycle And Autosave › copy from one slide and paste into another slide persists on target
+[1A[2K[59/413] [chromium] › tests\e2e\element-properties.spec.js:274:7 › Element Properties Persistence › persists chart type, labels, series values, and add series action
+[1A[2K[60/413] [chromium] › tests\e2e\elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in python
+[1A[2K[61/413] [chromium] › tests\e2e\elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in go
+[1A[2K[62/413] [chromium] › tests\e2e\element-lifecycle.spec.js:216:7 › Element Lifecycle And Autosave › autosave failure keeps local changes visible and retry persists them
+[1A[2K[63/413] [chromium] › tests\e2e\elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in rust
+[1A[2K[64/413] [chromium] › tests\e2e\element-properties.spec.js:326:7 › Element Properties Persistence › persists table row/column operations, table styles, and edited cell values
+[1A[2K[65/413] [chromium] › tests\e2e\elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in java
+[1A[2K[66/413] [chromium] › tests\e2e\coverage-gaps.spec.js:214:7 › Coverage Gaps: Editor controls and UI contracts › covers resize aspect lock, rotation handle snap, rulers, and persistent guides
+[1A[2K[67/413] [chromium] › tests\e2e\elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in sql
+[1A[2K[68/413] [chromium] › tests\e2e\elements\drawing-and-svg-element-rendering-with-paths-and-vector-graphics.spec.js:69:7 › Drawing and SVG element rendering with paths and vector graphics › renders drawing strokes from seeded paths
+[1A[2K[69/413] [chromium] › tests\e2e\elements\image-and-media-element-rendering-with-object-fit-and-filters.spec.js:92:7 › Image and media render with object fit, filters, audio video defaults › renders image with default object-fit contain
+[1A[2K[70/413] [chromium] › tests\e2e\elements\code-element-syntax-highlighting-and-language-switching.spec.js:67:7 › Code element syntax highlighting language switching and theme selection › switches language via property panel
+[1A[2K[71/413] [chromium] › tests\e2e\elements\drawing-and-svg-element-rendering-with-paths-and-vector-graphics.spec.js:80:7 › Drawing and SVG element rendering with paths and vector graphics › renders empty drawing placeholder
+[1A[2K[72/413] [chromium] › tests\e2e\elements\image-and-media-element-rendering-with-object-fit-and-filters.spec.js:100:7 › Image and media render with object fit, filters, audio video defaults › persists object-fit cover and filter sliders
+[1A[2K[73/413] [chromium] › tests\e2e\elements\drawing-and-svg-element-rendering-with-paths-and-vector-graphics.spec.js:88:7 › Drawing and SVG element rendering with paths and vector graphics › renders SVG content with embedded shapes
+[1A[2K[74/413] [chromium] › tests\e2e\elements\drawing-and-svg-element-rendering-with-paths-and-vector-graphics.spec.js:99:7 › Drawing and SVG element rendering with paths and vector graphics › renders multiple drawings co-existing
+[1A[2K[75/413] [chromium] › tests\e2e\elements\code-element-syntax-highlighting-and-language-switching.spec.js:78:7 › Code element syntax highlighting language switching and theme selection › persists font size change via property panel
+[1A[2K[76/413] [chromium] › tests\e2e\elements\image-and-media-element-rendering-with-object-fit-and-filters.spec.js:111:7 › Image and media render with object fit, filters, audio video defaults › renders video element with controls attribute
+[1A[2K[77/413] [chromium] › tests\e2e\coverage-gaps.spec.js:275:7 › Coverage Gaps: Editor controls and UI contracts › covers footer settings, feature modals, responsive layout, keyboard accessibility, and visual smoke
+[1A[2K[78/413] [chromium] › tests\e2e\elements\drawing-and-svg-element-rendering-with-paths-and-vector-graphics.spec.js:111:7 › Drawing and SVG element rendering with paths and vector graphics › persists drawing path stroke updates via API
+[1A[2K[79/413] [chromium] › tests\e2e\elements\image-and-media-element-rendering-with-object-fit-and-filters.spec.js:125:7 › Image and media render with object fit, filters, audio video defaults › renders audio element
+[1A[2K[80/413] [chromium] › tests\e2e\elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:63:7 › Markdown rendering and HTML embed sanitization with persistence › renders markdown heading and list
+[1A[2K[81/413] [chromium] › tests\e2e\elements\math-latex-tikz-element-rendering-with-katex-iframe.spec.js:51:7 › Math LaTeX and TikZ rendering with KaTeX iframe and content persistence › renders LaTeX equation in iframe
+[1A[2K[82/413] [chromium] › tests\e2e\elements\code-element-syntax-highlighting-and-language-switching.spec.js:89:7 › Code element syntax highlighting language switching and theme selection › opens code editor modal and persists content
+[1A[2K[83/413] [chromium] › tests\e2e\elements\image-and-media-element-rendering-with-object-fit-and-filters.spec.js:134:7 › Image and media render with object fit, filters, audio video defaults › persists border radius via slider
+[1A[2K[84/413] [chromium] › tests\e2e\elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:73:7 › Markdown rendering and HTML embed sanitization with persistence › renders code fences from markdown
+[1A[2K[85/413] [chromium] › tests\e2e\elements\math-latex-tikz-element-rendering-with-katex-iframe.spec.js:62:7 › Math LaTeX and TikZ rendering with KaTeX iframe and content persistence › renders inline TikZ block
+[1A[2K[86/413] [chromium] › tests\e2e\elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:82:7 › Markdown rendering and HTML embed sanitization with persistence › persists markdown content via API seed and read
+[1A[2K[87/413] [chromium] › tests\e2e\elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:91:7 › Markdown rendering and HTML embed sanitization with persistence › renders HTML embed inside iframe or container
+[1A[2K[88/413] [chromium] › tests\e2e\elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:102:7 › QR icon callout divider element rendering and property persistence › renders QR code with seeded data
+[1A[2K[89/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders rect
+[1A[2K[90/413] [chromium] › tests\e2e\elements\math-latex-tikz-element-rendering-with-katex-iframe.spec.js:74:7 › Math LaTeX and TikZ rendering with KaTeX iframe and content persistence › renders complex math expression with fractions and integrals
+[1A[2K[91/413] [chromium] › tests\e2e\elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:101:7 › Markdown rendering and HTML embed sanitization with persistence › persists html embed content via API
+[1A[2K[92/413] [chromium] › tests\e2e\elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:112:7 › QR icon callout divider element rendering and property persistence › persists QR data update via API
+[1A[2K[93/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders rounded-rect
+[1A[2K[94/413] [chromium] › tests\e2e\elements\math-latex-tikz-element-rendering-with-katex-iframe.spec.js:83:7 › Math LaTeX and TikZ rendering with KaTeX iframe and content persistence › renders multiple latex equations side by side
+[1A[2K[95/413] [chromium] › tests\e2e\elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:109:7 › Markdown rendering and HTML embed sanitization with persistence › persists markdown content edit via API
+[1A[2K[96/413] [chromium] › tests\e2e\elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:128:7 › QR icon callout divider element rendering and property persistence › renders icon SVG with seeded name
+[1A[2K[97/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders circle
+[1A[2K[98/413] [chromium] › tests\e2e\elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:59:7 › Table element interactions row column add remove cell edit and styling › renders seeded 3x3 table with header row
+[1A[2K[99/413] [chromium] › tests\e2e\elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:55:7 › Text element rich formatting bold italic underline alignment and color › renders seeded text and persists rich content
+[1A[2K[100/413] [chromium] › tests\e2e\elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:138:7 › QR icon callout divider element rendering and property persistence › renders different icon names
+[1A[2K[101/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders triangle
+[1A[2K[102/413] [chromium] › tests\e2e\elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:69:7 › Table element interactions row column add remove cell edit and styling › persists table data via API seed and reload
+[1A[2K[103/413] [chromium] › tests\e2e\elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:64:7 › Text element rich formatting bold italic underline alignment and color › inserts text via Insert tab
+[1A[2K[104/413] [chromium] › tests\e2e\elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:150:7 › QR icon callout divider element rendering and property persistence › renders callout with number badge
+[1A[2K[105/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders diamond
+[1A[2K[106/413] [chromium] › tests\e2e\elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:81:7 › Table element interactions row column add remove cell edit and styling › adds a row via property panel
+[1A[2K[107/413] [chromium] › tests\e2e\elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:74:7 › Text element rich formatting bold italic underline alignment and color › applies bold via toolbar while editing
+[1A[2K[108/413] [chromium] › tests\e2e\elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:158:7 › QR icon callout divider element rendering and property persistence › renders multiple callouts with sequential numbers
+[1A[2K[109/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders hexagon
+[1A[2K[110/413] [chromium] › tests\e2e\elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:170:7 › QR icon callout divider element rendering and property persistence › renders divider as horizontal line element
+[1A[2K[111/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders pentagon
+[1A[2K[112/413] [chromium] › tests\e2e\elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:92:7 › Table element interactions row column add remove cell edit and styling › adds a column via property panel
+[1A[2K[113/413] [chromium] › tests\e2e\elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:180:7 › QR icon callout divider element rendering and property persistence › persists callout color update via API
+[1A[2K[114/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders arrow-right
+[1A[2K[115/413] [chromium] › tests\e2e\elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:87:7 › Text element rich formatting bold italic underline alignment and color › applies italic via toolbar while editing
+[1A[2K[116/413] [chromium] › tests\e2e\elements.spec.js:12:7 › Elements Insertion › can insert text, shape and handle prompt for table
+[1A[2K[117/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders star
+[1A[2K[118/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders cloud
+[1A[2K[119/413] [chromium] › tests\e2e\elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:103:7 › Table element interactions row column add remove cell edit and styling › toggles header row off and persists
+[1A[2K[120/413] [chromium] › tests\e2e\explore.spec.js:10:7 › Explore Page › can navigate to Explore page
+[1A[2K[121/413] [chromium] › tests\e2e\elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:100:7 › Text element rich formatting bold italic underline alignment and color › persists font family change via property panel
+[1A[2K[122/413] [chromium] › tests\e2e\explore.spec.js:17:7 › Explore Page › shows empty state when no shared presentations
+[1A[2K[123/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders cylinder
+[1A[2K[124/413] [chromium] › tests\e2e\elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:114:7 › Text element rich formatting bold italic underline alignment and color › persists text alignment change
+[1A[2K[125/413] [chromium] › tests\e2e\explore.spec.js:29:7 › Explore Page › shows shared presentations after sharing one
+[1A[2K[126/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders parallelogram
+[1A[2K[127/413] [chromium] › tests\e2e\elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:114:7 › Table element interactions row column add remove cell edit and styling › edits cell value and persists
+[1A[2K[128/413] [chromium] › tests\e2e\export\client-side-download-flows-for-navslides-archive-and-offline-html-and-pdf-print.spec.js:41:7 › Client side download flows for navslides project archive and offline HTML and PDF print › exports navslides JSON archive when no local media present
+[1A[2K[129/413] [chromium] › tests\e2e\explore.spec.js:43:7 › Explore Page › can navigate back to home
+[1A[2K[130/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders trapezoid
+[1A[2K[131/413] [chromium] › tests\e2e\export\client-side-download-flows-for-navslides-archive-and-offline-html-and-pdf-print.spec.js:53:7 › Client side download flows for navslides project archive and offline HTML and PDF print › exports offline HTML with no remote CDN scripts
+[1A[2K[132/413] [chromium] › tests\e2e\export\html-export-and-present-endpoints-with-content-validation.spec.js:40:7 › HTML export and present endpoints with content validation › export endpoint sets attachment headers and HTML mime
+[1A[2K[133/413] [chromium] › tests\e2e\export\html-export-and-present-endpoints-with-content-validation.spec.js:48:7 › HTML export and present endpoints with content validation › export HTML includes both slide sections
+[1A[2K[134/413] [chromium] › tests\e2e\elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:75:7 › Shape variants render and gallery insertion › renders multiple shapes on one slide
+[1A[2K[135/413] [chromium] › tests\e2e\export\html-export-and-present-endpoints-with-content-validation.spec.js:56:7 › HTML export and present endpoints with content validation › export HTML contains seeded title content
+[1A[2K[136/413] [chromium] › tests\e2e\export\html-export-and-present-endpoints-with-content-validation.spec.js:63:7 › HTML export and present endpoints with content validation › present endpoint serves reveal.js scaffold
+[1A[2K[137/413] [chromium] › tests\e2e\export\html-export-and-present-endpoints-with-content-validation.spec.js:71:7 › HTML export and present endpoints with content validation › present endpoint preview mode strips controls
+[1A[2K[138/413] [chromium] › tests\e2e\export\html-export-and-present-endpoints-with-content-validation.spec.js:78:7 › HTML export and present endpoints with content validation › export rejects unknown id
+[1A[2K[139/413] [chromium] › tests\e2e\export\html-export-and-present-endpoints-with-content-validation.spec.js:83:7 › HTML export and present endpoints with content validation › present endpoint renders into browser without console errors
+[1A[2K[140/413] [chromium] › tests\e2e\elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:125:7 › Table element interactions row column add remove cell edit and styling › changes header background color and persists
+[1A[2K[141/413] [chromium] › tests\e2e\export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:38:9 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › imports Bai_2_1.pptx, creates presentation, and round-trips slides via API
+[1A[2K[142/413] [chromium] › tests\e2e\export.spec.js:14:7 › Export & Present › export HTML endpoint returns valid HTML
+[1A[2K[143/413] [chromium] › tests\e2e\export\client-side-download-flows-for-navslides-archive-and-offline-html-and-pdf-print.spec.js:71:7 › Client side download flows for navslides project archive and offline HTML and PDF print › exports HTML via Export HTML menu item
+[1A[2K[144/413] [chromium] › tests\e2e\export.spec.js:23:7 › Export & Present › present endpoint returns reveal.js HTML
+[1A[2K[145/413] [chromium] › tests\e2e\export\client-side-download-flows-for-navslides-archive-and-offline-html-and-pdf-print.spec.js:82:7 › Client side download flows for navslides project archive and offline HTML and PDF print › PDF export menu opens new window with print HTML
+[1A[2K[146/413] [chromium] › tests\e2e\export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:38:9 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › imports Bai_2_2.pptx, creates presentation, and round-trips slides via API
+[1A[2K[147/413] [chromium] › tests\e2e\find-replace.spec.js:62:7 › Find & Replace › can open Find bar with Ctrl+F
+[1A[2K[148/413] [chromium] › tests\e2e\export.spec.js:31:7 › Export & Present › present mode renders reveal.js slides in browser
+[1A[2K[149/413] [chromium] › tests\e2e\games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Name Picker via Insert menu
+[1A[2K[150/413] [chromium] › tests\e2e\find-replace.spec.js:68:7 › Find & Replace › can search text and show match count
+[1A[2K[151/413] [chromium] › tests\e2e\hardening-regression.spec.js:89:7 › Hardening regressions › analytics endpoint denies missing/invalid token and allows valid token
+[1A[2K[152/413] [chromium] › tests\e2e\export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:38:9 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › imports Bai_2_5.pptx, creates presentation, and round-trips slides via API
+[1A[2K[153/413] [chromium] › tests\e2e\hardening-regression.spec.js:118:7 › Hardening regressions › presenter takeover is rejected without presenter token
+[1A[2K[154/413] [chromium] › tests\e2e\hardening-regression.spec.js:141:7 › Hardening regressions › trusted HTML embed script still runs in editor, present, share, and export outputs
+[1A[2K[155/413] [chromium] › tests\e2e\games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Name Picker with Game: label on canvas
+[1A[2K[156/413] [chromium] › tests\e2e\find-replace.spec.js:74:7 › Find & Replace › can navigate between matches
+[1A[2K[157/413] [chromium] › tests\e2e\keyboard-shortcuts.spec.js:50:7 › Keyboard Shortcuts › Ctrl+D duplicates selected element
+[1A[2K[158/413] [chromium] › tests\e2e\games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Hot Potato Quiz via Insert menu
+[1A[2K[159/413] [chromium] › tests\e2e\find-replace.spec.js:83:7 › Find & Replace › can close Find bar with Escape
+[1A[2K[160/413] [chromium] › tests\e2e\export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:53:7 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › rejects non-pptx file with 400
+[1A[2K[161/413] [chromium] › tests\e2e\export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:62:7 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › rejects request without file with 400
+[1A[2K[162/413] [chromium] › tests\e2e\export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:67:7 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › imported presentation persists element bounds and types
+[1A[2K[163/413] [chromium] › tests\e2e\keyboard-shortcuts.spec.js:61:7 › Keyboard Shortcuts › Delete key removes selected element
+[1A[2K[164/413] [chromium] › tests\e2e\find-replace.spec.js:89:7 › Find & Replace › case-sensitive toggle works
+[1A[2K[165/413] [chromium] › tests\e2e\games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Hot Potato Quiz with Game: label on canvas
+[1A[2K[166/413] [chromium] › tests\e2e\keyboard-shortcuts.spec.js:72:7 › Keyboard Shortcuts › Escape deselects element
+[1A[2K[167/413] [chromium] › tests\e2e\find-replace.spec.js:102:7 › Find & Replace › replace all supports an empty replacement string
+[1A[2K[168/413] [chromium] › tests\e2e\games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Jeopardy via Insert menu
+[1A[2K[169/413] [chromium] › tests\e2e\keyboard-shortcuts.spec.js:80:7 › Keyboard Shortcuts › Ctrl+C / Ctrl+V copies and pastes element
+[1A[2K[170/413] [chromium] › tests\e2e\games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Jeopardy with Game: label on canvas
+[1A[2K[171/413] [chromium] › tests\e2e\keyboard-shortcuts.spec.js:91:7 › Keyboard Shortcuts › Ctrl+F opens Find & Replace
+[1A[2K[172/413] [chromium] › tests\e2e\media.spec.js:22:7 › Media Library & Templates › can open Media Library and see tabs
+[1A[2K[173/413] [chromium] › tests\e2e\games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Four Corners via Insert menu
+[1A[2K[174/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:29:7 › Parallax Features E2E › insert Timeline element from insert menu
+[1A[2K[175/413] [chromium] › tests\e2e\media.spec.js:28:7 › Media Library & Templates › can search Unsplash with mocked response
+[1A[2K[176/413] [chromium] › tests\e2e\games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Four Corners with Game: label on canvas
+[1A[2K[177/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:36:7 › Parallax Features E2E › insert Kinetic Text from insert menu opens modal
+[1A[2K[178/413] [chromium] › tests\e2e\find-replace.spec.js:117:7 › Find & Replace › single replace updates only the current match inside one element
+[1A[2K[179/413] [chromium] › tests\e2e\games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Relay Race via Insert menu
+[1A[2K[180/413] [chromium] › tests\e2e\media.spec.js:65:7 › Media Library & Templates › can add a slide from Template in the modal
+[1A[2K[181/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:49:7 › Parallax Features E2E › insert Math Grid from insert menu opens modal
+[1A[2K[182/413] [chromium] › tests\e2e\games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Relay Race with Game: label on canvas
+[1A[2K[183/413] [chromium] › tests\e2e\plugin-runtime-insert-render-persistence.spec.js:53:7 › Plugin runtime insert, render, and persistence › inserts Animated Counter, renders sandbox, persists element, and exports fallback
+[1A[2K[184/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:62:7 › Parallax Features E2E › insert Anime.js animation from insert menu opens modal
+[1A[2K[185/413] [chromium] › tests\e2e\games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Trivia Championship via Insert menu
+[1A[2K[186/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:75:7 › Parallax Features E2E › insert Three.js scene from insert menu opens modal
+[1A[2K[187/413] [chromium] › tests\e2e\games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Trivia Championship with Game: label on canvas
+[1A[2K[188/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:88:7 › Parallax Features E2E › FontWeight control visible in properties panel for text
+[1A[2K[189/413] [chromium] › tests\e2e\pptx-import-fidelity.spec.js:24:7 › PPTX import fidelity › imports pptx, renders stable element boxes, and persists property edits
+[1A[2K[190/413] [chromium] › tests\e2e\games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Scattergories via Insert menu
+[1A[2K[191/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:98:7 › Parallax Features E2E › LineHeight control visible in properties panel for text
+[1A[2K[192/413] [chromium] › tests\e2e\games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Scattergories with Game: label on canvas
+[1A[2K[193/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:110:7 › Parallax Features E2E › Ctrl+K does not crash when editing text
+[1A[2K[194/413] [chromium] › tests\e2e\properties-panel.spec.js:51:7 › Properties Panel › selecting an element shows properties panel
+[1A[2K[195/413] [chromium] › tests\e2e\games\game-elements.spec.js:56:7 › Game Elements — Insert & Render › game element increments canvas element count
+[1A[2K[196/413] [chromium] › tests\e2e\properties-panel.spec.js:58:7 › Properties Panel › deselecting hides active element state
+[1A[2K[197/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:120:7 › Parallax Features E2E › Video element with URL renders in canvas via API seed
+[1A[2K[198/413] [chromium] › tests\e2e\games\game-elements.spec.js:66:7 › Game Elements — Insert & Render › multiple game elements coexist on same slide
+[1A[2K[199/413] [chromium] › tests\e2e\properties-panel.spec.js:66:7 › Properties Panel › properties panel shows position/size inputs
+[1A[2K[200/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:136:7 › Parallax Features E2E › Timeline element renders SVG in canvas via API seed
+[1A[2K[201/413] [chromium] › tests\e2e\games\game-elements.spec.js:99:7 › Game Element — Canvas Rendering › Name Picker wheel renders SVG segments
+[1A[2K[202/413] [chromium] › tests\e2e\properties-panel.spec.js:77:7 › Properties Panel › can modify element position via properties panel
+[1A[2K[203/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:153:7 › Parallax Features E2E › LaTeX element with custom font size renders via API seed
+[1A[2K[204/413] [chromium] › tests\e2e\games\game-elements.spec.js:105:7 › Game Element — Canvas Rendering › Name Picker is inserted and renders with label
+[1A[2K[205/413] [chromium] › tests\e2e\properties-panel.spec.js:89:7 › Properties Panel › clearing numeric input does not persist NaN
+[1A[2K[206/413] [chromium] › tests\e2e\regression-smoke-fixes.spec.js:10:7 › Regression — smoke test fixes › I-001: Trash entry is visible in dashboard sidebar
+[1A[2K[207/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:169:7 › Parallax Features E2E › Image with citation renders in canvas via API seed
+[1A[2K[208/413] [chromium] › tests\e2e\games\game-elements.spec.js:113:7 › Game Element — Canvas Rendering › Hot Potato Quiz shows question editor placeholder
+[1A[2K[209/413] [chromium] › tests\e2e\regression-smoke-fixes.spec.js:17:7 › Regression — smoke test fixes › I-001 small viewport: Trash entry still visible at 1280×480
+[1A[2K[210/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:184:7 › Parallax Features E2E › HTML embed element renders iframe in canvas via API seed
+[1A[2K[211/413] [chromium] › tests\e2e\games\game-elements.spec.js:119:7 › Game Element — Canvas Rendering › Jeopardy board renders category header placeholder
+[1A[2K[212/413] [chromium] › tests\e2e\regression-smoke-fixes.spec.js:25:7 › Regression — smoke test fixes › I-003: Ctrl+K opens the command palette in editor
+[1A[2K[213/413] [chromium] › tests\e2e\games\game-elements.spec.js:125:7 › Game Element — Canvas Rendering › Present button accessible after adding game element
+[1A[2K[214/413] [chromium] › tests\e2e\parallax-element-insertion-property-controls-and-rendering.spec.js:199:7 › Parallax Features E2E › ported element properties persist and export to present HTML
+[1A[2K[215/413] [chromium] › tests\e2e\regression-smoke-fixes.spec.js:43:7 › Regression — smoke test fixes › I-004: Footer version matches package.json
+[1A[2K[216/413] [chromium] › tests\e2e\properties-panel.spec.js:103:7 › Properties Panel › speaker notes save through the canonical notes field
+[1A[2K[217/413] [chromium] › tests\e2e\ribbon-layout.spec.js:162:9 › Ribbon Layout Baseline Tests › Icon+Text Button Clipping › Insert tab buttons with text labels should not clip content
+[1A[2K[218/413] [chromium] › tests\e2e\games\game-elements.spec.js:151:7 › Game Element — Toolbar Integration › Insert menu shows all 7 game types
+[1A[2K[219/413] [chromium] › tests\e2e\security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:53:7 › Security: presenter token validation rejects invalid and cross-room reuse › joining as presenter with wrong token emits join-error invalid-presenter-token
+[1A[2K[220/413] [chromium] › tests\e2e\security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:69:7 › Security: presenter token validation rejects invalid and cross-room reuse › joining as presenter without token emits join-error
+[1A[2K[221/413] [chromium] › tests\e2e\security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:81:7 › Security: presenter token validation rejects invalid and cross-room reuse › joining unknown room as presenter with any token emits room-not-found
+[1A[2K[222/413] [chromium] › tests\e2e\security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:93:7 › Security: presenter token validation rejects invalid and cross-room reuse › valid token from one room cannot join a different room as presenter
+[1A[2K[223/413] [chromium] › tests\e2e\security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:112:7 › Security: presenter token validation rejects invalid and cross-room reuse › valid presenter token allows join and emits presentation-data
+[1A[2K[224/413] [chromium] › tests\e2e\security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:127:7 › Security: presenter token validation rejects invalid and cross-room reuse › viewer can join room without presenter token (no token gating for viewer role)
+[1A[2K[225/413] [chromium] › tests\e2e\ribbon-layout.spec.js:170:9 › Ribbon Layout Baseline Tests › Icon+Text Button Clipping › Home tab buttons should not clip content at 1280px
+[1A[2K[226/413] [chromium] › tests\e2e\games\game-elements.spec.js:171:7 › Player Join Page › renders join form with name input and join button
+[1A[2K[227/413] [chromium] › tests\e2e\ribbon-layout.spec.js:181:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab should show all section triggers at 1280px
+[1A[2K[228/413] [chromium] › tests\e2e\games\game-elements.spec.js:177:7 › Player Join Page › empty name submit shows validation message
+[1A[2K[229/413] [chromium] › tests\e2e\games\game-elements.spec.js:208:7 › Game Element — Stability & Coexistence › no runtime errors when inserting and rendering game elements
+[1A[2K[230/413] [chromium] › tests\e2e\security\share-link-password-never-leaks-in-api-json-responses.spec.js:23:7 › Security: share link plaintext password never leaks via API JSON responses › POST /api/presentations/:id/share response strips password field
+[1A[2K[231/413] [chromium] › tests\e2e\ribbon-layout.spec.js:209:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab exposes Media actions as direct buttons at 1280px
+[1A[2K[232/413] [chromium] › tests\e2e\security\share-link-password-never-leaks-in-api-json-responses.spec.js:31:7 › Security: share link plaintext password never leaks via API JSON responses › GET /api/presentations/:id JSON does not echo plaintext password marker
+[1A[2K[233/413] [chromium] › tests\e2e\security\share-link-password-never-leaks-in-api-json-responses.spec.js:38:7 › Security: share link plaintext password never leaks via API JSON responses › GET /api/presentations/:id/shares list never includes password field nor bcrypt hash
+[1A[2K[234/413] [chromium] › tests\e2e\security\share-link-password-never-leaks-in-api-json-responses.spec.js:49:7 › Security: share link plaintext password never leaks via API JSON responses › share verification path does not echo input password in error response
+[1A[2K[235/413] [chromium] › tests\e2e\security\share-token-not-echoed-in-html-and-referrer-policy-warning.spec.js:26:7 › Security: share token never echoed in HTML and warns when Referrer-Policy header missing › GET /share/:token rendered HTML does not contain raw token literal
+[1A[2K[236/413] [chromium] › tests\e2e\security\share-token-not-echoed-in-html-and-referrer-policy-warning.spec.js:35:7 › Security: share token never echoed in HTML and warns when Referrer-Policy header missing › GET /share/:token sets reasonable Content-Type (text/html)
+[1A[2K[237/413] [chromium] › tests\e2e\security\share-token-not-echoed-in-html-and-referrer-policy-warning.spec.js:41:7 › Security: share token never echoed in HTML and warns when Referrer-Policy header missing › GET /share/:token Referrer-Policy header presence (warning if missing)
+
+[1A[2K[chromium] › tests\e2e\security\share-token-not-echoed-in-html-and-referrer-policy-warning.spec.js:41:7 › Security: share token never echoed in HTML and warns when Referrer-Policy header missing › GET /share/:token Referrer-Policy header presence (warning if missing)
+[security/analytics-token-leak] Referrer-Policy header missing on /share/:token. Recommend setting strict-origin-when-cross-origin or stricter to prevent token leak via Referer.
+[1A[2K[238/413] [chromium] › tests\e2e\security\share-token-not-echoed-in-html-and-referrer-policy-warning.spec.js:56:7 › Security: share token never echoed in HTML and warns when Referrer-Policy header missing › share token not exposed via URL query parameters in subsequent server links
+[1A[2K[239/413] [chromium] › tests\e2e\settings.spec.js:5:7 › Settings Page › can navigate to Settings and see AI Configuration
+[1A[2K[240/413] [chromium] › tests\e2e\share\analytics-view-tracking-and-token-based-access.spec.js:20:7 › Analytics view tracking and access control via share token › GET /api/analytics/:id without token returns 403 access denied
+[1A[2K[241/413] [chromium] › tests\e2e\share\analytics-view-tracking-and-token-based-access.spec.js:25:7 › Analytics view tracking and access control via share token › GET /api/analytics/:id with wrong token returns 403 access denied
+[1A[2K[242/413] [chromium] › tests\e2e\share\analytics-view-tracking-and-token-based-access.spec.js:31:7 › Analytics view tracking and access control via share token › GET /api/analytics/:id with valid token returns analytics shape
+[1A[2K[243/413] [chromium] › tests\e2e\share\analytics-view-tracking-and-token-based-access.spec.js:44:7 › Analytics view tracking and access control via share token › share view increments totalViews counter
+[1A[2K[244/413] [chromium] › tests\e2e\share\analytics-view-tracking-and-token-based-access.spec.js:66:7 › Analytics view tracking and access control via share token › analytics totals match between byToken aggregation and totalViews
+[1A[2K[245/413] [chromium] › tests\e2e\ribbon-layout.spec.js:221:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab exposes Embed actions as direct buttons at 1280px
+[1A[2K[246/413] [chromium] › tests\e2e\share\share-link-revoke-deletion-and-list-endpoint.spec.js:22:7 › Share link revoke and expiry behavior › share token can be revoked via DELETE /api/shares/:token then returns 404
+[1A[2K[247/413] [chromium] › tests\e2e\share\share-link-revoke-deletion-and-list-endpoint.spec.js:38:7 › Share link revoke and expiry behavior › DELETE /api/shares/:token for unknown token returns 404
+[1A[2K[248/413] [chromium] › tests\e2e\share\share-link-revoke-deletion-and-list-endpoint.spec.js:43:7 › Share link revoke and expiry behavior › DELETE /api/presentations/:id/share revokes all shares for that presentation
+[1A[2K[249/413] [chromium] › tests\e2e\share\share-link-revoke-deletion-and-list-endpoint.spec.js:56:7 › Share link revoke and expiry behavior › GET /api/presentations/:id/shares lists active links and isProtected flag without password hash
+[1A[2K[250/413] [chromium] › tests\e2e\share\share-link-with-password-protection-and-verification.spec.js:20:7 › Share link with password protection requires password to view › GET /share/:token returns password form when token is protected
+[1A[2K[251/413] [chromium] › tests\e2e\share\share-link-with-password-protection-and-verification.spec.js:29:7 › Share link with password protection requires password to view › POST /share/:token/verify rejects wrong password with 401
+[1A[2K[252/413] [chromium] › tests\e2e\settings.spec.js:13:7 › Settings Page › can change AI provider
+[1A[2K[253/413] [chromium] › tests\e2e\share\share-link-with-password-protection-and-verification.spec.js:35:7 › Share link with password protection requires password to view › POST /share/:token/verify accepts correct password
+[1A[2K[254/413] [chromium] › tests\e2e\share\share-link-with-password-protection-and-verification.spec.js:43:7 › Share link with password protection requires password to view › GET /share/:token returns 404 for unknown token
+[1A[2K[255/413] [chromium] › tests\e2e\share\share-link-with-password-protection-and-verification.spec.js:48:7 › Share link with password protection requires password to view › share API response includes isProtected flag and never plaintext password
+[1A[2K[256/413] [chromium] › tests\e2e\games\game-elements.spec.js:230:7 › Game Element — Stability & Coexistence › game elements coexist with text elements on same slide
+[1A[2K[257/413] [chromium] › tests\e2e\ribbon-layout.spec.js:233:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert grouped triggers and games are keyboard reachable
+[1A[2K[258/413] [chromium] › tests\e2e\sharing.spec.js:24:7 › Sharing & Privacy › can open Share Modal in editor
+[1A[2K[259/413] [chromium] › tests\e2e\settings.spec.js:22:7 › Settings Page › can save settings successfully
+[1A[2K[260/413] [chromium] › tests\e2e\ribbon-layout.spec.js:259:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert popups use clipping-safe overlay geometry
+[1A[2K[261/413] [chromium] › tests\e2e\games\game-elements.spec.js:243:7 › Game Element — Stability & Coexistence › game elements coexist with shape elements
+[1A[2K[262/413] [chromium] › tests\e2e\sharing.spec.js:46:7 › Sharing & Privacy › share link via API returns valid token
+[1A[2K[263/413] [chromium] › tests\e2e\settings.spec.js:30:7 › Settings Page › can change default theme and transition
+[1A[2K[264/413] [chromium] › tests\e2e\sharing.spec.js:52:7 › Sharing & Privacy › can view shared presentation in new browser context
+[1A[2K[265/413] [chromium] › tests\e2e\slide-management.spec.js:47:7 › Slide Management Advanced › can add a blank slide
+[1A[2K[266/413] [chromium] › tests\e2e\ribbon-layout.spec.js:282:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert sibling popups close the previous popup
+[1A[2K[267/413] [chromium] › tests\e2e\settings.spec.js:52:7 › Settings Page › can navigate back to home
+[1A[2K[268/413] [chromium] › tests\e2e\slides.spec.js:5:7 › Slides Management › can add and delete slides in SlidePanel
+[1A[2K[269/413] [chromium] › tests\e2e\slide-management.spec.js:55:7 › Slide Management Advanced › can add slide from template (Two Column)
+[1A[2K[270/413] [chromium] › tests\e2e\settings.spec.js:60:7 › Settings Page › test connection button is present
+[1A[2K[271/413] [chromium] › tests\e2e\ribbon-layout.spec.js:300:11 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab should not have hidden overflow at 1280px
+[1A[2K[272/413] [chromium] › tests\e2e\smoke.spec.js:3:5 › has title and can load home page
+[1A[2K[273/413] [chromium] › tests\e2e\slide-management.spec.js:62:7 › Slide Management Advanced › can delete a slide
+[1A[2K[274/413] [chromium] › tests\e2e\templates.spec.js:5:7 › Templates › can view Built-in template gallery
+[1A[2K[275/413] [chromium] › tests\e2e\ribbon-layout.spec.js:300:11 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab should not have hidden overflow at 1024px
+[1A[2K[276/413] [chromium] › tests\e2e\toolbar-elements.spec.js:22:7 › Toolbar Element Insertion › can insert a Code Block
+[1A[2K[277/413] [chromium] › tests\e2e\slide-management.spec.js:72:7 › Slide Management Advanced › can navigate between slides by clicking thumbnails
+[1A[2K[278/413] [chromium] › tests\e2e\templates.spec.js:18:7 › Templates › can filter templates by category
+[1A[2K[279/413] [chromium] › tests\e2e\ribbon-layout.spec.js:300:11 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab should not have hidden overflow at 900px
+[1A[2K[280/413] [chromium] › tests\e2e\toolbar-elements.spec.js:29:7 › Toolbar Element Insertion › can insert a LaTeX block
+[1A[2K[281/413] [chromium] › tests\e2e\slide-management.spec.js:82:7 › Slide Management Advanced › can change slide background to solid color
+[1A[2K[282/413] [chromium] › tests\e2e\templates.spec.js:42:7 › Templates › can create presentation from Built-in template
+[1A[2K[283/413] [chromium] › tests\e2e\ribbon-layout.spec.js:300:11 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab should not have hidden overflow at 768px
+[1A[2K[284/413] [chromium] › tests\e2e\toolbar-elements.spec.js:36:7 › Toolbar Element Insertion › can insert a Markdown block
+[1A[2K[285/413] [chromium] › tests\e2e\slide-management.spec.js:108:7 › Slide Management Advanced › can change slide background to gradient
+[1A[2K[286/413] [chromium] › tests\e2e\templates.spec.js:54:7 › Templates › can view My Templates section
+[1A[2K[287/413] [chromium] › tests\e2e\ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Home idle exposes expected groups in order
+[1A[2K[288/413] [chromium] › tests\e2e\toolbar-elements.spec.js:43:7 › Toolbar Element Insertion › can insert a Chart
+[1A[2K[289/413] [chromium] › tests\e2e\slide-management.spec.js:112:7 › Slide Management Advanced › slide panel shows correct thumbnails count
+[1A[2K[290/413] [chromium] › tests\e2e\templates.spec.js:62:7 › Templates › can create a new custom template
+[1A[2K[291/413] [chromium] › tests\e2e\ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Format empty exposes expected groups in order
+[1A[2K[292/413] [chromium] › tests\e2e\toolbar-elements.spec.js:50:7 › Toolbar Element Insertion › can insert a Callout
+[1A[2K[293/413] [chromium] › tests\e2e\ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Insert default exposes expected groups in order
+[1A[2K[294/413] [chromium] › tests\e2e\templates.spec.js:84:7 › Templates › can view Marketplace section
+[1A[2K[295/413] [chromium] › tests\e2e\slide-management.spec.js:123:7 › Slide Management Advanced › can open slide context menu from slide panel
+[1A[2K[296/413] [chromium] › tests\e2e\toolbar-elements.spec.js:57:7 › Toolbar Element Insertion › can insert an HTML Embed
+[1A[2K[297/413] [chromium] › tests\e2e\ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Transitions default exposes expected groups in order
+[1A[2K[298/413] [chromium] › tests\e2e\slide-management.spec.js:130:7 › Slide Management Advanced › multiple slide templates are available in modal
+[1A[2K[299/413] [chromium] › tests\e2e\toolbar-elements.spec.js:64:7 › Toolbar Element Insertion › can insert a Shape from dropdown
+[1A[2K[300/413] [chromium] › tests\e2e\ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Animations default exposes expected groups in order
+[1A[2K[301/413] [chromium] › tests\e2e\slide-management.spec.js:146:7 › Slide Management Advanced › add slide modal keeps body clicks inside and closes on overlay click
+[1A[2K[302/413] [chromium] › tests\e2e\toolbar-elements.spec.js:72:7 › Toolbar Element Insertion › can insert a Table with prompt override
+[1A[2K[303/413] [chromium] › tests\e2e\ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › View default exposes expected groups in order
+[1A[2K[304/413] [chromium] › tests\e2e\undo-redo.spec.js:23:7 › Undo / Redo › can undo adding an element
+[1A[2K[305/413] [chromium] › tests\e2e\slide-management.spec.js:166:7 › Slide Management Advanced › multi-select duplicate keeps the duplicated block selected in order
+[1A[2K[306/413] [chromium] › tests\e2e\toolbar-elements.spec.js:79:7 › Toolbar Element Insertion › can insert a Line/Arrow
+[1A[2K[307/413] [chromium] › tests\e2e\ribbon-layout.spec.js:331:9 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Home text editing exposes Font and Paragraph groups in order
+[1A[2K[308/413] [chromium] › tests\e2e\toolbar-elements.spec.js:86:7 › Toolbar Element Insertion › main text toolbar preserves editing and applies formatting controls
+[1A[2K[309/413] [chromium] › tests\e2e\ribbon-layout.spec.js:347:9 › Ribbon Layout Baseline Tests › Home Tab Text-Editing State › Home tab should show Font/Paragraph controls when editing text at 1280px
+[1A[2K[310/413] [chromium] › tests\e2e\version-history.spec.js:18:7 › Version History (Snapshots) › can create a snapshot via API
+[1A[2K[311/413] [chromium] › tests\e2e\version-history.spec.js:28:7 › Version History (Snapshots) › can list snapshots for a presentation
+[1A[2K[312/413] [chromium] › tests\e2e\version-history.spec.js:41:7 › Version History (Snapshots) › can restore a snapshot
+[1A[2K[313/413] [chromium] › tests\e2e\ribbon-layout.spec.js:371:9 › Ribbon Layout Baseline Tests › Home Tab Text-Editing State › Home tab text controls should have horizontal scroll at 1024px when editing
+[1A[2K[314/413] [chromium] › tests\e2e\version-history.spec.js:61:7 › Version History (Snapshots) › can delete a snapshot
+[1A[2K[315/413] [chromium] › tests\e2e\visual\editor-canvas-states-empty-and-with-content.spec.js:22:7 › Editor canvas visual baselines across content states › empty canvas with thumb panel renders at 1280x800
+[1A[2K[316/413] [chromium] › tests\e2e\visual\editor-canvas-states-empty-and-with-content.spec.js:32:7 › Editor canvas visual baselines across content states › empty canvas at smaller 1024x768 viewport
+[1A[2K[317/413] [chromium] › tests\e2e\visual\editor-canvas-states-empty-and-with-content.spec.js:42:7 › Editor canvas visual baselines across content states › canvas with text and shape elements
+[1A[2K[318/413] [chromium] › tests\e2e\visual\editor-canvas-states-empty-and-with-content.spec.js:62:7 › Editor canvas visual baselines across content states › canvas with chart and code elements
+[1A[2K[319/413] [chromium] › tests\e2e\visual\mobile-editor-explicit-device-scale-factor-pinned.spec.js:22:7 › Mobile editor visual baseline pinned to deviceScaleFactor 2 › mobile editor at 390x844 with explicit DPR 2 renders deterministic baseline
+[1A[2K[320/413] [chromium] › tests\e2e\visual\present-speaker-share-and-live-viewer-baselines.spec.js:34:7 › Present, speaker, share landing, live viewer visual baselines › present mode renders reveal scaffold at 1920x1080
+[1A[2K[321/413] [chromium] › tests\e2e\visual\present-speaker-share-and-live-viewer-baselines.spec.js:42:7 › Present, speaker, share landing, live viewer visual baselines › share landing page renders for unprotected token
+[1A[2K[322/413] [chromium] › tests\e2e\visual\present-speaker-share-and-live-viewer-baselines.spec.js:51:7 › Present, speaker, share landing, live viewer visual baselines › live viewer initial state without presenter renders
+[1A[2K[323/413] [chromium] › tests\e2e\visual\present-speaker-share-and-live-viewer-baselines.spec.js:63:7 › Present, speaker, share landing, live viewer visual baselines › speaker view renders notes panel and thumbnails
+[1A[2K[324/413] [chromium] › tests\e2e\visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab home renders dark theme baseline
+[1A[2K[325/413] [chromium] › tests\e2e\visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab insert renders dark theme baseline
+[1A[2K[326/413] [chromium] › tests\e2e\visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab design renders dark theme baseline
+[1A[2K[327/413] [chromium] › tests\e2e\visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab format renders dark theme baseline
+[1A[2K[328/413] [chromium] › tests\e2e\visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab transitions renders dark theme baseline
+[1A[2K[329/413] [chromium] › tests\e2e\visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab animations renders dark theme baseline
+[1A[2K[330/413] [chromium] › tests\e2e\visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab view renders dark theme baseline
+[1A[2K[331/413] [chromium] › tests\e2e\visual-regression.spec.js:24:7 › Visual Regression › editor canvas baseline remains stable
+[1A[2K[332/413] [chromium] › tests\e2e\undo-redo.spec.js:41:7 › Undo / Redo › can redo after undo
+[1A[2K[333/413] [chromium-live] › tests\e2e\live\annotation-sync-and-persistence.spec.js:62:7 › Annotation sync and persistence across presenter and viewer › viewer receives annotation:add stroke from presenter within tolerant window
+[1A[2K[334/413] [chromium] › tests\e2e\ribbon-layout.spec.js:392:9 › Ribbon Layout Baseline Tests › Format Tab Vertical Rhythm › Format tab no-selection state uses classic Selection section
+[1A[2K[335/413] [chromium] › tests\e2e\slide-management.spec.js:193:7 › Slide Management Advanced › multi-select delete clamps the active slide to the remaining tail
+[1A[2K[336/413] [chromium-live] › tests\e2e\live\annotation-sync-and-persistence.spec.js:77:7 › Annotation sync and persistence across presenter and viewer › annotation:clear removes all strokes for current slide
+[1A[2K[337/413] [chromium] › tests\e2e\ribbon-layout.spec.js:405:9 › Ribbon Layout Baseline Tests › Format Tab Vertical Rhythm › Format tab selected shape exposes contextual groups in order
+[1A[2K[338/413] [chromium-live] › tests\e2e\live\annotation-sync-and-persistence.spec.js:89:7 › Annotation sync and persistence across presenter and viewer › rejoining viewer receives previous-slide annotations via annotations:sync
+[1A[2K[339/413] [chromium] › tests\e2e\ribbon-layout.spec.js:428:9 › Ribbon Layout Baseline Tests › Format Tab Vertical Rhythm › Format tab controls should have consistent row height
+[1A[2K[340/413] [chromium-live] › tests\e2e\live\annotation-sync-and-persistence.spec.js:105:7 › Annotation sync and persistence across presenter and viewer › annotation:remove deletes only target stroke
+[1A[2K[341/413] [chromium] › tests\e2e\ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not have vertical overflow at 1280px
+[1A[2K[342/413] [chromium] › tests\e2e\undo-redo.spec.js:56:7 › Undo / Redo › undo/redo keyboard shortcuts work
+[1A[2K[343/413] [chromium-live] › tests\e2e\live\black-and-white-screen-overlay-viewer-keyboard.spec.js:41:7 › Black and white screen overlay viewer keyboard toggle › pressing B toggles a fullscreen black overlay on viewer
+[1A[2K[344/413] [chromium] › tests\e2e\ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not have vertical overflow at 1280px
+[1A[2K[345/413] [chromium-live] › tests\e2e\live\black-and-white-screen-overlay-viewer-keyboard.spec.js:60:7 › Black and white screen overlay viewer keyboard toggle › pressing W toggles a fullscreen white overlay on viewer
+[1A[2K[346/413] [chromium] › tests\e2e\undo-redo.spec.js:65:7 › Undo / Redo › bounded stress: 10 adds, 10 undo, 10 redo
+[1A[2K[347/413] [chromium] › tests\e2e\ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not have vertical overflow at 1280px
+[1A[2K[348/413] [chromium-live] › tests\e2e\live\black-and-white-screen-overlay-viewer-keyboard.spec.js:79:7 › Black and white screen overlay viewer keyboard toggle › clicking the black overlay dismisses it
+[1A[2K[349/413] [chromium] › tests\e2e\ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not have vertical overflow at 1280px
+[1A[2K[350/413] [chromium-live] › tests\e2e\live\live-timer-broadcast-via-game-timer-socket-events.spec.js:66:7 › Live timer broadcast via game-timer socket events to viewer › presenter game-timer-start propagates to viewer window.__timerStates
+[1A[2K[351/413] [chromium] › tests\e2e\ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not have vertical overflow at 1280px
+[1A[2K[352/413] [chromium-live] › tests\e2e\live\live-timer-broadcast-via-game-timer-socket-events.spec.js:85:7 › Live timer broadcast via game-timer socket events to viewer › game-timer-pause toggles running flag false on viewer
+[1A[2K[353/413] [chromium] › tests\e2e\ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not have vertical overflow at 1280px
+[1A[2K[354/413] [chromium-live] › tests\e2e\live\live-timer-broadcast-via-game-timer-socket-events.spec.js:102:7 › Live timer broadcast via game-timer socket events to viewer › game-timer-stop emits zero remaining and viewer clears running state
+[1A[2K[355/413] [chromium] › tests\e2e\ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not have vertical overflow at 1280px
+[1A[2K[356/413] [chromium-live] › tests\e2e\live\live-timer-broadcast-via-game-timer-socket-events.spec.js:123:7 › Live timer broadcast via game-timer socket events to viewer › rejoining viewer receives existing running timer state via initial timer:sync
+[1A[2K[357/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not clip controls at 1280px
+[1A[2K[358/413] [chromium-live] › tests\e2e\live\present-mode-keyboard-navigation-presenter-to-viewer-sync.spec.js:66:7 › Present mode keyboard navigation propagates from presenter to viewer Reveal indices › ArrowRight on presenter advances viewer slide index
+[1A[2K[359/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not clip controls at 1280px
+[1A[2K[360/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not clip controls at 1280px
+[1A[2K[361/413] [chromium-live] › tests\e2e\live\present-mode-keyboard-navigation-presenter-to-viewer-sync.spec.js:84:7 › Present mode keyboard navigation propagates from presenter to viewer Reveal indices › Reveal.left on presenter goes back to previous slide on viewer
+[1A[2K[362/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not clip controls at 1280px
+[1A[2K[363/413] [chromium-live] › tests\e2e\live\present-mode-keyboard-navigation-presenter-to-viewer-sync.spec.js:107:7 › Present mode keyboard navigation propagates from presenter to viewer Reveal indices › Reveal.slide(0) brings presenter and viewer back to first slide
+[1A[2K[364/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not clip controls at 1280px
+[1A[2K[365/413] [chromium-live] › tests\e2e\live\present-mode-keyboard-navigation-presenter-to-viewer-sync.spec.js:130:7 › Present mode keyboard navigation propagates from presenter to viewer Reveal indices › end-of-deck navigation lands on last slide for viewer
+[1A[2K[366/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not clip controls at 1280px
+[1A[2K[367/413] [chromium-live] › tests\e2e\live\presenter-disconnect-cleanup-and-viewer-count-tracking.spec.js:54:7 › Presenter disconnect cleanup notifies viewer of presenter departure › viewer sees Presenter has left overlay when presenter socket disconnects
+[1A[2K[368/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not clip controls at 1280px
+[1A[2K[369/413] [chromium-live] › tests\e2e\live\presenter-disconnect-cleanup-and-viewer-count-tracking.spec.js:70:7 › Presenter disconnect cleanup notifies viewer of presenter departure › viewer can join room before presenter and shows waiting state until presenter arrives
+[1A[2K[370/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not clip controls at 1024px
+[1A[2K[371/413] [chromium-live] › tests\e2e\live\presenter-disconnect-cleanup-and-viewer-count-tracking.spec.js:91:7 › Presenter disconnect cleanup notifies viewer of presenter departure › viewer count badge reflects multiple viewers and decrements on viewer disconnect
+[1A[2K[372/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not clip controls at 1024px
+[1A[2K[373/413] [chromium-live] › tests\e2e\live\presenter-disconnect-cleanup-and-viewer-count-tracking.spec.js:123:7 › Presenter disconnect cleanup notifies viewer of presenter departure › GET live/room/:code returns exists:false for unknown rooms
+[1A[2K[374/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not clip controls at 1024px
+[1A[2K[375/413] [chromium-live] › tests\e2e\live.spec.js:88:7 › Live Presentation & WebSockets › can create a live room via API
+[1A[2K[376/413] [chromium-live] › tests\e2e\live.spec.js:96:7 › Live Presentation & WebSockets › can open Present Live button and see modal
+[1A[2K[377/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not clip controls at 1024px
+[1A[2K[378/413] [chromium-live] › tests\e2e\live.spec.js:107:7 › Live Presentation & WebSockets › live room URL contains room code
+[1A[2K[379/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not clip controls at 1024px
+[1A[2K[380/413] [chromium-live] › tests\e2e\live.spec.js:119:7 › Live Presentation & WebSockets › present live modal shows room code and both share links
+[1A[2K[381/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not clip controls at 1024px
+[1A[2K[382/413] [chromium-live] › tests\e2e\live.spec.js:137:7 › Live Presentation & WebSockets › remote controller navigates viewer without increasing viewer count
+[1A[2K[383/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not clip controls at 1024px
+[1A[2K[384/413] [chromium-live] › tests\e2e\live.spec.js:166:7 › Live Presentation & WebSockets › remote controller follows vertical slide order
+[1A[2K[385/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not clip controls at 900px
+[1A[2K[386/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not clip controls at 900px
+[1A[2K[387/413] [chromium-live] › tests\e2e\live.spec.js:201:7 › Live Presentation & WebSockets › speaker view renders notes and thumbnail navigation syncs viewer
+[1A[2K[388/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not clip controls at 900px
+[1A[2K[389/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not clip controls at 900px
+[1A[2K[390/413] [chromium-live] › tests\e2e\live.spec.js:229:7 › Live Presentation & WebSockets › speaker thumbnail navigation syncs vertical slides
+[1A[2K[391/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not clip controls at 900px
+[1A[2K[392/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not clip controls at 900px
+[1A[2K[393/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not clip controls at 900px
+[1A[2K[394/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not clip controls at 768px
+[1A[2K[395/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not clip controls at 768px
+[1A[2K[396/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not clip controls at 768px
+[1A[2K[397/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not clip controls at 768px
+[1A[2K[398/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not clip controls at 768px
+[1A[2K[399/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not clip controls at 768px
+[1A[2K[400/413] [chromium] › tests\e2e\ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not clip controls at 768px
+[1A[2K[401/413] [chromium] › tests\e2e\ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not have button overlaps
+[1A[2K[402/413] [chromium] › tests\e2e\ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not have button overlaps
+[1A[2K[403/413] [chromium] › tests\e2e\ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not have button overlaps
+[1A[2K[404/413] [chromium] › tests\e2e\ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not have button overlaps
+[1A[2K[405/413] [chromium] › tests\e2e\ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not have button overlaps
+[1A[2K[406/413] [chromium] › tests\e2e\ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not have button overlaps
+[1A[2K[407/413] [chromium] › tests\e2e\ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not have button overlaps
+[1A[2K[408/413] [chromium] › tests\e2e\ribbon-layout.spec.js:530:9 › Ribbon Layout Baseline Tests › Responsive Pressure Points › Insert tab should gracefully handle 900px viewport
+[1A[2K[409/413] [chromium] › tests\e2e\ribbon-layout.spec.js:546:9 › Ribbon Layout Baseline Tests › Responsive Pressure Points › Home tab should remain usable at 768px
+[1A[2K[410/413] [chromium] › tests\e2e\ribbon-layout.spec.js:561:11 › Ribbon Layout Baseline Tests › Header Responsive Pressure › Header should not cause document overflow at 1024px
+[1A[2K[411/413] [chromium] › tests\e2e\ribbon-layout.spec.js:573:11 › Ribbon Layout Baseline Tests › Header Responsive Pressure › Critical header actions should be visible at 1024px
+[1A[2K[412/413] [chromium] › tests\e2e\ribbon-layout.spec.js:561:11 › Ribbon Layout Baseline Tests › Header Responsive Pressure › Header should not cause document overflow at 768px
+[1A[2K[413/413] [chromium] › tests\e2e\ribbon-layout.spec.js:573:11 › Ribbon Layout Baseline Tests › Header Responsive Pressure › Critical header actions should be visible at 768px
+[1A[2K[414/413] [chromium] › tests\e2e\ribbon-layout.spec.js:609:9 › Ribbon Layout Baseline Tests › Header Responsive Pressure › Tab navigation should work at 768px
+[1A[2K  1 failed
+    [chromium] › tests\e2e\coverage-gaps.spec.js:104:7 › Coverage Gaps: Editor controls and UI contracts › covers extended insert menu elements: image, video, audio, QR, icon, drawing, SVG
+  17 skipped
+  395 passed (4.1m)

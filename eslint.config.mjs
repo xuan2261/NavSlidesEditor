@@ -193,4 +193,16 @@ export default [
       'no-empty': 'off',
     },
   },
+  {
+    files: ['tests/e2e/**/*.js'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'CallExpression[callee.property.name="waitForTimeout"]',
+          message: 'Use state-based waits instead of page.waitForTimeout in E2E tests.',
+        },
+      ],
+    },
+  },
 ]

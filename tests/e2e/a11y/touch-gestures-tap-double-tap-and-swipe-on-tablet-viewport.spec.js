@@ -4,6 +4,7 @@ import {
   apiDeletePresentation,
   apiUpdatePresentation,
 } from '../fixtures/test-fixtures.js'
+import { waitForNextFrame } from '../pages/wait-helpers.js'
 
 const SLIDES = [
   { id: 's1', elements: [{ id: 't1', type: 'text', x: 100, y: 100, width: 600, height: 80, content: '<h2>Slide A</h2>' }], notes: '', background: { type: 'color', color: '#1e1e2e' } },
@@ -72,7 +73,7 @@ test.describe('Touch gestures on tablet viewport for slide navigation and tap in
     await page.mouse.down()
     await page.mouse.move(endX, y, { steps: 10 })
     await page.mouse.up()
-    await page.waitForTimeout(200)
+    await waitForNextFrame(page)
 
     await expect(page.locator('.reveal section').first()).toBeVisible()
     await ctx.close()

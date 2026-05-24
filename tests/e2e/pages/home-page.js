@@ -6,7 +6,7 @@ export class HomePage {
    */
   constructor(page) {
     this.page = page
-    this.newPresentationBtn = page.locator('button:has-text("New")').first()
+    this.newPresentationBtn = page.getByTestId('home-new-presentation-btn')
     this.modalTitleInput = page.locator('input[placeholder="My Presentation"]')
     this.modalCreateBtn = page.locator('.fixed.inset-0 button:has-text("Create")')
     this.searchInput = page.locator('input[placeholder="Search presentations..."]')

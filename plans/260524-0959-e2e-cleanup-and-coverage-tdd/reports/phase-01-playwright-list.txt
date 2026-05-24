@@ -1,0 +1,415 @@
+Listing tests:
+  [chromium] › a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:45:7 › axe core scans across editor present share live and home views with stable DOM wait › editor page emits no critical axe violations beyond known baseline
+  [chromium] › a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:54:7 › axe core scans across editor present share live and home views with stable DOM wait › present preview page emits zero critical axe violations
+  [chromium] › a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:63:7 › axe core scans across editor present share live and home views with stable DOM wait › share landing page emits zero critical axe violations
+  [chromium] › a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:73:7 › axe core scans across editor present share live and home views with stable DOM wait › live viewer initial state emits zero critical axe violations
+  [chromium] › a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:84:7 › axe core scans across editor present share live and home views with stable DOM wait › home dashboard emits no critical axe violations beyond known baseline
+  [chromium] › a11y\axe-core-scans-across-editor-present-share-live-and-home-views.spec.js:93:7 › axe core scans across editor present share live and home views with stable DOM wait › axe scan returns ruleset and full violations array shape
+  [chromium] › a11y\keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js:30:7 › Keyboard only navigation across editor ribbon tabs and modals › Tab key cycles focus through ribbon tab bar with role tab
+  [chromium] › a11y\keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js:45:7 › Keyboard only navigation across editor ribbon tabs and modals › ArrowLeft and ArrowRight roving navigates ribbon tabs without leaving tablist
+  [chromium] › a11y\keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js:62:7 › Keyboard only navigation across editor ribbon tabs and modals › Home and End keys jump to first and last ribbon tab via roving focus
+  [chromium] › a11y\keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js:80:7 › Keyboard only navigation across editor ribbon tabs and modals › Escape key closes File menu without trapping focus
+  [chromium] › a11y\touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js:26:7 › Touch gestures on tablet viewport for slide navigation and tap interactions › touch tap on present mode body fires native click handler
+  [chromium] › a11y\touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js:42:7 › Touch gestures on tablet viewport for slide navigation and tap interactions › mobile editor at Pixel-7 viewport renders slide canvas with touch enabled
+  [chromium] › a11y\touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js:56:7 › Touch gestures on tablet viewport for slide navigation and tap interactions › horizontal swipe across reveal area is non-throwing and surface remains stable
+  [chromium] › a11y\touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js:81:7 › Touch gestures on tablet viewport for slide navigation and tap interactions › double-tap registers as two distinct touch events
+  [chromium] › ai.spec.js:22:7 › AI Integrations › can use AI Copywriter with mocked API response
+  [chromium] › ai.spec.js:55:7 › AI Integrations › can use AI Slide Generator modal
+  [chromium] › ai.spec.js:61:7 › AI Integrations › can use Translate Presentation modal
+  [chromium] › animation-preview.spec.js:10:7 › Animation Preview › opens as an accessible narrow-viewport dialog and closes on Escape
+  [chromium] › coverage-gaps.spec.js:104:7 › Coverage Gaps: Editor controls and UI contracts › covers extended insert menu elements: image, video, audio, QR, icon, drawing, SVG
+  [chromium] › coverage-gaps.spec.js:156:7 › Coverage Gaps: Editor controls and UI contracts › covers align/distribute, group/ungroup, layer, lock, shadow, and rotation controls
+  [chromium] › coverage-gaps.spec.js:214:7 › Coverage Gaps: Editor controls and UI contracts › covers resize aspect lock, rotation handle snap, rulers, and persistent guides
+  [chromium] › coverage-gaps.spec.js:275:7 › Coverage Gaps: Editor controls and UI contracts › covers footer settings, feature modals, responsive layout, keyboard accessibility, and visual smoke
+  [chromium] › dashboard.spec.js:6:7 › Dashboard & Navigation › sidebar navigation shows correct views
+  [chromium] › dashboard.spec.js:19:7 › Dashboard & Navigation › can switch sidebar views
+  [chromium] › dashboard.spec.js:30:7 › Dashboard & Navigation › can search presentations
+  [chromium] › dashboard.spec.js:47:7 › Dashboard & Navigation › view toggle buttons remain fully visible
+  [chromium] › dashboard.spec.js:91:7 › Dashboard & Navigation › can open an existing presentation from All Presentations
+  [chromium] › dashboard.spec.js:111:7 › Dashboard & Navigation › can create a new presentation from modal
+  [chromium] › dashboard.spec.js:119:7 › Dashboard & Navigation › new presentation modal toggles blank vs template start controls
+  [chromium] › dashboard.spec.js:138:7 › Dashboard & Navigation › can duplicate a presentation via API
+  [chromium] › dashboard.spec.js:152:7 › Dashboard & Navigation › can delete to trash and restore via API
+  [chromium] › dashboard.spec.js:173:7 › Dashboard & Navigation › theme toggle switches between dark and light
+  [chromium] › dashboard.spec.js:187:7 › Dashboard & Navigation › can navigate to Settings page
+  [chromium] › dashboard.spec.js:195:7 › Dashboard & Navigation › can navigate to Explore page
+  [chromium] › editor.spec.js:10:7 › Editor POM Workflow › should create presentation and change background using POM
+  [chromium] › editor.spec.js:22:7 › Editor POM Workflow › Sync and Version History modals close on Escape and overlay without runtime errors
+  [chromium] › editor.spec.js:60:7 › Editor POM Workflow › Version History shows inline errors and retry flows without crashing the page
+  [chromium] › editor.spec.js:166:7 › Editor POM Workflow › template gallery restores default ordering after sort, filter, and favorites changes
+  [chromium] › editor.spec.js:253:7 › Editor POM Workflow › editor chrome keeps text editing mounted and toolbar stays within bounds
+  [chromium] › element-interactions.spec.js:44:7 › Element Property Interactions › latex edit flow opens dialog and persists applied content
+  [chromium] › element-interactions.spec.js:74:7 › Element Property Interactions › html edit flow opens dialog and persists trusted content
+  [chromium] › element-lifecycle.spec.js:42:7 › Element Lifecycle And Autosave › keyboard delete removes selected element
+  [chromium] › element-lifecycle.spec.js:67:7 › Element Lifecycle And Autosave › context menu cut removes selected element
+  [chromium] › element-lifecycle.spec.js:92:7 › Element Lifecycle And Autosave › properties panel delete removes selected element
+  [chromium] › element-lifecycle.spec.js:117:7 › Element Lifecycle And Autosave › locked element blocks keyboard delete and duplicate
+  [chromium] › element-lifecycle.spec.js:145:7 › Element Lifecycle And Autosave › copy and paste on same slide preserves type and key properties
+  [chromium] › element-lifecycle.spec.js:182:7 › Element Lifecycle And Autosave › copy from one slide and paste into another slide persists on target
+  [chromium] › element-lifecycle.spec.js:216:7 › Element Lifecycle And Autosave › autosave failure keeps local changes visible and retry persists them
+  [chromium] › element-properties.spec.js:53:7 › Element Properties Persistence › persists common position, rotation, lock, and shadow controls
+  [chromium] › element-properties.spec.js:118:7 › Element Properties Persistence › persists shape controls including fill, stroke, radius, and label styling
+  [chromium] › element-properties.spec.js:180:7 › Element Properties Persistence › persists image controls including object fit and filters
+  [chromium] › element-properties.spec.js:227:7 › Element Properties Persistence › persists code properties and edit dialog changes
+  [chromium] › element-properties.spec.js:274:7 › Element Properties Persistence › persists chart type, labels, series values, and add series action
+  [chromium] › element-properties.spec.js:326:7 › Element Properties Persistence › persists table row/column operations, table styles, and edited cell values
+  [chromium] › elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders bar chart from seed
+  [chromium] › elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders line chart from seed
+  [chromium] › elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders pie chart from seed
+  [chromium] › elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders doughnut chart from seed
+  [chromium] › elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders radar chart from seed
+  [chromium] › elements\chart-types-smoke.spec.js:44:9 › Chart Types Smoke › renders polarArea chart from seed
+  [chromium] › elements\chart-types-smoke.spec.js:65:7 › Chart Types Smoke › switches chart type via property panel
+  [chromium] › elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in javascript
+  [chromium] › elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in python
+  [chromium] › elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in go
+  [chromium] › elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in rust
+  [chromium] › elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in java
+  [chromium] › elements\code-element-syntax-highlighting-and-language-switching.spec.js:55:9 › Code element syntax highlighting language switching and theme selection › renders code block in sql
+  [chromium] › elements\code-element-syntax-highlighting-and-language-switching.spec.js:67:7 › Code element syntax highlighting language switching and theme selection › switches language via property panel
+  [chromium] › elements\code-element-syntax-highlighting-and-language-switching.spec.js:78:7 › Code element syntax highlighting language switching and theme selection › persists font size change via property panel
+  [chromium] › elements\code-element-syntax-highlighting-and-language-switching.spec.js:89:7 › Code element syntax highlighting language switching and theme selection › opens code editor modal and persists content
+  [chromium] › elements\drawing-and-svg-element-rendering-with-paths-and-vector-graphics.spec.js:69:7 › Drawing and SVG element rendering with paths and vector graphics › renders drawing strokes from seeded paths
+  [chromium] › elements\drawing-and-svg-element-rendering-with-paths-and-vector-graphics.spec.js:80:7 › Drawing and SVG element rendering with paths and vector graphics › renders empty drawing placeholder
+  [chromium] › elements\drawing-and-svg-element-rendering-with-paths-and-vector-graphics.spec.js:88:7 › Drawing and SVG element rendering with paths and vector graphics › renders SVG content with embedded shapes
+  [chromium] › elements\drawing-and-svg-element-rendering-with-paths-and-vector-graphics.spec.js:99:7 › Drawing and SVG element rendering with paths and vector graphics › renders multiple drawings co-existing
+  [chromium] › elements\drawing-and-svg-element-rendering-with-paths-and-vector-graphics.spec.js:111:7 › Drawing and SVG element rendering with paths and vector graphics › persists drawing path stroke updates via API
+  [chromium] › elements\image-and-media-element-rendering-with-object-fit-and-filters.spec.js:92:7 › Image and media render with object fit, filters, audio video defaults › renders image with default object-fit contain
+  [chromium] › elements\image-and-media-element-rendering-with-object-fit-and-filters.spec.js:100:7 › Image and media render with object fit, filters, audio video defaults › persists object-fit cover and filter sliders
+  [chromium] › elements\image-and-media-element-rendering-with-object-fit-and-filters.spec.js:111:7 › Image and media render with object fit, filters, audio video defaults › renders video element with controls attribute
+  [chromium] › elements\image-and-media-element-rendering-with-object-fit-and-filters.spec.js:125:7 › Image and media render with object fit, filters, audio video defaults › renders audio element
+  [chromium] › elements\image-and-media-element-rendering-with-object-fit-and-filters.spec.js:134:7 › Image and media render with object fit, filters, audio video defaults › persists border radius via slider
+  [chromium] › elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:63:7 › Markdown rendering and HTML embed sanitization with persistence › renders markdown heading and list
+  [chromium] › elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:73:7 › Markdown rendering and HTML embed sanitization with persistence › renders code fences from markdown
+  [chromium] › elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:82:7 › Markdown rendering and HTML embed sanitization with persistence › persists markdown content via API seed and read
+  [chromium] › elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:91:7 › Markdown rendering and HTML embed sanitization with persistence › renders HTML embed inside iframe or container
+  [chromium] › elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:101:7 › Markdown rendering and HTML embed sanitization with persistence › persists html embed content via API
+  [chromium] › elements\markdown-rendering-and-html-embed-sanitization-and-persistence.spec.js:109:7 › Markdown rendering and HTML embed sanitization with persistence › persists markdown content edit via API
+  [chromium] › elements\math-latex-tikz-element-rendering-with-katex-iframe.spec.js:51:7 › Math LaTeX and TikZ rendering with KaTeX iframe and content persistence › renders LaTeX equation in iframe
+  [chromium] › elements\math-latex-tikz-element-rendering-with-katex-iframe.spec.js:62:7 › Math LaTeX and TikZ rendering with KaTeX iframe and content persistence › renders inline TikZ block
+  [chromium] › elements\math-latex-tikz-element-rendering-with-katex-iframe.spec.js:74:7 › Math LaTeX and TikZ rendering with KaTeX iframe and content persistence › renders complex math expression with fractions and integrals
+  [chromium] › elements\math-latex-tikz-element-rendering-with-katex-iframe.spec.js:83:7 › Math LaTeX and TikZ rendering with KaTeX iframe and content persistence › renders multiple latex equations side by side
+  [chromium] › elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:102:7 › QR icon callout divider element rendering and property persistence › renders QR code with seeded data
+  [chromium] › elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:112:7 › QR icon callout divider element rendering and property persistence › persists QR data update via API
+  [chromium] › elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:128:7 › QR icon callout divider element rendering and property persistence › renders icon SVG with seeded name
+  [chromium] › elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:138:7 › QR icon callout divider element rendering and property persistence › renders different icon names
+  [chromium] › elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:150:7 › QR icon callout divider element rendering and property persistence › renders callout with number badge
+  [chromium] › elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:158:7 › QR icon callout divider element rendering and property persistence › renders multiple callouts with sequential numbers
+  [chromium] › elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:170:7 › QR icon callout divider element rendering and property persistence › renders divider as horizontal line element
+  [chromium] › elements\qr-icon-callout-divider-element-rendering-and-property-persistence.spec.js:180:7 › QR icon callout divider element rendering and property persistence › persists callout color update via API
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders rect
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders rounded-rect
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders circle
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders triangle
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders diamond
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders hexagon
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders pentagon
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders arrow-right
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders star
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders cloud
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders cylinder
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders parallelogram
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:57:9 › Shape variants render and gallery insertion › renders trapezoid
+  [chromium] › elements\slide-element-shape-variants-render-and-gallery-insertion.spec.js:75:7 › Shape variants render and gallery insertion › renders multiple shapes on one slide
+  [chromium] › elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:59:7 › Table element interactions row column add remove cell edit and styling › renders seeded 3x3 table with header row
+  [chromium] › elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:69:7 › Table element interactions row column add remove cell edit and styling › persists table data via API seed and reload
+  [chromium] › elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:81:7 › Table element interactions row column add remove cell edit and styling › adds a row via property panel
+  [chromium] › elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:92:7 › Table element interactions row column add remove cell edit and styling › adds a column via property panel
+  [chromium] › elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:103:7 › Table element interactions row column add remove cell edit and styling › toggles header row off and persists
+  [chromium] › elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:114:7 › Table element interactions row column add remove cell edit and styling › edits cell value and persists
+  [chromium] › elements\table-element-interactions-row-col-add-and-cell-edit-and-styling.spec.js:125:7 › Table element interactions row column add remove cell edit and styling › changes header background color and persists
+  [chromium] › elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:55:7 › Text element rich formatting bold italic underline alignment and color › renders seeded text and persists rich content
+  [chromium] › elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:64:7 › Text element rich formatting bold italic underline alignment and color › inserts text via Insert tab
+  [chromium] › elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:74:7 › Text element rich formatting bold italic underline alignment and color › applies bold via toolbar while editing
+  [chromium] › elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:87:7 › Text element rich formatting bold italic underline alignment and color › applies italic via toolbar while editing
+  [chromium] › elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:100:7 › Text element rich formatting bold italic underline alignment and color › persists font family change via property panel
+  [chromium] › elements\text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js:114:7 › Text element rich formatting bold italic underline alignment and color › persists text alignment change
+  [chromium] › elements.spec.js:12:7 › Elements Insertion › can insert text, shape and handle prompt for table
+  [chromium] › explore.spec.js:10:7 › Explore Page › can navigate to Explore page
+  [chromium] › explore.spec.js:17:7 › Explore Page › shows empty state when no shared presentations
+  [chromium] › explore.spec.js:29:7 › Explore Page › shows shared presentations after sharing one
+  [chromium] › explore.spec.js:43:7 › Explore Page › can navigate back to home
+  [chromium] › export\client-side-download-flows-for-navslides-archive-and-offline-html-and-pdf-print.spec.js:41:7 › Client side download flows for navslides project archive and offline HTML and PDF print › exports navslides JSON archive when no local media present
+  [chromium] › export\client-side-download-flows-for-navslides-archive-and-offline-html-and-pdf-print.spec.js:53:7 › Client side download flows for navslides project archive and offline HTML and PDF print › exports offline HTML with no remote CDN scripts
+  [chromium] › export\client-side-download-flows-for-navslides-archive-and-offline-html-and-pdf-print.spec.js:71:7 › Client side download flows for navslides project archive and offline HTML and PDF print › exports HTML via Export HTML menu item
+  [chromium] › export\client-side-download-flows-for-navslides-archive-and-offline-html-and-pdf-print.spec.js:82:7 › Client side download flows for navslides project archive and offline HTML and PDF print › PDF export menu opens new window with print HTML
+  [chromium] › export\html-export-and-present-endpoints-with-content-validation.spec.js:40:7 › HTML export and present endpoints with content validation › export endpoint sets attachment headers and HTML mime
+  [chromium] › export\html-export-and-present-endpoints-with-content-validation.spec.js:48:7 › HTML export and present endpoints with content validation › export HTML includes both slide sections
+  [chromium] › export\html-export-and-present-endpoints-with-content-validation.spec.js:56:7 › HTML export and present endpoints with content validation › export HTML contains seeded title content
+  [chromium] › export\html-export-and-present-endpoints-with-content-validation.spec.js:63:7 › HTML export and present endpoints with content validation › present endpoint serves reveal.js scaffold
+  [chromium] › export\html-export-and-present-endpoints-with-content-validation.spec.js:71:7 › HTML export and present endpoints with content validation › present endpoint preview mode strips controls
+  [chromium] › export\html-export-and-present-endpoints-with-content-validation.spec.js:78:7 › HTML export and present endpoints with content validation › export rejects unknown id
+  [chromium] › export\html-export-and-present-endpoints-with-content-validation.spec.js:83:7 › HTML export and present endpoints with content validation › present endpoint renders into browser without console errors
+  [chromium] › export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:38:9 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › imports Bai_2_1.pptx, creates presentation, and round-trips slides via API
+  [chromium] › export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:38:9 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › imports Bai_2_2.pptx, creates presentation, and round-trips slides via API
+  [chromium] › export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:38:9 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › imports Bai_2_5.pptx, creates presentation, and round-trips slides via API
+  [chromium] › export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:53:7 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › rejects non-pptx file with 400
+  [chromium] › export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:62:7 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › rejects request without file with 400
+  [chromium] › export\pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js:67:7 › PPTX import endpoint and presentation creation roundtrip across multiple fixtures › imported presentation persists element bounds and types
+  [chromium] › export.spec.js:14:7 › Export & Present › export HTML endpoint returns valid HTML
+  [chromium] › export.spec.js:23:7 › Export & Present › present endpoint returns reveal.js HTML
+  [chromium] › export.spec.js:31:7 › Export & Present › present mode renders reveal.js slides in browser
+  [chromium] › find-replace.spec.js:62:7 › Find & Replace › can open Find bar with Ctrl+F
+  [chromium] › find-replace.spec.js:68:7 › Find & Replace › can search text and show match count
+  [chromium] › find-replace.spec.js:74:7 › Find & Replace › can navigate between matches
+  [chromium] › find-replace.spec.js:83:7 › Find & Replace › can close Find bar with Escape
+  [chromium] › find-replace.spec.js:89:7 › Find & Replace › case-sensitive toggle works
+  [chromium] › find-replace.spec.js:102:7 › Find & Replace › replace all supports an empty replacement string
+  [chromium] › find-replace.spec.js:117:7 › Find & Replace › single replace updates only the current match inside one element
+  [chromium] › games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Name Picker via Insert menu
+  [chromium] › games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Name Picker with Game: label on canvas
+  [chromium] › games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Hot Potato Quiz via Insert menu
+  [chromium] › games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Hot Potato Quiz with Game: label on canvas
+  [chromium] › games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Jeopardy via Insert menu
+  [chromium] › games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Jeopardy with Game: label on canvas
+  [chromium] › games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Four Corners via Insert menu
+  [chromium] › games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Four Corners with Game: label on canvas
+  [chromium] › games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Relay Race via Insert menu
+  [chromium] › games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Relay Race with Game: label on canvas
+  [chromium] › games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Trivia Championship via Insert menu
+  [chromium] › games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Trivia Championship with Game: label on canvas
+  [chromium] › games\game-elements.spec.js:42:9 › Game Elements — Insert & Render › inserts Scattergories via Insert menu
+  [chromium] › games\game-elements.spec.js:49:9 › Game Elements — Insert & Render › renders Scattergories with Game: label on canvas
+  [chromium] › games\game-elements.spec.js:56:7 › Game Elements — Insert & Render › game element increments canvas element count
+  [chromium] › games\game-elements.spec.js:66:7 › Game Elements — Insert & Render › multiple game elements coexist on same slide
+  [chromium] › games\game-elements.spec.js:99:7 › Game Element — Canvas Rendering › Name Picker wheel renders SVG segments
+  [chromium] › games\game-elements.spec.js:105:7 › Game Element — Canvas Rendering › Name Picker is inserted and renders with label
+  [chromium] › games\game-elements.spec.js:113:7 › Game Element — Canvas Rendering › Hot Potato Quiz shows question editor placeholder
+  [chromium] › games\game-elements.spec.js:119:7 › Game Element — Canvas Rendering › Jeopardy board renders category header placeholder
+  [chromium] › games\game-elements.spec.js:125:7 › Game Element — Canvas Rendering › Present button accessible after adding game element
+  [chromium] › games\game-elements.spec.js:151:7 › Game Element — Toolbar Integration › Insert menu shows all 7 game types
+  [chromium] › games\game-elements.spec.js:171:7 › Player Join Page › renders join form with name input and join button
+  [chromium] › games\game-elements.spec.js:177:7 › Player Join Page › empty name submit shows validation message
+  [chromium] › games\game-elements.spec.js:208:7 › Game Element — Stability & Coexistence › no runtime errors when inserting and rendering game elements
+  [chromium] › games\game-elements.spec.js:239:7 › Game Element — Stability & Coexistence › game elements coexist with text elements on same slide
+  [chromium] › games\game-elements.spec.js:251:7 › Game Element — Stability & Coexistence › game elements coexist with shape elements
+  [chromium] › hardening-regression.spec.js:89:7 › Hardening regressions › analytics endpoint denies missing/invalid token and allows valid token
+  [chromium] › hardening-regression.spec.js:118:7 › Hardening regressions › presenter takeover is rejected without presenter token
+  [chromium] › hardening-regression.spec.js:141:7 › Hardening regressions › trusted HTML embed script still runs in editor, present, share, and export outputs
+  [chromium] › keyboard-shortcuts.spec.js:50:7 › Keyboard Shortcuts › Ctrl+D duplicates selected element
+  [chromium] › keyboard-shortcuts.spec.js:61:7 › Keyboard Shortcuts › Delete key removes selected element
+  [chromium] › keyboard-shortcuts.spec.js:72:7 › Keyboard Shortcuts › Escape deselects element
+  [chromium] › keyboard-shortcuts.spec.js:80:7 › Keyboard Shortcuts › Ctrl+C / Ctrl+V copies and pastes element
+  [chromium] › keyboard-shortcuts.spec.js:91:7 › Keyboard Shortcuts › Ctrl+F opens Find & Replace
+  [chromium] › media.spec.js:22:7 › Media Library & Templates › can open Media Library and see tabs
+  [chromium] › media.spec.js:28:7 › Media Library & Templates › can search Unsplash with mocked response
+  [chromium] › media.spec.js:65:7 › Media Library & Templates › can add a slide from Template in the modal
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:29:7 › Parallax Features E2E › insert Timeline element from insert menu
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:36:7 › Parallax Features E2E › insert Kinetic Text from insert menu opens modal
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:49:7 › Parallax Features E2E › insert Math Grid from insert menu opens modal
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:62:7 › Parallax Features E2E › insert Anime.js animation from insert menu opens modal
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:75:7 › Parallax Features E2E › insert Three.js scene from insert menu opens modal
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:88:7 › Parallax Features E2E › FontWeight control visible in properties panel for text
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:98:7 › Parallax Features E2E › LineHeight control visible in properties panel for text
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:110:7 › Parallax Features E2E › Ctrl+K does not crash when editing text
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:121:7 › Parallax Features E2E › Video element with URL renders in canvas via API seed
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:137:7 › Parallax Features E2E › Timeline element renders SVG in canvas via API seed
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:154:7 › Parallax Features E2E › LaTeX element with custom font size renders via API seed
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:170:7 › Parallax Features E2E › Image with citation renders in canvas via API seed
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:185:7 › Parallax Features E2E › HTML embed element renders iframe in canvas via API seed
+  [chromium] › parallax-element-insertion-property-controls-and-rendering.spec.js:200:7 › Parallax Features E2E › ported element properties persist and export to present HTML
+  [chromium] › plugin-runtime-insert-render-persistence.spec.js:53:7 › Plugin runtime insert, render, and persistence › inserts Animated Counter, renders sandbox, persists element, and exports fallback
+  [chromium] › pptx-import-fidelity.spec.js:24:7 › PPTX import fidelity › imports pptx, renders stable element boxes, and persists property edits
+  [chromium] › properties-panel.spec.js:51:7 › Properties Panel › selecting an element shows properties panel
+  [chromium] › properties-panel.spec.js:58:7 › Properties Panel › deselecting hides active element state
+  [chromium] › properties-panel.spec.js:66:7 › Properties Panel › properties panel shows position/size inputs
+  [chromium] › properties-panel.spec.js:77:7 › Properties Panel › can modify element position via properties panel
+  [chromium] › properties-panel.spec.js:89:7 › Properties Panel › clearing numeric input does not persist NaN
+  [chromium] › properties-panel.spec.js:103:7 › Properties Panel › speaker notes save through the canonical notes field
+  [chromium] › regression-smoke-fixes.spec.js:10:7 › Regression — smoke test fixes › I-001: Trash entry is visible in dashboard sidebar
+  [chromium] › regression-smoke-fixes.spec.js:17:7 › Regression — smoke test fixes › I-001 small viewport: Trash entry still visible at 1280×480
+  [chromium] › regression-smoke-fixes.spec.js:25:7 › Regression — smoke test fixes › I-003: Ctrl+K opens the command palette in editor
+  [chromium] › regression-smoke-fixes.spec.js:43:7 › Regression — smoke test fixes › I-004: Footer version matches package.json
+  [chromium] › ribbon-layout.spec.js:162:9 › Ribbon Layout Baseline Tests › Icon+Text Button Clipping › Insert tab buttons with text labels should not clip content
+  [chromium] › ribbon-layout.spec.js:170:9 › Ribbon Layout Baseline Tests › Icon+Text Button Clipping › Home tab buttons should not clip content at 1280px
+  [chromium] › ribbon-layout.spec.js:181:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab should show all section triggers at 1280px
+  [chromium] › ribbon-layout.spec.js:209:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab exposes Media actions as direct buttons at 1280px
+  [chromium] › ribbon-layout.spec.js:221:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab exposes Embed actions as direct buttons at 1280px
+  [chromium] › ribbon-layout.spec.js:233:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert grouped triggers and games are keyboard reachable
+  [chromium] › ribbon-layout.spec.js:259:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert popups use clipping-safe overlay geometry
+  [chromium] › ribbon-layout.spec.js:282:9 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert sibling popups close the previous popup
+  [chromium] › ribbon-layout.spec.js:300:11 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab should not have hidden overflow at 1280px
+  [chromium] › ribbon-layout.spec.js:300:11 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab should not have hidden overflow at 1024px
+  [chromium] › ribbon-layout.spec.js:300:11 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab should not have hidden overflow at 900px
+  [chromium] › ribbon-layout.spec.js:300:11 › Ribbon Layout Baseline Tests › Insert Tab Critical Controls Visibility › Insert tab should not have hidden overflow at 768px
+  [chromium] › ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Home idle exposes expected groups in order
+  [chromium] › ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Format empty exposes expected groups in order
+  [chromium] › ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Insert default exposes expected groups in order
+  [chromium] › ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Transitions default exposes expected groups in order
+  [chromium] › ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Animations default exposes expected groups in order
+  [chromium] › ribbon-layout.spec.js:321:11 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › View default exposes expected groups in order
+  [chromium] › ribbon-layout.spec.js:331:9 › Ribbon Layout Baseline Tests › Classic Ribbon Group Contract › Home text editing exposes Font and Paragraph groups in order
+  [chromium] › ribbon-layout.spec.js:347:9 › Ribbon Layout Baseline Tests › Home Tab Text-Editing State › Home tab should show Font/Paragraph controls when editing text at 1280px
+  [chromium] › ribbon-layout.spec.js:371:9 › Ribbon Layout Baseline Tests › Home Tab Text-Editing State › Home tab text controls should have horizontal scroll at 1024px when editing
+  [chromium] › ribbon-layout.spec.js:392:9 › Ribbon Layout Baseline Tests › Format Tab Vertical Rhythm › Format tab no-selection state uses classic Selection section
+  [chromium] › ribbon-layout.spec.js:405:9 › Ribbon Layout Baseline Tests › Format Tab Vertical Rhythm › Format tab selected shape exposes contextual groups in order
+  [chromium] › ribbon-layout.spec.js:428:9 › Ribbon Layout Baseline Tests › Format Tab Vertical Rhythm › Format tab controls should have consistent row height
+  [chromium] › ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not have vertical overflow at 1280px
+  [chromium] › ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not have vertical overflow at 1280px
+  [chromium] › ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not have vertical overflow at 1280px
+  [chromium] › ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not have vertical overflow at 1280px
+  [chromium] › ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not have vertical overflow at 1280px
+  [chromium] › ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not have vertical overflow at 1280px
+  [chromium] › ribbon-layout.spec.js:468:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not have vertical overflow at 1280px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not clip controls at 1280px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not clip controls at 1280px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not clip controls at 1280px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not clip controls at 1280px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not clip controls at 1280px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not clip controls at 1280px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not clip controls at 1280px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not clip controls at 1024px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not clip controls at 1024px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not clip controls at 1024px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not clip controls at 1024px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not clip controls at 1024px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not clip controls at 1024px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not clip controls at 1024px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not clip controls at 900px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not clip controls at 900px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not clip controls at 900px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not clip controls at 900px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not clip controls at 900px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not clip controls at 900px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not clip controls at 900px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not clip controls at 768px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not clip controls at 768px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not clip controls at 768px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not clip controls at 768px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not clip controls at 768px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not clip controls at 768px
+  [chromium] › ribbon-layout.spec.js:480:13 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not clip controls at 768px
+  [chromium] › ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Home tab should not have button overlaps
+  [chromium] › ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Insert tab should not have button overlaps
+  [chromium] › ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Design tab should not have button overlaps
+  [chromium] › ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Format tab should not have button overlaps
+  [chromium] › ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Transitions tab should not have button overlaps
+  [chromium] › ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › Animations tab should not have button overlaps
+  [chromium] › ribbon-layout.spec.js:516:11 › Ribbon Layout Baseline Tests › All Tabs Overflow Matrix › View tab should not have button overlaps
+  [chromium] › ribbon-layout.spec.js:530:9 › Ribbon Layout Baseline Tests › Responsive Pressure Points › Insert tab should gracefully handle 900px viewport
+  [chromium] › ribbon-layout.spec.js:546:9 › Ribbon Layout Baseline Tests › Responsive Pressure Points › Home tab should remain usable at 768px
+  [chromium] › ribbon-layout.spec.js:561:11 › Ribbon Layout Baseline Tests › Header Responsive Pressure › Header should not cause document overflow at 1024px
+  [chromium] › ribbon-layout.spec.js:573:11 › Ribbon Layout Baseline Tests › Header Responsive Pressure › Critical header actions should be visible at 1024px
+  [chromium] › ribbon-layout.spec.js:561:11 › Ribbon Layout Baseline Tests › Header Responsive Pressure › Header should not cause document overflow at 768px
+  [chromium] › ribbon-layout.spec.js:573:11 › Ribbon Layout Baseline Tests › Header Responsive Pressure › Critical header actions should be visible at 768px
+  [chromium] › ribbon-layout.spec.js:609:9 › Ribbon Layout Baseline Tests › Header Responsive Pressure › Tab navigation should work at 768px
+  [chromium] › security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:53:7 › Security: presenter token validation rejects invalid and cross-room reuse › joining as presenter with wrong token emits join-error invalid-presenter-token
+  [chromium] › security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:69:7 › Security: presenter token validation rejects invalid and cross-room reuse › joining as presenter without token emits join-error
+  [chromium] › security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:81:7 › Security: presenter token validation rejects invalid and cross-room reuse › joining unknown room as presenter with any token emits room-not-found
+  [chromium] › security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:93:7 › Security: presenter token validation rejects invalid and cross-room reuse › valid token from one room cannot join a different room as presenter
+  [chromium] › security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:112:7 › Security: presenter token validation rejects invalid and cross-room reuse › valid presenter token allows join and emits presentation-data
+  [chromium] › security\presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js:127:7 › Security: presenter token validation rejects invalid and cross-room reuse › viewer can join room without presenter token (no token gating for viewer role)
+  [chromium] › security\share-link-password-never-leaks-in-api-json-responses.spec.js:23:7 › Security: share link plaintext password never leaks via API JSON responses › POST /api/presentations/:id/share response strips password field
+  [chromium] › security\share-link-password-never-leaks-in-api-json-responses.spec.js:31:7 › Security: share link plaintext password never leaks via API JSON responses › GET /api/presentations/:id JSON does not echo plaintext password marker
+  [chromium] › security\share-link-password-never-leaks-in-api-json-responses.spec.js:38:7 › Security: share link plaintext password never leaks via API JSON responses › GET /api/presentations/:id/shares list never includes password field nor bcrypt hash
+  [chromium] › security\share-link-password-never-leaks-in-api-json-responses.spec.js:49:7 › Security: share link plaintext password never leaks via API JSON responses › share verification path does not echo input password in error response
+  [chromium] › security\share-token-not-echoed-in-html-and-referrer-policy-warning.spec.js:26:7 › Security: share token never echoed in HTML and warns when Referrer-Policy header missing › GET /share/:token rendered HTML does not contain raw token literal
+  [chromium] › security\share-token-not-echoed-in-html-and-referrer-policy-warning.spec.js:35:7 › Security: share token never echoed in HTML and warns when Referrer-Policy header missing › GET /share/:token sets reasonable Content-Type (text/html)
+  [chromium] › security\share-token-not-echoed-in-html-and-referrer-policy-warning.spec.js:41:7 › Security: share token never echoed in HTML and warns when Referrer-Policy header missing › GET /share/:token Referrer-Policy header presence (warning if missing)
+  [chromium] › security\share-token-not-echoed-in-html-and-referrer-policy-warning.spec.js:56:7 › Security: share token never echoed in HTML and warns when Referrer-Policy header missing › share token not exposed via URL query parameters in subsequent server links
+  [chromium] › settings.spec.js:5:7 › Settings Page › can navigate to Settings and see AI Configuration
+  [chromium] › settings.spec.js:13:7 › Settings Page › can change AI provider
+  [chromium] › settings.spec.js:22:7 › Settings Page › can save settings successfully
+  [chromium] › settings.spec.js:30:7 › Settings Page › can change default theme and transition
+  [chromium] › settings.spec.js:52:7 › Settings Page › can navigate back to home
+  [chromium] › settings.spec.js:60:7 › Settings Page › test connection button is present
+  [chromium] › share\analytics-view-tracking-and-token-based-access.spec.js:20:7 › Analytics view tracking and access control via share token › GET /api/analytics/:id without token returns 403 access denied
+  [chromium] › share\analytics-view-tracking-and-token-based-access.spec.js:25:7 › Analytics view tracking and access control via share token › GET /api/analytics/:id with wrong token returns 403 access denied
+  [chromium] › share\analytics-view-tracking-and-token-based-access.spec.js:31:7 › Analytics view tracking and access control via share token › GET /api/analytics/:id with valid token returns analytics shape
+  [chromium] › share\analytics-view-tracking-and-token-based-access.spec.js:44:7 › Analytics view tracking and access control via share token › share view increments totalViews counter
+  [chromium] › share\analytics-view-tracking-and-token-based-access.spec.js:66:7 › Analytics view tracking and access control via share token › analytics totals match between byToken aggregation and totalViews
+  [chromium] › share\share-link-revoke-deletion-and-list-endpoint.spec.js:22:7 › Share link revoke and expiry behavior › share token can be revoked via DELETE /api/shares/:token then returns 404
+  [chromium] › share\share-link-revoke-deletion-and-list-endpoint.spec.js:38:7 › Share link revoke and expiry behavior › DELETE /api/shares/:token for unknown token returns 404
+  [chromium] › share\share-link-revoke-deletion-and-list-endpoint.spec.js:43:7 › Share link revoke and expiry behavior › DELETE /api/presentations/:id/share revokes all shares for that presentation
+  [chromium] › share\share-link-revoke-deletion-and-list-endpoint.spec.js:56:7 › Share link revoke and expiry behavior › GET /api/presentations/:id/shares lists active links and isProtected flag without password hash
+  [chromium] › share\share-link-with-password-protection-and-verification.spec.js:20:7 › Share link with password protection requires password to view › GET /share/:token returns password form when token is protected
+  [chromium] › share\share-link-with-password-protection-and-verification.spec.js:29:7 › Share link with password protection requires password to view › POST /share/:token/verify rejects wrong password with 401
+  [chromium] › share\share-link-with-password-protection-and-verification.spec.js:35:7 › Share link with password protection requires password to view › POST /share/:token/verify accepts correct password
+  [chromium] › share\share-link-with-password-protection-and-verification.spec.js:43:7 › Share link with password protection requires password to view › GET /share/:token returns 404 for unknown token
+  [chromium] › share\share-link-with-password-protection-and-verification.spec.js:48:7 › Share link with password protection requires password to view › share API response includes isProtected flag and never plaintext password
+  [chromium] › sharing.spec.js:24:7 › Sharing & Privacy › can open Share Modal in editor
+  [chromium] › sharing.spec.js:46:7 › Sharing & Privacy › share link via API returns valid token
+  [chromium] › sharing.spec.js:52:7 › Sharing & Privacy › can view shared presentation in new browser context
+  [chromium] › slide-management.spec.js:47:7 › Slide Management Advanced › can add a blank slide
+  [chromium] › slide-management.spec.js:55:7 › Slide Management Advanced › can add slide from template (Two Column)
+  [chromium] › slide-management.spec.js:62:7 › Slide Management Advanced › can delete a slide
+  [chromium] › slide-management.spec.js:72:7 › Slide Management Advanced › can navigate between slides by clicking thumbnails
+  [chromium] › slide-management.spec.js:82:7 › Slide Management Advanced › can change slide background to solid color
+  [chromium] › slide-management.spec.js:108:7 › Slide Management Advanced › can change slide background to gradient
+  [chromium] › slide-management.spec.js:112:7 › Slide Management Advanced › slide panel shows correct thumbnails count
+  [chromium] › slide-management.spec.js:123:7 › Slide Management Advanced › can open slide context menu from slide panel
+  [chromium] › slide-management.spec.js:130:7 › Slide Management Advanced › multiple slide templates are available in modal
+  [chromium] › slide-management.spec.js:146:7 › Slide Management Advanced › add slide modal keeps body clicks inside and closes on overlay click
+  [chromium] › slide-management.spec.js:166:7 › Slide Management Advanced › multi-select duplicate keeps the duplicated block selected in order
+  [chromium] › slide-management.spec.js:193:7 › Slide Management Advanced › multi-select delete clamps the active slide to the remaining tail
+  [chromium] › slides.spec.js:5:7 › Slides Management › can add and delete slides in SlidePanel
+  [chromium] › smoke.spec.js:3:5 › has title and can load home page
+  [chromium] › templates.spec.js:5:7 › Templates › can view Built-in template gallery
+  [chromium] › templates.spec.js:18:7 › Templates › can filter templates by category
+  [chromium] › templates.spec.js:42:7 › Templates › can create presentation from Built-in template
+  [chromium] › templates.spec.js:54:7 › Templates › can view My Templates section
+  [chromium] › templates.spec.js:62:7 › Templates › can create a new custom template
+  [chromium] › templates.spec.js:84:7 › Templates › can view Marketplace section
+  [chromium] › toolbar-elements.spec.js:22:7 › Toolbar Element Insertion › can insert a Code Block
+  [chromium] › toolbar-elements.spec.js:29:7 › Toolbar Element Insertion › can insert a LaTeX block
+  [chromium] › toolbar-elements.spec.js:36:7 › Toolbar Element Insertion › can insert a Markdown block
+  [chromium] › toolbar-elements.spec.js:43:7 › Toolbar Element Insertion › can insert a Chart
+  [chromium] › toolbar-elements.spec.js:50:7 › Toolbar Element Insertion › can insert a Callout
+  [chromium] › toolbar-elements.spec.js:57:7 › Toolbar Element Insertion › can insert an HTML Embed
+  [chromium] › toolbar-elements.spec.js:64:7 › Toolbar Element Insertion › can insert a Shape from dropdown
+  [chromium] › toolbar-elements.spec.js:72:7 › Toolbar Element Insertion › can insert a Table with prompt override
+  [chromium] › toolbar-elements.spec.js:79:7 › Toolbar Element Insertion › can insert a Line/Arrow
+  [chromium] › toolbar-elements.spec.js:86:7 › Toolbar Element Insertion › main text toolbar preserves editing and applies formatting controls
+  [chromium] › undo-redo.spec.js:23:7 › Undo / Redo › can undo adding an element
+  [chromium] › undo-redo.spec.js:41:7 › Undo / Redo › can redo after undo
+  [chromium] › undo-redo.spec.js:56:7 › Undo / Redo › undo/redo keyboard shortcuts work
+  [chromium] › undo-redo.spec.js:65:7 › Undo / Redo › bounded stress: 10 adds, 10 undo, 10 redo
+  [chromium] › version-history.spec.js:18:7 › Version History (Snapshots) › can create a snapshot via API
+  [chromium] › version-history.spec.js:28:7 › Version History (Snapshots) › can list snapshots for a presentation
+  [chromium] › version-history.spec.js:41:7 › Version History (Snapshots) › can restore a snapshot
+  [chromium] › version-history.spec.js:61:7 › Version History (Snapshots) › can delete a snapshot
+  [chromium] › visual\editor-canvas-states-empty-and-with-content.spec.js:22:7 › Editor canvas visual baselines across content states › empty canvas with thumb panel renders at 1280x800
+  [chromium] › visual\editor-canvas-states-empty-and-with-content.spec.js:32:7 › Editor canvas visual baselines across content states › empty canvas at smaller 1024x768 viewport
+  [chromium] › visual\editor-canvas-states-empty-and-with-content.spec.js:42:7 › Editor canvas visual baselines across content states › canvas with text and shape elements
+  [chromium] › visual\editor-canvas-states-empty-and-with-content.spec.js:62:7 › Editor canvas visual baselines across content states › canvas with chart and code elements
+  [chromium] › visual\mobile-editor-explicit-device-scale-factor-pinned.spec.js:22:7 › Mobile editor visual baseline pinned to deviceScaleFactor 2 › mobile editor at 390x844 with explicit DPR 2 renders deterministic baseline
+  [chromium] › visual\present-speaker-share-and-live-viewer-baselines.spec.js:34:7 › Present, speaker, share landing, live viewer visual baselines › present mode renders reveal scaffold at 1920x1080
+  [chromium] › visual\present-speaker-share-and-live-viewer-baselines.spec.js:42:7 › Present, speaker, share landing, live viewer visual baselines › share landing page renders for unprotected token
+  [chromium] › visual\present-speaker-share-and-live-viewer-baselines.spec.js:51:7 › Present, speaker, share landing, live viewer visual baselines › live viewer initial state without presenter renders
+  [chromium] › visual\present-speaker-share-and-live-viewer-baselines.spec.js:64:7 › Present, speaker, share landing, live viewer visual baselines › speaker view renders notes panel and thumbnails
+  [chromium] › visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab home renders dark theme baseline
+  [chromium] › visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab insert renders dark theme baseline
+  [chromium] › visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab design renders dark theme baseline
+  [chromium] › visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab format renders dark theme baseline
+  [chromium] › visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab transitions renders dark theme baseline
+  [chromium] › visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab animations renders dark theme baseline
+  [chromium] › visual\ribbon-tabs-across-all-seven-tabs-dark-theme.spec.js:50:9 › Ribbon tabs visual baseline across all 7 tabs and dark theme › ribbon tab view renders dark theme baseline
+  [chromium] › visual-regression.spec.js:24:7 › Visual Regression › editor canvas baseline remains stable
+  [chromium-live] › live\annotation-sync-and-persistence.spec.js:62:7 › Annotation sync and persistence across presenter and viewer › viewer receives annotation:add stroke from presenter within tolerant window
+  [chromium-live] › live\annotation-sync-and-persistence.spec.js:77:7 › Annotation sync and persistence across presenter and viewer › annotation:clear removes all strokes for current slide
+  [chromium-live] › live\annotation-sync-and-persistence.spec.js:89:7 › Annotation sync and persistence across presenter and viewer › rejoining viewer receives previous-slide annotations via annotations:sync
+  [chromium-live] › live\annotation-sync-and-persistence.spec.js:105:7 › Annotation sync and persistence across presenter and viewer › annotation:remove deletes only target stroke
+  [chromium-live] › live\black-and-white-screen-overlay-viewer-keyboard.spec.js:41:7 › Black and white screen overlay viewer keyboard toggle › pressing B toggles a fullscreen black overlay on viewer
+  [chromium-live] › live\black-and-white-screen-overlay-viewer-keyboard.spec.js:60:7 › Black and white screen overlay viewer keyboard toggle › pressing W toggles a fullscreen white overlay on viewer
+  [chromium-live] › live\black-and-white-screen-overlay-viewer-keyboard.spec.js:79:7 › Black and white screen overlay viewer keyboard toggle › clicking the black overlay dismisses it
+  [chromium-live] › live\live-timer-broadcast-via-game-timer-socket-events.spec.js:66:7 › Live timer broadcast via game-timer socket events to viewer › presenter game-timer-start propagates to viewer window.__timerStates
+  [chromium-live] › live\live-timer-broadcast-via-game-timer-socket-events.spec.js:85:7 › Live timer broadcast via game-timer socket events to viewer › game-timer-pause toggles running flag false on viewer
+  [chromium-live] › live\live-timer-broadcast-via-game-timer-socket-events.spec.js:102:7 › Live timer broadcast via game-timer socket events to viewer › game-timer-stop emits zero remaining and viewer clears running state
+  [chromium-live] › live\live-timer-broadcast-via-game-timer-socket-events.spec.js:123:7 › Live timer broadcast via game-timer socket events to viewer › rejoining viewer receives existing running timer state via initial timer:sync
+  [chromium-live] › live\present-mode-keyboard-navigation-presenter-to-viewer-sync.spec.js:66:7 › Present mode keyboard navigation propagates from presenter to viewer Reveal indices › ArrowRight on presenter advances viewer slide index
+  [chromium-live] › live\present-mode-keyboard-navigation-presenter-to-viewer-sync.spec.js:84:7 › Present mode keyboard navigation propagates from presenter to viewer Reveal indices › Reveal.left on presenter goes back to previous slide on viewer
+  [chromium-live] › live\present-mode-keyboard-navigation-presenter-to-viewer-sync.spec.js:107:7 › Present mode keyboard navigation propagates from presenter to viewer Reveal indices › Reveal.slide(0) brings presenter and viewer back to first slide
+  [chromium-live] › live\present-mode-keyboard-navigation-presenter-to-viewer-sync.spec.js:130:7 › Present mode keyboard navigation propagates from presenter to viewer Reveal indices › end-of-deck navigation lands on last slide for viewer
+  [chromium-live] › live\presenter-disconnect-cleanup-and-viewer-count-tracking.spec.js:54:7 › Presenter disconnect cleanup notifies viewer of presenter departure › viewer sees Presenter has left overlay when presenter socket disconnects
+  [chromium-live] › live\presenter-disconnect-cleanup-and-viewer-count-tracking.spec.js:70:7 › Presenter disconnect cleanup notifies viewer of presenter departure › viewer can join room before presenter and shows waiting state until presenter arrives
+  [chromium-live] › live\presenter-disconnect-cleanup-and-viewer-count-tracking.spec.js:91:7 › Presenter disconnect cleanup notifies viewer of presenter departure › viewer count badge reflects multiple viewers and decrements on viewer disconnect
+  [chromium-live] › live\presenter-disconnect-cleanup-and-viewer-count-tracking.spec.js:123:7 › Presenter disconnect cleanup notifies viewer of presenter departure › GET live/room/:code returns exists:false for unknown rooms
+  [chromium-live] › live.spec.js:88:7 › Live Presentation & WebSockets › can create a live room via API
+  [chromium-live] › live.spec.js:96:7 › Live Presentation & WebSockets › can open Present Live button and see modal
+  [chromium-live] › live.spec.js:107:7 › Live Presentation & WebSockets › live room URL contains room code
+  [chromium-live] › live.spec.js:119:7 › Live Presentation & WebSockets › present live modal shows room code and both share links
+  [chromium-live] › live.spec.js:137:7 › Live Presentation & WebSockets › remote controller navigates viewer without increasing viewer count
+  [chromium-live] › live.spec.js:166:7 › Live Presentation & WebSockets › remote controller follows vertical slide order
+  [chromium-live] › live.spec.js:201:7 › Live Presentation & WebSockets › speaker view renders notes and thumbnail navigation syncs viewer
+  [chromium-live] › live.spec.js:229:7 › Live Presentation & WebSockets › speaker thumbnail navigation syncs vertical slides
+Total: 413 tests in 64 files

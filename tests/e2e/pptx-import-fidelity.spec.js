@@ -1,10 +1,11 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { test, expect } from '@playwright/test'
-import { EditorPage } from './pages/EditorPage.js'
+import { EditorPage } from './pages/editor-page.js'
 import {
-  apiDeletePresentation,
   apiGetPresentation,
+  apiUpdatePresentation,
+  expect,
+  test,
 } from './fixtures/test-fixtures.js'
 
 const PPTX_MIME =
@@ -12,18 +13,10 @@ const PPTX_MIME =
 const PPTX_FIXTURE = path.resolve(process.cwd(), 'PPTX', 'Bai_2_2.pptx')
 
 test.describe('PPTX import fidelity', () => {
-  let presentationId = null
-
-  test.afterEach(async ({ request }) => {
-    if (presentationId) {
-      await apiDeletePresentation(request, presentationId)
-      presentationId = null
-    }
-  })
-
   test('imports pptx, renders stable element boxes, and persists property edits', async ({
     page,
     request,
+    testPresentation,
   }) => {
     const buffer = await fs.readFile(PPTX_FIXTURE)
     const importRes = await request.post('/api/pptx/import', {
@@ -39,15 +32,10 @@ test.describe('PPTX import fidelity', () => {
     const imported = await importRes.json()
     expect(imported.presentation?.slides?.length).toBeGreaterThan(0)
 
-    const createRes = await request.post('/api/presentations', {
-      data: imported.presentation,
-    })
-    expect(createRes.ok()).toBeTruthy()
-    const presentation = await createRes.json()
-    presentationId = presentation.id
+    const presentation = await apiUpdatePresentation(request, testPresentation.id, imported.presentation)
 
     const editor = new EditorPage(page)
-    await editor.gotoPresentation(presentationId)
+    await editor.gotoPresentation(presentation.id)
 
     const elementLocator = page.locator('[data-testid^="slide-element-"]')
     await expect(elementLocator.first()).toBeVisible({ timeout: 10000 })
@@ -101,7 +89,7 @@ test.describe('PPTX import fidelity', () => {
 
     await page.reload()
     await editor.waitForReady()
-    const saved = await apiGetPresentation(request, presentationId)
+    const saved = await apiGetPresentation(request, presentation.id)
     const savedElement = saved.slides[0]?.elements?.find((el) => el.id === firstElementId)
     expect(savedElement).toBeTruthy()
     expect(savedElement.x).toBe(nextX)

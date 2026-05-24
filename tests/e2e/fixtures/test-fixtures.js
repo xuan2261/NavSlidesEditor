@@ -55,6 +55,7 @@ export async function apiDeletePresentation(request, id) {
  * Helper: get a presentation by ID.
  */
 export async function apiGetPresentation(request, id) {
+  assertLoopback()
   const res = await request.get(`${API_BASE}/presentations/${id}`)
   if (!res.ok()) {
     throw new Error(`Failed to fetch presentation ${id}: ${res.status()} ${await res.text()}`)
@@ -101,7 +102,7 @@ export async function apiCreateShareLinkWithPassword(request, id, password, opts
  */
 export async function apiRevokeShareToken(request, token) {
   assertLoopback()
-  const res = await request.delete(`${API_BASE.replace('/api', '/api')}/shares/${token}`)
+  const res = await request.delete(`${API_BASE}/shares/${token}`)
   return res
 }
 
@@ -124,11 +125,7 @@ export const test = base.extend({
   testPresentation: async ({ request }, use) => {
     const pres = await apiCreatePresentation(request, 'Auto E2E Fixture')
     await use(pres)
-    try {
-      await apiDeletePresentation(request, pres.id)
-    } catch {
-      // Ignore cleanup errors
-    }
+    await apiDeletePresentation(request, pres.id)
   },
 })
 

@@ -16,6 +16,7 @@ export default function TabBar({ activeTab, onTabChange }) {
             key={tab.id}
             value={tab.id}
             id={`ribbon-tab-${tab.id}`}
+            data-testid={`ribbon-tab-${tab.id}`}
             aria-label={tab.label}
             aria-controls={`ribbon-panel-${tab.id}`}
             className={cn(

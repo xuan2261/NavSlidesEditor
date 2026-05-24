@@ -401,6 +401,7 @@ export default function SlideCanvas({
       {showRulers && <CanvasRulers scale={scale} onAddGuide={onAddGuide} />}
       <div
         ref={canvasRef}
+        data-testid="canvas-area"
         className={cn('slide-canvas shadow-lg')}
         style={canvasStyle}
         onClick={(e) => {
@@ -612,4 +613,4 @@ export default function SlideCanvas({
     </div>
   )
 }
-
+

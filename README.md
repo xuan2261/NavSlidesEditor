@@ -285,6 +285,13 @@ Verification typically runs in this order:
 
 Install `k6` from the official guide if you want to run the load suite locally.
 
+### E2E conventions
+
+- Use `testPresentation` from `tests/e2e/fixtures/test-fixtures.js` for presentation create/cleanup.
+- Prefer `data-testid` selectors for editor controls, canvas handles, and repeated UI; keep page objects in `tests/e2e/pages/` using kebab-case filenames.
+- Use state-based waits: `expect.poll`, locator assertions with timeouts, and `waitForResponse`. Do not add `waitForTimeout`.
+- Reuse helper modules such as `tests/e2e/pages/wait-helpers.js` instead of duplicating timing logic.
+
 ---
 
 ## Tech Stack

@@ -12,6 +12,7 @@ import {
   Keyboard,
   RotateCcw,
   AlertTriangle,
+  CloudUpload,
 } from 'lucide-react'
 import { testAIConnection } from '../utils/ai'
 import { Button } from '../components/ui'
@@ -24,6 +25,7 @@ import {
   detectConflict,
 } from '../utils/shortcut-local-storage-persistence'
 import { normalizeKey, isReservedChord } from '../utils/shortcut-normalizer'
+import SyncModal from '../components/SyncModal'
 
 const THEMES = [
   'black',
@@ -78,6 +80,7 @@ export default function SettingsPage() {
   const [conflictId, setConflictId] = useState(null) // shortcut id that has a conflict
   const [conflictWith, setConflictWith] = useState(null) // what it's conflicting with
   const [reservedWarning, setReservedWarning] = useState(null) // reserved chord warning
+  const [showSyncModal, setShowSyncModal] = useState(false)
   const recordCancelRef = useRef(null)
 
   useEffect(() => {
@@ -538,7 +541,25 @@ export default function SettingsPage() {
             </div>
           </div>
         </section>
+
+        {/* Cloud Sync */}
+        <section className="mb-8">
+          <h2 className="flex items-center gap-2 mb-4">
+            <CloudUpload size={18} /> Cloud Sync
+          </h2>
+          <Button
+            variant="secondary"
+            data-testid="settings-open-sync"
+            onClick={() => setShowSyncModal(true)}
+            className="flex items-center gap-1.5"
+          >
+            <CloudUpload size={14} />
+            Open Sync
+          </Button>
+        </section>
       </div>
+
+      {showSyncModal && <SyncModal onClose={() => setShowSyncModal(false)} />}
     </div>
   )
 }

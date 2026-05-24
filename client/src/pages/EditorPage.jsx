@@ -367,6 +367,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         })
         historyRef.current = [JSON.parse(JSON.stringify(migrated))]
         redoStackRef.current = []
+        if (window.__E2E__) window.__NAVSLIDES_E2E_HISTORY_LENGTH = historyRef.current.length
         setPresentation(migrated)
         if (migrated.gridSize) setGridSize(migrated.gridSize)
         setLoading(false)
@@ -492,6 +493,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         ...historyRef.current.slice(-50),
         JSON.parse(JSON.stringify(presentation)),
       ]
+      if (window.__E2E__) window.__NAVSLIDES_E2E_HISTORY_LENGTH = historyRef.current.length
       redoStackRef.current = []
     }, 500)
     return () => clearTimeout(timer)
@@ -1630,9 +1632,13 @@ svg.selectAll('circle').data(data).join('circle')
             slide={currentSlide}
             selectedElement={selectedElement}
             onUpdateSlide={updateCurrentSlide}
-            onUpdateElement={(updates) =>
-              selectedElementId && updateElement(selectedElementId, updates)
-            }
+            onUpdateElement={(idOrUpdates, maybeUpdates) => {
+              if (maybeUpdates) {
+                updateElement(idOrUpdates, maybeUpdates)
+                return
+              }
+              if (selectedElementId) updateElement(selectedElementId, idOrUpdates)
+            }}
             onDeleteElement={() => selectedElementId && deleteElement(selectedElementId)}
             onBringForward={() => selectedElementId && bringElementForward(selectedElementId)}
             onSendBackward={() => selectedElementId && sendElementBackward(selectedElementId)}
@@ -1904,6 +1910,16 @@ svg.selectAll('circle').data(data).join('circle')
           color={overlayColor}
           onDismiss={() => setOverlayColor(null)}
         />
+
+        {/* Game HUD Overlay */}
+        {currentGameType && (
+          <div
+            data-testid="game-active-indicator"
+            className="pointer-events-none fixed bottom-3 left-1/2 z-[9000] -translate-x-1/2 rounded-md border border-border bg-panel/90 px-3 py-1 text-xs text-text-secondary shadow-lg"
+          >
+            Game: {currentGameType}
+          </div>
+        )}
 
         {/* Game HUD Overlay */}
         <GameHudOverlay

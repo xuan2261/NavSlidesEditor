@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { ExplorePage } from './pages/ExplorePage.js'
+import { ExplorePage } from './pages/explore-page.js'
 import {
   apiCreatePresentation,
   apiDeletePresentation,

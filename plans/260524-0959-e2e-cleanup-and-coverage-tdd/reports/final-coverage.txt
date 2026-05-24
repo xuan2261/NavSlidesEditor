@@ -1,0 +1,306 @@
+
+> navslides-editor@1.9.6 test:coverage
+> vitest run --coverage
+
+5:47:07 PM [vite] warning: `esbuild` option was specified by "vite:react-babel" plugin. This option is deprecated, please use `oxc` instead.
+5:47:07 PM [vite] warning: `optimizeDeps.esbuildOptions` option was specified by "vite:react-babel" plugin. This option is deprecated, please use `optimizeDeps.rolldownOptions` instead.
+Both esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored. The following esbuild options were set: `{ jsx: 'automatic', jsxImportSource: undefined }`
+
+ RUN  v4.1.6 C:/Work/NavSlidesEditor
+      Coverage enabled with v8
+
+
+ Test Files  169 passed | 1 skipped (170)
+      Tests  1439 passed | 9 skipped (1448)
+   Start at  17:47:07
+   Duration  389.14s (transform 3.64s, setup 1.38s, import 55.29s, tests 100.57s, environment 167.88s)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   38.38 |    32.19 |      33 |   39.99 |
+ client/src        |       0 |        0 |       0 |       0 |
+  App.jsx          |       0 |        0 |       0 |       0 | 15-58
+ ...src/components |   22.16 |    19.48 |   24.96 |    23.1 |
+  ...iterModal.jsx |       0 |        0 |       0 |       0 | 6-132
+  ...atorModal.jsx |       0 |        0 |       0 |       0 | 6-244
+  ...lateModal.jsx |       0 |        0 |       0 |       0 | 7-170
+  ...ticsModal.jsx |       0 |        0 |       0 |       0 | 7-190
+  ...viewModal.jsx |   25.28 |     12.5 |    4.76 |   29.72 | ...,63-98,114-204
+  ...nTimeline.jsx |    62.5 |    40.32 |   62.96 |   68.42 | ...66,189-191,209
+  ...itorModal.jsx |       0 |        0 |       0 |       0 | 7-56
+  ...itorModal.jsx |       0 |        0 |       0 |       0 | 5-128
+  ...leSection.jsx |      50 |      100 |   33.33 |   66.66 | 21
+  DropdownMenu.jsx |       0 |        0 |       0 |       0 | 9-111
+  ...rBoundary.jsx |       0 |        0 |       0 |       0 | 9-47
+  ...eplaceBar.jsx |       0 |        0 |       0 |       0 | 19-204
+  ...PushModal.jsx |       0 |        0 |       0 |       0 | 8-126
+  HistoryModal.jsx |       0 |        0 |       0 |       0 | 7-165
+  ...itorModal.jsx |       0 |        0 |       0 |       0 | 6-67
+  IconGallery.jsx  |      80 |     62.5 |   73.68 |      84 | 17-19,102,134-137
+  ...itorModal.jsx |       0 |        0 |       0 |       0 | 6-81
+  ...tionModal.jsx |       0 |        0 |       0 |       0 | 7-111
+  ...raryModal.jsx |       0 |        0 |       0 |       0 | 8-283
+  MiniToolbar.jsx  |       0 |        0 |       0 |       0 | 5-180
+  ...chOverlay.jsx |       0 |        0 |       0 |       0 | 10-12
+  ProductTour.jsx  |   33.33 |        0 |   14.28 |   36.36 | ...29-131,136-157
+  ...ptPopover.jsx |       0 |        0 |       0 |       0 | 18-53
+  ...tiesPanel.jsx |    7.24 |    22.32 |    8.57 |    8.06 | ...29-249,272-465
+  ...ssToolbar.jsx |   66.66 |    63.63 |   33.33 |   66.66 | 16,20
+  ...ctionPane.jsx |   37.28 |     38.7 |      15 |   38.59 | ...09-110,133-191
+  ShareModal.jsx   |       0 |        0 |       0 |       0 | 6-319
+  SlideCanvas.jsx  |       0 |        0 |       0 |       0 | 25-602
+  SlidePanel.jsx   |       0 |        0 |       0 |       0 | 17-621
+  ...orterView.jsx |   55.78 |    31.25 |   52.63 |   57.31 | ...25-227,231-265
+  ...Thumbnail.jsx |       0 |        0 |       0 |       0 | 5-20
+  SyncModal.jsx    |       0 |        0 |       0 |       0 | 7-174
+  ...ckerModal.jsx |       0 |        0 |       0 |       0 | 31-114
+  ...onPreview.jsx |       0 |        0 |       0 |       0 | 6-102
+  ...ew-helpers.js |     100 |       60 |     100 |     100 | 3-37
+  ...tor-modal.jsx |   59.09 |      100 |      40 |   63.15 | 59-89
+  ...on-canvas.jsx |   72.72 |    57.14 |   66.66 |   81.57 | ...8-49,58-60,106
+  ...n-toolbar.jsx |     100 |     90.9 |     100 |     100 | 62
+  ...n-overlay.jsx |       0 |        0 |       0 |       0 | 4-5
+  ...d-palette.jsx |    92.3 |    95.23 |   85.71 |   90.62 | 65,107-108
+  ...ert-media.jsx |   75.47 |    52.17 |   89.47 |      85 | 35-38,92,119
+  ...ce-helpers.js |   39.75 |     47.5 |   72.72 |      40 | ...94,104,124,141
+  ...d-overlay.jsx |       0 |        0 |       0 |       0 | 4-38
+  ...tor-modal.jsx |   78.04 |    65.21 |   65.21 |   83.33 | 93-119
+  ...ter-modal.jsx |   91.66 |       75 |      88 |    92.5 | 154-165
+  ...tor-modal.jsx |   78.57 |    53.33 |      70 |   82.85 | 106-152
+  ...ment-utils.js |   52.38 |    55.73 |     100 |   54.05 | 31-55
+  ...e-element.jsx |       0 |        0 |       0 |       0 | 6-185
+  ...d-details.jsx |      80 |     64.7 |     100 |     100 | 2-41
+ ...ponents/canvas |   26.35 |    30.16 |   15.38 |   26.46 |
+  ...h-handles.jsx |    3.84 |      100 |       0 |    4.34 | 13-130
+  ...t-wrapper.jsx |    57.3 |    43.12 |    37.5 |   68.65 | ...35,144,163-185
+  ...ge-number.jsx |       0 |        0 |       0 |       0 | 5-121
+  ...d-overlay.jsx |       0 |        0 |       0 |       0 | 6-18
+  ...-elements.jsx |   57.14 |     73.8 |   43.75 |   67.56 | ...42-189,224-225
+  ...as-rulers.jsx |       0 |        0 |       0 |       0 | 3-113
+  ...nteraction.js |   28.75 |    13.11 |    5.88 |   24.39 | 125-284
+  ...ize-rotate.js |    3.03 |        0 |       0 |    3.44 | 28-130
+  ...-selection.js |       0 |        0 |       0 |       0 | 9-59
+  ...art-guides.js |       0 |        0 |       0 |       0 | 5-87
+ ...ment-renderers |   23.06 |    18.72 |   23.48 |   25.26 |
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 2-21
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 2-45
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 2-13
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 11-25
+  ...-renderer.jsx |      34 |    28.91 |   30.61 |   38.61 | ...1135,1237,1240
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 2-14
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 2-52
+  ...-renderer.jsx |    3.12 |        0 |       0 |    3.12 | 3-95
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 5-16
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 5-37
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 2-103
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 4-22
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 4-96
+  ...-renderer.jsx |       0 |      100 |       0 |       0 | 4
+ ...me-interactive |       0 |        0 |       0 |       0 |
+  ...aderboard.jsx |       0 |        0 |       0 |       0 | 7-252
+  ...-renderer.jsx |       0 |        0 |       0 |       0 | 16-427
+  ...aton-pass.jsx |       0 |        0 |       0 |       0 | 8-260
+  ...e-scoring.jsx |       0 |        0 |       0 |       0 | 7-304
+  ...g-jackpot.jsx |       0 |        0 |       0 |       0 | 7-268
+ ...ents/dashboard |       0 |        0 |       0 |       0 |
+  ...teGallery.jsx |       0 |        0 |       0 |       0 | 38-405
+  ...tePreview.jsx |       0 |        0 |       0 |       0 | 11-358
+ ...ponents/layout |      95 |       50 |    90.9 |   92.85 |
+  MainLayout.jsx   |       0 |      100 |       0 |       0 | 6
+  StatusBar.jsx    |     100 |       50 |     100 |     100 | 126
+ ...nts/properties |   19.53 |     30.3 |      13 |   22.81 |
+  ...roperties.jsx |      32 |       35 |   18.75 |   36.36 | ...6,53-56,70-101
+  ...roperties.jsx |    8.33 |        0 |       0 |      10 | 36-94
+  ...-controls.jsx |   13.04 |    66.66 |    12.5 |   14.28 | ...35-142,165-195
+  ...on-editor.jsx |   27.27 |     47.5 |   13.79 |    37.2 | ...,67-94,111-154
+  ...roperties.jsx |   39.18 |     47.5 |   18.91 |   49.15 | ...89-212,225-356
+  ...roperties.jsx |       0 |        0 |       0 |       0 | 8-134
+  ...roperties.jsx |   29.41 |    66.66 |      25 |   31.25 | ...-55,75-104,131
+  ...roperties.jsx |    7.04 |     6.57 |    3.22 |    7.93 | ...,70,74,103-368
+  ...roperties.jsx |       8 |    47.54 |    8.33 |    9.52 | 20-180
+  ...roperties.jsx |   27.65 |    44.73 |   29.62 |   31.57 | ...00,115-166,181
+  ...roperties.jsx |       0 |        0 |       0 |       0 | 5-224
+ ...ponents/ribbon |   66.98 |    71.05 |   58.98 |   71.34 |
+  ...b-content.jsx |   74.02 |    62.12 |   69.23 |   77.41 | ...51,194,228,277
+  ...b-content.jsx |   66.66 |    66.66 |      50 |   66.66 | 70
+  ...p-trigger.jsx |   82.14 |    68.42 |    90.9 |    87.5 | 45-47
+  ...b-content.jsx |   96.66 |    83.33 |     100 |     100 | 39,46-47,52-55,68
+  ...down-menu.jsx |    97.5 |    92.85 |     100 |     100 | 65
+  ...g-overlay.jsx |   97.05 |    91.11 |     100 |     100 | 24-35,42-46
+  ...-controls.jsx |   69.49 |       64 |   61.76 |   71.92 | ...86-299,313-314
+  ...eader-bar.jsx |   95.23 |    85.71 |     100 |     100 | 46,77
+  ...ies-panel.jsx |   27.41 |    48.07 |   21.49 |    33.1 | ...25-460,501-504
+  ...s-content.jsx |      65 |       50 |   63.63 |   58.33 | 27-91
+  ...and-icons.jsx |   71.42 |      100 |      75 |   71.42 | 30-31
+  ...b-content.jsx |   88.63 |    82.92 |   77.27 |   86.84 | ...16,131,174-189
+ ...ibbon/controls |   36.53 |    36.25 |   26.21 |   36.29 |
+  ...-controls.jsx |      50 |       50 |   33.33 |      50 | 45-49
+  ...-controls.jsx |   65.71 |    28.57 |   52.38 |   54.16 | 19-21,29-93
+  ...d-buttons.jsx |   11.11 |      100 |      20 |      20 | 10-38
+  ...-controls.jsx |   35.08 |    60.86 |   25.71 |      40 | ...73-128,141-149
+  ...-controls.jsx |   47.05 |    58.82 |   38.46 |   53.33 | 12-55,72-73
+  ...-controls.jsx |    8.82 |        0 |       0 |    9.67 | 37-170
+ .../components/ui |   52.11 |    48.14 |   78.57 |   53.96 |
+  ColorPicker.jsx  |   33.33 |    47.36 |     100 |   30.43 | 11-39
+  ModalShell.jsx   |   48.38 |       25 |   57.14 |   51.85 | 45-63,72-87
+ .../src/constants |     100 |    83.33 |     100 |     100 |
+  ...-constants.js |     100 |    83.33 |     100 |     100 | 128
+ ...t/src/contexts |       0 |      100 |     100 |       0 |
+  ...-provider.jsx |       0 |      100 |     100 |       0 | 4
+  ...-provider.jsx |       0 |      100 |     100 |       0 | 4
+ client/src/data   |    67.7 |    57.89 |   58.33 |   66.81 |
+  ...-templates.js |      95 |    70.27 |     100 |   97.43 | 220
+  ...-templates.js |       0 |        0 |       0 |       0 | 7-231
+  ...-templates.js |   94.73 |    82.27 |     100 |   96.51 | 79-80,114
+  ...-templates.js |       0 |      100 |     100 |       0 | 1
+  ...-templates.js |   95.65 |       95 |     100 |   95.65 | 203
+ ...src/extensions |   12.37 |    21.62 |   19.23 |   13.04 |
+  FontFamily.js    |       0 |        0 |       0 |       0 | 3-32
+  FontSize.js      |       0 |        0 |       0 |       0 | 3-32
+  MathExtension.js |       0 |        0 |       0 |       0 | 4-123
+  ...-extension.js |      60 |      100 |   55.55 |      60 | 27-32
+  ...-extension.js |      50 |      100 |   45.45 |      50 | 29-37
+ client/src/hooks  |   34.15 |    31.49 |   33.33 |   35.98 |
+  ...on-helpers.js |      90 |    78.94 |   84.61 |   88.88 | 20-30,55
+  ...ation-sync.js |   97.14 |    88.88 |     100 |     100 | 31,63
+  use-autosave.js  |       0 |        0 |       0 |       0 | 6-42
+  use-clipboard.js |    49.5 |     42.1 |   41.37 |   55.42 | 108,124-199
+  ...ments-hook.js |   88.88 |    55.55 |     100 |     100 | 5,12-27
+  ...ame-player.js |       0 |        0 |       0 |       0 | 9-145
+  ...ame-socket.js |       0 |        0 |       0 |       0 | 9-103
+  use-keyboard.js  |   91.11 |     91.3 |     100 |   89.74 | 78-80,85
+  ...esentation.js |       0 |        0 |       0 |       0 | 10-110
+  ...pinch-zoom.js |     100 |    89.47 |     100 |     100 | 26,47
+  ...view-frame.js |       0 |        0 |       0 |       0 | 4-81
+  ...eservation.js |      20 |        0 |   16.66 |   23.07 | ...24,29-33,40-44
+  ...operations.js |       0 |        0 |       0 |       0 | 24-331
+  ...navigation.js |     100 |     87.5 |     100 |     100 | 41-46
+  ...h-gestures.js |   77.61 |    71.79 |   85.71 |   76.56 | ...06-107,132-141
+ client/src/lib    |   85.71 |       50 |   85.71 |   91.66 |
+  utils.js         |   85.71 |       50 |   85.71 |   91.66 | 10
+ client/src/pages  |       0 |        0 |       0 |       0 |
+  EditorPage.jsx   |       0 |        0 |       0 |       0 | 95-2055
+  ExplorePage.jsx  |       0 |        0 |       0 |       0 | 7-113
+  HomePage.jsx     |       0 |        0 |       0 |       0 | 36-1672
+  LiveViewPage.jsx |       0 |        0 |       0 |       0 | 12-324
+  ...ntrolPage.jsx |       0 |        0 |       0 |       0 | 6-194
+  SettingsPage.jsx |       0 |        0 |       0 |       0 | 30-562
+  ...rViewPage.jsx |       0 |        0 |       0 |       0 | 12-285
+  ...join-page.jsx |       0 |        0 |       0 |       0 | 11-278
+ ...nt/src/plugins |   86.58 |    63.23 |    90.9 |   95.52 |
+  plugin-loader.js |   88.23 |    68.75 |     100 |     100 | 10-13,22-29
+  ...n-registry.js |   86.36 |       70 |   85.71 |     100 | 15-25,28-41
+  ...n-sandbox.jsx |   85.71 |    56.25 |   91.66 |    90.9 | 39,52,75
+ ...t/src/services |       0 |        0 |       0 |       0 |
+  giphy.js         |       0 |        0 |       0 |       0 | 2-37
+  unsplash.js      |       0 |        0 |       0 |       0 | 2-46
+ client/src/stores |   72.41 |    15.38 |   70.83 |   67.16 |
+  editor-store.js  |    65.9 |        5 |   65.85 |   57.14 | ...44,47-49,65-68
+  ui-store.js      |   76.92 |       50 |      75 |   75.86 | 40,49-51,53,60-61
+ client/src/utils  |    64.3 |       53 |   64.51 |   66.19 |
+  ai.js            |       0 |        0 |       0 |       0 | 1-70
+  api.js           |   16.32 |    11.11 |    5.26 |   17.02 | 10-39,46-148
+  ...ent-safety.js |   79.54 |    55.55 |   72.72 |    82.5 | 7-16,22,50,71
+  ...nt-factory.js |       0 |        0 |       0 |       0 | 14-25
+  ...background.js |   52.63 |       50 |     100 |   52.63 | 16-17,21-24,31-33
+  ...-renderers.js |   94.73 |    64.56 |    92.3 |   97.53 | 64,168
+  ...olor-utils.js |   94.28 |    80.55 |     100 |   96.77 | 63
+  ...-pptx-core.js |   65.71 |    46.98 |   93.75 |   68.85 | ...05-107,113,124
+  ...k-renderer.js |    64.7 |       50 |     100 |    64.7 | 34-36,41-43
+  ...tml-parser.js |   94.17 |    84.61 |     100 |     100 | ...97,116,147,155
+  ...er-capture.js |   55.96 |     50.9 |    62.5 |   61.05 | ...41-145,172-173
+  ...ptx-raster.js |   18.75 |     7.03 |   31.03 |   21.42 | ...14-338,356-364
+  ...-renderers.js |   78.57 |    81.25 |     100 |   78.57 | 51-55,64-65
+  ...-text-runs.js |    88.5 |    81.33 |     100 |   93.93 | 49-50,98-99
+  ...rt-project.js |   89.36 |       50 |     100 |   88.63 | 31,69-78
+  exportPptx.js    |    84.9 |       60 |     100 |   85.41 | 42,52-57,64
+  ...rt-project.js |   26.53 |    26.31 |   33.33 |      25 | 13-51,83-103
+  ...own-import.js |   88.46 |    88.88 |      70 |   91.66 | 81,115,122,129
+  ...down-utils.js |   92.85 |     87.5 |     100 |     100 | 50
+  number-input.js  |     100 |     87.5 |     100 |     100 | 11-12
+  offlineExport.js |   39.66 |    26.66 |   73.33 |      40 | ...18,326,332-441
+  pdf-import.js    |   96.96 |       75 |     100 |     100 | 29-44
+  ...rt-summary.js |   95.83 |    70.83 |     100 |      95 | 32
+  ...edia-utils.js |   74.24 |    70.76 |   78.57 |   75.92 | 33,112-126
+  ...normalizer.js |   86.48 |    78.94 |     100 |    92.3 | 79-80
+  slide-notes.js   |   25.92 |    24.24 |      20 |   33.33 | 6-32,54
+  url-safety.js    |   66.66 |    66.66 |     100 |   88.88 | 13
+ server            |       0 |        0 |       0 |       0 |
+  index.js         |       0 |        0 |       0 |       0 | 1-325
+ server/middleware |   65.51 |        0 |      50 |   65.51 |
+  error-handler.js |       0 |        0 |       0 |       0 | 6-17
+  validate.js      |      60 |        0 |   66.66 |      60 | 17-26
+ server/routes     |    62.5 |    44.98 |   71.57 |   63.95 |
+  ai.js            |   60.95 |    39.47 |      75 |   61.16 | ...91,207,228-261
+  analytics.js     |   89.18 |    78.26 |     100 |   89.18 | 10,20,37,66
+  explore.js       |   44.44 |       36 |   66.66 |   48.71 | 9,40,46-80
+  ...pi-handler.js |       0 |        0 |       0 |       0 | 5-121
+  github.js        |    37.5 |    21.73 |    37.5 |   40.74 | ...94-185,197-215
+  history.js       |   86.88 |       50 |     100 |    92.3 | 28,53,75,86
+  live.js          |   55.55 |     12.5 |   66.66 |   57.69 | 26,32-43
+  marketplace.js   |   70.21 |    52.63 |   55.55 |   70.73 | ...99,114,120-127
+  media.js         |   81.94 |    63.88 |   85.71 |   83.07 | ...1,87-88,94,116
+  plugins.js       |      80 |       75 |     100 |   85.29 | 21,32,43,53,57
+  pptx-import.js   |   91.89 |    61.11 |   88.88 |    90.9 | 47-49
+  presentations.js |   60.33 |    48.02 |   67.27 |   62.25 | ...58-502,508-531
+  settings.js      |   91.66 |    58.33 |     100 |    90.9 | 19,44
+  share.js         |   68.65 |     37.5 |   72.72 |   69.84 | ...04-117,123-130
+  sync.js          |   46.55 |    40.74 |   66.66 |   48.57 | ...50-157,166-172
+  templates.js     |   87.03 |    66.66 |     100 |   89.13 | 24,44,56,75,89
+  upload.js        |   90.32 |    71.42 |   78.57 |   93.22 | 79,97-98,119
+ server/services   |   68.19 |    54.45 |   71.85 |    72.7 |
+  ...oint-guard.js |   47.22 |    38.57 |      80 |      64 | ...57,61,66-68,74
+  ai-provider.js   |   63.88 |    46.15 |   33.33 |   71.87 | 14,45-60,68-70,90
+  ...on-service.js |    92.1 |    91.48 |   93.33 |   95.23 | 110,139-140
+  ...et-handler.js |       0 |        0 |       0 |       0 | 6-144
+  live-rooms.js    |   70.27 |    56.86 |   77.77 |   72.72 | ...03,124,131-132
+  ...in-runtime.js |   95.38 |    85.45 |    92.3 |   96.29 | 58,83
+  pptx-exporter.js |   89.55 |    57.14 |   91.66 |   90.32 | 35-36,67-71
+  ...ion-finder.js |   47.61 |    33.33 |      50 |   53.33 | 16-23,29
+  ...et-handler.js |   75.83 |    59.06 |   89.65 |   84.92 | ...33-337,339-349
+  storage.js       |   71.07 |    59.25 |   64.58 |   73.26 | ...61,171,191-221
+ ...es/pptx-import |   69.28 |     61.4 |   71.55 |   71.03 |
+  ...des-mapper.js |   90.32 |    87.25 |   91.66 |   93.02 | 64-65,97
+  diagnostics.js   |      50 |    38.46 |   66.66 |      50 | 28-38
+  geometry.js      |    92.1 |    77.77 |     100 |   95.58 | 1,49,89
+  importer.js      |   46.66 |        0 |       0 |   46.66 | 9-28
+  mapper.js        |    69.9 |    62.74 |   72.97 |   71.89 | ...50,954-955,961
+  media.js         |   61.72 |    50.79 |     100 |   65.15 | ...01-103,110-118
+  parse-worker.js  |       0 |        0 |       0 |       0 | 1-75
+  pptx-guards.js   |   67.56 |    55.55 |      50 |   66.66 | ...24-28,30,48,56
+  sanitize.js      |   78.37 |       65 |     100 |   83.33 | 43,67,69-72
+  worker-runner.js |    60.6 |    44.68 |   43.75 |   65.51 | ...98,104,114-130
+ server/utils      |   55.34 |       40 |   45.83 |    57.4 |
+  ...und-raster.js |   45.16 |       32 |    12.5 |   49.12 | 30-81,139-162
+  ...background.js |   52.77 |       50 |     100 |   52.77 | 10-11,22-33,46-58
+  ...-renderers.js |   45.91 |     34.9 |   46.15 |   46.42 | ...45-213,263-273
+  server-export.js |   93.93 |    54.54 |   66.66 |     100 | 13,21,34-64
+  ...r-fallback.js |    12.5 |        0 |       0 |   13.51 | 8-74
+  ...age-source.js |   95.23 |       75 |     100 |     100 | 8,20-22,30
+  server-raster.js |   63.63 |    54.21 |   52.94 |   65.55 | ...53,187,198-208
+  ...-renderers.js |   68.75 |    71.42 |     100 |   68.75 | 48,51,55-63,72-73
+ shared/src        |   45.75 |    38.39 |   46.32 |      48 |
+  ...ent-safety.js |   73.68 |    72.72 |      75 |   76.47 | 5,8,17,28
+  ...-renderers.js |   42.36 |    38.09 |      44 |   42.19 | ...65,579,582-590
+  htmlGenerator.js |   39.17 |    37.59 |      48 |   41.27 | ...52-456,576-607
+  index.js         |   66.66 |      100 |       0 |   66.66 | 42-47
+  ...enterTools.js |   70.96 |    51.85 |     100 |   77.77 | ...54,180,282-283
+  shapeUtils.js    |   66.66 |    58.53 |     100 |   67.18 | 51-60,74,86-103
+  ...olor-utils.js |   58.33 |    66.66 |      20 |   59.37 | ...38-42,45,50-51
+  ...tml-parser.js |   57.69 |    48.11 |   63.63 |   60.71 | ...48-149,157-160
+  ...-pptx-core.js |   20.83 |     7.14 |   13.33 |    23.8 | ...10-112,117-162
+  ...-text-runs.js |   26.66 |    21.05 |      30 |   33.33 | ...13-115,119-120
+  ...ets-config.js |       0 |      100 |       0 |       0 | 4-45
+  slideNotes.js    |      80 |       80 |     100 |     100 | 2,9,25-26
+ shared/src/types  |       0 |      100 |     100 |       0 |
+  presentation.js  |       0 |      100 |     100 |       0 | 242
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 38.38% ( 5802/15115 )
+Branches     : 32.19% ( 4002/12429 )
+Functions    : 33% ( 1272/3854 )
+Lines        : 39.99% ( 5224/13063 )
+================================================================================

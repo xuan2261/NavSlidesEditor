@@ -776,9 +776,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted px-3 pt-2 pb-1.5">
               Import
             </div>
-            <label
-              className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
-            >
+            <label className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary">
               <FileUp size={16} />
               <span>Import PPTX</span>
               <input
@@ -807,11 +805,13 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
               />
             </label>
             <label
+              data-testid="home-import-markdown-btn"
               className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
             >
               <BookOpen size={16} />
               <span>Import Markdown</span>
               <input
+                data-testid="home-import-markdown-input"
                 type="file"
                 accept=".md,.markdown,.txt"
                 className="hidden"
@@ -1246,6 +1246,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   <div className="flex gap-3 flex-wrap justify-center">
                     <Button
                       variant="ghost"
+                      data-testid="home-new-presentation-btn"
                       className={DASHBOARD_ACTION_TILE_CLASS}
                       onClick={handleOpenModal}
                     >
@@ -1316,6 +1317,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   ) : viewMode === 'grid' ? (
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 animate-fade-in">
                       <div
+                        data-testid="home-new-presentation-btn"
                         className="border-dashed border-2 border-border flex flex-col items-center justify-center gap-3 min-h-[200px] text-text-muted cursor-pointer transition-[background-color,border-color,color,box-shadow] duration-150 rounded-lg hover:border-accent hover:text-accent hover:bg-hover focus-visible:ring-2 focus-visible:ring-focus/30"
                         role="button"
                         tabIndex={0}

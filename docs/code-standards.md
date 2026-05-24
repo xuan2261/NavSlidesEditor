@@ -29,11 +29,18 @@
 
 ## E2E Selector Contract
 
-Use this selector priority for Playwright tests:
+Use `data-testid` as the stable selector contract for E2E tests that touch editor
+controls, canvas handles, repeated controls, or layout instrumentation. User-facing
+queries (`getByRole`, `getByLabel`, `getByText`) are allowed for accessibility
+assertions and simple navigation smoke tests. CSS selectors are legacy fallback only
+and should not be introduced for new editor behavior.
 
-1. `getByRole`, `getByLabel`, `getByText` when unique.
-2. `data-testid` only for ambiguous controls (property panels, repeated series/cell editors, color/range controls).
-3. CSS selectors only for legacy wrappers where semantic selectors are unavailable.
+E2E structure conventions:
+
+- Create and clean presentations through `testPresentation` from `tests/e2e/fixtures/test-fixtures.js`.
+- Page-object helper files live in `tests/e2e/pages/` and use kebab-case filenames.
+- Wait with `expect.poll`, locator assertions with explicit timeouts, and `waitForResponse`; do not add `waitForTimeout`.
+- Keep E2E spec files at or below 200 LOC. Split by concern when a file grows past that cap.
 
 Canvas selector IDs are stable and must not be renamed:
 

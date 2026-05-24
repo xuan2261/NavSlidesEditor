@@ -163,14 +163,14 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onGameTimer).not.toHaveBeenCalled()
   })
 
-  // Game shortcuts do NOT fire in editor mode
+  // Active game shortcuts fire when a game element is active, even outside present mode
 
-  it('does NOT fire gameHud when G pressed in editor mode even with activeGameType set', () => {
+  it('fires gameHud when G pressed in editor mode with activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: false, activeGameType: 'jeopardy' })
     handler(createEvent('g'))
-    expect(cb.onGameHud).not.toHaveBeenCalled()
+    expect(cb.onGameHud).toHaveBeenCalledTimes(1)
   })
 
   // Still respects isEditing blocking

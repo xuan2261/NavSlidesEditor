@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
+import { test, expect } from './fixtures/test-fixtures.js'
 
 const pkg = JSON.parse(
   fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')
@@ -22,16 +22,11 @@ test.describe('Regression — smoke test fixes', () => {
     await expect(trashBtn).toBeInViewport()
   })
 
-  test('I-003: Ctrl+K opens the command palette in editor', async ({ page, request }) => {
-    // Create a minimal presentation via API and navigate directly to its editor.
-    // Avoids dependence on the dashboard "New Presentation" modal flow.
-    const createRes = await request.post('/api/presentations', {
-      data: { title: 'I-003 test', slides: [{ id: 'slide-1', elements: [] }] },
-    })
-    expect(createRes.ok()).toBeTruthy()
-    const presentation = await createRes.json()
-
-    await page.goto(`/editor/${presentation.id}`)
+  test('I-003: Ctrl+K opens the command palette in editor', async ({
+    page,
+    testPresentation,
+  }) => {
+    await page.goto(`/editor/${testPresentation.id}`)
     // Click the canvas area to ensure no TipTap input is focused.
     await page.locator('body').click()
     await page.keyboard.press('Control+K')

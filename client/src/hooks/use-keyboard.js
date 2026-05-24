@@ -12,7 +12,7 @@ const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
  * Scope resolution:
  *   - isPresenting && activeGameType  → 'presentation-game'
  *   - isPresenting && !activeGameType → 'presentation'
- *   - !isPresenting                  → 'editor'
+ *   - !isPresenting                  → 'editor' plus active game shortcuts when activeGameType exists
  */
 export function createKeyboardHandler({
   shortcuts,
@@ -38,7 +38,8 @@ export function createKeyboardHandler({
     const scopeShortcuts = shortcuts.filter(
       (s) =>
         s.scopes.includes(activeScope) ||
-        (!isPresenting && !activeGameType && s.scopes.includes('canvas'))
+        (!isPresenting && s.scopes.includes('canvas')) ||
+        (activeGameType && s.scopes.includes('presentation-game'))
     )
 
     // Standalone keys (no Ctrl) — F5, arrows, B, W, Home, End, Escape in presentation
