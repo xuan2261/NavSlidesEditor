@@ -115,6 +115,18 @@ describe('AnimationsTabContent', () => {
     expect(screen.getByLabelText('Preview animation')).toBeTruthy()
   })
 
+  it('calls onPreviewAnimation when preview button is clicked', () => {
+    const onPreviewAnimation = vi.fn()
+    render(
+      <AnimationsTabContent
+        selectedElement={mockElement}
+        onPreviewAnimation={onPreviewAnimation}
+      />,
+    )
+    fireEvent.mouseDown(screen.getByLabelText('Preview animation'))
+    expect(onPreviewAnimation).toHaveBeenCalled()
+  })
+
   it('shows current animation label', () => {
     render(<AnimationsTabContent selectedElement={mockElement} />)
     expect(screen.getByText('Fade In')).toBeTruthy()

@@ -1565,6 +1565,7 @@ svg.selectAll('circle').data(data).join('circle')
               })
             }}
             onToggleSlideSorter={() => setViewMode((v) => (v === 'sorter' ? 'normal' : 'sorter'))}
+            onPreviewAnimation={() => setShowAnimationPreview(true)}
           />
           <div className="flex-1 flex flex-col relative overflow-hidden">
             <SlideCanvas

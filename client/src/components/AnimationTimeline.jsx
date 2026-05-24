@@ -59,15 +59,19 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
 
   const handleDragStart = (e, elementId, fromIndex) => {
     setDragItem({ elementId, fromIndex })
-    e.dataTransfer.effectAllowed = 'move'
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
   }
+
+  const handleDragEnd = () => setDragItem(null)
 
   const handleDrop = (e, toIndex) => {
     e.preventDefault()
-    if (dragItem) {
-      onUpdateElement(dragItem.elementId, { fragmentIndex: toIndex })
-      setDragItem(null)
-    }
+    if (!dragItem) return
+    const sourceEl = (slide.elements || []).find((el) => el.id === dragItem.elementId)
+    const updates = { fragmentIndex: toIndex }
+    if (sourceEl && !sourceEl.fragment) updates.fragment = true
+    onUpdateElement(dragItem.elementId, updates)
+    setDragItem(null)
   }
 
   return (
@@ -93,6 +97,37 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
         </div>
       </div>
 
+      {fragmentElements.length === 0 ? (
+        <div
+          data-testid="animation-timeline-empty-state"
+          className="flex-1 flex flex-col items-center justify-center px-3 py-4 text-center"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => handleDrop(e, 1)}
+        >
+          <div className="text-[12px] text-text-primary mb-1">
+            No animated elements on this slide yet
+          </div>
+          <div className="text-[11px] text-text-muted max-w-[420px]">
+            Drag any element below into a step, or open the Animations tab and toggle the
+            animation switch to add a fragment.
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1 justify-center max-w-[520px]">
+            {nonFragElements.slice(0, 8).map((el) => (
+              <div
+                key={el.id}
+                data-testid={`animation-timeline-item-${el.id}`}
+                className="flex items-center gap-1 py-1 px-2 rounded border border-dashed border-border text-[11px] text-text-primary bg-white/[0.06] cursor-grab"
+                draggable
+                onDragStart={(e) => handleDragStart(e, el.id, 0)}
+                onDragEnd={handleDragEnd}
+              >
+                <GripVertical size={10} className="cursor-grab opacity-50" />
+                {getElementLabel(el)}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
       <div className="flex overflow-x-auto py-2.5 px-3 gap-2 flex-1">
         {/* Initial state (non-fragment elements) */}
         <div className="min-w-[140px] bg-secondary border border-border rounded-sm p-2 shrink-0">
@@ -101,8 +136,14 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
             {nonFragElements.slice(0, 5).map((el) => (
               <div
                 key={el.id}
-                className="flex items-center gap-1 py-1 px-2 rounded border border-border text-[11px] cursor-grab text-text-primary bg-white/[0.08] opacity-50"
+                data-testid={`animation-timeline-item-${el.id}`}
+                className="flex items-center gap-1 py-1 px-2 rounded border border-border text-[11px] cursor-grab text-text-primary bg-white/[0.08]"
+                draggable
+                onDragStart={(e) => handleDragStart(e, el.id, 0)}
+                onDragEnd={handleDragEnd}
+                title="Drag onto a step to animate this element"
               >
+                <GripVertical size={10} className="cursor-grab opacity-50" />
                 <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                   {getElementLabel(el)}
                 </span>
@@ -129,9 +170,11 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
               {groups[idx].map((el, i) => (
                 <div
                   key={el.id}
+                  data-testid={`animation-timeline-item-${el.id}`}
                   className="flex items-center gap-1 py-1 px-2 rounded border border-border text-[11px] cursor-grab text-text-primary"
                   draggable
                   onDragStart={(e) => handleDragStart(e, el.id, idx)}
+                  onDragEnd={handleDragEnd}
                   style={{
                     background: ELEMENT_COLORS[i % ELEMENT_COLORS.length] + '33',
                     borderColor: ELEMENT_COLORS[i % ELEMENT_COLORS.length],
@@ -161,6 +204,7 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
 
         {/* Drop zone for new step */}
         <div
+          data-testid="animation-timeline-newstep-dropzone"
           className="min-w-[140px] bg-transparent border-2 border-dashed border-border rounded-sm p-2 shrink-0 flex items-center justify-center gap-1.5"
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => handleDrop(e, maxIndex + 1)}
@@ -173,6 +217,7 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
           <span className="text-[11px] text-text-muted">Drop here for new step</span>
         </div>
       </div>
+      )}
     </div>
   )
 }

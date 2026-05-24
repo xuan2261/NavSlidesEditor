@@ -145,7 +145,7 @@ export default function CanvasElement({
             />
           )
         }
-        if (element.type === 'html') return <iframe srcDoc={element.content || ''} style={htmlFrameStyle} sandbox="allow-scripts" title="HTML embed" />
+        if (element.type === 'html') return <iframe srcDoc={element.content || ''} style={htmlFrameStyle} sandbox="allow-scripts allow-same-origin" title="HTML embed" />
         if (element.type === 'code') return <pre className="hljs" style={codeBlockStyle}><code dangerouslySetInnerHTML={{ __html: hljs.highlight(element.content || '', { language: element.language || 'plaintext' }).value }} /></pre>
         if (element.type === 'video') {
           const playbackRate = getPlaybackRate(element.playbackRate)

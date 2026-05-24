@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X, Copy, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui'
 
@@ -38,10 +38,14 @@ function getContextMenuStyle(ctxMenu) {
   }
 }
 
-function MiniPreview({ slide }) {
+function MiniPreview({ slide, idx }) {
   const els = (slide.elements || []).slice(0, 4)
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-t-md" style={getBgStyle(slide.background)}>
+    <div
+      data-testid={`slide-sorter-preview-${idx}`}
+      className="relative aspect-video w-full overflow-hidden rounded-b-md"
+      style={getBgStyle(slide.background)}
+    >
       {els.map((el, i) => (
         <div key={el.id || i} style={getMiniPreviewElementStyle(el)}>
           {el.type === 'text' && (
@@ -74,6 +78,17 @@ export default function SlideSorterView({
   const [ctxMenu, setCtxMenu] = useState(null)
   const [selectedIndices, setSelectedIndices] = useState([currentIndex])
 
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        if (ctxMenu) setCtxMenu(null)
+        else onClose?.()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose, ctxMenu])
+
   const handleDragStart = (e, idx) => {
     setDragIdx(idx)
     e.dataTransfer.effectAllowed = 'move'
@@ -103,30 +118,39 @@ export default function SlideSorterView({
     setCtxMenu({ x: e.clientX, y: e.clientY, slideIdx: idx })
   }
 
-  // Multi-select + navigate on click
   const handleCardClick = (e, idx) => {
     e.stopPropagation()
     if (e.ctrlKey || e.metaKey) {
-      // Toggle selection
       setSelectedIndices((prev) =>
         prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
       )
     } else if (e.shiftKey && selectedIndices.length > 0) {
-      // Range select
       const last = selectedIndices[selectedIndices.length - 1]
       const start = Math.min(last, idx)
       const end = Math.max(last, idx)
       setSelectedIndices(Array.from({ length: end - start + 1 }, (_, i) => start + i))
     } else {
-      // Single select + navigate to normal view
       setSelectedIndices([idx])
-      onSelect(idx)
     }
   }
 
-  // Close context menu on outside click
+  const handleCardDoubleClick = (idx) => {
+    onSelect?.(idx)
+  }
+
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) setCtxMenu(null)
+  }
+
+  const handleBulkDelete = () => {
+    const sorted = [...selectedIndices].sort((a, b) => b - a)
+    sorted.forEach((idx) => onDelete?.(idx))
+    setSelectedIndices([])
+  }
+
+  const handleBulkDuplicate = () => {
+    const sorted = [...selectedIndices].sort((a, b) => a - b)
+    sorted.forEach((idx) => onDuplicate?.(idx))
   }
 
   return (
@@ -141,14 +165,50 @@ export default function SlideSorterView({
         <span>Slide Sorter</span>
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-text-muted">
-            Ctrl+Click: multi-select &nbsp;|&nbsp; Drag: reorder &nbsp;|&nbsp; Right-click:
-            Duplicate/Delete
+            Click: select &nbsp;|&nbsp; Double-click: open &nbsp;|&nbsp; Ctrl+Click: multi-select &nbsp;|&nbsp; Drag: reorder &nbsp;|&nbsp; Esc: close
           </span>
           <Button variant="icon" onClick={onClose} title="Close (Esc)">
             <X size={16} />
           </Button>
         </div>
       </div>
+
+      {selectedIndices.length >= 2 && (
+        <div
+          data-testid="slide-sorter-bulk-toolbar"
+          className="flex items-center gap-2 px-6 py-2 bg-secondary border-b border-border shrink-0"
+        >
+          <span className="text-[12px] text-text-primary font-medium">
+            {selectedIndices.length} selected
+          </span>
+          <div className="flex items-center gap-1 ml-auto">
+            <Button
+              variant="secondary"
+              className="text-[11px] px-2.5 py-1"
+              data-testid="slide-sorter-bulk-duplicate"
+              onClick={handleBulkDuplicate}
+            >
+              <Copy size={12} /> Duplicate
+            </Button>
+            <Button
+              variant="secondary"
+              className="text-[11px] px-2.5 py-1 text-danger"
+              data-testid="slide-sorter-bulk-delete"
+              onClick={handleBulkDelete}
+              disabled={slides.length - selectedIndices.length < 1}
+            >
+              <Trash2 size={12} /> Delete
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-[11px] px-2.5 py-1"
+              onClick={() => setSelectedIndices([currentIndex])}
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto p-6 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
         {slides.map((slide, idx) => {
@@ -167,11 +227,17 @@ export default function SlideSorterView({
               onDrop={(e) => handleDrop(e, idx)}
               onDragEnd={handleDragEnd}
               onClick={(e) => handleCardClick(e, idx)}
+              onDoubleClick={() => handleCardDoubleClick(idx)}
               onContextMenu={(e) => handleContextMenu(e, idx)}
               title={`Slide ${idx + 1}`}
             >
-              <div className="text-center py-1.5 text-xs font-medium text-text-secondary bg-card rounded-b-md">{idx + 1}</div>
-              <MiniPreview slide={slide} />
+              <div
+                data-testid={`slide-sorter-number-${idx + 1}`}
+                className="text-center py-1.5 text-xs font-medium text-text-secondary bg-card rounded-t-md"
+              >
+                {idx + 1}
+              </div>
+              <MiniPreview slide={slide} idx={idx} />
             </div>
           )
         })}

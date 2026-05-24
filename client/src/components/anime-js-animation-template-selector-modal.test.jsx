@@ -36,8 +36,35 @@ describe('AnimeJsAnimationTemplateSelectorModal', () => {
     const insertBtn = screen.getByRole('button', { name: /insert/i })
     fireEvent.click(insertBtn)
     const html = onInsert.mock.calls[0][0]
-    expect(html).toContain('canvas')
-    expect(html).toContain('anime')
+    expect(html).toContain('anime(')
+    expect(html).toContain('dot')
+  })
+
+  it('produces non-empty distinct HTML for each non-custom template', () => {
+    const onInsert = vi.fn()
+    const { getByText, getByRole, unmount } = render(
+      <AnimeModal onInsert={onInsert} onClose={vi.fn()} />
+    )
+    const names = [
+      'Scatter Dots', 'Stagger Grid', 'Path Morph', 'Orbital',
+      'Wave Bars', 'Particle Burst', 'Text Scramble', 'Breathing',
+      'Cascade Lines', 'Spring Grid', 'Pendulum', 'Fireworks',
+    ]
+    const seen = new Set()
+    for (const name of names) {
+      fireEvent.click(getByText(name))
+      const btn = getByRole('button', { name: /insert/i })
+      fireEvent.click(btn)
+    }
+    expect(onInsert).toHaveBeenCalledTimes(names.length)
+    for (const call of onInsert.mock.calls) {
+      const html = call[0]
+      expect(html.length).toBeGreaterThan(100)
+      expect(html).toContain('animejs')
+      seen.add(html)
+    }
+    expect(seen.size).toBe(names.length)
+    unmount()
   })
 
   it('switches template on click', () => {

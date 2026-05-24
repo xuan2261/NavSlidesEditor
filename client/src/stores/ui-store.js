@@ -10,6 +10,8 @@ const VALID_RIBBON_TABS = new Set([
   'view',
 ])
 
+const clampZoom = (v) => Math.max(0.1, Math.min(4, v))
+
 export const useUIStore = create((set) => ({
   // Modals — individual booleans matching EditorPage
   showGithubModal: false,
@@ -24,6 +26,10 @@ export const useUIStore = create((set) => ({
   // Panels
   leftPanelOpen: true,
   rightPanelOpen: true,
+
+  // Zoom — shared between SlideCanvas and StatusBar
+  zoom: 1,
+  userZoomMode: false,
 
   // Ribbon
   activeTab: (() => {
@@ -61,4 +67,11 @@ export const useUIStore = create((set) => ({
     try { localStorage.setItem('navslides-ribbon-active-tab', tab) } catch { /* ignore */ }
     set({ activeTab: tab })
   },
+
+  // Zoom actions
+  setZoom: (v) => set((s) => ({ zoom: clampZoom(typeof v === 'function' ? v(s.zoom) : v) })),
+  setUserZoomMode: (v) => set({ userZoomMode: !!v }),
+  zoomIn: () => set((s) => ({ zoom: clampZoom(s.zoom + 0.1), userZoomMode: true })),
+  zoomOut: () => set((s) => ({ zoom: clampZoom(s.zoom - 0.1), userZoomMode: true })),
+  fitZoom: () => set({ userZoomMode: false }),
 }))

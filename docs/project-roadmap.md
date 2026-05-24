@@ -1,6 +1,6 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: v1.9.4 — keyboard-shortcut contract tests + README element-count cleanup complete (2026-05-23)
+## Current Status: v1.9.6 — upstream parity evidence refreshed and release docs updated (2026-05-24)
 
 Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system and now has clipping-safe portal popups for File, header AI/Share, Design, Transitions, Animations, Paragraph, Insert Advanced, Shape, Table, and Games surfaces. Parallax feature port (font-weight, line-height, timeline element, video controls, LaTeX improvements) landed in v1.7.1. Upstream selective port merged on 2026-05-14. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state, and the hybrid PPTX export/import pipeline.
 

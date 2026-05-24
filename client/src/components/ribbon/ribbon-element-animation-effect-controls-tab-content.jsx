@@ -38,7 +38,7 @@ function AnimationPicker({ open, anchorRef, current, onSelect, onClose }) {
 
 const clampFragmentIndex = (value) => Math.min(20, Math.max(1, parseInt(value, 10) || 1))
 
-export default function AnimationsTabContent({ selectedElement, slideElements = [], onUpdateElement }) {
+export default function AnimationsTabContent({ selectedElement, slideElements = [], onUpdateElement, onPreviewAnimation }) {
   const [showPicker, setShowPicker] = useState(false)
   const animationTriggerRef = useRef(null)
 
@@ -117,7 +117,7 @@ export default function AnimationsTabContent({ selectedElement, slideElements = 
       <RibbonSection label="Preview">
         <Button variant="ribbon" className="h-7"
           title="Preview animation" aria-label="Preview animation"
-          onMouseDown={(e) => { e.preventDefault() }}>
+          onMouseDown={(e) => { e.preventDefault(); onPreviewAnimation?.() }}>
           <Play size={14} />
           <span className="text-[11px] hidden lg:inline">Preview</span>
         </Button>

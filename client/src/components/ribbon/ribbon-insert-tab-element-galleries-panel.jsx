@@ -12,6 +12,7 @@ import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import RibbonDropdownMenuGroup from './ribbon-dropdown-menu-group-trigger'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
+import IconGallery from '../IconGallery'
 import { Button } from '../ui'
 import { GAME_TYPES } from '../../constants/game-element-types-constants'
 import PromptPopover from '../PromptPopover'
@@ -243,11 +244,13 @@ export default function InsertTabContent({
   onAddPluginElement,
 }) {
   const [showShapeGallery, setShowShapeGallery] = useState(false)
+  const [showIconGallery, setShowIconGallery] = useState(false)
   const [showTablePicker, setShowTablePicker] = useState(false)
   const [showVideoPrompt, setShowVideoPrompt] = useState(false)
   const [showGameGallery, setShowGameGallery] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const shapeTriggerRef = useRef(null)
+  const iconTriggerRef = useRef(null)
   const tableTriggerRef = useRef(null)
   const advancedLauncherRef = useRef(null)
 
@@ -345,10 +348,19 @@ export default function InsertTabContent({
             <MessageSquare size={14} />
           </Button>
           <Button variant="icon" className="h-7 w-7" title="Icon" aria-label="Add icon"
-            onMouseDown={(e) => { e.preventDefault(); onAddIcon?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddIcon)}>
+            ref={iconTriggerRef}
+            onMouseDown={(e) => { e.preventDefault(); setShowIconGallery((v) => !v) }}
+            onKeyDown={(e) => handleKeyboardActivation(e, () => setShowIconGallery((v) => !v))}>
             <Smile size={14} />
           </Button>
+          {showIconGallery && (
+            <IconGallery
+              open={showIconGallery}
+              anchorRef={iconTriggerRef}
+              onSelect={(name) => onAddIcon?.(name)}
+              onClose={() => setShowIconGallery(false)}
+            />
+          )}
         </div>
       </RibbonSection>
 

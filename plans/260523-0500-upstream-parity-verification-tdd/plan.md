@@ -35,7 +35,7 @@ Goal: prove behavior parity with approved upstream, not just "tests pass". Use u
 | # | Phase | Status | Priority | File |
 |---|---|---|---|---|
 | 1 | Upstream Baseline And Diff Oracle | blocked | P0 | [phase-01-upstream-baseline-and-diff-oracle.md](./phase-01-upstream-baseline-and-diff-oracle.md) |
-| 2 | Feature Parity Matrix And Test Map | pending | P0 | [phase-02-feature-parity-matrix-and-test-map.md](./phase-02-feature-parity-matrix-and-test-map.md) |
+| 2 | Feature Parity Matrix And Test Map | blocked | P0 | [phase-02-feature-parity-matrix-and-test-map.md](./phase-02-feature-parity-matrix-and-test-map.md) |
 | 3 | Golden Fixtures And State Assertions | pending | P0 | [phase-03-golden-fixtures-and-state-assertions.md](./phase-03-golden-fixtures-and-state-assertions.md) |
 | 4 | Editor Elements Controls E2E Parity | pending | P0 | [phase-04-editor-elements-controls-e2e-parity.md](./phase-04-editor-elements-controls-e2e-parity.md) |
 | 5 | Export Import Present Live Game Parity | pending | P0 | [phase-05-export-import-present-live-game-parity.md](./phase-05-export-import-present-live-game-parity.md) |
@@ -163,7 +163,19 @@ Accepted changes were applied inline to phase files with `Red Team Adjustment` s
 - [x] Phase 2: draft post-approval matrix creation runbook without creating the matrix.
 - [x] Phase 2: draft future matrix audit report template without creating the matrix.
 - [x] Phase 2: draft approval request summary without approving the decision record.
-- [ ] Phase 2: keep MVP P0 release gate separate from P1/P2 backlog.
+- [x] Phase 2: approve unavailable-upstream-automation decision.
+- [x] Phase 2: create draft-blocked upstream parity matrix.
+- [x] Phase 2: create matrix audit report showing not release-ready.
+- [x] Phase 2: keep MVP P0 release gate separate from P1/P2 backlog.
+- [x] Phase 2: capture current-repo local regression evidence for `editor-create-save-reload` without promoting it to upstream parity `Pass`.
+- [x] Phase 2: capture current-repo local regression evidence for `editor-rich-text-formatting` without promoting it to upstream parity `Pass`.
+- [x] Phase 2: capture current-repo local regression evidence for `elements-representative-insert-edit-render` without promoting it to upstream parity `Pass`.
+- [x] Phase 2: capture current-repo local regression evidence for `editor-undo-redo-clipboard` without promoting it to upstream parity `Pass`.
+- [x] Phase 2: capture current-repo local regression evidence for `present-navigation` without promoting it to upstream parity `Pass`.
+- [x] Phase 2: capture current-repo local regression evidence for `export-html-pdf-offline-archive` without promoting it to upstream parity `Pass`.
+- [x] Phase 2: capture current-repo local regression evidence for `share-password-revoke` without promoting it to upstream parity `Pass`.
+- [x] Phase 2: capture current-repo local security invariant evidence for `security-presenter-token-cross-room` without promoting it to upstream parity `Pass`.
+- [x] Phase 2: capture current-repo local regression evidence for `navslides-import-export-roundtrip` without promoting it to upstream parity `Pass`.
 - [ ] Phase 3: generate parity fixtures from approved upstream SHA and store checksums/provenance.
 - [ ] Phase 5: keep external provider flows mock/local canary only by default.
 - [ ] Phase 6: assign named DRI before manual execution.

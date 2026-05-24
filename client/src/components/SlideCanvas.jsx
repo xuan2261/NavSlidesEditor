@@ -1,8 +1,8 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import CanvasGridOverlay from './canvas/canvas-grid-overlay'
 import CanvasRulers from './canvas/canvas-rulers'
-import CanvasZoomControls from './canvas/canvas-floating-zoom-in-out-fit-controls'
 import CanvasFooterOverlay from './canvas/canvas-footer-overlay-with-section-and-page-number'
+import { useUIStore } from '../stores/ui-store'
 import CanvasContextMenu from './canvas/canvas-right-click-context-menu-for-slide-elements'
 import {
   snapWithRef,
@@ -79,8 +79,10 @@ export default function SlideCanvas({
   const SLIDE_H = resolution?.height || 540
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
-  const [scale, setScale] = useState(1)
-  const [userZoomMode, setUserZoomMode] = useState(false)
+  const scale = useUIStore((s) => s.zoom)
+  const setScale = useUIStore((s) => s.setZoom)
+  const userZoomMode = useUIStore((s) => s.userZoomMode)
+  const setUserZoomMode = useUIStore((s) => s.setUserZoomMode)
   const pendingDragRef = useRef(null)
   const draggingRef = useRef(null)
   const suppressCanvasClickRef = useRef(false)
@@ -586,22 +588,6 @@ export default function SlideCanvas({
         onUpdateElement={onUpdateElement}
         onStartCrop={startCrop}
         onClose={() => setContextMenu(null)}
-      />
-
-      {/* Zoom Controls */}
-      <CanvasZoomControls
-        scale={scale}
-        onZoomIn={() => { setScale((s) => Math.min(4, s + 0.1)); setUserZoomMode(true) }}
-        onZoomOut={() => { setScale((s) => Math.max(0.1, s - 0.1)); setUserZoomMode(true) }}
-        onZoomReset={() => {
-          setUserZoomMode(false)
-          if (containerRef.current) {
-            const { clientWidth: w, clientHeight: h } = containerRef.current
-            setScale(Math.max(Math.min((w - 24) / SLIDE_W, (h - 24) / SLIDE_H), 0.1))
-          }
-        }}
-        onScaleChange={setScale}
-        onSetUserZoomMode={setUserZoomMode}
       />
 
       {/* Mini Toolbar — floating formatting bar when editing text */}

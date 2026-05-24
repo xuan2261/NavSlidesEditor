@@ -38,4 +38,62 @@ describe('ui-store', () => {
       rightPanelOpen: false,
     })
   })
+
+  describe('zoom', () => {
+    beforeEach(() => {
+      useUIStore.setState({ zoom: 1, userZoomMode: false })
+    })
+
+    it('has zoom 1 and userZoomMode false initially', () => {
+      const { zoom, userZoomMode } = useUIStore.getState()
+      expect(zoom).toBe(1)
+      expect(userZoomMode).toBe(false)
+    })
+
+    it('setZoom updates zoom, clamped to [0.1, 4]', () => {
+      useUIStore.getState().setZoom(0.5)
+      expect(useUIStore.getState().zoom).toBe(0.5)
+      useUIStore.getState().setZoom(10)
+      expect(useUIStore.getState().zoom).toBe(4)
+      useUIStore.getState().setZoom(0.01)
+      expect(useUIStore.getState().zoom).toBe(0.1)
+    })
+
+    it('zoomIn increases zoom by 0.1 and sets userZoomMode true', () => {
+      useUIStore.getState().zoomIn()
+      expect(useUIStore.getState().zoom).toBeCloseTo(1.1)
+      expect(useUIStore.getState().userZoomMode).toBe(true)
+    })
+
+    it('zoomOut decreases zoom by 0.1 and sets userZoomMode true', () => {
+      useUIStore.getState().zoomOut()
+      expect(useUIStore.getState().zoom).toBeCloseTo(0.9)
+      expect(useUIStore.getState().userZoomMode).toBe(true)
+    })
+
+    it('zoomIn clamps at 4', () => {
+      useUIStore.setState({ zoom: 4 })
+      useUIStore.getState().zoomIn()
+      expect(useUIStore.getState().zoom).toBe(4)
+    })
+
+    it('zoomOut clamps at 0.1', () => {
+      useUIStore.setState({ zoom: 0.1 })
+      useUIStore.getState().zoomOut()
+      expect(useUIStore.getState().zoom).toBe(0.1)
+    })
+
+    it('fitZoom sets userZoomMode false (allows auto-fit)', () => {
+      useUIStore.setState({ userZoomMode: true })
+      useUIStore.getState().fitZoom()
+      expect(useUIStore.getState().userZoomMode).toBe(false)
+    })
+
+    it('setUserZoomMode toggles the flag', () => {
+      useUIStore.getState().setUserZoomMode(true)
+      expect(useUIStore.getState().userZoomMode).toBe(true)
+      useUIStore.getState().setUserZoomMode(false)
+      expect(useUIStore.getState().userZoomMode).toBe(false)
+    })
+  })
 })

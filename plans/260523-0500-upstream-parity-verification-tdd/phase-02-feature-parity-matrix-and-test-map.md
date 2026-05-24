@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Feature Parity Matrix And Test Map"
-status: pending
+status: blocked
 priority: P0
 effort: "2-3d"
 dependencies: [1]
@@ -21,6 +21,16 @@ dependencies: [1]
 - [Manual oracle capture protocol](./reports/manual-oracle-capture-protocol.md)
 - [Post-approval matrix creation runbook](./reports/post-approval-matrix-creation-runbook.md)
 - [Future matrix audit report template](./reports/future-matrix-audit-report-template.md)
+- [Matrix audit report](./reports/matrix-audit-report-2026-05-23.md)
+- [Local evidence - editor create/save/reload](./reports/local-evidence-editor-create-save-reload-2026-05-23.md)
+- [Local evidence - editor rich text formatting](./reports/local-evidence-editor-rich-text-formatting-2026-05-23.md)
+- [Local evidence - elements representative insert/edit/render](./reports/local-evidence-elements-representative-insert-edit-render-2026-05-23.md)
+- [Local evidence - editor undo/redo clipboard](./reports/local-evidence-editor-undo-redo-clipboard-2026-05-23.md)
+- [Local evidence - present navigation](./reports/local-evidence-present-navigation-2026-05-23.md)
+- [Local evidence - export HTML/PDF/offline/archive](./reports/local-evidence-export-html-pdf-offline-archive-2026-05-23.md)
+- [Local evidence - share password/revoke](./reports/local-evidence-share-password-revoke-2026-05-23.md)
+- [Local evidence - security presenter token cross-room](./reports/local-evidence-security-presenter-token-cross-room-2026-05-23.md)
+- [Local evidence - navslides import/export roundtrip](./reports/local-evidence-navslides-import-export-roundtrip-2026-05-23.md)
 - `README.md`
 - `docs/project-roadmap.md`
 - `docs/code-standards.md`
@@ -29,11 +39,10 @@ dependencies: [1]
 
 Create the single source of truth for all features, elements, controls, logic, and flows. Every row gets upstream expected behavior, current status, automated coverage, manual coverage, and risk.
 
-Oracle approval is complete, but approved upstream automation is unavailable
-because the upstream build fails in both the primary and clean verification
-worktrees. Phase 2 execution and `docs/upstream-parity-matrix.md` remain pending
-until `upstream-build-failure-phase-2-decision-record.md` is approved or the
-upstream build blocker is resolved.
+Oracle approval is complete, and the Phase 2 blocker decision is approved.
+`docs/upstream-parity-matrix.md` has been created as `draft-blocked`, but Phase
+2 remains blocked for release readiness because every row is currently
+`Blocked` and no manual oracle evidence or signed waiver is attached.
 
 ## Requirements
 
@@ -117,12 +126,22 @@ README feature inventory -> parity matrix -> tests/manual checklist -> release g
 - [x] Draft post-approval matrix creation runbook.
 - [x] Draft future matrix audit report template.
 - [x] Draft Phase 2 approval request summary.
-- [ ] Approve Phase 2 path for unavailable upstream automation.
-- [ ] Create matrix doc.
-- [ ] Add required sections.
-- [ ] Map existing tests.
-- [ ] Mark unknowns honestly.
-- [ ] Add executable MVP parity/report audit for matrix gaps.
+- [x] Approve Phase 2 path for unavailable upstream automation.
+- [x] Create matrix doc.
+- [x] Add required sections.
+- [x] Map existing tests.
+- [x] Mark unknowns/blockers honestly.
+- [x] Add matrix audit report for matrix gaps.
+- [x] Capture local regression evidence for `editor-create-save-reload`.
+- [x] Capture local regression evidence for `editor-rich-text-formatting`.
+- [x] Capture local regression evidence for `elements-representative-insert-edit-render`.
+- [x] Capture local regression evidence for `editor-undo-redo-clipboard`.
+- [x] Capture local regression evidence for `present-navigation`.
+- [x] Capture local regression evidence for `export-html-pdf-offline-archive`.
+- [x] Capture local regression evidence for `share-password-revoke`.
+- [x] Capture local security invariant evidence for `security-presenter-token-cross-room`.
+- [x] Capture local regression evidence for `navslides-import-export-roundtrip`.
+- [ ] Attach manual oracle evidence or signed waivers for MVP P0 rows.
 
 ## Success Criteria
 
@@ -161,4 +180,5 @@ README feature inventory -> parity matrix -> tests/manual checklist -> release g
 ## Unresolved Questions
 
 - Whether Vietnamese manual checklist mirror is required in this plan.
-- Whether Path B/C/D in `upstream-build-failure-phase-2-decision-record.md` is approved.
+- Which MVP P0 rows should receive manual oracle evidence first.
+- Who reviews manual oracle evidence.

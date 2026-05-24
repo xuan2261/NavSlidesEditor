@@ -2,7 +2,13 @@
 
 ## v1.7.x
 
+## 2026-05-24
+
+- Released `v1.9.6`: upstream parity evidence reports, animation UI refinements, icon/status bar coverage, and release-facing docs are tagged for the next GitHub release.
+
 ## 2026-05-23
+
+- Released `v1.9.5`: upstream parity matrix and audit report are created; release readiness remains blocked until manual oracle evidence or explicit row-level waivers are attached for MVP P0 rows.
 
 - Closed Q1/Q2 keyboard + README follow-ups from prior smoke-test plan via TDD plan `plans/260523-1230-keyboard-shortcut-and-readme-cleanup-tdd/`. 8 editor-scope shortcuts now fire their store actions; README element-count claim reconciled with `ELEMENT_DEFAULTS`.
 

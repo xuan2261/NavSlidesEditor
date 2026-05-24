@@ -4,7 +4,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.9.4** — Upstream parity verification planning and release-readiness doc alignment.
+Current release: **v1.9.6** — Upstream parity evidence, animation UI refinements, and release docs refreshed.
 
 ## Features
 

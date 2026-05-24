@@ -1,6 +1,64 @@
+import { useRef, useState } from 'react'
 import { ColorPicker } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
+import IconGallery, { IconSvgPreview } from '../IconGallery'
 import GameProperties from './game-properties.jsx'
+
+function IconElementProperties({ element, onUpdate }) {
+  const [showIconGallery, setShowIconGallery] = useState(false)
+  const triggerRef = useRef(null)
+
+  return (
+    <div className="mb-2.5">
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <div>
+          <div className="text-[11px] text-text-muted mb-0.5">Color</div>
+          <ColorPicker
+            value={element.iconColor || '#ffffff'}
+            onChange={(e) => onUpdate({ iconColor: e.target.value })}
+            className="w-full h-7 border border-border rounded cursor-pointer"
+          />
+        </div>
+        <div>
+          <div className="text-[11px] text-text-muted mb-0.5">Stroke</div>
+          <input
+            className="prop-input"
+            type="number"
+            min="0.5"
+            max="4"
+            step="0.5"
+            value={element.iconStrokeWidth || 2}
+            onChange={(e) => {
+              const value = clampNumber(e.target.value, 0.5, 4, null)
+              if (value === null) return
+              onUpdate({ iconStrokeWidth: value })
+            }}
+          />
+        </div>
+      </div>
+      <div className="text-[11px] text-text-muted mb-1">
+        Icon: <span className="text-text-primary">{element.iconName || 'Star'}</span>
+      </div>
+      <button
+        ref={triggerRef}
+        data-testid="prop-icon-change"
+        className="btn btn-secondary w-full justify-center text-xs flex items-center gap-2"
+        onMouseDown={(e) => { e.preventDefault(); setShowIconGallery((v) => !v) }}
+      >
+        <IconSvgPreview name={element.iconName || 'Star'} size={14} />
+        Change Icon
+      </button>
+      {showIconGallery && (
+        <IconGallery
+          open={showIconGallery}
+          anchorRef={triggerRef}
+          onSelect={(name) => onUpdate({ iconName: name })}
+          onClose={() => setShowIconGallery(false)}
+        />
+      )}
+    </div>
+  )
+}
 
 /**
  * Misc element properties: callout, icon, qrcode, drawing, line/arrow, svg, html, latex, markdown, game.
@@ -129,40 +187,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
       </div>
     )
 
-  if (t === 'icon')
-    return (
-      <div className="mb-2.5">
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          <div>
-            <div className="text-[11px] text-text-muted mb-0.5">Color</div>
-            <ColorPicker
-              value={element.iconColor || '#ffffff'}
-              onChange={(e) => onUpdate({ iconColor: e.target.value })}
-              className="w-full h-7 border border-border rounded cursor-pointer"
-            />
-          </div>
-          <div>
-            <div className="text-[11px] text-text-muted mb-0.5">Stroke</div>
-            <input
-              className="prop-input"
-              type="number"
-              min="0.5"
-              max="4"
-              step="0.5"
-              value={element.iconStrokeWidth || 2}
-              onChange={(e) => {
-                const value = clampNumber(e.target.value, 0.5, 4, null)
-                if (value === null) return
-                onUpdate({ iconStrokeWidth: value })
-              }}
-            />
-          </div>
-        </div>
-        <div className="text-[11px] text-text-muted mb-0.5">
-          Icon: {element.iconName || 'Star'}
-        </div>
-      </div>
-    )
+  if (t === 'icon') return <IconElementProperties element={element} onUpdate={onUpdate} />
 
   if (t === 'qrcode')
     return (

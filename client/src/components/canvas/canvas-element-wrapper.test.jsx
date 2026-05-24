@@ -83,3 +83,34 @@ describe('CanvasElement video playback', () => {
     expect(video.getAttribute('src')).toBe('https://example.com/from-url.mp4#t=5,12')
   })
 })
+
+describe('CanvasElement html embed sandbox', () => {
+  const htmlElement = {
+    id: 'html-1',
+    type: 'html',
+    x: 0,
+    y: 0,
+    width: 500,
+    height: 380,
+    content: '<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script><div id="anim"></div>',
+  }
+
+  it('renders html embed iframe with allow-same-origin so CDN scripts can load', () => {
+    renderCanvasElement(htmlElement)
+    const wrapper = screen.getByTestId('slide-element-html-1')
+    const iframe = wrapper.querySelector('iframe')
+
+    expect(iframe).not.toBeNull()
+    const sandbox = iframe.getAttribute('sandbox') || ''
+    expect(sandbox).toContain('allow-scripts')
+    expect(sandbox).toContain('allow-same-origin')
+  })
+
+  it('uses element.content as srcDoc for html embeds', () => {
+    renderCanvasElement(htmlElement)
+    const wrapper = screen.getByTestId('slide-element-html-1')
+    const iframe = wrapper.querySelector('iframe')
+
+    expect(iframe.getAttribute('srcdoc')).toContain('animejs')
+  })
+})

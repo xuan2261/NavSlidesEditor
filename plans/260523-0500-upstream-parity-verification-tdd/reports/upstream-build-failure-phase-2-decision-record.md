@@ -1,7 +1,7 @@
 ---
 title: "Upstream Build Failure Phase 2 Decision Record"
 date: 2026-05-23
-status: pending-decision
+status: approved
 phase: 2
 ---
 
@@ -44,22 +44,23 @@ TipTap dependency set is inconsistent:
 `@tiptap/extension-highlight` imports `getStyleProperty` from `@tiptap/core`,
 but the installed `@tiptap/core` does not export it.
 
-## Decision Needed
+## Approved Decision
 
 Phase 2 cannot honestly mark MVP P0 parity rows as `Pass` from the current
 upstream automation evidence.
 
-Choose one path before creating `docs/upstream-parity-matrix.md`:
+The project owner approved Path B plus Path C where feasible. Path D remains
+available only by explicit row-level waiver.
 
 | Path | Effect | Release meaning |
 |---|---|---|
-| A. Keep Phase 2 blocked | Do not create matrix until upstream build is fixed or a different approved SHA is selected | Strictest evidence path |
-| B. Create matrix with `Blocked` upstream automation rows | Matrix may be created, but affected MVP P0 rows are not release-ready | Best planning path without false parity |
-| C. Use manual oracle capture for selected rows | Requires signed manual evidence per row; rows remain non-release-ready unless evidence is complete | Allows progress for visible behavior |
-| D. Signed waiver for selected MVP P0 rows | Requires full waiver contract per row | Release-ready only for waived rows |
+| A. Keep Phase 2 blocked | Not selected | Strictest evidence path |
+| B. Create matrix with `Blocked` upstream automation rows | Approved and applied in `docs/upstream-parity-matrix.md` | Planning may proceed without false parity |
+| C. Use manual oracle capture for selected rows | Approved where feasible; no row has evidence attached yet | Allows later progress for visible behavior |
+| D. Signed waiver for selected MVP P0 rows | Not approved globally; requires explicit row-level waiver | Release-ready only for waived rows |
 
-Recommended path: B plus C where manual capture is feasible. Do not use D unless
-the project owner explicitly accepts the release risk for a specific row.
+Result: `docs/upstream-parity-matrix.md` exists as `draft-blocked`. All rows
+remain `Blocked`, with `Pass 0` and `Waived 0`.
 
 ## Guardrails
 
@@ -75,11 +76,9 @@ the project owner explicitly accepts the release risk for a specific row.
   automation is unavailable.
 - Manual oracle evidence must follow `manual-oracle-capture-protocol.md`.
 
-## Required Approval To Proceed With Path B/C/D
+## Approval Statement
 
-The statement below is ready for the project owner to approve. It is not active
-until this record status changes to `approved`, approver metadata is filled, and
-the approval evidence is recorded.
+The project owner approved the following statement on `2026-05-23`:
 
 ```text
 I approve creating docs/upstream-parity-matrix.md while approved upstream
@@ -93,31 +92,30 @@ waiver. No failed upstream build log may be used as Pass evidence.
 | Required field | Value |
 |---|---|
 | Decision path | `B + C where feasible; D only by explicit row-level waiver` |
-| Approved by | `TBD` |
-| Approver role | `TBD` |
-| Approval date | `TBD` |
-| Approval evidence | `TBD` |
-| Manual oracle owner | `TBD` |
-| MVP P0 waiver policy | `TBD` |
+| Approved by | `Xuan` |
+| Approver role | `Project owner` |
+| Approval date | `2026-05-23` |
+| Approval evidence | User confirmed the Phase 2 approval request in this chat with "xác nhận, /goal resume". |
+| Manual oracle owner | `Xuan` |
+| MVP P0 waiver policy | MVP P0 waivers are not allowed by default; each waiver requires explicit row-level approval with owner, approved by, approval date, expiry, rationale, user impact, rollback decision, and follow-up issue. |
 
 ## Approval Checklist
 
-- [ ] Decision record status is changed from `pending-decision` to `approved`.
-- [ ] Approver name and role are filled.
-- [ ] Approval date is filled.
-- [ ] Approval evidence is linked or summarized.
-- [ ] Manual oracle owner is assigned if Path C is used.
-- [ ] Manual oracle capture protocol is linked from matrix metadata if Path C is used.
-- [ ] MVP P0 waiver policy is explicit.
-- [ ] `docs/upstream-parity-matrix.md` metadata links this decision record.
-- [ ] Rows affected by unavailable upstream automation default to `Blocked`.
-- [ ] No failed upstream build log is used as `Pass` evidence.
-- [ ] Any `Waived` row includes owner, approved by, approval date, expiry,
-  rationale, user impact, rollback decision, and follow-up issue.
+- [x] Decision record status is changed from `pending-decision` to `approved`.
+- [x] Approver name and role are filled.
+- [x] Approval date is filled.
+- [x] Approval evidence is linked or summarized.
+- [x] Manual oracle owner is assigned if Path C is used.
+- [x] Manual oracle capture protocol is linked from matrix metadata if Path C is used.
+- [x] MVP P0 waiver policy is explicit.
+- [x] `docs/upstream-parity-matrix.md` metadata links this decision record.
+- [x] Rows affected by unavailable upstream automation default to `Blocked`.
+- [x] No failed upstream build log is used as `Pass` evidence.
+- [x] Any `Waived` row includes owner, approved by, approval date, expiry,
+  rationale, user impact, rollback decision, and follow-up issue. There are no
+  waived rows in the current matrix.
 
 ## Unresolved Questions
 
-- Is Path B approved for Phase 2 planning?
-- Who owns manual oracle capture if Path C is used?
-- Are any MVP P0 waivers allowed, or should all MVP P0 rows remain blocked until
-  upstream automation or manual evidence is complete?
+- Which MVP P0 rows should receive manual oracle evidence first?
+- Who reviews and signs off manual oracle evidence?

@@ -1,4 +1,69 @@
 import React from 'react'
+import { useUIStore } from '../../stores/ui-store'
+
+const ZOOM_OPTIONS = [25, 50, 75, 100, 150, 200, 400]
+
+function ZoomControls() {
+  const zoom = useUIStore((s) => s.zoom)
+  const zoomIn = useUIStore((s) => s.zoomIn)
+  const zoomOut = useUIStore((s) => s.zoomOut)
+  const fitZoom = useUIStore((s) => s.fitZoom)
+  const setZoom = useUIStore((s) => s.setZoom)
+  const setUserZoomMode = useUIStore((s) => s.setUserZoomMode)
+
+  return (
+    <div className="flex items-center gap-1 text-[11px]">
+      <button
+        type="button"
+        data-testid="statusbar-zoom-out"
+        title="Zoom out"
+        aria-label="Zoom out"
+        onClick={zoomOut}
+        className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
+      >
+        −
+      </button>
+      <select
+        data-testid="statusbar-zoom-select"
+        aria-label="Zoom level"
+        value={`${Math.round(zoom * 100)}`}
+        onChange={(e) => {
+          const pct = parseInt(e.target.value, 10) / 100
+          setZoom(pct)
+          setUserZoomMode(true)
+        }}
+        className="bg-white/10 text-white border-none rounded px-1 py-0 text-[11px] min-w-[50px] text-center outline-none cursor-pointer"
+      >
+        {ZOOM_OPTIONS.map((pct) => (
+          <option key={pct} value={pct} className="text-text-primary">{pct}%</option>
+        ))}
+      </select>
+      <button
+        type="button"
+        data-testid="statusbar-zoom-in"
+        title="Zoom in"
+        aria-label="Zoom in"
+        onClick={zoomIn}
+        className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
+      >
+        +
+      </button>
+      <button
+        type="button"
+        data-testid="statusbar-zoom-fit"
+        title="Fit to window"
+        aria-label="Fit to window"
+        onClick={fitZoom}
+        className="px-1.5 h-5 rounded hover:bg-white/15 transition-colors cursor-pointer whitespace-nowrap"
+      >
+        Fit
+      </button>
+      <span data-testid="statusbar-zoom-display" className="ml-1 opacity-75 tabular-nums min-w-[36px] text-right">
+        {Math.round(zoom * 100)}%
+      </span>
+    </div>
+  )
+}
 
 export default function StatusBar() {
   return (
@@ -24,6 +89,7 @@ export default function StatusBar() {
       </div>
 
       <div className="flex items-center h-full gap-4">
+        <ZoomControls />
         <span
           className="flex items-center gap-1.5 opacity-90 transition-opacity hover:opacity-100"
           title="Author Signature"
