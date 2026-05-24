@@ -15,7 +15,7 @@
 - Completed local Phase 8 verification for `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: unit, E2E, repeat-each=3, lint, build, and coverage gates pass locally; CI verification remains pending until the worktree is committed and pushed.
 - Addressed first PR CI follow-up for `plans/260524-0959-e2e-cleanup-and-coverage-tdd`: unit/corpus jobs now install Playwright Chromium, editor initial-load autosave no longer fires a false first save, and live presenter/viewer navigation waits tolerate slower Linux CI convergence.
 - Refreshed six Linux visual baselines from PR CI run `26360447117` after all remaining failures were snapshot drift in editor canvas, mobile editor, and Insert ribbon visual tests.
-- Addressed PR CI run `26360768570` live E2E follow-up: presenter-to-viewer navigation tests now wait for the presenter socket to join the live room before emitting Reveal navigation, avoiding lost early `navigate` events under slower Linux CI startup.
+- Addressed PR CI live E2E follow-up: presenter-to-viewer navigation tests now wait for the presenter socket to join the live room before emitting Reveal navigation and assert the viewer's visible slide content instead of stale `Reveal.getIndices()` values from the iframe on Linux CI.
 
 ## 2026-05-23
 
