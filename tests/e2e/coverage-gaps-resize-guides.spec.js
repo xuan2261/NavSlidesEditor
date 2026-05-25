@@ -30,63 +30,6 @@ function seededSlide(elements = []) {
   }
 }
 
-async function openInsert(page) {
-  await page.getByRole('tab', { name: 'Insert' }).click()
-  await expect(page.getByRole('tabpanel', { name: 'Insert' })).toBeVisible()
-}
-
-async function getInsertItem(page, label) {
-  await openInsert(page)
-  const aliases = {
-    'Image (URL)': 'Add image',
-    Video: 'Add video',
-    Audio: 'Audio / Upload',
-    'Audio / Upload': 'Audio / Upload',
-    'QR Code': 'Add QR code',
-    Icon: 'Add icon',
-    'Drawing Canvas': 'Add drawing',
-    SVG: 'Add SVG',
-  }
-  const panel = page.getByRole('tabpanel', { name: 'Insert' })
-  const target = aliases[label] || label
-  return panel.getByRole('button', { name: target, exact: true })
-}
-
-async function insertItem(page, label) {
-  const previousCount = await page.locator('.element-wrapper').count()
-  await (await getInsertItem(page, label)).click()
-  await expect(page.locator('.element-wrapper')).toHaveCount(previousCount + 1, { timeout: 10000 })
-}
-
-async function selectedCanvasElementIds(page) {
-  return page.evaluate(() =>
-    Array.from(document.querySelectorAll('[data-element-id]'))
-      .filter((el) => el.style.outline && el.style.outline !== 'none')
-      .map((el) => el.getAttribute('data-element-id'))
-      .sort()
-  )
-}
-
-async function selectElements(page, ids) {
-  const expected = []
-  await page.keyboard.press('Escape')
-  await expect.poll(() => selectedCanvasElementIds(page)).toEqual([])
-
-  await page.getByTestId(`slide-element-${ids[0]}`).click({ force: true })
-  expected.push(ids[0])
-  await expect.poll(() => selectedCanvasElementIds(page)).toEqual([...expected].sort())
-
-  for (const id of ids.slice(1)) {
-    await page.keyboard.down('Shift')
-    await page.getByTestId(`slide-element-${id}`).click({ force: true })
-    await page.keyboard.up('Shift')
-    expected.push(id)
-    await expect.poll(() => selectedCanvasElementIds(page)).toEqual([...expected].sort())
-  }
-
-  await expect(page.locator('.tour-step-ribbon')).toContainText('Arrange', { timeout: 5000 })
-}
-
 test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
   let editor
   let presId

@@ -27,15 +27,6 @@ async function savedElement(request, presentationId, elementId) {
   return saved.slides[0].elements.find((el) => el.id === elementId)
 }
 
-async function setRangeByTestId(page, testId, value) {
-  await page.getByTestId(testId).evaluate((node, nextValue) => {
-    const descriptor = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')
-    descriptor.set.call(node, String(nextValue))
-    node.dispatchEvent(new Event('input', { bubbles: true }))
-    node.dispatchEvent(new Event('change', { bubbles: true }))
-  }, value)
-}
-
 test.describe('Element Properties Persistence', () => {
   let editor
   let presentationId

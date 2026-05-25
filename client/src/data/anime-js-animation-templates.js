@@ -24,7 +24,7 @@ export const TEMPLATES = [
 
 export const DEFAULT_CUSTOM = `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
-<script src="${ANIME_CDN}"><\/script>
+<script src="${ANIME_CDN}"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
@@ -46,7 +46,7 @@ anime({
   loop: true,
   easing: 'easeInOutQuad'
 });
-<\/script>
+</script>
 </body></html>`
 
 export function generateAnimeHtml(templateId, params) {
@@ -61,7 +61,7 @@ export function generateAnimeHtml(templateId, params) {
   const sz = size || 10
 
   const base = `<!DOCTYPE html><html><head><meta charset="utf-8">
-<script src="${ANIME_CDN}"><\/script>
+<script src="${ANIME_CDN}"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:${background}}
@@ -79,7 +79,7 @@ body{display:flex;align-items:center;justify-content:center}
 var W=window.innerWidth,H=window.innerHeight,c=document.getElementById('container');
 for(var i=0;i<${n};i++){var d=document.createElement('div');d.className='dot';d.style.cssText='position:absolute;width:${sz}px;height:${sz}px;border-radius:50%;background:${col};left:'+(W/2-${sz}/2)+'px;top:'+(H/2-${sz}/2)+'px;';c.appendChild(d)}
 anime({targets:'.dot',translateX:function(){return anime.random(-W/2,W/2)},translateY:function(){return anime.random(-H/2,H/2)},scale:[0,function(){return anime.random(5,15)/10}],opacity:[0,1],duration:${dur},delay:anime.stagger(${Math.round(dur / n / 2)},{from:'center'}),easing:'easeOutElastic(1,.6)',direction:'alternate',loop:true});
-<\/script>${end}`
+</script>${end}`
     }
 
     case 'stagger-grid': {
@@ -90,7 +90,7 @@ anime({targets:'.dot',translateX:function(){return anime.random(-W/2,W/2)},trans
 <script>
 for(var i=0;i<${cols * rows};i++){var d=document.createElement('div');d.className='cell';d.style.cssText='background:${col};border-radius:${Math.round(sz * 0.2)}px;';document.getElementById('grid').appendChild(d)}
 anime({targets:'.cell',scale:[{value:.1,easing:'easeOutSine',duration:${Math.round(dur * 0.25)}},{value:1,easing:'easeInOutQuad',duration:${Math.round(dur * 0.6)}}],opacity:[.3,1],borderRadius:['${Math.round(sz * 0.2)}px','50%','${Math.round(sz * 0.2)}px'],backgroundColor:['${col}','${col2}','${col}'],delay:anime.stagger(${Math.round(dur / (cols * rows) * 0.8)},{grid:[${cols},${rows}],from:'center'}),loop:true,direction:'alternate',easing:'easeInOutQuad'});
-<\/script>${end}`
+</script>${end}`
     }
 
     case 'morph-path': {
@@ -103,7 +103,7 @@ var shapes=['M200 50 L350 150 L300 350 L100 350 L50 150 Z','M200 20 C350 20 380 
 var idx=0;
 function next(){idx=(idx+1)%shapes.length;anime({targets:'#morph',d:[{value:shapes[idx]}],stroke:idx%2===0?'${col}':'${col2}',duration:${dur},easing:'easeInOutQuad',complete:function(){setTimeout(next,${Math.round(dur * 0.3)})}});}
 next();
-<\/script>${end}`
+</script>${end}`
     }
 
     case 'orbit': {
@@ -116,7 +116,7 @@ var c=document.getElementById('orbit');
 for(var i=0;i<${n};i++){var d=document.createElement('div');d.className='orb';d.style.cssText='position:absolute;left:50%;top:50%;width:${Math.max(4, sz * 0.6)}px;height:${Math.max(4, sz * 0.6)}px;margin:-${Math.max(2, sz * 0.3)}px;background:${col2};border-radius:50%;opacity:0.8;';c.appendChild(d)}
 anime({targets:'.orb',translateX:function(el,i){return Math.cos(i*2*Math.PI/${n})*(80+i*3)},translateY:function(el,i){return Math.sin(i*2*Math.PI/${n})*(80+i*3)},scale:[0,1],opacity:[0,.8],delay:anime.stagger(${Math.round(dur / n * 0.5)}),duration:${Math.round(dur * 0.6)},easing:'easeOutExpo',complete:function(){anime({targets:'.orb',rotate:'1turn',duration:${dur * 2},easing:'linear',loop:true})}});
 anime({targets:'#orbit',rotate:'1turn',duration:${dur * 4},easing:'linear',loop:true});
-<\/script>${end}`
+</script>${end}`
     }
 
     case 'wave-bars': {
@@ -125,7 +125,7 @@ anime({targets:'#orbit',rotate:'1turn',duration:${dur * 4},easing:'linear',loop:
 <script>
 for(var i=0;i<${n};i++){var d=document.createElement('div');d.className='bar';d.style.cssText='width:${Math.max(3, sz * 0.8)}px;height:20px;background:${col};border-radius:${Math.round(sz * 0.2)}px;';document.getElementById('bars').appendChild(d)}
 anime({targets:'.bar',height:function(el,i){return[20,anime.random(40,200)]},backgroundColor:['${col}','${col2}','${col}'],duration:${dur},delay:anime.stagger(${Math.round(dur / n * 0.4)},{from:'center'}),direction:'alternate',loop:true,easing:'easeInOutSine'});
-<\/script>${end}`
+</script>${end}`
     }
 
     case 'particle-burst': {
@@ -136,7 +136,7 @@ function burst(){var s=document.getElementById('stage');s.innerHTML='';var cx=wi
 for(var i=0;i<${n};i++){var d=document.createElement('div');d.className='p';d.style.cssText='position:absolute;width:${sz}px;height:${sz}px;border-radius:50%;left:'+cx+'px;top:'+cy+'px;background:'+(['${col}','${col2}','#fff'][i%3]);s.appendChild(d)}
 anime({targets:'.p',translateX:function(){return anime.random(-300,300)},translateY:function(){return anime.random(-300,300)},scale:[{value:1,duration:100},{value:0,duration:${dur}}],opacity:[1,0],duration:${dur},easing:'easeOutExpo',complete:function(){setTimeout(burst,400)}});}
 burst();
-<\/script>${end}`
+</script>${end}`
     }
 
     case 'text-scramble': {
@@ -149,7 +149,7 @@ var target='${escaped}',chars='!@#$%^&*()_+-=[]{}|;:,.<>?0123456789ABCDEFGHIJKLM
 function scramble(){var result=new Array(target.length).fill('');var done=new Array(target.length).fill(false);var frame=0;
 function step(){var all=true;for(var i=0;i<target.length;i++){if(!done[i]){if(frame>i*3+10){done[i]=true;result[i]=target[i]}else{result[i]=chars[Math.floor(Math.random()*chars.length)];all=false}}};el.textContent=result.join('');frame++;if(!all)requestAnimationFrame(step);else setTimeout(function(){result=new Array(target.length).fill('');done=new Array(target.length).fill(false);frame=0;el.textContent='';setTimeout(step,300)},${dur});}step();}
 scramble();
-<\/script>${end}`
+</script>${end}`
     }
 
     case 'breathing': {
@@ -160,7 +160,7 @@ ${Array.from({ length: rings }, (_, i) => `  <circle class="ring" cx="200" cy="2
 </svg>
 <script>
 anime({targets:'.ring',r:function(el){return[parseFloat(el.getAttribute('r')),parseFloat(el.getAttribute('r'))*1.15]},opacity:[0.6,0.2],strokeWidth:[1.5,0.5],duration:${dur},delay:anime.stagger(${Math.round(dur / rings * 0.3)}),direction:'alternate',loop:true,easing:'easeInOutSine'});
-<\/script>${end}`
+</script>${end}`
     }
 
     case 'cascade-lines': {
@@ -174,7 +174,7 @@ ${Array.from({ length: n }, (_, i) => {
 <script>
 document.querySelectorAll('.ln').forEach(function(l){var len=l.getTotalLength();l.style.strokeDasharray=len;l.style.strokeDashoffset=len;});
 anime({targets:'.ln',strokeDashoffset:[anime.setDashoffset,0],opacity:[0.3,0.8],duration:${dur},delay:anime.stagger(${Math.round(dur / n * 0.6)}),easing:'easeInOutCubic',direction:'alternate',loop:true});
-<\/script>${end}`
+</script>${end}`
     }
 
     case 'spring-grid': {
@@ -186,7 +186,7 @@ anime({targets:'.ln',strokeDashoffset:[anime.setDashoffset,0],opacity:[0.3,0.8],
 <script>
 for(var i=0;i<${cols * rows};i++){var d=document.createElement('div');d.className='dot';d.style.cssText='width:${sz}px;height:${sz}px;border-radius:50%;background:${col};cursor:pointer;';document.getElementById('grid').appendChild(d)}
 var anim=anime({targets:'.dot',scale:[{value:1.4,easing:'easeOutSine',duration:${Math.round(dur * 0.12)}},{value:1,easing:'easeOutElastic(1,.4)',duration:${Math.round(dur * 0.8)}}],backgroundColor:['${col}','${col2}','${col}'],delay:anime.stagger(${Math.round(dur / (cols * rows) * 0.6)},{grid:[${cols},${rows}],from:'center'}),loop:true,direction:'alternate'});
-<\/script>${end}`
+</script>${end}`
     }
 
     case 'pendulum': {
@@ -199,7 +199,7 @@ var anim=anime({targets:'.dot',scale:[{value:1.4,easing:'easeOutSine',duration:$
 <script>
 anime({targets:'#arm',rotate:[{value:35,duration:${Math.round(dur * 0.5)}},{value:-35,duration:${dur}}],duration:${dur},easing:'easeInOutSine',direction:'alternate',loop:true,update:function(a){var angle=parseFloat(document.getElementById('arm').style.transform?.match(/[\\d.-]+/)?.[0]||0)*Math.PI/180;var bx=200+260*Math.sin(angle),by=40+260*Math.cos(angle);document.getElementById('bob').setAttribute('cx',bx);document.getElementById('bob').setAttribute('cy',by);document.getElementById('arm').setAttribute('x2',bx);document.getElementById('arm').setAttribute('y2',by);}});
 anime({targets:'.trail',opacity:[0.3,0],scale:[1,0.3],duration:${Math.round(dur * 0.4)},delay:anime.stagger(60),loop:true,easing:'easeOutQuad'});
-<\/script>${end}`
+</script>${end}`
     }
 
     case 'fireworks': {
@@ -213,7 +213,7 @@ function draw(){ctx.fillStyle='rgba(${background === 'transparent' || background
 for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life-=0.012;if(p.life<=0){particles.splice(i,1);continue}ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;requestAnimationFrame(draw)}
 function launch(){burst(c.width*0.2+Math.random()*c.width*0.6,c.height*0.2+Math.random()*c.height*0.4);setTimeout(launch,${Math.round(dur * 0.4)}+Math.random()*${Math.round(dur * 0.6)})}
 draw();launch();
-<\/script>${end}`
+</script>${end}`
     }
 
     default:

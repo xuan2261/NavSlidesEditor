@@ -80,7 +80,7 @@ test.describe('HTML export and present endpoints with content validation', () =>
     expect(res.status()).toBe(404)
   })
 
-  test('present endpoint renders into browser without console errors', async ({ page, request }) => {
+  test('present endpoint renders into browser without console errors', async ({ page }) => {
     const errors = []
     page.on('pageerror', (e) => errors.push(e.message))
     await page.goto(`/api/presentations/${presId}/present`, { timeout: 15000 })

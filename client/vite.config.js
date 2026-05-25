@@ -32,6 +32,9 @@ export default defineConfig({
     include: ['revealjs-shared'],
   },
   build: {
+    // The WYSIWYG editor route is intentionally heavy, but it is lazy-loaded
+    // from App.jsx so the initial shell stays small.
+    chunkSizeWarningLimit: 2500,
     commonjsOptions: {
       // Match both the package name and the actual resolved file paths
       // (workspace symlinks resolve to shared/src/ not node_modules/revealjs-shared/)
@@ -42,7 +45,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-reveal': ['reveal.js'],
           'vendor-katex': ['katex'],
           'vendor-lucide': ['lucide-react'],
           'vendor-tiptap': [

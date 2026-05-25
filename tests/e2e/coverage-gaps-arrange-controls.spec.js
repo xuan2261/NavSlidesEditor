@@ -30,34 +30,6 @@ function seededSlide(elements = []) {
   }
 }
 
-async function openInsert(page) {
-  await page.getByRole('tab', { name: 'Insert' }).click()
-  await expect(page.getByRole('tabpanel', { name: 'Insert' })).toBeVisible()
-}
-
-async function getInsertItem(page, label) {
-  await openInsert(page)
-  const aliases = {
-    'Image (URL)': 'Add image',
-    Video: 'Add video',
-    Audio: 'Audio / Upload',
-    'Audio / Upload': 'Audio / Upload',
-    'QR Code': 'Add QR code',
-    Icon: 'Add icon',
-    'Drawing Canvas': 'Add drawing',
-    SVG: 'Add SVG',
-  }
-  const panel = page.getByRole('tabpanel', { name: 'Insert' })
-  const target = aliases[label] || label
-  return panel.getByRole('button', { name: target, exact: true })
-}
-
-async function insertItem(page, label) {
-  const previousCount = await page.locator('.element-wrapper').count()
-  await (await getInsertItem(page, label)).click()
-  await expect(page.locator('.element-wrapper')).toHaveCount(previousCount + 1, { timeout: 10000 })
-}
-
 async function selectedCanvasElementIds(page) {
   return page.evaluate(() =>
     Array.from(document.querySelectorAll('[data-element-id]'))

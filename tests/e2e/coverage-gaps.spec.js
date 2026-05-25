@@ -6,29 +6,6 @@ import {
   apiGetPresentation,
 } from './fixtures/test-fixtures.js'
 
-function shape(id, x, y, width = 100, height = 80, zIndex = 1) {
-  return {
-    id,
-    type: 'shape',
-    shape: 'rect',
-    x,
-    y,
-    width,
-    height,
-    zIndex,
-    fill: '#6366f1',
-  }
-}
-
-function seededSlide(elements = []) {
-  return {
-    id: 'slide-1',
-    elements,
-    notes: '',
-    background: { type: 'color', color: '#1e1e2e' },
-  }
-}
-
 async function openInsert(page) {
   await page.getByRole('tab', { name: 'Insert' }).click()
   await expect(page.getByRole('tabpanel', { name: 'Insert' })).toBeVisible()
@@ -59,35 +36,6 @@ async function insertItem(page, label) {
     await page.locator('[data-testid^="icon-gallery-item-"]').first().click()
   }
   await expect(page.locator('.element-wrapper')).toHaveCount(previousCount + 1, { timeout: 10000 })
-}
-
-async function selectedCanvasElementIds(page) {
-  return page.evaluate(() =>
-    Array.from(document.querySelectorAll('[data-element-id]'))
-      .filter((el) => el.style.outline && el.style.outline !== 'none')
-      .map((el) => el.getAttribute('data-element-id'))
-      .sort()
-  )
-}
-
-async function selectElements(page, ids) {
-  const expected = []
-  await page.keyboard.press('Escape')
-  await expect.poll(() => selectedCanvasElementIds(page)).toEqual([])
-
-  await page.getByTestId(`slide-element-${ids[0]}`).click({ force: true })
-  expected.push(ids[0])
-  await expect.poll(() => selectedCanvasElementIds(page)).toEqual([...expected].sort())
-
-  for (const id of ids.slice(1)) {
-    await page.keyboard.down('Shift')
-    await page.getByTestId(`slide-element-${id}`).click({ force: true })
-    await page.keyboard.up('Shift')
-    expected.push(id)
-    await expect.poll(() => selectedCanvasElementIds(page)).toEqual([...expected].sort())
-  }
-
-  await expect(page.locator('.tour-step-ribbon')).toContainText('Arrange', { timeout: 5000 })
 }
 
 test.describe('Coverage Gaps: Editor controls and UI contracts', () => {

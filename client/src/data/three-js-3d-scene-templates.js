@@ -38,7 +38,7 @@ export function generateThreeJsHtml(templateId, params = {}) {
 <script type="importmap">{"imports":{"three":"${THREE_CDN}","three/addons/controls/OrbitControls.js":"${ORBIT_CDN}"}}</script>
 <script type="module">`
 
-  const end = `<\/script></body></html>`
+  const end = `</script></body></html>`
 
   const setupCamera = `const W=window.innerWidth,H=window.innerHeight;
 const scene=new THREE.Scene();
@@ -259,5 +259,5 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
-<\/script>
+</script>
 </body></html>`

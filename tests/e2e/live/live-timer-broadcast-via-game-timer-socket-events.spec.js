@@ -120,7 +120,7 @@ test.describe('Live timer broadcast via game-timer socket events to viewer', () 
     )
   })
 
-  test('rejoining viewer receives existing running timer state via initial timer:sync', async ({ page, context }) => {
+  test('rejoining viewer receives existing running timer state via initial timer:sync', async ({ context }) => {
     presenterSocket.emit('game-timer-start', { elementId: TIMER_ELEMENT_ID, duration: 90 })
 
     await new Promise((r) => setTimeout(r, 500))

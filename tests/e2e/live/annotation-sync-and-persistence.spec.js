@@ -86,7 +86,7 @@ test.describe('Annotation sync and persistence across presenter and viewer', () 
     await waitWithLastSample('all strokes cleared', async () => (await page.locator('svg path').count()) === 0)
   })
 
-  test('rejoining viewer receives previous-slide annotations via annotations:sync', async ({ page, context }) => {
+  test('rejoining viewer receives previous-slide annotations via annotations:sync', async ({ context }) => {
     presenterSocket.emit('annotation:add', { slideIndex: 0, annotation: { id: 'persist-1', d: 'M10,10 L200,200', color: '#ff00ff' } })
     presenterSocket.emit('annotation:add', { slideIndex: 0, annotation: { id: 'persist-2', d: 'M20,20 L150,150', color: '#ffff00' } })
 

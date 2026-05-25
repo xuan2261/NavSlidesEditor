@@ -177,7 +177,7 @@ export default function SlideCanvas({
     const ro = new ResizeObserver(update)
     if (containerRef.current) ro.observe(containerRef.current)
     return () => ro.disconnect()
-  }, [SLIDE_H, SLIDE_W, userZoomMode])
+  }, [SLIDE_H, SLIDE_W, setScale, userZoomMode])
 
 
   // Keyboard shortcuts

@@ -66,7 +66,7 @@ test.describe('Table element interactions row column add remove cell edit and st
     await expect(wrapper.locator('td').first()).toContainText('Header A')
   })
 
-  test('persists table data via API seed and reload', async ({ page, request }) => {
+  test('persists table data via API seed and reload', async ({ request }) => {
     await seedSlide(request, presId, [tableEl()])
     await editor.gotoPresentation(presId)
     const saved = await apiGetPresentation(request, presId)

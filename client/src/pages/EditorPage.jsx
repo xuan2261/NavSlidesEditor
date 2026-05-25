@@ -23,7 +23,6 @@ import TableCell from '@tiptap/extension-table-cell'
 import { ChevronLeft } from 'lucide-react'
 import { api } from '../utils/api'
 import { presentInWindow, exportPDF, generateRevealHTML, downloadHTML } from '../utils/generateHTML'
-import { exportToPptx } from '../utils/exportPptx'
 import { generateOfflineHTML } from '../utils/offlineExport'
 import { exportProject } from '../utils/export-project'
 import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../utils/import-project'
@@ -1291,6 +1290,7 @@ svg.selectAll('circle').data(data).join('circle')
           onExportPDF={() => exportPDF(presentation)}
           onExportPPTX={async () => {
             try {
+              const { exportToPptx } = await import('../utils/exportPptx')
               const warnings = await exportToPptx(presentation)
               if (warnings.length) alert(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
             } catch (err) {

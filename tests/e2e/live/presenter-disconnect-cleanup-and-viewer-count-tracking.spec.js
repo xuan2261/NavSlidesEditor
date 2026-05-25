@@ -88,7 +88,7 @@ test.describe('Presenter disconnect cleanup notifies viewer of presenter departu
     presenterSocket.disconnect()
   })
 
-  test('viewer count badge reflects multiple viewers and decrements on viewer disconnect', async ({ page, context, request }) => {
+  test('viewer count badge reflects multiple viewers and decrements on viewer disconnect', async ({ page, context }) => {
     const presenterSocket = await connectSocket()
     await joinAsPresenter(presenterSocket, roomCode, token, presId)
 

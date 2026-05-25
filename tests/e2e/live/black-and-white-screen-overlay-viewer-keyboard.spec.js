@@ -32,12 +32,6 @@ test.describe('Black and white screen overlay viewer keyboard toggle', () => {
     await page.locator('body').click({ position: { x: 5, y: 5 } })
   }
 
-  function blackOverlay(page) {
-    return page.locator('div').filter({
-      has: page.locator(':scope').filter({ hasText: /^$/ }),
-    }).filter({ hasText: '' }).locator('xpath=//div[@style and contains(@style,"background-color: rgb(0, 0, 0)") and contains(@style,"z-index: 99999")]').first()
-  }
-
   test('pressing B toggles a fullscreen black overlay on viewer', async ({ page }) => {
     await openViewer(page)
 

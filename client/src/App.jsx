@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react'
+import { lazy, Suspense, useState, useEffect } from 'react'
 import ErrorBoundary from './components/ErrorBoundary'
 import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom'
-import HomePage from './pages/HomePage'
-import EditorPage from './pages/EditorPage'
-import SettingsPage from './pages/SettingsPage'
-import LiveViewPage from './pages/LiveViewPage'
-import RemoteControlPage from './pages/RemoteControlPage'
-import SpeakerViewPage from './pages/SpeakerViewPage'
-import ExplorePage from './pages/ExplorePage'
-import GamePlayerPage from './pages/game-player-join-page'
 import MainLayout from './components/layout/MainLayout'
+
+const HomePage = lazy(() => import('./pages/HomePage'))
+const EditorPage = lazy(() => import('./pages/EditorPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const LiveViewPage = lazy(() => import('./pages/LiveViewPage'))
+const RemoteControlPage = lazy(() => import('./pages/RemoteControlPage'))
+const SpeakerViewPage = lazy(() => import('./pages/SpeakerViewPage'))
+const ExplorePage = lazy(() => import('./pages/ExplorePage'))
+const GamePlayerPage = lazy(() => import('./pages/game-player-join-page'))
 
 function EditorRoute({ isTemplate = false }) {
   const { id } = useParams()
@@ -27,30 +28,32 @@ function AppRoutes() {
   }, [theme])
 
   return (
-    <Routes>
-      <Route element={<MainLayout />}>
-        <Route
-          path="/"
-          element={
-            <HomePage
-              onOpen={(id, template = false) =>
-                navigate(template ? `/template/${id}` : `/editor/${id}`)
-              }
-              theme={theme}
-              onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-            />
-          }
-        />
-        <Route path="/editor/:id" element={<EditorRoute />} />
-        <Route path="/template/:id" element={<EditorRoute isTemplate />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/explore" element={<ExplorePage />} />
-      </Route>
-      <Route path="/live/:roomCode" element={<LiveViewPage />} />
-      <Route path="/remote/:roomCode" element={<RemoteControlPage />} />
-      <Route path="/speaker/:roomCode" element={<SpeakerViewPage />} />
-      <Route path="/player/:slideId/:elementId" element={<GamePlayerPage />} />
-    </Routes>
+    <Suspense fallback={null}>
+      <Routes>
+        <Route element={<MainLayout />}>
+          <Route
+            path="/"
+            element={
+              <HomePage
+                onOpen={(id, template = false) =>
+                  navigate(template ? `/template/${id}` : `/editor/${id}`)
+                }
+                theme={theme}
+                onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+              />
+            }
+          />
+          <Route path="/editor/:id" element={<EditorRoute />} />
+          <Route path="/template/:id" element={<EditorRoute isTemplate />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/explore" element={<ExplorePage />} />
+        </Route>
+        <Route path="/live/:roomCode" element={<LiveViewPage />} />
+        <Route path="/remote/:roomCode" element={<RemoteControlPage />} />
+        <Route path="/speaker/:roomCode" element={<SpeakerViewPage />} />
+        <Route path="/player/:slideId/:elementId" element={<GamePlayerPage />} />
+      </Routes>
+    </Suspense>
   )
 }
 

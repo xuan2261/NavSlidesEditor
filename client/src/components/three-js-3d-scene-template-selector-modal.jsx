@@ -21,7 +21,7 @@ export default function ThreeJs3DSceneTemplateSelectorModal({ onInsert, onClose 
 
   const previewHtml = useMemo(
     () => (isCustom ? customCode : generateThreeJsHtml(selected, params)),
-    [isCustom, selected, params, customCode, previewKey]
+    [isCustom, selected, params, customCode]
   )
 
   const handleTextareaTab = (e) => {

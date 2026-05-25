@@ -7,16 +7,6 @@
  */
 import { test, expect } from '@playwright/test'
 
-const GAME_TYPES = [
-  { label: 'Name Picker' },
-  { label: 'Hot Potato Quiz' },
-  { label: 'Jeopardy' },
-  { label: 'Four Corners' },
-  { label: 'Relay Race' },
-  { label: 'Trivia Championship' },
-  { label: 'Scattergories' },
-]
-
 // ─── Game Element Insertion ────────────────────────────────────────────────────
 
 test.describe('Player Join Page', () => {

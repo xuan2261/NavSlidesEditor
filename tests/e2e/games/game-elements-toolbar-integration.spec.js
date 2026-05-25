@@ -9,16 +9,6 @@ import { test, expect } from '@playwright/test'
 import { EditorPage } from '../pages/editor-page.js'
 import { apiCreatePresentation, apiDeletePresentation } from '../fixtures/test-fixtures.js'
 
-const GAME_TYPES = [
-  { label: 'Name Picker' },
-  { label: 'Hot Potato Quiz' },
-  { label: 'Jeopardy' },
-  { label: 'Four Corners' },
-  { label: 'Relay Race' },
-  { label: 'Trivia Championship' },
-  { label: 'Scattergories' },
-]
-
 // ─── Game Element Insertion ────────────────────────────────────────────────────
 
 test.describe('Game Element — Toolbar Integration', () => {

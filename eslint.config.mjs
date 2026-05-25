@@ -18,6 +18,7 @@ export default [
       'playwright-report/**',
       'test-results/**',
       'coverage/**',
+      '.claude/**',
       'website/.vitepress/dist/**',
     ],
   },
@@ -32,10 +33,20 @@ export default [
     },
   },
   {
-    files: ['*.config.mjs', 'client/vite.config.js'],
+    files: ['*.config.mjs', 'client/vite.config.js', 'website/.vitepress/config.mjs'],
     languageOptions: {
       globals: {
         ...globals.node,
+      },
+      sourceType: 'module',
+    },
+  },
+  // Root-level JSDOM setup
+  {
+    files: ['vitest-setup-*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
       },
       sourceType: 'module',
     },
