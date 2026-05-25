@@ -323,12 +323,20 @@ ${getPluginRuntimeInitScript()}
               fragmentIndex: state.fragmentIndex
             });
           }
+          function emitLiveNavigateAfterInput() {
+            setTimeout(function() { emitLiveNavigate(true); }, 0);
+            setTimeout(function() { emitLiveNavigate(true); }, 120);
+            setTimeout(function() { emitLiveNavigate(true); }, 400);
+          }
           // Broadcast slide changes. The polling fallback covers headless CI
           // cases where keyboard navigation updates Reveal before events flush.
           Reveal.on('slidechanged', emitLiveNavigate);
           Reveal.on('fragmentshown', emitLiveNavigate);
           Reveal.on('fragmenthidden', emitLiveNavigate);
           setInterval(emitLiveNavigate, 250);
+          document.addEventListener('keydown', emitLiveNavigateAfterInput, true);
+          document.addEventListener('keyup', emitLiveNavigateAfterInput, true);
+          window.addEventListener('hashchange', emitLiveNavigateAfterInput);
           sock.on('control-navigate', function(state) {
             Reveal.slide(state.slideIndex || 0, state.verticalIndex || 0, state.fragmentIndex || 0);
           });

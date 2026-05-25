@@ -157,6 +157,8 @@ describe('htmlGenerator', () => {
     expect(html).toContain('slideIndex: indices.slideIndex || 0')
     expect(html).toContain('verticalIndex: indices.verticalIndex || 0')
     expect(html).toContain('fragmentIndex: indices.fragmentIndex || 0')
+    expect(html).toContain("document.addEventListener('keydown', emitLiveNavigateAfterInput, true);")
+    expect(html).toContain("window.addEventListener('hashchange', emitLiveNavigateAfterInput);")
     expect(html).toContain("sock.on('control-navigate'")
   })
 
