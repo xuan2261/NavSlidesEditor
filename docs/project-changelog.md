@@ -33,6 +33,7 @@
 - Refreshed the Linux speaker-view visual baseline from PR CI run `26361925614` after live E2E passed and only a sub-1k-pixel speaker view snapshot drift remained.
 - Stabilized the remaining PR CI live E2E failure by driving presenter navigation through real keyboard input (`ArrowRight`, `ArrowLeft`, `Home`, `End`) and waiting for the presenter slide content before asserting viewer socket sync.
 - Hardened the live presenter-to-viewer keyboard spec against the final master CI race by waiting for the server to count a joined viewer before emitting presenter navigation.
+- Addressed master CI run `26380770511` follow-up: present-mode exports now dedupe and periodically rebroadcast live `Reveal` indices so Linux CI does not miss keyboard navigation events after socket readiness, and deterministic visual snapshots use the plan-approved `maxDiffPixelRatio: 0.02` threshold for recurring 0.01-ratio antialias drift. Local verification passed: targeted `chromium-live` spec 4/4, `npm run lint`, `npm run build`, and the affected `htmlGenerator`/socket Vitest slice 4 files / 59 tests; full `npm test` earlier in the same pass was 183 files / 1532 tests.
 
 ## 2026-05-23
 

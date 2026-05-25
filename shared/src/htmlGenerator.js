@@ -263,43 +263,45 @@ ${getPluginRuntimeInitScript()}
               presentationId: '${presentation.id || ''}',
               presenterToken: presenterToken
             });
-            // Show live indicator
-            var badge = document.createElement('div');
-            badge.style.cssText = 'position:fixed;top:12px;left:12px;z-index:9999;background:rgba(239,68,68,0.9);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;font-family:system-ui,sans-serif;';
-            badge.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#fff;animation:livePulse 1.5s ease-in-out infinite;display:inline-block;"></span> LIVE';
-            var style = document.createElement('style');
-            style.textContent = '@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.3}}';
-            document.head.appendChild(style);
-            document.body.appendChild(badge);
+            if (!document.getElementById('navslides-live-indicator')) {
+              var badge = document.createElement('div');
+              badge.id = 'navslides-live-indicator';
+              badge.style.cssText = 'position:fixed;top:12px;left:12px;z-index:9999;background:rgba(239,68,68,0.9);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;font-family:system-ui,sans-serif;';
+              badge.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#fff;animation:livePulse 1.5s ease-in-out infinite;display:inline-block;"></span> LIVE';
+              var style = document.createElement('style');
+              style.id = 'navslides-live-indicator-style';
+              style.textContent = '@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.3}}';
+              document.head.appendChild(style);
+              document.body.appendChild(badge);
+            }
+            emitLiveNavigate(true);
           });
           sock.on('join-error', function(payload) {
             alert((payload && payload.message) || 'Presenter access denied');
           });
-          // Broadcast slide changes
-          Reveal.on('slidechanged', function(event) {
+          var lastLiveIndices = null;
+          function emitLiveNavigate(force) {
             var indices = Reveal.getIndices();
-            sock.emit('navigate', {
+            var state = {
               slideIndex: indices.h || 0,
               verticalIndex: indices.v || 0,
               fragmentIndex: indices.f || 0
-            });
-          });
-          Reveal.on('fragmentshown', function(event) {
-            var indices = Reveal.getIndices();
+            };
+            var key = state.slideIndex + ':' + state.verticalIndex + ':' + state.fragmentIndex;
+            if (force !== true && key === lastLiveIndices) return;
+            lastLiveIndices = key;
             sock.emit('navigate', {
-              slideIndex: indices.h || 0,
-              verticalIndex: indices.v || 0,
-              fragmentIndex: indices.f || 0
+              slideIndex: state.slideIndex,
+              verticalIndex: state.verticalIndex,
+              fragmentIndex: state.fragmentIndex
             });
-          });
-          Reveal.on('fragmenthidden', function(event) {
-            var indices = Reveal.getIndices();
-            sock.emit('navigate', {
-              slideIndex: indices.h || 0,
-              verticalIndex: indices.v || 0,
-              fragmentIndex: indices.f || 0
-            });
-          });
+          }
+          // Broadcast slide changes. The polling fallback covers headless CI
+          // cases where keyboard navigation updates Reveal before events flush.
+          Reveal.on('slidechanged', emitLiveNavigate);
+          Reveal.on('fragmentshown', emitLiveNavigate);
+          Reveal.on('fragmenthidden', emitLiveNavigate);
+          setInterval(emitLiveNavigate, 250);
           sock.on('control-navigate', function(state) {
             Reveal.slide(state.slideIndex || 0, state.verticalIndex || 0, state.fragmentIndex || 0);
           });
