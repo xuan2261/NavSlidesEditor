@@ -11,7 +11,7 @@ import os from 'node:os'
 import fs from 'node:fs/promises'
 import fsSync from 'node:fs'
 import JSZip from 'jszip'
-import { mapPptxOutput } from './mapper.js'
+import { mapPptxOutput } from './mapper'
 
 const CORPUS_DIR = path.join(__dirname, '..', '..', 'data', 'test-corpus')
 const hasCorpus = fsSync.existsSync(CORPUS_DIR)

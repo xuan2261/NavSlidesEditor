@@ -9,6 +9,20 @@ const PARSER_KILL_GRACE_MS = 2000
 
 const CANVAS_SIZE = Object.freeze({ width: 960, height: 540 })
 const TEMP_UPLOAD_DIR = path.join(DATA_DIR, 'tmp-pptx-imports')
+const ALLOWED_MEDIA_EXTENSIONS = new Set([
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'webp',
+  'bmp',
+  'mp4',
+  'mp3',
+  'wav',
+  'ogg',
+  'webm',
+])
+const MEDIA_URL_ALLOWLIST = buildMediaUrlAllowlist()
 
 const FAILURE_TYPES = Object.freeze({
   installFailed: 'install-failed',
@@ -19,9 +33,28 @@ const FAILURE_TYPES = Object.freeze({
   browserOnly: 'browser-only',
 })
 
+function addHost(list, value) {
+  if (!value) return
+  try {
+    list.add(new URL(value).hostname.toLowerCase())
+  } catch {
+    list.add(String(value).replace(/:\d+$/, '').toLowerCase())
+  }
+}
+
+function buildMediaUrlAllowlist() {
+  const list = new Set(['localhost', '127.0.0.1'])
+  addHost(list, process.env.PUBLIC_HOST)
+  addHost(list, process.env.HOST)
+  return list
+}
+
 module.exports = {
+  ALLOWED_MEDIA_EXTENSIONS,
+  buildMediaUrlAllowlist,
   CANVAS_SIZE,
   FAILURE_TYPES,
+  MEDIA_URL_ALLOWLIST,
   MAX_DECOMPRESSED_BYTES,
   MAX_FILE_BYTES,
   MAX_ZIP_ENTRIES,

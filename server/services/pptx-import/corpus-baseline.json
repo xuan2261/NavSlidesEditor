@@ -1,0 +1,246 @@
+{
+  "summary": {
+    "corpusDir": "C:\\Work\\NavSlidesEditor\\server\\data\\test-corpus",
+    "totalFiles": 10,
+    "passedFiles": 10,
+    "failedFiles": 0,
+    "avgSemanticFidelity": 1,
+    "avgRoundTripStability": 0.99,
+    "strict": true
+  },
+  "gates": {
+    "perDeckMinSemantic": 0.95,
+    "maxClassDrop": 0.15,
+    "excludeClassDrop": []
+  },
+  "perDeck": {
+    "background-image-notes-footer.pptx": {
+      "semanticFidelity": 1,
+      "roundTripStability": 1,
+      "propertyCoverage": {
+        "overall": 1,
+        "byType": {
+          "image": 1,
+          "shape": 1
+        }
+      },
+      "elementCount": {
+        "sourceByType": {
+          "image": 1,
+          "shape": 4
+        },
+        "navByType": {
+          "image": 1,
+          "shape": 4
+        }
+      }
+    },
+    "Bai_2_1.pptx": {
+      "semanticFidelity": 1,
+      "roundTripStability": 0.96,
+      "propertyCoverage": {
+        "overall": 1,
+        "byType": {
+          "shape": 1,
+          "image": 1,
+          "text": 1,
+          "table": 1
+        }
+      },
+      "elementCount": {
+        "sourceByType": {
+          "shape": 79,
+          "image": 27,
+          "text": 207,
+          "table": 5
+        },
+        "navByType": {
+          "text": 207,
+          "shape": 79,
+          "image": 27,
+          "table": 5
+        }
+      }
+    },
+    "Bai_2_2.pptx": {
+      "semanticFidelity": 1,
+      "roundTripStability": 1,
+      "propertyCoverage": {
+        "overall": 1,
+        "byType": {
+          "text": 1,
+          "shape": 1,
+          "table": 1,
+          "other": 1,
+          "image": 1
+        }
+      },
+      "elementCount": {
+        "sourceByType": {
+          "text": 294,
+          "shape": 199,
+          "table": 15,
+          "other": 4,
+          "image": 2
+        },
+        "navByType": {
+          "text": 294,
+          "shape": 199,
+          "table": 15,
+          "other": 4,
+          "image": 2
+        }
+      }
+    },
+    "Bai_2_5.pptx": {
+      "semanticFidelity": 1,
+      "roundTripStability": 0.99,
+      "propertyCoverage": {
+        "overall": 1,
+        "byType": {
+          "text": 1,
+          "image": 1,
+          "shape": 1,
+          "table": 1,
+          "other": 1
+        }
+      },
+      "elementCount": {
+        "sourceByType": {
+          "text": 267,
+          "image": 31,
+          "shape": 245,
+          "table": 18,
+          "other": 13
+        },
+        "navByType": {
+          "text": 267,
+          "image": 31,
+          "shape": 245,
+          "table": 18,
+          "other": 13
+        }
+      }
+    },
+    "chart-bars-lines.pptx": {
+      "semanticFidelity": 1,
+      "roundTripStability": 1,
+      "propertyCoverage": {
+        "overall": 1,
+        "byType": {
+          "shape": 1
+        }
+      },
+      "elementCount": {
+        "sourceByType": {
+          "shape": 2
+        },
+        "navByType": {
+          "shape": 2
+        }
+      }
+    },
+    "chart-pie-scatter.pptx": {
+      "semanticFidelity": 1,
+      "roundTripStability": 1,
+      "propertyCoverage": {
+        "overall": 1,
+        "byType": {
+          "shape": 1
+        }
+      },
+      "elementCount": {
+        "sourceByType": {
+          "shape": 2
+        },
+        "navByType": {
+          "shape": 2
+        }
+      }
+    },
+    "diagram-process-flow.pptx": {
+      "semanticFidelity": 1,
+      "roundTripStability": 1,
+      "propertyCoverage": {
+        "overall": 1,
+        "byType": {
+          "shape": 1
+        }
+      },
+      "elementCount": {
+        "sourceByType": {
+          "shape": 18
+        },
+        "navByType": {
+          "shape": 18
+        }
+      }
+    },
+    "math-rich-text.pptx": {
+      "semanticFidelity": 1,
+      "roundTripStability": 1,
+      "propertyCoverage": {
+        "overall": 1,
+        "byType": {
+          "shape": 1
+        }
+      },
+      "elementCount": {
+        "sourceByType": {
+          "shape": 6
+        },
+        "navByType": {
+          "shape": 6
+        }
+      }
+    },
+    "STTre_Duc.pptx": {
+      "semanticFidelity": 1,
+      "roundTripStability": 1,
+      "propertyCoverage": {
+        "overall": 1,
+        "byType": {
+          "text": 1,
+          "shape": 1,
+          "image": 1
+        }
+      },
+      "elementCount": {
+        "sourceByType": {
+          "text": 70,
+          "shape": 73,
+          "image": 28
+        },
+        "navByType": {
+          "text": 70,
+          "image": 28,
+          "shape": 73
+        }
+      }
+    },
+    "table-shapes-media.pptx": {
+      "semanticFidelity": 1,
+      "roundTripStability": 1,
+      "propertyCoverage": {
+        "overall": 1,
+        "byType": {
+          "shape": 1,
+          "table": 1,
+          "image": 1
+        }
+      },
+      "elementCount": {
+        "sourceByType": {
+          "shape": 5,
+          "table": 1,
+          "image": 1
+        },
+        "navByType": {
+          "shape": 5,
+          "table": 1,
+          "image": 1
+        }
+      }
+    }
+  }
+}

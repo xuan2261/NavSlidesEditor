@@ -10,6 +10,20 @@ import {
 const PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 const PPTX_FIXTURES = ['Bai_2_1.pptx', 'Bai_2_2.pptx', 'Bai_2_5.pptx']
 
+async function waitForPptxImport(request, jobId) {
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    const poll = await request.get(`/api/pptx/jobs/${jobId}`)
+    expect(poll.ok()).toBeTruthy()
+    const job = await poll.json()
+    if (job.status === 'done') return job.result
+    if (job.status === 'failed' || job.status === 'cancelled') {
+      throw new Error(job.error || `PPTX import ${job.status}`)
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+  throw new Error('Timed out waiting for PPTX import job')
+}
+
 async function importAndUpdate(request, fixturePath, testPresentation) {
   const buffer = await fs.readFile(fixturePath)
   const importRes = await request.post('/api/pptx/import', {
@@ -17,8 +31,9 @@ async function importAndUpdate(request, fixturePath, testPresentation) {
       file: { name: path.basename(fixturePath), mimeType: PPTX_MIME, buffer },
     },
   })
-  expect(importRes.ok()).toBeTruthy()
-  const imported = await importRes.json()
+  expect(importRes.status()).toBe(202)
+  const { jobId } = await importRes.json()
+  const imported = await waitForPptxImport(request, jobId)
   expect(imported.presentation?.slides?.length).toBeGreaterThan(0)
   const presentation = await apiUpdatePresentation(request, testPresentation.id, imported.presentation)
   return { imported, presentation }
@@ -30,6 +45,7 @@ test.describe('PPTX import endpoint and presentation creation roundtrip across m
       request,
       testPresentation,
     }) => {
+      test.setTimeout(150000)
       const fixturePath = path.resolve(process.cwd(), 'PPTX', fixture)
       const { imported, presentation } = await importAndUpdate(request, fixturePath, testPresentation)
 
@@ -61,6 +77,7 @@ test.describe('PPTX import endpoint and presentation creation roundtrip across m
     request,
     testPresentation,
   }) => {
+    test.setTimeout(150000)
     const fixturePath = path.resolve(process.cwd(), 'PPTX', 'Bai_2_2.pptx')
     const { presentation } = await importAndUpdate(request, fixturePath, testPresentation)
 

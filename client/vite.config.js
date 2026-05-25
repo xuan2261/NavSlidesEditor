@@ -14,7 +14,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': apiProxyTarget,
+      '/api': {
+        target: apiProxyTarget,
+        proxyTimeout: 0,
+        timeout: 0,
+      },
       '/share': apiProxyTarget,
       '/uploads': apiProxyTarget,
       '/vendor': apiProxyTarget,

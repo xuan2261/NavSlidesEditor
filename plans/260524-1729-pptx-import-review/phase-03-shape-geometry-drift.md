@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Shape geometry drift diagnostic + fix"
-status: pending
+status: complete
 priority: P1
 effort: "3d"
 dependencies: [1]
@@ -9,126 +9,104 @@ dependencies: [1]
 
 # Phase 3 — Shape Geometry Drift Diagnostic + Fix
 
-Shape median drift 121-364 px (Bai_2_1 364px = 38% of 960px canvas). Text drift 0.5px (fine), so drift is shape-specific. Root cause unverified — three candidates from findings. Instrument before fixing.
-
 ## Context Links
 
 - Brainstorm: P0-D
-- Source files: `mapper.js:494` (`mapShape`), `geometry.js`, `geometry-drift.test.js`
-- Candidates: `clampBox` in `mapLineGeometry`, group flattening nested rotations, `mapBox` rounding.
+- Diagnostic report: `plans/260524-1729-pptx-import-review/reports/geometry-drift-diagnostic.md`
+- Drift before fix: `plans/260524-1729-pptx-import-review/reports/shape-drift-baseline.json`
+- Drift after fix: `plans/260524-1729-pptx-import-review/reports/shape-drift-after-source-transform.json`
+- Code: `server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tester.js`
+- Tests: `server/services/pptx-import/geometry-drift.test.js`
 
 ## Overview
 
 - Priority: P1
-- Brief: Two sub-steps. (a) instrument tester to emit per-shape drift JSON so we know if it's one bad group or distributed. (b) once root cause confirmed, fix it. Likely candidate from research: group flattening drops the parent transform on nested rotated children.
+- Current status: Complete
+- Brief: Added per-shape drift diagnostics, identified root cause, and fixed the diagnostic metric. No mapper geometry behavior change was needed.
 
 ## Key Insights
 
-- Median 364px on Bai_2_1 means HALF of shapes are off by ~38% of canvas. Concentrated in groups (1 bad group with N children) is most plausible.
-- Existing `geometry-drift.test.js` (215 LOC) already scaffolds the test surface — extend it.
-- `clampBox` is the prime suspect because line/connector mapping uses it differently than shape (`mapper.js:783-786` connector detection).
+- The apparent 121-364px shape drift was a tester-side diagnostic error.
+- Grouped PPTX children were flattened as local group coordinates, then compared against absolute NavSlides canvas coordinates.
+- Applying group transforms to source children before comparison reduced median shape drift to 0px on Bai_2_1, Bai_2_2, and Bai_2_5.
 
-## File Inventory
+## Requirements
 
-| Path | Action | Est LOC delta |
-|---|---|---|
-| `server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tester.js` | Modify | +50 (instrument) |
-| `server/services/pptx-import/geometry.js` | Modify (after diagnosis) | +20/-15 |
-| `server/services/pptx-import/mapper.js` (or relevant chunk pre-split) | Possibly modify | +10/-5 |
-| `server/services/pptx-import/geometry.test.js` | New OR extend `geometry-drift.test.js` | +80 |
-| `server/services/pptx-import/geometry-drift.test.js` | Modify | +40 |
-| `plans/260524-1729-pptx-import-review/reports/geometry-drift-diagnostic.md` | Create | +60 |
+- Emit per-shape drift JSON through `--drift-out=<path>`.
+- Include enough context to diagnose outliers: `deckName`, `slideIdx`, `sourceIdx`, `flattenedIdx`, `sourcePath`, `kind`, `origin`, `mapped`, `deltaPx`.
+- Avoid mapper behavior churn unless the diagnostic proves mapper geometry is wrong.
 
-## Test Scenario Matrix
+## Architecture
 
-| Existing test | Touched? | Notes |
-|---|---|---|
-| `geometry-drift.test.js` (215 LOC) | Yes | Add per-shape drift export + assertions on median < 50px |
-| `group-transform.test.js` (164 LOC) | Verify still green | Likely changes if root cause is group flattening |
-| `mapper-golden-master.test.js` | Re-baseline | Shape `left`/`top`/`width`/`height` will shift |
-| New: `geometry.test.js` | Create | Unit tests for `clampBox`, `mapBox`, `mapLineGeometry` boundary cases |
+- `computeDetailedFidelityMetrics` now returns `shapeDriftDetails`.
+- `buildSourceGroupMatrix` and `transformSourceChild` apply grouped source transforms before comparison.
+- `writeDriftRows` writes the CLI drift rows and is unit tested without spawning a full corpus run.
 
-New tests: +1 file, +8-12 cases.
+## Related Code Files
 
-## Function/Interface Checklist
+- Modified: `server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tester.js`
+- Modified: `server/services/pptx-import/geometry-drift.test.js`
+- Created: `plans/260524-1729-pptx-import-review/reports/geometry-drift-diagnostic.md`
+- Created: `plans/260524-1729-pptx-import-review/reports/shape-drift-baseline.json`
+- Created: `plans/260524-1729-pptx-import-review/reports/shape-drift-after-source-transform.json`
+- Not modified: `server/services/pptx-import/mapper.js` for Phase 3 behavior
+- Not modified: `server/services/pptx-import/geometry.js`
 
-- Tester: add per-shape drift JSON emission via `--drift-out=<path>`. Format: `{ deckName, slideIdx, shapeIdx, kind, origin: {x,y,w,h}, mapped: {x,y,w,h}, deltaPx: {...} }[]`.
-- `geometry.js`: review `clampBox`, `mapBox`, `mapLineGeometry` for math errors at canvas edges and nested rotations.
-- `flattenGroupElement` / `buildGroupMatrix` in `mapper.js:674`: verify transform composition correctness with nested groups.
+## Implementation Steps
 
-## Dependency Map
+1. Added `--drift-out=<path>` CLI support.
+2. Added per-shape diagnostic rows to `computeDetailedFidelityMetrics`.
+3. Ran baseline drift output against `PPTX/`.
+4. Found outliers concentrated in grouped source paths such as `6.2.33`, `5.0.19`, and `6.7.41.1`.
+5. Fixed tester source flattening to apply group matrix transforms before geometry comparison.
+6. Re-ran drift output and confirmed all large shape drifts disappeared.
+7. Documented diagnosis and before/after evidence.
 
-- Blocks: Phase 7 (split must reflect fixed behavior), Phase 9 (acceptance gate)
-- Blocked by: Phase 1 (golden master baseline)
+## Todo List
 
-## Tests Before (Characterization Gate)
-
-- [ ] Confirm `npm test` green
-- [ ] `npx vitest run server/services/pptx-import/geometry-drift.test.js` — green
-- [ ] Run tester with new `--drift-out=drift-baseline.json` flag; commit baseline showing current 364px median
-
-## Refactor / Implement
-
-### Sub-step A: Instrument (Day 1)
-
-- [ ] Add `--drift-out=<path>` CLI flag to fidelity tester.
-- [ ] Emit per-shape drift JSON during `computeDetailedFidelityMetrics`.
-- [ ] Run against `PPTX/Bai_2_1.pptx`; write findings to `reports/geometry-drift-diagnostic.md`.
-- [ ] Identify root cause: is it (i) one outlier group, (ii) connector clampBox, or (iii) rotation matrix?
-
-### Sub-step B: Fix (Day 2-3, depends on A)
-
-- [ ] If cause is `clampBox` in `mapLineGeometry`: fix bounds calculation; verify with new `geometry.test.js` boundary cases.
-- [ ] If cause is group rotation: fix `buildGroupMatrix` matrix composition; verify with `group-transform.test.js`.
-- [ ] If cause is `mapBox` rounding: stop rounding `left`/`top` to integers in the EMU->px conversion.
-- [ ] Pick ONE root cause first; don't shotgun.
-
-### Sub-step B.fallback: Upstream root cause (validated contingency)
-
-If sub-step A diagnostic proves root cause lies in `pptxtojson` parser output (drift originates BEFORE mapper sees coordinates), apply this contingency instead of attempting fix:
-
-- [ ] Emit per-shape `geometry-drift-detected` warning in mapper when shape mapped drift exceeds 50px threshold (compare origin vs mapped box). Surfaced in import-dialog warnings list.
-- [ ] Document upstream limitation explicitly in `reports/geometry-drift-diagnostic.md` with reproduction recipe + minimal failing fixture.
-- [ ] Coordinate with Phase 9 to add per-class exception: if upstream-root-cause flag set, exclude `shape` class from element-class drop gate for v1. New CLI flag in tester: `--exclude-class-drop=shape`.
-- [ ] Open follow-up issue against `pptxtojson` upstream OR replace with `pptx2json` for affected shape types (out of scope; future plan).
-
-## Tests After (New Unit Tests)
-
-- [ ] `geometry.test.js`:
-  - `it('clampBox preserves shape entirely inside canvas')`
-  - `it('clampBox handles negative coords correctly')`
-  - `it('mapBox does not round EMU values inappropriately')`
-  - `it('mapLineGeometry handles diagonal connectors')`
-  - `it('buildGroupMatrix composes nested rotations correctly')`
-- [ ] Extend `geometry-drift.test.js` assertion: median shape drift < 50px on Bai_2_1 fixture.
-
-## Regression Gate
-
-- [ ] `npm test` — full suite green
-- [ ] `npm test -- --coverage` — thresholds preserved
-- [ ] LOC budget: `geometry.js` <= 180 LOC
-- [ ] `npm run test:corpus` — Bai_2_1 median shape drift <= 50px; max <= 200px; re-baseline `corpus-baseline.json`
-- [ ] Re-baseline `mapper-golden-master.test.js` for shape elements (review diff carefully)
-- [ ] `group-transform.test.js` still green
+- [x] Add `--drift-out=<path>` CLI flag.
+- [x] Emit per-shape drift JSON.
+- [x] Generate baseline drift JSON.
+- [x] Identify root cause.
+- [x] Fix the diagnostic metric.
+- [x] Add unit coverage for drift row shape.
+- [x] Add unit coverage for drift writer output.
+- [x] Add unit coverage for grouped and nested rotated source transforms.
+- [x] Run importer Vitest suite.
+- [x] Run strict corpus gate.
+- [x] Run production build.
 
 ## Success Criteria
 
-- Bai_2_1 median shape drift drops from 364px to <= 50px.
-- Bai_2_5 median drift drops from 326px to <= 50px.
-- Bai_2_2 stays <= 121px.
-- All four corpus decks pass strict gates.
+- Bai_2_1 median shape drift: `364.5px -> 0px`.
+- Bai_2_2 median shape drift: `121.04px -> 0px`.
+- Bai_2_5 median shape drift: `325.91px -> 0px`.
+- All four corpus decks pass strict gate.
+
+## Validation
+
+- `npx vitest run server/services/pptx-import` — 15 files passed, 210 passed, 1 skipped.
+- `npm run test:corpus` — 4/4 decks passed, avg semantic fidelity 100.0%, avg round-trip stability 99.0%.
+- `npm run build` — passed.
+- `npm test` full suite was not proven in this phase; previous run timed out locally.
 
 ## Risk Assessment
 
-- High risk: fixing geometry can cascade into shape-positioning regressions across ALL decks. Mitigation: per-shape drift JSON gives surgical diff; review every changed snapshot.
-- Risk: root cause is multiple candidates compounding. Mitigation: instrument fully first, then fix the dominant one and re-measure.
-- Risk: `clampBox` change breaks `geometry-drift.test.js` baseline. Mitigation: that test exists to lock in current state; expected to update.
+- Corpus remains small (`n=4`), so rare geometry edge cases may still exist.
+- The fix corrects diagnostic comparison, not every possible geometry mapping issue.
+- Large JSON drift artifacts are useful for traceability but not practical for full manual review.
 
-## Rollback Plan
+## Security Considerations
 
-- Revert `geometry.js` and any mapper.js delta. Snapshots: `git checkout` on `__snapshots__/`. Per-deck drift JSON retained for future investigation.
+- No new request surface.
+- No parser behavior change.
+- No upload/media trust change in this phase.
 
-## Unresolved Questions
+## Next Steps
 
-1. Is shape drift on Bai_2_2 (median 121px) acceptable, or part of same root cause?
-2. Connector clampBox: connectors at very-edge of canvas — current `clampBox` may legitimately need to be looser for them.
+- Continue to Phase 4: per-cell table border extraction.
+- Phase 9 should still expand corpus to cover more deck styles.
+
+## Completion Notes
+
+None for Phase 3. Bai_2_2 and connector drift were explained by the same tester-side grouped-source comparison issue in the measured corpus.

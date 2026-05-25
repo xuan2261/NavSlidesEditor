@@ -305,4 +305,55 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('Plan Launch')
     expect(html).toContain('Plan event')
   })
+
+  it('renders table cells with per-side borders', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'table',
+        data: [['A']],
+        cellStyles: {
+          borders: [[{
+            top: { color: '#ff0000', width: 2, style: 'dashed' },
+            right: { color: '#00ff00', width: 3, style: 'solid' },
+            bottom: { color: '#0000ff', width: 4, style: 'dotted' },
+            left: { color: '#111111', width: 5, style: 'double' },
+          }]],
+        },
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('border-top:2px dashed #ff0000')
+    expect(html).toContain('border-right:3px solid #00ff00')
+    expect(html).toContain('border-bottom:4px dotted #0000ff')
+    expect(html).toContain('border-left:5px double #111111')
+  })
+
+  it('sanitizes unsafe table border CSS in shared rendering', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'table',
+        borderColor: '#cccccc',
+        data: [['A']],
+        cellStyles: {
+          borders: [[{
+            top: {
+              color: 'red;display:block',
+              width: '2;position:absolute',
+              style: 'solid;background:url(javascript:alert(1))',
+            },
+          }]],
+        },
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('border-top:1px solid #cccccc')
+    expect(html).not.toContain('display:block')
+    expect(html).not.toContain('javascript:')
+  })
 })

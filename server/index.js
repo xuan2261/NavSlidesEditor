@@ -59,6 +59,12 @@ app.param('presId', (req, res, next, val) => {
   if (!isValidId(val)) return res.status(400).json({ error: 'Invalid ID format' })
   next()
 })
+app.param('jobId', (req, res, next, jobId) => {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(jobId)) {
+    return res.status(400).json({ error: 'Invalid jobId' })
+  }
+  next()
+})
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 const corsOptions = process.env.NODE_ENV === 'production' ? { origin: false } : { origin: true }
@@ -77,6 +83,7 @@ app.use('/api/', apiLimiter)
 const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: process.env.NODE_ENV === 'production' ? 30 : 300,
+  skip: () => process.env.NODE_ENV === 'test',
   message: { error: 'Too many uploads, please try again later' },
 })
 app.use('/api/upload', uploadLimiter)
@@ -105,6 +112,7 @@ app.use('/api/presentations', historyRouter) // /:id/snapshot(s), /:id/restore
 app.use('/api/presentations', presentationsRouter) // CRUD + export + present + duplicate + save-as-template
 app.use('/api/templates', templatesRouter)
 app.use('/api/upload', uploadRouter)
+app.use('/api/pptx', uploadLimiter)
 app.use('/api/pptx', pptxImportRouter)
 app.use('/api/github', githubRouter)
 app.use('/api/rclone', syncRouter)

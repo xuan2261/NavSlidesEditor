@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "TDD foundation: honest metric + golden masters"
-status: pending
+status: complete
 priority: P1
 effort: "2d"
 dependencies: []
@@ -66,35 +66,35 @@ New test count: +2 files, +12 assertions approx.
 
 ## Tests Before (Characterization Gate)
 
-- [ ] Confirm `npm test` green on current master
-- [ ] Run `npm run test:corpus` and snapshot output to `corpus-baseline.json`: `{ semantic: 0.98, roundTrip: 0.99, perDeck: {...} }`
-- [ ] Run mapper tests `npx vitest run server/services/pptx-import/mapper.test.js` — green
+- [x] Confirm `npm test` green on current master
+- [x] Run `npm run test:corpus` and snapshot output to `corpus-baseline.json`: `{ semantic: 0.98, roundTrip: 0.99, perDeck: {...} }`
+- [x] Run mapper tests `npx vitest run server/services/pptx-import/mapper.test.js` — green
 
 ## Refactor / Implement
 
-- [ ] **First**: Read `evaluateCapture` body (~line 556+) and trace dispatch for `latex`/`other` elements. Record current behavior in a characterization comment in the test file.
-- [ ] Add latex/math criteria branch in `evaluateCapture`. For `other` with `latex` string: required props = `latex`, `fontSize`. For `group`: `children`, `transform`. For `diagram`: `children`, `connectorMode`.
-- [ ] Verify category list `['text','shape','image','table','chart','group','diagram','line','other']` appears in scoring branches (~line 223, ~line 598).
-- [ ] Add CLI flag `--baseline-out=<path>` to tester to emit JSON metrics summary.
-- [ ] Create `mapper-golden-master.test.js`:
+- [x] **First**: Read `evaluateCapture` body (~line 556+) and trace dispatch for `latex`/`other` elements. Record current behavior in a characterization comment in the test file.
+- [x] Add latex/math criteria branch in `evaluateCapture`. For `other` with `latex` string: required props = `latex`, `fontSize`. For `group`: `children`, `transform`. For `diagram`: `children`, `connectorMode`.
+- [x] Verify category list `['text','shape','image','table','chart','group','diagram','line','other']` appears in scoring branches (~line 223, ~line 598).
+- [x] Add CLI flag `--baseline-out=<path>` to tester to emit JSON metrics summary.
+- [x] Create `mapper-golden-master.test.js`:
   - 8 deterministic synthetic inputs (one per element type) reused from `mapper.test.js` fixtures.
   - Each `it` calls `mapPptxOutput()`, strips ids, `toMatchSnapshot()`.
-- [ ] Create `corpus-baseline.test.js`:
+- [x] Create `corpus-baseline.test.js`:
   - `it.skip(!fs.existsSync('./PPTX'), ...)` pattern from `harness-integration-real-export-path.test.js:12`.
   - Calls tester programmatically; asserts metrics >= baseline from `corpus-baseline.json`.
 
 ## Tests After (New Unit Tests)
 
-- [ ] `mapper-golden-master.test.js` -> 8 snapshots created; rerun must match.
-- [ ] `corpus-baseline.test.js` -> baseline asserted; failing if any deck drops > 1pp.
-- [ ] `propertyCoverage` for `other` on Bai_2_2 now reports non-zero (verifies the fix).
+- [x] `mapper-golden-master.test.js` -> 8 snapshots created; rerun must match.
+- [x] `corpus-baseline.test.js` -> baseline asserted; failing if any deck drops > 1pp.
+- [x] `propertyCoverage` for `other` on Bai_2_2 now reports non-zero (verifies the fix).
 
 ## Regression Gate
 
-- [ ] `npm test` — full suite green
-- [ ] `npm test -- --coverage` — thresholds preserved (lines:33, branches:28, fns:26 per vitest.config.mjs)
-- [ ] LOC budget: new files <= 180 LOC
-- [ ] `npm run test:corpus` — green, but expect numeric shift in `other` coverage (document expected delta in `corpus-baseline.json`)
+- [x] `npm test` — full suite green
+- [x] `npm test -- --coverage` — thresholds preserved (lines:33, branches:28, fns:26 per vitest.config.mjs)
+- [x] LOC budget: new files <= 180 LOC
+- [x] `npm run test:corpus` — green, but expect numeric shift in `other` coverage (document expected delta in `corpus-baseline.json`)
 
 ## Success Criteria
 
@@ -112,7 +112,8 @@ New test count: +2 files, +12 assertions approx.
 
 - All Phase 1 changes are additive (new files + tester scoring extension). Revert the tester scoring branch + delete the 4 new files; no migration needed.
 
-## Unresolved Questions
+## Completion Notes
 
-1. Should the latex/math branch in `evaluateCapture` weight `latex` string differently than other required props? Default: same weight as text required props.
-2. Corpus baseline assertion granularity: per-deck floor or aggregate-only? Recommend per-deck >= 95% in addition to aggregate.
+1. Latex/math branch uses the same required-property weighting as other element criteria.
+2. Phase 9 finalized the corpus gate with aggregate floors plus per-deck semantic floor >= 95%.
+3. Final reviewer-fix validation confirmed math/LaTeX HTML cleanup strips both opening and closing tags; focused mapper regression tests and full `npm test` passed.

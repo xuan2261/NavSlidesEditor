@@ -24,8 +24,11 @@ async function validatePptxPackage(filePath, originalName = filePath, limits = {
   const maxFileBytes = limits.maxFileBytes || MAX_FILE_BYTES
   const maxZipEntries = limits.maxZipEntries || MAX_ZIP_ENTRIES
   const maxDecompressedBytes = limits.maxDecompressedBytes || MAX_DECOMPRESSED_BYTES
+  const signal = limits.signal
+  signal?.throwIfAborted?.()
   assertPptxExtension(originalName)
   const stat = await fs.stat(filePath)
+  signal?.throwIfAborted?.()
   if (stat.size > maxFileBytes) {
     throw new PptxImportError('PPTX file exceeds 100MB limit', { status: 413 })
   }
@@ -37,14 +40,19 @@ async function validatePptxPackage(filePath, originalName = filePath, limits = {
   } finally {
     await fd.close()
   }
+  signal?.throwIfAborted?.()
   if (!signature.equals(Buffer.from([0x50, 0x4b, 0x03, 0x04]))) {
     throw new PptxImportError('Uploaded file is not a ZIP package', { status: 400 })
   }
 
   let zip
   try {
-    zip = await JSZip.loadAsync(await fs.readFile(filePath), { checkCRC32: false })
-  } catch {
+    const bytes = await fs.readFile(filePath)
+    signal?.throwIfAborted?.()
+    zip = await JSZip.loadAsync(bytes, { checkCRC32: false })
+    signal?.throwIfAborted?.()
+  } catch (err) {
+    if (signal?.aborted) throw err
     throw new PptxImportError('Uploaded file is not a readable ZIP package', {
       status: 400,
       type: FAILURE_TYPES.parseFailed,

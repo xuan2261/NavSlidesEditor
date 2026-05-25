@@ -1,7 +1,7 @@
 ---
 phase: 9
 title: "Corpus expansion + acceptance gate"
-status: pending
+status: complete
 priority: P1
 effort: "3d"
 dependencies: [7, 8]
@@ -20,6 +20,7 @@ Current corpus (4 Vietnamese school decks in `PPTX/`) hides chart/SmartArt/anima
 ## Overview
 
 - Priority: P1 (acceptance gate)
+- Current status: Complete
 - Brief: Two tracks. (a) Collect or commission 6-11 additional PPTX fixtures covering missing categories. (b) Update tester to default to `server/data/test-corpus/` when no arg given; tighten strict gates; run final acceptance pass.
 
 ## Key Insights
@@ -27,6 +28,7 @@ Current corpus (4 Vietnamese school decks in `PPTX/`) hides chart/SmartArt/anima
 - 4-deck corpus is too small to catch chart-heavy / SmartArt-heavy regressions (P1-I, P1-J in findings).
 - New corpus dir at `server/data/test-corpus/` is the documented destination — `PPTX/` stays for backward compat as fallback.
 - Acceptance gate must enforce per-deck floor (not just avg) — Bai_2_1's 30% image loss was masked by average-only.
+- Current parser note: the hand-built chart PPTX files contain native charts, but `pptxtojson` exposes them as shape-backed content in current metrics. This is documented in the corpus README and remains a parser/upstream follow-up, not a fabricated chart score.
 
 ## Corpus Targets (6-11 new decks)
 
@@ -49,6 +51,7 @@ Total target: n >= 10 (incl. existing 4). Ideal: n = 12-15.
 |---|---|---|
 | `server/data/test-corpus/` | Create dir + 6-11 .pptx files | binary; no LOC |
 | `server/data/test-corpus/README.md` | Create — describes each fixture | +50 |
+| `.gitignore` | Modify (allow tracked `server/data/test-corpus/`) | +2 |
 | `server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tester.js` | Modify (default dir + per-deck floor + element-class drop check) | +60/-10 |
 | `server/services/pptx-import/corpus-baseline.json` | Update (n>=10 baseline) | +120 |
 | `server/services/pptx-import/corpus-baseline.test.js` | Modify (assert new floors) | +30 |
@@ -99,37 +102,38 @@ New tests: tester self-test additions only.
 
 ## Tests Before (Characterization Gate)
 
-- [ ] Confirm `npm test` green
-- [ ] Confirm `npm run test:corpus` green on `PPTX/` (existing 4 decks)
-- [ ] Confirm `corpus-baseline.json` reflects Phase 7-8 final state
+- [x] Confirm `npm test` green
+- [x] Confirm `npm run test:corpus` green on default 10-deck corpus
+- [x] Confirm `corpus-baseline.json` reflects Phase 9 final state
 
 ## Refactor / Implement
 
 ### Sub-step A: Tester updates (Day 1)
 
-- [ ] Add `DEFAULT_CORPUS` fallback to `server/data/test-corpus/`.
-- [ ] Add per-deck semantic floor (>= 95%).
-- [ ] Add element-class drop check (>= 85% retention per class on counts > 0).
-- [ ] Add CLI flags `--per-deck-min`, `--max-class-drop`.
-- [ ] Update `package.json` `test:corpus` script: keep default arg-less to use new default.
+- [x] Add `DEFAULT_CORPUS` fallback to `server/data/test-corpus/`.
+- [x] Add per-deck semantic floor (>= 95%).
+- [x] Add element-class drop check (>= 85% retention per class on counts > 0).
+- [x] Add CLI flags `--per-deck-min`, `--max-class-drop`.
+- [x] Update `package.json` `test:corpus` script: keep default arg-less to use new default.
 
 ### Sub-step B: Corpus collection (Day 1-2)
 
-- [ ] Create `server/data/test-corpus/` dir.
-- [ ] Add 6-11 PPTX fixtures per categories above (hand-built or sourced openly).
-- [ ] Write `server/data/test-corpus/README.md` describing each fixture, source, what it tests.
-- [ ] Do NOT delete existing `PPTX/` fixtures — kept as fallback.
+- [x] Create `server/data/test-corpus/` dir.
+- [x] Add 6 PPTX fixtures per categories above plus 4 copied existing decks for n=10.
+- [x] Write `server/data/test-corpus/README.md` describing each fixture, source, what it tests.
+- [x] Do NOT delete existing `PPTX/` fixtures — kept as fallback.
+- [x] Add `.gitignore` exception so `server/data/test-corpus/` can be committed despite runtime `server/data/*` ignores.
 
 ### Sub-step C: Acceptance run (Day 3)
 
-- [ ] Run `npm run test:corpus -- --strict --roundtrip` on n >= 10 corpus.
-- [ ] If failures: document each, decide block (real regression) vs accept (corpus too aggressive).
-- [ ] Update `corpus-baseline.json` to lock new floors.
-- [ ] Update `corpus-baseline.test.js` to assert new floors.
+- [x] Run `npm run test:corpus` (`--roundtrip --strict`) on n=10 corpus.
+- [x] If failures: document each, decide block (real regression) vs accept (corpus too aggressive). No failures.
+- [x] Update `corpus-baseline.json` to lock new floors.
+- [x] Update `corpus-baseline.test.js` to assert new floors.
 
 ## Tests After (New Unit Tests)
 
-- [ ] `corpus-baseline.test.js`:
+- [x] `corpus-baseline.test.js`:
   - `it('aggregate semantic >= 98%')`
   - `it('aggregate round-trip >= 99%')`
   - `it('no deck below 95% semantic')`
@@ -138,17 +142,17 @@ New tests: tester self-test additions only.
 
 ## Regression Gate (FINAL ACCEPTANCE)
 
-- [ ] `npm test` — full suite green
-- [ ] `npm test -- --coverage` — thresholds preserved
-- [ ] LOC budget: tester <= 1300 LOC (currently 1198, +60 -> 1258); the tester is large by nature, exempt from 200-LOC rule per documentation
-- [ ] **Acceptance gate (verbatim):** `npm run test:corpus -- --strict --roundtrip` MUST satisfy ALL of:
+- [x] `npm test` — full suite green: 182 files passed, 1 skipped; 1521 tests passed, 8 skipped.
+- [x] `npx vitest run --coverage` — thresholds preserved: statements 37.15%, branches 32.01%, functions 31.77%, lines 38.64%.
+- [x] LOC budget: tester <= 1300 LOC; final tester is 1299 LOC and `pptx-import-corpus-cli.js` is 111 LOC.
+- [x] **Acceptance gate (verbatim):** `npm run test:corpus -- --strict --roundtrip` MUST satisfy ALL of:
   - Avg semantic fidelity >= 98% AND avg round-trip stability >= 99%
   - NO deck below 95% semantic
   - NO element-class count drop > 15% for any of: image, shape, table, text, chart, group, diagram, line, other/math
   - n >= 10 decks in `server/data/test-corpus/`
-- [ ] **Geometry-drift abort (red-team verified):** `mapper-golden-master.test.js` snapshots IDENTICAL to pre-Phase-7 baseline. Any snapshot diff after Phase 7 mapper-split MUST BLOCK acceptance — corpus aggregate alone can mask geometry regressions because shape/box drift averages out within a class.
-- [ ] All gates pass; commit `corpus-baseline.json` as final v1 acceptance bar.
-- [ ] Confirm `package.json:44` `test:corpus` script no longer hardcodes `./PPTX` — defaults to `server/data/test-corpus/` (per Sub-step A tester change).
+- [x] **Geometry-drift abort (red-team verified):** `mapper-golden-master.test.js` snapshots IDENTICAL to pre-Phase-7 baseline. Any snapshot diff after Phase 7 mapper-split MUST BLOCK acceptance — corpus aggregate alone can mask geometry regressions because shape/box drift averages out within a class.
+- [x] All gates pass; `corpus-baseline.json` refreshed as final v1 acceptance bar.
+- [x] Confirm `package.json:44` `test:corpus` script no longer hardcodes `./PPTX` — defaults to `server/data/test-corpus/` (per Sub-step A tester change).
 
 ## Success Criteria
 
@@ -171,9 +175,8 @@ New tests: tester self-test additions only.
 
 - Revert tester changes; restore old `corpus-baseline.json`. Keep new fixtures (additive). If acceptance gate fails to land, document each blocker and reduce scope.
 
-## Unresolved Questions
+## Remaining Notes
 
-1. Where to source 6-11 PPTX fixtures (hand-built vs open-source)? Recommend mix; hand-built for tightly-scoped categories (SmartArt, math), open-source for general (charts).
-2. Acceptance failure path: which findings (P1-I, P1-J) need new phase before gate can pass? Triage in Sub-step C.
-3. Tester runtime: parallelize per-deck across workers if it exceeds 5 minutes? Out of scope for this phase; flag for future.
-4. CI integration: `npm run test:corpus` in nightly only, or every PR? Recommend nightly for now (slow); add to PR pipeline once stable.
+1. Current 10-deck strict corpus runtime is about 2 minutes; full Vitest/coverage are now slower because `corpus-baseline.test.js` imports the 10-deck corpus.
+2. Generated chart decks are native PPTX charts, but parser metrics currently count them as `shape`; track true chart extraction as a follow-up.
+3. CI integration choice remains outside this phase: recommend nightly for `npm run test:corpus` until runtime budget is accepted for PRs.

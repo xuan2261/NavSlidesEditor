@@ -3,9 +3,11 @@ import os from 'node:os'
 import path from 'node:path'
 import JSZip from 'jszip'
 import { describe, expect, it } from 'vitest'
-import mapperModule from './mapper.js'
+import mapperModule from './mapper'
+import testerModule from './pptx-import-semantic-and-roundtrip-fidelity-tester.js'
 
 const { mapPptxOutput } = mapperModule
+const { computeDetailedFidelityMetrics, writeDriftRows } = testerModule
 const PNG_DATA_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII='
 
@@ -19,6 +21,106 @@ async function withTempDir(prefix, run) {
 }
 
 describe('pptx geometry drift coverage', () => {
+  it('emits per-shape drift details for diagnostics', () => {
+    const detail = computeDetailedFidelityMetrics(
+      { slides: [{ elements: [{ type: 'shape', shapType: 'rect', left: 10, top: 20, width: 100, height: 50 }] }] },
+      { slides: [{ elements: [{ type: 'shape', shape: 'rect', x: 15, y: 25, width: 100, height: 50 }] }] }
+    )
+
+    expect(detail.shapeDriftDetails).toEqual([
+      expect.objectContaining({
+        slideIdx: 0,
+        sourceIdx: 0,
+        flattenedIdx: 0,
+        sourcePath: '0',
+        kind: 'rect',
+        deltaPx: expect.objectContaining({ x: 5, y: 5, max: 5 }),
+      }),
+    ])
+  })
+
+  it('compares grouped source shapes after applying group offsets', () => {
+    const detail = computeDetailedFidelityMetrics(
+      {
+        slides: [{
+          elements: [{
+            type: 'group',
+            left: 100,
+            top: 200,
+            width: 300,
+            height: 100,
+            elements: [{ type: 'shape', shapType: 'rect', left: 10, top: 20, width: 50, height: 30 }],
+          }],
+        }],
+      },
+      { slides: [{ elements: [{ type: 'shape', shape: 'rect', x: 110, y: 220, width: 50, height: 30 }] }] }
+    )
+
+    expect(detail.geometryDrift.byType.shape.medianPx).toBe(0)
+    expect(detail.shapeDriftDetails[0].origin).toEqual({ x: 110, y: 220, width: 50, height: 30 })
+  })
+
+  it('writes drift rows with deck names for the CLI drift-out contract', async () => {
+    await withTempDir('pptx-drift-out-', async (dir) => {
+      const outputPath = path.join(dir, 'drift.json')
+      await writeDriftRows(outputPath, [{
+        file: 'fixture.pptx',
+        shapeDriftDetails: [{
+          slideIdx: 0,
+          sourceIdx: 1,
+          flattenedIdx: 2,
+          sourcePath: '1.0',
+          kind: 'rect',
+          origin: { x: 10, y: 20, width: 30, height: 40 },
+          mapped: { x: 11, y: 20, width: 30, height: 40 },
+          deltaPx: { x: 1, y: 0, width: 0, height: 0, max: 1 },
+        }],
+      }])
+
+      const rows = JSON.parse(await fs.readFile(outputPath, 'utf8'))
+      expect(rows).toEqual([
+        expect.objectContaining({
+          deckName: 'fixture.pptx',
+          slideIdx: 0,
+          sourcePath: '1.0',
+          kind: 'rect',
+          origin: expect.any(Object),
+          mapped: expect.any(Object),
+          deltaPx: expect.objectContaining({ max: 1 }),
+        }),
+      ])
+    })
+  })
+
+  it('compares nested rotated group children in absolute coordinates', () => {
+    const detail = computeDetailedFidelityMetrics(
+      {
+        slides: [{
+          elements: [{
+            type: 'group',
+            left: 100,
+            top: 100,
+            width: 100,
+            height: 100,
+            rotate: 180,
+            elements: [{
+              type: 'group',
+              left: 0,
+              top: 0,
+              width: 100,
+              height: 100,
+              elements: [{ type: 'shape', shapType: 'rect', left: 10, top: 20, width: 30, height: 40 }],
+            }],
+          }],
+        }],
+      },
+      { slides: [{ elements: [{ type: 'shape', shape: 'rect', x: 160, y: 140, width: 30, height: 40 }] }] }
+    )
+
+    expect(detail.geometryDrift.byType.shape.maxPx).toBe(0)
+    expect(detail.shapeDriftDetails[0].sourcePath).toBe('0.0.0')
+  })
+
   it('preserves left/top zero instead of falling back to x/y', async () => {
     await withTempDir('pptx-drift-zero-', async (dir) => {
       const result = await mapPptxOutput({

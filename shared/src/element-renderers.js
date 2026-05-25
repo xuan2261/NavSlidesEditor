@@ -49,6 +49,20 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;')
 }
 
+function safeCssColor(value, fallback) {
+  const color = typeof value === 'string' ? value.trim() : ''
+  if (/^#[0-9a-f]{3,8}$/i.test(color)) return color
+  if (/^rgba?\(\s*[\d.\s,%]+\)$/i.test(color)) return color
+  if (/^hsla?\(\s*[\d.\s,%deg]+\)$/i.test(color)) return color
+  if (['transparent', 'currentColor'].includes(color)) return color
+  return fallback
+}
+
+function safeBorderStyle(value) {
+  const style = typeof value === 'string' ? value.trim().toLowerCase() : ''
+  return ['solid', 'dashed', 'dotted', 'double', 'none'].includes(style) ? style : 'solid'
+}
+
 function escapeSrcdoc(html) {
   return html
     .replace(/&/g, '&amp;')
@@ -324,12 +338,26 @@ function renderTable(el, style, wrap, vis) {
   const textColor = el.textColor || '#ffffff'
   const fontSize = el.fontSize || 14
   const cellPadding = el.cellPadding || 8
+  const cellStyles = el.cellStyles || {}
+  const borderCss = (ri, ci) => {
+    const borders = cellStyles.borders?.[ri]?.[ci]
+    if (!borders) return `border:${borderWidth}px solid ${borderColor};`
+    return ['top', 'right', 'bottom', 'left']
+      .map((side) => {
+        const border = borders[side] || {}
+        const width = Number.isFinite(Number(border.width)) ? Math.max(0, Number(border.width)) : borderWidth
+        const style = safeBorderStyle(border.style)
+        const color = safeCssColor(border.color, borderColor)
+        return `border-${side}:${width}px ${style} ${color};`
+      })
+      .join('')
+  }
   const rows = data
     .map((row, ri) => {
       const cells = (row || [])
-        .map((cell) => {
+        .map((cell, ci) => {
           const bg = el.headerRow && ri === 0 ? headerBg : cellBg
-          return `<td style="padding:${cellPadding}px;border:${borderWidth}px solid ${borderColor};background:${bg};color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));">${escapeHtml(cell || '')}</td>`
+          return `<td style="padding:${cellPadding}px;${borderCss(ri, ci)}background:${bg};color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));">${escapeHtml(cell || '')}</td>`
         })
         .join('')
       return `<tr>${cells}</tr>`

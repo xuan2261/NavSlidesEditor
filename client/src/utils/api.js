@@ -38,11 +38,14 @@ export const api = {
     fd.append('file', file)
     return fetch('/api/upload', { method: 'POST', body: fd }).then(handleResponse)
   },
-  importPptx: (file) => {
+  importPptxAsync: (file) => {
     const fd = new FormData()
     fd.append('file', file)
     return fetch(`${BASE}/pptx/import`, { method: 'POST', body: fd }).then(handleResponse)
   },
+  pollPptxJob: (jobId) => fetch(`${BASE}/pptx/jobs/${jobId}`).then(handleResponse),
+  cancelPptxJob: (jobId) =>
+    fetch(`${BASE}/pptx/jobs/${jobId}`, { method: 'DELETE' }).then(handleResponse),
   getGithubConfig: () => fetch(`${BASE}/github/config`).then(handleResponse),
   saveGithubConfig: (data) =>
     fetch(`${BASE}/github/config`, {

@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Worker ACK handshake + route rate limit"
-status: pending
+status: complete
 priority: P1
 effort: "1d"
 dependencies: [1]
@@ -36,6 +36,7 @@ Two lightweight infra fixes. (a) Worker silent crash currently waits PARSER_TIME
 | Path | Action | Est LOC delta |
 |---|---|---|
 | `server/services/pptx-import/worker-runner.js` | Modify | +30/-5 |
+| `server/services/pptx-import/worker-ipc.js` | Create | +59 |
 | `server/services/pptx-import/parse-worker.js` | Modify | +5 |
 | `server/services/pptx-import/worker-runner.test.js` | Modify | +60 |
 | `server/index.js` | Modify | +1 |
@@ -100,39 +101,49 @@ New tests: +4-5 cases.
 
 ## Tests Before (Characterization Gate)
 
-- [ ] Confirm `npm test` green
-- [ ] `npx vitest run server/services/pptx-import/worker-runner.test.js` — green
-- [ ] Verify `uploadLimiter` exists at `server/index.js:77-82` — read source
+- [x] Confirm `npm test` green
+- [x] `npx vitest run server/services/pptx-import/worker-runner.test.js` — green
+- [x] Verify `uploadLimiter` exists at `server/index.js:77-82` — read source
 
 ## Refactor / Implement
 
-- [ ] In `parse-worker.js`, add `process.send({type:'ready'})` **AFTER** the `process.on('message', ...)` registration at line 59 — NOT at top-of-file (handler-before-emit ordering invariant).
-- [ ] In `worker-runner.js`:
+- [x] In `parse-worker.js`, add `process.send({type:'ready'})` **AFTER** the `process.on('message', ...)` registration at line 59 — NOT at top-of-file (handler-before-emit ordering invariant).
+- [x] In `worker-runner.js`:
   1. Add `isReadyMessage` and `isProgressMessage` type guards near line 50.
   2. Add `waitForAck(child, timeoutMs)` helper that listens once for `isReadyMessage`.
   3. Wrap fork+send in Promise body with explicit try/catch around `await waitForAck` → `kill + reject`. Do NOT let the await throw to the unhandled-rejection path.
   4. Inside `child.on('message')` handler (line ~96), filter progress messages: if `isProgressMessage`, call `options.onProgress?.(msg)` and `return` early.
-- [ ] In `server/index.js`:
+- [x] In `server/index.js`:
   1. Add `skip: () => process.env.NODE_ENV === 'test'` to existing `uploadLimiter` at lines 77-82 (the limiter has NO skip clause today — verified).
   2. Add `app.use('/api/pptx', uploadLimiter)` before line 108.
+- [x] Review follow-up: guard `onProgress` callback exceptions and validate `PPTX_WORKER_ACK_MS` before use.
 
 ## Tests After (New Unit Tests)
 
-- [ ] `worker-runner.test.js`:
+- [x] `worker-runner.test.js`:
   - `it('waits for ready message before sending filePath')`
   - `it('kills child and rejects when ready not received within 500ms')`
   - `it('forwards progress messages to options.onProgress')`
   - `it('still emits result message after ready+progress sequence')`
-- [ ] `pptx-import.test.js`:
+- [x] `pptx-import.test.js`:
   - `it('returns 429 after 31 requests in 15 minutes')` (or test stub uploadLimiter at low threshold)
 
 ## Regression Gate
 
-- [ ] `npm test` — full suite green
-- [ ] `npm test -- --coverage` — thresholds preserved
-- [ ] LOC budget: `worker-runner.js` <= 180 LOC (currently 135; +30 -> ~165)
-- [ ] LOC budget: `parse-worker.js` <= 180 LOC (currently 83; +5 -> 88)
-- [ ] `npm run test:corpus` — no perf regression (ACK adds ~50ms once per import)
+- [x] `npm test` — full suite green (`171 passed | 1 skipped`, `1477 passed | 9 skipped`)
+- [x] `npm test -- --coverage` — final plan coverage gate passed after Phase 9: 182 files passed, 1521 tests passed, thresholds preserved.
+- [x] LOC budget: `worker-runner.js` is 172 LOC and `worker-ipc.js` is 59 LOC; under the 200 LOC hard limit.
+- [x] LOC budget: `parse-worker.js` is 85 LOC; under the 200 LOC hard limit.
+- [x] `npm run test:corpus` — 4/4 passed, avg semantic fidelity 100.0%, avg round-trip stability 99.0%.
+
+## Completion Notes
+
+- Added worker ACK handshake: `parse-worker.js` emits ready after registering its message handler, and `runParserWorker` waits before sending `filePath`.
+- Added startup failure result for missing ACK, with configurable positive `PPTX_WORKER_ACK_MS` and safe fallback.
+- Added progress-message forwarding for Phase 8, with callback exceptions converted into controlled failures.
+- Moved IPC guards and ACK helper to `worker-ipc.js` to keep file size below hard limit.
+- Mounted `uploadLimiter` on `/api/pptx` before the PPTX import router and skipped it in test env.
+- Fidelity tester now uses `runParserWorker` directly, avoiding duplicate IPC handling.
 
 ## Success Criteria
 
@@ -151,8 +162,7 @@ New tests: +4-5 cases.
 
 - Revert `worker-runner.js`, `parse-worker.js`, `server/index.js` one-liner. Tests revert with them.
 
-## Unresolved Questions
+## Completion Notes
 
-1. ACK timeout value: 500ms vs 1000ms vs 2000ms. Recommend 1000ms with env override.
-2. Should `worker-startup-failed` retry once before giving up? KISS: no retry; surface error to client.
-3. Rate limit in dev/Electron: should we exempt localhost or trust the limiter's existing skip rules? Verify `uploadLimiter` skip-in-test config.
+1. Final reviewer-fix validation confirmed cancelled PPTX import jobs remain counted against the one-running-job limit until the background import settles.
+2. Route and job-manager regression tests cover the cancel-then-retry active-slot behavior.

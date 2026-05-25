@@ -1,9 +1,10 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import { Buffer } from 'node:buffer'
 import JSZip from 'jszip'
 import { describe, expect, it } from 'vitest'
-import mapper from './mapper.js'
+import mapper from './mapper'
 import schemas from '../../middleware/schemas.js'
 
 const { mapPptxOutput, sanitizeHtml, mapVideo, mapAudio, extractShadow, mapMath } = mapper
@@ -11,6 +12,8 @@ const { createPresentationSchema } = schemas
 
 const PNG_DATA_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII='
+const VALID_MP4 = Buffer.from([0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 2, 0, 0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32])
+const VALID_MP3 = Buffer.from([0x49, 0x44, 0x33, 3, 0, 0, 0, 0, 0, 0, 0xff, 0xfb, 0x90, 0x64])
 
 describe('pptx mapper', () => {
   it('sanitizes script tags and event handlers in text', () => {
@@ -760,6 +763,68 @@ describe('pptx mapper', () => {
     }
   })
 
+  it('table extracts per-side cell borders', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-table-borders-'))
+    try {
+      const result = await mapPptxOutput({
+        zip: new JSZip(),
+        originalName: 'table-borders.pptx',
+        uploadsDir: dir,
+        output: {
+          size: { width: 960, height: 540 },
+          slides: [{
+            elements: [{
+              type: 'table', left: 10, top: 10, width: 300, height: 120,
+              data: [[{
+                text: 'A',
+                borders: {
+                  top: { color: '#ff0000', width: 2, style: 'dashed' },
+                  right: { color: '#00ff00', width: 3, style: 'solid' },
+                  bottom: { color: '#0000ff', width: 4, style: 'dotted' },
+                  left: { color: '#111111', width: 5, style: 'double' },
+                },
+              }]],
+            }],
+          }],
+        },
+      })
+      const borders = result.presentation.slides[0].elements[0].cellStyles.borders[0][0]
+      expect(borders.top).toEqual({ color: '#ff0000', width: 2, style: 'dashed' })
+      expect(borders.right).toEqual({ color: '#00ff00', width: 3, style: 'solid' })
+      expect(borders.bottom).toEqual({ color: '#0000ff', width: 4, style: 'dotted' })
+      expect(borders.left).toEqual({ color: '#111111', width: 5, style: 'double' })
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('table inherits table-level borders and falls back per side', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-table-border-fallback-'))
+    try {
+      const result = await mapPptxOutput({
+        zip: new JSZip(),
+        originalName: 'table-border-fallback.pptx',
+        uploadsDir: dir,
+        output: {
+          size: { width: 960, height: 540 },
+          slides: [{
+            elements: [{
+              type: 'table', left: 10, top: 10, width: 300, height: 120,
+              borders: { color: '#123456', width: 2, style: 'dashed' },
+              data: [[{ text: 'A', borders: { left: { color: '#654321', width: 4 } } }, { text: 'B' }]],
+            }],
+          }],
+        },
+      })
+      const table = result.presentation.slides[0].elements[0]
+      expect(table.cellStyles.borders[0][0].left).toEqual({ color: '#654321', width: 4, style: 'dashed' })
+      expect(table.cellStyles.borders[0][0].top).toEqual({ color: '#123456', width: 2, style: 'dashed' })
+      expect(table.cellStyles.borders[0][1].right).toEqual({ color: '#123456', width: 2, style: 'dashed' })
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
   it('table filters vMerge continuation rows', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-table-vmerge-'))
     try {
@@ -1109,7 +1174,7 @@ describe('pptx mapper', () => {
   // ─── Phase 6: Video Import ─────────────────────────────────────────────
   describe('mapVideo', () => {
     it('maps type=video ZIP ref to video element with /uploads/ src', async () => {
-      const mockEntry = { async: () => Promise.resolve(Buffer.from('fake-video-data')) }
+      const mockEntry = { async: () => Promise.resolve(VALID_MP4) }
       const mockMediaIndex = { files: new Map([['ppt/media/video1.mp4', mockEntry]]) }
       const element = { type: 'video', left: 10, top: 20, width: 100, height: 80, ref: 'ppt/media/video1.mp4' }
       const context = { mediaIndex: mockMediaIndex, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { videoCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
@@ -1122,12 +1187,14 @@ describe('pptx mapper', () => {
       expect(results[0].autoplay).toBe(false)
     })
 
-    it('maps type=video external URL ref directly as src', async () => {
+    it('blocks external video URL refs outside the media allowlist', async () => {
       const element = { type: 'video', left: 10, top: 20, width: 100, height: 80, ref: 'https://example.com/video.mp4' }
       const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { videoCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
       const results = await mapVideo(element, context)
-      expect(results[0].src).toBe('https://example.com/video.mp4')
-      expect(results[0].type).toBe('video')
+      expect(results[0].importPlaceholderType).toBe('video-missing')
+      expect(context.warnings).toEqual(expect.arrayContaining([
+        expect.objectContaining({ type: 'media-external-url-blocked', host: 'example.com' }),
+      ]))
     })
 
     it('returns placeholder when ref missing', async () => {
@@ -1138,7 +1205,7 @@ describe('pptx mapper', () => {
     })
 
     it('increments videoCount in stats', async () => {
-      const element = { type: 'video', left: 10, top: 20, width: 100, height: 80, ref: 'https://example.com/v.mp4' }
+      const element = { type: 'video', left: 10, top: 20, width: 100, height: 80, ref: 'http://localhost/v.mp4' }
       const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { videoCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
       await mapVideo(element, context)
       expect(context.stats.videoCount).toBe(1)
@@ -1148,7 +1215,7 @@ describe('pptx mapper', () => {
   // ─── Phase 6: Audio Import ─────────────────────────────────────────────
   describe('mapAudio', () => {
     it('maps type=audio ZIP ref to audio element', async () => {
-      const mockEntry = { async: () => Promise.resolve(Buffer.from('fake-audio')) }
+      const mockEntry = { async: () => Promise.resolve(VALID_MP3) }
       const mockMediaIndex = { files: new Map([['ppt/media/audio1.mp3', mockEntry]]) }
       const element = { type: 'audio', left: 10, top: 20, width: 100, height: 80, ref: 'ppt/media/audio1.mp3' }
       const context = { mediaIndex: mockMediaIndex, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { audioCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
@@ -1158,12 +1225,31 @@ describe('pptx mapper', () => {
       expect(results[0].src).toMatch(/\.mp3$/)
     })
 
-    it('maps type=audio external URL ref directly', async () => {
-      const element = { type: 'audio', left: 10, top: 20, width: 100, height: 80, ref: 'https://example.com/audio.mp3' }
+    it('passes localhost audio URL refs through unchanged', async () => {
+      const element = { type: 'audio', left: 10, top: 20, width: 100, height: 80, ref: 'http://127.0.0.1/audio.mp3' }
       const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { audioCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
       const results = await mapAudio(element, context)
-      expect(results[0].src).toBe('https://example.com/audio.mp3')
+      expect(results[0].src).toBe('http://127.0.0.1/audio.mp3')
       expect(results[0].type).toBe('audio')
+    })
+
+    it('passes PUBLIC_HOST same-origin URL refs through unchanged', async () => {
+      const originalPublicHost = process.env.PUBLIC_HOST
+      const originalHost = process.env.HOST
+      try {
+        process.env.PUBLIC_HOST = 'https://slides.example.test:3002'
+        delete process.env.HOST
+        const element = { type: 'audio', left: 10, top: 20, width: 100, height: 80, ref: 'https://slides.example.test/audio.mp3' }
+        const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { audioCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
+        const results = await mapAudio(element, context)
+        expect(results[0].src).toBe('https://slides.example.test/audio.mp3')
+        expect(context.warnings).toHaveLength(0)
+      } finally {
+        if (originalPublicHost === undefined) delete process.env.PUBLIC_HOST
+        else process.env.PUBLIC_HOST = originalPublicHost
+        if (originalHost === undefined) delete process.env.HOST
+        else process.env.HOST = originalHost
+      }
     })
   })
 

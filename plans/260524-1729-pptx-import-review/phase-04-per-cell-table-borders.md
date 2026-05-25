@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Per-cell table border extraction"
-status: pending
+status: complete
 priority: P1
 effort: "2d"
 dependencies: [1]
@@ -64,19 +64,19 @@ New tests: +5-8 cases (per-cell single border, per-side different colors, theme 
 
 ## Tests Before (Characterization Gate)
 
-- [ ] Confirm `npm test` green
-- [ ] Identify table tests in `mapper.test.js` asserting `borderColor: '#d1d5db'` — these will need updating
-- [ ] Find pptxtojson sample output for a known table fixture; document per-cell border shape
+- [x] Confirm `npm test` green
+- [x] Identify table tests in `mapper.test.js` asserting `borderColor: '#d1d5db'` — these will need updating
+- [x] Find pptxtojson sample output for a known table fixture; document per-cell border shape
 
 ## Refactor / Implement
 
-- [ ] In `mapTable`, after current row/cell mapping, parse per-cell borders:
+- [x] In `mapTable`, after current row/cell mapping, parse per-cell borders:
   ```js
   const cellBorders = parseCellBorder(rawCell?.borders ?? element?.borders ?? null)
   cell.borders = cellBorders
   ```
-- [ ] Remove `mapper.js:414-415` hardcoded color/width.
-- [ ] Add `parseCellBorder(rawBorders)` helper:
+- [x] Remove `mapper.js:414-415` hardcoded color/width.
+- [x] Add `parseCellBorder(rawBorders)` helper:
   ```js
   function parseCellBorder(raw) {
     return ['top','right','bottom','left'].reduce((acc, side) => {
@@ -90,25 +90,25 @@ New tests: +5-8 cases (per-cell single border, per-side different colors, theme 
     }, {})
   }
   ```
-- [ ] Update `shared/src/element-renderers.js` table renderer to use `cell.borders.{side}.{color,width,style}` when rendering HTML.
+- [x] Update `shared/src/element-renderers.js` table renderer to use `cell.borders.{side}.{color,width,style}` when rendering HTML.
 
 ## Tests After (New Unit Tests)
 
-- [ ] `mapper.test.js` new cases:
+- [x] `mapper.test.js` new cases:
   - `it('extracts per-side cell borders from pptxtojson output')`
   - `it('inherits table-level borders when cell-level missing')`
   - `it('falls back to default gray when both missing')`
   - `it('supports dashed border style')`
   - `it('supports per-cell border color variation')`
-- [ ] Renderer test (in `shared/tests/`): table with mixed borders renders correct CSS.
+- [x] Renderer test (in `shared/tests/`): table with mixed borders renders correct CSS.
 
 ## Regression Gate
 
-- [ ] `npm test` — full suite green
-- [ ] `npm test -- --coverage` — thresholds preserved
-- [ ] LOC budget: `mapper.js` net positive (~+48) — still under 200 LOC after Phase 7 split; for now `mapper.js` may temporarily exceed (acceptable since Phase 7 fixes)
-- [ ] `npm run test:corpus` — table property coverage on Bai_2_2 increases from 90% to >= 98%; re-baseline `corpus-baseline.json`
-- [ ] Re-baseline table snapshots in `mapper-golden-master.test.js`
+- [x] `npm test` — full suite green
+- [x] `npm test -- --coverage` — thresholds preserved
+- [x] LOC budget: mapper was split in Phase 7; table mapper now lives under the hard LOC limit.
+- [x] `npm run test:corpus` — table property coverage reached 100.0% on measured decks; `corpus-baseline.json` re-baselined.
+- [x] Re-baseline table snapshots in `mapper-golden-master.test.js`
 
 ## Success Criteria
 
@@ -126,8 +126,9 @@ New tests: +5-8 cases (per-cell single border, per-side different colors, theme 
 
 - Revert `mapper.js` (mapTable region) and `shared/src/element-renderers.js` table block. Snapshots: `git checkout`. No data migration required since field is additive.
 
-## Unresolved Questions
+## Completion Notes
 
-1. Should `borders` be normalized when all four sides match (collapse to single object) or always nest? Recommend always-nest for predictability.
-2. Table theme inheritance from PPTX (`tblStyle` references) — out of scope here; document gap.
-3. Renderer change in `shared/`: any breaking change to existing exported HTML? Verify with `roundtrip-matching.test.js`.
+1. `borders` are always stored per side for predictable renderer behavior.
+2. PPTX table theme inheritance through `tblStyle` remains out of scope; direct per-cell and table-level borders are covered.
+3. Shared renderer changes were verified by renderer tests, build, corpus, full suite, and coverage gates.
+4. Final reviewer-fix validation added CSS color/style sanitization for table borders in mapper, shared renderer, and client canvas renderer.

@@ -8,8 +8,13 @@ const { runParserWorker } = require('./worker-runner')
 async function importPptxFile(filePath, options = {}) {
   const started = Date.now()
   const originalName = options.originalName || filePath
-  const packageInfo = await validatePptxPackage(filePath, originalName)
-  const parsed = await runParserWorker(filePath, options.workerOptions)
+  const packageInfo = await validatePptxPackage(filePath, originalName, { signal: options.signal })
+  options.signal?.throwIfAborted?.()
+  const parsed = await runParserWorker(filePath, {
+    ...(options.workerOptions || {}),
+    onProgress: options.onProgress,
+    signal: options.signal,
+  })
 
   if (!parsed.ok) {
     throw new PptxImportError(parsed.error?.message || 'PPTX parse failed', {
@@ -18,11 +23,14 @@ async function importPptxFile(filePath, options = {}) {
     })
   }
 
+  options.signal?.throwIfAborted?.()
   const mapped = await mapPptxOutput({
     output: parsed.output,
     zip: packageInfo.zip,
     originalName,
     uploadsDir: options.uploadsDir || UPLOADS_DIR,
+    onProgress: options.onProgress,
+    signal: options.signal,
   })
 
   return {

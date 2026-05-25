@@ -38,11 +38,23 @@ async function parseFile(filePath) {
   const { parse } = require('pptxtojson/dist/index.cjs')
   const pkg = require('pptxtojson/package.json')
   const buffer = await fs.readFile(filePath)
-  const output = await parse(toArrayBuffer(buffer), {
-    imageMode: 'base64',
-    videoMode: 'blob',
-    audioMode: 'blob',
-  })
+  sendProgress('parsing', 5, 'Reading PPTX archive')
+  let heartbeatPercent = 10
+  const heartbeat = setInterval(() => {
+    heartbeatPercent = Math.min(75, heartbeatPercent + 5)
+    sendProgress('parsing', heartbeatPercent, 'Parsing PPTX content')
+  }, 2000)
+  let output
+  try {
+    output = await parse(toArrayBuffer(buffer), {
+      imageMode: 'base64',
+      videoMode: 'blob',
+      audioMode: 'blob',
+    })
+  } finally {
+    clearInterval(heartbeat)
+  }
+  sendProgress('parsing', 80, 'PPTX parsed')
   const fallback = needsFallbackInspector(output)
     ? await inspectWithPptx2Json(filePath, 'primary-output-missing-object-evidence')
     : null
@@ -54,6 +66,10 @@ async function parseFile(filePath) {
     output,
     fallback,
   }
+}
+
+function sendProgress(stage, percent, message) {
+  process.send?.({ type: 'progress', stage, percent, message })
 }
 
 process.on('message', async ({ filePath }) => {
@@ -81,3 +97,5 @@ process.on('message', async ({ filePath }) => {
     })
   }
 })
+
+process.send?.({ type: 'ready' })

@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Image loss fix (silent null in detectImage)"
-status: pending
+status: complete
 priority: P1
 effort: "1d"
 dependencies: [1]
@@ -66,14 +66,14 @@ New tests count: +4 cases in `media.test.js`.
 
 ## Tests Before (Characterization Gate)
 
-- [ ] Confirm `npm test` green
-- [ ] `npx vitest run server/services/pptx-import/media.test.js` — 56 LOC, green
-- [ ] Add characterization test: feed PNG buffer with hinted `image/jpeg` -> assert current behavior (null) before fix
-- [ ] Commit characterization test as baseline
+- [x] Confirm `npm test` green
+- [x] `npx vitest run server/services/pptx-import/media.test.js` — 56 LOC, green
+- [x] Add characterization test: feed PNG buffer with hinted `image/jpeg` -> assert current behavior (null) before fix
+- [x] Commit characterization test as baseline
 
 ## Refactor / Implement
 
-- [ ] In `media.js:71`, replace:
+- [x] In `media.js:71`, replace:
   ```js
   if (hintedMime && detected && hintedMime !== detected.mime) return null
   ```
@@ -83,7 +83,7 @@ New tests count: +4 cases in `media.test.js`.
     return { ...detected, hintMismatch: true }
   }
   ```
-- [ ] In `persistImageBuffer` (media.js:~75), after `detectImage`:
+- [x] In `persistImageBuffer` (media.js:~75), after `detectImage`:
   ```js
   const warnings = []
   if (detected?.hintMismatch) {
@@ -92,25 +92,25 @@ New tests count: +4 cases in `media.test.js`.
   // ... persist logic ...
   return { url, warning: warnings[0] }  // single warning, opt-in
   ```
-- [ ] In `persistImageBuffer` and `persistMediaBlob`: when `detected === null` (sniff actually failed), return `{ url: null, warning: { code: 'image-detect-failed', byteLength } }` instead of silent null.
-- [ ] Update 3 callers in `mapper.js:239,450,479`: change `const url = await persistImageBuffer(...)` to `const result = await persistImageBuffer(...); if (result.warning) warnings.push(result.warning)`. The `warnings` array is already in scope at each call site (verify before edit).
+- [x] In `persistImageBuffer` and `persistMediaBlob`: when `detected === null` (sniff actually failed), return `{ url: null, warning: { code: 'image-detect-failed', byteLength } }` instead of silent null.
+- [x] Update 3 callers in `mapper.js:239,450,479`: change `const url = await persistImageBuffer(...)` to `const result = await persistImageBuffer(...); if (result.warning) warnings.push(result.warning)`. The `warnings` array is already in scope at each call site (verify before edit).
 
 ## Tests After (New Unit Tests)
 
-- [ ] `media.test.js` adds:
+- [x] `media.test.js` adds:
   - `it('trusts sniffed MIME when hint disagrees')`
   - `it('flags hintMismatch in returned object')`
   - `it('pushes warning when sniffer fails')`
   - `it('returns null for zero-byte buffer (regression)')`
-- [ ] Re-run characterization test (now passing instead of failing-on-purpose); flip its assertion to the new behavior.
+- [x] Re-run characterization test (now passing instead of failing-on-purpose); flip its assertion to the new behavior.
 
 ## Regression Gate
 
-- [ ] `npm test` — full suite green
-- [ ] `npm test -- --coverage` — thresholds preserved
-- [ ] LOC budget: `media.js` <= 180 LOC (currently 129 -> ~141)
-- [ ] `npm run test:corpus` — Bai_2_1 image count 19 -> closer to 27 (target >= 25); document delta in `corpus-baseline.json` and update baseline
-- [ ] Re-baseline `mapper-golden-master.test.js` snapshots that include image elements
+- [x] `npm test` — full suite green
+- [x] `npm test -- --coverage` — thresholds preserved
+- [x] LOC budget: `media.js` stayed under the 200 LOC hard limit after Phase 5 extraction.
+- [x] `npm run test:corpus` — Bai_2_1 and Bai_2_5 image retention restored to source counts in the measured corpus; baseline updated.
+- [x] Re-baseline `mapper-golden-master.test.js` snapshots that include image elements
 
 ## Success Criteria
 
@@ -127,7 +127,7 @@ New tests count: +4 cases in `media.test.js`.
 
 - Revert `media.js` to current state. Snapshots may need rolling back via `git checkout` on `__snapshots__/`.
 
-## Unresolved Questions
+## Completion Notes
 
-1. Should `image-mime-hint-mismatch` warnings count against semantic fidelity score? Recommend: no, since image is preserved.
-2. Unsupported formats (WMF/EMF/SVG inside fill) still null silently — separate fix scope, not in this phase.
+1. `image-mime-hint-mismatch` warnings do not count against semantic fidelity because the image is preserved.
+2. Unsupported EMF/WMF payloads are preserved as uploaded media with limited-browser-support warnings; unsafe SVG remains rejected by the Phase 5 media hardening rules.

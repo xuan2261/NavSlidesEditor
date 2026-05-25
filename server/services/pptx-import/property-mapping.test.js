@@ -3,7 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 import JSZip from 'jszip'
 import { describe, expect, it } from 'vitest'
-import mapperModule from './mapper.js'
+import mapperModule from './mapper'
 
 const { mapPptxOutput } = mapperModule
 const PNG_DATA_URL =

@@ -1,6 +1,6 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: v1.9.6 — upstream parity evidence refreshed and release docs updated (2026-05-24)
+## Current Status: v1.9.7 — PPTX import fidelity hardening and corpus gates refreshed (2026-05-25)
 
 Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system and now has clipping-safe portal popups for File, header AI/Share, Design, Transitions, Animations, Paragraph, Insert Advanced, Shape, Table, and Games surfaces. Parallax feature port (font-weight, line-height, timeline element, video controls, LaTeX improvements) landed in v1.7.1. Upstream selective port merged on 2026-05-14. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state, and the hybrid PPTX export/import pipeline.
 
@@ -22,7 +22,7 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | Export PDF                                         | Done                                                                                                      |
 | Export PPTX                                        | Done (hybrid native + high-res raster fallback, split helpers)                                            |
 | Project export/import (.navslides)                 | Done (manifest v1.1, partial media skip warnings)                                                         |
-| Import PPTX                                        | Done (editable objects plus fidelity remediation; 97.0% semantic / 99.0% round-trip on checked-in corpus) |
+| Import PPTX                                        | Done (editable objects plus fidelity/media hardening; 100.0% semantic / 99.0% round-trip on 10-deck checked-in corpus) |
 | Offline HTML export                                | Done (self-contained)                                                                                     |
 | Shareable links (with password option)             | Done                                                                                                      |
 | GitHub push integration                            | Done                                                                                                      |
@@ -71,9 +71,18 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 - Present mode and standard HTML export still depend on CDN resources at
   runtime.
 - PPTX harness `--roundtrip` now uses the production export pipeline; strict
-  mode keeps the >=95 semantic / >=98 round-trip gate. Corpus size is still
-  small (`n=4`). The 2026-05-14 sync branch run passes at 98.0% semantic
-  fidelity and 99.0% round-trip stability.
+  mode keeps the >=95 semantic / >=98 round-trip gate. Imported PPTX media now
+  uses SHA256 dedup, extension allowlist, magic-byte checks, external media URL
+  gating, worker startup ACK handling, `/api/pptx` upload rate limiting, a
+  split mapper module tree under `server/services/pptx-import/mapper/`, and
+  async import jobs with SSE progress/cancel support. Phase 8 reviewer concerns
+  for concurrency reservation, abort propagation, SSE fallback, and lifecycle
+  coverage are fixed. The Phase 9 acceptance corpus now has `n=10` decks in
+  `server/data/test-corpus/` and enforces aggregate, per-deck, and element-class
+  retention gates. Final reviewer-fix validation also covers table border CSS
+  sanitization, cancel active-slot lifecycle, package-validation abort handling,
+  LaTeX tag cleanup, and media abort cleanup. The 2026-05-25 import review run
+  passes at 100.0% semantic fidelity and 99.0% round-trip stability.
 
 ### Future Backlog
 

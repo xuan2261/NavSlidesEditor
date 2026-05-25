@@ -1,5 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 
+function safeCssColor(value, fallback) {
+  const color = typeof value === 'string' ? value.trim() : ''
+  if (/^#[0-9a-f]{3,8}$/i.test(color)) return color
+  if (/^rgba?\(\s*[\d.\s,%]+\)$/i.test(color)) return color
+  if (/^hsla?\(\s*[\d.\s,%deg]+\)$/i.test(color)) return color
+  if (['transparent', 'currentColor'].includes(color)) return color
+  return fallback
+}
+
+function safeBorderStyle(value) {
+  const style = typeof value === 'string' ? value.trim().toLowerCase() : ''
+  return ['solid', 'dashed', 'dotted', 'double', 'none'].includes(style) ? style : 'solid'
+}
+
 export function TableRenderer({ element, isEditing, onUpdateElement }) {
   const data = element.data || [['']]
   const headerBg = element.headerBgColor || 'rgba(99,102,241,0.3)'
@@ -27,6 +41,20 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
     }
   })
   const getCellStyle = (key, ri, ci) => cellStyles[key]?.[ri]?.[ci]
+  const getBorderStyle = (ri, ci) => {
+    const borders = getCellStyle('borders', ri, ci)
+    if (!borders) return { border: `${borderWidth}px solid ${borderColor}` }
+    const style = {}
+    ;['top', 'right', 'bottom', 'left'].forEach((side) => {
+      const border = borders[side] || {}
+      const width = Number.isFinite(Number(border.width)) ? Math.max(0, Number(border.width)) : borderWidth
+      const borderStyle = safeBorderStyle(border.style)
+      const color = safeCssColor(border.color, borderColor)
+      style[`border${side[0].toUpperCase()}${side.slice(1)}`] =
+        `${width}px ${borderStyle} ${color}`
+    })
+    return style
+  }
 
   const [focusCell, setFocusCell] = useState(null)
   const inputRefs = useRef({})
@@ -73,7 +101,7 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
                     }}
                     style={{
                       padding: cellPadding,
-                      border: `${borderWidth}px solid ${borderColor}`,
+                      ...getBorderStyle(ri, ci),
                       background: cellBackground,
                       color: cellTextColor,
                       fontSize,

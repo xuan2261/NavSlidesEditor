@@ -2,6 +2,13 @@ const { fork } = require('child_process')
 const path = require('path')
 const { FAILURE_TYPES, PARSER_KILL_GRACE_MS, PARSER_TIMEOUT_MS } = require('./constants')
 const { sanitizeDiagnostic } = require('./diagnostics')
+const {
+  getWorkerAckTimeoutMs,
+  isParserWorkerResult,
+  isProgressMessage,
+  isReadyMessage,
+  waitForAck,
+} = require('./worker-ipc')
 
 function uniquePathEntries(entries) {
   return entries.filter(Boolean).filter((entry, index, all) => all.indexOf(entry) === index)
@@ -47,12 +54,9 @@ function killChild(child) {
   }, PARSER_KILL_GRACE_MS).unref()
 }
 
-function isParserWorkerResult(message) {
-  return Boolean(message && typeof message === 'object' && typeof message.ok === 'boolean')
-}
-
 function runParserWorker(filePath, options = {}) {
   const timeoutMs = options.timeoutMs || PARSER_TIMEOUT_MS
+  const ackTimeoutMs = getWorkerAckTimeoutMs(options.ackTimeoutMs)
   const workerPath = options.workerPath || path.join(__dirname, 'parse-worker.js')
 
   return new Promise((resolve) => {
@@ -72,8 +76,20 @@ function runParserWorker(filePath, options = {}) {
       if (settled) return
       settled = true
       clearTimeout(timer)
+      options.signal?.removeEventListener?.('abort', abortWorker)
       killChild(child)
       resolve(result)
+    }
+
+    const abortWorker = () => {
+      finish({
+        ok: false,
+        error: {
+          type: FAILURE_TYPES.importFailed,
+          message: 'PPTX import cancelled',
+          diagnostics: sanitizeDiagnostic(stderr || stdout || ignoredMessages),
+        },
+      })
     }
 
     const timer = setTimeout(() => {
@@ -86,6 +102,8 @@ function runParserWorker(filePath, options = {}) {
         },
       })
     }, timeoutMs)
+    if (options.signal?.aborted) return abortWorker()
+    options.signal?.addEventListener?.('abort', abortWorker, { once: true })
 
     child.stdout?.on('data', (chunk) => {
       stdout = `${stdout}${chunk}`.slice(-2000)
@@ -95,6 +113,22 @@ function runParserWorker(filePath, options = {}) {
     })
     child.on('message', (message) => {
       if (settled) return
+      if (isReadyMessage(message)) return
+      if (isProgressMessage(message)) {
+        try {
+          options.onProgress?.(message)
+        } catch (err) {
+          finish({
+            ok: false,
+            error: {
+              type: FAILURE_TYPES.importFailed,
+              message: sanitizeDiagnostic(err),
+              diagnostics: sanitizeDiagnostic(stderr || stdout || ignoredMessages),
+            },
+          })
+        }
+        return
+      }
       if (!isParserWorkerResult(message)) {
         ignoredMessages = `${ignoredMessages} ${sanitizeDiagnostic(message)}`.slice(-2000)
         return
@@ -123,13 +157,30 @@ function runParserWorker(filePath, options = {}) {
       })
     })
 
-    child.send({ filePath })
+    ;(async () => {
+      try {
+        await waitForAck(child, ackTimeoutMs)
+        if (!settled) child.send({ filePath })
+      } catch (err) {
+        finish({
+          ok: false,
+          error: {
+            type: 'worker-startup-failed',
+            message: sanitizeDiagnostic(err),
+            diagnostics: sanitizeDiagnostic(stderr || stdout || ignoredMessages),
+          },
+        })
+      }
+    })()
   })
 }
 
 module.exports = {
   buildParserExecArgv,
   buildParserWorkerEnv,
+  getWorkerAckTimeoutMs,
+  isProgressMessage,
   isParserWorkerResult,
+  isReadyMessage,
   runParserWorker,
 }

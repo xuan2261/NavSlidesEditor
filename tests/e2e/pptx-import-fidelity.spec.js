@@ -12,12 +12,27 @@ const PPTX_MIME =
   'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 const PPTX_FIXTURE = path.resolve(process.cwd(), 'PPTX', 'Bai_2_2.pptx')
 
+async function waitForPptxImport(request, jobId) {
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    const poll = await request.get(`/api/pptx/jobs/${jobId}`)
+    expect(poll.ok()).toBeTruthy()
+    const job = await poll.json()
+    if (job.status === 'done') return job.result
+    if (job.status === 'failed' || job.status === 'cancelled') {
+      throw new Error(job.error || `PPTX import ${job.status}`)
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+  throw new Error('Timed out waiting for PPTX import job')
+}
+
 test.describe('PPTX import fidelity', () => {
   test('imports pptx, renders stable element boxes, and persists property edits', async ({
     page,
     request,
     testPresentation,
   }) => {
+    test.setTimeout(150000)
     const buffer = await fs.readFile(PPTX_FIXTURE)
     const importRes = await request.post('/api/pptx/import', {
       multipart: {
@@ -28,8 +43,9 @@ test.describe('PPTX import fidelity', () => {
         },
       },
     })
-    expect(importRes.ok()).toBeTruthy()
-    const imported = await importRes.json()
+    expect(importRes.status()).toBe(202)
+    const { jobId } = await importRes.json()
+    const imported = await waitForPptxImport(request, jobId)
     expect(imported.presentation?.slides?.length).toBeGreaterThan(0)
 
     const presentation = await apiUpdatePresentation(request, testPresentation.id, imported.presentation)

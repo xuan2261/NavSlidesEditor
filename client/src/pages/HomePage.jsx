@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   Plus,
   Pencil,
@@ -241,6 +241,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   const [creating, setCreating] = useState(false)
   const [previewTemplate, setPreviewTemplate] = useState(null)
   const [confirmDialog, setConfirmDialog] = useState(null) // { title, message, onConfirm, variant }
+  const pptxImportRef = useRef(null)
 
   // Dashboard state
   const [sidebarView, setSidebarView] = useState('all')
@@ -251,6 +252,13 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
   useEffect(() => {
     loadData()
+  }, [])
+
+  useEffect(() => () => {
+    const activeImport = pptxImportRef.current
+    activeImport?.es?.close()
+    if (activeImport?.jobId) api.cancelPptxJob(activeImport.jobId).catch(() => {})
+    pptxImportRef.current = null
   }, [])
 
   async function loadData() {
@@ -572,9 +580,47 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     setImportWarningSummary(null)
     setImportProgress('Uploading PPTX...')
     try {
-      const importPromise = api.importPptx(file)
-      setImportProgress('Parsing PPTX...')
-      const imported = await importPromise
+      const { jobId } = await api.importPptxAsync(file)
+      const imported = await new Promise((resolve, reject) => {
+        const es = new EventSource(`/api/pptx/jobs/${jobId}/stream`)
+        let settled = false
+        pptxImportRef.current = { es, jobId }
+        es.addEventListener('progress', (event) => {
+          const progress = JSON.parse(event.data)
+          if (progress.message) setImportProgress(progress.message)
+        })
+        es.addEventListener('done', (event) => {
+          settled = true
+          es.close()
+          pptxImportRef.current = null
+          resolve(JSON.parse(event.data).result)
+        })
+        es.addEventListener('failed', (event) => {
+          settled = true
+          es.close()
+          pptxImportRef.current = null
+          reject(new Error(JSON.parse(event.data).error || 'PPTX import failed'))
+        })
+        es.addEventListener('cancelled', () => {
+          settled = true
+          es.close()
+          pptxImportRef.current = null
+          reject(new Error('PPTX import cancelled'))
+        })
+        es.onerror = () => {
+          if (settled) return
+          es.close()
+          pollPptxJobUntilTerminal(jobId).then((result) => {
+            settled = true
+            pptxImportRef.current = null
+            resolve(result)
+          }).catch((err) => {
+            settled = true
+            pptxImportRef.current = null
+            reject(err)
+          })
+        }
+      })
       setImportProgress('Creating presentation...')
       const pres = await api.createPresentation(imported.presentation)
       const warningSummary = summarizePptxImportWarnings(imported)
@@ -587,8 +633,23 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       console.error('PPTX import failed:', err)
       alert('Failed to import PPTX: ' + err.message)
     } finally {
+      pptxImportRef.current?.es?.close()
+      pptxImportRef.current = null
       setImportProgress(null)
     }
+  }
+
+  async function pollPptxJobUntilTerminal(jobId) {
+    for (let attempt = 0; attempt < 120; attempt += 1) {
+      const job = await api.pollPptxJob(jobId)
+      if (job.message) setImportProgress(job.message)
+      if (job.status === 'done') return job.result
+      if (job.status === 'failed' || job.status === 'cancelled') {
+        throw new Error(job.error || `PPTX import ${job.status}`)
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
+    throw new Error('PPTX import progress timed out')
   }
 
   // ── Filtered & sorted data ──
@@ -776,10 +837,14 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted px-3 pt-2 pb-1.5">
               Import
             </div>
-            <label className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary">
+            <label
+              data-testid="home-import-pptx-btn"
+              className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
+            >
               <FileUp size={16} />
               <span>Import PPTX</span>
               <input
+                data-testid="home-import-pptx-input"
                 type="file"
                 accept=".pptx"
                 className="hidden"

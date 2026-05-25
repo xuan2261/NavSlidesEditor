@@ -11,45 +11,25 @@ const fs = require('fs-extra')
 const JSZip = require('jszip')
 const pptxgen = require('pptxgenjs')
 const { mapPptxOutput, sanitizeHtml } = require('./mapper')
+const { identityMatrix, mapBoxByMatrix, multiply, readCoord, readNumber, rotateAround, scaleAround, translate } = require('./geometry')
 const { UPLOADS_DIR } = require('../storage')
+
+const DEFAULT_CORPUS = path.join(__dirname, '..', '..', 'data', 'test-corpus')
+const FALLBACK_CORPUS = path.resolve(__dirname, '..', '..', '..', 'PPTX')
+const DEFAULT_PER_DECK_MIN_SEMANTIC = 0.95
+const DEFAULT_MAX_CLASS_DROP = 0.15
+const STRICT_AVG_MIN_SEMANTIC = 0.98
+const STRICT_AVG_MIN_ROUND_TRIP = 0.99
+const STRICT_MIN_CORPUS_FILES = 10
+const STRICT_CLASS_DROP_TYPES = ['image', 'shape', 'table', 'text', 'chart', 'group', 'diagram', 'line', 'other']
 
 // ---------------------------------------------------------------------------
 // Raw pptxtojson parsing (bypasses the full importer to get baseline)
 // ---------------------------------------------------------------------------
 
 async function parsePptxWithPptxtojson(filePath) {
-  const { fork } = require('child_process')
-  const { PARSER_TIMEOUT_MS } = require('./constants')
-  const workerPath = path.join(__dirname, 'parse-worker.js')
-
-  return new Promise((resolve) => {
-    const child = fork(workerPath, [], { silent: true })
-    let settled = false
-    let timer = null
-
-    const finish = (result) => {
-      if (settled) return
-      settled = true
-      if (timer) clearTimeout(timer)
-      if (!child.killed) child.kill('SIGTERM')
-      resolve(result)
-    }
-
-    timer = setTimeout(() => {
-      finish({ ok: false, error: { message: 'parsePptxWithPptxtojson timed out' } })
-    }, PARSER_TIMEOUT_MS)
-
-    child.on('message', (msg) => {
-      if (settled) return
-      finish(msg)
-    })
-    child.on('error', (err) => {
-      if (!settled) finish({ ok: false, error: { message: String(err) } })
-    })
-
-    // Send the filePath so the worker knows what to parse
-    child.send({ filePath })
-  })
+  const { runParserWorker } = require('./worker-runner')
+  return runParserWorker(filePath)
 }
 
 // ---------------------------------------------------------------------------
@@ -291,11 +271,46 @@ function normalizeCountType(type) {
   return mapCategory(t)
 }
 
+function buildSourceGroupMatrix(group, parentMatrix = identityMatrix()) {
+  const left = readCoord(group?.left, group?.x, 0)
+  const top = readCoord(group?.top, group?.y, 0)
+  const width = Math.max(1, readNumber(group?.width, 80, 0))
+  const height = Math.max(1, readNumber(group?.height, 40, 0))
+  const cx = left + width / 2
+  const cy = top + height / 2
+
+  let matrix = translate(left, top)
+  const rotation = readNumber(group?.rotate, 0)
+  if (rotation !== 0) matrix = multiply(rotateAround(rotation, cx, cy), matrix)
+  if (group?.isFlipH) matrix = multiply(scaleAround(-1, 1, cx, cy), matrix)
+  if (group?.isFlipV) matrix = multiply(scaleAround(1, -1, cx, cy), matrix)
+
+  return multiply(parentMatrix, matrix)
+}
+
+function transformSourceChild(child, matrix) {
+  const box = {
+    x: readCoord(child?.left, child?.x, 0),
+    y: readCoord(child?.top, child?.y, 0),
+    width: Math.max(1, readNumber(child?.width, 80, 0)),
+    height: Math.max(1, readNumber(child?.height, 40, 0)),
+  }
+  const mappedBox = mapBoxByMatrix(box, matrix)
+  return {
+    ...child,
+    left: mappedBox.x,
+    top: mappedBox.y,
+    width: mappedBox.width,
+    height: mappedBox.height,
+  }
+}
+
 function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
   const pptxSlides = (pptxtojsonJSON?.slides || []).map((slide) => slide.elements || [])
   const navSlides = (navslidesJSON?.slides || []).map((slide) => slide.elements || [])
   const geometryDrifts = []
   const geometryByType = {}
+  const shapeDriftDetails = []
   const coverageByType = {}
   const sourceByType = {}
   const navByType = {}
@@ -313,21 +328,32 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
     }
 
     const ppts = []
-    for (const el of pptsRaw) {
+    for (let sourceIndex = 0; sourceIndex < pptsRaw.length; sourceIndex++) {
+      const el = pptsRaw[sourceIndex]
       if (el.type === 'group') {
-        const recurse = (g) => {
-          for (const c of (g.elements || [])) {
-            if (c.type === 'group') recurse(c)
-            else ppts.push(c)
+        const recurse = (g, pathParts, parentMatrix = identityMatrix()) => {
+          const groupMatrix = buildSourceGroupMatrix(g, parentMatrix)
+          const children = g.elements || []
+          for (let childIndex = 0; childIndex < children.length; childIndex++) {
+            const c = children[childIndex]
+            const childPath = [...pathParts, childIndex]
+            if (c.type === 'group') recurse(c, childPath, groupMatrix)
+            else ppts.push({
+              element: transformSourceChild(c, groupMatrix),
+              sourceIndex,
+              sourcePath: childPath.join('.'),
+            })
           }
         }
-        recurse(el)
+        recurse(el, [sourceIndex])
       } else {
-        ppts.push(el)
+        ppts.push({ element: el, sourceIndex, sourcePath: String(sourceIndex) })
       }
     }
 
-    for (const pptxEl of ppts) {
+    for (let flattenedIndex = 0; flattenedIndex < ppts.length; flattenedIndex++) {
+      const pptxEntry = ppts[flattenedIndex]
+      const pptxEl = pptxEntry.element
       const type = mapCategory(pptxEl.type || (pptxEl.content ? 'text' : 'other'))
       sourceByType[type] = (sourceByType[type] || 0) + 1
       if (!coverageByType[type]) coverageByType[type] = { captured: 0, total: 0 }
@@ -356,6 +382,24 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
       geometryDrifts.push(drift)
       if (!geometryByType[type]) geometryByType[type] = []
       geometryByType[type].push(drift)
+      if (type === 'shape') {
+        shapeDriftDetails.push({
+          slideIdx: si,
+          sourceIdx: pptxEntry.sourceIndex,
+          flattenedIdx: flattenedIndex,
+          sourcePath: pptxEntry.sourcePath,
+          kind: pptxEl.shapType || pptxEl.shape || pptxEl.type || 'shape',
+          origin: source,
+          mapped: target,
+          deltaPx: {
+            x: Math.round((target.x - source.x) * 100) / 100,
+            y: Math.round((target.y - source.y) * 100) / 100,
+            width: Math.round((target.width - source.width) * 100) / 100,
+            height: Math.round((target.height - source.height) * 100) / 100,
+            max: Math.round(drift * 100) / 100,
+          },
+        })
+      }
     }
   }
 
@@ -391,6 +435,7 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
       sourceByType,
       navByType,
     },
+    shapeDriftDetails,
   }
 }
 
@@ -400,8 +445,36 @@ function strictGeometryThreshold(type) {
   return null
 }
 
-function applyStrictPerTypeGates(result) {
+function applyStrictPerTypeGates(result, options = {}) {
+  const {
+    perDeckMin = DEFAULT_PER_DECK_MIN_SEMANTIC,
+    maxClassDrop = DEFAULT_MAX_CLASS_DROP,
+    excludeClassDrop = [],
+  } = options
   const errors = []
+  const semantic = Number(result.semanticFidelity)
+  if (Number.isFinite(semantic) && semantic < perDeckMin) {
+    errors.push(
+      `Strict semantic gate failed for ${result.file}: ${(semantic * 100).toFixed(1)}% < ${(perDeckMin * 100).toFixed(1)}%`
+    )
+  }
+
+  const excluded = new Set(excludeClassDrop.map((type) => String(type).toLowerCase()))
+  const sourceByType = result.elementCount?.sourceByType || {}
+  const navByType = result.elementCount?.navByType || {}
+  for (const type of STRICT_CLASS_DROP_TYPES) {
+    if (excluded.has(type)) continue
+    const sourceCount = sourceByType[type] || 0
+    if (sourceCount <= 0) continue
+    const navCount = navByType[type] || 0
+    const drop = Math.max(0, sourceCount - navCount) / sourceCount
+    if (drop > maxClassDrop) {
+      errors.push(
+        `Strict element-count gate failed for ${type}: drop ${(drop * 100).toFixed(1)}% > ${(maxClassDrop * 100).toFixed(1)}%`
+      )
+    }
+  }
+
   const name = String(result.file || '').toLowerCase()
   const isGeneratedFixture = name.includes('generated') || name.includes('fixture')
   if (!isGeneratedFixture) return errors
@@ -437,6 +510,7 @@ function mapCategory(type) {
   if (t === 'diagram') return 'diagram'
   if (t === 'line') return 'line'
   if (t === 'shape') return 'shape'
+  if (t === 'math' || t === 'latex') return 'other'
   return 'other'
 }
 
@@ -475,6 +549,9 @@ function semanticTypePreferences(type) {
       return ['shape', 'svg', 'line']
     case 'diagram':
       return ['diagram', 'svg', 'image']
+    case 'math':
+    case 'latex':
+      return ['latex', 'image', 'svg']
     default:
       return [type]
   }
@@ -577,12 +654,21 @@ function evaluateCapture(pptxEl, navEl) {
 
   if (type === 'table') {
     const hasData = Array.isArray(navEl.data) && navEl.data.length > 0
+    const sourceCells = (pptxEl.data || []).flatMap((row) => row || [])
+    const expectsMergedCells = sourceCells.some((cell) => cell?.rowSpan > 1 || cell?.colSpan > 1)
     const hasMergedCells = navEl.mergedCells && navEl.mergedCells.length > 0
     const hasCellStyles = navEl.cellStyles && Object.keys(navEl.cellStyles).length > 0
-    const score = (hasData ? 0.8 : 0.1) + (hasMergedCells ? 0.1 : 0) + (hasCellStyles ? 0.1 : 0)
+    const hasBorders = Boolean(navEl.cellStyles?.borders?.length)
+    const hasExpectedMerges = !expectsMergedCells || hasMergedCells
+    const score =
+      (hasData ? 0.7 : 0.1) +
+      (hasExpectedMerges ? 0.1 : 0) +
+      (hasCellStyles ? 0.1 : 0) +
+      (hasBorders ? 0.1 : 0)
     if (!hasData) gaps.push('missing-table-data')
-    if (!hasMergedCells) gaps.push('missing-merged-cells')
+    if (!hasExpectedMerges) gaps.push('missing-merged-cells')
     if (!hasCellStyles) gaps.push('missing-cell-styles')
+    if (!hasBorders) gaps.push('missing-cell-borders')
     return { score: Math.min(1, score), gaps }
   }
 
@@ -595,7 +681,32 @@ function evaluateCapture(pptxEl, navEl) {
     return { score: Math.min(1, score), gaps }
   }
 
-  if (type === 'shape' || type === 'diagram' || type === 'line' || type === 'other' || type === 'math') {
+  if (type === 'math' || type === 'latex' || (type === 'other' && (pptxEl.latex || navEl.latex))) {
+    if (navEl.importPlaceholderType === 'math') return { score: 0.8, gaps: ['math-rasterized'] }
+    if (navType === 'image' || navType === 'svg') return { score: 0.8, gaps: ['math-rasterized'] }
+
+    const hasLatex = Boolean(navEl.latex || navEl.content)
+    const hasPosition = navEl.x != null && navEl.y != null
+    const hasFontSize = navEl.fontSize != null || pptxEl.fontSize == null
+    const score = (hasLatex ? 0.5 : 0) + (hasPosition ? 0.25 : 0) + (hasFontSize ? 0.25 : 0)
+    if (!hasLatex) gaps.push('missing-latex')
+    if (!hasPosition) gaps.push('missing-position')
+    if (!hasFontSize) gaps.push('missing-font-size')
+    return { score: Math.min(1, score), gaps }
+  }
+
+  if (type === 'group') {
+    const hasChildren = Array.isArray(navEl.children) ? navEl.children.length > 0 : true
+    const hasPosition = navEl.x != null && navEl.y != null
+    const hasSize = navEl.width != null && navEl.height != null
+    const score = (hasChildren ? 0.4 : 0) + (hasPosition ? 0.3 : 0) + (hasSize ? 0.3 : 0)
+    if (!hasChildren) gaps.push('missing-group-children')
+    if (!hasPosition) gaps.push('missing-position')
+    if (!hasSize) gaps.push('missing-size')
+    return { score: Math.min(1, score), gaps }
+  }
+
+  if (type === 'shape' || type === 'diagram' || type === 'line' || type === 'other') {
     if (navEl.importPlaceholderType === 'math') return { score: 0.8, gaps: ['math-rasterized'] }
     if (type === 'shape' && navType === 'svg') return { score: 1.0, gaps }
     if (type === 'diagram' && navType === 'svg') return { score: 0.9, gaps }
@@ -909,6 +1020,7 @@ async function testCorpusFile(filePath, options = {}) {
     result.geometryDrift = detail.geometryDrift
     result.propertyCoverage = detail.propertyCoverage
     result.elementCount = detail.elementCount
+    result.shapeDriftDetails = detail.shapeDriftDetails
     result.semanticFidelity = result.semantic.overall
 
     if (!effectiveSkipRoundTrip) {
@@ -961,12 +1073,15 @@ async function testCorpusFile(filePath, options = {}) {
 // Run full corpus
 // ---------------------------------------------------------------------------
 
-async function runCorpusTests(corpusDir, options = {}) {
+async function runCorpusTests(corpusDir = DEFAULT_CORPUS, options = {}) {
   const {
     skipRoundTrip = true,
     allowFallback = false,
     strict = false,
     baseUrl = process.env.NAVSLIDES_API_URL || '',
+    perDeckMin = DEFAULT_PER_DECK_MIN_SEMANTIC,
+    maxClassDrop = DEFAULT_MAX_CLASS_DROP,
+    excludeClassDrop = [],
   } = options
   const effectiveSkipRoundTrip = strict ? false : skipRoundTrip
   const effectiveCorpusDir = await resolveCorpusDir(corpusDir)
@@ -979,7 +1094,7 @@ async function runCorpusTests(corpusDir, options = {}) {
   let roundTripCount = 0
 
   const entries = await fs.readdir(effectiveCorpusDir)
-  const pptxFiles = entries.filter((f) => f.toLowerCase().endsWith('.pptx'))
+  const pptxFiles = entries.filter((f) => f.toLowerCase().endsWith('.pptx')).sort((a, b) => a.localeCompare(b))
 
   for (const file of pptxFiles) {
     totalFiles++
@@ -1004,7 +1119,7 @@ async function runCorpusTests(corpusDir, options = {}) {
       if (!testResult.roundTrip?.available) {
         testResult.errors.push(`Strict mode requires round-trip result: ${testResult.roundTrip?.reason || 'missing'}`)
       }
-      testResult.errors.push(...applyStrictPerTypeGates(testResult))
+      testResult.errors.push(...applyStrictPerTypeGates(testResult, { perDeckMin, maxClassDrop, excludeClassDrop }))
     }
 
     results.push(testResult)
@@ -1038,18 +1153,28 @@ async function runCorpusTests(corpusDir, options = {}) {
 }
 
 async function resolveCorpusDir(corpusDir) {
-  const entries = await fs.readdir(corpusDir)
-  if (entries.some((file) => file.toLowerCase().endsWith('.pptx'))) return corpusDir
-
-  const fallback = path.resolve(__dirname, '..', '..', '..', 'PPTX')
+  const requested = corpusDir || DEFAULT_CORPUS
   try {
-    const fallbackEntries = await fs.readdir(fallback)
-    if (fallbackEntries.some((file) => file.toLowerCase().endsWith('.pptx'))) return fallback
+    const entries = await fs.readdir(requested)
+    if (entries.some((file) => file.toLowerCase().endsWith('.pptx'))) return requested
+  } catch {
+    // Fall back below.
+  }
+
+  try {
+    const fallbackEntries = await fs.readdir(FALLBACK_CORPUS)
+    if (fallbackEntries.some((file) => file.toLowerCase().endsWith('.pptx'))) return FALLBACK_CORPUS
   } catch {
     // Keep the requested corpus directory; the report will show zero files.
   }
 
-  return corpusDir
+  return requested
+}
+
+function parsePercentFlag(value, fallback) {
+  if (value == null || value === '') return fallback
+  const numeric = Number(value)
+  return Number.isFinite(numeric) && numeric >= 0 ? (numeric > 1 ? numeric / 100 : numeric) : fallback
 }
 
 // ---------------------------------------------------------------------------
@@ -1139,60 +1264,36 @@ function reportResults({ results, summary }) {
   return { text: lines.join('\n') }
 }
 
+function buildDriftRows(results) {
+  return results.flatMap((result) =>
+    (result.shapeDriftDetails || []).map((row) => ({ deckName: result.file, ...row }))
+  )
+}
+
+async function writeDriftRows(outputPath, results) {
+  await fs.outputJson(outputPath, buildDriftRows(results), { spaces: 2 })
+}
+
 module.exports = {
   buildFingerprint,
+  buildDriftRows,
   parsePptxWithPptxtojson,
   importPresentation,
   matchElements,
   computeSemanticFidelity,
   computeDetailedFidelityMetrics,
   computeRoundTripStability,
+  evaluateCapture,
   applyStrictPerTypeGates,
   testCorpusFile,
   runCorpusTests,
   reportResults,
+  writeDriftRows,
+  DEFAULT_CORPUS, DEFAULT_MAX_CLASS_DROP, DEFAULT_PER_DECK_MIN_SEMANTIC,
+  STRICT_AVG_MIN_ROUND_TRIP, STRICT_AVG_MIN_SEMANTIC, STRICT_MIN_CORPUS_FILES,
+  parsePercentFlag,
 }
 
-// ---------------------------------------------------------------------------
-// CLI entry point
-// ---------------------------------------------------------------------------
-
 if (require.main === module) {
-  const DEFAULT_CORPUS = path.join(__dirname, '..', '..', 'data', 'test-corpus')
-  const args = process.argv.slice(2)
-  const corpusDir = args.find((arg) => !arg.startsWith('--')) || DEFAULT_CORPUS
-  const roundTripRequested = args.includes('--roundtrip')
-  const allowFallback = args.includes('--allow-fallback')
-  const strict = args.includes('--strict')
-  const skipRoundTrip = strict ? false : !roundTripRequested
-
-  if (strict && !roundTripRequested) {
-    console.warn('Strict mode implies --roundtrip; enabling round-trip validation automatically.')
-  }
-
-  fs.access(corpusDir).then(() => {
-    return runCorpusTests(corpusDir, { skipRoundTrip, allowFallback, strict })
-  }).then(({ results, summary }) => {
-    reportResults({ results, summary })
-    if (summary.failedFiles > 0) process.exit(1)
-
-    if (strict && !skipRoundTrip) {
-      if (summary.avgSemanticFidelity == null || summary.avgSemanticFidelity < 0.95) {
-        console.error('Strict mode failed: average semantic fidelity is below 95%')
-        process.exit(1)
-      }
-      if (summary.avgRoundTripStability == null || summary.avgRoundTripStability < 0.98) {
-        console.error('Strict mode failed: average round-trip stability is below 98%')
-        process.exit(1)
-      }
-      const nonProduction = results.filter((result) => result.roundTripExportMethod !== 'production')
-      if (nonProduction.length > 0) {
-        console.error('Strict mode failed: non-production export method detected')
-        process.exit(1)
-      }
-    }
-  }).catch((err) => {
-    console.error(`Error running corpus tests: ${err.message}`)
-    process.exit(1)
-  })
+  require('./pptx-import-corpus-cli').runFromCli(process.argv.slice(2))
 }

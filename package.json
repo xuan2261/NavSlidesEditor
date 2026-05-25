@@ -1,6 +1,6 @@
 {
   "name": "navslides-editor",
-  "version": "1.9.6",
+  "version": "1.9.7",
   "private": true,
   "license": "AGPL-3.0-only",
   "description": "NavSlides Editor — A WYSIWYG presentation editor powered by Reveal.js",
@@ -41,7 +41,7 @@
     "test:load:ws:smoke": "k6 run -e PROFILE=smoke tests/load/k6-load-test-socketio-websocket-room-join-and-slide-change-broadcast.js",
     "test:load:ws:load": "k6 run -e PROFILE=load tests/load/k6-load-test-socketio-websocket-room-join-and-slide-change-broadcast.js",
     "test:load:ws:stress": "k6 run -e PROFILE=stress tests/load/k6-load-test-socketio-websocket-room-join-and-slide-change-broadcast.js",
-    "test:corpus": "node server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tester.js ./PPTX --roundtrip --strict",
+    "test:corpus": "node server/services/pptx-import/pptx-import-corpus-cli.js --roundtrip --strict",
     "electron:dev": "npm run build && electron .",
     "electron:prepare": "npm run build && node scripts/prepare-electron.js",
     "electron:build": "npm run electron:prepare && npx electron-builder",

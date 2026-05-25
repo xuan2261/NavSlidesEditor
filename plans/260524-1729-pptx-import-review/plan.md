@@ -2,7 +2,7 @@
 title: PPTX Import Full Overhaul — Deep TDD Plan
 date: 2026-05-24
 mode: --deep --tdd
-status: in-progress
+status: complete
 brainstorm: plans/260524-1729-pptx-import-review/reports/findings.md
 ---
 
@@ -14,15 +14,15 @@ Fix image loss, geometry drift, dishonest metric, security gaps; split 999-LOC m
 
 | # | Title | Status | Priority | Effort | Depends on |
 |---|---|---|---|---|---|
-| 1 | TDD foundation: honest metric + golden masters | pending | P1 | 2d | — |
-| 2 | Image loss fix (silent null in detectImage) | pending | P1 | 1d | 1 |
-| 3 | Shape geometry drift diagnostic + fix | pending | P1 | 3d | 1 |
-| 4 | Per-cell table border extraction | pending | P1 | 2d | 1 |
-| 5 | Media hardening: SHA256 dedup + extension allowlist | pending | P1 | 2d | 1 |
-| 6 | Worker ACK handshake + route rate limit | pending | P1 | 1d | 1 |
-| 7 | Mapper split (10 sub-modules, move-in-place) | pending | P1 | 5d | 2,3,4,5,6 |
-| 8 | Async import + SSE progress | pending | P1 | 4d | 6 |
-| 9 | Corpus expansion + acceptance gate | pending | P1 | 3d | 7,8 |
+| 1 | TDD foundation: honest metric + golden masters | complete | P1 | 2d | — |
+| 2 | Image loss fix (silent null in detectImage) | complete | P1 | 1d | 1 |
+| 3 | Shape geometry drift diagnostic + fix | complete | P1 | 3d | 1 |
+| 4 | Per-cell table border extraction | complete | P1 | 2d | 1 |
+| 5 | Media hardening: SHA256 dedup + extension allowlist | complete | P1 | 2d | 1 |
+| 6 | Worker ACK handshake + route rate limit | complete | P1 | 1d | 1 |
+| 7 | Mapper split (10 sub-modules, move-in-place) | complete | P1 | 5d | 2,3,4,5,6 |
+| 8 | Async import + SSE progress | complete | P1 | 4d | 6 |
+| 9 | Corpus expansion + acceptance gate | complete | P1 | 3d | 7,8 |
 
 Total nominal: ~23 days. Phases 2-6 parallelizable after Phase 1.
 
@@ -101,10 +101,169 @@ Scope-cut findings rejected on user mandate "no constraints — full overhaul":
 - **S7** Phase 1 fewer test files — Rejected. Golden masters vs corpus baseline tracking are distinct concerns.
 - **S8** Phase 6 split into 2 days — Rejected. Both fixes total 1 day; bundling avoids context-switch overhead.
 - **S9** Plan-wide +1015 LOC overengineered — Rejected. PPTX import IS untrusted boundary per security constraint; LOC budget already enforced per file.
-- **L8** XXE check deferred — Already documented as out-of-scope in plan Open Questions; no change.
+- **L8** XXE check deferred — Already documented as out-of-scope in plan completion notes; no change.
 - **M6** jobId path-traversal — UUIDv4 validator regex already prevents path-component characters.
 
 ## Validation Log
+
+### Final Audit — 2026-05-25
+**Completed:** Plan sync-back and final targeted verification.
+
+- Reconciled phase checklist states and stale open-question sections with the completed Phase 1-9 evidence.
+- Marked top-level plan status complete.
+- Verification:
+  - `npm run test:corpus` — 10/10 decks passed, avg semantic fidelity 100.0%, avg round-trip stability 99.0%.
+  - `npx vitest run server/services/pptx-import-job-manager.test.js server/routes/pptx-import.test.js` — 2 files passed, 12 tests passed.
+
+### Final Reviewer-Fix Validation — 2026-05-25
+**Completed:** Closed final code-review concerns and reran acceptance gates.
+
+- Sanitized PPTX table border CSS values in mapper, shared export renderer, and client canvas renderer.
+- Kept cancelled imports counted as active until background import settles, preserving the one-running-job resource cap.
+- Propagated `AbortSignal` into PPTX package validation and cleaned up newly written media files when abort arrives before or after hash indexing.
+- Fixed math/LaTeX HTML cleanup so closing tags are stripped instead of leaking into KaTeX input.
+- Verification:
+  - `npx vitest run server/services/pptx-import/mapper/map-table.test.js server/services/pptx-import/mapper/map-media.test.js shared/tests/element-renderers.test.js server/services/pptx-import-job-manager.test.js server/routes/pptx-import.test.js server/services/pptx-import/media.test.js` — 6 files passed, 60 tests passed.
+  - `npm test` — 182 files passed, 1 skipped; 1527 tests passed, 8 skipped.
+  - `npm run test:corpus` — 10/10 decks passed, avg semantic fidelity 100.0%, avg round-trip stability 99.0%.
+  - `npm run build` — passed.
+
+### Session 2 — 2026-05-24
+**Completed:** Phase 1 and Phase 2.
+
+- Added mapper golden master snapshots and corpus baseline checks.
+- Fixed fidelity scoring dispatch for math/latex so it no longer falls through to shape criteria.
+- Added `--baseline-out=<path>` support for corpus baseline JSON output.
+- Changed PPTX media persistence to return `{ url, warning? }`, preserving warnings without hidden global mutation.
+- Preserved EMF/WMF image payloads as uploaded media with limited-browser-support warnings instead of dropping them to placeholders.
+- Verification:
+  - `npx vitest run server/services/pptx-import/media.test.js server/services/pptx-import/mapper.test.js server/services/pptx-import/mapper-golden-master.test.js --update`
+  - `npx vitest run server/services/pptx-import/corpus-baseline.test.js server/services/pptx-import/mapper-golden-master.test.js --update`
+  - `npm run test:corpus`
+- Latest strict corpus: 4/4 decks passed, avg semantic fidelity 100.0%, avg round-trip stability 99.0%.
+- Image retention: `Bai_2_1.pptx` improved to `27 -> 27`; `Bai_2_5.pptx` improved to `31 -> 31`.
+
+### Session 3 — 2026-05-24
+**Completed:** Phase 3.
+
+- Added `--drift-out=<path>` support and `shapeDriftDetails` diagnostic rows.
+- Diagnosed the large shape drift as a tester source-flattening bug: grouped PPTX children were compared in local group coordinates against absolute NavSlides canvas coordinates.
+- Fixed tester source flattening to apply group matrix transforms before geometry comparison.
+- Wrote diagnostic report: `plans/260524-1729-pptx-import-review/reports/geometry-drift-diagnostic.md`.
+- Evidence files:
+  - `reports/shape-drift-baseline.json`
+  - `reports/shape-drift-after-source-transform.json`
+- Result: `Bai_2_1.pptx` median shape drift `364.5px -> 0px`; `Bai_2_5.pptx` `325.91px -> 0px`; `Bai_2_2.pptx` `121.04px -> 0px`.
+
+### Session 4 — 2026-05-24
+**Completed:** Phase 4.
+
+- Added per-cell table border extraction to `mapTable` as `cellStyles.borders[row][col]`.
+- Added per-side border rendering in shared present/export table renderer and client canvas table renderer.
+- Updated table fidelity scoring to credit `cellStyles.borders` and only require merged cells when source cells declare spans.
+- Re-baselined table golden master snapshot and corpus baseline.
+- Verification:
+  - `npx vitest run server/services/pptx-import shared/tests/element-renderers.test.js`
+  - `npm run build`
+  - `npm run test:corpus`
+- Latest strict corpus: 4/4 decks passed, avg semantic fidelity 100.0%, avg round-trip stability 99.0%; table property coverage is 100.0% on Bai_2_1, Bai_2_2, and Bai_2_5.
+
+### Session 5 — 2026-05-24
+**Completed:** Phase 5.
+
+- Added SHA256 dedup for PPTX imported image/media buffers using `server/data/upload-hashes.json`; no `server/uploads` scan.
+- Kept public media filenames as `<uuid>.<ext>` and moved dedup/hash-index code into `media-dedup.js` to keep `media.js` under the hard LOC limit.
+- Added PPTX media extension allowlist and magic-byte verification with dynamic `await import('file-type')`.
+- Rejected `.html`, `.svg`, dotless refs, and magic-byte mismatches with structured warnings before write.
+- Hardened external video/audio refs: only localhost, `127.0.0.1`, and same-origin hosts from `PUBLIC_HOST`/`HOST` pass through; other external `http(s)` URLs become locked placeholders with warnings.
+- Code review status: `DONE_WITH_CONCERNS`; follow-up test gaps and stale import were fixed. New helper `server/services/pptx-import/media-dedup.js` remains untracked until commit and must be included when landing.
+- Verification:
+  - `npx vitest run server/services/pptx-import/media.test.js server/services/pptx-import/mapper.test.js`
+  - `npx vitest run server/services/pptx-import shared/tests/element-renderers.test.js`
+  - `npm run test:corpus`
+  - `npm run build`
+  - `npm test`
+- Latest full suite: 171 files passed, 1 skipped; 1470 tests passed, 9 skipped.
+- Latest strict corpus: 4/4 decks passed, avg semantic fidelity 100.0%, avg round-trip stability 99.0%.
+
+### Session 6 — 2026-05-24
+**Completed:** Phase 6.
+
+- Added parser worker ACK handshake: child emits `{ type: 'ready' }` after binding the IPC message handler; parent waits before sending `filePath`.
+- Added configurable ACK timeout with positive-number validation and controlled `worker-startup-failed` result on missing ACK.
+- Added progress IPC guard/forwarding for Phase 8, including controlled failure when `onProgress` throws.
+- Moved worker IPC guards/ACK helper into `worker-ipc.js` so `worker-runner.js` stays below hard LOC limit.
+- Mounted `uploadLimiter` on `/api/pptx` before the import router, with test-env skip.
+- Updated the fidelity tester to call `runParserWorker` directly so ready/progress messages do not break corpus runs.
+- Code review status: `DONE_WITH_CONCERNS`; concerns were fixed with tests.
+- Verification:
+  - `npx vitest run server/services/pptx-import/worker-runner.test.js server/routes/pptx-import.test.js`
+  - `npx vitest run server/services/pptx-import server/routes/pptx-import.test.js shared/tests/element-renderers.test.js`
+  - `npm run test:corpus`
+  - `npm run build`
+  - `npm test`
+- Latest full suite: 171 files passed, 1 skipped; 1477 tests passed, 9 skipped.
+- Latest strict corpus: 4/4 decks passed, avg semantic fidelity 100.0%, avg round-trip stability 99.0%.
+
+### Session 7 — 2026-05-24
+**Completed:** Phase 7.
+
+- Split the oversized PPTX mapper into `server/services/pptx-import/mapper/` submodules with `index.js` preserving the `require('./mapper')` export contract.
+- Deleted `server/services/pptx-import/mapper.js`; runtime callers continue to resolve the mapper directory barrel.
+- Added focused co-located tests for color/text/base utilities, shape/image/table/media/group/diagram/presentation mapping.
+- Removed context-clone spreads from group/presentation mapping paths; `zIndex` is set/restored on the shared context object.
+- Verified all mapper subfiles are <= 180 LOC; `map-presentation.js` is 178 LOC.
+- Verification:
+  - `node -e "require('./server/services/pptx-import/mapper/index.js')"`
+  - `npx vitest run server/services/pptx-import server/routes/pptx-import.test.js shared/tests/element-renderers.test.js`
+  - `npm run test:corpus`
+  - `npm run build`
+  - `npm test`
+- Latest full suite: 181 files passed, 1 skipped; 1503 tests passed, 9 skipped.
+- Latest strict corpus: 4/4 decks passed, avg semantic fidelity 100.0%, avg round-trip stability 99.0%.
+
+### Session 8 — 2026-05-25
+**Completed:** Phase 8.
+
+- Replaced sync PPTX import response with async `202 { jobId }` and job routes: `GET /api/pptx/jobs/:jobId`, `GET /api/pptx/jobs/:jobId/stream`, and `DELETE /api/pptx/jobs/:jobId`.
+- Added in-memory PPTX import job manager with max-one-running enforcement, `Retry-After: 60`, TTL cleanup, SSE client attach/detach, and terminal-state retention while clients are attached.
+- Moved temp upload cleanup into background `runImport(...).finally`, preventing handler-finally deletion before worker read.
+- Added worker cancellation path: `DELETE` marks job cancelled and aborts parser child through `AbortController`.
+- Added worker parse progress, mapper slide mapping progress, and HomePage `EventSource` progress UI with unmount cleanup.
+- Updated client API and all known Playwright/API consumers from sync import to async job polling/SSE.
+- Verification:
+  - `npx vitest run server/services/pptx-import server/services/pptx-import-job-manager.test.js server/routes/pptx-import.test.js client/src/utils/api.test.js shared/tests/element-renderers.test.js`
+  - `npm run build`
+  - `npm run test:corpus`
+  - `npx playwright test tests/e2e/pptx-import-async.spec.js --project=chromium`
+  - `npx playwright test tests/e2e/export/pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js --project=chromium`
+  - `npx playwright test tests/e2e/pptx-import-fidelity.spec.js --project=chromium`
+  - `npm test`
+  - `npx vitest run --coverage`
+- Code review status: `DONE_WITH_CONCERNS`; all four concerns were fixed (pre-multer concurrency reservation, cancel propagation to worker/mapping/media writes, SSE error polling fallback, and route-level SSE lifecycle coverage).
+- Latest full suite: 182 files passed, 1 skipped; 1515 tests passed, 9 skipped.
+- Latest strict corpus: 4/4 decks passed, avg semantic fidelity 100.0%, avg round-trip stability 99.0%.
+- Latest coverage: statements 37.26%, branches 32.03%, functions 31.92%, lines 38.75%.
+
+### Session 9 — 2026-05-25
+**Completed:** Phase 9.
+
+- Created default corpus directory `server/data/test-corpus/` with 10 PPTX decks: 4 retained decks from `PPTX/` plus 6 hand-built synthetic decks for charts, process diagrams, background image/notes/footer, math-like rich text, tables, shapes, and media.
+- Added `server/data/test-corpus/README.md` documenting fixture source and coverage. Current `pptxtojson` exposes generated chart objects as shape-backed content in metrics, so chart decks are real PPTX chart files but baseline counts them under `shape`.
+- Added `.gitignore` exceptions so the new `server/data/test-corpus/` fixtures are tracked while other runtime `server/data/*` files remain ignored.
+- Added strict acceptance gates: default corpus fallback, per-deck semantic floor >= 95%, element-class drop <= 15%, strict corpus size >= 10, aggregate semantic >= 98%, aggregate round-trip >= 99%, and CLI flags `--per-deck-min`, `--max-class-drop`, `--exclude-class-drop`.
+- Split the corpus CLI into `pptx-import-corpus-cli.js`, keeping the tester at 1299 LOC and preserving direct execution of the old tester file via a shim.
+- Updated `package.json` `test:corpus` to use the default corpus instead of hardcoding `./PPTX`.
+- Refreshed `corpus-baseline.json` from the strict 10-deck run and added baseline tests for aggregate floors, per-deck semantic floors, class retention, and default corpus resolution.
+- Verification:
+  - `npx vitest run server/services/pptx-import/corpus-baseline.test.js`
+  - `npx vitest run server/services/pptx-import/mapper-golden-master.test.js`
+  - `npm run build`
+  - `npm run test:corpus`
+  - `npm test`
+  - `npx vitest run --coverage`
+- Final acceptance corpus: 10/10 decks passed, avg semantic fidelity 100.0%, avg round-trip stability 99.0%.
+- Final full Vitest/coverage run: 182 files passed, 1 skipped; 1521 tests passed, 8 skipped. Coverage: statements 37.15%, branches 32.01%, functions 31.77%, lines 38.64%.
 
 ### Session 1 — 2026-05-24
 **Trigger:** Auto-run post-plan validation for `--deep` mode after Red Team Review (Workflow Process Step 7).
@@ -135,12 +294,12 @@ Scope-cut findings rejected on user mandate "no constraints — full overhaul":
 - **Phase 8** — `Retry-After: 60` header explicitly required on 429 response.
 - **Phase 9** — Risk Assessment notes 15% locked as v1; v1.1 follow-up tightens to 10%.
 
-## Open Questions (carry from findings section 6)
+## Completion Notes
 
-1. Image-loss instrument: which path nulls in `media.js:71` for the 8 lost images on `Bai_2_1`? Phase 3 + Phase 2 must add diagnostic logging before fix.
-2. What pptxtojson types map to `other`? Suspected math/equation; confirm in Phase 1 metric refactor.
-3. Shape drift distribution: one bad group vs spread across all shapes? Phase 3 instrumentation must emit per-shape drift.
-4. XXE in pptxtojson parser: unverified; out of scope for this plan, raise as follow-up.
-5. `other -> latex` round-trip 100% stable but 0% property coverage — Phase 1 fixes metric.
-6. Background images: confirmed missing or just deprioritized? Out of this plan, log in P2-L follow-up.
-7. Express/Vite proxy SSE timeout in dev — verify in Phase 8.
+1. Image-loss instrumentation and fix completed in Phase 2; measured corpus image retention restored.
+2. `other`/latex metric dispatch fixed in Phase 1 and locked by corpus baseline coverage.
+3. Shape drift distribution was diagnosed in Phase 3 as grouped-source comparison drift; median measured drift dropped to 0px on the affected decks.
+4. XXE handling in upstream `pptxtojson` remains out of scope and should be handled by a separate security follow-up.
+5. Background-image import coverage is represented in the Phase 9 corpus; true gaps beyond the current parser output remain follow-up scope.
+6. Express/Vite SSE behavior was verified through the Phase 8 async import Playwright flow after proxy timeout configuration.
+7. Manual >5MB UI progress verification remains a non-blocking follow-up because checked-in fixtures are intentionally below 5MB.

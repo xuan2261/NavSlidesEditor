@@ -1,0 +1,254 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`pptx mapper golden masters > maps diagram deterministically 1`] = `
+[
+  {
+    "fill": "#e5e7eb",
+    "height": 40,
+    "opacity": 1,
+    "rotation": 0,
+    "shape": "rect",
+    "stroke": "none",
+    "strokeWidth": 0,
+    "text": "Node",
+    "textColor": "#111827",
+    "type": "shape",
+    "width": 80,
+    "x": 80,
+    "y": 90,
+    "zIndex": 1,
+  },
+]
+`;
+
+exports[`pptx mapper golden masters > maps group deterministically 1`] = `
+[
+  {
+    "fill": "#e5e7eb",
+    "height": 30,
+    "opacity": 1,
+    "rotation": 0,
+    "shape": "circle",
+    "stroke": "none",
+    "strokeWidth": 0,
+    "text": "",
+    "textColor": "#111827",
+    "type": "shape",
+    "width": 40,
+    "x": 75,
+    "y": 85,
+    "zIndex": 1,
+  },
+]
+`;
+
+exports[`pptx mapper golden masters > maps image deterministically 1`] = `
+[
+  {
+    "alt": "Logo",
+    "height": 70,
+    "objectFit": "contain",
+    "opacity": 1,
+    "rotation": 0,
+    "src": "/uploads/<asset>",
+    "type": "image",
+    "width": 90,
+    "x": 20,
+    "y": 30,
+    "zIndex": 1,
+  },
+]
+`;
+
+exports[`pptx mapper golden masters > maps line deterministically 1`] = `
+[
+  {
+    "arrowEnd": "none",
+    "arrowStart": "none",
+    "dashArray": undefined,
+    "height": 1,
+    "opacity": 1,
+    "rotation": 0,
+    "stroke": "#111111",
+    "strokeWidth": 2,
+    "type": "line",
+    "width": 100,
+    "x": 40,
+    "x1": 0,
+    "x2": 100,
+    "y": 50,
+    "y1": 1,
+    "y2": 1,
+    "zIndex": 1,
+  },
+]
+`;
+
+exports[`pptx mapper golden masters > maps math deterministically 1`] = `
+[
+  {
+    "_fallbackSrc": null,
+    "content": "\\frac{a}{b}",
+    "height": 60,
+    "latex": "\\frac{a}{b}",
+    "opacity": 1,
+    "rotation": 0,
+    "type": "latex",
+    "width": 160,
+    "x": 60,
+    "y": 70,
+    "zIndex": 1,
+  },
+]
+`;
+
+exports[`pptx mapper golden masters > maps shape deterministically 1`] = `
+[
+  {
+    "fill": "#ff0000",
+    "height": 80,
+    "opacity": 1,
+    "rotation": 0,
+    "shape": "rounded-rect",
+    "stroke": "none",
+    "strokeWidth": 0,
+    "text": "",
+    "textColor": "#111827",
+    "type": "shape",
+    "width": 120,
+    "x": 30,
+    "y": 40,
+    "zIndex": 1,
+  },
+]
+`;
+
+exports[`pptx mapper golden masters > maps table deterministically 1`] = `
+[
+  {
+    "borderColor": "#d1d5db",
+    "borderWidth": 1,
+    "cellBgColor": "transparent",
+    "cellStyles": {
+      "aligns": [
+        [
+          "left",
+          "left",
+        ],
+      ],
+      "bgColors": [
+        [
+          null,
+          null,
+        ],
+      ],
+      "borders": [
+        [
+          {
+            "bottom": {
+              "color": "#d1d5db",
+              "style": "solid",
+              "width": 1,
+            },
+            "left": {
+              "color": "#d1d5db",
+              "style": "solid",
+              "width": 1,
+            },
+            "right": {
+              "color": "#d1d5db",
+              "style": "solid",
+              "width": 1,
+            },
+            "top": {
+              "color": "#d1d5db",
+              "style": "solid",
+              "width": 1,
+            },
+          },
+          {
+            "bottom": {
+              "color": "#d1d5db",
+              "style": "solid",
+              "width": 1,
+            },
+            "left": {
+              "color": "#d1d5db",
+              "style": "solid",
+              "width": 1,
+            },
+            "right": {
+              "color": "#d1d5db",
+              "style": "solid",
+              "width": 1,
+            },
+            "top": {
+              "color": "#d1d5db",
+              "style": "solid",
+              "width": 1,
+            },
+          },
+        ],
+      ],
+      "isBold": [
+        [
+          false,
+          false,
+        ],
+      ],
+      "textColors": [
+        [
+          null,
+          null,
+        ],
+      ],
+      "vAligns": [
+        [
+          "middle",
+          "middle",
+        ],
+      ],
+    },
+    "colWidths": [],
+    "cols": 2,
+    "data": [
+      [
+        "A",
+        "B",
+      ],
+    ],
+    "headerBgColor": "rgba(99,102,241,0.18)",
+    "headerIsBold": true,
+    "headerRow": true,
+    "headerTextColor": "#1e40af",
+    "height": 90,
+    "mergedCells": [],
+    "opacity": 1,
+    "rotation": 0,
+    "rowHeights": [],
+    "rows": 1,
+    "textColor": "#111827",
+    "type": "table",
+    "width": 220,
+    "x": 50,
+    "y": 60,
+    "zIndex": 1,
+  },
+]
+`;
+
+exports[`pptx mapper golden masters > maps text deterministically 1`] = `
+[
+  {
+    "content": "<p>Hello <b>world</b></p>",
+    "height": 40,
+    "opacity": 1,
+    "rotation": 0,
+    "type": "text",
+    "width": 180,
+    "x": 10,
+    "y": 12,
+    "zIndex": 1,
+  },
+]
+`;
