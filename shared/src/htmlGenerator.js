@@ -280,12 +280,39 @@ ${getPluginRuntimeInitScript()}
             alert((payload && payload.message) || 'Presenter access denied');
           });
           var lastLiveIndices = null;
-          function emitLiveNavigate(force) {
-            var indices = Reveal.getIndices();
-            var state = {
+          function getLiveRevealIndices() {
+            var indices = Reveal.getIndices() || {};
+            var liveIndices = {
               slideIndex: indices.h || 0,
               verticalIndex: indices.v || 0,
               fragmentIndex: indices.f || 0
+            };
+            var currentSlide = Reveal.getCurrentSlide && Reveal.getCurrentSlide();
+            var horizontalSlides = document.querySelectorAll('.reveal .slides > section');
+            for (var h = 0; h < horizontalSlides.length; h += 1) {
+              var horizontal = horizontalSlides[h];
+              if (horizontal === currentSlide) {
+                liveIndices.slideIndex = h;
+                liveIndices.verticalIndex = 0;
+                return liveIndices;
+              }
+              var verticalSlides = horizontal.querySelectorAll('section');
+              for (var v = 0; v < verticalSlides.length; v += 1) {
+                if (verticalSlides[v] === currentSlide) {
+                  liveIndices.slideIndex = h;
+                  liveIndices.verticalIndex = v;
+                  return liveIndices;
+                }
+              }
+            }
+            return liveIndices;
+          }
+          function emitLiveNavigate(force) {
+            var indices = getLiveRevealIndices();
+            var state = {
+              slideIndex: indices.slideIndex || 0,
+              verticalIndex: indices.verticalIndex || 0,
+              fragmentIndex: indices.fragmentIndex || 0
             };
             var key = state.slideIndex + ':' + state.verticalIndex + ':' + state.fragmentIndex;
             if (force !== true && key === lastLiveIndices) return;

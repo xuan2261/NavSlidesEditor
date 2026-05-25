@@ -150,8 +150,13 @@ describe('htmlGenerator', () => {
   it('should broadcast vertical and fragment indices separately in live mode', () => {
     const html = generateRevealHTML({ id: 'p1', title: 'Live', slides: [] })
 
+    expect(html).toContain('function getLiveRevealIndices()')
+    expect(html).toContain('var currentSlide = Reveal.getCurrentSlide && Reveal.getCurrentSlide();')
     expect(html).toContain('verticalIndex: indices.v || 0')
     expect(html).toContain('fragmentIndex: indices.f || 0')
+    expect(html).toContain('slideIndex: indices.slideIndex || 0')
+    expect(html).toContain('verticalIndex: indices.verticalIndex || 0')
+    expect(html).toContain('fragmentIndex: indices.fragmentIndex || 0')
     expect(html).toContain("sock.on('control-navigate'")
   })
 

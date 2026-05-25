@@ -34,6 +34,7 @@
 - Stabilized the remaining PR CI live E2E failure by driving presenter navigation through real keyboard input (`ArrowRight`, `ArrowLeft`, `Home`, `End`) and waiting for the presenter slide content before asserting viewer socket sync.
 - Hardened the live presenter-to-viewer keyboard spec against the final master CI race by waiting for the server to count a joined viewer before emitting presenter navigation.
 - Addressed master CI run `26380770511` follow-up: present-mode exports now dedupe and periodically rebroadcast live `Reveal` indices so Linux CI does not miss keyboard navigation events after socket readiness, and deterministic visual snapshots use the plan-approved `maxDiffPixelRatio: 0.02` threshold for recurring 0.01-ratio antialias drift. Local verification passed: targeted `chromium-live` spec 4/4, `npm run lint`, `npm run build`, and the affected `htmlGenerator`/socket Vitest slice 4 files / 59 tests; full `npm test` earlier in the same pass was 183 files / 1532 tests.
+- Addressed master CI run `26389487789` follow-up: deterministic visual screenshots now override the inherited global `maxDiffPixels: 100` cap, and live presenter export derives emitted slide indices from `Reveal.getCurrentSlide()` DOM position when `Reveal.getIndices()` lags behind visible keyboard navigation on Linux CI. Local verification passed: targeted `chromium-live` spec 4/4, `htmlGenerator`/socket Vitest slice 2 files / 35 tests, `npm run lint` (0 errors; unrelated untracked debug-file warnings), and `npm run build`.
 
 ## 2026-05-23
 
