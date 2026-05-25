@@ -5,7 +5,7 @@ import { join } from 'node:path'
 const PLAN_DIR = 'plans/260524-0959-e2e-cleanup-and-coverage-tdd'
 
 function parseFrontmatterStatus(content) {
-  const match = content.match(/^---\n([\s\S]*?)\n---/)
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
   if (!match) return null
   const statusMatch = match[1].match(/^status:\s*(.+)$/m)
   return statusMatch ? statusMatch[1].trim().replace(/^["']|["']$/g, '') : null

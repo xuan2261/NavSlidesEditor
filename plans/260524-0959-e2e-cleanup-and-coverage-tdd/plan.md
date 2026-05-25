@@ -1,6 +1,6 @@
 ---
 title: E2E Test Cleanup and Coverage Expansion (Post-Review, Post-Audit)
-status: in_progress
+status: completed
 priority: P1
 flags: [--deep, --tdd]
 created: 2026-05-24
@@ -48,7 +48,7 @@ Execute every actionable recommendation from the E2E review report against `test
 | 5 | P1 Coverage — Export/Import/Sync (real /api/rclone contract) | P1 | 5h | completed | 3 |
 | 6 | P1-P2 Coverage — Games + Parametrize visual matrix | P2 | 4h | completed | 3 |
 | 7 | P2-P3 Fixture Migration + Architecture (split by concern, not tab) | P2 | 6h | completed | 1, 3 |
-| 8 | Final Regression + CI Verification | P1 | 2h | pending_ci | 1-7 |
+| 8 | Final Regression + CI Verification | P1 | 2h | completed | 1-7 |
 
 **Total effort:** ~35h. **Parallelisable:** 4↔5↔6 after 3 lands.
 **Dependency change:** Phase 7 now `[1, 3]` (Phase 2 not a blocker — fixture migration consumes Phase 1 fixture additions + Phase 3 testids only).
@@ -87,14 +87,14 @@ Execute every actionable recommendation from the E2E review report against `test
 
 ## Success Criteria (whole plan)
 
-- [ ] All 8 phases marked `status: completed` in their frontmatter
-- [ ] `npm test` + `npm run test:e2e` exit 0 on Windows + Linux (CI)
-- [ ] Zero `waitForTimeout(` remaining in `tests/e2e/` outside documented exceptions
-- [ ] Zero spec file >200 LOC
-- [ ] CI total e2e wallclock NOT >5% slower than baseline captured in Phase 1
-- [ ] Coverage % equal-or-higher vs Phase 1 baseline for files touched
-- [ ] Recommendation Coverage Map shows all recommendations resolved
-- [ ] README test docs + project-changelog.md reflect new conventions
+- [x] All 8 phases marked `status: completed` in their frontmatter
+- [x] `npm test` + `npm run test:e2e` exit 0 on Windows + Linux (CI)
+- [x] Zero `waitForTimeout(` remaining in `tests/e2e/` outside documented exceptions
+- [x] Zero spec file >200 LOC
+- [x] CI total e2e wallclock NOT >5% slower than baseline captured in Phase 1
+- [x] Coverage % equal-or-higher vs Phase 1 baseline for files touched
+- [x] Recommendation Coverage Map shows all recommendations resolved
+- [x] README test docs + project-changelog.md reflect new conventions
 
 ## Risk Register (post-audit)
 

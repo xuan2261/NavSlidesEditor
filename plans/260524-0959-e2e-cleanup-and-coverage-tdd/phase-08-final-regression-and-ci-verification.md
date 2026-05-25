@@ -1,7 +1,7 @@
 ---
 phase: 8
 title: "Final Regression + CI Verification"
-status: pending_ci
+status: completed
 priority: P1
 effort: "2h"
 dependencies: [1, 2, 3, 4, 5, 6, 7]
@@ -44,6 +44,7 @@ After Phases 1-7 land, run a regression sweep + measure final state vs. the base
 - Follow-up local verification for the `26389487789` fixes: deterministic visual helper now sets `maxDiffPixels: 5000` alongside `maxDiffPixelRatio: 0.02`; live presenter export now derives emitted h/v indices from `Reveal.getCurrentSlide()` DOM position when needed. `npx vitest run shared/tests/htmlGenerator.test.js server/services/socket-handler.test.js` → 2 files passed, 35 tests passed; targeted `chromium-live` keyboard sync spec → 4 passed; `npm run lint` → passed with unrelated untracked debug-script warnings; `npm run build` → passed. CI remains pending until these changes are committed, pushed, and GitHub Actions reruns green.
 - Master CI run `26390040248` passed visual regression, mobile, all chromium shards, lint, unit/coverage, corpus, build, and k6. Only `E2E live (workers:1)` failed, still on the four presenter keyboard navigation tests with the viewer iframe staying on `Slide A`; this proves the visual threshold fix is sufficient and narrows the remaining issue to presenter-side event emission under Linux CI.
 - Follow-up local verification for the `26390040248` live fix: present-mode exports now force short delayed live emits after `keydown`, `keyup`, and `hashchange` in addition to Reveal slide/fragment events and polling. Full `npx playwright test --project=chromium-live` → 24 passed; `npx vitest run shared/tests/htmlGenerator.test.js server/services/socket-handler.test.js` → 2 files passed, 35 tests passed; `npm run build` → passed; `npm run lint` → passed with unrelated untracked debug-script warnings. CI remains pending until these changes are committed, pushed, and GitHub Actions reruns green.
+- Master CI run `26390496912` passed all required jobs: lint, unit/coverage, PPTX corpus fidelity, build client, k6 load smoke, mobile, visual regression, live E2E, chromium shards 1/4-4/4, and required checks summary.
 
 ## Architecture
 
@@ -199,13 +200,13 @@ This phase is verification-only. No new specs/source code beyond docs updates + 
 - [x] `npm run test:e2e` green (single run); wallclock ≤ baseline + 5% (vs `reports/baseline-wallclock.txt`)
 - [x] `npx playwright test --repeat-each=3` green (de-flake proof)
 - [x] `npm run lint` zero errors
-- [ ] All 4 CI e2e jobs green on branch
+- [x] All 4 CI e2e jobs green on branch
 - [x] Nightly ribbon-layout 768px workflow runs against new split path (verified by Phase 7's unit test)
 - [x] Coverage report generated; global lines unchanged, branches slightly higher; statement/function drift documented in `coverage-delta-260524.md`
 - [x] README updated with new conventions
 - [x] `docs/project-changelog.md` updated
 - [x] Coverage delta report created under `plans/260524-0959-e2e-cleanup-and-coverage-tdd/reports/`
-- [ ] All 8 phase frontmatters `status: completed`
+- [x] All 8 phase frontmatters `status: completed`
 - [x] Zero new devDependencies introduced by Phase 8's own meta-test (no `gray-matter`)
 
 ## Tests (verification — meta-test)
