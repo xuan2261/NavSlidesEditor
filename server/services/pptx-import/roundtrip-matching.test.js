@@ -56,6 +56,73 @@ describe('roundtrip fingerprint matching', () => {
     expect(result.matches[0].method).toBe('unmatched')
   })
 
+  it('treats re-imported PowerPoint text boxes as stable text even when parsed as rect shapes', () => {
+    const sources = [
+      {
+        type: 'text',
+        x: 119,
+        y: 245,
+        width: 624,
+        height: 99,
+        content: '<p>HỌC&nbsp;PHẦN KỸ&nbsp;THUẬT&nbsp;XUNG&nbsp;SỐ</p>',
+      },
+    ]
+    const targets = [
+      {
+        type: 'shape',
+        shape: 'rect',
+        x: 119,
+        y: 245,
+        width: 624,
+        height: 99,
+        text: 'HỌC PHẦN KỸ THUẬT XUNG SỐ',
+        textHtml: '<p><span>HỌC&nbsp;PHẦN KỸ&nbsp;THUẬT&nbsp;XUNG&nbsp;SỐ</span></p>',
+      },
+    ]
+
+    const result = matchElements(sources, targets)
+
+    expect(result.matches[0]).toMatchObject({
+      method: 'exact',
+      stable: true,
+      roundTripIndex: 0,
+    })
+    expect(result.unmatchedTargets).toHaveLength(0)
+  })
+
+  it('does not treat non-rect text-bearing shapes as imported text boxes', () => {
+    const result = matchElements(
+      [
+        {
+          type: 'text',
+          x: 100,
+          y: 120,
+          width: 220,
+          height: 60,
+          content: '<p>Status</p>',
+        },
+      ],
+      [
+        {
+          type: 'shape',
+          shape: 'ellipse',
+          x: 100,
+          y: 120,
+          width: 220,
+          height: 60,
+          text: 'Status',
+        },
+      ]
+    )
+
+    expect(result.matches[0]).toMatchObject({
+      method: 'unmatched',
+      stable: false,
+      roundTripIndex: -1,
+    })
+    expect(result.unmatchedTargets).toHaveLength(1)
+  })
+
   it('uses one-to-one semantic matching for duplicate candidates', () => {
     const semantic = computeSemanticFidelity(
       {

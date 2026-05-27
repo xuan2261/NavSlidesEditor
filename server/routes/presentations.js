@@ -15,6 +15,7 @@ const path = require('path')
 const { validate } = require('../middleware/validate')
 const { createPresentationSchema, updatePresentationSchema } = require('../middleware/schemas')
 const { rasterizeComplexElements } = require('../services/pptx-exporter')
+const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
 
 const router = express.Router()
 const UPLOAD_HASHES_FILE = path.join(DATA_DIR, 'upload-hashes.json')
@@ -250,7 +251,7 @@ router.get('/:id', async (req, res) => {
     const presentations = await readPresentations()
     const presentation = presentations.find((p) => p.id === req.params.id)
     if (!presentation) return res.status(404).json({ error: 'Not found' })
-    res.json(normalizePresentationNotes(presentation))
+    res.json(normalizePresentationNotes(normalizePptxImportedPresentationForRead(presentation)))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -356,7 +357,7 @@ router.post('/:id/duplicate', async (req, res) => {
       const original = presentations.find((p) => p.id === req.params.id)
       if (!original) return null
       const now = new Date().toISOString()
-      const copy = JSON.parse(JSON.stringify(original))
+      const copy = JSON.parse(JSON.stringify(normalizePptxImportedPresentationForRead(original)))
       copy.id = uuidv4()
       copy.title = (copy.title || 'Untitled') + ' (copy)'
       copy.createdAt = now
@@ -378,7 +379,8 @@ router.get('/:id/export', async (req, res) => {
     const presentations = await readPresentations()
     const presentation = presentations.find((p) => p.id === req.params.id)
     if (!presentation) return res.status(404).json({ error: 'Not found' })
-    const html = generateRevealHTML(normalizePresentationNotes(presentation))
+    const normalized = normalizePptxImportedPresentationForRead(presentation)
+    const html = generateRevealHTML(normalizePresentationNotes(normalized))
     const filename = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
     res.setHeader('Content-Type', 'text/html')
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
@@ -410,6 +412,7 @@ router.get('/:id/present', async (req, res) => {
       }
     }
     if (!presentation) return res.status(404).json({ error: 'Not found' })
+    presentation = normalizePptxImportedPresentationForRead(presentation)
     let html = generateRevealHTML(normalizePresentationNotes(presentation))
     if (req.query.preview === 'true') {
       html = html.replace(
@@ -437,7 +440,7 @@ router.post('/:id/save-as-template', async (req, res) => {
     if (!pres) return res.status(404).json({ error: 'Not found' })
     const now = new Date().toISOString()
     const template = normalizePresentationNotes({
-      ...JSON.parse(JSON.stringify(pres)),
+      ...JSON.parse(JSON.stringify(normalizePptxImportedPresentationForRead(pres))),
       id: uuidv4(),
       title: (req.body.title || pres.title || 'Untitled') + ' (template)',
       isTemplate: true,

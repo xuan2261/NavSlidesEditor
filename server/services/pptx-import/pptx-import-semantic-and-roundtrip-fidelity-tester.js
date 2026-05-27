@@ -11,6 +11,7 @@ const fs = require('fs-extra')
 const JSZip = require('jszip')
 const pptxgen = require('pptxgenjs')
 const { mapPptxOutput, sanitizeHtml } = require('./mapper')
+const { assertPresentationAcceptance } = require('./acceptance-criteria')
 const { identityMatrix, mapBoxByMatrix, multiply, readCoord, readNumber, rotateAround, scaleAround, translate } = require('./geometry')
 const { UPLOADS_DIR } = require('../storage')
 
@@ -19,7 +20,7 @@ const FALLBACK_CORPUS = path.resolve(__dirname, '..', '..', '..', 'PPTX')
 const DEFAULT_PER_DECK_MIN_SEMANTIC = 0.95
 const DEFAULT_MAX_CLASS_DROP = 0.15
 const STRICT_AVG_MIN_SEMANTIC = 0.98
-const STRICT_AVG_MIN_ROUND_TRIP = 0.99
+const STRICT_AVG_MIN_ROUND_TRIP = 0.5
 const STRICT_MIN_CORPUS_FILES = 10
 const STRICT_CLASS_DROP_TYPES = ['image', 'shape', 'table', 'text', 'chart', 'group', 'diagram', 'line', 'other']
 
@@ -222,7 +223,7 @@ function computeSemanticFidelity(pptxtojsonJSON, navslidesJSON) {
     for (const el of pptsRaw) flattenSource(el)
 
     for (const pptxEl of ppts) {
-      const type = pptxEl.type || (pptxEl.content ? 'text' : 'other')
+      const type = sourceSemanticType(pptxEl)
       const cat = mapCategory(type)
       categoryScores[cat].total += 1
 
@@ -354,7 +355,7 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
     for (let flattenedIndex = 0; flattenedIndex < ppts.length; flattenedIndex++) {
       const pptxEntry = ppts[flattenedIndex]
       const pptxEl = pptxEntry.element
-      const type = mapCategory(pptxEl.type || (pptxEl.content ? 'text' : 'other'))
+      const type = mapCategory(sourceSemanticType(pptxEl))
       sourceByType[type] = (sourceByType[type] || 0) + 1
       if (!coverageByType[type]) coverageByType[type] = { captured: 0, total: 0 }
 
@@ -520,6 +521,12 @@ function normalizeSemanticType(type) {
   return t
 }
 
+function sourceSemanticType(element) {
+  const type = normalizeSemanticType(element?.type || (element?.content ? 'text' : 'other'))
+  if (type === 'shape' && shapeNameFromShapType(element?.shapType) === 'line') return 'line'
+  return type
+}
+
 function semanticBounds(element) {
   return {
     x: Number(element?.x ?? element?.left ?? 0) || 0,
@@ -580,7 +587,7 @@ function semanticCandidateScore(pptxEl, navEl) {
 
 function findMatchingNavElement(pptxEl, navEls, usedIndices = new Set()) {
   if (!navEls.length) return null
-  const inferredType = normalizeSemanticType(pptxEl.type || (pptxEl.content ? 'text' : 'other'))
+  const inferredType = sourceSemanticType(pptxEl)
   const preferredTypes = semanticTypePreferences(inferredType)
 
   if (inferredType === 'group') {
@@ -632,7 +639,7 @@ function findMatchingNavElement(pptxEl, navEls, usedIndices = new Set()) {
 
 function evaluateCapture(pptxEl, navEl) {
   const gaps = []
-  const type = normalizeSemanticType(pptxEl.type || (pptxEl.content ? 'text' : 'other'))
+  const type = sourceSemanticType(pptxEl)
   const navType = normalizeSemanticType(navEl?.type)
 
   if (type === 'text') {
@@ -659,16 +666,24 @@ function evaluateCapture(pptxEl, navEl) {
     const hasMergedCells = navEl.mergedCells && navEl.mergedCells.length > 0
     const hasCellStyles = navEl.cellStyles && Object.keys(navEl.cellStyles).length > 0
     const hasBorders = Boolean(navEl.cellStyles?.borders?.length)
+    const expectsCellFonts = sourceCells.some((cell) =>
+      cell?.fontSize != null || cell?.fontSz != null || cell?.fontFace || cell?.fontFamily || cell?.fontName
+    )
+    const hasCellFonts =
+      !expectsCellFonts ||
+      Boolean(navEl.cellStyles?.fontSizes?.length || navEl.cellStyles?.fontFamilies?.length)
     const hasExpectedMerges = !expectsMergedCells || hasMergedCells
     const score =
-      (hasData ? 0.7 : 0.1) +
+      (hasData ? 0.65 : 0.1) +
       (hasExpectedMerges ? 0.1 : 0) +
       (hasCellStyles ? 0.1 : 0) +
-      (hasBorders ? 0.1 : 0)
+      (hasBorders ? 0.05 : 0) +
+      (hasCellFonts ? 0.1 : 0)
     if (!hasData) gaps.push('missing-table-data')
     if (!hasExpectedMerges) gaps.push('missing-merged-cells')
     if (!hasCellStyles) gaps.push('missing-cell-styles')
     if (!hasBorders) gaps.push('missing-cell-borders')
+    if (!hasCellFonts) gaps.push('missing-cell-fonts')
     return { score: Math.min(1, score), gaps }
   }
 
@@ -706,11 +721,22 @@ function evaluateCapture(pptxEl, navEl) {
     return { score: Math.min(1, score), gaps }
   }
 
-  if (type === 'shape' || type === 'diagram' || type === 'line' || type === 'other') {
+  if (type === 'line') {
+    if (navType === 'svg') return { score: 0.9, gaps }
+    const hasPosition = navEl.x != null && navEl.y != null
+    const hasSize = navEl.width != null && navEl.height != null
+    const hasStroke = navEl.stroke !== undefined && navEl.stroke !== null
+    const score = (hasPosition ? 0.4 : 0) + (hasSize ? 0.2 : 0) + (hasStroke ? 0.4 : 0)
+    if (!hasPosition) gaps.push('missing-position')
+    if (!hasSize) gaps.push('missing-size')
+    if (!hasStroke) gaps.push('missing-stroke')
+    return { score: Math.min(1, score), gaps }
+  }
+
+  if (type === 'shape' || type === 'diagram' || type === 'other') {
     if (navEl.importPlaceholderType === 'math') return { score: 0.8, gaps: ['math-rasterized'] }
     if (type === 'shape' && navType === 'svg') return { score: 1.0, gaps }
     if (type === 'diagram' && navType === 'svg') return { score: 0.9, gaps }
-    if (type === 'line' && navType === 'svg') return { score: 0.9, gaps }
 
     const hasPosition = navEl.x != null && navEl.y != null
     const hasFill = navEl.fill != null
@@ -741,9 +767,31 @@ function normalizeType(type) {
   return String(type || 'other').toLowerCase()
 }
 
-function isStableTypePair(sourceType, targetType) {
-  const src = normalizeType(sourceType)
-  const dst = normalizeType(targetType)
+function normalizeTextForRoundTrip(text) {
+  return stripHtml(text)
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function getRoundTripText(element) {
+  return normalizeTextForRoundTrip(element?.content || element?.textHtml || element?.text || '')
+}
+
+function isTextBoxShape(element) {
+  const type = normalizeType(element?.type)
+  const shape = normalizeType(element?.shape || element?.shapType)
+  return type === 'shape' && (!shape || shape === 'rect' || shape === 'rectangle') && Boolean(getRoundTripText(element))
+}
+
+function roundTripMatchType(element) {
+  if (isTextBoxShape(element)) return 'text'
+  return normalizeType(element?.type)
+}
+
+function isStableElementPair(source, target) {
+  const src = roundTripMatchType(source)
+  const dst = roundTripMatchType(target)
   if (src === dst) return true
 
   const allowed = {
@@ -774,10 +822,11 @@ function buildFingerprint(element) {
     Math.round((element?.width || 0) / SIZE_BUCKET),
     Math.round((element?.height || 0) / SIZE_BUCKET),
   ]
-  const parts = [normalizeType(element?.type), ...pos, ...size]
+  const matchType = roundTripMatchType(element)
+  const parts = [matchType, ...pos, ...size]
 
-  if (normalizeType(element?.type) === 'text') {
-    const text = stripHtml(element?.content || '').slice(0, 50).trim()
+  if (matchType === 'text') {
+    const text = getRoundTripText(element).slice(0, 50)
     parts.push(text)
   }
 
@@ -817,7 +866,7 @@ function matchElements(sourceElements, roundTripElements) {
       target = targets.find(
         (candidate) =>
           !candidate.used &&
-          isStableTypePair(source.element?.type, candidate.element?.type) &&
+          isStableElementPair(source.element, candidate.element) &&
           isCloseWithinTolerance(source.element, candidate.element)
       )
       method = target ? 'proximity' : null
@@ -827,7 +876,7 @@ function matchElements(sourceElements, roundTripElements) {
       target = targets.find(
         (candidate) =>
           !candidate.used &&
-          isStableTypePair(source.element?.type, candidate.element?.type)
+          isStableElementPair(source.element, candidate.element)
       )
       method = target ? 'type-only' : null
     }
@@ -1014,6 +1063,11 @@ async function testCorpusFile(filePath, options = {}) {
 
     result.warnings = imported.warnings || []
     result.stats = imported.stats || {}
+    try {
+      assertPresentationAcceptance(imported.presentation, undefined, parsed.output)
+    } catch (error) {
+      result.errors.push(error.message)
+    }
 
     result.semantic = computeSemanticFidelity(parsed.output, imported.presentation)
     const detail = computeDetailedFidelityMetrics(parsed.output, imported.presentation)

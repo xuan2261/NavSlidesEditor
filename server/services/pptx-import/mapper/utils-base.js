@@ -1,5 +1,6 @@
 const uuidv4 = () => require('node:crypto').randomUUID()
 const { mapBox, readNumber } = require('../geometry')
+const PT_TO_PX = 96 / 72
 
 function baseElement(element, scale, zIndex, box = null) {
   return {
@@ -38,13 +39,20 @@ function warning(warnings, slideIndex, type, message) {
   warnings.push({ slideIndex, type, message })
 }
 
-function extractShadow(element) {
+function scaleLength(value, scaleAxis = 1, min = 0) {
+  const num = readNumber(value, 0)
+  const axis = Number(scaleAxis)
+  if (!(num > 0) || !(axis > 0)) return min
+  return Math.max(min, Math.round(num * PT_TO_PX * axis * 10) / 10)
+}
+
+function extractShadow(element, scale = { x: 1, y: 1 }) {
   const s = element.shadow
   if (!s || typeof s !== 'object') return null
   return {
-    shadowX: typeof s.h === 'number' ? s.h : 0,
-    shadowY: typeof s.v === 'number' ? s.v : 0,
-    shadowBlur: typeof s.blur === 'number' ? s.blur : 0,
+    shadowX: scaleLength(s.h, scale.x),
+    shadowY: scaleLength(s.v, scale.y),
+    shadowBlur: scaleLength(s.blur, scale.x),
     shadowColor: typeof s.color === 'string' ? s.color : '#000000',
   }
 }
@@ -70,6 +78,7 @@ module.exports = {
   baseElement,
   extractShadow,
   placeholder,
+  scaleLength,
   shapeName,
   warning,
 }

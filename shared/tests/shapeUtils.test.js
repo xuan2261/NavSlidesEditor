@@ -61,5 +61,79 @@ describe('shapeUtils', () => {
     })
     expect(escaped).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
     expect(escaped).not.toContain('<script>alert(1)</script>')
+
+    const safeColor = shapeSvgString({
+      shape: 'rect',
+      width: 120,
+      height: 80,
+      text: 'Label',
+      textColor: '" onload="bad',
+    })
+    expect(safeColor).toContain('fill="#ffffff"')
+    expect(safeColor).not.toContain('onload=')
+  })
+
+  it('renders sanitized rich shape text when textHtml is present', () => {
+    const rich = shapeSvgString({
+      shape: 'rect',
+      width: 160,
+      height: 80,
+      text: 'Bold rest',
+      textHtml: '<strong>Bold</strong> <span style="color:#112233;font-size:18pt;background-image:url(javascript:bad)">rest</span><script>bad()</script>',
+    })
+
+    expect(rich).toContain('<foreignObject')
+    expect(rich).toContain('<strong>Bold</strong>')
+    expect(rich).toContain('color: #112233')
+    expect(rich).toContain('font-size: 24px')
+    expect(rich).not.toContain('background-image')
+    expect(rich).not.toContain('<script')
+  })
+
+  it('removes unquoted dangerous attributes from rich shape text', () => {
+    const rich = shapeSvgString({
+      shape: 'rect',
+      width: 160,
+      height: 80,
+      textHtml: '<img src=x onerror=alert(1)><a href=javascript:alert(1)>link</a>',
+    })
+
+    expect(rich).not.toContain('onerror')
+    expect(rich).not.toContain('javascript:')
+    expect(rich).toContain('href="#"')
+    expect(rich).toContain('src="#"')
+  })
+
+  it('applies imported text insets to shared rich shape text content', () => {
+    const rich = shapeSvgString({
+      shape: 'rect',
+      width: 160,
+      height: 80,
+      textHtml: '<span>Inset</span>',
+      _pptxImportMeta: {
+        textInsets: { left: 10, right: 11, top: 5, bottom: 6 },
+        textInsetsUnit: 'px',
+      },
+    })
+
+    expect(rich).toContain('padding-left:10px')
+    expect(rich).toContain('padding-right:11px')
+    expect(rich).toContain('padding-top:5px')
+    expect(rich).toContain('padding-bottom:6px')
+  })
+
+  it('converts legacy unmarked shared shape text insets from pt to px', () => {
+    const rich = shapeSvgString({
+      shape: 'rect',
+      width: 160,
+      height: 80,
+      textHtml: '<span>Legacy inset</span>',
+      _pptxImportMeta: {
+        textInsets: { left: 7.2, right: 7.2, top: 3.6, bottom: 3.6 },
+      },
+    })
+
+    expect(rich).toContain('padding-left:9.6px')
+    expect(rich).toContain('padding-top:4.8px')
   })
 })

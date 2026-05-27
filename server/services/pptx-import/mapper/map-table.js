@@ -1,6 +1,6 @@
 const { readNumber } = require('../geometry')
 const { baseElement, placeholder } = require('./utils-base')
-const { plainText } = require('./utils-text')
+const { normalizeFontFamily, normalizeFontSize, plainText } = require('./utils-text')
 
 const DEFAULT_TABLE_BORDER = Object.freeze({ color: '#d1d5db', width: 1, style: 'solid' })
 const TABLE_BORDER_SIDES = ['top', 'right', 'bottom', 'left']
@@ -43,9 +43,17 @@ function pushEmptyCell(row, tableBorders) {
   row.textColors.push(null)
   row.bgColors.push(null)
   row.isBold.push(false)
+  row.fontSizes.push(null)
+  row.fontFamilies.push(null)
   row.aligns.push('left')
   row.vAligns.push('middle')
   row.borders.push(normalizeBorderSet(null, tableBorders))
+}
+
+function scaleDimensionList(values, axisScale) {
+  return Array.isArray(values)
+    ? values.map((value) => Math.round(readNumber(value, 0, 0) * axisScale))
+    : []
 }
 
 function mapTable(element, context) {
@@ -57,7 +65,16 @@ function mapTable(element, context) {
   const cols = Math.max(...element.data.map((row) => (row || []).length))
   const data = []
   const mergedCells = []
-  const cellStyles = { textColors: [], bgColors: [], isBold: [], aligns: [], vAligns: [], borders: [] }
+  const cellStyles = {
+    textColors: [],
+    bgColors: [],
+    isBold: [],
+    fontSizes: [],
+    fontFamilies: [],
+    aligns: [],
+    vAligns: [],
+    borders: [],
+  }
   const tableBorders = element.borders || {
     color: element.borderColor,
     width: element.borderWidth,
@@ -67,7 +84,16 @@ function mapTable(element, context) {
   for (let ri = 0; ri < rows; ri++) {
     const row = element.data[ri] || []
     const dataRow = []
-    const cellStylesRow = { textColors: [], bgColors: [], isBold: [], aligns: [], vAligns: [], borders: [] }
+    const cellStylesRow = {
+      textColors: [],
+      bgColors: [],
+      isBold: [],
+      fontSizes: [],
+      fontFamilies: [],
+      aligns: [],
+      vAligns: [],
+      borders: [],
+    }
 
     for (let ci = 0; ci < cols; ci++) {
       const cell = row[ci]
@@ -81,6 +107,11 @@ function mapTable(element, context) {
       cellStylesRow.textColors.push(cell.fontColor || null)
       cellStylesRow.bgColors.push(cell.fillColor || null)
       cellStylesRow.isBold.push(Boolean(cell.fontBold))
+      const fontSize = normalizeFontSize(cell.fontSize || cell.fontSz)
+      cellStylesRow.fontSizes.push(fontSize ? Math.round(fontSize * (96 / 72) * 10) / 10 : null)
+      cellStylesRow.fontFamilies.push(
+        normalizeFontFamily(cell.fontFamily || cell.fontFace || cell.font || cell.fontName) || null
+      )
       const align = cell.align || cell.paragraphAlign || 'left'
       cellStylesRow.aligns.push(['left', 'center', 'right', 'justify'].includes(align) ? align : 'left')
       const vAlign = cell.vAlign || 'middle'
@@ -96,6 +127,8 @@ function mapTable(element, context) {
     cellStyles.textColors.push(cellStylesRow.textColors)
     cellStyles.bgColors.push(cellStylesRow.bgColors)
     cellStyles.isBold.push(cellStylesRow.isBold)
+    cellStyles.fontSizes.push(cellStylesRow.fontSizes)
+    cellStyles.fontFamilies.push(cellStylesRow.fontFamilies)
     cellStyles.aligns.push(cellStylesRow.aligns)
     cellStyles.vAligns.push(cellStylesRow.vAligns)
     cellStyles.borders.push(cellStylesRow.borders)
@@ -118,8 +151,8 @@ function mapTable(element, context) {
     headerIsBold: true,
     cellStyles,
     mergedCells,
-    colWidths: Array.isArray(element.colWidths) ? element.colWidths : [],
-    rowHeights: Array.isArray(element.rowHeights) ? element.rowHeights : [],
+    colWidths: scaleDimensionList(element.colWidths, context.scale.x),
+    rowHeights: scaleDimensionList(element.rowHeights, context.scale.y),
   }
   if (element.fill && element.fill.type === 'color') table.headerBgColor = element.fill.value || table.headerBgColor
   return [table]

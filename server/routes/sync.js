@@ -9,6 +9,7 @@ const {
   SYNC_DIR,
   UPLOADS_DIR,
 } = require('../services/storage')
+const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
 
 const router = express.Router()
 
@@ -118,11 +119,12 @@ router.post('/sync', async (req, res) => {
 
     const presentations = await readPresentations()
     for (const pres of presentations) {
-      const folderName = (pres.title || 'untitled').replace(/[^a-z0-9_-]/gi, '_').toLowerCase()
+      const normalized = normalizePptxImportedPresentationForRead(pres)
+      const folderName = (normalized.title || 'untitled').replace(/[^a-z0-9_-]/gi, '_').toLowerCase()
       const folder = path.join(SYNC_DIR, folderName)
       fs.ensureDirSync(folder)
-      fs.writeFileSync(path.join(folder, 'presentation.html'), generateRevealHTML(pres))
-      fs.writeFileSync(path.join(folder, 'presentation.json'), JSON.stringify(pres, null, 2))
+      fs.writeFileSync(path.join(folder, 'presentation.html'), generateRevealHTML(normalized))
+      fs.writeFileSync(path.join(folder, 'presentation.json'), JSON.stringify(normalized, null, 2))
     }
 
     const uploadsSync = path.join(SYNC_DIR, '_uploads')
@@ -152,14 +154,15 @@ router.post('/sync-single', async (req, res) => {
     const presentations = await readPresentations()
     const pres = presentations.find((p) => p.id === presentationId)
     if (!pres) return res.status(404).json({ error: 'Presentation not found' })
+    const normalized = normalizePptxImportedPresentationForRead(pres)
 
     fs.ensureDirSync(SYNC_DIR)
-    const folderName = (pres.title || 'untitled').replace(/[^a-z0-9_-]/gi, '_').toLowerCase()
+    const folderName = (normalized.title || 'untitled').replace(/[^a-z0-9_-]/gi, '_').toLowerCase()
     const folder = path.join(SYNC_DIR, folderName)
     fs.ensureDirSync(folder)
 
-    fs.writeFileSync(path.join(folder, 'presentation.html'), generateRevealHTML(pres))
-    fs.writeFileSync(path.join(folder, 'presentation.json'), JSON.stringify(pres, null, 2))
+    fs.writeFileSync(path.join(folder, 'presentation.html'), generateRevealHTML(normalized))
+    fs.writeFileSync(path.join(folder, 'presentation.json'), JSON.stringify(normalized, null, 2))
 
     const remoteDest = `${safeRemote}:${dest}/${folderName}`
     await runRclone(['sync', folder, remoteDest])

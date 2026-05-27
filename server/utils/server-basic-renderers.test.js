@@ -80,10 +80,10 @@ describe('server-basic-renderers', () => {
     expect(Array.isArray(runs)).toBe(true)
     expect(runs.some((run) => run.text === 'Hello' && run.options.bold)).toBe(true)
     expect(runs[0].options.align).toBe('right')
-    expect(options).toMatchObject({ align: 'right', color: '123456', fontFace: 'Arial', fontSize: 20 })
+    expect(options).toMatchObject({ align: 'right', color: '123456', fontFace: 'Arial', fontSize: 15 })
   })
 
-  it('preserves merged table cell metadata', () => {
+  it('preserves merged table cell metadata and per-cell sizing styles', () => {
     const slide = { addTable: vi.fn() }
     addTableElement(
       slide,
@@ -93,7 +93,12 @@ describe('server-basic-renderers', () => {
           ['C', 'D'],
         ],
         mergedCells: [{ row: 0, col: 0, rowSpan: 1, colSpan: 2 }],
-        cellStyles: {},
+        colWidths: [120, 240],
+        rowHeights: [40, 80],
+        cellStyles: {
+          fontSizes: [[24, null], [null, null]],
+          fontFamilies: [['Arial', null], [null, null]],
+        },
       },
       { x: 0, y: 0, w: 4, h: 2 }
     )
@@ -101,5 +106,28 @@ describe('server-basic-renderers', () => {
     expect(slide.addTable).toHaveBeenCalledTimes(1)
     const rows = slide.addTable.mock.calls[0][0]
     expect(rows[0][0].options.colspan).toBe(2)
+    expect(rows[0][0].options.fontSize).toBe(18)
+    expect(rows[0][0].options.fontFace).toBe('Arial')
+    expect(slide.addTable.mock.calls[0][1].colW).toEqual([1.33, 2.67])
+    expect(slide.addTable.mock.calls[0][1].rowH).toEqual([0.67, 1.33])
+  })
+
+  it('drops unsafe table font family during server pptx export', () => {
+    const slide = { addTable: vi.fn() }
+    addTableElement(
+      slide,
+      {
+        data: [['A']],
+        cellStyles: {
+          fontSizes: [[24]],
+          fontFamilies: [['Arial; background:url(javascript:bad)']],
+        },
+      },
+      { x: 0, y: 0, w: 4, h: 2 }
+    )
+
+    const cell = slide.addTable.mock.calls[0][0][0][0]
+    expect(cell.options.fontSize).toBe(18)
+    expect(cell.options.fontFace).toBeUndefined()
   })
 })

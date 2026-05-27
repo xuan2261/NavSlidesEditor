@@ -177,7 +177,8 @@ describe('pptx geometry drift coverage', () => {
       expect(el.y).toBe(270)
       expect(el.width).toBe(96)
       expect(el.height).toBe(54)
-      expect(result.presentation.resolution).toEqual({ width: 1920, height: 1080 })
+      expect(result.presentation.resolution).toEqual({ width: 960, height: 540 })
+      expect(result.presentation._pptxMeta.originalSize).toEqual({ width: 1920, height: 1080 })
     })
   })
 

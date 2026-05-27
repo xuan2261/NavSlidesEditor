@@ -84,6 +84,47 @@ describe('CanvasElement video playback', () => {
   })
 })
 
+describe('CanvasElement PPTX text insets', () => {
+  const textElement = {
+    id: 'text-1',
+    type: 'text',
+    x: 0,
+    y: 0,
+    width: 200,
+    height: 80,
+    content: '<p>Hi</p>',
+  }
+
+  it('applies imported px text insets as inline padding', () => {
+    renderCanvasElement({
+      ...textElement,
+      _pptxImportMeta: {
+        textInsets: { left: 10, right: 11, top: 5, bottom: 6 },
+        textInsetsUnit: 'px',
+      },
+    })
+
+    const content = screen.getByTestId('slide-element-text-1').querySelector('.slide-text-content')
+    expect(content.style.paddingLeft).toBe('10px')
+    expect(content.style.paddingRight).toBe('11px')
+    expect(content.style.paddingTop).toBe('5px')
+    expect(content.style.paddingBottom).toBe('6px')
+  })
+
+  it('converts legacy unmarked text insets from pt to px before rendering', () => {
+    renderCanvasElement({
+      ...textElement,
+      _pptxImportMeta: {
+        textInsets: { left: 7.2, right: 7.2, top: 3.6, bottom: 3.6 },
+      },
+    })
+
+    const content = screen.getByTestId('slide-element-text-1').querySelector('.slide-text-content')
+    expect(content.style.paddingLeft).toBe('9.6px')
+    expect(content.style.paddingTop).toBe('4.8px')
+  })
+})
+
 describe('CanvasElement html embed sandbox', () => {
   const htmlElement = {
     id: 'html-1',

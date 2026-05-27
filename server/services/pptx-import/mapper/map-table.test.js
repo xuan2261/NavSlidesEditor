@@ -84,6 +84,29 @@ describe('pptx mapTable', () => {
     expect(result.cellStyles.borders[0][0].left).toMatchObject({ color: '#ff0000', width: 2 })
   })
 
+  it('captures per-cell font size/family and scales row/column dimensions', () => {
+    const result = mapTable({
+      type: 'table',
+      width: 300,
+      height: 80,
+      colWidths: [100, 200],
+      rowHeights: [30, 50],
+      data: [
+        [{ text: 'Header', fontSize: 18, fontFace: 'Arial' }, { text: 'B' }],
+        [{ text: 'C', fontSize: 12, fontFamily: 'Aptos' }, { text: 'D' }],
+      ],
+    }, { ...context(), scale: { x: 4 / 3, y: 2 } })[0]
+
+    expect(result.cellStyles.fontSizes[0][0]).toBe(24)
+    expect(result.cellStyles.fontFamilies[0][0]).toBe('Arial')
+    expect(result.cellStyles.fontSizes[1][0]).toBe(16)
+    expect(result.cellStyles.fontFamilies[1][0]).toBe('Aptos')
+    expect(result.cellStyles.fontSizes[0][1]).toBeNull()
+    expect(result.cellStyles.fontFamilies[0][1]).toBeNull()
+    expect(result.colWidths).toEqual([133, 267])
+    expect(result.rowHeights).toEqual([60, 100])
+  })
+
   it('returns placeholder for unusable table structure', () => {
     const ctx = context()
     const result = mapTable({ type: 'table' }, ctx)

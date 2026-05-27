@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   getPptxLayout,
+  getPptxExportLayout,
+  getPresentationResolution,
   htmlToPptTextRuns,
   mapArrowType,
   normalizeCssColor,
@@ -14,6 +16,17 @@ describe('export-pptx-core', () => {
     expect(getPptxLayout({ width: 960, height: 720 })).toEqual({ width: 10, height: 7.5 })
     expect(getPptxLayout({ width: 540, height: 960 })).toEqual({ width: 5.625, height: 10 })
     expect(getPptxLayout({ width: 1920, height: 1080 })).toEqual({ width: 10, height: 5.625 })
+  })
+
+  it('keeps element scaling resolution separate from original PPTX export layout', () => {
+    const presentation = {
+      resolution: { width: 960, height: 540 },
+      _pptxMeta: { originalSize: { width: 720, height: 540 } },
+    }
+
+    expect(getPresentationResolution(presentation)).toEqual({ width: 960, height: 540 })
+    expect(getPptxExportLayout(presentation)).toEqual({ width: 720, height: 540 })
+    expect(getPptxLayout(getPptxExportLayout(presentation))).toEqual({ width: 10, height: 7.5 })
   })
 
   it('normalizes hex and rgba colors to PPT format', () => {
@@ -113,7 +126,7 @@ describe('export-pptx-core', () => {
     expect(Array.isArray(textCall?.[1])).toBe(true)
     expect(textCall[1].some((run) => run.text === 'Hello' && run.options.bold)).toBe(true)
     expect(textCall[1][0].options.align).toBe('right')
-    expect(textCall[2]).toMatchObject({ align: 'right', color: '123456', fontFace: 'Arial', fontSize: 20 })
+    expect(textCall[2]).toMatchObject({ align: 'right', color: '123456', fontFace: 'Arial', fontSize: 15 })
   })
 
   it('exports merged table cells and per-cell styles', () => {
@@ -134,9 +147,13 @@ describe('export-pptx-core', () => {
           textColors: [['#112233', null], [null, null]],
           bgColors: [['#ddeeff', null], [null, null]],
           isBold: [[true, false], [false, false]],
+          fontSizes: [[24, null], [null, null]],
+          fontFamilies: [['Arial', null], [null, null]],
           aligns: [['center', 'left'], ['left', 'left']],
           vAligns: [['bottom', 'middle'], ['middle', 'middle']],
         },
+        colWidths: [120, 240],
+        rowHeights: [40, 80],
         borderColor: '#010203',
         borderWidth: 3,
         fontSize: 14,
@@ -151,10 +168,32 @@ describe('export-pptx-core', () => {
       rowspan: 2,
       color: '112233',
       bold: true,
+      fontFace: 'Arial',
+      fontSize: 18,
       align: 'center',
       valign: 'bottom',
     })
     expect(cell.options.fill.color).toBe('DDEEFF')
     expect(cell.options.border).toMatchObject({ color: '010203', pt: 3 })
+    expect(calls[0].options.colW).toEqual([1.33, 2.67])
+    expect(calls[0].options.rowH).toEqual([0.67, 1.33])
+  })
+
+  it('drops unsafe table font family during pptx export', () => {
+    const calls = []
+    addTableElement(
+      { addTable: (rows, options) => calls.push({ rows, options }) },
+      {
+        data: [['A']],
+        cellStyles: {
+          fontFamilies: [['Arial; background:url(javascript:bad)']],
+          fontSizes: [[24]],
+        },
+      },
+      { x: 0, y: 0, w: 4, h: 2 }
+    )
+
+    expect(calls[0].rows[0][0].options.fontSize).toBe(18)
+    expect(calls[0].rows[0][0].options.fontFace).toBeUndefined()
   })
 })

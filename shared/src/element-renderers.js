@@ -63,6 +63,20 @@ function safeBorderStyle(value) {
   return ['solid', 'dashed', 'dotted', 'double', 'none'].includes(style) ? style : 'solid'
 }
 
+function safeCssFontSize(value) {
+  const size = Number(value)
+  return Number.isFinite(size) && size > 0 ? Math.round(size * 10) / 10 : null
+}
+
+function safeCssFontFamily(value) {
+  const family = typeof value === 'string' ? value.trim() : ''
+  if (!family) return null
+  if ([...family].some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)) return null
+  if (/[;:()\\/]/.test(family)) return null
+  if (/\/\*|\*\/|url|import|expression|javascript|behavior|binding/i.test(family)) return null
+  return /^[a-zA-Z0-9 _.-]+$/.test(family) ? family : null
+}
+
 function escapeSrcdoc(html) {
   return html
     .replace(/&/g, '&amp;')
@@ -339,6 +353,14 @@ function renderTable(el, style, wrap, vis) {
   const fontSize = el.fontSize || 14
   const cellPadding = el.cellPadding || 8
   const cellStyles = el.cellStyles || {}
+  const colgroup = Array.isArray(el.colWidths) && el.colWidths.length
+    ? `<colgroup>${el.colWidths.map((width) => {
+      const safeWidth = Number(width)
+      return Number.isFinite(safeWidth) && safeWidth > 0
+        ? `<col style="width:${Math.round(safeWidth)}px" />`
+        : '<col />'
+    }).join('')}</colgroup>`
+    : ''
   const borderCss = (ri, ci) => {
     const borders = cellStyles.borders?.[ri]?.[ci]
     if (!borders) return `border:${borderWidth}px solid ${borderColor};`
@@ -356,14 +378,29 @@ function renderTable(el, style, wrap, vis) {
     .map((row, ri) => {
       const cells = (row || [])
         .map((cell, ci) => {
-          const bg = el.headerRow && ri === 0 ? headerBg : cellBg
-          return `<td style="padding:${cellPadding}px;${borderCss(ri, ci)}background:${bg};color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));">${escapeHtml(cell || '')}</td>`
+          const isHeader = el.headerRow && ri === 0
+          const bg = safeCssColor(cellStyles.bgColors?.[ri]?.[ci], isHeader ? headerBg : cellBg)
+          const color = safeCssColor(cellStyles.textColors?.[ri]?.[ci], textColor)
+          const bold = cellStyles.isBold?.[ri]?.[ci]
+          const align = ['left', 'center', 'right', 'justify'].includes(cellStyles.aligns?.[ri]?.[ci])
+            ? cellStyles.aligns[ri][ci]
+            : 'left'
+          const verticalAlign = ['top', 'middle', 'bottom'].includes(cellStyles.vAligns?.[ri]?.[ci])
+            ? cellStyles.vAligns[ri][ci]
+            : 'top'
+          const cellFontSize = safeCssFontSize(cellStyles.fontSizes?.[ri]?.[ci]) || fontSize
+          const cellFontFamily = safeCssFontFamily(cellStyles.fontFamilies?.[ri]?.[ci])
+          const familyCss = cellFontFamily ? `font-family:${cellFontFamily};` : ''
+          const weightCss = bold != null ? `font-weight:${bold ? 600 : 400};` : isHeader ? 'font-weight:600;' : ''
+          return `<td style="padding:${cellPadding}px;${borderCss(ri, ci)}background:${bg};color:${color};font-size:calc(${cellFontSize}px * var(--font-zoom, 1));${familyCss}${weightCss}text-align:${align};vertical-align:${verticalAlign};">${escapeHtml(cell || '')}</td>`
         })
         .join('')
-      return `<tr>${cells}</tr>`
+      const rowHeight = Array.isArray(el.rowHeights) ? Number(el.rowHeights[ri]) : 0
+      const rowStyle = Number.isFinite(rowHeight) && rowHeight > 0 ? ` style="height:${Math.round(rowHeight)}px"` : ''
+      return `<tr${rowStyle}>${cells}</tr>`
     })
     .join('')
-  return `<div${wrap} style="${style}${vis}overflow:auto;"><table style="width:100%;height:100%;border-collapse:collapse;">${rows}</table></div>`
+  return `<div${wrap} style="${style}${vis}overflow:auto;"><table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;">${colgroup}${rows}</table></div>`
 }
 
 function renderDrawing(el, style, wrap, vis) {

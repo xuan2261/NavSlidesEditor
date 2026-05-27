@@ -24,4 +24,10 @@ describe('rclone routes contract', () => {
     expect(src).not.toMatch(/router\.(get|post|put|delete|patch)\s*\(\s*['"]\/push['"]/)
     expect(src).not.toMatch(/router\.(get|post|put|delete|patch)\s*\(\s*['"]\/pull['"]/)
   })
+
+  it('normalizes pptx-imported presentations before sync serialization', () => {
+    expect(src).toContain('normalizePptxImportedPresentationForRead')
+    expect(src).toMatch(/generateRevealHTML\s*\(\s*normalized\s*\)/)
+    expect(src).toMatch(/JSON\.stringify\s*\(\s*normalized\s*,\s*null,\s*2\s*\)/)
+  })
 })

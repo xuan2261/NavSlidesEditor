@@ -331,6 +331,39 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('border-left:5px double #111111')
   })
 
+  it('renders table cell typography and row/column sizing', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'table',
+        data: [['A', 'B']],
+        colWidths: [80, 120],
+        rowHeights: [40],
+        cellStyles: {
+          textColors: [['#112233', null]],
+          bgColors: [['#ddeeff', null]],
+          isBold: [[true, false]],
+          fontSizes: [[24, null]],
+          fontFamilies: [['Arial', null]],
+          aligns: [['center', 'left']],
+          vAligns: [['bottom', 'top']],
+        },
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('<col style="width:80px"')
+    expect(html).toContain('<tr style="height:40px"')
+    expect(html).toContain('font-size:calc(24px * var(--font-zoom, 1))')
+    expect(html).toContain('font-family:Arial')
+    expect(html).toContain('background:#ddeeff')
+    expect(html).toContain('color:#112233')
+    expect(html).toContain('font-weight:600')
+    expect(html).toContain('text-align:center')
+    expect(html).toContain('vertical-align:bottom')
+  })
+
   it('sanitizes unsafe table border CSS in shared rendering', () => {
     const html = renderElement(
       {

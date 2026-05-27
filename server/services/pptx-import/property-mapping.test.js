@@ -55,15 +55,16 @@ describe('pptx property mapping hardening', () => {
       const text = result.presentation.slides[0].elements[0]
       expect(text.type).toBe('text')
       expect(text.fontFamily).toBe('Arial')
-      expect(text.fontSize).toBe(24)
+      expect(text.fontSize).toBe(32)
       expect(text.textColor).toBe('#123456')
       expect(text.textAlign).toBe('center')
       expect(text._pptxImportMeta.textInsets).toEqual({
-        left: 12,
-        right: 8,
-        top: 6,
-        bottom: 4,
+        left: 16,
+        right: 10.7,
+        top: 8,
+        bottom: 5.3,
       })
+      expect(text._pptxImportMeta.textInsetsUnit).toBe('px')
     })
   })
 
@@ -103,11 +104,12 @@ describe('pptx property mapping hardening', () => {
       expect(shape.type).toBe('shape')
       expect(shape.fill).toBe('#aabbcc')
       expect(shape.stroke).toBe('#112233')
-      expect(shape.strokeWidth).toBe(3)
+      expect(shape.strokeWidth).toBe(4)
       expect(shape.opacity).toBe(0.75)
       expect(shape.rotation).toBe(20)
       expect(shape.textAlign).toBe('right')
-      expect(shape._pptxImportMeta.textInsets.left).toBe(5)
+      expect(shape._pptxImportMeta.textInsets.left).toBe(6.7)
+      expect(shape._pptxImportMeta.textInsetsUnit).toBe('px')
     })
   })
 
@@ -152,7 +154,7 @@ describe('pptx property mapping hardening', () => {
         bottom: 0.05,
       })
       expect(image.borderColor).toBe('#f97316')
-      expect(image.borderWidth).toBe(2)
+      expect(image.borderWidth).toBe(2.7)
       expect(image.flipH).toBe(true)
     })
   })

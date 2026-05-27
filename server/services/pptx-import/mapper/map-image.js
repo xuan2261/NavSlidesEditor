@@ -1,6 +1,6 @@
 const { mapBox, readNumber } = require('../geometry')
 const { persistImageForElement } = require('../media')
-const { baseElement, placeholder } = require('./utils-base')
+const { baseElement, placeholder, scaleLength } = require('./utils-base')
 const { plainText } = require('./utils-text')
 const { pushMediaWarning } = require('./media-warning')
 
@@ -33,7 +33,9 @@ async function mapImage(element, context) {
   if (element.isFlipH) img.flipH = true
   if (element.isFlipV) img.flipV = true
   if (element.borderColor) img.borderColor = element.borderColor
-  if (readNumber(element.borderWidth, 0) > 0) img.borderWidth = readNumber(element.borderWidth, 0)
+  if (readNumber(element.borderWidth, 0) > 0) {
+    img.borderWidth = scaleLength(element.borderWidth, context.scale.x)
+  }
   if (element.filters) {
     const f = element.filters
     if (typeof f.brightness === 'number' && f.brightness !== 100000) img.filterBrightness = Math.round(f.brightness / 1000)

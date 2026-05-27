@@ -21,6 +21,7 @@ has at least 10 decks.
 | `background-image-notes-footer.pptx` | Hand-built synthetic | Full-bleed image-like background, footer text, speaker notes |
 | `math-rich-text.pptx` | Hand-built synthetic | Equation-like text, rich text runs, math symbols |
 | `table-shapes-media.pptx` | Hand-built synthetic | Table borders, image payload, shape palette |
+| `non-default-4x3-resolution.pptx` | Hand-built synthetic | 4:3 slide size, canvas-resolution normalization, export layout split |
 
 Note: the current `pptxtojson` parser exposes the generated chart objects in
 `chart-bars-lines.pptx` and `chart-pie-scatter.pptx` as shape-backed content in
@@ -36,6 +37,9 @@ The Phase 9 acceptance gate expects:
 - average round-trip stability >= 99%
 - no deck below 95% semantic fidelity
 - no element-class count drop above 15%
+- imported presentations satisfy the reusable PPTX acceptance invariants:
+  canonical canvas resolution, finite numeric length fields, no raw CSS
+  `pt`/`in`/`cm`/`mm` units in rich HTML, and no dangerous CSS/url tokens
 
 Keep each new fixture under 5MB unless a plan explicitly needs a large-file
 performance fixture.

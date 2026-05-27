@@ -12,11 +12,17 @@ function normalizeFontSize(value) {
 }
 
 function normalizeFontFamily(value) {
-  const family = String(value || '')
+  const raw = String(value || '').trim()
+  if (!raw) return undefined
+  if ([...raw].some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)) return undefined
+  if (/[;:()\\/]/.test(raw)) return undefined
+  if (/\/\*|\*\/|url|import|expression|javascript|behavior|binding/i.test(raw)) return undefined
+  const family = raw
     .split(',')[0]
     .replace(/["']/g, '')
     .trim()
-  return family || undefined
+  if (!family || !/^[a-zA-Z0-9 _.-]+$/.test(family)) return undefined
+  return family
 }
 
 function buildBaseTextStyle(element = {}) {
@@ -44,41 +50,97 @@ function applyTextStyle(metadata, style) {
   if (!metadata.textColor && style.color) metadata.textColor = style.color
 }
 
+function visibleTextLength(node) {
+  if (!node) return 0
+  if (node.type === 'text') return String(node.text || '').replace(/\s+/g, ' ').trim().length
+  return (node.children || []).reduce((sum, child) => sum + visibleTextLength(child), 0)
+}
+
+function hasDominantTextStyleChange(nextStyle, inheritedStyle) {
+  return ['fontSize', 'fontFace', 'color'].some((key) => nextStyle?.[key] && nextStyle[key] !== inheritedStyle?.[key])
+}
+
+function dominantTextStyleTuple(style = {}) {
+  return {
+    fontSize: normalizeFontSize(style.fontSize),
+    fontFace: normalizeFontFamily(style.fontFace),
+    color: style.color || undefined,
+  }
+}
+
+function hasSameDominantTextStyle(actualStyle, expectedStyle) {
+  const actual = dominantTextStyleTuple(actualStyle)
+  const expected = dominantTextStyleTuple(expectedStyle)
+  return actual.fontSize === expected.fontSize
+    && actual.fontFace === expected.fontFace
+    && actual.color === expected.color
+}
+
+function visibleTextUsesStyle(node, inheritedStyle, expectedStyle) {
+  if (!node) return true
+  if (node.type === 'text') {
+    return !visibleTextLength(node) || hasSameDominantTextStyle(inheritedStyle, expectedStyle)
+  }
+
+  const nextStyle = node.type === 'element' ? mergeInlineStyle(inheritedStyle, node) : inheritedStyle
+  return (node.children || []).every((child) => visibleTextUsesStyle(child, nextStyle, expectedStyle))
+}
+
 function extractTextMetadata(html, element = {}) {
   const baseStyle = buildBaseTextStyle(element)
   const fallback = {}
   applyTextStyle(fallback, baseStyle)
 
-  const metadata = {}
+  const runs = []
   const walk = (node, inheritedStyle) => {
     if (!node) return
     if (node.type === 'text') {
-      if (String(node.text || '').replace(/\s+/g, ' ').trim()) {
-        applyTextStyle(metadata, inheritedStyle)
-      }
+      const text = String(node.text || '').replace(/\s+/g, ' ').trim()
+      if (text) runs.push({ text, style: inheritedStyle })
       return
     }
 
     const nextStyle = node.type === 'element' ? mergeInlineStyle(inheritedStyle, node) : inheritedStyle
+    if (node.type === 'element' && hasDominantTextStyleChange(nextStyle, inheritedStyle)) {
+      const length = visibleTextLength(node)
+      if (length && visibleTextUsesStyle(node, inheritedStyle, nextStyle)) {
+        runs.push({ text: 'x'.repeat(length), style: nextStyle })
+      }
+    }
     for (const child of node.children || []) walk(child, nextStyle)
   }
 
   walk(parseHtmlTree(html), baseStyle)
+  if (!runs.length) return fallback
+
+  const dominant = runs.reduce((winner, candidate) =>
+    candidate.text.length > winner.text.length ? candidate : winner, runs[0])
+  const metadata = {}
+  applyTextStyle(metadata, dominant.style)
   return { ...fallback, ...metadata }
 }
 
-function extractTextInsets(element = {}) {
-  const left = readNumber(element.insetLeft ?? element.marginLeft ?? element.lIns ?? element.insetL, null)
-  const right = readNumber(element.insetRight ?? element.marginRight ?? element.rIns ?? element.insetR, null)
-  const top = readNumber(element.insetTop ?? element.marginTop ?? element.tIns ?? element.insetT, null)
-  const bottom = readNumber(element.insetBottom ?? element.marginBottom ?? element.bIns ?? element.insetB, null)
+function extractTextInsetsWithScale(element = {}, scale = { x: 1, y: 1 }, box = {}) {
+  const toPx = (value, axisScale, maxDimension) => {
+    const raw = readNumber(value, null)
+    if (raw == null) return null
+    const axis = readNumber(axisScale, 1, 0) || 1
+    const maxFromBox = readNumber(maxDimension, null, 0)
+    const max = Math.min(maxFromBox != null ? maxFromBox / 2 : 96, 96)
+    const px = Math.round(Math.max(0, raw) * (96 / 72) * axis * 10) / 10
+    return Math.min(px, max)
+  }
+  const left = toPx(element.insetLeft ?? element.marginLeft ?? element.lIns ?? element.insetL, scale.x, box.width)
+  const right = toPx(element.insetRight ?? element.marginRight ?? element.rIns ?? element.insetR, scale.x, box.width)
+  const top = toPx(element.insetTop ?? element.marginTop ?? element.tIns ?? element.insetT, scale.y, box.height)
+  const bottom = toPx(element.insetBottom ?? element.marginBottom ?? element.bIns ?? element.insetB, scale.y, box.height)
   if (![left, right, top, bottom].some((value) => value != null)) return null
   return { left, right, top, bottom }
 }
 
 module.exports = {
   buildBaseTextStyle,
-  extractTextInsets,
+  extractTextInsets: extractTextInsetsWithScale,
   extractTextMetadata,
   normalizeFontFamily,
   normalizeFontSize,

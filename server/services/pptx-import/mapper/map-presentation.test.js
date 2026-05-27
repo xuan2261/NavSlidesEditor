@@ -43,6 +43,66 @@ describe('pptx presentation mapper', () => {
     ])
   })
 
+  it('maps non-default slide sizes into the canonical canvas resolution', async () => {
+    const result = await mapPptxOutput({
+      output: {
+        size: { width: 720, height: 540 },
+        slides: [{
+          elements: [{
+            type: 'text',
+            left: 360,
+            top: 270,
+            width: 100,
+            height: 50,
+            content: '<p>Mid</p>',
+          }],
+        }],
+      },
+      zip: { files: {} },
+      originalName: '4x3.pptx',
+      uploadsDir: '/tmp',
+    })
+
+    expect(result.presentation.resolution).toEqual({ width: 960, height: 540 })
+    expect(result.presentation._pptxMeta.originalSize).toEqual({ width: 720, height: 540 })
+    expect(result.presentation.slides[0].elements[0]).toMatchObject({
+      x: 480,
+      y: 270,
+      width: 133,
+      height: 50,
+    })
+  })
+
+  it('stores text import insets as canvas px metadata', async () => {
+    const result = await mapPptxOutput({
+      output: {
+        size: { width: 960, height: 540 },
+        slides: [{
+          elements: [{
+            type: 'text',
+            left: 0,
+            top: 0,
+            width: 200,
+            height: 50,
+            insetLeft: 7.2,
+            insetRight: 7.2,
+            insetTop: 3.6,
+            insetBottom: 3.6,
+            content: '<p>X</p>',
+          }],
+        }],
+      },
+      zip: { files: {} },
+      originalName: 'Insets.pptx',
+      uploadsDir: '/tmp',
+    })
+
+    expect(result.presentation.slides[0].elements[0]._pptxImportMeta).toMatchObject({
+      textInsets: { left: 9.6, right: 9.6, top: 4.8, bottom: 4.8 },
+      textInsetsUnit: 'px',
+    })
+  })
+
   it('stops mapping when the import signal is aborted', async () => {
     const controller = new AbortController()
     controller.abort()

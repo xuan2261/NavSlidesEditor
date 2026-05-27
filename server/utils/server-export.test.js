@@ -3,8 +3,10 @@ import os from 'node:os'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import exportModule from './server-export.js'
+import importerModule from '../services/pptx-import/importer.js'
 
 const { exportToFile } = exportModule
+const { importPptxFile } = importerModule
 
 describe('server-export integration', () => {
   it('exports a minimal presentation to a valid pptx file', async () => {
@@ -60,6 +62,51 @@ describe('server-export integration', () => {
     }
 
     await expect(exportToFile(presentation, outFile, { strictRaster: true })).resolves.toBeTruthy()
+    await fs.rm(tempDir, { recursive: true, force: true })
+  }, 60000)
+
+  it('normalizes and round-trips legacy 4x3 decks using original-size export layout', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'navslides-export-4x3-'))
+    const outFile = path.join(tempDir, 'roundtrip-4x3.pptx')
+    const uploadsDir = path.join(tempDir, 'uploads')
+
+    const presentation = {
+      title: '4x3 Roundtrip',
+      resolution: { width: 720, height: 540 },
+      _pptxMeta: { originalSize: { width: 720, height: 540 } },
+      slides: [
+        {
+          id: 's1',
+          background: { type: 'color', color: '#ffffff' },
+          elements: [
+            {
+              id: 'center-text',
+              type: 'text',
+              x: 480,
+              y: 270,
+              width: 160,
+              height: 60,
+              content: '<p>Center Marker</p>',
+            },
+          ],
+        },
+      ],
+    }
+
+    await exportToFile(presentation, outFile, { strictRaster: true })
+    const imported = await importPptxFile(outFile, {
+      originalName: 'roundtrip-4x3.pptx',
+      uploadsDir,
+    })
+
+    expect(imported.presentation.resolution).toEqual({ width: 960, height: 540 })
+    expect(imported.presentation._pptxMeta?.originalSize).toEqual({ width: 720, height: 540 })
+
+    const marker = imported.presentation.slides[0].elements[0]
+    expect(marker).toBeTruthy()
+    expect(marker.x / imported.presentation.resolution.width).toBeCloseTo(0.5, 1)
+    expect(marker.y / imported.presentation.resolution.height).toBeCloseTo(0.5, 1)
+
     await fs.rm(tempDir, { recursive: true, force: true })
   }, 60000)
 })

@@ -5,6 +5,7 @@ const {
   getSlideNotes,
   normalizePresentationNotes,
 } = require('revealjs-shared')
+const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
 const { applySlideBackground } = require('./server-background')
 const { addElementToPptxSlide } = require('./server-renderers')
 const { clearRasterCache, getServerRasters } = require('./server-raster')
@@ -13,17 +14,27 @@ function getSafeTitle(title) {
   return String(title || 'Presentation').trim() || 'Presentation'
 }
 
+function getPptxExportLayout(presentation) {
+  const originalSize = presentation && presentation._pptxMeta && presentation._pptxMeta.originalSize
+  const width = Number(originalSize && originalSize.width)
+  const height = Number(originalSize && originalSize.height)
+  if (width > 0 && height > 0) return { width, height }
+  return getPresentationResolution(presentation)
+}
+
 async function exportToFile(sourcePresentation, filePath, options = {}) {
   const baseUrl = options.baseUrl || process.env.NAVSLIDES_API_URL || ''
   const strictRaster = options.strictRaster !== false
   const allowFallback = Boolean(options.allowFallback)
 
-  const presentation = normalizePresentationNotes(sourcePresentation || {})
+  const presentation = normalizePresentationNotes(
+    normalizePptxImportedPresentationForRead(sourcePresentation || {})
+  )
   const warnings = []
 
   const pptx = new pptxgen()
   const resolution = getPresentationResolution(presentation)
-  const layout = getPptxLayout(resolution)
+  const layout = getPptxLayout(getPptxExportLayout(presentation))
 
   pptx.defineLayout({ name: 'NAVSLIDES', width: layout.width, height: layout.height })
   pptx.layout = 'NAVSLIDES'

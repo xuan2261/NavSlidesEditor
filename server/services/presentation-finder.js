@@ -1,4 +1,5 @@
 const { readPresentations, readTemplates } = require('./storage')
+const { normalizePptxImportedPresentationForRead } = require('./presentation-normalization')
 const path = require('path')
 const fs = require('fs-extra')
 
@@ -10,12 +11,12 @@ async function findPresentationById(id) {
   // 1. Check user presentations
   const presentations = await readPresentations()
   const found = presentations.find((p) => p.id === id)
-  if (found) return found
+  if (found) return normalizePptxImportedPresentationForRead(found)
 
   // 2. Check custom templates
   const templates = await readTemplates()
   const tmpl = templates.find((t) => t.id === id)
-  if (tmpl) return tmpl
+  if (tmpl) return normalizePptxImportedPresentationForRead(tmpl)
 
   // 3. Check built-in templates
   try {

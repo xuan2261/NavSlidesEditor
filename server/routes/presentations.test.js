@@ -169,6 +169,33 @@ describe('Presentations API', () => {
     expect(tokens.objectToken).toBeUndefined()
     expect(tokens.otherToken).toBeDefined()
   })
+
+  it('normalizes legacy pptx-imported presentation resolution on read without rewriting storage', async () => {
+    const id = `legacy-pptx-${Date.now()}`
+    const legacy = {
+      id,
+      title: 'Legacy PPTX 4x3',
+      resolution: { width: 720, height: 540 },
+      _pptxMeta: { originalSize: { width: 720, height: 540 } },
+      slides: [{ id: 'slide-1', elements: [] }],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    await storage.withPresentations((presentations) => {
+      presentations.push(legacy)
+    })
+
+    const fetched = await request(app).get(`/api/presentations/${id}`)
+    expect(fetched.status).toBe(200)
+    expect(fetched.body.resolution).toEqual({ width: 960, height: 540 })
+    expect(fetched.body._pptxMeta.originalSize).toEqual({ width: 720, height: 540 })
+
+    const persisted = (await storage.readPresentations()).find((presentation) => presentation.id === id)
+    expect(persisted.resolution).toEqual({ width: 720, height: 540 })
+
+    await request(app).delete(`/api/presentations/${id}/permanent`)
+  })
 })
 
 describe('Legacy fixture compatibility (I-002)', () => {

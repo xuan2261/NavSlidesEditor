@@ -10,10 +10,23 @@ function roundCoord(value) {
 
 export { htmlToPptTextRuns, stripHtmlToPlainText } from './export-pptx-text-runs'
 
+export function toPptFontSize(value) {
+  const size = Number(value)
+  if (!Number.isFinite(size) || size <= 0) return undefined
+  return Math.round(size * 0.75 * 10) / 10
+}
+
 export function getPresentationResolution(presentation) {
   const width = Number(presentation?.resolution?.width) || CANVAS_WIDTH
   const height = Number(presentation?.resolution?.height) || CANVAS_HEIGHT
   return { width, height }
+}
+
+export function getPptxExportLayout(presentation) {
+  const width = Number(presentation?._pptxMeta?.originalSize?.width)
+  const height = Number(presentation?._pptxMeta?.originalSize?.height)
+  if (width > 0 && height > 0) return { width, height }
+  return getPresentationResolution(presentation)
 }
 
 export function getPptxLayout(resolution) {

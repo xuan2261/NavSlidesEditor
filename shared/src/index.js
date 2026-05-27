@@ -8,6 +8,7 @@ const sharedHtmlParser = require('./shared-html-parser.js')
 const sharedTextRuns = require('./shared-text-runs.js')
 const sharedSlideNotes = require('./shared-slide-notes.js')
 const sharedPptxCore = require('./shared-pptx-core.js')
+const contentSafety = require('./content-safety.js')
 
 const TEXT_COLORS = [
   '#ffffff', '#e2e8f0', '#94a3b8', '#64748b', '#334155', '#1e293b', '#0f172a', '#000000',
@@ -56,6 +57,7 @@ module.exports = {
   ...sharedTextRuns,
   ...sharedSlideNotes,
   ...sharedPptxCore,
+  ...contentSafety,
   TEXT_COLORS,
   BG_COLORS,
   GRADIENT_PRESETS,

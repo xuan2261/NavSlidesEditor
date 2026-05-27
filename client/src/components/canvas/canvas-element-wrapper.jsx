@@ -25,6 +25,24 @@ function getPlaybackRate(value) {
   return Number.isFinite(rate) && rate > 0 ? rate : null
 }
 
+function importedTextInsetStyles(element) {
+  const insets = element?._pptxImportMeta?.textInsets
+  if (!insets) return null
+  const unitScale = element._pptxImportMeta.textInsetsUnit === 'px' ? 1 : 96 / 72
+  const side = (value, maxDimension) => {
+    const raw = Number(value)
+    if (!Number.isFinite(raw)) return null
+    const max = Math.min(Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96, 96)
+    return `${Math.min(Math.round(Math.max(0, raw) * unitScale * 10) / 10, max)}px`
+  }
+  return {
+    paddingLeft: side(insets.left, element.width),
+    paddingRight: side(insets.right, element.width),
+    paddingTop: side(insets.top, element.height),
+    paddingBottom: side(insets.bottom, element.height),
+  }
+}
+
 export default function CanvasElement({
   element,
   isSelected,
@@ -83,8 +101,9 @@ export default function CanvasElement({
       ? `${element.shadowX || 0}px ${element.shadowY || 0}px ${element.shadowBlur || 0}px ${element.shadowColor || 'rgba(0,0,0,0.5)'}`
       : undefined,
   }
-  const textPreviewStyle = { width: '100%', height: '100%', overflow: 'hidden', color: 'white', padding: '8px 12px', boxSizing: 'border-box', fontSize: '16px' }
-  const editorContentStyle = { width: '100%', height: '100%', color: 'white', boxSizing: 'border-box' }
+  const textInsetStyles = importedTextInsetStyles(element)
+  const textPreviewStyle = { width: '100%', height: '100%', overflow: 'hidden', color: 'white', padding: '8px 12px', boxSizing: 'border-box', fontSize: '16px', ...textInsetStyles }
+  const editorContentStyle = { width: '100%', height: '100%', color: 'white', boxSizing: 'border-box', ...textInsetStyles }
   const imageWrapperStyle = { position: 'relative', width: '100%', height: '100%', overflow: isCropping ? 'visible' : 'hidden' }
   const htmlFrameStyle = { width: '100%', height: '100%', border: 'none', display: 'block', pointerEvents: 'none' }
   const codeBlockStyle = { margin: 0, padding: '10px 14px', width: '100%', height: '100%', overflow: 'hidden', boxSizing: 'border-box', fontFamily: "'Fira Code','JetBrains Mono','Courier New',monospace", fontSize: element.fontSize || 14, lineHeight: 1.5, borderRadius: 0 }

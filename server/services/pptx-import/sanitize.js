@@ -1,41 +1,13 @@
 const createDOMPurify = require('dompurify')
 const { JSDOM } = require('jsdom')
+const { sanitizeRichTextStyle } = require('../../../shared/src/rich-text-style-sanitizer.js')
 
 const DOMPurify = createDOMPurify(new JSDOM('').window)
-
-const SAFE_STYLE_PROPS = new Set([
-  'color',
-  'font-family',
-  'font-size',
-  'font-style',
-  'font-weight',
-  'text-align',
-  'text-decoration',
-  'vertical-align',
-  'letter-spacing',
-  'text-shadow',
-  'background',
-])
 
 const SAFE_PROTOCOLS = ['https:', 'http:', 'mailto:', 'tel:']
 
 function sanitizeStyle(value) {
-  return String(value || '')
-    .split(';')
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .filter((part) => {
-      const [prop, ...rest] = part.split(':')
-      const propName = prop.trim().toLowerCase()
-      const cssValue = rest.join(':').trim()
-      if (!SAFE_STYLE_PROPS.has(propName)) return false
-      // Block dangerous CSS expressions and javascript
-      if (/expression|javascript|import|behavior|binding/i.test(cssValue)) return false
-      // Rich text styles must not trigger outbound fetches when rendered.
-      if (/url\s*\(/i.test(cssValue)) return false
-      return true
-    })
-    .join('; ')
+  return sanitizeRichTextStyle(value)
 }
 
 // Phase 0: Validate href protocol — only allow safe protocols

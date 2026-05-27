@@ -17,8 +17,8 @@ describe('pptx corpus baseline', () => {
     expect(capture.gaps).toEqual([])
   })
 
-  it.skipIf(!fs.existsSync('./PPTX'))('does not drift below the checked-in corpus baseline', async () => {
-    const { results, summary } = await runCorpusTests('./PPTX', { skipRoundTrip: true })
+  it.skipIf(!fs.existsSync('./server/data/test-corpus'))('does not drift below the checked-in corpus baseline', async () => {
+    const { results, summary } = await runCorpusTests('./server/data/test-corpus', { skipRoundTrip: true })
 
     expect(summary.avgSemanticFidelity).toBeGreaterThanOrEqual(baseline.summary.avgSemanticFidelity)
 

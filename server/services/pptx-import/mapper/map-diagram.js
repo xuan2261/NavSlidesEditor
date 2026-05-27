@@ -1,8 +1,9 @@
 const uuidv4 = () => require('node:crypto').randomUUID()
 const { arrowMarker, colorValue } = require('./utils-color')
-const { plainText } = require('./utils-text')
-const { shapeName } = require('./utils-base')
+const { extractTextMetadata, plainText } = require('./utils-text')
+const { scaleLength, shapeName } = require('./utils-base')
 const { readCoord, readNumber } = require('../geometry')
+const { sanitizeHtml } = require('../sanitize')
 
 function isConnectorNode(node) {
   const shapeType = String(node.shapType || '').toLowerCase()
@@ -14,8 +15,11 @@ function mapDiagramNode(node, textList, index, maxNodes, element, context) {
   const boxHeight = readNumber(element.height, 200, 0)
   const diagramLeft = readCoord(element.left, element.x, 0)
   const diagramTop = readCoord(element.top, element.y, 0)
-  const nodeText = textList[index]?.text || node.text || node.content || ''
-  const sanitizedText = plainText(nodeText)
+  const displayTextSource = textList[index]?.text || node.text || node.content || ''
+  const metadataTextSource = node.content || node.text || textList[index]?.text || ''
+  const nodeHtml = sanitizeHtml(metadataTextSource)
+  const textMetadata = extractTextMetadata(nodeHtml, node)
+  const sanitizedText = plainText(displayTextSource)
   const nodeX = diagramLeft + readCoord(node.left, node.x, (index * boxWidth) / maxNodes)
   const nodeY = diagramTop + readCoord(node.top, node.y, 0)
 
@@ -33,9 +37,10 @@ function mapDiagramNode(node, textList, index, maxNodes, element, context) {
     shape: shapeName(node.shape || node.shapType || 'rect'),
     fill: colorValue(node.fill, '#e5e7eb'),
     stroke: colorValue(node.borderColor, 'none'),
-    strokeWidth: node.borderWidth || 0,
+    strokeWidth: scaleLength(node.borderWidth, context.scale.x),
     text: sanitizedText,
     textColor: '#111827',
+    ...textMetadata,
   }
 }
 
@@ -60,7 +65,7 @@ function mapDiagramConnector(node, element, context) {
     zIndex: context.zIndex,
     type: 'line',
     stroke: colorValue(node.borderColor, '#6b7280'),
-    strokeWidth: Math.max(1, readNumber(node.borderWidth, 2)),
+    strokeWidth: scaleLength(node.borderWidth, context.scale.x, 1),
     dashArray: node.borderStrokeDasharray || undefined,
     arrowStart: normType.includes('triangle') || normType.includes('diamond')
       ? arrowMarker(normType.replace(/end|start/gi, ''))

@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { Button, Input, ColorPicker, Select } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
-/**
- * Table properties: row/col management, header, colors, cell editor.
- */
+import { normalizeTableShape } from './table-properties-utils'
 export default function TableProperties({ element, onUpdate }) {
   const data = element.data || [['']]
   const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 })
@@ -29,22 +27,28 @@ export default function TableProperties({ element, onUpdate }) {
             () => {
               const d = [...data]
               d.push(Array((d[0] || []).length).fill(''))
-              onUpdate({ data: d })
+              onUpdate(normalizeTableShape({ data: d }, element))
             },
           ],
           [
             '-Row',
             'prop-table-remove-row',
             () => {
-              if (data.length > 1) onUpdate({ data: data.slice(0, -1) })
+              if (data.length > 1) onUpdate(normalizeTableShape({ data: data.slice(0, -1) }, element))
             },
           ],
-          ['+Col', 'prop-table-add-col', () => onUpdate({ data: data.map((r) => [...r, '']) })],
+          [
+            '+Col',
+            'prop-table-add-col',
+            () => onUpdate(normalizeTableShape({ data: data.map((r) => [...r, '']) }, element)),
+          ],
           [
             '-Col',
             'prop-table-remove-col',
             () => {
-              if ((data[0] || []).length > 1) onUpdate({ data: data.map((r) => r.slice(0, -1)) })
+              if ((data[0] || []).length > 1) {
+                onUpdate(normalizeTableShape({ data: data.map((r) => r.slice(0, -1)) }, element))
+              }
             },
           ],
         ].map(([label, testId, fn]) => (

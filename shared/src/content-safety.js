@@ -1,26 +1,38 @@
+const { convertCssLengthToPx } = require('./css-length-conversion.js')
+const { sanitizeRichTextStyle, sanitizeStyleAttributes } = require('./rich-text-style-sanitizer.js')
+
 function sanitizeHref(value) {
   const raw = String(value || '').trim()
   if (!raw) return '#'
   if (raw.startsWith('#') || raw.startsWith('/') || raw.startsWith('./') || raw.startsWith('../')) {
     return raw
   }
-  if (/^(https?:|mailto:)/i.test(raw)) return raw
+  if (/^(https?:|mailto:|tel:)/i.test(raw)) return raw
   return '#'
 }
 
 function stripEventAttributes(html) {
-  return String(html || '').replace(/\son[a-z-]+\s*=\s*(['"]).*?\1/gi, '')
+  return String(html || '')
+    .replace(/\son[a-z-]+\s*=\s*(['"]).*?\1/gi, '')
+    .replace(/\son[a-z-]+\s*=\s*[^\s>]+/gi, '')
+    .replace(/\son[a-z-]+(?=[\s>])/gi, '')
 }
 
 function sanitizeUrlAttributes(html) {
-  return String(html || '').replace(/\s(href|src|xlink:href)\s*=\s*(['"])(.*?)\2/gi, (_, attr, quote, value) => {
-    return ` ${attr}=${quote}${sanitizeHref(value)}${quote}`
-  })
+  return String(html || '')
+    .replace(/\s(href|src|xlink:href)\s*=\s*(['"])(.*?)\2/gi, (_, attr, quote, value) => {
+      return ` ${attr}=${quote}${sanitizeHref(value)}${quote}`
+    })
+    .replace(/\s(href|src|xlink:href)\s*=\s*(?!['"])([^\s>]+)/gi, (_, attr, value) => {
+      return ` ${attr}="${sanitizeHref(value)}"`
+    })
 }
 
 function sanitizeRichTextHtml(html) {
-  return sanitizeUrlAttributes(
-    stripEventAttributes(String(html || '').replace(/<script[\s\S]*?<\/script>/gi, ''))
+  return sanitizeStyleAttributes(
+    sanitizeUrlAttributes(
+      stripEventAttributes(String(html || '').replace(/<script[\s\S]*?<\/script>/gi, ''))
+    )
   )
 }
 
@@ -49,7 +61,10 @@ function escapePlainText(text) {
 module.exports = {
   sanitizeHref,
   sanitizeRichTextHtml,
+  sanitizeRichTextStyle,
   sanitizeMarkdownHtml,
   sanitizeSvgHtml,
+  sanitizeStyleAttributes,
+  convertCssLengthToPx,
   escapePlainText,
 }

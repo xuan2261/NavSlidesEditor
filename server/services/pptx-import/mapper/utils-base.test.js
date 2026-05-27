@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import baseUtils from './utils-base.js'
 
-const { baseElement, extractShadow, placeholder, shapeName, warning } = baseUtils
+const { baseElement, extractShadow, placeholder, scaleLength, shapeName, warning } = baseUtils
 
 describe('pptx mapper base utilities', () => {
   it('maps base element geometry, rotation, opacity, and z-index', () => {
@@ -33,9 +33,9 @@ describe('pptx mapper base utilities', () => {
 
   it('extracts shadows and creates locked placeholders with warnings', () => {
     expect(extractShadow({ shadow: { h: 1, v: 2, blur: 3, color: '#111111' } })).toEqual({
-      shadowX: 1,
-      shadowY: 2,
-      shadowBlur: 3,
+      shadowX: 1.3,
+      shadowY: 2.7,
+      shadowBlur: 4,
       shadowColor: '#111111',
     })
 
@@ -47,5 +47,26 @@ describe('pptx mapper base utilities', () => {
       { slideIndex: 1, type: 'missing', message: 'Missing' },
     ])
     expect(el).toMatchObject({ type: 'shape', locked: true, importPlaceholderType: 'missing', text: 'Missing' })
+  })
+
+  it('converts PPTX point lengths to canvas px', () => {
+    expect(scaleLength(2, 1)).toBe(2.7)
+    expect(scaleLength(2, 4 / 3)).toBe(3.6)
+    expect(scaleLength(0, 1, 1)).toBe(1)
+    expect(scaleLength(undefined, 1.5, 2)).toBe(2)
+  })
+
+  it('scales shadow offsets and blur by their axes', () => {
+    const result = extractShadow(
+      { shadow: { h: 3, v: 3, blur: 6, color: '#000000' } },
+      { x: 4 / 3, y: 2 }
+    )
+
+    expect(result).toMatchObject({
+      shadowX: 5.3,
+      shadowY: 8,
+      shadowBlur: 10.7,
+      shadowColor: '#000000',
+    })
   })
 })

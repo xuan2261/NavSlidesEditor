@@ -16,6 +16,7 @@ const {
 } = require('./services/storage')
 const { errorHandler } = require('./middleware/error-handler')
 const { generateRevealHTML } = require('revealjs-shared')
+const { normalizePptxImportedPresentationForRead } = require('./services/presentation-normalization')
 const { recordView } = require('./routes/analytics')
 const { setupSocketHandlers } = require('./services/socket-handler')
 const { setupGameSocketHandlers } = require('./services/game-socket-handler')
@@ -156,7 +157,7 @@ async function renderShareView(presentationId, res) {
 
   // Keep html embeds trusted and programmable in share mode too.
   // We only normalize customCSS risky URL/expression patterns.
-  const sanitized = JSON.parse(JSON.stringify(presentation))
+  const sanitized = JSON.parse(JSON.stringify(normalizePptxImportedPresentationForRead(presentation)))
   // Sanitize customCSS to prevent expression() / javascript: injection
   if (sanitized.customCSS) {
     sanitized.customCSS = sanitized.customCSS

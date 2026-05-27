@@ -2,6 +2,7 @@ const express = require('express')
 const { z } = require('zod')
 const { generateRevealHTML } = require('revealjs-shared')
 const { readGithubConfig, writeGithubConfig, readPresentations } = require('../services/storage')
+const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
 const { validate } = require('../middleware/validate')
 
 const router = express.Router()
@@ -57,8 +58,9 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
     }
 
     const presentations = await readPresentations()
-    const presentation = presentations.find((p) => p.id === req.params.presId)
-    if (!presentation) return res.status(404).json({ error: 'Presentation not found' })
+    const foundPresentation = presentations.find((p) => p.id === req.params.presId)
+    if (!foundPresentation) return res.status(404).json({ error: 'Presentation not found' })
+    const presentation = normalizePptxImportedPresentationForRead(foundPresentation)
 
     const { token, owner, repo } = config
     const gh = (endpoint, opts = {}) =>

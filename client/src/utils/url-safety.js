@@ -1,4 +1,4 @@
-const SAFE_SCHEMES = new Set(['http:', 'https:', 'mailto:'])
+const SAFE_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:'])
 
 export function isSafeHref(href) {
   const raw = String(href || '').trim()

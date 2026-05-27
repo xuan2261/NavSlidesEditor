@@ -15,7 +15,35 @@ const SHAPES = [
   { id: 'trapezoid', name: 'Trapezoid', icon: '⏢' },
   { id: 'bracket', name: 'Bracket', icon: '{' },
 ]
-const { escapePlainText } = require('./content-safety.js')
+const { escapePlainText, sanitizeRichTextHtml } = require('./content-safety.js')
+
+function safeCssColor(value, fallback) {
+  const color = typeof value === 'string' ? value.trim() : ''
+  if (/^#[0-9a-f]{3,8}$/i.test(color)) return color
+  if (/^rgba?\(\s*[\d.\s,%]+\)$/i.test(color)) return color
+  if (/^hsla?\(\s*[\d.\s,%deg]+\)$/i.test(color)) return color
+  if (['transparent', 'currentColor'].includes(color)) return color
+  return fallback
+}
+
+function importedTextInsetStyle(el) {
+  const insets = el?._pptxImportMeta?.textInsets
+  if (!insets) return ''
+  const unitScale = el._pptxImportMeta.textInsetsUnit === 'px' ? 1 : 96 / 72
+  const side = (name, value, maxDimension) => {
+    const raw = Number(value)
+    if (!Number.isFinite(raw)) return ''
+    const max = Math.min(Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96, 96)
+    const px = Math.min(Math.round(Math.max(0, raw) * unitScale * 10) / 10, max)
+    return `padding-${name}:${px}px;`
+  }
+  return [
+    side('left', insets.left, el.width),
+    side('right', insets.right, el.width),
+    side('top', insets.top, el.height),
+    side('bottom', insets.bottom, el.height),
+  ].join('')
+}
 
 function shapeSvgString(el) {
   const w = el.width,
@@ -97,9 +125,14 @@ function shapeSvgString(el) {
   }
 
   let textEl = ''
-  if (el.text) {
+  if (el.textHtml) {
     const fs = el.fontSize || 16
-    const tc = el.textColor || '#ffffff'
+    const tc = safeCssColor(el.textColor, '#ffffff')
+    const richText = sanitizeRichTextHtml(el.textHtml)
+    textEl = `<foreignObject x="0" y="0" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;color:${tc};font-size:${fs}px;overflow:hidden;${importedTextInsetStyle(el)}">${richText}</div></foreignObject>`
+  } else if (el.text) {
+    const fs = el.fontSize || 16
+    const tc = safeCssColor(el.textColor, '#ffffff')
     textEl = `<text x="${w / 2}" y="${h / 2}" dominant-baseline="middle" text-anchor="middle" font-size="${fs}" fill="${tc}" style="font-family:inherit;">${escapePlainText(el.text)}</text>`
   }
 

@@ -21,7 +21,7 @@ describe('pptx mapper', () => {
       '<p onclick="bad()" style="color:#111;background-image:url(javascript:bad)">Safe</p><script>alert(1)</script>'
     )
     expect(html).toContain('Safe')
-    expect(html).toContain('color:#111')
+    expect(html).toMatch(/color:\s*#111/)
     expect(html).not.toContain('background-image')
     expect(html).not.toContain('script')
     expect(html).not.toContain('onclick')
@@ -31,7 +31,7 @@ describe('pptx mapper', () => {
     const unsafe = sanitizeHtml(
       '<span style="width:url(https://safe.example/x);background:url(https://safe.example/bg.png);color:#111">Safe</span>'
     )
-    expect(unsafe).toContain('color:#111')
+    expect(unsafe).toMatch(/color:\s*#111/)
     expect(unsafe).not.toMatch(/url\s*\(/i)
     expect(unsafe).not.toContain('javascript:')
 
@@ -39,7 +39,7 @@ describe('pptx mapper', () => {
       '<span style="background:yellow;color:#222">Safe</span>'
     )
     expect(safe).toMatch(/background\s*:\s*yellow/i)
-    expect(safe).toContain('color:#222')
+    expect(safe).toMatch(/color:\s*#222/)
   })
 
   // ─── Phase 0: Sanitizer Hardening ────────────────────────────────────────
@@ -128,7 +128,7 @@ describe('pptx mapper', () => {
       expect(textEl.type).toBe('text')
       expect(textEl.content).toContain('Hello')
       expect(textEl.textAlign).toBe('center')
-      expect(textEl.fontSize).toBe(24)
+      expect(textEl.fontSize).toBe(32)
       expect(textEl.fontFamily).toBe('Arial')
       expect(textEl.textColor).toBe('#e74c3c')
     } finally {
@@ -187,7 +187,7 @@ describe('pptx mapper', () => {
       expect(shapeEl.text).toBe('Hello')
       expect(shapeEl.textHtml).toContain('<strong>Hello</strong>')
       expect(shapeEl.textAlign).toBe('right')
-      expect(shapeEl.fontSize).toBe(20)
+      expect(shapeEl.fontSize).toBe(26.7)
       expect(shapeEl.fontFamily).toBe('Arial')
       expect(shapeEl.textColor).toBe('#123456')
     } finally {
@@ -276,6 +276,8 @@ describe('pptx mapper', () => {
       const svgEl = result.presentation.slides[0].elements[0]
       expect(svgEl.type).toBe('svg')
       expect(svgEl.content).toContain('<svg')
+      expect(svgEl.content).toContain('viewBox="0 0 100 50"')
+      expect(svgEl.content).toContain('preserveAspectRatio="none"')
       expect(svgEl.content).toContain('M0 0 L100 0 L100 50 Z')
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
@@ -615,7 +617,7 @@ describe('pptx mapper', () => {
       })
       const img = result.presentation.slides[0].elements[0]
       expect(img.borderColor).toBe('#ff0000')
-      expect(img.borderWidth).toBe(3)
+      expect(img.borderWidth).toBe(4)
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
     }
@@ -1339,9 +1341,9 @@ describe('pptx mapper', () => {
     it('maps pptxtojson shadow to flat NavSlides fields', () => {
       const el = { shadow: { h: 5, v: 3, blur: 4, color: '#333333' } }
       const shadow = extractShadow(el)
-      expect(shadow.shadowX).toBe(5)
-      expect(shadow.shadowY).toBe(3)
-      expect(shadow.shadowBlur).toBe(4)
+      expect(shadow.shadowX).toBe(6.7)
+      expect(shadow.shadowY).toBe(4)
+      expect(shadow.shadowBlur).toBe(5.3)
       expect(shadow.shadowColor).toBe('#333333')
     })
 
@@ -1354,7 +1356,7 @@ describe('pptx mapper', () => {
     it('handles partial shadow object with defaults', () => {
       const el = { shadow: { h: 5 } }
       const shadow = extractShadow(el)
-      expect(shadow.shadowX).toBe(5)
+      expect(shadow.shadowX).toBe(6.7)
       expect(shadow.shadowY).toBe(0)
       expect(shadow.shadowBlur).toBe(0)
       expect(shadow.shadowColor).toBe('#000000')
@@ -1375,9 +1377,9 @@ describe('pptx mapper', () => {
           },
         })
         const el = result.presentation.slides[0].elements[0]
-        expect(el.shadowX).toBe(5)
-        expect(el.shadowY).toBe(3)
-        expect(el.shadowBlur).toBe(4)
+        expect(el.shadowX).toBe(6.7)
+        expect(el.shadowY).toBe(4)
+        expect(el.shadowBlur).toBe(5.3)
         expect(el.shadowColor).toBe('#333333')
       } finally {
         await fs.rm(dir, { recursive: true, force: true })
@@ -1399,9 +1401,9 @@ describe('pptx mapper', () => {
           },
         })
         const el = result.presentation.slides[0].elements[0]
-        expect(el.shadowX).toBe(2)
-        expect(el.shadowY).toBe(2)
-        expect(el.shadowBlur).toBe(3)
+        expect(el.shadowX).toBe(2.7)
+        expect(el.shadowY).toBe(2.7)
+        expect(el.shadowBlur).toBe(4)
         expect(el.shadowColor).toBe('#888888')
       } finally {
         await fs.rm(dir, { recursive: true, force: true })
@@ -1501,7 +1503,7 @@ describe('pptx mapper', () => {
         expect(lines.length).toBe(1)
         expect(lines[0].type).toBe('line')
         expect(lines[0].stroke).toBe('#333')
-        expect(lines[0].strokeWidth).toBe(2)
+        expect(lines[0].strokeWidth).toBe(2.7)
       } finally {
         await fs.rm(dir, { recursive: true, force: true })
       }

@@ -10,10 +10,24 @@ function roundCoord(value) {
   return Number(value.toFixed(4))
 }
 
+function toPptFontSize(value) {
+  const size = Number(value)
+  if (!Number.isFinite(size) || size <= 0) return undefined
+  return Math.round(size * 0.75 * 10) / 10
+}
+
 function getPresentationResolution(presentation) {
   const width = Number(presentation && presentation.resolution && presentation.resolution.width) || CANVAS_WIDTH
   const height = Number(presentation && presentation.resolution && presentation.resolution.height) || CANVAS_HEIGHT
   return { width, height }
+}
+
+function getPptxExportLayout(presentation) {
+  const originalSize = presentation && presentation._pptxMeta && presentation._pptxMeta.originalSize
+  const width = Number(originalSize && originalSize.width)
+  const height = Number(originalSize && originalSize.height)
+  if (width > 0 && height > 0) return { width, height }
+  return getPresentationResolution(presentation)
 }
 
 function getPptxLayout(resolution) {
@@ -165,6 +179,7 @@ module.exports = {
   createSvgDataUri,
   getBackgroundImageUrl,
   getNativeChartDefinition,
+  getPptxExportLayout,
   getPptxLayout,
   getPresentationResolution,
   getShapeType,
@@ -176,4 +191,5 @@ module.exports = {
   normalizeImageSource,
   scaleElementBounds,
   stripHtmlToPlainText,
+  toPptFontSize,
 }

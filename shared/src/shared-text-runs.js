@@ -1,5 +1,6 @@
 const { DEFAULT_TEXT_COLOR, normalizeCssColor } = require('./shared-color-utils')
 const {
+  cssPxToPptPt,
   decodeHtmlEntities,
   getBlockNodes,
   mergeInlineStyle,
@@ -17,8 +18,8 @@ function buildRunOptions(style) {
   if (style.subscript) options.subscript = true
   if (style.superscript) options.superscript = true
   if (style.fontFace) options.fontFace = style.fontFace
-  if (style.fontSize) options.fontSize = style.fontSize
-  if (style.charSpacing) options.charSpacing = style.charSpacing
+  if (style.fontSize) options.fontSize = cssPxToPptPt(style.fontSize)
+  if (style.charSpacing) options.charSpacing = cssPxToPptPt(style.charSpacing)
   if (style.link) options.hyperlink = { url: style.link }
   if (style.color) {
     const normalized = normalizeCssColor(style.color, DEFAULT_TEXT_COLOR)

@@ -70,7 +70,7 @@ exports[`pptx mapper golden masters > maps line deterministically 1`] = `
     "opacity": 1,
     "rotation": 0,
     "stroke": "#111111",
-    "strokeWidth": 2,
+    "strokeWidth": 1,
     "type": "line",
     "width": 100,
     "x": 40,
@@ -188,6 +188,18 @@ exports[`pptx mapper golden masters > maps table deterministically 1`] = `
               "width": 1,
             },
           },
+        ],
+      ],
+      "fontFamilies": [
+        [
+          null,
+          null,
+        ],
+      ],
+      "fontSizes": [
+        [
+          null,
+          null,
         ],
       ],
       "isBold": [

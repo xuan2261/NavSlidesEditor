@@ -24,7 +24,7 @@ describe('pptx mapImage', () => {
   it('maps inline image payload with filters, crop, flip, border, and alt text', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-'))
     try {
-      const ctx = context(dir)
+      const ctx = { ...context(dir), scale: { x: 4 / 3, y: 1 } }
       const result = await mapImage({
         type: 'image',
         left: 10,
@@ -49,13 +49,13 @@ describe('pptx mapImage', () => {
         alt: 'Alt text',
         flipH: true,
         borderColor: '#123456',
-        borderWidth: 2,
+        borderWidth: 3.6,
         filterBrightness: 120,
         filterContrast: 80,
         filterGrayscale: 100,
-        imageW: 125,
+        imageW: 166,
         imageH: 50,
-        imageOffsetX: -13,
+        imageOffsetX: -17,
       })
       expect(result[0]._pptxImportMeta._pptxSharpen).toBe(5)
       expect(result[0]._pptxImportMeta.cropData.left).toBe(0.1)

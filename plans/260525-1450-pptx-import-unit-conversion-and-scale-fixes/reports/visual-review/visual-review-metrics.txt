@@ -1,0 +1,29 @@
+
+Deck       : Bai_2_1
+Reference  : 960x540
+App        : 960x540
+DiffPixels : 515267
+DiffRatio  : 0.994
+Montage    : plans\260525-1450-pptx-import-unit-conversion-and-scale-fixes\reports\visual-review\Bai_2_1-powerpoint-vs-app.png
+
+Deck       : Bai_2_5
+Reference  : 960x540
+App        : 960x540
+DiffPixels : 52071
+DiffRatio  : 0.1004
+Montage    : plans\260525-1450-pptx-import-unit-conversion-and-scale-fixes\reports\visual-review\Bai_2_5-powerpoint-vs-app.png
+
+Deck       : math-rich-text
+Reference  : 960x540
+App        : 960x540
+DiffPixels : 95083
+DiffRatio  : 0.1834
+Montage    : plans\260525-1450-pptx-import-unit-conversion-and-scale-fixes\reports\visual-review\math-rich-text-powerpoint-vs-app.png
+
+Deck       : non-default-4x3-resolution
+Reference  : 960x540
+App        : 960x540
+DiffPixels : 51060
+DiffRatio  : 0.0985
+Montage    : plans\260525-1450-pptx-import-unit-conversion-and-scale-fixes\reports\visual-review\non-default-4x3-resolution-powerpoint-vs-app.png
+

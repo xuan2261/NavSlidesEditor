@@ -1,6 +1,7 @@
 import { DEFAULT_TEXT_COLOR, normalizeCssColor } from './export-pptx-color-utils'
 import {
   decodeHtmlEntities,
+  cssPxToPptPt,
   getBlockNodes,
   mergeInlineStyle,
   normalizeAlign,
@@ -17,8 +18,8 @@ function buildRunOptions(style) {
   if (style.subscript) options.subscript = true  // Phase 1
   if (style.superscript) options.superscript = true // Phase 1
   if (style.fontFace) options.fontFace = style.fontFace
-  if (style.fontSize) options.fontSize = style.fontSize
-  if (style.charSpacing) options.charSpacing = style.charSpacing // Phase 1
+  if (style.fontSize) options.fontSize = cssPxToPptPt(style.fontSize)
+  if (style.charSpacing) options.charSpacing = cssPxToPptPt(style.charSpacing) // Phase 1
   if (style.link) options.hyperlink = { url: style.link } // Phase 1: hyperlink
   if (style.color) {
     const normalized = normalizeCssColor(style.color, DEFAULT_TEXT_COLOR)

@@ -93,4 +93,23 @@ test.describe('PPTX import endpoint and presentation creation roundtrip across m
       expect(el.height).toBeGreaterThan(0)
     }
   })
+
+  test('imports non-default 4x3 decks with canvas resolution and original-size metadata', async ({
+    request,
+    testPresentation,
+  }) => {
+    test.setTimeout(120000)
+    const fixturePath = path.resolve(
+      process.cwd(),
+      'server/data/test-corpus/non-default-4x3-resolution.pptx'
+    )
+    const { presentation } = await importAndUpdate(request, fixturePath, testPresentation)
+
+    expect(presentation.resolution).toEqual({ width: 960, height: 540 })
+    expect(presentation._pptxMeta?.originalSize).toEqual({ width: 720, height: 540 })
+
+    const fetched = await apiGetPresentation(request, presentation.id)
+    expect(fetched.resolution).toEqual({ width: 960, height: 540 })
+    expect(fetched._pptxMeta?.originalSize).toEqual({ width: 720, height: 540 })
+  })
 })

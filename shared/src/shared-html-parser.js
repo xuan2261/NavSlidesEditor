@@ -1,4 +1,31 @@
 const HEADING_SIZES = { h1: 28, h2: 24, h3: 20, h4: 18, h5: 16, h6: 14 }
+const PX_PER_PT = 96 / 72
+const PT_PER_PX = 72 / 96
+
+function roundTenth(value) {
+  return Math.round(value * 10) / 10
+}
+
+function cssPxToPptPt(value) {
+  const size = Number(value)
+  return Number.isFinite(size) && size > 0 ? roundTenth(size * PT_PER_PX) : undefined
+}
+
+function parseCssLengthToPx(value) {
+  const raw = String(value || '').trim()
+  const match = /^(-?\d+(?:\.\d+)?)(px|pt|in|cm|mm)?$/i.exec(raw)
+  if (!match) return undefined
+
+  const size = Number(match[1])
+  if (!Number.isFinite(size) || size <= 0) return undefined
+
+  const unit = (match[2] || 'px').toLowerCase()
+  if (unit === 'pt') return roundTenth(size * PX_PER_PT)
+  if (unit === 'in') return roundTenth(size * 96)
+  if (unit === 'cm') return roundTenth((size * 96) / 2.54)
+  if (unit === 'mm') return roundTenth((size * 96) / 25.4)
+  return size
+}
 
 function decodeHtmlEntities(text) {
   return String(text || '')
@@ -134,14 +161,14 @@ function mergeInlineStyle(base, node) {
   if (style['font-family']) merged.fontFace = style['font-family'].split(',')[0].replace(/["']/g, '')
 
   if (style['font-size']) {
-    const size = parseFloat(style['font-size'])
+    const size = parseCssLengthToPx(style['font-size'])
     if (Number.isFinite(size)) merged.fontSize = size
   }
 
   if (style['text-align']) merged.align = style['text-align']
 
   if (style['letter-spacing']) {
-    const spacing = parseFloat(style['letter-spacing'])
+    const spacing = parseCssLengthToPx(style['letter-spacing'])
     if (Number.isFinite(spacing)) merged.charSpacing = spacing
   }
 
@@ -158,6 +185,7 @@ function normalizeAlign(align) {
 }
 
 module.exports = {
+  cssPxToPptPt,
   decodeHtmlEntities,
   getBlockNodes,
   mergeInlineStyle,

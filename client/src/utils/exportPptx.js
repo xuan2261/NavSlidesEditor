@@ -1,6 +1,6 @@
 import pptxgen from 'pptxgenjs'
 import { applySlideBackground } from './export-pptx-background'
-import { getPptxLayout, getPresentationResolution } from './export-pptx-core'
+import { getPptxExportLayout, getPptxLayout, getPresentationResolution } from './export-pptx-core'
 import { addElementToPptxSlide } from './export-pptx-renderers'
 import { clearPptxRasterAssetCaches } from './export-pptx-raster'
 import { getSlideNotes } from './slide-notes'
@@ -69,7 +69,7 @@ async function fetchComplexElementRasters(presentation) {
 async function exportToPptxClient(presentation, rasterOverrides = {}) {
   const pptx = new pptxgen()
   const resolution = getPresentationResolution(presentation)
-  const layout = getPptxLayout(resolution)
+  const layout = getPptxLayout(getPptxExportLayout(presentation))
   const warnings = []
 
   pptx.defineLayout({ name: 'NAVSLIDES_CUSTOM', width: layout.width, height: layout.height })

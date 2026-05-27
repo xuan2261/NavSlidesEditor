@@ -12,6 +12,7 @@ const { mapAudio, mapMath, mapVideo } = require('./map-media')
 const { flattenGroupElement } = require('./map-group')
 const { flattenDiagramElement } = require('./map-diagram')
 const { normalizeSourceSize } = require('../geometry')
+const { CANVAS_SIZE } = require('../constants')
 
 async function mapElement(element, context) {
   if (element.type === 'group') return flattenGroupElement(element, context, mapElement)
@@ -39,15 +40,16 @@ function mapChartElement(element, context) {
 function mapText(element, context) {
   context.stats.textCount += 1
   const content = sanitizeHtml(element.content)
+  const box = baseElement(element, context.scale, context.zIndex)
   const text = {
-    ...baseElement(element, context.scale, context.zIndex),
+    ...box,
     type: 'text',
     content,
     ...extractTextMetadata(content, element),
   }
-  const textInsets = extractTextInsets(element)
-  if (textInsets) text._pptxImportMeta = { ...(text._pptxImportMeta || {}), textInsets }
-  const textShadow = extractShadow(element)
+  const textInsets = extractTextInsets(element, context.scale, box)
+  if (textInsets) text._pptxImportMeta = { ...(text._pptxImportMeta || {}), textInsets, textInsetsUnit: 'px' }
+  const textShadow = extractShadow(element, context.scale)
   if (textShadow) {
     text.shadowX = textShadow.shadowX
     text.shadowY = textShadow.shadowY
@@ -144,7 +146,6 @@ async function mapPptxOutput({ output, zip, originalName, uploadsDir, onProgress
   const stats = { textCount: 0, imageCount: 0, shapeCount: 0, tableCount: 0, chartCount: 0, placeholderCount: 0, videoCount: 0, audioCount: 0, mathCount: 0 }
   const slides = []
   const totalSlides = Math.max(1, (output.slides || []).length)
-
   for (const [slideIndex, slide] of (output.slides || []).entries()) {
     signal?.throwIfAborted?.()
     onProgress?.({ stage: 'mapping', percent: 80 + Math.round((slideIndex / totalSlides) * 15), message: `Processing slide ${slideIndex + 1} of ${totalSlides}` })
@@ -165,7 +166,7 @@ async function mapPptxOutput({ output, zip, originalName, uploadsDir, onProgress
       theme: 'white',
       transition: 'slide',
       slides,
-      resolution: { width: sourceSize.width, height: sourceSize.height },
+      resolution: { width: CANVAS_SIZE.width, height: CANVAS_SIZE.height },
       _pptxMeta: {
         originalSize: { width: sourceSize.width, height: sourceSize.height },
         usedFonts: output.usedFonts || [],

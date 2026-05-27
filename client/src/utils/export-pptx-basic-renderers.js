@@ -8,6 +8,7 @@ import {
   mapLineDashType,
   normalizeCssColor,
   normalizeImageSource,
+  toPptFontSize,
 } from './export-pptx-core'
 
 export function addTextElement(slide, element, bounds) {
@@ -24,7 +25,7 @@ export function addTextElement(slide, element, bounds) {
     ...bounds,
     color: baseColor.color,
     fontFace: element.fontFamily,
-    fontSize: element.fontSize || 16,
+    fontSize: toPptFontSize(element.fontSize || 16),
     margin: 0.06,
     valign: 'top',
     fit: 'shrink',
@@ -120,7 +121,7 @@ export function addShapeElement(slide, element, bounds) {
       ...bounds,
       color: textColor.color,
       fontFace: element.fontFamily,
-      fontSize: element.fontSize || 16,
+      fontSize: toPptFontSize(element.fontSize || 16),
       margin: 0.05,
       align: element.textAlign || 'center',
       valign: 'mid',
@@ -170,7 +171,7 @@ export function addCodeElement(slide, element, bounds) {
     color: normalizeCssColor('#e2e8f0').color,
     fill: { color: normalizeCssColor('#111827').color },
     fontFace: 'Courier New',
-    fontSize: element.fontSize || 12,
+    fontSize: toPptFontSize(element.fontSize || 12),
     margin: 0.06,
     valign: 'top',
     fit: 'shrink',
@@ -190,7 +191,7 @@ export function addCalloutElement(slide, element, bounds) {
   slide.addText(String(element.calloutNumber || 1), {
     ...bounds,
     color: text.color,
-    fontSize: element.fontSize || 16,
+    fontSize: toPptFontSize(element.fontSize || 16),
     bold: true,
     align: 'center',
     valign: 'mid',
@@ -219,6 +220,25 @@ export function addTableElement(slide, element, bounds) {
   const cellStyles = element.cellStyles || {}
   const getCellStyle = (key, rowIndex, colIndex) => cellStyles[key]?.[rowIndex]?.[colIndex]
   const mapVAlign = (value) => (value === 'middle' ? 'mid' : value || undefined)
+  const safeFontFamily = (value) => {
+    const family = typeof value === 'string' ? value.trim() : ''
+    if (!family) return undefined
+    if ([...family].some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)) return undefined
+    if (/[;:()\\/]/.test(family)) return undefined
+    if (/\/\*|\*\/|url|import|expression|javascript|behavior|binding/i.test(family)) return undefined
+    return /^[a-zA-Z0-9 _.-]+$/.test(family) ? family : undefined
+  }
+  const scaleListToBounds = (values, total, bound) => {
+    if (!Array.isArray(values) || !values.length || !(total > 0) || !(bound > 0)) return undefined
+    if (!values.every((value) => Number.isFinite(Number(value)) && Number(value) > 0)) return undefined
+    return values.map((value) => Math.round(((Number(value) || 0) / total) * bound * 100) / 100)
+  }
+  const colTotal = Array.isArray(element.colWidths)
+    ? element.colWidths.reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0)
+    : 0
+  const rowTotal = Array.isArray(element.rowHeights)
+    ? element.rowHeights.reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0)
+    : 0
 
   const rows = (element.data || []).map((row, rowIndex) =>
     (row || []).reduce((cells, cell, colIndex) => {
@@ -235,17 +255,20 @@ export function addTableElement(slide, element, bounds) {
         getCellStyle('textColors', rowIndex, colIndex) || element.textColor || '#ffffff',
         DEFAULT_TEXT_COLOR
       )
+      const cellFontSize = Number(getCellStyle('fontSizes', rowIndex, colIndex))
+      const cellFontFamily = safeFontFamily(getCellStyle('fontFamilies', rowIndex, colIndex))
       cells.push({
         text: cell || '',
         options: {
           color: textColor.color,
-          fontSize: element.fontSize || 12,
+          fontSize: toPptFontSize(Number.isFinite(cellFontSize) && cellFontSize > 0 ? cellFontSize : element.fontSize || 12),
           margin: 0.04,
           fill: { color: fillColor.color, transparency: fillColor.transparency },
           border: {
             color: normalizeCssColor(element.borderColor || '#475569').color,
             pt: element.borderWidth || 1,
           },
+          ...(cellFontFamily && { fontFace: cellFontFamily }),
           ...(getCellStyle('isBold', rowIndex, colIndex) != null && { bold: Boolean(getCellStyle('isBold', rowIndex, colIndex)) }),
           ...(getCellStyle('aligns', rowIndex, colIndex) && { align: getCellStyle('aligns', rowIndex, colIndex) }),
           ...(getCellStyle('vAligns', rowIndex, colIndex) && { valign: mapVAlign(getCellStyle('vAligns', rowIndex, colIndex)) }),
@@ -257,7 +280,14 @@ export function addTableElement(slide, element, bounds) {
     }, [])
   )
 
-  if (rows.length) slide.addTable(rows, { ...bounds, margin: 0.04 })
+  const tableOptions = {
+    ...bounds,
+    margin: 0.04,
+    ...(colTotal > 0 && { colW: scaleListToBounds(element.colWidths, colTotal, bounds.w) }),
+    ...(rowTotal > 0 && { rowH: scaleListToBounds(element.rowHeights, rowTotal, bounds.h) }),
+  }
+
+  if (rows.length) slide.addTable(rows, tableOptions)
 }
 
 export function addChartElement(slide, element, bounds, pptx) {

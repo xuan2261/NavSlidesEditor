@@ -35,7 +35,7 @@ describe('export-pptx-text-runs', () => {
   // ─── Phase 1: Letter-spacing ─────────────────────────────────────────
   ;[
     ['<span style="letter-spacing:2pt">spaced</span>', true],
-    ['<span style="letter-spacing:0.5em">wide</span>', true],
+    ['<span style="letter-spacing:0.5em">wide</span>', false],
     ['<span style="letter-spacing:normal">normal</span>', false], // "normal" doesn't parse as number
     ['plain text', false],
   ].forEach(([html, expectCharSpacing]) => {
@@ -95,6 +95,16 @@ describe('export-pptx-text-runs', () => {
     expect(run.options.italic).toBe(true)
     // normalizeCssColor returns uppercase hex without '#'
     expect(run.options.color?.toUpperCase()).toBe('E74C3C')
+  })
+
+  it('converts CSS px and pt font lengths to PowerPoint points', () => {
+    const pxRuns = htmlToPptTextRuns('<span style="font-size:32px;letter-spacing:2.7px">large</span>')
+    expect(pxRuns[0].options.fontSize).toBe(24)
+    expect(pxRuns[0].options.charSpacing).toBe(2)
+
+    const ptRuns = htmlToPptTextRuns('<span style="font-size:24pt;letter-spacing:2pt">large</span>')
+    expect(ptRuns[0].options.fontSize).toBe(24)
+    expect(ptRuns[0].options.charSpacing).toBe(2)
   })
 
   it('link inside paragraph preserves alignment', () => {

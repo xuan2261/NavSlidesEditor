@@ -1,3 +1,32 @@
+import { sanitizeRichTextHtml } from '../../../utils/content-safety'
+
+function safeCssColor(value, fallback) {
+  const color = typeof value === 'string' ? value.trim() : ''
+  if (/^#[0-9a-f]{3,8}$/i.test(color)) return color
+  if (/^rgba?\(\s*[\d.\s,%]+\)$/i.test(color)) return color
+  if (/^hsla?\(\s*[\d.\s,%deg]+\)$/i.test(color)) return color
+  if (['transparent', 'currentColor'].includes(color)) return color
+  return fallback
+}
+
+function importedTextInsetStyles(element) {
+  const insets = element?._pptxImportMeta?.textInsets
+  if (!insets) return null
+  const unitScale = element._pptxImportMeta.textInsetsUnit === 'px' ? 1 : 96 / 72
+  const side = (value, maxDimension) => {
+    const raw = Number(value)
+    if (!Number.isFinite(raw)) return null
+    const max = Math.min(Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96, 96)
+    return `${Math.min(Math.round(Math.max(0, raw) * unitScale * 10) / 10, max)}px`
+  }
+  return {
+    paddingLeft: side(insets.left, element.width),
+    paddingRight: side(insets.right, element.width),
+    paddingTop: side(insets.top, element.height),
+    paddingBottom: side(insets.bottom, element.height),
+  }
+}
+
 export function ShapeRenderer({ element }) {
   const w = element.width,
     h = element.height
@@ -110,7 +139,27 @@ export function ShapeRenderer({ element }) {
         style={{ position: 'absolute', inset: 0, overflow: 'visible' }}
       >
         {renderShape()}
-        {element.text && (
+        {element.textHtml ? (
+          <foreignObject x={0} y={0} width={w} height={h}>
+            <div
+              xmlns="http://www.w3.org/1999/xhtml"
+              style={{
+                width: '100%',
+                height: '100%',
+                boxSizing: 'border-box',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                color: safeCssColor(element.textColor, '#ffffff'),
+                fontSize: element.fontSize || 16,
+                overflow: 'hidden',
+                ...importedTextInsetStyles(element),
+              }}
+              dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(element.textHtml) }}
+            />
+          </foreignObject>
+        ) : element.text && (
           <text
             x={w / 2}
             y={h / 2}
