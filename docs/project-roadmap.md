@@ -1,6 +1,6 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: v1.9.7 — PPTX import fidelity hardening and corpus gates refreshed (2026-05-25)
+## Current Status: v1.10.0 — PPTX import real-browser fidelity gates refreshed (2026-05-27)
 
 Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system and now has clipping-safe portal popups for File, header AI/Share, Design, Transitions, Animations, Paragraph, Insert Advanced, Shape, Table, and Games surfaces. Parallax feature port (font-weight, line-height, timeline element, video controls, LaTeX improvements) landed in v1.7.1. Upstream selective port merged on 2026-05-14. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state, and the hybrid PPTX export/import pipeline.
 
@@ -22,7 +22,7 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | Export PDF                                         | Done                                                                                                      |
 | Export PPTX                                        | Done (hybrid native + high-res raster fallback, split helpers)                                            |
 | Project export/import (.navslides)                 | Done (manifest v1.1, partial media skip warnings)                                                         |
-| Import PPTX                                        | Done (editable objects plus fidelity/media hardening; 100.0% semantic / 99.0% round-trip on 10-deck checked-in corpus) |
+| Import PPTX                                        | Done (editable objects plus fidelity/media hardening; strict corpus 11/11 and 5-deck real-browser audit at 0 strict failures) |
 | Offline HTML export                                | Done (self-contained)                                                                                     |
 | Shareable links (with password option)             | Done                                                                                                      |
 | GitHub push integration                            | Done                                                                                                      |

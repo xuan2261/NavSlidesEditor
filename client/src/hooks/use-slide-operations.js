@@ -5,6 +5,7 @@ import {
   deleteSlidesAtIndices,
   duplicateSlidesAtIndices,
 } from './slide-operation-helpers'
+import { invalidatePptxFitMetaForUpdates } from '../utils/pptx-import-meta'
 
 /**
  * Hook encapsulating multi-element operations (align, group, delete-selected)
@@ -39,7 +40,11 @@ export function useSlideOperations({
             i === currentSlideIndexRef.current
               ? {
                   ...s,
-                  elements: (s.elements || []).map((el) => (map[el.id] ? { ...el, ...map[el.id] } : el)),
+                  elements: (s.elements || []).map((el) =>
+                    map[el.id]
+                      ? { ...el, ...invalidatePptxFitMetaForUpdates(el, map[el.id]) }
+                      : el
+                  ),
                 }
               : s
           ),

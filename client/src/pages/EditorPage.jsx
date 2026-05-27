@@ -85,6 +85,7 @@ import ThreeJs3DSceneTemplateSelectorModal from '../components/three-js-3d-scene
 import FileBrowserModal from '../components/file-browser-modal-to-select-and-insert-media'
 import { LiveSocketContext } from '../contexts/live-socket-context-provider.jsx'
 import { GAME_SHORTCUT_CONFIG } from '../utils/game-shortcut-config.js'
+import { invalidatePptxFitMetaForUpdates } from '../utils/pptx-import-meta'
 import {
   applyTranslatedNotes,
   getSlideNotesTranslationKey,
@@ -429,7 +430,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
               ? {
                   ...s,
                   elements: (s.elements || []).map((el) =>
-                    el.id === elemId ? { ...el, content: html } : el
+                    el.id === elemId
+                      ? { ...el, ...invalidatePptxFitMetaForUpdates(el, { content: html }) }
+                      : el
                   ),
                 }
               : s
@@ -523,7 +526,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
           i === currentSlideIndexRef.current
             ? {
                 ...s,
-                elements: (s.elements || []).map((el) => (el.id === id ? { ...el, ...updates } : el)),
+                elements: (s.elements || []).map((el) =>
+                  el.id === id ? { ...el, ...invalidatePptxFitMetaForUpdates(el, updates) } : el
+                ),
               }
             : s
         ),

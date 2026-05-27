@@ -120,6 +120,33 @@ function extractTextMetadata(html, element = {}) {
   return { ...fallback, ...metadata }
 }
 
+function normalizeImportedRichTextHtml(html) {
+  return String(html || '').replace(/\sstyle=(["'])(.*?)\1/gi, (_match, quote, style) => {
+    const safe = String(style)
+      .split(';')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .filter((part) => {
+        const prop = String(part.split(':')[0] || '').trim().toLowerCase()
+        return prop !== 'font-size' && prop !== 'line-height'
+      })
+      .join('; ')
+    return safe ? ` style=${quote}${safe}${quote}` : ''
+  })
+}
+
+function computeFitFontSizePx(box = {}, metadata = {}, extra = {}) {
+  const source = normalizeFontSize(metadata.fontSize) || 16
+  const height = Number(box.height)
+  const width = Number(box.width)
+  if (!Number.isFinite(height) || height <= 0) return source
+  const readableMin = 8
+  const heightLimit = height * 0.38
+  const textLength = Number(extra.textLength)
+  const widthLimit = Number.isFinite(width) && textLength > 0 && textLength <= 3 ? width * 0.38 : source
+  return Math.max(readableMin, Math.min(source, Math.round(Math.min(heightLimit, widthLimit) * 10) / 10))
+}
+
 function extractTextInsetsWithScale(element = {}, scale = { x: 1, y: 1 }, box = {}) {
   const toPx = (value, axisScale, maxDimension) => {
     const raw = readNumber(value, null)
@@ -138,11 +165,31 @@ function extractTextInsetsWithScale(element = {}, scale = { x: 1, y: 1 }, box = 
   return { left, right, top, bottom }
 }
 
+function buildPptxTextImportMeta(box = {}, metadata = {}, extra = {}) {
+  const round = (value) => {
+    const raw = Number(value)
+    return Number.isFinite(raw) ? Math.round(raw * 10) / 10 : undefined
+  }
+  return {
+    version: 1,
+    textFit: 'wrap',
+    sourceFontSizePx: round(metadata.fontSize),
+    fitFontSizePx: computeFitFontSizePx(box, metadata, extra),
+    sourceBox: {
+      width: round(box.width),
+      height: round(box.height),
+    },
+    ...extra,
+  }
+}
+
 module.exports = {
   buildBaseTextStyle,
+  buildPptxTextImportMeta,
   extractTextInsets: extractTextInsetsWithScale,
   extractTextMetadata,
   normalizeFontFamily,
   normalizeFontSize,
+  normalizeImportedRichTextHtml,
   plainText,
 }

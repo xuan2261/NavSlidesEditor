@@ -22,6 +22,20 @@ describe('element-renderers safety behavior', () => {
     expect(html).not.toContain('onclick=')
   })
 
+  it('adds imported PPTX text wrapping styles only when metadata is present', () => {
+    const plain = renderElement({ ...base, type: 'text', content: '<p>Normal</p>' }, {}, {})
+    expect(plain).not.toContain('overflow-wrap:anywhere')
+
+    const imported = renderElement(
+      { ...base, type: 'text', content: '<p>Imported</p>', _pptxImportMeta: { textFit: 'wrap', version: 1 } },
+      {},
+      {}
+    )
+    expect(imported).toContain('overflow-wrap:anywhere')
+    expect(imported).toContain('white-space:pre-wrap')
+    expect(imported).toContain('word-break:normal')
+  })
+
   it('sanitizes dangerous svg content', () => {
     const html = renderElement(
       {
@@ -304,6 +318,45 @@ describe('element-renderers safety behavior', () => {
 
     expect(html).toContain('Plan Launch')
     expect(html).toContain('Plan event')
+  })
+
+  it('clips source-cropped images in the shared renderer like the editor', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'image',
+        src: '/uploads/photo.jpg',
+        imageW: 260,
+        imageH: 120,
+        imageOffsetX: -30,
+        imageOffsetY: -10,
+        _pptxImportMeta: {
+          sourceCrop: true,
+          cropData: { left: 0.1, right: 0.1, top: 0.05, bottom: 0.05 },
+        },
+      },
+      {},
+      {}
+    )
+    expect(html).toContain('overflow:hidden')
+    expect(html).toContain('data-pptx-crop-intent="source-crop"')
+    expect(html).toContain('left:-30px')
+  })
+
+  it('validates imported fit font size before emitting shared CSS', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'text',
+        content: '<p>Imported</p>',
+        fontSize: 18,
+        _pptxImportMeta: { textFit: 'wrap', version: 1, fitFontSizePx: '1);background:url(javascript:alert(1))' },
+      },
+      {},
+      {}
+    )
+    expect(html).toContain('font-size:calc(18px * var(--font-zoom, 1))')
+    expect(html).not.toContain('javascript:')
   })
 
   it('renders table cells with per-side borders', () => {

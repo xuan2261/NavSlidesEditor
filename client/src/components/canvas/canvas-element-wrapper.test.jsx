@@ -123,6 +123,73 @@ describe('CanvasElement PPTX text insets', () => {
     expect(content.style.paddingLeft).toBe('9.6px')
     expect(content.style.paddingTop).toBe('4.8px')
   })
+
+  it('applies wrap-safe layout only to imported PPTX text', () => {
+    const { rerender } = renderCanvasElement(textElement)
+    let content = screen.getByTestId('slide-element-text-1').querySelector('.slide-text-content')
+    expect(content.style.overflowWrap).toBe('')
+
+    rerender(
+      <CanvasElement
+        element={{ ...textElement, _pptxImportMeta: { textFit: 'wrap', version: 1 } }}
+        isSelected={false}
+        isEditing={false}
+        isCropping={false}
+        cropState={null}
+        isDragging={false}
+        editor={null}
+        onPointerDown={vi.fn()}
+        onClick={vi.fn()}
+        onDoubleClick={vi.fn()}
+        onContextMenu={vi.fn()}
+        onCropHandleDown={vi.fn()}
+        onCommitCrop={vi.fn()}
+        onUpdateElement={vi.fn()}
+        iconPaths={{}}
+      />
+    )
+
+    content = screen.getByTestId('slide-element-text-1').querySelector('.slide-text-content')
+    expect(content.style.overflowWrap).toBe('anywhere')
+    expect(content.style.whiteSpace).toBe('pre-wrap')
+    expect(content.style.wordBreak).toBe('normal')
+  })
+})
+
+describe('CanvasElement image crop diagnostics', () => {
+  const imageElement = {
+    id: 'image-1',
+    type: 'image',
+    x: 0,
+    y: 0,
+    width: 200,
+    height: 100,
+    src: '/uploads/image.png',
+    objectFit: 'contain',
+  }
+
+  it('does not mark regular images as source-cropped', () => {
+    renderCanvasElement(imageElement)
+    const wrapper = screen.getByTestId('slide-element-image-1')
+    expect(wrapper.getAttribute('data-pptx-crop-intent')).toBeNull()
+  })
+
+  it('marks imported source crop metadata for audit diagnostics', () => {
+    renderCanvasElement({
+      ...imageElement,
+      imageW: 250,
+      imageH: 120,
+      imageOffsetX: -20,
+      imageOffsetY: -10,
+      _pptxImportMeta: {
+        sourceCrop: true,
+        cropData: { left: 0.1, right: 0.1, top: 0.05, bottom: 0.05 },
+      },
+    })
+    const wrapper = screen.getByTestId('slide-element-image-1')
+    expect(wrapper.getAttribute('data-pptx-crop-intent')).toBe('source-crop')
+    expect(wrapper.getAttribute('data-pptx-crop-data')).toContain('"left":0.1')
+  })
 })
 
 describe('CanvasElement html embed sandbox', () => {

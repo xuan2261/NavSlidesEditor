@@ -3,7 +3,7 @@ const { createMediaIndex } = require('../media')
 const { sanitizeHtml } = require('../sanitize')
 const { mapChart } = require('../chart-output-to-navslides-mapper')
 const { colorValue, gradientBackground } = require('./utils-color')
-const { extractTextInsets, extractTextMetadata } = require('./utils-text')
+const { buildPptxTextImportMeta, extractTextInsets, extractTextMetadata, normalizeImportedRichTextHtml } = require('./utils-text')
 const { baseElement, extractShadow, placeholder } = require('./utils-base')
 const { mapShape } = require('./map-shape')
 const { mapImage } = require('./map-image')
@@ -11,7 +11,7 @@ const { mapTable } = require('./map-table')
 const { mapAudio, mapMath, mapVideo } = require('./map-media')
 const { flattenGroupElement } = require('./map-group')
 const { flattenDiagramElement } = require('./map-diagram')
-const { normalizeSourceSize } = require('../geometry')
+const { fitBoxWithinBounds, normalizeSourceSize } = require('../geometry')
 const { CANVAS_SIZE } = require('../constants')
 
 async function mapElement(element, context) {
@@ -39,16 +39,23 @@ function mapChartElement(element, context) {
 
 function mapText(element, context) {
   context.stats.textCount += 1
-  const content = sanitizeHtml(element.content)
+  const sanitizedContent = sanitizeHtml(element.content)
+  const content = normalizeImportedRichTextHtml(sanitizedContent)
   const box = baseElement(element, context.scale, context.zIndex)
+  const fittedBox = fitBoxWithinBounds(box)
   const text = {
     ...box,
+    ...fittedBox,
     type: 'text',
     content,
-    ...extractTextMetadata(content, element),
+    ...extractTextMetadata(sanitizedContent, element),
   }
-  const textInsets = extractTextInsets(element, context.scale, box)
-  if (textInsets) text._pptxImportMeta = { ...(text._pptxImportMeta || {}), textInsets, textInsetsUnit: 'px' }
+  const textInsets = extractTextInsets(element, context.scale, fittedBox)
+  const textLength = String(text.content || '').replace(/<[^>]+>/g, '').trim().length
+  text._pptxImportMeta = buildPptxTextImportMeta(fittedBox, text, {
+    textLength,
+    ...(textInsets ? { textInsets, textInsetsUnit: 'px' } : {}),
+  })
   const textShadow = extractShadow(element, context.scale)
   if (textShadow) {
     text.shadowX = textShadow.shadowX

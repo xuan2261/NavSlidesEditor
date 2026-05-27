@@ -4,7 +4,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.9.9** — Electron startup hotfix for packaged PPTX import/export shared runtime imports.
+Current release: **v1.10.0** — PPTX import real-browser fidelity fixes with strict browser audit release gates.
 
 ## Features
 
@@ -277,13 +277,21 @@ Verification typically runs in this order:
    ```bash
    npm run test:corpus
    ```
-5. Load tests with `k6`:
+5. PPTX real-browser layout audit:
+   ```bash
+   npm run test:pptx:browser-audit        # strict smoke subset for PR/runtime-sensitive checks
+   npm run test:pptx:browser-audit:full   # strict full 5-deck release gate
+   npm run test:pptx:browser-audit:headed # headed full audit for manual inspection
+   npm run test:pptx:strict               # corpus + full browser audit
+   ```
+6. Load tests with `k6`:
    ```bash
    npm run test:load:api
    npm run test:load:ws
    ```
 
 Install `k6` from the official guide if you want to run the load suite locally.
+PPTX browser audit artifacts are written under `plans/reports/pptx-import-real-browser-audit-runs/`, which is ignored by git because screenshots may contain slide content.
 
 ### E2E conventions
 

@@ -24,6 +24,22 @@ describe('server-basic-renderers', () => {
     expect(slide.addText).toHaveBeenCalledTimes(1)
   })
 
+  it('uses fitted imported text font size for server pptx export', () => {
+    const slide = { addText: vi.fn() }
+    addTextElement(
+      slide,
+      {
+        content: '<p>Hello</p>',
+        textColor: '#ffffff',
+        fontSize: 24,
+        _pptxImportMeta: { fitFontSizePx: 12 },
+      },
+      { x: 0, y: 0, w: 4, h: 1 }
+    )
+
+    expect(slide.addText.mock.calls[0][1].fontSize).toBe(9)
+  })
+
   it('maps shape and line options', () => {
     const slide = { addShape: vi.fn(), addText: vi.fn() }
     addShapeElement(
@@ -81,6 +97,25 @@ describe('server-basic-renderers', () => {
     expect(runs.some((run) => run.text === 'Hello' && run.options.bold)).toBe(true)
     expect(runs[0].options.align).toBe('right')
     expect(options).toMatchObject({ align: 'right', color: '123456', fontFace: 'Arial', fontSize: 15 })
+  })
+
+  it('uses fitted imported shape text font size for server pptx export', () => {
+    const slide = { addShape: vi.fn(), addText: vi.fn() }
+    addShapeElement(
+      slide,
+      {
+        shape: 'rect',
+        fill: '#22c55e',
+        stroke: '#111827',
+        text: 'Hello',
+        textHtml: '<p>Hello</p>',
+        fontSize: 24,
+        _pptxImportMeta: { fitFontSizePx: 12 },
+      },
+      { x: 0, y: 0, w: 2, h: 1 }
+    )
+
+    expect(slide.addText.mock.calls[0][1].fontSize).toBe(9)
   })
 
   it('preserves merged table cell metadata and per-cell sizing styles', () => {

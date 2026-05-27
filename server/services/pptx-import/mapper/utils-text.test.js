@@ -8,6 +8,7 @@ const {
   normalizeFontFamily,
   normalizeFontSize,
   plainText,
+  normalizeImportedRichTextHtml,
 } = textUtils
 
 describe('pptx mapper text utilities', () => {
@@ -41,7 +42,7 @@ describe('pptx mapper text utilities', () => {
     )
     expect(metadata).toMatchObject({
       textAlign: 'right',
-      fontSize: 22,
+      fontSize: 29.3,
       fontFamily: 'Calibri',
       textColor: '#abcdef',
     })
@@ -108,5 +109,11 @@ describe('pptx mapper text utilities', () => {
     )
 
     expect(result).toEqual({ left: 0, right: 60, top: null, bottom: null })
+  })
+
+  it('removes imported run font sizing so element-level fit can control layout', () => {
+    expect(
+      normalizeImportedRichTextHtml('<p style="font-size:24px;line-height:1.4;color:#123456">Hello</p>')
+    ).toBe('<p style="color:#123456">Hello</p>')
   })
 })

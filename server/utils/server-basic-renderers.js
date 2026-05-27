@@ -11,12 +11,18 @@ const {
 } = require('revealjs-shared')
 const { normalizeServerImageSource } = require('./server-image-source')
 
+function effectiveFontSize(element) {
+  const fit = Number(element?._pptxImportMeta?.fitFontSizePx)
+  return Number.isFinite(fit) && fit > 0 ? fit : element.fontSize || 16
+}
+
 function addTextElement(slide, element, bounds) {
+  const fontSize = effectiveFontSize(element)
   const runs = htmlToPptTextRuns(element.content || '', {
     align: element.textAlign,
     color: element.textColor || '#ffffff',
     fontFace: element.fontFamily,
-    fontSize: element.fontSize || 16,
+    fontSize,
   })
   if (!runs.length) return
 
@@ -25,7 +31,7 @@ function addTextElement(slide, element, bounds) {
     ...bounds,
     color: baseColor.color,
     fontFace: element.fontFamily,
-    fontSize: toPptFontSize(element.fontSize || 16),
+    fontSize: toPptFontSize(fontSize),
     margin: 0.06,
     valign: 'top',
     fit: 'shrink',
@@ -118,12 +124,13 @@ function addShapeElement(slide, element, bounds) {
   slide.addShape(shapeType || 'rect', shapeOptions)
 
   if (element.text || element.textHtml) {
+    const fontSize = effectiveFontSize(element)
     const textColor = normalizeCssColor(element.textColor || '#ffffff', DEFAULT_TEXT_COLOR)
     const textOptions = {
       ...bounds,
       color: textColor.color,
       fontFace: element.fontFamily,
-      fontSize: toPptFontSize(element.fontSize || 16),
+      fontSize: toPptFontSize(fontSize),
       margin: 0.05,
       align: element.textAlign || 'center',
       valign: 'mid',
@@ -135,7 +142,7 @@ function addShapeElement(slide, element, bounds) {
         align: element.textAlign || 'center',
         color: element.textColor || '#ffffff',
         fontFace: element.fontFamily,
-        fontSize: element.fontSize || 16,
+        fontSize,
       })
       : []
     if (runs.length || element.text) slide.addText(runs.length ? runs : element.text, textOptions)

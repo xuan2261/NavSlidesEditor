@@ -1,4 +1,5 @@
 const { buildMediaUrlAllowlist } = require('../constants')
+const { fitBoxWithinBounds } = require('../geometry')
 const { persistMediaBlob } = require('../media')
 const { baseElement, placeholder } = require('./utils-base')
 const { mapImage } = require('./map-image')
@@ -64,8 +65,10 @@ function mapMath(element, context) {
     return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'math', 'Math equation')]
   }
   context.stats.mathCount = (context.stats.mathCount || 0) + 1
+  const box = baseElement(element, context.scale, context.zIndex)
   return [{
-    ...baseElement(element, context.scale, context.zIndex),
+    ...box,
+    ...fitBoxWithinBounds(box),
     type: 'latex',
     content: cleanLatex,
     latex: cleanLatex,

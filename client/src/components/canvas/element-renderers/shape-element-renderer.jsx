@@ -27,6 +27,21 @@ function importedTextInsetStyles(element) {
   }
 }
 
+function importedTextWrapStyles(element) {
+  return element?._pptxImportMeta
+    ? { overflowWrap: 'anywhere', wordBreak: 'normal', whiteSpace: 'pre-wrap' }
+    : null
+}
+
+function importedFontSize(element) {
+  const fit = Number(element?._pptxImportMeta?.fitFontSizePx)
+  return Number.isFinite(fit) && fit > 0 ? fit : element.fontSize || 16
+}
+
+function innerDimension(value, strokeWidth) {
+  return Math.max(0, value - strokeWidth)
+}
+
 export function ShapeRenderer({ element }) {
   const w = element.width,
     h = element.height
@@ -58,8 +73,8 @@ export function ShapeRenderer({ element }) {
             <rect
               x={sw / 2}
               y={sw / 2}
-              width={w - sw}
-              height={h - sw}
+              width={innerDimension(w, sw)}
+              height={innerDimension(h, sw)}
               rx={element.borderRadius || 0}
             />
           </g>
@@ -67,7 +82,7 @@ export function ShapeRenderer({ element }) {
       case 'rounded-rect':
         return (
           <g {...gProps}>
-            <rect x={sw / 2} y={sw / 2} width={w - sw} height={h - sw} rx={Math.min(w, h) * 0.15} />
+            <rect x={sw / 2} y={sw / 2} width={innerDimension(w, sw)} height={innerDimension(h, sw)} rx={Math.min(w, h) * 0.15} />
           </g>
         )
       case 'circle':
@@ -123,7 +138,7 @@ export function ShapeRenderer({ element }) {
       default:
         return (
           <g {...gProps}>
-            <rect x={sw / 2} y={sw / 2} width={w - sw} height={h - sw} />
+            <rect x={sw / 2} y={sw / 2} width={innerDimension(w, sw)} height={innerDimension(h, sw)} />
           </g>
         )
     }
@@ -152,8 +167,9 @@ export function ShapeRenderer({ element }) {
                 justifyContent: 'center',
                 textAlign: 'center',
                 color: safeCssColor(element.textColor, '#ffffff'),
-                fontSize: element.fontSize || 16,
+                fontSize: importedFontSize(element),
                 overflow: 'hidden',
+                ...importedTextWrapStyles(element),
                 ...importedTextInsetStyles(element),
               }}
               dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(element.textHtml) }}

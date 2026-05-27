@@ -24,6 +24,12 @@ server/vendor/
 playwright-report/
 test-results/
 repomix-output.xml
+plans/reports/pptx-import-real-browser-audit-runs/
+plans/reports/pptx-import-real-browser-screenshots/
+plans/reports/pptx-import-real-browser-audit-latest.json
+plans/reports/pptx-import-real-browser-audit.json
+plans/reports/pptx-import-real-browser-audit.md
+PPTX/*_imported_browser.png
 
 # Coverage (Vitest v8)
 coverage/

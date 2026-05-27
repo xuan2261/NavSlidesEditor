@@ -54,6 +54,14 @@ function clampBox(box, bounds = CANVAS_SIZE) {
   }
 }
 
+function fitBoxWithinBounds(box, bounds = CANVAS_SIZE) {
+  const width = Math.min(Math.max(1, readNumber(box?.width, 1)), bounds.width)
+  const height = Math.min(Math.max(1, readNumber(box?.height, 1)), bounds.height)
+  const x = Math.min(Math.max(0, readNumber(box?.x, 0)), Math.max(0, bounds.width - width))
+  const y = Math.min(Math.max(0, readNumber(box?.y, 0)), Math.max(0, bounds.height - height))
+  return { x, y, width, height }
+}
+
 function inferLineCoordinateMode(element, box) {
   const hasCoords =
     element?.x1 != null &&
@@ -195,6 +203,7 @@ function mapBoxByMatrix(box, matrix) {
 module.exports = {
   applyToPoint,
   clampBox,
+  fitBoxWithinBounds,
   identityMatrix,
   mapBox,
   mapBoxByMatrix,

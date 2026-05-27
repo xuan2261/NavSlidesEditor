@@ -3,7 +3,7 @@ const { sanitizeHtml } = require('../sanitize')
 const { clampBox, mapBox, mapLineGeometry, readNumber } = require('../geometry')
 const { arrowMarker, colorValue, gradientBackground, svgAttr } = require('./utils-color')
 const { baseElement, extractShadow, scaleLength, shapeName } = require('./utils-base')
-const { extractTextInsets, extractTextMetadata, plainText } = require('./utils-text')
+const { buildPptxTextImportMeta, extractTextInsets, extractTextMetadata, normalizeImportedRichTextHtml, plainText } = require('./utils-text')
 
 function isKnownBuiltInShapeType(shapType = '') {
   const value = String(shapType || '').toLowerCase().replace(/[\s_-]/g, '')
@@ -36,7 +36,8 @@ function isKnownBuiltInShapeType(shapType = '') {
 
 function mapShape(element, context) {
   const shape = shapeName(element.shapType)
-  const textHtml = sanitizeHtml(element.content)
+  const sanitizedTextHtml = sanitizeHtml(element.content)
+  const textHtml = normalizeImportedRichTextHtml(sanitizedTextHtml)
   if (shape === 'line') {
     context.stats.shapeCount += 1
     const lineGeom = mapLineGeometry(element, context.scale)
@@ -77,7 +78,7 @@ function mapShape(element, context) {
     }]
   }
   context.stats.shapeCount += 1
-  const textMetadata = extractTextMetadata(textHtml, element)
+  const textMetadata = extractTextMetadata(sanitizedTextHtml, element)
   const box = baseElement(element, context.scale, context.zIndex, mapBox(element, context.scale))
   const fillFallback = textHtml ? 'transparent' : '#e5e7eb'
   const mapped = {
@@ -93,7 +94,12 @@ function mapShape(element, context) {
   }
   if (textHtml) mapped.textHtml = textHtml
   const textInsets = extractTextInsets(element, context.scale, box)
-  if (textInsets) mapped._pptxImportMeta = { ...(mapped._pptxImportMeta || {}), textInsets, textInsetsUnit: 'px' }
+  if (textHtml) {
+    mapped._pptxImportMeta = buildPptxTextImportMeta(box, mapped, {
+      textLength: mapped.text.length,
+      ...(textInsets ? { textInsets, textInsetsUnit: 'px' } : {}),
+    })
+  }
   if (element.fill?.type === 'gradient') mapped.fillGradient = gradientBackground(element.fill)
   const shadow = extractShadow(element, context.scale)
   if (shadow) {

@@ -45,6 +45,19 @@ function importedTextInsetStyle(el) {
   ].join('')
 }
 
+function importedTextWrapStyle(el) {
+  return el?._pptxImportMeta ? 'overflow-wrap:anywhere;word-break:normal;white-space:pre-wrap;' : ''
+}
+
+function importedFontSize(el) {
+  const fit = Number(el?._pptxImportMeta?.fitFontSizePx)
+  return Number.isFinite(fit) && fit > 0 ? fit : el.fontSize || 16
+}
+
+function innerDimension(value, strokeWidth) {
+  return Math.max(0, value - strokeWidth)
+}
+
 function shapeSvgString(el) {
   const w = el.width,
     h = el.height
@@ -63,10 +76,10 @@ function shapeSvgString(el) {
     let shapeEl = ''
     switch (shape) {
       case 'rect':
-        shapeEl = `<rect x="${sw / 2}" y="${sw / 2}" width="${w - sw}" height="${h - sw}" rx="${el.borderRadius || 0}" />`
+        shapeEl = `<rect x="${sw / 2}" y="${sw / 2}" width="${innerDimension(w, sw)}" height="${innerDimension(h, sw)}" rx="${el.borderRadius || 0}" />`
         break
       case 'rounded-rect':
-        shapeEl = `<rect x="${sw / 2}" y="${sw / 2}" width="${w - sw}" height="${h - sw}" rx="${Math.min(w, h) * 0.15}" />`
+        shapeEl = `<rect x="${sw / 2}" y="${sw / 2}" width="${innerDimension(w, sw)}" height="${innerDimension(h, sw)}" rx="${Math.min(w, h) * 0.15}" />`
         break
       case 'circle':
         shapeEl = `<ellipse cx="${w / 2}" cy="${h / 2}" rx="${Math.max(0, w / 2 - sw / 2)}" ry="${Math.max(0, h / 2 - sw / 2)}" />`
@@ -119,17 +132,17 @@ function shapeSvgString(el) {
         break
       }
       default:
-        shapeEl = `<rect x="${sw / 2}" y="${sw / 2}" width="${w - sw}" height="${h - sw}" />`
+        shapeEl = `<rect x="${sw / 2}" y="${sw / 2}" width="${innerDimension(w, sw)}" height="${innerDimension(h, sw)}" />`
     }
     inner = `<g fill="${fill}" stroke="${stroke}" stroke-width="${sw}">${shapeEl}</g>`
   }
 
   let textEl = ''
   if (el.textHtml) {
-    const fs = el.fontSize || 16
+    const fs = importedFontSize(el)
     const tc = safeCssColor(el.textColor, '#ffffff')
     const richText = sanitizeRichTextHtml(el.textHtml)
-    textEl = `<foreignObject x="0" y="0" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;color:${tc};font-size:${fs}px;overflow:hidden;${importedTextInsetStyle(el)}">${richText}</div></foreignObject>`
+    textEl = `<foreignObject x="0" y="0" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;color:${tc};font-size:${fs}px;overflow:hidden;${importedTextWrapStyle(el)}${importedTextInsetStyle(el)}">${richText}</div></foreignObject>`
   } else if (el.text) {
     const fs = el.fontSize || 16
     const tc = safeCssColor(el.textColor, '#ffffff')

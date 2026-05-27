@@ -136,4 +136,32 @@ describe('shapeUtils', () => {
     expect(rich).toContain('padding-left:9.6px')
     expect(rich).toContain('padding-top:4.8px')
   })
+
+  it('adds imported PPTX wrapping styles to shared rich shape text', () => {
+    const rich = shapeSvgString({
+      shape: 'rect',
+      width: 160,
+      height: 80,
+      textHtml: '<span>Long text</span>',
+      _pptxImportMeta: { textFit: 'wrap', version: 1 },
+    })
+
+    expect(rich).toContain('overflow-wrap:anywhere')
+    expect(rich).toContain('white-space:pre-wrap')
+    expect(rich).toContain('word-break:normal')
+  })
+
+  it('does not emit negative rect dimensions when stroke exceeds shape size', () => {
+    const rich = shapeSvgString({
+      shape: 'rect',
+      width: 3,
+      height: 3,
+      strokeWidth: 8,
+      fill: '#ffffff',
+      stroke: '#000000',
+    })
+
+    expect(rich).not.toContain('width="-')
+    expect(rich).not.toContain('height="-')
+  })
 })

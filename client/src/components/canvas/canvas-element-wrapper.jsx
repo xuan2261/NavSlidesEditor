@@ -43,6 +43,17 @@ function importedTextInsetStyles(element) {
   }
 }
 
+function importedTextWrapStyles(element) {
+  return element?._pptxImportMeta
+    ? { overflowWrap: 'anywhere', wordBreak: 'normal', whiteSpace: 'pre-wrap' }
+    : null
+}
+
+function importedFontSize(element) {
+  const fit = Number(element?._pptxImportMeta?.fitFontSizePx)
+  return Number.isFinite(fit) && fit > 0 ? fit : element.fontSize || 16
+}
+
 export default function CanvasElement({
   element,
   isSelected,
@@ -102,9 +113,26 @@ export default function CanvasElement({
       : undefined,
   }
   const textInsetStyles = importedTextInsetStyles(element)
-  const textPreviewStyle = { width: '100%', height: '100%', overflow: 'hidden', color: 'white', padding: '8px 12px', boxSizing: 'border-box', fontSize: '16px', ...textInsetStyles }
-  const editorContentStyle = { width: '100%', height: '100%', color: 'white', boxSizing: 'border-box', ...textInsetStyles }
+  const textWrapStyles = importedTextWrapStyles(element)
+  const textElementStyle = {
+    color: element.textColor || 'white',
+    fontFamily: element.fontFamily,
+    fontSize: importedFontSize(element),
+    lineHeight: element.lineHeight,
+  }
+  const textPadding = element?._pptxImportMeta ? 0 : '8px 12px'
+  const textPreviewStyle = { width: '100%', height: '100%', overflow: 'hidden', padding: textPadding, boxSizing: 'border-box', ...textElementStyle, ...textWrapStyles, ...textInsetStyles }
+  const editorContentStyle = { width: '100%', height: '100%', boxSizing: 'border-box', ...textElementStyle, ...textWrapStyles, ...textInsetStyles }
   const imageWrapperStyle = { position: 'relative', width: '100%', height: '100%', overflow: isCropping ? 'visible' : 'hidden' }
+  const sourceCropData = element.type === 'image' && element._pptxImportMeta?.sourceCrop
+    ? element._pptxImportMeta.cropData
+    : null
+  const cropDiagnostics = sourceCropData
+    ? {
+        'data-pptx-crop-intent': 'source-crop',
+        'data-pptx-crop-data': JSON.stringify(sourceCropData),
+      }
+    : {}
   const htmlFrameStyle = { width: '100%', height: '100%', border: 'none', display: 'block', pointerEvents: 'none' }
   const codeBlockStyle = { margin: 0, padding: '10px 14px', width: '100%', height: '100%', overflow: 'hidden', boxSizing: 'border-box', fontFamily: "'Fira Code','JetBrains Mono','Courier New',monospace", fontSize: element.fontSize || 14, lineHeight: 1.5, borderRadius: 0 }
   const videoStyle = { width: '100%', height: '100%', objectFit: element.objectFit || 'contain', display: 'block', pointerEvents: isSelected && !isDragging ? 'auto' : 'none' }
@@ -122,6 +150,7 @@ export default function CanvasElement({
       data-testid={`slide-element-${element.id}`}
       data-element-id={element.id}
       data-element-type={element.type}
+      {...cropDiagnostics}
       style={elementWrapperStyle}
       onMouseDown={(e) => { if (isEditing) { e.stopPropagation(); return }; if (!isCropping) onPointerDown(e, 'move', null) }}
       onClick={(e) => { if (!isEditing) onClick(e); else e.stopPropagation() }}

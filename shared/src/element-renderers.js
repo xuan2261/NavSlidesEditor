@@ -118,8 +118,12 @@ function buildWrapperAttrs(el, slide) {
 function renderText(el, style, wrap, vis) {
   const tc = el.textColor ? `;color:${el.textColor}` : ''
   const ff = el.fontFamily ? `;font-family:${el.fontFamily}` : ''
-  const fs = el.fontSize ? `;font-size:calc(${el.fontSize}px * var(--font-zoom, 1))` : ''
-  return `<div${wrap} style="${style}${vis}padding:8px 12px;color:white${tc}${ff}${fs}">${sanitizeRichTextHtml(el.content || '')}</div>`
+  const importedFit = Number(el._pptxImportMeta?.fitFontSizePx)
+  const fontSize = Number.isFinite(importedFit) && importedFit > 0 ? importedFit : el.fontSize
+  const fs = fontSize ? `;font-size:calc(${fontSize}px * var(--font-zoom, 1))` : ''
+  const fit = el._pptxImportMeta ? ';overflow-wrap:anywhere;word-break:normal;white-space:pre-wrap' : ''
+  const padding = el._pptxImportMeta ? '0' : '8px 12px'
+  return `<div${wrap} style="${style}${vis}padding:${padding};color:white${tc}${ff}${fs}${fit}">${sanitizeRichTextHtml(el.content || '')}</div>`
 }
 
 function buildCitationHtml(el) {
@@ -150,11 +154,15 @@ function renderImage(el, style, wrap, vis, opts) {
   const filterStyle = imgFilterParts ? `filter:${imgFilterParts};` : ''
   const imgReset = opts.forPrint ? 'max-width:none;max-height:none;' : ''
   const citationHtml = buildCitationHtml(el)
+  const sourceCrop = el._pptxImportMeta?.sourceCrop && el._pptxImportMeta?.cropData
+  const cropAttrs = sourceCrop
+    ? ` data-pptx-crop-intent="source-crop" data-pptx-crop-data="${escapeHtml(JSON.stringify(el._pptxImportMeta.cropData))}"`
+    : ''
   if (el.imageW != null) {
     const offX = el.imageOffsetX ?? 0
     const offY = el.imageOffsetY ?? 0
     const imgStyle = `position:absolute;left:${offX}px;top:${offY}px;width:${el.imageW}px;height:${el.imageH}px;object-fit:${el.objectFit || 'contain'};${filterStyle}${imgReset}`
-    return `<div${wrap} style="${style}${vis}overflow:visible;"><img src="${src}" alt="${el.alt || ''}" style="${imgStyle}" />${citationHtml}</div>`
+    return `<div${wrap}${cropAttrs} style="${style}${vis}overflow:hidden;"><img src="${src}" alt="${el.alt || ''}" style="${imgStyle}" />${citationHtml}</div>`
   }
   return `<div${wrap} style="${style}${vis}overflow:visible;"><img src="${src}" alt="${el.alt || ''}" style="display:block;width:100%;height:100%;object-fit:${el.objectFit || 'contain'};${filterStyle}${imgReset}" />${citationHtml}</div>`
 }

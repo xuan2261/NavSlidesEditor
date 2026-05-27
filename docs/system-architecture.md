@@ -332,6 +332,12 @@ billing, and offline sandbox inlining are not part of Phase 1.
   parses `.pptx` files via `pptxtojson` (primary) with `pptx2json` fallback,
   applies ZIP/package budget guards, and maps text/images/shapes/tables to
   NavSlides element types via shared geometry normalization; charts/equations/SmartArt become locked placeholders.
+- Imported PPTX text carries `_pptxImportMeta` fit/wrap metadata that editor,
+  shared HTML export, and PPTX export paths honor; user edits invalidate stale
+  import-fit metadata.
+- Imported PPTX image crop is represented as source-crop metadata plus
+  editor-native image offsets. Real-browser audit reports source crop separately
+  from unexpected clipping, and image wrappers are fitted within slide bounds.
 - PPTX HTML/LaTeX rasterization uses an offscreen iframe capture path aligned
   with print export: embed content is wrapped as a full document, common CDN
   dependencies are resolved through local `/vendor` assets, and LaTeX/TikZ
@@ -339,6 +345,9 @@ billing, and offline sandbox inlining are not part of Phase 1.
 - Corpus strict validation now includes by-type geometry drift and property
   coverage metrics from the PPTX fidelity harness, with generated-fixture
   per-type hard gates layered on top of existing global strict thresholds.
+- PPTX layout regression protection has two browser gates: PR/runtime-sensitive
+  strict smoke (`npm run test:pptx:browser-audit`) and release-blocking full
+  strict audit (`npm run test:pptx:browser-audit:full`).
 - `exportPptx.js` reuses `getSlideNotes()` so speaker notes stay aligned across
   HTML and PPTX exports, and it preserves slide z-order by exporting sorted
   element stacks.

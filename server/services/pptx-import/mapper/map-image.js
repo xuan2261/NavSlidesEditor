@@ -1,4 +1,4 @@
-const { mapBox, readNumber } = require('../geometry')
+const { fitBoxWithinBounds, mapBox, readNumber } = require('../geometry')
 const { persistImageForElement } = require('../media')
 const { baseElement, placeholder, scaleLength } = require('./utils-base')
 const { plainText } = require('./utils-text')
@@ -21,7 +21,7 @@ async function mapImage(element, context) {
     )]
   }
   context.stats.imageCount += 1
-  const box = mapBox(element, context.scale)
+  const box = fitBoxWithinBounds(mapBox(element, context.scale))
   const img = { ...baseElement(element, context.scale, context.zIndex, box), type: 'image', src }
   const fillMode = typeof element.fill === 'string' ? element.fill : element.fill?.mode || element.fill?.fit
   if (element.geom === 'picture' || fillMode === 'cover') img.objectFit = 'cover'
@@ -66,7 +66,7 @@ async function mapImage(element, context) {
     img.imageH = imageH
     img.imageOffsetX = -Math.round(imageW * left)
     img.imageOffsetY = -Math.round(imageH * top)
-    img._pptxImportMeta = { ...(img._pptxImportMeta || {}), cropData: { top, bottom, left, right } }
+    img._pptxImportMeta = { ...(img._pptxImportMeta || {}), sourceCrop: true, cropData: { top, bottom, left, right } }
   }
   return [img]
 }

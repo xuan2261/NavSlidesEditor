@@ -41,6 +41,12 @@ E2E structure conventions:
 - Page-object helper files live in `tests/e2e/pages/` and use kebab-case filenames.
 - Wait with `expect.poll`, locator assertions with explicit timeouts, and `waitForResponse`; do not add `waitForTimeout`.
 - Keep E2E spec files at or below 200 LOC. Split by concern when a file grows past that cap.
+- PPTX import layout regressions must use the real-browser audit commands:
+  `npm run test:pptx:browser-audit` for strict smoke and
+  `npm run test:pptx:browser-audit:full` for release signoff. Use
+  `npm run test:pptx:browser-audit:headed` when manual visual inspection is
+  needed. Audit artifacts stay under ignored
+  `plans/reports/pptx-import-real-browser-audit-runs/`.
 
 Canvas selector IDs are stable and must not be renamed:
 

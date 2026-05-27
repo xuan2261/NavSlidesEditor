@@ -68,4 +68,42 @@ describe('ShapeRenderer', () => {
     expect(textContent.style.paddingLeft).toBe('9.6px')
     expect(textContent.style.paddingTop).toBe('4.8px')
   })
+
+  it('applies wrap-safe layout to imported rich shape text', () => {
+    const { container } = render(
+      <ShapeRenderer
+        element={{
+          shape: 'rect',
+          width: 160,
+          height: 80,
+          textHtml: '<span>Long Vietnamese shape text</span>',
+          _pptxImportMeta: { textFit: 'wrap', version: 1 },
+        }}
+      />
+    )
+
+    const textContent = container.querySelector('foreignObject div')
+    expect(textContent.style.overflowWrap).toBe('anywhere')
+    expect(textContent.style.whiteSpace).toBe('pre-wrap')
+    expect(textContent.style.wordBreak).toBe('normal')
+  })
+
+  it('does not emit negative rect dimensions when stroke exceeds shape size', () => {
+    const { container } = render(
+      <ShapeRenderer
+        element={{
+          shape: 'rect',
+          width: 3,
+          height: 3,
+          strokeWidth: 8,
+          fill: '#ffffff',
+          stroke: '#000000',
+        }}
+      />
+    )
+
+    const rect = container.querySelector('rect')
+    expect(Number(rect.getAttribute('width'))).toBeGreaterThanOrEqual(0)
+    expect(Number(rect.getAttribute('height'))).toBeGreaterThanOrEqual(0)
+  })
 })

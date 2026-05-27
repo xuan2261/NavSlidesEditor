@@ -8,7 +8,7 @@ import {
   normalizeCssColor,
   normalizeImageSource,
 } from './export-pptx-core'
-import { addImageElement, addShapeElement, addTableElement } from './export-pptx-basic-renderers'
+import { addImageElement, addShapeElement, addTableElement, addTextElement } from './export-pptx-basic-renderers'
 
 describe('export-pptx-core', () => {
   it('derives landscape and portrait layouts from aspect ratio', () => {
@@ -99,6 +99,22 @@ describe('export-pptx-core', () => {
     expect(border?.[2].fill.transparency).toBe(100)
   })
 
+  it('exports imported text with fitted font size', () => {
+    const calls = []
+    addTextElement(
+      { addText: (runs, options) => calls.push({ runs, options }) },
+      {
+        content: '<p>Hello</p>',
+        textColor: '#ffffff',
+        fontSize: 24,
+        _pptxImportMeta: { fitFontSizePx: 12 },
+      },
+      { x: 0, y: 0, w: 2, h: 1 }
+    )
+
+    expect(calls[0].options.fontSize).toBe(9)
+  })
+
   it('exports imported shape rich text as PPT runs', () => {
     const calls = []
     const slide = {
@@ -127,6 +143,31 @@ describe('export-pptx-core', () => {
     expect(textCall[1].some((run) => run.text === 'Hello' && run.options.bold)).toBe(true)
     expect(textCall[1][0].options.align).toBe('right')
     expect(textCall[2]).toMatchObject({ align: 'right', color: '123456', fontFace: 'Arial', fontSize: 15 })
+  })
+
+  it('exports imported shape text with fitted font size', () => {
+    const calls = []
+    const slide = {
+      addShape: (type, options) => calls.push(['shape', type, options]),
+      addText: (text, options) => calls.push(['text', text, options]),
+    }
+
+    addShapeElement(
+      slide,
+      {
+        shape: 'rect',
+        fill: '#22c55e',
+        stroke: '#111827',
+        text: 'Hello',
+        textHtml: '<p>Hello</p>',
+        fontSize: 24,
+        _pptxImportMeta: { fitFontSizePx: 12 },
+      },
+      { x: 0, y: 0, w: 2, h: 1 }
+    )
+
+    const textCall = calls.find((call) => call[0] === 'text')
+    expect(textCall[2].fontSize).toBe(9)
   })
 
   it('exports merged table cells and per-cell styles', () => {

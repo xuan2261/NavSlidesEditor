@@ -252,6 +252,17 @@ exports[`pptx mapper golden masters > maps table deterministically 1`] = `
 exports[`pptx mapper golden masters > maps text deterministically 1`] = `
 [
   {
+    "_pptxImportMeta": {
+      "fitFontSizePx": 15.2,
+      "sourceBox": {
+        "height": 40,
+        "width": 180,
+      },
+      "sourceFontSizePx": undefined,
+      "textFit": "wrap",
+      "textLength": 11,
+      "version": 1,
+    },
     "content": "<p>Hello <b>world</b></p>",
     "height": 40,
     "opacity": 1,

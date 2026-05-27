@@ -65,6 +65,14 @@ describe('pptx property mapping hardening', () => {
         bottom: 5.3,
       })
       expect(text._pptxImportMeta.textInsetsUnit).toBe('px')
+      expect(text._pptxImportMeta).toMatchObject({
+        version: 1,
+        textFit: 'wrap',
+        sourceFontSizePx: 32,
+        fitFontSizePx: 32,
+        sourceBox: { width: 300, height: 120 },
+      })
+      expect(text.content).not.toContain('font-size')
     })
   })
 
@@ -110,6 +118,31 @@ describe('pptx property mapping hardening', () => {
       expect(shape.textAlign).toBe('right')
       expect(shape._pptxImportMeta.textInsets.left).toBe(6.7)
       expect(shape._pptxImportMeta.textInsetsUnit).toBe('px')
+      expect(shape._pptxImportMeta).toMatchObject({
+        version: 1,
+        textFit: 'wrap',
+        sourceFontSizePx: 26.7,
+        fitFontSizePx: 26.7,
+        sourceBox: { width: 240, height: 160 },
+      })
+      expect(shape.textHtml).not.toContain('font-size')
+    })
+  })
+
+  it('fits imported text boxes inside the editor canvas', async () => {
+    await withTempDir('pptx-props-text-fit-', async (dir) => {
+      const result = await mapPptxOutput({
+        zip: new JSZip(),
+        originalName: 'text-fit.pptx',
+        uploadsDir: dir,
+        output: {
+          size: { width: 960, height: 540 },
+          slides: [{ elements: [{ type: 'text', left: -2, top: 10, width: 962, height: 40, content: '<p>Wide</p>' }] }],
+        },
+      })
+      const text = result.presentation.slides[0].elements[0]
+      expect(text.x).toBe(0)
+      expect(text.x + text.width).toBeLessThanOrEqual(1136)
     })
   })
 
@@ -242,6 +275,23 @@ describe('pptx property mapping hardening', () => {
         originalType: 'lineChart',
         grouping: 'clustered',
       })
+    })
+  })
+
+  it('fits imported math boxes inside the editor canvas', async () => {
+    await withTempDir('pptx-props-math-fit-', async (dir) => {
+      const result = await mapPptxOutput({
+        zip: new JSZip(),
+        originalName: 'math-fit.pptx',
+        uploadsDir: dir,
+        output: {
+          size: { width: 960, height: 540 },
+          slides: [{ elements: [{ type: 'math', left: 30, top: 200, width: 940, height: 120, latex: 'x' }] }],
+        },
+      })
+      const math = result.presentation.slides[0].elements[0]
+      expect(math.type).toBe('latex')
+      expect(math.x + math.width).toBeLessThanOrEqual(1136)
     })
   })
 })
