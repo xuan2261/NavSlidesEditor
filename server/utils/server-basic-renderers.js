@@ -8,7 +8,7 @@ const {
   mapLineDashType,
   normalizeCssColor,
   toPptFontSize,
-} = require('../../shared/src')
+} = require('revealjs-shared')
 const { normalizeServerImageSource } = require('./server-image-source')
 
 function addTextElement(slide, element, bounds) {

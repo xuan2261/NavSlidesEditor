@@ -1,6 +1,6 @@
 const createDOMPurify = require('dompurify')
 const { JSDOM } = require('jsdom')
-const { sanitizeRichTextStyle } = require('../../../shared/src/rich-text-style-sanitizer.js')
+const { sanitizeRichTextStyle } = require('revealjs-shared')
 
 const DOMPurify = createDOMPurify(new JSDOM('').window)
 
