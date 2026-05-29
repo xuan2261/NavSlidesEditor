@@ -78,7 +78,7 @@ function mapShape(element, context) {
     }]
   }
   context.stats.shapeCount += 1
-  const textMetadata = extractTextMetadata(sanitizedTextHtml, element)
+  const textMetadata = extractTextMetadata(sanitizedTextHtml, element, context.scale)
   const box = baseElement(element, context.scale, context.zIndex, mapBox(element, context.scale))
   const fillFallback = textHtml ? 'transparent' : '#e5e7eb'
   const mapped = {

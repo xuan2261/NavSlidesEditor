@@ -111,7 +111,7 @@ async function persistImageBuffer(buffer, hintedMime, uploadsDir = UPLOADS_DIR, 
     : detected.hintMismatch
       ? { code: 'image-mime-hint-mismatch', detected: detected.mime, hinted: hintedMime }
       : undefined
-  return { url: media.url, warning }
+  return { url: media.url, warning, unsupportedBrowserImage: detected.unsupportedBrowserImage }
 }
 
 async function persistZipMediaRef(mediaIndex, ref, uploadsDir = UPLOADS_DIR, options = {}) {

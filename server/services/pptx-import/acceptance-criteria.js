@@ -18,8 +18,9 @@ function assertResolutionInvariant(presentation, expected = CANVAS_SIZE) {
   }
 }
 
-function assertTextFontSizeWithinTolerance(element, sourcePtFontSize, tolerancePx = 1) {
-  const expectedPx = Number(sourcePtFontSize) * (96 / 72)
+function assertTextFontSizeWithinTolerance(element, sourcePtFontSize, scaleY = 1, tolerancePx = 1) {
+  const axisY = Number.isFinite(Number(scaleY)) && Number(scaleY) > 0 ? Number(scaleY) : 1
+  const expectedPx = Number(sourcePtFontSize) * axisY
   const actualPx = Number(element?.fontSize)
   if (!Number.isFinite(expectedPx) || !Number.isFinite(actualPx) || Math.abs(actualPx - expectedPx) > tolerancePx) {
     throw new Error(`PPTX acceptance failed: fontSize ${actualPx} is not within ${tolerancePx}px of ${expectedPx}`)
@@ -129,9 +130,19 @@ function firstSourceFontPt(element) {
   return null
 }
 
+function deriveFontScaleY(presentation) {
+  const canvasHeight = Number(presentation?.resolution?.height)
+  const sourceHeight = Number(presentation?._pptxMeta?.originalSize?.height)
+  if (Number.isFinite(canvasHeight) && canvasHeight > 0 && Number.isFinite(sourceHeight) && sourceHeight > 0) {
+    return canvasHeight / sourceHeight
+  }
+  return 1
+}
+
 function assertSourceFontSizesWithinTolerance(sourceOutput, presentation, tolerancePx = 1) {
   const sourceSlides = sourceElementsBySlide(sourceOutput)
   const navSlides = presentation?.slides || []
+  const scaleY = deriveFontScaleY(presentation)
   for (const [slideIndex, sourceElements] of sourceSlides.entries()) {
     const navElements = navSlides[slideIndex]?.elements || []
     let navCursor = 0
@@ -143,7 +154,7 @@ function assertSourceFontSizesWithinTolerance(sourceOutput, presentation, tolera
       if (!navElement) continue
       navCursor = navElements.indexOf(navElement) + 1
       try {
-        assertTextFontSizeWithinTolerance(navElement, sourceFontPt, tolerancePx)
+        assertTextFontSizeWithinTolerance(navElement, sourceFontPt, scaleY, tolerancePx)
       } catch (error) {
         throw new Error(`${error.message} on slide ${slideIndex + 1}`)
       }

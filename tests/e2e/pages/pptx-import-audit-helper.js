@@ -149,6 +149,9 @@ function explicitDecorativeBleedReason(entry) {
   if (entry.deck === 'Bai_2_1.pptx' && entry.slide === 10 && inRange(entry.x, 968, 972) && inRange(entry.width, 168, 172)) {
     return 'explicit-allowlist: slide 10 right-side decorative shape has 4px source edge overscan'
   }
+  if (entry.deck === 'Bai_2_5.pptx' && entry.slide === 32 && inRange(entry.x, 160, 175) && inRange(entry.y, 322, 336) && inRange(entry.width, 855, 875) && inRange(entry.height, 308, 322)) {
+    return 'explicit-allowlist: slide 32 rotated-group shape extends ~5px past the bottom edge, matching the source deck overflow'
+  }
   if (entry.deck === 'STTre_Duc.pptx' && entry.slide === 20 && entry.width >= 1030 && entry.height <= 50) {
     return 'explicit-allowlist: final-slide decorative underline extends slightly past right edge'
   }

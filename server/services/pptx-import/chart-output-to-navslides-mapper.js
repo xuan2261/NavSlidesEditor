@@ -15,14 +15,26 @@ function mapChartType(pptxType = '') {
   if (t.includes('doughnut')) return 'doughnut'
   if (t.includes('radar')) return 'radar'
   if (t.includes('polar')) return 'polarArea'
+  if (t.includes('area')) return 'line'
   if (t.includes('bubble')) return 'bar'
   if (t.includes('bar')) return 'bar'
   if (t.includes('stacked')) return 'bar'
-  if (t.includes('area')) return 'bar'
   if (t.includes('stock')) return 'line'
   if (t.includes('surface')) return 'bar'
   if (t.includes('scatter')) return 'line'
   return 'bar'
+}
+
+// Translate pptxtojson grouping/type intent into the behavioral fields the
+// renderers actually read. grouping is emitted separately from chartType
+// (c:grouping/@val), so a stacked bar arrives as type 'barChart' + 'stacked'.
+function chartGroupingFlags(element) {
+  const grouping = String(element.grouping || '').toLowerCase()
+  const rawType = String(element.chartType || '').toLowerCase()
+  const flags = {}
+  if (grouping.includes('stacked') || rawType.includes('stacked')) flags.stacked = true
+  if (rawType.includes('area')) flags.areaFill = true
+  return flags
 }
 
 function mapCommonChart(element) {
@@ -116,6 +128,7 @@ function mapChart(element) {
     legend: mapped.legend,
     xAxisTitle: mapped.xAxisTitle,
     yAxisTitle: mapped.yAxisTitle,
+    ...chartGroupingFlags(element),
     _pptxChartMeta: mapped._pptxChartMeta,
   }
 }

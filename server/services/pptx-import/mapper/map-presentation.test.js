@@ -98,7 +98,7 @@ describe('pptx presentation mapper', () => {
     })
 
     expect(result.presentation.slides[0].elements[0]._pptxImportMeta).toMatchObject({
-      textInsets: { left: 9.6, right: 9.6, top: 4.8, bottom: 4.8 },
+      textInsets: { left: 7.2, right: 7.2, top: 3.6, bottom: 3.6 },
       textInsetsUnit: 'px',
     })
   })

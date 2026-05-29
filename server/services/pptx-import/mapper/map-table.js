@@ -1,6 +1,6 @@
 const { readNumber } = require('../geometry')
 const { baseElement, placeholder } = require('./utils-base')
-const { normalizeFontFamily, normalizeFontSize, plainText } = require('./utils-text')
+const { normalizeFontFamily, normalizeFontSize, plainText, ptToCanvasPx } = require('./utils-text')
 
 const DEFAULT_TABLE_BORDER = Object.freeze({ color: '#d1d5db', width: 1, style: 'solid' })
 const TABLE_BORDER_SIDES = ['top', 'right', 'bottom', 'left']
@@ -108,7 +108,7 @@ function mapTable(element, context) {
       cellStylesRow.bgColors.push(cell.fillColor || null)
       cellStylesRow.isBold.push(Boolean(cell.fontBold))
       const fontSize = normalizeFontSize(cell.fontSize || cell.fontSz)
-      cellStylesRow.fontSizes.push(fontSize ? Math.round(fontSize * (96 / 72) * 10) / 10 : null)
+      cellStylesRow.fontSizes.push(fontSize ? ptToCanvasPx(fontSize, context.scale) : null)
       cellStylesRow.fontFamilies.push(
         normalizeFontFamily(cell.fontFamily || cell.fontFace || cell.font || cell.fontName) || null
       )

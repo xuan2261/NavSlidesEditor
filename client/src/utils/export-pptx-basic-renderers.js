@@ -1,3 +1,4 @@
+import { gradientFallbackColor } from 'revealjs-shared'
 import {
   DEFAULT_BACKGROUND_COLOR,
   DEFAULT_TEXT_COLOR,
@@ -98,7 +99,11 @@ export function addImageElement(slide, element, bounds, resolution, layout) {
 
 export function addShapeElement(slide, element, bounds) {
   const shapeType = getShapeType(element.shape)
-  const fill = normalizeCssColor(element.fill || '#6366f1', DEFAULT_BACKGROUND_COLOR)
+  // pptxgenjs draws a solid fill; for an imported gradient shape (fill is the
+  // 'gradient' sentinel) use the first stop color so the export keeps the
+  // gradient's identity instead of falling back to the default background.
+  const fillSource = element.fillGradient ? gradientFallbackColor(element) : element.fill || '#6366f1'
+  const fill = normalizeCssColor(fillSource, DEFAULT_BACKGROUND_COLOR)
   const stroke = normalizeCssColor(element.stroke === 'none' ? '#000000' : element.stroke || '#ffffff')
   const transparency =
     element.opacity == null

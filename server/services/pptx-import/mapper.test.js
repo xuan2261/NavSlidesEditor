@@ -128,7 +128,7 @@ describe('pptx mapper', () => {
       expect(textEl.type).toBe('text')
       expect(textEl.content).toContain('Hello')
       expect(textEl.textAlign).toBe('center')
-      expect(textEl.fontSize).toBe(32)
+      expect(textEl.fontSize).toBe(24)
       expect(textEl.fontFamily).toBe('Arial')
       expect(textEl.textColor).toBe('#e74c3c')
     } finally {
@@ -187,7 +187,7 @@ describe('pptx mapper', () => {
       expect(shapeEl.text).toBe('Hello')
       expect(shapeEl.textHtml).toContain('<strong>Hello</strong>')
       expect(shapeEl.textAlign).toBe('right')
-      expect(shapeEl.fontSize).toBe(26.7)
+      expect(shapeEl.fontSize).toBe(20)
       expect(shapeEl.fontFamily).toBe('Arial')
       expect(shapeEl.textColor).toBe('#123456')
     } finally {
@@ -359,7 +359,8 @@ describe('pptx mapper', () => {
         },
       })
       const slide = result.presentation.slides[0]
-      expect(slide.background.gradient).toContain('linear-gradient(45deg')
+      // OOXML rot:45 (clockwise from East) → CSS 135deg (clockwise from North).
+      expect(slide.background.gradient).toContain('linear-gradient(135deg')
       expect(slide.elements[0].alt).toBe('Logo alt text')
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
@@ -617,7 +618,7 @@ describe('pptx mapper', () => {
       })
       const img = result.presentation.slides[0].elements[0]
       expect(img.borderColor).toBe('#ff0000')
-      expect(img.borderWidth).toBe(4)
+      expect(img.borderWidth).toBe(3)
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
     }
@@ -1107,7 +1108,7 @@ describe('pptx mapper', () => {
     ['radarChart', 'radar'],
     ['scatterChart', 'line'],  // Note: test uses CommonChart format; real pptxtojson uses [xVals, yVals]
     ['bubbleChart', 'bar'],
-    ['areaChart', 'bar'],
+    ['areaChart', 'line'],
     ['stockChart', 'line'],
     ['surfaceChart', 'bar'],
     ['polarAreaChart', 'polarArea'],
@@ -1341,9 +1342,9 @@ describe('pptx mapper', () => {
     it('maps pptxtojson shadow to flat NavSlides fields', () => {
       const el = { shadow: { h: 5, v: 3, blur: 4, color: '#333333' } }
       const shadow = extractShadow(el)
-      expect(shadow.shadowX).toBe(6.7)
-      expect(shadow.shadowY).toBe(4)
-      expect(shadow.shadowBlur).toBe(5.3)
+      expect(shadow.shadowX).toBe(5)
+      expect(shadow.shadowY).toBe(3)
+      expect(shadow.shadowBlur).toBe(4)
       expect(shadow.shadowColor).toBe('#333333')
     })
 
@@ -1356,7 +1357,7 @@ describe('pptx mapper', () => {
     it('handles partial shadow object with defaults', () => {
       const el = { shadow: { h: 5 } }
       const shadow = extractShadow(el)
-      expect(shadow.shadowX).toBe(6.7)
+      expect(shadow.shadowX).toBe(5)
       expect(shadow.shadowY).toBe(0)
       expect(shadow.shadowBlur).toBe(0)
       expect(shadow.shadowColor).toBe('#000000')
@@ -1377,9 +1378,9 @@ describe('pptx mapper', () => {
           },
         })
         const el = result.presentation.slides[0].elements[0]
-        expect(el.shadowX).toBe(6.7)
-        expect(el.shadowY).toBe(4)
-        expect(el.shadowBlur).toBe(5.3)
+        expect(el.shadowX).toBe(5)
+        expect(el.shadowY).toBe(3)
+        expect(el.shadowBlur).toBe(4)
         expect(el.shadowColor).toBe('#333333')
       } finally {
         await fs.rm(dir, { recursive: true, force: true })
@@ -1401,9 +1402,9 @@ describe('pptx mapper', () => {
           },
         })
         const el = result.presentation.slides[0].elements[0]
-        expect(el.shadowX).toBe(2.7)
-        expect(el.shadowY).toBe(2.7)
-        expect(el.shadowBlur).toBe(4)
+        expect(el.shadowX).toBe(2)
+        expect(el.shadowY).toBe(2)
+        expect(el.shadowBlur).toBe(3)
         expect(el.shadowColor).toBe('#888888')
       } finally {
         await fs.rm(dir, { recursive: true, force: true })
@@ -1411,9 +1412,9 @@ describe('pptx mapper', () => {
     })
   })
 
-  // ─── Phase 6: Image Filter Extraction ──────────────────────────────────
+  // ─── Image Filter Extraction (pptxtojson@2.0.2 fraction convention) ──────
   describe('mapImage — filters', () => {
-    it('extracts brightness/contrast with /1000 divisor', async () => {
+    it('maps brightness/contrast offset fractions to CSS percent', async () => {
       const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-img-filter-'))
       try {
         const result = await mapPptxOutput({
@@ -1422,12 +1423,12 @@ describe('pptx mapper', () => {
           uploadsDir: dir,
           output: {
             size: { width: 960, height: 540 },
-            slides: [{ elements: [{ type: 'image', left: 0, top: 0, width: 100, height: 100, base64: PNG_DATA_URL, filters: { brightness: 15000, contrast: 12000 } }] }],
+            slides: [{ elements: [{ type: 'image', left: 0, top: 0, width: 100, height: 100, base64: PNG_DATA_URL, filters: { brightness: 0.15, contrast: 0.12 } }] }],
           },
         })
         const el = result.presentation.slides[0].elements[0]
-        expect(el.filterBrightness).toBe(15)
-        expect(el.filterContrast).toBe(12)
+        expect(el.filterBrightness).toBe(115)
+        expect(el.filterContrast).toBe(112)
       } finally {
         await fs.rm(dir, { recursive: true, force: true })
       }
@@ -1452,7 +1453,7 @@ describe('pptx mapper', () => {
       }
     })
 
-    it('skips brightness=100000 (no-op)', async () => {
+    it('skips neutral corrections (brightness offset 0)', async () => {
       const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-img-none-'))
       try {
         const result = await mapPptxOutput({
@@ -1461,11 +1462,14 @@ describe('pptx mapper', () => {
           uploadsDir: dir,
           output: {
             size: { width: 960, height: 540 },
-            slides: [{ elements: [{ type: 'image', left: 0, top: 0, width: 100, height: 100, base64: PNG_DATA_URL, filters: { brightness: 100000 } }] }],
+            slides: [{ elements: [{ type: 'image', left: 0, top: 0, width: 100, height: 100, base64: PNG_DATA_URL, filters: { brightness: 0, contrast: 0, saturation: 1.0 } }] }],
           },
         })
         const el = result.presentation.slides[0].elements[0]
         expect(el.filterBrightness).toBeUndefined()
+        expect(el.filterContrast).toBeUndefined()
+        expect(el.filterGrayscale).toBeUndefined()
+        expect(el.filterSaturate).toBeUndefined()
       } finally {
         await fs.rm(dir, { recursive: true, force: true })
       }
@@ -1503,7 +1507,7 @@ describe('pptx mapper', () => {
         expect(lines.length).toBe(1)
         expect(lines[0].type).toBe('line')
         expect(lines[0].stroke).toBe('#333')
-        expect(lines[0].strokeWidth).toBe(2.7)
+        expect(lines[0].strokeWidth).toBe(2)
       } finally {
         await fs.rm(dir, { recursive: true, force: true })
       }

@@ -4,11 +4,49 @@ const { baseElement, placeholder, scaleLength } = require('./utils-base')
 const { plainText } = require('./utils-text')
 const { pushMediaWarning } = require('./media-warning')
 
+// pptxtojson@2.0.2 emits PowerPoint color corrections as parseInt(@val)/1e5
+// fractions: brightness/contrast are OFFSETS (neutral 0, range −1..+1) and
+// saturation is a MULTIPLIER (neutral 1.0). The 0.x mapper assumed raw 100000
+// values divided by 1000, which collapsed every correction to ~0 and forced
+// normal images to black/gray. Convert to the CSS-percent fields the renderer
+// consumes, guarding each neutral value so an unchanged image emits no filter.
+function mapImageFilters(filters) {
+  const out = {}
+  if (!filters || typeof filters !== 'object') return out
+  const { brightness, contrast, saturation } = filters
+  if (typeof brightness === 'number' && brightness !== 0) {
+    out.filterBrightness = Math.max(0, Math.round((1 + brightness) * 100))
+  }
+  if (typeof contrast === 'number' && contrast !== 0) {
+    out.filterContrast = Math.max(0, Math.round((1 + contrast) * 100))
+  }
+  if (typeof saturation === 'number' && saturation !== 1) {
+    if (saturation <= 0) out.filterGrayscale = 100
+    else if (saturation < 1) out.filterGrayscale = Math.max(0, Math.round((1 - saturation) * 100))
+    else out.filterSaturate = Math.round(saturation * 100)
+  }
+  return out
+}
+
 async function mapImage(element, context) {
   context.signal?.throwIfAborted?.()
   const media = await persistImageForElement(element, context.mediaIndex, context.uploadsDir, { signal: context.signal })
   pushMediaWarning(context, media.warning)
   const src = media.url
+  if (media.unsupportedBrowserImage) {
+    // EMF/WMF are vector formats the browser cannot render. Persisting their URL
+    // produces a broken <img>; render a labelled placeholder instead so layout
+    // is preserved and the loss is surfaced. Rasterization is a future plan.
+    return [placeholder(
+      element,
+      context.scale,
+      context.zIndex,
+      context.slideIndex,
+      context.warnings,
+      'unsupported-image',
+      'EMF/WMF not supported'
+    )]
+  }
   if (!src) {
     return [placeholder(
       element,
@@ -38,12 +76,7 @@ async function mapImage(element, context) {
   }
   if (element.filters) {
     const f = element.filters
-    if (typeof f.brightness === 'number' && f.brightness !== 100000) img.filterBrightness = Math.round(f.brightness / 1000)
-    if (typeof f.contrast === 'number' && f.contrast !== 100000) img.filterContrast = Math.round(f.contrast / 1000)
-    if (typeof f.saturation === 'number' && f.saturation !== 100000) {
-      if (f.saturation === 0) img.filterGrayscale = 100
-      else if (f.saturation < 50000) img.filterGrayscale = Math.round((1 - f.saturation / 100000) * 100)
-    }
+    Object.assign(img, mapImageFilters(f))
     if (typeof f.sharpen === 'number' && f.sharpen > 0) img._pptxImportMeta = { ...(img._pptxImportMeta || {}), _pptxSharpen: f.sharpen }
     if (typeof f.colorTemperature === 'number') img._pptxImportMeta = { ...(img._pptxImportMeta || {}), _pptxColorTemp: f.colorTemperature }
   }
@@ -73,4 +106,5 @@ async function mapImage(element, context) {
 
 module.exports = {
   mapImage,
+  mapImageFilters,
 }

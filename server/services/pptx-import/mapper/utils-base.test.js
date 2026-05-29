@@ -32,10 +32,11 @@ describe('pptx mapper base utilities', () => {
   })
 
   it('extracts shadows and creates locked placeholders with warnings', () => {
+    // 72-DPI canvas: pt → px at scale 1 is identity (no 96/72 inflation).
     expect(extractShadow({ shadow: { h: 1, v: 2, blur: 3, color: '#111111' } })).toEqual({
-      shadowX: 1.3,
-      shadowY: 2.7,
-      shadowBlur: 4,
+      shadowX: 1,
+      shadowY: 2,
+      shadowBlur: 3,
       shadowColor: '#111111',
     })
 
@@ -49,9 +50,12 @@ describe('pptx mapper base utilities', () => {
     expect(el).toMatchObject({ type: 'shape', locked: true, importPlaceholderType: 'missing', text: 'Missing' })
   })
 
-  it('converts PPTX point lengths to canvas px', () => {
-    expect(scaleLength(2, 1)).toBe(2.7)
-    expect(scaleLength(2, 4 / 3)).toBe(3.6)
+  it('scales point lengths by their box axis without 96-DPI inflation', () => {
+    // Border/shadow lengths follow the box scale (1pt → 1px at scale 1),
+    // matching geometry; the old PT_TO_PX factor bloated a 2pt border to 2.7px.
+    expect(scaleLength(2, 1)).toBe(2)
+    expect(scaleLength(2, 0.5)).toBe(1)
+    expect(scaleLength(3, 2)).toBe(6)
     expect(scaleLength(0, 1, 1)).toBe(1)
     expect(scaleLength(undefined, 1.5, 2)).toBe(2)
   })
@@ -63,9 +67,9 @@ describe('pptx mapper base utilities', () => {
     )
 
     expect(result).toMatchObject({
-      shadowX: 5.3,
-      shadowY: 8,
-      shadowBlur: 10.7,
+      shadowX: 4,
+      shadowY: 6,
+      shadowBlur: 8,
       shadowColor: '#000000',
     })
   })

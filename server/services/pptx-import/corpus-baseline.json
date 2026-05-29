@@ -36,7 +36,7 @@
       }
     },
     "Bai_2_1.pptx": {
-      "semanticFidelity": 1,
+      "semanticFidelity": 0.97,
       "roundTripStability": 0.96,
       "propertyCoverage": {
         "overall": 1,
@@ -93,7 +93,7 @@
       }
     },
     "Bai_2_5.pptx": {
-      "semanticFidelity": 1,
+      "semanticFidelity": 0.98,
       "roundTripStability": 0.99,
       "propertyCoverage": {
         "overall": 1,

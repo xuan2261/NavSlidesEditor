@@ -41,8 +41,8 @@ describe('pptx diagram mapper', () => {
       y: 52,
       text: 'A',
       zIndex: 2,
-      strokeWidth: 1.8,
-      fontSize: 24,
+      strokeWidth: 1.3,
+      fontSize: 36,
       textColor: '#abcdef',
     })
     expect(result[1]).toMatchObject({
@@ -51,7 +51,7 @@ describe('pptx diagram mapper', () => {
       x2: 80,
       y2: 40,
       zIndex: 3,
-      strokeWidth: 3.6,
+      strokeWidth: 2.7,
     })
     expect(ctx.zIndex).toBe(3)
   })
@@ -78,8 +78,60 @@ describe('pptx diagram mapper', () => {
 
     expect(result[0]).toMatchObject({
       text: 'Plain Label',
-      fontSize: 24,
+      fontSize: 18,
       textColor: '#abcdef',
     })
+  })
+
+  it('attaches fit-meta to a diagram node with text so long labels clamp', () => {
+    const ctx = context()
+    const result = flattenDiagramElement({
+      type: 'diagram',
+      width: 200,
+      height: 90,
+      elements: [
+        {
+          shapType: 'rect',
+          width: 200,
+          height: 40,
+          content: '<p><span style="font-size:18pt">A long diagram node label that should clamp</span></p>',
+        },
+      ],
+      textList: [{ text: 'A long diagram node label that should clamp' }],
+    }, ctx)
+
+    const node = result[0]
+    expect(Number.isFinite(node._pptxImportMeta?.fitFontSizePx)).toBe(true)
+    // 18pt source at scale.y 1 → 18 canvas px; fit clamp never exceeds source.
+    expect(node._pptxImportMeta.fitFontSizePx).toBeLessThanOrEqual(18)
+    expect(node.fontSize).toBe(18)
+  })
+
+  it('scales diagram node font by a non-uniform deck scale.y', () => {
+    const ctx = { ...context(), scale: { x: 1, y: 0.5 } }
+    const result = flattenDiagramElement({
+      type: 'diagram',
+      width: 200,
+      height: 90,
+      elements: [
+        { shapType: 'rect', width: 200, height: 80, content: '<p><span style="font-size:18pt">Node</span></p>' },
+      ],
+      textList: [{ text: 'Node' }],
+    }, ctx)
+
+    expect(result[0].fontSize).toBe(9)
+  })
+
+  it('does not force fit-meta onto a diagram node without text', () => {
+    const ctx = context()
+    const result = flattenDiagramElement({
+      type: 'diagram',
+      width: 200,
+      height: 90,
+      elements: [{ shapType: 'rect', width: 80, height: 40 }],
+      textList: [],
+    }, ctx)
+
+    expect(result[0]._pptxImportMeta).toBeUndefined()
   })
 })

@@ -2,6 +2,23 @@ const { mergeInlineStyle, normalizeAlign, parseHtmlTree } = require('revealjs-sh
 const { readNumber } = require('../geometry')
 const { sanitizeHtml } = require('../sanitize')
 
+// The 960×540 canvas is 72 DPI, so a point maps 1:1 to a canvas px before the
+// box scale is applied. mergeInlineStyle (a generic 96-DPI CSS converter) emits
+// px = pt × 96/72, so the import path recovers pt with the inverse factor and
+// then applies the deck's height-proportional scale.
+const PT_PER_PX = 72 / 96
+
+function roundTenth(value) {
+  return Math.round(value * 10) / 10
+}
+
+function ptToCanvasPx(pt, scale = { x: 1, y: 1 }) {
+  const size = Number(pt)
+  if (!Number.isFinite(size)) return undefined
+  const axisY = readNumber(scale?.y, 1, 0) || 1
+  return roundTenth(size * axisY)
+}
+
 function plainText(html) {
   return sanitizeHtml(html).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 }
@@ -76,17 +93,40 @@ function hasSameDominantTextStyle(actualStyle, expectedStyle) {
     && actual.color === expected.color
 }
 
+function nodeStyleDeclares(node, prop) {
+  if (!node || node.type !== 'element') return false
+  const style = node.attrs && node.attrs.style
+  if (!style) return false
+  return new RegExp(`(?:^|;)\\s*${prop}\\s*:`, 'i').test(String(style))
+}
+
+function mergeInlineStyleInPt(base, node) {
+  const merged = mergeInlineStyle(base, node)
+  // mergeInlineStyle is a generic 96-DPI converter: a node that declares its own
+  // font-size/letter-spacing yields px = pt × 96/72. Recover to pt only for the
+  // node that actually set the property — detected structurally from its own
+  // style. A magnitude comparison misfires when a child's converted px coincides
+  // with the inherited pt value (e.g. 18pt → 24px equals an inherited 24pt).
+  if (nodeStyleDeclares(node, 'font-size') && Number.isFinite(merged.fontSize)) {
+    merged.fontSize = roundTenth(merged.fontSize * PT_PER_PX)
+  }
+  if (nodeStyleDeclares(node, 'letter-spacing') && Number.isFinite(merged.charSpacing)) {
+    merged.charSpacing = roundTenth(merged.charSpacing * PT_PER_PX)
+  }
+  return merged
+}
+
 function visibleTextUsesStyle(node, inheritedStyle, expectedStyle) {
   if (!node) return true
   if (node.type === 'text') {
     return !visibleTextLength(node) || hasSameDominantTextStyle(inheritedStyle, expectedStyle)
   }
 
-  const nextStyle = node.type === 'element' ? mergeInlineStyle(inheritedStyle, node) : inheritedStyle
+  const nextStyle = node.type === 'element' ? mergeInlineStyleInPt(inheritedStyle, node) : inheritedStyle
   return (node.children || []).every((child) => visibleTextUsesStyle(child, nextStyle, expectedStyle))
 }
 
-function extractTextMetadata(html, element = {}) {
+function extractTextMetadata(html, element = {}, scale = { x: 1, y: 1 }) {
   const baseStyle = buildBaseTextStyle(element)
   const fallback = {}
   applyTextStyle(fallback, baseStyle)
@@ -100,7 +140,7 @@ function extractTextMetadata(html, element = {}) {
       return
     }
 
-    const nextStyle = node.type === 'element' ? mergeInlineStyle(inheritedStyle, node) : inheritedStyle
+    const nextStyle = node.type === 'element' ? mergeInlineStyleInPt(inheritedStyle, node) : inheritedStyle
     if (node.type === 'element' && hasDominantTextStyleChange(nextStyle, inheritedStyle)) {
       const length = visibleTextLength(node)
       if (length && visibleTextUsesStyle(node, inheritedStyle, nextStyle)) {
@@ -111,13 +151,18 @@ function extractTextMetadata(html, element = {}) {
   }
 
   walk(parseHtmlTree(html), baseStyle)
-  if (!runs.length) return fallback
 
-  const dominant = runs.reduce((winner, candidate) =>
-    candidate.text.length > winner.text.length ? candidate : winner, runs[0])
   const metadata = {}
-  applyTextStyle(metadata, dominant.style)
-  return { ...fallback, ...metadata }
+  if (runs.length) {
+    const dominant = runs.reduce((winner, candidate) =>
+      candidate.text.length > winner.text.length ? candidate : winner, runs[0])
+    applyTextStyle(metadata, dominant.style)
+  }
+  const result = { ...fallback, ...metadata }
+  // Font is carried in points through the walk; convert to canvas px once,
+  // using the deck's height-proportional scale (1pt → 1px on a standard deck).
+  if (result.fontSize != null) result.fontSize = ptToCanvasPx(result.fontSize, scale)
+  return result
 }
 
 function normalizeImportedRichTextHtml(html) {
@@ -154,7 +199,7 @@ function extractTextInsetsWithScale(element = {}, scale = { x: 1, y: 1 }, box = 
     const axis = readNumber(axisScale, 1, 0) || 1
     const maxFromBox = readNumber(maxDimension, null, 0)
     const max = Math.min(maxFromBox != null ? maxFromBox / 2 : 96, 96)
-    const px = Math.round(Math.max(0, raw) * (96 / 72) * axis * 10) / 10
+    const px = roundTenth(Math.max(0, raw) * axis)
     return Math.min(px, max)
   }
   const left = toPx(element.insetLeft ?? element.marginLeft ?? element.lIns ?? element.insetL, scale.x, box.width)
@@ -192,4 +237,5 @@ module.exports = {
   normalizeFontSize,
   normalizeImportedRichTextHtml,
   plainText,
+  ptToCanvasPx,
 }

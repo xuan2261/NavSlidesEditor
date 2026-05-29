@@ -1,6 +1,5 @@
 const uuidv4 = () => require('node:crypto').randomUUID()
 const { mapBox, readNumber } = require('../geometry')
-const PT_TO_PX = 96 / 72
 
 function baseElement(element, scale, zIndex, box = null) {
   return {
@@ -43,7 +42,7 @@ function scaleLength(value, scaleAxis = 1, min = 0) {
   const num = readNumber(value, 0)
   const axis = Number(scaleAxis)
   if (!(num > 0) || !(axis > 0)) return min
-  return Math.max(min, Math.round(num * PT_TO_PX * axis * 10) / 10)
+  return Math.max(min, Math.round(num * axis * 10) / 10)
 }
 
 function extractShadow(element, scale = { x: 1, y: 1 }) {

@@ -1,3 +1,4 @@
+import { buildSvgGradientData, gradientFallbackColor } from 'revealjs-shared'
 import { sanitizeRichTextHtml } from '../../../utils/content-safety'
 
 function safeCssColor(value, fallback) {
@@ -45,7 +46,12 @@ function innerDimension(value, strokeWidth) {
 export function ShapeRenderer({ element }) {
   const w = element.width,
     h = element.height
-  const fill = element.fill || '#6366f1'
+  const gradientData = buildSvgGradientData(element)
+  const fill = gradientData
+    ? `url(#${gradientData.id})`
+    : element.fillGradient
+      ? gradientFallbackColor(element)
+      : element.fill || '#6366f1'
   const stroke = element.stroke || 'none'
   const sw = element.strokeWidth || 0
   const shape = element.shape || 'rect'
@@ -153,6 +159,21 @@ export function ShapeRenderer({ element }) {
         preserveAspectRatio="none"
         style={{ position: 'absolute', inset: 0, overflow: 'visible' }}
       >
+        {gradientData && (
+          <defs>
+            <linearGradient
+              id={gradientData.id}
+              x1={gradientData.x1}
+              y1={gradientData.y1}
+              x2={gradientData.x2}
+              y2={gradientData.y2}
+            >
+              {gradientData.stops.map((stop, i) => (
+                <stop key={i} offset={stop.offset} stopColor={safeCssColor(stop.color, '#000000')} />
+              ))}
+            </linearGradient>
+          </defs>
+        )}
         {renderShape()}
         {element.textHtml ? (
           <foreignObject x={0} y={0} width={w} height={h}>

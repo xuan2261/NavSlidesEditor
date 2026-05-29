@@ -2,6 +2,9 @@ export function ChartRenderer({ element, isSelected, isDragging }) {
   const { chartType = 'bar', chartData = {} } = element
   const labels = chartData.labels || []
   const datasets = chartData.datasets || []
+  const areaFill = chartType === 'line' && element.areaFill === true
+  const stacked = element.stacked === true
+  const stackedAxis = stacked ? 'stacked:true,' : ''
 
   const chartHtml = `<!doctype html><html><head>
 <meta charset="utf-8">
@@ -21,7 +24,7 @@ new Chart(document.getElementById('c'),{
         backgroundColor: ds.color || '#6366f1',
         borderColor: ds.color || '#6366f1',
         borderWidth: chartType === 'line' ? 2 : 0,
-        fill: chartType === 'line' ? false : undefined,
+        fill: chartType === 'line' ? areaFill : undefined,
       }))
     )}
   },
@@ -29,7 +32,7 @@ new Chart(document.getElementById('c'),{
     responsive:true,
     maintainAspectRatio:false,
     plugins:{legend:{labels:{color:'rgba(255,255,255,0.7)',font:{size:12}}}},
-    scales:${chartType === 'pie' || chartType === 'doughnut' ? '{}' : `{x:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`}
+    scales:${chartType === 'pie' || chartType === 'doughnut' ? '{}' : `{x:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`}
   }
 });
 </script></body></html>`

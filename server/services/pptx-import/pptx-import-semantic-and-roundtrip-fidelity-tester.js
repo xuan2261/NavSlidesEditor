@@ -324,7 +324,13 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
     const usedNavIndices = new Set()
 
     for (const navEl of navs) {
-      const navType = normalizeCountType(navEl?.type || 'other')
+      // An unsupported-image placeholder still represents the source image (the
+      // element is reclassified to a shape, not dropped), so count it toward the
+      // image class. Genuinely dropped images produce no nav element and still
+      // register as a class drop; image→generic-shape bugs lack this marker.
+      const navType = navEl?.importPlaceholderType === 'unsupported-image'
+        ? 'image'
+        : normalizeCountType(navEl?.type || 'other')
       navByType[navType] = (navByType[navType] || 0) + 1
     }
 

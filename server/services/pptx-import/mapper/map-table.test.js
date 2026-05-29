@@ -97,14 +97,26 @@ describe('pptx mapTable', () => {
       ],
     }, { ...context(), scale: { x: 4 / 3, y: 2 } })[0]
 
-    expect(result.cellStyles.fontSizes[0][0]).toBe(24)
+    // Cell font follows scale.y (height-proportional): 18pt × 2 = 36, 12pt × 2 = 24.
+    // Old code did 18 × 96/72 = 24, ignoring scale entirely.
+    expect(result.cellStyles.fontSizes[0][0]).toBe(36)
     expect(result.cellStyles.fontFamilies[0][0]).toBe('Arial')
-    expect(result.cellStyles.fontSizes[1][0]).toBe(16)
+    expect(result.cellStyles.fontSizes[1][0]).toBe(24)
     expect(result.cellStyles.fontFamilies[1][0]).toBe('Aptos')
     expect(result.cellStyles.fontSizes[0][1]).toBeNull()
     expect(result.cellStyles.fontFamilies[0][1]).toBeNull()
     expect(result.colWidths).toEqual([133, 267])
     expect(result.rowHeights).toEqual([60, 100])
+  })
+
+  it('maps a standard-deck cell font 1pt→1px (no 96-DPI inflation)', () => {
+    const result = mapTable({
+      type: 'table',
+      width: 200,
+      height: 80,
+      data: [[{ text: 'A', fontSize: 18 }]],
+    }, context())[0]
+    expect(result.cellStyles.fontSizes[0][0]).toBe(18)
   })
 
   it('returns placeholder for unusable table structure', () => {

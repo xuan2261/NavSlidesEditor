@@ -442,4 +442,54 @@ describe('element-renderers safety behavior', () => {
     expect(html).not.toContain('display:block')
     expect(html).not.toContain('javascript:')
   })
+
+  it('renders a stacked bar chart with both axes stacked (iframe + print)', () => {
+    const element = {
+      ...base,
+      type: 'chart',
+      chartType: 'bar',
+      stacked: true,
+      chartData: {
+        labels: ['Q1', 'Q2'],
+        datasets: [{ label: 'S1', data: [10, 20], color: '#6366f1' }],
+      },
+    }
+
+    // iframe path builds scales as a raw template literal (unquoted keys).
+    const iframe = renderElement(element, {}, {})
+    expect(iframe).toContain('stacked:true')
+
+    // print path JSON-stringifies the options object (quoted keys).
+    const print = renderElement(element, {}, { forPrint: true })
+    expect(print).toMatch(/"x":\{[^}]*"stacked":true/)
+    expect(print).toMatch(/"y":\{[^}]*"stacked":true/)
+  })
+
+  it('renders an area chart as a filled line (iframe + print)', () => {
+    const element = {
+      ...base,
+      type: 'chart',
+      chartType: 'line',
+      areaFill: true,
+      chartData: {
+        labels: ['Jan', 'Feb', 'Mar'],
+        datasets: [{ label: 'S1', data: [3, 7, 5], color: '#22c55e' }],
+      },
+    }
+
+    const iframe = renderElement(element, {}, {})
+    expect(iframe).toContain("type:'line'")
+
+    // print path JSON-stringifies datasets with clean quotes.
+    const print = renderElement(element, {}, { forPrint: true })
+    expect(print).toContain('"fill":true')
+  })
+
+  it('does not stack a plain bar chart or fill a plain line chart', () => {
+    const bar = renderElement({ ...base, type: 'chart', chartType: 'bar', chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1], color: '#6366f1' }] } }, {}, { forPrint: true })
+    expect(bar).not.toContain('"stacked":true')
+
+    const line = renderElement({ ...base, type: 'chart', chartType: 'line', chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1], color: '#6366f1' }] } }, {}, { forPrint: true })
+    expect(line).toContain('"fill":false')
+  })
 })

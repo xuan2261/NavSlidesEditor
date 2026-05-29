@@ -2,6 +2,10 @@
 
 ## v1.7.x
 
+## 2026-05-29
+
+- Fixed 11 PPTX import fidelity bugs across 6 root causes, aligning mappers with pptxtojson 2.0.2 conventions: (1) removed erroneous ×96/72 length inflation — the import canvas is 960×540 at 72 DPI so 1pt maps to 1px before box scale; font sizes, table cell fonts, text insets, and border/shadow widths now use `pt × scale`; added shared helper `ptToCanvasPx` in `server/services/pptx-import/mapper/utils-text.js`; (2) mapped image filter fractions (brightness/contrast offset from neutral 0, saturation multiplier from neutral 1.0, all /1e5) to CSS filter percents with neutral-guarding; added `filterSaturate` support for oversaturation; (3) fixed gradient stop positions to parse "50%" string values, corrected OOXML→CSS angle as `(θ+90)%360`, and added real SVG `<linearGradient>` rendering on canvas and shared HTML paths; (4) replaced grouped-element AABB child-boxing with center-transform + dimension preservation so rotated shapes no longer double-rotate or bloat; grouped lines placed by transformed endpoints without re-rotation; (5) stacked bar charts now render stacked, area charts render as filled lines, SmartArt/diagram nodes carry text fit-clamp metadata; (6) EMF/WMF vector images render as labelled placeholders preserving box geometry instead of broken `<img>` tags. Verification passed: `npm run test` (1677 tests), `npm run test:corpus` (11/11), `npm run test:pptx:browser-audit:full` (6/6), `npm run build`, and `npm run lint` with 0 errors.
+
 ## 2026-05-27
 
 - Released `v1.10.0`: PPTX import real-browser fidelity fixes are tagged with strict browser audit release gates and shared import/export rendering contracts.

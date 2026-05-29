@@ -1,6 +1,6 @@
 const uuidv4 = () => require('node:crypto').randomUUID()
 const { arrowMarker, colorValue } = require('./utils-color')
-const { extractTextMetadata, plainText } = require('./utils-text')
+const { buildPptxTextImportMeta, extractTextMetadata, plainText } = require('./utils-text')
 const { scaleLength, shapeName } = require('./utils-base')
 const { readCoord, readNumber } = require('../geometry')
 const { sanitizeHtml } = require('../sanitize')
@@ -18,18 +18,20 @@ function mapDiagramNode(node, textList, index, maxNodes, element, context) {
   const displayTextSource = textList[index]?.text || node.text || node.content || ''
   const metadataTextSource = node.content || node.text || textList[index]?.text || ''
   const nodeHtml = sanitizeHtml(metadataTextSource)
-  const textMetadata = extractTextMetadata(nodeHtml, node)
+  const textMetadata = extractTextMetadata(nodeHtml, node, context.scale)
   const sanitizedText = plainText(displayTextSource)
   const nodeX = diagramLeft + readCoord(node.left, node.x, (index * boxWidth) / maxNodes)
   const nodeY = diagramTop + readCoord(node.top, node.y, 0)
+  const width = Math.max(1, Math.round(readNumber(node.width, boxWidth / maxNodes, 0) * context.scale.x))
+  const height = Math.max(1, Math.round(readNumber(node.height, boxHeight / 3, 0) * context.scale.y))
 
   context.zIndex += 1
-  return {
+  const mapped = {
     id: uuidv4(),
     x: Math.round(nodeX * context.scale.x),
     y: Math.round(nodeY * context.scale.y),
-    width: Math.max(1, Math.round(readNumber(node.width, boxWidth / maxNodes, 0) * context.scale.x)),
-    height: Math.max(1, Math.round(readNumber(node.height, boxHeight / 3, 0) * context.scale.y)),
+    width,
+    height,
     rotation: readNumber(node.rotate, 0),
     opacity: typeof node.opacity === 'number' ? node.opacity : 1,
     zIndex: context.zIndex,
@@ -42,6 +44,12 @@ function mapDiagramNode(node, textList, index, maxNodes, element, context) {
     textColor: '#111827',
     ...textMetadata,
   }
+  // Diagram node boxes are already scaled; give text the same fit-meta clamp
+  // that text/shape elements get so long labels don't overflow the node.
+  if (sanitizedText) {
+    mapped._pptxImportMeta = buildPptxTextImportMeta({ width, height }, mapped, { textLength: sanitizedText.length })
+  }
+  return mapped
 }
 
 function mapDiagramConnector(node, element, context) {

@@ -170,6 +170,31 @@ describe('export-pptx-core', () => {
     expect(textCall[2].fontSize).toBe(9)
   })
 
+  it('exports a gradient shape using its first stop color, not the gradient sentinel', () => {
+    const calls = []
+    const slide = {
+      addShape: (type, options) => calls.push(['shape', type, options]),
+      addText: (text, options) => calls.push(['text', text, options]),
+    }
+
+    // Imported gradient shapes carry fill === 'gradient' (a sentinel) plus the
+    // real stops in fillGradient. pptxgenjs draws a solid fill, so without using
+    // the stop color the export silently falls back to the default background.
+    addShapeElement(
+      slide,
+      {
+        shape: 'rect',
+        fill: 'gradient',
+        fillGradient: { type: 'gradient', angle: 90, stops: [{ offset: 0, color: '#abcdef' }, { offset: 1, color: '#000000' }] },
+        stroke: 'none',
+      },
+      { x: 0, y: 0, w: 2, h: 1 }
+    )
+
+    const shapeCall = calls.find((call) => call[0] === 'shape')
+    expect(shapeCall[2].fill.color).toBe('ABCDEF')
+  })
+
   it('exports merged table cells and per-cell styles', () => {
     const calls = []
     const slide = {

@@ -48,7 +48,7 @@ function mapText(element, context) {
     ...fittedBox,
     type: 'text',
     content,
-    ...extractTextMetadata(sanitizedContent, element),
+    ...extractTextMetadata(sanitizedContent, element, context.scale),
   }
   const textInsets = extractTextInsets(element, context.scale, fittedBox)
   const textLength = String(text.content || '').replace(/<[^>]+>/g, '').trim().length

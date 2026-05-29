@@ -55,21 +55,21 @@ describe('pptx property mapping hardening', () => {
       const text = result.presentation.slides[0].elements[0]
       expect(text.type).toBe('text')
       expect(text.fontFamily).toBe('Arial')
-      expect(text.fontSize).toBe(32)
+      expect(text.fontSize).toBe(24)
       expect(text.textColor).toBe('#123456')
       expect(text.textAlign).toBe('center')
       expect(text._pptxImportMeta.textInsets).toEqual({
-        left: 16,
-        right: 10.7,
-        top: 8,
-        bottom: 5.3,
+        left: 12,
+        right: 8,
+        top: 6,
+        bottom: 4,
       })
       expect(text._pptxImportMeta.textInsetsUnit).toBe('px')
       expect(text._pptxImportMeta).toMatchObject({
         version: 1,
         textFit: 'wrap',
-        sourceFontSizePx: 32,
-        fitFontSizePx: 32,
+        sourceFontSizePx: 24,
+        fitFontSizePx: 24,
         sourceBox: { width: 300, height: 120 },
       })
       expect(text.content).not.toContain('font-size')
@@ -112,17 +112,17 @@ describe('pptx property mapping hardening', () => {
       expect(shape.type).toBe('shape')
       expect(shape.fill).toBe('#aabbcc')
       expect(shape.stroke).toBe('#112233')
-      expect(shape.strokeWidth).toBe(4)
+      expect(shape.strokeWidth).toBe(3)
       expect(shape.opacity).toBe(0.75)
       expect(shape.rotation).toBe(20)
       expect(shape.textAlign).toBe('right')
-      expect(shape._pptxImportMeta.textInsets.left).toBe(6.7)
+      expect(shape._pptxImportMeta.textInsets.left).toBe(5)
       expect(shape._pptxImportMeta.textInsetsUnit).toBe('px')
       expect(shape._pptxImportMeta).toMatchObject({
         version: 1,
         textFit: 'wrap',
-        sourceFontSizePx: 26.7,
-        fitFontSizePx: 26.7,
+        sourceFontSizePx: 20,
+        fitFontSizePx: 20,
         sourceBox: { width: 240, height: 160 },
       })
       expect(shape.textHtml).not.toContain('font-size')
@@ -187,7 +187,7 @@ describe('pptx property mapping hardening', () => {
         bottom: 0.05,
       })
       expect(image.borderColor).toBe('#f97316')
-      expect(image.borderWidth).toBe(2.7)
+      expect(image.borderWidth).toBe(2)
       expect(image.flipH).toBe(true)
     })
   })

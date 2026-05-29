@@ -30,7 +30,7 @@ describe('pptx mapShape', () => {
     expect(result).toMatchObject({
       type: 'line',
       stroke: '#123456',
-      strokeWidth: 3.6,
+      strokeWidth: 2.7,
       arrowEnd: 'arrow',
       zIndex: 3,
     })
@@ -60,12 +60,12 @@ describe('pptx mapShape', () => {
       stroke: '#222222',
       text: 'Hello',
       textAlign: 'center',
-      fontSize: 26.7,
+      fontSize: 40,
       textColor: '#abcdef',
-      strokeWidth: 1.8,
-      shadowX: 1.8,
-      shadowY: 5.3,
-      shadowBlur: 5.3,
+      strokeWidth: 1.3,
+      shadowX: 1.3,
+      shadowY: 4,
+      shadowBlur: 4,
       shadowColor: '#444444',
     })
     expect(result.fillGradient.gradient).toContain('linear-gradient')
@@ -87,7 +87,7 @@ describe('pptx mapShape', () => {
     }, { ...context(), scale: { x: 1, y: 1 } })[0]
 
     expect(result._pptxImportMeta).toMatchObject({
-      textInsets: { left: 9.6, right: 9.6, top: 4.8, bottom: 4.8 },
+      textInsets: { left: 7.2, right: 7.2, top: 3.6, bottom: 3.6 },
       textInsetsUnit: 'px',
     })
   })
@@ -115,7 +115,7 @@ describe('pptx mapShape', () => {
     expect(result.content).toContain('viewBox="0 0 20 10"')
     expect(result.content).toContain('preserveAspectRatio="none"')
     expect(result.content).toContain('M0 0 L10 10')
-    expect(result.content).toContain('stroke-width="2.7"')
+    expect(result.content).toContain('stroke-width="2"')
   })
 
   it('maps path-only unknown shapes to SVG content', () => {
@@ -151,7 +151,7 @@ describe('pptx mapShape', () => {
       type: 'shape',
       shape: 'rect',
       text: 'Title',
-      fontSize: 32,
+      fontSize: 24,
       textColor: '#111827',
       width: 267,
       height: 50,

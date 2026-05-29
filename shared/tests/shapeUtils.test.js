@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SHAPES, shapeSvgString } from '../src/shapeUtils.js'
+import { SHAPES, buildSvgGradientData, gradientFallbackColor, shapeSvgString } from '../src/shapeUtils.js'
 
 describe('shapeUtils', () => {
   it('exposes the documented shape catalog', () => {
@@ -163,5 +163,92 @@ describe('shapeUtils', () => {
 
     expect(rich).not.toContain('width="-')
     expect(rich).not.toContain('height="-')
+  })
+
+  describe('buildSvgGradientData', () => {
+    const grad = (angle) => ({
+      id: 'el-1',
+      fillGradient: {
+        type: 'gradient',
+        angle,
+        stops: [{ offset: 0, color: '#fff' }, { offset: 1, color: '#000' }],
+      },
+    })
+
+    it('maps CSS angle 90 (to-right) to a left→right unit-square vector', () => {
+      const data = buildSvgGradientData(grad(90))
+      expect(data.id).toContain('el-1')
+      expect(data.x1).toBeCloseTo(0, 5)
+      expect(data.y1).toBeCloseTo(0.5, 5)
+      expect(data.x2).toBeCloseTo(1, 5)
+      expect(data.y2).toBeCloseTo(0.5, 5)
+      expect(data.stops).toHaveLength(2)
+    })
+
+    it('maps CSS angle 180 (to-bottom) to a top→bottom unit-square vector', () => {
+      const data = buildSvgGradientData(grad(180))
+      expect(data.x1).toBeCloseTo(0.5, 5)
+      expect(data.y1).toBeCloseTo(0, 5)
+      expect(data.x2).toBeCloseTo(0.5, 5)
+      expect(data.y2).toBeCloseTo(1, 5)
+    })
+
+    it('returns null without a gradient or with fewer than two stops', () => {
+      expect(buildSvgGradientData({ id: 'x', fill: '#fff' })).toBeNull()
+      expect(buildSvgGradientData({ id: 'x', fillGradient: { stops: [{ offset: 0, color: '#fff' }] } })).toBeNull()
+      expect(buildSvgGradientData(undefined)).toBeNull()
+    })
+  })
+
+  it('renders a gradient-filled shape as a real SVG linearGradient', () => {
+    const svg = shapeSvgString({
+      id: 'shape-7',
+      shape: 'rect',
+      width: 200,
+      height: 100,
+      fill: 'gradient',
+      fillGradient: {
+        type: 'gradient',
+        angle: 90,
+        stops: [{ offset: 0, color: '#ffffff' }, { offset: 1, color: '#000000' }],
+      },
+    })
+
+    expect(svg).toContain('<linearGradient')
+    expect(svg).toMatch(/fill="url\(#[^)]*shape-7[^)]*\)"/)
+    expect(svg).toContain('<stop')
+    // The invalid literal paint must never reach the SVG.
+    expect(svg).not.toContain('fill="gradient"')
+  })
+
+  it('falls back to a solid fill when no gradient is present', () => {
+    const svg = shapeSvgString({ shape: 'rect', width: 80, height: 40, fill: '#123456' })
+    expect(svg).toContain('fill="#123456"')
+    expect(svg).not.toContain('<linearGradient')
+  })
+
+  it('renders a degenerate single-stop gradient as its solid stop color, never the literal', () => {
+    const svg = shapeSvgString({
+      id: 'shape-1stop',
+      shape: 'rect',
+      width: 120,
+      height: 60,
+      fill: 'gradient',
+      fillGradient: {
+        type: 'gradient',
+        angle: 90,
+        stops: [{ offset: 0, color: '#abcdef' }],
+      },
+    })
+
+    expect(svg).not.toContain('<linearGradient')
+    expect(svg).not.toContain('fill="gradient"')
+    expect(svg).toContain('fill="#abcdef"')
+  })
+
+  it('exposes gradientFallbackColor as the first stop color', () => {
+    expect(buildSvgGradientData).toBeDefined()
+    expect(gradientFallbackColor({ fillGradient: { stops: [{ offset: 0, color: '#0f0f0f' }] } })).toBe('#0f0f0f')
+    expect(gradientFallbackColor({ fill: '#123' }, '#6366f1')).toBe('#6366f1')
   })
 })

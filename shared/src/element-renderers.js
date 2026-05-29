@@ -148,6 +148,7 @@ function renderImage(el, style, wrap, vis, opts) {
       : '',
     el.filterContrast != null && el.filterContrast !== 100 ? `contrast(${el.filterContrast}%)` : '',
     el.filterGrayscale ? `grayscale(${el.filterGrayscale}%)` : '',
+    el.filterSaturate != null && el.filterSaturate !== 100 ? `saturate(${el.filterSaturate}%)` : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -212,18 +213,21 @@ function renderMarkdown(el, style, wrap, vis, opts) {
 
 function renderChart(el, style, wrap, vis, opts) {
   const { chartType = 'bar', chartData = {} } = el
+  const areaFill = chartType === 'line' && el.areaFill === true
+  const stacked = el.stacked === true
   const datasetsArr = (chartData.datasets || []).map((ds) => ({
     label: ds.label || '',
     data: ds.data || [],
     backgroundColor: ds.color || '#6366f1',
     borderColor: ds.color || '#6366f1',
     borderWidth: chartType === 'line' ? 2 : 0,
-    fill: chartType === 'line' ? false : undefined,
+    fill: chartType === 'line' ? areaFill : undefined,
   }))
+  const stackedAxis = stacked ? 'stacked:true,' : ''
   const scalesOpt =
     chartType === 'pie' || chartType === 'doughnut'
       ? '{}'
-      : `{x:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`
+      : `{x:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`
 
   if (opts.forPrint) {
     const canvasId = `chart-${el.id || Math.random().toString(36).slice(2, 8)}`
@@ -240,10 +244,12 @@ function renderChart(el, style, wrap, vis, opts) {
             ? {}
             : {
                 x: {
+                  ...(stacked ? { stacked: true } : {}),
                   ticks: { color: 'rgba(255,255,255,0.6)' },
                   grid: { color: 'rgba(255,255,255,0.1)' },
                 },
                 y: {
+                  ...(stacked ? { stacked: true } : {}),
                   ticks: { color: 'rgba(255,255,255,0.6)' },
                   grid: { color: 'rgba(255,255,255,0.1)' },
                 },

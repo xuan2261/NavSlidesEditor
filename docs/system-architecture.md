@@ -329,9 +329,18 @@ billing, and offline sandbox inlining are not part of Phase 1.
   to rasterized assets so exported slides keep visual fidelity instead of
   dropping elements.
 - `server/routes/pptx-import.js` exposes `POST /api/pptx/import`, which
-  parses `.pptx` files via `pptxtojson` (primary) with `pptx2json` fallback,
+  parses `.pptx` files via `pptxtojson` 2.0.2 (primary) with `pptx2json` fallback,
   applies ZIP/package budget guards, and maps text/images/shapes/tables to
   NavSlides element types via shared geometry normalization; charts/equations/SmartArt become locked placeholders.
+- Import unit convention: the canvas is 960×540 at 72 DPI, so 1pt = 1px before
+  box scale. All length-bearing fields (font sizes, text insets, border/shadow
+  widths) convert as `pt × scale` — not `pt × 96/72`. The shared helper
+  `ptToCanvasPx` in `server/services/pptx-import/mapper/utils-text.js` encodes
+  this rule. The generic 96-DPI converter in `shared/src/shared-html-parser.js`
+  is intentionally unchanged; it serves browser/reveal.js layout, not the import
+  canvas.
+- EMF/WMF vector images are browser-unrenderable and import as labelled
+  placeholders preserving the source box geometry; rasterization is deferred.
 - Imported PPTX text carries `_pptxImportMeta` fit/wrap metadata that editor,
   shared HTML export, and PPTX export paths honor; user edits invalidate stale
   import-fit metadata.

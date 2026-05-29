@@ -48,9 +48,14 @@ describe('pptx import acceptance criteria', () => {
     })).toThrow(/not finite/i)
   })
 
-  it('accepts text font size within source pt tolerance', () => {
-    expect(() => assertTextFontSizeWithinTolerance({ fontSize: 32 }, 24)).not.toThrow()
-    expect(() => assertTextFontSizeWithinTolerance({ fontSize: 40 }, 24)).toThrow(/fontSize/i)
+  it('accepts text font size at the scale-based target and rejects 96-DPI inflation', () => {
+    // Correct fix on a standard deck (scale.y = 1): 24pt → 24px.
+    expect(() => assertTextFontSizeWithinTolerance({ fontSize: 24 }, 24)).not.toThrow()
+    // Old-bug inflated value (24 × 96/72 = 32) must now FAIL the gate.
+    expect(() => assertTextFontSizeWithinTolerance({ fontSize: 32 }, 24)).toThrow(/fontSize/i)
+    // Non-uniform deck: target follows scale.y. 24pt × 0.75 = 18px.
+    expect(() => assertTextFontSizeWithinTolerance({ fontSize: 18 }, 24, 0.75)).not.toThrow()
+    expect(() => assertTextFontSizeWithinTolerance({ fontSize: 24 }, 24, 0.75)).toThrow(/fontSize/i)
   })
 
   it('checks source-to-import font size tolerance when source output is available', () => {
@@ -58,12 +63,27 @@ describe('pptx import acceptance criteria', () => {
       slides: [{ elements: [{ type: 'text', fontSz: 24, content: '<span>Title</span>' }] }],
     }
     const imported = {
+      slides: [{ elements: [{ type: 'text', fontSize: 24 }] }],
+    }
+    // Standard deck (no originalSize → scale.y defaults to 1): 24pt → 24px passes.
+    expect(() => assertSourceFontSizesWithinTolerance(source, imported)).not.toThrow()
+    // The old inflated value (32) is now a regression the gate catches.
+    expect(() => assertSourceFontSizesWithinTolerance(source, {
       slides: [{ elements: [{ type: 'text', fontSize: 32 }] }],
+    })).toThrow(/fontSize/i)
+  })
+
+  it('derives the font scale from a non-uniform imported deck resolution', () => {
+    const source = {
+      slides: [{ elements: [{ type: 'text', fontSz: 24, content: '<span>Title</span>' }] }],
+    }
+    // 540 canvas / 720 source height → scale.y = 0.75 → 24pt expects 18px.
+    const imported = {
+      resolution: { width: 960, height: 540 },
+      _pptxMeta: { originalSize: { width: 960, height: 720 } },
+      slides: [{ elements: [{ type: 'text', fontSize: 18 }] }],
     }
     expect(() => assertSourceFontSizesWithinTolerance(source, imported)).not.toThrow()
-    expect(() => assertSourceFontSizesWithinTolerance(source, {
-      slides: [{ elements: [{ type: 'text', fontSize: 40 }] }],
-    })).toThrow(/fontSize/i)
   })
 
   it('passes a normalized imported presentation', () => {
@@ -77,7 +97,7 @@ describe('pptx import acceptance criteria', () => {
           y: 2,
           width: 100,
           height: 40,
-          fontSize: 24,
+          fontSize: 18,
           content: '<span style="font-size:24px;color:#111">Safe</span>',
           _pptxImportMeta: { textInsets: { left: 9.6, right: 9.6, top: 4.8, bottom: 4.8 }, textInsetsUnit: 'px' },
         }],

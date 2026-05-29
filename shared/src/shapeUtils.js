@@ -58,13 +58,58 @@ function innerDimension(value, strokeWidth) {
   return Math.max(0, value - strokeWidth)
 }
 
+// Pure gradient geometry shared by the SVG-string renderer (here) and the canvas
+// JSX renderer (shape-element-renderer.jsx). Converts a CSS gradient angle to an
+// SVG objectBoundingBox vector so both surfaces draw the identical direction.
+// CSS angle is clockwise from North; in SVG's y-down unit square the gradient
+// direction is (sin θ, −cos θ): 90°→left-to-right, 180°→top-to-bottom.
+function buildSvgGradientData(el) {
+  const gradient = el?.fillGradient
+  const stops = Array.isArray(gradient?.stops) ? gradient.stops : []
+  if (!gradient || stops.length < 2) return null
+  const rad = (Number(gradient.angle) || 0) * (Math.PI / 180)
+  const dx = Math.sin(rad)
+  const dy = -Math.cos(rad)
+  const round = (v) => Math.round(v * 1e5) / 1e5
+  const id = `grad-${String(el.id || 'shape').replace(/[^a-zA-Z0-9_-]/g, '')}`
+  return {
+    id,
+    x1: round(0.5 - dx / 2),
+    y1: round(0.5 - dy / 2),
+    x2: round(0.5 + dx / 2),
+    y2: round(0.5 + dy / 2),
+    stops,
+  }
+}
+
+function gradientDefsString(data) {
+  const stops = data.stops
+    .map((s) => `<stop offset="${Math.round(Number(s.offset) * 1e4) / 1e4}" stop-color="${safeCssColor(s.color, '#000000')}" />`)
+    .join('')
+  return `<defs><linearGradient id="${data.id}" x1="${data.x1}" y1="${data.y1}" x2="${data.x2}" y2="${data.y2}">${stops}</linearGradient></defs>`
+}
+
+// Solid color that stands in for a gradient where a real <linearGradient> can't
+// be used (degenerate single-stop gradient, or solid-only export targets like
+// pptxgenjs). Uses the first stop; never the 'gradient' sentinel literal.
+function gradientFallbackColor(el, fallback = '#6366f1') {
+  const stop = el?.fillGradient?.stops?.[0]?.color
+  return stop || fallback
+}
+
 function shapeSvgString(el) {
   const w = el.width,
     h = el.height
-  const fill = el.fill || '#6366f1'
+  const gradientData = buildSvgGradientData(el)
+  const fill = gradientData
+    ? `url(#${gradientData.id})`
+    : el.fillGradient
+      ? gradientFallbackColor(el)
+      : el.fill || '#6366f1'
   const stroke = el.stroke || 'none'
   const sw = el.strokeWidth || 0
   const shape = el.shape || 'rect'
+  const defs = gradientData ? gradientDefsString(gradientData) : ''
 
   let inner = ''
   if (shape === 'line') {
@@ -149,6 +194,6 @@ function shapeSvgString(el) {
     textEl = `<text x="${w / 2}" y="${h / 2}" dominant-baseline="middle" text-anchor="middle" font-size="${fs}" fill="${tc}" style="font-family:inherit;">${escapePlainText(el.text)}</text>`
   }
 
-  return `<svg width="100%" height="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;">${inner}${textEl}</svg>`
+  return `<svg width="100%" height="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;">${defs}${inner}${textEl}</svg>`
 }
-module.exports = { SHAPES, shapeSvgString }
+module.exports = { SHAPES, buildSvgGradientData, gradientFallbackColor, shapeSvgString }

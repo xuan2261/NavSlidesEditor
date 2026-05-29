@@ -106,4 +106,30 @@ describe('ShapeRenderer', () => {
     expect(Number(rect.getAttribute('width'))).toBeGreaterThanOrEqual(0)
     expect(Number(rect.getAttribute('height'))).toBeGreaterThanOrEqual(0)
   })
+
+  it('renders an imported gradient fill as an SVG linearGradient', () => {
+    const { container } = render(
+      <ShapeRenderer
+        element={{
+          id: 'shape-9',
+          shape: 'rect',
+          width: 200,
+          height: 100,
+          fill: 'gradient',
+          fillGradient: {
+            type: 'gradient',
+            angle: 90,
+            stops: [{ offset: 0, color: '#ffffff' }, { offset: 1, color: '#000000' }],
+          },
+        }}
+      />
+    )
+
+    const gradient = container.querySelector('linearGradient')
+    expect(gradient).toBeTruthy()
+    expect(container.querySelectorAll('linearGradient stop').length).toBe(2)
+    const filledGroup = container.querySelector('g')
+    expect(filledGroup.getAttribute('fill')).toMatch(/^url\(#.*shape-9.*\)$/)
+    expect(container.innerHTML).not.toContain('fill="gradient"')
+  })
 })

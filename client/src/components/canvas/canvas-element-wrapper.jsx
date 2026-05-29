@@ -164,7 +164,7 @@ export default function CanvasElement({
         <EditorContent editor={editor} style={editorContentStyle} />
       )}
       {element.type === 'image' && (() => {
-        const imgFilter = [element.filterBrightness != null && element.filterBrightness !== 100 ? `brightness(${element.filterBrightness}%)` : '', element.filterContrast != null && element.filterContrast !== 100 ? `contrast(${element.filterContrast}%)` : '', element.filterGrayscale ? `grayscale(${element.filterGrayscale}%)` : ''].filter(Boolean).join(' ') || undefined
+        const imgFilter = [element.filterBrightness != null && element.filterBrightness !== 100 ? `brightness(${element.filterBrightness}%)` : '', element.filterContrast != null && element.filterContrast !== 100 ? `contrast(${element.filterContrast}%)` : '', element.filterGrayscale ? `grayscale(${element.filterGrayscale}%)` : '', element.filterSaturate != null && element.filterSaturate !== 100 ? `saturate(${element.filterSaturate}%)` : ''].filter(Boolean).join(' ') || undefined
         return (
           <div style={imageWrapperStyle}>
             <img src={element.src} alt={element.alt || ''} style={element.imageW != null ? { position: 'absolute', left: element.imageOffsetX ?? 0, top: element.imageOffsetY ?? 0, width: element.imageW, height: element.imageH, objectFit: element.objectFit || 'contain', pointerEvents: 'none', filter: imgFilter } : { width: '100%', height: '100%', objectFit: element.objectFit || 'contain', display: 'block', pointerEvents: 'none', filter: imgFilter }} draggable={false} />

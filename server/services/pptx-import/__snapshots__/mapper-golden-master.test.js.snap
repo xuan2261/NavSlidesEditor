@@ -3,6 +3,17 @@
 exports[`pptx mapper golden masters > maps diagram deterministically 1`] = `
 [
   {
+    "_pptxImportMeta": {
+      "fitFontSizePx": 15.2,
+      "sourceBox": {
+        "height": 40,
+        "width": 80,
+      },
+      "sourceFontSizePx": undefined,
+      "textFit": "wrap",
+      "textLength": 4,
+      "version": 1,
+    },
     "fill": "#e5e7eb",
     "height": 40,
     "opacity": 1,

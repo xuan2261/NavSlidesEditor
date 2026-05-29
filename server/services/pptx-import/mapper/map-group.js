@@ -2,7 +2,6 @@ const { placeholder } = require('./utils-base')
 const {
   applyToPoint,
   identityMatrix,
-  mapBoxByMatrix,
   multiply,
   readCoord,
   readNumber,
@@ -75,17 +74,31 @@ async function flattenGroupElement(group, context, mapElementFn, depth = 0, pare
       width: Math.max(1, readNumber(child?.width, 80, 0) * context.scale.x),
       height: Math.max(1, readNumber(child?.height, 40, 0) * context.scale.y),
     }
-    const mappedBox = mapBoxByMatrix(childBoxLocal, groupMatrix)
+    const isLine = child?.x1 != null && child?.y1 != null && child?.x2 != null && child?.y2 != null
+    // Transform the child's CENTER through the group matrix and preserve its
+    // intrinsic dimensions. The previous code used mapBoxByMatrix (the rotated
+    // AABB, already enlarged) AND re-set rotate, so the wrapper rotated an
+    // already-rotated/bloated box a second time.
+    const childCenter = applyToPoint(
+      groupMatrix,
+      childBoxLocal.x + childBoxLocal.width / 2,
+      childBoxLocal.y + childBoxLocal.height / 2
+    )
+    const childRotate = readNumber(child?.rotate, 0)
     const transformedChild = {
       ...child,
-      left: mappedBox.x / context.scale.x,
-      top: mappedBox.y / context.scale.y,
-      width: mappedBox.width / context.scale.x,
-      height: mappedBox.height / context.scale.y,
-      rotate: readNumber(child?.rotate, 0) + inheritedRotate + groupRotation,
+      left: (childCenter.x - childBoxLocal.width / 2) / context.scale.x,
+      top: (childCenter.y - childBoxLocal.height / 2) / context.scale.y,
+      width: childBoxLocal.width / context.scale.x,
+      height: childBoxLocal.height / context.scale.y,
+      // Shapes: the wrapper rotates once about center, so accumulate all
+      // rotation here. Lines: their endpoints already carry the full accumulated
+      // rotation via groupMatrix, so keep only the child's own rotation or the
+      // wrapper would rotate them again.
+      rotate: isLine ? childRotate : childRotate + inheritedRotate + groupRotation,
     }
 
-    if (child?.x1 != null && child?.y1 != null && child?.x2 != null && child?.y2 != null) {
+    if (isLine) {
       const p1 = applyToPoint(groupMatrix, childBoxLocal.x + readNumber(child.x1, 0) * context.scale.x, childBoxLocal.y + readNumber(child.y1, 0) * context.scale.y)
       const p2 = applyToPoint(groupMatrix, childBoxLocal.x + readNumber(child.x2, 0) * context.scale.x, childBoxLocal.y + readNumber(child.y2, 0) * context.scale.y)
       transformedChild.x1 = p1.x / context.scale.x

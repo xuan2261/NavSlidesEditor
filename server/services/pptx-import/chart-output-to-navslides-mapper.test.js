@@ -140,6 +140,37 @@ describe('mapChart', () => {
     const result = mapChart(chart)
     expect(result.chartType).toBe('radar')
   })
+
+  it('emits stacked:true for a stacked grouping bar chart', () => {
+    const chart = makeChart({ chartType: 'barChart', grouping: 'stacked' })
+    const result = mapChart(chart)
+    expect(result.chartType).toBe('bar')
+    expect(result.stacked).toBe(true)
+    expect(result.areaFill).toBeUndefined()
+  })
+
+  it('maps an area chart to a filled line', () => {
+    const chart = makeChart({ chartType: 'areaChart', grouping: 'standard' })
+    const result = mapChart(chart)
+    expect(result.chartType).toBe('line')
+    expect(result.areaFill).toBe(true)
+    expect(result.stacked).toBeUndefined()
+  })
+
+  it('does not set stacked/areaFill for a plain clustered bar', () => {
+    const chart = makeChart({ chartType: 'barChart', grouping: 'clustered' })
+    const result = mapChart(chart)
+    expect(result.chartType).toBe('bar')
+    expect(result.stacked).toBeUndefined()
+    expect(result.areaFill).toBeUndefined()
+  })
+
+  it('does not set areaFill for a plain line chart', () => {
+    const chart = makeChart({ chartType: 'lineChart', grouping: 'standard' })
+    const result = mapChart(chart)
+    expect(result.chartType).toBe('line')
+    expect(result.areaFill).toBeUndefined()
+  })
 })
 
 describe('mapScatterChart', () => {
