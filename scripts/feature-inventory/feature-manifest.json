@@ -1,0 +1,48 @@
+{
+  "canvas": [
+    { "id": "canvas.move",         "risk": "low",  "tiers": ["smoke"] },
+    { "id": "canvas.resize",       "risk": "low",  "tiers": ["smoke"] },
+    { "id": "canvas.resize-aspect","risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.rotate-snap",  "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.zorder",       "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.group",        "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.align",        "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.distribute",   "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.lock",         "risk": "low",  "tiers": ["smoke"] },
+    { "id": "canvas.smart-guides", "risk": "low",  "tiers": ["smoke"] }
+  ],
+  "flow": [
+    { "id": "flow.undo-redo",      "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "flow.clipboard",      "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "flow.multiselect",    "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "flow.autosave",       "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "flow.find-replace",   "risk": "low",  "tiers": ["smoke"] }
+  ],
+  "control": [
+    { "id": "control.format.bold",        "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.italic",      "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.underline",   "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.fontSize",    "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.fontFamily",  "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.fontWeight",  "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.lineHeight",  "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.position",    "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.align",       "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.insert.text",        "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.insert.shape",       "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.view.smartGuides",   "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.view.selectionPane", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.file.menu",          "risk": "low", "tiers": ["smoke"] }
+  ],
+  "command": [
+    { "id": "command.insertSlide",    "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.insertLink",     "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.group",          "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.ungroup",        "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.zoomIn",         "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.zoomOut",        "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.resetZoom",      "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.startSlideshow", "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.commandPalette", "risk": "low", "tiers": ["smoke"] }
+  ]
+}

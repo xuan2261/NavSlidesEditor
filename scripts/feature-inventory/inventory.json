@@ -1,0 +1,1025 @@
+[
+  {
+    "id": "canvas.align",
+    "category": "canvas",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "canvas.distribute",
+    "category": "canvas",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "canvas.group",
+    "category": "canvas",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "canvas.lock",
+    "category": "canvas",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "canvas.move",
+    "category": "canvas",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "canvas.resize",
+    "category": "canvas",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "canvas.resize-aspect",
+    "category": "canvas",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "canvas.rotate-snap",
+    "category": "canvas",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "canvas.smart-guides",
+    "category": "canvas",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "canvas.zorder",
+    "category": "canvas",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "command.commandPalette",
+    "category": "command",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "command.group",
+    "category": "command",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "command.insertLink",
+    "category": "command",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "command.insertSlide",
+    "category": "command",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "command.resetZoom",
+    "category": "command",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "command.startSlideshow",
+    "category": "command",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "command.ungroup",
+    "category": "command",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "command.zoomIn",
+    "category": "command",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "command.zoomOut",
+    "category": "command",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.file.menu",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.format.align",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.format.bold",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.format.fontFamily",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.format.fontSize",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.format.fontWeight",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.format.italic",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.format.lineHeight",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.format.position",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.format.underline",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.insert.shape",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.insert.text",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.view.selectionPane",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "control.view.smartGuides",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.audio",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.callout",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.chart",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.code",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.drawing",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.game",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game"
+  },
+  {
+    "id": "element.html",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.icon",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.image",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.latex",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.line",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.markdown",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.qrcode",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.shape",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.svg",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.table",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.text",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.timeline",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "element.video",
+    "category": "element",
+    "source": "ELEMENT_DEFAULTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "flow.autosave",
+    "category": "flow",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "flow.clipboard",
+    "category": "flow",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "flow.find-replace",
+    "category": "flow",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "flow.multiselect",
+    "category": "flow",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "flow.undo-redo",
+    "category": "flow",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.blackScreen",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.bringForward",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.commandPalette",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.copy",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.cut",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.delete",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.duplicate",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.endSlideshow",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.eraseAnnotations",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.escape",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.gameHud",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.gameLeaderboard",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.gameNext",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.gamePause",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.gameReveal",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.gameTimer",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.group",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.highlighterTool",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.insertSlide",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.laserPointer",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.paste",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.penTool",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.redo",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.resetZoom",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.selectAll",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.sendBackward",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.slideFirst",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.slideLast",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.slideNext",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.slidePrev",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.startSlideshow",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.startSlideshowCurrent",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.teamSelect1",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.teamSelect2",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.teamSelect3",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.teamSelect4",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.timerAdd",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.timerSub",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.toggleFindReplace",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.undo",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.ungroup",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.whiteScreen",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.zoomIn",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  },
+  {
+    "id": "shortcut.zoomOut",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core"
+  }
+]
