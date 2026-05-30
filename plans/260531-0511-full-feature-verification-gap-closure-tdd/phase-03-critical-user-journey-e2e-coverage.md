@@ -22,20 +22,38 @@ Priority: P1. Status: Pending. Add release-grade Playwright coverage for user jo
 - Each journey asserts persisted data or visible final state.
 - Use stable selectors and POM methods.
 - No screenshots unless layout/visual is the assertion.
+- MVP journey set is bounded: create/edit/persist and share password/revoke are release-blocking; export, live, PPTX, and AI are included only with explicit runtime budget and stable fixture support.
+- Artifact journeys must inspect the exported/imported artifact, not just success toasts.
+- <!-- Updated: Validation Session 1 - only create/edit/persist and share password/revoke are release-blocking journeys. -->
 
 ## Architecture
 
 Journeys:
 
 ```text
-create/edit/persist
-insert/format/arrange/export-smoke
-live presentation reconnect
-pptx import roundtrip with edit smoke
-share password revoke
+release-blocking MVP: create/edit/persist
+release-blocking MVP: share password revoke
+bounded: insert/format/arrange/export-smoke
+bounded: live presentation reconnect
+bounded: pptx import roundtrip with edit smoke
 ```
 
-AI failure journey may be API-contract/unit if external key dependence makes E2E brittle.
+AI failure journey may be API-contract/unit if external key dependence makes E2E brittle. It must be reported as contract coverage, not full external integration coverage.
+
+Artifact validation contract:
+
+- exported HTML opens and contains expected slide text/assets
+- offline HTML has no unexpected external runtime dependency
+- PPTX export parses and contains expected slide/element count where tooling supports it
+- PPTX import roundtrip preserves at least one editable element after save/reload
+
+Live reconnect contract:
+
+- use separate presenter and viewer browser contexts
+- force viewer socket disconnect/reconnect
+- advance slide during outage
+- assert viewer catches current slide once with no duplicate event effects
+- clean up room/token data
 
 ## Related Code Files
 
@@ -52,16 +70,18 @@ AI failure journey may be API-contract/unit if external key dependence makes E2E
 2. Green: add missing POM helper methods, not brittle inline selectors.
 3. Refactor: split helper methods by page object responsibility.
 4. Tag journey tests with relevant `[cap:*]` where they verify capability behavior.
-5. Run targeted Playwright specs.
-6. Update journey doc mapping journey -> spec -> risk covered.
+5. For export/import journeys, parse/open the downloaded artifact before counting the journey as verified.
+6. For live/share journeys, include direct bypass checks where cheap: revoked token denied outside the UI path, viewer cannot perform presenter-only socket actions.
+7. Run targeted Playwright specs.
+8. Update journey doc mapping journey -> spec -> risk covered and mark contract-only coverage separately.
 
 ## Todo List
 
-- [ ] Create/edit/persist journey.
-- [ ] Insert/format/arrange/export-smoke journey.
-- [ ] Live reconnect journey.
-- [ ] PPTX import/edit/export smoke journey.
-- [ ] Share password/revoke journey.
+- [ ] Create/edit/persist MVP journey.
+- [ ] Share password/revoke MVP journey.
+- [ ] Insert/format/arrange/export-smoke bounded journey.
+- [ ] Live reconnect bounded journey.
+- [ ] PPTX import/edit/export bounded smoke journey.
 - [ ] AI failure handling coverage by best layer.
 
 ## Success Criteria
