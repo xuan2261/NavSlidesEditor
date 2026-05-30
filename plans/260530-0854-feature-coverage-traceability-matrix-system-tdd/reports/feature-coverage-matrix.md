@@ -2,7 +2,7 @@
 
 _Generated: local run_
 
-Verified (PASS only): 51/100 (51%)  |  PASS: 51  |  GAP: 49
+Verified (PASS only): 73/100 (73%)  |  PASS: 73  |  DEEP-GAP: 2  |  GAP: 25
 
 ## canvas
 
@@ -13,7 +13,7 @@ Verified (PASS only): 51/100 (51%)  |  PASS: 51  |  GAP: 49
 | canvas.group | high | deep | unit | client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js | PASS |
 | canvas.lock | low | smoke | - | (none) | GAP |
 | canvas.move | low | smoke | - | (none) | GAP |
-| canvas.resize | low | smoke | - | (none) | GAP |
+| canvas.resize | low | smoke | unit | client/src/components/canvas/canvas-geometry-ops.smoke.test.js | PASS |
 | canvas.resize-aspect | high | deep | unit | client/src/components/canvas/use-canvas-resize-rotate.deep.test.js | PASS |
 | canvas.rotate-snap | high | deep | unit | client/src/components/canvas/use-canvas-resize-rotate.deep.test.js | PASS |
 | canvas.smart-guides | low | deep | unit | client/src/utils/smartGuides.test.js | PASS |
@@ -39,14 +39,14 @@ Verified (PASS only): 51/100 (51%)  |  PASS: 51  |  GAP: 49
 |---|---|---|---|---|---|
 | control.file.menu | low | smoke | - | (none) | GAP |
 | control.format.align | low | smoke | unit | client/src/components/ribbon/controls/paragraph-formatting-and-alignment-controls.test.jsx | PASS |
-| control.format.bold | low | smoke | - | (none) | GAP |
-| control.format.fontFamily | low | smoke | - | (none) | GAP |
-| control.format.fontSize | low | smoke | - | (none) | GAP |
-| control.format.fontWeight | low | smoke | - | (none) | GAP |
-| control.format.italic | low | smoke | - | (none) | GAP |
+| control.format.bold | low | smoke | unit | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
+| control.format.fontFamily | low | smoke | unit | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
+| control.format.fontSize | low | smoke | unit | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
+| control.format.fontWeight | low | smoke | unit | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
+| control.format.italic | low | smoke | unit | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
 | control.format.lineHeight | low | smoke | unit | client/src/components/ribbon/controls/paragraph-formatting-and-alignment-controls.test.jsx | PASS |
 | control.format.position | low | smoke | - | (none) | GAP |
-| control.format.underline | low | smoke | - | (none) | GAP |
+| control.format.underline | low | smoke | unit | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
 | control.insert.shape | low | smoke | - | (none) | GAP |
 | control.insert.text | low | smoke | - | (none) | GAP |
 | control.view.selectionPane | low | smoke | - | (none) | GAP |
@@ -56,24 +56,24 @@ Verified (PASS only): 51/100 (51%)  |  PASS: 51  |  GAP: 49
 
 | Capability | Risk | Tier | Layer | Test(s) | Status |
 |---|---|---|---|---|---|
-| element.audio | low | smoke | - | (none) | GAP |
-| element.callout | low | smoke | - | (none) | GAP |
-| element.chart | high | smoke→deep | - | (none) | GAP |
-| element.code | low | smoke | - | (none) | GAP |
-| element.drawing | low | smoke | - | (none) | GAP |
-| element.html | low | smoke | - | (none) | GAP |
-| element.icon | low | smoke | - | (none) | GAP |
-| element.image | low | smoke | - | (none) | GAP |
-| element.latex | low | smoke | - | (none) | GAP |
-| element.line | low | smoke | - | (none) | GAP |
-| element.markdown | low | smoke | - | (none) | GAP |
-| element.qrcode | low | smoke | - | (none) | GAP |
-| element.shape | low | smoke | - | (none) | GAP |
-| element.svg | low | smoke | - | (none) | GAP |
+| element.audio | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.callout | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.chart | high | smoke→deep | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | DEEP-GAP |
+| element.code | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.drawing | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.html | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.icon | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.image | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.latex | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.line | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.markdown | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.qrcode | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.shape | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.svg | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
 | element.table | high | deep | unit | client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx | PASS |
-| element.text | low | smoke | - | (none) | GAP |
-| element.timeline | high | smoke→deep | - | (none) | GAP |
-| element.video | low | smoke | - | (none) | GAP |
+| element.text | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
+| element.timeline | high | smoke→deep | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | DEEP-GAP |
+| element.video | low | smoke | unit | client/src/components/canvas/element-renderers/element-factory.smoke.test.js | PASS |
 
 ## flow
 
