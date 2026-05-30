@@ -8,6 +8,13 @@ const {
 } = require('./presenterTools.js')
 const { renderSlideElements, escapeHtml, absoluteSrc } = require('./element-renderers.js')
 const { getSlideNotes } = require('./slideNotes.js')
+const {
+  DEFAULT_TOKENS,
+  tokensToCssVars,
+  mergeTokens,
+  presentationUsesTokens,
+} = require('./design-tokens.js')
+const { getFxModule, buildFxRuntimeScript } = require('./fx/index.js')
 
 function formatGradientCss(bg) {
   if (!bg || bg.type !== 'gradient') return ''
@@ -32,6 +39,26 @@ function getSlideTransitionAttrs(slide) {
   if (slide.transitionDirection) attrs.push(`data-transition-direction="${escapeHtml(slide.transitionDirection)}"`)
   if (slide.transitionDuration != null) attrs.push(`data-transition-duration="${escapeHtml(slide.transitionDuration)}"`)
   return attrs.length ? ` ${attrs.join(' ')}` : ''
+}
+
+/**
+ * Build the deck-level :root token block (full merged DEFAULT + deck tokens so
+ * every --ns-* resolves) plus per-slide override blocks keyed by data-slide-idx.
+ * Returns { styleBlock, slideOverrideIdx } where slideOverrideIdx is a Set of
+ * slide indices that carry an override (used to stamp data-slide-idx).
+ */
+function buildTokenStyleBlock(presentation) {
+  const deckTokens = mergeTokens(DEFAULT_TOKENS, presentation.designTokens)
+  let css = `    :root{ ${tokensToCssVars(deckTokens)} }\n`
+  const slideOverrideIdx = new Set()
+  ;(presentation.slides || []).forEach((slide, slideIndex) => {
+    if (slide && slide.designTokens) {
+      slideOverrideIdx.add(slideIndex)
+      const merged = mergeTokens(deckTokens, slide.designTokens)
+      css += `    [data-slide-idx="${slideIndex}"]{ ${tokensToCssVars(merged)} }\n`
+    }
+  })
+  return { styleBlock: `  <style>\n${css}  </style>`, slideOverrideIdx }
 }
 
 function getPluginRuntimeInitScript() {
@@ -90,10 +117,18 @@ function generateRevealHTML(presentation) {
   ).length
   let pageCounter = 0
 
+  const usesTokens = presentationUsesTokens(presentation)
+  const tokenInfo = usesTokens ? buildTokenStyleBlock(presentation) : null
+  const slideOverrideIdx = tokenInfo ? tokenInfo.slideOverrideIdx : null
+  const fxRuntimeScript = presentationUsesFx(presentation) ? buildFxRuntimeScript() : ''
+
   const slidesHtml = presentation.slides
-    // eslint-disable-next-line unused-imports/no-unused-vars
     .map((slide, slideIndex) => {
       const bgAttrs = getBackgroundAttrs(slide.background)
+      const slideIdxAttr =
+        slideOverrideIdx && slideOverrideIdx.has(slideIndex)
+          ? ` data-slide-idx="${slideIndex}"`
+          : ''
       const autoAnimateAttr = slide.autoAnimate ? ' data-auto-animate' : ''
       const transitionAttrs = getSlideTransitionAttrs(slide)
       const slideNotes = getSlideNotes(slide)
@@ -137,13 +172,15 @@ function generateRevealHTML(presentation) {
         ? `      <div style="position:absolute;inset:0;z-index:950;pointer-events:none;background-image:linear-gradient(to right,rgba(255,255,255,0.12) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,0.12) 1px,transparent 1px);background-size:${presentGridSize}px ${presentGridSize}px;"></div>`
         : ''
 
-      const sectionHtml = `    <section${autoAnimateAttr}${transitionAttrs}${bgAttrs} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${elementsHtml}\n${footerHtml}\n${gridHtml}\n      ${notes}\n    </section>`
+      const fxCanvas = getFxCanvasHtml(slide.background)
+      const sectionHtml = `    <section${autoAnimateAttr}${transitionAttrs}${bgAttrs}${slideIdxAttr} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${fxCanvas}${elementsHtml}\n${footerHtml}\n${gridHtml}\n      ${notes}\n    </section>`
 
       // Vertical slides support: if slide has children, wrap in a vertical section stack
       if (slide.children && slide.children.length > 0) {
         const childSections = slide.children
           .map((child) => {
             const childBg = getBackgroundAttrs(child.background)
+            const childFxCanvas = getFxCanvasHtml(child.background)
             const childAutoAnimate = child.autoAnimate ? ' data-auto-animate' : ''
             const childTransitionAttrs = getSlideTransitionAttrs(child)
             const childNotesText = getSlideNotes(child)
@@ -151,7 +188,7 @@ function generateRevealHTML(presentation) {
               ? `<aside class="notes">${escapeHtml(childNotesText)}</aside>`
               : ''
             const childElements = renderSlideElements(child, { forPrint: false })
-            return `    <section${childAutoAnimate}${childTransitionAttrs}${childBg} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${childElements}\n      ${childNotes}\n    </section>`
+            return `    <section${childAutoAnimate}${childTransitionAttrs}${childBg} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${childFxCanvas}${childElements}\n      ${childNotes}\n    </section>`
           })
           .join('\n')
         return `  <section>\n${sectionHtml}\n${childSections}\n  </section>`
@@ -198,7 +235,7 @@ function generateRevealHTML(presentation) {
     .reveal .slides section .reveal-footer,
     .reveal .slides section .reveal-footer * { font-family: ${footerFontFamily} !important; font-size: ${footerFontSize}px !important; color: ${footerColor} !important; }
   </style>
-  ${getPresenterToolsHead(presenterTools)}${presentation.customCSS ? `\n  <style>\n${presentation.customCSS}\n  </style>` : ''}
+${tokenInfo ? `${tokenInfo.styleBlock}\n` : ''}  ${getPresenterToolsHead(presenterTools)}${presentation.customCSS ? `\n  <style>\n${presentation.customCSS}\n  </style>` : ''}
 </head>
 <body>
   <div class="reveal">
@@ -351,13 +388,16 @@ ${getPluginRuntimeInitScript()}
         document.head.appendChild(script);
       }
     });
-  </script>${getPresenterToolsInlineJS(presenterTools)}
+  </script>${getPresenterToolsInlineJS(presenterTools)}${fxRuntimeScript ? `\n${fxRuntimeScript}` : ''}
 </body>
 </html>`
 }
 
 function getBackgroundAttrs(bg) {
   if (!bg) return ''
+  // 'fx' backgrounds render via a per-slide <canvas> (injected separately), so
+  // emit no reveal bg attr — the section stays transparent over the canvas.
+  if (bg.type === 'fx') return ''
   if (bg.type === 'color' && bg.color) return ` data-background-color="${bg.color}"`
   const imageSrc = bg.type === 'image' ? bg.image || bg.src : ''
   if (imageSrc)
@@ -365,6 +405,29 @@ function getBackgroundAttrs(bg) {
   const gradient = formatGradientCss(bg)
   if (gradient) return ` data-background-gradient="${gradient}"`
   return ''
+}
+
+/** True if any slide (or vertical child) uses an `'fx'` background with a known module. */
+function presentationUsesFx(presentation) {
+  const slides = presentation.slides || []
+  for (const slide of slides) {
+    const groups = [slide, ...(slide.children || [])]
+    for (const s of groups) {
+      const fx = s && s.background && s.background.type === 'fx' && s.background.fx
+      if (fx && getFxModule(fx.name)) return true
+    }
+  }
+  return false
+}
+
+/**
+ * Build the absolutely-positioned <canvas> for an `'fx'` background. Sits at
+ * z-index 0 behind slide elements; the runtime starts/stops its rAF loop.
+ */
+function getFxCanvasHtml(bg) {
+  if (!bg || bg.type !== 'fx' || !bg.fx || !getFxModule(bg.fx.name)) return ''
+  const params = JSON.stringify(bg.fx.params || {}).replace(/'/g, '&#39;')
+  return `<canvas data-fx-name="${escapeHtml(bg.fx.name)}" data-fx-params='${params}' style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>`
 }
 
 function downloadHTML(presentation) {
@@ -385,10 +448,16 @@ function downloadHTML(presentation) {
 
 // ΓöÇΓöÇΓöÇ PDF export (print-ready HTML, one page per fragment state) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
-function getBgPrintStyle(bg) {
+function getBgPrintStyle(bg, deckTokens) {
   if (!bg || bg.type === 'none') return 'background-color:#1e1e2e;'
   if (bg.type === 'color') return `background-color:${bg.color || '#1e1e2e'};`
   if (bg.type === 'gradient') return `background:${formatGradientCss(bg) || '#1e1e2e'};`
+  if (bg.type === 'fx') {
+    // Canvas can't print — fall back to a solid color (author override, then the
+    // theme bg token, then default).
+    const fallback = (bg.fx && bg.fx.fallbackColor) || (deckTokens && deckTokens.colors && deckTokens.colors.bg) || '#1e1e2e'
+    return `background-color:${fallback};`
+  }
   const imageSrc = bg.type === 'image' ? bg.image || bg.src : ''
   if (imageSrc) {
     const src = absoluteSrc(imageSrc)
@@ -414,7 +483,7 @@ function generatePrintHTML(presentation, options = {}) {
   const footerInactiveColor = presentation.footerInactiveColor || 'rgba(255,255,255,0.25)'
   const resW = presentation.resolution?.width || 960
   const resH = presentation.resolution?.height || 540
-
+  const printDeckTokens = mergeTokens(DEFAULT_TOKENS, presentation.designTokens)
   const pages = []
   let printPageCounter = 0
   presentation.slides.forEach((slide) => {
@@ -437,7 +506,7 @@ function generatePrintHTML(presentation, options = {}) {
   const pagesHtml = pages
     // eslint-disable-next-line unused-imports/no-unused-vars
     .map(({ slide, maxIdx, countPageNumber }, pageIndex) => {
-      const bgStyle = getBgPrintStyle(slide.background)
+      const bgStyle = getBgPrintStyle(slide.background, printDeckTokens)
 
       const elementsHtml = renderSlideElements(slide, {
         forPrint: true,

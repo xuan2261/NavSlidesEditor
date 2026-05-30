@@ -1,0 +1,282 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`htmlGenerator golden baseline (frozen-hex backward compat) > renders the frozen-hex deck byte-identically (locked snapshot) 1`] = `
+"<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Frozen Hex Deck</title>
+  <link rel="stylesheet" href="/vendor/reveal.js/dist/reset.css">
+  <link rel="stylesheet" href="/vendor/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="/vendor/reveal.js/dist/theme/black.css">
+  <link rel="stylesheet" href="/vendor/highlight.js/styles/monokai.min.css">
+  <link rel="stylesheet" href="/vendor/katex/dist/katex.min.css">
+  <link rel="stylesheet" href="/reveal-overrides.css">
+
+  <style>
+    html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; background: #000; }
+    /* Reset reveal.js section padding/alignment so absolute positions match the 960x540 editor canvas exactly */
+    .reveal .slides section { padding: 0 !important; text-align: left !important; line-height: normal !important; overflow: hidden; }
+    /* Neutralise theme typography overrides so presentation matches editor exactly */
+    /* font-family only on section (inherited) so KaTeX's explicit rules take precedence */
+    .reveal .slides section { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .reveal .slides section * { text-transform: none !important; letter-spacing: normal !important; }
+    /* Explicit heading sizes ΓÇö override theme so present mode matches editor exactly */
+    .reveal .slides section h1 { font-size: 2.5em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section h2 { font-size: 1.6em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section h3 { font-size: 1.3em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section h4 { font-size: 1em;   font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section p  { margin: 0 0 6px; line-height: 1.5; }
+    .reveal .slides section ul,
+    .reveal .slides section ol { padding-left: 24px; margin: 0 0 6px; }
+    .reveal .slides section li { margin-bottom: 3px; line-height: 1.5; }
+    .reveal .slides section a  { text-decoration: underline; }
+    /* reveal.js constrains/decorates section imgs ΓÇö reset everything */
+    .reveal .slides section img { margin: 0 !important; border: none !important; background: none !important; box-shadow: none !important; max-width: none !important; max-height: none !important; }
+    /* Footer ΓÇö explicit CSS rule with high specificity so reveal.js theme cannot override */
+    .reveal .slides section .reveal-footer,
+    .reveal .slides section .reveal-footer * { font-family: -apple-system,sans-serif !important; font-size: 14px !important; color: rgba(255,255,255,0.65) !important; }
+  </style>
+  <style>
+    [data-theme="light"] .reveal { filter: invert(1) hue-rotate(180deg); background: #ffffff !important; }
+    [data-theme="light"] .reveal img, 
+    [data-theme="light"] .reveal video, 
+    [data-theme="light"] .reveal canvas, 
+    [data-theme="light"] .reveal iframe { filter: invert(1) hue-rotate(180deg); }
+    </style>
+  <style>
+    .presenter-toolbar { position:fixed; top:10px; right:10px; z-index:100; display:flex; gap:5px; opacity: 0.15; transition: opacity 0.3s ease; }
+    .presenter-toolbar:hover { opacity: 1; }
+    .presenter-toolbar button {
+      background:rgba(0,0,0,0.5); color:white; border:1px solid rgba(255,255,255,0.25);
+      border-radius:6px; padding:5px 10px; cursor:pointer; font-size:14px;
+      backdrop-filter:blur(4px); transition:background 0.15s;
+    }
+    .presenter-toolbar button:hover { background:rgba(0,0,0,0.75); }
+    :fullscreen .presenter-toolbar { top:10px; }
+    :fullscreen #fs-btn, :-webkit-full-screen #fs-btn { display: none; }
+    .slide-menu-button, #customcontrols, .reveal .controls, .palette, .boardhandle { opacity: 0.15 !important; transition: opacity 0.3s ease !important; }
+    .slide-menu-button:hover, #customcontrols:hover, .reveal .controls:hover, .palette:hover, .boardhandle:hover { opacity: 1 !important; }
+    </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+    <section data-background-color="#101020" style="padding:0;width:960px;height:540px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">
+<div style="position:absolute;left:80px;top:60px;width:400px;height:120px;z-index:1;overflow:hidden;box-sizing:border-box;padding:8px 12px;color:white;color:#ffcc00"><p>Hello</p></div>
+<div style="position:absolute;left:100px;top:220px;width:200px;height:150px;z-index:1;overflow:hidden;box-sizing:border-box;"><svg width="100%" height="100%" viewBox="0 0 200 150" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;"><g fill="#6366f1" stroke="#ffffff" stroke-width="2"><rect x="1" y="1" width="198" height="148" rx="0" /></g><text x="100" y="75" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="#ffffff" style="font-family:inherit;">Box</text></svg></div>
+
+
+      
+    </section>
+    <section data-background-gradient="linear-gradient(135deg, #1e1e2e 0%, #4a0e8f 100%)" style="padding:0;width:960px;height:540px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">
+<div style="position:absolute;left:80px;top:100px;width:600px;height:300px;z-index:2;overflow:hidden;box-sizing:border-box;overflow:auto;"><table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;"><tr><td style="padding:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(99,102,241,0.3);color:#ffffff;font-size:calc(14px * var(--font-zoom, 1));font-weight:600;text-align:left;vertical-align:top;">H1</td><td style="padding:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(99,102,241,0.3);color:#ffffff;font-size:calc(14px * var(--font-zoom, 1));font-weight:600;text-align:left;vertical-align:top;">H2</td></tr><tr><td style="padding:8px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#ffffff;font-size:calc(14px * var(--font-zoom, 1));text-align:left;vertical-align:top;">a</td><td style="padding:8px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#ffffff;font-size:calc(14px * var(--font-zoom, 1));text-align:left;vertical-align:top;">b</td></tr></table></div>
+<div style="position:absolute;left:200px;top:200px;width:36px;height:36px;z-index:10;overflow:hidden;box-sizing:border-box;border-radius:50%;background:#ef4444;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:calc(16px * var(--font-zoom, 1));font-weight:700;font-family:-apple-system,sans-serif;">1</div>
+
+
+      
+    </section>
+    <section data-background-image="http://localhost:3000/uploads/bg.png" data-background-size="cover" data-background-position="center" style="padding:0;width:960px;height:540px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">
+<div style="position:absolute;left:100px;top:200px;width:400px;height:200px;z-index:1;overflow:hidden;box-sizing:border-box;"><svg width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;"><defs><marker id="me-l" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth"><polygon points="0 0,10 3.5,0 7" fill="#ffffff"/></marker></defs><path d="M 0 100 L 400 100" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" marker-end="url(#me-l)"/></svg></div>
+<div style="position:absolute;left:200px;top:200px;width:80px;height:80px;z-index:2;overflow:hidden;box-sizing:border-box;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></div>
+
+
+      
+    </section>
+    </div>
+  </div>
+  <div class="presenter-toolbar"><button id="theme-btn" onclick="toggleTheme()" title="Toggle dark/light">&#x1F313;</button><button onclick="zoomFont(1)" title="Increase font">A+</button><button onclick="zoomFont(-1)" title="Decrease font">A−</button><button id="fs-btn" title="Enter fullscreen (F)" onclick="document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()">&#x26F6;</button></div>
+  <script src="/vendor/reveal.js/dist/reveal.js"></script>
+  <script src="/vendor/reveal.js/plugin/notes/notes.js"></script>
+  <script src="/vendor/reveal.js/plugin/highlight/highlight.js"></script>
+  <script src="/vendor/katex/dist/katex.min.js"></script>
+  
+  <script>
+    var params = new URLSearchParams(window.location.search);
+    var revealConfig = {
+      hash: true,
+      width: 960,
+      height: 540,
+      margin: 0,
+      minScale: 0,
+      maxScale: 10,
+      center: false,
+      transition: 'slide',
+      plugins: [ RevealNotes, RevealHighlight ]
+    };
+    
+    
+    
+    
+    if (params.get('scroll') === 'true') { revealConfig.view = 'scroll'; revealConfig.scrollProgress = true; }
+    Reveal.initialize(revealConfig);
+    Reveal.on('ready', function() {
+      document.querySelectorAll('span[data-math-latex]').forEach(function(el) {
+        try {
+          katex.render(el.getAttribute('data-math-latex'), el, {
+            displayMode: el.getAttribute('data-math-display') === 'true',
+            throwOnError: false
+          });
+        } catch(e) {}
+      });
+
+      function initPluginRuntime(root) {
+        var iframe = root.querySelector('iframe');
+        if (!iframe || !iframe.contentWindow) return;
+        var pluginData = {};
+        try { pluginData = JSON.parse(root.getAttribute('data-plugin-data') || '{}'); } catch (e) {}
+        iframe.contentWindow.postMessage({
+          source: 'navslides-host',
+          type: 'init',
+          pluginData: pluginData,
+          size: { width: root.offsetWidth || 0, height: root.offsetHeight || 0 }
+        }, '*');
+      }
+      document.querySelectorAll('[data-plugin-runtime="true"]').forEach(function(root) {
+        var iframe = root.querySelector('iframe');
+        if (!iframe) return;
+        iframe.addEventListener('load', function() { initPluginRuntime(root); });
+        setTimeout(function() { initPluginRuntime(root); }, 250);
+      });
+      window.addEventListener('message', function(event) {
+        var message = event.data || {};
+        if (message.source !== 'navslides-plugin' || message.type !== 'ready') return;
+        document.querySelectorAll('[data-plugin-runtime="true"]').forEach(function(root) {
+          var iframe = root.querySelector('iframe');
+          if (iframe && iframe.contentWindow === event.source) initPluginRuntime(root);
+        });
+      });
+
+      // Live presenter: connect Socket.IO and broadcast navigation
+      var liveRoom = params.get('live');
+      if (liveRoom) {
+        var presenterToken = '';
+        try {
+          var launchCtx = JSON.parse(window.name || '{}');
+          if (launchCtx && launchCtx.roomCode === liveRoom && launchCtx.presenterToken) {
+            presenterToken = launchCtx.presenterToken;
+          }
+        } catch (e) {}
+        var script = document.createElement('script');
+        script.src = '/vendor/socket.io/socket.io.min.js';
+        script.onload = function() {
+          var sock = io({ path: '/ws' });
+          sock.on('connect', function() {
+            sock.emit('join-room', {
+              roomId: liveRoom,
+              role: 'presenter',
+              presentationId: '',
+              presenterToken: presenterToken
+            });
+            if (!document.getElementById('navslides-live-indicator')) {
+              var badge = document.createElement('div');
+              badge.id = 'navslides-live-indicator';
+              badge.style.cssText = 'position:fixed;top:12px;left:12px;z-index:9999;background:rgba(239,68,68,0.9);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;font-family:system-ui,sans-serif;';
+              badge.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#fff;animation:livePulse 1.5s ease-in-out infinite;display:inline-block;"></span> LIVE';
+              var style = document.createElement('style');
+              style.id = 'navslides-live-indicator-style';
+              style.textContent = '@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.3}}';
+              document.head.appendChild(style);
+              document.body.appendChild(badge);
+            }
+            emitLiveNavigate(true);
+          });
+          sock.on('join-error', function(payload) {
+            alert((payload && payload.message) || 'Presenter access denied');
+          });
+          var lastLiveIndices = null;
+          function getLiveRevealIndices() {
+            var indices = Reveal.getIndices() || {};
+            var liveIndices = {
+              slideIndex: indices.h || 0,
+              verticalIndex: indices.v || 0,
+              fragmentIndex: indices.f || 0
+            };
+            var currentSlide = Reveal.getCurrentSlide && Reveal.getCurrentSlide();
+            var horizontalSlides = document.querySelectorAll('.reveal .slides > section');
+            for (var h = 0; h < horizontalSlides.length; h += 1) {
+              var horizontal = horizontalSlides[h];
+              if (horizontal === currentSlide) {
+                liveIndices.slideIndex = h;
+                liveIndices.verticalIndex = 0;
+                return liveIndices;
+              }
+              var verticalSlides = horizontal.querySelectorAll('section');
+              for (var v = 0; v < verticalSlides.length; v += 1) {
+                if (verticalSlides[v] === currentSlide) {
+                  liveIndices.slideIndex = h;
+                  liveIndices.verticalIndex = v;
+                  return liveIndices;
+                }
+              }
+            }
+            return liveIndices;
+          }
+          function emitLiveNavigate(force) {
+            var indices = getLiveRevealIndices();
+            var state = {
+              slideIndex: indices.slideIndex || 0,
+              verticalIndex: indices.verticalIndex || 0,
+              fragmentIndex: indices.fragmentIndex || 0
+            };
+            var key = state.slideIndex + ':' + state.verticalIndex + ':' + state.fragmentIndex;
+            if (force !== true && key === lastLiveIndices) return;
+            lastLiveIndices = key;
+            sock.emit('navigate', {
+              slideIndex: state.slideIndex,
+              verticalIndex: state.verticalIndex,
+              fragmentIndex: state.fragmentIndex
+            });
+          }
+          function emitLiveNavigateAfterInput() {
+            setTimeout(function() { emitLiveNavigate(true); }, 0);
+            setTimeout(function() { emitLiveNavigate(true); }, 120);
+            setTimeout(function() { emitLiveNavigate(true); }, 400);
+          }
+          // Broadcast slide changes. The polling fallback covers headless CI
+          // cases where keyboard navigation updates Reveal before events flush.
+          Reveal.on('slidechanged', emitLiveNavigate);
+          Reveal.on('fragmentshown', emitLiveNavigate);
+          Reveal.on('fragmenthidden', emitLiveNavigate);
+          setInterval(emitLiveNavigate, 250);
+          document.addEventListener('keydown', emitLiveNavigateAfterInput, true);
+          document.addEventListener('keyup', emitLiveNavigateAfterInput, true);
+          window.addEventListener('hashchange', emitLiveNavigateAfterInput);
+          sock.on('control-navigate', function(state) {
+            Reveal.slide(state.slideIndex || 0, state.verticalIndex || 0, state.fragmentIndex || 0);
+          });
+          // Track cursor for viewers
+          document.addEventListener('mousemove', function(e) {
+            sock.emit('cursor-move', {
+              x: e.clientX / window.innerWidth,
+              y: e.clientY / window.innerHeight
+            });
+          });
+        };
+        document.head.appendChild(script);
+      }
+    });
+  </script>
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var isLight = html.getAttribute('data-theme') === 'light';
+      html.setAttribute('data-theme', isLight ? '' : 'light');
+    }
+    var _fontZoomLevel = 0;
+    var zoomFont = function(dir) {
+      _fontZoomLevel = Math.max(-8, Math.min(8, _fontZoomLevel + dir));
+      var scale = 1 - _fontZoomLevel * 0.05;
+      var baseW = 960;
+      var baseH = 540;
+      Reveal.configure({
+        width: Math.round(baseW * scale),
+        height: Math.round(baseH * scale)
+      });
+      Reveal.layout();
+    };
+  </script>
+</body>
+</html>"
+`;

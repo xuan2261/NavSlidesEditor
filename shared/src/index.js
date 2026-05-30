@@ -10,6 +10,9 @@ const sharedSlideNotes = require('./shared-slide-notes.js')
 const sharedPptxCore = require('./shared-pptx-core.js')
 const contentSafety = require('./content-safety.js')
 const aiSlideContract = require('./types/ai-slide-contract.js')
+const designTokens = require('./design-tokens.js')
+const themePresets = require('./theme-presets.js')
+const fxRegistry = require('./fx/index.js')
 
 const TEXT_COLORS = [
   '#ffffff', '#e2e8f0', '#94a3b8', '#64748b', '#334155', '#1e293b', '#0f172a', '#000000',
@@ -60,6 +63,9 @@ module.exports = {
   ...sharedPptxCore,
   ...contentSafety,
   ...aiSlideContract,
+  ...designTokens,
+  ...themePresets,
+  ...fxRegistry,
   TEXT_COLORS,
   BG_COLORS,
   GRADIENT_PRESETS,

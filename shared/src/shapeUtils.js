@@ -16,12 +16,14 @@ const SHAPES = [
   { id: 'bracket', name: 'Bracket', icon: '{' },
 ]
 const { escapePlainText, sanitizeRichTextHtml } = require('./content-safety.js')
+const { resolveColorField, svgPaint } = require('./design-tokens.js')
 
 function safeCssColor(value, fallback) {
   const color = typeof value === 'string' ? value.trim() : ''
   if (/^#[0-9a-f]{3,8}$/i.test(color)) return color
   if (/^rgba?\(\s*[\d.\s,%]+\)$/i.test(color)) return color
   if (/^hsla?\(\s*[\d.\s,%deg]+\)$/i.test(color)) return color
+  if (/^var\(--ns-[a-z0-9-]+\)$/.test(color)) return color
   if (['transparent', 'currentColor'].includes(color)) return color
   return fallback
 }
@@ -105,8 +107,8 @@ function shapeSvgString(el) {
     ? `url(#${gradientData.id})`
     : el.fillGradient
       ? gradientFallbackColor(el)
-      : el.fill || '#6366f1'
-  const stroke = el.stroke || 'none'
+      : resolveColorField(el.fill, 'shape', 'fill') || '#6366f1'
+  const stroke = resolveColorField(el.stroke, 'shape', 'stroke') || 'none'
   const sw = el.strokeWidth || 0
   const shape = el.shape || 'rect'
   const defs = gradientData ? gradientDefsString(gradientData) : ''
@@ -116,7 +118,9 @@ function shapeSvgString(el) {
     const lw = el.strokeWidth || 3
     let dashStyle = ''
     if (el.dashArray) dashStyle = ` stroke-dasharray="${el.dashArray}"`
-    inner = `<line x1="${lw}" y1="${h / 2}" x2="${w - lw}" y2="${h / 2}" stroke="${fill}" stroke-width="${lw}" fill="none"${dashStyle} />`
+    const linePaint = svgPaint('stroke', fill)
+    const lineStyle = linePaint.style ? ` style="${linePaint.style}"` : ''
+    inner = `<line x1="${lw}" y1="${h / 2}" x2="${w - lw}" y2="${h / 2}"${linePaint.attr} stroke-width="${lw}" fill="none"${dashStyle}${lineStyle} />`
   } else {
     let shapeEl = ''
     switch (shape) {
@@ -171,27 +175,33 @@ function shapeSvgString(el) {
         shapeEl = `<polygon points="${w * 0.2},${sw} ${w * 0.8},${sw} ${w - sw},${h - sw} ${sw},${h - sw}" />`
         break
       case 'bracket': {
-        const strk = stroke === 'none' ? fill : stroke
+        const strkVal = stroke === 'none' ? fill : stroke
         const swThick = Math.max(3, sw)
-        shapeEl = `<path d="M ${w * 0.8} ${swThick} Q ${w * 0.4} ${swThick} ${w * 0.4} ${h * 0.25} T ${swThick} ${h * 0.5} Q ${w * 0.4} ${h * 0.5} ${w * 0.4} ${h * 0.75} T ${w * 0.8} ${h - swThick}" fill="none" stroke="${strk}" stroke-width="${swThick}" />`
+        const bp = svgPaint('stroke', strkVal)
+        const bStyle = bp.style ? ` style="${bp.style}"` : ''
+        shapeEl = `<path d="M ${w * 0.8} ${swThick} Q ${w * 0.4} ${swThick} ${w * 0.4} ${h * 0.25} T ${swThick} ${h * 0.5} Q ${w * 0.4} ${h * 0.5} ${w * 0.4} ${h * 0.75} T ${w * 0.8} ${h - swThick}" fill="none"${bp.attr} stroke-width="${swThick}"${bStyle} />`
         break
       }
       default:
         shapeEl = `<rect x="${sw / 2}" y="${sw / 2}" width="${innerDimension(w, sw)}" height="${innerDimension(h, sw)}" />`
     }
-    inner = `<g fill="${fill}" stroke="${stroke}" stroke-width="${sw}">${shapeEl}</g>`
+    const gFill = svgPaint('fill', fill)
+    const gStroke = svgPaint('stroke', stroke)
+    const gStyle = gFill.style || gStroke.style ? ` style="${gFill.style}${gStroke.style}"` : ''
+    inner = `<g${gFill.attr}${gStroke.attr} stroke-width="${sw}"${gStyle}>${shapeEl}</g>`
   }
 
   let textEl = ''
   if (el.textHtml) {
     const fs = importedFontSize(el)
-    const tc = safeCssColor(el.textColor, '#ffffff')
+    const tc = safeCssColor(resolveColorField(el.textColor, 'shape', 'textColor'), '#ffffff')
     const richText = sanitizeRichTextHtml(el.textHtml)
     textEl = `<foreignObject x="0" y="0" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;color:${tc};font-size:${fs}px;overflow:hidden;${importedTextWrapStyle(el)}${importedTextInsetStyle(el)}">${richText}</div></foreignObject>`
   } else if (el.text) {
     const fs = el.fontSize || 16
-    const tc = safeCssColor(el.textColor, '#ffffff')
-    textEl = `<text x="${w / 2}" y="${h / 2}" dominant-baseline="middle" text-anchor="middle" font-size="${fs}" fill="${tc}" style="font-family:inherit;">${escapePlainText(el.text)}</text>`
+    const tc = safeCssColor(resolveColorField(el.textColor, 'shape', 'textColor'), '#ffffff')
+    const tp = svgPaint('fill', tc)
+    textEl = `<text x="${w / 2}" y="${h / 2}" dominant-baseline="middle" text-anchor="middle" font-size="${fs}"${tp.attr} style="font-family:inherit;${tp.style}">${escapePlainText(el.text)}</text>`
   }
 
   return `<svg width="100%" height="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;">${defs}${inner}${textEl}</svg>`

@@ -173,11 +173,12 @@
 /**
  * Slide background specification.
  * @typedef {Object} SlideBackground
- * @property {'color'|'gradient'|'image'} type
+ * @property {'color'|'gradient'|'image'|'fx'|'none'} type
  * @property {string} [color]    - CSS color string
  * @property {string} [gradient] - CSS gradient string
  * @property {string} [image]    - Image URL
  * @property {string} [value]    - Fallback value
+ * @property {{ name: string, params?: Object, fallbackColor?: string }} [fx] - Animated canvas FX (type==='fx'); name ∈ fx registry, fallbackColor used for print
  */
 
 /**
@@ -189,6 +190,16 @@
  */
 
 /**
+ * Design token set — drives theme-aware `'auto'` color resolution. Injected as
+ * CSS custom properties (`--ns-*`) at the deck (`:root`) and per-slide level.
+ * @typedef {Object} DesignTokens
+ * @property {Object} [colors]   - { bg, surface, accent, accent2, text, muted } (CSS color strings)
+ * @property {Object} [fonts]    - { heading, body } font-family strings
+ * @property {number} [radius]   - Base corner radius in px
+ * @property {number} [spacingScale] - Spacing multiplier
+ */
+
+/**
  * A single slide in the presentation.
  * @typedef {Object} Slide
  * @property {string}              id         - UUID v4
@@ -196,6 +207,7 @@
  * @property {string}              [notes=''] - Speaker notes (plain text)
  * @property {string}              [speakerNotes] - Legacy input alias for notes
  * @property {SlideBackground}     [background] - Slide background
+ * @property {DesignTokens}        [designTokens] - Per-slide token override (partial; merged over deck tokens)
  * @property {boolean}             [hidden=false] - Whether slide is skipped
  * @property {boolean}             [showPageNumber] - Page number toggle
  * @property {FragmentAnimation[]} [fragments] - Animation sequence
@@ -230,6 +242,7 @@
  * @property {string}          [theme='black']      - reveal.js theme name
  * @property {string}          [transition='none']  - Transition type
  * @property {Slide[]}         slides
+ * @property {DesignTokens}    [designTokens]       - Deck-level design token set (merged over DEFAULT_TOKENS)
  * @property {FooterConfig}    [footer]
  * @property {PresenterTools}  [presenterTools]
  * @property {string}          [createdAt]  - ISO date string

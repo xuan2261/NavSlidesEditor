@@ -4,6 +4,17 @@
  */
 const { shapeSvgString } = require('./shapeUtils.js')
 const { sanitizeRichTextHtml, sanitizeSvgHtml, sanitizeHref } = require('./content-safety.js')
+const { resolveColorField, svgPaint, isTokenVar } = require('./design-tokens.js')
+
+/**
+ * Inline SVG paint that preserves the exact `name="value"` token shape for
+ * literal colors (byte-identical frozen-hex output) but swaps to a `style`
+ * declaration for token vars, since SVG presentation attributes don't resolve
+ * CSS custom properties.
+ */
+function inlineSvgPaint(name, value) {
+  return isTokenVar(value) ? `style="${name}:${value}"` : `${name}="${value}"`
+}
 const iconPathsData = require('../data/icon-paths.json')
 const ICON_PATHS = iconPathsData
 
@@ -54,6 +65,7 @@ function safeCssColor(value, fallback) {
   if (/^#[0-9a-f]{3,8}$/i.test(color)) return color
   if (/^rgba?\(\s*[\d.\s,%]+\)$/i.test(color)) return color
   if (/^hsla?\(\s*[\d.\s,%deg]+\)$/i.test(color)) return color
+  if (/^var\(--ns-[a-z0-9-]+\)$/.test(color)) return color
   if (['transparent', 'currentColor'].includes(color)) return color
   return fallback
 }
@@ -116,7 +128,8 @@ function buildWrapperAttrs(el, slide) {
 // ─── Per-type renderers ──────────────────────────────────────────────────────
 
 function renderText(el, style, wrap, vis) {
-  const tc = el.textColor ? `;color:${el.textColor}` : ''
+  const resolvedTextColor = resolveColorField(el.textColor, 'text', 'textColor')
+  const tc = resolvedTextColor ? `;color:${resolvedTextColor}` : ''
   const ff = el.fontFamily ? `;font-family:${el.fontFamily}` : ''
   const importedFit = Number(el._pptxImportMeta?.fitFontSizePx)
   const fontSize = Number.isFinite(importedFit) && importedFit > 0 ? importedFit : el.fontSize
@@ -268,28 +281,29 @@ function renderChart(el, style, wrap, vis, opts) {
 
 function renderCallout(el, style, wrap, vis) {
   const bg = el.calloutColor || '#ef4444'
-  const tc = el.calloutTextColor || '#ffffff'
+  const tc = resolveColorField(el.calloutTextColor, 'callout', 'calloutTextColor') || '#ffffff'
   const fs = el.fontSize || 16
   return `<div${wrap} style="${style}${vis}border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;color:${tc};font-size:calc(${fs}px * var(--font-zoom, 1));font-weight:700;font-family:-apple-system,sans-serif;">${el.calloutNumber || 1}</div>`
 }
 
 function renderIcon(el, style, wrap, vis) {
-  const color = el.iconColor || '#ffffff'
+  const color = resolveColorField(el.iconColor, 'icon', 'iconColor') || '#ffffff'
   const sw = el.iconStrokeWidth || 2
-  
+
   // Normalize icon name in case it has an 'Icon' suffix (from lucide-react aliases)
   const rawName = el.iconName || 'Star'
   const iconKey = rawName.endsWith('Icon') && rawName !== 'ImageIcon' ? rawName.replace(/Icon$/, '') : rawName
   const path = ICON_PATHS[iconKey] || ICON_PATHS['Star'] || ''
-  
-  return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${path}</svg></div>`
+  const ip = svgPaint('stroke', color)
+  const ipStyle = ip.style ? ` style="${ip.style}"` : ''
+  return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none"${ip.attr} stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"${ipStyle}>${path}</svg></div>`
 }
 
 function renderLatex(el, style, wrap, vis, opts) {
   const content = el.content || ''
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
   const fontSize = el.latexFontSize || el.fontSize || 16
-  const textColor = el.latexColor || el.textColor || el.fontColor || '#ffffff'
+  const textColor = el.latexColor || resolveColorField(el.textColor, 'latex', 'textColor') || el.fontColor || '#ffffff'
 
   // [FIX #13] If _fallbackSrc is available and content doesn't look like valid LaTeX, use image fallback.
   // This handles malformed LaTeX strings imported from PPTX that KaTeX cannot render.
@@ -359,11 +373,11 @@ function renderAudio(el, style, wrap, vis, opts) {
 
 function renderTable(el, style, wrap, vis) {
   const data = el.data || [['']]
-  const headerBg = el.headerBgColor || 'rgba(99,102,241,0.3)'
-  const cellBg = el.cellBgColor || 'transparent'
-  const borderColor = el.borderColor || 'rgba(255,255,255,0.2)'
+  const headerBg = resolveColorField(el.headerBgColor, 'table', 'headerBgColor') || 'rgba(99,102,241,0.3)'
+  const cellBg = resolveColorField(el.cellBgColor, 'table', 'cellBgColor') || 'transparent'
+  const borderColor = resolveColorField(el.borderColor, 'table', 'borderColor') || 'rgba(255,255,255,0.2)'
   const borderWidth = el.borderWidth ?? 1
-  const textColor = el.textColor || '#ffffff'
+  const textColor = resolveColorField(el.textColor, 'table', 'textColor') || '#ffffff'
   const fontSize = el.fontSize || 14
   const cellPadding = el.cellPadding || 8
   const cellStyles = el.cellStyles || {}
@@ -418,18 +432,23 @@ function renderTable(el, style, wrap, vis) {
 }
 
 function renderDrawing(el, style, wrap, vis) {
+  const resolvedStroke = resolveColorField(el.strokeColor, 'drawing', 'strokeColor')
   const paths = (el.paths || [])
     .map((p) => {
-      const stroke = p.stroke || el.strokeColor || '#ffffff'
+      const stroke = p.stroke || resolvedStroke || '#ffffff'
       const sw = p.strokeWidth || el.strokeWidth || 3
-      return `<path d="${escapeHtml(p.d || '')}" stroke="${stroke}" stroke-width="${sw}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${p.opacity ?? 1}"/>`
+      return `<path d="${escapeHtml(p.d || '')}" ${inlineSvgPaint('stroke', stroke)} stroke-width="${sw}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${p.opacity ?? 1}"/>`
     })
     .join('')
   return `<div${wrap} style="${style}${vis}"><svg width="100%" height="100%" viewBox="0 0 ${el.width} ${el.height}" preserveAspectRatio="none" style="position:absolute;inset:0;">${paths}</svg></div>`
 }
 
 function renderLine(el, style, wrap, vis) {
-  const color = el.stroke || '#ffffff'
+  const color = resolveColorField(el.stroke, 'line', 'stroke') || '#ffffff'
+  const lp = svgPaint('fill', color) // marker paint: var via style, hex via attr
+  const markerPaint = `${lp.attr}${lp.style ? ` style="${lp.style}"` : ''}`
+  const strokePaint = svgPaint('stroke', color)
+  const pathStyle = strokePaint.style ? ` style="${strokePaint.style}"` : ''
   const sw = el.strokeWidth || 2
   const dash = el.dashArray ? ` stroke-dasharray="${escapeHtml(el.dashArray)}"` : ''
   const x1 = el.x1 ?? 0,
@@ -442,30 +461,30 @@ function renderLine(el, style, wrap, vis) {
   let defs = ''
   let ms = '',
     me = ''
-  const mkArrow = (id, c) =>
-    `<marker id="${id}" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth"><polygon points="0 0,10 3.5,0 7" fill="${c}"/></marker>`
-  const mkDiamond = (id, c) =>
-    `<marker id="${id}" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto" markerUnits="strokeWidth"><polygon points="5 0,10 5,5 10,0 5" fill="${c}"/></marker>`
-  const mkCircle = (id, c) =>
-    `<marker id="${id}" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><circle cx="4" cy="4" r="3" fill="${c}"/></marker>`
-  const mkSquare = (id, c) =>
-    `<marker id="${id}" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><rect x="1" y="1" width="6" height="6" fill="${c}"/></marker>`
+  const mkArrow = (id) =>
+    `<marker id="${id}" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth"><polygon points="0 0,10 3.5,0 7"${markerPaint}/></marker>`
+  const mkDiamond = (id) =>
+    `<marker id="${id}" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto" markerUnits="strokeWidth"><polygon points="5 0,10 5,5 10,0 5"${markerPaint}/></marker>`
+  const mkCircle = (id) =>
+    `<marker id="${id}" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><circle cx="4" cy="4" r="3"${markerPaint}/></marker>`
+  const mkSquare = (id) =>
+    `<marker id="${id}" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><rect x="1" y="1" width="6" height="6"${markerPaint}/></marker>`
   const markerFns = { arrow: mkArrow, diamond: mkDiamond, circle: mkCircle, square: mkSquare }
   if (startType !== 'none' && markerFns[startType]) {
     const sid = `ms-${uid}`
-    defs += markerFns[startType](sid, color)
+    defs += markerFns[startType](sid)
     ms = ` marker-start="url(#${sid})"`
   }
   if (endType !== 'none' && markerFns[endType]) {
     const eid = `me-${uid}`
-    defs += markerFns[endType](eid, color)
+    defs += markerFns[endType](eid)
     me = ` marker-end="url(#${eid})"`
   }
   const pathD =
     el.cx != null && el.cy != null
       ? `M ${x1} ${y1} Q ${el.cx} ${el.cy} ${x2} ${y2}`
       : `M ${x1} ${y1} L ${x2} ${y2}`
-  return `<div${wrap} style="${style}${vis}"><svg width="100%" height="100%" viewBox="0 0 ${el.width} ${el.height}" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;"><defs>${defs}</defs><path d="${pathD}" stroke="${color}" stroke-width="${sw}" fill="none" stroke-linecap="round"${dash}${ms}${me}/></svg></div>`
+  return `<div${wrap} style="${style}${vis}"><svg width="100%" height="100%" viewBox="0 0 ${el.width} ${el.height}" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;"><defs>${defs}</defs><path d="${pathD}"${strokePaint.attr} stroke-width="${sw}" fill="none" stroke-linecap="round"${dash}${ms}${me}${pathStyle}/></svg></div>`
 }
 
 function renderSvg(el, style, wrap, vis) {
@@ -498,9 +517,12 @@ function renderTimeline(el, style, wrap, vis, _opts) {
   const h = el.height || 400
   const lineY = h * 0.5
   const pad = 30
-  const lineColor = el.lineColor || '#6366f1'
-  const dotColor = el.dotColor || lineColor
-  const textColor = el.textColor || '#fff'
+  const lineColor = resolveColorField(el.lineColor, 'timeline', 'lineColor') || '#6366f1'
+  const dotColor = resolveColorField(el.dotColor, 'timeline', 'dotColor') || lineColor
+  const textColor = resolveColorField(el.textColor, 'timeline', 'textColor') || '#fff'
+  const lineStroke = inlineSvgPaint('stroke', lineColor)
+  const dotFill = inlineSvgPaint('fill', dotColor)
+  const textFill = inlineSvgPaint('fill', textColor)
   const fs = el.fontSize || 11
   const startDate = el.timelineStart ?? el.startDate ?? '2000'
   const endDate = el.timelineEnd ?? el.endDate ?? '2025'
@@ -537,11 +559,11 @@ function renderTimeline(el, style, wrap, vis, _opts) {
   }
 
   let svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;overflow:visible">`
-  svg += `<line x1="${pad}" y1="${lineY}" x2="${w - pad}" y2="${lineY}" stroke="${lineColor}" stroke-width="2"/>`
+  svg += `<line x1="${pad}" y1="${lineY}" x2="${w - pad}" y2="${lineY}" ${lineStroke} stroke-width="2"/>`
   ticks.forEach((t) => {
     const x = datePos(t.date)
-    svg += `<line x1="${x}" y1="${lineY - 4}" x2="${x}" y2="${lineY + 4}" stroke="${lineColor}" stroke-width="1.5"/>`
-    svg += `<text x="${x}" y="${lineY + 14}" text-anchor="end" fill="${textColor}" font-size="${fs - 1}" opacity="0.5" transform="rotate(-45,${x},${lineY + 14})">${escapeHtml(t.label)}</text>`
+    svg += `<line x1="${x}" y1="${lineY - 4}" x2="${x}" y2="${lineY + 4}" ${lineStroke} stroke-width="1.5"/>`
+    svg += `<text x="${x}" y="${lineY + 14}" text-anchor="end" ${textFill} font-size="${fs - 1}" opacity="0.5" transform="rotate(-45,${x},${lineY + 14})">${escapeHtml(t.label)}</text>`
   })
   items.forEach((item) => {
     const x = datePos(item.date)
@@ -551,17 +573,17 @@ function renderTimeline(el, style, wrap, vis, _opts) {
     const cardH = isTop ? lineY - 36 : h - lineY - 36
     const connY1 = isTop ? cardY + cardH : lineY
     const connY2 = isTop ? lineY : cardY
-    svg += `<line x1="${x}" y1="${connY1}" x2="${x}" y2="${connY2}" stroke="${lineColor}" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>`
-    svg += `<circle cx="${x}" cy="${lineY}" r="4" fill="${dotColor}"/>`
+    svg += `<line x1="${x}" y1="${connY1}" x2="${x}" y2="${connY2}" ${lineStroke} stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>`
+    svg += `<circle cx="${x}" cy="${lineY}" r="4" ${dotFill}/>`
     let ty = cardY + fs
-    svg += `<text x="${x}" y="${ty}" text-anchor="middle" fill="${textColor}" font-size="${fs}" font-weight="600">${escapeHtml(item.label || '')}</text>`
+    svg += `<text x="${x}" y="${ty}" text-anchor="middle" ${textFill} font-size="${fs}" font-weight="600">${escapeHtml(item.label || '')}</text>`
     ty += fs + 2
     if (item.description) {
-      svg += `<text x="${x}" y="${ty}" text-anchor="middle" fill="${textColor}" font-size="${fs - 1}" opacity="0.6">${escapeHtml(item.description)}</text>`
+      svg += `<text x="${x}" y="${ty}" text-anchor="middle" ${textFill} font-size="${fs - 1}" opacity="0.6">${escapeHtml(item.description)}</text>`
       ty += fs
     }
     const dateLabel = yearMode ? String(parseInt(item.date) || item.date) : item.date
-    svg += `<text x="${x}" y="${ty}" text-anchor="middle" fill="${textColor}" font-size="${fs - 2}" opacity="0.35">${escapeHtml(dateLabel)}</text>`
+    svg += `<text x="${x}" y="${ty}" text-anchor="middle" ${textFill} font-size="${fs - 2}" opacity="0.35">${escapeHtml(dateLabel)}</text>`
   })
   svg += '</svg>'
 
