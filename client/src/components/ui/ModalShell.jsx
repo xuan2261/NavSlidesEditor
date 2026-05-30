@@ -16,6 +16,7 @@ export function ModalShell({
   titleId,
   children,
   onClose,
+  footer,
   size = 'md',
   className,
   bodyClassName,
@@ -101,6 +102,14 @@ export function ModalShell({
           </Button>
         </div>
         <div className={cn('min-h-0 overflow-y-auto p-5', bodyClassName)}>{children}</div>
+        {footer && (
+          <div
+            data-testid="modal-shell-footer"
+            className="sticky bottom-0 z-10 shrink-0 border-t border-border bg-panel px-5 py-4"
+          >
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   )

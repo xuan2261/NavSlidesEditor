@@ -12,6 +12,9 @@ const TYPE_FILTERS = [
   { key: 'audio', label: 'Audio', icon: Music },
 ]
 
+const INITIAL_MEDIA_LIMIT = 100
+const MEDIA_PAGE_SIZE = 100
+
 function formatSize(bytes) {
   if (bytes == null) return ''
   if (bytes < 1024) return bytes + ' B'
@@ -28,6 +31,7 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
+  const [visibleLimit, setVisibleLimit] = useState(INITIAL_MEDIA_LIMIT)
   const closeTimerRef = useRef(null)
 
   const loadMedia = useCallback(async () => {
@@ -61,6 +65,10 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
     }, 400)
     return () => clearTimeout(delayDebounceFn)
   }, [loadMedia])
+
+  useEffect(() => {
+    setVisibleLimit(INITIAL_MEDIA_LIMIT)
+  }, [activeTab, search, typeFilter])
 
   useEffect(() => {
     return () => {
@@ -150,6 +158,9 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
   }
 
   if (!isOpen) return null
+
+  const visibleMedia = media.slice(0, visibleLimit)
+  const hasMoreMedia = visibleMedia.length < media.length
 
   return (
     <ModalShell
@@ -243,62 +254,78 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
-            {media.map((item) => (
-              <div
-                key={item.id || item.filename}
-                data-testid="media-library-item"
-                className="border border-border rounded-lg overflow-hidden cursor-pointer bg-card transition-colors hover:border-accent relative flex flex-col"
-                onClick={() => handleInsert(item)}
-              >
-                {/* Preview */}
-                <div className="h-[120px] bg-[#111] flex items-center justify-center overflow-hidden">
-                  {item.type === 'video' ? (
-                    <Film size={28} className="text-white/30" />
-                  ) : item.type === 'audio' ? (
-                    <Music size={28} className="text-white/30" />
-                  ) : (
-                    <img
-                      src={item.url}
-                      alt={item.originalName || item.author}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  )}
-                </div>
-                {/* Info */}
-                <div className="p-2 flex flex-col flex-1">
-                  <div className="text-xs text-text-primary overflow-hidden text-ellipsis whitespace-nowrap">
-                    {item.originalName || item.author || 'Image'}
-                  </div>
-                  <div className="mt-auto">
-                    {activeTab === 'local' && (
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-[11px] text-text-muted">{formatSize(item.size)}</span>
-                        <Button
-                          variant="icon"
-                          className="w-[22px] h-[22px] text-text-muted hover:text-danger hover:bg-danger/10 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDelete(item.filename)
-                          }}
-                          title="Delete"
-                        >
-                          <Trash2 size={13} />
-                        </Button>
-                      </div>
-                    )}
-                    {activeTab !== 'local' && (
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-[11px] text-text-muted">From {activeTab}</span>
-                        <Download size={13} className="text-text-muted" />
-                      </div>
+          <>
+            <div className="mb-3 flex items-center justify-between text-[12px] text-text-muted">
+              <span>
+                Showing {visibleMedia.length} of {media.length} media files
+              </span>
+              {hasMoreMedia && (
+                <Button
+                  variant="secondary"
+                  className="h-7 px-3 text-[12px]"
+                  onClick={() => setVisibleLimit((limit) => limit + MEDIA_PAGE_SIZE)}
+                >
+                  Load more media
+                </Button>
+              )}
+            </div>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+              {visibleMedia.map((item) => (
+                <div
+                  key={item.id || item.filename}
+                  data-testid="media-library-item"
+                  className="border border-border rounded-lg overflow-hidden cursor-pointer bg-card transition-colors hover:border-accent relative flex flex-col"
+                  onClick={() => handleInsert(item)}
+                >
+                  {/* Preview */}
+                  <div className="h-[120px] bg-[#111] flex items-center justify-center overflow-hidden">
+                    {item.type === 'video' ? (
+                      <Film size={28} className="text-white/30" />
+                    ) : item.type === 'audio' ? (
+                      <Music size={28} className="text-white/30" />
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt={item.originalName || item.author}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
                     )}
                   </div>
+                  {/* Info */}
+                  <div className="p-2 flex flex-col flex-1">
+                    <div className="text-xs text-text-primary overflow-hidden text-ellipsis whitespace-nowrap">
+                      {item.originalName || item.author || 'Image'}
+                    </div>
+                    <div className="mt-auto">
+                      {activeTab === 'local' && (
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-[11px] text-text-muted">{formatSize(item.size)}</span>
+                          <Button
+                            variant="icon"
+                            className="w-[22px] h-[22px] text-text-muted hover:text-danger hover:bg-danger/10 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDelete(item.filename)
+                            }}
+                            title="Delete"
+                          >
+                            <Trash2 size={13} />
+                          </Button>
+                        </div>
+                      )}
+                      {activeTab !== 'local' && (
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-[11px] text-text-muted">From {activeTab}</span>
+                          <Download size={13} className="text-text-muted" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </ModalShell>

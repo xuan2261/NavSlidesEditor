@@ -44,6 +44,23 @@ describe('ModalShell', () => {
     expect(html).toContain('w-full')
   })
 
+  it('supports sticky footer actions outside the scroll body', () => {
+    const html = renderToString(
+      <ModalShell
+        titleId="action-modal-title"
+        title="Action modal"
+        onClose={() => {}}
+        footer={<button type="button">Create</button>}
+      >
+        Body
+      </ModalShell>
+    )
+
+    expect(html).toContain('data-testid="modal-shell-footer"')
+    expect(html).toContain('sticky bottom-0')
+    expect(html).toContain('Create')
+  })
+
   it('closes on Escape after rerenders update the close callback', () => {
     const firstClose = vi.fn()
     const latestClose = vi.fn()
