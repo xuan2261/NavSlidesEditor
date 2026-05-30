@@ -18,6 +18,32 @@ NavSlides Editor uses three testing layers: Vitest (unit/integration JS), Playwr
 | `npm run test:load:ws` | k6 Socket.IO load test (smoke profile by default) |
 | `npm run test:load:ws:smoke` / `:load` / `:stress` | k6 Socket.IO with explicit profile |
 | `npm run test:corpus` | PPTX import fidelity tester |
+| `npm run test:deep` | Run only the `tier:deep` behavior tests (`*.deep.test.*`) |
+| `npm run inventory` | Regenerate the capability inventory (`scripts/feature-inventory/inventory.json`) |
+| `npm run matrix` | Regenerate the feature-coverage matrix → `docs/feature-coverage-matrix.md` (+ plan reports) |
+| `npm run matrix:gate` | Regenerate matrix, then run the coverage gate + manifest-completeness drift guard |
+
+## Feature coverage matrix (capability traceability)
+
+A separate, capability-level signal from line coverage: it tracks whether each
+editor-core capability's *behavior is asserted*, not just whether code ran. See
+`docs/feature-coverage-matrix.md` for the live map.
+
+- **What it covers**: every `ELEMENT_DEFAULTS` element type, every
+  `DEFAULT_SHORTCUTS` id, and hand-maintained canvas-op / control / command /
+  flow capabilities (`scripts/feature-inventory/feature-manifest.json`).
+- **How a capability becomes PASS**: a test title carries a `[cap:<id>]` tag AND
+  that test actually ran green (joined against vitest `--reporter=json`). A
+  skipped or unrun tagged test shows `SKIP`/`TAGGED`, never PASS — no false
+  green. High-risk caps need a `[cap:<id> tier:deep]` test to clear `DEEP-GAP`.
+- **Drift guards**: `client/src/data/element-defaults.test.js` fails if a new
+  element/shortcut has no tag or allowlist entry; `check-manifest-completeness.mjs`
+  fails if a new EditorPage command is not in the manifest.
+- **Allowlist**: `scripts/feature-inventory/coverage-gate-allowlist.json` holds
+  dated, reasoned entries for acknowledged gaps (warn-first). It should shrink.
+- **CI**: a non-required `feature-coverage-gate` job runs `matrix:gate` + a
+  freshness check on the committed `docs/feature-coverage-matrix.md`.
+
 
 ## Vitest coverage (v8)
 
