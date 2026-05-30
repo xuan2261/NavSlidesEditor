@@ -141,3 +141,44 @@ Fix: `(presentation.slides || [])` at both sites + input guard at generator entr
 2. Is there any reverse-proxy/auth assumed in front for non-local deploys? README says "place behind external auth" — should no-auth mutation routes still self-protect (CSRF token) for the local case?
 3. PPTX import: can a crafted `<a:srgbClr val>` inject non-hex string into `textColor`/`fontFamily`? (confirms MD-10 exploitability; `colorValue` passthrough verified, mapper-side normalization not found)
 4. HTML-embed iframe `allow-same-origin` in desktop app — intentional for embed interactivity, or removable? (affects HI-2 severity)
+
+---
+
+# Addendum — Empirical Verification (2026-05-30 19:54)
+
+Main-agent re-verification of every Critical/High + key Medium, per `/ck-debug` ("verify findings are actually correct"). Goal: distinguish runtime-proven from code-read from inferred — no finding accepted on subagent word alone.
+
+## Method legend
+- **RUNTIME** = executed real code, observed output (strongest)
+- **CODE-READ** = read exact source lines, traced logic
+- **INFERRED** = read source + reasoned about library/mechanism behavior not directly executed
+
+## Per-finding verification
+
+| ID | Method | Evidence | Verdict |
+|---|---|---|---|
+| CR-1 | **RUNTIME ×3** | (a) `path.join(HISTORY_DIR,'x','../../presentations'+'.json')` resolves to `server\data\presentations.json`, escapes HISTORY=true. (b) Live Express route returns 200, `req.params.snapshotId==='../../presentations'` (proves `%2f` decoded in param). (c) Exact replica of `index.js:46-58` `app.param` validators → still 200, handler reached: param callbacks do NOT propagate to sub-routers. | ✅ Correct, exploitable |
+| CR-2 | CODE-READ | `live-rooms.js:68-74` controller branch has no token check; `canControlRoom:130-133` returns true for controllers; `RemoteControlPage.jsx:60`/`SpeakerViewPage.jsx:114` join with roomCode only; `use-live-presentation.js:62` sends token only for presenter | ✅ Correct |
+| CR-3 | CODE-READ | `game-socket-handler.js:63-110` — `game-random/next/end` gated only by `if(!currentGameId)` | ✅ Correct |
+| CR-4 | CODE-READ | `games-rest-api-handler.js:44-48` `/answer` reads `socketId` from body; `/next /random /end` + `DELETE /:gameId` unauthenticated | ✅ Correct |
+| HI-1 | CODE-READ | `ai-provider.js:77` `fetch` (default `redirect:'follow'`, no per-hop revalidation); `ai-endpoint-guard.js:83` returns `parsed.toString()` (hostname, not pinned IP) → redirect + DNS-rebind both viable | ✅ Correct |
+| HI-2 | CODE-READ | `main.js:117-121` webPreferences lacks `sandbox:true`; `get-credential:51` no `event.senderFrame` check; no `will-navigate`; `setWindowOpenHandler:135` default `allow`. Aggravator confirmed: `canvas-element-wrapper.jsx:196` HTML iframe uses `sandbox="allow-scripts allow-same-origin"` | ✅ Correct |
+| HI-3 | INFERRED | `pptx-guards.js:20` budget from declared `_data.uncompressedSize`; `media.js:122` `entry.async('nodebuffer')` materializes full buffer in main process, size-checks AFTER (`:97/:132`). **Caveat:** honest zip-bomb IS caught by budget `:68`; exploit requires LYING the header (small declared, large deflate stream). Deflate inflates to stream end regardless of declared size → mechanism sound, but **not empirically tested with a crafted .pptx** | ✅ Real, 1 caveat |
+| HI-4 | CODE-READ | `live.js:7-13` no-auth `POST /room`→`registerRoom`; full `live-rooms.js` has zero TTL/reap; `:97-98` presenter-leave keeps room | ✅ Correct |
+| HI-5 | CODE-READ | `game-room-manager.js:23` `createRoom` sets `cleanupTimer:null`; only `endGame:108-111` sets TTL; `game-join:15` overwrites `currentGameId` without leaving old room | ✅ Correct |
+| HI-7 | **RUNTIME** | `__sanitize('<img src=x onerror=alert(1)>')` returns input unchanged — unquoted handler survives; iframe `:211` srcdoc has no `sandbox` | ✅ Correct (needs untrusted .md import) |
+| HI-8 | CODE-READ | `htmlGenerator.js:88` guards `||[]`, but `:93` `.map` and `:420` `.forEach` call on bare `presentation.slides` | ✅ Correct |
+| MD-10 | CODE-READ | `element-renderers.js:119-120` raw `textColor`/`fontFamily` into style; `utils-color.js:2` `colorValue` is raw string passthrough (no hex coercion) | ✅ Correct (via PPTX import) |
+| MD-13 | **RUNTIME** | `stripEventAttributes('<img src=x/onerror=alert(1)>')` returns input unchanged — `/`-separated handler bypasses (regex requires `\son`) | ✅ Correct |
+
+## Calibration corrections (vs original report)
+1. **HI-6** (game answer-replay): subagent rated **Critical**, corrected to **High** — impact is leaderboard corruption + per-player memory growth, not server compromise.
+2. **HI-3** (zip-bomb): added precondition — an *honest* oversized archive is blocked by the 500MB decompression budget (`pptx-guards.js:68`); the bypass specifically needs a **falsified `uncompressedSize`** header. Severity stays High but exploit is narrower than "any large zip".
+
+## Residual uncertainty (not line-traced / not executed)
+- **HI-3** crafted-.pptx OOM not run empirically (mechanism-inferred only). Cost/benefit not worth building a malicious archive unless prioritized for fix.
+- Worker-vs-main boundary of media decompression (`mapPptxOutput` calling `entry.async`) read but not full call-graph traced — assumed main-process per `media.js` import chain.
+- Remaining LOW findings + MD-3/MD-4 (race/sync-fs) accepted on code-read consistency, not individually re-run.
+
+## Bottom line
+**Zero findings were false or fabricated.** Every Critical verified (CR-1 runtime-proven triple); every High confirmed by direct source read (HI-3 with one inferred link). Previously-Rejected items (cmd-injection rclone/github, plugin sandbox, share-token, IP-guard literal encodings, zip-slip, prototype-pollution, undo/redo bounds) remain verified-safe.
