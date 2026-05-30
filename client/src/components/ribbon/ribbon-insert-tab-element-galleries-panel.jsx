@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Type, Image as ImageIcon, Upload, Shapes, Minus, ArrowUpRight,
   BarChart3, Table2, FileCode, Code, Sigma, QrCode,
-  Video, Music, FolderOpen, Monitor,
-  Globe, Pencil, Scissors, FileImage,
+  Video, Music, FolderOpen, HardDrive,
+  Globe, Pencil, SeparatorHorizontal, FileImage,
   Wand2, Grid3x3, Clapperboard, Box, Clock,
-  Gamepad2, MessageSquare, Smile, Package,
+  Gamepad2, MessageSquare, Sticker, Package,
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import RibbonSection from './ribbon-section'
@@ -352,7 +352,7 @@ export default function InsertTabContent({
             ref={iconTriggerRef}
             onMouseDown={(e) => { e.preventDefault(); setShowIconGallery((v) => !v) }}
             onKeyDown={(e) => handleKeyboardActivation(e, () => setShowIconGallery((v) => !v))}>
-            <Smile size={14} />
+            <Sticker size={14} />
           </Button>
           {showIconGallery && (
             <IconGallery
@@ -432,7 +432,7 @@ export default function InsertTabContent({
             <Button variant="icon" className="h-7 w-7" title="Open file browser" aria-label="Open file browser"
               onMouseDown={(e) => { e.preventDefault(); onOpenFileBrowser?.() }}
               onKeyDown={(e) => handleKeyboardActivation(e, onOpenFileBrowser)}>
-              <Monitor size={14} />
+              <HardDrive size={14} />
             </Button>
           )}
         </div>
@@ -458,7 +458,7 @@ export default function InsertTabContent({
           <Button variant="icon" className="h-7 w-7" title="Add divider" aria-label="Add divider"
             onMouseDown={(e) => { e.preventDefault(); onAddDivider?.() }}
             onKeyDown={(e) => handleKeyboardActivation(e, onAddDivider)}>
-            <Scissors size={14} />
+            <SeparatorHorizontal size={14} />
           </Button>
         </div>
       </RibbonSection>

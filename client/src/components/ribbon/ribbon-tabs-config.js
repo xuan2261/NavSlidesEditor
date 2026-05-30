@@ -3,8 +3,8 @@ import {
   Plus,
   Palette,
   Paintbrush,
-  Wand2,
-  Clapperboard,
+  Replace,
+  Sparkles,
   Eye,
 } from 'lucide-react'
 
@@ -13,7 +13,7 @@ export const RIBBON_TABS = [
   { id: 'insert', label: 'Insert', icon: Plus },
   { id: 'design', label: 'Design', icon: Palette },
   { id: 'format', label: 'Format', icon: Paintbrush },
-  { id: 'transitions', label: 'Transitions', icon: Wand2 },
-  { id: 'animations', label: 'Animations', icon: Clapperboard },
+  { id: 'transitions', label: 'Transitions', icon: Replace },
+  { id: 'animations', label: 'Animations', icon: Sparkles },
   { id: 'view', label: 'View', icon: Eye },
 ]

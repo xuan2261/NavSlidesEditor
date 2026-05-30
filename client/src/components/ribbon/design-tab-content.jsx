@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import {
-  Palette, MonitorSmartphone, PanelBottom, Hash, Navigation, Upload, Grid3X3,
-  Layout, Monitor, Square, MonitorPlay, MonitorSpeaker,
+  Palette, MonitorSmartphone, PanelBottom, Hash, Timer, Upload, Grid3x3,
+  Repeat, Menu, Monitor, Square, MonitorPlay, MonitorSpeaker,
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import RibbonSection from './ribbon-section'
@@ -293,7 +293,7 @@ export default function DesignTabContent({
               e.preventDefault()
               onUpdatePresentation?.({ autoSlide: presentation?.autoSlide ? 0 : 5000 })
             }}>
-            <Navigation size={14} />
+            <Timer size={14} />
           </Button>
           <Button variant="icon"
             className={`h-7 w-7 ${presentation?.autoSlideLoop ? 'bg-primary-light text-accent' : ''}`}
@@ -302,7 +302,7 @@ export default function DesignTabContent({
               e.preventDefault()
               onUpdatePresentation?.({ autoSlideLoop: !presentation?.autoSlideLoop })
             }}>
-            <Layout size={14} />
+            <Repeat size={14} />
           </Button>
           <Button variant="icon"
             className={`h-7 w-7 ${presentation?.showPresentGrid ? 'bg-primary-light text-accent' : ''}`}
@@ -311,7 +311,7 @@ export default function DesignTabContent({
               e.preventDefault()
               onUpdatePresentation?.({ showPresentGrid: !presentation?.showPresentGrid })
             }}>
-            <Grid3X3 size={14} />
+            <Grid3x3 size={14} />
           </Button>
           <Button variant="icon"
             className={`h-7 w-7 ${presentation?.kioskMode ? 'bg-primary-light text-accent' : ''}`}
@@ -329,7 +329,7 @@ export default function DesignTabContent({
               e.preventDefault()
               updatePresenterTool('slideMenu', !presenterTools.slideMenu)
             }}>
-            <Layout size={14} />
+            <Menu size={14} />
           </Button>
         </div>
       </RibbonSection>

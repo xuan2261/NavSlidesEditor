@@ -65,6 +65,45 @@ describe('Insert/Embed icon consistency', () => {
   })
 })
 
+describe('Insert icon semantic accuracy', () => {
+  function iconByAriaLabel(content, ariaLabel) {
+    const re = new RegExp(
+      `aria-label="${ariaLabel}"[\\s\\S]*?<([A-Z][A-Za-z0-9]+)\\s+size=\\{14\\}`,
+    )
+    const m = content.match(re)
+    expect(m, `button "${ariaLabel}" should render a sized lucide icon`).toBeTruthy()
+    return m[1]
+  }
+
+  it('Icon element button uses Sticker, not the emoji-specific Smile', () => {
+    const content = readFileSync(FILE, 'utf8')
+    expect(iconByAriaLabel(content, 'Add icon')).toBe('Sticker')
+    expect(content).not.toMatch(/<Smile\s+size=\{14\}/)
+  })
+
+  it('Open file browser uses HardDrive, not Monitor', () => {
+    const content = readFileSync(FILE, 'utf8')
+    expect(iconByAriaLabel(content, 'Open file browser')).toBe('HardDrive')
+  })
+
+  it('Divider uses SeparatorHorizontal, not Scissors (which means Cut)', () => {
+    const content = readFileSync(FILE, 'utf8')
+    expect(iconByAriaLabel(content, 'Add divider')).toBe('SeparatorHorizontal')
+    expect(content).not.toMatch(/<Scissors\s+size=\{14\}/)
+  })
+
+  it('imports the replacement icons from lucide-react', () => {
+    const content = readFileSync(FILE, 'utf8')
+    const lucideImport = content.match(
+      /import\s*\{([\s\S]+?)\}\s*from\s*['"]lucide-react['"]/,
+    )
+    expect(lucideImport).toBeTruthy()
+    expect(lucideImport[1]).toMatch(/\bSticker\b/)
+    expect(lucideImport[1]).toMatch(/\bHardDrive\b/)
+    expect(lucideImport[1]).toMatch(/\bSeparatorHorizontal\b/)
+  })
+})
+
 describe('Insert Advanced direct action contract', () => {
   it('renders fixed Advanced commands as direct buttons outside the launcher menu', () => {
     render(<InsertTabContent pluginTypes={[]} />)
