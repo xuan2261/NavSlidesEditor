@@ -51,9 +51,9 @@ Browser / Electron
 
 ### Editor Composition
 
-- `EditorPage.jsx` composes `EditorMenuBar`, `QuickAccessToolbar`,
-  `SlideSorterView`, `InsertMenu`, `MiniToolbar`, `SelectionPane`,
-  `PromptPopover`, `ProductTour`, `SlidePanel`, `Toolbar`, `SlideCanvas`,
+- `EditorPage.jsx` composes `QuickAccessToolbar`,
+  `SlideSorterView`, `SelectionPane`,
+  `PromptPopover`, `ProductTour`, `SlidePanel`, `SlideCanvas`,
   `PropertiesPanel`, `FindReplaceBar`, `AnimationTimeline`,
   `AnimationPreviewModal`, and modal surfaces.
 - Editor save lifecycle status is explicit in the shell (`saving` / `saved` /
