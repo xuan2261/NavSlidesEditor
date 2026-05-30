@@ -5,6 +5,10 @@ import { loadOverrides } from '../utils/shortcut-local-storage-persistence'
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
+// Bare arrow keys are not registry shortcuts: in the editor they either nudge
+// the selected element or navigate slides, decided by the caller at press time.
+const ARROW_DIRECTION = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }
+
 /**
  * Create keyboard event handler that dispatches from shortcut registry.
  * Supports scope filtering via isPresenting flag and activeGameType.
@@ -73,6 +77,13 @@ export function createKeyboardHandler({
       }
     }
 
+    // Bare arrow keys (editor only) — caller decides nudge-element vs change-slide.
+    // Presentation scope keeps its own ArrowLeft/Right registry shortcuts.
+    if (!ctrl && !isPresenting && ARROW_DIRECTION[e.key]) {
+      callbacks.onArrow?.(ARROW_DIRECTION[e.key], e)
+      return
+    }
+
     // Delete/Backspace
     if ((e.key === 'Delete' || e.key === 'Backspace') && !ctrl) {
       callbacks.onDelete?.()
@@ -110,6 +121,7 @@ export function useKeyboard({
   onSlidePrev,
   onSlideFirst,
   onSlideLast,
+  onArrow,
   onBlackScreen,
   onWhiteScreen,
   onEndSlideshow,
@@ -166,6 +178,7 @@ export function useKeyboard({
         onSlidePrev,
         onSlideFirst,
         onSlideLast,
+        onArrow,
         onBlackScreen,
         onWhiteScreen,
         onEndSlideshow,
@@ -213,6 +226,7 @@ export function useKeyboard({
       onSlidePrev,
       onSlideFirst,
       onSlideLast,
+      onArrow,
       onBlackScreen,
       onWhiteScreen,
       onEndSlideshow,

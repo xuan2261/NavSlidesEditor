@@ -976,6 +976,34 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       setSelectedElementIds([])
       setEditingElementId(null)
     },
+    onArrow: (direction, e) => {
+      // Text editing exits the handler earlier, so this only runs on the canvas.
+      // Selection present → nudge elements (Shift = fine 1px); empty → up/down
+      // walks slides like PowerPoint's slide pane.
+      const ids = selectedElementIdsRef.current
+      if (ids.length > 0) {
+        const step = e.shiftKey ? 1 : 10
+        const dx = direction === 'left' ? -step : direction === 'right' ? step : 0
+        const dy = direction === 'up' ? -step : direction === 'down' ? step : 0
+        if (dx === 0 && dy === 0) return
+        e.preventDefault()
+        const slide = activeSlideRef.current
+        ids.forEach((id) => {
+          const el = slide?.elements?.find((x) => x.id === id)
+          if (!el || el.locked) return
+          updateElement(id, { x: (el.x || 0) + dx, y: (el.y || 0) + dy })
+        })
+        return
+      }
+      if (direction === 'up' || direction === 'down') {
+        const total = presentation?.slides?.length ?? 0
+        if (total === 0) return
+        e.preventDefault()
+        setCurrentSlideIndex((ci) =>
+          direction === 'up' ? Math.max(0, ci - 1) : Math.min(total - 1, ci + 1)
+        )
+      }
+    },
     isEditing: !!editingElementId,
     activeGameType: currentGameType,
     // Game (reachable in-editor when a game element is on the slide)
