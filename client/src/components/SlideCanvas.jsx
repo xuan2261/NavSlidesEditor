@@ -19,12 +19,16 @@ import useCanvasPointerInteraction from './canvas/use-canvas-pointer-interaction
 import useCanvasRubberBandSelection from './canvas/use-canvas-rubber-band-drag-selection'
 import CanvasElement from './canvas/canvas-element-wrapper'
 import { cn } from '../lib/utils'
+import { DEFAULT_TOKENS, mergeTokens, tokensToStyleObject } from 'revealjs-shared'
+import SlideBackgroundFxCanvas from './canvas/slide-background-fx-canvas'
 
 function getBgStyle(bg) {
   if (!bg || bg.type === 'none') return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
   if (bg.type === 'color') return { backgroundColor: bg.color || 'var(--bg-canvas-default, #ffffff)' }
   if (bg.type === 'gradient') return { background: bg.gradient || 'var(--bg-canvas-default, #ffffff)' }
   if (bg.type === 'image' && bg.image) return { backgroundImage: `url(${bg.image})`, backgroundSize: bg.size || 'cover', backgroundPosition: bg.position || 'center' }
+  // 'fx' backgrounds render via the FX canvas overlay; keep the container transparent.
+  if (bg.type === 'fx') return { backgroundColor: bg.fx?.fallbackColor || '#0d0221' }
   return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
 }
 
@@ -34,6 +38,7 @@ let _iconPathsCache = null
 export default function SlideCanvas({
   editor,
   slide,
+  designTokens,
   selectedElementIds,
   editingElementId,
   showGrid,
@@ -371,6 +376,11 @@ export default function SlideCanvas({
     }
   }
 
+  // Always apply token vars (merged DEFAULT + deck + per-slide override) so
+  // 'auto' elements resolve to the historical hex out-of-box; frozen-hex
+  // content ignores them harmlessly.
+  const resolvedTokens = mergeTokens(mergeTokens(DEFAULT_TOKENS, designTokens), slide?.designTokens)
+
   const canvasStyle = {
     width: SLIDE_W,
     height: SLIDE_H,
@@ -380,6 +390,7 @@ export default function SlideCanvas({
     position: 'relative',
     fontSize: '16px',
     outline: dragOver ? '3px dashed #6366f1' : 'none',
+    ...tokensToStyleObject(resolvedTokens),
     ...getBgStyle(slide?.background),
   }
 
@@ -435,6 +446,16 @@ export default function SlideCanvas({
           <div className={cn('absolute inset-0 z-[997] pointer-events-none flex items-center justify-center')}>
             <span className="text-white/30 text-sm select-none">🔒 Slide Locked</span>
           </div>
+        )}
+
+        {/* Animated FX background (shared module; matches present/export). Pauses when slide locked. */}
+        {slide?.background?.type === 'fx' && slide.background.fx && (
+          <SlideBackgroundFxCanvas
+            fx={slide.background.fx}
+            width={SLIDE_W}
+            height={SLIDE_H}
+            active={!slide?.locked}
+          />
         )}
 
         {/* Grid overlay */}

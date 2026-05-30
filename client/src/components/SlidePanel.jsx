@@ -32,6 +32,7 @@ function getBgStyle(bg) {
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     }
+  if (bg.type === 'fx') return { backgroundColor: bg.fx?.fallbackColor || '#0d0221' }
   return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
 }
 

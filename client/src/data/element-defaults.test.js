@@ -3,12 +3,46 @@ import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { ELEMENT_DEFAULTS } from './element-defaults'
 import { DEFAULT_SHORTCUTS } from '../utils/default-keyboard-shortcut-definitions-registry'
+import { DEFAULT_TOKENS, AUTO_FIELD_MAP, resolveColorField } from 'revealjs-shared'
 
 describe('element-defaults guards README count claim', () => {
   it('exposes exactly 19 element types (matches README "19 element types")', () => {
     expect(Object.keys(ELEMENT_DEFAULTS)).toHaveLength(19)
   })
 })
+
+// The token flip (hex -> 'auto') must produce ZERO out-of-box visual change:
+// every default color field flipped to 'auto' must resolve, under DEFAULT_TOKENS,
+// to the exact hex it held before the flip.
+describe("default 'auto' colors resolve to the historical hex (no out-of-box change)", () => {
+  // Map of (type, field) -> the hex the default held BEFORE the flip.
+  const PRIOR_HEX = {
+    shape: { fill: '#6366f1', textColor: '#ffffff' },
+    text: { textColor: '#ffffff' },
+    icon: { iconColor: '#ffffff' },
+    callout: { calloutTextColor: '#ffffff' },
+    table: { textColor: '#ffffff' },
+    drawing: { strokeColor: '#ffffff' },
+    line: { stroke: '#ffffff' },
+    timeline: { lineColor: '#6366f1', dotColor: '#6366f1', textColor: '#ffffff' },
+  }
+
+  for (const [type, fields] of Object.entries(PRIOR_HEX)) {
+    for (const [field, priorHex] of Object.entries(fields)) {
+      it(`${type}.${field} default 'auto' -> ${priorHex} under DEFAULT_TOKENS`, () => {
+        // The current default is the 'auto' sentinel.
+        expect(ELEMENT_DEFAULTS[type][field]).toBe('auto')
+        // 'auto' resolves to a token var whose DEFAULT_TOKENS value == prior hex.
+        const tokenVar = resolveColorField('auto', type, field) // var(--ns-X)
+        const tokenName = tokenVar.match(/^var\(--ns-(.+)\)$/)[1]
+        expect(DEFAULT_TOKENS.colors[tokenName]).toBe(priorHex)
+        // sanity: AUTO_FIELD_MAP agrees
+        expect(`var(--ns-${AUTO_FIELD_MAP[type][field]})`).toBe(tokenVar)
+      })
+    }
+  }
+})
+
 
 // Drift guard (auto-source layer): a new ELEMENT_DEFAULTS key or DEFAULT_SHORTCUTS
 // id must be tracked by the coverage matrix as PASS (verified) or ALLOWED

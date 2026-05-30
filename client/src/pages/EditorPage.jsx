@@ -27,6 +27,9 @@ import { resolveActiveSlide, mapActiveSlide } from '../utils/active-slide-mapper
 import SlidePanel from '../components/SlidePanel'
 import SlideCanvas from '../components/SlideCanvas'
 import PropertiesPanel from '../components/PropertiesPanel'
+import DesignIdeasPanel from '../components/design-ideas-panel'
+import { SLIDE_TEMPLATES } from '../data/slide-templates'
+import { getThemePreset } from 'revealjs-shared'
 import RibbonHeaderBar from '../components/ribbon/ribbon-header-bar'
 import RibbonPanel from '../components/ribbon/ribbon-panel'
 import { useUIStore } from '../stores/ui-store'
@@ -176,6 +179,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const resetZoom = useEditorStore((s) => s.resetZoom)
   const leftPanelOpen = useUIStore((s) => s.leftPanelOpen)
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen)
+  const showDesignIdeas = useUIStore((s) => s.showDesignIdeas)
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen)
   const setActiveTab = useUIStore((s) => s.setActiveTab)
   const setFormatContext = useUIStore((s) => s.setFormatContext)
@@ -1101,7 +1105,20 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const hasChanges = historyRef.current.length > 1
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden">
+    <>
+    <div
+      data-testid="editor-small-screen-guard"
+      className="flex h-full flex-col items-center justify-center gap-3 bg-workspace px-6 text-center md:hidden"
+    >
+      <div className="text-base font-semibold text-text-primary">Tablet or desktop required</div>
+      <p className="max-w-[320px] text-sm leading-6 text-text-secondary">
+        Full slide editing needs a wider workspace. Use a tablet, desktop, or larger browser window.
+      </p>
+      <Button variant="secondary" onClick={onGoHome}>
+        Back to presentations
+      </Button>
+    </div>
+    <div className="relative hidden h-full flex-col overflow-hidden md:flex">
       {/* Editor Header */}
       <div className="relative z-[200] flex items-center gap-x-3 px-4 py-1.5 min-h-[44px] bg-secondary border-b border-border shrink-0">
         <Button
@@ -1228,7 +1245,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
             presentation={presentation}
             slide={currentSlide}
             onUpdateSlide={updateCurrentSlide}
-            onUpdatePresentation={(updates) => setPresentation((prev) => ({ ...prev, ...updates }))}
+            onUpdatePresentation={(updates) => setPresentation((prev) => (typeof updates === 'function' ? updates(prev) : { ...prev, ...updates }))}
             selectedElement={selectedElement}
             onUpdateElement={(updates) => selectedElementId && updateElement(selectedElementId, updates)}
             onPaste={handlePaste}
@@ -1291,6 +1308,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
             <SlideCanvas
               editor={editor}
               slide={activeSlide}
+              designTokens={presentation.designTokens}
               selectedElementIds={selectedElementIds}
               editingElementId={editingElementId}
               showGrid={showGrid}
@@ -1346,31 +1364,69 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         </div>
 
         {rightPanelOpen && (
-          <PropertiesPanel
-            slide={activeSlide}
-            selectedElement={selectedElement}
-            onUpdateSlide={updateCurrentSlide}
-            onUpdateElement={(idOrUpdates, maybeUpdates) => {
-              if (maybeUpdates) {
-                updateElement(idOrUpdates, maybeUpdates)
-                return
-              }
-              if (selectedElementId) updateElement(selectedElementId, idOrUpdates)
-            }}
-            onDeleteElement={() => selectedElementId && deleteElement(selectedElementId)}
-            onBringForward={() => selectedElementId && bringElementForward(selectedElementId)}
-            onSendBackward={() => selectedElementId && sendElementBackward(selectedElementId)}
-            onEditHtml={() => selectedElementId && openHtmlEditor(selectedElementId)}
-            onEditCode={() => selectedElementId && openCodeEditor(selectedElementId)}
-            onEditLatex={() => selectedElementId && openLatexEditor(selectedElementId)}
-            presentation={presentation}
-            onUpdatePresentation={(updates) => setPresentation((prev) => ({ ...prev, ...updates }))}
-            selectedElementIds={selectedElementIds}
-            onSelectElement={toggleElementSelection}
-            onUpdateElements={updateElements}
-            onDeleteSelectedElements={deleteSelectedElements}
-            isTemplate={isTemplate}
-          />
+          <div className="mt-[80px] flex h-[calc(100%-80px)] shrink-0">
+            <PropertiesPanel
+              slide={activeSlide}
+              selectedElement={selectedElement}
+              onUpdateSlide={updateCurrentSlide}
+              onUpdateElement={(idOrUpdates, maybeUpdates) => {
+                if (maybeUpdates) {
+                  updateElement(idOrUpdates, maybeUpdates)
+                  return
+                }
+                if (selectedElementId) updateElement(selectedElementId, idOrUpdates)
+              }}
+              onDeleteElement={() => selectedElementId && deleteElement(selectedElementId)}
+              onBringForward={() => selectedElementId && bringElementForward(selectedElementId)}
+              onSendBackward={() => selectedElementId && sendElementBackward(selectedElementId)}
+              onEditHtml={() => selectedElementId && openHtmlEditor(selectedElementId)}
+              onEditCode={() => selectedElementId && openCodeEditor(selectedElementId)}
+              onEditLatex={() => selectedElementId && openLatexEditor(selectedElementId)}
+              presentation={presentation}
+              onUpdatePresentation={(updates) => setPresentation((prev) => (typeof updates === 'function' ? updates(prev) : { ...prev, ...updates }))}
+              selectedElementIds={selectedElementIds}
+              onSelectElement={toggleElementSelection}
+              onUpdateElements={updateElements}
+              onDeleteSelectedElements={deleteSelectedElements}
+              isTemplate={isTemplate}
+            />
+          </div>
+        )}
+        {showDesignIdeas && (
+          <div className="mt-[80px] flex h-[calc(100%-80px)] shrink-0">
+            <DesignIdeasPanel
+              slide={activeSlide}
+              presentation={presentation}
+              onApplyLayout={(templateId) => {
+                const template = SLIDE_TEMPLATES[templateId]
+                if (!template) return
+                const slots = (template.elements || []).filter((e) => e.type === 'text')
+                // Conservative re-fit: keep content, adopt each text slot's geometry
+                // in order; non-text and overflow elements stay put. One undo step.
+                setPresentation((prev) =>
+                  mapActive(prev, (s) => {
+                    let slotIdx = 0
+                    const elements = (s.elements || []).map((el) => {
+                      if (el.type === 'text' && slotIdx < slots.length) {
+                        const slot = slots[slotIdx++]
+                        return { ...el, x: slot.x, y: slot.y, width: slot.width, height: slot.height, zIndex: slot.zIndex ?? el.zIndex }
+                      }
+                      return el
+                    })
+                    return { ...s, elements }
+                  })
+                )
+              }}
+              onApplyTheme={({ presetId, tokens }) => {
+                const preset = presetId ? getThemePreset(presetId) : null
+                setPresentation((prev) => ({
+                  ...prev,
+                  designTokens: preset ? preset.tokens : tokens || prev.designTokens,
+                  theme: preset ? preset.revealTheme : prev.theme,
+                }))
+              }}
+            />
+          </div>
         )}
       </div>
 
@@ -1420,5 +1476,6 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
 
       <ProductTour />
     </div>
+    </>
   )
 }

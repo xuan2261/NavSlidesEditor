@@ -47,6 +47,7 @@ export const useUIStore = create((set, get) => ({
   // Panels
   leftPanelOpen: true,
   rightPanelOpen: true,
+  showDesignIdeas: false,
 
   // Zoom — shared between SlideCanvas and StatusBar
   zoom: 1,
@@ -116,6 +117,8 @@ export const useUIStore = create((set, get) => ({
   toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
   setLeftPanelOpen: (isOpen) => set({ leftPanelOpen: isOpen }),
   setRightPanelOpen: (isOpen) => set({ rightPanelOpen: isOpen }),
+  toggleDesignIdeas: () => set((s) => ({ showDesignIdeas: !s.showDesignIdeas })),
+  setShowDesignIdeas: (v) => set((s) => ({ showDesignIdeas: typeof v === 'function' ? v(s.showDesignIdeas) : v })),
 
   // Ribbon
   setActiveTab: (tab) => {

@@ -32,6 +32,7 @@ import { summarizePptxImportWarnings } from '../utils/pptx-import-summary'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
 import { Button, Input, ModalShell, Select } from '../components/ui'
 import SlideThumbnail from '../components/SlideThumbnail'
+import { getThemePreset } from 'revealjs-shared'
 
 const THEMES = [
   'black',
@@ -48,7 +49,23 @@ const THEMES = [
 ]
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
 
-const PRESET_THEMES = [
+// Maps each deck-starter preset to a token preset id (theme-presets.js) so a
+// new deck seeds the matching designTokens. Palette literals live only in
+// theme-presets.js (no duplication here).
+const PRESET_THEME_TOKEN_IDS = {
+  'deck-blank-light': 'minimal-white',
+  'deck-blank-dark': 'minimal-dark',
+  'deck-palette': 'ocean-breeze',
+  'deck-bento': 'corporate-clean',
+  'deck-serif': 'editorial-serif',
+  'deck-bold': 'crimson-dark',
+  'deck-minimal': 'soft-gray',
+  'deck-code': 'tokyo-night',
+  'deck-desk': 'executive-navy',
+  'deck-ellipse': 'coral-pop',
+}
+
+const PRESET_THEMES_BASE = [
   {
     id: 'deck-blank-light',
     title: 'Blank Light',
@@ -140,6 +157,13 @@ const PRESET_THEMES = [
     description: 'Soft rounded shapes',
   },
 ]
+
+// Seed each preset with the matching token set so a new deck starts themed.
+const PRESET_THEMES = PRESET_THEMES_BASE.map((p) => {
+  const tokenId = PRESET_THEME_TOKEN_IDS[p.id]
+  const preset = tokenId ? getThemePreset(tokenId) : null
+  return preset ? { ...p, designTokens: preset.tokens } : p
+})
 
 const TEMPLATE_CATEGORIES = [
   'All',
@@ -771,9 +795,9 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       </div>
 
       {/* ════ Body: Sidebar + Content ════ */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden md:flex-row">
         {/* Sidebar */}
-        <nav className="w-[var(--sidebar-width)] shrink-0 bg-secondary border-r border-border flex flex-col overflow-y-auto py-3">
+        <nav className="w-full md:w-[var(--sidebar-width)] shrink-0 bg-secondary border-b border-border md:border-b-0 md:border-r flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto py-2 md:py-3">
           <div className="px-3 mb-2">
             {SIDEBAR_VIEWS.map((item) => (
               <Button
@@ -1541,8 +1565,18 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           title="New Presentation"
           size="lg"
           onClose={() => setShowModal(false)}
+          footer={
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" type="button" onClick={() => setShowModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit" form="create-presentation-form" disabled={creating}>
+                {creating ? 'Creating...' : 'Create'}
+              </Button>
+            </div>
+          }
         >
-            <form onSubmit={handleCreate}>
+            <form id="create-presentation-form" onSubmit={handleCreate}>
               <div className="mb-3">
                 <label
                   className="mb-1 block text-xs font-medium text-text-secondary"
@@ -1659,14 +1693,6 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   </div>
                 </>
               )}
-              <div className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
-                <Button variant="secondary" type="button" onClick={() => setShowModal(false)}>
-                  Cancel
-                </Button>
-                <Button variant="primary" type="submit" disabled={creating}>
-                  {creating ? 'Creating...' : 'Create'}
-                </Button>
-              </div>
             </form>
         </ModalShell>
       )}

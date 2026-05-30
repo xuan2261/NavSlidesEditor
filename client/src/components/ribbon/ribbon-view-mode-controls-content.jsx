@@ -1,4 +1,4 @@
-import { Code2, Film, LayoutGrid, PanelLeft, PanelRight, Search, StickyNote } from 'lucide-react'
+import { Code2, Film, LayoutGrid, PanelLeft, PanelRight, Search, StickyNote, Sparkles } from 'lucide-react'
 import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
@@ -17,8 +17,10 @@ export default function ViewTabContent({
 }) {
   const leftPanelOpen = useUIStore((s) => s.leftPanelOpen)
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen)
+  const showDesignIdeas = useUIStore((s) => s.showDesignIdeas)
   const toggleLeftPanel = useUIStore((s) => s.toggleLeftPanel)
   const toggleRightPanel = useUIStore((s) => s.toggleRightPanel)
+  const toggleDesignIdeas = useUIStore((s) => s.toggleDesignIdeas)
   const setShowTimeline = useEditorStore((s) => s.setShowTimeline)
 
   return (
@@ -98,6 +100,13 @@ export default function ViewTabContent({
             onMouseDown={(e) => { e.preventDefault(); onToggleSlideSorter?.() }}>
             <LayoutGrid size={14} />
             <span className="text-[11px] hidden lg:inline">Sorter</span>
+          </Button>
+          <Button variant="ribbon"
+            className={`h-7 ${showDesignIdeas ? 'bg-primary-light text-accent' : ''}`}
+            title="Design Ideas" aria-label="Toggle design ideas panel" aria-pressed={showDesignIdeas}
+            onMouseDown={(e) => { e.preventDefault(); toggleDesignIdeas() }}>
+            <Sparkles size={14} />
+            <span className="text-[11px] hidden lg:inline">Ideas</span>
           </Button>
         </div>
       </RibbonSection>

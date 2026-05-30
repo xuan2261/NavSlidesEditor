@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
+import { resolveColorField } from 'revealjs-shared'
 
 function safeCssColor(value, fallback) {
   const color = typeof value === 'string' ? value.trim() : ''
   if (/^#[0-9a-f]{3,8}$/i.test(color)) return color
   if (/^rgba?\(\s*[\d.\s,%]+\)$/i.test(color)) return color
   if (/^hsla?\(\s*[\d.\s,%deg]+\)$/i.test(color)) return color
+  if (/^var\(--ns-[a-z0-9-]+\)$/.test(color)) return color
   if (['transparent', 'currentColor'].includes(color)) return color
   return fallback
 }
@@ -30,12 +32,12 @@ function safeFontFamily(value) {
 
 export function TableRenderer({ element, isEditing, onUpdateElement }) {
   const data = element.data || [['']]
-  const headerBg = element.headerBgColor || 'rgba(99,102,241,0.3)'
-  const cellBg = element.cellBgColor || 'transparent'
-  const borderColor = element.borderColor || 'rgba(255,255,255,0.2)'
+  const headerBg = resolveColorField(element.headerBgColor, 'table', 'headerBgColor') || 'rgba(99,102,241,0.3)'
+  const cellBg = resolveColorField(element.cellBgColor, 'table', 'cellBgColor') || 'transparent'
+  const borderColor = resolveColorField(element.borderColor, 'table', 'borderColor') || 'rgba(255,255,255,0.2)'
   const borderWidth = element.borderWidth ?? 1
-  const textColor = element.textColor || '#ffffff'
-  const headerTextColor = element.headerTextColor || textColor
+  const textColor = resolveColorField(element.textColor, 'table', 'textColor') || '#ffffff'
+  const headerTextColor = resolveColorField(element.headerTextColor, 'table', 'headerTextColor') || textColor
   const fontSize = element.fontSize || 14
   const cellPadding = element.cellPadding || 8
   const cellStyles = element.cellStyles || {}

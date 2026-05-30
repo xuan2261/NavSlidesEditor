@@ -8,6 +8,7 @@ export const ELEMENT_DEFAULTS = {
     height: 180,
     zIndex: 1,
     content: '<p>New text</p>',
+    textColor: 'auto', // adopts active theme --ns-text (DEFAULT_TOKENS.text = #ffffff = prior white)
   },
   image: {
     width: 400,
@@ -22,14 +23,14 @@ export const ELEMENT_DEFAULTS = {
     height: 150,
     zIndex: 1,
     shape: 'rect',
-    fill: '#6366f1',
+    fill: 'auto', // --ns-accent (DEFAULT_TOKENS.accent = #6366f1 = prior hex)
     stroke: 'none',
     strokeWidth: 0,
     borderRadius: 0,
     opacity: 1,
     text: '',
     fontSize: 16,
-    textColor: '#ffffff',
+    textColor: 'auto', // --ns-text (= #ffffff)
   },
   code: {
     width: 600,
@@ -44,7 +45,7 @@ export const ELEMENT_DEFAULTS = {
     height: 380,
     zIndex: 2,
     fontSize: 16,
-    textColor: '#ffffff',
+    textColor: '#ffffff', // frozen: default content is tikz (iframe) where CSS vars don't cascade, so 'auto' couldn't resolve
     content: `\\\\begin{tikzpicture}
   \\\\draw[thick,->] (0,0) -- (4,0) node[right] {$x$};
   \\\\draw[thick,->] (0,0) -- (0,3) node[above] {$y$};
@@ -125,7 +126,7 @@ svg.selectAll('circle').data(data).join('circle')
     borderWidth: 1,
     headerBgColor: 'rgba(99,102,241,0.3)',
     cellBgColor: 'transparent',
-    textColor: '#ffffff',
+    textColor: 'auto', // --ns-text (= #ffffff); header/cell/border bg kept frozen (no matching token value)
     fontSize: 14,
     // Phase 3: Extended schema
     headerTextColor: '#1e40af',
@@ -150,7 +151,7 @@ svg.selectAll('circle').data(data).join('circle')
     height: 80,
     zIndex: 2,
     iconName: 'Star',
-    iconColor: '#ffffff',
+    iconColor: 'auto', // --ns-text (= #ffffff)
     iconStrokeWidth: 2,
   },
   callout: {
@@ -159,7 +160,7 @@ svg.selectAll('circle').data(data).join('circle')
     zIndex: 10,
     calloutNumber: 1,
     calloutColor: '#ef4444',
-    calloutTextColor: '#ffffff',
+    calloutTextColor: 'auto', // --ns-text (= #ffffff); calloutColor kept frozen
     fontSize: 16,
   },
   qrcode: {
@@ -176,7 +177,7 @@ svg.selectAll('circle').data(data).join('circle')
     height: 540,
     zIndex: 1,
     paths: [],
-    strokeColor: '#ffffff',
+    strokeColor: 'auto', // --ns-text (= #ffffff)
     strokeWidth: 3,
   },
   line: {
@@ -189,7 +190,7 @@ svg.selectAll('circle').data(data).join('circle')
     y2: 100,
     cx: null,
     cy: null,
-    stroke: '#ffffff',
+    stroke: 'auto', // --ns-text (= #ffffff)
     strokeWidth: 2,
     arrowStart: 'none',
     arrowEnd: 'arrow',
@@ -213,9 +214,9 @@ svg.selectAll('circle').data(data).join('circle')
     startDate: '2000',
     endDate: '2025',
     tickSpacing: 'auto',
-    lineColor: '#6366f1',
-    dotColor: '#6366f1',
-    textColor: '#ffffff',
+    lineColor: 'auto', // --ns-accent (= #6366f1)
+    dotColor: 'auto', // --ns-accent (= #6366f1)
+    textColor: 'auto', // --ns-text (= #ffffff)
     fontSize: 11,
     events: [],
     items: [],

@@ -24,6 +24,23 @@ import {
   Film,
   AppWindow,
   PanelLeftClose,
+  Presentation,
+  MessageSquareQuote,
+  UserRound,
+  LayoutDashboard,
+  BarChart3,
+  CalendarRange,
+  Filter,
+  TrendingUp,
+  Map,
+  Brain,
+  Server,
+  GitBranch,
+  GitCompare,
+  Table2,
+  Rocket,
+  Database,
+  Network,
 } from 'lucide-react'
 import { SLIDE_TEMPLATES } from '../data/slide-templates'
 import { Button, ModalShell } from '../components/ui'
@@ -33,10 +50,13 @@ const iconMap = {
   title: <Heading1 size={24} />,
   'section-header': <Heading2 size={24} />,
   agenda: <List size={24} />,
+  'cover-hero': <Presentation size={24} />,
   'image-text': <ImageIcon size={24} />,
   comparison: <Columns2 size={24} />,
   'big-number': <Hash size={24} />,
   quote: <Quote size={24} />,
+  'big-quote': <MessageSquareQuote size={24} />,
+  'quote-with-author': <UserRound size={24} />,
   timeline: <Clock size={24} />,
   steps: <Footprints size={24} />,
   team: <Users size={24} />,
@@ -46,10 +66,24 @@ const iconMap = {
   'three-column': <Columns3 size={24} />,
   'four-grid': <LayoutGrid size={24} />,
   'image-gallery': <Images size={24} />,
+  'kpi-grid': <LayoutDashboard size={24} />,
+  'bar-chart': <BarChart3 size={24} />,
+  gantt: <CalendarRange size={24} />,
+  funnel: <Filter size={24} />,
+  'stat-callout': <TrendingUp size={24} />,
+  roadmap: <Map size={24} />,
+  mindmap: <Brain size={24} />,
+  'arch-diagram': <Server size={24} />,
+  'process-flow': <GitBranch size={24} />,
+  'code-diff': <GitCompare size={24} />,
+  swot: <Table2 size={24} />,
   'thank-you': <Smile size={24} />,
   'key-takeaways': <Star size={24} />,
   qa: <MessageCircleQuestion size={24} />,
+  'closing-cta': <Rocket size={24} />,
 }
+
+const CATEGORY_ORDER = ['basic', 'content', 'layout', 'data', 'structure', 'ending']
 
 const getCategoryLabel = (category) => {
   switch (category) {
@@ -69,6 +103,18 @@ const getCategoryLabel = (category) => {
       return (
         <span className="flex items-center gap-2">
           <LayoutTemplate size={16} /> Layout
+        </span>
+      )
+    case 'data':
+      return (
+        <span className="flex items-center gap-2">
+          <Database size={16} /> Data
+        </span>
+      )
+    case 'structure':
+      return (
+        <span className="flex items-center gap-2">
+          <Network size={16} /> Structure
         </span>
       )
     case 'ending':
@@ -99,7 +145,7 @@ export default function TemplatePickerModal({ onSelect, onClose }) {
       size="xl"
       onClose={handleClose}
     >
-      {['basic', 'content', 'layout', 'ending'].map((category) => (
+      {CATEGORY_ORDER.map((category) => (
         <div key={category} className="mb-6">
           <h3 className="text-sm text-text-muted mb-3 capitalize">{getCategoryLabel(category)}</h3>
           <div className="grid grid-cols-4 gap-3">

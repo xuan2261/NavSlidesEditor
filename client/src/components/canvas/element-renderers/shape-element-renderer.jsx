@@ -1,4 +1,4 @@
-import { buildSvgGradientData, gradientFallbackColor } from 'revealjs-shared'
+import { buildSvgGradientData, gradientFallbackColor, resolveColorField, isTokenVar } from 'revealjs-shared'
 import { sanitizeRichTextHtml } from '../../../utils/content-safety'
 
 function safeCssColor(value, fallback) {
@@ -6,6 +6,7 @@ function safeCssColor(value, fallback) {
   if (/^#[0-9a-f]{3,8}$/i.test(color)) return color
   if (/^rgba?\(\s*[\d.\s,%]+\)$/i.test(color)) return color
   if (/^hsla?\(\s*[\d.\s,%deg]+\)$/i.test(color)) return color
+  if (/^var\(--ns-[a-z0-9-]+\)$/.test(color)) return color
   if (['transparent', 'currentColor'].includes(color)) return color
   return fallback
 }
@@ -51,10 +52,24 @@ export function ShapeRenderer({ element }) {
     ? `url(#${gradientData.id})`
     : element.fillGradient
       ? gradientFallbackColor(element)
-      : element.fill || '#6366f1'
-  const stroke = element.stroke || 'none'
+      : resolveColorField(element.fill, 'shape', 'fill') || '#6366f1'
+  const stroke = resolveColorField(element.stroke, 'shape', 'stroke') || 'none'
   const sw = element.strokeWidth || 0
   const shape = element.shape || 'rect'
+
+  // SVG presentation attrs don't resolve CSS vars, so route token vars via
+  // `style` and keep literal colors / url(#grad) as attributes (byte-identical
+  // to pre-token output and preserves gradient url() handling).
+  const paintProps = (fillVal, strokeVal) => {
+    const props = {}
+    const style = {}
+    if (isTokenVar(fillVal)) style.fill = fillVal
+    else if (fillVal != null) props.fill = fillVal
+    if (isTokenVar(strokeVal)) style.stroke = strokeVal
+    else if (strokeVal != null) props.stroke = strokeVal
+    if (Object.keys(style).length) props.style = style
+    return props
+  }
 
   const renderShape = () => {
     if (shape === 'line') {
@@ -65,13 +80,13 @@ export function ShapeRenderer({ element }) {
           y1={h / 2}
           x2={w - lw}
           y2={h / 2}
-          stroke={fill}
           strokeWidth={lw}
           fill="none"
+          {...paintProps(undefined, fill)}
         />
       )
     }
-    const gProps = { fill, stroke, strokeWidth: sw }
+    const gProps = { strokeWidth: sw, ...paintProps(fill, stroke) }
     switch (shape) {
       case 'rect':
         return (
@@ -187,7 +202,7 @@ export function ShapeRenderer({ element }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 textAlign: 'center',
-                color: safeCssColor(element.textColor, '#ffffff'),
+                color: safeCssColor(resolveColorField(element.textColor, 'shape', 'textColor'), '#ffffff'),
                 fontSize: importedFontSize(element),
                 overflow: 'hidden',
                 ...importedTextWrapStyles(element),
@@ -203,7 +218,7 @@ export function ShapeRenderer({ element }) {
             dominantBaseline="middle"
             textAnchor="middle"
             fontSize={element.fontSize || 16}
-            fill={element.textColor || '#ffffff'}
+            style={{ fill: safeCssColor(resolveColorField(element.textColor, 'shape', 'textColor'), '#ffffff') }}
           >
             {element.text}
           </text>

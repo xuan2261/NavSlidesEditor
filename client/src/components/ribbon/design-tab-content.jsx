@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import {
   Palette, MonitorSmartphone, PanelBottom, Hash, Timer, Upload, Grid3x3,
-  Repeat, Menu, Monitor, Square, MonitorPlay, MonitorSpeaker,
+  Repeat, Menu, Monitor, Square, MonitorPlay, MonitorSpeaker, Layers,
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import RibbonSection from './ribbon-section'
@@ -9,7 +9,8 @@ import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
 
-const { BG_COLORS = [], GRADIENT_PRESETS = [] } = shared
+const { BG_COLORS = [], GRADIENT_PRESETS = [], THEME_PRESETS = [], listFx } = shared
+const FX_LIST = typeof listFx === 'function' ? listFx() : []
 
 const THEMES = [
   'black', 'white', 'league', 'beige', 'night',
@@ -23,27 +24,86 @@ const SIZE_PRESETS = [
   { label: 'Ultra', w: 1920, h: 1080, icon: MonitorSpeaker },
 ]
 
-function ThemeGallery({ open, anchorRef, current, onSelect, onClose }) {
+function ThemeSwatch({ preset, active, onSelect }) {
+  const c = preset.tokens.colors
+  return (
+    <button
+      title={preset.label}
+      aria-label={`Apply theme ${preset.label}`}
+      className={`flex items-center gap-1.5 rounded px-1.5 py-1 text-left cursor-pointer transition-colors w-full
+        ${active ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary text-text-primary'}`}
+      onMouseDown={(e) => { e.preventDefault(); onSelect(preset) }}
+    >
+      <span
+        className="flex h-5 w-7 shrink-0 items-center justify-center rounded-sm border border-border/60 text-[9px] font-bold"
+        style={{ background: c.bg, color: c.text }}
+      >
+        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: c.accent }} />
+      </span>
+      <span className="truncate text-[10px] leading-tight">{preset.label}</span>
+    </button>
+  )
+}
+
+function ThemeGallery({ open, anchorRef, current, currentTokens, onSelect, onSelectPreset, onApplyToAll, onClose }) {
+  const grouped = useMemo(() => {
+    const byCat = {}
+    for (const p of THEME_PRESETS) {
+      ;(byCat[p.category] ||= []).push(p)
+    }
+    return byCat
+  }, [])
+  // A preset is "active" when its accent matches the deck's current accent token.
+  const activeAccent = currentTokens?.colors?.accent
+
   return (
     <RibbonFloatingOverlay
       open={open}
       anchorRef={anchorRef}
       onClose={onClose}
       dataRibbonPopup="theme-gallery"
-      className="bg-card border border-border rounded-lg p-2 shadow-xl w-[220px]"
+      className="bg-card border border-border rounded-lg p-2 shadow-xl w-[320px] max-h-[460px] overflow-y-auto"
     >
-      <div className="text-[10px] font-semibold text-text-primary mb-1.5">Themes</div>
-      <div className="grid grid-cols-3 gap-1">
-        {THEMES.map((t) => (
-          <button
-            key={t}
-            className={`px-1.5 py-1 rounded text-[10px] capitalize cursor-pointer transition-colors
-              ${current === t ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary text-text-primary'}`}
-            onMouseDown={(e) => { e.preventDefault(); onSelect(t) }}
-          >
-            {t}
-          </button>
-        ))}
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="text-[10px] font-semibold text-text-primary">Theme Presets</div>
+        <button
+          className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-text-secondary hover:bg-secondary hover:text-text-primary cursor-pointer"
+          title="Apply the current theme to every slide (clears per-slide overrides)"
+          aria-label="Apply theme to all slides"
+          onMouseDown={(e) => { e.preventDefault(); onApplyToAll() }}
+        >
+          <Layers size={11} /> Apply to all
+        </button>
+      </div>
+      {Object.keys(grouped).sort().map((cat) => (
+        <div key={cat} className="mb-1.5">
+          <div className="text-[9px] uppercase tracking-wide text-text-muted mb-0.5 px-0.5">{cat}</div>
+          <div className="grid grid-cols-2 gap-0.5">
+            {grouped[cat].map((p) => (
+              <ThemeSwatch
+                key={p.id}
+                preset={p}
+                active={activeAccent != null && p.tokens.colors.accent === activeAccent}
+                onSelect={onSelectPreset}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+      <div className="mt-1 border-t border-border pt-1.5">
+        <div className="text-[9px] uppercase tracking-wide text-text-muted mb-0.5 px-0.5">Base reveal theme</div>
+        <div className="grid grid-cols-3 gap-1">
+          {THEMES.map((t) => (
+            <button
+              key={t}
+              className={`px-1.5 py-1 rounded text-[10px] capitalize cursor-pointer transition-colors
+                ${current === t ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary text-text-primary'}`}
+              onMouseDown={(e) => { e.preventDefault(); onSelect(t) }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
       </div>
     </RibbonFloatingOverlay>
   )
@@ -57,6 +117,8 @@ function BackgroundControls({ open, anchorRef, slide, onUpdateSlide, onClose }) 
   const setBgColor = (color) => onUpdateSlide({ background: { ...bg, type: 'color', color } })
   const setBgGradient = (gradient) => onUpdateSlide({ background: { ...bg, type: 'gradient', gradient } })
   const setBgImage = (image) => onUpdateSlide({ background: { ...bg, type: 'image', image } })
+  const setBgFx = (fxUpdates) =>
+    onUpdateSlide({ background: { ...bg, type: 'fx', fx: { name: 'gradient-blob', ...(bg.fx || {}), ...fxUpdates } } })
 
   const uploadBgImage = (file) => {
     if (!file) return
@@ -77,8 +139,8 @@ function BackgroundControls({ open, anchorRef, slide, onUpdateSlide, onClose }) 
       className="bg-card border border-border rounded-lg p-2 shadow-xl w-[200px]"
     >
       <div className="text-[10px] font-semibold text-text-primary mb-1.5">Slide Background</div>
-      <div className="flex gap-1 mb-2">
-        {['color', 'gradient', 'image', 'none'].map((type) => (
+      <div className="flex gap-1 mb-2 flex-wrap">
+        {['color', 'gradient', 'image', 'fx', 'none'].map((type) => (
           <button
             key={type}
             className={`px-1.5 py-0.5 rounded text-[10px] capitalize cursor-pointer transition-colors
@@ -123,6 +185,35 @@ function BackgroundControls({ open, anchorRef, slide, onUpdateSlide, onClose }) 
       )}
       {bgType === 'none' && (
         <p className="text-[10px] text-text-muted">No background (uses theme default)</p>
+      )}
+      {bgType === 'fx' && (
+        <div className="space-y-2">
+          <select
+            className="w-full rounded border border-border bg-card px-2 py-1 text-[11px] text-text-primary outline-none focus:border-accent"
+            value={bg.fx?.name || 'gradient-blob'}
+            onMouseDown={(e) => e.stopPropagation()}
+            onChange={(e) => setBgFx({ name: e.target.value })}
+            aria-label="Animated background effect"
+          >
+            {FX_LIST.map((m) => (
+              <option key={m.name} value={m.name}>{m.label}</option>
+            ))}
+          </select>
+          <label className="flex items-center gap-2 text-[10px] text-text-secondary">
+            Print fallback
+            <input
+              type="color"
+              className="h-6 w-8 cursor-pointer rounded border border-border bg-transparent"
+              value={bg.fx?.fallbackColor || '#0d0221'}
+              onMouseDown={(e) => e.stopPropagation()}
+              onChange={(e) => setBgFx({ fallbackColor: e.target.value })}
+              aria-label="Print fallback color"
+            />
+          </label>
+          <p className="text-[9px] text-text-muted leading-snug">
+            Animates in editor, present &amp; live. Honors reduced-motion; prints as the fallback color.
+          </p>
+        </div>
       )}
       {bgType === 'image' && (
         <div className="space-y-2">
@@ -190,7 +281,25 @@ export default function DesignTabContent({
               open={showThemes}
               anchorRef={themeTriggerRef}
               current={currentTheme}
+              currentTokens={presentation?.designTokens}
               onSelect={(t) => { onUpdatePresentation?.({ theme: t }); setShowThemes(false) }}
+              onSelectPreset={(preset) => {
+                // Live-switch: set deck tokens + closest reveal theme. Recolors all
+                // 'auto' content instantly (new decks + built-in templates).
+                onUpdatePresentation?.({ designTokens: preset.tokens, theme: preset.revealTheme })
+              }}
+              onApplyToAll={() => {
+                // One undoable step: set deck tokens (current or default) AND clear
+                // every per-slide token override so the whole deck shares one theme.
+                onUpdatePresentation?.((prev) => ({
+                  ...prev,
+                  designTokens: prev?.designTokens || undefined,
+                  slides: (prev?.slides || []).map((s) =>
+                    s.designTokens ? { ...s, designTokens: undefined } : s
+                  ),
+                }))
+                setShowThemes(false)
+              }}
               onClose={() => setShowThemes(false)}
             />
           )}

@@ -13,6 +13,7 @@ function getBgStyle(bg) {
       backgroundPosition: 'center',
       opacity: 0.5,
   }
+  if (bg.type === 'fx') return { backgroundColor: bg.fx?.fallbackColor || '#0d0221' }
   return { backgroundColor: 'var(--bg-card)' }
 }
 
