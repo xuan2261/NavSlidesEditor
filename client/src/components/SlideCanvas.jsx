@@ -18,7 +18,6 @@ import {
 import useCanvasPointerInteraction from './canvas/use-canvas-pointer-interaction'
 import useCanvasRubberBandSelection from './canvas/use-canvas-rubber-band-drag-selection'
 import CanvasElement from './canvas/canvas-element-wrapper'
-import MiniToolbar from './MiniToolbar'
 import { cn } from '../lib/utils'
 
 function getBgStyle(bg) {
@@ -590,26 +589,6 @@ export default function SlideCanvas({
         onStartCrop={startCrop}
         onClose={() => setContextMenu(null)}
       />
-
-      {/* Mini Toolbar — floating formatting bar when editing text */}
-      {editingElementId &&
-        editor &&
-        (() => {
-          const el = slide?.elements?.find((e) => e.id === editingElementId)
-          if (!el || el.type !== 'text') return null
-          const containerLeft = containerRef.current?.getBoundingClientRect().left ?? 0
-          const containerTop = containerRef.current?.getBoundingClientRect().top ?? 0
-          return (
-            <MiniToolbar
-              editor={editor}
-              position={{
-                x: containerLeft + (el.x + (el.width ?? 200) / 2) * scale,
-                y: containerTop + el.y * scale,
-              }}
-              onClose={onStopEdit}
-            />
-          )
-        })()}
     </div>
   )
 }

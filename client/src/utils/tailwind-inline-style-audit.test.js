@@ -34,7 +34,6 @@ const INLINE_STYLE_BUDGETS = {
   'client/src/components/DropdownMenu.jsx': 0,
   'client/src/pages/ExplorePage.jsx': 0,
   'client/src/components/TemplatePickerModal.jsx': 0,
-  'client/src/components/MiniToolbar.jsx': 0,
   'client/src/pages/EditorPage.jsx': 0,
   'client/src/pages/SettingsPage.jsx': 0,
   'client/src/components/SlideCanvas.jsx': 13,
