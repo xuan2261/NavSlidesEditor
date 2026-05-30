@@ -4,6 +4,7 @@ import {
   parsePlaywrightJson,
   buildRunIndex,
   resolveStatus,
+  isRunResultStale,
 } from './join-run-status.mjs'
 
 const VITEST_JSON = {
@@ -70,16 +71,32 @@ describe('run-status joiner', () => {
   })
 
   it('resolveStatus matches a tag occurrence by basename + leaf title', () => {
+    // Real vitest reports the FULL literal it() title, including the [cap:*]
+    // token, so the run row title equals the occurrence title.
     const index = buildRunIndex([
-      ...parseVitestJson(VITEST_JSON),
-      ...parsePlaywrightJson(PLAYWRIGHT_JSON),
+      { file: 'foo.test.js', title: '[cap:element.chart] renders bar chart', status: 'passed' },
     ])
     const occ = {
       file: 'client/src/foo.test.js',
       title: '[cap:element.chart] renders bar chart',
     }
-    // tag title contains the leaf test title as a substring
     expect(resolveStatus(occ, index)).toBe('passed')
+  })
+
+  it('does NOT bind a tagged test to a passing untagged sibling (no substring false-PASS)', () => {
+    // The tagged test is skipped at RUNTIME (describe.skip / skipIf) so occ.skipped
+    // is false, but a sibling whose title is a substring of the tagged title
+    // passed. The join must report the tagged test's own status (skipped), never
+    // the sibling's pass — that would manufacture false confidence.
+    const index = buildRunIndex([
+      { file: 'align.test.js', title: 'aligns elements', status: 'passed' },
+      { file: 'align.test.js', title: '[cap:canvas.align] aligns elements to grid', status: 'skipped' },
+    ])
+    const occ = {
+      file: 'client/src/align.test.js',
+      title: '[cap:canvas.align] aligns elements to grid',
+    }
+    expect(resolveStatus(occ, index)).toBe('skipped')
   })
 
   it('resolveStatus matches a tag placed on a describe (ancestor) title', () => {
@@ -113,12 +130,31 @@ describe('run-status joiner', () => {
     expect(resolveStatus(occ, index)).toBeNull()
   })
 
-  it('resolveStatus prefers failed over passed on title collision', () => {
+  it('isRunResultStale flags run-results older than the newest test file', () => {
+    // run-results captured at t=100; a test file was edited at t=200 → stale.
+    expect(isRunResultStale(100, [50, 200, 80])).toBe(true)
+  })
+
+  it('isRunResultStale is false when run-results are newer than every test file', () => {
+    expect(isRunResultStale(300, [50, 200, 80])).toBe(false)
+  })
+
+  it('isRunResultStale is false when there are no test files to compare', () => {
+    expect(isRunResultStale(100, [])).toBe(false)
+  })
+
+  it('isRunResultStale treats a missing run-result mtime (null) as stale', () => {
+    expect(isRunResultStale(null, [50])).toBe(true)
+  })
+
+  it('resolveStatus prefers failed over passed across a describe-tagged group', () => {
+    // A [cap:*] tag on a describe spans multiple leaf tests; if any leaf failed,
+    // the cap must resolve to failed (failed > passed > skipped).
     const index = buildRunIndex([
-      { file: 'a.test.js', title: 'same title', status: 'passed' },
-      { file: 'a.test.js', title: 'same title', status: 'failed' },
+      { file: 'a.test.js', title: 'case one', fullTitle: '[cap:y] suite case one', status: 'passed' },
+      { file: 'a.test.js', title: 'case two', fullTitle: '[cap:y] suite case two', status: 'failed' },
     ])
-    const occ = { file: 'x/a.test.js', title: '[cap:y] same title' }
+    const occ = { file: 'x/a.test.js', title: '[cap:y] suite' }
     expect(resolveStatus(occ, index)).toBe('failed')
   })
 })

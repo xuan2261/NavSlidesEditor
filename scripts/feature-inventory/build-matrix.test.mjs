@@ -41,12 +41,14 @@ const TAGS = {
   // flow.autosave: NO tag at all → GAP (omitted here)
 }
 
+// Real vitest reports the FULL literal it() title, including the [cap:*] token,
+// so each run row title equals the tagged occurrence title above.
 const RUN_INDEX = buildRunIndex([
-  { file: 'chart.spec.js', title: 'renders', status: 'passed' },
-  { file: 'chart.test.jsx', title: 'maps data', status: 'passed' },
-  { file: 'rotate.test.js', title: 'rotates', status: 'passed' },
-  { file: 'clip.test.js', title: 'copies', status: 'failed' },
-  { file: 'bold.test.jsx', title: 'toggles', status: 'skipped' },
+  { file: 'chart.spec.js', title: '[cap:element.chart] renders', status: 'passed' },
+  { file: 'chart.test.jsx', title: '[cap:element.chart tier:deep] maps data', status: 'passed' },
+  { file: 'rotate.test.js', title: '[cap:canvas.rotate-snap] rotates', status: 'passed' },
+  { file: 'clip.test.js', title: '[cap:flow.clipboard] copies', status: 'failed' },
+  { file: 'bold.test.jsx', title: '[cap:control.format.bold] toggles', status: 'skipped' },
 ])
 
 function statusOf(rows, id) {

@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve, basename } from 'node:path'
 
@@ -72,13 +72,16 @@ export function resolveStatus(occurrence, index) {
   if (!candidates) return null
   let best = null
   for (const row of candidates) {
-    // Tag on a leaf it(): the occurrence title embeds the leaf test title.
-    // Tag on a describe(): the row's fullTitle (ancestors + leaf) embeds the
-    // occurrence (describe) title. Match either direction.
+    // The occurrence title always carries the distinctive [cap:*] token (it is
+    // literally in the source it()/describe() title). A run row matches only
+    // when its full title (ancestors + leaf) CONTAINS that tagged title:
+    //   - it() tag  → row.title === occurrence.title (exact)
+    //   - describe() tag → row.fullTitle starts with the describe title
+    // Matching this single direction makes an untagged sibling — which never
+    // contains the [cap:*] token — structurally unable to false-match, so a
+    // runtime-skipped tagged test can never bind to a passing sibling.
     const full = row.fullTitle || row.title
-    const matched =
-      occurrence.title.includes(row.title) || full.includes(occurrence.title)
-    if (!matched) continue
+    if (!full.includes(occurrence.title)) continue
     if (!best || STATUS_PRIORITY[row.status] > STATUS_PRIORITY[best]) {
       best = row.status
     }
@@ -86,11 +89,26 @@ export function resolveStatus(occurrence, index) {
   return best
 }
 
-export function loadRunResults({ vitestPath, playwrightPath } = {}) {
+// Pure staleness check: run-results are stale if their capture time predates
+// the newest test file's mtime (a test was edited after the last run), or if
+// the run-result mtime is missing entirely. No test files → cannot be stale.
+export function isRunResultStale(runResultMtime, testFileMtimes) {
+  if (!testFileMtimes || testFileMtimes.length === 0) return false
+  if (runResultMtime == null) return true
+  return runResultMtime < Math.max(...testFileMtimes)
+}
+
+export function loadRunResults({ vitestPath, playwrightPath, testFileMtimes } = {}) {
   const rows = []
   let stale = false
   if (vitestPath && existsSync(vitestPath)) {
     rows.push(...parseVitestJson(JSON.parse(readFileSync(vitestPath, 'utf8'))))
+    // Present-but-old run-results are the silent false-green trap: warn when a
+    // test file changed after this capture so a stale green is never trusted.
+    if (testFileMtimes) {
+      const mtime = statSync(vitestPath).mtimeMs
+      if (isRunResultStale(mtime, testFileMtimes)) stale = true
+    }
   } else if (vitestPath) {
     stale = true
   }

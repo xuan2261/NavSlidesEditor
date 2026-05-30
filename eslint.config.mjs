@@ -171,11 +171,12 @@ export default [
   },
   // Scripts
   {
-    files: ['scripts/**/*.js'],
+    files: ['scripts/**/*.{js,mjs}'],
     languageOptions: {
       globals: {
         ...globals.node,
         ...globals.browser,
+        ...globals.vitest,
       },
       sourceType: 'module',
     },

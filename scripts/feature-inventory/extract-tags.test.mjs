@@ -78,6 +78,13 @@ describe('tag extractor', () => {
     expect(out['control.format.line']).toBeUndefined()
   })
 
+  it('captures ids containing underscores (grammar matches command-id charset)', () => {
+    const src = `it('[cap:command.insert_slide] inserts a slide', () => {})`
+    const out = extractTagsFromSource(src, 'x.test.js')
+    expect(out['command.insert_slide']).toBeTruthy()
+    expect(out['command.insert']).toBeUndefined()
+  })
+
   it('ignores text with no cap tags', () => {
     const out = extractTagsFromSource(`it('plain test', () => {})`, 'x.test.js')
     expect(Object.keys(out)).toHaveLength(0)

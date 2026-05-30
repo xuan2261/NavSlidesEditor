@@ -5,10 +5,11 @@ import { dirname, resolve, join, relative, sep } from 'node:path'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(HERE, '../..')
 
-// Capability ids are dotted/hyphenated and may be camelCase (e.g.
-// shortcut.blackScreen, control.format.lineHeight) — match upper+lower so the
-// id is not truncated at the first uppercase letter.
-const CAP_RE = /\[cap:([A-Za-z0-9.\-]+)([^\]]*)\]/g
+// Capability ids are dotted/hyphenated and may be camelCase or contain
+// underscores (e.g. shortcut.blackScreen, canvas.rotate-snap, command.insert_slide).
+// Match upper+lower+digits+dot+underscore+hyphen so the id is never truncated.
+// Hyphen is last in the class so it is a literal, not a range (no escape needed).
+const CAP_RE = /\[cap:([A-Za-z0-9._-]+)([^\]]*)\]/g
 const TEST_DECL_RE =
   /\b(it|test|describe)(\.[a-z]+)?\s*\(\s*(['"`])((?:\\.|(?!\3).)*)\3/g
 

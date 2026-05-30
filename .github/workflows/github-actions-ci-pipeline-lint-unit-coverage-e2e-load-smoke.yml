@@ -237,7 +237,10 @@ jobs:
         with: { node-version: '20', cache: npm }
       - run: npm ci
       - name: Capture fresh vitest run results for matrix join
-        run: npx vitest run --reporter=json --outputFile=scripts/feature-inventory/run-results-vitest.json
+        # `|| true`: vitest exits non-zero on a failing test but still writes the
+        # JSON reporter file. Keep going so the gate can SEE that failure and
+        # report it as a FAIL row, instead of the job aborting before the gate runs.
+        run: npx vitest run --reporter=json --outputFile=scripts/feature-inventory/run-results-vitest.json || true
       - name: Regenerate matrix + run coverage + manifest-completeness gates
         run: npm run matrix:gate
       - name: Fail if committed docs/feature-coverage-matrix.md is stale

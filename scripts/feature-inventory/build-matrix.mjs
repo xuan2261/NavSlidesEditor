@@ -81,17 +81,28 @@ function loadJsonIfExists(path, fallback) {
 const invokedDirectly =
   process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (invokedDirectly) {
-  const { extractAllTags } = await import('./extract-tags.mjs')
+  const { extractAllTags, collectTestFiles } = await import('./extract-tags.mjs')
   const { loadRunResults } = await import('./join-run-status.mjs')
+  const { statSync } = await import('node:fs')
 
   const fullInventory = loadJsonIfExists(resolve(HERE, 'inventory.json'), [])
   // Matrix scope is editor-core; live/game/pptx/ai namespaces are reserved but
   // excluded from the visibility map (their gap rows would be misleading noise).
   const inventory = fullInventory.filter((c) => c.scope === 'editor-core')
   const tags = extractAllTags()
+  // Collect test-file mtimes so a present-but-old run-results file is flagged
+  // stale (a test edited after the last capture must not show a trusted green).
+  const testFileMtimes = collectTestFiles().map((f) => {
+    try {
+      return statSync(f).mtimeMs
+    } catch {
+      return 0
+    }
+  })
   const { index: runIndex, stale } = loadRunResults({
     vitestPath: resolve(HERE, 'run-results-vitest.json'),
     playwrightPath: resolve(HERE, 'run-results-playwright.json'),
+    testFileMtimes,
   })
   const allowlistDoc = loadJsonIfExists(resolve(HERE, 'coverage-gate-allowlist.json'), { entries: [] })
   const allowlist = allowlistDoc.entries || []
