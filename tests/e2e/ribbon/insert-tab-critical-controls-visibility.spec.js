@@ -67,6 +67,25 @@ test.describe('Insert Tab Critical Controls Visibility', () => {
     await expect(insertPanel.getByRole('button', { name: 'Embed', exact: true })).toHaveCount(0)
   })
 
+  test('Advanced launcher click target is not covered by the properties panel at 1366px', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 768 })
+    await editor.switchRibbonTab('Insert')
+
+    const launcher = page.getByTestId('ribbon-insert-game')
+    await expect(launcher).toBeVisible()
+
+    const hitTarget = await launcher.evaluate((button) => {
+      const rect = button.getBoundingClientRect()
+      const target = document.elementFromPoint(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2
+      )
+      return target === button || button.contains(target)
+    })
+
+    expect(hitTarget).toBe(true)
+  })
+
   test('Insert grouped triggers and games are keyboard reachable', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await editor.switchRibbonTab('Insert')

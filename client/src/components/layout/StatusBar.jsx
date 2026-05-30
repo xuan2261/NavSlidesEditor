@@ -122,10 +122,10 @@ function ViewSwitcher() {
 
 const iconCls = 'w-[11px] h-[11px]'
 
-function AttributionItem({ title, path, children }) {
+function AttributionItem({ title, path, children, className = '' }) {
   return (
     <span
-      className="flex items-center gap-1.5 opacity-90 transition-opacity hover:opacity-100"
+      className={`flex items-center gap-1.5 opacity-90 transition-opacity hover:opacity-100 ${className}`}
       title={title}
     >
       <svg className={iconCls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -141,22 +141,26 @@ export default function StatusBar() {
   const editorActive = total > 0
 
   return (
-    <footer className="h-6 bg-accent text-white flex items-center justify-between px-6 text-[11px] select-none z-[100] shrink-0 font-medium">
-      <div className="flex items-center h-full gap-4">
+    <footer className="h-6 bg-accent text-white flex items-center justify-between gap-2 overflow-hidden px-2 text-[11px] select-none z-[100] shrink-0 font-medium sm:px-6">
+      <div className="flex min-w-0 items-center h-full gap-2 sm:gap-4">
         <AttributionItem title="Application Name" path={<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />}>
           NavSlides Editor
         </AttributionItem>
         {editorActive && <SlidePosition current={current} total={total} />}
       </div>
 
-      <div className="flex items-center h-full gap-4">
+      <div className="flex min-w-0 items-center h-full gap-2 sm:gap-4">
         {editorActive && (
           <>
             <ViewSwitcher />
             <ZoomControls />
           </>
         )}
-        <AttributionItem title="Author Signature" path={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />}>
+        <AttributionItem
+          title="Author Signature"
+          path={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />}
+          className="hidden sm:inline-flex min-w-0 truncate"
+        >
           Designed by Xuan Bui Thanh - Department of Fundamental Engineering - Vietnam Naval Academy
         </AttributionItem>
         <AttributionItem

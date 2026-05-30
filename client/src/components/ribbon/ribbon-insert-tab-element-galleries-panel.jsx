@@ -202,13 +202,13 @@ function AdvancedActionButton({ label, title, icon: Icon, onAction }) {
   return (
     <Button
       variant="icon"
-      className="h-7 w-7"
+      className="h-6 w-6"
       title={title}
       aria-label={label}
       onMouseDown={(e) => { e.preventDefault(); onAction?.() }}
       onKeyDown={(e) => handleKeyboardActivation(e, onAction)}
     >
-      <Icon size={14} />
+      <Icon size={13} />
     </Button>
   )
 }
@@ -472,7 +472,7 @@ export default function InsertTabContent({
             icon={Package}
             label="More advanced insert options"
             triggerVariant="icon"
-            triggerClassName="h-7 w-7"
+            triggerClassName="h-6 w-6"
             items={[
               { id: 'games', icon: Gamepad2, label: 'Games...', onAction: () => setShowGameGallery(true) },
               ...pluginTypes.map((plugin) => ({
