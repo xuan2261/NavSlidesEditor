@@ -4,7 +4,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.12.0** — PowerPoint familiar-feel ribbon polish: contextual Format tab, PowerPoint-style status bar (zoom slider, slide position, view switcher), and big-button command hierarchy.
+Current release: **v1.13.0** — keyboard arrow-key element nudging and slide navigation, font ribbon controls now reflect element-level text styles, and removal of the unused floating MiniToolbar.
 
 ## Features
 

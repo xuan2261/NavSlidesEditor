@@ -1,6 +1,6 @@
 {
   "name": "navslides-editor",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "private": true,
   "license": "AGPL-3.0-only",
   "description": "NavSlides Editor — A WYSIWYG presentation editor powered by Reveal.js",

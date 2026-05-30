@@ -4,7 +4,7 @@
 
 NavSlides Editor is a self-hostable presentation editor built as a monorepo with
 `client/`, `server/`, `shared/`, and `electron/` runtimes. Current release is
-`v1.12.0`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
+`v1.13.0`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
 checked-in corpus / report artifacts used for verification. The editor shell
 uses the tab-based ribbon as the default controls surface.
 
@@ -176,7 +176,7 @@ navslides-editor/
 
 ## Repo Notes
 
-- Root package version is `1.12.0`.
+- Root package version is `1.13.0`.
 - Runtime baseline is Node.js 20+.
 - There is no database layer; persistence is file-based by design.
 - There is no full TypeScript migration; JSDoc is the type system.
