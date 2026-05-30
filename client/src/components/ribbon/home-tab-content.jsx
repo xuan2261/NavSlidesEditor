@@ -9,6 +9,7 @@ import { useSelectionPreservation } from '../../hooks/use-selection-preservation
 
 export default function HomeTabContent({
   editor,
+  selectedElement,
   onPaste,
   onCut,
   onCopy,
@@ -40,6 +41,7 @@ export default function HomeTabContent({
         <RibbonSection label="Font" className="border-r border-border">
           <FontControls
             editor={editor}
+            element={selectedElement}
             rememberSelection={rememberSelection}
             runTextCommand={runTextCommand}
             handleTextCommandMouseDown={handleTextCommandMouseDown}

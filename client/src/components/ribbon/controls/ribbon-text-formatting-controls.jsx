@@ -33,16 +33,21 @@ const FONT_FAMILIES = [
 const FONT_SIZES = ['10px','12px','14px','16px','18px','20px','24px','28px','32px','36px','40px','48px','56px','64px','72px','96px']
 const FONT_WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900]
 
-export default function FontControls({ editor, rememberSelection, runTextCommand, handleTextCommandMouseDown }) {
+export default function FontControls({ editor, element, rememberSelection, runTextCommand, handleTextCommandMouseDown }) {
   if (!editor) return null
 
-  const currentColor = editor.getAttributes('textStyle').color || '#ffffff'
+  // The ribbon reflects inline text-style marks first; when a span has no mark,
+  // fall back to the element-level style so the controls match what's rendered.
+  const textStyle = editor.getAttributes('textStyle')
+  const currentFontFamily = textStyle.fontFamily || element?.fontFamily || ''
+  const currentFontSize = textStyle.fontSize || (element?.fontSize ? `${element.fontSize}px` : '')
+  const currentColor = textStyle.color || element?.textColor || '#ffffff'
 
   return (
     <div className="flex items-center gap-0.5">
       <select
         className="h-7 bg-card border border-border text-text-primary px-1.5 rounded text-xs max-w-[110px] cursor-pointer"
-        value={editor.getAttributes('textStyle').fontFamily || ''}
+        value={currentFontFamily}
         onMouseDown={() => rememberSelection()}
         onChange={(e) =>
           e.target.value
@@ -63,7 +68,7 @@ export default function FontControls({ editor, rememberSelection, runTextCommand
 
       <select
         className="h-7 bg-card border border-border text-text-primary px-1.5 rounded text-xs w-[55px] cursor-pointer"
-        value={editor.getAttributes('textStyle').fontSize || ''}
+        value={currentFontSize}
         onMouseDown={() => rememberSelection()}
         onChange={(e) =>
           e.target.value
