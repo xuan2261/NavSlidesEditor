@@ -12,7 +12,7 @@ function createEvent(key, extra = {}) {
 }
 
 describe('createKeyboardHandler', () => {
-  it('maps editor shortcuts to callbacks and prevents browser defaults', () => {
+  it('[cap:shortcut.copy][cap:shortcut.cut][cap:shortcut.paste][cap:shortcut.duplicate][cap:shortcut.undo][cap:shortcut.redo][cap:shortcut.delete][cap:shortcut.selectAll][cap:shortcut.toggleFindReplace][cap:shortcut.escape] maps editor shortcuts to callbacks and prevents browser defaults', () => {
     const callbacks = {
       onCopy: vi.fn(),
       onCut: vi.fn(),
@@ -90,7 +90,7 @@ describe('createKeyboardHandler', () => {
     expect(event.preventDefault).not.toHaveBeenCalled()
   })
 
-  it('invokes onCommandPalette when Ctrl+K is pressed in editor scope (I-003)', () => {
+  it('[cap:shortcut.commandPalette][cap:command.commandPalette] invokes onCommandPalette when Ctrl+K is pressed in editor scope (I-003)', () => {
     const shortcuts = getShortcuts({})
     const onCommandPalette = vi.fn()
     const event = createEvent('k', { ctrlKey: true })

@@ -36,7 +36,7 @@ describe('createKeyboardHandler with isPresenting', () => {
   })
 
   // ── Presentation scope shortcuts only fire when isPresenting=true ──────────
-  it('fires slideNext when ArrowRight pressed in presentation mode', () => {
+  it('[cap:shortcut.slideNext] fires slideNext when ArrowRight pressed in presentation mode', () => {
     const cb = makeCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true })
@@ -46,7 +46,7 @@ describe('createKeyboardHandler with isPresenting', () => {
     expect(cb.onSlideNext).toHaveBeenCalledTimes(1)
   })
 
-  it('fires slidePrev when ArrowLeft pressed in presentation mode', () => {
+  it('[cap:shortcut.slidePrev] fires slidePrev when ArrowLeft pressed in presentation mode', () => {
     const cb = makeCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true })
@@ -56,7 +56,7 @@ describe('createKeyboardHandler with isPresenting', () => {
     expect(cb.onSlidePrev).toHaveBeenCalledTimes(1)
   })
 
-  it('fires slideFirst when Home pressed in presentation mode', () => {
+  it('[cap:shortcut.slideFirst] fires slideFirst when Home pressed in presentation mode', () => {
     const cb = makeCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true })
@@ -66,7 +66,7 @@ describe('createKeyboardHandler with isPresenting', () => {
     expect(cb.onSlideFirst).toHaveBeenCalledTimes(1)
   })
 
-  it('fires slideLast when End pressed in presentation mode', () => {
+  it('[cap:shortcut.slideLast] fires slideLast when End pressed in presentation mode', () => {
     const cb = makeCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true })
@@ -76,7 +76,7 @@ describe('createKeyboardHandler with isPresenting', () => {
     expect(cb.onSlideLast).toHaveBeenCalledTimes(1)
   })
 
-  it('fires blackScreen when B pressed in presentation mode', () => {
+  it('[cap:shortcut.blackScreen] fires blackScreen when B pressed in presentation mode', () => {
     const cb = makeCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true })
@@ -86,7 +86,7 @@ describe('createKeyboardHandler with isPresenting', () => {
     expect(cb.onBlackScreen).toHaveBeenCalledTimes(1)
   })
 
-  it('fires whiteScreen when W pressed in presentation mode', () => {
+  it('[cap:shortcut.whiteScreen] fires whiteScreen when W pressed in presentation mode', () => {
     const cb = makeCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true })
@@ -96,7 +96,7 @@ describe('createKeyboardHandler with isPresenting', () => {
     expect(cb.onWhiteScreen).toHaveBeenCalledTimes(1)
   })
 
-  it('fires endSlideshow when Escape pressed in presentation mode', () => {
+  it('[cap:shortcut.endSlideshow] fires endSlideshow when Escape pressed in presentation mode', () => {
     const cb = makeCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true })
@@ -107,7 +107,7 @@ describe('createKeyboardHandler with isPresenting', () => {
   })
 
   // ── Editor scope shortcuts only fire when isPresenting=false ───────────────
-  it('fires startSlideshow when F5 pressed in editor mode', () => {
+  it('[cap:shortcut.startSlideshow] fires startSlideshow when F5 pressed in editor mode', () => {
     const cb = makeCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: false })
@@ -117,7 +117,7 @@ describe('createKeyboardHandler with isPresenting', () => {
     expect(cb.onStartSlideshow).toHaveBeenCalledTimes(1)
   })
 
-  it('fires startSlideshowCurrent when Shift+F5 pressed in editor mode', () => {
+  it('[cap:shortcut.startSlideshowCurrent] fires startSlideshowCurrent when Shift+F5 pressed in editor mode', () => {
     const cb = makeCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: false })

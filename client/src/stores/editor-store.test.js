@@ -21,7 +21,7 @@ describe('editor-store', () => {
     useEditorStore.setState(initialState)
   })
 
-  it('tracks selection and clears editing state together', () => {
+  it('[cap:flow.multiselect] tracks selection and clears editing state together', () => {
     const store = useEditorStore.getState()
 
     store.selectElement('el-1')
@@ -74,7 +74,7 @@ describe('editor-store', () => {
     expect(useEditorStore.getState().zoom).toBe(1)
   })
 
-  it('zoomIn increases zoom by 0.25, clamped to max 4', () => {
+  it('[cap:shortcut.zoomIn][cap:command.zoomIn] zoomIn increases zoom by 0.25, clamped to max 4', () => {
     useEditorStore.getState().setZoom(1)
     useEditorStore.getState().zoomIn()
     expect(useEditorStore.getState().zoom).toBe(1.25)
@@ -83,7 +83,7 @@ describe('editor-store', () => {
     expect(useEditorStore.getState().zoom).toBe(4) // clamped
   })
 
-  it('zoomOut decreases zoom by 0.25, clamped to min 0.25', () => {
+  it('[cap:shortcut.zoomOut][cap:command.zoomOut] zoomOut decreases zoom by 0.25, clamped to min 0.25', () => {
     useEditorStore.getState().setZoom(1)
     useEditorStore.getState().zoomOut()
     expect(useEditorStore.getState().zoom).toBe(0.75)
@@ -92,7 +92,7 @@ describe('editor-store', () => {
     expect(useEditorStore.getState().zoom).toBe(0.25) // clamped
   })
 
-  it('resetZoom sets zoom to 1', () => {
+  it('[cap:shortcut.resetZoom][cap:command.resetZoom] resetZoom sets zoom to 1', () => {
     useEditorStore.getState().setZoom(2.5)
     useEditorStore.getState().resetZoom()
     expect(useEditorStore.getState().zoom).toBe(1)

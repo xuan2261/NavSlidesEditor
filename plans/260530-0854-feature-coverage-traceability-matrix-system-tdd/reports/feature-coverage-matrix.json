@@ -1,7 +1,7 @@
 {
   "meta": {
     "generated": "local run",
-    "stale": true
+    "stale": false
   },
   "rows": [
     {
@@ -80,10 +80,12 @@
       "id": "canvas.smart-guides",
       "category": "canvas",
       "risk": "low",
-      "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/utils/smartGuides.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "canvas.zorder",
@@ -99,9 +101,11 @@
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "command.group",
@@ -135,9 +139,11 @@
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "command.startSlideshow",
@@ -162,18 +168,22 @@
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "command.zoomOut",
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "control.file.menu",
@@ -189,9 +199,11 @@
       "category": "control",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/controls/paragraph-formatting-and-alignment-controls.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "control.format.bold",
@@ -243,9 +255,11 @@
       "category": "control",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/controls/paragraph-formatting-and-alignment-controls.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "control.format.position",
@@ -476,28 +490,34 @@
       "id": "flow.clipboard",
       "category": "flow",
       "risk": "high",
-      "tier": "smoke→deep",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-clipboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "flow.find-replace",
       "category": "flow",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/find-replace-helpers.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "flow.multiselect",
       "category": "flow",
       "risk": "high",
       "tier": "smoke→deep",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "DEEP-GAP"
     },
     {
       "id": "flow.undo-redo",
@@ -513,9 +533,11 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.bringForward",
@@ -531,54 +553,66 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.copy",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.cut",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.delete",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.duplicate",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.endSlideshow",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.eraseAnnotations",
@@ -594,63 +628,77 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.gameHud",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.gameLeaderboard",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.gameNext",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.gamePause",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.gameReveal",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.gameTimer",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.group",
@@ -693,9 +741,11 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.penTool",
@@ -711,27 +761,33 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.resetZoom",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.selectAll",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.sendBackward",
@@ -747,126 +803,154 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.slideLast",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.slideNext",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.slidePrev",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.startSlideshow",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.startSlideshowCurrent",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.teamSelect1",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.teamSelect2",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.teamSelect3",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.teamSelect4",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.timerAdd",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.timerSub",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.toggleFindReplace",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.undo",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.ungroup",
@@ -882,33 +966,41 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.zoomIn",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.zoomOut",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
     }
   ],
   "orphans": [],
   "summary": {
     "total": 100,
-    "verified": 0,
-    "GAP": 100
+    "verified": 44,
+    "GAP": 55,
+    "PASS": 44,
+    "DEEP-GAP": 1
   }
 }

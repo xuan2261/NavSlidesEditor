@@ -9,7 +9,7 @@ const createEditor = () => ({
 })
 
 describe('ParagraphCompactControls', () => {
-  it('opens with keyboard and runs menu commands without mouse input', () => {
+  it('[cap:control.format.align] opens with keyboard and runs menu commands without mouse input', () => {
     const rememberSelection = vi.fn()
     const runTextCommand = vi.fn()
     render(
@@ -31,7 +31,7 @@ describe('ParagraphCompactControls', () => {
 })
 
 describe('ParagraphControls', () => {
-  it('uses preserved selection command for line height changes', () => {
+  it('[cap:control.format.lineHeight] uses preserved selection command for line height changes', () => {
     const rememberSelection = vi.fn()
     const runTextCommand = vi.fn()
     render(

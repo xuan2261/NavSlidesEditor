@@ -1,0 +1,6 @@
+# Intermediate artifacts regenerated on every `npm run matrix` — not canonical.
+# inventory.json and the reports/feature-coverage-matrix.{md,json} ARE committed.
+tags.json
+run-results.json
+run-results-vitest.json
+run-results-playwright.json

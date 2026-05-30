@@ -49,7 +49,7 @@ const makeGameCallbacks = () => ({
 describe('createKeyboardHandler with presentation-game scope', () => {
   // Game shortcuts fire when isPresenting=true AND activeGameType is set
 
-  it('fires gameHud when G pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.gameHud] fires gameHud when G pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
@@ -57,7 +57,7 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onGameHud).toHaveBeenCalledTimes(1)
   })
 
-  it('fires gameTimer when Space pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.gameTimer] fires gameTimer when Space pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
@@ -65,7 +65,7 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onGameTimer).toHaveBeenCalledTimes(1)
   })
 
-  it('fires gameNext when Enter pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.gameNext] fires gameNext when Enter pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
@@ -73,7 +73,7 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onGameNext).toHaveBeenCalledTimes(1)
   })
 
-  it('fires gameReveal when R pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.gameReveal] fires gameReveal when R pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
@@ -81,7 +81,7 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onGameReveal).toHaveBeenCalledTimes(1)
   })
 
-  it('fires gameLeaderboard when L pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.gameLeaderboard] fires gameLeaderboard when L pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
@@ -89,7 +89,7 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onGameLeaderboard).toHaveBeenCalledTimes(1)
   })
 
-  it('fires gamePause when P pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.gamePause] fires gamePause when P pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
@@ -97,7 +97,7 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onGamePause).toHaveBeenCalledTimes(1)
   })
 
-  it('fires timerAdd when + pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.timerAdd] fires timerAdd when + pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
@@ -105,7 +105,7 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onTimerAdd).toHaveBeenCalledTimes(1)
   })
 
-  it('fires timerSub when - pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.timerSub] fires timerSub when - pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
@@ -113,7 +113,7 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onTimerSub).toHaveBeenCalledTimes(1)
   })
 
-  it('fires teamSelect1 when 1 pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.teamSelect1] fires teamSelect1 when 1 pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
@@ -121,7 +121,7 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onTeamSelect1).toHaveBeenCalledTimes(1)
   })
 
-  it('fires teamSelect2 when 2 pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.teamSelect2] fires teamSelect2 when 2 pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
@@ -129,7 +129,7 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onTeamSelect2).toHaveBeenCalledTimes(1)
   })
 
-  it('fires teamSelect3 when 3 pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.teamSelect3] fires teamSelect3 when 3 pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
@@ -137,7 +137,7 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onTeamSelect3).toHaveBeenCalledTimes(1)
   })
 
-  it('fires teamSelect4 when 4 pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.teamSelect4] fires teamSelect4 when 4 pressed with isPresenting=true and activeGameType set', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
     const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })

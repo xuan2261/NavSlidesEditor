@@ -48,7 +48,7 @@ describe('createCopyOperation', () => {
     expect(createCopyOperation({ slideElements: [], selectedElementIds: ['el-1'] })).toBeNull()
   })
 
-  it('stores correct elements with IDs stripped', () => {
+  it('[cap:flow.clipboard tier:deep] stores correct elements with IDs stripped', () => {
     const result = createCopyOperation({
       slideElements: [
         makeEl('el-1', { type: 'text', content: 'Hello' }),

@@ -5,8 +5,10 @@ import { dirname, resolve, join, relative, sep } from 'node:path'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(HERE, '../..')
 
-// Capability ids are lowercase dotted/hyphenated: element.chart, canvas.rotate-snap.
-const CAP_RE = /\[cap:([a-z0-9.\-]+)([^\]]*)\]/g
+// Capability ids are dotted/hyphenated and may be camelCase (e.g.
+// shortcut.blackScreen, control.format.lineHeight) — match upper+lower so the
+// id is not truncated at the first uppercase letter.
+const CAP_RE = /\[cap:([A-Za-z0-9.\-]+)([^\]]*)\]/g
 const TEST_DECL_RE =
   /\b(it|test|describe)(\.[a-z]+)?\s*\(\s*(['"`])((?:\\.|(?!\3).)*)\3/g
 

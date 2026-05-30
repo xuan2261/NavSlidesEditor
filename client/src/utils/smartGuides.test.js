@@ -12,7 +12,7 @@ describe('smartGuides', () => {
     expect(result.guides).toContainEqual({ axis: 'x', position: 480 })
   })
 
-  it('snaps to another element edge and returns guide axes independently', () => {
+  it('[cap:canvas.smart-guides tier:deep] snaps to another element edge and returns guide axes independently', () => {
     const result = calculateGuides(
       { id: 'drag', x: 294, y: 96, width: 80, height: 60 },
       [

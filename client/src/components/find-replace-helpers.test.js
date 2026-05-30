@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { replaceAllInSlides, replaceInHtml } from './find-replace-helpers'
 
 describe('find replace helpers', () => {
-  it('supports replacing matches with an empty string', () => {
+  it('[cap:flow.find-replace] supports replacing matches with an empty string', () => {
     const slides = [
       {
         id: 'slide-1',
