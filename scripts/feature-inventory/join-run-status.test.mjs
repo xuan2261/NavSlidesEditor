@@ -82,6 +82,31 @@ describe('run-status joiner', () => {
     expect(resolveStatus(occ, index)).toBe('passed')
   })
 
+  it('resolveStatus matches a tag placed on a describe (ancestor) title', () => {
+    // vitest reports describe titles as ancestorTitles, not the leaf title. A
+    // tag on a describe must still resolve to its tests' run status.
+    const json = {
+      testResults: [
+        {
+          name: 'C:/repo/client/src/rotate.test.js',
+          assertionResults: [
+            {
+              title: 'snaps 22 to 15',
+              status: 'passed',
+              ancestorTitles: ['[cap:canvas.rotate-snap tier:deep] rotation snapping'],
+            },
+          ],
+        },
+      ],
+    }
+    const index = buildRunIndex(parseVitestJson(json))
+    const occ = {
+      file: 'client/src/rotate.test.js',
+      title: '[cap:canvas.rotate-snap tier:deep] rotation snapping',
+    }
+    expect(resolveStatus(occ, index)).toBe('passed')
+  })
+
   it('resolveStatus returns null when no run result joined', () => {
     const index = buildRunIndex(parseVitestJson(VITEST_JSON))
     const occ = { file: 'client/src/other.test.js', title: '[cap:x] never ran' }
