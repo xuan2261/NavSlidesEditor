@@ -22,6 +22,7 @@ const builtInElementTypeSchema = z.enum([
   'svg',
   'qrcode',
   'timeline',
+  'game',
   'divider',
 ])
 
