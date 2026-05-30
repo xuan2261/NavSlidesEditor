@@ -191,6 +191,24 @@ Default font families offered in the font picker (verified in Toolbar):
 - Tab command rows flow from the left edge. Group content stays centered inside each group, and group labels stay centered at the bottom.
 - The contextual Format tab uses the same row/group rhythm in both empty and selected states; the empty state is a `Selection` group, not free-floating text.
 
+**Contextual Format tab (dynamic):**
+- The Format tab is hidden from the tab bar when nothing is selected and appears only when an element is selected. Selection context flows through `ui-store.formatContext` (`{ hasSelection, elementType }`) instead of prop-drilling `selectedElement` through `RibbonHeaderBar`.
+- The tab label is type-specific via `formatTabLabel(type)`: Shape Format (`shape`/`line`), Picture Format (`image`), Table Design (`table`), Chart Design (`chart`), Code (`code`), Media (`video`/`audio`), and Format for text/unknown.
+- Format auto-activates on the first render of a new selection (none → some). Once the user navigates to another tab while the selection persists, later type changes must not yank them back to Format.
+- Losing the selection while Format is active falls back to Home. The brand terracotta active border already serves as the contextual accent — no extra accent class.
+- Both `Tabs.Root` value props (`RibbonPanel` and `RibbonHeaderBar`) coerce a persisted `activeTab='format'` to `home` when `!hasSelection` (`effectiveTab` guard) so a reload never flashes an empty Format panel before an async effect can correct it.
+
+**Big-button hierarchy:**
+- A tab's primary action is promoted to `RibbonBigButton` (icon ~22px over an 11px label, ~52px tall, fits inside the 80px command row) for PowerPoint-style visual hierarchy; secondary actions stay compact (`h-7`).
+- Applied to: Home → Paste; Insert → Text Box (`onAddText`) and Picture (`onAddImageUpload`, file upload — not the URL-prompt `onAddImage`, which remains a small button).
+- Big buttons accept an explicit `aria-label` so the visible label can differ from the stable accessible name used by tests/automation (e.g. visible "Text Box" / accessible "Add text", `data-testid="ribbon-insert-text"`).
+
+**Status bar (PowerPoint-style):**
+- `StatusBar` (rendered globally in `MainLayout`, outside the editor tree) shows attribution + version always, and gates the editor cluster (zoom + slide position + view switcher) on `ui-store.slidePosition.total > 0`, which doubles as the "editor active" signal (only `EditorPage` calls `setSlidePosition`).
+- Zoom uses a range slider (`min=10 max=400 step=5` percent) two-way bound to `ui-store.zoom`, keeping the −/+/Fit buttons and the percent display.
+- Slide position renders `Slide {current+1} / {total}` for top-level parent slides only.
+- The view switcher toggles `editor-store.viewMode` (Normal / Slide Sorter) and triggers the registered `ui-store.presentHandler` for Present. `setPresentHandler` uses a plain `set` (never the function-updater idiom) so registering the handler never opens the present window.
+
 **Toolbar styling:**
 - Background: `--bg-secondary`
 - Icon buttons: 32×32px, `--text-secondary` idle, `--text-primary` hover, `--accent` active/selected

@@ -21,9 +21,17 @@ const TAB_PANELS = {
 export default function RibbonPanel(props) {
   const activeTab = useUIStore((s) => s.activeTab)
   const setActiveTab = useUIStore((s) => s.setActiveTab)
+  const formatContext = useUIStore((s) => s.formatContext)
+
+  // Guard against radix showing the Format panel for a persisted activeTab
+  // ('format' from localStorage) before a selection exists. Tabs.Root renders
+  // whichever Content matches `value` regardless of a matching trigger, so we
+  // must coerce the value synchronously rather than rely on an async effect.
+  const effectiveTab =
+    activeTab === 'format' && !formatContext.hasSelection ? 'home' : activeTab
 
   return (
-    <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
+    <Tabs.Root value={effectiveTab} onValueChange={setActiveTab}>
       <div
         data-testid="ribbon-panel-container"
         className="tour-step-ribbon relative h-[80px] overflow-hidden bg-background border-b border-border"

@@ -110,9 +110,16 @@ export default function RibbonHeaderBar({
 }) {
   const activeTab = useUIStore((s) => s.activeTab)
   const setActiveTab = useUIStore((s) => s.setActiveTab)
+  const formatContext = useUIStore((s) => s.formatContext)
+
+  // Keep the header's Tabs.Root value in sync with the panel guard so a
+  // persisted activeTab='format' without a selection never marks a missing
+  // trigger as selected.
+  const effectiveTab =
+    activeTab === 'format' && !formatContext.hasSelection ? 'home' : activeTab
 
   return (
-    <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="flex min-w-0 flex-1">
+    <Tabs.Root value={effectiveTab} onValueChange={setActiveTab} className="flex min-w-0 flex-1">
       <div className="flex min-w-0 flex-1 items-center border-b border-border bg-secondary">
         <FileDropdown
           onOpenProject={onOpenProject}
@@ -125,7 +132,7 @@ export default function RibbonHeaderBar({
           onSync={onSync}
           onHistory={onHistory}
         />
-        <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+        <TabBar activeTab={effectiveTab} onTabChange={setActiveTab} />
         <div className="ml-auto flex shrink-0 items-center gap-1 px-1">
           <RibbonActionDropdown
             label="AI"

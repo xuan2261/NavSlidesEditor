@@ -7,13 +7,26 @@ import RibbonPanel from './ribbon-panel'
 
 describe('RibbonShell', () => {
   beforeEach(() => {
-    useUIStore.setState({ activeTab: 'home' })
+    useUIStore.setState({
+      activeTab: 'home',
+      formatContext: { hasSelection: false, elementType: null },
+      formatAutoActivatedForSelection: false,
+    })
   })
 
-  it('renders 7 tab triggers', () => {
+  it('renders 6 tab triggers when nothing is selected (Format hidden)', () => {
+    render(<RibbonShell />)
+    const tabs = screen.getAllByRole('tab')
+    expect(tabs).toHaveLength(6)
+    expect(screen.queryByTestId('ribbon-tab-format')).toBeNull()
+  })
+
+  it('renders 7 tab triggers when an element is selected (Format shown)', () => {
+    useUIStore.setState({ formatContext: { hasSelection: true, elementType: 'shape' } })
     render(<RibbonShell />)
     const tabs = screen.getAllByRole('tab')
     expect(tabs).toHaveLength(7)
+    expect(screen.getByTestId('ribbon-tab-format')).toBeTruthy()
   })
 
   it('has role="tablist" on tab bar', () => {
@@ -64,9 +77,21 @@ describe('RibbonShell', () => {
     expect(selectedTab.textContent).toMatch(/home/i)
   })
 
-  it('renders all tab labels', () => {
+  it('renders the six static tab labels (no Format) when nothing is selected', () => {
     render(<RibbonShell />)
-    const expectedLabels = ['Home', 'Insert', 'Design', 'Format', 'Transitions', 'Animations', 'View']
+    const expectedLabels = ['Home', 'Insert', 'Design', 'Transitions', 'Animations', 'View']
+    const tabs = screen.getAllByRole('tab')
+    for (const label of expectedLabels) {
+      const found = tabs.some((t) => t.textContent.includes(label))
+      expect(found).toBe(true)
+    }
+    expect(tabs.some((t) => t.textContent.includes('Format'))).toBe(false)
+  })
+
+  it('renders the contextual Format label alongside static tabs when selected', () => {
+    useUIStore.setState({ formatContext: { hasSelection: true, elementType: 'image' } })
+    render(<RibbonShell />)
+    const expectedLabels = ['Home', 'Insert', 'Design', 'Picture Format', 'Transitions', 'Animations', 'View']
     const tabs = screen.getAllByRole('tab')
     for (const label of expectedLabels) {
       const found = tabs.some((t) => t.textContent.includes(label))

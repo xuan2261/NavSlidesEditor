@@ -1,19 +1,17 @@
 import { Clipboard, Scissors, Copy, ClipboardCopy } from 'lucide-react'
 import { Button } from '../../ui'
+import RibbonBigButton from '../ribbon-big-button'
 
 export default function ClipboardButtons({ onPaste, onCut, onCopy, onDuplicate }) {
   return (
     <div className="flex items-center gap-0.5">
-      <Button
-        variant="ribbon"
-        className="h-7"
-        onMouseDown={(e) => { e.preventDefault(); onPaste?.() }}
+      <RibbonBigButton
+        icon={Clipboard}
+        label="Paste"
         title="Paste (Ctrl+V)"
         aria-label="Paste"
-      >
-        <Clipboard size={14} />
-        <span className="hidden lg:inline">Paste</span>
-      </Button>
+        onMouseDown={(e) => { e.preventDefault(); onPaste?.() }}
+      />
       <Button
         variant="icon"
         className="h-7 w-7"

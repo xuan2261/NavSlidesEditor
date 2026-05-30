@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Sparkles, Wand2 } from 'lucide-react'
+import { Sparkles, Replace } from 'lucide-react'
 
 import { RIBBON_TABS } from '../components/ribbon/ribbon-tabs-config'
 
@@ -20,9 +20,9 @@ function readSrc(rel) {
 }
 
 describe('sparkles semantic separation', () => {
-  it('Transitions ribbon tab uses Wand2', () => {
+  it('Transitions ribbon tab does not use Sparkles (reserved for AI)', () => {
     const transitions = RIBBON_TABS.find((t) => t.id === 'transitions')
-    expect(transitions?.icon).toBe(Wand2)
+    expect(transitions?.icon).toBe(Replace)
     expect(transitions?.icon).not.toBe(Sparkles)
   })
 

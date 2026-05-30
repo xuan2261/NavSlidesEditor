@@ -12,7 +12,7 @@ const VALID_RIBBON_TABS = new Set([
 
 const clampZoom = (v) => Math.max(0.1, Math.min(4, v))
 
-export const useUIStore = create((set) => ({
+export const useUIStore = create((set, get) => ({
   // Modals — individual booleans matching EditorPage
   showGithubModal: false,
   showShareModal: false,
@@ -52,6 +52,13 @@ export const useUIStore = create((set) => ({
   zoom: 1,
   userZoomMode: false,
 
+  // Slide position + present action — bridge EditorPage (local state / window
+  // opener) to the global StatusBar that lives outside the editor tree.
+  // total>0 also doubles as the "editor is active" signal that gates the
+  // right-hand status cluster (only EditorPage calls setSlidePosition).
+  slidePosition: { current: 0, total: 0 },
+  presentHandler: null,
+
   // Ribbon
   activeTab: (() => {
     try {
@@ -60,6 +67,13 @@ export const useUIStore = create((set) => ({
       return VALID_RIBBON_TABS.has(storedTab) ? storedTab : 'home'
     } catch { return 'home' }
   })(),
+
+  // Format-tab context — bridges EditorPage selection to the ribbon TabBar
+  // without prop-drilling selectedElement through RibbonHeaderBar.
+  // formatAutoActivatedForSelection enforces "auto-activate Format on the first
+  // render of a new selection, but respect a manual tab change afterwards".
+  formatContext: { hasSelection: false, elementType: null },
+  formatAutoActivatedForSelection: false,
 
   // Actions — Modals
   openModal: (name) => set({ [`show${name}Modal`]: true }),
@@ -110,10 +124,32 @@ export const useUIStore = create((set) => ({
     set({ activeTab: tab })
   },
 
+  // Sync EditorPage selection into the ribbon. Auto-activates Format the first
+  // time a selection appears (none -> some); once the user navigates away while
+  // the selection persists, later type changes must not yank them back.
+  setFormatContext: ({ hasSelection, elementType }) => {
+    const prev = get()
+    if (hasSelection && !prev.formatContext.hasSelection) {
+      get().setActiveTab('format')
+      set({ formatAutoActivatedForSelection: true })
+    }
+    if (!hasSelection) {
+      set({ formatAutoActivatedForSelection: false })
+      if (get().activeTab === 'format') get().setActiveTab('home')
+    }
+    set({ formatContext: { hasSelection, elementType } })
+  },
+
   // Zoom actions
   setZoom: (v) => set((s) => ({ zoom: clampZoom(typeof v === 'function' ? v(s.zoom) : v) })),
   setUserZoomMode: (v) => set({ userZoomMode: !!v }),
   zoomIn: () => set((s) => ({ zoom: clampZoom(s.zoom + 0.1), userZoomMode: true })),
   zoomOut: () => set((s) => ({ zoom: clampZoom(s.zoom - 0.1), userZoomMode: true })),
   fitZoom: () => set({ userZoomMode: false }),
+
+  // Slide position + present action setters.
+  setSlidePosition: ({ current, total }) => set({ slidePosition: { current, total } }),
+  // Plain set on purpose: a function-updater idiom would call fn(state) here and
+  // open the present window the moment EditorPage registers the handler.
+  setPresentHandler: (fn) => set({ presentHandler: fn }),
 }))

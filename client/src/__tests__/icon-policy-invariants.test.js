@@ -39,6 +39,10 @@ const SPARKLES_NON_TEST_WHITELIST = [
   'components/AIGeneratorModal.jsx',
   'components/AICopywriterModal.jsx',
   'components/ribbon/ribbon-header-bar.jsx',
+  // The ribbon tab-icon refactor intentionally assigns Sparkles to the
+  // Animations tab (Transitions → Replace), codified in ribbon-tabs-config.test.js.
+  // That decision postdates this guard, so the config file is allowed.
+  'components/ribbon/ribbon-tabs-config.js',
 ]
 
 function isSparklesAllowed(file) {

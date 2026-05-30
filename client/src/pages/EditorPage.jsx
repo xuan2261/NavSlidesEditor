@@ -178,6 +178,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen)
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen)
   const setActiveTab = useUIStore((s) => s.setActiveTab)
+  const setFormatContext = useUIStore((s) => s.setFormatContext)
+  const setSlidePosition = useUIStore((s) => s.setSlidePosition)
+  const setPresentHandler = useUIStore((s) => s.setPresentHandler)
 
   // Ribbon
   // Derived from selectedElementIds — must be declared before any useEffect that references it
@@ -835,6 +838,33 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   }, [presentation?.customCSS])
 
   const selectedElement = activeSlide?.elements?.find((el) => el.id === selectedElementId) || null
+
+  // Bridge selection into the ribbon so the Format tab can show/hide and relabel
+  // itself. Depend on primitives (presence + type) rather than the recomputed
+  // selectedElement object so this only fires on real selection changes.
+  const hasSelectedElement = !!selectedElement
+  const selectedElementType = selectedElement?.type ?? null
+  useEffect(() => {
+    setFormatContext({ hasSelection: hasSelectedElement, elementType: selectedElementType })
+  }, [hasSelectedElement, selectedElementType, setFormatContext])
+
+  // Sync slide position into the global StatusBar (which lives outside this
+  // tree). total>0 also signals "editor active" so the status cluster shows.
+  useEffect(() => {
+    setSlidePosition({ current: currentSlideIndex, total: presentation?.slides?.length ?? 0 })
+  }, [currentSlideIndex, presentation?.slides?.length, setSlidePosition])
+
+  // Register the Present action for the StatusBar; re-register when the
+  // presentation changes, and clear on unmount.
+  useEffect(() => {
+    setPresentHandler(() => presentInWindow(presentation))
+    return () => setPresentHandler(null)
+  }, [presentation, setPresentHandler])
+
+  // Reset slide position when leaving the editor so the cluster hides on Home.
+  useEffect(() => {
+    return () => setSlidePosition({ current: 0, total: 0 })
+  }, [setSlidePosition])
 
   // ── Command layer (Phase 1: clipboard + keyboard unified via useKeyboard/useClipboard) ──
   const { performCopy, performPaste, performCut } = useClipboard({

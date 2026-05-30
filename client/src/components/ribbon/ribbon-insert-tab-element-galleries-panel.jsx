@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  Type, Image as ImageIcon, Upload, Shapes, Minus, ArrowUpRight,
+  Type, Image as ImageIcon, Shapes, Minus, ArrowUpRight,
   BarChart3, Table2, FileCode, Code, Sigma, QrCode,
   Video, Music, FolderOpen, HardDrive,
   Globe, Pencil, SeparatorHorizontal, FileImage,
   Wand2, Grid3x3, Clapperboard, Box, Clock,
-  Gamepad2, MessageSquare, Sticker, Package,
+  Gamepad2, MessageSquare, Sticker, Package, Link,
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import RibbonDropdownMenuGroup from './ribbon-dropdown-menu-group-trigger'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
+import RibbonBigButton from './ribbon-big-button'
 import IconGallery from '../IconGallery'
 import { Button } from '../ui'
 import { GAME_TYPES } from '../../constants/game-element-types-constants'
@@ -298,20 +299,15 @@ export default function InsertTabContent({
     <RibbonTabContentRow>
       <RibbonSection label="Basic" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5">
-          <Button variant="ribbon" title="Add text" aria-label="Add text" data-testid="ribbon-insert-text"
-            onMouseDown={(e) => { e.preventDefault(); onAddText?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddText)}>
-            <Type size={14} />
-          </Button>
+          <RibbonBigButton icon={Type} label="Text Box" title="Add text" aria-label="Add text"
+            data-testid="ribbon-insert-text"
+            onMouseDown={(e) => { e.preventDefault(); onAddText?.() }} />
+          <RibbonBigButton icon={ImageIcon} label="Picture" title="Insert picture" aria-label="Picture"
+            onMouseDown={(e) => { e.preventDefault(); handleFileUpload('image/*', (f) => onAddImageUpload?.(f)) }} />
           <Button variant="icon" className="h-7 w-7" title="Add image (URL)" aria-label="Add image"
             onMouseDown={(e) => { e.preventDefault(); onAddImage?.() }}
             onKeyDown={(e) => handleKeyboardActivation(e, onAddImage)}>
-            <ImageIcon size={14} />
-          </Button>
-          <Button variant="icon" className="h-7 w-7" title="Upload image" aria-label="Upload image"
-            onMouseDown={(e) => { e.preventDefault(); handleFileUpload('image/*', (f) => onAddImageUpload?.(f)) }}
-            onKeyDown={(e) => handleKeyboardActivation(e, () => handleFileUpload('image/*', (f) => onAddImageUpload?.(f)))}>
-            <Upload size={14} />
+            <Link size={14} />
           </Button>
         </div>
       </RibbonSection>

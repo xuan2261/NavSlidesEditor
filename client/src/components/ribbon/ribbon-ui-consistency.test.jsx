@@ -10,9 +10,9 @@ import QuickAccessToolbar from '../QuickAccessToolbar'
  */
 
 describe('Ribbon UI Consistency', () => {
-  describe('Issue #1: ClipboardButtons height consistency', () => {
-    it('all buttons should have consistent h-7 height class', () => {
-      const { container } = render(
+  describe('Issue #1: ClipboardButtons height hierarchy', () => {
+    it('secondary buttons (Cut/Copy/Duplicate) keep the compact h-7 height', () => {
+      render(
         <ClipboardButtons
           onPaste={vi.fn()}
           onCut={vi.fn()}
@@ -21,21 +21,17 @@ describe('Ribbon UI Consistency', () => {
         />
       )
 
-      const buttons = container.querySelectorAll('button')
-      expect(buttons.length).toBe(4)
-
-      // All buttons should have h-7 (28px), not explicit h-8 (32px)
-      // Note: Button variant has min-h-8, but explicit h-8 should not be present
-      buttons.forEach((btn) => {
+      // Cut/Copy/Duplicate stay small; Paste is intentionally promoted to a
+      // big button (icon over label) for PowerPoint-style visual hierarchy.
+      for (const label of ['Cut', 'Copy', 'Duplicate']) {
+        const btn = screen.getByLabelText(label)
         const classes = btn.className.split(' ')
-        const hasExplicitH8 = classes.some(c => c === 'h-8')
-        const hasH7 = classes.some(c => c === 'h-7')
-        expect(hasExplicitH8).toBe(false) // No button should have explicit h-8
-        expect(hasH7).toBe(true) // All buttons should have h-7
-      })
+        expect(classes.some((c) => c === 'h-8')).toBe(false)
+        expect(classes.some((c) => c === 'h-7')).toBe(true)
+      }
     })
 
-    it('Paste button should not be taller than other buttons', () => {
+    it('Paste is a big button, taller than the compact secondary buttons', () => {
       render(
         <ClipboardButtons
           onPaste={vi.fn()}
@@ -48,10 +44,10 @@ describe('Ribbon UI Consistency', () => {
       const pasteBtn = screen.getByLabelText('Paste')
       const cutBtn = screen.getByLabelText('Cut')
 
-      // Both should have same height class
-      const pasteHasH7 = pasteBtn.className.includes('h-7')
-      const cutHasH7 = cutBtn.className.includes('h-7')
-      expect(pasteHasH7).toBe(cutHasH7)
+      // Paste opts out of the h-7 cluster height on purpose.
+      expect(pasteBtn.getAttribute('data-ribbon-big-button')).not.toBeNull()
+      expect(pasteBtn.className.includes('h-7')).toBe(false)
+      expect(cutBtn.className.includes('h-7')).toBe(true)
     })
   })
 

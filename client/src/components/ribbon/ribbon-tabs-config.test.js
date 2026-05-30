@@ -3,7 +3,7 @@
 // Anime.js inside Insert). Transitions → Replace, Animations → Sparkles.
 
 import { describe, expect, it } from 'vitest'
-import { RIBBON_TABS } from './ribbon-tabs-config'
+import { RIBBON_TABS, formatTabLabel } from './ribbon-tabs-config'
 
 function iconName(tab) {
   // lucide-react@0.441 sets Component.displayName = iconName
@@ -42,5 +42,25 @@ describe('Ribbon tab icon config', () => {
     const names = RIBBON_TABS.map(iconName)
     expect(names).not.toContain('Wand2')
     expect(names).not.toContain('Clapperboard')
+  })
+})
+
+describe('formatTabLabel', () => {
+  it('maps each element type to its PowerPoint-style contextual label', () => {
+    expect(formatTabLabel('shape')).toBe('Shape Format')
+    expect(formatTabLabel('line')).toBe('Shape Format')
+    expect(formatTabLabel('image')).toBe('Picture Format')
+    expect(formatTabLabel('table')).toBe('Table Design')
+    expect(formatTabLabel('chart')).toBe('Chart Design')
+    expect(formatTabLabel('code')).toBe('Code')
+    expect(formatTabLabel('video')).toBe('Media')
+    expect(formatTabLabel('audio')).toBe('Media')
+  })
+
+  it('falls back to "Format" for text and unknown types', () => {
+    expect(formatTabLabel('text')).toBe('Format')
+    expect(formatTabLabel(null)).toBe('Format')
+    expect(formatTabLabel(undefined)).toBe('Format')
+    expect(formatTabLabel('something-new')).toBe('Format')
   })
 })
