@@ -63,6 +63,21 @@ describe('tag extractor', () => {
     expect(deriveLayer('client/src/stores/editor-store.test.js')).toBe('unit')
   })
 
+  it('captures camelCase capability ids without truncating at uppercase', () => {
+    const src = `it('[cap:shortcut.blackScreen] toggles black', () => {})`
+    const out = extractTagsFromSource(src, 'x.test.js')
+    expect(out['shortcut.blackScreen']).toBeTruthy()
+    expect(out['shortcut.black']).toBeUndefined()
+  })
+
+  it('captures camelCase id with inline tier:deep marker', () => {
+    const src = `it('[cap:control.format.lineHeight tier:deep] sets line height', () => {})`
+    const out = extractTagsFromSource(src, 'x.test.js')
+    expect(out['control.format.lineHeight']).toBeTruthy()
+    expect(out['control.format.lineHeight'][0].tier).toBe('deep')
+    expect(out['control.format.line']).toBeUndefined()
+  })
+
   it('ignores text with no cap tags', () => {
     const out = extractTagsFromSource(`it('plain test', () => {})`, 'x.test.js')
     expect(Object.keys(out)).toHaveLength(0)
