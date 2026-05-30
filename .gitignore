@@ -46,6 +46,7 @@ Thumbs.db
 # Temp reports
 brainstorm-report.md
 "Fixing Offline HTML Export Rendering.md"
+loiImportPPTX.txt
 
 # Plan-scoped benchmark artifacts
 plans/**/research/parser-raw/
