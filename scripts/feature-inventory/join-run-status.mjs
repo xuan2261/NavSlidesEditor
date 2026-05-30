@@ -16,7 +16,9 @@ export function parseVitestJson(json) {
   for (const tr of json.testResults || []) {
     const file = basename((tr.name || '').replace(/\\/g, '/'))
     for (const a of tr.assertionResults || []) {
-      rows.push({ file, title: a.title, status: normVitestStatus(a.status) })
+      const ancestors = (a.ancestorTitles || []).join(' ')
+      const fullTitle = ancestors ? `${ancestors} ${a.title}` : a.title
+      rows.push({ file, title: a.title, fullTitle, status: normVitestStatus(a.status) })
     }
   }
   return rows
@@ -70,7 +72,13 @@ export function resolveStatus(occurrence, index) {
   if (!candidates) return null
   let best = null
   for (const row of candidates) {
-    if (!occurrence.title.includes(row.title)) continue
+    // Tag on a leaf it(): the occurrence title embeds the leaf test title.
+    // Tag on a describe(): the row's fullTitle (ancestors + leaf) embeds the
+    // occurrence (describe) title. Match either direction.
+    const full = row.fullTitle || row.title
+    const matched =
+      occurrence.title.includes(row.title) || full.includes(occurrence.title)
+    if (!matched) continue
     if (!best || STATUS_PRIORITY[row.status] > STATUS_PRIORITY[best]) {
       best = row.status
     }

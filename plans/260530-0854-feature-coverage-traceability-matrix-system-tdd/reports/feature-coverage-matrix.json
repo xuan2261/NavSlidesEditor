@@ -8,28 +8,34 @@
       "id": "canvas.align",
       "category": "canvas",
       "risk": "high",
-      "tier": "smoke→deep",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "canvas.distribute",
       "category": "canvas",
       "risk": "high",
-      "tier": "smoke→deep",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "canvas.group",
       "category": "canvas",
       "risk": "high",
-      "tier": "smoke→deep",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "canvas.lock",
@@ -62,19 +68,23 @@
       "id": "canvas.resize-aspect",
       "category": "canvas",
       "risk": "high",
-      "tier": "smoke→deep",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/use-canvas-resize-rotate.deep.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "canvas.rotate-snap",
       "category": "canvas",
       "risk": "high",
-      "tier": "smoke→deep",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/use-canvas-resize-rotate.deep.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "canvas.smart-guides",
@@ -445,10 +455,12 @@
       "id": "element.table",
       "category": "element",
       "risk": "high",
-      "tier": "smoke→deep",
-      "layer": null,
-      "tests": [],
-      "status": "GAP"
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "element.text",
@@ -512,12 +524,13 @@
       "id": "flow.multiselect",
       "category": "flow",
       "risk": "high",
-      "tier": "smoke→deep",
+      "tier": "deep",
       "layer": "unit",
       "tests": [
+        "client/src/stores/editor-store-multiselect.deep.test.js",
         "client/src/stores/editor-store.test.js"
       ],
-      "status": "DEEP-GAP"
+      "status": "PASS"
     },
     {
       "id": "flow.undo-redo",
@@ -998,9 +1011,8 @@
   "orphans": [],
   "summary": {
     "total": 100,
-    "verified": 44,
-    "GAP": 55,
-    "PASS": 44,
-    "DEEP-GAP": 1
+    "verified": 51,
+    "PASS": 51,
+    "GAP": 49
   }
 }

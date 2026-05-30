@@ -2,20 +2,20 @@
 
 _Generated: local run_
 
-Verified (PASS only): 44/100 (44%)  |  PASS: 44  |  DEEP-GAP: 1  |  GAP: 55
+Verified (PASS only): 51/100 (51%)  |  PASS: 51  |  GAP: 49
 
 ## canvas
 
 | Capability | Risk | Tier | Layer | Test(s) | Status |
 |---|---|---|---|---|---|
-| canvas.align | high | smoke→deep | - | (none) | GAP |
-| canvas.distribute | high | smoke→deep | - | (none) | GAP |
-| canvas.group | high | smoke→deep | - | (none) | GAP |
+| canvas.align | high | deep | unit | client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js | PASS |
+| canvas.distribute | high | deep | unit | client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js | PASS |
+| canvas.group | high | deep | unit | client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js | PASS |
 | canvas.lock | low | smoke | - | (none) | GAP |
 | canvas.move | low | smoke | - | (none) | GAP |
 | canvas.resize | low | smoke | - | (none) | GAP |
-| canvas.resize-aspect | high | smoke→deep | - | (none) | GAP |
-| canvas.rotate-snap | high | smoke→deep | - | (none) | GAP |
+| canvas.resize-aspect | high | deep | unit | client/src/components/canvas/use-canvas-resize-rotate.deep.test.js | PASS |
+| canvas.rotate-snap | high | deep | unit | client/src/components/canvas/use-canvas-resize-rotate.deep.test.js | PASS |
 | canvas.smart-guides | low | deep | unit | client/src/utils/smartGuides.test.js | PASS |
 | canvas.zorder | high | smoke→deep | - | (none) | GAP |
 
@@ -70,7 +70,7 @@ Verified (PASS only): 44/100 (44%)  |  PASS: 44  |  DEEP-GAP: 1  |  GAP: 55
 | element.qrcode | low | smoke | - | (none) | GAP |
 | element.shape | low | smoke | - | (none) | GAP |
 | element.svg | low | smoke | - | (none) | GAP |
-| element.table | high | smoke→deep | - | (none) | GAP |
+| element.table | high | deep | unit | client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx | PASS |
 | element.text | low | smoke | - | (none) | GAP |
 | element.timeline | high | smoke→deep | - | (none) | GAP |
 | element.video | low | smoke | - | (none) | GAP |
@@ -82,7 +82,7 @@ Verified (PASS only): 44/100 (44%)  |  PASS: 44  |  DEEP-GAP: 1  |  GAP: 55
 | flow.autosave | high | smoke→deep | - | (none) | GAP |
 | flow.clipboard | high | deep | unit | client/src/hooks/use-clipboard.test.js | PASS |
 | flow.find-replace | low | smoke | unit | client/src/components/find-replace-helpers.test.js | PASS |
-| flow.multiselect | high | smoke→deep | unit | client/src/stores/editor-store.test.js | DEEP-GAP |
+| flow.multiselect | high | deep | unit | client/src/stores/editor-store-multiselect.deep.test.js<br>client/src/stores/editor-store.test.js | PASS |
 | flow.undo-redo | high | smoke→deep | - | (none) | GAP |
 
 ## shortcut
