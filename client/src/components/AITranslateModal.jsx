@@ -76,7 +76,7 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
           id:
             t.field === 'notes'
               ? getSlideNotesTranslationKey(t.slideIdx)
-              : `${t.slideIdx}-${t.elementIdx || 'notes'}-${t.field}`,
+              : `${t.slideIdx}-${t.elementIdx}-${t.field}`,
           html: t.html,
         }))
         const data = await aiTranslate(payload, targetLang)
@@ -90,7 +90,7 @@ export default function AITranslateModal({ slides, onApplyTranslations, onClose 
         const key =
           t.field === 'notes'
             ? getSlideNotesTranslationKey(t.slideIdx)
-            : `${t.slideIdx}-${t.elementIdx || 'notes'}-${t.field}`
+            : `${t.slideIdx}-${t.elementIdx}-${t.field}`
         const translated = results.find((r) => r.id === key)
         if (translated) {
           translationMap[key] = { ...t, translatedHtml: translated.html }
