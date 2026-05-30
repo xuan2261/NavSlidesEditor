@@ -125,8 +125,10 @@ Phase 1-mini unblocks Phase 2 (smoke needs revised GPs). Phase 3 independent (ma
 
 ## Deferred items (follow-up plan blueprint)
 
+> **Follow-up plan EXISTS (2026-05-30):** `260530-0854-feature-coverage-traceability-matrix-system-tdd` delivers the matrix half (auto-sourced inventory + `[cap:*]` tags + Markdown/JSON visibility map + CI gate). It is **independent** — auto-sources from registries, does NOT block on this MVP. Items below marked ✅ are now covered there.
+
 After MVP ships, create follow-up plan covering:
-- Full feature × test layer matrix (160 cells)
+- ✅ Full feature × test layer matrix (160 cells) → covered by `260530-0854` (auto-sourced, capability-tag based)
 - Per-glob coverage thresholds + ratchet script + baseline updater
 - Nightly cross-browser (webkit + firefox + iOS Safari via BrowserStack/Sauce)
 - Reusable workflow `_reusable-playwright-shard.yml`
