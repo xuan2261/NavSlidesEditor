@@ -291,11 +291,58 @@ billing, and offline sandbox inlining are not part of Phase 1.
 | --- | --- |
 | `htmlGenerator.js` | Reveal.js HTML and print HTML generation |
 | `element-renderers.js` | Shared element rendering helpers |
+| `design-tokens.js` | `'auto'` → `var(--ns-*)` resolver shared by both render paths (`DEFAULT_TOKENS`, `AUTO_FIELD_MAP`, `resolveAutoColor`, `isTokenVar`) |
+| `theme-presets.js` | 39 token presets (`THEME_PRESETS`), 7 categories |
+| `fx/` | 8 canvas FX modules + registry; `buildFxRuntimeScript()` emits the inlined browser runtime |
 | `slideNotes.js` | Canonical notes normalization helpers |
 | `shapeUtils.js` | SVG shape/path helpers |
 | `shared-toolbar-text-bg-color-palette-gradient-presets-config.js` | Color palette, gradient presets, and `isLightColor()` helper |
 | `presenterTools.js` | Presenter UI controls and scripts |
 | `types/presentation.js` | JSDoc data model for presentation objects |
+
+### Design Token Render Path
+
+The `'auto'` color sentinel resolves to a CSS custom property through ONE shared
+resolver (`design-tokens.js`), consumed by both render paths so they cannot
+diverge:
+
+```text
+'auto' color field
+  ├─ shared string renderers (element-renderers.js / shapeUtils.js)  → resolveAutoColor()
+  └─ React editor renderers (client canvas)                          → resolveAutoColor()
+        => both emit var(--ns-<token>)
+```
+
+- Tokens apply at two scopes: deck (`presentation.designTokens`, merged over
+  `DEFAULT_TOKENS`) and per-slide (`slide.designTokens`, merged over deck tokens).
+- `htmlGenerator` injects `:root{--ns-*}` plus per-slide `[data-slide-idx]`
+  override blocks ONLY when a deck uses tokens. A frozen-hex deck emits no token
+  CSS and renders exactly as before (backward-compat contract). `DEFAULT_TOKENS`
+  values equal the historical hardcoded hex, so token-free output is
+  byte-identical at paint time.
+- SVG paints route token vars through the `style` attribute, never the SVG
+  presentation attribute, because SVG presentation attrs do not resolve CSS
+  custom properties. `safeCssColor` whitelists the `var(--ns-<name>)` shape.
+
+### Background FX Runtime
+
+- A slide background of `type: 'fx'` stores `{name, params, fallbackColor}`.
+- `shared/src/fx/index.js` is the registry; each FX module exports self-contained
+  `initState`/`draw` functions so `buildFxRuntimeScript()` can serialize them into
+  a single inlined `<script>` that powers present/export HTML, while the editor
+  canvas imports the same modules directly. One source, two consumers.
+- The inlined runtime starts the active slide's rAF loop on both Reveal `ready`
+  and `slidechanged`, stops off-slide canvases, honors `prefers-reduced-motion`
+  (single static frame), and uses `fallbackColor` for print/PDF.
+
+### Design Ideas Engine
+
+- `client/src/lib/design-ideas/` holds pure functions: `analyze-slide.js`
+  distills a slide into a deterministic feature record; `suggest.js` returns 3-5
+  ranked suggestions (layout re-fits from `slide-templates` + theme pairings from
+  `THEME_PRESETS`). No AI; stable ordering by score then id.
+- `design-ideas-panel.jsx` mounts in `EditorPage`, toggled from the View ribbon
+  through `ui-store.showDesignIdeas`. Applying a suggestion is one undoable step.
 
 ### Notes Contract
 

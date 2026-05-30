@@ -107,10 +107,46 @@ navslides-editor/
 | --- | --- |
 | `shared/src/htmlGenerator.js` | Reveal.js HTML, print HTML, offline HTML, and present-mode generation |
 | `shared/src/element-renderers.js` | Shared render helpers for export and preview |
+| `shared/src/design-tokens.js` | Design-token resolver: `DEFAULT_TOKENS`, `AUTO_FIELD_MAP`, `resolveAutoColor`, `isTokenVar` — single source for the `'auto'` → `var(--ns-*)` mapping shared by both render paths |
+| `shared/src/theme-presets.js` | 39 token presets (`THEME_PRESETS`) across 7 categories; `{id,label,category,tokens,revealTheme}` |
+| `shared/src/fx/` | 8 animated canvas FX modules + `index.js` registry (`getFxModule`, `listFx`, `buildFxRuntimeScript`) for the `'fx'` slide background type |
 | `shared/src/slideNotes.js` | Canonical notes normalization |
 | `shared/src/shapeUtils.js` | SVG shape/path helpers |
 | `shared/src/presenterTools.js` | Presenter overlay tools |
 | `shared/src/types/presentation.js` | JSDoc data model used by client and server |
+
+### Design Tokens and Theming
+
+- `design-tokens.js` is the single resolver for the `'auto'` color sentinel.
+  Element color fields set to `'auto'` resolve to `var(--ns-<token>)`; both render
+  paths (shared string renderers and the React editor renderers) import the same
+  resolver so the mapping never diverges. `DEFAULT_TOKENS` mirrors the historical
+  hardcoded hex, so a token-free deck renders byte-identical at paint time.
+- `htmlGenerator` injects `:root{--ns-*}` plus per-slide `[data-slide-idx]` token
+  blocks ONLY when a deck actually uses tokens; frozen-hex user decks are left
+  untouched (backward-compat contract). Saved user decks are never auto-migrated;
+  only built-in element defaults and built-in templates use `'auto'`.
+- Token presets live in `theme-presets.js` and surface in the Design ribbon
+  ThemeGallery (live-switch, "Apply to all" as one undoable step) and HomePage
+  `PRESET_THEMES` (new decks seed tokens).
+- The layout library (`client/src/data/slide-templates/`) is a barrel
+  (`slide-templates.js`) over 6 category modules (basic/content/layout/data/
+  structure/ending) — 35 layouts on the 960×540 grid using `'auto'` colors.
+
+### Background FX and Design Ideas
+
+- Slide backgrounds support `type: 'fx'` (`{name, params, fallbackColor}`). The
+  `shared/src/fx/` registry powers both the editor canvas
+  (`client/src/components/canvas/slide-background-fx-canvas.jsx`) and the
+  `htmlGenerator`-inlined browser runtime, so live viewers get FX through the
+  iframe without a LiveViewPage change. The runtime honors
+  `prefers-reduced-motion` (static frame) and falls back to `fallbackColor` for
+  print/PDF.
+- The Design Ideas engine (`client/src/lib/design-ideas/`: `analyze-slide.js` +
+  `suggest.js`, pure functions) produces 3-5 ranked, deterministic suggestions —
+  layout re-fits from the slide templates plus theme pairings from the presets.
+  `design-ideas-panel.jsx` mounts in `EditorPage`, toggled from the View ribbon
+  via `ui-store.showDesignIdeas`; Apply is one undoable step. No AI.
 
 ### Export and Import
 
