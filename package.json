@@ -32,6 +32,7 @@
     "test:coverage:summary": "node scripts/summarize-vitest-coverage.js",
     "inventory": "node scripts/feature-inventory/build-inventory.mjs",
     "matrix": "node scripts/feature-inventory/build-inventory.mjs && node scripts/feature-inventory/build-matrix.mjs",
+    "matrix:gate": "npm run matrix && node scripts/feature-inventory/check-coverage-gate.mjs && node scripts/feature-inventory/check-manifest-completeness.mjs",
     "test:audit": "vitest run client/src/components/ribbon/__tests__/audit-* client/src/lib/__tests__/tailwind-config-* client/src/components/ribbon/__tests__/audit-ribbon-onmousedown-preventdefault-tiptap-whitelist-compliance.test.jsx",
     "test:e2e": "playwright test",
     "test:e2e:report": "playwright show-report",

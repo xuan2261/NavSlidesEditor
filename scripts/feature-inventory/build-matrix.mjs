@@ -7,6 +7,7 @@ import { renderMatrixMarkdown } from './matrix-format.mjs'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const PLAN_DIR = resolve(HERE, '../../plans/260530-0854-feature-coverage-traceability-matrix-system-tdd')
 const REPORTS_DIR = resolve(PLAN_DIR, 'reports')
+const DOCS_MD = resolve(HERE, '../../docs/feature-coverage-matrix.md')
 
 const ALLOWED_BASES = new Set(['GAP', 'DEEP-GAP', 'SKIP', 'TAGGED'])
 
@@ -102,10 +103,12 @@ if (invokedDirectly) {
     resolve(REPORTS_DIR, 'feature-coverage-matrix.json'),
     JSON.stringify({ meta, ...result }, null, 2) + '\n'
   )
-  writeFileSync(
-    resolve(REPORTS_DIR, 'feature-coverage-matrix.md'),
-    renderMatrixMarkdown({ ...result, meta })
-  )
+  const markdown = renderMatrixMarkdown({ ...result, meta })
+  writeFileSync(resolve(REPORTS_DIR, 'feature-coverage-matrix.md'), markdown)
+  // Promote the human-readable map to docs/ (committed, long-term home). CI's
+  // freshness check fails if the committed copy drifts from a fresh regen.
+  mkdirSync(dirname(DOCS_MD), { recursive: true })
+  writeFileSync(DOCS_MD, markdown)
   const s = result.summary
   console.log(
     `[matrix] ${s.verified}/${s.total} verified | GAP:${s.GAP || 0} DEEP-GAP:${s['DEEP-GAP'] || 0} FAIL:${s.FAIL || 0} SKIP:${s.SKIP || 0} TAGGED:${s.TAGGED || 0} | orphans:${result.orphans.length}`

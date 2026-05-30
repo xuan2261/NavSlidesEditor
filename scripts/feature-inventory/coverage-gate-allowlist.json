@@ -1,0 +1,32 @@
+{
+  "_comment": "Warn-first coverage gate allowlist. Each entry acknowledges a capability that is GAP/DEEP-GAP today with a real reason + dated. The gate WARNs on these (not fail) and FAILs on any NEW un-allowlisted gap. Goal: this list shrinks to empty for editor-core. Entries older than 30 days warn as stale. NEVER allowlist a FAIL.",
+  "entries": [
+    { "id": "canvas.lock", "reason": "lock toggle is inline component state; no pure seam — needs extraction", "added": "2026-05-30", "owner": "qa" },
+    { "id": "canvas.move", "reason": "drag-delta applied in pointer-interaction hook; no testable export", "added": "2026-05-30", "owner": "qa" },
+    { "id": "canvas.zorder", "reason": "z-order logic inline in EditorPage.jsx:726; extract reorderByZ to deep-test", "added": "2026-05-30", "owner": "qa" },
+    { "id": "command.group", "reason": "covered via shortcut.group keyboard test; command action is an inline closure", "added": "2026-05-30", "owner": "qa" },
+    { "id": "command.insertLink", "reason": "action is an inline DOM-query closure in EditorPage commands array", "added": "2026-05-30", "owner": "qa" },
+    { "id": "command.insertSlide", "reason": "action opens a modal via inline closure; needs handler extraction", "added": "2026-05-30", "owner": "qa" },
+    { "id": "command.startSlideshow", "reason": "action is a console.log stub at EditorPage.jsx:912 — real wiring gap, tracked", "added": "2026-05-30", "owner": "qa" },
+    { "id": "command.ungroup", "reason": "covered via shortcut.ungroup keyboard test; command action is an inline closure", "added": "2026-05-30", "owner": "qa" },
+    { "id": "control.file.menu", "reason": "file dropdown lacks an isolated render seam; deep component tree", "added": "2026-05-30", "owner": "qa" },
+    { "id": "control.format.position", "reason": "position/size control dispatches through PropertiesPanel; no isolated seam yet", "added": "2026-05-30", "owner": "qa" },
+    { "id": "control.insert.shape", "reason": "insert button wired through ribbon insert panel; add isolated control test", "added": "2026-05-30", "owner": "qa" },
+    { "id": "control.insert.text", "reason": "insert button wired through ribbon insert panel; add isolated control test", "added": "2026-05-30", "owner": "qa" },
+    { "id": "control.view.selectionPane", "reason": "view toggle dispatches ui-store; add isolated control test", "added": "2026-05-30", "owner": "qa" },
+    { "id": "control.view.smartGuides", "reason": "toggle covered indirectly by editor-store guides test; add direct control test", "added": "2026-05-30", "owner": "qa" },
+    { "id": "element.chart", "reason": "smoke PASS via factory; deep chart-data→config mapping needs buildChartConfig extraction", "added": "2026-05-30", "owner": "qa" },
+    { "id": "element.timeline", "reason": "smoke PASS via factory; deep event→position scaling needs scaleEventToTimeline extraction", "added": "2026-05-30", "owner": "qa" },
+    { "id": "flow.autosave", "reason": "save effect bound to component lifecycle; extract debounced-save helper", "added": "2026-05-30", "owner": "qa" },
+    { "id": "flow.undo-redo", "reason": "historyRef + 500ms debounce in EditorPage; extract pushHistory(50-bound) to deep-test", "added": "2026-05-30", "owner": "qa" },
+    { "id": "shortcut.bringForward", "reason": "z-order shortcut wiring not unit-asserted; couples to canvas.zorder extraction", "added": "2026-05-30", "owner": "qa" },
+    { "id": "shortcut.eraseAnnotations", "reason": "annotation present-mode wiring not unit-covered", "added": "2026-05-30", "owner": "qa" },
+    { "id": "shortcut.group", "reason": "group action covered by use-slide-operations deep test; keypress wiring not asserted", "added": "2026-05-30", "owner": "qa" },
+    { "id": "shortcut.highlighterTool", "reason": "annotation present-mode wiring not unit-covered", "added": "2026-05-30", "owner": "qa" },
+    { "id": "shortcut.insertSlide", "reason": "Ctrl+M wiring not unit-asserted", "added": "2026-05-30", "owner": "qa" },
+    { "id": "shortcut.laserPointer", "reason": "annotation present-mode wiring not unit-covered", "added": "2026-05-30", "owner": "qa" },
+    { "id": "shortcut.penTool", "reason": "annotation present-mode wiring not unit-covered", "added": "2026-05-30", "owner": "qa" },
+    { "id": "shortcut.sendBackward", "reason": "z-order shortcut wiring not unit-asserted; couples to canvas.zorder extraction", "added": "2026-05-30", "owner": "qa" },
+    { "id": "shortcut.ungroup", "reason": "ungroup action covered by use-slide-operations deep test; keypress wiring not asserted", "added": "2026-05-30", "owner": "qa" }
+  ]
+}

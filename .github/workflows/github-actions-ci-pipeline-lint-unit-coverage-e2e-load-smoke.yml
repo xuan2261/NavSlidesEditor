@@ -222,6 +222,27 @@ jobs:
         run: |
           if [ -f server.pid ]; then kill "$(cat server.pid)" || true; fi
 
+  feature-coverage-gate:
+    name: Feature coverage gate (warn-first, non-required)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [lint]
+    # ROLLOUT: this job is intentionally NOT in required-checks yet. Observe one
+    # cycle, then flip to required in branch protection via:
+    #   gh api -X PATCH repos/OWNER/REPO/branches/master/protection/required_status_checks \
+    #     -f 'checks[][context]=Feature coverage gate (warn-first, non-required)'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - name: Capture fresh vitest run results for matrix join
+        run: npx vitest run --reporter=json --outputFile=scripts/feature-inventory/run-results-vitest.json
+      - name: Regenerate matrix + run coverage + manifest-completeness gates
+        run: npm run matrix:gate
+      - name: Fail if committed docs/feature-coverage-matrix.md is stale
+        run: git diff --exit-code docs/feature-coverage-matrix.md
+
   required-checks:
     name: Required checks summary
     runs-on: ubuntu-latest
