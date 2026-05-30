@@ -16,9 +16,10 @@ const MUST_PASS = ['flow.clipboard', 'canvas.smart-guides', 'flow.find-replace']
 
 describe('tag retrofit guard — curated subset is PASS in regenerated matrix', () => {
   let byId = {}
+  let doc
   beforeAll(() => {
     expect(existsSync(MATRIX_JSON), 'matrix JSON must exist (run npm run matrix:capture)').toBe(true)
-    const doc = JSON.parse(readFileSync(MATRIX_JSON, 'utf8'))
+    doc = JSON.parse(readFileSync(MATRIX_JSON, 'utf8'))
     byId = Object.fromEntries(doc.rows.map((r) => [r.id, r]))
   })
 
@@ -28,4 +29,10 @@ describe('tag retrofit guard — curated subset is PASS in regenerated matrix', 
       expect(byId[id].status).toBe('PASS')
     })
   }
+
+  it('has no orphan tags (every [cap:*] id resolves to inventory)', () => {
+    // An orphan means a tag id was mistyped or truncated (e.g. the camelCase
+    // extractor bug). Zero orphans proves every tag maps to a real capability.
+    expect(doc.orphans).toEqual([])
+  })
 })
