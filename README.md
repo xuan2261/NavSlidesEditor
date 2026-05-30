@@ -4,14 +4,16 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.10.0** — PPTX import real-browser fidelity fixes with strict browser audit release gates.
+Current release: **v1.12.0** — PowerPoint familiar-feel ribbon polish: contextual Format tab, PowerPoint-style status bar (zoom slider, slide position, view switcher), and big-button command hierarchy.
 
 ## Features
 
 ### Editing
 
 - **WYSIWYG editing** — click and type directly on slides with TipTap rich text
-- **Tab-based ribbon UI** — Home / Insert / Design / Transitions / Animations / View / Format tabs replace the old toolbar/menu system; active tab persists across sessions (`Ctrl+Alt+R` toggles)
+- **Tab-based ribbon UI** — Home / Insert / Design / Transitions / Animations / View tabs replace the old toolbar/menu system; active tab persists across sessions (`Ctrl+Alt+R` toggles). Primary actions (Paste, Text Box, Picture) use large icon-over-label buttons for a familiar command hierarchy
+- **Contextual Format tab** — appears only when an element is selected and relabels itself to the selection type (Shape Format / Picture Format / Table Design / Chart Design / Code / Media); auto-activates on the first selection and hides again when the selection clears
+- **PowerPoint-style status bar** — zoom slider with −/+/Fit controls, current slide position (Slide X / Y), and a Normal / Slide Sorter / Present view switcher; the editor cluster hides outside the editor
 - **Rich formatting** — headings, bold/italic/underline/strikethrough, text color, highlight, font family, font size, font weight, line height, alignment, lists, tables, code blocks, links, images, inline math
 - **Multi-select** — shift-click to select multiple elements, move or delete them together
 - **Group / ungroup** — group multiple elements so they select, move, and resize as a unit (`Ctrl+G` / `Ctrl+Shift+G`)
