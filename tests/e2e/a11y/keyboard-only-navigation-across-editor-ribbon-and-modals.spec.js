@@ -83,13 +83,12 @@ test.describe('Keyboard only navigation across editor ribbon tabs and modals', (
     await waitForStableDOM(page)
 
     const fileTrigger = page.locator('[aria-label="File menu"]').first()
-    if (await fileTrigger.count()) {
-      await fileTrigger.click()
-      await page.waitForSelector('[role="menuitem"]', { timeout: 5000 })
-      await page.keyboard.press('Escape')
-      await waitForStableDOM(page)
-      const menuItemsAfter = await page.locator('[role="menuitem"]').count()
-      expect(menuItemsAfter).toBe(0)
-    }
+    await expect(fileTrigger).toBeVisible()
+    await fileTrigger.click()
+    await page.waitForSelector('[role="menuitem"]', { timeout: 5000 })
+    await page.keyboard.press('Escape')
+    await waitForStableDOM(page)
+    const menuItemsAfter = await page.locator('[role="menuitem"]').count()
+    expect(menuItemsAfter).toBe(0)
   })
 })

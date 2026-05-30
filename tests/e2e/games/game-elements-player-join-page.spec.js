@@ -18,13 +18,11 @@ test.describe('Player Join Page', () => {
 
   test('empty name submit shows validation message', async ({ page }) => {
     await page.goto('/player/slide456/el789')
-    await page.waitForSelector('[placeholder*="Minh"]', { timeout: 10000 }).catch(() => {})
+    await expect(page.getByPlaceholder('e.g. Minh or Team Red')).toBeVisible({ timeout: 10000 })
     const submitBtn = page.getByRole('button', { name: /join game/i })
-    if (await submitBtn.isVisible()) {
-      await submitBtn.click()
-      // Name field should remain visible (validation prevents submission)
-      await expect(page.getByPlaceholder('e.g. Minh or Team Red')).toBeVisible()
-    }
+    await submitBtn.click()
+    // Name field should remain visible (validation prevents submission)
+    await expect(page.getByPlaceholder('e.g. Minh or Team Red')).toBeVisible()
   })
 })
 

@@ -64,21 +64,13 @@ test.describe('Templates', () => {
     await home.goto()
     await home.switchSidebarView('My Templates')
 
-    // Click "New Template" button
+    // The "New Template" button is always present in the My Templates header.
     const newTemplateBtn = page.locator('button').filter({ hasText: 'New Template' })
-    if ((await newTemplateBtn.count()) > 0) {
-      await newTemplateBtn.first().click()
-      // Should navigate to template editor
-      await page.waitForURL(/\/template\/.+/, { timeout: 30000 })
-      expect(page.url()).toContain('/template/')
-    } else {
-      // Fallback: "Create Template" button in empty state
-      const createBtn = page.locator('button').filter({ hasText: 'Create Template' })
-      if ((await createBtn.count()) > 0) {
-        await createBtn.click()
-        await page.waitForURL(/\/template\/.+/, { timeout: 30000 })
-      }
-    }
+    await expect(newTemplateBtn.first()).toBeVisible()
+    await newTemplateBtn.first().click()
+    // Should navigate to the template editor
+    await page.waitForURL(/\/template\/.+/, { timeout: 30000 })
+    expect(page.url()).toContain('/template/')
   })
 
   test('can view Marketplace section', async ({ page }) => {

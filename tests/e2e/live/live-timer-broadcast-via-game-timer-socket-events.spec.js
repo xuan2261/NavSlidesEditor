@@ -121,9 +121,13 @@ test.describe('Live timer broadcast via game-timer socket events to viewer', () 
   })
 
   test('rejoining viewer receives existing running timer state via initial timer:sync', async ({ context }) => {
+    // Wait for the server to echo timer:sync back to the presenter (the handler
+    // stores timer state before broadcasting) so the late viewer is guaranteed to
+    // get the running timer in its join-time timer:sync.
+    let synced = false
+    presenterSocket.on('timer:sync', () => { synced = true })
     presenterSocket.emit('game-timer-start', { elementId: TIMER_ELEMENT_ID, duration: 90 })
-
-    await new Promise((r) => setTimeout(r, 500))
+    await waitWithLastSample('presenter receives timer:sync echo', async () => synced)
 
     const lateViewer = await context.newPage()
     await lateViewer.goto(`/live/${roomCode}`)

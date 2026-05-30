@@ -97,31 +97,32 @@ test.describe('Text element rich formatting bold italic underline alignment and 
     }, { timeout: 8000 }).toBe(true)
   })
 
-  test('persists font family change via property panel', async ({ page, request }) => {
-    await seedSlide(request, presId, [textEl()])
+  test('persists font family change via toolbar while editing', async ({ page, request }) => {
+    await seedSlide(request, presId, [textEl({ content: '<p>plain text</p>' })])
     await editor.gotoPresentation(presId)
-    await page.getByTestId('slide-element-text-1').click()
-    const familyControl = page.getByTestId('prop-text-font-family')
-    if (await familyControl.count()) {
-      await familyControl.selectOption({ index: 1 })
-      await expect.poll(async () => {
-        const saved = await apiGetPresentation(request, presId)
-        return saved.slides[0].elements[0].fontFamily
-      }).not.toBe('Arial')
-    }
+    await editor.startEditingTextElement(0)
+    await editor.selectAllText()
+    await page.locator('select[title="Font family"]').first().selectOption({ index: 1 })
+    await page.keyboard.press('Escape')
+    await expect.poll(async () => {
+      const saved = await apiGetPresentation(request, presId)
+      return /font-family/i.test(saved.slides[0].elements[0].content)
+    }, { timeout: 8000 }).toBe(true)
   })
 
-  test('persists text alignment change', async ({ page, request }) => {
-    await seedSlide(request, presId, [textEl({ textAlign: 'left' })])
+  test('persists text alignment change via toolbar while editing', async ({ page, request }) => {
+    await seedSlide(request, presId, [textEl({ content: '<p>plain text</p>' })])
     await editor.gotoPresentation(presId)
-    await page.getByTestId('slide-element-text-1').click()
-    const alignCenter = page.getByTestId('prop-text-align-center')
-    if (await alignCenter.count()) {
-      await alignCenter.click()
-      await expect.poll(async () => {
-        const saved = await apiGetPresentation(request, presId)
-        return saved.slides[0].elements[0].textAlign
-      }).toBe('center')
-    }
+    await editor.startEditingTextElement(0)
+    await editor.selectAllText()
+    // On the Home tab the alignment buttons live inside the compact "Paragraph"
+    // dropdown, so open it before clicking Align center.
+    await page.getByRole('button', { name: 'Paragraph' }).click()
+    await page.getByRole('button', { name: 'Align center' }).click()
+    await page.keyboard.press('Escape')
+    await expect.poll(async () => {
+      const saved = await apiGetPresentation(request, presId)
+      return /text-align:\s*center/i.test(saved.slides[0].elements[0].content)
+    }, { timeout: 8000 }).toBe(true)
   })
 })

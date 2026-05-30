@@ -87,10 +87,14 @@ test.describe('Annotation sync and persistence across presenter and viewer', () 
   })
 
   test('rejoining viewer receives previous-slide annotations via annotations:sync', async ({ context }) => {
+    // Wait for the server to echo both stored annotations back to the presenter
+    // (the handler persists to room state before it broadcasts) so the late viewer
+    // is guaranteed to get them in its join-time annotations:sync.
+    let echoed = 0
+    presenterSocket.on('annotation:add', () => { echoed += 1 })
     presenterSocket.emit('annotation:add', { slideIndex: 0, annotation: { id: 'persist-1', d: 'M10,10 L200,200', color: '#ff00ff' } })
     presenterSocket.emit('annotation:add', { slideIndex: 0, annotation: { id: 'persist-2', d: 'M20,20 L150,150', color: '#ffff00' } })
-
-    await new Promise((r) => setTimeout(r, 500))
+    await waitWithLastSample('presenter echoes both stored annotations', async () => echoed >= 2)
 
     const viewer = await context.newPage()
     await viewer.goto(`/live/${roomCode}`)

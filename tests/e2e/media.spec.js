@@ -52,14 +52,13 @@ test.describe('Media Library & Templates', () => {
       .click()
 
     const searchInput = page.locator('input[placeholder*="earch"]').first()
-    if (await searchInput.isVisible()) {
-      await searchInput.fill('nature')
-      await searchInput.press('Enter')
-      await expect(page.locator('text=Loading...')).toHaveCount(0, { timeout: 5000 })
-      await expect(
-        page.locator('div.border.border-border.rounded-lg.overflow-hidden.cursor-pointer.bg-card').first()
-      ).toBeVisible({ timeout: 5000 })
-    }
+    await expect(searchInput).toBeVisible()
+    await searchInput.fill('nature')
+    await searchInput.press('Enter')
+    await expect(page.locator('text=Loading...')).toHaveCount(0, { timeout: 5000 })
+    await expect(
+      page.locator('div.border.border-border.rounded-lg.overflow-hidden.cursor-pointer.bg-card').first()
+    ).toBeVisible({ timeout: 5000 })
   })
 
   test('can add a slide from Template in the modal', async ({ page }) => {
