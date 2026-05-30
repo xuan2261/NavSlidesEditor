@@ -1,0 +1,914 @@
+{
+  "meta": {
+    "generated": "local run",
+    "stale": true
+  },
+  "rows": [
+    {
+      "id": "canvas.align",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "canvas.distribute",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "canvas.group",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "canvas.lock",
+      "category": "canvas",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "canvas.move",
+      "category": "canvas",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "canvas.resize",
+      "category": "canvas",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "canvas.resize-aspect",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "canvas.rotate-snap",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "canvas.smart-guides",
+      "category": "canvas",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "canvas.zorder",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "command.commandPalette",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "command.group",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "command.insertLink",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "command.insertSlide",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "command.resetZoom",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "command.startSlideshow",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "command.ungroup",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "command.zoomIn",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "command.zoomOut",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.file.menu",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.format.align",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.format.bold",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.format.fontFamily",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.format.fontSize",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.format.fontWeight",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.format.italic",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.format.lineHeight",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.format.position",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.format.underline",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.insert.shape",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.insert.text",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.view.selectionPane",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "control.view.smartGuides",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.audio",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.callout",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.chart",
+      "category": "element",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.code",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.drawing",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.html",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.icon",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.image",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.latex",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.line",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.markdown",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.qrcode",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.shape",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.svg",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.table",
+      "category": "element",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.text",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.timeline",
+      "category": "element",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "element.video",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "flow.autosave",
+      "category": "flow",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "flow.clipboard",
+      "category": "flow",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "flow.find-replace",
+      "category": "flow",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "flow.multiselect",
+      "category": "flow",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "flow.undo-redo",
+      "category": "flow",
+      "risk": "high",
+      "tier": "smoke→deep",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.blackScreen",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.bringForward",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.commandPalette",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.copy",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.cut",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.delete",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.duplicate",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.endSlideshow",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.eraseAnnotations",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.escape",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.gameHud",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.gameLeaderboard",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.gameNext",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.gamePause",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.gameReveal",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.gameTimer",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.group",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.highlighterTool",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.insertSlide",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.laserPointer",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.paste",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.penTool",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.redo",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.resetZoom",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.selectAll",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.sendBackward",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.slideFirst",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.slideLast",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.slideNext",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.slidePrev",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.startSlideshow",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.startSlideshowCurrent",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.teamSelect1",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.teamSelect2",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.teamSelect3",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.teamSelect4",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.timerAdd",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.timerSub",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.toggleFindReplace",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.undo",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.ungroup",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.whiteScreen",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.zoomIn",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    },
+    {
+      "id": "shortcut.zoomOut",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "GAP"
+    }
+  ],
+  "orphans": [],
+  "summary": {
+    "total": 100,
+    "verified": 0,
+    "GAP": 100
+  }
+}
