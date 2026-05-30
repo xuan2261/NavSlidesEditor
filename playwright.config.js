@@ -51,7 +51,14 @@ module.exports = defineConfig({
       : []),
   ],
   webServer: {
-    command: `npx concurrently "npm run dev --workspace=server" "npm run dev --workspace=client -- --host 127.0.0.1 --port ${clientPort}"`,
+    // E2E runs against a static production build served by `vite preview`, not the
+    // dev server. The dev server transforms lazy route chunks (App.jsx lazy-loads
+    // EditorPage et al.) on demand; under multi-worker CPU contention that transform
+    // can stall past the mount timeout, intermittently tripping the React error
+    // boundary. Pre-built chunks are served as plain files, removing that race.
+    // NODE_ENV is left non-production so the API rate limiters stay at their high
+    // dev ceilings and the destructive E2E traffic is not throttled.
+    command: `npm run build --workspace=client && npx concurrently "npm run dev --workspace=server" "npm run preview --workspace=client -- --host 127.0.0.1 --port ${clientPort} --strictPort"`,
     env: {
       ...process.env,
       DATA_DIR: dataDir,
@@ -62,6 +69,6 @@ module.exports = defineConfig({
     },
     url: baseURL,
     reuseExistingServer: false,
-    timeout: 120000,
+    timeout: 180000,
   },
 })

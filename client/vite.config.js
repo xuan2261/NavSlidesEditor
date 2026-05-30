@@ -7,26 +7,35 @@ const pkg = require('../package.json')
 
 const apiProxyTarget = process.env.VITE_API_PROXY_TARGET || 'http://localhost:3002'
 
+// Shared by dev (`server`) and built-asset preview (`preview`). E2E runs against
+// `vite preview` (static, pre-built chunks) so lazy route imports are served as
+// files rather than transformed on demand; preview ignores `server.proxy`, so the
+// same proxy must be declared under both keys.
+const proxyConfig = {
+  '/api': {
+    target: apiProxyTarget,
+    proxyTimeout: 0,
+    timeout: 0,
+  },
+  '/share': apiProxyTarget,
+  '/uploads': apiProxyTarget,
+  '/vendor': apiProxyTarget,
+  '/ws': {
+    target: apiProxyTarget,
+    ws: true,
+  },
+}
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
   plugins: [react()],
   server: {
-    proxy: {
-      '/api': {
-        target: apiProxyTarget,
-        proxyTimeout: 0,
-        timeout: 0,
-      },
-      '/share': apiProxyTarget,
-      '/uploads': apiProxyTarget,
-      '/vendor': apiProxyTarget,
-      '/ws': {
-        target: apiProxyTarget,
-        ws: true,
-      },
-    },
+    proxy: proxyConfig,
+  },
+  preview: {
+    proxy: proxyConfig,
   },
   optimizeDeps: {
     include: ['revealjs-shared'],

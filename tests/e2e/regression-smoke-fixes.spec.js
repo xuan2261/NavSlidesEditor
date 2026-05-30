@@ -27,6 +27,9 @@ test.describe('Regression — smoke test fixes', () => {
     testPresentation,
   }) => {
     await page.goto(`/editor/${testPresentation.id}`)
+    // The Ctrl+K listener attaches in a mount effect on the lazy-loaded editor;
+    // wait for the canvas before pressing so the keypress is not dropped.
+    await expect(page.getByTestId('canvas-area')).toBeVisible({ timeout: 30000 })
     // Click the canvas area to ensure no TipTap input is focused.
     await page.locator('body').click()
     await page.keyboard.press('Control+K')

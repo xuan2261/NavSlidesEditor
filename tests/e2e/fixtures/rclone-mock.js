@@ -14,10 +14,12 @@ const CONFIGURED_STATUS = {
 
 export async function installRcloneMocks(page, overrides = {}) {
   let statusCalls = 0
+  let configured = false
   const statusSequence = overrides.statusSequence || [
     overrides.status || DEFAULT_STATUS,
     overrides.configuredStatus || CONFIGURED_STATUS,
   ]
+  const configuredStatus = overrides.configuredStatus || CONFIGURED_STATUS
 
   function assertMethod(route, expectedMethod) {
     const actualMethod = route.request().method()
@@ -30,6 +32,17 @@ export async function installRcloneMocks(page, overrides = {}) {
 
   await page.route('**/api/rclone/status', (route) => {
     assertMethod(route, 'GET')
+    // Once /config has been POSTed the remote is configured, so report it as such
+    // regardless of how many times the UI polls status on mount. This mirrors the
+    // real server and keeps the test independent of mount-poll count, which differs
+    // between dev (StrictMode double-invokes effects) and a production build.
+    if (configured) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(configuredStatus),
+      })
+    }
     const index = Math.min(statusCalls, statusSequence.length - 1)
     statusCalls += 1
     return route.fulfill({
@@ -42,6 +55,7 @@ export async function installRcloneMocks(page, overrides = {}) {
   await page.route('**/api/rclone/config', (route) =>
     {
       assertMethod(route, 'POST')
+      configured = true
       return route.fulfill({
         status: overrides.configStatus || 200,
         contentType: 'application/json',
