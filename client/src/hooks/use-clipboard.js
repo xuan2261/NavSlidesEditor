@@ -117,10 +117,13 @@ export function createCutOperation({ slideElements, selectedElementIds }) {
 
 /**
  * @param {Object} opts
- * @param {() => number} opts.getCurrentSlideIndex - getter for current slide index
+ * @param {(prev:Object, fn:(slide:Object)=>Object)=>Object} opts.mapActiveSlide
+ *   routes a slide transform to the active slide (parent OR active vertical
+ *   child), so paste/cut/duplicate never write to the parent while a child is
+ *   being edited.
  * @param {(presentation: Object) => void} opts.setPresentation - presentation store setter
  */
-export function useClipboard({ getCurrentSlideIndex, setPresentation }) {
+export function useClipboard({ mapActiveSlide, setPresentation }) {
   const selectedElementIds = useEditorStore((s) => s.selectedElementIds)
   const setClipboard = useEditorStore((s) => s.setClipboard)
   const selectElement = useEditorStore((s) => s.selectElement)
@@ -141,19 +144,12 @@ export function useClipboard({ getCurrentSlideIndex, setPresentation }) {
     (clipboardElements) => {
       const { elements, allIds } = createPasteOperation({ clipboardElements })
       if (!elements.length) return
-      const idx = getCurrentSlideIndex()
-      setPresentation((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          slides: prev.slides.map((s, i) =>
-            i === idx ? { ...s, elements: [...(s.elements || []), ...elements] } : s
-          ),
-        }
-      })
+      setPresentation((prev) =>
+        mapActiveSlide(prev, (s) => ({ ...s, elements: [...(s.elements || []), ...elements] }))
+      )
       if (allIds.length) selectElement(allIds)
     },
-    [getCurrentSlideIndex, setPresentation, selectElement]
+    [mapActiveSlide, setPresentation, selectElement]
   )
 
   const performCut = useCallback(
@@ -161,39 +157,26 @@ export function useClipboard({ getCurrentSlideIndex, setPresentation }) {
       const { clipboardData } = createCutOperation({ slideElements: slideElements || [], selectedElementIds: idsToDelete || [] })
       if (clipboardData) setClipboard(clipboardData)
       if (!idsToDelete?.length) return
-      const idx = getCurrentSlideIndex()
-      setPresentation((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          slides: prev.slides.map((s, i) =>
-            i === idx
-              ? { ...s, elements: (s.elements || []).filter((el) => !idsToDelete.includes(el.id)) }
-              : s
-          ),
-        }
-      })
+      setPresentation((prev) =>
+        mapActiveSlide(prev, (s) => ({
+          ...s,
+          elements: (s.elements || []).filter((el) => !idsToDelete.includes(el.id)),
+        }))
+      )
       clearSelection()
     },
-    [getCurrentSlideIndex, setPresentation, setClipboard, clearSelection]
+    [mapActiveSlide, setPresentation, setClipboard, clearSelection]
   )
 
   const performDuplicate = useCallback(
     (clipboardElements) => {
       const toAdd = (clipboardElements || []).filter((el) => !el.locked)
       if (!toAdd.length) return
-      const idx = getCurrentSlideIndex()
-      setPresentation((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          slides: prev.slides.map((s, i) =>
-            i === idx ? { ...s, elements: [...(s.elements || []), ...toAdd] } : s
-          ),
-        }
-      })
+      setPresentation((prev) =>
+        mapActiveSlide(prev, (s) => ({ ...s, elements: [...(s.elements || []), ...toAdd] }))
+      )
     },
-    [getCurrentSlideIndex, setPresentation]
+    [mapActiveSlide, setPresentation]
   )
 
   return { performCopy, performPaste, performCut, performDuplicate }

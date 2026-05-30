@@ -149,6 +149,13 @@ Style parameter: ${style}. Language parameter: ${language}. Expected Slides coun
 })
 
 // POST /api/ai/generate-slides
+// DEPRECATED / caller-less in-repo: the client now builds slides locally from
+// the outline via buildSlidesFromOutline (the route's escapeHtml treatment was
+// ported there), so no in-repo code calls this endpoint. Kept (not deleted)
+// because the app is self-hostable and an external HTTP client may still rely
+// on it; hard removal is deferred to a future release after confirming no
+// external traffic. This route only re-maps the outline to escaped <section>
+// strings — it does not call AI.
 const generateSlidesSchema = z.object({
   outline: z
     .array(

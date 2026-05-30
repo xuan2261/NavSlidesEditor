@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 import { SLIDE_TEMPLATES } from '../data/slide-templates'
 import {
@@ -21,9 +21,31 @@ export function useSlideOperations({
   currentSlideIndexRef,
   selectedElementIdsRef,
   editingElementIdRef,
+  mapActiveSlide,
+  getActiveSlide,
 }) {
   const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds)
   const setEditingElementId = useEditorStore((s) => s.setEditingElementId)
+
+  // Fallback router for older call sites / tests that don't inject one: act on
+  // the parent slide at currentSlideIndexRef. Memoized so callback deps stay
+  // stable across renders.
+  const mapActive = useMemo(
+    () =>
+      mapActiveSlide ||
+      ((prev, fn) =>
+        prev
+          ? {
+              ...prev,
+              slides: prev.slides.map((s, i) => (i === currentSlideIndexRef.current ? fn(s) : s)),
+            }
+          : prev),
+    [mapActiveSlide, currentSlideIndexRef]
+  )
+  const activeSlideOf = useMemo(
+    () => getActiveSlide || (() => presentation?.slides?.[currentSlideIndexRef.current]),
+    [getActiveSlide, presentation, currentSlideIndexRef]
+  )
 
   // ── Multi-element batch update ─────────────────────────────────────────────
   const updateElements = useCallback(
@@ -34,49 +56,35 @@ export function useSlideOperations({
         updates.forEach((u) => {
           map[u.id] = u
         })
-        return {
-          ...prev,
-          slides: prev.slides.map((s, i) =>
-            i === currentSlideIndexRef.current
-              ? {
-                  ...s,
-                  elements: (s.elements || []).map((el) =>
-                    map[el.id]
-                      ? { ...el, ...invalidatePptxFitMetaForUpdates(el, map[el.id]) }
-                      : el
-                  ),
-                }
-              : s
+        return mapActive(prev, (s) => ({
+          ...s,
+          elements: (s.elements || []).map((el) =>
+            map[el.id] ? { ...el, ...invalidatePptxFitMetaForUpdates(el, map[el.id]) } : el
           ),
-        }
+        }))
       })
     },
-    [setPresentation, currentSlideIndexRef]
+    [setPresentation, mapActive]
   )
 
   // ── Delete all selected elements ───────────────────────────────────────────
   const deleteSelectedElements = useCallback(() => {
     const ids = selectedElementIdsRef.current
     if (!ids.length) return
-    const currentSlide = presentation?.slides?.[currentSlideIndexRef.current]
+    const activeSlide = activeSlideOf()
     const lockedIds = new Set(
-      (currentSlide?.elements || [])
+      (activeSlide?.elements || [])
         .filter((el) => ids.includes(el.id) && el.locked)
         .map((el) => el.id)
     )
     const deletableIds = ids.filter((id) => !lockedIds.has(id))
     if (!deletableIds.length) return
-    setPresentation((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        slides: prev.slides.map((s, i) =>
-          i === currentSlideIndexRef.current
-            ? { ...s, elements: (s.elements || []).filter((el) => !deletableIds.includes(el.id)) }
-            : s
-        ),
-      }
-    })
+    setPresentation((prev) =>
+      mapActive(prev, (s) => ({
+        ...s,
+        elements: (s.elements || []).filter((el) => !deletableIds.includes(el.id)),
+      }))
+    )
     if (lockedIds.size) {
       setSelectedElementIds(ids.filter((id) => lockedIds.has(id)))
     } else {
@@ -85,13 +93,13 @@ export function useSlideOperations({
       editingElementIdRef.current = null
     }
   }, [
-    presentation,
+    activeSlideOf,
     setPresentation,
     selectedElementIdsRef,
-    currentSlideIndexRef,
     editingElementIdRef,
     setSelectedElementIds,
     setEditingElementId,
+    mapActive,
   ])
 
   // ── Group / ungroup ────────────────────────────────────────────────────────
@@ -99,49 +107,34 @@ export function useSlideOperations({
     const ids = selectedElementIdsRef.current
     if (ids.length < 2) return
     const groupId = crypto.randomUUID()
-    setPresentation((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        slides: prev.slides.map((s, i) =>
-          i === currentSlideIndexRef.current
-            ? {
-                ...s,
-                elements: (s.elements || []).map((el) => (ids.includes(el.id) ? { ...el, groupId } : el)),
-              }
-            : s
-        ),
-      }
-    })
-  }, [setPresentation, selectedElementIdsRef, currentSlideIndexRef])
+    setPresentation((prev) =>
+      mapActive(prev, (s) => ({
+        ...s,
+        elements: (s.elements || []).map((el) => (ids.includes(el.id) ? { ...el, groupId } : el)),
+      }))
+    )
+  }, [setPresentation, selectedElementIdsRef, mapActive])
 
   const ungroupElements = useCallback(() => {
     const ids = selectedElementIdsRef.current
     if (!ids.length) return
     setPresentation((prev) => {
       if (!prev) return prev
-      const slide = prev.slides[currentSlideIndexRef.current]
+      const slide = activeSlideOf()
       const groupIds = new Set(
         (slide?.elements || [])
           .filter((el) => ids.includes(el.id) && el.groupId)
           .map((el) => el.groupId)
       )
       if (!groupIds.size) return prev
-      return {
-        ...prev,
-        slides: prev.slides.map((s, i) =>
-          i === currentSlideIndexRef.current
-            ? {
-                ...s,
-                elements: (s.elements || []).map((el) =>
-                  groupIds.has(el.groupId) ? { ...el, groupId: undefined } : el
-                ),
-              }
-            : s
+      return mapActive(prev, (s) => ({
+        ...s,
+        elements: (s.elements || []).map((el) =>
+          groupIds.has(el.groupId) ? { ...el, groupId: undefined } : el
         ),
-      }
+      }))
     })
-  }, [setPresentation, selectedElementIdsRef, currentSlideIndexRef])
+  }, [setPresentation, selectedElementIdsRef, activeSlideOf, mapActive])
 
   // ── Alignment ──────────────────────────────────────────────────────────────
   const alignElements = useCallback(
@@ -150,7 +143,7 @@ export function useSlideOperations({
       if (ids.length < 2) return
       setPresentation((prev) => {
         if (!prev) return prev
-        const slide = prev.slides[currentSlideIndexRef.current]
+        const slide = activeSlideOf()
         const els = (slide?.elements || []).filter((el) => ids.includes(el.id))
         const upd = {}
         if (type === 'left') {
@@ -212,20 +205,13 @@ export function useSlideOperations({
             })
           }
         }
-        return {
-          ...prev,
-          slides: prev.slides.map((sl, i) =>
-            i === currentSlideIndexRef.current
-              ? {
-                  ...sl,
-                  elements: (sl.elements || []).map((el) => (upd[el.id] ? { ...el, ...upd[el.id] } : el)),
-                }
-              : sl
-          ),
-        }
+        return mapActive(prev, (sl) => ({
+          ...sl,
+          elements: (sl.elements || []).map((el) => (upd[el.id] ? { ...el, ...upd[el.id] } : el)),
+        }))
       })
     },
-    [setPresentation, selectedElementIdsRef, currentSlideIndexRef]
+    [setPresentation, selectedElementIdsRef, activeSlideOf, mapActive]
   )
 
   // ── Slide CRUD ─────────────────────────────────────────────────────────────
@@ -333,6 +319,75 @@ export function useSlideOperations({
     [presentation, setPresentation, setCurrentSlideIndex]
   )
 
+  // ── Vertical (child) slide CRUD ────────────────────────────────────────────
+  const addChildSlide = useCallback(
+    (parentIndex) => {
+      setPresentation((prev) => {
+        if (!prev) return prev
+        const parent = prev.slides[parentIndex]
+        if (!parent) return prev
+        const newChild = {
+          id: crypto.randomUUID(),
+          elements: [],
+          notes: '',
+          background: parent.background ? { ...parent.background } : { type: 'color', color: '#1e1e2e' },
+        }
+        return {
+          ...prev,
+          slides: prev.slides.map((s, i) =>
+            i === parentIndex ? { ...s, children: [...(s.children || []), newChild] } : s
+          ),
+        }
+      })
+    },
+    [setPresentation]
+  )
+
+  const duplicateChildSlide = useCallback(
+    (parentIndex, childIndex) => {
+      setPresentation((prev) => {
+        if (!prev) return prev
+        const parent = prev.slides[parentIndex]
+        const child = parent?.children?.[childIndex]
+        if (!child) return prev
+        const dup = {
+          ...child,
+          id: crypto.randomUUID(),
+          elements: (child.elements || []).map((el) => ({ ...el, id: crypto.randomUUID() })),
+        }
+        return {
+          ...prev,
+          slides: prev.slides.map((s, i) => {
+            if (i !== parentIndex) return s
+            const children = [...(s.children || [])]
+            children.splice(childIndex + 1, 0, dup)
+            return { ...s, children }
+          }),
+        }
+      })
+    },
+    [setPresentation]
+  )
+
+  const deleteChildSlide = useCallback(
+    (parentIndex, childIndex) => {
+      setPresentation((prev) => {
+        if (!prev) return prev
+        const parent = prev.slides[parentIndex]
+        if (!parent?.children?.[childIndex]) return prev
+        return {
+          ...prev,
+          slides: prev.slides.map((s, i) =>
+            i === parentIndex
+              ? { ...s, children: s.children.filter((_, ci) => ci !== childIndex) }
+              : s
+          ),
+        }
+      })
+    },
+    [setPresentation]
+  )
+
   return {
     updateElements,
     deleteSelectedElements,
@@ -345,5 +400,8 @@ export function useSlideOperations({
     deleteSlides,
     duplicateSlides,
     moveSlide,
+    addChildSlide,
+    duplicateChildSlide,
+    deleteChildSlide,
   }
 }

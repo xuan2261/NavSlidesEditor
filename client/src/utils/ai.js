@@ -31,19 +31,6 @@ export async function aiGenerateOutline(
   return res.json()
 }
 
-export async function aiGenerateSlides(outline, templateId = null) {
-  const res = await fetch(`${API_BASE}/generate-slides`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ outline, templateId }),
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.error || 'Failed to generate slides')
-  }
-  return res.json()
-}
-
 export async function aiTranslate(texts, targetLanguage) {
   const res = await fetch(`${API_BASE}/translate`, {
     method: 'POST',

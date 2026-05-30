@@ -40,7 +40,27 @@ navslides-editor/
 
 - `EditorPage.jsx` composes the editor shell, overlays, menus, toolbars, and
   modal surfaces. Shared dialogs now flow through `ModalShell`; dense panel
-  sections use disclosure semantics in `CollapsibleSection`.
+  sections use disclosure semantics in `CollapsibleSection`. After the
+  `260529-2256` hardening refactor it is a thinner orchestrator (~1356 LOC, down
+  from 2071): boolean modal-visibility flags live in `ui-store` (not local
+  `useState`), the modal-mount JSX is lifted into `EditorModals.jsx` +
+  `editor-modals-secondary.jsx`, and element-creation / export / AI handlers are
+  extracted into `use-element-creation`, `use-export-actions`, and
+  `use-ai-actions` hooks. The editor body (SlidePanel / RibbonPanel / SlideCanvas
+  / PropertiesPanel) stays inline.
+- Vertical (child) slides are first-class: `client/src/utils/active-slide-mapper.js`
+  resolves the active edit target (parent or selected child, tracked by parent
+  `id`) and `mapActiveSlide` routes EVERY element write path — element callbacks,
+  clipboard paste/cut/duplicate, inline duplicate, media insert, and slide-ops
+  group/align — to that target so writes never land on the wrong slide. The
+  `{parentId, child}` editor model bridges to the flat socket/export
+  `verticalIndex` convention via `toFlatVerticalIndex`.
+- AI slide generation builds locally from the outline via
+  `client/src/utils/build-slides-from-outline.js` (no network round-trip; every
+  field escaped). `shared/src/types/ai-slide-contract.js` (`validateAiSlides`)
+  is the runtime-validated seam for a future server-supplied element payload —
+  schema check + safe-`type` allowlist (excludes html/code/svg) + content
+  sanitization.
 - `EditorPage.jsx` composes `RibbonHeaderBar` and `RibbonPanel` directly. The
   old `EditorMenuBar`, `Toolbar`, and `InsertMenu` surfaces have been removed.
   Tab selection is stored in `ui-store.activeTab`, validated on load, and

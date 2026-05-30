@@ -20,6 +20,27 @@ export const useUIStore = create((set) => ({
   showSyncModal: false,
   showTemplateModal: false,
 
+  // Editor modal/visibility flags migrated out of EditorPage local useState.
+  // Names match the original EditorPage flags verbatim so call sites change
+  // only their source (useState -> useUIStore), not the read/write shape.
+  showTemplateGallery: false,
+  showMediaLibrary: false,
+  showTransitionPreview: false,
+  showAnimationPreview: false,
+  showCssEditor: false,
+  showAICopywriter: false,
+  showAIGenerator: false,
+  showAITranslate: false,
+  showLiveModal: false,
+  showAnalytics: false,
+  showImageUrlPrompt: false,
+  showCommandPalette: false,
+  showKineticTextModal: false,
+  showMathGridModal: false,
+  showAnimeModal: false,
+  showThreeModal: false,
+  showFileBrowser: false,
+
   // Theme
   theme: 'dark', // 'light' | 'dark'
 
@@ -51,6 +72,27 @@ export const useUIStore = create((set) => ({
   setShowHistoryModal: (v) => set({ showHistoryModal: v }),
   setShowSyncModal: (v) => set({ showSyncModal: v }),
   setShowTemplateModal: (v) => set({ showTemplateModal: v }),
+
+  // Convenience setters for migrated editor flags. Accept a direct boolean OR
+  // an updater fn (some call sites use setShowX((v) => !v)), matching the
+  // useState API they replace.
+  setShowTemplateGallery: (v) => set((s) => ({ showTemplateGallery: typeof v === 'function' ? v(s.showTemplateGallery) : v })),
+  setShowMediaLibrary: (v) => set((s) => ({ showMediaLibrary: typeof v === 'function' ? v(s.showMediaLibrary) : v })),
+  setShowTransitionPreview: (v) => set((s) => ({ showTransitionPreview: typeof v === 'function' ? v(s.showTransitionPreview) : v })),
+  setShowAnimationPreview: (v) => set((s) => ({ showAnimationPreview: typeof v === 'function' ? v(s.showAnimationPreview) : v })),
+  setShowCssEditor: (v) => set((s) => ({ showCssEditor: typeof v === 'function' ? v(s.showCssEditor) : v })),
+  setShowAICopywriter: (v) => set((s) => ({ showAICopywriter: typeof v === 'function' ? v(s.showAICopywriter) : v })),
+  setShowAIGenerator: (v) => set((s) => ({ showAIGenerator: typeof v === 'function' ? v(s.showAIGenerator) : v })),
+  setShowAITranslate: (v) => set((s) => ({ showAITranslate: typeof v === 'function' ? v(s.showAITranslate) : v })),
+  setShowLiveModal: (v) => set((s) => ({ showLiveModal: typeof v === 'function' ? v(s.showLiveModal) : v })),
+  setShowAnalytics: (v) => set((s) => ({ showAnalytics: typeof v === 'function' ? v(s.showAnalytics) : v })),
+  setShowImageUrlPrompt: (v) => set((s) => ({ showImageUrlPrompt: typeof v === 'function' ? v(s.showImageUrlPrompt) : v })),
+  setShowCommandPalette: (v) => set((s) => ({ showCommandPalette: typeof v === 'function' ? v(s.showCommandPalette) : v })),
+  setShowKineticTextModal: (v) => set((s) => ({ showKineticTextModal: typeof v === 'function' ? v(s.showKineticTextModal) : v })),
+  setShowMathGridModal: (v) => set((s) => ({ showMathGridModal: typeof v === 'function' ? v(s.showMathGridModal) : v })),
+  setShowAnimeModal: (v) => set((s) => ({ showAnimeModal: typeof v === 'function' ? v(s.showAnimeModal) : v })),
+  setShowThreeModal: (v) => set((s) => ({ showThreeModal: typeof v === 'function' ? v(s.showThreeModal) : v })),
+  setShowFileBrowser: (v) => set((s) => ({ showFileBrowser: typeof v === 'function' ? v(s.showFileBrowser) : v })),
 
   // Theme
   setTheme: (theme) => set({ theme }),

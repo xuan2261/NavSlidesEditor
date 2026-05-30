@@ -36,7 +36,7 @@ const REQUIRED_TESTIDS = [
   { file: 'client/src/components/SyncModal.jsx', testid: 'sync-error-toast' },
   { file: 'client/src/components/game-hud-overlay.jsx', testid: 'game-hud' },
   { file: 'client/src/components/game-leaderboard-overlay.jsx', testid: 'game-leaderboard' },
-  { file: 'client/src/pages/EditorPage.jsx', testid: 'game-active-indicator' },
+  { file: 'client/src/components/EditorModals.jsx', testid: 'game-active-indicator' },
   { file: 'client/src/components/canvas/element-renderers/game-element-renderer.jsx', testid: 'game-question' },
   { file: 'client/src/components/canvas/element-renderers/game-element-renderer.jsx', testid: 'game-score' },
 ]

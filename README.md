@@ -37,7 +37,7 @@ Current release: **v1.10.0** — PPTX import real-browser fidelity fixes with st
 
 ### Slides
 
-8 layouts (blank, title, two-column, three-column, image+text, section header, comparison, big number) + 20+ full-deck templates including interactive simulations and quiz decks. Per-slide backgrounds (solid, gradient, image), fragment animations with visual timeline editor and preview modal, per-slide page numbers, hidden slides, footer system (basic / sequence modes), and global presentation settings (auto-slide, loop, navigation modes).
+8 layouts (blank, title, two-column, three-column, image+text, section header, comparison, big number) + 20+ full-deck templates including interactive simulations and quiz decks. Per-slide backgrounds (solid, gradient, image), **first-class vertical (child) slides** — create, select, edit, and export nested slides from the slide panel — fragment animations with visual timeline editor and preview modal, per-slide page numbers, hidden slides, footer system (basic / sequence modes), and global presentation settings (auto-slide, loop, navigation modes).
 
 ### Live Presentation
 

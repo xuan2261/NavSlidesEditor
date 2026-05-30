@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useContext } from 'react'
 import { useEditorStore } from '../stores/editor-store'
-import { createElement } from '../utils/element-factory'
-import { createGameElement } from '../constants/game-element-types-constants'
-import { createPluginElement, loadPlugins } from '../plugins'
 import { useSlideOperations } from '../hooks/use-slide-operations'
 import { useKeyboard } from '../hooks/use-keyboard'
 import { useClipboard, createDuplicateOperation } from '../hooks/use-clipboard'
+import { useElementCreation } from '../hooks/use-element-creation'
 import { useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -22,41 +20,18 @@ import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import { ChevronLeft } from 'lucide-react'
 import { api } from '../utils/api'
-import { presentInWindow, exportPDF, generateRevealHTML, downloadHTML } from '../utils/generateHTML'
-import { generateOfflineHTML } from '../utils/offlineExport'
-import { exportProject } from '../utils/export-project'
-import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../utils/import-project'
+import { presentInWindow } from '../utils/generateHTML'
+import { useExportActions } from '../hooks/use-export-actions'
+import { useAiActions } from '../hooks/use-ai-actions'
+import { resolveActiveSlide, mapActiveSlide } from '../utils/active-slide-mapper'
 import SlidePanel from '../components/SlidePanel'
 import SlideCanvas from '../components/SlideCanvas'
 import PropertiesPanel from '../components/PropertiesPanel'
-import FindReplaceBar from '../components/FindReplaceBar'
-import TransitionPreview from '../components/TransitionPreview'
-import SlideSorterView from '../components/SlideSorterView'
-import AnimationTimeline from '../components/AnimationTimeline'
-import AnimationPreviewModal from '../components/AnimationPreviewModal'
-import MediaLibraryModal from '../components/MediaLibraryModal'
-import AICopywriterModal from '../components/AICopywriterModal'
-import AIGeneratorModal from '../components/AIGeneratorModal'
-import AITranslateModal from '../components/AITranslateModal'
-import ShareModal from '../components/ShareModal'
-import AnalyticsModal from '../components/AnalyticsModal'
-import GitHubPushModal from '../components/GitHubPushModal'
-import HistoryModal from '../components/HistoryModal'
-import SyncModal from '../components/SyncModal'
-import LivePresentationModal from '../components/LivePresentationModal'
-import CSSEditorModal from '../components/CSSEditorModal'
 import RibbonHeaderBar from '../components/ribbon/ribbon-header-bar'
 import RibbonPanel from '../components/ribbon/ribbon-panel'
 import { useUIStore } from '../stores/ui-store'
-import TemplateGallery from '../components/dashboard/TemplateGallery'
-import TemplatePreview from '../components/dashboard/TemplatePreview'
 import QuickAccessToolbar from '../components/QuickAccessToolbar'
-import HtmlEditorModal from '../components/HtmlEditorModal'
-import CodeEditorModal from '../components/CodeEditorModal'
-import LatexEditorModal from '../components/LatexEditorModal'
-import TemplatePickerModal from '../components/TemplatePickerModal'
 import ProductTour from '../components/ProductTour'
-import PromptPopover from '../components/PromptPopover'
 import { MathNode } from '../extensions/MathExtension'
 import { FontSize } from '../extensions/FontSize'
 import { FontFamily } from '../extensions/FontFamily'
@@ -73,24 +48,12 @@ import atomOneLightCSS from '../../../node_modules/highlight.js/styles/atom-one-
 import githubCSS from '../../../node_modules/highlight.js/styles/github.min.css?raw'
 import vsCSS from '../../../node_modules/highlight.js/styles/vs.min.css?raw'
 import { Button, Input } from '../components/ui'
-import { BlackScreenOverlay } from '../components/black-screen-overlay'
-import { CommandPalette } from '../components/command-palette'
-import { GameHudOverlay } from '../components/game-hud-overlay'
-import { GameLeaderboardOverlay } from '../components/game-leaderboard-overlay'
-import { AnnotationToolbar } from '../components/annotation-toolbar'
-import KineticTextAnimationTemplateSelectorModal from '../components/kinetic-text-animation-template-selector-modal'
-import ParametricMathGridSurfacePlotterModal from '../components/parametric-math-grid-surface-plotter-modal'
-import AnimeJsAnimationTemplateSelectorModal from '../components/anime-js-animation-template-selector-modal'
-import ThreeJs3DSceneTemplateSelectorModal from '../components/three-js-3d-scene-template-selector-modal'
-import FileBrowserModal from '../components/file-browser-modal-to-select-and-insert-media'
 import { LiveSocketContext } from '../contexts/live-socket-context-provider.jsx'
 import { GAME_SHORTCUT_CONFIG } from '../utils/game-shortcut-config.js'
 import { invalidatePptxFitMetaForUpdates } from '../utils/pptx-import-meta'
-import {
-  applyTranslatedNotes,
-  getSlideNotesTranslationKey,
-  normalizePresentationNotes,
-} from '../utils/slide-notes'
+import EditorModals from '../components/EditorModals'
+import { normalizePresentationNotes } from '../utils/slide-notes'
+import { sanitizeRichTextHtml } from '../utils/content-safety'
 
 const CODE_THEME_CSS = {
   monokai: monokaiCSS,
@@ -121,18 +84,19 @@ const THEMES = [
 ]
 // eslint-disable-next-line unused-imports/no-unused-vars
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
-const imageUrlPromptPopoverStyle = {
-  position: 'fixed',
-  top: 100,
-  left: '50%',
-  transform: 'translateX(-50%)',
-}
 
 const migrateSlide = (slide) => {
-  if (!slide.elements) {
+  // Recurse into vertical children first (legacy children may lack `elements`).
+  // Child html is sanitized on migration (untrusted-content boundary).
+  const withChildren =
+    slide.children && slide.children.length > 0
+      ? { ...slide, children: slide.children.map(migrateChild) }
+      : slide
+
+  if (!withChildren.elements) {
     return {
-      ...slide,
-      elements: slide.html
+      ...withChildren,
+      elements: withChildren.html
         ? [
             {
               id: crypto.randomUUID(),
@@ -142,18 +106,43 @@ const migrateSlide = (slide) => {
               width: 800,
               height: 340,
               zIndex: 1,
-              content: slide.html,
+              content: withChildren.html,
             },
           ]
         : [],
     }
   }
-  return slide
+  return withChildren
+}
+
+const migrateChild = (child) => {
+  if (child.elements) return child
+  return {
+    ...child,
+    elements: child.html
+      ? [
+          {
+            id: crypto.randomUUID(),
+            type: 'text',
+            x: 80,
+            y: 100,
+            width: 800,
+            height: 340,
+            zIndex: 1,
+            content: sanitizeRichTextHtml(child.html),
+          },
+        ]
+      : [],
+  }
 }
 
 export default function EditorPage({ presentationId, isTemplate = false, onGoHome }) {
   const [presentation, setPresentation] = useState(null)
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
+  // Active vertical (child) edit target, tracked by PARENT id for reorder
+  // stability: { parentId, child } | null. child===null/absent ⇒ editing the
+  // parent. The parent ARRAY INDEX is derived at render (currentVerticalIndex).
+  const [verticalEdit, setVerticalEdit] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState('') // '', 'saving', 'saved', 'error'
   const [lastSaveError, setLastSaveError] = useState('')
@@ -194,57 +183,48 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   // Derived from selectedElementIds — must be declared before any useEffect that references it
   const selectedElementId = selectedElementIds[selectedElementIds.length - 1] ?? null
 
-  // ─── Editor-only modal state (not worth putting in store) ──────────────────
+  // ─── Editor-only payload modal state (carries data — stays local) ──────────
   const [htmlEditorState, setHtmlEditorState] = useState(null) // { elementId, content }
   const [codeEditorState, setCodeEditorState] = useState(null) // { elementId, content, language }
   const [latexEditorState, setLatexEditorState] = useState(null) // { elementId, content }
-  const [showTemplateModal, setShowTemplateModal] = useState(false)
-  const [showTemplateGallery, setShowTemplateGallery] = useState(false)
   const [galleryPreviewTemplate, setGalleryPreviewTemplate] = useState(null)
-  const [showMediaLibrary, setShowMediaLibrary] = useState(false)
-  const [showGithubModal, setShowGithubModal] = useState(false)
-  const [showTransitionPreview, setShowTransitionPreview] = useState(false)
-  const [showAnimationPreview, setShowAnimationPreview] = useState(false)
-  const [showShareModal, setShowShareModal] = useState(false)
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [shareStatus, setShareStatus] = useState({ shared: false, token: null })
-  const [showSyncModal, setShowSyncModal] = useState(false)
-  const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [_lastSavedAt, setLastSavedAt] = useState(null)
-  const [showCssEditor, setShowCssEditor] = useState(false)
-  const [showAICopywriter, setShowAICopywriter] = useState(false)
-  const [showAIGenerator, setShowAIGenerator] = useState(false)
-  const [showAITranslate, setShowAITranslate] = useState(false)
-  const [showLiveModal, setShowLiveModal] = useState(false)
   const [liveRoomCode, setLiveRoomCode] = useState(null)
   const [livePresenterToken, setLivePresenterToken] = useState(null)
-  const [showAnalytics, setShowAnalytics] = useState(false)
-  const [showImageUrlPrompt, setShowImageUrlPrompt] = useState(false)
-  const [pluginTypes, setPluginTypes] = useState([])
 
-  // Slideshow/Presentation mode overlays
-  const [overlayColor, setOverlayColor] = useState(null) // 'black' | 'white' | null
-  const [isPresenting, setIsPresenting] = useState(false)
+  // ─── Boolean modal/visibility flags — centralized in ui-store ──────────────
+  // EditorModals reads the flags it renders directly from the store, so here we
+  // keep only the setters wired into the ribbon/panel/canvas props (plus the
+  // command-palette flag, read by onEscape). Select per-flag for re-render
+  // isolation; setters are stable Zustand actions.
+  const setShowTemplateModal = useUIStore((s) => s.setShowTemplateModal)
+  const setShowTemplateGallery = useUIStore((s) => s.setShowTemplateGallery)
+  const setShowMediaLibrary = useUIStore((s) => s.setShowMediaLibrary)
+  const setShowGithubModal = useUIStore((s) => s.setShowGithubModal)
+  const setShowAnimationPreview = useUIStore((s) => s.setShowAnimationPreview)
+  const setShowShareModal = useUIStore((s) => s.setShowShareModal)
+  const setShowSyncModal = useUIStore((s) => s.setShowSyncModal)
+  const setShowHistoryModal = useUIStore((s) => s.setShowHistoryModal)
+  const setShowCssEditor = useUIStore((s) => s.setShowCssEditor)
+  const setShowAICopywriter = useUIStore((s) => s.setShowAICopywriter)
+  const setShowAIGenerator = useUIStore((s) => s.setShowAIGenerator)
+  const setShowAITranslate = useUIStore((s) => s.setShowAITranslate)
+  const setShowLiveModal = useUIStore((s) => s.setShowLiveModal)
+  const setShowAnalytics = useUIStore((s) => s.setShowAnalytics)
+  const setShowImageUrlPrompt = useUIStore((s) => s.setShowImageUrlPrompt)
+  const showCommandPalette = useUIStore((s) => s.showCommandPalette)
+  const setShowCommandPalette = useUIStore((s) => s.setShowCommandPalette)
+  const setShowKineticTextModal = useUIStore((s) => s.setShowKineticTextModal)
+  const setShowMathGridModal = useUIStore((s) => s.setShowMathGridModal)
+  const setShowAnimeModal = useUIStore((s) => s.setShowAnimeModal)
+  const setShowThreeModal = useUIStore((s) => s.setShowThreeModal)
+  const setShowFileBrowser = useUIStore((s) => s.setShowFileBrowser)
 
-  // Game presenter overlays
+  // Game presenter overlays (reachable in-editor via activeGameType) — local
   const [showGameHud, setShowGameHud] = useState(false)
   const [showGameLeaderboard, setShowGameLeaderboard] = useState(false)
-  const [_activeGameType, _setActiveGameType] = useState(null) // e.g. 'name-picker'
-
-  // Annotation state
-  const [annotationTool, setAnnotationTool] = useState('none') // 'none'|'pen'|'laser'|'highlighter'|'eraser'
-  const [annotationColor, setAnnotationColor] = useState('#FF0000')
-  const [_annotationStrokes, _setAnnotationStrokes] = useState([])
-
-  // Command palette
-  const [showCommandPalette, setShowCommandPalette] = useState(false)
-
-  // Embed modals
-  const [showKineticTextModal, setShowKineticTextModal] = useState(false)
-  const [showMathGridModal, setShowMathGridModal] = useState(false)
-  const [showAnimeModal, setShowAnimeModal] = useState(false)
-  const [showThreeModal, setShowThreeModal] = useState(false)
-  const [showFileBrowser, setShowFileBrowser] = useState(false)
 
   // Track if we're programmatically setting editor content (to avoid loops)
   const settingContent = useRef(false)
@@ -255,6 +235,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const applyingUndoRef = useRef(false)
   const editingElementIdRef = useRef(null)
   const currentSlideIndexRef = useRef(0)
+  const verticalEditRef = useRef(null)
   const selectedElementIdsRef = useRef([])
   const redoStackRef = useRef([])
   const saveAttemptRef = useRef(0)
@@ -269,6 +250,21 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   useEffect(() => {
     currentSlideIndexRef.current = currentSlideIndex
   }, [currentSlideIndex])
+
+  useEffect(() => {
+    verticalEditRef.current = verticalEdit
+  }, [verticalEdit])
+
+  // Drop a stale vertical-child edit if the tracked parent slide or child index
+  // no longer exists (e.g. after a parent/child delete). resolveActiveSlide
+  // already falls back safely, but this clears the phantom selection state.
+  useEffect(() => {
+    if (!presentation || !verticalEdit || verticalEdit.child == null) return
+    const parent = presentation.slides.find((s) => s.id === verticalEdit.parentId)
+    if (!parent || !parent.children || verticalEdit.child >= parent.children.length) {
+      setVerticalEdit(null)
+    }
+  }, [presentation, verticalEdit])
 
   useEffect(() => {
     selectedElementIdsRef.current = selectedElementIds
@@ -391,6 +387,32 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
 
   const currentSlide = presentation?.slides[currentSlideIndex]
 
+  // Active edit target: the parent slide, or the active vertical child.
+  const activeSlide = resolveActiveSlide(presentation?.slides, currentSlideIndex, verticalEdit)
+
+  // { parent, child } shape SlidePanel expects: resolve the tracked parent id to
+  // its current array index at read time (parent-by-id keeps this reorder-safe).
+  const currentVerticalIndex =
+    verticalEdit && verticalEdit.child != null
+      ? {
+          parent: presentation?.slides?.findIndex((s) => s.id === verticalEdit.parentId) ?? -1,
+          child: verticalEdit.child,
+        }
+      : null
+
+  // Single routing point for EVERY element write: targets the active child when
+  // one is selected, else the parent at currentSlideIndex. Reads refs so it is
+  // stable for callbacks that fire outside render (clipboard, TipTap onUpdate).
+  const mapActive = useCallback((prev, fn) => {
+    return mapActiveSlide(prev, currentSlideIndexRef.current, verticalEditRef.current, fn)
+  }, [])
+
+  // Ref to the active slide for call-time lookups (open*Editor, locked checks).
+  const activeSlideRef = useRef(null)
+  useEffect(() => {
+    activeSlideRef.current = activeSlide
+  })
+
   // TipTap editor
   const editor = useEditor({
     extensions: [
@@ -418,27 +440,18 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       // Don't trigger if we're setting content programmatically
       if (settingContent.current) return
       const elemId = editingElementIdRef.current
-      const slideIdx = currentSlideIndexRef.current
       if (!elemId) return
       const html = editor.getHTML()
-      setPresentation((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          slides: prev.slides.map((s, i) =>
-            i === slideIdx
-              ? {
-                  ...s,
-                  elements: (s.elements || []).map((el) =>
-                    el.id === elemId
-                      ? { ...el, ...invalidatePptxFitMetaForUpdates(el, { content: html }) }
-                      : el
-                  ),
-                }
-              : s
+      setPresentation((prev) =>
+        mapActive(prev, (s) => ({
+          ...s,
+          elements: (s.elements || []).map((el) =>
+            el.id === elemId
+              ? { ...el, ...invalidatePptxFitMetaForUpdates(el, { content: html }) }
+              : el
           ),
-        }
-      })
+        }))
+      )
     },
   })
 
@@ -451,11 +464,13 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     }
   }, [editor, presentation])
 
-  // When currentSlideIndex changes, reset selection and editing
+  // When currentSlideIndex changes, reset selection, editing, and any active
+  // vertical-child edit (you've navigated to a different parent slide).
   useEffect(() => {
     setSelectedElementIds([])
     setEditingElementId(null)
     editingElementIdRef.current = null
+    setVerticalEdit(null)
     if (editor) {
       settingContent.current = true
       editor.commands.setContent('', false)
@@ -506,341 +521,83 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
 
   const updateCurrentSlide = useCallback(
     (updates) => {
-      setPresentation((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          slides: prev.slides.map((s, i) => (i === currentSlideIndex ? { ...s, ...updates } : s)),
-        }
-      })
+      setPresentation((prev) => mapActive(prev, (s) => ({ ...s, ...updates })))
     },
-    [currentSlideIndex]
+    [mapActive]
   )
 
   const updateElement = useCallback((id, updates) => {
-    setPresentation((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        slides: prev.slides.map((s, i) =>
-          i === currentSlideIndexRef.current
-            ? {
-                ...s,
-                elements: (s.elements || []).map((el) =>
-                  el.id === id ? { ...el, ...invalidatePptxFitMetaForUpdates(el, updates) } : el
-                ),
-              }
-            : s
+    setPresentation((prev) =>
+      mapActive(prev, (s) => ({
+        ...s,
+        elements: (s.elements || []).map((el) =>
+          el.id === id ? { ...el, ...invalidatePptxFitMetaForUpdates(el, updates) } : el
         ),
-      }
-    })
-  }, [])
+      }))
+    )
+  }, [mapActive])
 
   const deleteElement = useCallback(
     (id) => {
-      const target = currentSlide?.elements?.find((el) => el.id === id)
+      const target = activeSlide?.elements?.find((el) => el.id === id)
       if (target?.locked) return
-      setPresentation((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          slides: prev.slides.map((s, i) =>
-            i === currentSlideIndexRef.current
-              ? {
-                  ...s,
-                  elements: s.elements.filter((el) => el.id !== id),
-                }
-              : s
-          ),
-        }
-      })
+      setPresentation((prev) =>
+        mapActive(prev, (s) => ({
+          ...s,
+          elements: (s.elements || []).filter((el) => el.id !== id),
+        }))
+      )
       setSelectedElementIds((prev) => prev.filter((x) => x !== id))
       if (editingElementId === id) setEditingElementId(null)
     },
-    [currentSlide, editingElementId, setEditingElementId, setSelectedElementIds]
+    [activeSlide, editingElementId, setEditingElementId, setSelectedElementIds, mapActive]
   )
 
-  // ── Unified element creation (replaces 17 individual addXxxElement callbacks) ──
-  const addElement = useCallback((type, overrides = {}) => {
-    const newEl = createElement(type, overrides)
-    setPresentation((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        slides: prev.slides.map((s, i) =>
-          i === currentSlideIndexRef.current
-            ? { ...s, elements: [...(s.elements || []), newEl] }
-            : s
-        ),
-      }
-    })
-    setSelectedElementIds([newEl.id])
-    return newEl
-  }, [setSelectedElementIds])
-
-  // Thin wrappers for call-site compatibility
-  const addTextElement = useCallback(() => addElement('text'), [addElement])
-
-  const addImageElement = useCallback(
-    (src, dropX, dropY) => {
-      const posOverrides = { src }
-      if (dropX !== undefined) posOverrides.x = Math.max(0, Math.min(560, dropX - 200))
-      if (dropY !== undefined) posOverrides.y = Math.max(0, Math.min(240, dropY - 150))
-      return addElement('image', posOverrides)
-    },
-    [addElement]
-  )
-
-  const DEFAULT_HTML = `<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-<style>* { box-sizing: border-box; margin: 0; } body { background: transparent; overflow: hidden; }</style>
-<svg id="viz" width="100%" height="100%" style="display:block;"></svg>
-<script>
-const W = window.innerWidth, H = window.innerHeight;
-const svg = d3.select('#viz').attr('viewBox', \`0 0 \${W} \${H}\`);
-const data = Array.from({length: 30}, () => ({ x: Math.random()*W, y: Math.random()*H, r: 8+Math.random()*20 }));
-svg.selectAll('circle').data(data).join('circle')
-  .attr('cx', d => d.x).attr('cy', d => d.y).attr('r', d => d.r)
-  .attr('fill', (d,i) => d3.schemeTableau10[i%10]).attr('opacity', 0.8);
-</script>`
-
-  const addQrCodeElement = useCallback(() => addElement('qrcode'), [addElement])
-
-  const addTimelineElement = useCallback(() => addElement('timeline', {
-    timelineStart: '2000',
-    timelineEnd: '2025',
-    startDate: '2000',
-    endDate: '2025',
-    tickSpacing: 'auto',
-    lineColor: '#6366f1',
-    dotColor: '#6366f1',
-    textColor: '#ffffff',
-    fontSize: 11,
-    events: [],
-    items: [],
-  }), [addElement])
-
-  const insertEmbedHtml = useCallback((html) => {
-    addElement('html', { content: html })
-  }, [addElement])
-
-  const handleInsertFromFileBrowser = useCallback((file) => {
-    if (file.type === 'image') {
-      addElement('image', { src: file.src })
-    } else if (file.type === 'video') {
-      addElement('video', { src: file.src })
-    } else if (file.type === 'audio') {
-      addElement('audio', { src: file.src })
-    }
-  }, [addElement])
-
-  const addDividerElement = useCallback(() => {
-    return addElement('line', {
-      x: 96,
-      y: 270,
-      width: 768,
-      height: 40,
-      x1: 0,
-      y1: 20,
-      x2: 768,
-      y2: 20,
-      stroke: 'rgba(255,255,255,0.3)',
-      arrowStart: 'none',
-      arrowEnd: 'none',
-    })
-  }, [addElement])
-
-  const addGameElement = useCallback((gameType) => {
-    const newEl = createGameElement(gameType)
-    setPresentation((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        slides: prev.slides.map((s, i) =>
-          i === currentSlideIndexRef.current
-            ? { ...s, elements: [...(s.elements || []), newEl] }
-            : s
-        ),
-      }
-    })
-    setSelectedElementIds([newEl.id])
-    return newEl
-  }, [setSelectedElementIds])
-
-  const addPluginElement = useCallback((fullType) => {
-    const newEl = createPluginElement(fullType)
-    setPresentation((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        slides: prev.slides.map((s, i) =>
-          i === currentSlideIndexRef.current
-            ? { ...s, elements: [...(s.elements || []), newEl] }
-            : s
-        ),
-      }
-    })
-    setSelectedElementIds([newEl.id])
-    return newEl
-  }, [setSelectedElementIds])
-
-  useEffect(() => {
-    let cancelled = false
-    loadPlugins().then((types) => {
-      if (!cancelled) setPluginTypes(types)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const addHtmlElement = useCallback(() => {
-    const newEl = addElement('html', { content: DEFAULT_HTML })
-    setHtmlEditorState({ elementId: newEl.id, content: DEFAULT_HTML })
-  }, [addElement, DEFAULT_HTML])
-
-  const openHtmlEditor = useCallback(
-    (elementId) => {
-      const element = presentation?.slides[currentSlideIndexRef.current]?.elements?.find(
-        (el) => el.id === elementId
-      )
-      if (!element || element.type !== 'html') return
-      setHtmlEditorState({ elementId, content: element.content || '' })
-    },
-    [presentation]
-  )
-
-  const commitHtmlEdit = useCallback(() => {
-    if (!htmlEditorState) return
-    updateElement(htmlEditorState.elementId, { content: htmlEditorState.content })
-    setHtmlEditorState(null)
-  }, [htmlEditorState, updateElement])
-
-  const addCodeElement = useCallback(() => {
-    const newEl = addElement('code')
-    setCodeEditorState({ elementId: newEl.id, content: newEl.content, language: newEl.language })
-  }, [addElement])
-
-  const openCodeEditor = useCallback(
-    (elementId) => {
-      const slide = presentation?.slides[currentSlideIndexRef.current]
-      const element = slide?.elements?.find((el) => el.id === elementId)
-      if (!element || element.type !== 'code') return
-      setCodeEditorState({
-        elementId,
-        content: element.content || '',
-        language: element.language || 'javascript',
-      })
-    },
-    [presentation]
-  )
-
-  const commitCodeEdit = useCallback(() => {
-    if (!codeEditorState) return
-    updateElement(codeEditorState.elementId, {
-      content: codeEditorState.content,
-      language: codeEditorState.language,
-    })
-    setCodeEditorState(null)
-  }, [codeEditorState, updateElement])
-
-  const addLatexElement = useCallback(() => {
-    const newEl = addElement('latex')
-    setLatexEditorState({
-      elementId: newEl.id,
-      content: newEl.content,
-      fontSize: newEl.fontSize,
-      textColor: newEl.textColor,
-    })
-  }, [addElement])
-
-  const openLatexEditor = useCallback(
-    (elementId) => {
-      const element = presentation?.slides[currentSlideIndexRef.current]?.elements?.find(
-        (el) => el.id === elementId
-      )
-      if (!element || element.type !== 'latex') return
-      setLatexEditorState({
-        elementId,
-        content: element.content || '',
-        fontSize: element.fontSize,
-        textColor: element.textColor,
-      })
-    },
-    [presentation]
-  )
-
-  const commitLatexEdit = useCallback(() => {
-    if (!latexEditorState) return
-    updateElement(latexEditorState.elementId, {
-      content: latexEditorState.content,
-      fontSize: latexEditorState.fontSize,
-      textColor: latexEditorState.textColor,
-    })
-    setLatexEditorState(null)
-  }, [latexEditorState, updateElement])
-
-  const addMarkdownElement = useCallback(() => addElement('markdown'), [addElement])
-
-  const addChartElement = useCallback(() => addElement('chart'), [addElement])
-
-  const addCalloutElement = useCallback(
-    (number) => {
-      const num =
-        number || (currentSlide?.elements || []).filter((el) => el.type === 'callout').length + 1
-      return addElement('callout', { calloutNumber: num })
-    },
-    [currentSlide, addElement]
-  )
-
-  const addIconElement = useCallback(
-    (iconName) => {
-      return addElement('icon', iconName ? { iconName } : {})
-    },
-    [addElement]
-  )
-
-  const addShapeElement = useCallback(
-    (shape) => {
-      const dims = { line: { width: 300, height: 40 }, circle: { width: 200, height: 200 } }
-      const dim = dims[shape] || { width: 200, height: 150 }
-      return addElement('shape', {
-        shape,
-        x: (960 - dim.width) / 2,
-        y: (540 - dim.height) / 2,
-        width: dim.width,
-        height: dim.height,
-      })
-    },
-    [addElement]
-  )
-
-  const addVideoElement = useCallback((src) => addElement('video', { src }), [addElement])
-
-  const addAudioElement = useCallback((src) => addElement('audio', { src }), [addElement])
-
-  const addTableElement = useCallback(
-    (rows = 3, cols = 3) => {
-      const data = Array.from({ length: rows }, (_, ri) =>
-        Array.from({ length: cols }, (_, ci) => (ri === 0 ? `Header ${ci + 1}` : ''))
-      )
-      return addElement('table', { data })
-    },
-    [addElement]
-  )
-
-  const addDrawingElement = useCallback(() => addElement('drawing'), [addElement])
-
-  const addLineElement = useCallback(
-    (overrides = {}) => addElement('line', overrides),
-    [addElement]
-  )
-
-  const addSvgElement = useCallback(
-    (svgContent) => {
-      return addElement('svg', svgContent ? { content: svgContent } : {})
-    },
-    [addElement]
-  )
+  // ── Unified element creation (extracted to use-element-creation hook) ──
+  const {
+    pluginTypes,
+    addTextElement,
+    addImageElement,
+    addQrCodeElement,
+    addTimelineElement,
+    insertEmbedHtml,
+    handleInsertFromFileBrowser,
+    addDividerElement,
+    addGameElement,
+    addPluginElement,
+    addHtmlElement,
+    openHtmlEditor,
+    commitHtmlEdit,
+    addCodeElement,
+    openCodeEditor,
+    commitCodeEdit,
+    addLatexElement,
+    openLatexEditor,
+    commitLatexEdit,
+    addMarkdownElement,
+    addChartElement,
+    addCalloutElement,
+    addIconElement,
+    addShapeElement,
+    addVideoElement,
+    addAudioElement,
+    addTableElement,
+    addDrawingElement,
+    addLineElement,
+    addSvgElement,
+  } = useElementCreation({
+    mapActiveSlide: mapActive,
+    getActiveSlide: () => activeSlideRef.current,
+    setPresentation,
+    setSelectedElementIds,
+    updateElement,
+    htmlEditorState,
+    setHtmlEditorState,
+    codeEditorState,
+    setCodeEditorState,
+    latexEditorState,
+    setLatexEditorState,
+  })
 
   // Pre-process HTML to preserve block-level inline styles for ProseMirror
   // TipTap Color/TextStyle extensions only work on <span>, not block elements
@@ -927,6 +684,7 @@ svg.selectAll('circle').data(data).join('circle')
     deleteSlides,
     duplicateSlides,
     moveSlide,
+    addChildSlide,
   } = useSlideOperations({
     presentation,
     setPresentation,
@@ -935,29 +693,31 @@ svg.selectAll('circle').data(data).join('circle')
     currentSlideIndexRef,
     selectedElementIdsRef,
     editingElementIdRef,
+    mapActiveSlide: mapActive,
+    getActiveSlide: () => activeSlideRef.current,
   })
 
   const bringElementForward = useCallback(
     (id) => {
       updateElement(id, {
-        zIndex: (currentSlide?.elements?.find((el) => el.id === id)?.zIndex || 1) + 1,
+        zIndex: (activeSlide?.elements?.find((el) => el.id === id)?.zIndex || 1) + 1,
       })
     },
-    [currentSlide, updateElement]
+    [activeSlide, updateElement]
   )
 
   const sendElementBackward = useCallback(
     (id) => {
       updateElement(id, {
-        zIndex: Math.max(1, (currentSlide?.elements?.find((el) => el.id === id)?.zIndex || 1) - 1),
+        zIndex: Math.max(1, (activeSlide?.elements?.find((el) => el.id === id)?.zIndex || 1) - 1),
       })
     },
-    [currentSlide, updateElement]
+    [activeSlide, updateElement]
   )
 
   const moveElementToStackEdge = useCallback(
     (id, edge) => {
-      const elements = currentSlide?.elements || []
+      const elements = activeSlide?.elements || []
       if (!elements.some((el) => el.id === id)) return
 
       const sorted = [...elements].sort((a, b) => (a.zIndex || 1) - (b.zIndex || 1))
@@ -967,7 +727,7 @@ svg.selectAll('circle').data(data).join('circle')
 
       updateElements(reordered.map((el, index) => ({ id: el.id, zIndex: index + 1 })))
     },
-    [currentSlide, updateElements]
+    [activeSlide, updateElements]
   )
 
   const bringElementToFront = useCallback(
@@ -981,6 +741,18 @@ svg.selectAll('circle').data(data).join('circle')
   )
 
   // Undo/Redo handlers (called by QuickAccessToolbar and keyboard shortcuts)
+  // Reconcile a restored snapshot against the active vertical edit: drop it if
+  // the tracked parent id no longer exists or the child index is out of range
+  // (parent-by-id makes reorder free, but undo/redo can remove the slide/child).
+  const reconcileVerticalEdit = useCallback((state) => {
+    setVerticalEdit((ve) => {
+      if (!ve || ve.child == null) return ve
+      const parent = state?.slides?.find((s) => s.id === ve.parentId)
+      if (!parent || !parent.children || ve.child >= parent.children.length) return null
+      return ve
+    })
+  }, [])
+
   const handleUndo = useCallback(() => {
     const hist = historyRef.current
     if (hist.length < 2) return
@@ -991,7 +763,8 @@ svg.selectAll('circle').data(data).join('circle')
     const prevState = newHist[newHist.length - 1]
     setPresentation(prevState)
     setCurrentSlideIndex((ci) => Math.min(ci, prevState.slides.length - 1))
-  }, [setPresentation, setCurrentSlideIndex])
+    reconcileVerticalEdit(prevState)
+  }, [setPresentation, setCurrentSlideIndex, reconcileVerticalEdit])
 
   const handleRedo = useCallback(() => {
     const stack = redoStackRef.current
@@ -1006,7 +779,8 @@ svg.selectAll('circle').data(data).join('circle')
       ]
     setPresentation(redoState)
     setCurrentSlideIndex((ci) => Math.min(ci, redoState.slides.length - 1))
-  }, [presentation, setPresentation, setCurrentSlideIndex])
+    reconcileVerticalEdit(redoState)
+  }, [presentation, setPresentation, setCurrentSlideIndex, reconcileVerticalEdit])
 
   // Global keyboard shortcuts (find/replace, slide sorter)
   // NOTE: Undo/redo and clipboard shortcuts are now handled by useKeyboard/useClipboard
@@ -1060,54 +834,71 @@ svg.selectAll('circle').data(data).join('circle')
     }
   }, [presentation?.customCSS])
 
-  const selectedElement = currentSlide?.elements?.find((el) => el.id === selectedElementId) || null
+  const selectedElement = activeSlide?.elements?.find((el) => el.id === selectedElementId) || null
 
   // ── Command layer (Phase 1: clipboard + keyboard unified via useKeyboard/useClipboard) ──
   const { performCopy, performPaste, performCut } = useClipboard({
-    getCurrentSlideIndex: () => currentSlideIndex,
+    mapActiveSlide: mapActive,
     setPresentation,
   })
 
   const handleSelectAll = useCallback(() => {
-    const els = currentSlide?.elements || []
+    const els = activeSlide?.elements || []
     setSelectedElementIds(els.map((e) => e.id))
-  }, [currentSlide, setSelectedElementIds])
+  }, [activeSlide, setSelectedElementIds])
 
   // Wrappers that pass required context to useClipboard callbacks
   const handleCopy = useCallback(() => {
-    performCopy(currentSlide?.elements)
-  }, [currentSlide, performCopy])
+    performCopy(activeSlide?.elements)
+  }, [activeSlide, performCopy])
 
   const handlePaste = useCallback(() => {
     performPaste(clipboard)
   }, [clipboard, performPaste])
 
   const handleCut = useCallback(() => {
-    performCut(currentSlide?.elements, selectedElementIds)
-  }, [currentSlide, selectedElementIds, performCut])
+    performCut(activeSlide?.elements, selectedElementIds)
+  }, [activeSlide, selectedElementIds, performCut])
 
   const handleDuplicate = useCallback(() => {
     // Use createDuplicateOperation directly — reads current selection from store,
     // matching the original SlideCanvas behavior (no clipboard required)
     const { selectedElementIds: liveSelectedIds } = useEditorStore.getState()
-    const slideEls = currentSlide?.elements || []
+    const slideEls = activeSlide?.elements || []
     const { toAdd, clipboardData } = createDuplicateOperation({
       slideElements: slideEls,
       selectedElementIds: liveSelectedIds,
     })
     if (!toAdd.length) return
     if (clipboardData) setClipboard(clipboardData)
-    const idx = currentSlideIndex
-    setPresentation((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        slides: prev.slides.map((s, i) =>
-          i === idx ? { ...s, elements: [...(s.elements || []), ...toAdd] } : s
-        ),
+    setPresentation((prev) =>
+      mapActive(prev, (s) => ({ ...s, elements: [...(s.elements || []), ...toAdd] }))
+    )
+  }, [activeSlide, setPresentation, setClipboard, mapActive])
+
+  // Media-library insert — routes through mapActive so media lands on the
+  // active vertical child when one is being edited (Red Team #1).
+  const insertMediaElement = useCallback(
+    (item) => {
+      const base = {
+        id: crypto.randomUUID(),
+        x: 100,
+        y: 100,
+        zIndex: (activeSlide?.elements || []).length + 1,
       }
-    })
-  }, [currentSlide, currentSlideIndex, setPresentation, setClipboard])
+      let el = null
+      if (item.type === 'image') {
+        el = { ...base, type: 'image', width: 400, height: 300, src: item.url, objectFit: 'contain' }
+      } else if (item.type === 'video') {
+        el = { ...base, type: 'video', width: 480, height: 270, src: item.url, controls: true }
+      } else if (item.type === 'audio') {
+        el = { ...base, type: 'audio', width: 300, height: 60, src: item.url }
+      }
+      if (!el) return
+      setPresentation((prev) => mapActive(prev, (s) => ({ ...s, elements: [...(s.elements || []), el] })))
+    },
+    [activeSlide, setPresentation, mapActive]
+  )
 
   // Command palette commands
   const commands = [
@@ -1128,6 +919,16 @@ svg.selectAll('circle').data(data).join('circle')
   )
   const currentGameType = activeGameElement?.gameType || null
 
+  // Export/import + AI action handlers (extracted to hooks)
+  const { onExportPDF, onExportPPTX, onExportHTML, onExportOffline, onExportProject, onOpenProject } =
+    useExportActions(presentation)
+  const { onCreatePresentation, onAICopywriterApply, onApplyTranslations } = useAiActions({
+    presentation,
+    setPresentation,
+    updateElement,
+    selectedElementId,
+  })
+
   useKeyboard({
     onCopy: handleCopy,
     onCut: handleCut,
@@ -1142,25 +943,12 @@ svg.selectAll('circle').data(data).join('circle')
       if (showCommandPalette) { setShowCommandPalette(false); return }
       if (showGameHud) { setShowGameHud(false); return }
       if (showGameLeaderboard) { setShowGameLeaderboard(false); return }
-      if (overlayColor) { setOverlayColor(null); return }
-      if (annotationTool !== 'none') { setAnnotationTool('none'); return }
       setSelectedElementIds([])
       setEditingElementId(null)
     },
     isEditing: !!editingElementId,
-    isPresenting,
     activeGameType: currentGameType,
-    // Slideshow
-    onStartSlideshow: () => console.log('[slideshow] start'),
-    onStartSlideshowCurrent: () => console.log('[slideshow] start from current'),
-    onSlideNext: () => setCurrentSlideIndex((i) => Math.min(i + 1, (presentation?.slides?.length ?? 1) - 1)),
-    onSlidePrev: () => setCurrentSlideIndex((i) => Math.max(i - 1, 0)),
-    onSlideFirst: () => setCurrentSlideIndex(0),
-    onSlideLast: () => setCurrentSlideIndex((presentation?.slides?.length ?? 1) - 1),
-    onBlackScreen: () => setOverlayColor('black'),
-    onWhiteScreen: () => setOverlayColor('white'),
-    onEndSlideshow: () => { setOverlayColor(null); setIsPresenting(false) },
-    // Game
+    // Game (reachable in-editor when a game element is on the slide)
     onGameHud: () => setShowGameHud((v) => !v),
     onGameTimer: () => {
       const el = activeGameElement
@@ -1188,11 +976,6 @@ svg.selectAll('circle').data(data).join('circle')
     onTeamSelect2: () => console.log('[game] team 2'),
     onTeamSelect3: () => console.log('[game] team 3'),
     onTeamSelect4: () => console.log('[game] team 4'),
-    // Annotations
-    onPenTool: () => setAnnotationTool((t) => (t === 'pen' ? 'none' : 'pen')),
-    onLaserPointer: () => setAnnotationTool((t) => (t === 'laser' ? 'none' : 'laser')),
-    onHighlighterTool: () => setAnnotationTool((t) => (t === 'highlighter' ? 'none' : 'highlighter')),
-    onEraseAnnotations: () => _setAnnotationStrokes([]),
     // Editor
     onCommandPalette: () => setShowCommandPalette((v) => !v),
     // Editor shortcuts (260523-1230 cleanup plan)
@@ -1292,82 +1075,12 @@ svg.selectAll('circle').data(data).join('circle')
           onRedo={handleRedo}
         />
         <RibbonHeaderBar
-          onExportPDF={() => exportPDF(presentation)}
-          onExportPPTX={async () => {
-            try {
-              const { exportToPptx } = await import('../utils/exportPptx')
-              const warnings = await exportToPptx(presentation)
-              if (warnings.length) alert(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
-            } catch (err) {
-              console.error('PPTX export failed:', err)
-              alert('PPTX export failed: ' + err.message)
-            }
-          }}
-          onExportHTML={async () => {
-            try {
-              downloadHTML(presentation)
-            } catch (err) {
-              console.error('HTML export failed:', err)
-              alert('HTML export failed: ' + err.message)
-            }
-          }}
-          onExportOffline={async () => {
-            try {
-              const html = generateRevealHTML(presentation)
-              const offline = await generateOfflineHTML(html)
-              const blob = new Blob([offline], { type: 'text/html' })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              a.href = url
-              a.download = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}_offline.html`
-              a.click()
-              URL.revokeObjectURL(url)
-            } catch (err) {
-              console.error('Offline export failed:', err)
-              alert('Offline export failed: ' + err.message)
-            }
-          }}
-          onExportProject={async () => {
-            try {
-              await exportProject(presentation)
-            } catch (err) {
-              console.error('Project export failed:', err)
-              alert('Project export failed: ' + err.message)
-            }
-          }}
-          onOpenProject={() => {
-            const input = document.createElement('input')
-            input.type = 'file'
-            input.accept = '.navslides,.json'
-            input.onchange = async (e) => {
-              const file = e.target.files[0]
-              if (!file) return
-              try {
-                const parsed = await parseProjectFile(file)
-                const { valid, errors, warnings } = validateProjectFile(parsed)
-                if (!valid) {
-                  alert('Invalid project file: ' + errors.join(', '))
-                  return
-                }
-                if (warnings.length) console.warn('Import warnings:', warnings)
-                const rehydrated = await rehydrateImportedPresentation(api, parsed)
-                if (rehydrated.warnings.length) {
-                  console.warn('Import warnings:', rehydrated.warnings)
-                }
-                let finalPres = rehydrated.presentation
-                finalPres.title = (finalPres.title || 'Imported') + ' (Imported)'
-                const newPres = await api.createPresentation({
-                  ...finalPres,
-                  slides: finalPres.slides,
-                })
-                window.location.href = `/editor/${newPres.id}`
-              } catch (err) {
-                console.error('Import failed:', err)
-                alert('Import failed: ' + err.message)
-              }
-            }
-            input.click()
-          }}
+          onExportPDF={onExportPDF}
+          onExportPPTX={onExportPPTX}
+          onExportHTML={onExportHTML}
+          onExportOffline={onExportOffline}
+          onExportProject={onExportProject}
+          onOpenProject={onOpenProject}
           onGithub={() => setShowGithubModal(true)}
           onSync={() => setShowSyncModal(true)}
           onHistory={() => setShowHistoryModal(true)}
@@ -1390,8 +1103,7 @@ svg.selectAll('circle').data(data).join('circle')
           }}
           onAnalytics={() => setShowAnalytics(true)}
           onAICopywriter={() => {
-            const el = currentSlide?.elements?.find((e) => e.id === selectedElementId)
-            if (el?.type === 'text' && el.content) {
+            if (selectedElement?.type === 'text' && selectedElement.content) {
               setShowAICopywriter(true)
             } else {
               alert('Select a text element first')
@@ -1403,69 +1115,6 @@ svg.selectAll('circle').data(data).join('circle')
         />
       </div>
 
-      {/* GitHub Modal */}
-      {showGithubModal && (
-        <GitHubPushModal
-          presentationId={presentationId}
-          presentationTitle={presentation?.title}
-          onClose={() => setShowGithubModal(false)}
-        />
-      )}
-
-      {/* Sync / Proton Drive Modal */}
-      {showSyncModal && (
-        <SyncModal presentationId={presentationId} onClose={() => setShowSyncModal(false)} />
-      )}
-
-      {/* Version History Modal */}
-      {showHistoryModal && (
-        <HistoryModal
-          presentationId={presentationId}
-          onRestore={(restored) =>
-            setPresentation({ ...restored, slides: (restored.slides || []).map((s) => s) })
-          }
-          onClose={() => setShowHistoryModal(false)}
-        />
-      )}
-
-      {/* Slide Sorter View */}
-      {viewMode === 'sorter' && (
-        <SlideSorterView
-          slides={presentation.slides}
-          currentIndex={currentSlideIndex}
-          onSelect={(idx) => {
-            setCurrentSlideIndex(idx)
-            setViewMode('normal')
-          }}
-          onMove={(fromIdx, toIdx) => {
-            const newSlides = [...presentation.slides]
-            const [moved] = newSlides.splice(fromIdx, 1)
-            newSlides.splice(toIdx, 0, moved)
-            setPresentation((prev) => ({ ...prev, slides: newSlides }))
-          }}
-          onDelete={(idx) => {
-            if (presentation.slides.length <= 1) return
-            const newSlides = presentation.slides.filter((_, i) => i !== idx)
-            setPresentation((prev) => ({ ...prev, slides: newSlides }))
-            if (currentSlideIndex >= newSlides.length) {
-              setCurrentSlideIndex(Math.max(0, newSlides.length - 1))
-            }
-          }}
-          onDuplicate={(idx) => {
-            const slide = presentation.slides[idx]
-            const dup = {
-              ...slide,
-              id: crypto.randomUUID(),
-              elements: JSON.parse(JSON.stringify(slide.elements || [])),
-            }
-            const newSlides = [...presentation.slides]
-            newSlides.splice(idx + 1, 0, dup)
-            setPresentation((prev) => ({ ...prev, slides: newSlides }))
-          }}
-          onClose={() => setViewMode('normal')}
-        />
-      )}
-
       {/* Editor Body */}
       <div className="flex-1 flex overflow-hidden">
         {leftPanelOpen && (
@@ -1473,7 +1122,14 @@ svg.selectAll('circle').data(data).join('circle')
             slides={presentation.slides}
             resolution={presentation.resolution}
             currentIndex={currentSlideIndex}
-            onSelect={setCurrentSlideIndex}
+            onSelect={(idx) => {
+              // Always clear any active vertical-child edit when selecting a
+              // top-level slide — including re-selecting the current index,
+              // which the slide-change effect (keyed on currentSlideIndex)
+              // would otherwise miss.
+              setVerticalEdit(null)
+              setCurrentSlideIndex(idx)
+            }}
             onAdd={() => setShowTemplateModal(true)}
             onAddFromTemplate={() => setShowTemplateGallery(true)}
             onDelete={deleteSlide}
@@ -1495,19 +1151,15 @@ svg.selectAll('circle').data(data).join('circle')
                 ),
               }))
             }
-            onAddVerticalSlide={(idx) => {
-              const newChild = {
-                id: crypto.randomUUID(),
-                elements: [],
-                background: { type: 'color', color: '#1e1e2e' },
-                notes: '',
-              }
-              setPresentation((prev) => ({
-                ...prev,
-                slides: prev.slides.map((s, i) =>
-                  i === idx ? { ...s, children: [...(s.children || []), newChild] } : s
-                ),
-              }))
+            onAddVerticalSlide={(idx) => addChildSlide(idx)}
+            currentVerticalIndex={currentVerticalIndex}
+            onSelectVertical={({ parent, child }) => {
+              const parentSlide = presentation.slides[parent]
+              if (!parentSlide) return
+              setSelectedElementIds([])
+              setEditingElementId(null)
+              editingElementIdRef.current = null
+              setVerticalEdit({ parentId: parentSlide.id, child })
             }}
           />
         )}
@@ -1580,7 +1232,7 @@ svg.selectAll('circle').data(data).join('circle')
           <div className="flex-1 flex flex-col relative overflow-hidden">
             <SlideCanvas
               editor={editor}
-              slide={currentSlide}
+              slide={activeSlide}
               selectedElementIds={selectedElementIds}
               editingElementId={editingElementId}
               showGrid={showGrid}
@@ -1637,7 +1289,7 @@ svg.selectAll('circle').data(data).join('circle')
 
         {rightPanelOpen && (
           <PropertiesPanel
-            slide={currentSlide}
+            slide={activeSlide}
             selectedElement={selectedElement}
             onUpdateSlide={updateCurrentSlide}
             onUpdateElement={(idOrUpdates, maybeUpdates) => {
@@ -1662,408 +1314,51 @@ svg.selectAll('circle').data(data).join('circle')
             isTemplate={isTemplate}
           />
         )}
-
-        {/* HTML / D3 Code Editor Modal */}
-        {htmlEditorState && (
-          <HtmlEditorModal
-            state={htmlEditorState}
-            onChange={setHtmlEditorState}
-            onApply={commitHtmlEdit}
-            onCancel={() => setHtmlEditorState(null)}
-          />
-        )}
-
-        {/* Code Editor Modal */}
-        {codeEditorState && (
-          <CodeEditorModal
-            state={codeEditorState}
-            onChange={setCodeEditorState}
-            onApply={commitCodeEdit}
-            onCancel={() => setCodeEditorState(null)}
-            codeTheme={presentation.codeTheme}
-            onChangeTheme={(theme) => setPresentation((prev) => ({ ...prev, codeTheme: theme }))}
-          />
-        )}
-        {/* LaTeX / TikZ Editor Modal */}
-        {latexEditorState && (
-          <LatexEditorModal
-            state={latexEditorState}
-            onChange={setLatexEditorState}
-            onApply={commitLatexEdit}
-            onCancel={() => setLatexEditorState(null)}
-          />
-        )}
-
-        {/* Find & Replace */}
-        {showFindReplace && (
-          <FindReplaceBar
-            presentation={presentation}
-            onUpdatePresentation={(updates) => setPresentation((prev) => ({ ...prev, ...updates }))}
-            currentSlideIndex={currentSlideIndex}
-            onNavigateToSlide={setCurrentSlideIndex}
-            onClose={() => setShowFindReplace(false)}
-          />
-        )}
-
-        {/* Animation Timeline */}
-        {showTimeline && (
-          <AnimationTimeline
-            slide={currentSlide}
-            onUpdateElement={(id, updates) => updateElement(id, updates)}
-            onClose={() => setShowTimeline(false)}
-            onPreview={() => setShowAnimationPreview(true)}
-          />
-        )}
-
-        {showAnimationPreview && presentation && currentSlide && (
-          <AnimationPreviewModal
-            key={`${presentation.id || 'preview'}-${currentSlide.id || currentSlideIndex}`}
-            presentation={presentation}
-            slideIndex={currentSlideIndex}
-            onClose={() => setShowAnimationPreview(false)}
-          />
-        )}
-
-        {/* Transition Preview */}
-        {showTransitionPreview && (
-          <TransitionPreview
-            presentation={presentation}
-            fromIndex={currentSlideIndex}
-            onClose={() => setShowTransitionPreview(false)}
-          />
-        )}
-
-        {/* Share Modal */}
-        {showShareModal && (
-          <ShareModal presentationId={presentationId} onClose={() => setShowShareModal(false)} />
-        )}
-
-        {/* Analytics Modal */}
-        {showAnalytics && (
-          <AnalyticsModal presentationId={presentationId} onClose={() => setShowAnalytics(false)} />
-        )}
-
-        {/* AI Copywriter Modal */}
-        {showAICopywriter &&
-          (() => {
-            const el = currentSlide?.elements?.find((e) => e.id === selectedElementId)
-            const textContent = el?.content?.replace(/<[^>]*>/g, '') || ''
-            return (
-              <AICopywriterModal
-                text={textContent}
-                onApply={(newText) => {
-                  if (selectedElementId) {
-                    updateElement(selectedElementId, { content: `<p>${newText}</p>` })
-                  }
-                }}
-                onClose={() => setShowAICopywriter(false)}
-              />
-            )
-          })()}
-
-        {/* AI Generator Modal */}
-        {showAIGenerator && (
-          <AIGeneratorModal
-            onCreatePresentation={async (outline) => {
-              try {
-                const res = await fetch('/api/ai/generate-slides', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ outline }),
-                })
-                const data = await res.json()
-                if (data.slides) {
-                  // Create new slides from outline
-                  // eslint-disable-next-line unused-imports/no-unused-vars
-                  const newSlides = outline.map((item, idx) => ({
-                    id: crypto.randomUUID(),
-                    elements: [
-                      {
-                        id: crypto.randomUUID(),
-                        type: 'text',
-                        x: 40,
-                        y: 40,
-                        width: 880,
-                        height: 460,
-                        zIndex: 1,
-                        content:
-                          item.layout === 'title'
-                            ? `<h1 style="text-align:center">${item.title}</h1>${item.bulletPoints?.length ? `<p style="text-align:center">${item.bulletPoints.join(' | ')}</p>` : ''}`
-                            : `<h2>${item.title}</h2><ul>${(item.bulletPoints || []).map((bp) => `<li>${bp}</li>`).join('')}</ul>`,
-                      },
-                    ],
-                    notes: item.notes || item.speakerNotes || '',
-                  }))
-                  setPresentation((prev) => ({
-                    ...prev,
-                    slides: [...(prev.slides || []), ...newSlides],
-                  }))
-                }
-              } catch (err) {
-                alert('Failed to generate slides: ' + err.message)
-              }
-            }}
-            onClose={() => setShowAIGenerator(false)}
-          />
-        )}
-
-        {/* AI Translate Modal */}
-        {showAITranslate && (
-          <AITranslateModal
-            slides={presentation?.slides}
-            onApplyTranslations={(translationMap, keepOriginal) => {
-              setPresentation((prev) => {
-                const newSlides = prev.slides.map((slide, si) => {
-                  let updatedSlide = { ...slide }
-                  if (slide.elements) {
-                    updatedSlide.elements = slide.elements.map((el, ei) => {
-                      const key = `${si}-${ei}-content`
-                      const t = translationMap[key]
-                      if (t) return { ...el, content: t.translatedHtml }
-                      return el
-                    })
-                  }
-                  const notesKey = getSlideNotesTranslationKey(si)
-                  const notesT = translationMap[notesKey]
-                  if (notesT) {
-                    updatedSlide = applyTranslatedNotes(
-                      updatedSlide,
-                      notesT.translatedHtml,
-                      keepOriginal
-                    )
-                  }
-                  return updatedSlide
-                })
-                return { ...prev, slides: newSlides }
-              })
-            }}
-            onClose={() => setShowAITranslate(false)}
-          />
-        )}
-
-        {/* Live Present Modal */}
-        {showLiveModal && liveRoomCode && (
-          <LivePresentationModal
-            presentationId={presentationId}
-            roomCode={liveRoomCode}
-            presenterToken={livePresenterToken}
-            onClose={() => setShowLiveModal(false)}
-          />
-        )}
-
-        {showTemplateModal && (
-          <TemplatePickerModal
-            onSelect={(key) => addSlide(key)}
-            onClose={() => setShowTemplateModal(false)}
-          />
-        )}
-
-        {/* Custom CSS Editor Modal */}
-        {showCssEditor && (
-          <CSSEditorModal
-            customCSS={presentation.customCSS}
-            onUpdate={(css) => setPresentation((prev) => ({ ...prev, customCSS: css }))}
-            onClose={() => setShowCssEditor(false)}
-          />
-        )}
-
-        {showMediaLibrary && (
-          <MediaLibraryModal
-            onClose={() => setShowMediaLibrary(false)}
-            onInsert={(item) => {
-              if (!currentSlide) return
-              const base = {
-                id: crypto.randomUUID(),
-                x: 100,
-                y: 100,
-                zIndex: (currentSlide.elements || []).length + 1,
-              }
-              let el = null
-              if (item.type === 'image') {
-                el = {
-                  ...base,
-                  type: 'image',
-                  width: 400,
-                  height: 300,
-                  src: item.url,
-                  objectFit: 'contain',
-                }
-              } else if (item.type === 'video') {
-                el = {
-                  ...base,
-                  type: 'video',
-                  width: 480,
-                  height: 270,
-                  src: item.url,
-                  controls: true,
-                }
-              } else if (item.type === 'audio') {
-                el = { ...base, type: 'audio', width: 300, height: 60, src: item.url }
-              }
-              if (el) {
-                setPresentation((prev) => ({
-                  ...prev,
-                  slides: prev.slides.map((s, i) =>
-                    i === currentSlideIndex ? { ...s, elements: [...(s.elements || []), el] } : s
-                  ),
-                }))
-              }
-            }}
-          />
-        )}
-
-        {/* Black Screen Overlay */}
-        <BlackScreenOverlay
-          visible={overlayColor !== null}
-          color={overlayColor}
-          onDismiss={() => setOverlayColor(null)}
-        />
-
-        {/* Game HUD Overlay */}
-        {currentGameType && (
-          <div
-            data-testid="game-active-indicator"
-            className="pointer-events-none fixed bottom-3 left-1/2 z-[9000] -translate-x-1/2 rounded-md border border-border bg-panel/90 px-3 py-1 text-xs text-text-secondary shadow-lg"
-          >
-            Game: {currentGameType}
-          </div>
-        )}
-
-        {/* Game HUD Overlay */}
-        <GameHudOverlay
-          visible={showGameHud}
-          gameType={currentGameType}
-          onClose={() => setShowGameHud(false)}
-        />
-
-        {/* Game Leaderboard Overlay */}
-        <GameLeaderboardOverlay
-          visible={showGameLeaderboard}
-          scores={[]}
-          onClose={() => setShowGameLeaderboard(false)}
-        />
-
-        {/* Command Palette */}
-        <CommandPalette
-          open={showCommandPalette}
-          onClose={() => setShowCommandPalette(false)}
-          commands={commands}
-        />
-
-        {/* Embed Modals */}
-        {showKineticTextModal && (
-          <KineticTextAnimationTemplateSelectorModal
-            onInsert={insertEmbedHtml}
-            onClose={() => setShowKineticTextModal(false)}
-          />
-        )}
-        {showMathGridModal && (
-          <ParametricMathGridSurfacePlotterModal
-            onInsert={insertEmbedHtml}
-            onClose={() => setShowMathGridModal(false)}
-          />
-        )}
-        {showAnimeModal && (
-          <AnimeJsAnimationTemplateSelectorModal
-            onInsert={insertEmbedHtml}
-            onClose={() => setShowAnimeModal(false)}
-          />
-        )}
-        {showThreeModal && (
-          <ThreeJs3DSceneTemplateSelectorModal
-            onInsert={insertEmbedHtml}
-            onClose={() => setShowThreeModal(false)}
-          />
-        )}
-        {showFileBrowser && (
-          <FileBrowserModal
-            presentationId={presentationId}
-            onInsert={handleInsertFromFileBrowser}
-            onClose={() => setShowFileBrowser(false)}
-          />
-        )}
-
-        {/* Annotation Toolbar */}
-        <AnnotationToolbar
-          tool={annotationTool}
-          color={annotationColor}
-          onToolChange={setAnnotationTool}
-          onColorChange={setAnnotationColor}
-          onClear={() => _setAnnotationStrokes([])}
-          visible={annotationTool !== 'none'}
-        />
       </div>
 
-      {/* Image URL Prompt Popover */}
-      {showImageUrlPrompt && (
-        <PromptPopover
-          title="Image URL"
-          defaultValue=""
-          placeholder="https://..."
-          onSubmit={(url) => {
-            addImageElement(url)
-            setShowImageUrlPrompt(false)
-          }}
-          onCancel={() => setShowImageUrlPrompt(false)}
-          style={imageUrlPromptPopoverStyle}
-        />
-      )}
-
-      {/* Template Gallery for Inserting Slides */}
-      {showTemplateGallery && (
-        <TemplateGallery
-          onSelectTemplate={setGalleryPreviewTemplate}
-          onClose={() => setShowTemplateGallery(false)}
-        />
-      )}
-
-      {galleryPreviewTemplate && (
-        <TemplatePreview
-          template={galleryPreviewTemplate}
-          onClose={() => setGalleryPreviewTemplate(null)}
-          onUseAsNew={(tmpl) => {
-            // Replace current presentation slides with template slides
-            const newSlides = (tmpl.slides || []).map((s) => ({
-              ...s,
-              id: crypto.randomUUID(),
-              elements: (s.elements || []).map((el) => ({ ...el, id: crypto.randomUUID() })),
-            }))
-            setPresentation((prev) => ({
-              ...prev,
-              slides: newSlides,
-              theme: tmpl.theme || prev.theme,
-              transition: tmpl.transition || prev.transition,
-            }))
-            setCurrentSlideIndex(0)
-            setGalleryPreviewTemplate(null)
-            setShowTemplateGallery(false)
-          }}
-          onInsertSlides={(slidesToInsert, position) => {
-            // Re-assign IDs for all slides and elements to avoid duplicates
-            const newSlides = slidesToInsert.map((s) => ({
-              ...s,
-              id: crypto.randomUUID(),
-              elements: (s.elements || []).map((el) => ({ ...el, id: crypto.randomUUID() })),
-            }))
-
-            setPresentation((prev) => {
-              const currentSlides = [...prev.slides]
-              let insertIndex
-              if (position === 'after') {
-                insertIndex = currentSlideIndex + 1
-              } else {
-                insertIndex = currentSlides.length
-              }
-              currentSlides.splice(insertIndex, 0, ...newSlides)
-              return { ...prev, slides: currentSlides }
-            })
-
-            // Close modals
-            setGalleryPreviewTemplate(null)
-            setShowTemplateGallery(false)
-          }}
-        />
-      )}
+      <EditorModals
+        presentationId={presentationId}
+        presentation={presentation}
+        currentSlide={currentSlide}
+        currentSlideIndex={currentSlideIndex}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        setCurrentSlideIndex={setCurrentSlideIndex}
+        setPresentation={setPresentation}
+        htmlEditorState={htmlEditorState}
+        setHtmlEditorState={setHtmlEditorState}
+        commitHtmlEdit={commitHtmlEdit}
+        codeEditorState={codeEditorState}
+        setCodeEditorState={setCodeEditorState}
+        commitCodeEdit={commitCodeEdit}
+        latexEditorState={latexEditorState}
+        setLatexEditorState={setLatexEditorState}
+        commitLatexEdit={commitLatexEdit}
+        showFindReplace={showFindReplace}
+        setShowFindReplace={setShowFindReplace}
+        showTimeline={showTimeline}
+        setShowTimeline={setShowTimeline}
+        updateElement={updateElement}
+        currentGameType={currentGameType}
+        showGameHud={showGameHud}
+        setShowGameHud={setShowGameHud}
+        showGameLeaderboard={showGameLeaderboard}
+        setShowGameLeaderboard={setShowGameLeaderboard}
+        selectedElementId={selectedElementId}
+        commands={commands}
+        liveRoomCode={liveRoomCode}
+        livePresenterToken={livePresenterToken}
+        galleryPreviewTemplate={galleryPreviewTemplate}
+        setGalleryPreviewTemplate={setGalleryPreviewTemplate}
+        addSlide={addSlide}
+        addImageElement={addImageElement}
+        insertEmbedHtml={insertEmbedHtml}
+        handleInsertFromFileBrowser={handleInsertFromFileBrowser}
+        onCreatePresentation={onCreatePresentation}
+        onAICopywriterApply={onAICopywriterApply}
+        onApplyTranslations={onApplyTranslations}
+        onInsertMedia={insertMediaElement}
+      />
 
       <ProductTour />
     </div>

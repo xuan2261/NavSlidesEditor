@@ -27,6 +27,68 @@ describe('ui-store', () => {
     expect(useUIStore.getState().showSyncModal).toBe(false)
   })
 
+  it('defaults all migrated editor modal flags to closed', () => {
+    const s = useUIStore.getState()
+    const flags = [
+      'showTemplateGallery',
+      'showMediaLibrary',
+      'showTransitionPreview',
+      'showAnimationPreview',
+      'showCssEditor',
+      'showAICopywriter',
+      'showAIGenerator',
+      'showAITranslate',
+      'showLiveModal',
+      'showAnalytics',
+      'showImageUrlPrompt',
+      'showCommandPalette',
+      'showKineticTextModal',
+      'showMathGridModal',
+      'showAnimeModal',
+      'showThreeModal',
+      'showFileBrowser',
+    ]
+    for (const f of flags) {
+      expect(s[f]).toBe(false)
+    }
+  })
+
+  it('exposes a convenience setter for each migrated flag that flips the right key', () => {
+    const cases = [
+      ['setShowAICopywriter', 'showAICopywriter'],
+      ['setShowAIGenerator', 'showAIGenerator'],
+      ['setShowAITranslate', 'showAITranslate'],
+      ['setShowCommandPalette', 'showCommandPalette'],
+      ['setShowMediaLibrary', 'showMediaLibrary'],
+      ['setShowCssEditor', 'showCssEditor'],
+      ['setShowLiveModal', 'showLiveModal'],
+      ['setShowAnalytics', 'showAnalytics'],
+      ['setShowImageUrlPrompt', 'showImageUrlPrompt'],
+      ['setShowTemplateGallery', 'showTemplateGallery'],
+      ['setShowTransitionPreview', 'showTransitionPreview'],
+      ['setShowAnimationPreview', 'showAnimationPreview'],
+      ['setShowKineticTextModal', 'showKineticTextModal'],
+      ['setShowMathGridModal', 'showMathGridModal'],
+      ['setShowAnimeModal', 'showAnimeModal'],
+      ['setShowThreeModal', 'showThreeModal'],
+      ['setShowFileBrowser', 'showFileBrowser'],
+    ]
+    for (const [setter, flag] of cases) {
+      useUIStore.getState()[setter](true)
+      expect(useUIStore.getState()[flag]).toBe(true)
+      useUIStore.getState()[setter](false)
+      expect(useUIStore.getState()[flag]).toBe(false)
+    }
+  })
+
+  it('supports functional updates for toggle-style call sites', () => {
+    useUIStore.setState({ showCommandPalette: false })
+    useUIStore.getState().setShowCommandPalette((v) => !v)
+    expect(useUIStore.getState().showCommandPalette).toBe(true)
+    useUIStore.getState().setShowCommandPalette((v) => !v)
+    expect(useUIStore.getState().showCommandPalette).toBe(false)
+  })
+
   it('tracks theme and panel visibility', () => {
     useUIStore.getState().setTheme('light')
     useUIStore.getState().toggleLeftPanel()

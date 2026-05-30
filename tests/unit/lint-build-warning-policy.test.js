@@ -29,10 +29,13 @@ describe('lint and build warning policy', () => {
   })
 
   it('keeps heavyweight PPTX export code out of the initial editor bundle', () => {
-    const editorPage = read('client', 'src', 'pages', 'EditorPage.jsx')
+    // The export handlers (incl. the dynamic exportPptx import) were extracted
+    // from EditorPage into the use-export-actions hook. The code-splitting
+    // property is preserved — the dynamic import just lives in the hook now.
+    const exportActions = read('client', 'src', 'hooks', 'use-export-actions.js')
 
-    expect(editorPage).not.toMatch(/import\s+\{\s*exportToPptx\s*\}\s+from ['"]\.\.\/utils\/exportPptx['"]/)
-    expect(editorPage).toContain("import('../utils/exportPptx')")
+    expect(exportActions).not.toMatch(/import\s+\{\s*exportToPptx\s*\}\s+from ['"]\.\.\/utils\/exportPptx['"]/)
+    expect(exportActions).toContain("import('../utils/exportPptx')")
   })
 
   it('lazy-loads route pages from the app shell', () => {

@@ -34,3 +34,16 @@ if (typeof window !== 'undefined') {
     Element.prototype.scrollIntoView = function () {}
   }
 }
+
+// ResizeObserver is unimplemented in jsdom; SlideCanvas and other canvas
+// components instantiate it on mount. A no-op stub lets the real component tree
+// render under test instead of forcing child stubs.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  globalThis.ResizeObserver = ResizeObserver
+  if (typeof window !== 'undefined') window.ResizeObserver = ResizeObserver
+}
