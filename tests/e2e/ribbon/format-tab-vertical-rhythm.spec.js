@@ -1,7 +1,5 @@
 import { test, expect } from '../fixtures/test-fixtures.js'
 import {
-  expectClassicRibbonRow,
-  expectNoRowVerticalOverflow,
   openRibbonEditor,
   sectionLabels,
 } from '../pages/ribbon-layout-helper.js'
@@ -13,17 +11,9 @@ test.beforeEach(async ({ page, testPresentation }) => {
 })
 
 test.describe('Format Tab Vertical Rhythm', () => {
-  test('Format tab no-selection state uses classic Selection section', async ({ page }) => {
+  test('Format tab is hidden until an element is selected', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
-    const metrics = await editor.getRibbonLayoutMetrics('Format')
-
-    expect(metrics).not.toBeNull()
-    expect(sectionLabels(metrics)).toEqual(['Selection'])
-    expectClassicRibbonRow(metrics, 'Format empty')
-    expectNoRowVerticalOverflow(metrics, 'Format empty')
-    await expect(
-      page.getByRole('tabpanel', { name: 'Format' }).getByText('Select an element to format')
-    ).toBeVisible()
+    await expect(page.getByTestId('ribbon-tab-format')).toHaveCount(0)
   })
 
   test('Format tab selected shape exposes contextual groups in order', async ({ page }) => {
@@ -52,7 +42,8 @@ test.describe('Format Tab Vertical Rhythm', () => {
   test('Format tab controls should have consistent row height', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
 
-    // Format tab is visible without element selection
+    await editor.addShape('Rectangle')
+    await page.locator('.element-wrapper[data-element-type="shape"]').first().click({ force: true })
     const metrics = await editor.getRibbonLayoutMetrics('Format')
     expect(metrics).not.toBeNull()
 

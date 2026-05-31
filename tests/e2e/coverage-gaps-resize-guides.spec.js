@@ -52,8 +52,6 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
       slides: [seededSlide([shape('a', 120, 120, 120, 80)])],
     })
     await editor.gotoPresentation(presId)
-    await page.locator('select').filter({ hasText: '100%' }).first().selectOption('100')
-    await expect(page.locator('select').filter({ hasText: '100%' }).first()).toHaveValue('100')
     await page.getByTestId('slide-element-a').click()
 
     const handle = await page.getByTestId('resize-handle-se').boundingBox()

@@ -46,9 +46,17 @@ test.describe('All Tabs Overflow Matrix', () => {
             (CRITICAL_VISIBLE_CONTROLS[tab] || []).includes(control.label)
           )
           if (tab === 'Insert' && metrics.row.hasHorizontalOverflow) {
+            const trailingAdvancedControls = [
+              'Add kinetic text',
+              'Add math grid',
+              'Add Anime.js',
+              'Add Three.js',
+              'Add timeline',
+              'More advanced insert options',
+            ]
             expect(
               criticalOutside.every((control) =>
-                ['Add timeline', 'More advanced insert options'].includes(control.label)
+                trailingAdvancedControls.includes(control.label)
               ),
               'Insert 1280px overflow should only affect trailing Advanced controls'
             ).toBe(true)

@@ -8,7 +8,7 @@ export const VIEWPORTS = [
   { width: 768, height: 600, label: '768px' },
 ]
 
-export const RIBBON_TABS = ['Home', 'Insert', 'Design', 'Format', 'Transitions', 'Animations', 'View']
+export const RIBBON_TABS = ['Home', 'Insert', 'Design', 'Transitions', 'Animations', 'View']
 
 export const CRITICAL_VISIBLE_CONTROLS = {
   Home: ['Paste', 'Add slide'],
@@ -39,7 +39,6 @@ export const CRITICAL_VISIBLE_CONTROLS = {
 
 export const GROUP_STATE_EXPECTATIONS = [
   { name: 'Home idle', tab: 'Home', expected: ['Clipboard', 'Text', 'Canvas', 'Arrange'] },
-  { name: 'Format empty', tab: 'Format', expected: ['Selection'] },
   { name: 'Insert default', tab: 'Insert', expected: ['Basic', 'Shapes', 'Content', 'Media', 'Embed', 'Advanced'] },
   { name: 'Transitions default', tab: 'Transitions', expected: ['Transition', 'Slide', 'Speed', 'Auto-Advance', 'Preview'] },
   { name: 'Animations default', tab: 'Animations', expected: ['Animation', 'Order', 'Preview'] },

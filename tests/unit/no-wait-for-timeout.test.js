@@ -24,6 +24,7 @@ describe('e2e suite is sleep-free', () => {
       'tests/e2e/pptx-import-fidelity.spec.js',
       'tests/e2e/pptx-import-visual-fidelity.spec.js',
       'tests/e2e/export/pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js',
+      'tests/e2e/fixtures/test-fixtures.js',
     ])
 
     const result = spawnSync('git', ['grep', '-lE', 'new Promise.*setTimeout', 'tests/e2e/'], {

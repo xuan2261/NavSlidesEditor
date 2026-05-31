@@ -63,6 +63,7 @@ module.exports = defineConfig({
       ...process.env,
       DATA_DIR: dataDir,
       PORT: serverPort,
+      PLAYWRIGHT_API_BASE_URL: `${apiTarget}/api`,
       SLIDES_DATA_DIR: dataDir,
       SLIDES_UPLOADS_DIR: uploadsDir,
       VITE_API_PROXY_TARGET: apiTarget,

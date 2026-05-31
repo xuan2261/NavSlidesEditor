@@ -79,7 +79,7 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
     await page.keyboard.press('Escape')
 
     await page.setViewportSize({ width: 390, height: 844 })
-    await expect(page.locator('.slide-canvas')).toBeVisible()
+    await expect(page.getByText('Tablet or desktop required')).toBeVisible()
     await page.keyboard.press('Tab')
     await expect(page.locator(':focus')).toBeVisible()
 

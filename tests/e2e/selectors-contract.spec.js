@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures/test-fixtures.js'
 import { EditorPage } from './pages/editor-page.js'
 
-const RIBBON_TABS = ['home', 'insert', 'design', 'format', 'transitions', 'animations', 'view']
+const STATIC_RIBBON_TABS = ['home', 'insert', 'design', 'transitions', 'animations', 'view']
 
 test.describe('data-testid selector contract', () => {
   test('home and settings selectors are stable', async ({ page }) => {
@@ -27,11 +27,18 @@ test.describe('data-testid selector contract', () => {
     await expect(page.getByTestId('slide-panel-item')).toHaveCount(1)
     await expect(page.getByTestId('ribbon-panel-container')).toBeVisible()
 
-    for (const tab of RIBBON_TABS) {
+    for (const tab of STATIC_RIBBON_TABS) {
       await expect(page.getByTestId(`ribbon-tab-${tab}`)).toBeVisible()
       await page.getByTestId(`ribbon-tab-${tab}`).click()
       await expect(page.getByTestId(`ribbon-tab-${tab}-content`)).toBeVisible()
     }
+
+    await expect(page.getByTestId('ribbon-tab-format')).toHaveCount(0)
+    await editorPage.addShape('Rectangle')
+    await page.locator('.element-wrapper[data-element-type="shape"]').first().click({ force: true })
+    await expect(page.getByTestId('ribbon-tab-format')).toBeVisible()
+    await page.getByTestId('ribbon-tab-format').click()
+    await expect(page.getByTestId('ribbon-tab-format-content')).toBeVisible()
 
     await page.getByTestId('ribbon-tab-insert').click()
     await expect(page.getByTestId('ribbon-insert-text')).toBeVisible()

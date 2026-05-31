@@ -168,6 +168,7 @@ async function renderShareView(presentationId, res) {
 
   const html = generateRevealHTML(sanitized)
   res.setHeader('Content-Type', 'text/html')
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
   res.send(html)
 }
 

@@ -6,6 +6,23 @@ const require = createRequire(import.meta.url)
 const pkg = require('../package.json')
 
 const apiProxyTarget = process.env.VITE_API_PROXY_TARGET || 'http://localhost:3002'
+const MANUAL_CHUNKS = [
+  ['vendor-react', ['react', 'react-dom', 'react-router-dom']],
+  ['vendor-katex', ['katex']],
+  ['vendor-lucide', ['lucide-react']],
+  [
+    'vendor-tiptap',
+    ['@tiptap/core', '@tiptap/starter-kit', '@tiptap/extension-text-style'],
+  ],
+]
+
+function manualChunks(id) {
+  const normalizedId = id.replace(/\\/g, '/')
+  const match = MANUAL_CHUNKS.find(([, packages]) =>
+    packages.some((packageName) => normalizedId.includes(`/node_modules/${packageName}/`))
+  )
+  return match?.[0]
+}
 
 // Shared by dev (`server`) and built-asset preview (`preview`). E2E runs against
 // `vite preview` (static, pre-built chunks) so lazy route imports are served as
@@ -52,16 +69,7 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-katex': ['katex'],
-          'vendor-lucide': ['lucide-react'],
-          'vendor-tiptap': [
-            '@tiptap/core',
-            '@tiptap/starter-kit',
-            '@tiptap/extension-text-style',
-          ],
-        },
+        manualChunks,
       },
     },
   },

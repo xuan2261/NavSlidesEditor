@@ -11,7 +11,7 @@ test.describe('Animation Preview', () => {
     page,
     request,
   }) => {
-    await page.setViewportSize({ width: 390, height: 844 })
+    await page.setViewportSize({ width: 768, height: 844 })
     const pres = await apiCreatePresentation(request, 'Animation Preview E2E')
 
     try {

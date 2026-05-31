@@ -56,6 +56,7 @@ async function selectElements(page, ids) {
     await expect.poll(() => selectedCanvasElementIds(page)).toEqual([...expected].sort())
   }
 
+  await page.getByRole('tab', { name: 'Home' }).click()
   await expect(page.locator('.tour-step-ribbon')).toContainText('Arrange', { timeout: 5000 })
 }
 

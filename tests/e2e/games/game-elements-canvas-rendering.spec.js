@@ -63,7 +63,7 @@ test.describe('Game Element — Canvas Rendering', () => {
     const prevCount = await editorPage.getElementCount()
     await editorPage.clickInsertMenuItem('Name Picker')
     await editorPage.waitForElementCount(prevCount + 1)
-    await expect(page.locator('button[title="Present"]')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Present' }).first()).toBeVisible()
   })
 })
 
