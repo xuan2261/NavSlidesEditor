@@ -1,13 +1,19 @@
 # Live Presentations
 
-NavSlides Editor ships with a built-in **live presentation mode** powered by Socket.IO. Present from one machine and let viewers follow along in their own browsers — no external service required.
+NavSlides Editor ships with a built-in **live presentation mode** powered by Socket.IO. Present from one machine and let viewers follow along in their own browsers — no external service required. The presenter holds a **server-issued presenter token** so only the host can drive the deck.
 
 ## Modes
 
 - **Live View** (`/live/:roomCode`): a read-only viewer that mirrors slide changes in real time
-- **Speaker View** (`/speaker/:roomCode`): the presenter's console with notes, timer, and next-slide preview
+- **Speaker View** (`/speaker/:roomCode`): the presenter's console with notes, a next-slide preview, and a timer
 - **Remote Control** (`/remote/:roomCode`): drive the deck from a phone or tablet
-- **Annotations**: presenter draws on slides; ink syncs to all viewers via the same socket
+- **Annotations**: pen, laser pointer, highlighter, and eraser tools that sync to all viewers in real time and **persist per slide** when a viewer rejoins
+
+## Presenter controls
+
+- **PowerPoint-style navigation**: `F5`, `Home`, `End`, and arrow keys
+- **Black / white screen overlays**: press `B` or `W` to blank the audience view
+- **Shared live timer** synced between the speaker view and viewers
 
 ## Starting a session
 

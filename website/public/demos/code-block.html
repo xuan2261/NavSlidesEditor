@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Block Demo</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  .code-container {
+    background: #272822;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 640px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+  .code-header {
+    background: #1e1e1e;
+    padding: 10px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.red { background: #ff5f57; }
+  .dot.yellow { background: #febc2e; }
+  .dot.green { background: #28c840; }
+  pre {
+    margin: 0;
+    padding: 20px;
+  }
+  code {
+    font-family: 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .hljs { background: transparent; }
+</style>
+</head>
+<body>
+<div class="code-container">
+  <div class="code-header">
+    <span class="dot red"></span>
+    <span class="dot yellow"></span>
+    <span class="dot green"></span>
+  </div>
+  <pre><code class="language-python">
+# integration example
+# https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html
+   
+import numpy as np
+from scipy.integrate import odeint
+
+def pend(y, t, b, c):
+    theta, omega = y
+    dydt = [omega, -b*omega - c*np.sin(theta)]
+    return dydt
+
+b = 1.0
+c = 3.0
+y0 = [np.pi - 0.1, 0.0]
+t = np.linspace(0, 10, 101)
+   
+sol = odeint(pend, y0, t, args=(b, c))</code></pre>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

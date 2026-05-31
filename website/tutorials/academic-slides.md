@@ -5,8 +5,8 @@ This tutorial shows how to build a polished academic talk: section footers, LaTe
 ## 1. Choosing the Academic preset
 
 1. Create a new presentation and select the **Academic** template.
-2. Once in the editor, click **Design** in the top toolbar.
-3. Under **Presets**, click **Academic**. This applies:
+2. Once in the editor, open the **Design** tab in the ribbon.
+3. Open the **Themes** gallery and pick the **Academic Paper** preset. This applies:
    - A clean serif/sans-serif font pairing
    - A subtle header color
    - Numbered slide footers ready for section labeling

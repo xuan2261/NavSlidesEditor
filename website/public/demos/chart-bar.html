@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bar Chart Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  .chart-container {
+    width: 500px;
+    height: 300px;
+  }
+</style>
+</head>
+<body>
+<div class="chart-container">
+  <canvas id="chart"></canvas>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  new Chart(document.getElementById('chart'), {
+    type: 'bar',
+    data: {
+      labels: ['Kepler', 'TESS', 'Gaia', 'JWST'],
+      datasets: [{
+        label: 'Discoveries',
+        data: [2700, 400, 1800, 50],
+        backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981'],
+        borderColor: ['#818cf8', '#f472b6', '#fbbf24', '#34d399'],
+        borderWidth: 1,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#a0a0b8', font: { family: 'Inter' } },
+          grid: { color: 'rgba(255,255,255,0.06)' }
+        },
+        y: {
+          ticks: { color: '#a0a0b8', font: { family: 'Inter' } },
+          grid: { color: 'rgba(255,255,255,0.06)' }
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>

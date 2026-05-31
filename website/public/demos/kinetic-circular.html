@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Circular Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .circle-container {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    animation: spin 8s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .circle-container span {
+    position: absolute;
+    font-size: 16px;
+    font-weight: 500;
+    left: 50%;
+    top: 50%;
+    transform-origin: 0 0;
+  }
+</style>
+</head>
+<body>
+<div class="circle-container" id="circle"></div>
+<script>
+  const text = "ROTATION***";
+  const radius = 70;
+  const container = document.getElementById('circle');
+  const chars = text.split('');
+  const total = chars.length;
+
+  chars.forEach((ch, i) => {
+    const angle = (i / total) * 2 * Math.PI - Math.PI / 2;
+    const x = radius * Math.cos(angle);
+    const y = radius * Math.sin(angle);
+    const span = document.createElement('span');
+    span.textContent = ch;
+    const rotDeg = (i / total) * 360 + 90;
+    span.style.transform = `translate(${x}px, ${y}px) rotate(${rotDeg}deg) translate(-50%, -50%)`;
+    container.appendChild(span);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Split-Flap Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    color: #ffffff;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    perspective: 600px;
+  }
+  .splitflap {
+    font-size: 32px;
+    display: flex;
+    gap: 4px;
+  }
+  .splitflap span {
+    display: inline-block;
+    background: #2a2a3e;
+    padding: 8px 6px;
+    border-radius: 4px;
+    transform: rotateX(-90deg);
+    opacity: 0;
+    animation: flipDown 0.5s ease forwards;
+    transform-origin: top center;
+  }
+  @keyframes flipDown {
+    to {
+      transform: rotateX(0deg);
+      opacity: 1;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="splitflap" id="flap"></div>
+<script>
+  const text = "DEPARTING";
+  const container = document.getElementById('flap');
+  text.split('').forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.textContent = ch;
+    span.style.animationDelay = `${i * 0.12}s`;
+    container.appendChild(span);
+  });
+</script>
+</body>
+</html>

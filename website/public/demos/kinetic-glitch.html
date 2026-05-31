@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Glitch Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    color: #ffffff;
+    font-family: 'Bebas Neue', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .glitch {
+    position: relative;
+    font-size: 48px;
+    letter-spacing: 6px;
+  }
+  .glitch::before,
+  .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .glitch::before {
+    color: #0ff;
+    animation: glitchTop 1s linear infinite;
+    clip-path: inset(0 0 50% 0);
+  }
+  .glitch::after {
+    color: #f0f;
+    animation: glitchBottom 1.2s linear infinite;
+    clip-path: inset(50% 0 0 0);
+  }
+  @keyframes glitchTop {
+    0% { transform: translate(0); }
+    20% { transform: translate(-3px, -2px); }
+    40% { transform: translate(3px, 1px); }
+    60% { transform: translate(-1px, 2px); }
+    80% { transform: translate(2px, -1px); }
+    100% { transform: translate(0); }
+  }
+  @keyframes glitchBottom {
+    0% { transform: translate(0); }
+    15% { transform: translate(2px, 1px); }
+    35% { transform: translate(-3px, -1px); }
+    55% { transform: translate(1px, 2px); }
+    75% { transform: translate(-2px, -2px); }
+    100% { transform: translate(0); }
+  }
+</style>
+</head>
+<body>
+<div class="glitch" data-text="SIGNAL LOST">SIGNAL LOST</div>
+</body>
+</html>

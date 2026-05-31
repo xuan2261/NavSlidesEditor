@@ -33,7 +33,7 @@ This feature lets the audience click an image during a presentation to see it at
 ### Example output
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/expand-image.html" style="width:100%;height:260px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/expand-image.html" style="width:100%;height:260px;border:none"></iframe>
 </div>
 
 ## Popup text
@@ -52,5 +52,5 @@ You can enable **both** click-to-expand and popup text on the same image. When c
 ### Example output
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/popup-image.html" style="width:100%;height:260px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/popup-image.html" style="width:100%;height:260px;border:none"></iframe>
 </div>

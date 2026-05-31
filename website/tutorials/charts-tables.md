@@ -12,10 +12,12 @@ Insert data visualizations directly on your slides.
 
 Charts are rendered with Chart.js and update live as you change the data.
 
+![A bar chart element on a slide with the Design ribbon open](/img/editor-chart-element.png)
+
 ### Example output
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/chart-bar.html" style="width:100%;height:260px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/chart-bar.html" style="width:100%;height:260px;border:none"></iframe>
 </div>
 
 ## Tables
@@ -32,5 +34,5 @@ Charts are rendered with Chart.js and update live as you change the data.
 ### Example output
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/table.html" style="width:100%;height:180px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/table.html" style="width:100%;height:180px;border:none"></iframe>
 </div>

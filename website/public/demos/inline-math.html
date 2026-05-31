@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inline Math Demo</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  .content {
+    max-width: 700px;
+    text-align: center;
+    line-height: 1.8;
+  }
+  .katex { color: #ffffff; }
+</style>
+</head>
+<body>
+<div class="content">
+  <p>
+    The energy is <span id="eq1"></span> where <span id="eq2"></span> is the mass of the particle, and <span id="eq3"></span> is the speed of light.
+  </p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script>
+  katex.render("E = mc^2", document.getElementById("eq1"), { throwOnError: false });
+  katex.render("m", document.getElementById("eq2"), { throwOnError: false });
+  katex.render("c", document.getElementById("eq3"), { throwOnError: false });
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Revolve Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    color: #ffffff;
+    font-family: 'Bebas Neue', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    perspective: 800px;
+  }
+  .revolve {
+    font-size: 52px;
+    letter-spacing: 6px;
+    animation: flipIn 1s ease forwards, drift 3s ease-in-out 1s infinite alternate;
+    transform: rotateY(-180deg);
+  }
+  @keyframes flipIn {
+    to { transform: rotateY(0deg); }
+  }
+  @keyframes drift {
+    0% { transform: rotateY(-10deg); }
+    100% { transform: rotateY(10deg); }
+  }
+</style>
+</head>
+<body>
+<div class="revolve">REVOLUTION</div>
+</body>
+</html>

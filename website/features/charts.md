@@ -4,12 +4,15 @@ NavSlides Editor includes a built-in chart editor powered by [Chart.js](https://
 
 ## Inserting a chart
 
-1. Right-click on the slide canvas and choose **Insert → Chart**.
-2. A chart dialog opens. Select the chart type:
+1. Use the **Insert** ribbon tab and choose **Chart** (or right-click the canvas and choose **Insert → Chart**).
+2. A bar chart with sample data is placed on the slide.
+3. With the chart selected, pick a chart type from the **Format** tab or the properties panel:
    - **Bar** — vertical or horizontal bar chart
-   - **Line** — line chart with optional fill
-   - **Scatter** — X/Y scatter plot with optional trend line
-3. Click **Create**. A default chart is placed on the slide with sample data.
+   - **Line** — line chart with optional area fill
+   - **Pie** — proportional pie chart
+   - **Doughnut** — pie chart with a hollow center
+   - **Radar** — multi-axis radar/spider chart
+   - **Polar area** — radial area chart
 
 ## Editing chart data
 

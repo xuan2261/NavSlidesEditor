@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Typewriter Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .typewriter {
+    font-size: 28px;
+    white-space: nowrap;
+  }
+  .typewriter .text {
+    display: inline;
+    border-right: 2px solid #ffffff;
+    animation: blink 0.7s step-end infinite;
+  }
+  @keyframes blink {
+    50% { border-color: transparent; }
+  }
+</style>
+</head>
+<body>
+<div class="typewriter">
+  <span class="text" id="output"></span>
+</div>
+<script>
+  const fullText = "$ ssh user@galaxy";
+  const el = document.getElementById('output');
+  const totalChars = 18;
+  const duration = 2000;
+  const interval = duration / totalChars;
+  let i = 0;
+
+  function type() {
+    if (i < fullText.length) {
+      el.textContent += fullText.charAt(i);
+      i++;
+      setTimeout(type, interval);
+    }
+  }
+  setTimeout(type, 500);
+</script>
+</body>
+</html>

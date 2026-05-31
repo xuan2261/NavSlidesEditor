@@ -35,7 +35,7 @@ You can insert LaTeX math expressions directly inside running text.
 ### Example output
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/inline-math.html" style="width:100%;height:140px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/inline-math.html" style="width:100%;height:140px;border:none"></iframe>
 </div>
 
 ## Text on a path

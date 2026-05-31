@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Stagger Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .stagger {
+    font-size: 36px;
+    display: flex;
+  }
+  .stagger span {
+    display: inline-block;
+    transform: scale(0) rotate(20deg);
+    opacity: 0;
+    animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  @keyframes popIn {
+    to {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="stagger" id="stagger"></div>
+<script>
+  const text = "EXPANDING";
+  const container = document.getElementById('stagger');
+  const mid = Math.floor(text.length / 2);
+
+  text.split('').forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.textContent = ch;
+    const distFromCenter = Math.abs(i - mid);
+    span.style.animationDelay = `${distFromCenter * 0.08}s`;
+    container.appendChild(span);
+  });
+</script>
+</body>
+</html>

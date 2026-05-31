@@ -2,6 +2,8 @@
 
 This tutorial walks you through creating a complete presentation from scratch — from blank deck to exported HTML file.
 
+![The NavSlides Editor with a deck open](/img/editor-empty.png)
+
 ## 1. Creating a new presentation
 
 1. Open NavSlides Editor in your browser (default: `http://localhost:3002`).
@@ -55,10 +57,10 @@ To change the font size:
 
 ## 6. Applying a theme
 
-1. Click the **Design** button in the top toolbar (or go to **Slide → Theme**).
-2. The theme panel opens on the right, showing 11 built-in reveal.js themes.
-3. Click **Sky** (or any theme you like) to apply it.
-4. The background and typography update across all slides immediately.
+1. Open the **Design** tab in the ribbon.
+2. Click **Themes** to open the ThemeGallery, which shows 39 token-based design presets across 7 categories plus the 11 built-in reveal.js base themes.
+3. Click any preset or base theme to apply it.
+4. The background and typography update across all slides immediately. Use **Apply to all** to clear per-slide overrides.
 
 ## 7. Adding a slide transition
 
@@ -69,7 +71,7 @@ To change the font size:
 
 ## 8. Presenting
 
-1. Click the **Present** button (play icon) in the top toolbar, or press `F`.
+1. Click the **Present** button (play icon) in the top toolbar, or press `F5`.
 2. The presentation enters full-screen mode via reveal.js.
 3. Use the **arrow keys** to advance slides.
 4. Press **S** to open the **speaker notes** window in a separate browser tab.

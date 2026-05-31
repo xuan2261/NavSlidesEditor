@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaTeX Equation Demo</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  #equation {
+    font-size: 28px;
+  }
+  .katex { color: #ffffff; }
+</style>
+</head>
+<body>
+<div id="equation"></div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script>
+  katex.render(
+    "\\Omega(\\theta) = \\Omega_{\\text{eq}} - \\Delta\\Omega\\,\\sin^2\\theta",
+    document.getElementById("equation"),
+    { displayMode: true, throwOnError: false }
+  );
+</script>
+</body>
+</html>

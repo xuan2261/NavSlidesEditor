@@ -31,7 +31,7 @@ A custom physics-inspired transition where horizontal bands sweep across at diff
 ### Example output
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/dr-transition.html" style="width:100%;height:240px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/dr-transition.html" style="width:100%;height:240px;border:none"></iframe>
 </div>
 
 ## Transition speed

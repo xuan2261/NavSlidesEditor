@@ -14,10 +14,12 @@ Unlike editing raw Markdown or HTML reveal.js files, NavSlides Editor lets you:
 ## Key capabilities
 
 - **Rich text formatting** via TipTap: headings, bold/italic/underline, font size & color, highlight, lists, tables, and code blocks
+- **Ribbon UI** — a familiar PowerPoint-style ribbon (Home, Insert, Design, View) with a contextual Format tab that appears when an element is selected
+- **PowerPoint-style status bar** — zoom slider with Fit controls, current slide position, and a Normal / Slide Sorter / Present view switcher
 - **LaTeX & TikZ** — write display math or full TikZ diagrams in a split-pane editor with live preview
-- **Charts** — insert bar, line, and scatter charts from the element menu
-- **Slide navigation** — vertical stacks, reorderable slides, speaker notes
-- **Themes & presets** — 11 built-in reveal.js themes plus 6 design presets (Academic, Minimal, Dark Tech, etc.)
+- **Charts** — insert bar, line, pie, doughnut, radar, and polar area charts powered by Chart.js
+- **Slide navigation** — first-class vertical (child) slides, reorderable slides, speaker notes
+- **Themes & presets** — 11 built-in reveal.js themes plus 39 token-based design presets across 7 categories
 - **Footer sequences** — automatic section progress footers for academic talks
 - **Export options** — standalone HTML, offline HTML (CDN inlined), PDF, PPTX, shareable links, GitHub push
 - **Cloud sync** — Proton Drive, S3, Google Drive, or any rclone remote
@@ -38,6 +40,9 @@ See the [Installation guide](/guide/installation) for step-by-step instructions.
 
 Once running, navigate to `http://localhost:3002` in your browser. You'll land on the **home screen**, which shows:
 
+![The NavSlides Editor home dashboard](/img/home-dashboard.png)
+
+
 - **New Presentation** — create a blank deck or pick a template
 - **Recent files** — re-open presentations you've worked on before
 - **Open file** — load an existing `.json` presentation file from disk
@@ -47,7 +52,7 @@ Once running, navigate to `http://localhost:3002` in your browser. You'll land o
 1. Click **New Presentation** on the home screen.
 2. Choose a template (or start blank).
 3. Click the title text on the first slide and start typing.
-4. Use the formatting toolbar that appears at the top to change font, size, or color.
+4. Use the ribbon's **Home** tab (or the contextual **Format** tab) to change font, size, or color.
 5. Press **Escape** to deselect and return to slide-selection mode.
 6. Click the **+** button in the slide panel to add a new slide.
 

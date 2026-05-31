@@ -2,6 +2,8 @@
 
 A high-level tour of everything NavSlides Editor can do.
 
+![The NavSlides Editor workspace: ribbon, slide panel, canvas, and properties panel](/img/editor-empty.png)
+
 ## Editing
 
 NavSlides Editor is built around a drag-and-drop canvas. Every element on a slide — text boxes, images, shapes, code blocks, LaTeX blocks, charts — can be:
@@ -16,28 +18,55 @@ An undo/redo stack tracks every change (`Ctrl+Z` / `Ctrl+Y`).
 
 ## Element Types
 
+NavSlides Editor has **19 canonical element types**. The Insert ribbon shows ~27 actions because shapes (rectangle, circle, triangle, arrow, star) and games (7 variants) expose sub-variants from a single element type.
+
 | Element | Description |
 |---|---|
-| Text box | Rich text with TipTap — headings, bold/italic/underline, lists, tables, inline math |
-| Image | Upload or paste images; resize and reposition freely |
-| Shape | Rectangle, circle, arrow, line — filled or outlined, any color |
-| Code block | Syntax-highlighted code via highlight.js; supports 100+ languages |
-| LaTeX block | Display math and TikZ diagrams with live split-pane preview |
-| Chart | Bar, line, and scatter charts powered by Chart.js |
-| Embed | Iframe embeds for web content |
+| Text | Rich text with TipTap — headings, bold/italic/underline, font size & color, lists, tables, inline math |
+| Image | Upload or paste images; crop, filters, rounded corners; resize and reposition freely |
+| Shape | Rectangle, circle, triangle, arrow, star — filled or outlined, any color |
+| Code | Syntax-highlighted code; 10 themes, 25+ languages |
+| LaTeX / TikZ | Display math and TikZ diagrams (KaTeX + TikZJax) with live split-pane preview |
+| HTML | Iframe-isolated HTML embeds for interactive web content |
+| Markdown | Markdown blocks rendered to HTML |
+| Chart | Chart.js charts — bar, line, pie, doughnut, radar, polar area |
+| Video | Local or URL video with start/end trim and playback speed |
+| Audio | Audio clips with playback controls |
+| Table | Drag-resize columns/rows, inline editing, per-cell styling, merged cells |
+| QR code | Generate a QR code from any URL or text |
+| Icon | 60+ Lucide icons, recolorable |
+| Callout | Numbered callout markers for annotations |
+| Drawing | Freehand pen strokes on the canvas |
+| Line | Straight or curved connectors with arrowheads |
+| SVG | Inline SVG with fill/stroke overrides |
+| Timeline | Date-based timeline with events |
+| Game | 7 interactive game types (name picker, hot potato, Jeopardy, four corners, relay race, trivia champ, scattergories) |
+
+The canonical list lives in `client/src/data/element-defaults.js`.
 
 ::: tip
-To insert a new element, right-click on the slide canvas or use the **Insert** toolbar at the top of the editor.
+To insert an element, use the **Insert** tab in the ribbon at the top of the editor, or right-click on the slide canvas.
 :::
 
 ## Slides
 
 - **Add, duplicate, delete** slides from the panel on the left
 - **Reorder** by drag-and-drop in the panel
-- **Vertical stacks** — nest slides below a parent for reveal.js-style vertical navigation
-- **Per-slide background** — solid color, gradient, or image
+- **First-class vertical (child) slides** — create, select, edit, and export nested slides directly from the slide panel for reveal.js-style vertical navigation
+- **35 layouts** across 6 categories (basic, content, layout, data, structure, ending), plus 20+ full-deck templates including interactive simulations and quiz decks
+- **Per-slide background** — solid color, gradient, image, or **animated FX**
 - **Speaker notes** — each slide has an optional notes pane visible in presenter mode
+- **Fragment animations** with a visual timeline editor and preview modal
 - **Slide transitions** — choose from reveal.js transitions (fade, slide, zoom, convex, concave, none)
+- **Hidden slides, per-slide page numbers**, and a footer system (basic / sequence modes)
+
+## Animated FX Backgrounds
+
+Set a slide background to `type: fx` for one of **8 animated canvas effects**: gradient-blob, starfield, matrix-rain, constellation, particle-burst, knowledge-graph, orbit-ring, sparkle-trail. They animate in the editor, present, and live views, honor `prefers-reduced-motion`, and fall back to a solid color when printed.
+
+## Game Mode
+
+Run **7 interactive game element types** — name picker, hot potato, Jeopardy, four corners, relay race, trivia champ, scattergories — with a dedicated player join page, leaderboard, scoring, and presenter shortcuts. See [Game Mode](/features/game-mode).
 
 ## Footer System
 
@@ -50,9 +79,11 @@ The footer system lets you define a **section sequence** shown at the bottom of 
 ## Themes & Templates
 
 - **11 built-in reveal.js themes**: Black, White, League, Beige, Sky, Night, Serif, Simple, Solarized, Moon, Dracula
-- **6 design presets**: Academic, Minimal, Dark Tech, Warm, High Contrast, Pastel
+- **39 token-based design presets** across 7 categories (minimal, editorial, developer, corporate, creative, earthy, bold), surfaced in the Design ribbon's ThemeGallery with live-switch and "Apply to all"
+- **6 transitions**: none, fade, slide, convex, concave, zoom
+- **Design Ideas panel** — heuristic layout and theme suggestions (no AI)
 - **Custom templates**: Save any slide as a reusable template to re-use across presentations
-- **Per-slide overrides**: Change the background image or color on individual slides without affecting the rest of the deck
+- **Per-slide overrides**: Change the background or theme tokens on individual slides without affecting the rest of the deck
 
 ::: tip
 Design presets apply a coordinated color palette, font stack, and default element styles all at once — great for getting a polished look quickly.

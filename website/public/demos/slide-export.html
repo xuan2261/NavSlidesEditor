@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1e1e2e;color:#fff;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;height:100vh;padding:40px 60px;gap:16px}
+h1{font-size:28px;font-weight:700}
+p{font-size:16px;line-height:1.6;color:rgba(255,255,255,0.75);max-width:600px}
+.footer{position:absolute;bottom:12px;left:20px;right:20px;display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.35)}
+</style></head><body>
+<h1>Tidal Dissipation</h1>
+<p>The tidal quality factor <span id="eq"></span> parameterizes the efficiency of energy dissipation in tidally deformed bodies.</p>
+<div class="footer"><span>Introduction &mdash; Methods &mdash; <b style="color:rgba(255,255,255,0.8)">Results</b> &mdash; Discussion</span><span>3 / 12</span></div>
+<script>katex.render("\\mathcal{Q}",document.getElementById("eq"),{throwOnError:false})</script>
+</body></html>

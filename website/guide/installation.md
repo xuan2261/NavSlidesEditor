@@ -13,8 +13,8 @@ Docker is the easiest way to run NavSlides Editor as a persistent server.
 ### Steps
 
 ```bash
-git clone https://github.com/jbirky/revealjs_gui.git
-cd revealjs_gui
+git clone https://github.com/xuan2261/NavSlidesEditor.git
+cd NavSlidesEditor
 docker compose up -d
 ```
 
@@ -54,7 +54,7 @@ The desktop app bundles the editor and server into a standalone application — 
 
 ### Download
 
-Go to the [Releases page](https://github.com/jbirky/revealjs_gui/releases) and download the installer for your platform:
+Go to the [Releases page](https://github.com/xuan2261/NavSlidesEditor/releases) and download the installer for your platform:
 
 | Platform | File |
 |---|---|
@@ -95,8 +95,8 @@ For developers or anyone who wants to customize the editor.
 ### Steps
 
 ```bash
-git clone https://github.com/jbirky/revealjs_gui.git
-cd revealjs_gui
+git clone https://github.com/xuan2261/NavSlidesEditor.git
+cd NavSlidesEditor
 npm install
 ```
 

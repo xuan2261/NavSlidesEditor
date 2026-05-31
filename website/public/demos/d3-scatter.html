@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D3 Scatter Plot Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+</style>
+</head>
+<body>
+<div id="chart"></div>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+  const width = 500, height = 220;
+  const margin = { top: 20, right: 20, bottom: 35, left: 45 };
+  const iw = width - margin.left - margin.right;
+  const ih = height - margin.top - margin.bottom;
+
+  const svg = d3.select("#chart")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  const g = svg.append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  const data = Array.from({ length: 40 }, () => ({
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    group: Math.floor(Math.random() * 10)
+  }));
+
+  const x = d3.scaleLinear().domain([0, 100]).range([0, iw]);
+  const y = d3.scaleLinear().domain([0, 100]).range([ih, 0]);
+  const color = d3.scaleOrdinal(d3.schemeTableau10);
+
+  g.append("g")
+    .attr("transform", `translate(0,${ih})`)
+    .call(d3.axisBottom(x).ticks(6))
+    .selectAll("text").attr("fill", "#a0a0b8");
+  g.selectAll(".domain, line").attr("stroke", "#555");
+
+  g.append("g")
+    .call(d3.axisLeft(y).ticks(5))
+    .selectAll("text").attr("fill", "#a0a0b8");
+  g.selectAll(".domain, line").attr("stroke", "#555");
+
+  g.selectAll("circle")
+    .data(data)
+    .join("circle")
+    .attr("cx", d => x(d.x))
+    .attr("cy", d => y(d.y))
+    .attr("r", 5)
+    .attr("fill", d => color(d.group))
+    .attr("opacity", 0.85);
+</script>
+</body>
+</html>

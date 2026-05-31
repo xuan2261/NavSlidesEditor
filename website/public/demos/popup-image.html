@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Popup Image Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  .image-container {
+    width: 260px;
+    height: 170px;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .image-container:hover {
+    border-color: #f59e0b;
+  }
+  .image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .hint {
+    margin-top: 16px;
+    font-size: 14px;
+    color: #a0a0b8;
+  }
+  .popup {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 16px);
+    transform: translateY(-50%);
+    background: #2a2a3e;
+    border: 1px solid #3a3a50;
+    border-radius: 10px;
+    padding: 16px 20px;
+    width: 260px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #e0e0f0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+  .popup.active {
+    display: block;
+  }
+  .popup::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -8px;
+    transform: translateY(-50%) rotate(45deg);
+    width: 14px;
+    height: 14px;
+    background: #2a2a3e;
+    border-left: 1px solid #3a3a50;
+    border-bottom: 1px solid #3a3a50;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="image-container" id="thumb" tabindex="0">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Sunspots_1302_Sep_2011_by_NASA.jpg/1024px-Sunspots_1302_Sep_2011_by_NASA.jpg" alt="Sunspots">
+  </div>
+  <div class="popup" id="popup">
+    Sunspot group AR 1302 observed by NASA SDO in September 2011. This active region produced several X-class solar flares.
+  </div>
+</div>
+<p class="hint">Click the image to see popup text</p>
+
+<script>
+  const thumb = document.getElementById('thumb');
+  const popup = document.getElementById('popup');
+
+  thumb.addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.classList.toggle('active');
+  });
+
+  document.addEventListener('click', () => {
+    popup.classList.remove('active');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') popup.classList.remove('active');
+  });
+</script>
+</body>
+</html>

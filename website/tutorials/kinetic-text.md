@@ -23,7 +23,7 @@ After inserting, you can resize and reposition the element like any other. To ed
 Characters appear one at a time with a blinking cursor, like text being typed.
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/kinetic-typewriter.html" style="width:100%;height:100px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/kinetic-typewriter.html" style="width:100%;height:100px;border:none"></iframe>
 </div>
 
 ### Word Reveal
@@ -31,7 +31,7 @@ Characters appear one at a time with a blinking cursor, like text being typed.
 Words fade and slide up one at a time with staggered timing.
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/kinetic-word-reveal.html" style="width:100%;height:100px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/kinetic-word-reveal.html" style="width:100%;height:100px;border:none"></iframe>
 </div>
 
 ### Revolve
@@ -39,7 +39,7 @@ Words fade and slide up one at a time with staggered timing.
 Text flips in from behind via a 3D Y-axis rotation, then drifts gently.
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/kinetic-revolve.html" style="width:100%;height:120px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/kinetic-revolve.html" style="width:100%;height:120px;border:none"></iframe>
 </div>
 
 ### Wave
@@ -47,7 +47,7 @@ Text flips in from behind via a 3D Y-axis rotation, then drifts gently.
 Letters bob up and down in a staggered sine wave pattern.
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/kinetic-wave.html" style="width:100%;height:100px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/kinetic-wave.html" style="width:100%;height:100px;border:none"></iframe>
 </div>
 
 ### Split-Flap
@@ -55,7 +55,7 @@ Letters bob up and down in a staggered sine wave pattern.
 Letters flip down like an airport departure board — each character rotates from the top.
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/kinetic-splitflap.html" style="width:100%;height:100px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/kinetic-splitflap.html" style="width:100%;height:100px;border:none"></iframe>
 </div>
 
 ### Fade Cascade
@@ -63,7 +63,7 @@ Letters flip down like an airport departure board — each character rotates fro
 Letters blur-in one by one, creating a progressive reveal.
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/kinetic-fade.html" style="width:100%;height:100px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/kinetic-fade.html" style="width:100%;height:100px;border:none"></iframe>
 </div>
 
 ### Circular Orbit
@@ -71,7 +71,7 @@ Letters blur-in one by one, creating a progressive reveal.
 Text arranged along a circle, continuously rotating.
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/kinetic-circular.html" style="width:100%;height:220px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/kinetic-circular.html" style="width:100%;height:220px;border:none"></iframe>
 </div>
 
 ### Glitch
@@ -79,7 +79,7 @@ Text arranged along a circle, continuously rotating.
 Digital glitch with cyan and magenta color channel separation.
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/kinetic-glitch.html" style="width:100%;height:110px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/kinetic-glitch.html" style="width:100%;height:110px;border:none"></iframe>
 </div>
 
 ### Bounce In
@@ -87,7 +87,7 @@ Digital glitch with cyan and magenta color channel separation.
 Letters drop from above with spring-like overshoot.
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/kinetic-bounce.html" style="width:100%;height:110px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/kinetic-bounce.html" style="width:100%;height:110px;border:none"></iframe>
 </div>
 
 ### Stagger from Center
@@ -95,7 +95,7 @@ Letters drop from above with spring-like overshoot.
 Letters pop outward from the center with rotation.
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/kinetic-stagger.html" style="width:100%;height:100px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/kinetic-stagger.html" style="width:100%;height:100px;border:none"></iframe>
 </div>
 
 ## Tips

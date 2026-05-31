@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Fade Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    color: #ffffff;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .fade-text {
+    font-size: 36px;
+    display: flex;
+  }
+  .fade-text span {
+    display: inline-block;
+    opacity: 0;
+    filter: blur(8px);
+    animation: blurIn 0.6s ease forwards;
+  }
+  @keyframes blurIn {
+    to {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+</style>
+</head>
+<body>
+<div class="fade-text" id="fade"></div>
+<script>
+  const text = "Luminosity";
+  const container = document.getElementById('fade');
+  text.split('').forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.textContent = ch;
+    span.style.animationDelay = `${i * 0.1}s`;
+    container.appendChild(span);
+  });
+</script>
+</body>
+</html>

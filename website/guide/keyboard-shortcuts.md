@@ -29,7 +29,8 @@ A complete reference for keyboard shortcuts available in NavSlides Editor.
 
 | Shortcut | Action |
 |---|---|
-| `F` or `Enter` | Enter full-screen presentation mode |
+| `F5` | Start presentation from the first slide |
+| `Shift+F5` | Start presentation from the current slide |
 | `←` / `→` | Previous / next slide |
 | `↑` / `↓` | Navigate vertical slide stacks |
 | `Escape` | Exit presentation mode |

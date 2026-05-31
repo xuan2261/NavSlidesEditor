@@ -14,7 +14,7 @@ The embedded HTML is completely self-contained. It works in present mode, export
 ### Example output
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/d3-scatter.html" style="width:100%;height:220px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/d3-scatter.html" style="width:100%;height:220px;border:none"></iframe>
 </div>
 
 ## p5.js sketches
@@ -27,7 +27,7 @@ The embedded HTML is completely self-contained. It works in present mode, export
 ### Example output
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/p5-stars.html" style="width:100%;height:220px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/p5-stars.html" style="width:100%;height:220px;border:none"></iframe>
 </div>
 
 ## Manim animations

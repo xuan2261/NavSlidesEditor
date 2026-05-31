@@ -8,6 +8,8 @@ This tutorial covers shape elements, freehand drawing, non-objective composition
 2. Choose from: **Rectangle**, **Rounded Rectangle**, **Circle**, **Triangle**, **Diamond**, **Arrow**, **Star**, or **Line**.
 3. The shape appears on the slide. Drag to reposition, drag handles to resize.
 
+![A shape element selected on a slide](/img/editor-shape-element.png)
+
 ## Shape properties
 
 Select a shape to configure in the right panel:
@@ -21,7 +23,7 @@ Select a shape to configure in the right panel:
 ### Example output
 
 <div style="border: 1px solid #333; border-radius: 8px; overflow: hidden; margin: 16px 0;">
-  <iframe src="/revealjs_gui/demos/shapes.html" style="width:100%;height:140px;border:none"></iframe>
+  <iframe src="/NavSlidesEditor/demos/shapes.html" style="width:100%;height:140px;border:none"></iframe>
 </div>
 
 ## Freehand drawing

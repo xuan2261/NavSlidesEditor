@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shapes Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .shapes {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<div class="shapes">
+  <!-- Indigo rounded rectangle -->
+  <svg width="80" height="80" viewBox="0 0 80 80">
+    <rect x="5" y="15" width="70" height="50" rx="10" fill="#6366f1" stroke="#818cf8" stroke-width="2"/>
+  </svg>
+  <!-- Pink circle -->
+  <svg width="80" height="80" viewBox="0 0 80 80">
+    <circle cx="40" cy="40" r="34" fill="#ec4899" stroke="#f472b6" stroke-width="2"/>
+  </svg>
+  <!-- Amber triangle -->
+  <svg width="80" height="80" viewBox="0 0 80 80">
+    <polygon points="40,8 74,72 6,72" fill="#f59e0b" stroke="#fbbf24" stroke-width="2"/>
+  </svg>
+  <!-- Emerald diamond -->
+  <svg width="80" height="80" viewBox="0 0 80 80">
+    <polygon points="40,6 74,40 40,74 6,40" fill="#10b981" stroke="#34d399" stroke-width="2"/>
+  </svg>
+  <!-- Red star -->
+  <svg width="80" height="80" viewBox="0 0 80 80">
+    <polygon points="40,6 48,30 74,30 53,46 61,72 40,56 19,72 27,46 6,30 32,30" fill="#ef4444" stroke="#f87171" stroke-width="2"/>
+  </svg>
+</div>
+</body>
+</html>
