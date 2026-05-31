@@ -4,6 +4,8 @@
 
 Release-confidence and full-feature verification gap closure.
 
+- Fixed dependency audit gate: `npm audit --audit-level=moderate` now reports 0 vulnerabilities after upgrading Electron/Electron Builder, Vite/React plugin, Express/Socket.IO/marked, VitePress, and scoped npm overrides for transitive `ws`, `tar`, `tmp`, `qs`, `brace-expansion`, `esbuild`, and legacy audit chains.
+- Added a dependency security floor regression test to keep direct dependencies and required overrides above known vulnerable ranges.
 - Completed baseline gap reporting, extended domain coverage matrix, CI gate verification notes, manual smoke checklist, and release verification summary for the `plans/260531-0511-full-feature-verification-gap-closure-tdd` plan.
 - Added critical E2E coverage for command palette/editor actions, live reconnect authorization, PPTX journey checks, and release-confidence documentation contracts.
 - Synchronized app package versions to `1.14.1`.

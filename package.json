@@ -68,8 +68,8 @@
     "@testing-library/user-event": "^14.6.1",
     "@vitest/coverage-v8": "^4.1.6",
     "concurrently": "^9.2.1",
-    "electron": "^33.4.11",
-    "electron-builder": "^25.1.8",
+    "electron": "^42.3.0",
+    "electron-builder": "^26.8.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -87,6 +87,37 @@
   },
   "overrides": {
     "@xmldom/xmldom": ">=0.9.5",
-    "tar": ">=6.2.1"
+    "@tootallnate/once": "^2.0.1",
+    "esbuild": "^0.25.0",
+    "qs": "^6.15.2",
+    "tar": "^7.5.11",
+    "tmp": "^0.2.6",
+    "vite": "^8.0.14",
+    "ws": "^8.20.1",
+    "socket.io": {
+      "engine.io": "^6.6.8",
+      "socket.io-adapter": "^2.5.7"
+    },
+    "socket.io-client": {
+      "engine.io-client": "^6.6.5"
+    },
+    "engine.io": {
+      ".": "^6.6.8",
+      "ws": "^8.20.1"
+    },
+    "engine.io-client": {
+      ".": "^6.6.5",
+      "ws": "^8.20.1"
+    },
+    "socket.io-adapter": {
+      ".": "^2.5.7",
+      "ws": "^8.20.1"
+    },
+    "minimatch@3.1.5": {
+      "brace-expansion": "^1.1.12"
+    },
+    "minimatch@5.1.9": {
+      "brace-expansion": "^2.0.2"
+    }
   }
 }
