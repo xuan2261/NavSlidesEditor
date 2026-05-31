@@ -55,7 +55,15 @@ Browser / Electron
   `SlideSorterView`, `SelectionPane`,
   `PromptPopover`, `ProductTour`, `SlidePanel`, `SlideCanvas`,
   `PropertiesPanel`, `FindReplaceBar`, `AnimationTimeline`,
-  `AnimationPreviewModal`, and modal surfaces.
+  `AnimationPreviewModal`, `EditorModals`, `editor-modals-secondary`, and modal surfaces.
+- Modal-visibility flags live in `ui-store` (not local `useState`). Modal-mount JSX is
+  lifted into `EditorModals.jsx` + `editor-modals-secondary.jsx`. Element-creation,
+  export, and AI handlers are extracted into `use-element-creation`, `use-export-actions`,
+  and `use-ai-actions` hooks. EditorPage is ~1356 LOC (down from 2071).
+- **Ribbon polish**: contextual Format tab driven by `ui-store.formatContext`
+  (`{ hasSelection, elementType }`). `RibbonBigButton` promotes primary tab actions.
+  `StatusBar` zoom slider two-way bound to `ui-store.zoom`; view switcher toggles
+  `editor-store.viewMode` (Normal / Slide Sorter / Present) via `ui-store.presentHandler`.
 - Editor save lifecycle status is explicit in the shell (`saving` / `saved` /
   `error`) with non-destructive autosave failure handling and retry action.
 - `SlideCanvas.jsx` owns the core drag, resize, rotate, and snap
@@ -97,7 +105,7 @@ client/src/components/canvas/
     ├── table-element-renderer.jsx
     ├── shape-element-renderer.jsx
     ├── line-element-renderer.jsx
-    └── game-element-placeholder-renderer.jsx  # game element (Phase 3 full render deferred)
+    ├── game-element-renderer.jsx          # game element (full SVG renderer, active)
 
 Constants:
 - `client/src/constants/` holds typed constants and factory functions. Each
@@ -419,8 +427,10 @@ diverge:
 - `shared/src/types/presentation.js` defines the JSDoc model used by client and
   server.
 - Element types are kept in sync with the editor, export pipeline, and Zod schemas.
-  The current base type set includes 20 types: text, image, shape, code, video, audio, html, latex,
-  icon, qrcode, drawing, svg, markdown, chart, table, line, divider, callout, timeline, and game.
+  The canonical base type set is **19 types**: text, image, shape, code, video, audio, html, latex,
+  icon, qrcode, drawing, svg, markdown, chart, table, line, callout, timeline, and game.
+  "divider" is a `line` preset, not a separate type. The canonical source is
+  `Object.keys(ELEMENT_DEFAULTS)` in `client/src/data/element-defaults.js`.
   Plugin elements use dynamic `plugin:<contributed-type>` values with
   `pluginId`, `pluginSlug`, `pluginData`, and `pluginRuntime` metadata.
   Typed constants and factory functions live in `client/src/constants/` (e.g.
@@ -475,3 +485,7 @@ diverge:
 - The live room contract and the export pipeline share the same notes
   normalization logic.
 - File-backed persistence is intentional; there is still no database layer.
+
+### Feature-Coverage Matrix
+
+The feature-coverage traceability matrix is maintained by `scripts/feature-inventory/`. The pipeline scans `[cap:<id>]` annotations in test files, joins them against `feature-manifest.json` (100 editor-core capabilities), and produces `docs/feature-coverage-matrix.md` (auto-generated — do not hand-edit) plus a JSON report. Run via `npm run matrix` / `npm run matrix:gate`. CI job `feature-coverage-gate` runs the gate as a non-required warn-first check. Acknowledged editor-core gaps are in `coverage-gate-allowlist.json` (10 entries, `debtAllowedUntil: 2026-06-30`). Extended export/import/live/share/AI/game/sync/history coverage is reported separately by `npm run matrix:extended-report` with executable, mocked-e2e, and contract-only modes. Required CI jobs (blocking): lint, unit-coverage, build, e2e-chromium (4 shards), e2e-live, e2e-mobile, e2e-visual, pptx-corpus, load-smoke, required-checks fan-in.

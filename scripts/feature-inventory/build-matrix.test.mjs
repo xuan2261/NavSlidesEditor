@@ -92,6 +92,21 @@ describe('matrix builder status semantics', () => {
     expect(orphans).toContain('element.bogus')
   })
 
+  it('knownIds can suppress cross-scope tags from the orphan list', () => {
+    const result = buildMatrix({
+      inventory: INVENTORY.filter((cap) => cap.scope === 'editor-core'),
+      tags: {
+        'share.password': [
+          { file: 'share.spec.js', title: '[cap:share.password] protects', tier: 'smoke', layer: 'e2e', skipped: false },
+        ],
+      },
+      runIndex: RUN_INDEX,
+      allowlist: [],
+      knownIds: [...INVENTORY.map((cap) => cap.id), 'share.password'],
+    })
+    expect(result.orphans).toEqual([])
+  })
+
   it('does not emit a matrix row for an orphan tag', () => {
     expect(rows.find((r) => r.id === 'element.bogus')).toBeUndefined()
   })

@@ -38,6 +38,8 @@ export async function loadElements() {
     tiers: HIGH_RISK_ELEMENTS.has(type) ? ['smoke', 'deep'] : ['smoke'],
     // element.game is a game-mode element, out of editor-core element scope.
     scope: type === 'game' ? 'game' : 'editor-core',
+    targetLayer: type === 'game' ? 'e2e' : 'unit',
+    coverageMode: 'executable',
   }))
 }
 
@@ -52,6 +54,8 @@ export async function loadShortcuts() {
     risk: 'low',
     tiers: ['smoke'],
     scope: 'editor-core',
+    targetLayer: 'unit',
+    coverageMode: 'executable',
   }))
 }
 

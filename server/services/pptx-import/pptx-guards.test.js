@@ -29,7 +29,7 @@ describe('pptx package guards', () => {
     }
   })
 
-  it('rejects non-PPTX names, renamed non-ZIPs, and missing required entries', async () => {
+  it('[cap:import.upload-safety tier:deep] rejects non-PPTX names, renamed non-ZIPs, and missing required entries', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-guards-'))
     try {
       const renamed = path.join(dir, 'renamed.pptx')
@@ -45,7 +45,7 @@ describe('pptx package guards', () => {
     }
   })
 
-  it('rejects packages over the decompression budget', async () => {
+  it('[cap:import.upload-safety tier:deep] rejects packages over the decompression budget', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-guards-'))
     const file = path.join(dir, 'large.pptx')
     try {

@@ -32,7 +32,7 @@ describe('PPTX import route', () => {
     jobManager._reset()
   })
 
-  it('rejects missing file and non-PPTX uploads', async () => {
+  it('[cap:import.upload-safety] rejects missing file and non-PPTX uploads', async () => {
     const app = express()
     app.use('/api/pptx', createPptxImportRouter({ importer: async () => ({ ok: true }) }))
 
@@ -204,7 +204,7 @@ describe('PPTX import route', () => {
     }
   })
 
-  it('rejects invalid jobId params in the mounted app', async () => {
+  it('[cap:import.upload-safety] rejects invalid jobId params in the mounted app', async () => {
     vi.resetModules()
     const imported = await import('../index.js')
     const app = imported.app || imported.default?.app
@@ -213,7 +213,7 @@ describe('PPTX import route', () => {
     expect(res.body.error).toBe('Invalid jobId')
   })
 
-  it('applies the upload limiter to PPTX import in production', async () => {
+  it('[cap:import.upload-safety] applies the upload limiter to PPTX import in production', async () => {
     const originalNodeEnv = process.env.NODE_ENV
     try {
       vi.resetModules()

@@ -105,6 +105,17 @@ describe('live-rooms service', () => {
     expect(state.timerTimeouts).toEqual({})
   })
 
+  it('removes room state and socket mappings when room is ended', () => {
+    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
+    liveRooms.joinRoom('ROOM12', 'socket-2', 'viewer')
+
+    expect(liveRooms.removeRoom('ROOM12')).toBe(true)
+    expect(liveRooms.getRoomState('ROOM12')).toBeUndefined()
+    expect(liveRooms.getRoomForSocket('socket-1')).toBeUndefined()
+    expect(liveRooms.getRoomForSocket('socket-2')).toBeUndefined()
+    expect(liveRooms.removeRoom('ROOM12')).toBe(false)
+  })
+
   it('should compute timer remaining correctly', () => {
     // Timer not started — returns duration
     expect(liveRooms.computeTimerRemaining({ running: false, duration: 60, pausedRemaining: null, endedAt: null })).toBe(60)

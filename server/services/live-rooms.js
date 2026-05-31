@@ -116,6 +116,22 @@ function getRoomState(roomId) {
   return rooms.get(roomId)
 }
 
+function removeRoom(roomId) {
+  const room = rooms.get(roomId)
+  if (!room) return false
+  for (const timeoutId of Object.values(room.timerTimeouts || {})) {
+    clearTimeout(timeoutId)
+  }
+  rooms.delete(roomId)
+  for (const [socketId, mappedRoomId] of socketToRoom.entries()) {
+    if (mappedRoomId === roomId) {
+      socketToRoom.delete(socketId)
+      socketRoles.delete(socketId)
+    }
+  }
+  return true
+}
+
 function getRoomForSocket(socketId) {
   return socketToRoom.get(socketId)
 }
@@ -149,6 +165,7 @@ module.exports = {
   joinRoom,
   leaveRoom,
   getRoomState,
+  removeRoom,
   getRoomForSocket,
   updateRoomState,
   canControlRoom,

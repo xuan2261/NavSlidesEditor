@@ -200,6 +200,7 @@ Set via shell, `.env` file (manually), or Docker environment config.
 | `server/data/settings.json`      | Editor settings and AI API key |
 | `server/data/analytics.json`     | Share-view analytics records    |
 | `server/data/media.json`         | Uploaded media metadata        |
+| `server/data/upload-hashes.json` | SHA256 dedup index for uploaded files |
 | `server/data/rclone.conf`        | rclone configuration           |
 | `server/data/history/`           | Version history snapshots      |
 | `server/data/sync-export/`       | rclone export staging          |
@@ -267,9 +268,31 @@ Note: Set `client_max_body_size` (Nginx) or the equivalent to at least 100MB to 
 
 The repository includes GitHub Actions workflows for validation and Electron release.
 
-- `CI/CD Pipeline` runs lint, Vitest, build, and Playwright on push / pull request.
-- `Build & Release Electron` currently builds the Windows Electron package only, then creates a GitHub Release asset when a `v*` tag is pushed or a manual dispatch is used.
-- Linux and macOS Electron packages exist as local `electron-builder` scripts, but they are not part of the current release workflow.
+### Required CI Jobs (blocking)
+
+| Job | What it runs |
+| --- | --- |
+| `lint` | ESLint across all packages |
+| `unit-coverage` | Vitest with coverage thresholds |
+| `build` | `npm run build` (React → client/dist/) |
+| `e2e-chromium` | Playwright E2E, 4 shards |
+| `e2e-live` | Playwright live presentation flows |
+| `e2e-mobile` | Playwright mobile / a11y |
+| `e2e-visual` | Playwright visual regression |
+| `pptx-corpus` | PPTX semantic fidelity + round-trip corpus |
+| `load-smoke` | k6 REST + WebSocket load smoke |
+| `required-checks` | Fan-in gate — all above must pass |
+
+### Non-Required (warn-first)
+
+| Job | What it runs |
+| --- | --- |
+| `feature-coverage-gate` | `npm run matrix:gate` + drift-check on committed matrix |
+
+### Release
+
+- `Build & Release Electron` builds the Windows Electron package and creates a GitHub Release asset when a `v*` tag is pushed or a manual dispatch is used.
+- Linux and macOS Electron packages exist as local `electron-builder` scripts but are not part of the current release workflow.
 
 Test commands run locally:
 ```bash

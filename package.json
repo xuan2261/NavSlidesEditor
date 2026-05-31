@@ -1,6 +1,6 @@
 {
   "name": "navslides-editor",
-  "version": "1.14.0",
+  "version": "1.14.1",
   "private": true,
   "license": "AGPL-3.0-only",
   "description": "NavSlides Editor — A WYSIWYG presentation editor powered by Reveal.js",
@@ -32,6 +32,8 @@
     "test:coverage:summary": "node scripts/summarize-vitest-coverage.js",
     "inventory": "node scripts/feature-inventory/build-inventory.mjs",
     "matrix": "node scripts/feature-inventory/build-inventory.mjs && node scripts/feature-inventory/build-matrix.mjs",
+    "matrix:extended-report": "npm run matrix && node scripts/feature-inventory/extended-domain-report.mjs",
+    "matrix:baseline-report": "npm run matrix && node scripts/feature-inventory/check-coverage-gate.mjs && node scripts/feature-inventory/baseline-gap-report.mjs",
     "matrix:gate": "npm run matrix && node scripts/feature-inventory/check-coverage-gate.mjs && node scripts/feature-inventory/check-manifest-completeness.mjs",
     "test:audit": "vitest run client/src/components/ribbon/__tests__/audit-* client/src/lib/__tests__/tailwind-config-* client/src/components/ribbon/__tests__/audit-ribbon-onmousedown-preventdefault-tiptap-whitelist-compliance.test.jsx",
     "test:e2e": "playwright test",

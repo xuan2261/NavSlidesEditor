@@ -11,6 +11,12 @@ export const options = buildOptions({
 
 const BASE_URL = __ENV.API_BASE_URL || 'http://localhost:3002/api'
 
+function assertLoopbackUrl(value, name) {
+  if (!/^(https?):\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/.test(value)) {
+    throw new Error(`${name} must target loopback only for destructive load tests: ${value}`)
+  }
+}
+
 const largePayload = {
   title: 'Load Test Presentation',
   slides: Array(30).fill({
@@ -19,6 +25,7 @@ const largePayload = {
 }
 
 export function setup() {
+  assertLoopbackUrl(BASE_URL, 'API_BASE_URL')
   const p = getProfile()
   console.log(`[api-load] profile=${p.name} vus=${p.vus} duration=${p.duration}`)
   return p

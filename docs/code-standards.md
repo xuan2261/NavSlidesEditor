@@ -191,6 +191,9 @@ Logic extracted from `EditorPage` lives in `hooks/`.
 | `useCanvasResizeRotate` | `use-canvas-resize-rotate.js` | Resize math + rotation snap |
 | `useCanvasSnappingHelpers` | `use-canvas-snapping-helpers-for-grid-and-smart-guides.js` | Snap + smart guide math |
 | `useCanvasRubberBandDrag` | `use-canvas-rubber-band-drag-selection.js` | Rubber-band selection |
+| `useElementCreation` | `use-element-creation.js` | Element insertion handlers (extracted from EditorPage) |
+| `useExportActions` | `use-export-actions.js` | Export handlers (HTML/PDF/PPTX/offline) |
+| `useAiActions` | `use-ai-actions.js` | AI copywriter/translate/generate handlers |
 
 Rule: new editor logic goes into a hook or store. `EditorPage` handles
 composition.
@@ -210,6 +213,9 @@ composition.
 - Game elements are first-class `type: 'game'` elements with 7 game types and a dedicated presenter/player flow; they are not collaborative slide-editing primitives.
 - **Ribbon UI**: `EditorPage` composes `RibbonHeaderBar` and `RibbonPanel`. Active tab state lives in `ui-store.activeTab` and persists to localStorage. The old `Toolbar.jsx`, `InsertMenu.jsx`, and `EditorMenuBar.jsx` components have been removed in favor of the tab-based ribbon.
 - **Ribbon layout primitive**: tab content should render through `RibbonTabContentRow` when it participates in the classic ribbon command-row contract. Keep horizontal scrolling on that row only; do not add nested scroll owners inside individual groups.
+- **RibbonBigButton**: primary tab actions use `RibbonBigButton` (icon ~22px over an 11px label, ~52px tall) for PowerPoint-style visual hierarchy. Applied to Home→Paste and Insert→Text Box + Picture. Accepts explicit `aria-label` so the visible label can differ from the accessible name used by tests.
+- **Contextual Format tab**: driven by `ui-store.formatContext` (`{ hasSelection, elementType }`). Hidden when nothing is selected; relabelled by type via `formatTabLabel`. Auto-activates on first selection; falls back to Home when selection clears. Both `RibbonPanel` and `RibbonHeaderBar` use an `effectiveTab` guard to coerce a persisted `activeTab='format'` to `home` when `!hasSelection`.
+- **EditorModals**: boolean modal-visibility flags live in `ui-store` (not local `useState`). Modal-mount JSX is lifted into `EditorModals.jsx` + `editor-modals-secondary.jsx`. Element-creation, export, and AI handlers are extracted into `use-element-creation`, `use-export-actions`, and `use-ai-actions` hooks.
 
 ### Canvas Extraction Patterns
 
@@ -349,6 +355,8 @@ pattern.
 | `MathExtension.js` | Node | Inline KaTeX rendering within text elements |
 | `FontSize.js` | Mark | Custom `font-size` mark |
 | `FontFamily.js` | Mark | Custom `font-family` mark |
+| `tiptap-font-weight-extension.js` | Mark | Custom `font-weight` mark |
+| `tiptap-line-height-extension.js` | Mark | Custom `line-height` mark |
 | `@tiptap/extension-color` | Mark | Text color |
 | `@tiptap/extension-highlight` | Mark | Text highlighting |
 | `@tiptap/extension-image` | Node | Image elements |
@@ -362,7 +370,69 @@ pattern.
 One `Editor` instance is created in `EditorPage` and reused. When a text element
 is selected, the editor content is swapped to that element's HTML.
 
-## Export Utilities
+## Design Token Conventions
+
+Design tokens are defined in `shared/src/design-tokens.js` and consumed by both render paths (shared string renderers and React editor canvas) so the `'auto'` → `var(--ns-*)` mapping never diverges.
+
+### Token Shape
+
+```js
+// presentation.designTokens / slide.designTokens
+{
+  colors: { bg, surface, accent, accent2, text, muted },
+  fonts:  { heading, body },
+  radius, spacingScale
+}
+```
+
+- `DEFAULT_TOKENS` mirrors historical hardcoded hex values — token-free decks render byte-identical.
+- `AUTO_FIELD_MAP` maps element color field names to their token key.
+- `resolveAutoColor(value, tokens)` — call this for any color field; returns `var(--ns-<token>)` when `value === 'auto'`, otherwise returns the value unchanged.
+- `resolveColorField(element, fieldName, tokens)` — convenience wrapper.
+- `tokensToCssVars(tokens)` / `tokensToStyleObject(tokens)` — used by `htmlGenerator` and `SlideCanvas` respectively.
+- `mergeTokens(base, override)` — shallow merge; used for per-slide token overrides.
+- `presentationUsesTokens(presentation)` — returns `true` if any deck/slide token is set; `htmlGenerator` only injects `:root{--ns-*}` blocks when this is true (frozen-hex decks are untouched).
+
+### 'auto' Sentinel Rule
+
+Element color fields (fill, stroke, text color, etc.) may be set to the string `'auto'`. This resolves to `var(--ns-<token>)` at render time. Built-in element defaults and built-in templates use `'auto'`; saved user decks are never auto-migrated.
+
+SVG paints must route token vars through the `style` attribute, not SVG presentation attributes (which cannot resolve CSS custom properties). `safeCssColor` whitelists the `var(--ns-<name>)` shape.
+
+### Background FX Type
+
+Slide backgrounds support `type: 'fx'` with shape `{ name, params, fallbackColor }`. The `shared/src/fx/` registry (`getFxModule`, `listFx`, `buildFxRuntimeScript`) powers both the editor canvas (`slide-background-fx-canvas.jsx`) and the `htmlGenerator`-inlined browser runtime. `fallbackColor` is used for print/PDF paths.
+
+### Theme Presets
+
+`shared/src/theme-presets.js` exports `THEME_PRESETS` (39 presets) and `getThemePreset(id)`. Each preset: `{ id, label, category, revealTheme, tokens }`. All re-exported via `revealjs-shared` package (`import { THEME_PRESETS, getFxModule, tokensToCssVars } from 'revealjs-shared'`).
+
+## Feature-Coverage Matrix
+
+The feature-coverage traceability matrix is maintained by a pipeline in `scripts/feature-inventory/`:
+
+| Script | Purpose |
+| --- | --- |
+| `build-inventory.mjs` | Builds capability inventory from `feature-manifest.json` |
+| `extract-tags.mjs` | Scans test files for `[cap:<id>]` annotations |
+| `join-run-status.mjs` | Joins coverage tags with Vitest/Playwright run results |
+| `build-matrix.mjs` | Produces `docs/feature-coverage-matrix.md` + JSON report |
+| `check-coverage-gate.mjs` | Fails if uncovered capabilities exceed the allowlist |
+| `check-manifest-completeness.mjs` | Checks manifest vs. codebase drift |
+
+### Test Annotation Convention
+
+Tag test cases with `[cap:<id>]` in the test description to link them to a capability in `feature-manifest.json`:
+
+```js
+it('moves element with arrow keys [cap:canvas-nudge]', () => { ... })
+```
+
+- Capability IDs are defined in `scripts/feature-inventory/feature-manifest.json`.
+- Acknowledged gaps live in `scripts/feature-inventory/coverage-gate-allowlist.json` with a `debtAllowedUntil` date.
+- `docs/feature-coverage-matrix.md` is **auto-generated** by `npm run matrix` — do not hand-edit it.
+- Run `npm run matrix:gate` to check the gate locally. CI job `feature-coverage-gate` runs this as a non-required warn-first check.
+- Extended non-editor-core domains are reported separately by `npm run matrix:extended-report`; contract-only rows must not be promoted to full executable verification without hermetic adapters or real CI credentials.
 
 | File | Function signature | Notes |
 | --- | --- | --- |

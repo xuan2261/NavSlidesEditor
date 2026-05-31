@@ -76,6 +76,7 @@ async function callCustom(config, system, user) {
 
   const response = await fetch(url, {
     method: 'POST',
+    redirect: 'manual',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: config.customModel || 'local',

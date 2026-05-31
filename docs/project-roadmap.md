@@ -1,8 +1,8 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: v1.10.0 — PPTX import real-browser fidelity gates refreshed (2026-05-27)
+## Current Status: v1.14.1 — Release-confidence verification, critical journey coverage, design-token theming, FX backgrounds, Design Ideas, ribbon polish, EditorPage hardening (2026-05-31)
 
-Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system and now has clipping-safe portal popups for File, header AI/Share, Design, Transitions, Animations, Paragraph, Insert Advanced, Shape, Table, and Games surfaces. Parallax feature port (font-weight, line-height, timeline element, video controls, LaTeX improvements) landed in v1.7.1. Upstream selective port merged on 2026-05-14. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state, and the hybrid PPTX export/import pipeline.
+Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system and now has clipping-safe portal popups. The design-token system (39 presets, 8 FX backgrounds, Design Ideas panel) landed in v1.13.0–v1.14.0. EditorPage hardening (vertical slides first-class, ~1356 LOC) and ribbon polish (contextual Format tab, RibbonBigButton, zoom slider, view switcher) completed in v1.14.0. v1.14.1 adds release-confidence verification docs, critical journey coverage, and CI gate contracts. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state, and the hybrid PPTX export/import pipeline.
 
 ### What Works
 
@@ -38,6 +38,10 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | Parallax feature port                               | Done (font-weight, line-height, timeline element, video controls, LaTeX improvements)                    |
 | Upstream selective port                             | Done (merged 2026-05-14; copy URL context menu, typography/export consistency)                            |
 | Local plugin runtime Phase 1                        | Done (bundled plugin discovery, sandbox canvas runtime, Animated Counter sample, export fallback)         |
+| Design-token system (themes/FX/Design Ideas)        | Done (39 token presets × 7 categories, 8 FX backgrounds, Design Ideas panel, 35-layout library)          |
+| Ribbon UI polish                                    | Done (contextual Format tab, RibbonBigButton hierarchy, zoom slider, view switcher)                       |
+| EditorPage hardening + vertical slides              | Done (~1356 LOC, EditorModals extracted, use-element-creation/use-export-actions/use-ai-actions hooks, vertical slides first-class) |
+| Feature-coverage traceability matrix                | Done (100 editor-core capabilities, 90 PASS / 10 ALLOWED, extended domain inventory, CI warn-first gate, `[cap:<id>]` annotation convention)    |
 
 ### What's New in v1.5.x / v1.6.x (Security & Architecture Refactor)
 
@@ -254,7 +258,76 @@ Completed full execution plan `260426-2128-pptx-import-coordinate-fidelity-harde
 
 **Plan:** `plans/260426-2128-pptx-import-coordinate-fidelity-hardening/`
 
-## Future Improvement Phases
+### Design-Token System, Theme Gallery, FX Backgrounds, Design Ideas (Complete - 2026-05-31)
+
+Full design-system layer from `plans/260530-2219-html-ppt-skill-native-integration`.
+
+**Delivered:**
+- `shared/src/design-tokens.js`: `DEFAULT_TOKENS`, `AUTO_FIELD_MAP`, `resolveAutoColor`, `tokensToCssVars`, `tokensToStyleObject`, `mergeTokens`, `presentationUsesTokens`
+- `shared/src/theme-presets.js`: 39 token presets across 7 categories
+- `shared/src/fx/`: 8 animated canvas FX modules + registry (`buildFxRuntimeScript`)
+- Layout library expanded to 35 layouts across 6 category modules
+- Design Ideas engine: `analyze-slide.js` + `suggest.js` + `design-ideas-panel.jsx`
+- Design ribbon tab: Themes, Background (color/gradient/image/fx/none), Slide Size, Footer, Navigation
+
+**Plan:** `plans/260530-2219-html-ppt-skill-native-integration/`
+
+### Ribbon UI Polish (Complete - 2026-05-30)
+
+PowerPoint familiar-feel gaps closed from `plans/260530-1647-editor-powerpoint-familiar-feel-ui-polish-tdd`.
+
+**Delivered:**
+- Contextual Format tab via `ui-store.formatContext`; `effectiveTab` guard prevents empty-panel flash
+- `RibbonBigButton` component for icon-over-label primary actions
+- `StatusBar` zoom range slider bound to `ui-store.zoom`; view switcher via `editor-store.viewMode`
+- Responsive `StatusBar.jsx` (hidden sm:inline-flex attribution, min-w-0 truncate)
+
+**Plan:** `plans/260530-1647-editor-powerpoint-familiar-feel-ui-polish-tdd/`
+
+### EditorPage Hardening Refactor (Complete - 2026-05-29)
+
+TDD refactor from `plans/260529-2256-editorpage-hardening-refactor-tdd`.
+
+**Delivered:**
+- EditorPage: 2071 → ~1356 LOC; modal flags centralized in `ui-store`
+- `EditorModals.jsx` + `editor-modals-secondary.jsx` extracted
+- `use-element-creation`, `use-export-actions`, `use-ai-actions` hooks extracted
+- `active-slide-mapper.js`: vertical (child) slides first-class across all write paths
+- AI slide generation replaced with local `buildSlidesFromOutline` + `ai-slide-contract.js`
+
+**Plan:** `plans/260529-2256-editorpage-hardening-refactor-tdd/`
+
+### E2E Cleanup and Coverage (Complete - 2026-05-24)
+
+8-phase E2E hardening from `plans/260524-0959-e2e-cleanup-and-coverage-tdd`.
+
+**Delivered:** Removed all `waitForTimeout` calls, full `data-testid` selector catalog, state-based waits, coverage specs for smart guides/clipboard/Selection Pane, PPTX export/Markdown import/rclone E2E, game shortcut coverage, visual matrix, kebab-case page objects, 200-LOC spec guard.
+
+**Plan:** `plans/260524-0959-e2e-cleanup-and-coverage-tdd/`
+
+### Full Feature Verification Gap Closure (Complete - 2026-05-31)
+
+Release-confidence plan for editor-core and high-risk extended domains.
+
+**Delivered:** Baseline gap reporting with deterministic JSON/Markdown evidence; editor-core matrix tightened to 90/100 PASS with 10 dated P2 ALLOWED entries and 0 orphan tags; critical Playwright journeys for create/edit/persist/export HTML, share password/revoke, live reconnect/authz, and PPTX import/edit/export artifact inspection; extended domain capability inventory for export/import/live/share/AI/game/sync/history; CI gate verification report, k6 loopback destructive preflight, release-confidence lane docs, and manual smoke checklist.
+
+**Plan:** `plans/260531-0511-full-feature-verification-gap-closure-tdd/`
+
+### PPTX Import Unit Conversion and Scale Fixes (Complete - 2026-05-25)
+
+7-phase PPTX fidelity from `plans/260525-1450-pptx-import-unit-conversion-and-scale-fixes`.
+
+**Delivered:** `ptToCanvasPx` helper, CSS unit normalization, image filter fractions, gradient stop fixes, grouped-element AABB fix, stacked/area chart rendering, EMF/WMF placeholders, table font/border fidelity, shape `foreignObject` text, text inset conversion.
+
+**Plan:** `plans/260525-1450-pptx-import-unit-conversion-and-scale-fixes/`
+
+### PPTX Import Review (Complete - 2026-05-24)
+
+9-phase review from `plans/260524-1729-pptx-import-review`.
+
+**Delivered:** Async import jobs with SSE progress/cancel, mapper split into `server/services/pptx-import/mapper/` submodules, SHA256 media dedup via `upload-hashes.json`, table border preservation, 10-deck strict corpus (`n=10`, 100.0% semantic, 99.0% round-trip).
+
+**Plan:** `plans/260524-1729-pptx-import-review/`
 
 ### Phase 3 - Testing & CI Quality Gate (Complete)
 

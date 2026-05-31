@@ -1,7 +1,7 @@
 {
   "meta": {
     "generated": "local run",
-    "stale": false
+    "stale": true
   },
   "rows": [
     {
@@ -103,10 +103,12 @@
       "id": "canvas.zorder",
       "category": "canvas",
       "risk": "high",
-      "tier": "smoke→deep",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "command.commandPalette",
@@ -124,9 +126,11 @@
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "command.insertLink",
@@ -171,9 +175,11 @@
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "command.zoomIn",
@@ -288,9 +294,11 @@
       "category": "control",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "control.format.underline",
@@ -308,36 +316,44 @@
       "category": "control",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "control.insert.text",
       "category": "control",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "control.view.selectionPane",
       "category": "control",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-view-tab-mode-controls-and-window-panel-toggles.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "control.view.smartGuides",
       "category": "control",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-view-tab-mode-controls-and-window-panel-toggles.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "element.audio",
@@ -365,12 +381,13 @@
       "id": "element.chart",
       "category": "element",
       "risk": "high",
-      "tier": "smoke→deep",
+      "tier": "deep",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "ALLOWED"
+      "status": "PASS"
     },
     {
       "id": "element.code",
@@ -519,12 +536,13 @@
       "id": "element.timeline",
       "category": "element",
       "risk": "high",
-      "tier": "smoke→deep",
+      "tier": "deep",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "ALLOWED"
+      "status": "PASS"
     },
     {
       "id": "element.video",
@@ -541,10 +559,12 @@
       "id": "flow.autosave",
       "category": "flow",
       "risk": "high",
-      "tier": "smoke→deep",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "flow.clipboard",
@@ -584,10 +604,12 @@
       "id": "flow.undo-redo",
       "category": "flow",
       "risk": "high",
-      "tier": "smoke→deep",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.blackScreen",
@@ -605,9 +627,11 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.commandPalette",
@@ -766,9 +790,11 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.highlighterTool",
@@ -784,9 +810,11 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.laserPointer",
@@ -855,9 +883,11 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.slideFirst",
@@ -1018,9 +1048,11 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.whiteScreen",
@@ -1059,8 +1091,8 @@
   "orphans": [],
   "summary": {
     "total": 100,
-    "verified": 73,
-    "PASS": 73,
-    "ALLOWED": 27
+    "verified": 90,
+    "PASS": 90,
+    "ALLOWED": 10
   }
 }

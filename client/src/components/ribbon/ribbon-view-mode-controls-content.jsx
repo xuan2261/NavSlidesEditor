@@ -1,4 +1,4 @@
-import { Code2, Film, LayoutGrid, PanelLeft, PanelRight, Search, StickyNote, Sparkles } from 'lucide-react'
+import { Code2, Film, LayoutGrid, Lightbulb, PanelLeft, PanelRight, Search, StickyNote } from 'lucide-react'
 import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
@@ -105,7 +105,7 @@ export default function ViewTabContent({
             className={`h-7 ${showDesignIdeas ? 'bg-primary-light text-accent' : ''}`}
             title="Design Ideas" aria-label="Toggle design ideas panel" aria-pressed={showDesignIdeas}
             onMouseDown={(e) => { e.preventDefault(); toggleDesignIdeas() }}>
-            <Sparkles size={14} />
+            <Lightbulb size={14} />
             <span className="text-[11px] hidden lg:inline">Ideas</span>
           </Button>
         </div>

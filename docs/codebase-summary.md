@@ -4,7 +4,7 @@
 
 NavSlides Editor is a self-hostable presentation editor built as a monorepo with
 `client/`, `server/`, `shared/`, and `electron/` runtimes. Current release is
-`v1.13.0`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
+`v1.14.1`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
 checked-in corpus / report artifacts used for verification. The editor shell
 uses the tab-based ribbon as the default controls surface.
 
@@ -48,6 +48,13 @@ navslides-editor/
   extracted into `use-element-creation`, `use-export-actions`, and
   `use-ai-actions` hooks. The editor body (SlidePanel / RibbonPanel / SlideCanvas
   / PropertiesPanel) stays inline.
+- **Ribbon polish** (plan 260530-1647): contextual Format tab driven by
+  `ui-store.formatContext` (`{ hasSelection, elementType }`) — hidden when nothing
+  is selected, relabelled by type via `formatTabLabel`. `RibbonBigButton`
+  (~52px icon-over-label) promotes Home→Paste and Insert→Text Box + Picture.
+  `StatusBar` zoom slider two-way bound to `ui-store.zoom`; view switcher toggles
+  `editor-store.viewMode` (Normal / Slide Sorter / Present) via registered
+  `ui-store.presentHandler`.
 - Vertical (child) slides are first-class: `client/src/utils/active-slide-mapper.js`
   resolves the active edit target (parent or selected child, tracked by parent
   `id`) and `mapActiveSlide` routes EVERY element write path — element callbacks,
@@ -200,6 +207,7 @@ navslides-editor/
   visual regression.
 - `k6` load tests target REST and WebSocket paths.
 - The PPTX corpus harness validates semantic fidelity and round-trip stability.
+- **Feature-coverage traceability matrix** (`scripts/feature-inventory/`): a pipeline of scripts (`build-inventory.mjs` → `extract-tags.mjs` → `join-run-status.mjs` → `build-matrix.mjs` → `check-coverage-gate.mjs`) scans `[cap:<id>]` annotations in test files and joins them against `feature-manifest.json` (100 capabilities across canvas/command/control/element/flow/shortcut domains). Produces `docs/feature-coverage-matrix.md` (auto-generated — do not hand-edit) and a JSON report. Run via `npm run matrix` / `npm run matrix:gate`. Acknowledged gaps tracked in `coverage-gate-allowlist.json` (27 entries, `debtAllowedUntil: 2026-06-30`). CI job `feature-coverage-gate` runs the gate as a non-required warn-first check.
 
 ## Behavior Notes
 
@@ -212,7 +220,7 @@ navslides-editor/
 
 ## Repo Notes
 
-- Root package version is `1.13.0`.
+- Root package version is `1.14.1`.
 - Runtime baseline is Node.js 20+.
 - There is no database layer; persistence is file-based by design.
 - There is no full TypeScript migration; JSDoc is the type system.

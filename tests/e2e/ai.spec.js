@@ -19,7 +19,7 @@ test.describe('AI Integrations', () => {
     } catch {}
   })
 
-  test('can use AI Copywriter with mocked API response', async ({ page }) => {
+  test('[cap:ai.rewrite] can use AI Copywriter with mocked API response', async ({ page }) => {
     await page.route('**/api/ai/rewrite', async (route) => {
       await route.fulfill({
         status: 200,
@@ -52,7 +52,7 @@ test.describe('AI Integrations', () => {
     expect(textContent).toContain('MOCKED_AI_GENERATED_CONTENT')
   })
 
-  test('AI Slide Generator builds slides from a mocked outline and appends them', async ({
+  test('[cap:ai.generate] AI Slide Generator builds slides from a mocked outline and appends them', async ({
     page,
     request,
   }) => {
@@ -89,7 +89,7 @@ test.describe('AI Integrations', () => {
     }, { timeout: 8000 }).toBe(before + 3)
   })
 
-  test('Translate Presentation translates every text element including the first', async ({
+  test('[cap:ai.translate] Translate Presentation translates every text element including the first', async ({
     page,
     request,
   }) => {

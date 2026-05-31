@@ -11,7 +11,7 @@ async function importSampleMarkdown(page) {
 }
 
 test.describe('Markdown import', () => {
-  test('uploading sample.md creates three slides', async ({ page, request }) => {
+  test('[cap:import.markdown] uploading sample.md creates three slides', async ({ page, request }) => {
     await page.goto('/')
     const presentationId = await importSampleMarkdown(page)
     try {

@@ -8,7 +8,7 @@
 
 ## Overview
 
-Priority: P1. Status: Pending. Turn verification into repeatable gates that give clear release confidence without making every PR painfully slow.
+Priority: P1. Status: Complete. Turn verification into repeatable gates that give clear release confidence without making every PR painfully slow.
 
 ## Key Insights
 
@@ -25,7 +25,8 @@ Priority: P1. Status: Pending. Turn verification into repeatable gates that give
 - Add CI gates incrementally with runtime budget and rollback path.
 - Preserve or document required-check job name migration before workflow changes land.
 - Enforce destructive-test loopback guards and secret/artifact scanning for generated reports/artifacts.
-- <!-- Updated: Validation Session 1 - initial required gates are lint/unit/matrix; E2E and heavy lanes stay report-only until two green CI runs. -->
+
+<!-- Updated: Validation Session 1 - initial required gates are lint/unit/matrix; E2E and heavy lanes stay report-only until two green CI runs. -->
 
 ## Architecture
 
@@ -66,15 +67,24 @@ Runtime and rollout constraints:
 
 ## Todo List
 
-- [ ] Define PR fast lane command set.
-- [ ] Define merge full lane command set.
-- [ ] Define release strict lane command set.
-- [ ] Add/adjust workflow contract tests.
-- [ ] Add destructive-command loopback preflight.
-- [ ] Add secret/artifact scan step or documented scanner command.
-- [ ] Document branch-protection mapping and rollback path.
-- [ ] Document quarantine expiry policy.
-- [ ] Document operator-only branch protection steps.
+- [x] Define PR fast lane command set.
+- [x] Define merge full lane command set.
+- [x] Define release strict lane command set.
+- [x] Add/adjust workflow contract tests.
+- [x] Add destructive-command loopback preflight.
+- [x] Add secret/artifact scan step or documented scanner command.
+- [x] Document branch-protection mapping and rollback path.
+- [x] Document quarantine expiry policy.
+- [x] Document operator-only branch protection steps.
+
+## Evidence
+
+- Added `tests/unit/github-actions-ci-release-confidence-contract.test.js` to pin the workflow/report contract for `matrix:gate`, `required-checks`, loopback load targets, and rollout docs.
+- Added k6 loopback preflight to `tests/load/k6-load-test-api-presentations-post-endpoint-with-profiles.js` and `tests/load/k6-load-test-socketio-websocket-room-join-and-slide-change-broadcast.js`.
+- Added `reports/ci-gate-verification.md` with PR fast, merge full, release strict, branch-protection mapping, rollback, quarantine, and secret/artifact scan commands.
+- Updated `docs/navslides-editor-vitest-playwright-k6-testing-guide.md` with release-confidence lane references and operator-only branch-protection guidance.
+- Verification passed: targeted ESLint for CI/load contract files, `npx vitest run tests/unit/github-actions-ci-release-confidence-contract.test.js tests/unit/test-fixtures-loopback.test.js`, and `npm run matrix:gate`.
+- Tester status: DONE. Reviewer re-check status: DONE after fixing required-check promotion wording and artifact scanning command.
 
 ## Success Criteria
 

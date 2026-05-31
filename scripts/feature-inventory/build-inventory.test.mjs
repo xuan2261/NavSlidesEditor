@@ -35,6 +35,20 @@ describe('feature inventory generator', () => {
     }
   })
 
+  it('extended-domain capabilities declare layer and coverage policy', () => {
+    const extended = inv.filter((e) => e.scope !== 'editor-core')
+    expect(extended.map((e) => e.id)).toEqual(expect.arrayContaining([
+      'ai.failure',
+      'import.pptx',
+      'live.presenter-authz',
+      'share.revoke',
+    ]))
+    for (const e of extended) {
+      expect(e.targetLayer).toMatch(/^(unit|contract|integration|e2e)$/)
+      expect(e.coverageMode).toMatch(/^(executable|mocked-e2e|contract-only)$/)
+    }
+  })
+
   it('auto-sources all 44 shortcut.* including shortcut.group', () => {
     const shortcuts = inv.filter((e) => e.category === 'shortcut')
     expect(shortcuts.length).toBe(44)

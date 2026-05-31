@@ -8,7 +8,7 @@
 
 ## Overview
 
-Priority: P2. Status: Pending. Extend capability tracking beyond editor-core without trying to fully test every edge in one pass. This phase is bounded: inventory and retag first; add new smoke/security coverage only for explicitly selected high-risk domains.
+Priority: P2. Status: Complete. Extend capability tracking beyond editor-core without trying to fully test every edge in one pass. This phase is bounded: inventory and retag first; add new smoke/security coverage only for explicitly selected high-risk domains.
 
 ## Key Insights
 
@@ -23,7 +23,8 @@ Priority: P2. Status: Pending. Extend capability tracking beyond editor-core wit
 - Add smoke coverage for highest-value flows.
 - Do not add broad namespaces unless each new ID has risk/layer classification and a debt/verification policy.
 - Distinguish executable integration coverage from contract-only coverage.
-- <!-- Updated: Validation Session 1 - AI/sync/GitHub/rclone are contract-only unless backed by hermetic local adapters. -->
+
+<!-- Updated: Validation Session 1 - AI/sync/GitHub/rclone are contract-only unless backed by hermetic local adapters. -->
 
 ## Architecture
 
@@ -81,12 +82,41 @@ Validation scope: share/live/import-upload/AI guard negative tests are mandatory
 
 ## Todo List
 
-- [ ] Add extended namespace policy.
-- [ ] Tag existing export/import tests.
-- [ ] Tag live/game/share/sync tests.
-- [ ] Add missing high-value smoke tests.
-- [ ] Add mandatory negative/security matrix entries or dated debt.
-- [ ] Add allowlist entries for intentionally deferred domains.
+- [x] Add extended namespace policy.
+- [x] Tag existing export/import tests.
+- [x] Tag live/game/share/sync tests.
+- [x] Add missing high-value smoke tests.
+- [x] Add mandatory negative/security matrix entries or dated debt.
+- [x] Add allowlist entries for intentionally deferred domains.
+
+## Implementation Evidence
+
+- Added extended-domain capability IDs to `scripts/feature-inventory/feature-manifest.json` for export, import, live, share, AI, game, sync, history, plus the existing `element.game` non-editor-core scope.
+- Extended IDs carry `scope`, `targetLayer`, and `coverageMode` so contract-only AI/sync checks cannot be confused with full external E2E coverage.
+- Added `scripts/feature-inventory/extended-domain-report.mjs` and `npm run matrix:extended-report`, writing `plans/260531-0511-full-feature-verification-gap-closure-tdd/reports/extended-domain-coverage-matrix.{json,md}` separately from the editor-core matrix.
+- Updated `scripts/feature-inventory/build-matrix.mjs` so editor-core matrix generation suppresses known cross-scope tags from orphan failures while still failing truly unknown tags.
+- Tagged existing coverage for `export.html`, `export.pptx`, `import.markdown`, `import.pptx`, `live.reconnect`, `live.presenter-authz`, `share.password`, `share.revoke`, `ai.generate`, `ai.rewrite`, `ai.translate`, `game.score`, `element.game`, `sync.rclone-status`, and `history.snapshot`.
+- Added `server/services/ai-endpoint-guard.test.js` for AI custom endpoint guard negative coverage: unsupported protocols, localhost, private/link-local/metadata IPs, DNS resolving to private ranges, public host allow, and explicit hostname allowlist.
+- Tagged existing PPTX route/package guard tests for `import.upload-safety` covering missing file, MIME/name mismatch, non-ZIP, missing required entries, decompression budget, invalid job IDs, and upload limiter.
+- Tagged existing live token security tests for deep `live.presenter-authz` coverage including invalid token and cross-room token reuse rejection.
+- No intentionally deferred extended domain remains invisible after this slice; extended report shows `GAP:0`, `TAGGED:18`, `orphans:0`. PASS promotion is intentionally left to future run-result capture because current run-result JSON is stale.
+
+## Verification Evidence
+
+- `npx vitest run scripts/feature-inventory/build-inventory.test.mjs scripts/feature-inventory/build-matrix.test.mjs scripts/feature-inventory/extended-domain-report.test.mjs scripts/feature-inventory/check-coverage-gate.test.mjs server/routes/ai.test.js tests/unit/no-wait-for-timeout.test.js` -> 46/46 passed.
+- `npx vitest run server/services/ai-endpoint-guard.test.js server/services/pptx-import/pptx-guards.test.js server/routes/pptx-import.test.js server/routes/api-surface.test.js scripts/feature-inventory/build-inventory.test.mjs scripts/feature-inventory/build-matrix.test.mjs scripts/feature-inventory/extended-domain-report.test.mjs` -> 53/53 passed.
+- `npm run matrix:gate` -> editor-core matrix remains 90/100 verified, 0 failures, 0 orphans; gate passed with 10 existing allowlist warnings.
+- `npm run matrix:extended-report` -> 118 inventory capabilities, extended report `0/18 verified`, `GAP:0`, `TAGGED:18`, `orphans:0` with stale run-result warning.
+- `npx playwright test tests/e2e/critical-user-journeys.spec.js tests/e2e/critical-live-reconnect.spec.js tests/e2e/critical-pptx-journey.spec.js tests/e2e/import/markdown-import.spec.js tests/e2e/games/game-scoring-and-leaderboard.spec.js --project=chromium` -> 8/8 passed.
+- `npx playwright test tests/e2e/ai.spec.js --project=chromium` -> 3/3 passed.
+- `npx playwright test tests/e2e/games/game-elements.spec.js --project=chromium -g "\[cap:element\.game\]"` -> 1/1 passed.
+- `npx playwright test tests/e2e/security/presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js --project=chromium` -> 6/6 passed.
+- A parallel Playwright attempt combining `ai.spec.js` and full `game-elements.spec.js` failed after one invocation shut down the shared webServer port. It was rerun sequentially with clean passes above and is not counted as product evidence.
+- Reviewer-blocking AI redirect SSRF concern fixed in `server/services/ai-provider.js` by setting custom-provider `fetch` to `redirect: 'manual'`; regression covered by `server/services/ai-provider.test.js`.
+- Reviewer-blocking extended stale PASS concern fixed by using an empty run index for stale extended-domain reports; regression covered by `scripts/feature-inventory/extended-domain-report.test.mjs`.
+- Reviewer-blocking live room cleanup concern fixed by preferring `Authorization: Bearer` for `DELETE /api/live/room/:code` and leaving connected Socket.IO clients via `io.in(code).socketsLeave(code)` after `room-ended`; route contract covered by `server/routes/api-surface.test.js`, and live journey cleanup updated to Bearer token.
+- Post-review fix verification: `npx vitest run server/services/ai-provider.test.js server/services/ai-endpoint-guard.test.js server/routes/api-surface.test.js scripts/feature-inventory/extended-domain-report.test.mjs scripts/feature-inventory/build-matrix.test.mjs` -> 30/30 passed.
+- Post-review live verification: `npx playwright test tests/e2e/critical-live-reconnect.spec.js --project=chromium` -> 1/1 passed.
 
 ## Success Criteria
 

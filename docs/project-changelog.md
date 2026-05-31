@@ -1,5 +1,56 @@
 # Project Changelog
 
+## v1.14.1 — 2026-05-31
+
+Release-confidence and full-feature verification gap closure.
+
+- Completed baseline gap reporting, extended domain coverage matrix, CI gate verification notes, manual smoke checklist, and release verification summary for the `plans/260531-0511-full-feature-verification-gap-closure-tdd` plan.
+- Added critical E2E coverage for command palette/editor actions, live reconnect authorization, PPTX journey checks, and release-confidence documentation contracts.
+- Synchronized app package versions to `1.14.1`.
+
+## v1.14.0 — 2026-05-31
+
+Design-token theming system, animated FX backgrounds, Design Ideas panel, and 35-layout library.
+
+- **Release verification uplift**: completed `plans/260531-0511-full-feature-verification-gap-closure-tdd`. Editor-core feature matrix is now 90/100 PASS with 10 dated P2 ALLOWED debts and 0 orphan tags. Added critical E2E journeys for HTML export artifact validation, share password/revoke, live reconnect/authz, and PPTX import/edit/export package inspection. Extended export/import/live/share/AI/game/sync/history domains are classified by risk/layer/coverage mode. CI release-confidence docs now define PR fast, merge full, and release strict lanes; k6 destructive load scripts reject non-loopback targets; `docs/manual-smoke-checklist.md` and `release-verification-summary.md` record manual and release evidence boundaries.
+- **Design-token layer** (`shared/src/design-tokens.js`): `'auto'` color sentinel resolves to `var(--ns-*)` via shared `resolveAutoColor`/`AUTO_FIELD_MAP`. Both render paths (shared string renderers + React canvas) import the same resolver. `DEFAULT_TOKENS` mirrors historical hardcoded hex — frozen-hex decks render byte-identical. `htmlGenerator` injects token CSS only when a deck uses tokens (backward-compat contract).
+- **Theme gallery** (`shared/src/theme-presets.js`): 39 token presets across 7 categories (minimal×5, editorial×5, developer×7, corporate×6, creative×8, earthy×4, bold×4). Surfaced in Design ribbon ThemeGallery with live-switch and "Apply to all" as one undoable step.
+- **Layout library**: expanded to 35 layouts across 6 category modules (basic/content/layout/data/structure/ending) under `client/src/data/slide-templates/`.
+- **Background canvas FX** (`shared/src/fx/`): 8 animated canvas effects (gradient-blob, starfield, matrix-rain, constellation, particle-burst, knowledge-graph, orbit-ring, sparkle-trail). `buildFxRuntimeScript()` inlines the runtime into exported HTML. Honors `prefers-reduced-motion`; falls back to `fallbackColor` for PDF/print.
+- **Design Ideas engine**: `analyze-slide.js` + `suggest.js` (pure functions, no AI) produce 3-5 ranked layout/theme suggestions. `design-ideas-panel.jsx` toggled from View ribbon via `ui-store.showDesignIdeas`.
+- All new shared modules re-exported via `revealjs-shared` package.
+
+## v1.13.0 — 2026-05-30
+
+Ribbon UI polish and EditorPage hardening refactor.
+
+- **Ribbon polish**: contextual Format tab driven by `ui-store.formatContext`; `effectiveTab` guard prevents empty-panel flash on reload. `RibbonBigButton` (~52px icon-over-label) promotes Home→Paste and Insert→Text Box + Picture. `StatusBar` zoom range slider two-way bound to `ui-store.zoom`; view switcher toggles `editor-store.viewMode` (Normal / Slide Sorter / Present).
+- **Responsive StatusBar**: attribution text wrapped in `hidden sm:inline-flex`, left section `min-w-0 + truncate`, tighter padding.
+- **EditorPage hardening**: 2071 → ~1356 LOC. Modal-visibility flags centralized in `ui-store`. Modal JSX lifted into `EditorModals.jsx` + `editor-modals-secondary.jsx`. `use-element-creation`, `use-export-actions`, `use-ai-actions` hooks extracted. `active-slide-mapper.js` makes vertical (child) slides first-class across all element write paths.
+- **AI slide generation**: replaced `/api/ai/generate-slides` round-trip with local `buildSlidesFromOutline`; `ai-slide-contract.js` added as runtime-validated seam.
+
+## v1.12.0 — 2026-05-29
+
+PPTX import fidelity: 11 bugs fixed across 6 root causes.
+
+- Removed erroneous ×96/72 length inflation; added shared `ptToCanvasPx` helper.
+- Image filter fractions mapped to CSS filter percents; `filterSaturate` support added.
+- Gradient stop positions fixed; OOXML→CSS angle corrected; real SVG `<linearGradient>` rendering.
+- Grouped-element AABB replaced with center-transform + dimension preservation.
+- Stacked bar and area charts render correctly; SmartArt nodes carry text fit-clamp metadata.
+- EMF/WMF vector images render as labelled placeholders preserving box geometry.
+- Verification: 1677 tests, corpus 11/11, full browser audit 6/6, build and lint clean.
+
+## v1.11.0 — 2026-05-27
+
+E2E cleanup and coverage hardening; PPTX import review completion.
+
+- Removed all 20 `waitForTimeout` calls from E2E suite; replaced with state-based waits.
+- Full `data-testid` selector catalog; page objects migrated to kebab-case; 200-LOC spec guard.
+- Added coverage specs: smart guides, clipboard offsets, Selection Pane, PPTX export, Markdown import, rclone sync, game shortcuts, visual matrix.
+- PPTX import: async job with SSE progress/cancel, mapper split into submodules, SHA256 media dedup via `upload-hashes.json`, table border preservation, 10-deck strict corpus (100.0% semantic, 99.0% round-trip).
+- Feature-coverage traceability matrix system introduced: `scripts/feature-inventory/` pipeline, `[cap:<id>]` test annotation convention, `docs/feature-coverage-matrix.md` (auto-generated), CI warn-first gate.
+
 ## v1.7.x
 
 ## 2026-05-31

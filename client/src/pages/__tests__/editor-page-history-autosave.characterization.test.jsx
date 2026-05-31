@@ -3,7 +3,7 @@
 // api.updatePresentation (autosave serializes the whole presentation).
 // Red Team #10: assertions MUST flush microtasks (runAllTimersAsync), not just
 // advance timers, or the async processSaveQueue re-drain is missed.
-import { render, fireEvent, waitFor, screen } from '@testing-library/react'
+import { act, render, fireEvent, waitFor, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { LiveSocketContext } from '../../contexts/live-socket-context-provider.jsx'
 
@@ -123,7 +123,35 @@ describe('EditorPage autosave characterization', () => {
     expect(h.updatePresentation.mock.calls[1][1].title).toBe('Queued-2')
   })
 
-  it('undo restores the prior snapshot after an edit', async () => {
+  it('[cap:flow.autosave tier:deep] shows failure state and retry persists the failed snapshot', async () => {
+    renderPage()
+    const title = await loadAndGetTitle()
+
+    h.updatePresentation
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce({})
+
+    vi.useFakeTimers()
+    await act(async () => {
+      fireEvent.change(title, { target: { value: 'Needs Retry' } })
+      await vi.runAllTimersAsync()
+    })
+
+    expect(h.updatePresentation).toHaveBeenCalledTimes(1)
+    expect(h.updatePresentation.mock.calls[0][1].title).toBe('Needs Retry')
+    expect(screen.getByText('Save failed')).toBeTruthy()
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Retry'))
+      await vi.advanceTimersByTimeAsync(100)
+    })
+
+    expect(h.updatePresentation).toHaveBeenCalledTimes(2)
+    expect(h.updatePresentation.mock.calls[1][1].title).toBe('Needs Retry')
+    expect(screen.getAllByLabelText('Saved').length).toBeGreaterThan(0)
+  })
+
+  it('[cap:flow.undo-redo tier:deep] undo restores the prior snapshot after an edit', async () => {
     renderPage()
     const title = await loadAndGetTitle()
 
@@ -134,11 +162,34 @@ describe('EditorPage autosave characterization', () => {
     vi.useRealTimers()
 
     // Ctrl+Z on document (focus not in the title input).
+    title.blur()
     document.body.focus()
     fireEvent.keyDown(document, { key: 'z', ctrlKey: true })
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('Char Deck')).toBeTruthy()
+    })
+  })
+
+  it('[cap:flow.undo-redo tier:deep] redo restores an undone edit', async () => {
+    renderPage()
+    const title = await loadAndGetTitle()
+
+    vi.useFakeTimers()
+    fireEvent.change(title, { target: { value: 'Redo Target' } })
+    await vi.runAllTimersAsync()
+    vi.useRealTimers()
+
+    title.blur()
+    document.body.focus()
+    fireEvent.keyDown(document, { key: 'z', ctrlKey: true })
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Char Deck')).toBeTruthy()
+    })
+
+    fireEvent.keyDown(document, { key: 'y', ctrlKey: true })
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Redo Target')).toBeTruthy()
     })
   })
 })

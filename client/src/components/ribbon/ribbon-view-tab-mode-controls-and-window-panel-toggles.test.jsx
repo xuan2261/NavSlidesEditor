@@ -1,6 +1,23 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import ViewTabContent from './ribbon-view-mode-controls-content'
+import { useEditorStore } from '../../stores/editor-store'
+import { useUIStore } from '../../stores/ui-store'
+
+beforeEach(() => {
+  useEditorStore.setState({
+    showGrid: false,
+    gridSize: 40,
+    smartGuidesEnabled: true,
+    showRulers: false,
+    zoom: 1,
+  })
+  useUIStore.setState({
+    leftPanelOpen: true,
+    rightPanelOpen: true,
+    showDesignIdeas: false,
+  })
+})
 
 describe('ViewTabContent', () => {
   it('renders Show and Window sections', () => {
@@ -65,5 +82,29 @@ describe('ViewTabContent', () => {
     expect(onFindReplace).toHaveBeenCalled()
     expect(onSpeakerNotes).toHaveBeenCalled()
     expect(onToggleSlideSorter).toHaveBeenCalled()
+  })
+
+  it('[cap:control.view.smartGuides] toggles smart guide state from the View ribbon', () => {
+    render(<ViewTabContent />)
+
+    const smartGuides = screen.getByLabelText('Toggle smart guides')
+    expect(smartGuides.getAttribute('aria-pressed')).toBe('true')
+
+    fireEvent.click(smartGuides)
+
+    expect(useEditorStore.getState().smartGuidesEnabled).toBe(false)
+    expect(screen.getByLabelText('Toggle smart guides').getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('[cap:control.view.selectionPane] toggles the right properties pane from the View ribbon', () => {
+    render(<ViewTabContent />)
+
+    const propertiesPane = screen.getByLabelText('Toggle properties panel')
+    expect(propertiesPane.getAttribute('aria-pressed')).toBe('true')
+
+    fireEvent.mouseDown(propertiesPane)
+
+    expect(useUIStore.getState().rightPanelOpen).toBe(false)
+    expect(screen.getByLabelText('Toggle properties panel').getAttribute('aria-pressed')).toBe('false')
   })
 })

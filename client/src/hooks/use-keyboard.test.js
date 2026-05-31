@@ -104,6 +104,21 @@ describe('createKeyboardHandler', () => {
     expect(onCommandPalette).toHaveBeenCalledTimes(1)
     expect(event.preventDefault).toHaveBeenCalledTimes(1)
   })
+
+  it('[cap:shortcut.insertSlide] invokes onInsertSlide when Ctrl+M is pressed in editor scope', () => {
+    const shortcuts = getShortcuts({})
+    const onInsertSlide = vi.fn()
+    const event = createEvent('m', { ctrlKey: true })
+
+    createKeyboardHandler({
+      shortcuts,
+      onInsertSlide,
+      getActiveElement: () => null,
+    })(event)
+
+    expect(onInsertSlide).toHaveBeenCalledTimes(1)
+    expect(event.preventDefault).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('useKeyboard hook integration', () => {

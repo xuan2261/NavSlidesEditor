@@ -9,7 +9,7 @@
 
 ## Overview
 
-Priority: P1. Status: Pending. Establish exact baseline and rules before writing more tests. Output is a verified gap list and contract doc section.
+Priority: P1. Status: Complete. Establish exact baseline and rules before writing more tests. Output is a verified gap list and contract doc section.
 
 ## Key Insights
 
@@ -25,7 +25,8 @@ Priority: P1. Status: Pending. Establish exact baseline and rules before writing
 - Keep generated docs generated; do not hand-edit generated matrix.
 - Freeze the editor-core denominator used by this plan before Phase 4 adds any extended domain IDs.
 - Produce a machine-readable baseline report contract that later phases can validate.
-- <!-- Updated: Validation Session 1 - baseline JSON is authoritative and must be deterministically generated from matrix/manifest/run output. -->
+
+<!-- Updated: Validation Session 1 - baseline JSON is authoritative and must be deterministically generated from matrix/manifest/run output. -->
 
 ## Architecture
 
@@ -82,12 +83,21 @@ The Markdown report may summarize the JSON, but Phase 2 consumes the structured 
 
 ## Todo List
 
-- [ ] Capture baseline matrix and gate output.
-- [ ] Produce structured gap report and Markdown summary.
-- [ ] Freeze editor-core denominator for this plan.
-- [ ] Document verification semantics.
-- [ ] Add stale allowlist rule if missing.
-- [ ] Run `npm run matrix:gate`.
+- [x] Capture baseline matrix and gate output.
+- [x] Produce structured gap report and Markdown summary.
+- [x] Freeze editor-core denominator for this plan.
+- [x] Document verification semantics.
+- [x] Add stale allowlist rule if missing.
+- [x] Run `npm run matrix:gate`.
+
+## Implementation Evidence
+
+- `npm run matrix:baseline-report` generated `reports/baseline-gap-report.json` and `reports/baseline-gap-report.md`.
+- Baseline: 75/100 PASS, 25 ALLOWED, 0 orphan tags, editor-core denominator frozen at 100.
+- Baseline JSON has `staleRunResults: false`; report generation now refuses stale matrix input.
+- `npm run matrix:gate` passed with 25 allowlist warnings and 0 failures.
+- Targeted tests passed: `npx vitest run scripts/feature-inventory/check-coverage-gate.test.mjs scripts/feature-inventory/baseline-gap-report.test.mjs`.
+- Full `npx vitest run --reporter=json --outputFile=scripts/feature-inventory/run-results-vitest.json` produced fresh run-results but reported 3 unrelated failing suites; do not treat full `npm test` as green yet.
 
 ## Success Criteria
 

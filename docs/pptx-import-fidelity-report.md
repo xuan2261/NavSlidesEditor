@@ -21,7 +21,7 @@
 | `pptx-export.test.js` | 1 | ✅ Pass |
 | `chart-output-to-navslides-mapper.test.js` | 2 | ✅ Pass |
 | `import-fidelity-properties.test.jsx` | 2 | ✅ Pass |
-| **Total** | **145+** | **✅ All Pass** |
+| **Total** | **172** | **✅ All Pass** |
 
 ## 2026-04-27 Coordinate Fidelity Hardening Update
 

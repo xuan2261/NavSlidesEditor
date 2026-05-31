@@ -4,7 +4,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.13.0** — keyboard arrow-key element nudging and slide navigation, font ribbon controls now reflect element-level text styles, and removal of the unused floating MiniToolbar.
+Current release: **v1.14.1** — release-confidence verification, critical user journey coverage, design-token theming system, animated canvas FX backgrounds, Design Ideas panel, 35-layout library, ribbon UI polish, and EditorPage hardening with first-class vertical slides.
 
 ## Features
 
@@ -39,7 +39,7 @@ Current release: **v1.13.0** — keyboard arrow-key element nudging and slide na
 
 ### Slides
 
-8 layouts (blank, title, two-column, three-column, image+text, section header, comparison, big number) + 20+ full-deck templates including interactive simulations and quiz decks. Per-slide backgrounds (solid, gradient, image), **first-class vertical (child) slides** — create, select, edit, and export nested slides from the slide panel — fragment animations with visual timeline editor and preview modal, per-slide page numbers, hidden slides, footer system (basic / sequence modes), and global presentation settings (auto-slide, loop, navigation modes).
+**35 layouts** across 6 categories (basic, content, layout, data, structure, ending) + 20+ full-deck templates including interactive simulations and quiz decks. Per-slide backgrounds (solid, gradient, image, **animated FX**), **first-class vertical (child) slides** — create, select, edit, and export nested slides from the slide panel — fragment animations with visual timeline editor and preview modal, per-slide page numbers, hidden slides, footer system (basic / sequence modes), and global presentation settings (auto-slide, loop, navigation modes).
 
 ### Live Presentation
 
@@ -55,7 +55,7 @@ AI copywriter (rewrite slide text), AI generator (full presentation drafts from 
 
 ### Themes & Templates
 
-11 reveal.js themes (black, white, league, beige, sky, night, serif, simple, solarized, moon, dracula), 6 transitions (none, fade, slide, convex, concave, zoom), 6 preset design themes (Minimal Dark, Minimal Light, Academic, Gradient, Corporate, Neon), custom user templates, and a dark/light editor theme toggle.
+11 reveal.js base themes (black, white, league, beige, sky, night, serif, simple, solarized, moon, dracula), 6 transitions (none, fade, slide, convex, concave, zoom), **39 token-based design presets** across 7 categories (minimal, editorial, developer, corporate, creative, earthy, bold) surfaced in the Design ribbon ThemeGallery with live-switch and "Apply to all", **8 animated canvas FX backgrounds** (gradient-blob, starfield, matrix-rain, constellation, particle-burst, knowledge-graph, orbit-ring, sparkle-trail) for `type: 'fx'` slide backgrounds, **Design Ideas panel** (heuristic layout + theme suggestions, no AI), custom user templates, and a dark/light editor theme toggle.
 
 ### Export & Sharing
 

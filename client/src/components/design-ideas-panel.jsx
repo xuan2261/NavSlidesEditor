@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from 'react'
-import { Sparkles, RefreshCw, LayoutTemplate, Palette } from 'lucide-react'
+import { Lightbulb, RefreshCw, LayoutTemplate, Palette } from 'lucide-react'
 import { suggestDesigns } from '../lib/design-ideas/suggest'
 
 /**
@@ -58,7 +58,7 @@ export default function DesignIdeasPanel({
     >
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <div className="flex items-center gap-1.5 text-[11px] font-semibold">
-          <Sparkles size={13} className="text-accent" />
+          <Lightbulb size={13} className="text-accent" />
           Design Ideas
         </div>
         <button

@@ -15,8 +15,19 @@ export const options = buildOptions({
 })
 
 const API_BASE_URL = __ENV.API_BASE_URL || 'http://localhost:3002/api'
+const WS_URL = __ENV.WS_URL || 'ws://localhost:3002/ws/?EIO=4&transport=websocket'
+
+function assertLoopbackUrl(value, name, protocols) {
+  const protocolPattern = protocols.join('|')
+  const pattern = new RegExp(`^(${protocolPattern}):\\/\\/(127\\.0\\.0\\.1|localhost)(:\\d+)?(\\/|$)`)
+  if (!pattern.test(value)) {
+    throw new Error(`${name} must target loopback only for destructive load tests: ${value}`)
+  }
+}
 
 export function setup() {
+  assertLoopbackUrl(API_BASE_URL, 'API_BASE_URL', ['http', 'https'])
+  assertLoopbackUrl(WS_URL, 'WS_URL', ['ws', 'wss'])
   const p = getProfile()
   console.log(`[ws-load] profile=${p.name} vus=${p.vus} duration=${p.duration}`)
   const res = http.post(`${API_BASE_URL}/live/room`)
@@ -27,10 +38,9 @@ export function setup() {
 }
 
 export default function (data) {
-  const url = __ENV.WS_URL || 'ws://localhost:3002/ws/?EIO=4&transport=websocket'
   const roomId = data.roomCode
 
-  const res = ws.connect(url, {}, function (socket) {
+  const res = ws.connect(WS_URL, {}, function (socket) {
     let joined = false
 
     socket.on('message', (msg) => {

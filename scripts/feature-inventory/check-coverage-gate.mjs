@@ -22,6 +22,10 @@ function validateAllowlist(allowlist) {
     if (!e.id) errors.push(`allowlist entry missing id: ${JSON.stringify(e)}`)
     if (!e.reason) errors.push(`allowlist entry for ${e.id || '?'} missing reason`)
     if (!e.added) errors.push(`allowlist entry for ${e.id || '?'} missing added date`)
+    if (!e.owner) errors.push(`allowlist entry for ${e.id || '?'} missing owner`)
+    if (!e.targetLayer) errors.push(`allowlist entry for ${e.id || '?'} missing targetLayer`)
+    if (!e.resolutionPhase) errors.push(`allowlist entry for ${e.id || '?'} missing resolutionPhase`)
+    if (!e.debtAllowedUntil) errors.push(`allowlist entry for ${e.id || '?'} missing debtAllowedUntil`)
   }
   return errors
 }

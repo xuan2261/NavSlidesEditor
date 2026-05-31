@@ -298,7 +298,7 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('Product launch')
   })
 
-  it('renders timeline events from the plan schema', () => {
+  it('[cap:element.timeline tier:deep] renders timeline events from the plan schema', () => {
     const html = renderElement(
       {
         ...base,
@@ -443,7 +443,7 @@ describe('element-renderers safety behavior', () => {
     expect(html).not.toContain('javascript:')
   })
 
-  it('renders a stacked bar chart with both axes stacked (iframe + print)', () => {
+  it('[cap:element.chart tier:deep] renders a stacked bar chart with both axes stacked (iframe + print)', () => {
     const element = {
       ...base,
       type: 'chart',

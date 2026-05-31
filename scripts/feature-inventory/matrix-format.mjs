@@ -22,7 +22,7 @@ function summaryLine(summary) {
 
 export function renderMatrixMarkdown({ rows, orphans, summary, meta = {} }) {
   const lines = []
-  lines.push(`# Feature Coverage Matrix — editor-core`)
+  lines.push(`# ${meta.title || 'Feature Coverage Matrix — editor-core'}`)
   lines.push('')
   if (meta.generated) lines.push(`_Generated: ${meta.generated}_`)
   if (meta.stale) {

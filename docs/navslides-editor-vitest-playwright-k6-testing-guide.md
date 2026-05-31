@@ -21,6 +21,7 @@ NavSlides Editor uses three testing layers: Vitest (unit/integration JS), Playwr
 | `npm run test:deep` | Run only the `tier:deep` behavior tests (`*.deep.test.*`) |
 | `npm run inventory` | Regenerate the capability inventory (`scripts/feature-inventory/inventory.json`) |
 | `npm run matrix` | Regenerate the feature-coverage matrix → `docs/feature-coverage-matrix.md` (+ plan reports) |
+| `npm run matrix:baseline-report` | Regenerate matrix and Phase 1 baseline gap reports |
 | `npm run matrix:gate` | Regenerate matrix, then run the coverage gate + manifest-completeness drift guard |
 
 ## Feature coverage matrix (capability traceability)
@@ -40,7 +41,16 @@ editor-core capability's *behavior is asserted*, not just whether code ran. See
   element/shortcut has no tag or allowlist entry; `check-manifest-completeness.mjs`
   fails if a new EditorPage command is not in the manifest.
 - **Allowlist**: `scripts/feature-inventory/coverage-gate-allowlist.json` holds
-  dated, reasoned entries for acknowledged gaps (warn-first). It should shrink.
+  dated, owned entries for acknowledged gaps (warn-first). Each entry needs a
+  reason, target layer, resolution phase, and debt date so gap reports are
+  actionable. It should shrink.
+- **Baseline reports**: `npm run matrix:baseline-report` writes the Phase 1
+  contract to `plans/260531-0511-full-feature-verification-gap-closure-tdd/reports/`.
+  The JSON report is authoritative; Markdown is a review summary. The command
+  refuses stale or missing run-results, so refresh
+  `scripts/feature-inventory/run-results-vitest.json` with
+  `npx vitest run --reporter=json --outputFile=scripts/feature-inventory/run-results-vitest.json`
+  before capturing a release baseline.
 - **CI**: a non-required `feature-coverage-gate` job runs `matrix:gate` + a
   freshness check on the committed `docs/feature-coverage-matrix.md`.
 
@@ -200,7 +210,23 @@ The pipeline lives in `.github/workflows/github-actions-ci-pipeline-lint-unit-co
 | `load-smoke` | `grafana/setup-k6-action@v1` | 15 min | yes |
 | `required-checks` | summary | < 1 min | yes — fan-in gate |
 
-`required-checks` fans in on every prior job and exits non-zero if any reports `failure`/`cancelled`/`timed_out`. Wire branch protection to require `required-checks` instead of every individual job — keeps the rule list small and stable when shards are renamed.
+`required-checks` fans in on the currently blocking jobs and exits non-zero if any reports `failure`/`cancelled`/`timed_out`. Wire branch protection to require `required-checks` instead of every individual job — keeps the rule list small and stable when shards are renamed.
+
+### Release-confidence lanes
+
+Current lane ownership is documented in `plans/260531-0511-full-feature-verification-gap-closure-tdd/reports/ci-gate-verification.md`.
+
+| Lane | Scope | Promotion rule |
+|---|---|---|
+| PR fast | lint, focused unit/contract checks, matrix gate signal | Keep practical for PR feedback; new gates start warn-first |
+| Merge full | coverage, build, Playwright shards, visual, PPTX corpus, k6 smoke | Promote after two consecutive green CI runs |
+| Release strict | PPTX strict, Electron prepare/package, load profile, manual checklist | Blocks release signoff, not every PR |
+
+Branch protection changes are operator-only. Prefer requiring `Required checks summary`; avoid pinning every shard context unless there is a deliberate repository policy change.
+
+Before publishing release artifacts or sharing reports, run the secret/artifact scan command in the CI gate verification report against `plans/`, `playwright-report/`, `test-results/`, `coverage/`, `dist/`, `dist-electron/`, `server/data/`, and `server/uploads/`.
+
+Manual release smoke lives in `docs/manual-smoke-checklist.md`. Keep it under 45 minutes and map every row to a capability ID or explicit manual-only risk.
 
 ### Coverage thresholds (Phase 9 anti-regression gate)
 

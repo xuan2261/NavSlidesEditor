@@ -76,7 +76,7 @@ describe('API surface routes', () => {
     expect(pushRes.body.error).toContain('GitHub not configured')
   })
 
-  it('covers rclone validation/status paths without requiring rclone credentials', async () => {
+  it('[cap:sync.rclone-status] covers rclone validation/status paths without requiring rclone credentials', async () => {
     const statusRes = await request(app).get('/api/rclone/status')
     expect(statusRes.status).toBe(200)
     expect(statusRes.body).toHaveProperty('installed')
@@ -124,7 +124,7 @@ describe('API surface routes', () => {
     expect(deleteRes.status).toBe(200)
   })
 
-  it('covers history snapshot create/list/restore/delete', async () => {
+  it('[cap:history.snapshot] covers history snapshot create/list/restore/delete', async () => {
     const presId = `history-${Date.now()}`
     await storage.writePresentations([
       {
@@ -158,6 +158,25 @@ describe('API surface routes', () => {
   })
 
   it('covers live room existence and analytics aggregation', async () => {
+    const liveEvents = []
+    const socketLeaves = []
+    app.set('io', {
+      to(roomId) {
+        return {
+          emit(event, payload) {
+            liveEvents.push({ roomId, event, payload })
+          },
+        }
+      },
+      in(roomId) {
+        return {
+          socketsLeave(targetRoomId) {
+            socketLeaves.push({ roomId, targetRoomId })
+          },
+        }
+      },
+    })
+
     const roomRes = await request(app).post('/api/live/room')
     expect(roomRes.status).toBe(200)
     expect(roomRes.body.roomCode).toHaveLength(6)
@@ -166,6 +185,25 @@ describe('API surface routes', () => {
     const existsRes = await request(app).get(`/api/live/room/${roomRes.body.roomCode}`)
     expect(existsRes.status).toBe(200)
     expect(existsRes.body.exists).toBe(true)
+
+    const deniedDeleteRes = await request(app).delete(`/api/live/room/${roomRes.body.roomCode}`)
+    expect(deniedDeleteRes.status).toBe(403)
+
+    const deleteRes = await request(app)
+      .delete(`/api/live/room/${roomRes.body.roomCode}`)
+      .set('Authorization', `Bearer ${roomRes.body.presenterToken}`)
+    expect(deleteRes.status).toBe(204)
+    expect(liveEvents).toContainEqual({
+      roomId: roomRes.body.roomCode,
+      event: 'room-ended',
+      payload: { roomId: roomRes.body.roomCode },
+    })
+    expect(socketLeaves).toContainEqual({
+      roomId: roomRes.body.roomCode,
+      targetRoomId: roomRes.body.roomCode,
+    })
+    const deletedExistsRes = await request(app).get(`/api/live/room/${roomRes.body.roomCode}`)
+    expect(deletedExistsRes.body.exists).toBe(false)
 
     await storage.writeShareTokens({
       analyticsToken: {

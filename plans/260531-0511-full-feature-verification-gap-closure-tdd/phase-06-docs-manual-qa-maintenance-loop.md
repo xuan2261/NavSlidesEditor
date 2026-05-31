@@ -9,7 +9,7 @@
 
 ## Overview
 
-Priority: P2. Status: Pending. Make the verification system usable by future releases: concise docs, checklist, and maintenance rules.
+Priority: P2. Status: Complete. Make the verification system usable by future releases: concise docs, checklist, and maintenance rules.
 
 ## Key Insights
 
@@ -25,7 +25,8 @@ Priority: P2. Status: Pending. Make the verification system usable by future rel
 - Keep docs short and actionable.
 - Release summary must be generated from or cross-checked against the latest matrix/report outputs.
 - Manual QA checklist entries must map to capability IDs or explicit manual-only risks.
-- <!-- Updated: Validation Session 1 - release summary must separate release-blocking MVP, bounded coverage, contract-only coverage, and dated debt. -->
+
+<!-- Updated: Validation Session 1 - release summary must separate release-blocking MVP, bounded coverage, contract-only coverage, and dated debt. -->
 
 ## Architecture
 
@@ -66,12 +67,21 @@ Drift controls:
 
 ## Todo List
 
-- [ ] Write/update manual smoke checklist.
-- [ ] Update testing guide.
-- [ ] Update roadmap.
-- [ ] Update changelog.
-- [ ] Write release verification summary.
-- [ ] Cross-check release summary against latest generated matrix/report evidence.
+- [x] Write/update manual smoke checklist.
+- [x] Update testing guide.
+- [x] Update roadmap.
+- [x] Update changelog.
+- [x] Write release verification summary.
+- [x] Cross-check release summary against latest generated matrix/report evidence.
+
+## Evidence
+
+- Added `docs/manual-smoke-checklist.md` with under-45-minute always-run and rotating rows mapped to capability IDs or manual-only risks.
+- Added `reports/release-verification-summary.md` separating release-blocking MVP, bounded coverage, contract-only coverage, and dated debt.
+- Added `tests/unit/release-verification-docs-contract.test.js` to pin checklist mappings, summary honesty, and testing-guide links.
+- Updated testing guide, roadmap, changelog, system architecture, and code standards with current matrix/extended-domain/CI lane truth.
+- Strengthened the docs contract to sum manual runtime and validate checklist capability IDs against `scripts/feature-inventory/inventory.json`.
+- Verification passed: docs/CI contract Vitest, targeted ESLint, `npm run matrix:gate`, `npm run matrix:extended-report`, and full `npm test` (249 files passed, 1 skipped; 2195 tests passed, 8 skipped).
 
 ## Success Criteria
 

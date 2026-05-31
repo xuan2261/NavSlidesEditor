@@ -134,7 +134,7 @@ export class EditorPage {
   async getRibbonLayoutMetrics(name) { return this.ribbon.getRibbonLayoutMetrics(name) }
   async getButtonClippingStatus(labels) { return this.ribbon.getButtonClippingStatus(labels) }
 
-  async addShape(t) { await this.insert.addShape(t) }
+  async addShape(t) { return this.insert.addShape(t) }
   async addCodeBlock() { await this.insert.addCodeBlock() }
   async addLatexBlock() { await this.insert.addLatexBlock() }
   async addMarkdownBlock() { await this.insert.addMarkdownBlock() }

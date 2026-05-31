@@ -316,6 +316,7 @@ function startServer(port) {
     // Attach Socket.IO
     const corsOptions = process.env.NODE_ENV === 'production' ? { origin: false } : { origin: '*' }
     const io = new Server(server, { cors: corsOptions, path: '/ws' })
+    app.set('io', io)
 
     setupSocketHandlers(io)
     setupGameSocketHandlers(io)

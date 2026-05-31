@@ -116,6 +116,10 @@ export class RibbonInsertHelper {
       prevCount,
       { timeout: 5000 }
     )
+
+    const nextIndex = (await this.getElementCount()) - 1
+    this.setLastInsertedElementIndex(nextIndex)
+    return nextIndex
   }
 
   async openMediaLibrary() {

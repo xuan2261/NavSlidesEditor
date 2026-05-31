@@ -2,7 +2,7 @@
 
 ## Product Vision
 
-**NavSlides Editor** is a self-hostable, WYSIWYG presentation editor powered by reveal.js. Users build, edit, and present slides entirely in the browser - no account, no cloud, no tracking. Available as a web app (Docker / Node.js) and a standalone desktop app via Electron. Current release: v1.9.7.
+**NavSlides Editor** is a self-hostable, WYSIWYG presentation editor powered by reveal.js. Users build, edit, and present slides entirely in the browser - no account, no cloud, no tracking. Available as a web app (Docker / Node.js) and a standalone desktop app via Electron. Current release: v1.14.1.
 
 ## Problem Statement
 
@@ -69,18 +69,21 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 
 ### Slides
 
-- 8 slide templates: blank, title, two-column, three-column, image+text, section header, comparison, big number
+- 35 layouts across 6 categories (basic, content, layout, data, structure, ending) via `client/src/data/slide-templates/`
 - Advanced Interactive templates: interactive simulations, comparative analysis, and quizzes
-- Per-slide background: solid color, CSS gradient, or image
+- Per-slide background: solid color, CSS gradient, image, or animated canvas FX (`type: 'fx'`)
 - Fragment animations with visual timeline editor
 - Per-slide page numbers toggle, hidden slide support
 - Footer system: basic (label + page number) or sequence mode (section titles)
 
 ### Themes & Transitions
 
-- 11 reveal.js themes (black, white, league, beige, sky, night, serif, simple, solarized, moon, dracula)
+- 11 reveal.js base themes (black, white, league, beige, sky, night, serif, simple, solarized, moon, dracula)
 - 6 transitions: none, fade, slide, convex, concave, zoom
-- 6 preset design themes: Minimal Dark, Minimal Light, Academic, Gradient, Corporate, Neon
+- **39 token-based design presets** across 7 categories (minimal×5, editorial×5, developer×7, corporate×6, creative×8, earthy×4, bold×4) — surfaced in the Design ribbon ThemeGallery with live-switch and "Apply to all" as one undoable step
+- **8 animated canvas FX backgrounds** (gradient-blob, starfield, matrix-rain, constellation, particle-burst, knowledge-graph, orbit-ring, sparkle-trail) for `type: 'fx'` slide backgrounds; honors `prefers-reduced-motion`
+- **Design Ideas panel** — heuristic layout + theme suggestions (no AI), toggled from the View ribbon
+- Design ribbon: Themes, Background (color/gradient/image/fx/none), Slide Size, Footer, Navigation sections
 - Custom templates: create, edit, manage, start new presentations from templates
 - Full-Deck Template Gallery directly accessible from the homepage
 - Global Presentation Settings (Auto-slide, Loop, Navigation Modes)
@@ -146,11 +149,11 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 - CDN dependency at runtime for standard HTML export and present mode
 - Live room state, annotations, and timers are in memory; restart clears them
 
-## Completed Refactoring (v1.5.x / v1.6.x)
+## Completed Refactoring (v1.5.x – v1.14.0)
 
-- ✅ EditorPage reduced from 3400 → 1475 LOC (now ~1609+ LOC)
-- ✅ Zustand state management (3 stores)
-- ✅ 7 editor hooks in `client/src/hooks`
+- ✅ EditorPage reduced from 3400 → ~1356 LOC (modal flags in ui-store, modal JSX lifted to EditorModals.jsx + editor-modals-secondary.jsx)
+- ✅ Zustand state management (3 stores: editor, presentation, UI)
+- ✅ 16+ editor hooks in `client/src/hooks` (including use-element-creation, use-export-actions, use-ai-actions)
 - ✅ PropertiesPanel decomposed into 8 sub-editors
 - ✅ Zod request validation on all mutation endpoints
 - ✅ CSS split from monolithic 57KB into modular files
@@ -158,3 +161,9 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 - ✅ Electron safeStorage for credential encryption
 - ✅ ErrorBoundary for crash recovery
 - ✅ DOMPurify + MIME validation + rate limiting
+- ✅ Design-token system (`shared/src/design-tokens.js`): `'auto'` sentinel → `var(--ns-*)`, shared by both render paths
+- ✅ 39 token presets (`shared/src/theme-presets.js`) across 7 categories
+- ✅ 8 animated FX backgrounds (`shared/src/fx/`) with inlined browser runtime
+- ✅ 35-layout library split into 6 category modules under `client/src/data/slide-templates/`
+- ✅ Vertical (child) slides first-class via `active-slide-mapper.js`
+- ✅ Ribbon UI polish: contextual Format tab (ui-store.formatContext), RibbonBigButton hierarchy, zoom slider, view switcher (editor-store.viewMode)

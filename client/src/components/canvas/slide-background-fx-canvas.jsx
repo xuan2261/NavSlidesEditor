@@ -54,7 +54,7 @@ export default function SlideBackgroundFxCanvas({ fx, width, height, active = tr
   return (
     <canvas
       ref={canvasRef}
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}
+      className="pointer-events-none absolute inset-0 z-0 h-full w-full"
       aria-hidden="true"
     />
   )

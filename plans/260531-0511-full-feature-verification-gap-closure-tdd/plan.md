@@ -1,7 +1,7 @@
 ---
 title: "Full Feature Verification Gap Closure TDD"
 description: "Close editor-core capability gaps, add release-grade user journey verification, then extend the matrix to export/import, presentation, live, games, AI, sync, and release gates."
-status: pending
+status: complete
 priority: P1
 effort: "12-16 dev-days"
 branch: master
@@ -31,12 +31,12 @@ Red-team adjustment: this plan is release-confidence work, not a full product-su
 
 | Phase | Name | Status |
 |---|---|---|
-| 1 | [Baseline and Verification Contract](./phase-01-baseline-and-verification-contract.md) | Pending |
-| 2 | [Editor Core Gap Closure](./phase-02-editor-core-gap-closure.md) | Pending |
-| 3 | [Critical User Journey E2E Coverage](./phase-03-critical-user-journey-e2e-coverage.md) | Pending |
-| 4 | [Extended Domain Matrix Expansion](./phase-04-extended-domain-matrix-expansion.md) | Pending |
-| 5 | [CI Gates and Release Confidence](./phase-05-ci-gates-and-release-confidence.md) | Pending |
-| 6 | [Docs, Manual QA, and Maintenance Loop](./phase-06-docs-manual-qa-maintenance-loop.md) | Pending |
+| 1 | [Baseline and Verification Contract](./phase-01-baseline-and-verification-contract.md) | Complete |
+| 2 | [Editor Core Gap Closure](./phase-02-editor-core-gap-closure.md) | Complete |
+| 3 | [Critical User Journey E2E Coverage](./phase-03-critical-user-journey-e2e-coverage.md) | Complete |
+| 4 | [Extended Domain Matrix Expansion](./phase-04-extended-domain-matrix-expansion.md) | Complete |
+| 5 | [CI Gates and Release Confidence](./phase-05-ci-gates-and-release-confidence.md) | Complete |
+| 6 | [Docs, Manual QA, and Maintenance Loop](./phase-06-docs-manual-qa-maintenance-loop.md) | Complete |
 
 ## Execution Strategy
 

@@ -50,7 +50,7 @@ test.describe('Security: presenter token validation rejects invalid and cross-ro
     try { await apiDeletePresentation(request, presId) } catch {}
   })
 
-  test('joining as presenter with wrong token emits join-error invalid-presenter-token', async () => {
+  test('[cap:live.presenter-authz tier:deep] joining as presenter with wrong token emits join-error invalid-presenter-token', async () => {
     const socket = await connectSocket()
     try {
       const result = await emitJoinRoom(socket, {
@@ -90,7 +90,7 @@ test.describe('Security: presenter token validation rejects invalid and cross-ro
     }
   })
 
-  test('valid token from one room cannot join a different room as presenter', async ({ request }) => {
+  test('[cap:live.presenter-authz tier:deep] valid token from one room cannot join a different room as presenter', async ({ request }) => {
     const r2 = await request.post('/api/live/room')
     const otherRoom = await r2.json()
 

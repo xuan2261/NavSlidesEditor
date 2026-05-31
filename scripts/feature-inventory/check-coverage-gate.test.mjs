@@ -14,6 +14,9 @@ const validEntry = (id, added = '2026-05-30') => ({
   reason: 'deferred — tracked',
   added,
   owner: 'qa',
+  targetLayer: 'unit',
+  resolutionPhase: 2,
+  debtAllowedUntil: '2026-06-30',
 })
 
 describe('coverage gate decision logic', () => {
@@ -50,11 +53,24 @@ describe('coverage gate decision logic', () => {
     const r = checkGate({
       rows: [GAP_ROW],
       orphans: [],
-      allowlist: [{ id: 'canvas.move', added: '2026-05-30' }],
+      allowlist: [{ ...validEntry('canvas.move'), reason: '' }],
       now: NOW,
     })
     expect(r.ok).toBe(false)
     expect(r.errors.some((e) => e.includes('reason'))).toBe(true)
+  })
+
+  it('rejects allowlist entries missing debt routing metadata', () => {
+    const r = checkGate({
+      rows: [GAP_ROW],
+      orphans: [],
+      allowlist: [{ id: 'canvas.move', reason: 'deferred', added: '2026-05-30', owner: 'qa' }],
+      now: NOW,
+    })
+    expect(r.ok).toBe(false)
+    expect(r.errors.some((e) => e.includes('targetLayer'))).toBe(true)
+    expect(r.errors.some((e) => e.includes('resolutionPhase'))).toBe(true)
+    expect(r.errors.some((e) => e.includes('debtAllowedUntil'))).toBe(true)
   })
 
   it('warns on an allowlist entry older than the staleness threshold', () => {

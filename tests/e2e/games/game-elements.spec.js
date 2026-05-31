@@ -54,7 +54,7 @@ test.describe('Game Elements — Insert & Render', () => {
     })
   }
 
-  test('game element increments canvas element count', async () => {
+  test('[cap:element.game] game element increments canvas element count', async () => {
     const initialCount = await editorPage.getElementCount()
     await editorPage.clickInsertMenuItem('Name Picker')
     await editorPage.waitForElementCount(initialCount + 1)

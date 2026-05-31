@@ -44,7 +44,7 @@ function waitForEvent(socket, event, predicate = () => true, timeoutMs = 8000) {
 }
 
 test.describe('Game scoring and leaderboard over sockets', () => {
-  test('two players join, answer, and the leaderboard ranks the correct answerer first', async ({
+  test('[cap:game.score] two players join, answer, and the leaderboard ranks the correct answerer first', async ({
     request,
   }) => {
     const gameId = `e2e-game-${Date.now()}-${Math.floor(Math.random() * 1e6)}`

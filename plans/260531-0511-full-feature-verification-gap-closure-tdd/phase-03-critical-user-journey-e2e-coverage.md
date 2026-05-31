@@ -8,7 +8,7 @@
 
 ## Overview
 
-Priority: P1. Status: Pending. Add release-grade Playwright coverage for user journeys that prove controls, elements, logic, and flow work together.
+Priority: P1. Status: Complete. Add release-grade Playwright coverage for user journeys that prove controls, elements, logic, and flow work together.
 
 ## Key Insights
 
@@ -24,7 +24,8 @@ Priority: P1. Status: Pending. Add release-grade Playwright coverage for user jo
 - No screenshots unless layout/visual is the assertion.
 - MVP journey set is bounded: create/edit/persist and share password/revoke are release-blocking; export, live, PPTX, and AI are included only with explicit runtime budget and stable fixture support.
 - Artifact journeys must inspect the exported/imported artifact, not just success toasts.
-- <!-- Updated: Validation Session 1 - only create/edit/persist and share password/revoke are release-blocking journeys. -->
+
+<!-- Updated: Validation Session 1 - only create/edit/persist and share password/revoke are release-blocking journeys. -->
 
 ## Architecture
 
@@ -77,12 +78,33 @@ Live reconnect contract:
 
 ## Todo List
 
-- [ ] Create/edit/persist MVP journey.
-- [ ] Share password/revoke MVP journey.
-- [ ] Insert/format/arrange/export-smoke bounded journey.
-- [ ] Live reconnect bounded journey.
-- [ ] PPTX import/edit/export bounded smoke journey.
-- [ ] AI failure handling coverage by best layer.
+- [x] Create/edit/persist MVP journey.
+- [x] Share password/revoke MVP journey.
+- [x] Insert/format/arrange/export-smoke bounded journey.
+- [x] Live reconnect bounded journey.
+- [x] PPTX import/edit/export bounded smoke journey.
+- [x] AI failure handling coverage by best layer.
+
+## Implementation Evidence
+
+- Added `tests/e2e/critical-user-journeys.spec.js` for the two release-blocking MVP journeys.
+- Added `docs/critical-user-journeys.md` mapping journey to spec and verification layer.
+- Create/edit/persist journey uses the dashboard modal, editor Insert text flow, persisted JSON assertion, and editor reload visible-state assertion.
+- Share password/revoke journey uses real protected share link creation, missing/wrong password 401 checks, pre-auth no-marker assertion, visible reveal slide assertion, token revoke, and revoked 404 assertion.
+- Insert/format/arrange/export journey inserts text and shape through the editor UI, formats shape fill/size, aligns shape through Shape Format controls, verifies persisted JSON, downloads Export HTML, and inspects the HTML artifact for marker/section/shape fill.
+- Live reconnect journey uses separate presenter/viewer/auditor browser contexts with real Socket.IO live room joins, disconnects the viewer, advances the presenter while the viewer is offline, verifies server-applied state before reconnect, verifies reconnect catches slide 2 once without duplicate navigate effects, verifies viewer `navigate` cannot mutate room state, and cleans room/token state through a presenter-token-protected endpoint.
+- Targeted Playwright passed after export journey addition: `npx playwright test tests/e2e/critical-user-journeys.spec.js --project=chromium` -> 3/3 tests passed.
+- Targeted live reconnect Playwright passed: `npx playwright test tests/e2e/critical-live-reconnect.spec.js --project=chromium` -> 1/1 test passed.
+- Live cleanup contract covered by `npx vitest run server/services/live-rooms.test.js server/routes/api-surface.test.js` -> 18/18 tests passed.
+- Added `tests/e2e/critical-pptx-journey.spec.js` for bounded PPTX import/edit/export smoke.
+- PPTX journey imports real `PPTX/Bai_2_2.pptx` through `/api/pptx/import`, updates the test presentation, edits an imported text element through the editor UI, verifies persisted JSON, exports PPTX through the File menu, and inspects the downloaded ZIP for package parts plus edited slide XML text.
+- Added AI failure contract assertions in `server/routes/ai.test.js` for malformed translate JSON and missing AI configuration without provider calls, complementing existing malformed outline and provider-failure assertions.
+- Targeted AI contract passed: `npx vitest run server/routes/ai.test.js` -> 5/5 tests passed.
+- Targeted PPTX journey passed clean on rerun: `npx playwright test tests/e2e/critical-pptx-journey.spec.js --project=chromium` -> 1/1 test passed. First run passed only on retry after a fixture create 500, so it was rerun and passed without retry before counting as evidence.
+- Reviewer concern about manual sleep polling was fixed by switching PPTX import status polling to Playwright `expect.poll` intervals. Guard passed: `npx vitest run tests/unit/no-wait-for-timeout.test.js server/routes/ai.test.js` -> 7/7 tests passed.
+- Targeted PPTX journey passed after polling fix: `npx playwright test tests/e2e/critical-pptx-journey.spec.js --project=chromium` -> 1/1 test passed.
+- Combined Phase 3 contract lane passed: `npx vitest run server/routes/ai.test.js server/services/live-rooms.test.js server/routes/api-surface.test.js` -> 23/23 tests passed.
+- Combined Phase 3 Playwright lane passed: `npx playwright test tests/e2e/critical-user-journeys.spec.js tests/e2e/critical-live-reconnect.spec.js tests/e2e/critical-pptx-journey.spec.js --project=chromium` -> 5/5 tests passed.
 
 ## Success Criteria
 

@@ -277,17 +277,66 @@ Selected per presentation (not per slide). Available: none, fade, slide, convex,
 
 ---
 
-## Preset Themes (6)
+## Design Tokens
 
-Applied from `HomePage` and affect all element default styles and backgrounds. Color palettes and gradient presets are defined in `shared/src/shared-toolbar-text-bg-color-palette-gradient-presets-config.js`.
+NavSlides Editor uses a token-based design system defined in `shared/src/design-tokens.js`. Tokens apply at two scopes: deck (`presentation.designTokens`) and per-slide (`slide.designTokens`).
 
-| Theme         | Character                                     |
-| ------------- | --------------------------------------------- |
-| Minimal Dark  | Dark background, white text, clean sans-serif |
-| Minimal Light | White background, dark text, clean sans-serif |
-| Academic      | Serif fonts, muted tones, formal layout       |
-| Gradient      | Vibrant gradient backgrounds                  |
-| Corporate     | Structured, blue accent, professional         |
-| Neon          | Dark background, bright neon accent colors    |
+### Token Taxonomy
 
-Applying a preset overwrites the presentation's `theme`, `transition`, and default element styles.
+| Token key | Field | Default |
+| --- | --- | --- |
+| `colors.bg` | Slide background | `#0f172a` |
+| `colors.surface` | Card / panel surface | `#1e293b` |
+| `colors.accent` | Primary accent | `#6366f1` |
+| `colors.accent2` | Secondary accent | `#8b5cf6` |
+| `colors.text` | Body text | `#f8fafc` |
+| `colors.muted` | Muted / secondary text | `#94a3b8` |
+| `fonts.heading` | Heading font family | `Inter` |
+| `fonts.body` | Body font family | `Inter` |
+| `radius` | Border radius scale | `0.5rem` |
+| `spacingScale` | Spacing multiplier | `1` |
+
+### 'auto' Sentinel
+
+Element color fields may be set to `'auto'`. At render time `resolveAutoColor(value, tokens)` maps `'auto'` → `var(--ns-<token>)`. Both the shared string renderers and the React canvas import the same resolver from `revealjs-shared` so the mapping never diverges. SVG paints must use the `style` attribute (not SVG presentation attributes) for token vars.
+
+### Theme Presets (39)
+
+`shared/src/theme-presets.js` exports `THEME_PRESETS` (39 presets) and `getThemePreset(id)`. Each preset: `{ id, label, category, revealTheme, tokens }`.
+
+| Category | Count | Examples |
+| --- | --- | --- |
+| minimal | 5 | minimal-dark, minimal-light |
+| editorial | 5 | editorial-serif, editorial-mono |
+| developer | 7 | dev-dark, dev-terminal |
+| corporate | 6 | corporate-blue, corporate-slate |
+| creative | 8 | creative-gradient, creative-neon |
+| earthy | 4 | earthy-warm, earthy-forest |
+| bold | 4 | bold-contrast, bold-vivid |
+
+Surfaced in the Design ribbon ThemeGallery with live-switch and "Apply to all" as one undoable step. New decks seed tokens from the selected preset.
+
+### Background FX (8)
+
+Slide backgrounds support `type: 'fx'` with shape `{ name, params, fallbackColor }`. The `shared/src/fx/` registry powers both the editor canvas (`slide-background-fx-canvas.jsx`) and the `htmlGenerator`-inlined browser runtime.
+
+| FX name | Effect |
+| --- | --- |
+| `gradient-blob` | Animated color blobs |
+| `starfield` | Moving star particles |
+| `matrix-rain` | Falling character rain |
+| `constellation` | Connected star network |
+| `particle-burst` | Radiating particles |
+| `knowledge-graph` | Animated node graph |
+| `orbit-ring` | Orbiting ring elements |
+| `sparkle-trail` | Sparkle trail effect |
+
+`fallbackColor` is used for print/PDF paths. The runtime honors `prefers-reduced-motion` (static first frame).
+
+---
+
+## Preset Themes (39)
+
+Applied from the Design ribbon ThemeGallery or `HomePage` new-deck flow. Each preset sets `presentation.designTokens` (colors, fonts, radius, spacingScale) and a `revealTheme`. The 39 presets span 7 categories — see the Design Tokens section above for the full category breakdown.
+
+Applying a preset overwrites the presentation's `designTokens` and `revealTheme`. Element color fields set to `'auto'` automatically reflect the new token values at render time without requiring per-element edits.

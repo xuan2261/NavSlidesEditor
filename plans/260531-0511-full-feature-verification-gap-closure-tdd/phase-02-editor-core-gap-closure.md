@@ -8,7 +8,7 @@
 
 ## Overview
 
-Priority: P1. Status: Pending. Convert editor-core `ALLOWED` entries into real PASS where practical, starting with high-risk behavior.
+Priority: P1. Status: Complete. Converted high-risk editor-core `ALLOWED` entries into real PASS where practical; remaining debt is low-risk, dated, and owner-assigned.
 
 ## Key Insights
 
@@ -23,7 +23,8 @@ Priority: P1. Status: Pending. Convert editor-core `ALLOWED` entries into real P
 - Keep new test files below 200 LOC.
 - For every P0/P1 gap, record the behavior oracle before writing the test: README/docs expectation, existing user-facing behavior spec, or issue/report that defines the expected outcome.
 - Avoid production refactors solely to make a gap easy to test. If behavior is not safely testable without refactor, leave dated debt with the extraction target.
-- <!-- Updated: Validation Session 1 - do not encode guessed/current behavior for P0/P1 gaps without a clear oracle. -->
+
+<!-- Updated: Validation Session 1 - do not encode guessed/current behavior for P0/P1 gaps without a clear oracle. -->
 
 ## Architecture
 
@@ -66,14 +67,31 @@ High-risk recovery paths are first-class capability tests, not optional edge cas
 
 ## Todo List
 
-- [ ] Add deep autosave verification or justified debt.
-- [ ] Add autosave failure/retry/debounce recovery coverage or explicit debt.
-- [ ] Add undo/redo behavior coverage.
-- [ ] Add z-order behavior coverage.
-- [ ] Add insert text/shape command coverage.
-- [ ] Add group/ungroup command path coverage.
-- [ ] Add chart/timeline deep coverage or extraction path.
-- [ ] Shrink allowlist.
+- [x] Add deep autosave verification or justified debt.
+- [x] Add autosave failure/retry/debounce recovery coverage or explicit debt.
+- [x] Add undo/redo behavior coverage.
+- [x] Add z-order behavior coverage.
+- [x] Add insert text/shape command coverage.
+- [x] Add group/ungroup command path coverage.
+- [x] Add chart/timeline deep coverage or extraction path.
+
+## Implementation Evidence
+
+- Tagged existing behavior-oracle tests in `shared/tests/element-renderers.test.js`: chart stacked-axis config and timeline plan-schema event rendering.
+- Removed `element.chart` and `element.timeline` from `coverage-gate-allowlist.json`.
+- Tagged EditorPage undo/redo characterization with `[cap:flow.undo-redo tier:deep]` and added redo restoration assertion.
+- Tagged EditorPage z-order shortcut characterization with `[cap:canvas.zorder tier:deep]`, `[cap:shortcut.bringForward]`, and `[cap:shortcut.sendBackward]`.
+- Tagged Insert ribbon component tests with `[cap:control.insert.text]` and `[cap:control.insert.shape]`.
+- Tagged EditorPage group/ungroup shortcut characterization with `[cap:shortcut.group]` and `[cap:shortcut.ungroup]`.
+- Tagged View ribbon control tests with `[cap:control.view.smartGuides]` and `[cap:control.view.selectionPane]`.
+- Tagged Format tab position dispatch with `[cap:control.format.position]`.
+- Tagged keyboard handler test with `[cap:shortcut.insertSlide]`.
+- Added autosave failure/retry coverage with `[cap:flow.autosave tier:deep]`; covers visible failure, retry action, and failed snapshot persistence.
+- Added EditorPage command palette action coverage with `[cap:command.group]` and `[cap:command.ungroup]`.
+- Removed `flow.undo-redo`, `flow.autosave`, `canvas.zorder`, `shortcut.bringForward`, `shortcut.sendBackward`, `shortcut.group`, `shortcut.ungroup`, `shortcut.insertSlide`, `control.insert.text`, `control.insert.shape`, `control.format.position`, `control.view.smartGuides`, `control.view.selectionPane`, `command.group`, `command.ungroup`, `element.chart`, and `element.timeline` from `coverage-gate-allowlist.json`.
+- Targeted Vitest passed: 5 files, 37 tests.
+- `npm run matrix:gate` passed after regeneration: 90/100 PASS, 10 ALLOWED, 0 failures, 0 orphans.
+- Allowlist shrank from 27 to 10 entries; remaining entries are low-risk dated debt.
 
 ## Success Criteria
 

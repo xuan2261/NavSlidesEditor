@@ -116,7 +116,7 @@ describe('EditorPage element-ops characterization', () => {
     expect(ids).toContain('el-a')
   })
 
-  it('groups two selected elements with a shared groupId (Ctrl+G)', async () => {
+  it('[cap:shortcut.group] groups two selected elements with a shared groupId (Ctrl+G)', async () => {
     renderPage()
     await screen.findByDisplayValue('Char Deck')
 
@@ -132,7 +132,25 @@ describe('EditorPage element-ops characterization', () => {
     }, { timeout: 2500 })
   })
 
-  it('bring-forward increments the selected element zIndex (Ctrl+])', async () => {
+  it('[cap:shortcut.ungroup] ungroups grouped elements with Ctrl+Shift+G', async () => {
+    h.seed.slides[0].elements[0].groupId = 'group-1'
+    h.seed.slides[0].elements[1].groupId = 'group-1'
+    renderPage()
+    await screen.findByDisplayValue('Char Deck')
+
+    await selectElements(['el-a', 'el-b'])
+    await pressKey({ key: 'g', ctrlKey: true, shiftKey: true })
+
+    await waitFor(() => {
+      const snap = lastSaved()
+      expect(snap).toBeTruthy()
+      const [a, b] = snap.slides[0].elements
+      expect(a.groupId).toBeUndefined()
+      expect(b.groupId).toBeUndefined()
+    }, { timeout: 2500 })
+  })
+
+  it('[cap:canvas.zorder tier:deep] [cap:shortcut.bringForward] bring-forward increments the selected element zIndex (Ctrl+])', async () => {
     renderPage()
     await screen.findByDisplayValue('Char Deck')
 
@@ -144,6 +162,21 @@ describe('EditorPage element-ops characterization', () => {
       expect(snap).toBeTruthy()
       const a = snap.slides[0].elements.find((e) => e.id === 'el-a')
       expect(a.zIndex).toBe(2)
+    }, { timeout: 2500 })
+  })
+
+  it('[cap:canvas.zorder tier:deep] [cap:shortcut.sendBackward] send-backward decrements the selected element zIndex (Ctrl+[)', async () => {
+    renderPage()
+    await screen.findByDisplayValue('Char Deck')
+
+    await selectElements(['el-b']) // zIndex 2
+    await pressKey({ key: '[', ctrlKey: true })
+
+    await waitFor(() => {
+      const snap = lastSaved()
+      expect(snap).toBeTruthy()
+      const b = snap.slides[0].elements.find((e) => e.id === 'el-b')
+      expect(b.zIndex).toBe(1)
     }, { timeout: 2500 })
   })
 

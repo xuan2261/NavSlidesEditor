@@ -37,9 +37,10 @@ function hasDeepPass(occurrences, runIndex) {
   )
 }
 
-export function buildMatrix({ inventory, tags, runIndex, allowlist = [] }) {
+export function buildMatrix({ inventory, tags, runIndex, allowlist = [], knownIds = null }) {
   const allowSet = new Set(allowlist.map((a) => a.id))
   const inventoryIds = new Set(inventory.map((c) => c.id))
+  const knownIdSet = knownIds ? new Set(knownIds) : inventoryIds
   const rows = []
 
   for (const cap of inventory) {
@@ -64,7 +65,7 @@ export function buildMatrix({ inventory, tags, runIndex, allowlist = [] }) {
   rows.sort((a, b) => a.id.localeCompare(b.id))
 
   const orphans = Object.keys(tags)
-    .filter((id) => !inventoryIds.has(id))
+    .filter((id) => !knownIdSet.has(id))
     .sort((a, b) => a.localeCompare(b))
 
   const summary = { total: rows.length, verified: 0 }
@@ -107,7 +108,13 @@ if (invokedDirectly) {
   const allowlistDoc = loadJsonIfExists(resolve(HERE, 'coverage-gate-allowlist.json'), { entries: [] })
   const allowlist = allowlistDoc.entries || []
 
-  const result = buildMatrix({ inventory, tags, runIndex, allowlist })
+  const result = buildMatrix({
+    inventory,
+    tags,
+    runIndex,
+    allowlist,
+    knownIds: fullInventory.map((c) => c.id),
+  })
   mkdirSync(REPORTS_DIR, { recursive: true })
   const meta = { generated: process.env.MATRIX_DATE || 'local run', stale }
   writeFileSync(

@@ -30,7 +30,7 @@ describe('Home clipboard big-button', () => {
 })
 
 describe('Insert basic big-buttons', () => {
-  it('renders Text Box as a big button wired to onAddText', () => {
+  it('[cap:control.insert.text] renders Text Box as a big button wired to onAddText', () => {
     const onAddText = vi.fn()
     render(<InsertTabContent onAddText={onAddText} pluginTypes={[]} />)
     const textBox = screen.getByTestId('ribbon-insert-text')
@@ -38,6 +38,16 @@ describe('Insert basic big-buttons', () => {
     expect(textBox.textContent).toContain('Text Box')
     fireEvent.mouseDown(textBox)
     expect(onAddText).toHaveBeenCalledTimes(1)
+  })
+
+  it('[cap:control.insert.shape] opens the shape gallery and dispatches the selected shape', () => {
+    const onAddShape = vi.fn()
+    render(<InsertTabContent onAddShape={onAddShape} pluginTypes={[]} />)
+
+    fireEvent.mouseDown(screen.getByTestId('ribbon-insert-shape'))
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Rectangle' }))
+
+    expect(onAddShape).toHaveBeenCalledWith('rect')
   })
 
   it('renders Picture as a big button wired to the upload handler (not the URL prompt)', () => {

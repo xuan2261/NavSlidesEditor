@@ -44,5 +44,38 @@
     { "id": "command.resetZoom",      "risk": "low", "tiers": ["smoke"] },
     { "id": "command.startSlideshow", "risk": "low", "tiers": ["smoke"] },
     { "id": "command.commandPalette", "risk": "low", "tiers": ["smoke"] }
+  ],
+  "export": [
+    { "id": "export.html", "risk": "high", "tiers": ["smoke"], "scope": "export", "targetLayer": "e2e", "coverageMode": "executable" },
+    { "id": "export.pptx", "risk": "high", "tiers": ["smoke"], "scope": "export", "targetLayer": "e2e", "coverageMode": "executable" }
+  ],
+  "import": [
+    { "id": "import.markdown", "risk": "low", "tiers": ["smoke"], "scope": "import", "targetLayer": "e2e", "coverageMode": "executable" },
+    { "id": "import.pptx", "risk": "high", "tiers": ["smoke"], "scope": "import", "targetLayer": "e2e", "coverageMode": "executable" },
+    { "id": "import.upload-safety", "risk": "high", "tiers": ["smoke", "deep"], "scope": "import", "targetLayer": "contract", "coverageMode": "executable" }
+  ],
+  "live": [
+    { "id": "live.reconnect", "risk": "high", "tiers": ["smoke"], "scope": "live", "targetLayer": "e2e", "coverageMode": "executable" },
+    { "id": "live.presenter-authz", "risk": "high", "tiers": ["smoke", "deep"], "scope": "live", "targetLayer": "e2e", "coverageMode": "executable" }
+  ],
+  "share": [
+    { "id": "share.password", "risk": "high", "tiers": ["smoke"], "scope": "share", "targetLayer": "e2e", "coverageMode": "executable" },
+    { "id": "share.revoke", "risk": "high", "tiers": ["smoke"], "scope": "share", "targetLayer": "e2e", "coverageMode": "executable" }
+  ],
+  "ai": [
+    { "id": "ai.generate", "risk": "high", "tiers": ["smoke"], "scope": "ai", "targetLayer": "e2e", "coverageMode": "mocked-e2e" },
+    { "id": "ai.rewrite", "risk": "high", "tiers": ["smoke"], "scope": "ai", "targetLayer": "e2e", "coverageMode": "mocked-e2e" },
+    { "id": "ai.translate", "risk": "high", "tiers": ["smoke"], "scope": "ai", "targetLayer": "e2e", "coverageMode": "mocked-e2e" },
+    { "id": "ai.endpoint-guard", "risk": "high", "tiers": ["smoke", "deep"], "scope": "ai", "targetLayer": "contract", "coverageMode": "contract-only" },
+    { "id": "ai.failure", "risk": "high", "tiers": ["smoke", "deep"], "scope": "ai", "targetLayer": "contract", "coverageMode": "contract-only" }
+  ],
+  "game": [
+    { "id": "game.score", "risk": "high", "tiers": ["smoke"], "scope": "game", "targetLayer": "e2e", "coverageMode": "executable" }
+  ],
+  "sync": [
+    { "id": "sync.rclone-status", "risk": "high", "tiers": ["smoke"], "scope": "sync", "targetLayer": "contract", "coverageMode": "contract-only" }
+  ],
+  "history": [
+    { "id": "history.snapshot", "risk": "low", "tiers": ["smoke"], "scope": "history", "targetLayer": "e2e", "coverageMode": "executable" }
   ]
 }
