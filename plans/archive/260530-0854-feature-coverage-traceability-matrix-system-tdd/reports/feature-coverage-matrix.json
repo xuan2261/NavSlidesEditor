@@ -1,0 +1,1098 @@
+{
+  "meta": {
+    "generated": "local run",
+    "stale": true
+  },
+  "rows": [
+    {
+      "id": "canvas.align",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "canvas.distribute",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "canvas.group",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "canvas.lock",
+      "category": "canvas",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "ALLOWED"
+    },
+    {
+      "id": "canvas.move",
+      "category": "canvas",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "ALLOWED"
+    },
+    {
+      "id": "canvas.resize",
+      "category": "canvas",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/canvas-geometry-ops.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "canvas.resize-aspect",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/use-canvas-resize-rotate.deep.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "canvas.rotate-snap",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/use-canvas-resize-rotate.deep.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "canvas.smart-guides",
+      "category": "canvas",
+      "risk": "low",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/utils/smartGuides.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "canvas.zorder",
+      "category": "canvas",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "command.commandPalette",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "command.group",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "command.insertLink",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "ALLOWED"
+    },
+    {
+      "id": "command.insertSlide",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "ALLOWED"
+    },
+    {
+      "id": "command.resetZoom",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "command.startSlideshow",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "ALLOWED"
+    },
+    {
+      "id": "command.ungroup",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "command.zoomIn",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "command.zoomOut",
+      "category": "command",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.file.menu",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "ALLOWED"
+    },
+    {
+      "id": "control.format.align",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/controls/paragraph-formatting-and-alignment-controls.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.format.bold",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.format.fontFamily",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.format.fontSize",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.format.fontWeight",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.format.italic",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.format.lineHeight",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/controls/paragraph-formatting-and-alignment-controls.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.format.position",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.format.underline",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.insert.shape",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.insert.text",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.view.selectionPane",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-view-tab-mode-controls-and-window-panel-toggles.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "control.view.smartGuides",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-view-tab-mode-controls-and-window-panel-toggles.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.audio",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.callout",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.chart",
+      "category": "element",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.code",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.drawing",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.html",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.icon",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.image",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.latex",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.line",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.markdown",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.qrcode",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.shape",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.svg",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.table",
+      "category": "element",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.text",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.timeline",
+      "category": "element",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "element.video",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "flow.autosave",
+      "category": "flow",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "flow.clipboard",
+      "category": "flow",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-clipboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "flow.find-replace",
+      "category": "flow",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/find-replace-helpers.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "flow.multiselect",
+      "category": "flow",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store-multiselect.deep.test.js",
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "flow.undo-redo",
+      "category": "flow",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.blackScreen",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.bringForward",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.commandPalette",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.copy",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.cut",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.delete",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.duplicate",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.endSlideshow",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.eraseAnnotations",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "ALLOWED"
+    },
+    {
+      "id": "shortcut.escape",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.gameHud",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.gameLeaderboard",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.gameNext",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.gamePause",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.gameReveal",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.gameTimer",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.group",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.highlighterTool",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "ALLOWED"
+    },
+    {
+      "id": "shortcut.insertSlide",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.laserPointer",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "ALLOWED"
+    },
+    {
+      "id": "shortcut.paste",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.penTool",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": null,
+      "tests": [],
+      "status": "ALLOWED"
+    },
+    {
+      "id": "shortcut.redo",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.resetZoom",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.selectAll",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.sendBackward",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.slideFirst",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.slideLast",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.slideNext",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.slidePrev",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.startSlideshow",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.startSlideshowCurrent",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.teamSelect1",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.teamSelect2",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.teamSelect3",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.teamSelect4",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.timerAdd",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.timerSub",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.toggleFindReplace",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.undo",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.ungroup",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.whiteScreen",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.zoomIn",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "shortcut.zoomOut",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/stores/editor-store.test.js"
+      ],
+      "status": "PASS"
+    }
+  ],
+  "orphans": [],
+  "summary": {
+    "total": 100,
+    "verified": 90,
+    "PASS": 90,
+    "ALLOWED": 10
+  }
+}

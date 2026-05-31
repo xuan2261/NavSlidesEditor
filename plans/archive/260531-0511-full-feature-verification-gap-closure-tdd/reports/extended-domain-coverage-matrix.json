@@ -1,0 +1,344 @@
+{
+  "meta": {
+    "generated": "local run",
+    "stale": true,
+    "title": "Extended Domain Coverage Matrix"
+  },
+  "rows": [
+    {
+      "id": "ai.endpoint-guard",
+      "category": "ai",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "server/services/ai-endpoint-guard.test.js",
+        "server/services/ai-provider.test.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "ai.failure",
+      "category": "ai",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "server/routes/ai.test.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "ai.generate",
+      "category": "ai",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/ai.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "ai.rewrite",
+      "category": "ai",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/ai.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "ai.translate",
+      "category": "ai",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/ai.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "element.game",
+      "category": "element",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/games/game-elements.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "export.html",
+      "category": "export",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/critical-user-journeys.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "export.pptx",
+      "category": "export",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/critical-pptx-journey.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "game.score",
+      "category": "game",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/games/game-scoring-and-leaderboard.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "history.snapshot",
+      "category": "history",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "server/routes/api-surface.test.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "import.markdown",
+      "category": "import",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/import/markdown-import.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "import.pptx",
+      "category": "import",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/critical-pptx-journey.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "import.upload-safety",
+      "category": "import",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "unit",
+      "tests": [
+        "server/routes/pptx-import.test.js",
+        "server/services/pptx-import/pptx-guards.test.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "live.presenter-authz",
+      "category": "live",
+      "risk": "high",
+      "tier": "deep",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/critical-live-reconnect.spec.js",
+        "tests/e2e/security/presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "live.reconnect",
+      "category": "live",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/critical-live-reconnect.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "share.password",
+      "category": "share",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/critical-user-journeys.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "share.revoke",
+      "category": "share",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "e2e",
+      "tests": [
+        "tests/e2e/critical-user-journeys.spec.js"
+      ],
+      "status": "TAGGED"
+    },
+    {
+      "id": "sync.rclone-status",
+      "category": "sync",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "server/routes/api-surface.test.js"
+      ],
+      "status": "TAGGED"
+    }
+  ],
+  "orphans": [],
+  "summary": {
+    "total": 18,
+    "verified": 0,
+    "TAGGED": 18
+  },
+  "policy": [
+    {
+      "id": "ai.endpoint-guard",
+      "scope": "ai",
+      "risk": "high",
+      "targetLayer": "contract",
+      "coverageMode": "contract-only"
+    },
+    {
+      "id": "ai.failure",
+      "scope": "ai",
+      "risk": "high",
+      "targetLayer": "contract",
+      "coverageMode": "contract-only"
+    },
+    {
+      "id": "ai.generate",
+      "scope": "ai",
+      "risk": "high",
+      "targetLayer": "e2e",
+      "coverageMode": "mocked-e2e"
+    },
+    {
+      "id": "ai.rewrite",
+      "scope": "ai",
+      "risk": "high",
+      "targetLayer": "e2e",
+      "coverageMode": "mocked-e2e"
+    },
+    {
+      "id": "ai.translate",
+      "scope": "ai",
+      "risk": "high",
+      "targetLayer": "e2e",
+      "coverageMode": "mocked-e2e"
+    },
+    {
+      "id": "element.game",
+      "scope": "game",
+      "risk": "low",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "export.html",
+      "scope": "export",
+      "risk": "high",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "export.pptx",
+      "scope": "export",
+      "risk": "high",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "game.score",
+      "scope": "game",
+      "risk": "high",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "history.snapshot",
+      "scope": "history",
+      "risk": "low",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "import.markdown",
+      "scope": "import",
+      "risk": "low",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "import.pptx",
+      "scope": "import",
+      "risk": "high",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "import.upload-safety",
+      "scope": "import",
+      "risk": "high",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "live.presenter-authz",
+      "scope": "live",
+      "risk": "high",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "live.reconnect",
+      "scope": "live",
+      "risk": "high",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "share.password",
+      "scope": "share",
+      "risk": "high",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "share.revoke",
+      "scope": "share",
+      "risk": "high",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "sync.rclone-status",
+      "scope": "sync",
+      "risk": "high",
+      "targetLayer": "contract",
+      "coverageMode": "contract-only"
+    }
+  ]
+}
