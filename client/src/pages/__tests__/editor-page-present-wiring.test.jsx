@@ -45,6 +45,7 @@ function seedWithGame() {
 
 const h = vi.hoisted(() => ({
   updatePresentation: vi.fn(() => Promise.resolve({})),
+  presentInWindow: vi.fn(),
   seed: null,
 }))
 
@@ -59,7 +60,11 @@ vi.mock('../../utils/api', () => ({
   },
 }))
 
-import EditorPage from '../EditorPage.jsx'
+vi.mock('../../utils/generateHTML', () => ({
+  presentInWindow: h.presentInWindow,
+}))
+
+import EditorPage, { getGameElementForActiveSlide } from '../EditorPage.jsx'
 
 function renderPage() {
   return render(
@@ -78,12 +83,13 @@ async function press(init) {
 
 beforeEach(() => {
   h.updatePresentation.mockClear()
+  h.presentInWindow.mockClear()
   useEditorStore.setState({ selectedElementIds: [], editingElementId: null, clipboard: null })
   globalThis.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) }))
 })
 
 describe('EditorPage present-wiring (dead presentation-scope removed)', () => {
-  it('without a game element, B/W/F5 produce no game overlay and do not crash', async () => {
+  it('without a game element, B/W produce no game overlay and F5 opens presentation', async () => {
     h.seed = seedNoGame()
     renderPage()
     await screen.findByDisplayValue('Wire Deck')
@@ -94,8 +100,17 @@ describe('EditorPage present-wiring (dead presentation-scope removed)', () => {
 
     expect(screen.queryByTestId('game-hud')).toBeNull()
     expect(screen.queryByTestId('game-leaderboard')).toBeNull()
+    expect(h.presentInWindow).toHaveBeenCalledWith(expect.objectContaining({ id: 'wire-deck' }))
     // Page still mounted/usable.
     expect(screen.getByDisplayValue('Wire Deck')).toBeTruthy()
+  })
+
+  it('selects game element from the active vertical slide before falling back to the parent', () => {
+    const parent = { id: 's1', elements: [{ id: 'parent-game', type: 'game', gameType: 'jeopardy' }] }
+    const child = { id: 's1-child', elements: [{ id: 'child-game', type: 'game', gameType: 'name-picker' }] }
+
+    expect(getGameElementForActiveSlide(child, parent)?.id).toBe('child-game')
+    expect(getGameElementForActiveSlide(null, parent)?.id).toBe('parent-game')
   })
 
   it('with a game element, G opens the HUD and L opens the leaderboard (reachable game-scope wiring)', async () => {
@@ -111,6 +126,28 @@ describe('EditorPage present-wiring (dead presentation-scope removed)', () => {
 
     await press({ key: 'l' })
     await waitFor(() => expect(screen.getByTestId('game-leaderboard')).toBeTruthy())
+  })
+
+  it('game shortcut actions publish a typed event instead of being console stubs', async () => {
+    h.seed = seedWithGame()
+    const events = []
+    const handler = (event) => events.push(event.detail)
+    window.addEventListener('navslides:game-shortcut', handler)
+
+    try {
+      renderPage()
+      await screen.findByDisplayValue('Wire Deck')
+
+      await press({ key: 'Enter' })
+
+      expect(events).toContainEqual({
+        action: 'next',
+        elementId: 'g1',
+        gameType: 'jeopardy',
+      })
+    } finally {
+      window.removeEventListener('navslides:game-shortcut', handler)
+    }
   })
 
   it('Escape closes an open game overlay (kept branch)', async () => {

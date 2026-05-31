@@ -2,9 +2,7 @@
 
 _Generated: local run_
 
-> ⚠️ **Run results stale or missing** — statuses derived without a fresh test run. PASS counts may be optimistic; regenerate with a fresh `--reporter=json` run.
-
-Verified (PASS only): 90/100 (90%)  |  PASS: 90  |  ALLOWED: 10
+Verified (PASS only): 100/100 (100%)  |  PASS: 100
 
 ## canvas
 
@@ -13,8 +11,8 @@ Verified (PASS only): 90/100 (90%)  |  PASS: 90  |  ALLOWED: 10
 | canvas.align | high | deep | unit | client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js | PASS |
 | canvas.distribute | high | deep | unit | client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js | PASS |
 | canvas.group | high | deep | unit | client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js | PASS |
-| canvas.lock | low | smoke | - | (none) | ALLOWED |
-| canvas.move | low | smoke | - | (none) | ALLOWED |
+| canvas.lock | low | smoke | unit | client/src/components/canvas/canvas-geometry-ops.smoke.test.js<br>client/src/components/canvas/use-canvas-pointer-interaction.test.js | PASS |
+| canvas.move | low | smoke | unit | client/src/components/canvas/canvas-geometry-ops.smoke.test.js | PASS |
 | canvas.resize | low | smoke | unit | client/src/components/canvas/canvas-geometry-ops.smoke.test.js | PASS |
 | canvas.resize-aspect | high | deep | unit | client/src/components/canvas/use-canvas-resize-rotate.deep.test.js | PASS |
 | canvas.rotate-snap | high | deep | unit | client/src/components/canvas/use-canvas-resize-rotate.deep.test.js | PASS |
@@ -27,10 +25,10 @@ Verified (PASS only): 90/100 (90%)  |  PASS: 90  |  ALLOWED: 10
 |---|---|---|---|---|---|
 | command.commandPalette | low | smoke | unit | client/src/hooks/use-keyboard.test.js | PASS |
 | command.group | low | smoke | unit | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
-| command.insertLink | low | smoke | - | (none) | ALLOWED |
-| command.insertSlide | low | smoke | - | (none) | ALLOWED |
+| command.insertLink | low | smoke | unit | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
+| command.insertSlide | low | smoke | unit | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 | command.resetZoom | low | smoke | unit | client/src/stores/editor-store.test.js | PASS |
-| command.startSlideshow | low | smoke | - | (none) | ALLOWED |
+| command.startSlideshow | low | smoke | unit | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 | command.ungroup | low | smoke | unit | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 | command.zoomIn | low | smoke | unit | client/src/stores/editor-store.test.js | PASS |
 | command.zoomOut | low | smoke | unit | client/src/stores/editor-store.test.js | PASS |
@@ -39,7 +37,7 @@ Verified (PASS only): 90/100 (90%)  |  PASS: 90  |  ALLOWED: 10
 
 | Capability | Risk | Tier | Layer | Test(s) | Status |
 |---|---|---|---|---|---|
-| control.file.menu | low | smoke | - | (none) | ALLOWED |
+| control.file.menu | low | smoke | unit | client/src/components/ribbon/ribbon-file-dropdown-menu.test.jsx | PASS |
 | control.format.align | low | smoke | unit | client/src/components/ribbon/controls/paragraph-formatting-and-alignment-controls.test.jsx | PASS |
 | control.format.bold | low | smoke | unit | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
 | control.format.fontFamily | low | smoke | unit | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
@@ -99,7 +97,7 @@ Verified (PASS only): 90/100 (90%)  |  PASS: 90  |  ALLOWED: 10
 | shortcut.delete | low | smoke | unit | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.duplicate | low | smoke | unit | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.endSlideshow | low | smoke | unit | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
-| shortcut.eraseAnnotations | low | smoke | - | (none) | ALLOWED |
+| shortcut.eraseAnnotations | low | smoke | unit | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
 | shortcut.escape | low | smoke | unit | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.gameHud | low | smoke | unit | client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js | PASS |
 | shortcut.gameLeaderboard | low | smoke | unit | client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js | PASS |
@@ -108,11 +106,11 @@ Verified (PASS only): 90/100 (90%)  |  PASS: 90  |  ALLOWED: 10
 | shortcut.gameReveal | low | smoke | unit | client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js | PASS |
 | shortcut.gameTimer | low | smoke | unit | client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js | PASS |
 | shortcut.group | low | smoke | unit | client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx | PASS |
-| shortcut.highlighterTool | low | smoke | - | (none) | ALLOWED |
+| shortcut.highlighterTool | low | smoke | unit | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
 | shortcut.insertSlide | low | smoke | unit | client/src/hooks/use-keyboard.test.js | PASS |
-| shortcut.laserPointer | low | smoke | - | (none) | ALLOWED |
+| shortcut.laserPointer | low | smoke | unit | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
 | shortcut.paste | low | smoke | unit | client/src/hooks/use-keyboard.test.js | PASS |
-| shortcut.penTool | low | smoke | - | (none) | ALLOWED |
+| shortcut.penTool | low | smoke | unit | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
 | shortcut.redo | low | smoke | unit | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.resetZoom | low | smoke | unit | client/src/stores/editor-store.test.js | PASS |
 | shortcut.selectAll | low | smoke | unit | client/src/hooks/use-keyboard.test.js | PASS |

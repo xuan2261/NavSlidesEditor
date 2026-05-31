@@ -43,7 +43,10 @@ vi.mock('../../utils/api', () => ({
   },
 }))
 
-import EditorPage from '../EditorPage.jsx'
+import EditorPage, {
+  getElementForActiveSlideEdit,
+  getSelectionIdsForActiveSlideElement,
+} from '../EditorPage.jsx'
 
 function renderPage() {
   return render(
@@ -83,6 +86,51 @@ afterEach(() => {
 })
 
 describe('EditorPage element-ops characterization', () => {
+  it('resolves editable text elements from the active vertical child slide', () => {
+    const activeChild = {
+      id: 'child-1',
+      elements: [
+        { id: 'child-text', type: 'text', content: '<p>Child</p>' },
+      ],
+    }
+    const parent = {
+      id: 'parent-1',
+      elements: [
+        { id: 'parent-text', type: 'text', content: '<p>Parent</p>' },
+      ],
+    }
+
+    expect(getElementForActiveSlideEdit(activeChild, parent, 'child-text')).toEqual(
+      activeChild.elements[0]
+    )
+    expect(getElementForActiveSlideEdit(activeChild, parent, 'parent-text')).toBeNull()
+  })
+
+  it('resolves grouped selection ids from the active vertical child slide', () => {
+    const activeChild = {
+      id: 'child-1',
+      elements: [
+        { id: 'child-a', type: 'shape', groupId: 'child-group' },
+        { id: 'child-b', type: 'shape', groupId: 'child-group' },
+      ],
+    }
+    const parent = {
+      id: 'parent-1',
+      elements: [
+        { id: 'parent-a', type: 'shape', groupId: 'parent-group' },
+        { id: 'parent-b', type: 'shape', groupId: 'parent-group' },
+      ],
+    }
+
+    expect(getSelectionIdsForActiveSlideElement(activeChild, parent, 'child-a')).toEqual([
+      'child-a',
+      'child-b',
+    ])
+    expect(getSelectionIdsForActiveSlideElement(activeChild, parent, 'parent-a')).toEqual([
+      'parent-a',
+    ])
+  })
+
   it('deletes the selected element via Delete key', async () => {
     renderPage()
     await screen.findByDisplayValue('Char Deck')

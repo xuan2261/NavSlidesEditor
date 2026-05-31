@@ -6,11 +6,17 @@
  * - startElementDrag side-effects only (sets pendingDragRef) — test via ref inspection
  * - No @testing-library/react needed (not installed in client)
  */
-import { describe, it, expect } from 'vitest'
-import { applyCropHandle } from './use-canvas-pointer-interaction'
+import { cleanup, renderHook } from '@testing-library/react'
+import { afterEach, describe, it, expect, vi } from 'vitest'
+import useCanvasPointerInteraction, { applyCropHandle } from './use-canvas-pointer-interaction'
 
 // Re-exported pure helpers from the hook module for direct testing
 // applyCropHandle and startElementDrag are exported for testing purposes
+afterEach(() => {
+  cleanup()
+  document.body.innerHTML = ''
+})
+
 describe('applyCropHandle (pure math)', () => {
   const cases = [
     { handle: 'nw', dx: -0.05, dy: -0.05, crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }, expectX: true, expectY: true },
@@ -85,5 +91,93 @@ describe('applyCropHandle (pure math)', () => {
 describe('exports', () => {
   it('applyCropHandle is exported from the module', () => {
     expect(typeof applyCropHandle).toBe('function')
+  })
+})
+
+function renderPointerInteraction() {
+  const pendingDragRef = { current: null }
+  const slide = {
+    elements: [
+      { id: 'free', x: 10, y: 20, width: 100, height: 80 },
+      { id: 'locked', locked: true, x: 200, y: 220, width: 120, height: 90 },
+    ],
+  }
+
+  const canvas = document.createElement('div')
+  canvas.className = 'slide-canvas'
+  canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 960, height: 540 })
+  document.body.appendChild(canvas)
+
+  const hook = renderHook(() =>
+    useCanvasPointerInteraction({
+      scaleRef: { current: 1 },
+      showGridRef: { current: false },
+      gridSizeRef: { current: 10 },
+      smartGuidesRef: { current: false },
+      slideRef: { current: slide },
+      selectedElementIdsRef: { current: ['free', 'locked'] },
+      draggingRef: { current: null },
+      pendingDragRef,
+      cropDragRef: { current: null },
+      rubberBandRef: { current: null },
+      suppressCanvasClickRef: { current: false },
+      onUpdateElement: vi.fn(),
+      onUpdateElements: vi.fn(),
+      snapToGrid: (value) => value,
+      snapWithRef: (x, y) => ({ x, y }),
+      getRotationAngle: vi.fn(),
+      applyResize: vi.fn(),
+      applyResizeAspectRatio: vi.fn(),
+      clampToSlide: vi.fn(),
+      startRubberBand: vi.fn(),
+      updateRubberBand: vi.fn(),
+      endRubberBand: vi.fn(() => []),
+      applyRubberBandSelection: vi.fn(),
+      setRubberBand: vi.fn(),
+      setActiveGuides: vi.fn(),
+      forceUpdate: vi.fn(),
+      setSuppressCanvasClick: vi.fn(),
+      setCropMode: vi.fn(),
+      slideW: 960,
+      slideH: 540,
+    })
+  )
+
+  return { hook, pendingDragRef, slide }
+}
+
+describe('startElementDrag lock handling', () => {
+  it('[cap:canvas.lock] does not create a pending drag for a locked element', () => {
+    const { hook, pendingDragRef, slide } = renderPointerInteraction()
+
+    hook.result.current.startElementDrag(
+      { clientX: 210, clientY: 230 },
+      'locked',
+      'move',
+      null,
+      slide,
+      1,
+      ['free', 'locked']
+    )
+
+    expect(pendingDragRef.current).toBeNull()
+  })
+
+  it('[cap:canvas.lock] excludes locked selected elements from a mixed move drag', () => {
+    const { hook, pendingDragRef, slide } = renderPointerInteraction()
+
+    hook.result.current.startElementDrag(
+      { clientX: 20, clientY: 30 },
+      'free',
+      'move',
+      null,
+      slide,
+      1,
+      ['free', 'locked']
+    )
+
+    expect(pendingDragRef.current.startEls).toEqual([
+      { id: 'free', x: 10, y: 20, width: 100, height: 80 },
+    ])
   })
 })

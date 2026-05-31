@@ -126,7 +126,7 @@ export function createCutOperation({ slideElements, selectedElementIds }) {
 export function useClipboard({ mapActiveSlide, setPresentation }) {
   const selectedElementIds = useEditorStore((s) => s.selectedElementIds)
   const setClipboard = useEditorStore((s) => s.setClipboard)
-  const selectElement = useEditorStore((s) => s.selectElement)
+  const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds)
   const clearSelection = useEditorStore((s) => s.clearSelection)
 
   const performCopy = useCallback(
@@ -147,9 +147,9 @@ export function useClipboard({ mapActiveSlide, setPresentation }) {
       setPresentation((prev) =>
         mapActiveSlide(prev, (s) => ({ ...s, elements: [...(s.elements || []), ...elements] }))
       )
-      if (allIds.length) selectElement(allIds)
+      if (allIds.length) setSelectedElementIds(allIds)
     },
-    [mapActiveSlide, setPresentation, selectElement]
+    [mapActiveSlide, setPresentation, setSelectedElementIds]
   )
 
   const performCut = useCallback(

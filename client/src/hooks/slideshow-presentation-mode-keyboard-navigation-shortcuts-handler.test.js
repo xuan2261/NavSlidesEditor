@@ -32,6 +32,10 @@ describe('createKeyboardHandler with isPresenting', () => {
     onBlackScreen: vi.fn(),
     onWhiteScreen: vi.fn(),
     onEndSlideshow: vi.fn(),
+    onPenTool: vi.fn(),
+    onLaserPointer: vi.fn(),
+    onHighlighterTool: vi.fn(),
+    onEraseAnnotations: vi.fn(),
     getActiveElement: () => null,
   })
 
@@ -104,6 +108,46 @@ describe('createKeyboardHandler with isPresenting', () => {
     handler(createEvent('Escape'))
 
     expect(cb.onEndSlideshow).toHaveBeenCalledTimes(1)
+  })
+
+  it('[cap:shortcut.penTool] fires penTool when Ctrl+Shift+O pressed in presentation mode', () => {
+    const cb = makeCallbacks()
+    const shortcuts = getShortcuts({})
+    const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true })
+
+    handler(createEvent('o', { ctrlKey: true, shiftKey: true }))
+
+    expect(cb.onPenTool).toHaveBeenCalledTimes(1)
+  })
+
+  it('[cap:shortcut.laserPointer] fires laserPointer when Ctrl+I pressed in presentation mode', () => {
+    const cb = makeCallbacks()
+    const shortcuts = getShortcuts({})
+    const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true })
+
+    handler(createEvent('i', { ctrlKey: true }))
+
+    expect(cb.onLaserPointer).toHaveBeenCalledTimes(1)
+  })
+
+  it('[cap:shortcut.highlighterTool] fires highlighterTool when Y pressed in presentation mode', () => {
+    const cb = makeCallbacks()
+    const shortcuts = getShortcuts({})
+    const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true })
+
+    handler(createEvent('y'))
+
+    expect(cb.onHighlighterTool).toHaveBeenCalledTimes(1)
+  })
+
+  it('[cap:shortcut.eraseAnnotations] fires eraseAnnotations when E pressed in presentation mode', () => {
+    const cb = makeCallbacks()
+    const shortcuts = getShortcuts({})
+    const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true })
+
+    handler(createEvent('e'))
+
+    expect(cb.onEraseAnnotations).toHaveBeenCalledTimes(1)
   })
 
   // ── Editor scope shortcuts only fire when isPresenting=false ───────────────

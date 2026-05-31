@@ -4,6 +4,7 @@ import { io } from 'socket.io-client'
 import { Clock, Home, Layers, Users } from 'lucide-react'
 import { useRevealPreviewFrame } from '../hooks/use-reveal-preview-frame'
 import { useAnnotationSync } from '../hooks/use-annotation-sync.js'
+import { useKeyboard } from '../hooks/use-keyboard'
 
 import { AnnotationCanvas } from '../components/annotation-canvas.jsx'
 import { AnnotationToolbar } from '../components/annotation-toolbar.jsx'
@@ -174,6 +175,14 @@ export default function SpeakerViewPage() {
     onAnnotationAdd: handleAnnotationAdd,
     onAnnotationRemove: handleAnnotationRemove,
     onAnnotationsClear: handleAnnotationsClear,
+  })
+
+  useKeyboard({
+    isPresenting: true,
+    onPenTool: () => setAnnotationTool('pen'),
+    onLaserPointer: () => setAnnotationTool('laser'),
+    onHighlighterTool: () => setAnnotationTool('highlighter'),
+    onEraseAnnotations: () => setAnnotationTool('eraser'),
   })
 
   const navigateToSlide = (slide) => {

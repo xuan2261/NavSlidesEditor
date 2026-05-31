@@ -1,7 +1,7 @@
 {
   "meta": {
     "generated": "local run",
-    "stale": true
+    "stale": false
   },
   "rows": [
     {
@@ -42,18 +42,23 @@
       "category": "canvas",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/canvas-geometry-ops.smoke.test.js",
+        "client/src/components/canvas/use-canvas-pointer-interaction.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "canvas.move",
       "category": "canvas",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/canvas-geometry-ops.smoke.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "canvas.resize",
@@ -137,18 +142,22 @@
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "command.insertSlide",
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "command.resetZoom",
@@ -166,9 +175,11 @@
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "command.ungroup",
@@ -208,9 +219,11 @@
       "category": "control",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-file-dropdown-menu.test.jsx"
+      ],
+      "status": "PASS"
     },
     {
       "id": "control.format.align",
@@ -704,9 +717,11 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.escape",
@@ -801,9 +816,11 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.insertSlide",
@@ -821,9 +838,11 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.paste",
@@ -841,9 +860,11 @@
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS"
     },
     {
       "id": "shortcut.redo",
@@ -1091,8 +1112,7 @@
   "orphans": [],
   "summary": {
     "total": 100,
-    "verified": 90,
-    "PASS": 90,
-    "ALLOWED": 10
+    "verified": 100,
+    "PASS": 100
   }
 }

@@ -207,7 +207,7 @@ navslides-editor/
   visual regression.
 - `k6` load tests target REST and WebSocket paths.
 - The PPTX corpus harness validates semantic fidelity and round-trip stability.
-- **Feature-coverage traceability matrix** (`scripts/feature-inventory/`): a pipeline of scripts (`build-inventory.mjs` → `extract-tags.mjs` → `join-run-status.mjs` → `build-matrix.mjs` → `check-coverage-gate.mjs`) scans `[cap:<id>]` annotations in test files and joins them against `feature-manifest.json` (100 capabilities across canvas/command/control/element/flow/shortcut domains). Produces `docs/feature-coverage-matrix.md` (auto-generated — do not hand-edit) and a JSON report. Run via `npm run matrix` / `npm run matrix:gate`. Acknowledged gaps tracked in `coverage-gate-allowlist.json` (27 entries, `debtAllowedUntil: 2026-06-30`). CI job `feature-coverage-gate` runs the gate as a non-required warn-first check.
+- **Feature-coverage traceability matrix** (`scripts/feature-inventory/`): a pipeline of scripts (`build-inventory.mjs` → `extract-tags.mjs` → `join-run-status.mjs` → `build-matrix.mjs` → `check-coverage-gate.mjs`) scans `[cap:<id>]` annotations in test files and joins them against `feature-manifest.json` (100 capabilities across canvas/command/control/element/flow/shortcut domains). Produces `docs/feature-coverage-matrix.md` (auto-generated — do not hand-edit) and a JSON report. Run via `npm run matrix` / `npm run matrix:gate`. Editor-core matrix is currently 100/100 PASS with an empty `coverage-gate-allowlist.json`; CI job `feature-coverage-gate` runs the gate as a non-required warn-first check.
 
 ## Behavior Notes
 

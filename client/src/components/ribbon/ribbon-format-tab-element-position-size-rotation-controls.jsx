@@ -5,6 +5,7 @@ import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 import { CANVAS_WIDTH } from '../../data/slide-constants'
+import { normalizeTableShape } from '../properties/table-properties-utils'
 
 const OBJECT_FIT_OPTIONS = ['cover', 'contain', 'fill', 'none']
 const CHART_TYPES = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea', 'scatter']
@@ -98,11 +99,23 @@ function ChartControls({ element, onUpdateElement }) {
 }
 
 function TableControls({ element, onUpdateElement }) {
-  const updateNum = (key, value, min) => {
+  const data = element.data || [['']]
+  const rowCount = data.length
+  const colCount = Math.max(1, ...data.map((row) => (row || []).length))
+
+  const resizeData = (rows, cols) => {
+    const nextData = Array.from({ length: rows }, (_, rowIndex) => {
+      const sourceRow = data[rowIndex] || []
+      return Array.from({ length: cols }, (_, colIndex) => sourceRow[colIndex] ?? '')
+    })
+    onUpdateElement?.(normalizeTableShape({ data: nextData }, element))
+  }
+
+  const updateNum = (kind, value) => {
     const num = parseInt(value, 10)
-    if (!Number.isNaN(num) && num >= (min ?? 1)) {
-      onUpdateElement?.({ [key]: num })
-    }
+    if (Number.isNaN(num) || num < 1) return
+    if (kind === 'rows') resizeData(num, colCount)
+    if (kind === 'cols') resizeData(rowCount, num)
   }
 
   return (
@@ -113,8 +126,8 @@ function TableControls({ element, onUpdateElement }) {
           <input
             type="number"
             className="w-10 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-            value={element.rows || 3}
-            onChange={(e) => updateNum('rows', e.target.value, 1)}
+            value={rowCount}
+            onChange={(e) => updateNum('rows', e.target.value)}
             min={1}
             aria-label="Rows"
           />
@@ -124,8 +137,8 @@ function TableControls({ element, onUpdateElement }) {
           <input
             type="number"
             className="w-10 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-            value={element.cols || 3}
-            onChange={(e) => updateNum('cols', e.target.value, 1)}
+            value={colCount}
+            onChange={(e) => updateNum('cols', e.target.value)}
             min={1}
             aria-label="Columns"
           />

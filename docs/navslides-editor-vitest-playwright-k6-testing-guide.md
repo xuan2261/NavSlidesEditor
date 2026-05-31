@@ -44,9 +44,10 @@ editor-core capability's *behavior is asserted*, not just whether code ran. See
   dated, owned entries for acknowledged gaps (warn-first). Each entry needs a
   reason, target layer, resolution phase, and debt date so gap reports are
   actionable. It should shrink.
-- **Baseline reports**: `npm run matrix:baseline-report` writes the Phase 1
-  contract to `plans/260531-0511-full-feature-verification-gap-closure-tdd/reports/`.
-  The JSON report is authoritative; Markdown is a review summary. The command
+- **Baseline reports**: `npm run matrix:baseline-report` writes generated plan
+  artifacts for review provenance. The evergreen contract lives in
+  `docs/feature-coverage-matrix.md` and this testing guide, so archived plan
+  folders are not required as the only source of release evidence. The command
   refuses stale or missing run-results, so refresh
   `scripts/feature-inventory/run-results-vitest.json` with
   `npx vitest run --reporter=json --outputFile=scripts/feature-inventory/run-results-vitest.json`
@@ -214,19 +215,43 @@ The pipeline lives in `.github/workflows/github-actions-ci-pipeline-lint-unit-co
 
 ### Release-confidence lanes
 
-Current lane ownership is documented in `plans/260531-0511-full-feature-verification-gap-closure-tdd/reports/ci-gate-verification.md`.
+Current lane ownership is maintained here as evergreen release evidence. Archived plan reports can provide provenance, but they are not the only contract source.
 
 | Lane | Scope | Promotion rule |
 |---|---|---|
-| PR fast | lint, focused unit/contract checks, matrix gate signal | Keep practical for PR feedback; new gates start warn-first |
-| Merge full | coverage, build, Playwright shards, visual, PPTX corpus, k6 smoke | Promote after two consecutive green CI runs |
-| Release strict | PPTX strict, Electron prepare/package, load profile, manual checklist | Blocks release signoff, not every PR |
+| PR fast lane | lint, focused unit/contract checks, matrix gate signal | Keep practical for PR feedback; new gates start warn-first |
+| Merge full lane | coverage, build, Playwright shards, visual, PPTX corpus, k6 smoke | Promote after two consecutive green CI runs |
+| Release strict lane | PPTX strict, Electron prepare/package, load profile, manual checklist | Blocks release signoff, not every PR |
+
+#### Branch protection mapping
 
 Branch protection changes are operator-only. Prefer requiring `Required checks summary`; avoid pinning every shard context unless there is a deliberate repository policy change.
 
-Before publishing release artifacts or sharing reports, run the secret/artifact scan command in the CI gate verification report against `plans/`, `playwright-report/`, `test-results/`, `coverage/`, `dist/`, `dist-electron/`, `server/data/`, and `server/uploads/`.
+Operator action required: do not require `Feature coverage gate (warn-first, non-required)` until two consecutive green CI runs are recorded. Treat adding any job to `required-checks.needs` as an operator-approved required-check behavior change, even when the protected context name stays `Required checks summary`.
+
+#### Rollback path
+
+If a newly promoted gate blocks unrelated work, remove only the new job from `required-checks.needs`, keep the job running as warn-first, document the failed context, and re-promote only after two consecutive green target-branch CI runs.
+
+#### Quarantine policy
+
+Flaky or infrastructure-bound checks stay non-required until they have a deterministic local reproduction path and a documented owner. Do not hide failures by deleting capability IDs or weakening assertions.
+
+#### Secret and artifact scanning
+
+Before publishing release artifacts or sharing reports, run:
+
+```bash
+rg --no-ignore --hidden -n "(api[_-]?key|secret|token|password|BEGIN (RSA|OPENSSH|PRIVATE) KEY)" plans/ playwright-report/ test-results/ coverage/ dist/ dist-electron/ server/data/ server/uploads/
+```
+
+The scan must report no real credentials. Redact or delete generated artifacts before sharing if it finds sensitive local data.
 
 Manual release smoke lives in `docs/manual-smoke-checklist.md`. Keep it under 45 minutes and map every row to a capability ID or explicit manual-only risk.
+
+#### Release evidence boundaries
+
+Release-Blocking MVP coverage is the automated merge full lane plus the manual smoke checklist. Contract-Only Coverage remains explicit for external AI/sync/GitHub/rclone/provider behavior where real credentials are not allowed in CI. A full Playwright suite pass is required for release confidence, but feature-matrix PASS counts only prove capability-tagged behavior, not every user workflow.
 
 ### Coverage thresholds (Phase 9 anti-regression gate)
 

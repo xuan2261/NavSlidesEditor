@@ -44,6 +44,7 @@ function makeSeed(grouped = false) {
 
 const h = vi.hoisted(() => ({
   updatePresentation: vi.fn(() => Promise.resolve({})),
+  presentInWindow: vi.fn(),
   seed: null,
 }))
 
@@ -56,6 +57,10 @@ vi.mock('../../utils/api', () => ({
     getShareStatus: vi.fn(() => Promise.resolve({ shared: false, token: null })),
     uploadFile: vi.fn(() => Promise.resolve({ url: '/x.png' })),
   },
+}))
+
+vi.mock('../../utils/generateHTML', () => ({
+  presentInWindow: h.presentInWindow,
 }))
 
 import EditorPage from '../EditorPage.jsx'
@@ -87,6 +92,7 @@ async function runCommandAndFlushSave(label) {
 beforeEach(() => {
   h.seed = makeSeed(false)
   h.updatePresentation.mockClear()
+  h.presentInWindow.mockClear()
   useEditorStore.setState({ selectedElementIds: [], editingElementId: null, clipboard: null })
   useUIStore.setState({ showCommandPalette: false })
   globalThis.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) }))
@@ -128,5 +134,50 @@ describe('EditorPage command palette element actions', () => {
     const [a, b] = snap.slides[0].elements
     expect(a.groupId).toBeUndefined()
     expect(b.groupId).toBeUndefined()
+  })
+
+  it('[cap:command.startSlideshow] starts presentation through the command palette', async () => {
+    renderPage()
+    await screen.findByDisplayValue('Command Deck')
+
+    await act(async () => {
+      useUIStore.getState().setShowCommandPalette(true)
+    })
+    fireEvent.click(screen.getByText('Start Slideshow'))
+
+    expect(h.presentInWindow).toHaveBeenCalledWith(expect.objectContaining({ id: 'command-deck' }))
+  })
+
+  it('[cap:command.insertSlide] opens the slide template picker through the command palette', async () => {
+    renderPage()
+    await screen.findByDisplayValue('Command Deck')
+
+    await act(async () => {
+      useUIStore.getState().setShowCommandPalette(true)
+    })
+    fireEvent.click(screen.getByText('Insert Slide'))
+
+    expect(screen.getByRole('heading', { name: 'Add Slide' })).toBeTruthy()
+  })
+
+  it('[cap:command.insertLink] delegates to the rich-text link control through the command palette', async () => {
+    const linkControl = document.createElement('button')
+    linkControl.title = 'Add link'
+    const clickLinkControl = vi.fn()
+    linkControl.addEventListener('click', clickLinkControl)
+    document.body.appendChild(linkControl)
+
+    renderPage()
+    await screen.findByDisplayValue('Command Deck')
+
+    await act(async () => {
+      useUIStore.getState().setShowCommandPalette(true)
+    })
+    fireEvent.click(screen.getByText('Insert Link'))
+
+    expect(clickLinkControl).toHaveBeenCalledTimes(1)
+    expect(useUIStore.getState().showCommandPalette).toBe(false)
+
+    linkControl.remove()
   })
 })

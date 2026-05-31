@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const root = resolve(__dirname, '..', '..')
@@ -9,14 +9,6 @@ const workflowPath = resolve(
   'workflows',
   'github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml'
 )
-const reportPath = resolve(
-  root,
-  'plans',
-  '260531-0511-full-feature-verification-gap-closure-tdd',
-  'reports',
-  'ci-gate-verification.md'
-)
-
 const readText = (path) => readFileSync(path, 'utf8').replace(/\r\n/g, '\n')
 
 const getJobBlock = (workflow, jobName) => {
@@ -69,8 +61,9 @@ describe('CI release confidence contract', () => {
   })
 
   it('documents lanes, branch-protection rollout, rollback, quarantine, and scans', () => {
-    expect(existsSync(reportPath), `${reportPath} is missing`).toBe(true)
-    const report = readText(reportPath)
+    const guide = readText(resolve(root, 'docs', 'navslides-editor-vitest-playwright-k6-testing-guide.md'))
+    const checklist = readText(resolve(root, 'docs', 'manual-smoke-checklist.md'))
+    const docs = `${guide}\n${checklist}`
 
     for (const requiredText of [
       'PR fast lane',
@@ -84,9 +77,9 @@ describe('CI release confidence contract', () => {
       'operator-approved required-check behavior change',
       'rg --no-ignore --hidden',
     ]) {
-      expect(report).toContain(requiredText)
+      expect(docs).toContain(requiredText)
     }
 
-    expect(report).not.toContain('git grep')
+    expect(docs).not.toContain('git grep')
   })
 })

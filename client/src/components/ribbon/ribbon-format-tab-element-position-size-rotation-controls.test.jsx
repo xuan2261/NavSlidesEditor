@@ -107,6 +107,88 @@ describe('FormatTabContent', () => {
     fireEvent.mouseDown(screen.getByLabelText('Align center horizontal'))
     expect(onUpdateElement).toHaveBeenCalledWith({ x: 330 })
   })
+
+  it('resizes table rows and columns by updating data, not inert rows/cols fields', () => {
+    const onUpdateElement = vi.fn()
+    render(
+      <FormatTabContent
+        selectedElement={{
+          ...mockElement,
+          type: 'table',
+          data: [
+            ['H1', 'H2'],
+            ['A1', 'A2'],
+          ],
+          cellStyles: { textColors: [['#fff', null], [null, null]] },
+        }}
+        onUpdateElement={onUpdateElement}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('Rows'), { target: { value: '3' } })
+    expect(onUpdateElement).toHaveBeenLastCalledWith({
+      data: [
+        ['H1', 'H2'],
+        ['A1', 'A2'],
+        ['', ''],
+      ],
+      cellStyles: {
+        textColors: [
+          ['#fff', null],
+          [null, null],
+          [null, null],
+        ],
+        bgColors: [
+          [null, null],
+          [null, null],
+          [null, null],
+        ],
+        isBold: [
+          [null, null],
+          [null, null],
+          [null, null],
+        ],
+        fontSizes: [
+          [null, null],
+          [null, null],
+          [null, null],
+        ],
+        fontFamilies: [
+          [null, null],
+          [null, null],
+          [null, null],
+        ],
+        aligns: [
+          [null, null],
+          [null, null],
+          [null, null],
+        ],
+        vAligns: [
+          [null, null],
+          [null, null],
+          [null, null],
+        ],
+        borders: [
+          [null, null],
+          [null, null],
+          [null, null],
+        ],
+      },
+      mergedCells: [],
+    })
+
+    fireEvent.change(screen.getByLabelText('Columns'), { target: { value: '3' } })
+    expect(onUpdateElement).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        data: [
+          ['H1', 'H2', ''],
+          ['A1', 'A2', ''],
+        ],
+      })
+    )
+    expect(onUpdateElement).not.toHaveBeenCalledWith({ rows: 3 })
+    expect(onUpdateElement).not.toHaveBeenCalledWith({ cols: 3 })
+  })
 })
 
 describe('icon consistency pass — align identity', () => {

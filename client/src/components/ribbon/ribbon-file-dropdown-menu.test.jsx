@@ -14,13 +14,18 @@ describe('FileDropdown', () => {
     expect(screen.getByText('Open Project')).toBeTruthy()
   })
 
-  it('shows export options', () => {
+  it('[cap:control.file.menu] opens and exposes expected file commands', () => {
     render(<FileDropdown />)
     fireEvent.mouseDown(screen.getByLabelText('File menu'))
+    expect(screen.getByText('Open Project')).toBeTruthy()
     expect(screen.getByText('Export PDF')).toBeTruthy()
     expect(screen.getByText('Export PPTX')).toBeTruthy()
     expect(screen.getByText('Export HTML')).toBeTruthy()
     expect(screen.getByText('Export Offline HTML')).toBeTruthy()
+    expect(screen.getByText('Export Project')).toBeTruthy()
+    expect(screen.getByText('Save to GitHub')).toBeTruthy()
+    expect(screen.getByText('Sync to Cloud')).toBeTruthy()
+    expect(screen.getByText('Version History')).toBeTruthy()
   })
 
   it('shows version history option', () => {

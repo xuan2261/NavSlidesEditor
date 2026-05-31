@@ -189,7 +189,11 @@ export default function CanvasElement({
               width={element.width}
               height={element.height}
               interactive={isSelected && !isDragging}
-              onDataUpdate={(patch) => onUpdateElement?.({ pluginData: { ...(element.pluginData || {}), ...patch } })}
+              onDataUpdate={(patch) =>
+                onUpdateElement?.(element.id, {
+                  pluginData: { ...(element.pluginData || {}), ...patch },
+                })
+              }
             />
           )
         }

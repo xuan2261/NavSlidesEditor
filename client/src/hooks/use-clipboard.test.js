@@ -6,12 +6,15 @@
  *   createDuplicateOperation, createCutOperation) directly — no React context needed
  * - Mock crypto.randomUUID for deterministic IDs
  */
+import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { useEditorStore } from '../stores/editor-store'
 import {
   createCopyOperation,
   createPasteOperation,
   createDuplicateOperation,
   createCutOperation,
+  useClipboard,
 } from './use-clipboard'
 
 // Mock crypto.randomUUID for deterministic IDs
@@ -125,6 +128,36 @@ describe('createPasteOperation', () => {
     })
     expect(result.elements[0].x).toBe(20)
     expect(result.elements[0].y).toBe(20)
+  })
+})
+
+describe('useClipboard paste integration', () => {
+  beforeEach(() => {
+    uuidIndex = 0
+    useEditorStore.setState({ selectedElementIds: [], clipboard: null, editingElementId: null })
+  })
+
+  it('[cap:flow.clipboard tier:deep] selects pasted element ids as a flat multi-selection', () => {
+    let deck = { slides: [{ id: 's1', elements: [] }] }
+    const setPresentation = (updater) => {
+      deck = updater(deck)
+    }
+    const mapActiveSlide = (prev, fn) => ({
+      ...prev,
+      slides: prev.slides.map((slide, index) => (index === 0 ? fn(slide) : slide)),
+    })
+
+    const { result } = renderHook(() => useClipboard({ mapActiveSlide, setPresentation }))
+
+    act(() => {
+      result.current.performPaste([
+        { type: 'shape', x: 10, y: 20, width: 100, height: 60 },
+        { type: 'text', x: 30, y: 40, width: 200, height: 80 },
+      ])
+    })
+
+    expect(deck.slides[0].elements.map((el) => el.id)).toEqual(['uuid-0', 'uuid-1'])
+    expect(useEditorStore.getState().selectedElementIds).toEqual(['uuid-0', 'uuid-1'])
   })
 })
 

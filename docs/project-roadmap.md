@@ -41,7 +41,7 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | Design-token system (themes/FX/Design Ideas)        | Done (39 token presets × 7 categories, 8 FX backgrounds, Design Ideas panel, 35-layout library)          |
 | Ribbon UI polish                                    | Done (contextual Format tab, RibbonBigButton hierarchy, zoom slider, view switcher)                       |
 | EditorPage hardening + vertical slides              | Done (~1356 LOC, EditorModals extracted, use-element-creation/use-export-actions/use-ai-actions hooks, vertical slides first-class) |
-| Feature-coverage traceability matrix                | Done (100 editor-core capabilities, 90 PASS / 10 ALLOWED, extended domain inventory, CI warn-first gate, `[cap:<id>]` annotation convention)    |
+| Feature-coverage traceability matrix                | Done (100 editor-core capabilities, 100 PASS / 0 ALLOWED, extended domain inventory, CI warn-first gate, `[cap:<id>]` annotation convention)    |
 
 ### What's New in v1.5.x / v1.6.x (Security & Architecture Refactor)
 
@@ -309,7 +309,7 @@ TDD refactor from `plans/260529-2256-editorpage-hardening-refactor-tdd`.
 
 Release-confidence plan for editor-core and high-risk extended domains.
 
-**Delivered:** Baseline gap reporting with deterministic JSON/Markdown evidence; editor-core matrix tightened to 90/100 PASS with 10 dated P2 ALLOWED entries and 0 orphan tags; critical Playwright journeys for create/edit/persist/export HTML, share password/revoke, live reconnect/authz, and PPTX import/edit/export artifact inspection; extended domain capability inventory for export/import/live/share/AI/game/sync/history; CI gate verification report, k6 loopback destructive preflight, release-confidence lane docs, and manual smoke checklist.
+**Delivered:** Baseline gap reporting with deterministic JSON/Markdown evidence; editor-core matrix tightened to 100/100 PASS with 0 ALLOWED entries and 0 orphan tags; critical Playwright journeys for create/edit/persist/export HTML, share password/revoke, live reconnect/authz, and PPTX import/edit/export artifact inspection; extended domain capability inventory for export/import/live/share/AI/game/sync/history; CI gate verification report, k6 loopback destructive preflight, release-confidence lane docs, and manual smoke checklist.
 
 **Plan:** `plans/260531-0511-full-feature-verification-gap-closure-tdd/`
 

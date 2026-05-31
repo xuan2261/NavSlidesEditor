@@ -71,6 +71,24 @@ const CODE_THEME_CSS = {
   vs: vsCSS,
 }
 
+export function getElementForActiveSlideEdit(activeSlide, fallbackSlide, elementId) {
+  const slide = activeSlide || fallbackSlide
+  const element = slide?.elements?.find((el) => el.id === elementId)
+  return element?.type === 'text' ? element : null
+}
+
+export function getSelectionIdsForActiveSlideElement(activeSlide, fallbackSlide, elementId) {
+  const slide = activeSlide || fallbackSlide
+  const element = slide?.elements?.find((el) => el.id === elementId)
+  if (!element?.groupId) return [elementId]
+  return (slide?.elements || []).filter((el) => el.groupId === element.groupId).map((el) => el.id)
+}
+
+export function getGameElementForActiveSlide(activeSlide, fallbackSlide) {
+  const slide = activeSlide || fallbackSlide
+  return slide?.elements?.find((element) => element.type === 'game') || null
+}
+
 // eslint-disable-next-line unused-imports/no-unused-vars
 const THEMES = [
   'black',
@@ -657,10 +675,12 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
 
   const startEditingElement = useCallback(
     (elementId) => {
-      const element = presentation?.slides[currentSlideIndexRef.current]?.elements?.find(
-        (el) => el.id === elementId
+      const element = getElementForActiveSlideEdit(
+        activeSlideRef.current,
+        presentation?.slides[currentSlideIndexRef.current],
+        elementId
       )
-      if (!element || element.type !== 'text') return
+      if (!element) return
       setActiveTab('home')
       setEditingElementId(elementId)
       editingElementIdRef.current = elementId
@@ -865,6 +885,10 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     return () => setPresentHandler(null)
   }, [presentation, setPresentHandler])
 
+  const startSlideshow = useCallback(() => {
+    if (presentation) presentInWindow(presentation)
+  }, [presentation])
+
   // Reset slide position when leaving the editor so the cluster hides on Home.
   useEffect(() => {
     return () => setSlidePosition({ current: 0, total: 0 })
@@ -943,15 +967,31 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     { id: 'zoomIn', label: 'Zoom In', shortcut: 'Ctrl+=', action: () => zoomIn() },
     { id: 'zoomOut', label: 'Zoom Out', shortcut: 'Ctrl+-', action: () => zoomOut() },
     { id: 'resetZoom', label: 'Reset Zoom', shortcut: 'Ctrl+0', action: () => resetZoom() },
-    { id: 'startSlideshow', label: 'Start Slideshow', shortcut: 'F5', action: () => console.log('[slideshow] start') },
+    { id: 'startSlideshow', label: 'Start Slideshow', shortcut: 'F5', action: startSlideshow },
     { id: 'commandPalette', label: 'Command Palette', shortcut: 'Ctrl+K', action: () => setShowCommandPalette(false) },
   ]
 
-  // Detect active game type from current slide elements
-  const activeGameElement = presentation?.slides?.[currentSlideIndex]?.elements?.find(
-    (el) => el.type === 'game'
+  // Detect active game type from the actual editable slide, including vertical children.
+  const activeGameElement = getGameElementForActiveSlide(
+    activeSlide,
+    presentation?.slides?.[currentSlideIndex]
   )
   const currentGameType = activeGameElement?.gameType || null
+
+  const emitGameShortcutAction = useCallback(
+    (action, payload = {}) => {
+      if (!activeGameElement || typeof window === 'undefined') return
+      window.dispatchEvent(new CustomEvent('navslides:game-shortcut', {
+        detail: {
+          action,
+          elementId: activeGameElement.id,
+          gameType: currentGameType,
+          ...payload,
+        },
+      }))
+    },
+    [activeGameElement, currentGameType]
+  )
 
   // Export/import + AI action handlers (extracted to hooks)
   const { onExportPDF, onExportPPTX, onExportHTML, onExportOffline, onExportProject, onOpenProject } =
@@ -1010,6 +1050,8 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     },
     isEditing: !!editingElementId,
     activeGameType: currentGameType,
+    onStartSlideshow: startSlideshow,
+    onStartSlideshowCurrent: startSlideshow,
     // Game (reachable in-editor when a game element is on the slide)
     onGameHud: () => setShowGameHud((v) => !v),
     onGameTimer: () => {
@@ -1018,10 +1060,17 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       const defaultDuration = GAME_SHORTCUT_CONFIG[currentGameType]?.timer?.duration ?? 30
       liveSocket.emit('game-timer-start', { elementId: el.id, duration: defaultDuration })
     },
-    onGameNext: () => console.log('[game] next phase'),
-    onGameReveal: () => console.log('[game] reveal'),
+    onGameNext: () => emitGameShortcutAction('next'),
+    onGameReveal: () => {
+      setShowGameHud(true)
+      emitGameShortcutAction('reveal')
+    },
     onGameLeaderboard: () => setShowGameLeaderboard((v) => !v),
-    onGamePause: () => console.log('[game] pause'),
+    onGamePause: () => {
+      const el = activeGameElement
+      if (el && liveSocket?.connected) liveSocket.emit('game-timer-pause', { elementId: el.id })
+      emitGameShortcutAction('pause')
+    },
     onTimerAdd: () => {
       const el = activeGameElement
       if (!el || !liveSocket?.connected) return
@@ -1034,10 +1083,10 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       const delta = GAME_SHORTCUT_CONFIG[currentGameType]?.timerSub?.delta ?? -10
       liveSocket.emit('game-timer-adjust', { elementId: el.id, delta })
     },
-    onTeamSelect1: () => console.log('[game] team 1'),
-    onTeamSelect2: () => console.log('[game] team 2'),
-    onTeamSelect3: () => console.log('[game] team 3'),
-    onTeamSelect4: () => console.log('[game] team 4'),
+    onTeamSelect1: () => emitGameShortcutAction('team-select', { teamIndex: 0 }),
+    onTeamSelect2: () => emitGameShortcutAction('team-select', { teamIndex: 1 }),
+    onTeamSelect3: () => emitGameShortcutAction('team-select', { teamIndex: 2 }),
+    onTeamSelect4: () => emitGameShortcutAction('team-select', { teamIndex: 3 }),
     // Editor
     onCommandPalette: () => setShowCommandPalette((v) => !v),
     // Editor shortcuts (260523-1230 cleanup plan)
@@ -1067,17 +1116,13 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
           prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
         )
       } else {
-        // If element is in a group, select all group members
-        const slide = presentation?.slides[currentSlideIndexRef.current]
-        const el = slide?.elements?.find((e) => e.id === id)
-        if (el?.groupId) {
-          const groupIds = (slide?.elements || [])
-            .filter((e) => e.groupId === el.groupId)
-            .map((e) => e.id)
-          setSelectedElementIds(groupIds)
-        } else {
-          setSelectedElementIds([id])
-        }
+        setSelectedElementIds(
+          getSelectionIdsForActiveSlideElement(
+            activeSlideRef.current,
+            presentation?.slides[currentSlideIndexRef.current],
+            id
+          )
+        )
       }
     },
     [presentation, setSelectedElementIds]

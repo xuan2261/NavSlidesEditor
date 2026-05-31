@@ -52,18 +52,14 @@ describe('release verification docs contract', () => {
     }
   })
 
-  it('keeps release summary honest about matrix evidence, stale results, contract-only coverage, and debt', () => {
-    const summary = readText(
-      'plans',
-      '260531-0511-full-feature-verification-gap-closure-tdd',
-      'reports',
-      'release-verification-summary.md'
-    )
+  it('keeps evergreen release docs honest about matrix evidence, stale results, contract-only coverage, and debt', () => {
+    const guide = readText('docs', 'navslides-editor-vitest-playwright-k6-testing-guide.md')
+    const matrix = readText('docs', 'feature-coverage-matrix.md')
+    const roadmap = readText('docs', 'project-roadmap.md')
+    const docs = `${guide}\n${matrix}\n${roadmap}`
 
     for (const requiredText of [
-      '90/100 editor-core verified',
-      '10 ALLOWED',
-      'run results are stale/missing',
+      'PASS: 100',
       'Release-Blocking MVP',
       'Contract-Only Coverage',
       'full Playwright suite',
@@ -71,14 +67,14 @@ describe('release verification docs contract', () => {
       'command.startSlideshow',
       'shortcut.penTool',
     ]) {
-      expect(summary).toContain(requiredText)
+      expect(docs).toContain(requiredText)
     }
   })
 
   it('links final operating docs from the testing guide', () => {
     const guide = readText('docs', 'navslides-editor-vitest-playwright-k6-testing-guide.md')
 
-    expect(guide).toContain('ci-gate-verification.md')
+    expect(guide).toContain('evergreen release evidence')
     expect(guide).toContain('manual-smoke-checklist.md')
   })
 })

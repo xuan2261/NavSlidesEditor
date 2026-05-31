@@ -50,6 +50,20 @@ export function applyCropHandle(handle, startCrop, dx, dy, elW, elH) {
   return { x, y, w, h }
 }
 
+export function applyMove(startEl, dx, dy, slideW, slideH) {
+  return {
+    x: Math.max(0, Math.min(slideW - startEl.width, startEl.x + dx)),
+    y: Math.max(0, Math.min(slideH - startEl.height, startEl.y + dy)),
+  }
+}
+
+export function applyMoveBatch(startEls, dx, dy, slideW, slideH) {
+  return startEls.map((sel) => ({
+    id: sel.id,
+    ...applyMove(sel, dx, dy, slideW, slideH),
+  }))
+}
+
 /**
  * use-canvas-pointer-interaction — pointer event routing for element drag/resize/rotate.
  * Manages pending drag, active drag, and crop drag state via refs.
@@ -183,15 +197,9 @@ export default function useCanvasPointerInteraction({
 
       if (drag.type === 'move') {
         if (drag.startEls && drag.startEls.length > 1) {
-          const updates = drag.startEls.map((sel) => ({
-            id: sel.id,
-            x: Math.max(0, Math.min(slideW - sel.width, sel.x + dx)),
-            y: Math.max(0, Math.min(slideH - sel.height, sel.y + dy)),
-          }))
-          onUpdateElements(updates)
+          onUpdateElements(applyMoveBatch(drag.startEls, dx, dy, slideW, slideH))
         } else {
-          const rawX = Math.max(0, Math.min(slideW - drag.startEl.width, drag.startEl.x + dx))
-          const rawY = Math.max(0, Math.min(slideH - drag.startEl.height, drag.startEl.y + dy))
+          const { x: rawX, y: rawY } = applyMove(drag.startEl, dx, dy, slideW, slideH)
           let newX, newY
           if (showGridRef.current) {
             const { x: snappedX, y: snappedY } = snapWithRef_(
@@ -267,7 +275,8 @@ export default function useCanvasPointerInteraction({
     const rect = canvasEl.getBoundingClientRect()
     const element = slide?.elements?.find((el) => el.id === elementId)
     if (!element) return
-    const allSelected = (slide?.elements || []).filter((el) => selectedIds.includes(el.id))
+    if (element.locked) return
+    const allSelected = (slide?.elements || []).filter((el) => selectedIds.includes(el.id) && !el.locked)
     pendingDragRef.current = {
       type,
       handle,
