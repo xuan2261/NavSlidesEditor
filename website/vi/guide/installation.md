@@ -54,29 +54,16 @@ Theo mặc định, các thư mục này được gắn (mount) vào `./presenta
 
 ### Tải về
 
-Truy cập [trang Releases](https://github.com/xuan2261/NavSlidesEditor/releases) và tải về trình cài đặt cho nền tảng của bạn:
+Truy cập [trang Releases](https://github.com/xuan2261/NavSlidesEditor/releases) và tải về bản dựng cho nền tảng của bạn:
 
-| Nền tảng | Tệp |
-|---|---|
-| Linux (AppImage) | `Slides-Editor-x.x.x.AppImage` |
-| Linux (Debian/Ubuntu) | `parallax_x.x.x_amd64.deb` |
-| macOS | `Slides-Editor-x.x.x.dmg` |
-| Windows | `Slides-Editor-Setup-x.x.x.exe` |
+| Nền tảng | Tệp | Ghi chú |
+|---|---|---|
+| Windows (trình cài đặt) | `NavSlides Editor Setup x.x.x.exe` | Cài vào Program Files và tạo lối tắt trong Start menu |
+| Windows (portable) | `NavSlides Editor x.x.x.exe` | Chạy trực tiếp, không cần cài đặt |
 
-### Linux AppImage
-
-```bash
-chmod +x Slides-Editor-*.AppImage
-./Slides-Editor-*.AppImage
-```
-
-### Linux .deb
-
-```bash
-sudo dpkg -i parallax_*.deb
-# Then launch from your application menu or run:
-parallax
-```
+::: tip Linux & macOS
+Các gói Linux và macOS dựng sẵn chưa được phát hành. Bạn có thể tự build từ mã nguồn — xem [Build từ mã nguồn](/vi/develop/building-from-source) (`npm run electron:build:linux` hoặc `electron:build:mac`).
+:::
 
 ::: tip
 Trong lần khởi chạy đầu tiên, ứng dụng desktop sẽ mở cả cửa sổ trình soạn thảo và một máy chủ cục bộ trên cổng 3002. Bạn cũng có thể truy cập trình soạn thảo từ trình duyệt tại `http://localhost:3002`.

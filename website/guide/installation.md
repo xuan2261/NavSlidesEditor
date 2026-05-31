@@ -54,29 +54,16 @@ The desktop app bundles the editor and server into a standalone application — 
 
 ### Download
 
-Go to the [Releases page](https://github.com/xuan2261/NavSlidesEditor/releases) and download the installer for your platform:
+Go to the [Releases page](https://github.com/xuan2261/NavSlidesEditor/releases) and download the build for your platform:
 
-| Platform | File |
-|---|---|
-| Linux (AppImage) | `Slides-Editor-x.x.x.AppImage` |
-| Linux (Debian/Ubuntu) | `parallax_x.x.x_amd64.deb` |
-| macOS | `Slides-Editor-x.x.x.dmg` |
-| Windows | `Slides-Editor-Setup-x.x.x.exe` |
+| Platform | File | Notes |
+|---|---|---|
+| Windows (installer) | `NavSlides Editor Setup x.x.x.exe` | Installs to Program Files and adds a Start menu shortcut |
+| Windows (portable) | `NavSlides Editor x.x.x.exe` | Runs directly, no installation |
 
-### Linux AppImage
-
-```bash
-chmod +x Slides-Editor-*.AppImage
-./Slides-Editor-*.AppImage
-```
-
-### Linux .deb
-
-```bash
-sudo dpkg -i parallax_*.deb
-# Then launch from your application menu or run:
-parallax
-```
+::: tip Linux & macOS
+Prebuilt Linux and macOS packages are not published yet. You can build them yourself from source — see [Building from Source](/develop/building-from-source) (`npm run electron:build:linux` or `electron:build:mac`).
+:::
 
 ::: tip
 On first launch the desktop app will open both the editor window and a local server on port 3002. You can also access the editor from a browser at `http://localhost:3002`.
