@@ -260,14 +260,27 @@ describe('createDuplicateOperation', () => {
     expect(dup.height).toBe(75)
   })
 
-  it('LOCKED guard — returns empty if any selected element is locked', () => {
+  it('LOCKED members are skipped while the rest are duplicated', () => {
     const result = createDuplicateOperation({
       slideElements: [
         makeEl('el-1', { locked: false }),
-        makeEl('el-2', { locked: true }), // locked blocks entire operation
+        makeEl('el-2', { locked: true }), // locked member is skipped, not blocking
         makeEl('el-3', { locked: false }),
       ],
       selectedElementIds: ['el-1', 'el-2', 'el-3'],
+    })
+    expect(result.toAdd).toHaveLength(2)
+    expect(result.clipboardData).toHaveLength(2)
+    expect(result.lastId).toBe('uuid-1')
+  })
+
+  it('returns empty when every selected element is locked', () => {
+    const result = createDuplicateOperation({
+      slideElements: [
+        makeEl('el-1', { locked: true }),
+        makeEl('el-2', { locked: true }),
+      ],
+      selectedElementIds: ['el-1', 'el-2'],
     })
     expect(result.toAdd).toHaveLength(0)
     expect(result.clipboardData).toBeNull()

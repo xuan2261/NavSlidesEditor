@@ -24,17 +24,30 @@ export function createCopyOperation({ slideElements, selectedElementIds }) {
 }
 
 /**
- * Pure function: compute elements to be pasted (fresh UUIDs + +20/+20 offset).
+ * Pure function: compute elements to be pasted (fresh UUIDs + cascading offset).
  * Does NOT mutate store — returns the elements to add.
+ *
+ * Group handling: a source group is rebuilt under a NEW shared groupId only when
+ * ≥2 pasted elements carry that source groupId. A lone survivor of a group is
+ * dropped to ungrouped (a 1-member group is meaningless). Pasting two distinct
+ * source groups yields two distinct new groupIds — they never collapse together.
  *
  * @param {Object} opts
  * @param {Object[]} opts.clipboardElements - elements from clipboard
- * @returns {{ elements: Object[], lastId: string|null }} elements to add, and the last new ID
+ * @param {number} [opts.pasteIndex=0] - how many times this clipboard has already
+ *   been pasted; drives the cascade offset so repeated pastes fan out.
+ * @returns {{ elements: Object[], allIds: string[], lastId: string|null }}
  */
-export function createPasteOperation({ clipboardElements }) {
+export function createPasteOperation({ clipboardElements, pasteIndex = 0 }) {
   if (!clipboardElements || clipboardElements.length === 0) {
     return { elements: [], allIds: [], lastId: null }
   }
+  const counts = new Map()
+  for (const el of clipboardElements) {
+    if (el.groupId) counts.set(el.groupId, (counts.get(el.groupId) || 0) + 1)
+  }
+  const groupRemap = new Map()
+  const off = 20 * (pasteIndex + 1)
   const elements = []
   const allIds = []
   let lastId = null
@@ -42,7 +55,12 @@ export function createPasteOperation({ clipboardElements }) {
     const newId = crypto.randomUUID()
     lastId = newId
     allIds.push(newId)
-    elements.push({ ...el, id: newId, x: (el.x || 0) + 20, y: (el.y || 0) + 20 })
+    let groupId
+    if (el.groupId && counts.get(el.groupId) >= 2) {
+      if (!groupRemap.has(el.groupId)) groupRemap.set(el.groupId, crypto.randomUUID())
+      groupId = groupRemap.get(el.groupId)
+    }
+    elements.push({ ...el, id: newId, groupId, x: (el.x || 0) + off, y: (el.y || 0) + off })
   }
   return { elements, allIds, lastId }
 }
@@ -50,6 +68,10 @@ export function createPasteOperation({ clipboardElements }) {
 /**
  * Pure function: compute elements for a duplicate operation (sync, no setTimeout).
  * Returns { toAdd, clipboardData } — caller adds elements and sets clipboard.
+ *
+ * Locked members are skipped (the rest are still duplicated), matching delete
+ * behavior. Group handling mirrors createPasteOperation: duplicates of a group
+ * land under a NEW shared groupId (≥2 members), a lone survivor is ungrouped.
  *
  * @param {Object} opts
  * @param {Object[]} opts.slideElements
@@ -60,15 +82,16 @@ export function createDuplicateOperation({ slideElements, selectedElementIds }) 
   if (!slideElements || selectedElementIds.length === 0) {
     return { toAdd: [], clipboardData: null, lastId: null }
   }
-  const elementsToDuplicate = (slideElements || []).filter((el) =>
+  const selected = (slideElements || []).filter((el) =>
     selectedElementIds.includes(el.id)
   )
-  if (elementsToDuplicate.length === 0) {
+  if (selected.length === 0) {
     return { toAdd: [], clipboardData: null, lastId: null }
   }
 
-  // Locked guard: skip entirely if any selected element is locked
-  if (elementsToDuplicate.some((el) => el.locked)) {
+  // Skip locked members, duplicate the rest (consistent with delete).
+  const elementsToDuplicate = selected.filter((el) => !el.locked)
+  if (elementsToDuplicate.length === 0) {
     return { toAdd: [], clipboardData: null, lastId: null }
   }
 
@@ -77,12 +100,22 @@ export function createDuplicateOperation({ slideElements, selectedElementIds }) 
     return { ...rest }
   })
 
+  const counts = new Map()
+  for (const el of elementsToDuplicate) {
+    if (el.groupId) counts.set(el.groupId, (counts.get(el.groupId) || 0) + 1)
+  }
+  const groupRemap = new Map()
   const toAdd = []
   let lastId = null
   for (const el of elementsToDuplicate) {
     const newId = crypto.randomUUID()
     lastId = newId
-    toAdd.push({ ...el, id: newId, x: (el.x || 0) + 20, y: (el.y || 0) + 20 })
+    let groupId
+    if (el.groupId && counts.get(el.groupId) >= 2) {
+      if (!groupRemap.has(el.groupId)) groupRemap.set(el.groupId, crypto.randomUUID())
+      groupId = groupRemap.get(el.groupId)
+    }
+    toAdd.push({ ...el, id: newId, groupId, x: (el.x || 0) + 20, y: (el.y || 0) + 20 })
   }
 
   return { toAdd, clipboardData, lastId }
@@ -128,6 +161,8 @@ export function useClipboard({ mapActiveSlide, setPresentation }) {
   const setClipboard = useEditorStore((s) => s.setClipboard)
   const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds)
   const clearSelection = useEditorStore((s) => s.clearSelection)
+  const incrementPasteCount = useEditorStore((s) => s.incrementPasteCount)
+  const resetPasteCount = useEditorStore((s) => s.resetPasteCount)
 
   const performCopy = useCallback(
     (slideElements) => {
@@ -135,27 +170,35 @@ export function useClipboard({ mapActiveSlide, setPresentation }) {
         slideElements: slideElements || [],
         selectedElementIds,
       })
-      if (data) setClipboard(data)
+      if (data) {
+        setClipboard(data)
+        resetPasteCount()
+      }
     },
-    [selectedElementIds, setClipboard]
+    [selectedElementIds, setClipboard, resetPasteCount]
   )
 
   const performPaste = useCallback(
     (clipboardElements) => {
-      const { elements, allIds } = createPasteOperation({ clipboardElements })
+      const pasteIndex = useEditorStore.getState().pasteCount
+      const { elements, allIds } = createPasteOperation({ clipboardElements, pasteIndex })
       if (!elements.length) return
       setPresentation((prev) =>
         mapActiveSlide(prev, (s) => ({ ...s, elements: [...(s.elements || []), ...elements] }))
       )
+      incrementPasteCount()
       if (allIds.length) setSelectedElementIds(allIds)
     },
-    [mapActiveSlide, setPresentation, setSelectedElementIds]
+    [mapActiveSlide, setPresentation, setSelectedElementIds, incrementPasteCount]
   )
 
   const performCut = useCallback(
     (slideElements, idsToDelete) => {
       const { clipboardData } = createCutOperation({ slideElements: slideElements || [], selectedElementIds: idsToDelete || [] })
-      if (clipboardData) setClipboard(clipboardData)
+      if (clipboardData) {
+        setClipboard(clipboardData)
+        resetPasteCount()
+      }
       if (!idsToDelete?.length) return
       setPresentation((prev) =>
         mapActiveSlide(prev, (s) => ({
@@ -165,7 +208,7 @@ export function useClipboard({ mapActiveSlide, setPresentation }) {
       )
       clearSelection()
     },
-    [mapActiveSlide, setPresentation, setClipboard, clearSelection]
+    [mapActiveSlide, setPresentation, setClipboard, clearSelection, resetPasteCount]
   )
 
   const performDuplicate = useCallback(

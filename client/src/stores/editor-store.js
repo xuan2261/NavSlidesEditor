@@ -34,6 +34,12 @@ export const useEditorStore = create((set, get) => ({
     set({ clipboard: clones })
   },
 
+  // Cascade counter so repeated pastes of one clipboard fan out instead of
+  // overlapping. Bumped after each paste, zeroed when a fresh copy/cut starts.
+  pasteCount: 0,
+  incrementPasteCount: () => set((s) => ({ pasteCount: s.pasteCount + 1 })),
+  resetPasteCount: () => set({ pasteCount: 0 }),
+
   // ─── Canvas Controls ───────────────────────────────────────────────────────
   showGrid: false,
   gridSize: 40,

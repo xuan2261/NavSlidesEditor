@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react'
+import { getRotatedAABB } from './use-canvas-resize-rotate'
 
 /**
  * use-canvas-rubber-band-drag-selection — rubber-band (marquee) drag selection helpers.
@@ -41,11 +42,14 @@ export default function useCanvasRubberBandSelection({ slide, onToggleSelectElem
     const els = slide?.elements || []
     return els
       .filter((el) => {
-        const ex1 = el.x
-        const ey1 = el.y
-        const ex2 = el.x + el.width
-        const ey2 = el.y + el.height
-        return ex1 < x2 && ex2 > x1 && ey1 < y2 && ey2 > y1
+        // Hidden elements aren't on screen and locked elements are protected
+        // from bulk edits, so neither should be caught by a marquee drag
+        // (consistent with delete/duplicate honoring `locked`).
+        if (el.hidden || el.locked) return false
+        // Hit-test against the element's true visual (rotated) bounding box so a
+        // rotated element is caught only where it actually appears on screen.
+        const box = getRotatedAABB(el)
+        return box.left < x2 && box.right > x1 && box.top < y2 && box.bottom > y1
       })
       .map((el) => el.id)
   }, [slide, rubberBandRef])

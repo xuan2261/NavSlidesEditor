@@ -6,6 +6,7 @@ import {
   duplicateSlidesAtIndices,
 } from './slide-operation-helpers'
 import { invalidatePptxFitMetaForUpdates } from '../utils/pptx-import-meta'
+import { getRotatedAABB } from '../components/canvas/use-canvas-resize-rotate'
 
 /**
  * Hook encapsulating multi-element operations (align, group, delete-selected)
@@ -144,64 +145,82 @@ export function useSlideOperations({
       setPresentation((prev) => {
         if (!prev) return prev
         const slide = activeSlideOf()
-        const els = (slide?.elements || []).filter((el) => ids.includes(el.id))
+        // Locked elements are protected from bulk moves (matching
+        // deleteSelectedElements). Re-check the count AFTER filtering: a
+        // selection of one free + one locked leaves a lone survivor, which
+        // must not self-align.
+        const els = (slide?.elements || []).filter(
+          (el) => ids.includes(el.id) && !el.locked
+        )
+        if (els.length < 2) return prev
+        // Align/distribute on the element's true VISUAL (rotated) bounding box.
+        // Rotation is about the element center, so a rigid translation shifts the
+        // AABB by the same delta — new x/y = old x/y + (target - currentEdge).
+        // For unrotated elements the AABB equals the element box (legacy result).
+        const bb = new Map(els.map((e) => [e.id, getRotatedAABB(e)]))
         const upd = {}
         if (type === 'left') {
-          const v = Math.min(...els.map((e) => e.x))
+          const v = Math.min(...els.map((e) => bb.get(e.id).left))
           els.forEach((e) => {
-            upd[e.id] = { x: v }
+            upd[e.id] = { x: e.x + (v - bb.get(e.id).left) }
           })
         } else if (type === 'right') {
-          const v = Math.max(...els.map((e) => e.x + e.width))
+          const v = Math.max(...els.map((e) => bb.get(e.id).right))
           els.forEach((e) => {
-            upd[e.id] = { x: v - e.width }
+            upd[e.id] = { x: e.x + (v - bb.get(e.id).right) }
           })
         } else if (type === 'center-h') {
           const v =
-            (Math.min(...els.map((e) => e.x)) + Math.max(...els.map((e) => e.x + e.width))) / 2
+            (Math.min(...els.map((e) => bb.get(e.id).left)) +
+              Math.max(...els.map((e) => bb.get(e.id).right))) /
+            2
           els.forEach((e) => {
-            upd[e.id] = { x: v - e.width / 2 }
+            const b = bb.get(e.id)
+            upd[e.id] = { x: e.x + (v - (b.left + b.right) / 2) }
           })
         } else if (type === 'top') {
-          const v = Math.min(...els.map((e) => e.y))
+          const v = Math.min(...els.map((e) => bb.get(e.id).top))
           els.forEach((e) => {
-            upd[e.id] = { y: v }
+            upd[e.id] = { y: e.y + (v - bb.get(e.id).top) }
           })
         } else if (type === 'bottom') {
-          const v = Math.max(...els.map((e) => e.y + e.height))
+          const v = Math.max(...els.map((e) => bb.get(e.id).bottom))
           els.forEach((e) => {
-            upd[e.id] = { y: v - e.height }
+            upd[e.id] = { y: e.y + (v - bb.get(e.id).bottom) }
           })
         } else if (type === 'center-v') {
           const v =
-            (Math.min(...els.map((e) => e.y)) + Math.max(...els.map((e) => e.y + e.height))) / 2
+            (Math.min(...els.map((e) => bb.get(e.id).top)) +
+              Math.max(...els.map((e) => bb.get(e.id).bottom))) /
+            2
           els.forEach((e) => {
-            upd[e.id] = { y: v - e.height / 2 }
+            const b = bb.get(e.id)
+            upd[e.id] = { y: e.y + (v - (b.top + b.bottom) / 2) }
           })
         } else if (type === 'distribute-h') {
-          const s = [...els].sort((a, b) => a.x - b.x)
+          const s = [...els].sort((a, b) => bb.get(a.id).left - bb.get(b.id).left)
           if (s.length > 1) {
-            const l = s[0].x,
-              r = s[s.length - 1].x + s[s.length - 1].width
-            const tw = s.reduce((a, e) => a + e.width, 0),
+            const l = bb.get(s[0].id).left,
+              r = bb.get(s[s.length - 1].id).right
+            const tw = s.reduce((a, e) => a + bb.get(e.id).width, 0),
               gap = (r - l - tw) / (s.length - 1)
             let cx = l
             s.forEach((e) => {
-              upd[e.id] = { x: cx }
-              cx += e.width + gap
+              upd[e.id] = { x: e.x + (cx - bb.get(e.id).left) }
+              cx += bb.get(e.id).width + gap
             })
           }
         } else if (type === 'distribute-v') {
-          const s = [...els].sort((a, b) => a.y - b.y)
+          const s = [...els].sort((a, b) => bb.get(a.id).top - bb.get(b.id).top)
           if (s.length > 1) {
-            const t = s[0].y,
-              b = s[s.length - 1].y + s[s.length - 1].height
-            const th = s.reduce((a, e) => a + e.height, 0),
+            const t = bb.get(s[0].id).top,
+              b = bb.get(s[s.length - 1].id).bottom
+            const th = s.reduce((a, e) => a + bb.get(e.id).height, 0),
               gap = (b - t - th) / (s.length - 1)
             let cy = t
             s.forEach((e) => {
-              upd[e.id] = { y: cy }
-              cy += e.height + gap
+              upd[e.id] = { y: e.y + (cy - bb.get(e.id).top) }
+              cy += bb.get(e.id).height + gap
             })
           }
         }

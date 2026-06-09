@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useContext } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 import { useSlideOperations } from '../hooks/use-slide-operations'
 import { useKeyboard } from '../hooks/use-keyboard'
+import { createExitEditOnEscape } from '../hooks/tiptap-exit-edit-on-escape'
 import { useClipboard, createDuplicateOperation } from '../hooks/use-clipboard'
 import { useElementCreation } from '../hooks/use-element-creation'
 import { useEditor } from '@tiptap/react'
@@ -24,6 +25,11 @@ import { presentInWindow } from '../utils/generateHTML'
 import { useExportActions } from '../hooks/use-export-actions'
 import { useAiActions } from '../hooks/use-ai-actions'
 import { resolveActiveSlide, mapActiveSlide } from '../utils/active-slide-mapper'
+import { buildSelectionUpdates } from '../utils/element-update-fanout'
+import { computeZOrderStep, computeMultiZOrderStep } from '../utils/z-order-step'
+import { reconcileSelectionAfterHistory } from '../utils/history-selection-reconciler'
+import { resolveLegacyEditorShortcut } from '../utils/legacy-editor-keydown-resolver'
+import { getSelectionIdsForActiveSlideElement } from '../utils/active-slide-selection'
 import SlidePanel from '../components/SlidePanel'
 import SlideCanvas from '../components/SlideCanvas'
 import PropertiesPanel from '../components/PropertiesPanel'
@@ -56,6 +62,7 @@ import { GAME_SHORTCUT_CONFIG } from '../utils/game-shortcut-config.js'
 import { invalidatePptxFitMetaForUpdates } from '../utils/pptx-import-meta'
 import EditorModals from '../components/EditorModals'
 import { normalizePresentationNotes } from '../utils/slide-notes'
+import { flushPendingSave } from '../hooks/use-editor-save-queue'
 import { sanitizeRichTextHtml } from '../utils/content-safety'
 
 const CODE_THEME_CSS = {
@@ -77,12 +84,9 @@ export function getElementForActiveSlideEdit(activeSlide, fallbackSlide, element
   return element?.type === 'text' ? element : null
 }
 
-export function getSelectionIdsForActiveSlideElement(activeSlide, fallbackSlide, elementId) {
-  const slide = activeSlide || fallbackSlide
-  const element = slide?.elements?.find((el) => el.id === elementId)
-  if (!element?.groupId) return [elementId]
-  return (slide?.elements || []).filter((el) => el.groupId === element.groupId).map((el) => el.id)
-}
+// Re-exported from the shared selection util so existing importers of this
+// symbol from EditorPage keep working without a circular SlideCanvas import.
+export { getSelectionIdsForActiveSlideElement }
 
 export function getGameElementForActiveSlide(activeSlide, fallbackSlide) {
   const slide = activeSlide || fallbackSlide
@@ -178,7 +182,6 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const editingElementId = useEditorStore((s) => s.editingElementId)
   const setEditingElementId = useEditorStore((s) => s.setEditingElementId)
   const clipboard = useEditorStore((s) => s.clipboard)
-  const setClipboard = useEditorStore((s) => s.setClipboard)
   const showGrid = useEditorStore((s) => s.showGrid)
   const gridSize = useEditorStore((s) => s.gridSize)
   const setGridSize = useEditorStore((s) => s.setGridSize)
@@ -266,11 +269,22 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const saveAttemptRef = useRef(0)
   const saveInFlightRef = useRef(false)
   const queuedSaveRef = useRef(null)
+  // True only between the load seeding historyRef and the history effect's
+  // first run, so the initial snapshot is not duplicated. Dedicated to the
+  // history effect; the autosave effect must not consume it.
+  const seededRef = useRef(false)
 
   // Keep refs in sync with state
   useEffect(() => {
     editingElementIdRef.current = editingElementId
   }, [editingElementId])
+
+  // Escape exits text editing back to the canvas. Clearing editingElementId
+  // unmounts the editor surface, so no explicit blur is needed.
+  const exitEditOnEscape = createExitEditOnEscape({
+    editingElementIdRef,
+    setEditingElementId,
+  })
 
   useEffect(() => {
     currentSlideIndexRef.current = currentSlideIndex
@@ -339,11 +353,20 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     queuedSaveRef.current = null
     saveInFlightRef.current = true
 
+    let ok = false
     try {
-      await persistPresentation(nextSave.snapshot, nextSave.attemptId)
+      ok = await persistPresentation(nextSave.snapshot, nextSave.attemptId)
     } finally {
       saveInFlightRef.current = false
-      if (queuedSaveRef.current) void processSaveQueue()
+      if (queuedSaveRef.current) {
+        // A newer edit landed while this save was in flight — drain it.
+        void processSaveQueue()
+      } else if (!ok) {
+        // Keep the rejected snapshot pending so the next edit or a manual
+        // retry resends it. Do NOT re-fire here: a deterministic failure
+        // would otherwise hot-loop the request.
+        queuedSaveRef.current = nextSave
+      }
     }
   }, [persistPresentation])
 
@@ -375,9 +398,57 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     [clearSaveStatusResetTimer, processSaveQueue]
   )
 
+  // Persist a pending (still-debounced) save during teardown: component
+  // unmount, a switch to another presentation, or the browser tab closing.
+  // Without this, an edit made inside the debounce window is silently lost.
+  // Drains atomically — nulls the queue before dispatch so an unmount + a
+  // tab-close cannot send the same snapshot twice.
+  const flushPendingSaveNow = useCallback(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = null
+    }
+    const pending = queuedSaveRef.current
+    if (!pending?.snapshot) return
+    queuedSaveRef.current = null
+    const snapshot = normalizePresentationNotes(pending.snapshot)
+    flushPendingSave(snapshot, {
+      isTemplate,
+      sendKeepalive: (url, body) => {
+        void fetch(url, {
+          method: 'PUT',
+          keepalive: true,
+          headers: { 'Content-Type': 'application/json' },
+          body,
+        }).catch(() => {})
+      },
+      sendSync: (url, body) => {
+        // Payload exceeds the keepalive ceiling (e.g. an inlined base64
+        // background). Best-effort synchronous send so the close still has a
+        // chance to persist; keepalive is unreliable above the cap.
+        try {
+          const xhr = new XMLHttpRequest()
+          xhr.open('PUT', url, false)
+          xhr.setRequestHeader('Content-Type', 'application/json')
+          xhr.send(body)
+        } catch {
+          // Nothing more we can do during teardown.
+        }
+      },
+    })
+  }, [isTemplate])
+
   // Load presentation (or template) on mount
   useEffect(() => {
     if (!presentationId) return
+    // Switching presentations reuses this component instance (route param
+    // change, no unmount), so drain any save still pending for the outgoing
+    // presentation before its state is overwritten. persistPresentation keys
+    // off snapshot.id, so the late flush writes the correct document.
+    flushPendingSaveNow()
+    saveInFlightRef.current = false
+    queuedSaveRef.current = null
+    saveAttemptRef.current += 1
     const loadFn = isTemplate ? api.getTemplate : api.getPresentation
     loadFn(presentationId)
       .then((data) => {
@@ -388,6 +459,10 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         })
         historyRef.current = [JSON.parse(JSON.stringify(migrated))]
         redoStackRef.current = []
+        // The loaded snapshot is already in historyRef; mark it seeded so the
+        // history effect skips re-pushing it (which would enable Undo with
+        // zero edits).
+        seededRef.current = true
         if (window.__E2E__) window.__NAVSLIDES_E2E_HISTORY_LENGTH = historyRef.current.length
         setPresentation(migrated)
         if (migrated.gridSize) setGridSize(migrated.gridSize)
@@ -398,7 +473,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         console.error('Failed to load presentation', err)
         setLoading(false)
       })
-  }, [isTemplate, presentationId, setGridSize])
+  }, [isTemplate, presentationId, setGridSize, flushPendingSaveNow])
 
   // Load share status
   useEffect(() => {
@@ -461,6 +536,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       TableCell,
     ],
     content: '',
+    editorProps: {
+      handleKeyDown: (view, event) => exitEditOnEscape(view, event),
+    },
     onUpdate: ({ editor }) => {
       // Don't trigger if we're setting content programmatically
       if (settingContent.current) return
@@ -518,24 +596,39 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     }
   }, [presentation, schedulePresentationSave])
 
-  useEffect(
-    () => () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+  // Unmount-only: persist any still-debounced edit and clean timers. This must
+  // live here, NOT in the per-edit autosave cleanup above (that runs on every
+  // keystroke and would defeat the debounce). A beforeunload listener covers
+  // the tab-close path with the same flush.
+  useEffect(() => {
+    const onBeforeUnload = () => flushPendingSaveNow()
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload)
+      flushPendingSaveNow()
       clearSaveStatusResetTimer()
-    },
-    [clearSaveStatusResetTimer]
-  )
+    }
+  }, [clearSaveStatusResetTimer, flushPendingSaveNow])
 
   // Undo history: debounce-push presentation snapshots; skip during undo itself
   useEffect(() => {
-    if (!presentation || isFirstLoad.current) return
+    if (!presentation) return
+    // The just-loaded snapshot already seeds historyRef. Skip exactly that
+    // first run so Undo stays disabled until a real edit (a dedicated flag,
+    // not isFirstLoad, which the autosave effect consumes first; and not a
+    // length===1 check, which would also swallow the first edit's undo).
+    if (seededRef.current) {
+      seededRef.current = false
+      return
+    }
     if (applyingUndoRef.current) {
       applyingUndoRef.current = false
       return
     }
     const timer = setTimeout(() => {
+      // Keep 49 prior snapshots + this one = 50 (matches redo-push cap at 49).
       historyRef.current = [
-        ...historyRef.current.slice(-50),
+        ...historyRef.current.slice(-49),
         JSON.parse(JSON.stringify(presentation)),
       ]
       if (window.__E2E__) window.__NAVSLIDES_E2E_HISTORY_LENGTH = historyRef.current.length
@@ -726,20 +819,30 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
 
   const bringElementForward = useCallback(
     (id) => {
-      updateElement(id, {
-        zIndex: (activeSlide?.elements?.find((el) => el.id === id)?.zIndex || 1) + 1,
-      })
+      const stepped = computeZOrderStep(activeSlide?.elements || [], id, 'forward')
+      updateElements(stepped.map((el) => ({ id: el.id, zIndex: el.zIndex })))
     },
-    [activeSlide, updateElement]
+    [activeSlide, updateElements]
   )
 
   const sendElementBackward = useCallback(
     (id) => {
-      updateElement(id, {
-        zIndex: Math.max(1, (activeSlide?.elements?.find((el) => el.id === id)?.zIndex || 1) - 1),
-      })
+      const stepped = computeZOrderStep(activeSlide?.elements || [], id, 'backward')
+      updateElements(stepped.map((el) => ({ id: el.id, zIndex: el.zIndex })))
     },
-    [activeSlide, updateElement]
+    [activeSlide, updateElements]
+  )
+
+  // Step every selected element one neighbor over at once, keeping the
+  // selection's internal stacking order intact.
+  const stepSelectedZOrder = useCallback(
+    (dir) => {
+      const ids = selectedElementIdsRef.current
+      if (!ids?.length) return
+      const stepped = computeMultiZOrderStep(activeSlideRef.current?.elements || [], ids, dir)
+      updateElements(stepped.map((el) => ({ id: el.id, zIndex: el.zIndex })))
+    },
+    [selectedElementIdsRef, activeSlideRef, updateElements]
   )
 
   const moveElementToStackEdge = useCallback(
@@ -767,6 +870,24 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     [moveElementToStackEdge]
   )
 
+  // Single chokepoint for control-driven property edits: fan one partial update
+  // across every selected element so a multi-selection mutates as a whole, not
+  // just the last-clicked id. Reads selection/slide from refs so the callback
+  // identity stays stable across renders.
+  const updateSelectedElements = useCallback((updates) => {
+    const ids = selectedElementIdsRef.current
+    const slide = activeSlideRef.current
+    if (!ids?.length || !slide) return
+    const primaryId = ids[ids.length - 1]
+    const batch = buildSelectionUpdates(slide.elements || [], ids, primaryId, updates)
+    if (batch.length === 1) {
+      const { id, ...partial } = batch[0]
+      updateElement(id, partial)
+    } else if (batch.length > 1) {
+      updateElements(batch)
+    }
+  }, [selectedElementIdsRef, activeSlideRef, updateElement, updateElements])
+
   // Undo/Redo handlers (called by QuickAccessToolbar and keyboard shortcuts)
   // Reconcile a restored snapshot against the active vertical edit: drop it if
   // the tracked parent id no longer exists or the child index is out of range
@@ -780,6 +901,32 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     })
   }, [])
 
+  // Drop selection/editing for elements a restored snapshot no longer contains,
+  // so the properties panel never acts on removed elements and the TipTap editor
+  // never re-emits stale HTML for a vanished edit target.
+  const reconcileSelectionForState = useCallback((state) => {
+    const clampedIndex = Math.min(
+      currentSlideIndexRef.current,
+      (state?.slides?.length ?? 1) - 1
+    )
+    const restoredSlide = resolveActiveSlide(state?.slides, clampedIndex, verticalEditRef.current)
+    const { selectedIds, editingId, editingCleared } = reconcileSelectionAfterHistory(
+      restoredSlide,
+      selectedElementIdsRef.current,
+      editingElementIdRef.current
+    )
+    setSelectedElementIds(selectedIds)
+    if (editingCleared) {
+      setEditingElementId(editingId)
+      editingElementIdRef.current = editingId
+      if (editor) {
+        settingContent.current = true
+        editor.commands.setContent('', false)
+        settingContent.current = false
+      }
+    }
+  }, [editor, setSelectedElementIds, setEditingElementId])
+
   const handleUndo = useCallback(() => {
     const hist = historyRef.current
     if (hist.length < 2) return
@@ -791,7 +938,8 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     setPresentation(prevState)
     setCurrentSlideIndex((ci) => Math.min(ci, prevState.slides.length - 1))
     reconcileVerticalEdit(prevState)
-  }, [setPresentation, setCurrentSlideIndex, reconcileVerticalEdit])
+    reconcileSelectionForState(prevState)
+  }, [setPresentation, setCurrentSlideIndex, reconcileVerticalEdit, reconcileSelectionForState])
 
   const handleRedo = useCallback(() => {
     const stack = redoStackRef.current
@@ -807,32 +955,26 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     setPresentation(redoState)
     setCurrentSlideIndex((ci) => Math.min(ci, redoState.slides.length - 1))
     reconcileVerticalEdit(redoState)
-  }, [presentation, setPresentation, setCurrentSlideIndex, reconcileVerticalEdit])
+    reconcileSelectionForState(redoState)
+  }, [presentation, setPresentation, setCurrentSlideIndex, reconcileVerticalEdit, reconcileSelectionForState])
 
-  // Global keyboard shortcuts (find/replace, slide sorter)
-  // NOTE: Undo/redo and clipboard shortcuts are now handled by useKeyboard/useClipboard
+  // Standalone document keydown listener for editor responsibilities the
+  // shortcut registry does not model. The registry (useKeyboard) owns
+  // find/replace and the chorded commands; this listener must not double-handle
+  // them. Currently only the slide-sorter toggle lives here.
   useEffect(() => {
     const onKeyDown = (e) => {
       if (editingElementId) return
       const tag = document.activeElement?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
-      const ctrl = e.ctrlKey || e.metaKey
-      if (!ctrl) return
-      // Slide Sorter toggle: Ctrl+Shift+S
-      if (ctrl && e.shiftKey && e.key.toLowerCase() === 's') {
+      if (resolveLegacyEditorShortcut(e) === 'toggle-sorter') {
         setViewMode((v) => (v === 'sorter' ? 'normal' : 'sorter'))
         e.preventDefault()
-        return
-      }
-      if (e.key === 'f') {
-        setShowFindReplace((v) => !v)
-        e.preventDefault()
-        return
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [editingElementId, setShowFindReplace, setViewMode])
+  }, [editingElementId, setViewMode])
 
   // Inject hljs theme CSS into the document head for the editor preview
   useEffect(() => {
@@ -920,19 +1062,20 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
 
   const handleDuplicate = useCallback(() => {
     // Use createDuplicateOperation directly — reads current selection from store,
-    // matching the original SlideCanvas behavior (no clipboard required)
+    // matching the original SlideCanvas behavior (no clipboard required).
+    // Duplicate intentionally leaves the copy/cut clipboard untouched so a prior
+    // Ctrl+C survives a Ctrl+D and the next paste still pastes the copied element.
     const { selectedElementIds: liveSelectedIds } = useEditorStore.getState()
     const slideEls = activeSlide?.elements || []
-    const { toAdd, clipboardData } = createDuplicateOperation({
+    const { toAdd } = createDuplicateOperation({
       slideElements: slideEls,
       selectedElementIds: liveSelectedIds,
     })
     if (!toAdd.length) return
-    if (clipboardData) setClipboard(clipboardData)
     setPresentation((prev) =>
       mapActive(prev, (s) => ({ ...s, elements: [...(s.elements || []), ...toAdd] }))
     )
-  }, [activeSlide, setPresentation, setClipboard, mapActive])
+  }, [activeSlide, setPresentation, mapActive])
 
   // Media-library insert — routes through mapActive so media lands on the
   // active vertical child when one is being edited (Red Team #1).
@@ -1094,10 +1237,10 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     onGroup: () => groupElements(),
     onUngroup: () => ungroupElements(),
     onBringForward: () => {
-      if (selectedElementIds.length === 1) bringElementForward(selectedElementIds[0])
+      if (selectedElementIds.length) stepSelectedZOrder('forward')
     },
     onSendBackward: () => {
-      if (selectedElementIds.length === 1) sendElementBackward(selectedElementIds[0])
+      if (selectedElementIds.length) stepSelectedZOrder('backward')
     },
     onResetZoom: () => resetZoom(),
     onZoomIn: () => zoomIn(),
@@ -1292,7 +1435,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
             onUpdateSlide={updateCurrentSlide}
             onUpdatePresentation={(updates) => setPresentation((prev) => (typeof updates === 'function' ? updates(prev) : { ...prev, ...updates }))}
             selectedElement={selectedElement}
-            onUpdateElement={(updates) => selectedElementId && updateElement(selectedElementId, updates)}
+            onUpdateElement={(updates) => updateSelectedElements(updates)}
             onPaste={handlePaste}
             onCut={handleCut}
             onCopy={handleCopy}
@@ -1415,11 +1558,14 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
               selectedElement={selectedElement}
               onUpdateSlide={updateCurrentSlide}
               onUpdateElement={(idOrUpdates, maybeUpdates) => {
+                // Two-arg form (id, partial) targets one element — used by the
+                // Selection Pane row toggles/rename. Single-arg partials come
+                // from the shared property controls and fan to the selection.
                 if (maybeUpdates) {
                   updateElement(idOrUpdates, maybeUpdates)
                   return
                 }
-                if (selectedElementId) updateElement(selectedElementId, idOrUpdates)
+                updateSelectedElements(idOrUpdates)
               }}
               onDeleteElement={() => selectedElementId && deleteElement(selectedElementId)}
               onBringForward={() => selectedElementId && bringElementForward(selectedElementId)}

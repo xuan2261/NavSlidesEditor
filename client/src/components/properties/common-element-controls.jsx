@@ -1,5 +1,6 @@
 import { Input, Select, Button, ColorPicker } from '../../components/ui'
 import { clampNumber, parseFiniteNumber } from '../../utils/number-input'
+import { normalizeRotation } from '../../utils/element-update-fanout'
 import { ArrowDown, ArrowUp, Lock, Unlock } from 'lucide-react'
 import { FRAGMENT_ANIMATION_TYPES } from '../../constants/fragment-animation-types'
 
@@ -56,7 +57,7 @@ export default function CommonElementControls({
             onChange={(e) => {
               const value = parseFiniteNumber(e.target.value, null)
               if (value === null) return
-              onUpdate({ rotation: ((value % 360) + 360) % 360 })
+              onUpdate({ rotation: normalizeRotation(value) })
             }}
             title="Rotation angle in degrees"
           />

@@ -10,23 +10,29 @@ export function applyCropHandle(handle, startCrop, dx, dy, elW, elH) {
   const fdy = dy / elH
   let { x, y, w, h } = startCrop
   const MIN_CROP = 0.05
+  // Subtractive handles move a leading edge toward the FIXED opposite edge.
+  // Capping the moving edge at (opposite - MIN_CROP) floors the resulting
+  // width/height at MIN_CROP, so the crop rectangle can never collapse or
+  // invert past the opposite edge.
   switch (handle) {
     case 'nw': {
-      // Clamp: x can't go below MIN_CROP; right edge (x+w) can't go below x+MIN_CROP
-      const nx = Math.max(x + fdx, MIN_CROP)
-      const ny = Math.max(y + fdy, MIN_CROP)
-      const nw = (x + w) - nx; const nh = (y + h) - ny
-      x = nx; y = ny; w = nw; h = nh
+      const right = x + w
+      const bottom = y + h
+      const nx = Math.min(Math.max(x + fdx, 0), right - MIN_CROP)
+      const ny = Math.min(Math.max(y + fdy, 0), bottom - MIN_CROP)
+      x = nx; y = ny; w = right - nx; h = bottom - ny
       break
     }
     case 'n': {
-      const ny = Math.max(y + fdy, MIN_CROP)
-      h = (y + h) - ny; y = ny
+      const bottom = y + h
+      const ny = Math.min(Math.max(y + fdy, 0), bottom - MIN_CROP)
+      y = ny; h = bottom - ny
       break
     }
     case 'ne': {
-      const ny = Math.max(y + fdy, MIN_CROP)
-      h = (y + h) - ny; y = ny
+      const bottom = y + h
+      const ny = Math.min(Math.max(y + fdy, 0), bottom - MIN_CROP)
+      y = ny; h = bottom - ny
       w = Math.max(MIN_CROP, w + fdx)
       break
     }
@@ -34,14 +40,16 @@ export function applyCropHandle(handle, startCrop, dx, dy, elW, elH) {
     case 'se': w = Math.max(MIN_CROP, w + fdx); h = Math.max(MIN_CROP, h + fdy); break
     case 's': h = Math.max(MIN_CROP, h + fdy); break
     case 'sw': {
-      const nx = Math.max(x + fdx, MIN_CROP)
-      w = (x + w) - nx; x = nx
+      const right = x + w
+      const nx = Math.min(Math.max(x + fdx, 0), right - MIN_CROP)
+      x = nx; w = right - nx
       h = Math.max(MIN_CROP, h + fdy)
       break
     }
     case 'w': {
-      const nx = Math.max(x + fdx, MIN_CROP)
-      w = (x + w) - nx; x = nx
+      const right = x + w
+      const nx = Math.min(Math.max(x + fdx, 0), right - MIN_CROP)
+      x = nx; w = right - nx
       break
     }
   }
@@ -285,7 +293,7 @@ export default function useCanvasPointerInteraction({
       startClientY: e.clientY,
       startMouseX: (e.clientX - rect.left) / scale,
       startMouseY: (e.clientY - rect.top) / scale,
-      startEl: { x: element.x, y: element.y, width: element.width, height: element.height, snapRef: element.snapRef },
+      startEl: { x: element.x, y: element.y, width: element.width, height: element.height, rotation: element.rotation || 0, snapRef: element.snapRef },
       startEls: allSelected.map((el) => ({ id: el.id, x: el.x, y: el.y, width: el.width, height: el.height })),
     }
   }, [pendingDragRef])

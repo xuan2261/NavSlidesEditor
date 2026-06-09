@@ -107,6 +107,32 @@ describe('EditorPage vertical-slide editing', () => {
   })
 
   it('z-order (bring-forward) on the active child reads + writes the child, not the parent', async () => {
+    // Child carries two stacked elements so bring-forward has a neighbor to
+    // cross — proving the write targeted the CHILD slide. (Regression: the
+    // handler previously read the PARENT slide, so the child lookup missed and
+    // the stack never changed.)
+    h.seed = {
+      id: 'vdeck',
+      title: 'V Deck',
+      theme: 'black',
+      slides: [
+        {
+          id: 'p0',
+          background: '#101010',
+          elements: [{ id: 'pa', type: 'text', x: 0, y: 0, width: 100, height: 50, zIndex: 1, content: '<p>parent</p>' }],
+          children: [
+            {
+              id: 'c0',
+              background: '#202020',
+              elements: [
+                { id: 'ca', type: 'text', x: 0, y: 0, width: 100, height: 50, zIndex: 1, content: '<p>child a</p>' },
+                { id: 'cb', type: 'text', x: 0, y: 60, width: 100, height: 50, zIndex: 2, content: '<p>child b</p>' },
+              ],
+            },
+          ],
+        },
+      ],
+    }
     renderPage()
     await screen.findByDisplayValue('V Deck')
 
@@ -123,11 +149,14 @@ describe('EditorPage vertical-slide editing', () => {
       () => {
         const snap = lastSaved()
         expect(snap).toBeTruthy()
-        // child element 'ca' started at zIndex 1 -> bring-forward makes it 2.
-        // (regression: previously the handler read the PARENT slide and the
-        // child lookup missed, leaving zIndex stuck.)
-        const ca = snap.slides[0].children[0].elements.find((e) => e.id === 'ca')
-        expect(ca.zIndex).toBe(2)
+        // 'ca' started below 'cb'; bring-forward swaps them so 'ca' now sits on
+        // top. The write landed on the child, not the parent.
+        const child = snap.slides[0].children[0]
+        const ca = child.elements.find((e) => e.id === 'ca')
+        const cb = child.elements.find((e) => e.id === 'cb')
+        expect(ca.zIndex).toBeGreaterThan(cb.zIndex)
+        // Parent stack is untouched.
+        expect(snap.slides[0].elements.find((e) => e.id === 'pa').zIndex).toBe(1)
       },
       { timeout: 2500 }
     )

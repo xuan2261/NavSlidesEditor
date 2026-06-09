@@ -75,6 +75,28 @@ describe('createKeyboardHandler', () => {
     expect(onCopy).not.toHaveBeenCalled()
   })
 
+  it('stands down when the caret is inside a contenteditable region even if the editing flag is unset', () => {
+    const shortcuts = getShortcuts({})
+    const onCopy = vi.fn()
+    const onDelete = vi.fn()
+
+    // A TipTap root / table cell reports tagName DIV but isContentEditable true,
+    // and the editing flag may not have propagated yet. Canvas shortcuts must
+    // not steal the keystroke and clobber the text element.
+    const handler = createKeyboardHandler({
+      onCopy,
+      onDelete,
+      shortcuts,
+      isEditing: false,
+      getActiveElement: () => ({ tagName: 'DIV', isContentEditable: true }),
+    })
+    handler(createEvent('c', { ctrlKey: true }))
+    handler(createEvent('Delete'))
+
+    expect(onCopy).not.toHaveBeenCalled()
+    expect(onDelete).not.toHaveBeenCalled()
+  })
+
   it('leaves removed ribbon toggle shortcut unhandled', () => {
     const shortcuts = getShortcuts({})
     const onToggleRibbon = vi.fn()

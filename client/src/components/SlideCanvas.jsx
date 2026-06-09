@@ -21,6 +21,7 @@ import CanvasElement from './canvas/canvas-element-wrapper'
 import { cn } from '../lib/utils'
 import { DEFAULT_TOKENS, mergeTokens, tokensToStyleObject } from 'revealjs-shared'
 import SlideBackgroundFxCanvas from './canvas/slide-background-fx-canvas'
+import { resolvePointerDownSelection } from '../utils/active-slide-selection'
 
 function getBgStyle(bg) {
   if (!bg || bg.type === 'none') return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
@@ -515,14 +516,22 @@ export default function SlideCanvas({
                 if (editingElementId === element.id) return
                 if (element.locked && type === 'move') return
                 e.stopPropagation()
-                if (
-                  type === 'move' &&
-                  !e.shiftKey &&
-                  !selectedElementIdsRef.current.includes(element.id)
-                ) {
+                // Resolve the drag's selection synchronously: grabbing an
+                // unselected element (plain move) replaces selection — expanding
+                // to its group — while already-selected / shift / handle grabs
+                // keep the current multi-selection so group drags stay intact.
+                const dragIds = resolvePointerDownSelection({
+                  activeSlide: slide,
+                  elementId: element.id,
+                  currentSelectionIds: selectedElementIdsRef.current,
+                  shiftKey: e.shiftKey,
+                  type,
+                })
+                if (dragIds !== selectedElementIdsRef.current) {
+                  selectedElementIdsRef.current = dragIds
                   onToggleSelectElement(element.id, false)
                 }
-                startElementDrag(e, element.id, type, handle, slide, scale, selectedElementIdsRef.current)
+                startElementDrag(e, element.id, type, handle, slide, scale, dragIds)
               }}
               onClick={(e) => {
                 e.stopPropagation()

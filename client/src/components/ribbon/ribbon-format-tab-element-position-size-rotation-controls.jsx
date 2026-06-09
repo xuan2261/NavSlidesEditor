@@ -6,6 +6,7 @@ import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 import { CANVAS_WIDTH } from '../../data/slide-constants'
 import { normalizeTableShape } from '../properties/table-properties-utils'
+import { normalizeRotation } from '../../utils/element-update-fanout'
 
 const OBJECT_FIT_OPTIONS = ['cover', 'contain', 'fill', 'none']
 const CHART_TYPES = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea', 'scatter']
@@ -216,11 +217,18 @@ export default function FormatTabContent({ selectedElement, onUpdateElement }) {
     )
   }
 
-  const updateNum = (key, value, min) => {
+  // X/Y accept negatives (off-canvas bleed is valid) — no lower bound. Rotation
+  // wraps to 0–359 so the ribbon and the Properties panel agree. W/H keep a
+  // floor of 1 here; the apply path enforces the real minimum size.
+  const updateNum = (key, value, min = null) => {
     const num = parseInt(value, 10)
-    if (!Number.isNaN(num) && num >= (min ?? 0)) {
-      onUpdateElement?.({ [key]: num })
+    if (Number.isNaN(num)) return
+    if (key === 'rotation') {
+      onUpdateElement?.({ rotation: normalizeRotation(num) })
+      return
     }
+    if (min !== null && num < min) return
+    onUpdateElement?.({ [key]: num })
   }
 
   return (

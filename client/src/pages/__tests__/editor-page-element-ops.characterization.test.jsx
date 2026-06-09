@@ -228,6 +228,23 @@ describe('EditorPage element-ops characterization', () => {
     }, { timeout: 2500 })
   })
 
+  it('Ctrl+D leaves the copy clipboard intact so the next paste still pastes the copied element', async () => {
+    renderPage()
+    await screen.findByDisplayValue('Char Deck')
+
+    // Copy el-a, then duplicate el-b. Duplicate must NOT overwrite the clipboard.
+    await selectElements(['el-a'])
+    await pressKey({ key: 'c', ctrlKey: true })
+    await selectElements(['el-b'])
+    await pressKey({ key: 'd', ctrlKey: true })
+
+    const clip = useEditorStore.getState().clipboard
+    expect(clip).toHaveLength(1)
+    // Clipboard still holds the text element copied first (Alpha), not the shape.
+    expect(clip[0].type).toBe('text')
+    expect(clip[0].content).toBe('<p>Alpha</p>')
+  })
+
   it('adds a text element with defaults via the Insert ribbon', async () => {
     renderPage()
     await screen.findByDisplayValue('Char Deck')
