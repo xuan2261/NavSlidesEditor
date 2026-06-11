@@ -56,6 +56,10 @@ function parseDataUrl(value) {
   if (typeof value !== 'string') return null
   const match = value.match(/^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i)
   if (!match) return null
+  // Cap BEFORE decoding: a base64 payload of length L decodes to ~L*3/4 bytes.
+  // Reject oversize inline data URLs so we never allocate the decoded Buffer.
+  const approxBytes = Math.floor((match[2].length * 3) / 4)
+  if (approxBytes > MAX_MEDIA_SIZE) return null
   return { mime: match[1].toLowerCase(), buffer: Buffer.from(match[2], 'base64') }
 }
 

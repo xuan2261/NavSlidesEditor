@@ -30,7 +30,7 @@ describe('Upload deduplication route', () => {
   })
 
   it('deduplicates repeated uploads by content hash within a presentation', async () => {
-    const content = Buffer.from('test image data')
+    const content = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1"/></svg>')
 
     const first = await request(app)
       .post('/api/upload')
@@ -50,7 +50,7 @@ describe('Upload deduplication route', () => {
   })
 
   it('does not deduplicate the same file across different presentations', async () => {
-    const content = Buffer.from('shared image data')
+    const content = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><circle r="1"/></svg>')
 
     const first = await request(app)
       .post('/api/upload')
@@ -70,4 +70,19 @@ describe('Upload deduplication route', () => {
 
     expect(second.body.url).not.toBe(first.body.url)
   })
+
+  it('rejects a non-SVG payload renamed to .svg (magic-byte/content sniff)', async () => {
+    // A PNG-ish binary blob masquerading as SVG must not be stored or served as image/svg+xml.
+    const notSvg = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x01, 0x02])
+
+    const res = await request(app)
+      .post('/api/upload')
+      .field('presentationId', 'pres-svg')
+      .attach('file', notSvg, 'evil.svg')
+
+    expect(res.status).toBe(400)
+    // Nothing persisted.
+    expect(res.body.url).toBeUndefined()
+  })
+
 })

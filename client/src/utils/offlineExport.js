@@ -246,7 +246,7 @@ export async function generateOfflineHTML(html) {
       css = css.replace(/url\('\.\.\/webfonts\//g, `url('${faWebfontsBase}/`)
     }
 
-      result = result.replace(match[0], () => `<style>/* ${vendorPath} */\n${css}\n</style>`)
+      result = result.split(match[0]).join(`<style>/* ${vendorPath} */\n${css}\n</style>`)
     }
 
     // Public CSS files copied by Vite are not under /vendor but must still be
@@ -257,7 +257,7 @@ export async function generateOfflineHTML(html) {
     for (const match of publicCssMatches) {
       const publicPath = match[1]
       const css = await cachedFetchText(publicPath)
-      result = result.replace(match[0], () => `<style>/* ${publicPath} */\n${css}\n</style>`)
+      result = result.split(match[0]).join(`<style>/* ${publicPath} */\n${css}\n</style>`)
     }
 
     // ── 2. Inline all <script> vendor JS ─────────────────────────────────────

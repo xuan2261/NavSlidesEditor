@@ -164,11 +164,15 @@ export function addLineElement(slide, element, bounds, resolution, layout) {
   const x2 = bounds.x + (element.x2 ?? element.width ?? 0) * scaleX
   const y2 = bounds.y + (element.y2 ?? midY) * scaleY
 
+  // pptxgenjs misrenders negative w/h; normalize to a positive box and use
+  // flipH/flipV to preserve the line's direction (and arrowhead orientation).
   slide.addShape('line', {
-    x: x1,
-    y: y1,
-    w: x2 - x1,
-    h: y2 - y1,
+    x: Math.min(x1, x2),
+    y: Math.min(y1, y2),
+    w: Math.abs(x2 - x1),
+    h: Math.abs(y2 - y1),
+    flipH: x2 < x1,
+    flipV: y2 < y1,
     line: {
       color: normalizeCssColor(element.stroke || '#ffffff').color,
       width: element.strokeWidth || 2,

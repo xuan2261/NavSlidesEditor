@@ -4,32 +4,7 @@ const path = require('path')
 const fs = require('fs').promises
 const crypto = require('crypto')
 const uuidv4 = () => require('node:crypto').randomUUID()
-const { DATA_DIR, UPLOADS_DIR, withFileLock } = require('../services/storage')
-
-const HASHES_FILE = path.join(DATA_DIR, 'upload-hashes.json')
-
-async function loadHashes() {
-  try {
-    const data = await fs.readFile(HASHES_FILE, 'utf-8')
-    return JSON.parse(data)
-  } catch {
-    return {}
-  }
-}
-
-async function saveHashes(hashes) {
-  await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
-  await fs.writeFile(HASHES_FILE, JSON.stringify(hashes, null, 2))
-}
-
-async function withUploadHashes(fn) {
-  return withFileLock(HASHES_FILE, async () => {
-    const hashes = await loadHashes()
-    const result = await fn(hashes)
-    await saveHashes(hashes)
-    return result
-  })
-}
+const { UPLOADS_DIR, withUploadHashes } = require('../services/storage')
 
 async function computeFileHash(filePath) {
   const buffer = await fs.readFile(filePath)
@@ -99,6 +74,23 @@ router.post('/', upload.single('file'), async (req, res) => {
     }
   } catch {
     // file-type can't detect some formats (SVG, text) — fall back to extension check (already passed)
+  }
+
+  // SVG content sniff: file-type cannot detect SVG, so a non-SVG payload renamed to
+  // .svg would pass on extension alone. Require it to actually look like SVG/XML.
+  if (path.extname(req.file.path).toLowerCase() === '.svg') {
+    try {
+      const head = (await fs.readFile(req.file.path, 'utf-8')).slice(0, 2048)
+      // Must contain an <svg> root (optionally preceded by an XML prolog / comments).
+      const looksLikeSvg = /<svg[\s>]/i.test(head)
+      if (!looksLikeSvg) {
+        await fs.unlink(req.file.path).catch(() => {})
+        return res.status(400).json({ error: 'File content is not valid SVG' })
+      }
+    } catch {
+      await fs.unlink(req.file.path).catch(() => {})
+      return res.status(400).json({ error: 'Unable to read uploaded file' })
+    }
   }
 
   // SHA-256 deduplication

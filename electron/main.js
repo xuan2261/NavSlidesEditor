@@ -123,16 +123,30 @@ function createWindow() {
 
   mainWindow.loadURL(`http://localhost:${PORT}`)
 
-  // Open external links in the default browser, allow new windows for present mode
+  const APP_ORIGIN = `http://localhost:${PORT}`
+
+  // Open external links in the default browser, allow new windows for present mode.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('blob:') || url.startsWith(`http://localhost:${PORT}`)) {
+    if (url.startsWith('blob:') || url.startsWith(APP_ORIGIN)) {
       return { action: 'allow' }
     }
-    if (url.startsWith('http')) {
+    if (url.startsWith('http:') || url.startsWith('https:')) {
       shell.openExternal(url)
       return { action: 'deny' }
     }
-    return { action: 'allow' }
+    // Deny everything else (file:, data:, custom protocols) — do not spawn a window for them.
+    return { action: 'deny' }
+  })
+
+  // Pin the main window to the app origin: block in-page navigation to external,
+  // file:, or data: targets (a compromised/redirecting page could otherwise
+  // navigate the trusted window away). Allow same-origin and blob: only.
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith(APP_ORIGIN) || url.startsWith('blob:')) return
+    event.preventDefault()
+    if (url.startsWith('http:') || url.startsWith('https:')) {
+      shell.openExternal(url)
+    }
   })
 
   mainWindow.on('closed', () => {

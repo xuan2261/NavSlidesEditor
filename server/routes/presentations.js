@@ -5,10 +5,10 @@ const {
   readPresentations,
   withPresentations,
   withShareTokens,
+  withUploadHashes,
   DATA_DIR,
   HISTORY_DIR,
   UPLOADS_DIR,
-  withFileLock,
 } = require('../services/storage')
 const fs = require('fs-extra')
 const path = require('path')
@@ -61,16 +61,6 @@ async function readUploadHashes() {
   } catch {
     return {}
   }
-}
-
-async function withUploadHashes(fn) {
-  return withFileLock(UPLOAD_HASHES_FILE, async () => {
-    const hashes = await readUploadHashes()
-    const result = await fn(hashes)
-    await fs.ensureDir(path.dirname(UPLOAD_HASHES_FILE))
-    await fs.writeJson(UPLOAD_HASHES_FILE, hashes, { spaces: 2 })
-    return result
-  })
 }
 
 // GET /api/presentations - list summaries (excludes trashed)

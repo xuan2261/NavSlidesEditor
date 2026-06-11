@@ -16,6 +16,7 @@ const HISTORY_DIR = path.join(DATA_DIR, 'history')
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json')
 const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics.json')
 const MEDIA_DB_FILE = path.join(DATA_DIR, 'media.json')
+const UPLOAD_HASHES_FILE = path.join(DATA_DIR, 'upload-hashes.json')
 
 // ── File locking to prevent race conditions ──────────────────────────────────
 const fileLocks = new Map()
@@ -222,6 +223,25 @@ async function withMediaDb(fn) {
   })
 }
 
+// ── Upload Hash Index (SHA-256 dedup) ────────────────────────────────────────
+// Single canonical writer for upload-hashes.json. Both the upload route and the
+// presentation media-orphan sweep go through this so the index has one atomic
+// read-modify-write path instead of two drift-prone copies.
+async function withUploadHashes(fn) {
+  return withFileLock(UPLOAD_HASHES_FILE, async () => {
+    let hashes
+    try {
+      hashes = await fs.readJson(UPLOAD_HASHES_FILE)
+    } catch {
+      hashes = {}
+    }
+    const result = await fn(hashes)
+    await fs.ensureDir(path.dirname(UPLOAD_HASHES_FILE))
+    await writeJsonAtomic(UPLOAD_HASHES_FILE, hashes, { spaces: 2 })
+    return result
+  })
+}
+
 module.exports = {
   // Paths
   DATA_DIR,
@@ -235,6 +255,7 @@ module.exports = {
   SETTINGS_FILE,
   ANALYTICS_FILE,
   MEDIA_DB_FILE,
+  UPLOAD_HASHES_FILE,
 
   // Init
   initDataFiles,
@@ -261,4 +282,5 @@ module.exports = {
   readMediaDb,
   writeMediaDb,
   withMediaDb,
+  withUploadHashes,
 }

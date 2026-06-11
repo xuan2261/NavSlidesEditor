@@ -274,6 +274,12 @@ app.post('/share/:token', async (req, res) => {
     if (!tokenData) return res.status(404).send('Not found')
     if (!canViewShare(tokenData)) return res.status(403).send('This link has expired')
 
+    // Token has no stored password: nothing to verify against. Bounce back to the
+    // GET handler, which renders the deck directly (avoids bcrypt.compare on undefined → 500).
+    if (!tokenData.password) {
+      return res.redirect(`/share/${req.params.token}`)
+    }
+
     const pwd = req.body?.pwd
     if (!pwd || !(await bcrypt.compare(pwd, tokenData.password))) {
       return res.redirect(`/share/${req.params.token}`) // back to form
