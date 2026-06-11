@@ -6,6 +6,11 @@ const rooms = new Map() // roomId -> { presenterId, presenterTokenHash, controll
 const socketToRoom = new Map() // socketId -> roomId
 const socketRoles = new Map() // socketId -> role
 
+// Grace window before an orphaned room (presenter gone, no viewers) is reaped.
+// Mirrors the game-room TTL pattern. Overridable for fast tests.
+const DEFAULT_LIVE_ROOM_TTL_MS = 60 * 1000
+let liveRoomTtlMs = DEFAULT_LIVE_ROOM_TTL_MS
+
 function hashToken(token) {
   return crypto.createHash('sha256').update(String(token || '')).digest('hex')
 }
@@ -25,6 +30,7 @@ function createRoom(presenterToken, presenterId = null) {
     annotations: {},    // slideIndex -> Annotation[]
     timers: {},         // elementId -> TimerState
     timerTimeouts: {},  // elementId -> setTimeout ID
+    cleanupTimer: null, // pending orphaned-room reap handle
   }
 }
 
@@ -79,6 +85,8 @@ function joinRoom(roomId, socketId, role, options = {}) {
       room.viewers.push(socketId)
     }
   }
+  // Any (re)join inside the grace window cancels a pending orphaned-room reap.
+  cancelRoomCleanup(room)
   socketToRoom.set(socketId, roomId)
   socketRoles.set(socketId, role)
   return { ok: true }
@@ -104,12 +112,31 @@ function leaveRoom(socketId) {
       }
       room.timerTimeouts = {}
     }
+    maybeScheduleRoomCleanup(roomId, room)
     return { roomId, role: 'presenter' }
   }
 
   room.viewers = room.viewers.filter((id) => id !== socketId)
   room.controllers = room.controllers.filter((id) => id !== socketId)
+  maybeScheduleRoomCleanup(roomId, room)
   return { roomId, role: role || 'viewer' }
+}
+
+// Arm a grace-window reap when a room is orphaned (no presenter AND no viewers).
+// A (re)join within the window cancels it via cancelRoomCleanup. In-memory only —
+// annotations are NOT flushed to storage on cleanup.
+function maybeScheduleRoomCleanup(roomId, room) {
+  if (!room) return
+  if (room.presenterId || room.viewers.length > 0) return
+  if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
+  room.cleanupTimer = setTimeout(() => removeRoom(roomId), liveRoomTtlMs)
+}
+
+function cancelRoomCleanup(room) {
+  if (room?.cleanupTimer) {
+    clearTimeout(room.cleanupTimer)
+    room.cleanupTimer = null
+  }
 }
 
 function getRoomState(roomId) {
@@ -119,6 +146,7 @@ function getRoomState(roomId) {
 function removeRoom(roomId) {
   const room = rooms.get(roomId)
   if (!room) return false
+  if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
   for (const timeoutId of Object.values(room.timerTimeouts || {})) {
     clearTimeout(timeoutId)
   }
@@ -153,9 +181,19 @@ function getViewerCount(roomId) {
 }
 
 function _resetRooms() {
+  for (const room of rooms.values()) {
+    if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
+    for (const id of Object.values(room.timerTimeouts || {})) clearTimeout(id)
+  }
   rooms.clear()
   socketToRoom.clear()
   socketRoles.clear()
+  liveRoomTtlMs = DEFAULT_LIVE_ROOM_TTL_MS
+}
+
+// Test seam: shrink the orphaned-room grace window so cleanup tests run fast.
+function _setLiveRoomTtl(ms) {
+  liveRoomTtlMs = ms
 }
 
 module.exports = {
@@ -172,5 +210,6 @@ module.exports = {
   getViewerCount,
   isValidPresenterToken,
   _resetRooms,
+  _setLiveRoomTtl,
   computeTimerRemaining,
 }

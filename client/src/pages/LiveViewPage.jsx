@@ -14,8 +14,9 @@ export default function LiveViewPage() {
   // Socket reference shared across callbacks
   const socketRef = useRef(null)
 
-  // Annotation strokes — unified state for display
-  const [annotationStrokes, setAnnotationStrokes] = useState([])
+  // Annotation strokes keyed by slide index so strokes never bleed across
+  // slides. The displayed set is derived from the current slide.
+  const [strokesBySlide, setStrokesBySlide] = useState({})
 
   // Slideshow overlay
   const [overlayColor, setOverlayColor] = useState(null) // 'black' | 'white' | null
@@ -134,26 +135,36 @@ export default function LiveViewPage() {
   }, [roomCode])
 
 
-  // Annotation sync — handlers for incoming Socket.IO events
+  // Annotation sync — handlers operate on the current slide's stroke bucket.
+  const slideIndex = liveState.slideIndex
+
   const handleAnnotationAdd = useCallback((annotation) => {
-    setAnnotationStrokes((prev) => [...prev, annotation])
-  }, [])
+    setStrokesBySlide((prev) => ({
+      ...prev,
+      [slideIndex]: [...(prev[slideIndex] || []), annotation],
+    }))
+  }, [slideIndex])
 
   const handleAnnotationRemove = useCallback((annotationId) => {
-    setAnnotationStrokes((prev) => prev.filter((a) => a.id !== annotationId))
-  }, [])
+    setStrokesBySlide((prev) => ({
+      ...prev,
+      [slideIndex]: (prev[slideIndex] || []).filter((a) => a.id !== annotationId),
+    }))
+  }, [slideIndex])
 
   const handleAnnotationsClear = useCallback(() => {
-    setAnnotationStrokes([])
-  }, [])
+    setStrokesBySlide((prev) => ({ ...prev, [slideIndex]: [] }))
+  }, [slideIndex])
 
   useAnnotationSync({
     socket: socketRef.current,
-    slideIndex: liveState.slideIndex,
+    slideIndex,
     onAnnotationAdd: handleAnnotationAdd,
     onAnnotationRemove: handleAnnotationRemove,
     onAnnotationsClear: handleAnnotationsClear,
   })
+
+  const annotationStrokes = strokesBySlide[slideIndex] || []
 
   // Timer sync (Phase 2): subscribe to server timer events
   const timerStatesRef = useLiveTimerSync(socketRef.current, (elementId) => {

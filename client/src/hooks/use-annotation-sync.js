@@ -58,8 +58,22 @@ export function useAnnotationSync({
   )
 
   const handleAnnotationsSync = useCallback(
-    ({ slideAnnotations }) => {
-      const annotations = slideAnnotations[slideIndex]
+    (payload) => {
+      // Two payload shapes are supported:
+      //  - join/rejoin: { slideAnnotations: { [slideIndex]: Annotation[] } }
+      //  - navigate (slide-scoped): { slideIndex, annotations: Annotation[] }
+      let annotations
+      if (payload?.slideAnnotations) {
+        annotations = payload.slideAnnotations[slideIndex]
+      } else if (payload?.slideIndex === slideIndex) {
+        // Scoped sync for the slide we just navigated to: reset and replace so
+        // the previous slide's strokes do not bleed onto this one.
+        seenIds.current = new Set()
+        onAnnotationsClear()
+        annotations = payload.annotations
+      } else {
+        return
+      }
       if (annotations) {
         annotations.forEach((ann) => {
           if (ann?.id && !seenIds.current.has(ann.id)) {
@@ -69,7 +83,7 @@ export function useAnnotationSync({
         })
       }
     },
-    [slideIndex, onAnnotationAdd]
+    [slideIndex, onAnnotationAdd, onAnnotationsClear]
   )
 
   useEffect(() => {

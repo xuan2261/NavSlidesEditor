@@ -169,6 +169,52 @@ describe('useAnnotationSync', () => {
     expect(onAdd).toHaveBeenNthCalledWith(2, { id: 'a2', d: 'M1 1 L2 2', color: '#00FF00' })
   })
 
+  it('replaces strokes from a slide-scoped annotations:sync on navigate (I-R4.1)', () => {
+    const onAdd = vi.fn()
+    const onClear = vi.fn()
+    renderHook(() =>
+      useAnnotationSync({
+        socket: mockSocket,
+        slideIndex: 1,
+        onAnnotationAdd: onAdd,
+        onAnnotationRemove: vi.fn(),
+        onAnnotationsClear: onClear,
+      })
+    )
+
+    // Scoped sync for the slide we navigated to → clears, then adds slide-1 strokes
+    mockSocket._trigger('annotations:sync', {
+      slideIndex: 1,
+      annotations: [{ id: 'b1', d: 'M1 1', color: '#00FF00' }],
+    })
+
+    expect(onClear).toHaveBeenCalledTimes(1)
+    expect(onAdd).toHaveBeenCalledTimes(1)
+    expect(onAdd).toHaveBeenCalledWith({ id: 'b1', d: 'M1 1', color: '#00FF00' })
+  })
+
+  it('ignores a slide-scoped annotations:sync for a different slide', () => {
+    const onAdd = vi.fn()
+    const onClear = vi.fn()
+    renderHook(() =>
+      useAnnotationSync({
+        socket: mockSocket,
+        slideIndex: 0,
+        onAnnotationAdd: onAdd,
+        onAnnotationRemove: vi.fn(),
+        onAnnotationsClear: onClear,
+      })
+    )
+
+    mockSocket._trigger('annotations:sync', {
+      slideIndex: 2,
+      annotations: [{ id: 'c1', d: 'M2 2' }],
+    })
+
+    expect(onClear).not.toHaveBeenCalled()
+    expect(onAdd).not.toHaveBeenCalled()
+  })
+
   it('does nothing when socket is null', () => {
     const { result: _result } = renderHook(() =>
       useAnnotationSync({

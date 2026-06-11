@@ -138,6 +138,26 @@ function setupSocketHandlers(io, dependencies = {}) {
         }
       }
 
+      // On presenter (re)connect, re-arm any running timers. leaveRoom cleared
+      // their timeouts on disconnect but left the running timer state intact, so
+      // a mid-countdown reconnect must reschedule timer:ended at the remaining time.
+      if (role === 'presenter') {
+        const roomState = liveRooms.getRoomState(roomId)
+        if (roomState) {
+          for (const [elementId, timer] of Object.entries(roomState.timers || {})) {
+            if (timer.running && !roomState.timerTimeouts[elementId]) {
+              roomState.timerTimeouts[elementId] = scheduleTimerEnd(
+                roomId,
+                elementId,
+                roomState.timers,
+                roomState.timerTimeouts,
+                io
+              )
+            }
+          }
+        }
+      }
+
       if (role === 'viewer' || role === 'controller') {
         const state = liveRooms.getRoomState(roomId)
         if (state) {
@@ -183,6 +203,13 @@ function setupSocketHandlers(io, dependencies = {}) {
       if (success) {
         socket.to(socket.data.roomId).emit('navigate', state)
         socket.to(socket.data.roomId).emit('sync-state', state)
+        // Re-sync annotations scoped to the target slide so viewers swap to that
+        // slide's strokes (empty if none) instead of bleeding the previous slide.
+        const room = liveRooms.getRoomState(socket.data.roomId)
+        socket.to(socket.data.roomId).emit('annotations:sync', {
+          slideIndex,
+          annotations: room?.annotations?.[slideIndex] || [],
+        })
       }
     })
 

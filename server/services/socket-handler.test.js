@@ -353,6 +353,48 @@ describe('socket-handler', () => {
     expect(presenter.handlers['annotation']).toBeUndefined()
   })
 
+  it('scopes annotations:sync to the target slide on navigate (I-R4.1)', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM12', presenterToken)
+
+    const presenter = io.connect('presenter-1')
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM12',
+      role: 'presenter',
+      presenterToken,
+    })
+
+    // Draw on slide 0 and slide 1
+    await presenter.trigger('annotation:add', {
+      slideIndex: 0,
+      annotation: { d: 'M0 0', color: '#FF0000', strokeWidth: 3 },
+    })
+    await presenter.trigger('annotation:add', {
+      slideIndex: 1,
+      annotation: { d: 'M1 1', color: '#00FF00', strokeWidth: 3 },
+    })
+
+    // Navigate to slide 1 → server broadcasts a slide-scoped annotations:sync
+    await presenter.trigger('navigate', { slideIndex: 1, verticalIndex: 0, fragmentIndex: 0 })
+    const toSlide1 = io.broadcasts.filter((b) => b.event === 'annotations:sync')
+    expect(toSlide1.length).toBeGreaterThan(0)
+    const slide1Payload = toSlide1[toSlide1.length - 1].payload
+    expect(slide1Payload.slideIndex).toBe(1)
+    // Only slide-1 strokes — no slide-0 bleed
+    expect(slide1Payload.annotations).toHaveLength(1)
+    expect(slide1Payload.annotations[0].d).toBe('M1 1')
+
+    // Navigate back to slide 0 → slide-0 strokes restored
+    await presenter.trigger('navigate', { slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 })
+    const toSlide0 = io.broadcasts.filter((b) => b.event === 'annotations:sync')
+    const slide0Payload = toSlide0[toSlide0.length - 1].payload
+    expect(slide0Payload.slideIndex).toBe(0)
+    expect(slide0Payload.annotations).toHaveLength(1)
+    expect(slide0Payload.annotations[0].d).toBe('M0 0')
+  })
+
   it('rejects presenter takeover when token is missing or invalid', async () => {
     const io = new FakeIO()
     setupSocketHandlers(io, { liveRoomsService: liveRooms })
