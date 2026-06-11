@@ -2,7 +2,20 @@ const { isNativeChartType, normalizeCssColor } = require('revealjs-shared')
 const { normalizeServerImageSource } = require('./server-image-source')
 const { rasterizeStaticVisualElement } = require('./server-background-raster')
 
-const STATIC_VISUAL_TYPES = new Set(['html', 'latex', 'icon', 'drawing', 'markdown', 'qrcode', 'svg'])
+// timeline and game are static-renderable via the Phase-4 shared HTML renderers
+// (timeline → SVG with event images; game → labeled placeholder badge), so they
+// route through the rasterizer instead of crashing the strict export.
+const STATIC_VISUAL_TYPES = new Set([
+  'html',
+  'latex',
+  'icon',
+  'drawing',
+  'markdown',
+  'qrcode',
+  'svg',
+  'timeline',
+  'game',
+])
 
 function isRasterizable(element) {
   if (!element) return false
@@ -35,7 +48,13 @@ function addPlaceholder(slide, bounds, element) {
 }
 
 async function addFallbackElement(slide, element, bounds, warnings, slideNumber, options = {}) {
-  const { strictRaster = true, allowFallback = false, baseUrl = '', resolution } = options
+  const {
+    baseUrl = '',
+    resolution,
+    rasterCache,
+    // injectable so unit tests can exercise routing/isolation without a browser
+    rasterizeElement = rasterizeStaticVisualElement,
+  } = options
 
   if (element.type === 'video' && element.poster) {
     const source = normalizeServerImageSource(element.poster)
@@ -49,7 +68,7 @@ async function addFallbackElement(slide, element, bounds, warnings, slideNumber,
   if (isRasterizable(element)) {
     let rasterData = null
     try {
-      rasterData = await rasterizeStaticVisualElement(element, { baseUrl, resolution })
+      rasterData = await rasterizeElement(element, { baseUrl, resolution, cache: rasterCache })
     } catch (error) {
       warnings.push(`Slide ${slideNumber}: rasterization error for ${element.type} (${error.message})`)
     }
@@ -59,15 +78,9 @@ async function addFallbackElement(slide, element, bounds, warnings, slideNumber,
       warnings.push(`Slide ${slideNumber}: rasterized ${element.type} fallback`)
       return
     }
-
-    if (strictRaster && !allowFallback) {
-      throw new Error(`Rasterization required for ${element.type} but capture failed`)
-    }
-  }
-
-  const mediaAllowed = element.type === 'audio' || element.type === 'video'
-  if (!mediaAllowed && strictRaster && !allowFallback) {
-    throw new Error(`Strict export disallows placeholder fallback for ${element.type}`)
+    // Per-element isolation (strict or not): a single element that cannot be
+    // rasterized degrades to a gray placeholder so the deck still exports —
+    // it must never throw and abort the whole presentation.
   }
 
   addPlaceholder(slide, bounds, element)

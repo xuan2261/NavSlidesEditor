@@ -49,6 +49,12 @@ function addImageElement(slide, element, bounds, resolution, layout) {
     rotate: element.rotation || 0,
   }
 
+  // Mirror client export: pptxgenjs `transparency` is 0-100 (higher = more
+  // transparent), so opacity 0.5 → transparency 50. Omit when fully opaque.
+  if (element.opacity != null && element.opacity !== 1) {
+    imageOptions.transparency = Math.round((1 - element.opacity) * 100)
+  }
+
   if (element.flipH) imageOptions.flipH = true
   if (element.flipV) imageOptions.flipV = true
   if (element.alt || element.altText) imageOptions.altText = element.alt || element.altText

@@ -23,6 +23,8 @@ async function addElementToPptxSlide({
   strictRaster = true,
   allowFallback = false,
   baseUrl = '',
+  rasterCache,
+  rasterizeElement,
 }) {
   const bounds = scaleElementBounds(element, resolution, layout)
   const rasterData = element && element.id ? rasterOverrides[element.id] : null
@@ -31,6 +33,15 @@ async function addElementToPptxSlide({
     slide.addImage({ data: rasterData, ...bounds, rotate: element.rotation || 0 })
     warnings.push(`Slide ${slideNumber}: rasterized ${element.type} with server renderer`)
     return
+  }
+
+  const fallbackOptions = {
+    strictRaster,
+    allowFallback,
+    baseUrl,
+    resolution,
+    rasterCache,
+    ...(rasterizeElement ? { rasterizeElement } : {}),
   }
 
   try {
@@ -60,22 +71,12 @@ async function addElementToPptxSlide({
         addChartElement(slide, element, bounds, pptx)
         break
       default:
-        await addFallbackElement(slide, element, bounds, warnings, slideNumber, {
-          strictRaster,
-          allowFallback,
-          baseUrl,
-          resolution,
-        })
+        await addFallbackElement(slide, element, bounds, warnings, slideNumber, fallbackOptions)
         break
     }
   } catch (error) {
     warnings.push(`Slide ${slideNumber}: ${element.type} export failed (${error.message})`)
-    await addFallbackElement(slide, element, bounds, warnings, slideNumber, {
-      strictRaster,
-      allowFallback,
-      baseUrl,
-      resolution,
-    })
+    await addFallbackElement(slide, element, bounds, warnings, slideNumber, fallbackOptions)
   }
 }
 

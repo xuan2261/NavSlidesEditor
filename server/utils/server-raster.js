@@ -5,7 +5,17 @@ const { generatePrintHTML, normalizePresentationNotes, isNativeChartType } = req
 const DEFAULT_WIDTH = 960
 const DEFAULT_HEIGHT = 540
 const SCREENSHOT_SCALE = Number(process.env.NAVSLIDES_PPTX_SCALE || 2)
-const DEFAULT_RASTER_TYPES = new Set(['html', 'latex', 'icon', 'drawing', 'markdown', 'qrcode', 'svg'])
+const DEFAULT_RASTER_TYPES = new Set([
+  'html',
+  'latex',
+  'icon',
+  'drawing',
+  'markdown',
+  'qrcode',
+  'svg',
+  'timeline',
+  'game',
+])
 
 const CDN_TO_VENDOR = [
   [/cdn\.jsdelivr\.net\/npm\/d3(?:@[^/"']*)?/i, '/vendor/d3/dist/d3.min.js'],
@@ -16,8 +26,6 @@ const CDN_TO_VENDOR = [
   [/tikzjax\.com\/v1\/fonts\.css/i, '/vendor/tikzjax/fonts.css'],
   [/tikzjax\.com\/v1\/tikzjax\.js/i, '/vendor/tikzjax/tikzjax.js'],
 ]
-
-const rasterCache = new Map()
 
 function getResolution(presentation) {
   return {
@@ -143,37 +151,24 @@ async function installVendorRoute(page, baseUrl) {
   })
 }
 
-async function getServerRasters(sourcePresentation, { baseUrl = '', rasterTypes: customRasterTypes } = {}) {
-  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
-  const presentation = normalizePresentationNotes(sourcePresentation || {})
-  const rasterTypes = customRasterTypes ? new Set(customRasterTypes) : DEFAULT_RASTER_TYPES
-  const targets = collectRasterTargets(presentation, rasterTypes)
-  if (!targets.length) return {}
-
-  const cacheKey = getCacheKey(presentation, normalizedBaseUrl, rasterTypes)
-  if (rasterCache.has(cacheKey)) return rasterCache.get(cacheKey)
-
-  const resolution = getResolution(presentation)
-  const scale = Math.min(4, Math.max(1, SCREENSHOT_SCALE || 2))
-  const html = generatePrintHTML(presentation, {
-    autoPrint: false,
-    includePrintBar: false,
-    fragmentMode: 'final',
-    baseUrl: normalizedBaseUrl,
-    exportElementIds: true,
-    exportReadyDelayMs: 300,
-  })
-
+async function captureRasters(html, targets, { resolution, scale, baseUrl }) {
   let browser
   const rasters = {}
   try {
-    browser = await chromium.launch(getLaunchOptions())
+    try {
+      browser = await chromium.launch(getLaunchOptions())
+    } catch (error) {
+      throw new Error(
+        `Failed to launch Chromium for PPTX rasterization. Run "npx playwright install chromium" ` +
+          `(or set NAVSLIDES_CHROMIUM_PATH to a Chromium binary). Original error: ${error.message}`
+      )
+    }
     const context = await browser.newContext({
       viewport: { width: resolution.width, height: resolution.height },
       deviceScaleFactor: scale,
     })
     const page = await context.newPage()
-    await installVendorRoute(page, normalizedBaseUrl)
+    await installVendorRoute(page, baseUrl)
     await page.setContent(html, { waitUntil: 'load', timeout: 30000 })
     await page.waitForFunction('window.__navslidesExportReady === true', null, { timeout: 15000 })
     await page.evaluate('document.fonts && document.fonts.ready ? document.fonts.ready : true')
@@ -199,13 +194,42 @@ async function getServerRasters(sourcePresentation, { baseUrl = '', rasterTypes:
   } finally {
     if (browser) await browser.close()
   }
-
-  rasterCache.set(cacheKey, rasters)
   return rasters
 }
 
-function clearRasterCache() {
-  rasterCache.clear()
+// `cache` is an optional per-export Map for memoization. It defaults to a fresh
+// Map per call so concurrent exports never share or wipe each other's entries
+// (the previous global cache + end-of-export clear caused a cross-export race).
+// `capture` is injectable so unit tests can exercise routing without launching
+// a real browser.
+async function getServerRasters(
+  sourcePresentation,
+  { baseUrl = '', rasterTypes: customRasterTypes, cache = new Map(), capture = captureRasters } = {}
+) {
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
+  const presentation = normalizePresentationNotes(sourcePresentation || {})
+  const rasterTypes = customRasterTypes ? new Set(customRasterTypes) : DEFAULT_RASTER_TYPES
+  const targets = collectRasterTargets(presentation, rasterTypes)
+  if (!targets.length) return {}
+
+  const cacheKey = getCacheKey(presentation, normalizedBaseUrl, rasterTypes)
+  if (cache.has(cacheKey)) return cache.get(cacheKey)
+
+  const resolution = getResolution(presentation)
+  const scale = Math.min(4, Math.max(1, SCREENSHOT_SCALE || 2))
+  const html = generatePrintHTML(presentation, {
+    autoPrint: false,
+    includePrintBar: false,
+    fragmentMode: 'final',
+    baseUrl: normalizedBaseUrl,
+    exportElementIds: true,
+    exportReadyDelayMs: 300,
+  })
+
+  const rasters = await capture(html, targets, { resolution, scale, baseUrl: normalizedBaseUrl })
+
+  cache.set(cacheKey, rasters)
+  return rasters
 }
 
 module.exports = {
@@ -214,6 +238,5 @@ module.exports = {
     installVendorRoute,
     resolveVendorPath,
   },
-  clearRasterCache,
   getServerRasters,
 }

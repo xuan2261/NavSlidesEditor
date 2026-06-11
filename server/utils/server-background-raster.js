@@ -135,7 +135,7 @@ async function rasterizeBackground(background, resolution, { baseUrl = '' } = {}
   }
 }
 
-async function rasterizeStaticVisualElement(element, { baseUrl = '', resolution } = {}) {
+async function rasterizeStaticVisualElement(element, { baseUrl = '', resolution, cache } = {}) {
   if (!element || !element.id || !element.type) return null
 
   const workingResolution = getResolution(resolution)
@@ -154,6 +154,7 @@ async function rasterizeStaticVisualElement(element, { baseUrl = '', resolution 
   const rasters = await getServerRasters(presentation, {
     baseUrl,
     rasterTypes: [element.type],
+    ...(cache ? { cache } : {}),
   })
 
   return rasters[element.id] || null

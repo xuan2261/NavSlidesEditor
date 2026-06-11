@@ -8,7 +8,7 @@ const {
 const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
 const { applySlideBackground } = require('./server-background')
 const { addElementToPptxSlide } = require('./server-renderers')
-const { clearRasterCache, getServerRasters } = require('./server-raster')
+const { getServerRasters } = require('./server-raster')
 
 function getSafeTitle(title) {
   return String(title || 'Presentation').trim() || 'Presentation'
@@ -40,7 +40,10 @@ async function exportToFile(sourcePresentation, filePath, options = {}) {
   pptx.layout = 'NAVSLIDES'
   pptx.title = getSafeTitle(presentation && presentation.title)
 
-  const rasterOverrides = await getServerRasters(presentation, { baseUrl })
+  // Per-export raster cache: isolates this invocation so concurrent exports
+  // can't wipe or share each other's memoized rasters.
+  const rasterCache = new Map()
+  const rasterOverrides = await getServerRasters(presentation, { baseUrl, cache: rasterCache })
 
   for (const [index, sourceSlide] of (presentation.slides || []).entries()) {
     const slideNumber = index + 1
@@ -68,6 +71,7 @@ async function exportToFile(sourcePresentation, filePath, options = {}) {
         strictRaster,
         allowFallback,
         baseUrl,
+        rasterCache,
       })
     }
 
@@ -76,7 +80,6 @@ async function exportToFile(sourcePresentation, filePath, options = {}) {
   }
 
   await pptx.writeFile({ fileName: filePath })
-  clearRasterCache()
 
   return { warnings }
 }

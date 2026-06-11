@@ -32,6 +32,33 @@ async function fetchAsDataUri(url) {
   }
 }
 
+/**
+ * Fetch an external (http/https) resource as a base64 data URI, guarded by a
+ * timeout. On any failure (CORS, network, timeout) returns null so the caller
+ * leaves the original URL in place — external inlining is best-effort and must
+ * never fail the export. Cross-origin assets without permissive CORS headers
+ * cannot be inlined and will stay as remote references.
+ */
+async function fetchExternalAsDataUri(url, timeoutMs = 8000) {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null
+  try {
+    const resp = await fetch(url, controller ? { signal: controller.signal } : undefined)
+    if (!resp.ok) return null
+    const blob = await resp.blob()
+    return await new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result)
+      reader.onerror = () => resolve(null)
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return null
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
+}
+
 // Cache fetched resources to avoid duplicate requests for same URL
 const fetchCache = new Map()
 async function cachedFetchText(url) {
@@ -459,6 +486,28 @@ ${iframeDataParts.join(',\n')}
       // Replace all occurrences of this image path with the data URI
       const escaped = imgPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       result = result.replace(new RegExp(escaped, 'g'), dataUri)
+    }
+  }
+
+    // ── 6b. Inline external/CDN images (best-effort, timeout-guarded) ─────────
+  // Make the offline HTML self-contained for remote images too. Each fetch is
+  // bounded by a timeout; on failure (CORS, network, timeout) we leave the
+  // original URL untouched and warn — external inlining never fails the export.
+  // Cross-origin assets that lack permissive CORS headers can't be inlined.
+  const externalImgMatches = [
+    ...new Set(
+      (result.match(/(?:src|data-background-image)=["'](https?:\/\/[^"']+)["']/g) || [])
+        .map((m) => m.match(/["'](https?:\/\/[^"']+)["']/)?.[1])
+        .filter(Boolean)
+    ),
+  ]
+  for (const imgUrl of externalImgMatches) {
+    const dataUri = await fetchExternalAsDataUri(imgUrl)
+    if (dataUri) {
+      const escaped = imgUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      result = result.replace(new RegExp(escaped, 'g'), dataUri)
+    } else if (typeof console !== 'undefined') {
+      console.warn(`Offline export: kept remote image (could not inline): ${imgUrl}`)
     }
   }
 
