@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { EditorPage } from './pages/editor-page.js'
-import { apiCreatePresentation, apiDeletePresentation, apiUpdatePresentation } from './fixtures/test-fixtures.js'
+import { apiCreatePresentation, apiDeletePresentation, apiUpdatePresentation, apiGetPresentation } from './fixtures/test-fixtures.js'
+import { seedElements, selectElement } from './pages/canvas-actions-helper.js'
 
 test.describe('Undo / Redo', () => {
   let editorPage
@@ -118,5 +119,29 @@ test.describe('Undo / Redo', () => {
     }
 
     await expect.poll(async () => editorPage.getElementCount(), { timeout: 10000 }).toBe(initialCount + 10)
+  })
+
+  test('undo restores a reverted property edit (position)', async ({ page, request }) => {
+    await seedElements(request, presId, [
+      { id: 'el-pos', type: 'shape', shape: 'rect', x: 100, y: 100, width: 120, height: 80, zIndex: 1, fill: '#6366f1' },
+    ])
+    await editorPage.gotoPresentation(presId)
+
+    await selectElement(page, 'el-pos')
+    const xInput = page.getByTestId('prop-x')
+    await xInput.fill('400')
+    await xInput.blur()
+    await editorPage.waitForAutoSave()
+
+    // Undo must revert x back toward 100 (the edit is reversible).
+    await editorPage.deselectAll()
+    await editorPage.undo()
+
+    await expect
+      .poll(async () => {
+        const saved = await apiGetPresentation(request, presId)
+        return saved.slides?.[0]?.elements?.[0]?.x
+      }, { timeout: 10000 })
+      .toBe(100)
   })
 })
