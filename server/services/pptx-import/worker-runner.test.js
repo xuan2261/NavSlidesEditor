@@ -21,7 +21,7 @@ describe('pptx parser worker runner', () => {
     expect(isProgressMessage({ type: 'ready' })).toBe(false)
   })
 
-  it('removes Node watch flags from parser worker exec args', () => {
+  it('removes Node watch flags from parser worker exec args and caps heap', () => {
     expect(
       buildParserExecArgv([
         '--watch',
@@ -31,7 +31,7 @@ describe('pptx parser worker runner', () => {
         '--watch-preserve-output',
         '--trace-warnings',
       ])
-    ).toEqual(['--trace-warnings'])
+    ).toEqual(['--trace-warnings', '--max-old-space-size=1024'])
   })
 
   it('builds module paths and Electron Node mode for packaged workers', () => {
@@ -64,7 +64,7 @@ describe('pptx parser worker runner', () => {
         execArgv: ['--watch', '--watch-path', 'server', '--watch-preserve-output'],
       })
       expect(result.ok).toBe(true)
-      expect(result.execArgv).toEqual([])
+      expect(result.execArgv).toEqual(['--max-old-space-size=1024'])
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
     }

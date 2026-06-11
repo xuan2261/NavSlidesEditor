@@ -1,6 +1,6 @@
 const { fork } = require('child_process')
 const path = require('path')
-const { FAILURE_TYPES, PARSER_KILL_GRACE_MS, PARSER_TIMEOUT_MS } = require('./constants')
+const { FAILURE_TYPES, PARSER_KILL_GRACE_MS, PARSER_MAX_OLD_SPACE_MB, PARSER_TIMEOUT_MS } = require('./constants')
 const { sanitizeDiagnostic } = require('./diagnostics')
 const {
   getWorkerAckTimeoutMs,
@@ -42,8 +42,15 @@ function buildParserExecArgv(execArgv = process.execArgv) {
       continue
     }
     if (arg === '--watch' || arg.startsWith('--watch-')) continue
+    // Drop any inherited heap cap so we can set our own deterministic ceiling.
+    if (arg.startsWith('--max-old-space-size')) {
+      if (arg === '--max-old-space-size') index += 1
+      continue
+    }
     filtered.push(arg)
   }
+  // Cap parser heap so a parser-side OOM kills the worker, not the host process.
+  filtered.push(`--max-old-space-size=${PARSER_MAX_OLD_SPACE_MB}`)
   return filtered
 }
 

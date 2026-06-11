@@ -1,5 +1,14 @@
 import { isSafeHref } from './url-safety'
 
+function escapeHtmlAttr(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
 /**
  * Convert a Markdown document into an array of slide objects.
  * Splits by `---` (horizontal rule) or `## ` headings.
@@ -112,7 +121,10 @@ function simpleMarkdownToHtml(md, warnings = []) {
       warnings.push(`Blocked unsafe markdown link: ${href}`)
       return `<span style="color:#94a3b8;">${text}</span>`
     }
-    return `<a href="${href}" style="color:#818cf8;text-decoration:underline;">${text}</a>`
+    // Belt-and-suspenders: escape attribute-significant characters before
+    // interpolating into href="..." even though isSafeHref already rejects them.
+    const safeHref = escapeHtmlAttr(href)
+    return `<a href="${safeHref}" style="color:#818cf8;text-decoration:underline;">${text}</a>`
   })
 
   // Unordered lists

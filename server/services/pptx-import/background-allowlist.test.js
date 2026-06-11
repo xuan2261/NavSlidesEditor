@@ -1,0 +1,69 @@
+import { describe, expect, it } from 'vitest'
+import presentationMapper from './mapper/map-presentation.js'
+import shared from 'revealjs-shared'
+
+const { mapPptxOutput } = presentationMapper
+const { getBackgroundAttrs } = shared
+
+function runWithBackgroundFill(fill) {
+  return mapPptxOutput({
+    output: { size: { width: 960, height: 540 }, slides: [{ fill, elements: [] }] },
+    zip: { files: {} },
+    originalName: 'bg.pptx',
+    uploadsDir: '/tmp',
+  })
+}
+
+describe('I-R6.1 — slide background src must pass the media gate for all schemes', () => {
+  it('blocks a background image on a non-allowlisted http host', async () => {
+    const result = await runWithBackgroundFill({
+      type: 'image',
+      value: { src: 'https://evil.example.com/bg.png' },
+    })
+    const bg = result.presentation.slides[0].background
+    expect(bg.src || bg.image || '').not.toContain('evil.example.com')
+  })
+
+  it('blocks a data:text/html background', async () => {
+    const result = await runWithBackgroundFill({
+      type: 'image',
+      value: { src: 'data:text/html,<script>alert(1)</script>' },
+    })
+    const bg = result.presentation.slides[0].background
+    expect(bg.src || bg.image || '').not.toContain('text/html')
+  })
+
+  it('blocks a protocol-relative //evil.tld background', async () => {
+    const result = await runWithBackgroundFill({
+      type: 'image',
+      value: { src: '//evil.tld/bg.png' },
+    })
+    const bg = result.presentation.slides[0].background
+    expect(bg.src || bg.image || '').not.toContain('evil.tld')
+  })
+
+  it('allows a data:image background within reason', async () => {
+    const pixel =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/I2BAAAAAElFTkSuQmCC'
+    const result = await runWithBackgroundFill({ type: 'image', value: { src: pixel } })
+    const bg = result.presentation.slides[0].background
+    expect(bg.src || bg.image || '').toContain('data:image/png')
+  })
+
+  it('allows an allowlisted localhost background host', async () => {
+    const result = await runWithBackgroundFill({
+      type: 'image',
+      value: { src: 'http://localhost/bg.png' },
+    })
+    const bg = result.presentation.slides[0].background
+    expect(bg.src || bg.image || '').toContain('localhost')
+  })
+})
+
+describe('I-R6.1 — emitted background URL is attribute-escaped', () => {
+  it('escapes a double-quote in the background image src so it cannot break out of the attribute', () => {
+    const attrs = getBackgroundAttrs({ type: 'image', image: '/x" onload="alert(1)' })
+    expect(attrs).not.toContain('" onload="')
+    expect(attrs).toContain('&quot;')
+  })
+})

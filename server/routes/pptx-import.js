@@ -69,6 +69,13 @@ function createPptxImportRouter({ importer = importPptxFile, jobManager = defaul
     next()
   })
 
+  // Job status/result routes are not bound to an in-app identity: this service
+  // runs behind a trusted reverse proxy that provides any required auth (there
+  // is no app-level user model). Job ids are unguessable UUIDv4 and only one
+  // import runs at a time (MAX_CONCURRENT_RUNNING=1), so the practical IDOR
+  // surface is minimal. If this is ever exposed to mutually-untrusted tenants,
+  // bind each job to a per-job secret returned at creation and require it here.
+
   function reserveImportJob(req, res, next) {
     try {
       const jobId = jobManager.createJob()
@@ -92,12 +99,19 @@ function createPptxImportRouter({ importer = importPptxFile, jobManager = defaul
 
     try {
       const jobId = req.pptxJobId
+      // Fire-and-forget: runImport owns its own try/catch/finally (marks the
+      // job failed and unlinks the temp file). The trailing catch guards
+      // against an unexpected synchronous throw escaping as an unhandled
+      // rejection before runImport's internal try is entered.
       runImport({
         jobId,
         filePath: req.file.path,
         originalName: req.file.originalname,
         importer,
         jobManager,
+      }).catch((err) => {
+        jobManager.failJob(jobId, sanitizeDiagnostic(err))
+        fs.unlink(req.file.path).catch(() => {})
       })
       res.status(202).json({ jobId })
     } catch (err) {

@@ -8,7 +8,7 @@ const { baseElement, extractShadow, placeholder } = require('./utils-base')
 const { mapShape } = require('./map-shape')
 const { mapImage } = require('./map-image')
 const { mapTable } = require('./map-table')
-const { mapAudio, mapMath, mapVideo } = require('./map-media')
+const { mapAudio, mapMath, mapVideo, gateBackgroundImageSrc } = require('./map-media')
 const { flattenGroupElement } = require('./map-group')
 const { flattenDiagramElement } = require('./map-diagram')
 const { fitBoxWithinBounds, normalizeSourceSize } = require('../geometry')
@@ -120,10 +120,12 @@ function pushOrderedResult(allResults, result, stats, effectiveOrder, childOrder
   allResults.push({ result, effectiveOrder, childOrder })
 }
 
-function mapSlideBackground(slide) {
+function mapSlideBackground(slide, context) {
   if (slide.fill?.type === 'gradient') return gradientBackground(slide.fill)
   if (slide.fill?.type === 'image') {
-    const image = slide.fill.value?.base64 || slide.fill.value?.src || ''
+    const rawImage = slide.fill.value?.base64 || slide.fill.value?.src || ''
+    const image = gateBackgroundImageSrc(rawImage, context) || ''
+    if (!image) return { type: 'color', color: colorValue(slide.fill, '#ffffff') }
     return { type: 'image', src: image, image }
   }
   return { type: 'color', color: colorValue(slide.fill, '#ffffff') }
@@ -160,7 +162,7 @@ async function mapPptxOutput({ output, zip, originalName, uploadsDir, onProgress
     signal?.throwIfAborted?.()
     slides.push({
       id: uuidv4(),
-      background: mapSlideBackground(slide),
+      background: mapSlideBackground(slide, { slideIndex, warnings }),
       elements,
       notes: slide.note ? sanitizeHtml(slide.note) : '',
       ...mapSlideTransition(slide),

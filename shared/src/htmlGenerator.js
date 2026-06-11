@@ -401,7 +401,7 @@ function getBackgroundAttrs(bg) {
   if (bg.type === 'color' && bg.color) return ` data-background-color="${bg.color}"`
   const imageSrc = bg.type === 'image' ? bg.image || bg.src : ''
   if (imageSrc)
-    return ` data-background-image="${absoluteSrc(imageSrc)}" data-background-size="${bg.size || 'cover'}" data-background-position="${bg.position || 'center'}"`
+    return ` data-background-image="${escapeHtml(absoluteSrc(imageSrc))}" data-background-size="${escapeHtml(bg.size || 'cover')}" data-background-position="${escapeHtml(bg.position || 'center')}"`
   const gradient = formatGradientCss(bg)
   if (gradient) return ` data-background-gradient="${gradient}"`
   return ''

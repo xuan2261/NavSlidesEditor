@@ -20,6 +20,48 @@ function getUncompressedSize(entry) {
   return entry?._data?.uncompressedSize || entry?.uncompressedSize || 0
 }
 
+// Stream-decompress one entry through a byte counter, aborting as soon as the
+// per-entry or cumulative cap is breached. Never trusts the archive-declared
+// uncompressed size — that field is attacker-controlled.
+async function measureEntryInflatedBytes(entry, { perEntryCap, remainingBudget, signal }) {
+  if (entry.dir) return 0
+  signal?.throwIfAborted?.()
+  return new Promise((resolve, reject) => {
+    let count = 0
+    let settled = false
+    const stream = entry.nodeStream('nodebuffer')
+    const onAbort = () => {
+      if (settled) return
+      settled = true
+      stream.destroy?.()
+      reject(new PptxImportError('PPTX import cancelled', { status: 400 }))
+    }
+    signal?.addEventListener?.('abort', onAbort, { once: true })
+    const finish = (err, value) => {
+      if (settled) return
+      settled = true
+      signal?.removeEventListener?.('abort', onAbort)
+      if (err) reject(err)
+      else resolve(value)
+    }
+    stream.on('data', (chunk) => {
+      count += chunk.length
+      if (count > perEntryCap || count > remainingBudget) {
+        stream.destroy?.()
+        finish(new PptxImportError('PPTX package exceeds decompression budget', { status: 413 }))
+      }
+    })
+    stream.on('end', () => finish(null, count))
+    stream.on('error', (err) =>
+      finish(new PptxImportError('Uploaded file is not a readable ZIP package', {
+        status: 400,
+        type: FAILURE_TYPES.parseFailed,
+        cause: err,
+      }))
+    )
+  })
+}
+
 async function validatePptxPackage(filePath, originalName = filePath, limits = {}) {
   const maxFileBytes = limits.maxFileBytes || MAX_FILE_BYTES
   const maxZipEntries = limits.maxZipEntries || MAX_ZIP_ENTRIES
@@ -64,16 +106,34 @@ async function validatePptxPackage(filePath, originalName = filePath, limits = {
     throw new PptxImportError('PPTX package has too many ZIP entries', { status: 413 })
   }
 
-  const decompressedBytes = entries.reduce((sum, entry) => sum + getUncompressedSize(entry), 0)
-  if (decompressedBytes > maxDecompressedBytes) {
+  // Cheap fast-reject on the archive-declared sizes (attacker can lie, so this
+  // is only an optimization — the authoritative check is the measured one below).
+  const declaredBytes = entries.reduce((sum, entry) => sum + getUncompressedSize(entry), 0)
+  if (declaredBytes > maxDecompressedBytes) {
     throw new PptxImportError('PPTX package exceeds decompression budget', { status: 413 })
+  }
+
+  // Authoritative check: actually inflate each entry through a byte counter and
+  // abort the moment the per-entry or cumulative cap is breached.
+  let measuredBytes = 0
+  for (const entry of entries) {
+    if (entry.dir) continue
+    signal?.throwIfAborted?.()
+    measuredBytes += await measureEntryInflatedBytes(entry, {
+      perEntryCap: maxDecompressedBytes,
+      remainingBudget: maxDecompressedBytes - measuredBytes,
+      signal,
+    })
+    if (measuredBytes > maxDecompressedBytes) {
+      throw new PptxImportError('PPTX package exceeds decompression budget', { status: 413 })
+    }
   }
 
   if (!zip.file('[Content_Types].xml') || !zip.file('ppt/presentation.xml')) {
     throw new PptxImportError('ZIP package is missing required PPTX entries', { status: 400 })
   }
 
-  return { zip, entryCount: entries.length, decompressedBytes, fileSize: stat.size }
+  return { zip, entryCount: entries.length, decompressedBytes: measuredBytes, fileSize: stat.size }
 }
 
 module.exports = {
