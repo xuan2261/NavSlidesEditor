@@ -26,7 +26,7 @@ function ShapeControls({ element, onUpdateElement }) {
             <input
               type="color"
               className="w-7 h-7 rounded cursor-pointer border border-border"
-              value={element.fill || '#3b82f6'}
+              value={element.fill || '#6366f1'}
               onChange={(e) => onUpdateElement?.({ fill: e.target.value })}
               aria-label="Fill color"
             />
@@ -234,8 +234,20 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
     onUpdateElement?.({ [key]: num })
   }
 
-  const mixed = computeMixedValues(elements || [], selectedElementIds || [], ['opacity'])
+  const mixed = computeMixedValues(elements || [], selectedElementIds || [], [
+    'x',
+    'y',
+    'width',
+    'height',
+    'rotation',
+    'opacity',
+  ])
   const opacityMixed = mixed.opacity?.isMixed
+  // Blank a geometry field + show its placeholder when the selection diverges on
+  // that key (parity with the Properties panel). Editing still writes — the apply
+  // path fans the value to every selected element.
+  const numProps = (key, fallback) =>
+    mixed[key]?.isMixed ? { value: '', placeholder: '—' } : { value: fallback }
 
   return (
     <RibbonTabContentRow>
@@ -247,7 +259,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
             <span className="text-[10px] text-text-muted w-3">X</span>
             <input type="number"
               className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-              value={Math.round(selectedElement.x || 0)}
+              {...numProps('x', Math.round(selectedElement.x || 0))}
               onChange={(e) => updateNum('x', e.target.value)}
               aria-label="X position" />
           </label>
@@ -255,7 +267,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
             <span className="text-[10px] text-text-muted w-3">Y</span>
             <input type="number"
               className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-              value={Math.round(selectedElement.y || 0)}
+              {...numProps('y', Math.round(selectedElement.y || 0))}
               onChange={(e) => updateNum('y', e.target.value)}
               aria-label="Y position" />
           </label>
@@ -268,7 +280,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
             <span className="text-[10px] text-text-muted w-3">W</span>
             <input type="number"
               className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-              value={Math.round(selectedElement.width || 0)}
+              {...numProps('width', Math.round(selectedElement.width || 0))}
               onChange={(e) => updateNum('width', e.target.value, 1)}
               aria-label="Width" />
           </label>
@@ -276,7 +288,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
             <span className="text-[10px] text-text-muted w-3">H</span>
             <input type="number"
               className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-              value={Math.round(selectedElement.height || 0)}
+              {...numProps('height', Math.round(selectedElement.height || 0))}
               onChange={(e) => updateNum('height', e.target.value, 1)}
               aria-label="Height" />
           </label>
@@ -287,7 +299,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
         <div className="flex items-center gap-0.5 h-7">
           <input type="number"
             className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-            value={Math.round(selectedElement.rotation || 0)}
+            {...numProps('rotation', Math.round(selectedElement.rotation || 0))}
             onChange={(e) => updateNum('rotation', e.target.value)}
             aria-label="Rotation degrees" />
           <Button variant="icon" className="h-7 w-7"

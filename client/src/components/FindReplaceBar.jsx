@@ -31,21 +31,27 @@ export default function FindReplaceBar({
     const nextMatches = []
     if (!searchTerm || !presentation) return nextMatches
     const term = matchCase ? searchTerm : searchTerm.toLowerCase()
+    const collect = (el, si, childIndex) => {
+      let text = ''
+      if (el.type === 'text') text = stripHtml(el.content)
+      else if (el.type === 'code') text = el.content || ''
+      else if (el.type === 'shape' && el.text) text = el.text
+      else if (el.type === 'markdown') text = el.content || ''
+      else if (el.type === 'latex') text = el.content || ''
+      else if (el.type === 'html') text = stripHtml(el.content || '')
+      const compare = matchCase ? text : text.toLowerCase()
+      let pos = 0
+      while ((pos = compare.indexOf(term, pos)) !== -1) {
+        nextMatches.push({ slideIndex: si, childIndex, elementId: el.id, elementType: el.type, pos })
+        pos += term.length
+      }
+    }
     presentation.slides.forEach((slide, si) => {
-      ;(slide.elements || []).forEach((el) => {
-        let text = ''
-        if (el.type === 'text') text = stripHtml(el.content)
-        else if (el.type === 'code') text = el.content || ''
-        else if (el.type === 'shape' && el.text) text = el.text
-        else if (el.type === 'markdown') text = el.content || ''
-        else if (el.type === 'latex') text = el.content || ''
-        else if (el.type === 'html') text = stripHtml(el.content || '')
-        const compare = matchCase ? text : text.toLowerCase()
-        let pos = 0
-        while ((pos = compare.indexOf(term, pos)) !== -1) {
-          nextMatches.push({ slideIndex: si, elementId: el.id, elementType: el.type, pos })
-          pos += term.length
-        }
+      ;(slide.elements || []).forEach((el) => collect(el, si, undefined))
+      // Vertical child slides hold their own elements — search them too so Find
+      // is not blind to text living on a vertical stack.
+      ;(slide.children || []).forEach((child, ci) => {
+        ;(child.elements || []).forEach((el) => collect(el, si, ci))
       })
     })
     return nextMatches
@@ -56,7 +62,7 @@ export default function FindReplaceBar({
       if (matches.length === 0) return
       const wrapped = ((idx % matches.length) + matches.length) % matches.length
       setCurrentMatchIdx(wrapped)
-      onNavigateToSlide(matches[wrapped].slideIndex)
+      onNavigateToSlide(matches[wrapped].slideIndex, matches[wrapped].childIndex)
     },
     [matches, onNavigateToSlide]
   )
@@ -69,45 +75,46 @@ export default function FindReplaceBar({
     const match = matches[currentMatchIdx]
     if (!match) return
     const singleMatchRegex = createSearchRegex(searchTerm, matchCase, false)
+    const replaceOne = (el) => {
+      if (el.id !== match.elementId) return el
+      if (el.type === 'text') {
+        return {
+          ...el,
+          content: replaceInHtml(el.content, searchTerm, replaceTerm, matchCase, false),
+        }
+      }
+      if (el.type === 'code') {
+        return { ...el, content: (el.content || '').replace(singleMatchRegex, replaceTerm) }
+      }
+      if (el.type === 'markdown' || el.type === 'latex') {
+        return { ...el, content: (el.content || '').replace(singleMatchRegex, replaceTerm) }
+      }
+      if (el.type === 'html') {
+        return {
+          ...el,
+          content: replaceInHtml(el.content || '', searchTerm, replaceTerm, matchCase, false),
+        }
+      }
+      if (el.type === 'shape') {
+        return { ...el, text: (el.text || '').replace(singleMatchRegex, replaceTerm) }
+      }
+      return el
+    }
     const newSlides = presentation.slides.map((slide, si) => {
       if (si !== match.slideIndex) return slide
-      return {
-        ...slide,
-        elements: (slide.elements || []).map((el) => {
-          if (el.id !== match.elementId) return el
-          if (el.type === 'text') {
-            return {
-              ...el,
-              content: replaceInHtml(el.content, searchTerm, replaceTerm, matchCase, false),
-            }
-          }
-          if (el.type === 'code') {
-            return {
-              ...el,
-              content: (el.content || '').replace(singleMatchRegex, replaceTerm),
-            }
-          }
-          if (el.type === 'markdown' || el.type === 'latex') {
-            return {
-              ...el,
-              content: (el.content || '').replace(singleMatchRegex, replaceTerm),
-            }
-          }
-          if (el.type === 'html') {
-            return {
-              ...el,
-              content: replaceInHtml(el.content || '', searchTerm, replaceTerm, matchCase, false),
-            }
-          }
-          if (el.type === 'shape') {
-            return {
-              ...el,
-              text: (el.text || '').replace(singleMatchRegex, replaceTerm),
-            }
-          }
-          return el
-        }),
+      // childIndex set → the match lives on a vertical child; rewrite there and
+      // leave the parent's own elements untouched (and vice versa).
+      if (match.childIndex != null) {
+        return {
+          ...slide,
+          children: (slide.children || []).map((child, ci) =>
+            ci === match.childIndex
+              ? { ...child, elements: (child.elements || []).map(replaceOne) }
+              : child
+          ),
+        }
       }
+      return { ...slide, elements: (slide.elements || []).map(replaceOne) }
     })
     onUpdatePresentation({ slides: newSlides })
   }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeZOrderStep, computeMultiZOrderStep } from '../utils/z-order-step'
+import { computeZOrderStep, computeMultiZOrderStep, computeMultiZOrderEdge } from '../utils/z-order-step'
 
 const zById = (els, id) => els.find((e) => e.id === id).zIndex
 const orderIds = (els) =>
@@ -97,5 +97,30 @@ describe('z-order stepping acts on every selected element', () => {
     const res = computeMultiZOrderStep(els, ['C', 'D'], 'backward')
     expect(zById(res, 'C')).toBeLessThan(zById(res, 'D'))
     expect(orderIds(res)).toEqual(['A', 'C', 'D', 'B'])
+  })
+})
+
+describe('multi-select to-front / to-back moves the whole selection as a block', () => {
+  const els = [
+    { id: 'A', zIndex: 1 },
+    { id: 'B', zIndex: 2 },
+    { id: 'C', zIndex: 3 },
+    { id: 'D', zIndex: 4 },
+  ]
+
+  it('to-front lifts every selected id above all unselected, order preserved', () => {
+    const res = computeMultiZOrderEdge(els, ['A', 'B'], 'front')
+    // unselected C,D keep their relative order at the bottom; A,B sit on top.
+    expect(orderIds(res)).toEqual(['C', 'D', 'A', 'B'])
+  })
+
+  it('to-back drops every selected id below all unselected, order preserved', () => {
+    const res = computeMultiZOrderEdge(els, ['C', 'D'], 'back')
+    expect(orderIds(res)).toEqual(['C', 'D', 'A', 'B'])
+  })
+
+  it('empty selection only renormalizes', () => {
+    const res = computeMultiZOrderEdge(els, [], 'front')
+    expect(orderIds(res)).toEqual(['A', 'B', 'C', 'D'])
   })
 })

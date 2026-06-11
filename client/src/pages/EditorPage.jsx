@@ -26,7 +26,8 @@ import { useExportActions } from '../hooks/use-export-actions'
 import { useAiActions } from '../hooks/use-ai-actions'
 import { resolveActiveSlide, mapActiveSlide } from '../utils/active-slide-mapper'
 import { buildSelectionUpdates } from '../utils/element-update-fanout'
-import { computeZOrderStep, computeMultiZOrderStep } from '../utils/z-order-step'
+import { computeMultiZOrderStep, computeMultiZOrderEdge } from '../utils/z-order-step'
+import { pushHistory } from '../utils/history-stack'
 import { reconcileSelectionAfterHistory } from '../utils/history-selection-reconciler'
 import { resolveLegacyEditorShortcut } from '../utils/legacy-editor-keydown-resolver'
 import { getSelectionIdsForActiveSlideElement } from '../utils/active-slide-selection'
@@ -270,6 +271,14 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const saveAttemptRef = useRef(0)
   const saveInFlightRef = useRef(false)
   const queuedSaveRef = useRef(null)
+  // The snapshot currently being PUT. processSaveQueue nulls queuedSaveRef the
+  // moment a save starts, so without this a teardown during an in-flight save
+  // would find nothing to flush (M6). Held until the request settles.
+  const inFlightSaveRef = useRef(null)
+  // Cleared on unmount so the async save resolution does not setState on a
+  // dead component (M7). The attemptId guard already prevents stale-status
+  // overwrites; this prevents the post-unmount React warning.
+  const isMountedRef = useRef(true)
   // True only between the load seeding historyRef and the history effect's
   // first run, so the initial snapshot is not duplicated. Dedicated to the
   // history effect; the autosave effect must not consume it.
@@ -324,7 +333,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       try {
         const saveFn = isTemplate ? api.updateTemplate : api.updatePresentation
         await saveFn(snapshot.id, normalizePresentationNotes(snapshot))
-        if (attemptId !== saveAttemptRef.current) return true
+        if (attemptId !== saveAttemptRef.current || !isMountedRef.current) return true
         clearSaveStatusResetTimer()
         setSaveStatus('saved')
         setLastSaveError('')
@@ -332,7 +341,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         saveStatusResetTimerRef.current = setTimeout(() => setSaveStatus(''), 2000)
         return true
       } catch (err) {
-        if (attemptId !== saveAttemptRef.current) return false
+        if (attemptId !== saveAttemptRef.current || !isMountedRef.current) return false
         clearSaveStatusResetTimer()
         const message =
           typeof err?.message === 'string' && err.message.trim() ? err.message.trim() : 'Save failed'
@@ -341,7 +350,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         setLastSaveError(message)
         return false
       } finally {
-        if (attemptId === saveAttemptRef.current) setSaving(false)
+        if (attemptId === saveAttemptRef.current && isMountedRef.current) setSaving(false)
       }
     },
     [clearSaveStatusResetTimer, isTemplate]
@@ -353,12 +362,14 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     const nextSave = queuedSaveRef.current
     queuedSaveRef.current = null
     saveInFlightRef.current = true
+    inFlightSaveRef.current = nextSave
 
     let ok = false
     try {
       ok = await persistPresentation(nextSave.snapshot, nextSave.attemptId)
     } finally {
       saveInFlightRef.current = false
+      inFlightSaveRef.current = null
       if (queuedSaveRef.current) {
         // A newer edit landed while this save was in flight — drain it.
         void processSaveQueue()
@@ -410,9 +421,15 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       saveTimerRef.current = null
     }
     const pending = queuedSaveRef.current
-    if (!pending?.snapshot) return
     queuedSaveRef.current = null
-    const snapshot = normalizePresentationNotes(pending.snapshot)
+    // Fall back to the in-flight snapshot: if a normal save is mid-PUT at
+    // teardown its request may still reject, and after unmount nothing retries
+    // it (M6). A best-effort keepalive resend of that snapshot gives the edit a
+    // second chance to land. Harmless on success (idempotent PUT of same id).
+    const target = pending?.snapshot ? pending : inFlightSaveRef.current
+    if (!target?.snapshot) return
+    inFlightSaveRef.current = null
+    const snapshot = normalizePresentationNotes(target.snapshot)
     flushPendingSave(snapshot, {
       isTemplate,
       sendKeepalive: (url, body) => {
@@ -611,6 +628,15 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     }
   }, [clearSaveStatusResetTimer, flushPendingSaveNow])
 
+  // Mount flag for the async save path (M7): flip false only on true unmount so
+  // late-resolving saves skip their setState calls. Empty deps → runs once.
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   // Undo history: debounce-push presentation snapshots; skip during undo itself
   useEffect(() => {
     if (!presentation) return
@@ -627,11 +653,12 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       return
     }
     const timer = setTimeout(() => {
-      // Keep 49 prior snapshots + this one = 50 (matches redo-push cap at 49).
-      historyRef.current = [
-        ...historyRef.current.slice(-49),
-        JSON.parse(JSON.stringify(presentation)),
-      ]
+      // Cap at HISTORY_CAP (50) most-recent snapshots; redo uses the same cap so
+      // a long undo run stays fully redoable.
+      historyRef.current = pushHistory(
+        historyRef.current,
+        JSON.parse(JSON.stringify(presentation))
+      )
       if (window.__E2E__) window.__NAVSLIDES_E2E_HISTORY_LENGTH = historyRef.current.length
       redoStackRef.current = []
     }, 500)
@@ -667,7 +694,10 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         }))
       )
       setSelectedElementIds((prev) => prev.filter((x) => x !== id))
-      if (editingElementId === id) setEditingElementId(null)
+      if (editingElementId === id) {
+        setEditingElementId(null)
+        editingElementIdRef.current = null
+      }
     },
     [activeSlide, editingElementId, setEditingElementId, setSelectedElementIds, mapActive]
   )
@@ -818,22 +848,6 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     getActiveSlide: () => activeSlideRef.current,
   })
 
-  const bringElementForward = useCallback(
-    (id) => {
-      const stepped = computeZOrderStep(activeSlide?.elements || [], id, 'forward')
-      updateElements(stepped.map((el) => ({ id: el.id, zIndex: el.zIndex })))
-    },
-    [activeSlide, updateElements]
-  )
-
-  const sendElementBackward = useCallback(
-    (id) => {
-      const stepped = computeZOrderStep(activeSlide?.elements || [], id, 'backward')
-      updateElements(stepped.map((el) => ({ id: el.id, zIndex: el.zIndex })))
-    },
-    [activeSlide, updateElements]
-  )
-
   // Step every selected element one neighbor over at once, keeping the
   // selection's internal stacking order intact.
   const stepSelectedZOrder = useCallback(
@@ -846,29 +860,16 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     [selectedElementIdsRef, activeSlideRef, updateElements]
   )
 
-  const moveElementToStackEdge = useCallback(
-    (id, edge) => {
-      const elements = activeSlide?.elements || []
-      if (!elements.some((el) => el.id === id)) return
-
-      const sorted = [...elements].sort((a, b) => (a.zIndex || 1) - (b.zIndex || 1))
-      const selected = sorted.find((el) => el.id === id)
-      const others = sorted.filter((el) => el.id !== id)
-      const reordered = edge === 'front' ? [...others, selected] : [selected, ...others]
-
-      updateElements(reordered.map((el, index) => ({ id: el.id, zIndex: index + 1 })))
+  // Move the whole selection to a stack edge as one block, so the ribbon/property
+  // to-front/to-back buttons match stepSelectedZOrder's whole-selection behavior.
+  const moveSelectedToStackEdge = useCallback(
+    (edge) => {
+      const ids = selectedElementIdsRef.current
+      if (!ids?.length) return
+      const reordered = computeMultiZOrderEdge(activeSlideRef.current?.elements || [], ids, edge)
+      updateElements(reordered.map((el) => ({ id: el.id, zIndex: el.zIndex })))
     },
-    [activeSlide, updateElements]
-  )
-
-  const bringElementToFront = useCallback(
-    (id) => moveElementToStackEdge(id, 'front'),
-    [moveElementToStackEdge]
-  )
-
-  const sendElementToBack = useCallback(
-    (id) => moveElementToStackEdge(id, 'back'),
-    [moveElementToStackEdge]
+    [selectedElementIdsRef, activeSlideRef, updateElements]
   )
 
   // Single chokepoint for control-driven property edits: fan one partial update
@@ -932,7 +933,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     const hist = historyRef.current
     if (hist.length < 2) return
     applyingUndoRef.current = true
-    redoStackRef.current = [...redoStackRef.current.slice(-19), hist[hist.length - 1]]
+    redoStackRef.current = pushHistory(redoStackRef.current, hist[hist.length - 1])
     const newHist = hist.slice(0, -1)
     historyRef.current = newHist
     const prevState = newHist[newHist.length - 1]
@@ -949,10 +950,10 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     const redoState = stack[stack.length - 1]
     redoStackRef.current = stack.slice(0, -1)
     if (presentation)
-      historyRef.current = [
-        ...historyRef.current.slice(-49),
-        JSON.parse(JSON.stringify(presentation)),
-      ]
+      historyRef.current = pushHistory(
+        historyRef.current,
+        JSON.parse(JSON.stringify(presentation))
+      )
     setPresentation(redoState)
     setCurrentSlideIndex((ci) => Math.min(ci, redoState.slides.length - 1))
     reconcileVerticalEdit(redoState)
@@ -1076,7 +1077,10 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     setPresentation((prev) =>
       mapActive(prev, (s) => ({ ...s, elements: [...(s.elements || []), ...toAdd] }))
     )
-  }, [activeSlide, setPresentation, mapActive])
+    // Move selection onto the new copies (matches PowerPoint/Keynote) so the
+    // next nudge/format acts on the duplicates, not the originals.
+    setSelectedElementIds(toAdd.map((el) => el.id))
+  }, [activeSlide, setPresentation, mapActive, setSelectedElementIds])
 
   // Media-library insert — routes through mapActive so media lands on the
   // active vertical child when one is being edited (Red Team #1).
@@ -1176,11 +1180,15 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         if (dx === 0 && dy === 0) return
         e.preventDefault()
         const slide = activeSlideRef.current
+        // One batched store write per nudge instead of N (one per selected id),
+        // so a large multi-selection does not fire N renders per keypress.
+        const batch = []
         ids.forEach((id) => {
           const el = slide?.elements?.find((x) => x.id === id)
           if (!el || el.locked) return
-          updateElement(id, { x: (el.x || 0) + dx, y: (el.y || 0) + dy })
+          batch.push({ id, x: (el.x || 0) + dx, y: (el.y || 0) + dy })
         })
+        if (batch.length) updateElements(batch)
         return
       }
       if (direction === 'up' || direction === 'down') {
@@ -1447,10 +1455,10 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
             onGroup={groupElements}
             onUngroup={ungroupElements}
             onAlignElements={alignElements}
-            onBringForward={() => selectedElementId && bringElementForward(selectedElementId)}
-            onSendBackward={() => selectedElementId && sendElementBackward(selectedElementId)}
-            onBringToFront={() => selectedElementId && bringElementToFront(selectedElementId)}
-            onSendToBack={() => selectedElementId && sendElementToBack(selectedElementId)}
+            onBringForward={() => stepSelectedZOrder('forward')}
+            onSendBackward={() => stepSelectedZOrder('backward')}
+            onBringToFront={() => moveSelectedToStackEdge('front')}
+            onSendToBack={() => moveSelectedToStackEdge('back')}
             onAddText={addTextElement}
             onAddImage={() => setShowImageUrlPrompt(true)}
             onAddImageUpload={async (file) => {
@@ -1571,8 +1579,8 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
                 updateSelectedElements(idOrUpdates)
               }}
               onDeleteElement={() => selectedElementId && deleteElement(selectedElementId)}
-              onBringForward={() => selectedElementId && bringElementForward(selectedElementId)}
-              onSendBackward={() => selectedElementId && sendElementBackward(selectedElementId)}
+              onBringForward={() => stepSelectedZOrder('forward')}
+              onSendBackward={() => stepSelectedZOrder('backward')}
               onEditHtml={() => selectedElementId && openHtmlEditor(selectedElementId)}
               onEditCode={() => selectedElementId && openCodeEditor(selectedElementId)}
               onEditLatex={() => selectedElementId && openLatexEditor(selectedElementId)}

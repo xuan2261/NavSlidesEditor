@@ -10,7 +10,9 @@ export const useEditorStore = create((set, get) => ({
   selectElement: (id) => set({ selectedElementIds: [id] }),
   addToSelection: (id) =>
     set((s) => ({
-      selectedElementIds: [...s.selectedElementIds, id],
+      selectedElementIds: s.selectedElementIds.includes(id)
+        ? s.selectedElementIds
+        : [...s.selectedElementIds, id],
     })),
   clearSelection: () => set({ selectedElementIds: [], editingElementId: null }),
   setEditingElementId: (id) => set({ editingElementId: id }),

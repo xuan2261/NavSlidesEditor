@@ -115,30 +115,46 @@ export function replaceInHtml(html, searchTerm, replaceTerm, matchCase, global =
   return serializeDocument(doc, html)
 }
 
+function replaceInElement(element, searchTerm, replaceTerm, matchCase, regex) {
+  if (element.type === 'text') {
+    return {
+      ...element,
+      content: replaceInHtml(element.content, searchTerm, replaceTerm, matchCase),
+    }
+  }
+  if (element.type === 'code' || element.type === 'markdown' || element.type === 'latex') {
+    return { ...element, content: (element.content || '').replace(regex, replaceTerm) }
+  }
+  if (element.type === 'html') {
+    return {
+      ...element,
+      content: replaceInHtml(element.content || '', searchTerm, replaceTerm, matchCase),
+    }
+  }
+  if (element.type === 'shape' && element.text) {
+    return { ...element, text: element.text.replace(regex, replaceTerm) }
+  }
+  return element
+}
+
 export function replaceAllInSlides(slides, searchTerm, replaceTerm, matchCase) {
   const regex = createSearchRegex(searchTerm, matchCase)
+  const mapElements = (elements) =>
+    (elements || []).map((element) =>
+      replaceInElement(element, searchTerm, replaceTerm, matchCase, regex)
+    )
   return slides.map((slide) => ({
     ...slide,
-    elements: (slide.elements || []).map((element) => {
-      if (element.type === 'text') {
-        return {
-          ...element,
-          content: replaceInHtml(element.content, searchTerm, replaceTerm, matchCase),
+    elements: mapElements(slide.elements),
+    // Vertical child slides carry their own elements — replace there too so a
+    // Replace All on a deck with vertical stacks is not silently partial.
+    ...(slide.children
+      ? {
+          children: slide.children.map((child) => ({
+            ...child,
+            elements: mapElements(child.elements),
+          })),
         }
-      }
-      if (element.type === 'code' || element.type === 'markdown' || element.type === 'latex') {
-        return { ...element, content: (element.content || '').replace(regex, replaceTerm) }
-      }
-      if (element.type === 'html') {
-        return {
-          ...element,
-          content: replaceInHtml(element.content || '', searchTerm, replaceTerm, matchCase),
-        }
-      }
-      if (element.type === 'shape' && element.text) {
-        return { ...element, text: element.text.replace(regex, replaceTerm) }
-      }
-      return element
-    }),
+      : {}),
   }))
 }

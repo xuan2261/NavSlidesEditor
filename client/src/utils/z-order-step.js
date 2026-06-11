@@ -84,3 +84,22 @@ export function computeMultiZOrderStep(elements, ids, dir) {
   }
   return next
 }
+
+/**
+ * Move every id in a multi-selection to the front or back of the stack as a
+ * contiguous block, preserving the selection's internal render order.
+ * @param {Array} elements
+ * @param {string[]} ids - selected element ids
+ * @param {'front'|'back'} edge
+ * @returns {Array} new elements (render order) with dense zIndex.
+ */
+export function computeMultiZOrderEdge(elements, ids, edge) {
+  const ordered = renderOrder(elements)
+  if (!ids || ids.length === 0) return renormalize(ordered)
+  const idSet = new Set(ids)
+  const selected = ordered.filter((el) => idSet.has(el.id))
+  if (selected.length === 0) return renormalize(ordered)
+  const others = ordered.filter((el) => !idSet.has(el.id))
+  const reordered = edge === 'front' ? [...others, ...selected] : [...selected, ...others]
+  return renormalize(reordered)
+}
