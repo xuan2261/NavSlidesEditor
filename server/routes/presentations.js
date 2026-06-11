@@ -231,18 +231,33 @@ function getLocalBaseUrl(req) {
 }
 
 // POST /api/presentations/raster-elements
+// Caps the payload so a malicious/huge deck can't exhaust memory or pin the
+// rasterizer (each slide spins up headless rendering work).
+const MAX_RASTER_SLIDES = 500
+const MAX_RASTER_ELEMENTS = 5000
+
 router.post('/raster-elements', async (req, res) => {
   try {
     const presentation = req.body?.presentation
     if (!presentation || !Array.isArray(presentation.slides)) {
       return res.status(400).json({ error: 'Invalid presentation payload' })
     }
+    if (presentation.slides.length > MAX_RASTER_SLIDES) {
+      return res.status(413).json({ error: 'Too many slides to rasterize' })
+    }
+    const elementCount = presentation.slides.reduce(
+      (sum, s) => sum + (Array.isArray(s?.elements) ? s.elements.length : 0),
+      0
+    )
+    if (elementCount > MAX_RASTER_ELEMENTS) {
+      return res.status(413).json({ error: 'Too many elements to rasterize' })
+    }
 
     const rasters = await rasterizeComplexElements(presentation, { baseUrl: getLocalBaseUrl(req) })
     res.json({ rasters })
   } catch (err) {
     console.error('PPTX element rasterization failed:', err)
-    res.status(500).json({ error: 'PPTX element rasterization failed', details: err.message })
+    res.status(500).json({ error: 'PPTX element rasterization failed' })
   }
 })
 

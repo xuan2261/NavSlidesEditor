@@ -1,13 +1,6 @@
 const dns = require('dns').promises
 const net = require('net')
 
-function parseAllowlist() {
-  return String(process.env.AI_CUSTOM_ENDPOINT_ALLOWLIST || '')
-    .split(',')
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean)
-}
-
 function isBlockedIpv4(ip) {
   const parts = ip.split('.').map((part) => Number(part))
   if (parts.length !== 4 || parts.some((part) => Number.isNaN(part))) return true
@@ -49,6 +42,46 @@ async function resolveHost(hostname) {
   return records.map((record) => record.address)
 }
 
+// Build a synchronous-callback DNS lookup that resolves ONLY to the
+// pre-validated addresses. undici's connect step calls this instead of the OS
+// resolver, so the socket connects to an address we already vetted — closing
+// the DNS-rebinding TOCTOU window between validation and fetch.
+function buildPinnedLookup(addresses) {
+  const records = addresses.map((address) => ({
+    address,
+    family: net.isIP(address) === 6 ? 6 : 4,
+  }))
+  return function pinnedLookup(_hostname, options, callback) {
+    const cb = typeof options === 'function' ? options : callback
+    const opts = typeof options === 'function' ? {} : options || {}
+    if (opts.all) return cb(null, records)
+    return cb(null, records[0].address, records[0].family)
+  }
+}
+
+// Returns an undici Agent (when available) whose connect.lookup is pinned to
+// the validated addresses. If undici is not present we return undefined; the
+// caller then must not perform the request, since we cannot guarantee the
+// connection target. We prefer the standalone `undici` package (ships with
+// Node 18+). `node:undici` is intentionally NOT a public builtin, so we don't
+// rely on it.
+function buildPinnedDispatcher(addresses) {
+  let undici
+  try {
+    undici = require('undici')
+  } catch {
+    return undefined
+  }
+  if (!undici || typeof undici.Agent !== 'function') return undefined
+  return new undici.Agent({
+    connect: { lookup: buildPinnedLookup(addresses) },
+  })
+}
+
+// Validates a user-configured AI endpoint against SSRF.
+// Returns { url, addresses, dispatcher } — NOT a bare string. The caller MUST
+// pass `dispatcher` to fetch so the connection is pinned to a validated IP and
+// cannot re-resolve DNS to an internal address.
 async function assertSafeAiEndpoint(rawUrl) {
   let parsed
   try {
@@ -62,25 +95,35 @@ async function assertSafeAiEndpoint(rawUrl) {
   }
 
   const hostname = parsed.hostname.toLowerCase()
-  const allowlist = parseAllowlist()
-  if (allowlist.includes(hostname)) return parsed.toString()
 
+  // localhost / *.localhost are reserved to loopback (RFC 6761) — block
+  // directly without a network resolve. This also avoids a hang on names that
+  // never resolve. Allowlisting cannot override a loopback-reserved name.
   if (hostname === 'localhost' || hostname.endsWith('.localhost')) {
     throw new Error('Private or local endpoints are blocked')
   }
 
+  // NOTE: the allowlist (AI_CUSTOM_ENDPOINT_ALLOWLIST) is informational only.
+  // IP validation is authoritative: an allowlisted hostname that resolves to
+  // an internal IP is still blocked (removes the old early-return bypass).
+  let addresses
   if (net.isIP(hostname)) {
-    if (isBlockedIp(hostname)) throw new Error('Private or local endpoints are blocked')
-    return parsed.toString()
+    addresses = [hostname]
+  } else {
+    addresses = await resolveHost(hostname)
   }
 
-  const addresses = await resolveHost(hostname)
   if (!addresses.length) throw new Error('Unable to resolve custom endpoint')
   if (addresses.some(isBlockedIp)) {
     throw new Error('Private or local endpoints are blocked')
   }
 
-  return parsed.toString()
+  const dispatcher = buildPinnedDispatcher(addresses)
+  if (!dispatcher) {
+    throw new Error('Unable to establish a pinned connection for the custom endpoint')
+  }
+
+  return { url: parsed.toString(), addresses, dispatcher }
 }
 
-module.exports = { assertSafeAiEndpoint, isBlockedIp }
+module.exports = { assertSafeAiEndpoint, isBlockedIp, buildPinnedLookup }

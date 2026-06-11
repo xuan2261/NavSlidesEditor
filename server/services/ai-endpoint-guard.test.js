@@ -41,15 +41,17 @@ describe('AI custom endpoint guard', () => {
     await expect(assertSafeAiEndpoint('https://model.example/v1')).rejects.toThrow(/blocked/)
   })
 
-  it('[cap:ai.endpoint-guard] allows public hosts and explicit hostname allowlist entries', async () => {
+  it('[cap:ai.endpoint-guard] allows public hosts and pins to the validated IP', async () => {
     vi.spyOn(dns, 'lookup').mockResolvedValue([{ address: '93.184.216.34', family: 4 }])
-    await expect(assertSafeAiEndpoint('https://api.example.com/v1')).resolves.toBe(
-      'https://api.example.com/v1'
-    )
+    const result = await assertSafeAiEndpoint('https://api.example.com/v1')
+    expect(result.url).toBe('https://api.example.com/v1')
+    expect(result.addresses).toEqual(['93.184.216.34'])
+    expect(result.dispatcher).toBeTruthy()
+  })
 
+  it('[cap:ai.endpoint-guard] still IP-checks allowlisted hosts (no bypass)', async () => {
     process.env.AI_CUSTOM_ENDPOINT_ALLOWLIST = 'localhost'
-    await expect(assertSafeAiEndpoint('http://localhost:11434')).resolves.toBe(
-      'http://localhost:11434/'
-    )
+    // localhost maps to loopback → blocked even though allowlisted.
+    await expect(assertSafeAiEndpoint('http://localhost:11434')).rejects.toThrow(/blocked/)
   })
 })

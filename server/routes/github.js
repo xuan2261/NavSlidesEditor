@@ -61,6 +61,11 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
     if (!presentation) return res.status(404).json({ error: 'Presentation not found' })
 
     const { token, owner, repo } = config
+    // owner/repo come from user-supplied config and are interpolated into
+    // GitHub API paths. Encode each as a single path segment so a value like
+    // "../x" or one containing slashes cannot traverse/forge the API path.
+    const ownerSeg = encodeURIComponent(owner)
+    const repoSeg = encodeURIComponent(repo)
     const gh = (endpoint, opts = {}) =>
       fetch(`https://api.github.com${endpoint}`, {
         ...opts,
@@ -83,32 +88,32 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
     const jsonContent = JSON.stringify(presentation, null, 2)
 
     // Get default branch
-    const repoInfo = await gh(`/repos/${owner}/${repo}`)
+    const repoInfo = await gh(`/repos/${ownerSeg}/${repoSeg}`)
     const branch = repoInfo.default_branch || 'main'
 
     // Check if repo has any commits
     let latestCommitSha = null
     let baseTreeSha = null
     try {
-      const refData = await gh(`/repos/${owner}/${repo}/git/ref/heads/${branch}`)
+      const refData = await gh(`/repos/${ownerSeg}/${repoSeg}/git/ref/heads/${branch}`)
       latestCommitSha = refData.object.sha
-      const commitData = await gh(`/repos/${owner}/${repo}/git/commits/${latestCommitSha}`)
+      const commitData = await gh(`/repos/${ownerSeg}/${repoSeg}/git/commits/${latestCommitSha}`)
       baseTreeSha = commitData.tree.sha
     } catch {
-      await gh(`/repos/${owner}/${repo}/contents/.gitkeep`, {
+      await gh(`/repos/${ownerSeg}/${repoSeg}/contents/.gitkeep`, {
         method: 'PUT',
         body: JSON.stringify({ message: 'Initial commit', content: '' }),
       })
-      const refData = await gh(`/repos/${owner}/${repo}/git/ref/heads/${branch}`)
+      const refData = await gh(`/repos/${ownerSeg}/${repoSeg}/git/ref/heads/${branch}`)
       latestCommitSha = refData.object.sha
-      const commitData = await gh(`/repos/${owner}/${repo}/git/commits/${latestCommitSha}`)
+      const commitData = await gh(`/repos/${ownerSeg}/${repoSeg}/git/commits/${latestCommitSha}`)
       baseTreeSha = commitData.tree.sha
     }
 
     // Discover existing folders
     const existingFolders = new Set()
     if (baseTreeSha) {
-      const rootTree = await gh(`/repos/${owner}/${repo}/git/trees/${baseTreeSha}`)
+      const rootTree = await gh(`/repos/${ownerSeg}/${repoSeg}/git/trees/${baseTreeSha}`)
       for (const item of rootTree.tree || []) {
         if (item.type === 'tree' && item.path !== '.github') existingFolders.add(item.path)
       }
@@ -119,27 +124,27 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
     const readmeLines = [`# Presentations\n`]
     for (const folder of [...existingFolders].sort()) {
       const displayName = folder.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-      const viewUrl = `https://htmlpreview.github.io/?https://github.com/${owner}/${repo}/blob/${branch}/${encodeURIComponent(folder)}/presentation.html`
+      const viewUrl = `https://htmlpreview.github.io/?https://github.com/${ownerSeg}/${repoSeg}/blob/${branch}/${encodeURIComponent(folder)}/presentation.html`
       readmeLines.push(`- [${displayName}](${viewUrl})`)
     }
     const readmeContent = readmeLines.join('\n') + '\n'
 
     // Create blobs
-    const htmlBlob = await gh(`/repos/${owner}/${repo}/git/blobs`, {
+    const htmlBlob = await gh(`/repos/${ownerSeg}/${repoSeg}/git/blobs`, {
       method: 'POST',
       body: JSON.stringify({
         content: Buffer.from(htmlContent).toString('base64'),
         encoding: 'base64',
       }),
     })
-    const jsonBlob = await gh(`/repos/${owner}/${repo}/git/blobs`, {
+    const jsonBlob = await gh(`/repos/${ownerSeg}/${repoSeg}/git/blobs`, {
       method: 'POST',
       body: JSON.stringify({
         content: Buffer.from(jsonContent).toString('base64'),
         encoding: 'base64',
       }),
     })
-    const readmeBlob = await gh(`/repos/${owner}/${repo}/git/blobs`, {
+    const readmeBlob = await gh(`/repos/${ownerSeg}/${repoSeg}/git/blobs`, {
       method: 'POST',
       body: JSON.stringify({
         content: Buffer.from(readmeContent).toString('base64'),
@@ -166,7 +171,7 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
       ],
     }
     if (baseTreeSha) treePayload.base_tree = baseTreeSha
-    const newTree = await gh(`/repos/${owner}/${repo}/git/trees`, {
+    const newTree = await gh(`/repos/${ownerSeg}/${repoSeg}/git/trees`, {
       method: 'POST',
       body: JSON.stringify(treePayload),
     })
@@ -185,7 +190,7 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
     const defaultMessage = `${presentation.title || 'Untitled'} [${dateStr} ${timeStr}]`
     const commitMessage = req.body && req.body.message ? req.body.message : defaultMessage
 
-    const newCommit = await gh(`/repos/${owner}/${repo}/git/commits`, {
+    const newCommit = await gh(`/repos/${ownerSeg}/${repoSeg}/git/commits`, {
       method: 'POST',
       body: JSON.stringify({
         message: commitMessage,
@@ -195,12 +200,12 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
     })
 
     if (latestCommitSha) {
-      await gh(`/repos/${owner}/${repo}/git/refs/heads/${branch}`, {
+      await gh(`/repos/${ownerSeg}/${repoSeg}/git/refs/heads/${branch}`, {
         method: 'PATCH',
         body: JSON.stringify({ sha: newCommit.sha }),
       })
     } else {
-      await gh(`/repos/${owner}/${repo}/git/refs`, {
+      await gh(`/repos/${ownerSeg}/${repoSeg}/git/refs`, {
         method: 'POST',
         body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: newCommit.sha }),
       })
@@ -209,7 +214,7 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
     res.json({
       success: true,
       commitSha: newCommit.sha,
-      url: `https://github.com/${owner}/${repo}/tree/${branch}/${folderName}`,
+      url: `https://github.com/${ownerSeg}/${repoSeg}/tree/${branch}/${folderName}`,
     })
   } catch (err) {
     res.status(500).json({ error: err.message })

@@ -4,7 +4,7 @@ const { readSettings, writeSettings } = require('../services/storage')
 const router = express.Router()
 
 // GET /api/settings
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const settings = await readSettings()
     // Mask sensitive fields
@@ -16,19 +16,30 @@ router.get('/', async (req, res) => {
       ai: safeAi,
     })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    next(err)
   }
 })
 
 // PUT /api/settings
-router.put('/', async (req, res) => {
+// Contract: top-level keys are REPLACED (shallow). The `ai` object is the
+// exception — it is deep-merged over the stored `ai` so omitting a sub-key
+// (especially `apiKey`) preserves the stored value instead of wiping it.
+router.put('/', async (req, res, next) => {
   try {
     const existing = await readSettings()
-    const updated = { ...existing, ...req.body }
+    const body = req.body && typeof req.body === 'object' ? req.body : {}
 
-    // If client sends '***configured***', preserve the original key
-    if (updated.ai && updated.ai.apiKey === '***configured***') {
-      updated.ai.apiKey = existing.ai?.apiKey
+    const updated = { ...existing, ...body }
+
+    if ('ai' in body) {
+      const incomingAi = body.ai && typeof body.ai === 'object' ? body.ai : {}
+      // Merge over stored ai so unspecified sub-keys (e.g. apiKey) survive.
+      const mergedAi = { ...(existing.ai || {}), ...incomingAi }
+      // Sentinel echo or omitted apiKey both keep the stored secret.
+      if (incomingAi.apiKey === '***configured***' || incomingAi.apiKey === undefined) {
+        mergedAi.apiKey = existing.ai?.apiKey
+      }
+      updated.ai = mergedAi
     }
 
     await writeSettings(updated)
@@ -41,7 +52,7 @@ router.put('/', async (req, res) => {
       ai: safeAi,
     })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    next(err)
   }
 })
 

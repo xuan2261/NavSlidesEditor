@@ -38,7 +38,15 @@ function runRclone(args, env = {}) {
   return new Promise((resolve, reject) => {
     const mergedEnv = { ...process.env, RCLONE_CONFIG: RCLONE_CONFIG_FILE, ...env }
     execFile('rclone', args, { env: mergedEnv, timeout: 120000 }, (err, stdout, stderr) => {
-      if (err) return reject(new Error(stderr || err.message))
+      if (err) {
+        // rclone stderr can echo absolute paths, remote names, and config
+        // hints. Log full detail server-side only; surface a generic message
+        // so the HTTP client never receives the raw stderr.
+        console.error('[rclone]', args[0], stderr || err.message)
+        const generic = new Error('rclone command failed')
+        generic.rcloneCommand = args[0]
+        return reject(generic)
+      }
       resolve(stdout.trim())
     })
   })

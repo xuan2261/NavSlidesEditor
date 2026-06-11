@@ -16,7 +16,7 @@ function getMediaType(ext) {
 }
 
 // GET /api/media — list all uploaded media
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     // Scan uploads dir and merge with metadata DB
     let db = []
@@ -25,18 +25,20 @@ router.get('/', async (req, res) => {
     })
     const dbMap = new Map(db.map((m) => [m.filename, m]))
 
-    if (!fs.existsSync(UPLOADS_DIR)) {
+    if (!(await fs.pathExists(UPLOADS_DIR))) {
       return res.json([])
     }
 
-    const files = fs.readdirSync(UPLOADS_DIR)
-    const media = files.map((filename) => {
+    const files = await fs.readdir(UPLOADS_DIR)
+    const media = []
+    for (const filename of files) {
       const filePath = path.join(UPLOADS_DIR, filename)
-      const stat = fs.statSync(filePath)
+      const stat = await fs.stat(filePath)
+      if (!stat.isFile()) continue
       const ext = path.extname(filename).toLowerCase()
       const existing = dbMap.get(filename)
 
-      return {
+      media.push({
         id: existing?.id || filename,
         filename,
         originalName: existing?.originalName || filename,
@@ -45,8 +47,8 @@ router.get('/', async (req, res) => {
         tags: existing?.tags || [],
         uploadedAt: existing?.uploadedAt || stat.birthtime.toISOString(),
         url: `/uploads/${filename}`,
-      }
-    })
+      })
+    }
 
     // Filter by query params
     let result = media
@@ -64,13 +66,12 @@ router.get('/', async (req, res) => {
 
     res.json(result)
   } catch (err) {
-    console.error('Media list error:', err)
-    res.status(500).json({ error: 'Failed to list media' })
+    next(err)
   }
 })
 
 // PUT /api/media/:id — update tags/name
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req, res, next) => {
   try {
     await withMediaDb((db) => {
       const records = Array.isArray(db) ? db : []
@@ -89,31 +90,38 @@ router.put('/:id', async (req, res) => {
       }
     })
     res.json({ success: true })
-    // eslint-disable-next-line unused-imports/no-unused-vars
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update media' })
+    next(err)
   }
 })
 
 // DELETE /api/media/:filename — delete file + metadata
-router.delete('/:filename', async (req, res) => {
+// The :filename param may be either the DB `id` or the stored `filename`. We
+// resolve the matching record first so we delete the right file on disk AND
+// the right DB row (previously the DB filter keyed only on `filename`, leaving
+// orphaned records/files when the client passed an `id`).
+router.delete('/:filename', async (req, res, next) => {
   try {
-    const filePath = path.join(UPLOADS_DIR, path.basename(req.params.filename))
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath)
-    }
+    const key = req.params.filename
+    let targetFilename = key
 
     await withMediaDb((db) => {
       const records = Array.isArray(db) ? db : []
-      const filtered = records.filter((m) => m.filename !== req.params.filename)
+      const match = records.find((m) => m.id === key || m.filename === key)
+      if (match?.filename) targetFilename = match.filename
+      const filtered = records.filter((m) => m.id !== key && m.filename !== targetFilename)
       db.length = 0
       db.push(...filtered)
     })
 
+    const filePath = path.join(UPLOADS_DIR, path.basename(targetFilename))
+    if (await fs.pathExists(filePath)) {
+      await fs.remove(filePath)
+    }
+
     res.json({ success: true })
-    // eslint-disable-next-line unused-imports/no-unused-vars
   } catch (err) {
-    res.status(500).json({ error: 'Failed to delete media' })
+    next(err)
   }
 })
 

@@ -67,7 +67,9 @@ async function callGemini(config, system, user) {
 async function callCustom(config, system, user) {
   if (!config.customEndpoint) throw new Error('Custom endpoint not configured')
 
-  const safeEndpoint = await assertSafeAiEndpoint(config.customEndpoint)
+  // Guard returns a pinned dispatcher; the connection is locked to a validated
+  // IP so fetch cannot re-resolve DNS to an internal address (rebinding TOCTOU).
+  const { url: safeEndpoint, dispatcher } = await assertSafeAiEndpoint(config.customEndpoint)
   const endpointUrl = new URL(safeEndpoint)
   if (!endpointUrl.pathname.endsWith('/chat/completions')) {
     endpointUrl.pathname = `${endpointUrl.pathname.replace(/\/+$/, '')}/chat/completions`
@@ -77,6 +79,7 @@ async function callCustom(config, system, user) {
   const response = await fetch(url, {
     method: 'POST',
     redirect: 'manual',
+    dispatcher,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: config.customModel || 'local',
