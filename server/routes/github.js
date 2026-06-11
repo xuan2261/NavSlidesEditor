@@ -1,8 +1,8 @@
 const express = require('express')
 const { z } = require('zod')
 const { generateRevealHTML } = require('revealjs-shared')
-const { readGithubConfig, writeGithubConfig, readPresentations } = require('../services/storage')
-const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
+const { readGithubConfig, writeGithubConfig } = require('../services/storage')
+const { findServeablePresentation } = require('../services/presentation-finder')
 const { validate } = require('../middleware/validate')
 
 const router = express.Router()
@@ -57,10 +57,8 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
         .json({ error: 'GitHub not configured. Set token, owner, and repo first.' })
     }
 
-    const presentations = await readPresentations()
-    const foundPresentation = presentations.find((p) => p.id === req.params.presId)
-    if (!foundPresentation) return res.status(404).json({ error: 'Presentation not found' })
-    const presentation = normalizePptxImportedPresentationForRead(foundPresentation)
+    const presentation = await findServeablePresentation(req.params.presId)
+    if (!presentation) return res.status(404).json({ error: 'Presentation not found' })
 
     const { token, owner, repo } = config
     const gh = (endpoint, opts = {}) =>

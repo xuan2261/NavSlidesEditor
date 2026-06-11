@@ -5,7 +5,8 @@ const { z } = require('zod')
 const bcrypt = require('bcryptjs')
 // eslint-disable-next-line unused-imports/no-unused-vars
 const { generateRevealHTML } = require('revealjs-shared')
-const { readShareTokens, writeShareTokens, readPresentations } = require('../services/storage')
+const { readShareTokens, withShareTokens } = require('../services/storage')
+const { findServeablePresentation } = require('../services/presentation-finder')
 
 const router = express.Router()
 
@@ -49,17 +50,11 @@ const shareBodySchema = z
 // POST /api/presentations/:id/share - create a new share link
 router.post('/:id/share', validate(shareBodySchema), async (req, res) => {
   try {
-    const presentations = await readPresentations()
-    const presentation = presentations.find((p) => p.id === req.params.id)
+    // Serve-guard (C2): refuse minting a token for a missing or trashed deck.
+    const presentation = await findServeablePresentation(req.params.id, { normalize: false })
     if (!presentation) return res.status(404).json({ error: 'Not found' })
 
-    const tokens = await readShareTokens()
     const { name, password, expiresInDays } = req.body
-
-    // Normalize existing string tokens first
-    for (const t of Object.keys(tokens)) {
-      tokens[t] = sanitizeToken(tokens[t])
-    }
 
     const token = uuidv4()
     const newToken = {
@@ -78,8 +73,13 @@ router.post('/:id/share', validate(shareBodySchema), async (req, res) => {
       newToken.expiresAt = new Date(Date.now() + ms).toISOString()
     }
 
-    tokens[token] = newToken
-    await writeShareTokens(tokens)
+    // Atomic RMW (I-R5.1): normalize legacy string tokens + insert under one lock.
+    await withShareTokens((tokens) => {
+      for (const t of Object.keys(tokens)) {
+        tokens[t] = sanitizeToken(tokens[t])
+      }
+      tokens[token] = newToken
+    })
 
     res.json({
       token,
@@ -102,16 +102,15 @@ router.post('/:id/share', validate(shareBodySchema), async (req, res) => {
 // Old delete route (disable all sharing)
 router.delete('/:id/share', async (req, res) => {
   try {
-    const tokens = await readShareTokens()
-    let modified = false
-    for (const [token, data] of Object.entries(tokens)) {
-      const sanitized = sanitizeToken(data)
-      if (sanitized.presentationId === req.params.id) {
-        delete tokens[token]
-        modified = true
+    // Atomic RMW (I-R5.1): remove all tokens for this deck under one lock.
+    await withShareTokens((tokens) => {
+      for (const [token, data] of Object.entries(tokens)) {
+        const sanitized = sanitizeToken(data)
+        if (sanitized.presentationId === req.params.id) {
+          delete tokens[token]
+        }
       }
-    }
-    if (modified) await writeShareTokens(tokens)
+    })
     res.json({ shared: false })
   } catch (err) {
     res.status(500).json({ error: err.message })

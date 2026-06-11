@@ -1,6 +1,7 @@
 const express = require('express')
 const uuidv4 = () => require('node:crypto').randomUUID()
-const { readShareTokens, readPresentations, writePresentations } = require('../services/storage')
+const { readShareTokens, readPresentations, withPresentations } = require('../services/storage')
+const { findServeablePresentation } = require('../services/presentation-finder')
 
 const router = express.Router()
 
@@ -60,8 +61,7 @@ router.post('/:token/fork', async (req, res) => {
       if (!isValid) return res.status(401).json({ error: 'Invalid password' })
     }
 
-    const presentations = await readPresentations()
-    const original = presentations.find((p) => p.id === tokenData.presentationId)
+    const original = await findServeablePresentation(tokenData.presentationId, { normalize: false })
 
     if (!original) return res.status(404).json({ error: 'Original presentation not found' })
 
@@ -71,9 +71,11 @@ router.post('/:token/fork', async (req, res) => {
       title: `${original.title} (Forked)`,
       createdAt: new Date().toISOString(),
     }
+    delete forkedPresentation.deletedAt
 
-    presentations.push(forkedPresentation)
-    await writePresentations(presentations)
+    await withPresentations((presentations) => {
+      presentations.push(forkedPresentation)
+    })
 
     res.json({ presentation: forkedPresentation })
   } catch (err) {

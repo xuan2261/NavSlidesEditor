@@ -10,13 +10,12 @@ const {
   initDataFiles,
   UPLOADS_DIR,
   readShareTokens,
-  writeShareTokens,
   withShareTokens,
-  readPresentations,
 } = require('./services/storage')
 const { errorHandler } = require('./middleware/error-handler')
 const { generateRevealHTML } = require('revealjs-shared')
 const { normalizePptxImportedPresentationForRead } = require('./services/presentation-normalization')
+const { findServeablePresentation } = require('./services/presentation-finder')
 const { recordView } = require('./routes/analytics')
 const { setupSocketHandlers } = require('./services/socket-handler')
 const { setupGameSocketHandlers } = require('./services/game-socket-handler')
@@ -130,10 +129,13 @@ app.use('/api/analytics', require('./routes/analytics'))
 // Single-token DELETE
 app.delete('/api/shares/:token', async (req, res) => {
   try {
-    const tokens = await readShareTokens()
-    if (!tokens[req.params.token]) return res.status(404).json({ error: 'Token not found' })
-    delete tokens[req.params.token]
-    await writeShareTokens(tokens)
+    // Atomic RMW (I-R5.1): existence check + delete under one lock.
+    const existed = await withShareTokens((tokens) => {
+      if (!tokens[req.params.token]) return false
+      delete tokens[req.params.token]
+      return true
+    })
+    if (!existed) return res.status(404).json({ error: 'Token not found' })
     res.json({ deleted: true })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -151,8 +153,9 @@ app.post('/api/presentations/:id/github/push', (req, res, next) => {
 
 // Helper for presentation viewer HTML payload (with server-side XSS sanitization)
 async function renderShareView(presentationId, res) {
-  const presentations = await readPresentations()
-  const presentation = presentations.find((p) => p.id === presentationId)
+  // Serve-guard (C2): a soft-deleted deck must not render even via a live share
+  // token. findServeablePresentation returns null for missing or trashed decks.
+  const presentation = await findServeablePresentation(presentationId, { normalize: false })
   if (!presentation) return res.status(404).send('Presentation not found')
 
   // Keep html embeds trusted and programmable in share mode too.

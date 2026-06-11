@@ -30,4 +30,25 @@ async function findPresentationById(id) {
   return null
 }
 
-module.exports = { findPresentationById }
+/**
+ * Serve-guard chokepoint (C2). Returns a user presentation by id ONLY when it
+ * exists and is NOT soft-deleted (no `deletedAt`). Returns null otherwise so
+ * every serve/fork/export sink can refuse a trashed deck with a single check.
+ * Soft-delete does not touch share tokens; restore "just works" because the
+ * guard re-admits the deck once `deletedAt` is cleared.
+ *
+ * Scope is the presentations store only — that is where `deletedAt` lives.
+ * Template / built-in fallbacks (which are never trashed) stay in callers.
+ *
+ * @param {string} id
+ * @param {{ normalize?: boolean }} [opts] normalize defaults to true.
+ * @returns {Promise<object|null>}
+ */
+async function findServeablePresentation(id, { normalize = true } = {}) {
+  const presentations = await readPresentations()
+  const found = presentations.find((p) => p.id === id)
+  if (!found || found.deletedAt) return null
+  return normalize ? normalizePptxImportedPresentationForRead(found) : found
+}
+
+module.exports = { findPresentationById, findServeablePresentation }

@@ -16,6 +16,7 @@ const { validate } = require('../middleware/validate')
 const { createPresentationSchema, updatePresentationSchema } = require('../middleware/schemas')
 const { rasterizeComplexElements } = require('../services/pptx-exporter')
 const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
+const { findServeablePresentation } = require('../services/presentation-finder')
 
 const router = express.Router()
 const UPLOAD_HASHES_FILE = path.join(DATA_DIR, 'upload-hashes.json')
@@ -248,10 +249,9 @@ router.post('/raster-elements', async (req, res) => {
 // GET /api/presentations/:id
 router.get('/:id', async (req, res) => {
   try {
-    const presentations = await readPresentations()
-    const presentation = presentations.find((p) => p.id === req.params.id)
+    const presentation = await findServeablePresentation(req.params.id)
     if (!presentation) return res.status(404).json({ error: 'Not found' })
-    res.json(normalizePresentationNotes(normalizePptxImportedPresentationForRead(presentation)))
+    res.json(normalizePresentationNotes(presentation))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -355,7 +355,7 @@ router.post('/:id/duplicate', async (req, res) => {
   try {
     const result = await withPresentations(async (presentations) => {
       const original = presentations.find((p) => p.id === req.params.id)
-      if (!original) return null
+      if (!original || original.deletedAt) return null
       const now = new Date().toISOString()
       const copy = JSON.parse(JSON.stringify(normalizePptxImportedPresentationForRead(original)))
       copy.id = uuidv4()
@@ -376,8 +376,7 @@ router.post('/:id/duplicate', async (req, res) => {
 // GET /api/presentations/:id/export
 router.get('/:id/export', async (req, res) => {
   try {
-    const presentations = await readPresentations()
-    const presentation = presentations.find((p) => p.id === req.params.id)
+    const presentation = await findServeablePresentation(req.params.id, { normalize: false })
     if (!presentation) return res.status(404).json({ error: 'Not found' })
     const normalized = normalizePptxImportedPresentationForRead(presentation)
     const html = generateRevealHTML(normalizePresentationNotes(normalized))
@@ -393,8 +392,9 @@ router.get('/:id/export', async (req, res) => {
 // GET /api/presentations/:id/present
 router.get('/:id/present', async (req, res) => {
   try {
-    const presentations = await readPresentations()
-    let presentation = presentations.find((p) => p.id === req.params.id)
+    // Serve-guard for user decks (trashed decks must not present); templates and
+    // built-ins are never trashed, so they stay as a fallback.
+    let presentation = await findServeablePresentation(req.params.id, { normalize: false })
     if (!presentation) {
       const { readTemplates } = require('../services/storage')
       const templates = await readTemplates()
@@ -435,8 +435,7 @@ router.get('/:id/present', async (req, res) => {
 router.post('/:id/save-as-template', async (req, res) => {
   try {
     const { readTemplates, writeTemplates } = require('../services/storage')
-    const presentations = await readPresentations()
-    const pres = presentations.find((p) => p.id === req.params.id)
+    const pres = await findServeablePresentation(req.params.id, { normalize: false })
     if (!pres) return res.status(404).json({ error: 'Not found' })
     const now = new Date().toISOString()
     const template = normalizePresentationNotes({
@@ -461,11 +460,10 @@ router.get('/:id/uploads', async (req, res) => {
   try {
     if (!fs.existsSync(UPLOADS_DIR)) return res.json([])
 
-    const [presentations, allHashes] = await Promise.all([
-      readPresentations(),
+    const [presentation, allHashes] = await Promise.all([
+      findServeablePresentation(req.params.id, { normalize: false }),
       readUploadHashes(),
     ])
-    const presentation = presentations.find((p) => p.id === req.params.id)
     if (!presentation) return res.status(404).json({ error: 'Not found' })
 
     const presHashes = allHashes[req.params.id] || {}
