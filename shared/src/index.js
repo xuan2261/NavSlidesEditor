@@ -13,6 +13,7 @@ const aiSlideContract = require('./types/ai-slide-contract.js')
 const designTokens = require('./design-tokens.js')
 const themePresets = require('./theme-presets.js')
 const fxRegistry = require('./fx/index.js')
+const tableMergeResolver = require('./table-merge-resolver.js')
 
 const TEXT_COLORS = [
   '#ffffff', '#e2e8f0', '#94a3b8', '#64748b', '#334155', '#1e293b', '#0f172a', '#000000',
@@ -66,6 +67,7 @@ module.exports = {
   ...designTokens,
   ...themePresets,
   ...fxRegistry,
+  ...tableMergeResolver,
   TEXT_COLORS,
   BG_COLORS,
   GRADIENT_PRESETS,

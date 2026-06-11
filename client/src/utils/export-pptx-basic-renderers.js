@@ -1,4 +1,4 @@
-import { gradientFallbackColor } from 'revealjs-shared'
+import { gradientFallbackColor, resolveMergedCells } from 'revealjs-shared'
 import {
   DEFAULT_BACKGROUND_COLOR,
   DEFAULT_TEXT_COLOR,
@@ -48,6 +48,9 @@ export function addImageElement(slide, element, bounds, resolution, layout) {
     ...source,
     ...bounds,
     rotate: element.rotation || 0,
+  }
+  if (element.opacity != null && element.opacity !== 1) {
+    imageOptions.transparency = Math.round((1 - element.opacity) * 100)
   }
   if (element.flipH) imageOptions.flipH = true
   if (element.flipV) imageOptions.flipV = true
@@ -213,21 +216,7 @@ export function addCalloutElement(slide, element, bounds) {
 }
 
 export function addTableElement(slide, element, bounds) {
-  const mergedCells = Array.isArray(element.mergedCells) ? element.mergedCells : []
-  const mergeByStart = new Map()
-  const covered = new Set()
-  mergedCells.forEach((merge) => {
-    const row = Number(merge.row) || 0
-    const col = Number(merge.col) || 0
-    const rowSpan = Math.max(1, Number(merge.rowSpan) || 1)
-    const colSpan = Math.max(1, Number(merge.colSpan) || 1)
-    mergeByStart.set(`${row}:${col}`, { rowSpan, colSpan })
-    for (let ri = row; ri < row + rowSpan; ri++) {
-      for (let ci = col; ci < col + colSpan; ci++) {
-        if (ri !== row || ci !== col) covered.add(`${ri}:${ci}`)
-      }
-    }
-  })
+  const { spans: mergeByStart, covered } = resolveMergedCells(element.mergedCells)
 
   const cellStyles = element.cellStyles || {}
   const getCellStyle = (key, rowIndex, colIndex) => cellStyles[key]?.[rowIndex]?.[colIndex]

@@ -9,8 +9,8 @@ export function MarkdownRenderer({ element }) {
     overflow: 'auto',
     padding: '8px 12px',
     boxSizing: 'border-box',
-    color: 'white',
-    fontSize: '18px',
+    color: element.textColor || 'white',
+    fontSize: element.fontSize ? `${element.fontSize}px` : '18px',
     lineHeight: 1.5,
   }
   return (

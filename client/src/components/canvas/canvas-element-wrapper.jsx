@@ -134,7 +134,14 @@ export default function CanvasElement({
       }
     : {}
   const htmlFrameStyle = { width: '100%', height: '100%', border: 'none', display: 'block', pointerEvents: 'none' }
-  const codeBlockStyle = { margin: 0, padding: '10px 14px', width: '100%', height: '100%', overflow: 'hidden', boxSizing: 'border-box', fontFamily: "'Fira Code','JetBrains Mono','Courier New',monospace", fontSize: element.fontSize || 14, lineHeight: 1.5, borderRadius: 0 }
+  const codeBlockStyle = { margin: 0, padding: '10px 14px', width: '100%', height: '100%', overflow: 'hidden', boxSizing: 'border-box', fontFamily: "'Fira Code','JetBrains Mono','Courier New',monospace", fontSize: element.fontSize || 14, lineHeight: 1.5, borderRadius: element.borderRadius || 0 }
+  // Opacity is applied to the element-CONTENT layer only, so selection chrome
+  // (outline, resize/rotation handles, badges) stays fully opaque.
+  const contentOpacity = element.opacity !== undefined && element.opacity !== 1 ? element.opacity : undefined
+  const contentLayerStyle = { position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: contentOpacity }
+  // Flip targets the <img>, not the wrapper, so handles aren't mirrored; composes
+  // with the wrapper's rotation rather than canceling it.
+  const imageFlipTransform = [element.flipH ? 'scaleX(-1)' : '', element.flipV ? 'scaleY(-1)' : ''].filter(Boolean).join(' ') || undefined
   const videoStyle = { width: '100%', height: '100%', objectFit: element.objectFit || 'contain', display: 'block', pointerEvents: isSelected && !isDragging ? 'auto' : 'none' }
   const audioWrapperStyle = { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: 4 }
   const audioControlStyle = { width: '90%', pointerEvents: isSelected && !isDragging ? 'auto' : 'none' }
@@ -157,6 +164,7 @@ export default function CanvasElement({
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
     >
+      <div data-element-content style={contentLayerStyle}>
       {element.type === 'text' && !isEditing && (
         <div ref={contentRef} className="slide-text-content ProseMirror-preview" style={textPreviewStyle} dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(element.content || '') }} />
       )}
@@ -167,7 +175,7 @@ export default function CanvasElement({
         const imgFilter = [element.filterBrightness != null && element.filterBrightness !== 100 ? `brightness(${element.filterBrightness}%)` : '', element.filterContrast != null && element.filterContrast !== 100 ? `contrast(${element.filterContrast}%)` : '', element.filterGrayscale ? `grayscale(${element.filterGrayscale}%)` : '', element.filterSaturate != null && element.filterSaturate !== 100 ? `saturate(${element.filterSaturate}%)` : ''].filter(Boolean).join(' ') || undefined
         return (
           <div style={imageWrapperStyle}>
-            <img src={element.src} alt={element.alt || ''} style={element.imageW != null ? { position: 'absolute', left: element.imageOffsetX ?? 0, top: element.imageOffsetY ?? 0, width: element.imageW, height: element.imageH, objectFit: element.objectFit || 'contain', pointerEvents: 'none', filter: imgFilter } : { width: '100%', height: '100%', objectFit: element.objectFit || 'contain', display: 'block', pointerEvents: 'none', filter: imgFilter }} draggable={false} />
+            <img src={element.src} alt={element.alt || ''} style={element.imageW != null ? { position: 'absolute', left: element.imageOffsetX ?? 0, top: element.imageOffsetY ?? 0, width: element.imageW, height: element.imageH, objectFit: element.objectFit || 'contain', pointerEvents: 'none', filter: imgFilter, transform: imageFlipTransform } : { width: '100%', height: '100%', objectFit: element.objectFit || 'contain', display: 'block', pointerEvents: 'none', filter: imgFilter, transform: imageFlipTransform }} draggable={false} />
             {isCropping && cropState && <CropOverlay crop={cropState} elW={element.width} elH={element.height} onHandleDown={onCropHandleDown} onCommit={onCommitCrop} />}
           </div>
         )
@@ -226,6 +234,7 @@ export default function CanvasElement({
         }
         return null
       })()}
+      </div>
       {element.fragment && <div style={fragmentBadgeStyle}>▶ {element.fragmentIndex ?? 1}</div>}
       {element.groupId && isSelected && <div style={groupBadgeStyle}>Group</div>}
       {isSelected && !isEditing && !isCropping && !element.locked && Object.entries(HANDLE_STYLES).map(([handle, hStyle]) => (

@@ -166,7 +166,7 @@ export function ShapeRenderer({ element }) {
   }
 
   return (
-    <div style={{ position: 'absolute', inset: 0, opacity: element.opacity || 1 }}>
+    <div style={{ position: 'absolute', inset: 0 }}>
       <svg
         width="100%"
         height="100%"

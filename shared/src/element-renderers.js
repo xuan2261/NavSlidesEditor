@@ -5,6 +5,7 @@
 const { shapeSvgString } = require('./shapeUtils.js')
 const { sanitizeRichTextHtml, sanitizeSvgHtml, sanitizeHref } = require('./content-safety.js')
 const { resolveColorField, svgPaint, isTokenVar } = require('./design-tokens.js')
+const { resolveMergedCells } = require('./table-merge-resolver.js')
 
 /**
  * Inline SVG paint that preserves the exact `name="value"` token shape for
@@ -113,7 +114,8 @@ function buildBaseStyle(el, opts = {}) {
       ? `border-radius:${el.borderRadius}px;`
       : ''
   const rotationStyle = el.rotation ? `transform:rotate(${el.rotation}deg);` : ''
-  return `position:absolute;left:${el.x}px;top:${el.y}px;width:${el.width}px;height:${el.height}px;z-index:${el.zIndex || 1};overflow:hidden;box-sizing:border-box;${shadowStyle}${borderRadiusStyle}${rotationStyle}`
+  const opacityStyle = el.opacity !== undefined && el.opacity !== 1 ? `opacity:${el.opacity};` : ''
+  return `position:absolute;left:${el.x}px;top:${el.y}px;width:${el.width}px;height:${el.height}px;z-index:${el.zIndex || 1};overflow:hidden;box-sizing:border-box;${shadowStyle}${borderRadiusStyle}${rotationStyle}${opacityStyle}`
 }
 
 /** Build wrapper attributes for reveal.js (fragment + data-id) */
@@ -166,6 +168,14 @@ function renderImage(el, style, wrap, vis, opts) {
     .filter(Boolean)
     .join(' ')
   const filterStyle = imgFilterParts ? `filter:${imgFilterParts};` : ''
+  const flipParts = [el.flipH ? 'scaleX(-1)' : '', el.flipV ? 'scaleY(-1)' : ''].filter(Boolean).join(' ')
+  const flipStyle = flipParts ? `transform:${flipParts};` : ''
+  const borderW = Number(el.borderWidth)
+  const borderColor = el.borderColor ? safeCssColor(el.borderColor, null) : null
+  const borderStyle =
+    Number.isFinite(borderW) && borderW > 0 && borderColor
+      ? `border:${borderW}px solid ${borderColor};`
+      : ''
   const imgReset = opts.forPrint ? 'max-width:none;max-height:none;' : ''
   const citationHtml = buildCitationHtml(el)
   const sourceCrop = el._pptxImportMeta?.sourceCrop && el._pptxImportMeta?.cropData
@@ -175,15 +185,15 @@ function renderImage(el, style, wrap, vis, opts) {
   if (el.imageW != null) {
     const offX = el.imageOffsetX ?? 0
     const offY = el.imageOffsetY ?? 0
-    const imgStyle = `position:absolute;left:${offX}px;top:${offY}px;width:${el.imageW}px;height:${el.imageH}px;object-fit:${el.objectFit || 'contain'};${filterStyle}${imgReset}`
-    return `<div${wrap}${cropAttrs} style="${style}${vis}overflow:hidden;"><img src="${src}" alt="${el.alt || ''}" style="${imgStyle}" />${citationHtml}</div>`
+    const imgStyle = `position:absolute;left:${offX}px;top:${offY}px;width:${el.imageW}px;height:${el.imageH}px;object-fit:${el.objectFit || 'contain'};${filterStyle}${flipStyle}${imgReset}`
+    return `<div${wrap}${cropAttrs} style="${style}${borderStyle}${vis}overflow:hidden;"><img src="${src}" alt="${el.alt || ''}" style="${imgStyle}" />${citationHtml}</div>`
   }
-  return `<div${wrap} style="${style}${vis}overflow:visible;"><img src="${src}" alt="${el.alt || ''}" style="display:block;width:100%;height:100%;object-fit:${el.objectFit || 'contain'};${filterStyle}${imgReset}" />${citationHtml}</div>`
+  return `<div${wrap} style="${style}${borderStyle}${vis}overflow:visible;"><img src="${src}" alt="${el.alt || ''}" style="display:block;width:100%;height:100%;object-fit:${el.objectFit || 'contain'};${filterStyle}${flipStyle}${imgReset}" />${citationHtml}</div>`
 }
 
 function renderShape(el, style, wrap, vis) {
-  const opacityStyle = el.opacity !== undefined && el.opacity !== 1 ? `opacity:${el.opacity};` : ''
-  return `<div${wrap} style="${style}${opacityStyle}${vis}">${shapeSvgString(el)}</div>`
+  // opacity is emitted once by buildBaseStyle for all types; no per-shape re-apply
+  return `<div${wrap} style="${style}${vis}">${shapeSvgString(el)}</div>`
 }
 
 function renderCode(el, style, wrap, vis) {
@@ -216,11 +226,15 @@ function renderHtml(el, style, wrap, vis, opts) {
 }
 
 function renderMarkdown(el, style, wrap, vis, opts) {
+  const mdColor = safeCssColor(el.textColor, 'white')
+  const mdFont = Number(el.fontSize) > 0 ? Number(el.fontSize) : null
   if (opts.forPrint) {
-    return `<div style="${style}${vis}padding:8px 12px;color:white;overflow:auto;font-size:calc(16px * var(--font-zoom, 1));line-height:1.5;">${escapeHtml(el.content || '')}</div>`
+    const fs = mdFont || 16
+    return `<div style="${style}${vis}padding:8px 12px;color:${mdColor};overflow:auto;font-size:calc(${fs}px * var(--font-zoom, 1));line-height:1.5;">${escapeHtml(el.content || '')}</div>`
   }
   const _origin = getAssetOrigin()
-  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/marked/marked.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{background:transparent;color:white;font-family:-apple-system,sans-serif;font-size:calc(18px * var(--font-zoom, 1));line-height:1.6;padding:8px 12px;overflow:auto}h1,h2,h3,h4{margin:0 0 .4em}p{margin:0 0 .4em}ul,ol{padding-left:1.5em;margin:0 0 .4em}a{color:#60a5fa}pre{background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:6px;overflow:auto;font-size:13px}code{font-family:'Fira Code',monospace}</style></head><body><div id="out"></div><script>function __safeHref(v){v=String(v||'').trim();if(!v)return '#';if(v[0]==='#'||v[0]==='/'||v.startsWith('./')||v.startsWith('../'))return v;if(/^(https?:|mailto:)/i.test(v))return v;return '#'}function __sanitize(html){return String(html||'').replace(/<script[\\s\\S]*?<\\/script>/gi,'').replace(/\\son[a-z-]+\\s*=\\s*(['"]).*?\\1/gi,'').replace(/\\s(href|src)\\s*=\\s*(['"])(.*?)\\2/gi,function(_,a,q,v){return ' '+a+'='+q+__safeHref(v)+q})}document.getElementById('out').innerHTML=__sanitize(marked.parse(${JSON.stringify(el.content || '')}));</script></body></html>`
+  const bodyFs = mdFont || 18
+  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/marked/marked.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{background:transparent;color:${mdColor};font-family:-apple-system,sans-serif;font-size:calc(${bodyFs}px * var(--font-zoom, 1));line-height:1.6;padding:8px 12px;overflow:auto}h1,h2,h3,h4{margin:0 0 .4em}p{margin:0 0 .4em}ul,ol{padding-left:1.5em;margin:0 0 .4em}a{color:#60a5fa}pre{background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:6px;overflow:auto;font-size:13px}code{font-family:'Fira Code',monospace}</style></head><body><div id="out"></div><script>function __safeHref(v){v=String(v||'').trim();if(!v)return '#';if(v[0]==='#'||v[0]==='/'||v.startsWith('./')||v.startsWith('../'))return v;if(/^(https?:|mailto:)/i.test(v))return v;return '#'}function __sanitize(html){return String(html||'').replace(/<script[\\s\\S]*?<\\/script>/gi,'').replace(/\\son[a-z-]+\\s*=\\s*(['"]).*?\\1/gi,'').replace(/\\s(href|src)\\s*=\\s*(['"])(.*?)\\2/gi,function(_,a,q,v){return ' '+a+'='+q+__safeHref(v)+q})}document.getElementById('out').innerHTML=__sanitize(marked.parse(${JSON.stringify(el.content || '')}));</script></body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(srcdoc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
 }
 
@@ -378,6 +392,8 @@ function renderTable(el, style, wrap, vis) {
   const borderColor = resolveColorField(el.borderColor, 'table', 'borderColor') || 'rgba(255,255,255,0.2)'
   const borderWidth = el.borderWidth ?? 1
   const textColor = resolveColorField(el.textColor, 'table', 'textColor') || '#ffffff'
+  const headerTextColor = resolveColorField(el.headerTextColor, 'table', 'headerTextColor') || textColor
+  const tableBorderStyle = safeBorderStyle(el.borderStyle)
   const fontSize = el.fontSize || 14
   const cellPadding = el.cellPadding || 8
   const cellStyles = el.cellStyles || {}
@@ -391,24 +407,30 @@ function renderTable(el, style, wrap, vis) {
     : ''
   const borderCss = (ri, ci) => {
     const borders = cellStyles.borders?.[ri]?.[ci]
-    if (!borders) return `border:${borderWidth}px solid ${borderColor};`
+    if (!borders) return `border:${borderWidth}px ${tableBorderStyle} ${borderColor};`
     return ['top', 'right', 'bottom', 'left']
       .map((side) => {
         const border = borders[side] || {}
         const width = Number.isFinite(Number(border.width)) ? Math.max(0, Number(border.width)) : borderWidth
-        const style = safeBorderStyle(border.style)
+        const style = safeBorderStyle(border.style ?? el.borderStyle)
         const color = safeCssColor(border.color, borderColor)
         return `border-${side}:${width}px ${style} ${color};`
       })
       .join('')
   }
+  const { spans, covered } = resolveMergedCells(el.mergedCells)
   const rows = data
     .map((row, ri) => {
       const cells = (row || [])
         .map((cell, ci) => {
+          if (covered.has(`${ri}:${ci}`)) return ''
+          const span = spans.get(`${ri}:${ci}`)
+          const spanAttrs = span
+            ? `${span.colSpan > 1 ? ` colspan="${span.colSpan}"` : ''}${span.rowSpan > 1 ? ` rowspan="${span.rowSpan}"` : ''}`
+            : ''
           const isHeader = el.headerRow && ri === 0
           const bg = safeCssColor(cellStyles.bgColors?.[ri]?.[ci], isHeader ? headerBg : cellBg)
-          const color = safeCssColor(cellStyles.textColors?.[ri]?.[ci], textColor)
+          const color = safeCssColor(cellStyles.textColors?.[ri]?.[ci], isHeader ? headerTextColor : textColor)
           const bold = cellStyles.isBold?.[ri]?.[ci]
           const align = ['left', 'center', 'right', 'justify'].includes(cellStyles.aligns?.[ri]?.[ci])
             ? cellStyles.aligns[ri][ci]
@@ -420,7 +442,7 @@ function renderTable(el, style, wrap, vis) {
           const cellFontFamily = safeCssFontFamily(cellStyles.fontFamilies?.[ri]?.[ci])
           const familyCss = cellFontFamily ? `font-family:${cellFontFamily};` : ''
           const weightCss = bold != null ? `font-weight:${bold ? 600 : 400};` : isHeader ? 'font-weight:600;' : ''
-          return `<td style="padding:${cellPadding}px;${borderCss(ri, ci)}background:${bg};color:${color};font-size:calc(${cellFontSize}px * var(--font-zoom, 1));${familyCss}${weightCss}text-align:${align};vertical-align:${verticalAlign};">${escapeHtml(cell || '')}</td>`
+          return `<td${spanAttrs} style="padding:${cellPadding}px;${borderCss(ri, ci)}background:${bg};color:${color};font-size:calc(${cellFontSize}px * var(--font-zoom, 1));${familyCss}${weightCss}text-align:${align};vertical-align:${verticalAlign};">${escapeHtml(cell || '')}</td>`
         })
         .join('')
       const rowHeight = Array.isArray(el.rowHeights) ? Number(el.rowHeights[ri]) : 0

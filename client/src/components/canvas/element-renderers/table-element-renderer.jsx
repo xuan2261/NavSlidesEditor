@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { resolveColorField } from 'revealjs-shared'
+import { resolveColorField, resolveMergedCells } from 'revealjs-shared'
 
 function safeCssColor(value, fallback) {
   const color = typeof value === 'string' ? value.trim() : ''
@@ -41,32 +41,19 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
   const fontSize = element.fontSize || 14
   const cellPadding = element.cellPadding || 8
   const cellStyles = element.cellStyles || {}
-  const mergedCells = Array.isArray(element.mergedCells) ? element.mergedCells : []
-  const mergeByStart = new Map()
-  const coveredCells = new Set()
-  mergedCells.forEach((merge) => {
-    const row = Number(merge.row) || 0
-    const col = Number(merge.col) || 0
-    const rowSpan = Math.max(1, Number(merge.rowSpan) || 1)
-    const colSpan = Math.max(1, Number(merge.colSpan) || 1)
-    mergeByStart.set(`${row}:${col}`, { rowSpan, colSpan })
-    for (let ri = row; ri < row + rowSpan; ri++) {
-      for (let ci = col; ci < col + colSpan; ci++) {
-        if (ri !== row || ci !== col) coveredCells.add(`${ri}:${ci}`)
-      }
-    }
-  })
+  const { spans: mergeByStart, covered: coveredCells } = resolveMergedCells(element.mergedCells)
   const getCellStyle = (key, ri, ci) => cellStyles[key]?.[ri]?.[ci]
   const colWidths = Array.isArray(element.colWidths) ? element.colWidths : []
   const rowHeights = Array.isArray(element.rowHeights) ? element.rowHeights : []
+  const tableBorderStyle = safeBorderStyle(element.borderStyle)
   const getBorderStyle = (ri, ci) => {
     const borders = getCellStyle('borders', ri, ci)
-    if (!borders) return { border: `${borderWidth}px solid ${borderColor}` }
+    if (!borders) return { border: `${borderWidth}px ${tableBorderStyle} ${borderColor}` }
     const style = {}
     ;['top', 'right', 'bottom', 'left'].forEach((side) => {
       const border = borders[side] || {}
       const width = Number.isFinite(Number(border.width)) ? Math.max(0, Number(border.width)) : borderWidth
-      const borderStyle = safeBorderStyle(border.style)
+      const borderStyle = safeBorderStyle(border.style ?? element.borderStyle)
       const color = safeCssColor(border.color, borderColor)
       style[`border${side[0].toUpperCase()}${side.slice(1)}`] =
         `${width}px ${borderStyle} ${color}`
