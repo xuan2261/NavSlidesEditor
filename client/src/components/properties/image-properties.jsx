@@ -76,6 +76,24 @@ export default function ImageProperties({ element, onUpdate }) {
       </div>
       <div className="mb-2.5">
         <div className="text-[11px] text-text-muted mb-0.5">
+          Saturation: {element.filterSaturate ?? 100}%
+        </div>
+        <input
+          data-testid="prop-image-saturation"
+          type="range"
+          className="w-full accent-accent"
+          min="0"
+          max="200"
+          value={element.filterSaturate ?? 100}
+          onChange={(e) => {
+            const value = clampNumber(e.target.value, 0, 200, null)
+            if (value === null) return
+            onUpdate({ filterSaturate: value })
+          }}
+        />
+      </div>
+      <div className="mb-2.5">
+        <div className="text-[11px] text-text-muted mb-0.5">
           Round Corners: {element.borderRadius || 0}px
         </div>
         <input

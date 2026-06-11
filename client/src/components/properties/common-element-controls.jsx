@@ -1,6 +1,7 @@
 import { Input, Select, Button, ColorPicker } from '../../components/ui'
 import { clampNumber, parseFiniteNumber } from '../../utils/number-input'
 import { normalizeRotation } from '../../utils/element-update-fanout'
+import { computeMixedValues } from '../../utils/selection-mixed-values'
 import { ArrowDown, ArrowUp, Lock, Unlock } from 'lucide-react'
 import { FRAGMENT_ANIMATION_TYPES } from '../../constants/fragment-animation-types'
 
@@ -15,12 +16,29 @@ export default function CommonElementControls({
   onBringForward,
   onSendBackward,
   onDelete,
+  elements,
+  selectedElementIds,
 }) {
   const updateFinite = (key, value, min = null, max = null) => {
     const next = clampNumber(value, min, max, null)
     if (next === null) return
     onUpdate({ [key]: next })
   }
+
+  const mixed = computeMixedValues(elements || [], selectedElementIds || [], [
+    'x',
+    'y',
+    'width',
+    'height',
+    'rotation',
+    'opacity',
+  ])
+  // Blank a numeric field + show "—" when the selection diverges on that key;
+  // editing still writes (the apply path fans the value to all selected).
+  const numProps = (key, fallback) =>
+    mixed[key]?.isMixed
+      ? { value: '', placeholder: '—' }
+      : { value: fallback }
 
   return (
     <>
@@ -32,7 +50,7 @@ export default function CommonElementControls({
             data-testid="prop-x"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
-            value={Math.round(element.x)}
+            {...numProps('x', Math.round(element.x))}
             onChange={(e) => updateFinite('x', e.target.value)}
           />
         </div>
@@ -42,7 +60,7 @@ export default function CommonElementControls({
             data-testid="prop-y"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
-            value={Math.round(element.y)}
+            {...numProps('y', Math.round(element.y))}
             onChange={(e) => updateFinite('y', e.target.value)}
           />
         </div>
@@ -53,7 +71,7 @@ export default function CommonElementControls({
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             step="1"
-            value={Math.round(element.rotation || 0)}
+            {...numProps('rotation', Math.round(element.rotation || 0))}
             onChange={(e) => {
               const value = parseFiniteNumber(e.target.value, null)
               if (value === null) return
@@ -68,7 +86,7 @@ export default function CommonElementControls({
             data-testid="prop-width"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
-            value={Math.round(element.width)}
+            {...numProps('width', Math.round(element.width))}
             onChange={(e) => updateFinite('width', e.target.value, 1)}
           />
         </div>
@@ -78,11 +96,34 @@ export default function CommonElementControls({
             data-testid="prop-height"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
-            value={Math.round(element.height)}
+            {...numProps('height', Math.round(element.height))}
             onChange={(e) => updateFinite('height', e.target.value, 1)}
           />
         </div>
       </div>
+
+      {/* Opacity (generic) — shape/line already expose it in ShapeProperties */}
+      {element.type !== 'shape' && element.type !== 'line' && (
+        <div className="mb-2.5">
+          <div className="text-[11px] text-text-muted mb-1">
+            Opacity: {mixed.opacity?.isMixed ? '—' : `${Math.round((element.opacity ?? 1) * 100)}%`}
+          </div>
+          <input
+            data-testid="prop-opacity"
+            data-mixed={mixed.opacity?.isMixed ? 'true' : undefined}
+            type="range"
+            className="w-full accent-accent"
+            min="0"
+            max="100"
+            value={Math.round((element.opacity ?? 1) * 100)}
+            onChange={(e) => {
+              const value = clampNumber(e.target.value, 0, 100, null)
+              if (value === null) return
+              onUpdate({ opacity: value / 100 })
+            }}
+          />
+        </div>
+      )}
 
       {/* Lock */}
       <label className="flex items-center gap-1.5 cursor-pointer mb-2 select-none">

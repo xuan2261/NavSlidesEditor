@@ -41,6 +41,30 @@ export default function ChartProperties({ element, onUpdate }) {
           </option>
         ))}
       </Select>
+      <div className="flex flex-col gap-1 mb-2">
+        {element.chartType === 'line' && (
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs text-text-secondary">
+            <input
+              data-testid="prop-chart-area-fill"
+              type="checkbox"
+              checked={element.areaFill === true}
+              onChange={(e) => onUpdate({ areaFill: e.target.checked })}
+              className="accent-accent"
+            />
+            <span>Fill area under line</span>
+          </label>
+        )}
+        <label className="flex items-center gap-1.5 cursor-pointer text-xs text-text-secondary">
+          <input
+            data-testid="prop-chart-stacked"
+            type="checkbox"
+            checked={element.stacked === true}
+            onChange={(e) => onUpdate({ stacked: e.target.checked })}
+            className="accent-accent"
+          />
+          <span>Stacked</span>
+        </label>
+      </div>
       <div className="text-[11px] text-text-muted mb-1">
         Labels (comma-separated)
       </div>

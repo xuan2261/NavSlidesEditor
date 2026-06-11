@@ -142,6 +142,33 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
           className="w-full min-h-[120px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] font-mono resize-y box-border"
           spellCheck={false}
         />
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          <div>
+            <div className="text-[11px] text-text-muted mb-0.5">Text Color</div>
+            <ColorPicker
+              data-testid="prop-markdown-text-color"
+              className="w-full h-8 border border-border rounded cursor-pointer"
+              value={element.textColor || '#ffffff'}
+              onChange={(e) => onUpdate({ textColor: e.target.value })}
+            />
+          </div>
+          <div>
+            <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
+            <input
+              data-testid="prop-markdown-font-size"
+              className="prop-input"
+              type="number"
+              min={8}
+              max={120}
+              value={element.fontSize || 18}
+              onChange={(e) => {
+                const value = clampNumber(e.target.value, 8, 120, null)
+                if (value === null) return
+                onUpdate({ fontSize: value })
+              }}
+            />
+          </div>
+        </div>
       </div>
     )
 
@@ -362,6 +389,15 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
         >
           Reset Overrides
         </button>
+        <div className="text-[11px] text-text-muted mb-0.5">SVG Markup</div>
+        <textarea
+          data-testid="prop-svg-content"
+          value={element.content || ''}
+          onChange={(e) => onUpdate({ content: e.target.value })}
+          className="w-full min-h-[100px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] font-mono resize-y box-border"
+          spellCheck={false}
+          placeholder="<svg>...</svg>"
+        />
       </div>
     )
 

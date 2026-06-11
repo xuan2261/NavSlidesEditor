@@ -223,6 +223,18 @@ export default function TimelineProperties({ element, onUpdate }) {
             placeholder="Image URL (optional)"
             onChange={(e) => updateItem(idx, { imageUrl: e.target.value })}
           />
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-text-muted">Connector length</span>
+            <Input
+              data-testid={`prop-timeline-connector-${idx}`}
+              type="number"
+              className="w-16 bg-card border border-border text-text-primary px-2 py-1 rounded-sm text-[11px]"
+              value={item.connectorOffset ?? 0}
+              onChange={(e) =>
+                updateItem(idx, { connectorOffset: clampNumber(e.target.value, 0, 500, 0) })
+              }
+            />
+          </div>
         </div>
       ))}
       <button

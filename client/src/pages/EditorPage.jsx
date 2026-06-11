@@ -64,6 +64,7 @@ import EditorModals from '../components/EditorModals'
 import { normalizePresentationNotes } from '../utils/slide-notes'
 import { flushPendingSave } from '../hooks/use-editor-save-queue'
 import { sanitizeRichTextHtml } from '../utils/content-safety'
+import { migrateVideoSrc } from '../utils/migrate-video-src'
 
 const CODE_THEME_CSS = {
   monokai: monokaiCSS,
@@ -137,7 +138,7 @@ const migrateSlide = (slide) => {
         : [],
     }
   }
-  return withChildren
+  return { ...withChildren, elements: withChildren.elements.map(migrateVideoSrc) }
 }
 
 const migrateChild = (child) => {
@@ -1435,6 +1436,8 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
             onUpdateSlide={updateCurrentSlide}
             onUpdatePresentation={(updates) => setPresentation((prev) => (typeof updates === 'function' ? updates(prev) : { ...prev, ...updates }))}
             selectedElement={selectedElement}
+            selectedElementIds={selectedElementIds}
+            elements={currentSlide?.elements || []}
             onUpdateElement={(updates) => updateSelectedElements(updates)}
             onPaste={handlePaste}
             onCut={handleCut}

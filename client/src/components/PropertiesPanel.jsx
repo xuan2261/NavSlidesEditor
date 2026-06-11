@@ -16,11 +16,11 @@ import { MousePointer2 } from 'lucide-react'
  * Type-specific property panel router.
  * Renders the correct sub-panel based on element.type.
  */
-function ElementTypeProperties({ element, onUpdate, onEditHtml, onEditCode, onEditLatex }) {
+function ElementTypeProperties({ element, onUpdate, onEditHtml, onEditCode, onEditLatex, elements, selectedElementIds }) {
   switch (element.type) {
     case 'shape':
     case 'line':
-      return <ShapeProperties element={element} onUpdate={onUpdate} />
+      return <ShapeProperties element={element} onUpdate={onUpdate} elements={elements} selectedElementIds={selectedElementIds} />
     case 'image':
       return <ImageProperties element={element} onUpdate={onUpdate} />
     case 'chart':
@@ -118,6 +118,8 @@ export default function PropertiesPanel({
             onBringForward={onBringForward}
             onSendBackward={onSendBackward}
             onDelete={onDeleteElement}
+            elements={slide?.elements || []}
+            selectedElementIds={selectedElementIds || []}
           />
 
           {/* Selection Pane (layer list) */}
@@ -158,6 +160,8 @@ export default function PropertiesPanel({
             onEditHtml={onEditHtml}
             onEditCode={onEditCode}
             onEditLatex={onEditLatex}
+            elements={slide?.elements || []}
+            selectedElementIds={selectedElementIds || []}
           />
         </div>
       )}

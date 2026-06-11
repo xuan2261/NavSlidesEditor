@@ -1,11 +1,18 @@
 import { Input, Select, ColorPicker } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
+import { computeMixedValues } from '../../utils/selection-mixed-values'
 /**
  * Shape and Line specific properties.
  */
 
-export default function ShapeProperties({ element, onUpdate }) {
+export default function ShapeProperties({ element, onUpdate, elements, selectedElementIds }) {
   const isLine = element.type === 'line'
+  const mixed = computeMixedValues(elements || [], selectedElementIds || [], [
+    'opacity',
+    'fill',
+    'stroke',
+    'textColor',
+  ])
 
   return (
     <>
@@ -15,6 +22,7 @@ export default function ShapeProperties({ element, onUpdate }) {
             <div className="text-[11px] text-text-muted">Fill</div>
             <ColorPicker
               data-testid="prop-shape-fill"
+              data-mixed={mixed.fill?.isMixed ? 'true' : undefined}
               className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
               value={element.fill || '#6366f1'}
               onChange={(e) => onUpdate({ fill: e.target.value })}
@@ -25,6 +33,7 @@ export default function ShapeProperties({ element, onUpdate }) {
           <div className="text-[11px] text-text-muted">Stroke Color</div>
           <ColorPicker
             data-testid="prop-shape-stroke"
+            data-mixed={mixed.stroke?.isMixed ? 'true' : undefined}
             className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
             value={element.stroke === 'none' || !element.stroke ? '#ffffff' : element.stroke}
             onChange={(e) => onUpdate({ stroke: e.target.value })}
@@ -101,10 +110,11 @@ export default function ShapeProperties({ element, onUpdate }) {
 
       <div className="mb-2.5">
         <div className="text-[11px] text-text-muted mb-1">
-          Opacity: {Math.round((element.opacity ?? 1) * 100)}%
+          Opacity: {mixed.opacity?.isMixed ? '—' : `${Math.round((element.opacity ?? 1) * 100)}%`}
         </div>
         <input
           data-testid="prop-shape-opacity"
+          data-mixed={mixed.opacity?.isMixed ? 'true' : undefined}
           type="range"
           className="w-full accent-accent"
           min="0"
@@ -175,6 +185,7 @@ export default function ShapeProperties({ element, onUpdate }) {
             <div className="text-[11px] text-text-muted">Text Color</div>
             <ColorPicker
               data-testid="prop-shape-text-color"
+              data-mixed={mixed.textColor?.isMixed ? 'true' : undefined}
               className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
               value={element.textColor || '#ffffff'}
               onChange={(e) => onUpdate({ textColor: e.target.value })}

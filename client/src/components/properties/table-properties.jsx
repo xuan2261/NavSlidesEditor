@@ -76,6 +76,7 @@ export default function TableProperties({ element, onUpdate }) {
       <div className="grid grid-cols-2 gap-2 mb-2">
         {[
           ['Header BG', 'headerBgColor', '#6366f1', 'prop-table-header-bg'],
+          ['Header Text', 'headerTextColor', '#ffffff', 'prop-table-header-text-color'],
           ['Text Color', 'textColor', '#ffffff', 'prop-table-text-color'],
           ['Border', 'borderColor', '#555555', 'prop-table-border-color'],
         ].map(([l, k, d, testId]) => (
@@ -89,6 +90,19 @@ export default function TableProperties({ element, onUpdate }) {
             />
           </div>
         ))}
+        <div>
+          <div className="text-[11px] text-text-muted mb-0.5">Border Style</div>
+          <Select
+            data-testid="prop-table-border-style"
+            className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs"
+            value={element.borderStyle || 'solid'}
+            onChange={(e) => onUpdate({ borderStyle: e.target.value })}
+          >
+            {['solid', 'dashed', 'dotted', 'double'].map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </Select>
+        </div>
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
           <Input

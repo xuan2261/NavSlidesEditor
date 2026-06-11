@@ -24,18 +24,6 @@ export default function MediaProperties({ element, onUpdate }) {
       />
       {isVideo && (
         <>
-          <div className="text-[11px] text-text-muted mb-1">Video URL</div>
-          <Input
-            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2"
-            type="text"
-            value={element.videoUrl || ''}
-            onChange={(e) => onUpdate({ videoUrl: e.target.value })}
-            placeholder="https://example.com/video.mp4"
-          />
-        </>
-      )}
-      {isVideo && (
-        <>
           <div className="text-[11px] text-text-muted mb-1">
             Poster Image URL
           </div>

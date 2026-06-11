@@ -7,6 +7,7 @@ import { Button } from '../ui'
 import { CANVAS_WIDTH } from '../../data/slide-constants'
 import { normalizeTableShape } from '../properties/table-properties-utils'
 import { normalizeRotation } from '../../utils/element-update-fanout'
+import { computeMixedValues } from '../../utils/selection-mixed-values'
 
 const OBJECT_FIT_OPTIONS = ['cover', 'contain', 'fill', 'none']
 const CHART_TYPES = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea', 'scatter']
@@ -19,17 +20,19 @@ const CODE_LANGUAGES = [
 function ShapeControls({ element, onUpdateElement }) {
   return (
     <>
-      <RibbonSection label="Fill" className="border-r border-border">
-        <div className="flex items-center h-7">
-          <input
-            type="color"
-            className="w-7 h-7 rounded cursor-pointer border border-border"
-            value={element.fill || '#3b82f6'}
-            onChange={(e) => onUpdateElement?.({ fill: e.target.value })}
-            aria-label="Fill color"
-          />
-        </div>
-      </RibbonSection>
+      {element.type !== 'line' && (
+        <RibbonSection label="Fill" className="border-r border-border">
+          <div className="flex items-center h-7">
+            <input
+              type="color"
+              className="w-7 h-7 rounded cursor-pointer border border-border"
+              value={element.fill || '#3b82f6'}
+              onChange={(e) => onUpdateElement?.({ fill: e.target.value })}
+              aria-label="Fill color"
+            />
+          </div>
+        </RibbonSection>
+      )}
       <RibbonSection label="Stroke" className="border-r border-border">
         <div className="flex items-center gap-1 h-7">
           <input
@@ -204,7 +207,7 @@ function ContextualControls({ selectedElement, onUpdateElement }) {
   }
 }
 
-export default function FormatTabContent({ selectedElement, onUpdateElement }) {
+export default function FormatTabContent({ selectedElement, onUpdateElement, elements, selectedElementIds }) {
   if (!selectedElement) {
     return (
       <RibbonTabContentRow>
@@ -230,6 +233,9 @@ export default function FormatTabContent({ selectedElement, onUpdateElement }) {
     if (min !== null && num < min) return
     onUpdateElement?.({ [key]: num })
   }
+
+  const mixed = computeMixedValues(elements || [], selectedElementIds || [], ['opacity'])
+  const opacityMixed = mixed.opacity?.isMixed
 
   return (
     <RibbonTabContentRow>
@@ -299,6 +305,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement }) {
         <div className="flex items-center gap-1 h-7">
           <input
             type="range"
+            data-mixed={opacityMixed ? 'true' : undefined}
             className="w-16 accent-accent cursor-pointer"
             min={0}
             max={1}
@@ -308,7 +315,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement }) {
             aria-label="Opacity"
           />
           <span className="text-[10px] text-text-muted w-6 text-right">
-            {Math.round((selectedElement.opacity ?? 1) * 100)}%
+            {opacityMixed ? '—' : `${Math.round((selectedElement.opacity ?? 1) * 100)}%`}
           </span>
         </div>
       </RibbonSection>
