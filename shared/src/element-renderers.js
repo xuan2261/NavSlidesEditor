@@ -61,6 +61,21 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;')
 }
 
+// Stable, collision-resistant id fragment derived from the FULL element id.
+// A prior `id.slice(0,8)` truncation made two elements whose ids shared an
+// 8-char prefix emit the same marker def id, so one line's arrowheads bound to
+// the other's marker. A 32-bit FNV-1a hash over the whole id avoids that while
+// staying deterministic and DOM-id safe.
+function hashId(value) {
+  const str = String(value == null ? '' : value)
+  let h = 0x811c9dc5
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i)
+    h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0
+  }
+  return h.toString(36)
+}
+
 function safeCssColor(value, fallback) {
   const color = typeof value === 'string' ? value.trim() : ''
   if (/^#[0-9a-f]{3,8}$/i.test(color)) return color
@@ -477,7 +492,7 @@ function renderLine(el, style, wrap, vis) {
     y1 = el.y1 ?? el.height / 2
   const x2 = el.x2 ?? el.width,
     y2 = el.y2 ?? el.height / 2
-  const uid = (el.id || 'l').slice(0, 8)
+  const uid = `l${hashId(el.id || 'l')}`
   const startType = el.arrowStart || 'none'
   const endType = el.arrowEnd || 'none'
   let defs = ''
@@ -511,9 +526,27 @@ function renderLine(el, style, wrap, vis) {
 
 function renderSvg(el, style, wrap, vis) {
   let svgContent = el.content || ''
-  if (el.fillOverride) svgContent = svgContent.replace(/fill="[^"]*"/g, `fill="${el.fillOverride}"`)
-  if (el.strokeOverride)
-    svgContent = svgContent.replace(/stroke="[^"]*"/g, `stroke="${el.strokeOverride}"`)
+  // Recolor shape paint while leaving the gradient/pattern definitions intact:
+  // (1) skip anything inside a <defs>...</defs> block (gradient <stop> colors),
+  // (2) never clobber a `url(#id)` paint reference (that points at a gradient),
+  // (3) also rewrite inline `style="...fill:..."`, not just the presentation attr.
+  const applyPaint = (content, name, value) => {
+    if (!value) return content
+    // Split out <defs> blocks so their contents pass through untouched.
+    const segments = content.split(/(<defs\b[\s\S]*?<\/defs>)/i)
+    const attrRe = new RegExp(`${name}\\s*=\\s*"(?!url\\()[^"]*"`, 'gi')
+    const styleRe = new RegExp(`(style\\s*=\\s*"[^"]*?)${name}\\s*:\\s*(?!url\\()[^;"']*`, 'gi')
+    return segments
+      .map((seg, i) => {
+        if (i % 2 === 1) return seg // odd segments are <defs>...</defs> blocks
+        return seg
+          .replace(attrRe, `${name}="${value}"`)
+          .replace(styleRe, `$1${name}:${value}`)
+      })
+      .join('')
+  }
+  if (el.fillOverride) svgContent = applyPaint(svgContent, 'fill', el.fillOverride)
+  if (el.strokeOverride) svgContent = applyPaint(svgContent, 'stroke', el.strokeOverride)
   return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;">${sanitizeSvgHtml(svgContent)}</div>`
 }
 
@@ -595,17 +628,34 @@ function renderTimeline(el, style, wrap, vis, _opts) {
     const cardH = isTop ? lineY - 36 : h - lineY - 36
     const connY1 = isTop ? cardY + cardH : lineY
     const connY2 = isTop ? lineY : cardY
+    const imgH = item.image ? Math.min(cardH * 0.55, 60) : 0
     svg += `<line x1="${x}" y1="${connY1}" x2="${x}" y2="${connY2}" ${lineStroke} stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>`
     svg += `<circle cx="${x}" cy="${lineY}" r="4" ${dotFill}/>`
-    let ty = cardY + fs
-    svg += `<text x="${x}" y="${ty}" text-anchor="middle" ${textFill} font-size="${fs}" font-weight="600">${escapeHtml(item.label || '')}</text>`
-    ty += fs + 2
-    if (item.description) {
-      svg += `<text x="${x}" y="${ty}" text-anchor="middle" ${textFill} font-size="${fs - 1}" opacity="0.6">${escapeHtml(item.description)}</text>`
-      ty += fs
+    if (isTop) {
+      let ty = cardY + fs
+      svg += `<text x="${x}" y="${ty}" text-anchor="middle" ${textFill} font-size="${fs}" font-weight="600">${escapeHtml(item.label || '')}</text>`
+      ty += fs + 2
+      if (item.description) {
+        svg += `<text x="${x}" y="${ty}" text-anchor="middle" ${textFill} font-size="${fs - 1}" opacity="0.6">${escapeHtml(item.description)}</text>`
+        ty += fs
+      }
+      const dateLabel = yearMode ? String(parseInt(item.date) || item.date) : item.date
+      svg += `<text x="${x}" y="${ty}" text-anchor="middle" ${textFill} font-size="${fs - 2}" opacity="0.35">${escapeHtml(dateLabel)}</text>`
+      ty += 4
+      if (item.image) {
+        svg += `<image href="${escapeHtml(item.image)}" x="${x - 40}" y="${ty}" width="80" height="${imgH}" preserveAspectRatio="xMidYMid meet"/>`
+      }
+    } else {
+      if (item.image) {
+        svg += `<image href="${escapeHtml(item.image)}" x="${x - 40}" y="${cardY}" width="80" height="${imgH}" preserveAspectRatio="xMidYMid meet"/>`
+      }
+      svg += `<text x="${x}" y="${cardY + imgH + fs + 2}" text-anchor="middle" ${textFill} font-size="${fs}" font-weight="600">${escapeHtml(item.label || '')}</text>`
+      if (item.description) {
+        svg += `<text x="${x}" y="${cardY + imgH + fs * 2 + 4}" text-anchor="middle" ${textFill} font-size="${fs - 1}" opacity="0.6">${escapeHtml(item.description)}</text>`
+      }
+      const dateLabel = yearMode ? String(parseInt(item.date) || item.date) : item.date
+      svg += `<text x="${x}" y="${cardY + imgH + fs * (item.description ? 3 : 2) + 6}" text-anchor="middle" ${textFill} font-size="${fs - 2}" opacity="0.35">${escapeHtml(dateLabel)}</text>`
     }
-    const dateLabel = yearMode ? String(parseInt(item.date) || item.date) : item.date
-    svg += `<text x="${x}" y="${ty}" text-anchor="middle" ${textFill} font-size="${fs - 2}" opacity="0.35">${escapeHtml(dateLabel)}</text>`
   })
   svg += '</svg>'
 
@@ -649,6 +699,19 @@ function renderPlugin(el, style, wrap, vis, opts) {
   return `<div${wrap} data-plugin-runtime="true" data-plugin-data="${dataJson}" style="${style}${vis}"><iframe title="${title}" src="${src}" sandbox="allow-scripts" style="width:100%;height:100%;border:none;background:transparent;" scrolling="no"></iframe></div>`
 }
 
+// Static export renderer for `game` elements. Games hold heterogeneous,
+// type-specific sub-configs (name-picker/jeopardy/...) with no uniform
+// question schema, and they are interactive at runtime — so on export we emit a
+// labeled static placeholder (title + game-type badge), never interactive UI.
+// Mirrors renderPluginFallback's contract: never returns '' and never throws.
+function renderGame(el, style, wrap, vis) {
+  const gameType = el.gameType || 'game'
+  const title = el[gameType] && el[gameType].title ? el[gameType].title : el.title || 'Game'
+  const label = escapeHtml(title)
+  const badge = escapeHtml(gameType)
+  return `<div${wrap} data-game-fallback="true" data-game-type="${badge}" style="${style}${vis}display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:${safeCssColor(el.backgroundColor, '#1a1a2e')};border:1px solid rgba(148,163,184,0.35);border-radius:8px;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong style="font-size:calc(20px * var(--font-zoom, 1));">${label}</strong><span style="font-size:calc(12px * var(--font-zoom, 1));text-transform:uppercase;letter-spacing:0.05em;padding:2px 10px;border-radius:999px;background:${safeCssColor(el.accentColor, '#6366f1')};opacity:.92;">${badge}</span><span style="font-size:calc(11px * var(--font-zoom, 1));opacity:.6;">Interactive game</span></div>`
+}
+
 // ─── Dispatcher ──────────────────────────────────────────────────────────────
 
 const RENDERERS = {
@@ -670,6 +733,7 @@ const RENDERERS = {
   svg: renderSvg,
   qrcode: renderQrcode,
   timeline: renderTimeline,
+  game: renderGame,
 }
 
 /**

@@ -1,7 +1,9 @@
+import { resolveColorField } from 'revealjs-shared'
+
 export function CalloutRenderer({ element }) {
   const num = element.calloutNumber || 1
   const bg = element.calloutColor || '#ef4444'
-  const textColor = element.calloutTextColor || '#ffffff'
+  const textColor = resolveColorField(element.calloutTextColor, 'callout', 'calloutTextColor') || '#ffffff'
   const fontSize = element.fontSize || 16
   const calloutStyle = {
     width: '100%',

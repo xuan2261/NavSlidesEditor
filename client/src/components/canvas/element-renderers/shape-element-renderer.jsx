@@ -156,6 +156,64 @@ export function ShapeRenderer({ element }) {
           </g>
         )
       }
+      case 'hexagon':
+        return (
+          <g {...gProps}>
+            <polygon
+              points={`${w / 4},${sw} ${w * 0.75},${sw} ${w - sw},${h / 2} ${w * 0.75},${h - sw} ${w / 4},${h - sw} ${sw},${h / 2}`}
+            />
+          </g>
+        )
+      case 'pentagon':
+        return (
+          <g {...gProps}>
+            <polygon
+              points={`${w / 2},${sw} ${w - sw},${h * 0.38} ${w * 0.81},${h - sw} ${w * 0.19},${h - sw} ${sw},${h * 0.38}`}
+            />
+          </g>
+        )
+      case 'cloud':
+        return (
+          <g {...gProps}>
+            <path
+              d={`M ${w * 0.25} ${h * 0.65} A ${w * 0.2} ${h * 0.2} 0 0 1 ${w * 0.2} ${h * 0.35} A ${w * 0.25} ${h * 0.25} 0 0 1 ${w * 0.6} ${h * 0.15} A ${w * 0.2} ${h * 0.2} 0 0 1 ${w * 0.85} ${h * 0.35} A ${w * 0.2} ${h * 0.2} 0 0 1 ${w * 0.8} ${h * 0.7} Z`}
+            />
+          </g>
+        )
+      case 'cylinder':
+        return (
+          <g {...gProps}>
+            <path
+              d={`M ${sw} ${h * 0.15} A ${w / 2 - sw} ${h * 0.15} 0 0 0 ${w - sw} ${h * 0.15} A ${w / 2 - sw} ${h * 0.15} 0 0 0 ${sw} ${h * 0.15} L ${sw} ${h * 0.85} A ${w / 2 - sw} ${h * 0.15} 0 0 0 ${w - sw} ${h * 0.85} Z`}
+            />
+          </g>
+        )
+      case 'parallelogram':
+        return (
+          <g {...gProps}>
+            <polygon points={`${w * 0.2},${sw} ${w - sw},${sw} ${w * 0.8},${h - sw} ${sw},${h - sw}`} />
+          </g>
+        )
+      case 'trapezoid':
+        return (
+          <g {...gProps}>
+            <polygon points={`${w * 0.2},${sw} ${w * 0.8},${sw} ${w - sw},${h - sw} ${sw},${h - sw}`} />
+          </g>
+        )
+      case 'bracket': {
+        // Bracket is stroke-only (no fill); mirror shapeUtils: fall back to fill
+        // color when stroke is 'none', and thicken thin strokes to stay visible.
+        const strkVal = stroke === 'none' ? fill : stroke
+        const swThick = Math.max(3, sw)
+        return (
+          <g {...paintProps(undefined, strkVal)} strokeWidth={swThick}>
+            <path
+              d={`M ${w * 0.8} ${swThick} Q ${w * 0.4} ${swThick} ${w * 0.4} ${h * 0.25} T ${swThick} ${h * 0.5} Q ${w * 0.4} ${h * 0.5} ${w * 0.4} ${h * 0.75} T ${w * 0.8} ${h - swThick}`}
+              fill="none"
+            />
+          </g>
+        )
+      }
       default:
         return (
           <g {...gProps}>

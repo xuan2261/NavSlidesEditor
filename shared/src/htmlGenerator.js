@@ -24,8 +24,10 @@ function formatGradientCss(bg) {
   const angle = Number(bg.angle) || 0
   const cssStops = stops
     .map((stop) => {
-      const offset = Number(stop.offset) > 1 ? Number(stop.offset) : Number(stop.offset) * 100
-      const percent = Number.isFinite(offset) ? Math.round(offset) : 0
+      // Stop offsets follow the 0-1 convention used everywhere else (shapeUtils,
+      // export-pptx-raster, the canvas gradient renderer). Convert to a CSS percent.
+      const offset = Number(stop.offset)
+      const percent = Number.isFinite(offset) ? Math.round(offset * 100) : 0
       return `${stop.color || '#000000'} ${percent}%`
     })
     .join(', ')

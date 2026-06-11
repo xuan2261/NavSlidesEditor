@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react'
 import { EditorContent } from '@tiptap/react'
 import hljs from 'highlight.js'
 import katex from 'katex'
+import { resolveColorField } from 'revealjs-shared'
 import { sanitizeRichTextHtml } from '../../utils/content-safety'
 import { getElementRenderer, CropOverlay } from './element-renderers/registry'
 import { HANDLE_STYLES } from './use-canvas-resize-rotate'
@@ -115,7 +116,7 @@ export default function CanvasElement({
   const textInsetStyles = importedTextInsetStyles(element)
   const textWrapStyles = importedTextWrapStyles(element)
   const textElementStyle = {
-    color: element.textColor || 'white',
+    color: resolveColorField(element.textColor, 'text', 'textColor') || 'white',
     fontFamily: element.fontFamily,
     fontSize: importedFontSize(element),
     lineHeight: element.lineHeight,

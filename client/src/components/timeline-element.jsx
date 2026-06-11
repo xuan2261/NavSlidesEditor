@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { resolveColorField } from 'revealjs-shared'
 import { TimelineExpandedDetails } from './timeline-expanded-details'
 import { buildTicks, getTimelineItems, getTimelineRange, parseDatePos } from './timeline-element-utils'
 
@@ -12,9 +13,9 @@ export default function TimelineElement({ element }) {
     (spacing === 'auto' && /^-?\d+$/.test(String(startDate)))
   const lineY = h * 0.5
   const pad = 30
-  const lineColor = element.lineColor || '#6366f1'
-  const dotColor = element.dotColor || lineColor
-  const textColor = element.textColor || '#fff'
+  const lineColor = resolveColorField(element.lineColor, 'timeline', 'lineColor') || '#6366f1'
+  const dotColor = resolveColorField(element.dotColor, 'timeline', 'dotColor') || lineColor
+  const textColor = resolveColorField(element.textColor, 'timeline', 'textColor') || '#fff'
   const fs = element.fontSize || 11
   const items = getTimelineItems(element)
 

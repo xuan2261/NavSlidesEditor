@@ -1,3 +1,5 @@
+import { resolveColorField } from 'revealjs-shared'
+
 export const ARROWHEAD_MARKERS = {
   arrow: (id, color) => (
     <marker
@@ -66,7 +68,7 @@ export function LineArrowRenderer({ element }) {
     y2 = element.y2 ?? h / 2
   const cx = element.cx,
     cy = element.cy
-  const color = element.stroke || '#ffffff'
+  const color = resolveColorField(element.stroke, 'line', 'stroke') || '#ffffff'
   const sw = element.strokeWidth || 2
   const dash = element.dashArray || ''
   const startType = element.arrowStart || 'none'

@@ -1,8 +1,10 @@
+import { resolveColorField } from 'revealjs-shared'
+
 export function IconRenderer({ element, iconPaths }) {
   const rawName = element.iconName || 'Star'
   const iconKey = rawName.endsWith('Icon') && rawName !== 'ImageIcon' ? rawName.replace(/Icon$/, '') : rawName
   const svgPath = iconPaths[iconKey] || iconPaths['Star']
-  const color = element.iconColor || '#ffffff'
+  const color = resolveColorField(element.iconColor, 'icon', 'iconColor') || '#ffffff'
   const sw = element.iconStrokeWidth || 2
   const iconWrapperStyle = {
     width: '100%',

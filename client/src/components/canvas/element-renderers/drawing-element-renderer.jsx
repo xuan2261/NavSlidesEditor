@@ -1,5 +1,8 @@
+import { resolveColorField } from 'revealjs-shared'
+
 export function DrawingRenderer({ element }) {
   const paths = element.paths || []
+  const resolvedStroke = resolveColorField(element.strokeColor, 'drawing', 'strokeColor')
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
       <svg
@@ -13,7 +16,7 @@ export function DrawingRenderer({ element }) {
           <path
             key={i}
             d={p.d}
-            stroke={p.stroke || element.strokeColor || '#ffffff'}
+            stroke={p.stroke || resolvedStroke || '#ffffff'}
             strokeWidth={p.strokeWidth || element.strokeWidth || 3}
             fill="none"
             strokeLinecap="round"
