@@ -5,6 +5,23 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { io } from 'socket.io-client'
 
+// Stable per-browser player identity. Survives reconnects so the server can
+// keep host designation and the room reconnect-grace window valid.
+function getPlayerId() {
+  if (typeof localStorage === 'undefined') {
+    return `p-${Math.random().toString(36).slice(2)}`
+  }
+  let id = localStorage.getItem('navslides-game-player-id')
+  if (!id) {
+    id =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `p-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    localStorage.setItem('navslides-game-player-id', id)
+  }
+  return id
+}
+
 export function useGamePlayer({ gameId, playerName }) {
   const [status, setStatus] = useState('joining') // joining | waiting | question | answered | result | finished
   const [players, setPlayers] = useState([])
@@ -48,9 +65,9 @@ export function useGamePlayer({ gameId, playerName }) {
     if (!socketRef.current || status !== 'question') return
     const timeSpent = questionStartRef.current ? (Date.now() - questionStartRef.current) / 1000 : 0
     socketRef.current.emit('game-answer', {
-      roomId: gameId,
-      answer: answerIndex,
-      timeSpent: Math.round(timeSpent),
+      gameId,
+      answerIndex,
+      timeSpentMs: Math.round(timeSpent * 1000),
     })
     setSelectedAnswer(answerIndex)
     setStatus('answered')
@@ -61,15 +78,18 @@ export function useGamePlayer({ gameId, playerName }) {
     if (!gameId || !playerName) return
     let cancelled = false
 
-    const sock = io({ path: '/ws', reconnection: true })
+    // Player-game traffic lives on the '/games' namespace (the live default
+    // namespace is reserved for EditorPage game-timer events).
+    const sock = io('/games', { path: '/ws', reconnection: true })
 
     sock.on('connect', () => {
       if (cancelled) { sock.disconnect(); return }
       setIsConnected(true)
       setError(null)
       sock.emit('game-join', {
-        roomId: gameId,
+        gameId,
         playerName,
+        playerId: getPlayerId(),
         role: 'player',
       })
       setStatus('waiting')

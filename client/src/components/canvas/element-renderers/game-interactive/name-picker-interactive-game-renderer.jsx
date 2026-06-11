@@ -394,20 +394,33 @@ export function NamePickerRenderer({ element, isPresenting }) {
 
   useEffect(() => { injectCSS() }, [])
 
-  const { emit } = useGameSocket(element.id, 'presenter', 'presenter')
+  const { emit, isConnected, lastEvent } = useGameSocket(element.id, 'presenter', 'presenter')
 
   const effectiveItems = (element.items || []).filter((_, i) => !excludedSet.has(i))
 
   const handleWinner = useCallback((name, idx) => {
+    // When live, the server is authoritative: request a pick and let the
+    // game-random-result event (below) decide the announced winner so every
+    // client renders the SAME index. Offline (no game room) we fall back to
+    // the local animation result so the picker still works in the editor.
+    if (emit && isConnected) {
+      emit('game-random', { gameId: element.id, gameType: 'name-picker', mode })
+      return
+    }
     setLastWinner({ name, idx })
     fireConfetti(element)
-    if (emit) {
-      emit('game-random', {
-        roomId: element.id, gameType: 'name-picker', mode,
-        winner: name, allItems: element.items || [],
-      })
-    }
-  }, [element, emit, mode])
+  }, [element, emit, isConnected, mode])
+
+  // Render the SERVER-chosen winner so it matches every other client.
+  useEffect(() => {
+    if (lastEvent?.type !== 'random-result') return
+    const idx = lastEvent.winnerIndex
+    if (typeof idx !== 'number' || idx < 0) return
+    const name = (element.items || [])[idx]
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing UI to an external socket event is the intended use
+    setLastWinner({ name, idx })
+    fireConfetti(element)
+  }, [lastEvent, element])
 
   const handleExclude = useCallback(() => {
     if (lastWinner?.idx !== undefined) {

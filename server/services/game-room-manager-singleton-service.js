@@ -1,11 +1,16 @@
 /**
  * GameEngine — singleton service managing all game rooms.
  * Handles: room creation, player join/leave, answer submission, random picker,
- * scoring, leaderboard, and TTL-based cleanup.
+ * scoring, leaderboard, host identity/authorization, and TTL-based cleanup.
+ *
+ * Players are keyed by a stable playerId (client-supplied, persisted in
+ * localStorage; falls back to socket.id). This survives reconnects so the
+ * host designation and the reconnect grace window remain valid.
  */
 const rooms = new Map() // gameId -> room object
 
 const ROOM_TTL_MS = 5 * 60 * 1000 // 5 minutes after game ends
+let emptyRoomTtlMs = 30 * 1000 // grace window before an emptied room is reaped
 
 function createRoom(gameId, gameType, options = {}) {
   if (rooms.has(gameId)) return null
@@ -14,7 +19,9 @@ function createRoom(gameId, gameType, options = {}) {
     gameId,
     gameType,
     status: 'waiting', // 'waiting' | 'active' | 'finished'
-    players: new Map(), // socketId -> { name, score, answers[] }
+    players: new Map(), // playerId -> { playerId, socketId, name, score, answers[], role }
+    hostPlayerId: null,
+    hostExplicit: false, // true once a role==='host' joiner claimed it
     currentQuestion: 0,
     questions: options.questions || [],
     teams: options.teams || [],
@@ -32,32 +39,55 @@ function getRoom(gameId) {
   return rooms.get(gameId)
 }
 
-function joinRoom(gameId, socketId, playerName) {
+function joinRoom(gameId, playerId, playerName, options = {}) {
   const room = rooms.get(gameId)
   if (!room) return { ok: false, error: 'room-not-found' }
 
-  room.players.set(socketId, {
-    name: playerName,
-    score: 0,
-    answers: [],
-  })
+  // Rejoin within the grace window cancels a pending empty-room cleanup.
+  if (room.cleanupTimer) {
+    clearTimeout(room.cleanupTimer)
+    room.cleanupTimer = null
+  }
+
+  const existing = room.players.get(playerId)
+  const player = existing || { playerId, name: playerName, score: 0, answers: [] }
+  player.name = playerName
+  player.socketId = options.socketId || playerId
+  if (options.role) player.role = options.role
+  room.players.set(playerId, player)
+
+  // Host designation: an explicit role==='host' always wins; otherwise the
+  // first joiner overall becomes the fallback host until a real host claims it.
+  if (options.role === 'host' && !room.hostExplicit) {
+    room.hostPlayerId = playerId
+    room.hostExplicit = true
+  } else if (!room.hostPlayerId) {
+    room.hostPlayerId = playerId
+  }
 
   return {
     ok: true,
     players: room.players,
     leaderboard: buildLeaderboard(room),
+    isHost: room.hostPlayerId === playerId,
   }
 }
 
-function submitAnswer(gameId, socketId, answerIndex, timeSpentMs) {
+function submitAnswer(gameId, playerId, answerIndex, timeSpentMs) {
   const room = rooms.get(gameId)
   if (!room) return null
 
   const question = room.questions[room.currentQuestion]
   if (!question) return null
 
-  const player = room.players.get(socketId)
+  const player = room.players.get(playerId)
   if (!player) return null
+
+  // Anti-cheat: a player may answer each question only once. A repeat for the
+  // same question id is ignored — no score change, signalled to the caller.
+  if (player.answers.some((a) => a.questionId === question.id)) {
+    return { duplicate: true, correct: false, points: 0, totalScore: player.score }
+  }
 
   const correct = answerIndex === question.correctIndex
 
@@ -120,17 +150,31 @@ function getLeaderboard(gameId) {
 }
 
 function buildLeaderboard(room) {
-  return Array.from(room.players.entries())
-    .map(([socketId, player]) => ({ socketId, name: player.name, score: player.score }))
+  return Array.from(room.players.values())
+    .map((player) => ({ playerId: player.playerId, name: player.name, score: player.score }))
     .sort((a, b) => b.score - a.score)
 }
 
-function leaveRoom(gameId, socketId) {
+function isHost(gameId, playerId) {
+  const room = rooms.get(gameId)
+  return !!room && room.hostPlayerId === playerId
+}
+
+function leaveRoom(gameId, playerId) {
   const room = rooms.get(gameId)
   if (!room) return { ok: false, error: 'room-not-found' }
 
-  room.players.delete(socketId)
+  room.players.delete(playerId)
   return { ok: true, players: room.players }
+}
+
+// Arm a grace-window cleanup for a room that just became empty. A rejoin
+// (joinRoom) within the window clears this timer.
+function scheduleEmptyCleanup(gameId) {
+  const room = rooms.get(gameId)
+  if (!room || room.players.size > 0) return
+  if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
+  room.cleanupTimer = setTimeout(() => cleanup(gameId), emptyRoomTtlMs)
 }
 
 function cleanup(gameId) {
@@ -147,6 +191,12 @@ function _reset() {
     if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
   }
   rooms.clear()
+  emptyRoomTtlMs = 30 * 1000
+}
+
+// Test seam: shrink the empty-room grace window so cleanup tests run fast.
+function _setEmptyRoomTtl(ms) {
+  emptyRoomTtlMs = ms
 }
 
 module.exports = {
@@ -158,7 +208,10 @@ module.exports = {
   nextQuestion,
   endGame,
   getLeaderboard,
+  isHost,
   leaveRoom,
+  scheduleEmptyCleanup,
   cleanup,
   _reset,
+  _setEmptyRoomTtl,
 }
