@@ -23,6 +23,11 @@ extraResources:
       - '**/*'
       - '!data/**'
       - '!uploads/**'
+      - '!node_modules/**'
+  - from: server/node_modules/
+    to: server/node_modules/
+    filter:
+      - '**/*'
   - from: server/data/built-in-templates.json
     to: server/data/built-in-templates.json
   - from: client/dist/

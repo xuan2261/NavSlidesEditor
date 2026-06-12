@@ -9,6 +9,7 @@
 - Improved renderer/editor/live fidelity: canvas and shared renderers now align for additional shapes, token colors, timeline, and game elements; vertical child slides participate in find/replace; redo history now matches the undo cap; ribbon mixed-state controls work for multi-select; live annotations are scoped per slide and orphaned rooms are reaped.
 - Verification: final `npm run test` passed 2474 tests with 0 failures and 1 skipped; `npm run lint` passed with 0 errors and 23 pre-existing benchmark warnings; `npm run build` passed. PPTX corpus and browser-audit gates passed in the import/export phases.
 - Synchronized app package versions to `1.14.2` and added release notes for the GitHub release.
+- Fixed Electron release packaging so the prepared standalone `server/node_modules` tree is copied into `win-unpacked/resources/server/node_modules`; local `npx electron-builder --win --publish never` now creates the installer and portable `.exe` with packaged server dependencies present.
 
 ## v1.14.1 — 2026-05-31
 
