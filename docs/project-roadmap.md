@@ -1,8 +1,8 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: v1.14.1 — Release-confidence verification, critical journey coverage, design-token theming, FX backgrounds, Design Ideas, ribbon polish, EditorPage hardening (2026-05-31)
+## Current Status: v1.14.1 + remediation hardening — Release-confidence verification, critical journey coverage, design-token theming, FX backgrounds, Design Ideas, ribbon polish, EditorPage hardening, and 2026-06-12 review remediation
 
-Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system and now has clipping-safe portal popups. The design-token system (39 presets, 8 FX backgrounds, Design Ideas panel) landed in v1.13.0–v1.14.0. EditorPage hardening (vertical slides first-class, ~1356 LOC) and ribbon polish (contextual Format tab, RibbonBigButton, zoom slider, view switcher) completed in v1.14.0. v1.14.1 adds release-confidence verification docs, critical journey coverage, and CI gate contracts. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state, and the hybrid PPTX export/import pipeline.
+Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system and now has clipping-safe portal popups. The design-token system (39 presets, 8 FX backgrounds, Design Ideas panel) landed in v1.13.0–v1.14.0. EditorPage hardening (vertical slides first-class, ~1356 LOC) and ribbon polish (contextual Format tab, RibbonBigButton, zoom slider, view switcher) completed in v1.14.0. v1.14.1 adds release-confidence verification docs, critical journey coverage, and CI gate contracts. The 2026-06-12 remediation pass closes the 2026-06-11 monorepo review findings across game sockets, server trust boundaries, import/export hardening, live room cleanup, and editor UI controls. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state with cleanup, and the hybrid PPTX export/import pipeline.
 
 ### What Works
 
@@ -34,6 +34,7 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | AI copywriting + translation                       | Done                                                                                                      |
 | Media library (Unsplash, Giphy)                    | Done                                                                                                      |
 | Gamification Game Controls (7 game types)          | Done                                                                                                      |
+| Game socket remediation                             | Done (dedicated `/games` namespace, stable player identity, host authz, duplicate-answer guard, room cleanup) |
 | Ribbon UI migration                                 | Done (replaced Toolbar.jsx, InsertMenu.jsx, EditorMenuBar.jsx with tab-based ribbon; Advanced direct actions and portal popup overlay hardening complete) |
 | Parallax feature port                               | Done (font-weight, line-height, timeline element, video controls, LaTeX improvements)                    |
 | Upstream selective port                             | Done (merged 2026-05-14; copy URL context menu, typography/export consistency)                            |
@@ -42,6 +43,7 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | Ribbon UI polish                                    | Done (contextual Format tab, RibbonBigButton hierarchy, zoom slider, view switcher)                       |
 | EditorPage hardening + vertical slides              | Done (~1356 LOC, EditorModals extracted, use-element-creation/use-export-actions/use-ai-actions hooks, vertical slides first-class) |
 | Feature-coverage traceability matrix                | Done (100 editor-core capabilities, 100 PASS / 0 ALLOWED, extended domain inventory, CI warn-first gate, `[cap:<id>]` annotation convention)    |
+| Monorepo review remediation                         | Done (8 TDD phases, 2474 Vitest tests passed, lint/build green, PPTX corpus/browser-audit gates passed for import/export phases) |
 
 ### What's New in v1.5.x / v1.6.x (Security & Architecture Refactor)
 

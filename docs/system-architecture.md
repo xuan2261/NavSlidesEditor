@@ -181,7 +181,7 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 | --- | --- |
 | `storage.js` | File I/O abstraction with per-file locking |
 | `socket-handler.js` | Socket.IO event wiring |
-| `live-rooms.js` | In-memory room state and role tracking |
+| `live-rooms.js` | In-memory room state, role tracking, and orphan-room cleanup |
 | `game-socket-handler.js` | Game Socket.IO wiring |
 | `plugin-runtime.js` | Bundled/user plugin manifest discovery and safe asset path resolution |
 | `presentation-finder.js` | Presentation lookup utility |
@@ -199,7 +199,7 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 - `presentation-meta` carries slide labels, slide count, and notes for the
   controller UI.
 - Viewer count excludes controllers.
-- Room annotations and timers live in memory; a restart clears live room state even though presentation JSON persists.
+- Room annotations and timers live in memory; a restart clears live room state even though presentation JSON persists. Orphaned rooms are cleaned up after presenter teardown so idle live sessions do not grow without bound.
 
 ### Socket.IO Events
 
@@ -217,7 +217,7 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 | `annotations:sync` | server → client | `{ slideIndex, annotations[] }` |
 | `presenter-disconnected` | server → room | — (room survives, presenterId = null) |
 
-Annotations are stored per `slideIndex` in room state. `presenter-disconnected` replaces the previous `presenter-left` event; the room is preserved rather than deleted.
+Annotations are stored per `slideIndex` in room state and re-synced for the active slide on navigation/rejoin. `presenter-disconnected` replaces the previous `presenter-left` event; the room is preserved briefly for reconnect, then cleanup removes orphaned state.
 
 **Timer events:**
 | Event | Direction | Payload |
@@ -382,10 +382,12 @@ diverge:
 - `server/services/pptx-exporter.js` uses a hybrid strategy: stable primitives render as native PPT
   objects, while complex DOM-backed content and gradient backgrounds fall back
   to rasterized assets so exported slides keep visual fidelity instead of
-  dropping elements.
+  dropping elements. Element-level render failures degrade to labelled
+  placeholders and warnings instead of failing the whole export.
 - `server/routes/pptx-import.js` exposes `POST /api/pptx/import`, which
   parses `.pptx` files via `pptxtojson` 2.0.2 (primary) with `pptx2json` fallback,
-  applies ZIP/package budget guards, and maps text/images/shapes/tables to
+  applies ZIP/package budget guards with measured inflated-byte caps and worker
+  heap limits, and maps text/images/shapes/tables to
   NavSlides element types via shared geometry normalization; charts/equations/SmartArt become locked placeholders.
 - Import unit convention: the canvas is 960×540 at 72 DPI, so 1pt = 1px before
   box scale. All length-bearing fields (font sizes, text insets, border/shadow
@@ -469,14 +471,17 @@ diverge:
 - Upload routes enforce MIME validation and rate limiting.
 - `/api/analytics/:id` requires a valid share token mapped to that
   presentation.
+- Soft-deleted presentations are blocked from serve/share/export-derived paths
+  through centralized serveable-presentation lookup.
 - Live presenter takeover is blocked by `presenterToken` validation in
   `join-room`.
-- AI custom endpoints are restricted to public `http/https` targets and block
-  localhost/private/link-local ranges.
+- AI custom endpoints are restricted to public `http/https` targets, block
+  localhost/private/link-local ranges, and pin the outbound connection to the
+  validated IP to avoid DNS rebinding between validation and fetch.
 - Share links use server-side tokens and optional passwords.
 - `ErrorBoundary` guards the React app against render crashes.
-- Electron sandbox hardening remains a tracked follow-up; no sandbox change was
-  applied in this hardening pass.
+- Electron denies unexpected window-open/navigation targets outside the app
+  origin and explicit safe external schemes.
 
 ## Operational Notes
 

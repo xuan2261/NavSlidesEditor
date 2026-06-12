@@ -1,5 +1,14 @@
 # Project Changelog
 
+## 2026-06-12
+
+- Completed `plans/260611-0902-monorepo-review-remediation-tdd` across 8 TDD phases / 9 commits. The remediation closes the consolidated 2026-06-11 code review findings for game sockets, server trust boundaries, untrusted import hardening, renderer/export parity, live realtime state, editor UI controls, and the final medium/low sweep.
+- Repaired game mode end-to-end: player clients use the dedicated `/games` namespace, answer scoring is keyed to stable player identity, duplicate answers no longer inflate scores, host-only game events are authorized, and stale game rooms are cleaned up.
+- Hardened server data and trust boundaries: soft-deleted decks are blocked from all serve/export/share-derived paths, share token writes use atomic helpers, settings updates preserve configured secrets, history restore creates a pre-restore snapshot, AI endpoint fetches pin the validated IP connection, and passwordless share links no longer call bcrypt with an undefined hash.
+- Hardened import/export surfaces: markdown hrefs and PPTX background URLs escape/gate untrusted values, PPTX package validation measures real inflated bytes with cumulative caps and worker heap limits, raster export uses one engine, vendor URL checks are centralized, and per-element export failures degrade to placeholders instead of failing the whole deck.
+- Improved renderer/editor/live fidelity: canvas and shared renderers now align for additional shapes, token colors, timeline, and game elements; vertical child slides participate in find/replace; redo history now matches the undo cap; ribbon mixed-state controls work for multi-select; live annotations are scoped per slide and orphaned rooms are reaped.
+- Verification: final `npm run test` passed 2474 tests with 0 failures and 1 skipped; `npm run lint` passed with 0 errors and 23 pre-existing benchmark warnings; `npm run build` passed. PPTX corpus and browser-audit gates passed in the import/export phases.
+
 ## v1.14.1 — 2026-05-31
 
 Release-confidence and full-feature verification gap closure.
