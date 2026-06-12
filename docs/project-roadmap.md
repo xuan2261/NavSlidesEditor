@@ -1,6 +1,6 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: v1.14.1 + remediation hardening — Release-confidence verification, critical journey coverage, design-token theming, FX backgrounds, Design Ideas, ribbon polish, EditorPage hardening, and 2026-06-12 review remediation
+## Current Status: v1.14.2 — Release-confidence verification, critical journey coverage, design-token theming, FX backgrounds, Design Ideas, ribbon polish, EditorPage hardening, and 2026-06-12 review remediation
 
 Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system and now has clipping-safe portal popups. The design-token system (39 presets, 8 FX backgrounds, Design Ideas panel) landed in v1.13.0–v1.14.0. EditorPage hardening (vertical slides first-class, ~1356 LOC) and ribbon polish (contextual Format tab, RibbonBigButton, zoom slider, view switcher) completed in v1.14.0. v1.14.1 adds release-confidence verification docs, critical journey coverage, and CI gate contracts. The 2026-06-12 remediation pass closes the 2026-06-11 monorepo review findings across game sockets, server trust boundaries, import/export hardening, live room cleanup, and editor UI controls. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state with cleanup, and the hybrid PPTX export/import pipeline.
 
