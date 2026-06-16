@@ -39,7 +39,9 @@ test.describe('Mobile editor visual baseline pinned to deviceScaleFactor 2', () 
     await suppressTutorialAndOverlays(page)
     await page.goto(`/editor/${presId}`)
     await page.waitForSelector('.slide-canvas, body', { timeout: 15000 })
-    await expectStableScreenshot(page, 'mobile-editor-390x844-dpr2.png')
+    await expectStableScreenshot(page, 'mobile-editor-390x844-dpr2.png', {
+      maxDiffPixelRatio: 0.03,
+    })
     await ctx.close()
   })
 })

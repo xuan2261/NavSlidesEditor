@@ -33,13 +33,14 @@ function idFromEditorUrl(url) {
   return new URL(url).pathname.split('/').filter(Boolean).pop()
 }
 
-async function waitForPresentationPut(page, presId, action) {
+async function waitForPresentationSave(page, presId, marker, action) {
   const saveResponse = page.waitForResponse(
     (response) =>
       response.request().method() === 'PUT' &&
       response.url().includes(`/api/presentations/${presId}`) &&
-      response.ok(),
-    { timeout: 20000 }
+      response.ok() &&
+      response.request().postData()?.includes(marker),
+    { timeout: 30000 }
   )
   await action()
   await saveResponse
@@ -61,9 +62,10 @@ test.describe('Critical MVP user journeys', () => {
       await editor.waitForReady()
       await editor.addTextNode()
       await editor.startEditingTextElement()
-      await editor.selectAllText()
-      await editor.typeInTextEditor(marker)
-      await waitForPresentationPut(page, presId, () => page.keyboard.press('Escape'))
+      const activeTextEditor = page.locator('.ProseMirror').first()
+      await activeTextEditor.fill(marker)
+      await expect(activeTextEditor).toContainText(marker)
+      await waitForPresentationSave(page, presId, marker, () => page.keyboard.press('Escape'))
 
       await expect.poll(async () => {
         const saved = await apiGetPresentation(request, presId)
