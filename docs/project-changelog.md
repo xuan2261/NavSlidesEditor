@@ -1,6 +1,8 @@
 # Project Changelog
 
-## Unreleased — 2026-06-15
+## Unreleased
+
+## v1.14.3 — 2026-06-16
 
 - Completed Phase 2 of `plans/260615-1641-long-term-automated-coverage-expansion-tdd`: coverage matrix now supports optional `depth:*` assertion-depth labels, a small `coverage-depth-policy.json`, generated Depth columns, and warn-first `DEPTH-WARN` gate output without changing the 100/100 editor-core PASS count.
 - Documented depth tag conventions in the testing guide and code standards. Verification: `npx vitest run scripts/feature-inventory`, `npm run matrix:gate`, `npm run lint`, and `npm run build` passed.
@@ -13,6 +15,9 @@
 - Completed Phase 7 governance adoption: manual smoke rows now declare automated-backed/manual-only disposition, final validation evidence is recorded in the plan report, and branch-protection promotion remains operator-controlled pending two target-branch green CI runs.
 - Fixed common element-update fanout so lock, fragment, and supported shadow controls persist even when selected elements did not already carry those fields, while preserving the existing Drop Shadow exclusion for HTML and code elements. Added focused regression coverage and validated with full E2E: `npm run test:e2e` passed with 473 passed, 22 skipped, and 2 retry-passed flaky specs.
 - Stabilized the remaining coverage-expansion E2E failures: direct PPTX import API tests now retry only the intentional `429 import-in-progress` concurrency gate, Markdown import/export rehydrates persisted state before exporting, live viewer disconnect cleanup has a REST fallback, plugin runtime persistence tolerates transient API resets, and PPTX browser audit uses API-backed import setup before real-browser rendering. Fresh validation passed targeted Markdown/PPTX/live/plugin/audit specs, lint, build, matrix gate, and full `npm run test:e2e` with 475 passed, 22 skipped, and 0 retry-passed flakes.
+- Stabilized GitHub full CI release lanes after coverage expansion: feature coverage now captures fresh Playwright JSON evidence, visual tests run in a dedicated `chromium-visual` project while reusing canonical `chromium` snapshots, mobile a11y is scoped to the touch suite, and the critical create/edit/persist journey waits for the autosave PUT containing the edited marker before reloading.
+- Verification: GitHub CI run `27608087560` passed lint, unit + coverage gate, build, feature coverage gate, PPTX corpus fidelity, E2E chromium shards 1/4-4/4, visual regression, mobile, live, k6 load smoke, and required checks summary.
+- Synchronized root and workspace package versions to `1.14.3` and added release notes for the GitHub release.
 
 ## v1.14.2 — 2026-06-12
 

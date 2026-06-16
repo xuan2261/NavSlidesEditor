@@ -4,7 +4,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.14.2** — monorepo review remediation, game socket recovery, server trust-boundary hardening, untrusted import/export safeguards, live-room cleanup, editor UI correctness fixes, and release-confidence verification.
+Current release: **v1.14.3** — coverage governance, CI matrix/E2E/k6 lane stabilization, visual baseline isolation, and release-confidence verification.
 
 ## Features
 

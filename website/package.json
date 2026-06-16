@@ -1,6 +1,6 @@
 {
   "name": "navslides-website",
-  "version": "1.14.2",
+  "version": "1.14.3",
   "private": true,
   "description": "NavSlides Editor — public documentation site (VitePress)",
   "license": "AGPL-3.0-only",
