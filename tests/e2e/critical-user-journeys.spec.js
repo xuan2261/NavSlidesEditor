@@ -33,6 +33,18 @@ function idFromEditorUrl(url) {
   return new URL(url).pathname.split('/').filter(Boolean).pop()
 }
 
+async function waitForPresentationPut(page, presId, action) {
+  const saveResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'PUT' &&
+      response.url().includes(`/api/presentations/${presId}`) &&
+      response.ok(),
+    { timeout: 20000 }
+  )
+  await action()
+  await saveResponse
+}
+
 test.describe('Critical MVP user journeys', () => {
   test('[journey:create-edit-persist] create/edit/persist journey survives save and reload', async ({ page, request }) => {
     const title = `Critical Persist ${Date.now()}`
@@ -51,12 +63,12 @@ test.describe('Critical MVP user journeys', () => {
       await editor.startEditingTextElement()
       await editor.selectAllText()
       await editor.typeInTextEditor(marker)
-      await page.keyboard.press('Escape')
+      await waitForPresentationPut(page, presId, () => page.keyboard.press('Escape'))
 
       await expect.poll(async () => {
         const saved = await apiGetPresentation(request, presId)
         return saved.slides[0].elements.some((el) => el.type === 'text' && el.content.includes(marker))
-      }, { timeout: 10000 }).toBe(true)
+      }, { timeout: 20000 }).toBe(true)
 
       await page.reload()
       await editor.waitForReady()

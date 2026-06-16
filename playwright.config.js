@@ -56,6 +56,8 @@ module.exports = defineConfig({
         /tests\/e2e\/visual(?:\/.*\.spec\.js$)/,
         /tests\/e2e\/visual-regression\.spec\.js$/,
       ],
+      snapshotPathTemplate:
+        '{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}-chromium{-snapshotSuffix}{ext}',
       use: { ...devices['Desktop Chrome'] },
     },
     ...(process.env.PLAYWRIGHT_MOBILE_CHROMIUM
