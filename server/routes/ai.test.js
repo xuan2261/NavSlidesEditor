@@ -1,4 +1,4 @@
-import { afterEach, describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 import request from 'supertest'
 import express from 'express'
 import * as storage from '../services/storage.js'
@@ -13,6 +13,7 @@ describe('AI API', () => {
 
   afterEach(() => {
     global.fetch = originalFetch
+    vi.restoreAllMocks()
   })
 
   it('[cap:ai.failure tier:deep] returns controlled error for malformed outline responses', async () => {
@@ -44,6 +45,25 @@ describe('AI API', () => {
     const res = await request(app).post('/api/ai/rewrite').send({ text: 'hello', action: 'improve' })
     expect(res.status).toBe(502)
     expect(res.body.error).toBe('AI provider request failed')
+  })
+
+  it('[cap:ai.failure tier:deep] redacts token-like provider exception details from responses and logs', async () => {
+    storage.initDataFiles()
+    await storage.writeSettings({
+      ai: { provider: 'openai', apiKey: 'sk-test-secret-token', model: 'gpt-4o-mini' },
+    })
+    global.fetch = async () => {
+      throw new Error('network failure for sk-test-secret-token')
+    }
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const res = await request(app).post('/api/ai/rewrite').send({ text: 'hello', action: 'improve' })
+    const logOutput = consoleSpy.mock.calls.flat().map(String).join(' ')
+
+    expect(res.status).toBe(502)
+    expect(JSON.stringify(res.body)).not.toContain('sk-test-secret-token')
+    expect(logOutput).not.toContain('sk-test-secret-token')
+    expect(logOutput).toContain('<REDACTED_TOKEN>')
   })
 
   it('[cap:ai.failure tier:deep] returns controlled error when translate provider returns malformed JSON', async () => {

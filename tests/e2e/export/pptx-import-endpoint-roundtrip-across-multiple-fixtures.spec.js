@@ -6,6 +6,7 @@ import {
   expect,
   test,
 } from '../fixtures/test-fixtures.js'
+import { postPptxImportWhenAvailable } from '../helpers/pptx-import-api-helper.js'
 
 const PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 const PPTX_FIXTURES = ['Bai_2_1.pptx', 'Bai_2_2.pptx', 'Bai_2_5.pptx']
@@ -26,10 +27,8 @@ async function waitForPptxImport(request, jobId) {
 
 async function importAndUpdate(request, fixturePath, testPresentation) {
   const buffer = await fs.readFile(fixturePath)
-  const importRes = await request.post('/api/pptx/import', {
-    multipart: {
-      file: { name: path.basename(fixturePath), mimeType: PPTX_MIME, buffer },
-    },
+  const importRes = await postPptxImportWhenAvailable(request, {
+    file: { name: path.basename(fixturePath), mimeType: PPTX_MIME, buffer },
   })
   expect(importRes.status()).toBe(202)
   const { jobId } = await importRes.json()
@@ -60,16 +59,14 @@ test.describe('PPTX import endpoint and presentation creation roundtrip across m
   }
 
   test('rejects non-pptx file with 400', async ({ request }) => {
-    const res = await request.post('/api/pptx/import', {
-      multipart: {
-        file: { name: 'fake.txt', mimeType: 'text/plain', buffer: Buffer.from('not a pptx') },
-      },
+    const res = await postPptxImportWhenAvailable(request, {
+      file: { name: 'fake.txt', mimeType: 'text/plain', buffer: Buffer.from('not a pptx') },
     })
     expect(res.status()).toBe(400)
   })
 
   test('rejects request without file with 400', async ({ request }) => {
-    const res = await request.post('/api/pptx/import', { multipart: {} })
+    const res = await postPptxImportWhenAvailable(request, {})
     expect(res.status()).toBe(400)
   })
 

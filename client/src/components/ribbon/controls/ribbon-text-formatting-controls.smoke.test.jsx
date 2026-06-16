@@ -55,7 +55,7 @@ describe('font formatting controls smoke floor', () => {
     expect(chain.toggleUnderline).toHaveBeenCalled()
   })
 
-  it('[cap:control.format.fontSize] Font size select dispatches setFontSize', () => {
+  it('[cap:control.format.fontSize] [cap:element.text depth:behavior] Font size select dispatches setFontSize', () => {
     const chain = setup()
     fireEvent.change(screen.getByTitle('Font size'), { target: { value: '24px' } })
     expect(chain.setFontSize).toHaveBeenCalledWith('24px')

@@ -10,7 +10,12 @@ const { escapeHtml, getSlideNotes } = require('revealjs-shared')
 const router = express.Router()
 
 function logAiError(context, err) {
-  console.error(`[AI:${context}]`, err)
+  const message = err?.message || String(err || 'Unknown AI error')
+  const safeMessage = message
+    .replace(/\b(sk-[A-Za-z0-9_-]{8,})\b/g, '<REDACTED_TOKEN>')
+    .replace(/\b(gh[pousr]_[A-Za-z0-9_]{8,})\b/g, '<REDACTED_TOKEN>')
+    .replace(/\b(Bearer\s+)[A-Za-z0-9._-]{12,}/gi, '$1<REDACTED_TOKEN>')
+  console.error(`[AI:${context}]`, safeMessage)
 }
 
 function sendAiProviderFailure(res) {

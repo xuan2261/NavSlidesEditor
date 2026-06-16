@@ -2,9 +2,16 @@ const BASE = '/api'
 
 async function handleResponse(r) {
   const body = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
-  if (!r.ok) throw new Error(body.error || `Request failed (${r.status})`)
+  if (!r.ok) {
+    const err = new Error(body.error || `Request failed (${r.status})`)
+    err.status = r.status
+    err.retryAfter = Number(r.headers?.get?.('Retry-After') || 0)
+    throw err
+  }
   return body
 }
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export const api = {
   getPresentations: () => fetch(`${BASE}/presentations`).then(handleResponse),
@@ -38,10 +45,26 @@ export const api = {
     fd.append('file', file)
     return fetch('/api/upload', { method: 'POST', body: fd }).then(handleResponse)
   },
-  importPptxAsync: (file) => {
+  importPptxAsync: async (file, opts = {}) => {
+    const {
+      retryOnBusy = false,
+      maxBusyRetries = 0,
+      busyRetryDelayMs = 5000,
+      onBusyRetry,
+    } = opts
     const fd = new FormData()
     fd.append('file', file)
-    return fetch(`${BASE}/pptx/import`, { method: 'POST', body: fd }).then(handleResponse)
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        return await fetch(`${BASE}/pptx/import`, { method: 'POST', body: fd }).then(handleResponse)
+      } catch (err) {
+        if (!retryOnBusy || err.status !== 429 || err.message !== 'import-in-progress' || attempt >= maxBusyRetries) {
+          throw err
+        }
+        onBusyRetry?.(attempt + 1)
+        await sleep(busyRetryDelayMs)
+      }
+    }
   },
   pollPptxJob: (jobId) => fetch(`${BASE}/pptx/jobs/${jobId}`).then(handleResponse),
   cancelPptxJob: (jobId) =>

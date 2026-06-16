@@ -30,14 +30,23 @@ function validateAllowlist(allowlist) {
   return errors
 }
 
-export function checkGate({ rows, orphans = [], allowlist = [], now = Date.now() }) {
+export function checkGate({ rows, orphans = [], allowlist = [], now = Date.now(), stale = false }) {
   const errors = validateAllowlist(allowlist)
   const allowById = new Map(allowlist.map((e) => [e.id, e]))
   const failures = []
   const warnings = []
 
+  if (stale) {
+    warnings.push('STALE matrix evidence: run results are stale or missing; refresh test reporter JSON before treating PASS counts as release evidence')
+  }
+
   for (const row of rows) {
     const entry = allowById.get(row.id)
+    if (row.depthStatus === 'DEPTH-WARN') {
+      const missing = (row.missingDepths || []).join(', ')
+      const owner = row.depthOwner ? ` owner:${row.depthOwner}` : ''
+      warnings.push(`DEPTH-WARN: ${row.id} missing ${missing || '(unknown)'}${owner}`)
+    }
     if (row.status === 'PASS') continue
     if (row.status === 'FAIL') {
       // A failing test is a hard fail regardless of allowlist — never mask red.
@@ -87,6 +96,7 @@ if (invokedDirectly) {
     rows: matrix.rows,
     orphans: matrix.orphans || [],
     allowlist: allowlistDoc.entries || [],
+    stale: Boolean(matrix.meta?.stale),
   })
   for (const w of result.warnings) console.warn(`[gate] WARN ${w}`)
   for (const e of result.errors) console.error(`[gate] ERROR ${e}`)

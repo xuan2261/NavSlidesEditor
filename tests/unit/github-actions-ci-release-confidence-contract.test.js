@@ -60,6 +60,15 @@ describe('CI release confidence contract', () => {
     expect(wsLoad).toContain("assertLoopbackUrl(WS_URL, 'WS_URL'")
   })
 
+  it('keeps the visual gate aligned with the documented Linux-only visual suites', () => {
+    const workflow = readText(workflowPath)
+    const visualJob = getJobBlock(workflow, 'e2e-visual')
+
+    expect(visualJob).toContain('image: mcr.microsoft.com/playwright:v1.59.1-jammy')
+    expect(visualJob).toContain('npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js')
+    expect(visualJob).not.toContain('--update-snapshots')
+  })
+
   it('documents lanes, branch-protection rollout, rollback, quarantine, and scans', () => {
     const guide = readText(resolve(root, 'docs', 'navslides-editor-vitest-playwright-k6-testing-guide.md'))
     const checklist = readText(resolve(root, 'docs', 'manual-smoke-checklist.md'))

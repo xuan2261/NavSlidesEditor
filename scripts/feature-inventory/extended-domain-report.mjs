@@ -39,22 +39,30 @@ export function trustedExtendedRunIndex(runIndex, stale) {
 const invokedDirectly =
   process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (invokedDirectly) {
-  const { extractAllTags, collectTestFiles } = await import('./extract-tags.mjs')
+  const { extractAllTags } = await import('./extract-tags.mjs')
   const { loadRunResults } = await import('./join-run-status.mjs')
   const { statSync } = await import('node:fs')
 
   const inventory = readJson(resolve(HERE, 'inventory.json'), [])
   const tags = extractAllTags()
-  const testFileMtimes = collectTestFiles().map((file) => {
+  const taggedFiles = [
+    ...new Set(Object.values(tags).flat().map((occurrence) => resolve(HERE, '../..', occurrence.file))),
+  ]
+  const mtimesFor = (predicate) => taggedFiles.filter(predicate).map((file) => {
     try {
       return statSync(file).mtimeMs
     } catch {
       return 0
     }
   })
-  const { index: runIndex, stale } = loadRunResults({
+  const testFileMtimes = {
+    vitest: mtimesFor((file) => !file.replace(/\\/g, '/').includes('/tests/e2e/')),
+    playwright: mtimesFor((file) => file.replace(/\\/g, '/').includes('/tests/e2e/')),
+  }
+  const playwrightRunPath = resolve(HERE, 'run-results-playwright.json')
+  const { index: runIndex, stale, staleSources } = loadRunResults({
     vitestPath: resolve(HERE, 'run-results-vitest.json'),
-    playwrightPath: resolve(HERE, 'run-results-playwright.json'),
+    playwrightPath: existsSync(playwrightRunPath) ? playwrightRunPath : null,
     testFileMtimes,
   })
 
@@ -63,6 +71,7 @@ if (invokedDirectly) {
   const meta = {
     generated: process.env.MATRIX_DATE || 'local run',
     stale,
+    staleSources,
     title: 'Extended Domain Coverage Matrix',
   }
   mkdirSync(REPORTS_DIR, { recursive: true })

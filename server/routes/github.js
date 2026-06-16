@@ -7,6 +7,13 @@ const { validate } = require('../middleware/validate')
 
 const router = express.Router()
 
+function redactSecretLikeValues(message) {
+  return String(message || 'Internal server error')
+    .replace(/\b(sk-[A-Za-z0-9_-]{8,})\b/g, '<REDACTED_TOKEN>')
+    .replace(/\b(gh[pousr]_[A-Za-z0-9_]{8,})\b/g, '<REDACTED_TOKEN>')
+    .replace(/\b(Bearer\s+)[A-Za-z0-9._-]{12,}/gi, '$1<REDACTED_TOKEN>')
+}
+
 // GET /api/github/config
 router.get('/config', async (req, res) => {
   try {
@@ -17,7 +24,7 @@ router.get('/config', async (req, res) => {
       hasToken: !!config.token,
     })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: redactSecretLikeValues(err.message) })
   }
 })
 
@@ -39,7 +46,7 @@ router.post('/config', validate(githubConfigSchema), async (req, res) => {
     await writeGithubConfig(updated)
     res.json({ owner: updated.owner, repo: updated.repo, hasToken: !!updated.token })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: redactSecretLikeValues(err.message) })
   }
 })
 
@@ -217,7 +224,7 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
       url: `https://github.com/${ownerSeg}/${repoSeg}/tree/${branch}/${folderName}`,
     })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: redactSecretLikeValues(err.message) })
   }
 })
 

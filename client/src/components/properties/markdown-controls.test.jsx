@@ -6,7 +6,7 @@ import MiscProperties from './misc-properties'
 const md = { id: 'm1', type: 'markdown', content: '# Hi' }
 
 describe('Phase 2: markdown controls in MiscProperties', () => {
-  it('renders a Text Color control that writes textColor', () => {
+  it('[cap:element.markdown depth:behavior] renders a Text Color control that writes textColor', () => {
     const onUpdate = vi.fn()
     render(<MiscProperties element={md} onUpdate={onUpdate} />)
     const picker = screen.getByTestId('prop-markdown-text-color')

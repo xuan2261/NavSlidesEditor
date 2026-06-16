@@ -22,6 +22,13 @@ async function getPresentation(request, id) {
   return res.json()
 }
 
+async function expectAnimatedCounterValue(page, expectedText) {
+  const pluginFrame = page
+    .frameLocator('iframe[title="Plugin sandbox"], iframe[title="Animated Counter"]')
+    .first()
+  await expect(pluginFrame.locator('#value')).toHaveText(expectedText, { timeout: 20000 })
+}
+
 test.describe('Plugin runtime insert, render, and persistence', () => {
   test.setTimeout(90000)
 
@@ -48,6 +55,7 @@ test.describe('Plugin runtime insert, render, and persistence', () => {
     const pluginElement = page.locator('[data-element-type="plugin:counter"]').first()
     await expect(pluginElement).toBeVisible({ timeout: 10000 })
     await expect(pluginElement.locator('iframe[sandbox="allow-scripts"]')).toBeVisible()
+    await expectAnimatedCounterValue(page, '100%')
 
     await editor.waitForAutoSave()
     await expect
@@ -65,6 +73,7 @@ test.describe('Plugin runtime insert, render, and persistence', () => {
     await page.reload()
     await editor.waitForReady()
     await expect(page.locator('[data-element-type="plugin:counter"]')).toBeVisible()
+    await expectAnimatedCounterValue(page, '100%')
 
     const presentRes = await request.get(`${API_BASE}/presentations/${testPresentation.id}/present`)
     expect(presentRes.ok()).toBeTruthy()
@@ -74,7 +83,7 @@ test.describe('Plugin runtime insert, render, and persistence', () => {
     expect(presentHtml).toContain("type: 'init'")
 
     await page.goto(`/api/presentations/${testPresentation.id}/present`, { timeout: 15000 })
-    const pluginFrame = page.frameLocator('iframe[title="Animated Counter"]').first()
-    await expect(pluginFrame.locator('#value')).toHaveText('100%', { timeout: 10000 })
+    await expect(page.locator('iframe[title="Animated Counter"]')).toBeVisible({ timeout: 20000 })
+    await expectAnimatedCounterValue(page, '100%')
   })
 })

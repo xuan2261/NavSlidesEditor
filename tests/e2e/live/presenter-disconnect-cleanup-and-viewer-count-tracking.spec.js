@@ -59,10 +59,21 @@ test.describe('Presenter disconnect cleanup notifies viewer of presenter departu
     await expect(page.locator('iframe[title="Live Presentation"]')).toBeVisible({ timeout: 15000 })
 
     presenterSocket.disconnect()
+    await expect
+      .poll(
+        async () => {
+          const res = await page.request.get(`/api/live/room/${roomCode}`)
+          const data = await res.json()
+          return data.hasPresenter
+        },
+        { timeout: 15000, message: 'server room state reflects presenter disconnect' }
+      )
+      .toBe(false)
 
     await waitWithLastSample(
       'Presenter has left text appears on viewer',
-      async () => (await page.locator('text=Presenter has left').count()) > 0
+      async () => (await page.locator('text=Presenter has left').count()) > 0,
+      { timeout: 15000 }
     )
     await expect(page.getByRole('heading', { name: 'Presenter has left' })).toBeVisible()
   })

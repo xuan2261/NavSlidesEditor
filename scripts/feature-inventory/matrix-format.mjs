@@ -33,6 +33,9 @@ export function renderMatrixMarkdown({ rows, orphans, summary, meta = {} }) {
   }
   lines.push('')
   lines.push(summaryLine(summary))
+  if (summary['DEPTH-WARN']) {
+    lines.push(`Depth warnings (warn-first): ${summary['DEPTH-WARN']}`)
+  }
   lines.push('')
 
   const byCategory = {}
@@ -41,12 +44,16 @@ export function renderMatrixMarkdown({ rows, orphans, summary, meta = {} }) {
   for (const category of Object.keys(byCategory).sort()) {
     lines.push(`## ${category}`)
     lines.push('')
-    lines.push('| Capability | Risk | Tier | Layer | Test(s) | Status |')
-    lines.push('|---|---|---|---|---|---|')
+    lines.push('| Capability | Risk | Tier | Layer | Depth | Test(s) | Status |')
+    lines.push('|---|---|---|---|---|---|---|')
     for (const r of byCategory[category]) {
       const tests = r.tests.length ? r.tests.join('<br>') : '(none)'
+      const depths = r.depths?.length ? r.depths.join(', ') : '-'
+      const missing = r.missingDepths?.length
+        ? `<br>Missing: ${r.missingDepths.join(', ')}`
+        : ''
       lines.push(
-        `| ${r.id} | ${r.risk} | ${r.tier} | ${r.layer || '-'} | ${tests} | ${r.status} |`
+        `| ${r.id} | ${r.risk} | ${r.tier} | ${r.layer || '-'} | ${depths}${missing} | ${tests} | ${r.status} |`
       )
     }
     lines.push('')

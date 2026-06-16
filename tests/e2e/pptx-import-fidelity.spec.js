@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { EditorPage } from './pages/editor-page.js'
+import { postPptxImportWhenAvailable } from './helpers/pptx-import-api-helper.js'
 import {
   apiGetPresentation,
   apiUpdatePresentation,
@@ -34,14 +35,12 @@ test.describe('PPTX import fidelity', () => {
   }) => {
     test.setTimeout(150000)
     const buffer = await fs.readFile(PPTX_FIXTURE)
-    const importRes = await request.post('/api/pptx/import', {
-      multipart: {
+    const importRes = await postPptxImportWhenAvailable(request, {
         file: {
           name: path.basename(PPTX_FIXTURE),
           mimeType: PPTX_MIME,
           buffer,
         },
-      },
     })
     expect(importRes.status()).toBe(202)
     const { jobId } = await importRes.json()

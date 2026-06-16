@@ -429,6 +429,12 @@ it('moves element with arrow keys [cap:canvas-nudge]', () => { ... })
 ```
 
 - Capability IDs are defined in `scripts/feature-inventory/feature-manifest.json`.
+- Optional `depth:*` labels add assertion-depth evidence to a passing capability
+  tag. Use inline depth for one capability, for example
+  `[cap:control.format.position depth:behavior]`, or standalone
+  `[depth:persistence]` when the evidence applies to every cap in the title.
+  Allowed labels are enforced by the tag parser and mirrored with evidence
+  definitions in `scripts/feature-inventory/coverage-depth-policy.json`.
 - Acknowledged gaps live in `scripts/feature-inventory/coverage-gate-allowlist.json` with a `debtAllowedUntil` date.
 - `docs/feature-coverage-matrix.md` is **auto-generated** by `npm run matrix` — do not hand-edit it.
 - Run `npm run matrix:gate` to check the gate locally. CI job `feature-coverage-gate` runs this as a non-required warn-first check.

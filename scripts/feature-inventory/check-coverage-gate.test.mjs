@@ -7,6 +7,13 @@ const SKIP_ROW = { id: 'control.format.bold', status: 'SKIP' }
 const TAGGED_ROW = { id: 'element.audio', status: 'TAGGED' }
 const FAIL_ROW = { id: 'flow.clipboard', status: 'FAIL' }
 const ALLOWED_ROW = { id: 'canvas.lock', status: 'ALLOWED' }
+const DEPTH_WARN_ROW = {
+  id: 'element.chart',
+  status: 'PASS',
+  depthStatus: 'DEPTH-WARN',
+  missingDepths: ['persistence'],
+  depthOwner: 'qa',
+}
 
 const NOW = new Date('2026-05-30T00:00:00Z').getTime()
 const validEntry = (id, added = '2026-05-30') => ({
@@ -111,5 +118,18 @@ describe('coverage gate decision logic', () => {
     const r = checkGate({ rows: [ALLOWED_ROW], orphans: [], allowlist: [validEntry('canvas.lock')], now: NOW })
     expect(r.ok).toBe(true)
     expect(r.warnings.some((w) => w.includes('canvas.lock'))).toBe(true)
+  })
+
+  it('warns, but does not fail, on missing required depth labels', () => {
+    const r = checkGate({ rows: [PASS_ROW, DEPTH_WARN_ROW], orphans: [], allowlist: [], now: NOW })
+    expect(r.ok).toBe(true)
+    expect(r.warnings.some((w) => w.includes('element.chart'))).toBe(true)
+    expect(r.warnings.some((w) => w.includes('persistence'))).toBe(true)
+  })
+
+  it('warns, but does not fail, when matrix run evidence is stale', () => {
+    const r = checkGate({ rows: [PASS_ROW], orphans: [], allowlist: [], now: NOW, stale: true })
+    expect(r.ok).toBe(true)
+    expect(r.warnings.some((w) => w.includes('STALE matrix evidence'))).toBe(true)
   })
 })

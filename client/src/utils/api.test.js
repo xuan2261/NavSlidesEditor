@@ -23,6 +23,38 @@ describe('PPTX import API', () => {
     )
   })
 
+  it('retries async PPTX import when the server reports another import is running', async () => {
+    const file = new File(['pptx'], 'deck.pptx')
+    const onBusyRetry = vi.fn()
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 429,
+          headers: { get: () => '60' },
+          json: async () => ({ error: 'import-in-progress' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ jobId: 'job-2' }),
+        })
+    )
+
+    await expect(
+      api.importPptxAsync(file, {
+        retryOnBusy: true,
+        maxBusyRetries: 1,
+        busyRetryDelayMs: 0,
+        onBusyRetry,
+      })
+    ).resolves.toEqual({ jobId: 'job-2' })
+
+    expect(onBusyRetry).toHaveBeenCalledWith(1)
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
   it('polls and cancels PPTX import jobs', async () => {
     vi.stubGlobal(
       'fetch',

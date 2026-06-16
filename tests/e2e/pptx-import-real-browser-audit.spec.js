@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { apiDeletePresentation, expect, test } from './fixtures/test-fixtures.js'
-import { AUDIT_VIEWPORT, buildAuditMetadata, classifyImageClipping, classifyOutOfCanvas, classifyTextOverflow, createAuditRunPaths, ensureAuditRunDirs, importDeckViaHome, sanitizeDiagnosticText, screenshotSlide, selectAuditDecks, selectSlide } from './pages/pptx-import-audit-helper.js'
+import { AUDIT_VIEWPORT, buildAuditMetadata, classifyImageClipping, classifyOutOfCanvas, classifyTextOverflow, createAuditRunPaths, ensureAuditRunDirs, importDeckForAudit, sanitizeDiagnosticText, screenshotSlide, selectAuditDecks, selectSlide } from './pages/pptx-import-audit-helper.js'
 import { assertStrictAuditSummary, summarizeDecks, writeAuditReports } from './pages/pptx-import-audit-report-helper.js'
 
 const PPTX_DIR = path.resolve(process.cwd(), 'PPTX')
@@ -153,7 +153,7 @@ test.describe.serial('PPTX import real browser audit', () => {
 
       let presentationId
       try {
-        presentationId = await importDeckViaHome(page, PPTX_DIR, deckName)
+        presentationId = await importDeckForAudit(page, request, PPTX_DIR, deckName)
         const thumbnails = page.getByTestId('slide-panel-item')
         await expect(thumbnails.first()).toBeVisible({ timeout: 30000 })
         deckResult.slideCount = await thumbnails.count()

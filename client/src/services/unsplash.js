@@ -34,15 +34,22 @@ export async function searchUnsplash(query) {
     )
     if (!res.ok) throw new Error('Unsplash fetch failed')
     const data = await res.json()
-    return data.results.map((img) => ({
-      id: img.id,
-      url: img.urls.small,
-      downloadUrl: img.urls.full,
-      author: img.user.name,
-      authorUrl: img.user.links.html,
-    }))
-  } catch (error) {
-    console.error(error)
-    return []
+    const results = Array.isArray(data.results) ? data.results : []
+    return results
+      .map((img) => {
+        const url = img.urls?.small || img.urls?.regular || img.urls?.full
+        const downloadUrl = img.urls?.full || img.urls?.regular || img.urls?.small
+        if (!url || !downloadUrl) return null
+        return {
+          id: img.id,
+          url,
+          downloadUrl,
+          author: img.user?.name || 'Unsplash',
+          authorUrl: img.user?.links?.html || '',
+        }
+      })
+      .filter(Boolean)
+  } catch {
+    throw new Error('Failed to load media')
   }
 }

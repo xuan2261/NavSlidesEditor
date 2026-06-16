@@ -37,10 +37,35 @@ function hasDeepPass(occurrences, runIndex) {
   )
 }
 
-export function buildMatrix({ inventory, tags, runIndex, allowlist = [], knownIds = null }) {
+function passedOccurrences(occurrences, runIndex) {
+  return (occurrences || []).filter(
+    (o) => !o.skipped && resolveStatus(o, runIndex) === 'passed'
+  )
+}
+
+function verifiedDepths(occurrences, runIndex) {
+  const depths = passedOccurrences(occurrences, runIndex).flatMap((o) => o.depths || [])
+  return passedOccurrences(occurrences, runIndex).length
+    ? ['trace', ...[...new Set(depths)].sort((a, b) => a.localeCompare(b))]
+    : []
+}
+
+function depthRequirementById(depthPolicy) {
+  return new Map((depthPolicy?.requirements || []).map((r) => [r.id, r]))
+}
+
+export function buildMatrix({
+  inventory,
+  tags,
+  runIndex,
+  allowlist = [],
+  knownIds = null,
+  depthPolicy = {},
+}) {
   const allowSet = new Set(allowlist.map((a) => a.id))
   const inventoryIds = new Set(inventory.map((c) => c.id))
   const knownIdSet = knownIds ? new Set(knownIds) : inventoryIds
+  const depthRequirements = depthRequirementById(depthPolicy)
   const rows = []
 
   for (const cap of inventory) {
@@ -58,8 +83,28 @@ export function buildMatrix({ inventory, tags, runIndex, allowlist = [], knownId
         : 'smoke'
     const layer = occ.length ? [...new Set(occ.map((o) => o.layer))].join(',') : null
     const tests = [...new Set(occ.map((o) => o.file))]
+    const depths = verifiedDepths(occ, runIndex)
+    const depthRequirement = depthRequirements.get(cap.id)
+    const requiredDepths = depthRequirement?.requiredDepths || []
+    const missingDepths =
+      status === 'PASS' ? requiredDepths.filter((d) => !depths.includes(d)) : []
+    const depthStatus = missingDepths.length ? 'DEPTH-WARN' : 'OK'
 
-    rows.push({ id: cap.id, category: cap.category, risk: cap.risk, tier, layer, tests, status })
+    rows.push({
+      id: cap.id,
+      category: cap.category,
+      risk: cap.risk,
+      tier,
+      layer,
+      tests,
+      status,
+      depths,
+      requiredDepths,
+      missingDepths,
+      depthStatus,
+      depthOwner: depthRequirement?.owner || null,
+      depthResolutionPhase: depthRequirement?.resolutionPhase || null,
+    })
   }
 
   rows.sort((a, b) => a.id.localeCompare(b.id))
@@ -71,6 +116,7 @@ export function buildMatrix({ inventory, tags, runIndex, allowlist = [], knownId
   const summary = { total: rows.length, verified: 0 }
   for (const r of rows) summary[r.status] = (summary[r.status] || 0) + 1
   summary.verified = summary.PASS || 0
+  summary['DEPTH-WARN'] = rows.filter((r) => r.depthStatus === 'DEPTH-WARN').length
 
   return { rows, orphans, summary }
 }
@@ -82,7 +128,7 @@ function loadJsonIfExists(path, fallback) {
 const invokedDirectly =
   process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (invokedDirectly) {
-  const { extractAllTags, collectTestFiles } = await import('./extract-tags.mjs')
+  const { extractAllTags } = await import('./extract-tags.mjs')
   const { loadRunResults } = await import('./join-run-status.mjs')
   const { statSync } = await import('node:fs')
 
@@ -91,22 +137,31 @@ if (invokedDirectly) {
   // excluded from the visibility map (their gap rows would be misleading noise).
   const inventory = fullInventory.filter((c) => c.scope === 'editor-core')
   const tags = extractAllTags()
-  // Collect test-file mtimes so a present-but-old run-results file is flagged
-  // stale (a test edited after the last capture must not show a trusted green).
-  const testFileMtimes = collectTestFiles().map((f) => {
+  // Collect tagged test-file mtimes per runner so a present-but-old result is
+  // flagged only against files that contribute matrix evidence.
+  const taggedFiles = [
+    ...new Set(Object.values(tags).flat().map((occurrence) => resolve(HERE, '../..', occurrence.file))),
+  ]
+  const mtimesFor = (predicate) => taggedFiles.filter(predicate).map((f) => {
     try {
       return statSync(f).mtimeMs
     } catch {
       return 0
     }
   })
-  const { index: runIndex, stale } = loadRunResults({
+  const testFileMtimes = {
+    vitest: mtimesFor((f) => !f.replace(/\\/g, '/').includes('/tests/e2e/')),
+    playwright: mtimesFor((f) => f.replace(/\\/g, '/').includes('/tests/e2e/')),
+  }
+  const playwrightRunPath = resolve(HERE, 'run-results-playwright.json')
+  const { index: runIndex, stale, staleSources } = loadRunResults({
     vitestPath: resolve(HERE, 'run-results-vitest.json'),
-    playwrightPath: resolve(HERE, 'run-results-playwright.json'),
+    playwrightPath: existsSync(playwrightRunPath) ? playwrightRunPath : null,
     testFileMtimes,
   })
   const allowlistDoc = loadJsonIfExists(resolve(HERE, 'coverage-gate-allowlist.json'), { entries: [] })
   const allowlist = allowlistDoc.entries || []
+  const depthPolicy = loadJsonIfExists(resolve(HERE, 'coverage-depth-policy.json'), {})
 
   const result = buildMatrix({
     inventory,
@@ -114,9 +169,10 @@ if (invokedDirectly) {
     runIndex,
     allowlist,
     knownIds: fullInventory.map((c) => c.id),
+    depthPolicy,
   })
   mkdirSync(REPORTS_DIR, { recursive: true })
-  const meta = { generated: process.env.MATRIX_DATE || 'local run', stale }
+  const meta = { generated: process.env.MATRIX_DATE || 'local run', stale, staleSources }
   writeFileSync(
     resolve(REPORTS_DIR, 'feature-coverage-matrix.json'),
     JSON.stringify({ meta, ...result }, null, 2) + '\n'

@@ -76,6 +76,30 @@ describe('API surface routes', () => {
     expect(pushRes.body.error).toContain('GitHub not configured')
   })
 
+  it('redacts token-like GitHub push failures from API responses', async () => {
+    const originalFetch = global.fetch
+    await storage.writeGithubConfig({ token: 'ghp_phase5SecretToken', owner: 'owner', repo: 'repo' })
+    await storage.writePresentations([
+      {
+        id: 'github-redaction',
+        title: 'GitHub Redaction',
+        slides: [{ id: 's1', elements: [] }],
+      },
+    ])
+    global.fetch = async () => {
+      throw new Error('GitHub network failure ghp_phase5SecretToken')
+    }
+
+    try {
+      const pushRes = await request(app).post('/api/github/push/github-redaction').send({ message: 'test' })
+      expect(pushRes.status).toBe(500)
+      expect(pushRes.body.error).toContain('<REDACTED_TOKEN>')
+      expect(pushRes.body.error).not.toContain('ghp_phase5SecretToken')
+    } finally {
+      global.fetch = originalFetch
+    }
+  })
+
   it('[cap:sync.rclone-status] covers rclone validation/status paths without requiring rclone credentials', async () => {
     const statusRes = await request(app).get('/api/rclone/status')
     expect(statusRes.status).toBe(200)
@@ -106,6 +130,15 @@ describe('API surface routes', () => {
 
     const deleteRes = await request(app).delete(`/api/media/${filename}`)
     expect(deleteRes.status).toBe(200)
+  })
+
+  it('[cap:import.upload-safety tier:deep] rejects non-SVG payloads uploaded with an SVG extension', async () => {
+    const uploadRes = await request(app)
+      .post('/api/upload')
+      .attach('file', Buffer.from('not actually svg'), 'spoofed.svg')
+
+    expect(uploadRes.status).toBe(400)
+    expect(uploadRes.body.error).toBe('File content is not valid SVG')
   })
 
   it('accepts ogv uploads and lists them as video media', async () => {

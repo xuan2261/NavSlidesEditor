@@ -3,9 +3,12 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { expect } from '@playwright/test'
+import { apiCreatePresentation, apiUpdatePresentation } from '../fixtures/test-fixtures.js'
+import { postPptxImportWhenAvailable } from '../helpers/pptx-import-api-helper.js'
 
 export const AUDIT_VIEWPORT = { width: 1600, height: 1000 }
 export const PPTX_BROWSER_AUDIT_SMOKE_DECKS = ['Bai3_HinhChieuVuongGoc.pptx', 'Bai_2_5.pptx']
+const PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 
 export function selectAuditDecks(allDecks) {
   const explicit = String(process.env.PPTX_IMPORT_AUDIT_DECKS || '').split(',').map((name) => name.trim()).filter(Boolean)
@@ -16,15 +19,48 @@ export function selectAuditDecks(allDecks) {
   return allDecks
 }
 
-export async function importDeckViaHome(page, pptxDir, deckName) {
-  await page.goto('/', { timeout: 30000 })
-  await expect(page.getByTestId('home-import-pptx-btn')).toBeVisible({ timeout: 30000 })
-  const chooserPromise = page.waitForEvent('filechooser')
-  await page.getByTestId('home-import-pptx-btn').click()
-  const chooser = await chooserPromise
-  await chooser.setFiles(path.join(pptxDir, deckName))
-  await page.waitForURL(/\/editor\/[^/]+$/, { timeout: 180000 })
-  return page.url().split('/').pop()
+async function waitForPptxImport(request, jobId) {
+  let result
+  await expect
+    .poll(async () => {
+      const poll = await request.get(`/api/pptx/jobs/${jobId}`)
+      expect(poll.ok()).toBeTruthy()
+      const job = await poll.json()
+      if (job.status === 'done') {
+        result = job.result
+        return 'done'
+      }
+      if (job.status === 'failed' || job.status === 'cancelled') {
+        throw new Error(job.error || `PPTX import ${job.status}`)
+      }
+      return job.status
+    }, { timeout: 300000, intervals: [500, 1000, 2000] })
+    .toBe('done')
+  return result
+}
+
+export async function importDeckForAudit(page, request, pptxDir, deckName) {
+  const deckPath = path.join(pptxDir, deckName)
+  const buffer = await fs.promises.readFile(deckPath)
+  const importRes = await postPptxImportWhenAvailable(
+    request,
+    {
+      file: { name: deckName, mimeType: PPTX_MIME, buffer },
+    },
+    { maxAttempts: 90, retryDelayMs: 5000 }
+  )
+  expect(importRes.status()).toBe(202)
+
+  const { jobId } = await importRes.json()
+  const imported = await waitForPptxImport(request, jobId)
+  expect(imported.presentation?.slides?.length).toBeGreaterThan(0)
+
+  const presentation = await apiCreatePresentation(request, `Audit ${deckName}`)
+  await apiUpdatePresentation(request, presentation.id, imported.presentation)
+
+  await page.goto(`/editor/${presentation.id}`, { timeout: 30000 })
+  await expect(page.locator('.slide-canvas')).toBeVisible({ timeout: 30000 })
+  return presentation.id
 }
 
 export async function selectSlide(page, index) {

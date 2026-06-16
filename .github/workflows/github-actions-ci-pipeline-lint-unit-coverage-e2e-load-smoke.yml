@@ -157,7 +157,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Playwright visual suite
-        run: npx playwright test tests/e2e/visual/
+        run: npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js
         env:
           CI: 'true'
           PLAYWRIGHT_CLIENT_PORT: '4173'

@@ -604,7 +604,12 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     setImportWarningSummary(null)
     setImportProgress('Uploading PPTX...')
     try {
-      const { jobId } = await api.importPptxAsync(file)
+      const { jobId } = await api.importPptxAsync(file, {
+        retryOnBusy: true,
+        maxBusyRetries: 72,
+        busyRetryDelayMs: 5000,
+        onBusyRetry: () => setImportProgress('Another PPTX import is running. Waiting to retry...'),
+      })
       const imported = await new Promise((resolve, reject) => {
         const es = new EventSource(`/api/pptx/jobs/${jobId}/stream`)
         let settled = false

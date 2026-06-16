@@ -77,7 +77,7 @@ test.describe('Keyboard only navigation across editor ribbon tabs and modals', (
     expect(activeText.length).toBeGreaterThan(0)
   })
 
-  test('Escape key closes File menu without trapping focus', async ({ page }) => {
+  test('[cap:control.file.menu depth:a11y] Escape key closes File menu without trapping focus', async ({ page }) => {
     await page.goto(`/editor/${presId}`)
     await page.waitForSelector('.slide-canvas', { timeout: 15000 })
     await waitForStableDOM(page)

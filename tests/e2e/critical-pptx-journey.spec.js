@@ -3,6 +3,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import JSZip from 'jszip'
 import { EditorPage } from './pages/editor-page.js'
+import { postPptxImportWhenAvailable } from './helpers/pptx-import-api-helper.js'
 import {
   apiGetPresentation,
   apiUpdatePresentation,
@@ -34,10 +35,8 @@ async function waitForPptxImport(request, jobId) {
 async function importFixtureIntoPresentation(request, testPresentation) {
   const fixturePath = path.resolve(process.cwd(), 'PPTX', FIXTURE)
   const buffer = await fs.readFile(fixturePath)
-  const importRes = await request.post('/api/pptx/import', {
-    multipart: {
-      file: { name: FIXTURE, mimeType: PPTX_MIME, buffer },
-    },
+  const importRes = await postPptxImportWhenAvailable(request, {
+    file: { name: FIXTURE, mimeType: PPTX_MIME, buffer },
   })
   expect(importRes.status()).toBe(202)
 

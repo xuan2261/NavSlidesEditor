@@ -19,9 +19,27 @@ import { MIN_SIZE } from '../components/canvas/use-canvas-resize-rotate'
 const DELTA_KEYS = new Set(['x', 'y'])
 // Geometry keys applied as the same absolute value to every selected element.
 const ABSOLUTE_GEOMETRY_KEYS = new Set(['width', 'height', 'rotation', 'opacity'])
-// Geometry is universal — every element has a box — so it is never gated by
-// type. Everything outside this set is a type-specific style prop.
-const GEOMETRY_KEYS = new Set(['x', 'y', 'width', 'height', 'rotation', 'opacity'])
+// Common controls are universal, so they are never gated by element defaults.
+// Everything outside this set is a type-specific style prop.
+const COMMON_KEYS = new Set([
+  'x',
+  'y',
+  'width',
+  'height',
+  'rotation',
+  'opacity',
+  'locked',
+  'fragment',
+  'fragmentIndex',
+  'fragmentAnimation',
+])
+
+const SHADOW_KEYS = new Set([
+  'shadowX',
+  'shadowY',
+  'shadowBlur',
+  'shadowColor',
+])
 
 export function normalizeRotation(value) {
   return ((value % 360) + 360) % 360
@@ -31,6 +49,10 @@ function ownsProperty(element, key) {
   if (element && Object.prototype.hasOwnProperty.call(element, key)) return true
   const defaults = ELEMENT_DEFAULTS[element?.type]
   return !!defaults && Object.prototype.hasOwnProperty.call(defaults, key)
+}
+
+function supportsShadow(element) {
+  return element?.type !== 'html' && element?.type !== 'code'
 }
 
 /**
@@ -44,7 +66,8 @@ function valueForElement(element, primary, key, rawValue) {
   }
   if (key === 'rotation') return normalizeRotation(rawValue)
   if (key === 'width' || key === 'height') return Math.max(MIN_SIZE, rawValue)
-  if (ABSOLUTE_GEOMETRY_KEYS.has(key)) return rawValue
+  if (ABSOLUTE_GEOMETRY_KEYS.has(key) || COMMON_KEYS.has(key)) return rawValue
+  if (SHADOW_KEYS.has(key)) return supportsShadow(element) ? rawValue : undefined
   // Type-specific style prop: only elements that own it receive it.
   return ownsProperty(element, key) ? rawValue : undefined
 }
@@ -64,7 +87,7 @@ export function buildSelectionUpdates(elements, ids, primaryId, updates) {
   const byId = new Map(elements.map((el) => [el.id, el]))
   const primary = byId.get(primaryId) || byId.get(ids[ids.length - 1])
   const keys = Object.keys(updates)
-  const hasGeometry = keys.some((k) => GEOMETRY_KEYS.has(k))
+  const hasCommon = keys.some((k) => COMMON_KEYS.has(k))
 
   const result = []
   for (const id of ids) {
@@ -80,6 +103,6 @@ export function buildSelectionUpdates(elements, ids, primaryId, updates) {
 
   // No element owned a purely type-specific update (e.g. fill onto a selection
   // with no fill-bearing element): nothing to write.
-  if (!result.length && !hasGeometry) return []
+  if (!result.length && !hasCommon) return []
   return result
 }

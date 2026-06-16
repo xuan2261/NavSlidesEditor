@@ -10,6 +10,18 @@ const REPO_ROOT = resolve(HERE, '../..')
 // Match upper+lower+digits+dot+underscore+hyphen so the id is never truncated.
 // Hyphen is last in the class so it is a literal, not a range (no escape needed).
 const CAP_RE = /\[cap:([A-Za-z0-9._-]+)([^\]]*)\]/g
+export const ALLOWED_DEPTHS = new Set([
+  'trace',
+  'behavior',
+  'persistence',
+  'export',
+  'sync',
+  'visual',
+  'a11y',
+  'perf',
+])
+const DEPTH_RE = /\bdepth:([A-Za-z0-9_-]+)\b/g
+const STANDALONE_DEPTH_RE = /\[depth:([A-Za-z0-9_-]+)\]/g
 const TEST_DECL_RE =
   /\b(it|test|describe)(\.[a-z]+)?\s*\(\s*(['"`])((?:\\.|(?!\3).)*)\3/g
 
@@ -34,6 +46,30 @@ function isSkippedModifier(mod) {
   return mod === '.skip' || mod === '.fixme'
 }
 
+function parseDepths(text, filePath) {
+  const depths = []
+  for (const match of text.matchAll(DEPTH_RE)) {
+    const depth = match[1]
+    if (!ALLOWED_DEPTHS.has(depth)) {
+      throw new Error(`unknown depth label "${depth}" in ${filePath}`)
+    }
+    if (depth !== 'trace' && !depths.includes(depth)) depths.push(depth)
+  }
+  return depths
+}
+
+function parseStandaloneDepths(title, filePath) {
+  const depths = []
+  for (const match of title.matchAll(STANDALONE_DEPTH_RE)) {
+    const depth = match[1]
+    if (!ALLOWED_DEPTHS.has(depth)) {
+      throw new Error(`unknown depth label "${depth}" in ${filePath}`)
+    }
+    if (depth !== 'trace' && !depths.includes(depth)) depths.push(depth)
+  }
+  return depths
+}
+
 export function extractTagsFromSource(source, filePath) {
   const layer = deriveLayer(filePath)
   const out = {}
@@ -43,11 +79,15 @@ export function extractTagsFromSource(source, filePath) {
     if (!title.includes('[cap:')) continue
     const skipped = isSkippedModifier(modifier)
     const standaloneDeep = /\[tier:deep\]/.test(title)
+    const standaloneDepths = parseStandaloneDepths(title, filePath)
     for (const cap of title.matchAll(CAP_RE)) {
       const id = cap[1]
       const inlineDeep = /\btier:deep\b/.test(cap[2] || '')
       const tier = inlineDeep || standaloneDeep ? 'deep' : 'smoke'
-      ;(out[id] ||= []).push({ file: filePath, title, tier, layer, skipped })
+      const depths = [
+        ...new Set([...parseDepths(cap[2] || '', filePath), ...standaloneDepths]),
+      ]
+      ;(out[id] ||= []).push({ file: filePath, title, tier, layer, skipped, depths })
     }
   }
   return out

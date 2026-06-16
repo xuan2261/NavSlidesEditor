@@ -26,14 +26,21 @@ export async function searchGiphy(query) {
     )
     if (!res.ok) throw new Error('GIPHY fetch failed')
     const data = await res.json()
-    return data.data.map((gif) => ({
-      id: gif.id,
-      url: gif.images.fixed_width.url,
-      downloadUrl: gif.images.original.url,
-      author: gif.username || 'Giphy',
-    }))
-  } catch (error) {
-    console.error(error)
-    return []
+    const results = Array.isArray(data.data) ? data.data : []
+    return results
+      .map((gif) => {
+        const url = gif.images?.fixed_width?.url || gif.images?.original?.url
+        const downloadUrl = gif.images?.original?.url || gif.images?.fixed_width?.url
+        if (!url || !downloadUrl) return null
+        return {
+          id: gif.id,
+          url,
+          downloadUrl,
+          author: gif.username || 'Giphy',
+        }
+      })
+      .filter(Boolean)
+  } catch {
+    throw new Error('Failed to load media')
   }
 }

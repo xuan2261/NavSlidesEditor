@@ -26,6 +26,34 @@ describe('tag extractor', () => {
     expect(out['canvas.zorder'][0].tier).toBe('deep')
   })
 
+  it('captures inline and standalone depth tokens', () => {
+    const src = `it('[cap:control.format.position depth:behavior] persists [depth:persistence]', () => {})`
+    const out = extractTagsFromSource(src, 'x.test.js')
+    expect(out['control.format.position'][0].depths).toEqual([
+      'behavior',
+      'persistence',
+    ])
+  })
+
+  it('applies standalone depth tokens to all caps in a title', () => {
+    const src = `it('[cap:canvas.group][cap:canvas.align] updates [depth:behavior]', () => {})`
+    const out = extractTagsFromSource(src, 'x.test.js')
+    expect(out['canvas.group'][0].depths).toEqual(['behavior'])
+    expect(out['canvas.align'][0].depths).toEqual(['behavior'])
+  })
+
+  it('does not apply one cap inline depth to another cap in the same title', () => {
+    const src = `it('[cap:canvas.group depth:behavior][cap:canvas.align] updates', () => {})`
+    const out = extractTagsFromSource(src, 'x.test.js')
+    expect(out['canvas.group'][0].depths).toEqual(['behavior'])
+    expect(out['canvas.align'][0].depths).toEqual([])
+  })
+
+  it('rejects unknown depth labels', () => {
+    const src = `it('[cap:canvas.group depth:vanity] groups', () => {})`
+    expect(() => extractTagsFromSource(src, 'x.test.js')).toThrow(/unknown depth/i)
+  })
+
   it('captures multiple caps in one title', () => {
     const src = `it('[cap:canvas.group][cap:canvas.zorder] both', () => {})`
     const out = extractTagsFromSource(src, 'x.test.js')

@@ -37,6 +37,15 @@ editor-core capability's *behavior is asserted*, not just whether code ran. See
   that test actually ran green (joined against vitest `--reporter=json`). A
   skipped or unrun tagged test shows `SKIP`/`TAGGED`, never PASS — no false
   green. High-risk caps need a `[cap:<id> tier:deep]` test to clear `DEEP-GAP`.
+- **Coverage depth labels**: optional `depth:*` labels describe what the passing
+  assertion proves beyond traceability. Inline form applies to one cap
+  (`[cap:control.format.position depth:behavior]`); standalone form applies to
+  every cap in the title (`[depth:persistence]`). The parser accepts only
+  `trace`, `behavior`, `persistence`, `export`, `sync`, `visual`, `a11y`, and
+  `perf`; matching evidence definitions live in
+  `scripts/feature-inventory/coverage-depth-policy.json`.
+  Missing required depth is warn-first (`DEPTH-WARN`) until Phase 7 records
+  promotion evidence.
 - **Drift guards**: `client/src/data/element-defaults.test.js` fails if a new
   element/shortcut has no tag or allowlist entry; `check-manifest-completeness.mjs`
   fails if a new EditorPage command is not in the manifest.
@@ -130,10 +139,10 @@ The expanded visual suite under `tests/e2e/visual/` covers 7 ribbon tabs, editor
 ```bash
 docker run --rm -v "${PWD}:/work" -w /work \
   mcr.microsoft.com/playwright:v1.59.1-jammy \
-  bash -lc "npm ci && npx playwright test tests/e2e/visual/ --update-snapshots"
+  bash -lc "npm ci && npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js --update-snapshots"
 ```
 
-Then commit only files under `tests/e2e/visual/*-snapshots/`. Regeneration on a Windows or macOS host produces drift that the CI gate rejects.
+Then commit only files under `tests/e2e/visual/*-snapshots/` and `tests/e2e/visual-regression.spec.js-snapshots/`. Regeneration on a Windows or macOS host produces drift that the CI gate rejects.
 
 The mobile spec uses an explicit `deviceScaleFactor: 2` (Patch-09) instead of relying on `devices['Pixel 5']` defaults, so version updates to `@playwright/test` do not silently shift the baseline.
 
@@ -223,6 +232,15 @@ Current lane ownership is maintained here as evergreen release evidence. Archive
 | Merge full lane | coverage, build, Playwright shards, visual, PPTX corpus, k6 smoke | Promote after two consecutive green CI runs |
 | Release strict lane | PPTX strict, Electron prepare/package, load profile, manual checklist | Blocks release signoff, not every PR |
 
+#### Non-functional gate ownership
+
+| Gate | Lane | Local reproduction |
+|---|---|---|
+| Visual snapshots | Merge full lane | `npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js --project=chromium` in the pinned Linux Playwright container |
+| Keyboard/axe/touch a11y | Merge full lane | `npx playwright test tests/e2e/a11y/ --project=chromium` and `PLAYWRIGHT_MOBILE_CHROMIUM=1 npx playwright test tests/e2e/a11y/ --project=mobile-chromium` |
+| k6 smoke | Merge full lane | `npm run test:load:api:smoke` and `npm run test:load:ws:smoke` against loopback only |
+| k6 load/stress profiles | Release strict lane | `npm run test:load:api:load`, `npm run test:load:ws:load`, and stress variants after operator approval |
+
 #### Branch protection mapping
 
 Branch protection changes are operator-only. Prefer requiring `Required checks summary`; avoid pinning every shard context unless there is a deliberate repository policy change.
@@ -264,10 +282,10 @@ All Playwright jobs run inside `mcr.microsoft.com/playwright:v1.59.1-jammy` so v
 ```bash
 docker run --rm -v "${PWD}:/work" -w /work \
   mcr.microsoft.com/playwright:v1.59.1-jammy \
-  bash -lc "npm ci && npx playwright test tests/e2e/visual/ --update-snapshots"
+  bash -lc "npm ci && npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js --update-snapshots"
 ```
 
-Then commit only files under `tests/e2e/visual/*-snapshots/`.
+Then commit only files under `tests/e2e/visual/*-snapshots/` and `tests/e2e/visual-regression.spec.js-snapshots/`.
 
 If Docker is unavailable, use the manual GitHub Actions fallback above after the workflow exists on the default branch.
 

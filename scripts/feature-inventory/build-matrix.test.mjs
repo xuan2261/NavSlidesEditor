@@ -15,8 +15,8 @@ const INVENTORY = [
 const TAGS = {
   // chart: smoke passes AND deep passes → PASS
   'element.chart': [
-    { file: 'tests/e2e/elements/chart.spec.js', title: '[cap:element.chart] renders', tier: 'smoke', layer: 'e2e', skipped: false },
-    { file: 'client/src/chart.test.jsx', title: '[cap:element.chart tier:deep] maps data', tier: 'deep', layer: 'unit', skipped: false },
+    { file: 'tests/e2e/elements/chart.spec.js', title: '[cap:element.chart] renders', tier: 'smoke', layer: 'e2e', skipped: false, depths: ['behavior'] },
+    { file: 'client/src/chart.test.jsx', title: '[cap:element.chart tier:deep] maps data', tier: 'deep', layer: 'unit', skipped: false, depths: ['export'] },
   ],
   // canvas.rotate-snap: smoke passes but NO deep → DEEP-GAP
   'canvas.rotate-snap': [
@@ -120,6 +120,34 @@ describe('matrix builder status semantics', () => {
   it('rows are sorted by id deterministically', () => {
     const ids = rows.map((r) => r.id)
     expect(ids).toEqual([...ids].sort((a, b) => a.localeCompare(b)))
+  })
+
+  it('reports verified depth labels from passing occurrences only', () => {
+    const row = rows.find((r) => r.id === 'element.chart')
+    expect(row.depths).toEqual(['trace', 'behavior', 'export'])
+  })
+
+  it('marks missing required depth as warn-first metadata', () => {
+    const result = buildMatrix({
+      inventory: INVENTORY,
+      tags: TAGS,
+      runIndex: RUN_INDEX,
+      allowlist: [],
+      depthPolicy: {
+        requirements: [
+          {
+            id: 'element.chart',
+            requiredDepths: ['behavior', 'persistence'],
+            owner: 'qa',
+            resolutionPhase: 3,
+          },
+        ],
+      },
+    })
+    const row = result.rows.find((r) => r.id === 'element.chart')
+    expect(row.depthStatus).toBe('DEPTH-WARN')
+    expect(row.missingDepths).toEqual(['persistence'])
+    expect(result.summary['DEPTH-WARN']).toBe(1)
   })
 })
 

@@ -98,26 +98,41 @@ export function isRunResultStale(runResultMtime, testFileMtimes) {
   return runResultMtime < Math.max(...testFileMtimes)
 }
 
+function mtimesForRunner(testFileMtimes, runner) {
+  if (!testFileMtimes) return null
+  if (Array.isArray(testFileMtimes)) return testFileMtimes
+  return testFileMtimes[runner] || []
+}
+
 export function loadRunResults({ vitestPath, playwrightPath, testFileMtimes } = {}) {
   const rows = []
-  let stale = false
+  const staleSources = { vitest: false, playwright: false }
   if (vitestPath && existsSync(vitestPath)) {
     rows.push(...parseVitestJson(JSON.parse(readFileSync(vitestPath, 'utf8'))))
     // Present-but-old run-results are the silent false-green trap: warn when a
     // test file changed after this capture so a stale green is never trusted.
-    if (testFileMtimes) {
+    const vitestMtimes = mtimesForRunner(testFileMtimes, 'vitest')
+    if (vitestMtimes) {
       const mtime = statSync(vitestPath).mtimeMs
-      if (isRunResultStale(mtime, testFileMtimes)) stale = true
+      staleSources.vitest = isRunResultStale(mtime, vitestMtimes)
     }
   } else if (vitestPath) {
-    stale = true
+    staleSources.vitest = true
   }
   if (playwrightPath && existsSync(playwrightPath)) {
     rows.push(
       ...parsePlaywrightJson(JSON.parse(readFileSync(playwrightPath, 'utf8')))
     )
+    const playwrightMtimes = mtimesForRunner(testFileMtimes, 'playwright')
+    if (playwrightMtimes) {
+      const mtime = statSync(playwrightPath).mtimeMs
+      staleSources.playwright = isRunResultStale(mtime, playwrightMtimes)
+    }
+  } else if (playwrightPath) {
+    staleSources.playwright = true
   }
-  return { index: buildRunIndex(rows), rowCount: rows.length, stale }
+  const stale = staleSources.vitest || staleSources.playwright
+  return { index: buildRunIndex(rows), rowCount: rows.length, stale, staleSources }
 }
 
 const invokedDirectly =

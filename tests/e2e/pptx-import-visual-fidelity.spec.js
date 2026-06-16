@@ -5,6 +5,7 @@ import {
   expect,
   test,
 } from './fixtures/test-fixtures.js'
+import { postPptxImportWhenAvailable } from './helpers/pptx-import-api-helper.js'
 
 const PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 const BASELINES_REVIEWED = process.env.PPTX_VISUAL_BASELINES_REVIEWED === '1'
@@ -36,10 +37,8 @@ async function waitForPptxImport(request, jobId) {
 
 async function importDeckIntoPresentation(request, testPresentation, deckName) {
   const buffer = await fs.readFile(fixturePath(deckName))
-  const importRes = await request.post('/api/pptx/import', {
-    multipart: {
-      file: { name: deckName, mimeType: PPTX_MIME, buffer },
-    },
+  const importRes = await postPptxImportWhenAvailable(request, {
+    file: { name: deckName, mimeType: PPTX_MIME, buffer },
   })
   expect(importRes.status()).toBe(202)
   const { jobId } = await importRes.json()

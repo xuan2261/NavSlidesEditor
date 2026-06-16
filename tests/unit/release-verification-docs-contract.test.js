@@ -23,6 +23,7 @@ const getTimeMinutes = (row) => {
 }
 
 const getMappings = (row) => row.split('|')[2]?.trim() ?? ''
+const getCheck = (row) => row.split('|')[4]?.trim() ?? ''
 
 describe('release verification docs contract', () => {
   it('keeps manual smoke checklist bounded and mapped to capability IDs or manual risks', () => {
@@ -45,6 +46,7 @@ describe('release verification docs contract', () => {
 
       expect(mapping).toMatch(/(`[^`]+`|manual-risk:)/)
       expect(Number.isNaN(getTimeMinutes(row))).toBe(false)
+      expect(getCheck(row)).toMatch(/\b(automated-backed|manual-only|replaced-by-automation|deferred-risk)\b/)
 
       for (const capId of capIds) {
         expect(inventoryIds.has(capId), `Unknown manual checklist capability ID: ${capId}`).toBe(true)

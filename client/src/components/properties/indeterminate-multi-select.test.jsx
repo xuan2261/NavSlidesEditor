@@ -23,7 +23,7 @@ describe('Phase 3: CommonElementControls geometry indeterminate', () => {
     )
   }
 
-  it('blanks X when selection differs on x, keeps Y (shared)', () => {
+  it('[cap:flow.multiselect tier:deep depth:behavior] blanks X when selection differs on x, keeps Y (shared)', () => {
     renderControls(a, { elements: [a, b], selectedElementIds: ['a', 'b'] })
     const x = screen.getByTestId('prop-x')
     const y = screen.getByTestId('prop-y')
@@ -43,7 +43,7 @@ describe('Phase 3: CommonElementControls geometry indeterminate', () => {
     expect(screen.getByTestId('prop-x').value).toBe('10')
   })
 
-  it('editing a blanked (mixed) X still calls onUpdate (write path intact)', () => {
+  it('[cap:flow.multiselect tier:deep depth:behavior] editing a blanked (mixed) X still calls onUpdate (write path intact)', () => {
     const onUpdate = vi.fn()
     renderControls(a, { elements: [a, b], selectedElementIds: ['a', 'b'], onUpdate })
     fireEvent.change(screen.getByTestId('prop-x'), { target: { value: '55' } })
@@ -59,12 +59,12 @@ describe('Phase 3: ShapeProperties opacity + color indeterminate', () => {
     return render(<ShapeProperties element={element} onUpdate={noop} {...extra} />)
   }
 
-  it('marks opacity slider mixed when selection differs', () => {
+  it('[cap:element.shape depth:behavior] marks opacity slider mixed when selection differs', () => {
     renderShape(a, { elements: [a, b], selectedElementIds: ['a', 'b'] })
     expect(screen.getByTestId('prop-shape-opacity').getAttribute('data-mixed')).toBe('true')
   })
 
-  it('marks fill mixed but NOT stroke (stroke shared)', () => {
+  it('[cap:element.shape depth:behavior] marks fill mixed but NOT stroke (stroke shared)', () => {
     renderShape(a, { elements: [a, b], selectedElementIds: ['a', 'b'] })
     expect(screen.getByTestId('prop-shape-fill').getAttribute('data-mixed')).toBe('true')
     expect(screen.getByTestId('prop-shape-stroke').getAttribute('data-mixed')).not.toBe('true')
@@ -76,7 +76,7 @@ describe('Phase 3: ShapeProperties opacity + color indeterminate', () => {
     expect(screen.getByTestId('prop-shape-fill').getAttribute('data-mixed')).not.toBe('true')
   })
 
-  it('editing a mixed opacity still writes through onUpdate', () => {
+  it('[cap:flow.multiselect tier:deep depth:behavior] editing a mixed opacity still writes through onUpdate', () => {
     const onUpdate = vi.fn()
     renderShape(a, { elements: [a, b], selectedElementIds: ['a', 'b'], onUpdate })
     fireEvent.change(screen.getByTestId('prop-shape-opacity'), { target: { value: '40' } })

@@ -24,7 +24,7 @@ describe('Phase 4: chart area + stacked', () => {
   const lineChart = { id: 'c1', type: 'chart', chartType: 'line', chartData: { labels: [], datasets: [] } }
   const barChart = { id: 'c2', type: 'chart', chartType: 'bar', chartData: { labels: [], datasets: [] } }
 
-  it('shows area-fill checkbox for line charts and writes areaFill', () => {
+  it('[cap:element.chart depth:behavior] shows area-fill checkbox for line charts and writes areaFill', () => {
     const onUpdate = vi.fn()
     render(<ChartProperties element={lineChart} onUpdate={onUpdate} />)
     const cb = screen.getByTestId('prop-chart-area-fill')
@@ -48,7 +48,7 @@ describe('Phase 4: chart area + stacked', () => {
 describe('Phase 4: table header text color + border style', () => {
   const table = { id: 't1', type: 'table', data: [['a', 'b']] }
 
-  it('renders header text color picker writing headerTextColor', () => {
+  it('[cap:element.table depth:behavior] renders header text color picker writing headerTextColor', () => {
     const onUpdate = vi.fn()
     render(<TableProperties element={table} onUpdate={onUpdate} />)
     fireEvent.change(screen.getByTestId('prop-table-header-text-color'), { target: { value: '#ff0000' } })
@@ -70,7 +70,7 @@ describe('Phase 4: timeline per-event connector length', () => {
     events: [{ id: 'e1', date: '2020', title: 'A', connectorLength: 0 }],
   }
 
-  it('renders a connector-length input per event writing connectorLength', () => {
+  it('[cap:element.timeline depth:behavior] renders a connector-length input per event writing connectorLength', () => {
     const onUpdate = vi.fn()
     render(<TimelineProperties element={tl} onUpdate={onUpdate} />)
     const input = screen.getByTestId('prop-timeline-connector-0')
@@ -116,7 +116,7 @@ describe('Phase 4: generic panel opacity (P0-PANEL-OPACITY)', () => {
 describe('Phase 4: svg content editor', () => {
   const svg = { id: 's1', type: 'svg', content: '<svg><rect width="10" height="10"/></svg>' }
 
-  it('renders an editable SVG content field that updates element.content', () => {
+  it('[cap:element.svg depth:behavior] renders an editable SVG content field that updates element.content', () => {
     const onUpdate = vi.fn()
     render(<MiscProperties element={svg} onUpdate={onUpdate} />)
     const editor = screen.getByTestId('prop-svg-content')

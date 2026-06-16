@@ -11,13 +11,23 @@ describe('element-renderers safety behavior', () => {
     zIndex: 1,
   }
 
-  it('sanitizes text element HTML', () => {
+  it('[cap:element.text depth:export] sanitizes text element HTML and applies typography', () => {
     const html = renderElement(
-      { ...base, type: 'text', content: '<p onclick="x()">Hi</p><script>alert(1)</script>' },
+      {
+        ...base,
+        type: 'text',
+        content: '<p onclick="x()">Hi</p><script>alert(1)</script>',
+        textColor: '#22c55e',
+        fontFamily: 'Inter',
+        fontSize: 24,
+      },
       {},
       {}
     )
     expect(html).toContain('<p>Hi</p>')
+    expect(html).toContain('color:#22c55e')
+    expect(html).toContain('font-family:Inter')
+    expect(html).toContain('font-size:calc(24px * var(--font-zoom, 1))')
     expect(html).not.toContain('<script')
     expect(html).not.toContain('onclick=')
   })
@@ -64,6 +74,24 @@ describe('element-renderers safety behavior', () => {
     expect(decodeURIComponent(encoded)).toContain('window.__trusted = true')
   })
 
+  it('[cap:element.code depth:export] renders code language class and escaped source', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'code',
+        language: 'javascript',
+        content: 'if (a < b) console.log("ok")',
+        fontSize: 18,
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('class="language-javascript"')
+    expect(html).toContain('if (a &lt; b) console.log(&quot;ok&quot;)')
+    expect(html).toContain('font-size:calc(18px * var(--font-zoom, 1))')
+  })
+
   it('adds base URL to data URL html embeds so local assets resolve', () => {
     const html = renderElement(
       { ...base, type: 'html', content: '<img src="/uploads/local.png"><script src="/vendor/d3/dist/d3.js"></script>' },
@@ -77,7 +105,7 @@ describe('element-renderers safety behavior', () => {
     expect(decoded).toContain('src="/vendor/d3/dist/d3.js"')
   })
 
-  it('uses data-pdf-iframe for html embeds in print output', () => {
+  it('[cap:element.html depth:export] uses data-pdf-iframe for html embeds in print output', () => {
     const html = renderElement(
       { ...base, type: 'html', content: '<script>window.__trusted = true</script>' },
       {},
@@ -91,7 +119,7 @@ describe('element-renderers safety behavior', () => {
     )
   })
 
-  it('applies latex font size and color in present and print output', () => {
+  it('[cap:element.latex depth:export] applies latex font size and color in present and print output', () => {
     const element = {
       ...base,
       type: 'latex',
@@ -109,7 +137,7 @@ describe('element-renderers safety behavior', () => {
     expect(printHtml).toContain('color:#10b981')
   })
 
-  it('renders video trim and playback rate attributes', () => {
+  it('[cap:element.video depth:export] renders video trim and playback rate attributes', () => {
     const html = renderElement(
       {
         ...base,
@@ -208,7 +236,7 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('onloadedmetadata="this.playbackRate=2"')
   })
 
-  it('renders image citation text below image', () => {
+  it('[cap:element.image depth:export] renders image citation text below image', () => {
     const html = renderElement(
       {
         ...base,
@@ -222,6 +250,155 @@ describe('element-renderers safety behavior', () => {
     )
     expect(html).toContain('Photo by John Doe')
     expect(html).toContain('#808080')
+  })
+
+  it('[cap:element.audio depth:export] renders audio source and playback flags', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'audio',
+        src: 'https://example.com/demo.mp3',
+        autoplay: true,
+        loop: true,
+        muted: true,
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('<audio')
+    expect(html).toContain('src="https://example.com/demo.mp3"')
+    expect(html).toContain('autoplay')
+    expect(html).toContain('loop')
+    expect(html).toContain('muted')
+  })
+
+  it('[cap:element.shape depth:export] renders shape fill, stroke, and label text', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'shape',
+        shape: 'rect',
+        fill: '#22c55e',
+        stroke: '#0f172a',
+        strokeWidth: 3,
+        text: 'Status',
+        textColor: '#ffffff',
+        fontSize: 20,
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('<svg')
+    expect(html).toContain('fill="#22c55e"')
+    expect(html).toContain('stroke="#0f172a"')
+    expect(html).toContain('stroke-width="3"')
+    expect(html).toContain('font-size="20"')
+    expect(html).toContain('Status')
+  })
+
+  it('[cap:element.line depth:export] renders line stroke width, dash pattern, and markers', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'line',
+        stroke: '#f97316',
+        strokeWidth: 6,
+        dashArray: '8 4',
+        arrowStart: 'circle',
+        arrowEnd: 'arrow',
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('stroke="#f97316"')
+    expect(html).toContain('stroke-width="6"')
+    expect(html).toContain('stroke-dasharray="8 4"')
+    expect(html).toContain('marker-start=')
+    expect(html).toContain('marker-end=')
+  })
+
+  it('[cap:element.callout depth:export] renders callout number, colors, and font size', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'callout',
+        calloutNumber: 7,
+        calloutColor: '#2563eb',
+        calloutTextColor: '#f8fafc',
+        fontSize: 22,
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('background:#2563eb')
+    expect(html).toContain('color:#f8fafc')
+    expect(html).toContain('font-size:calc(22px * var(--font-zoom, 1))')
+    expect(html).toContain('>7</div>')
+  })
+
+  it('[cap:element.icon depth:export] renders icon stroke color and width', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'icon',
+        iconName: 'Star',
+        iconColor: '#a855f7',
+        iconStrokeWidth: 3.5,
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('<svg')
+    expect(html).toContain('stroke="#a855f7"')
+    expect(html).toContain('stroke-width="3.5"')
+  })
+
+  it('[cap:element.qrcode depth:export] renders print QR canvas config', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'qrcode',
+        qrData: 'https://example.com/share',
+        qrColor: '#111827',
+        qrBgColor: '#f9fafb',
+        qrErrorLevel: 'H',
+      },
+      {},
+      { forPrint: true }
+    )
+    const config = JSON.parse(html.match(/data-qr-config='([^']+)'/)[1])
+
+    expect(html).toContain('data-qr-config=')
+    expect(config).toEqual({
+      data: 'https://example.com/share',
+      fg: '#111827',
+      bg: '#f9fafb',
+      err: 'H',
+    })
+  })
+
+  it('[cap:element.drawing depth:export] renders drawing paths with stroke styling', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'drawing',
+        strokeColor: '#ffffff',
+        strokeWidth: 4,
+        paths: [{ d: 'M 0 0 L 20 20', opacity: 0.75 }],
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('d="M 0 0 L 20 20"')
+    expect(html).toContain('stroke="#ffffff"')
+    expect(html).toContain('stroke-width="4"')
+    expect(html).toContain('opacity="0.75"')
   })
 
   it('renders image citation link as clickable', () => {
@@ -298,7 +475,7 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('Product launch')
   })
 
-  it('[cap:element.timeline tier:deep] renders timeline events from the plan schema', () => {
+  it('[cap:element.timeline tier:deep depth:export] renders timeline events from the plan schema', () => {
     const html = renderElement(
       {
         ...base,
@@ -384,7 +561,7 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('border-left:5px double #111111')
   })
 
-  it('renders table cell typography and row/column sizing', () => {
+  it('[cap:element.table depth:export] renders table cell typography and row/column sizing', () => {
     const html = renderElement(
       {
         ...base,
@@ -443,7 +620,7 @@ describe('element-renderers safety behavior', () => {
     expect(html).not.toContain('javascript:')
   })
 
-  it('[cap:element.chart tier:deep] renders a stacked bar chart with both axes stacked (iframe + print)', () => {
+  it('[cap:element.chart tier:deep depth:export] renders a stacked bar chart with both axes stacked (iframe + print)', () => {
     const element = {
       ...base,
       type: 'chart',

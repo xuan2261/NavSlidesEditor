@@ -1,0 +1,134 @@
+{
+  "allowedDepths": {
+    "trace": "Capability has a passing [cap:*] test at the expected layer.",
+    "behavior": "User-visible behavior or public API behavior is asserted.",
+    "persistence": "Saved JSON/state survives reload or equivalent serialization.",
+    "export": "Exported artifact or renderer output includes the behavior.",
+    "sync": "Multi-client or server state propagation is asserted.",
+    "visual": "Stable screenshot, pixel, or DOM visual assertion exists.",
+    "a11y": "Keyboard, role, or axe assertion exists.",
+    "perf": "Timed or load threshold assertion exists."
+  },
+  "requirements": [
+    {
+      "id": "control.format.position",
+      "requiredDepths": ["behavior", "persistence"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "flow.multiselect",
+      "requiredDepths": ["behavior"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.chart",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.audio",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.code",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.html",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.image",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.latex",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.markdown",
+      "requiredDepths": ["behavior"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.text",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.shape",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.line",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.callout",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.icon",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.qrcode",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.drawing",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.svg",
+      "requiredDepths": ["behavior"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.table",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.timeline",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    },
+    {
+      "id": "element.video",
+      "requiredDepths": ["behavior", "export"],
+      "owner": "qa",
+      "resolutionPhase": 3
+    }
+  ]
+}

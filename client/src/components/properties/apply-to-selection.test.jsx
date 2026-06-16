@@ -178,6 +178,35 @@ describe('Format ribbon routes edits through the selection fan-out', () => {
     fireEvent.change(screen.getByLabelText('X position'), { target: { value: '450' } })
     expect(latest.map((el) => el.x)).toEqual([50, 250, 450])
   })
+
+  it('[cap:control.format.position depth:persistence] serializes geometry updates without dropping fields', () => {
+    const state = { slides: [{ id: 's1', elements: shapes.map((s) => ({ ...s })) }] }
+    const batch = buildSelectionUpdates(state.slides[0].elements, ids, 'c', {
+      x: 450,
+      y: 350,
+      width: 120,
+      height: 80,
+      rotation: 450,
+    })
+    const map = new Map(batch.map((u) => [u.id, u]))
+    const next = {
+      ...state,
+      slides: state.slides.map((slide) => ({
+        ...slide,
+        elements: slide.elements.map((el) => (map.has(el.id) ? { ...el, ...map.get(el.id) } : el)),
+      })),
+    }
+
+    const restored = JSON.parse(JSON.stringify(next))
+    const updated = restored.slides[0].elements.find((el) => el.id === 'c')
+    expect(updated).toMatchObject({
+      x: 450,
+      y: 350,
+      width: 120,
+      height: 80,
+      rotation: 90,
+    })
+  })
 })
 
 describe('numeric entry agrees between panel and ribbon', () => {

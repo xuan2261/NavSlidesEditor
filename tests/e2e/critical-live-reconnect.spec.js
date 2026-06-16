@@ -95,7 +95,7 @@ async function disconnectSocket(page) {
 }
 
 test.describe('Critical live user journeys', () => {
-  test('[journey:live-reconnect] [cap:live.reconnect] [cap:live.presenter-authz] viewer catches current slide after reconnect and cannot navigate room', async ({
+  test('[journey:live-reconnect] [cap:live.reconnect depth:sync] [cap:live.presenter-authz depth:behavior] viewer catches current slide after reconnect and cannot navigate room', async ({
     browser,
     request,
   }) => {

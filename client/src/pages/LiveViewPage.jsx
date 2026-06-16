@@ -134,6 +134,31 @@ export default function LiveViewPage() {
     }
   }, [roomCode])
 
+  useEffect(() => {
+    if (!isConnected || !htmlContent || presenterLeft) return undefined
+    let cancelled = false
+
+    const checkPresenter = async () => {
+      try {
+        const res = await fetch(`/api/live/room/${roomCode}`)
+        if (!res.ok) return
+        const room = await res.json()
+        if (!cancelled && room.exists && room.hasPresenter === false) {
+          setPresenterLeft(true)
+        }
+      } catch {
+        // Socket events remain primary; this poll is only a missed-event fallback.
+      }
+    }
+
+    const interval = setInterval(checkPresenter, 2000)
+    checkPresenter()
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [htmlContent, isConnected, presenterLeft, roomCode])
+
 
   // Annotation sync — handlers operate on the current slide's stroke bucket.
   const slideIndex = liveState.slideIndex

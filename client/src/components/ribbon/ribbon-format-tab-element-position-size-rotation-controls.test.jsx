@@ -54,7 +54,7 @@ describe('FormatTabContent', () => {
     expect(screen.getByLabelText('Height').value).toBe('150')
   })
 
-  it('[cap:control.format.position] calls onUpdateElement for position change', () => {
+  it('[cap:control.format.position depth:behavior] calls onUpdateElement for position change', () => {
     const onUpdateElement = vi.fn()
     render(<FormatTabContent selectedElement={mockElement} onUpdateElement={onUpdateElement} />)
     fireEvent.change(screen.getByLabelText('X position'), { target: { value: '50' } })

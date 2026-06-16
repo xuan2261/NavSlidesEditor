@@ -1,3 +1,6 @@
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import {
   parseVitestJson,
@@ -5,6 +8,7 @@ import {
   buildRunIndex,
   resolveStatus,
   isRunResultStale,
+  loadRunResults,
 } from './join-run-status.mjs'
 
 const VITEST_JSON = {
@@ -156,5 +160,26 @@ describe('run-status joiner', () => {
     ])
     const occ = { file: 'x/a.test.js', title: '[cap:y] suite' }
     expect(resolveStatus(occ, index)).toBe('failed')
+  })
+
+  it('tracks stale evidence separately for vitest and playwright result files', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'navslides-run-status-'))
+    const vitestPath = join(dir, 'run-results-vitest.json')
+    const playwrightPath = join(dir, 'run-results-playwright.json')
+    writeFileSync(vitestPath, JSON.stringify(VITEST_JSON))
+    writeFileSync(playwrightPath, JSON.stringify(PLAYWRIGHT_JSON))
+
+    const now = Date.now()
+    const result = loadRunResults({
+      vitestPath,
+      playwrightPath,
+      testFileMtimes: {
+        vitest: [now - 1000],
+        playwright: [now + 1000],
+      },
+    })
+
+    expect(result.stale).toBe(true)
+    expect(result.staleSources).toEqual({ vitest: false, playwright: true })
   })
 })
