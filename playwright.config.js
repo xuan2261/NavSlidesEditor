@@ -37,7 +37,11 @@ module.exports = defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: /tests\/e2e\/live(?:\.spec\.js$|\/.*\.spec\.js$)/,
+      testIgnore: [
+        /tests\/e2e\/live(?:\.spec\.js$|\/.*\.spec\.js$)/,
+        /tests\/e2e\/visual(?:\/.*\.spec\.js$)/,
+        /tests\/e2e\/visual-regression\.spec\.js$/,
+      ],
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -46,8 +50,20 @@ module.exports = defineConfig({
       workers: 1,
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'chromium-visual',
+      testMatch: [
+        /tests\/e2e\/visual(?:\/.*\.spec\.js$)/,
+        /tests\/e2e\/visual-regression\.spec\.js$/,
+      ],
+      use: { ...devices['Desktop Chrome'] },
+    },
     ...(process.env.PLAYWRIGHT_MOBILE_CHROMIUM
-      ? [{ name: 'mobile-chromium', use: { ...devices['Pixel 7'] } }]
+      ? [{
+          name: 'mobile-chromium',
+          testMatch: /tests\/e2e\/a11y\/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport\.spec\.js$/,
+          use: { ...devices['Pixel 7'] },
+        }]
       : []),
   ],
   webServer: {

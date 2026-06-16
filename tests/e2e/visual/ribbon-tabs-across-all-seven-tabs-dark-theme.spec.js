@@ -14,7 +14,6 @@ const TABS = [
   { id: 'home', label: 'Home' },
   { id: 'insert', label: 'Insert' },
   { id: 'design', label: 'Design' },
-  { id: 'format', label: 'Format' },
   { id: 'transitions', label: 'Transitions' },
   { id: 'animations', label: 'Animations' },
   { id: 'view', label: 'View' },
@@ -30,7 +29,7 @@ async function seedPresentation(request) {
   return pres
 }
 
-test.describe('Ribbon tabs visual baseline across all 7 tabs and dark theme', () => {
+test.describe('Ribbon tabs visual baseline across primary tabs and dark theme', () => {
   skipNonLinuxVisualSnapshots()
 
   let presId

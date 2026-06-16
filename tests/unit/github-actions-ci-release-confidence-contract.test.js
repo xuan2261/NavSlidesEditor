@@ -66,6 +66,7 @@ describe('CI release confidence contract', () => {
 
     expect(visualJob).toContain('image: mcr.microsoft.com/playwright:v1.59.1-jammy')
     expect(visualJob).toContain('npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js')
+    expect(visualJob).toContain('--project=chromium-visual')
     expect(visualJob).not.toContain('--update-snapshots')
   })
 

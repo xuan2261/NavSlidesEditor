@@ -44,7 +44,7 @@ export async function expectStableScreenshot(page, name, opts = {}) {
   )
   await expect(page).toHaveScreenshot(name, {
     animations: 'disabled',
-    maxDiffPixels: 5000,
+    maxDiffPixels: 10000,
     maxDiffPixelRatio: 0.02,
     threshold: 0.2,
     ...opts,

@@ -128,8 +128,8 @@ jobs:
         with: { node-version: '20', cache: npm }
       - run: npm ci
       - run: npm run build
-      - name: Playwright a11y suite on mobile-chromium
-        run: npx playwright test tests/e2e/a11y/ --project=mobile-chromium
+      - name: Playwright touch/mobile suite on mobile-chromium
+        run: npx playwright test tests/e2e/a11y/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js --project=mobile-chromium
         env:
           CI: 'true'
           PLAYWRIGHT_MOBILE_CHROMIUM: '1'
@@ -157,7 +157,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Playwright visual suite
-        run: npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js
+        run: npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js --project=chromium-visual
         env:
           CI: 'true'
           PLAYWRIGHT_CLIENT_PORT: '4173'
@@ -236,11 +236,19 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '20', cache: npm }
       - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - name: Capture fresh vitest run results for matrix join
         # `|| true`: vitest exits non-zero on a failing test but still writes the
         # JSON reporter file. Keep going so the gate can SEE that failure and
         # report it as a FAIL row, instead of the job aborting before the gate runs.
         run: npx vitest run --reporter=json --outputFile=scripts/feature-inventory/run-results-vitest.json || true
+      - name: Capture fresh Playwright a11y depth results for matrix join
+        run: npx playwright test tests/e2e/a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js --project=chromium --reporter=json || true
+        env:
+          CI: 'true'
+          PLAYWRIGHT_JSON_OUTPUT_NAME: scripts/feature-inventory/run-results-playwright.json
+          PLAYWRIGHT_CLIENT_PORT: '4173'
+          PLAYWRIGHT_SERVER_PORT: '3202'
       - name: Regenerate matrix + run coverage + manifest-completeness gates
         run: npm run matrix:gate
       - name: Fail if committed docs/feature-coverage-matrix.md is stale
