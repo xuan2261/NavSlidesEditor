@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.14.4 — 2026-06-17
+
 - Added the element-control audit matrix harness and completed Phase 02 cross-cutting canvas coverage: hidden elements are omitted from shared HTML/PPTX viewer exports, hidden fragments no longer create print pages, geometry/lock/visibility/group/z-order/guides now have targeted Playwright coverage, renderer-family shared controls have smoke coverage, and project/archive data remains non-redacted by design.
 - Completed Phase 03 media controls: video source migration keeps `src` canonical while retaining legacy `videoUrl` fallback, canvas/shared video renderers no longer let stale `videoUrl` shadow edited `src`, audio canvas/export flags are covered, Copy URL and render paths reject unsafe media schemes, PPTX image sources reject non-image data URIs, and image PPTX `fill`/`none` objectFit plus CSS filters/rounded corners are documented accepted native gaps.
 - Advanced Phase 04 content controls: code/markdown/chart properties and HTML/Code/LaTeX editor modals have focused coverage, HTML authoring now shows a trusted-active-content warning, Format/Properties chart type options are aligned by removing unsupported `scatter`, and matrix rows now distinguish supported text/code/markdown/chart behavior from accepted PPTX/fallback gaps.
@@ -9,6 +11,7 @@
 - Advanced Phase 06 game/live-only coverage: Insert ribbon now has executable coverage for all 7 game subtypes, `GameProperties` persists at least one non-default nested config path per subtype, canvas preview labels render for every subtype, shared HTML export emits a whitelist-only static game fallback, and PPTX export now has an explicit placeholder-warning contract for live-only game elements.
 - Completed Phase 07 export fidelity classification: every current PPTX `export-gap` row is classified as fallback-warning or accepted-limit, fallback paths now emit structured machine-readable `exportReport` warnings with matrix row ids while preserving legacy string warnings, and export warnings remain user-visible through the browser export-result modal.
 - PPTX import strict verification now aligns scripts, diagnostics, and docs: `test:pptx:strict` runs corpus plus strict smoke browser audit while full audit stays release-only, corpus CLI threshold text comes from canonical enforced constants, and import reports additive per-slide OOXML chart/SmartArt relationship-evidence stats plus degradation warnings.
+- Removed local debug/import-review artifacts from version control before release tagging.
 
 ## v1.14.3 — 2026-06-16
 
