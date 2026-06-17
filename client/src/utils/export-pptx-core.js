@@ -3,6 +3,24 @@ import { DEFAULT_BACKGROUND_COLOR, DEFAULT_TEXT_COLOR, normalizeCssColor } from 
 
 const DEFAULT_PPT_WIDTH = 10
 const DEFAULT_PPT_HEIGHT = 10
+const SAFE_IMAGE_DATA_URL = /^data:image\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]*$/i
+const PPTX_EXPORT_CONTROLS_BY_TYPE = {
+  audio: 'audio-source-playback',
+  chart: 'chart-data-options',
+  code: 'code-content-language',
+  drawing: 'drawing-path-style',
+  game: 'game-subtype-live-policy',
+  html: 'trusted-html-content',
+  icon: 'icon-name-style',
+  image: 'media-source-and-fit',
+  latex: 'latex-content-style',
+  markdown: 'markdown-content-style',
+  qrcode: 'qr-data-style',
+  svg: 'svg-content-overrides',
+  timeline: 'timeline-events-style',
+  video: 'video-source-playback',
+  'slide-background': 'slide-background-export',
+}
 
 function roundCoord(value) {
   return Number(value.toFixed(4))
@@ -60,8 +78,10 @@ export function scaleElementBounds(element, resolution, layout) {
 
 export function normalizeImageSource(src) {
   if (!src) return null
-  if (String(src).startsWith('data:')) return { data: src }
-  return { path: src }
+  const raw = String(src).trim()
+  if (!raw) return null
+  if (raw.startsWith('data:')) return SAFE_IMAGE_DATA_URL.test(raw) ? { data: raw } : null
+  return { path: raw }
 }
 
 export function getBackgroundImageUrl(background) {
@@ -78,6 +98,51 @@ export function createSvgDataUri(svg) {
       ? btoa(binary)
       : globalThis.Buffer.from(svg, 'utf8').toString('base64')
   return `data:image/svg+xml;base64,${encoded}`
+}
+
+export function createPptxExportReport() {
+  return {
+    surface: 'pptx-export',
+    warningCount: 0,
+    warnings: [],
+  }
+}
+
+export function attachPptxExportReport(warnings) {
+  if (!warnings || typeof warnings !== 'object') return createPptxExportReport()
+  if (!warnings.exportReport) {
+    Object.defineProperty(warnings, 'exportReport', {
+      configurable: true,
+      enumerable: false,
+      value: createPptxExportReport(),
+    })
+  }
+  return warnings.exportReport
+}
+
+export function recordPptxExportWarning(
+  warnings,
+  { element, slideNumber, message, fallback, severity = 'warning' }
+) {
+  warnings.push(message)
+
+  const report = attachPptxExportReport(warnings)
+  const elementType = String(element?.type || 'unknown')
+  const control = PPTX_EXPORT_CONTROLS_BY_TYPE[elementType] || 'unknown-export-control'
+  const rowId = `${elementType}.${control}.pptx-export`
+
+  report.warnings.push({
+    elementId: element?.id || null,
+    elementType,
+    control,
+    surface: 'pptx-export',
+    matrixRowId: rowId,
+    severity,
+    message,
+    fallback,
+    slideNumber,
+  })
+  report.warningCount = report.warnings.length
 }
 
 export function getShapeType(shape) {

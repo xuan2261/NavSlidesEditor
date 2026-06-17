@@ -3,7 +3,7 @@
  * Eliminates ~300 lines of duplicated rendering logic.
  */
 const { shapeSvgString } = require('./shapeUtils.js')
-const { sanitizeRichTextHtml, sanitizeSvgHtml, sanitizeHref } = require('./content-safety.js')
+const { sanitizeRichTextHtml, sanitizeSvgHtml, sanitizeHref, sanitizeMediaSrc } = require('./content-safety.js')
 const { resolveColorField, svgPaint, isTokenVar } = require('./design-tokens.js')
 const { resolveMergedCells } = require('./table-merge-resolver.js')
 
@@ -171,7 +171,7 @@ function buildCitationHtml(el) {
 }
 
 function renderImage(el, style, wrap, vis, opts) {
-  const src = absoluteSrc(el.src)
+  const src = absoluteSrc(sanitizeMediaSrc(el.src))
   const imgFilterParts = [
     el.filterBrightness != null && el.filterBrightness !== 100
       ? `brightness(${el.filterBrightness}%)`
@@ -374,7 +374,7 @@ function renderVideo(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
     return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));">&#9654; Video</div>`
   }
-  const videoSrc = el.videoUrl || el.src
+  const videoSrc = sanitizeMediaSrc(el.src || el.videoUrl)
   const src = getMediaFragmentSrc(absoluteSrc(videoSrc), el.startTime, el.endTime)
   const attrs = []
   if (el.controls !== false) attrs.push('controls')
@@ -384,7 +384,8 @@ function renderVideo(el, style, wrap, vis, opts) {
   const playbackRate = getPlaybackRate(el.playbackRate)
   const playbackAttr =
     playbackRate && playbackRate !== 1 ? ` onloadedmetadata="this.playbackRate=${playbackRate}"` : ''
-  const posterAttr = el.poster ? ` poster="${absoluteSrc(el.poster)}"` : ''
+  const poster = sanitizeMediaSrc(el.poster)
+  const posterAttr = poster ? ` poster="${absoluteSrc(poster)}"` : ''
   return `<div${wrap} style="${style}"><video src="${src}" ${attrs.join(' ')}${posterAttr}${playbackAttr} style="width:100%;height:100%;object-fit:${el.objectFit || 'contain'};display:block;"></video></div>`
 }
 
@@ -392,7 +393,7 @@ function renderAudio(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
     return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));">&#9835; Audio</div>`
   }
-  const src = absoluteSrc(el.src)
+  const src = absoluteSrc(sanitizeMediaSrc(el.src))
   const attrs = ['controls']
   if (el.autoplay) attrs.push('autoplay')
   if (el.loop) attrs.push('loop')
@@ -762,6 +763,7 @@ function renderElement(el, slide, opts = {}) {
  */
 function renderSlideElements(slide, opts = {}) {
   return (slide.elements || [])
+    .filter((el) => !(el.hidden || false))
     .slice()
     .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
     .map((el) => {

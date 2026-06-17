@@ -186,6 +186,7 @@ export default function SelectionPane({
 
             {/* Lock toggle */}
             <button
+              data-testid={`selection-pane-toggle-lock-${el.id}`}
               onClick={(e) => {
                 e.stopPropagation()
                 onToggleLock(el.id)

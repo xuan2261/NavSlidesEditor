@@ -27,4 +27,9 @@ describe('server-image-source', () => {
     expect(normalizeServerImageSource('server/uploads/local.png')?.path).toContain(path.join('server', 'uploads'))
     expect(normalizeServerImageSource('')).toBeNull()
   })
+
+  it('rejects non-image data URIs for server PPTX image sources', () => {
+    expect(normalizeServerImageSource('data:text/html,<script>alert(1)</script>')).toBeNull()
+    expect(normalizeServerImageSource('data:video/mp4;base64,AAA')).toBeNull()
+  })
 })

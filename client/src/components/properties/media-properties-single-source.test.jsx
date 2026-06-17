@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import MediaProperties from './media-properties'
 
 describe('Phase 2: single video source field', () => {
@@ -14,5 +14,27 @@ describe('Phase 2: single video source field', () => {
     expect(screen.queryByText('Video URL')).toBeNull()
     // The single Source URL field remains
     expect(screen.getByText('Source URL')).toBeTruthy()
+  })
+
+  it('writes source edits to canonical src only', () => {
+    const onUpdate = vi.fn()
+    render(
+      <MediaProperties
+        element={{
+          id: 'v1',
+          type: 'video',
+          src: 'https://cdn.example.com/current.mp4',
+          videoUrl: 'https://cdn.example.com/legacy.mp4',
+        }}
+        onUpdate={onUpdate}
+      />
+    )
+
+    fireEvent.change(screen.getByDisplayValue('https://cdn.example.com/current.mp4'), {
+      target: { value: 'https://cdn.example.com/new.mp4' },
+    })
+
+    expect(onUpdate).toHaveBeenCalledWith({ src: 'https://cdn.example.com/new.mp4' })
+    expect(onUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ videoUrl: expect.anything() }))
   })
 })

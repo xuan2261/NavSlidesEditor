@@ -95,6 +95,68 @@ describe('Bug fixes in element renderers', () => {
       )
       expect(html).toContain('poster=')
     })
+
+    it('uses canonical src before stale legacy videoUrl', () => {
+      const html = renderElement(
+        {
+          ...base,
+          type: 'video',
+          src: '/uploads/current.mp4',
+          videoUrl: '/uploads/stale.mp4',
+          startTime: 2,
+        },
+        {},
+        {}
+      )
+      expect(html).toContain('/uploads/current.mp4#t=2')
+      expect(html).not.toContain('/uploads/stale.mp4')
+    })
+
+    it('uses legacy videoUrl only when src is absent', () => {
+      const html = renderElement(
+        { ...base, type: 'video', src: '', videoUrl: '/uploads/legacy.mp4' },
+        {},
+        {}
+      )
+      expect(html).toContain('/uploads/legacy.mp4')
+    })
+
+    it('renders audio flags consistently for viewer export', () => {
+      const html = renderElement(
+        {
+          ...base,
+          type: 'audio',
+          src: '/uploads/a.mp3',
+          autoplay: true,
+          loop: true,
+          muted: true,
+        },
+        {},
+        {}
+      )
+      expect(html).toContain('/uploads/a.mp3')
+      expect(html).toContain('controls')
+      expect(html).toContain('autoplay')
+      expect(html).toContain('loop')
+      expect(html).toContain('muted')
+    })
+
+    it('neutralizes unsafe media URLs in viewer export', () => {
+      const html = renderElement(
+        {
+          ...base,
+          type: 'video',
+          src: 'javascript:alert(1)',
+          poster: 'file:///secret.png',
+        },
+        {},
+        {}
+      )
+      expect(html).toContain('src=""')
+      expect(html).not.toContain('javascript:')
+      expect(html).not.toContain('poster=')
+      expect(html).not.toContain('file:///')
+    })
   })
 
   describe('LaTeX with fallback image', () => {

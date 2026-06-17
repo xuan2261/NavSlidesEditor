@@ -69,7 +69,7 @@ describe('CanvasElement video playback', () => {
     expect(video.playbackRate).toBe(1.25)
   })
 
-  it('uses videoUrl when provided for URL-based video elements', () => {
+  it('uses legacy videoUrl only when src is empty', () => {
     renderCanvasElement({
       ...baseElement,
       src: '',
@@ -81,6 +81,55 @@ describe('CanvasElement video playback', () => {
     const video = wrapper.querySelector('video')
 
     expect(video.getAttribute('src')).toBe('https://example.com/from-url.mp4#t=5,12')
+  })
+
+  it('uses canonical src before stale legacy videoUrl', () => {
+    renderCanvasElement({
+      ...baseElement,
+      src: 'https://example.com/current.mp4',
+      videoUrl: 'https://example.com/stale.mp4',
+      startTime: 3,
+    })
+    const wrapper = screen.getByTestId('slide-element-video-1')
+    const video = wrapper.querySelector('video')
+
+    expect(video.getAttribute('src')).toBe('https://example.com/current.mp4#t=3')
+  })
+
+  it('applies audio preview flags consistently with export attributes', () => {
+    renderCanvasElement({
+      id: 'audio-1',
+      type: 'audio',
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 60,
+      src: '/uploads/a.mp3',
+      autoplay: true,
+      loop: true,
+      muted: true,
+    })
+    const wrapper = screen.getByTestId('slide-element-audio-1')
+    const audio = wrapper.querySelector('audio')
+
+    expect(audio.getAttribute('src')).toBe('/uploads/a.mp3')
+    expect(audio.autoplay).toBe(true)
+    expect(audio.loop).toBe(true)
+    expect(audio.muted).toBe(true)
+    expect(audio.controls).toBe(true)
+  })
+
+  it('neutralizes unsafe media URLs on canvas', () => {
+    renderCanvasElement({
+      ...baseElement,
+      src: 'javascript:alert(1)',
+      poster: 'file:///secret.png',
+    })
+    const wrapper = screen.getByTestId('slide-element-video-1')
+    const video = wrapper.querySelector('video')
+
+    expect(video.getAttribute('src')).toBe('')
+    expect(video.getAttribute('poster')).toBeNull()
   })
 })
 

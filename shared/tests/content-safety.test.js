@@ -5,7 +5,9 @@ const require = createRequire(import.meta.url)
 const {
   sanitizeRichTextHtml,
   sanitizeRichTextStyle,
+  sanitizeMediaSrc,
   sanitizeHref,
+  sanitizeSvgHtml,
   convertCssLengthToPx,
 } = require('../src/content-safety.js')
 
@@ -54,5 +56,29 @@ describe('shared rich text content safety', () => {
     expect(sanitizeRichTextHtml('<a href="tel:+1234567890">Call</a>')).toContain(
       'href="tel:+1234567890"'
     )
+  })
+
+  test('media src policy rejects executable, local file, and unsafe data schemes', () => {
+    expect(sanitizeMediaSrc('/uploads/a.mp4')).toBe('/uploads/a.mp4')
+    expect(sanitizeMediaSrc('https://cdn.example.com/a.mp4')).toBe('https://cdn.example.com/a.mp4')
+    expect(sanitizeMediaSrc('data:image/png;base64,abc')).toBe('data:image/png;base64,abc')
+    expect(sanitizeMediaSrc('javascript:alert(1)')).toBe('')
+    expect(sanitizeMediaSrc('file:///tmp/a.mp4')).toBe('')
+    expect(sanitizeMediaSrc('data:text/html,<script>alert(1)</script>')).toBe('')
+    expect(sanitizeMediaSrc('mailto:person@example.com')).toBe('')
+  })
+
+  test('svg policy removes active content and neutralizes external references', () => {
+    const safe = sanitizeSvgHtml(
+      '<svg><script>alert(1)</script><foreignObject><p>x</p></foreignObject><rect onclick="x()" /><use href="https://evil.example/s.svg#x"/><image xlink:href="javascript:alert(1)"/><image src="http://evil.example/p.png"/><use href="#safe"/></svg>'
+    )
+
+    expect(safe).not.toContain('<script')
+    expect(safe).not.toContain('<foreignObject')
+    expect(safe).not.toContain('onclick=')
+    expect(safe).not.toContain('https://evil.example')
+    expect(safe).not.toContain('javascript:')
+    expect(safe).not.toContain('http://evil.example')
+    expect(safe).toContain('href="#safe"')
   })
 })

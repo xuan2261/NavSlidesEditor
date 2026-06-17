@@ -443,6 +443,19 @@ it('moves element with arrow keys [cap:canvas-nudge]', () => { ... })
 - Run `npm run matrix:gate` to check the gate locally. CI job `feature-coverage-gate` runs this as a non-required warn-first check.
 - Extended non-editor-core domains are reported separately by `npm run matrix:extended-report`; contract-only rows must not be promoted to full executable verification without hermetic adapters or real CI credentials.
 
+### Element-Control Audit Matrix
+
+The element-control audit matrix is a separate, finer-grained harness layered on top of the feature-coverage matrix. It lives under `scripts/feature-inventory/` as:
+
+- `element-control-expected-controls.json`
+- `element-control-audit-matrix.json`
+- `validate-element-control-audit-matrix.mjs`
+- `validate-element-control-audit-matrix.test.mjs`
+
+Use `npm run matrix:element-control` to run it directly. `npm run matrix:gate` already includes this validator, so the gate now covers both capability coverage and element/control/surface audit rows.
+
+The harness verifies all 19 canonical element types, enforces one row per `element/control/surface`, allows only `works`, `partial`, `broken`, and `export-gap`, and requires evidence, testCoverage, and security fields for content-bearing controls. The generated report lives at `plans/260617-0739-element-control-audit-matrix-tdd/reports/element-control-audit-matrix-current.md`.
+
 | File | Function signature | Notes |
 | --- | --- | --- |
 | `generateHTML.js` | `generateRevealHTML(presentation) -> string` | Pure, CDN-dependent re-export from shared |
@@ -500,6 +513,12 @@ If deployment is internet-facing or multi-user, require external authentication 
 | Credential security | Electron `safeStorage` for GitHub tokens |
 | Error boundaries | React `ErrorBoundary` prevents crash exposure |
 | Share passwords | Optional password protection for shared links |
+
+SVG authored content remains trusted presentation content, but SVG render sinks
+must strip active nodes (`script`, `foreignObject`, `iframe`, `object`, `embed`),
+event attributes, unsafe `href` / `xlink:href` / `src` values, and external SVG
+references. Fragment references and `data:image/*;base64` references are the
+allowed SVG reference forms.
 
 ## What Does Not Exist
 

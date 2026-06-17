@@ -68,6 +68,7 @@ describe('CanvasContextMenu copy URL action', () => {
     expect(getCopyableMediaUrl({ src: 'javascript:alert(1)' }, 'https://slides.test')).toBeNull()
     expect(getCopyableMediaUrl({ src: 'vbscript:msgbox(1)' }, 'https://slides.test')).toBeNull()
     expect(getCopyableMediaUrl({ src: 'file:///C:/secret.png' }, 'https://slides.test')).toBeNull()
+    expect(getCopyableMediaUrl({ src: 'data:text/html,<script>alert(1)</script>' }, 'https://slides.test')).toBeNull()
   })
 
   it('hides Copy URL for media without a usable source', () => {

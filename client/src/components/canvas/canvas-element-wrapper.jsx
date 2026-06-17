@@ -4,6 +4,7 @@ import hljs from 'highlight.js'
 import katex from 'katex'
 import { resolveColorField } from 'revealjs-shared'
 import { sanitizeRichTextHtml } from '../../utils/content-safety'
+import { sanitizeMediaSrc } from '../../utils/url-safety'
 import { getElementRenderer, CropOverlay } from './element-renderers/registry'
 import { HANDLE_STYLES } from './use-canvas-resize-rotate'
 import PluginSandbox from '../../plugins/plugin-sandbox'
@@ -176,7 +177,7 @@ export default function CanvasElement({
         const imgFilter = [element.filterBrightness != null && element.filterBrightness !== 100 ? `brightness(${element.filterBrightness}%)` : '', element.filterContrast != null && element.filterContrast !== 100 ? `contrast(${element.filterContrast}%)` : '', element.filterGrayscale ? `grayscale(${element.filterGrayscale}%)` : '', element.filterSaturate != null && element.filterSaturate !== 100 ? `saturate(${element.filterSaturate}%)` : ''].filter(Boolean).join(' ') || undefined
         return (
           <div style={imageWrapperStyle}>
-            <img src={element.src} alt={element.alt || ''} style={element.imageW != null ? { position: 'absolute', left: element.imageOffsetX ?? 0, top: element.imageOffsetY ?? 0, width: element.imageW, height: element.imageH, objectFit: element.objectFit || 'contain', pointerEvents: 'none', filter: imgFilter, transform: imageFlipTransform } : { width: '100%', height: '100%', objectFit: element.objectFit || 'contain', display: 'block', pointerEvents: 'none', filter: imgFilter, transform: imageFlipTransform }} draggable={false} />
+            <img src={sanitizeMediaSrc(element.src)} alt={element.alt || ''} style={element.imageW != null ? { position: 'absolute', left: element.imageOffsetX ?? 0, top: element.imageOffsetY ?? 0, width: element.imageW, height: element.imageH, objectFit: element.objectFit || 'contain', pointerEvents: 'none', filter: imgFilter, transform: imageFlipTransform } : { width: '100%', height: '100%', objectFit: element.objectFit || 'contain', display: 'block', pointerEvents: 'none', filter: imgFilter, transform: imageFlipTransform }} draggable={false} />
             {isCropping && cropState && <CropOverlay crop={cropState} elW={element.width} elH={element.height} onHandleDown={onCropHandleDown} onCommit={onCommitCrop} />}
           </div>
         )
@@ -210,7 +211,7 @@ export default function CanvasElement({
         if (element.type === 'code') return <pre className="hljs" style={codeBlockStyle}><code dangerouslySetInnerHTML={{ __html: hljs.highlight(element.content || '', { language: element.language || 'plaintext' }).value }} /></pre>
         if (element.type === 'video') {
           const playbackRate = getPlaybackRate(element.playbackRate)
-          const videoSrc = element.videoUrl || element.src
+          const videoSrc = sanitizeMediaSrc(element.src || element.videoUrl)
           return (
             <video
               ref={videoRef}
@@ -218,7 +219,7 @@ export default function CanvasElement({
               controls={element.controls !== false}
               muted={element.muted || false}
               loop={element.loop || false}
-              poster={element.poster || undefined}
+              poster={sanitizeMediaSrc(element.poster) || undefined}
               style={videoStyle}
               onLoadedMetadata={(event) => {
                 if (playbackRate && playbackRate !== 1) event.currentTarget.playbackRate = playbackRate
@@ -226,7 +227,20 @@ export default function CanvasElement({
             />
           )
         }
-        if (element.type === 'audio') return <div style={audioWrapperStyle}><audio src={element.src} controls style={audioControlStyle} /></div>
+        if (element.type === 'audio') {
+          return (
+            <div style={audioWrapperStyle}>
+              <audio
+                src={sanitizeMediaSrc(element.src)}
+                controls
+                autoPlay={element.autoplay || false}
+                loop={element.loop || false}
+                muted={element.muted || false}
+                style={audioControlStyle}
+              />
+            </div>
+          )
+        }
         if (Renderer) {
           if (element.type === 'table') return <Renderer element={element} isEditing={isEditing} onUpdateElement={onUpdateElement} />
           if (element.type === 'chart' || element.type === 'latex') return <Renderer element={element} isSelected={isSelected} isDragging={isDragging} />

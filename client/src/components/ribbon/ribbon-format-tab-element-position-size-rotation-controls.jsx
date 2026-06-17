@@ -10,7 +10,7 @@ import { normalizeRotation } from '../../utils/element-update-fanout'
 import { computeMixedValues } from '../../utils/selection-mixed-values'
 
 const OBJECT_FIT_OPTIONS = ['cover', 'contain', 'fill', 'none']
-const CHART_TYPES = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea', 'scatter']
+const CHART_TYPES = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea']
 const CODE_LANGUAGES = [
   'javascript', 'typescript', 'python', 'java', 'c', 'cpp', 'csharp',
   'go', 'rust', 'ruby', 'php', 'swift', 'kotlin', 'html', 'css',

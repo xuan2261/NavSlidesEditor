@@ -90,6 +90,7 @@ function shouldRasterElement(element, rasterTypes) {
 function collectRasterTargets(presentation, rasterTypes) {
   return (presentation.slides || []).flatMap((slide, slideIndex) =>
     (slide.elements || [])
+      .filter((element) => !(element.hidden || false))
       .filter((element) => shouldRasterElement(element, rasterTypes))
       .map((element) => ({ id: element.id, slideIndex }))
   )
@@ -235,6 +236,7 @@ async function getServerRasters(
 module.exports = {
   __private: {
     canPassThroughRequest,
+    collectRasterTargets,
     installVendorRoute,
     resolveVendorPath,
   },

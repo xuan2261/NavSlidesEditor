@@ -16,6 +16,7 @@ import {
   Undo2,
 } from 'lucide-react'
 import { Button } from '../ui'
+import { sanitizeMediaSrc } from '../../utils/url-safety'
 
 const SNAP_REF_OPTIONS = [
   { id: 'ul', label: 'Upper Left', fx: 0, fy: 0 },
@@ -72,12 +73,16 @@ const SNAP_ICONS = {
 
 export function getCopyableMediaUrl(element, origin = globalThis.location?.origin) {
   const raw = typeof element?.src === 'string' ? element.src.trim() : ''
-  if (!raw || /^(javascript|vbscript):/i.test(raw)) return null
-  if (/^(https?:|blob:|data:)/i.test(raw)) return raw
+  if (!raw) return null
+  if (/^blob:/i.test(raw)) return raw
+
+  const safe = sanitizeMediaSrc(raw)
+  if (!safe) return null
+  if (/^(https?:|data:)/i.test(safe)) return safe
   if (!origin) return null
 
   try {
-    const url = new URL(raw, origin)
+    const url = new URL(safe, origin)
     return /^https?:$/i.test(url.protocol) ? url.toString() : null
   } catch {
     return null

@@ -5,6 +5,7 @@ const CANVAS_WIDTH = 960
 const CANVAS_HEIGHT = 540
 const DEFAULT_PPT_WIDTH = 10
 const DEFAULT_PPT_HEIGHT = 10
+const SAFE_IMAGE_DATA_URL = /^data:image\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]*$/i
 
 function roundCoord(value) {
   return Number(value.toFixed(4))
@@ -61,8 +62,10 @@ function scaleElementBounds(element, resolution, layout) {
 
 function normalizeImageSource(src) {
   if (!src) return null
-  if (String(src).startsWith('data:')) return { data: src }
-  return { path: src }
+  const raw = String(src).trim()
+  if (!raw) return null
+  if (raw.startsWith('data:')) return SAFE_IMAGE_DATA_URL.test(raw) ? { data: raw } : null
+  return { path: raw }
 }
 
 function getBackgroundImageUrl(background) {

@@ -16,6 +16,19 @@ describe('canonical media/code/image/latex/html property depth', () => {
     expect(onUpdate).toHaveBeenCalledWith({ objectFit: 'cover' })
   })
 
+  it('[cap:element.image depth:behavior] exposes round corners but not image border width/color authoring', () => {
+    render(
+      <ImageProperties
+        element={{ id: 'img-1', type: 'image', borderRadius: 12, borderColor: '#ff0000', borderWidth: 3 }}
+        onUpdate={vi.fn()}
+      />
+    )
+
+    expect(screen.getByTestId('prop-image-border-radius')).toBeTruthy()
+    expect(screen.queryByTestId('prop-image-border-color')).toBeNull()
+    expect(screen.queryByTestId('prop-image-border-width')).toBeNull()
+  })
+
   it('[cap:element.code depth:behavior] writes language from the code properties select', () => {
     const onUpdate = vi.fn()
     render(<CodeProperties element={{ id: 'code-1', type: 'code', language: 'javascript' }} onUpdate={onUpdate} />)
@@ -23,6 +36,17 @@ describe('canonical media/code/image/latex/html property depth', () => {
     fireEvent.change(screen.getByTestId('prop-code-language'), { target: { value: 'python' } })
 
     expect(onUpdate).toHaveBeenCalledWith({ language: 'python' })
+  })
+
+  it('[cap:element.code depth:behavior] writes font size and border radius from code properties', () => {
+    const onUpdate = vi.fn()
+    render(<CodeProperties element={{ id: 'code-1', type: 'code', fontSize: 14, borderRadius: 4 }} onUpdate={onUpdate} />)
+
+    fireEvent.change(screen.getByTestId('prop-code-font-size'), { target: { value: '20' } })
+    fireEvent.change(screen.getByTestId('prop-code-border-radius'), { target: { value: '16' } })
+
+    expect(onUpdate).toHaveBeenCalledWith({ fontSize: 20 })
+    expect(onUpdate).toHaveBeenCalledWith({ borderRadius: 16 })
   })
 
   it('[cap:element.video depth:behavior] writes trim and playback properties', () => {
@@ -63,5 +87,18 @@ describe('canonical media/code/image/latex/html property depth', () => {
     fireEvent.click(screen.getByTestId('prop-html-edit'))
 
     expect(onEditHtml).toHaveBeenCalledTimes(1)
+  })
+
+  it('[cap:element.markdown depth:behavior] writes markdown content, text color, and font size', () => {
+    const onUpdate = vi.fn()
+    render(<MiscProperties element={{ id: 'markdown-1', type: 'markdown', content: '# Old' }} onUpdate={onUpdate} />)
+
+    fireEvent.change(screen.getByTestId('prop-markdown-content'), { target: { value: '## New' } })
+    fireEvent.change(screen.getByTestId('prop-markdown-text-color'), { target: { value: '#22c55e' } })
+    fireEvent.change(screen.getByTestId('prop-markdown-font-size'), { target: { value: '28' } })
+
+    expect(onUpdate).toHaveBeenCalledWith({ content: '## New' })
+    expect(onUpdate).toHaveBeenCalledWith({ textColor: '#22c55e' })
+    expect(onUpdate).toHaveBeenCalledWith({ fontSize: 28 })
   })
 })

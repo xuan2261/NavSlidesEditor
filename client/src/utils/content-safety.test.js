@@ -42,4 +42,29 @@ describe('content safety helpers', () => {
     expect(safe).not.toContain('<foreignObject')
     expect(safe).not.toContain('onload=')
   })
+
+  it('neutralizes unsafe svg links and external references', () => {
+    const safe = sanitizeSvgContent(
+      '<svg><use href="https://evil.example/sprite.svg#icon"/><image xlink:href="javascript:alert(1)"/><image src="http://evil.example/pixel.png"/><use href="#safe"/></svg>'
+    )
+
+    expect(safe).not.toContain('parsererror')
+    expect(safe).not.toContain('https://evil.example')
+    expect(safe).not.toContain('javascript:')
+    expect(safe).not.toContain('http://evil.example')
+    expect(safe).toContain('href="#safe"')
+  })
+
+  it('sanitizes root svg attributes in the browser parser path', () => {
+    const safe = sanitizeSvgContent(
+      '<svg onload="alert(1)" href="https://evil.example/root.svg" xlink:href="javascript:alert(1)" src="http://evil.example/root.png"><rect width="10" height="10"/></svg>'
+    )
+
+    expect(safe).not.toContain('onload=')
+    expect(safe).not.toContain('https://evil.example')
+    expect(safe).not.toContain('javascript:')
+    expect(safe).not.toContain('http://evil.example')
+    expect(safe).toContain('href="#"')
+    expect(safe).toContain('src="#"')
+  })
 })

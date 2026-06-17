@@ -35,6 +35,7 @@ import { exportToPptx } from './exportPptx'
 
 describe('exportPptx', () => {
   const originalDocument = globalThis.document
+  const originalCreateElement = originalDocument?.createElement?.bind(originalDocument)
   const originalFetch = globalThis.fetch
   const originalWindow = globalThis.window
 
@@ -74,6 +75,9 @@ describe('exportPptx', () => {
 
   afterEach(() => {
     globalThis.document = originalDocument
+    if (globalThis.document && originalCreateElement) {
+      globalThis.document.createElement = originalCreateElement
+    }
     globalThis.fetch = originalFetch
     globalThis.window = originalWindow
   })
@@ -195,9 +199,63 @@ describe('exportPptx', () => {
     })
 
     expect(warnings).toContain('Slide 1: inserted placeholder for audio')
+    expect(warnings.exportReport).toEqual({
+      surface: 'pptx-export',
+      warningCount: 1,
+      warnings: [
+        expect.objectContaining({
+          elementId: 'audio-1',
+          elementType: 'audio',
+          control: 'audio-source-playback',
+          surface: 'pptx-export',
+          matrixRowId: 'audio.audio-source-playback.pptx-export',
+          severity: 'warning',
+          fallback: 'placeholder',
+          slideNumber: 1,
+        }),
+      ],
+    })
     expect(slides[0].addShape).toHaveBeenCalledWith('rect', expect.any(Object))
     expect(slides[0].addText).toHaveBeenCalledWith(
       'Audio preview unavailable',
+      expect.objectContaining({ fit: 'shrink' })
+    )
+  })
+
+  it('[cap:element.game depth:export] inserts a placeholder warning for live-only game elements', async () => {
+    const warnings = await exportToPptx({
+      title: 'Game fallback export',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'game-1',
+              type: 'game',
+              gameType: 'name-picker',
+              x: 10,
+              y: 20,
+              width: 320,
+              height: 180,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(warnings).toContain('Slide 1: inserted placeholder for game')
+    expect(warnings.exportReport.warnings[0]).toEqual(
+      expect.objectContaining({
+        elementId: 'game-1',
+        elementType: 'game',
+        control: 'game-subtype-live-policy',
+        matrixRowId: 'game.game-subtype-live-policy.pptx-export',
+        fallback: 'placeholder',
+      })
+    )
+    expect(slides).toHaveLength(1)
+    expect(slides[0].addShape).toHaveBeenCalledWith('rect', expect.any(Object))
+    expect(slides[0].addText).toHaveBeenCalledWith(
+      'game preview unavailable',
       expect.objectContaining({ fit: 'shrink' })
     )
   })
@@ -228,7 +286,62 @@ describe('exportPptx', () => {
     })
 
     expect(warnings).toContain('Slide 1: background fallback used during PPTX export')
+    expect(warnings.exportReport.warnings[0]).toEqual(
+      expect.objectContaining({
+        elementId: 'slide-1-background',
+        elementType: 'slide-background',
+        control: 'slide-background-export',
+        matrixRowId: 'slide-background.slide-background-export.pptx-export',
+        fallback: 'background-color',
+      })
+    )
     expect(slides[0].background).toEqual({ color: '1E1E2E' })
+  })
+
+  it('reports unsupported chart variants with the matrix chart row id', async () => {
+    const warnings = await exportToPptx({
+      title: 'Unsupported chart fallback',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'chart-polar',
+              type: 'chart',
+              chartType: 'polarArea',
+              x: 20,
+              y: 20,
+              width: 300,
+              height: 180,
+              chartData: {
+                labels: ['A', 'B'],
+                datasets: [{ label: 'Series', data: [1, 2] }],
+              },
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(warnings).toContain('Slide 1: chart export failed (Unsupported chart type: polarArea)')
+    expect(warnings.exportReport.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          elementId: 'chart-polar',
+          elementType: 'chart',
+          control: 'chart-data-options',
+          matrixRowId: 'chart.chart-data-options.pptx-export',
+          fallback: 'export-error',
+          severity: 'error',
+        }),
+        expect.objectContaining({
+          elementId: 'chart-polar',
+          elementType: 'chart',
+          control: 'chart-data-options',
+          matrixRowId: 'chart.chart-data-options.pptx-export',
+          fallback: expect.stringMatching(/^(client-raster|placeholder)$/),
+        }),
+      ])
+    )
   })
 
   it('keeps native elements editable while using server rasters for HTML and LaTeX', async () => {
@@ -296,5 +409,101 @@ describe('exportPptx', () => {
       'Slide 1: rasterized html with server renderer',
       'Slide 1: rasterized latex with server renderer',
     ])
+  })
+
+  it('omits hidden elements from client PPTX export output', async () => {
+    const warnings = await exportToPptx({
+      title: 'Hidden client export',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'visible-text',
+              type: 'text',
+              content: '<p>Visible PPTX marker</p>',
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 80,
+            },
+            {
+              id: 'hidden-text',
+              type: 'text',
+              hidden: true,
+              content: '<p>Hidden PPTX marker</p>',
+              x: 0,
+              y: 100,
+              width: 200,
+              height: 80,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(warnings).toEqual([])
+    expect(slides).toHaveLength(1)
+    expect(slides[0].addText).toHaveBeenCalledTimes(1)
+    expect(JSON.stringify(slides[0].addText.mock.calls)).toContain('Visible PPTX marker')
+    expect(JSON.stringify(slides[0].addText.mock.calls)).not.toContain('Hidden PPTX marker')
+  })
+
+  it('ignores hidden HTML and LaTeX elements during server raster pre-pass', async () => {
+    globalThis.window = {}
+    globalThis.document = {}
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        rasters: {
+          'html-visible': 'data:image/png;base64,html',
+        },
+      }),
+    })
+
+    const warnings = await exportToPptx({
+      title: 'Hidden raster pre-pass',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'html-visible',
+              type: 'html',
+              content: '<div>Visible HTML</div>',
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 80,
+            },
+            {
+              id: 'html-hidden',
+              type: 'html',
+              hidden: true,
+              content: '<div>Hidden HTML</div>',
+              x: 0,
+              y: 100,
+              width: 200,
+              height: 80,
+            },
+            {
+              id: 'latex-hidden',
+              type: 'latex',
+              hidden: true,
+              content: String.raw`x^2`,
+              x: 0,
+              y: 200,
+              width: 200,
+              height: 80,
+            },
+          ],
+        },
+      ],
+    })
+
+    const requestBody = JSON.parse(globalThis.fetch.mock.calls[0][1].body)
+    const requestedIds = requestBody.presentation.slides[0].elements.map((element) => element.id)
+
+    expect(requestedIds).toEqual(['html-visible'])
+    expect(warnings).toEqual(['Slide 1: rasterized html with server renderer'])
+    expect(slides[0].addImage).toHaveBeenCalledTimes(1)
   })
 })

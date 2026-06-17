@@ -8,7 +8,7 @@ import {
   addTableElement,
   addTextElement,
 } from './export-pptx-basic-renderers'
-import { scaleElementBounds } from './export-pptx-core'
+import { recordPptxExportWarning, scaleElementBounds } from './export-pptx-core'
 import { addFallbackElement } from './export-pptx-fallback-renderer'
 
 export async function addElementToPptxSlide({
@@ -26,7 +26,12 @@ export async function addElementToPptxSlide({
 
   if (rasterData) {
     slide.addImage({ data: rasterData, ...bounds, rotate: element.rotation || 0 })
-    warnings.push(`Slide ${slideNumber}: rasterized ${element.type} with server renderer`)
+    recordPptxExportWarning(warnings, {
+      element,
+      slideNumber,
+      message: `Slide ${slideNumber}: rasterized ${element.type} with server renderer`,
+      fallback: 'server-raster',
+    })
     return
   }
 
@@ -61,7 +66,13 @@ export async function addElementToPptxSlide({
         break
     }
   } catch (error) {
-    warnings.push(`Slide ${slideNumber}: ${element.type} export failed (${error.message})`)
+    recordPptxExportWarning(warnings, {
+      element,
+      slideNumber,
+      message: `Slide ${slideNumber}: ${element.type} export failed (${error.message})`,
+      fallback: 'export-error',
+      severity: 'error',
+    })
     await addFallbackElement(slide, element, bounds, warnings, slideNumber)
   }
 }

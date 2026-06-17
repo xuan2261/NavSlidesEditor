@@ -39,6 +39,9 @@ export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) 
             <span className="text-xs text-text-muted">
               D3, plain HTML, or any JavaScript — renders in an iframe
             </span>
+            <span data-testid="html-trusted-content-warning" className="text-xs text-amber-300">
+              Trusted author content only; scripts are preserved in preview and export.
+            </span>
           </div>
           <div className="flex gap-2">
             <Button variant="secondary" className="text-xs" onClick={onCancel}>

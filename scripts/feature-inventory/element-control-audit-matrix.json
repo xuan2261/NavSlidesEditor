@@ -1,0 +1,2846 @@
+{
+  "rows": [
+    {
+      "id": "audio.audio-source-playback.canvas",
+      "element": "audio",
+      "control": "audio-source-playback",
+      "surface": "canvas",
+      "status": "partial",
+      "evidence": [
+        "media-properties.jsx",
+        "shared renderAudio",
+        "Current audit A6",
+        "client/src/components/canvas/canvas-element-wrapper.jsx",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "audio audio-source-playback canvas matrix target",
+        "client/src/utils/url-safety.test.js media URL policy negative cases",
+        "shared/tests/content-safety.test.js media URL policy negative cases",
+        "client/src/components/canvas/canvas-element-wrapper.test.jsx audio autoplay loop muted controls parity"
+      ],
+      "decision": "canvas works for the primary path but has a documented secondary limitation.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "audio authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "audio canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "audio.audio-source-playback.editor",
+      "element": "audio",
+      "control": "audio-source-playback",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "media-properties.jsx",
+        "shared renderAudio",
+        "Current audit A6",
+        "client/src/components/canvas/canvas-element-wrapper.jsx",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "audio audio-source-playback editor matrix target",
+        "client/src/utils/url-safety.test.js media URL policy negative cases",
+        "shared/tests/content-safety.test.js media URL policy negative cases"
+      ],
+      "decision": "editor behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "audio authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "audio editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "audio.audio-source-playback.html-export",
+      "element": "audio",
+      "control": "audio-source-playback",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "media-properties.jsx",
+        "shared renderAudio",
+        "Current audit A6",
+        "client/src/components/canvas/canvas-element-wrapper.jsx",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "audio audio-source-playback html-export matrix target",
+        "client/src/utils/url-safety.test.js media URL policy negative cases",
+        "shared/tests/content-safety.test.js media URL policy negative cases",
+        "shared/tests/bug-fixes-element-renderers.test.js audio autoplay loop muted controls parity"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "audio authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "audio html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "audio.audio-source-playback.pptx-export",
+      "element": "audio",
+      "control": "audio-source-playback",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "media-properties.jsx",
+        "shared renderAudio",
+        "Current audit A6",
+        "client/src/components/canvas/canvas-element-wrapper.jsx",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "audio audio-source-playback pptx-export matrix target",
+        "client/src/utils/url-safety.test.js media URL policy negative cases",
+        "shared/tests/content-safety.test.js media URL policy negative cases"
+      ],
+      "decision": "pptx-export has an accepted or pending fidelity gap documented for audio.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "audio authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "audio pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "audio.visibility.canvas",
+      "element": "audio",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "audio.visibility.html-export",
+      "element": "audio",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "audio.visibility.pptx-export",
+      "element": "audio",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "callout.callout-number-style.canvas",
+      "element": "callout",
+      "control": "callout-number-style",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx callout controls",
+        "shared renderCallout",
+        "addCalloutElement"
+      ],
+      "testCoverage": [
+        "callout callout-number-style canvas matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx callout number/color controls",
+        "shared/tests/element-renderers.test.js callout number/color/font HTML export behavior"
+      ],
+      "decision": "canvas behavior is included in the current supported contract."
+    },
+    {
+      "id": "callout.callout-number-style.editor",
+      "element": "callout",
+      "control": "callout-number-style",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx callout controls",
+        "shared renderCallout",
+        "addCalloutElement"
+      ],
+      "testCoverage": [
+        "callout callout-number-style editor matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx callout number/color controls",
+        "shared/tests/element-renderers.test.js callout number/color/font HTML export behavior"
+      ],
+      "decision": "editor behavior is included in the current supported contract."
+    },
+    {
+      "id": "callout.callout-number-style.html-export",
+      "element": "callout",
+      "control": "callout-number-style",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx callout controls",
+        "shared renderCallout",
+        "addCalloutElement"
+      ],
+      "testCoverage": [
+        "callout callout-number-style html-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx callout number/color controls",
+        "shared/tests/element-renderers.test.js callout number/color/font HTML export behavior"
+      ],
+      "decision": "html-export behavior is included in the current supported contract."
+    },
+    {
+      "id": "callout.callout-number-style.pptx-export",
+      "element": "callout",
+      "control": "callout-number-style",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx callout controls",
+        "shared renderCallout",
+        "addCalloutElement"
+      ],
+      "testCoverage": [
+        "callout callout-number-style pptx-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx callout number/color controls",
+        "shared/tests/element-renderers.test.js callout number/color/font HTML export behavior"
+      ],
+      "decision": "pptx-export behavior is included in the current supported contract."
+    },
+    {
+      "id": "callout.visibility.canvas",
+      "element": "callout",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "callout.visibility.html-export",
+      "element": "callout",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "callout.visibility.pptx-export",
+      "element": "callout",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "chart.chart-data-options.canvas",
+      "element": "chart",
+      "control": "chart-data-options",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "chart-properties.jsx",
+        "shared renderChart",
+        "Current audit A3",
+        "client/src/components/properties/chart-properties.jsx",
+        "client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.jsx",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "chart chart-data-options canvas matrix target",
+        "client/src/components/properties/chart-properties.test.jsx chart controls supported type set and data mutations",
+        "client/src/components/ribbon/ribbon-format-tab-contextual-controls.test.jsx chart Format tab supported type parity",
+        "shared/tests/element-renderers.test.js chart stacked and areaFill export behavior"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "chart authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "chart canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "chart.chart-data-options.editor",
+      "element": "chart",
+      "control": "chart-data-options",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "chart-properties.jsx",
+        "shared renderChart",
+        "Current audit A3",
+        "client/src/components/properties/chart-properties.jsx",
+        "client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.jsx"
+      ],
+      "testCoverage": [
+        "chart chart-data-options editor matrix target",
+        "client/src/components/properties/chart-properties.test.jsx chart controls supported type set and data mutations",
+        "client/src/components/ribbon/ribbon-format-tab-contextual-controls.test.jsx chart Format tab supported type parity"
+      ],
+      "decision": "editor behavior is included in the current supported contract; Format and Properties now expose the same supported chart type set.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "chart authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "chart editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "chart.chart-data-options.html-export",
+      "element": "chart",
+      "control": "chart-data-options",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "chart-properties.jsx",
+        "shared renderChart",
+        "Current audit A3",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "chart chart-data-options html-export matrix target",
+        "shared/tests/element-renderers.test.js chart stacked and areaFill export behavior"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "chart authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "chart html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "chart.chart-data-options.pptx-export",
+      "element": "chart",
+      "control": "chart-data-options",
+      "surface": "pptx-export",
+      "status": "partial",
+      "evidence": [
+        "chart-properties.jsx",
+        "shared renderChart",
+        "Current audit A3",
+        "client/src/utils/export-pptx-basic-renderers.js",
+        "shared/src/shared-pptx-core.js"
+      ],
+      "testCoverage": [
+        "chart chart-data-options pptx-export matrix target",
+        "client/src/components/properties/chart-properties.test.jsx chart type set includes polarArea",
+        "shared/tests/element-renderers.test.js chart stacked and areaFill HTML fallback behavior"
+      ],
+      "decision": "pptx-export works for native chart types but remains partial for non-native chart types such as polarArea, which use fallback/raster policy.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "chart authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "chart pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "chart.visibility.canvas",
+      "element": "chart",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js renderer family visibility smoke"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "chart.visibility.html-export",
+      "element": "chart",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "chart.visibility.pptx-export",
+      "element": "chart",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "code.code-content-language.canvas",
+      "element": "code",
+      "control": "code-content-language",
+      "surface": "canvas",
+      "status": "partial",
+      "evidence": [
+        "code-properties.jsx",
+        "shared renderCode",
+        "PPTX plain code export",
+        "client/src/components/canvas/canvas-element-wrapper.jsx"
+      ],
+      "testCoverage": [
+        "code code-content-language canvas matrix target",
+        "client/src/components/canvas/global-render-mapping.test.jsx code border-radius canvas mapping"
+      ],
+      "decision": "canvas works for the primary path but has a documented secondary limitation.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "code authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "code canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "code.code-content-language.editor",
+      "element": "code",
+      "control": "code-content-language",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "code-properties.jsx",
+        "shared renderCode",
+        "PPTX plain code export",
+        "client/src/components/properties/code-properties.jsx",
+        "client/src/components/CodeEditorModal.jsx"
+      ],
+      "testCoverage": [
+        "code code-content-language editor matrix target",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx code language/font size/border radius controls",
+        "client/src/components/content-editor-modals.test.jsx code modal save/cancel/language/theme behavior"
+      ],
+      "decision": "editor behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "code authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "code editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "code.code-content-language.html-export",
+      "element": "code",
+      "control": "code-content-language",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "code-properties.jsx",
+        "shared renderCode",
+        "PPTX plain code export",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "code code-content-language html-export matrix target",
+        "shared/tests/element-renderers.test.js code language and escaped content HTML export"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "code authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "code html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "code.code-content-language.pptx-export",
+      "element": "code",
+      "control": "code-content-language",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "code-properties.jsx",
+        "shared renderCode",
+        "PPTX plain code export",
+        "client/src/utils/export-pptx-basic-renderers.js"
+      ],
+      "testCoverage": [
+        "code code-content-language pptx-export matrix target",
+        "client/src/utils/export-pptx-basic-renderers.js plain code text export policy"
+      ],
+      "decision": "pptx-export emits code as plain text; syntax highlighting/language theme fidelity is an accepted native export gap.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "code authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "code pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "code.visibility.canvas",
+      "element": "code",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js renderer family visibility smoke"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "code.visibility.html-export",
+      "element": "code",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "code.visibility.pptx-export",
+      "element": "code",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "drawing.drawing-path-style.canvas",
+      "element": "drawing",
+      "control": "drawing-path-style",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx drawing controls",
+        "shared renderDrawing"
+      ],
+      "testCoverage": [
+        "drawing drawing-path-style canvas matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx drawing controls update element stroke defaults only",
+        "shared/tests/element-renderers.test.js drawing paths render per-path stroke over element defaults"
+      ],
+      "decision": "canvas behavior is included in the current supported contract."
+    },
+    {
+      "id": "drawing.drawing-path-style.editor",
+      "element": "drawing",
+      "control": "drawing-path-style",
+      "surface": "editor",
+      "status": "partial",
+      "evidence": [
+        "misc-properties.jsx drawing controls",
+        "shared renderDrawing"
+      ],
+      "testCoverage": [
+        "drawing drawing-path-style editor matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx drawing controls update element stroke defaults only",
+        "shared/tests/element-renderers.test.js drawing paths render per-path stroke over element defaults"
+      ],
+      "decision": "editor controls update drawing default stroke color/width for future or default-styled paths; existing per-path stroke data is preserved, so path-level bulk recolor remains partial."
+    },
+    {
+      "id": "drawing.drawing-path-style.html-export",
+      "element": "drawing",
+      "control": "drawing-path-style",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx drawing controls",
+        "shared renderDrawing"
+      ],
+      "testCoverage": [
+        "drawing drawing-path-style html-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx drawing controls update element stroke defaults only",
+        "shared/tests/element-renderers.test.js drawing paths render per-path stroke over element defaults"
+      ],
+      "decision": "html-export behavior is included in the current supported contract."
+    },
+    {
+      "id": "drawing.drawing-path-style.pptx-export",
+      "element": "drawing",
+      "control": "drawing-path-style",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "misc-properties.jsx drawing controls",
+        "shared renderDrawing"
+      ],
+      "testCoverage": [
+        "drawing drawing-path-style pptx-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx drawing controls update element stroke defaults only",
+        "shared/tests/element-renderers.test.js drawing paths render per-path stroke over element defaults"
+      ],
+      "decision": "pptx-export has an accepted fallback/export-gap for editable drawing paths; shared HTML renderer preserves per-path stroke semantics."
+    },
+    {
+      "id": "drawing.visibility.canvas",
+      "element": "drawing",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "drawing.visibility.html-export",
+      "element": "drawing",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "drawing.visibility.pptx-export",
+      "element": "drawing",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "game.game-subtype-live-policy.canvas",
+      "element": "game",
+      "control": "game-subtype-live-policy",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "game-properties.jsx",
+        "game-element-renderer.jsx",
+        "Current audit live-only policy",
+        "client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.jsx"
+      ],
+      "testCoverage": [
+        "game game-subtype-live-policy canvas matrix target",
+        "client/src/components/canvas/element-renderers/canvas-game-element-renderer-phase-03.contract.test.jsx all subtype labels",
+        "client/src/components/ribbon/ribbon-plugin-insert.test.jsx game subtype insert gallery"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "game authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "game canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "game.game-subtype-live-policy.editor",
+      "element": "game",
+      "control": "game-subtype-live-policy",
+      "surface": "editor",
+      "status": "partial",
+      "evidence": [
+        "game-properties.jsx",
+        "game-element-renderer.jsx",
+        "Current audit live-only policy",
+        "client/src/constants/game-element-types-constants.js"
+      ],
+      "testCoverage": [
+        "game game-subtype-live-policy editor matrix target",
+        "client/src/components/ribbon/ribbon-plugin-insert.test.jsx game subtype insert gallery",
+        "client/src/components/properties/game-properties.test.jsx non-default nested subtype persistence"
+      ],
+      "decision": "editor exposes all 7 subtypes and persists at least one nested subtype config path per subtype; status remains partial because some runtime defaults are flat while GameProperties writes nested subtype config.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "game authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "game editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "game.game-subtype-live-policy.html-export",
+      "element": "game",
+      "control": "game-subtype-live-policy",
+      "surface": "html-export",
+      "status": "partial",
+      "evidence": [
+        "game-properties.jsx",
+        "game-element-renderer.jsx",
+        "Current audit live-only policy",
+        "shared/src/element-renderers.js renderGame"
+      ],
+      "testCoverage": [
+        "game game-subtype-live-policy html-export matrix target",
+        "shared/tests/element-renderers.test.js game static fallback whitelist and no-leak contract"
+      ],
+      "decision": "html-export intentionally emits a static public fallback with title, data-game-type, and Interactive game label; live game UI/config is not serialized.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "game authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "game html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "game.game-subtype-live-policy.pptx-export",
+      "element": "game",
+      "control": "game-subtype-live-policy",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "game-properties.jsx",
+        "game-element-renderer.jsx",
+        "Current audit live-only policy",
+        "client/src/utils/exportPptx.js",
+        "client/src/utils/export-pptx-fallback-renderer.js"
+      ],
+      "testCoverage": [
+        "game game-subtype-live-policy pptx-export matrix target",
+        "client/src/utils/exportPptx.test.js game placeholder warning"
+      ],
+      "decision": "pptx-export has an accepted live-only export gap; unsupported game elements produce a visible placeholder and warning instead of an empty slide.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "game authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "game pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "game.visibility.canvas",
+      "element": "game",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "game.visibility.html-export",
+      "element": "game",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "game.visibility.pptx-export",
+      "element": "game",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "html.trusted-html-content.canvas",
+      "element": "html",
+      "control": "trusted-html-content",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx",
+        "trusted HTML iframe export policy",
+        "README.md Security Model",
+        "client/src/components/HtmlEditorModal.jsx",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "html trusted-html-content canvas matrix target",
+        "client/src/components/content-editor-modals.test.jsx trusted HTML warning and modal save/cancel",
+        "shared/tests/element-renderers.test.js HTML embed scripts preserved by trusted-author policy"
+      ],
+      "decision": "canvas/editor preview treats HTML as trusted author content and preserves scripts in an iframe; users see an active-content warning in the HTML editor.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "html authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "trusted HTML policy; no blanket script stripping",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "html canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "html.trusted-html-content.editor",
+      "element": "html",
+      "control": "trusted-html-content",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx",
+        "trusted HTML iframe export policy",
+        "README.md Security Model",
+        "client/src/components/HtmlEditorModal.jsx"
+      ],
+      "testCoverage": [
+        "html trusted-html-content editor matrix target",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx HTML edit callback routing",
+        "client/src/components/content-editor-modals.test.jsx trusted HTML warning and modal save/cancel"
+      ],
+      "decision": "editor behavior is included in the trusted-author supported contract; active HTML/JS is preserved and warned, not sanitized away.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "html authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "trusted HTML policy; no blanket script stripping",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "html editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "html.trusted-html-content.html-export",
+      "element": "html",
+      "control": "trusted-html-content",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx",
+        "trusted HTML iframe export policy",
+        "README.md Security Model",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "html trusted-html-content html-export matrix target",
+        "shared/tests/element-renderers.test.js HTML embed scripts preserved and print data-pdf-iframe export"
+      ],
+      "decision": "html-export behavior is included in the trusted-author contract and intentionally preserves active HTML in iframe/data URL output.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "html authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "trusted HTML policy; no blanket script stripping",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "html html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "html.trusted-html-content.pptx-export",
+      "element": "html",
+      "control": "trusted-html-content",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "misc-properties.jsx",
+        "trusted HTML iframe export policy",
+        "README.md Security Model",
+        "client/src/utils/export-pptx-fallback-renderer.js"
+      ],
+      "testCoverage": [
+        "html trusted-html-content pptx-export matrix target",
+        "shared/tests/element-renderers.test.js HTML active-content export policy evidence"
+      ],
+      "decision": "pptx-export is an accepted fidelity gap for live HTML/JS content; active content is represented through fallback policy rather than editable native PPTX.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "html authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "trusted HTML policy; no blanket script stripping",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "html pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "html.visibility.canvas",
+      "element": "html",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js renderer family visibility smoke"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "html.visibility.html-export",
+      "element": "html",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "html.visibility.pptx-export",
+      "element": "html",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "icon.icon-name-style.canvas",
+      "element": "icon",
+      "control": "icon-name-style",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx IconGallery",
+        "shared renderIcon"
+      ],
+      "testCoverage": [
+        "icon icon-name-style canvas matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx icon stroke width control",
+        "shared/tests/element-renderers.test.js icon stroke color/width HTML export behavior"
+      ],
+      "decision": "canvas behavior is included in the current supported contract."
+    },
+    {
+      "id": "icon.icon-name-style.editor",
+      "element": "icon",
+      "control": "icon-name-style",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx IconGallery",
+        "shared renderIcon"
+      ],
+      "testCoverage": [
+        "icon icon-name-style editor matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx icon stroke width control",
+        "shared/tests/element-renderers.test.js icon stroke color/width HTML export behavior"
+      ],
+      "decision": "editor behavior is included in the current supported contract."
+    },
+    {
+      "id": "icon.icon-name-style.html-export",
+      "element": "icon",
+      "control": "icon-name-style",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx IconGallery",
+        "shared renderIcon"
+      ],
+      "testCoverage": [
+        "icon icon-name-style html-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx icon stroke width control",
+        "shared/tests/element-renderers.test.js icon stroke color/width HTML export behavior"
+      ],
+      "decision": "html-export behavior is included in the current supported contract."
+    },
+    {
+      "id": "icon.icon-name-style.pptx-export",
+      "element": "icon",
+      "control": "icon-name-style",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "misc-properties.jsx IconGallery",
+        "shared renderIcon"
+      ],
+      "testCoverage": [
+        "icon icon-name-style pptx-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx icon stroke width control",
+        "shared/tests/element-renderers.test.js icon stroke color/width HTML export behavior"
+      ],
+      "decision": "pptx-export has an accepted or pending fidelity gap documented for icon."
+    },
+    {
+      "id": "icon.visibility.canvas",
+      "element": "icon",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js renderer family visibility smoke"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "icon.visibility.html-export",
+      "element": "icon",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "icon.visibility.pptx-export",
+      "element": "icon",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "image.media-source-and-fit.canvas",
+      "element": "image",
+      "control": "media-source-and-fit",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "image-properties.jsx",
+        "canvas image renderer",
+        "shared renderImage",
+        "client/src/components/canvas/canvas-element-wrapper.jsx",
+        "client/src/utils/url-safety.js",
+        "client/src/components/canvas/canvas-right-click-context-menu-for-slide-elements.jsx"
+      ],
+      "testCoverage": [
+        "image media-source-and-fit canvas matrix target",
+        "client/src/utils/url-safety.test.js media URL policy negative cases",
+        "client/src/components/canvas/canvas-element-wrapper.test.jsx unsafe image media URL neutralization",
+        "client/src/components/canvas/canvas-right-click-context-menu-for-slide-elements.test.jsx Copy URL rejects unsafe media data schemes"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "image authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "image canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "image.media-source-and-fit.editor",
+      "element": "image",
+      "control": "media-source-and-fit",
+      "surface": "editor",
+      "status": "partial",
+      "evidence": [
+        "image-properties.jsx",
+        "canvas image renderer",
+        "shared renderImage",
+        "client/src/components/properties/image-properties.jsx"
+      ],
+      "testCoverage": [
+        "image media-source-and-fit editor matrix target",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx objectFit authoring and border authoring partial decision"
+      ],
+      "decision": "editor supports source/fit/filter/radius/citation controls; image border width/color authoring remains intentionally partial and is not added solely for audit completeness.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "image authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "image editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "image.media-source-and-fit.html-export",
+      "element": "image",
+      "control": "media-source-and-fit",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "image-properties.jsx",
+        "canvas image renderer",
+        "shared renderImage",
+        "shared/src/element-renderers.js",
+        "shared/src/content-safety.js"
+      ],
+      "testCoverage": [
+        "image media-source-and-fit html-export matrix target",
+        "shared/tests/bug-fixes-element-renderers.test.js unsafe image media URL neutralization",
+        "shared/tests/content-safety.test.js media URL policy negative cases"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "image authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "image html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "image.media-source-and-fit.pptx-export",
+      "element": "image",
+      "control": "media-source-and-fit",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "image-properties.jsx",
+        "canvas image renderer",
+        "shared renderImage",
+        "client/src/utils/export-pptx-basic-renderers.js",
+        "client/src/utils/export-pptx-core.js",
+        "server/utils/server-image-source.js"
+      ],
+      "testCoverage": [
+        "image media-source-and-fit pptx-export matrix target",
+        "client/src/utils/export-pptx-image-opacity.test.js image crop/objectFit/native border overlay and filter/radius accepted limits",
+        "client/src/utils/export-pptx-core.test.js rejects unsafe non-image data URIs",
+        "server/utils/server-image-source.test.js rejects unsafe non-image data URIs"
+      ],
+      "decision": "pptx-export preserves safe image sources, crop, cover/contain sizing, opacity, flip, alt text, and rectangular border overlay; fill/none objectFit, CSS filters, and rounded image corners remain accepted native PPTX fidelity gaps.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "image authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "image pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "image.visibility.canvas",
+      "element": "image",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js renderer family visibility smoke"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "image.visibility.html-export",
+      "element": "image",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "image.visibility.pptx-export",
+      "element": "image",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "latex.latex-content-style.canvas",
+      "element": "latex",
+      "control": "latex-content-style",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx",
+        "shared renderLatex",
+        "PPTX raster fallback policy",
+        "client/src/components/canvas/element-renderers/latex-element-renderer.jsx"
+      ],
+      "testCoverage": [
+        "latex latex-content-style canvas matrix target",
+        "tests/e2e/elements/math-latex-tikz-element-rendering-with-katex-iframe.spec.js LaTeX canvas render behavior"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "latex authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "latex canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "latex.latex-content-style.editor",
+      "element": "latex",
+      "control": "latex-content-style",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx",
+        "shared renderLatex",
+        "PPTX raster fallback policy",
+        "client/src/components/LatexEditorModal.jsx"
+      ],
+      "testCoverage": [
+        "latex latex-content-style editor matrix target",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx LaTeX font size/text color controls",
+        "client/src/components/content-editor-modals.test.jsx LaTeX modal save/cancel behavior"
+      ],
+      "decision": "editor behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "latex authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "latex editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "latex.latex-content-style.html-export",
+      "element": "latex",
+      "control": "latex-content-style",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx",
+        "shared renderLatex",
+        "PPTX raster fallback policy",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "latex latex-content-style html-export matrix target",
+        "shared/tests/bug-fixes-element-renderers.test.js LaTeX image/math export behavior"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "latex authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "latex html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "latex.latex-content-style.pptx-export",
+      "element": "latex",
+      "control": "latex-content-style",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "misc-properties.jsx",
+        "shared renderLatex",
+        "PPTX raster fallback policy",
+        "client/src/utils/export-pptx-fallback-renderer.js"
+      ],
+      "testCoverage": [
+        "latex latex-content-style pptx-export matrix target",
+        "client/src/utils/export-pptx-fallback-renderer.js raster fallback policy"
+      ],
+      "decision": "pptx-export uses fallback/raster policy for LaTeX/TikZ; editable native equation fidelity is an accepted export gap.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "latex authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "latex pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "latex.visibility.canvas",
+      "element": "latex",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "latex.visibility.html-export",
+      "element": "latex",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "latex.visibility.pptx-export",
+      "element": "latex",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "line.line-style-markers.canvas",
+      "element": "line",
+      "control": "line-style-markers",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "shape-properties.jsx line branch",
+        "shared renderLine",
+        "addLineElement"
+      ],
+      "testCoverage": [
+        "line line-style-markers canvas matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx line excludes fill and writes dash/markers",
+        "shared/tests/element-renderers.test.js line stroke/dash/marker HTML export behavior"
+      ],
+      "decision": "canvas behavior is included in the current supported contract."
+    },
+    {
+      "id": "line.line-style-markers.editor",
+      "element": "line",
+      "control": "line-style-markers",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "shape-properties.jsx line branch",
+        "shared renderLine",
+        "addLineElement"
+      ],
+      "testCoverage": [
+        "line line-style-markers editor matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx line excludes fill and writes dash/markers",
+        "shared/tests/element-renderers.test.js line stroke/dash/marker HTML export behavior"
+      ],
+      "decision": "editor behavior is included in the current supported contract."
+    },
+    {
+      "id": "line.line-style-markers.html-export",
+      "element": "line",
+      "control": "line-style-markers",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shape-properties.jsx line branch",
+        "shared renderLine",
+        "addLineElement"
+      ],
+      "testCoverage": [
+        "line line-style-markers html-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx line excludes fill and writes dash/markers",
+        "shared/tests/element-renderers.test.js line stroke/dash/marker HTML export behavior"
+      ],
+      "decision": "html-export behavior is included in the current supported contract."
+    },
+    {
+      "id": "line.line-style-markers.pptx-export",
+      "element": "line",
+      "control": "line-style-markers",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "shape-properties.jsx line branch",
+        "shared renderLine",
+        "addLineElement"
+      ],
+      "testCoverage": [
+        "line line-style-markers pptx-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx line excludes fill and writes dash/markers",
+        "shared/tests/element-renderers.test.js line stroke/dash/marker HTML export behavior"
+      ],
+      "decision": "pptx-export behavior is included in the current supported contract."
+    },
+    {
+      "id": "line.visibility.canvas",
+      "element": "line",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "line.visibility.html-export",
+      "element": "line",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "line.visibility.pptx-export",
+      "element": "line",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "markdown.markdown-content-style.canvas",
+      "element": "markdown",
+      "control": "markdown-content-style",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx markdown controls",
+        "shared renderMarkdown",
+        "client/src/components/canvas/element-renderers/markdown-element-renderer.jsx"
+      ],
+      "testCoverage": [
+        "markdown markdown-content-style canvas matrix target",
+        "client/src/components/canvas/element-renderers/markdown-element-renderer.test.jsx markdown canvas textColor/fontSize behavior"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "markdown authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "markdown canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "markdown.markdown-content-style.editor",
+      "element": "markdown",
+      "control": "markdown-content-style",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx markdown controls",
+        "shared renderMarkdown",
+        "client/src/components/properties/misc-properties.jsx"
+      ],
+      "testCoverage": [
+        "markdown markdown-content-style editor matrix target",
+        "client/src/components/properties/markdown-controls.test.jsx markdown textColor/fontSize controls",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx markdown content/textColor/fontSize controls"
+      ],
+      "decision": "editor behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "markdown authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "markdown editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "markdown.markdown-content-style.html-export",
+      "element": "markdown",
+      "control": "markdown-content-style",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx markdown controls",
+        "shared renderMarkdown",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "markdown markdown-content-style html-export matrix target",
+        "shared/tests/markdown-reveal-textcolor-fontsize.test.js markdown HTML export textColor/fontSize behavior",
+        "shared/tests/element-renderers.test.js markdown sanitization behavior"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "markdown authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "markdown html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "markdown.markdown-content-style.pptx-export",
+      "element": "markdown",
+      "control": "markdown-content-style",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "misc-properties.jsx markdown controls",
+        "shared renderMarkdown",
+        "client/src/utils/export-pptx-fallback-renderer.js"
+      ],
+      "testCoverage": [
+        "markdown markdown-content-style pptx-export matrix target",
+        "client/src/utils/export-pptx-fallback-renderer.js markdown fallback policy"
+      ],
+      "decision": "pptx-export uses fallback/raster policy for markdown; editable native markdown structure is an accepted export gap.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "markdown authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "markdown pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "markdown.visibility.canvas",
+      "element": "markdown",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "markdown.visibility.html-export",
+      "element": "markdown",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "markdown.visibility.pptx-export",
+      "element": "markdown",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "qrcode.qr-data-style.canvas",
+      "element": "qrcode",
+      "control": "qr-data-style",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx QR controls",
+        "shared QR config"
+      ],
+      "testCoverage": [
+        "qrcode qr-data-style canvas matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx QR data and error correction controls",
+        "shared/tests/element-renderers.test.js QR print config HTML export behavior"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "qrcode authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "qrcode canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "qrcode.qr-data-style.editor",
+      "element": "qrcode",
+      "control": "qr-data-style",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx QR controls",
+        "shared QR config"
+      ],
+      "testCoverage": [
+        "qrcode qr-data-style editor matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx QR data and error correction controls",
+        "shared/tests/element-renderers.test.js QR print config HTML export behavior"
+      ],
+      "decision": "editor behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "qrcode authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "qrcode editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "qrcode.qr-data-style.html-export",
+      "element": "qrcode",
+      "control": "qr-data-style",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx QR controls",
+        "shared QR config"
+      ],
+      "testCoverage": [
+        "qrcode qr-data-style html-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx QR data and error correction controls",
+        "shared/tests/element-renderers.test.js QR print config HTML export behavior"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "qrcode authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "qrcode html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "qrcode.qr-data-style.pptx-export",
+      "element": "qrcode",
+      "control": "qr-data-style",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "misc-properties.jsx QR controls",
+        "shared QR config"
+      ],
+      "testCoverage": [
+        "qrcode qr-data-style pptx-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx QR data and error correction controls",
+        "shared/tests/element-renderers.test.js QR print config HTML export behavior"
+      ],
+      "decision": "pptx-export has an accepted or pending fidelity gap documented for qrcode.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "qrcode authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "qrcode pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "qrcode.visibility.canvas",
+      "element": "qrcode",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js renderer family visibility smoke"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "qrcode.visibility.html-export",
+      "element": "qrcode",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "qrcode.visibility.pptx-export",
+      "element": "qrcode",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "shape.shape-style-and-label.canvas",
+      "element": "shape",
+      "control": "shape-style-and-label",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "shape-properties.jsx",
+        "shape-element-renderer.jsx",
+        "addShapeElement"
+      ],
+      "testCoverage": [
+        "shape shape-style-and-label canvas matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx shape fill/stroke/opacity/radius/label typography controls",
+        "shared/tests/element-renderers.test.js shape fill/stroke/label HTML export behavior"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "shape authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "shape canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "shape.shape-style-and-label.editor",
+      "element": "shape",
+      "control": "shape-style-and-label",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "shape-properties.jsx",
+        "shape-element-renderer.jsx",
+        "addShapeElement"
+      ],
+      "testCoverage": [
+        "shape shape-style-and-label editor matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx shape fill/stroke/opacity/radius/label typography controls",
+        "shared/tests/element-renderers.test.js shape fill/stroke/label HTML export behavior"
+      ],
+      "decision": "editor behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "shape authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "shape editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "shape.shape-style-and-label.html-export",
+      "element": "shape",
+      "control": "shape-style-and-label",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shape-properties.jsx",
+        "shape-element-renderer.jsx",
+        "addShapeElement"
+      ],
+      "testCoverage": [
+        "shape shape-style-and-label html-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx shape fill/stroke/opacity/radius/label typography controls",
+        "shared/tests/element-renderers.test.js shape fill/stroke/label HTML export behavior"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "shape authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "shape html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "shape.shape-style-and-label.pptx-export",
+      "element": "shape",
+      "control": "shape-style-and-label",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "shape-properties.jsx",
+        "shape-element-renderer.jsx",
+        "addShapeElement"
+      ],
+      "testCoverage": [
+        "shape shape-style-and-label pptx-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx shape fill/stroke/opacity/radius/label typography controls",
+        "shared/tests/element-renderers.test.js shape fill/stroke/label HTML export behavior"
+      ],
+      "decision": "pptx-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "shape authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "shape pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "shape.visibility.canvas",
+      "element": "shape",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js renderer family visibility smoke"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "shape.visibility.html-export",
+      "element": "shape",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "shape.visibility.pptx-export",
+      "element": "shape",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "svg.svg-content-overrides.canvas",
+      "element": "svg",
+      "control": "svg-content-overrides",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx SVG controls",
+        "shared renderSvg sanitizer"
+      ],
+      "testCoverage": [
+        "svg svg-content-overrides canvas matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx SVG markup/override/reset controls",
+        "client/src/utils/content-safety.test.js SVG script/event/foreignObject/external reference sanitizer policy",
+        "client/src/components/canvas/element-renderers/svg-element-renderer.test.jsx SVG override interpolation hardening",
+        "shared/tests/content-safety.test.js shared SVG sanitizer adversarial fixtures",
+        "shared/tests/element-renderers.test.js SVG active content and external reference HTML export sanitization"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "svg authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "svg canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "svg.svg-content-overrides.editor",
+      "element": "svg",
+      "control": "svg-content-overrides",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx SVG controls",
+        "shared renderSvg sanitizer"
+      ],
+      "testCoverage": [
+        "svg svg-content-overrides editor matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx SVG markup/override/reset controls",
+        "client/src/utils/content-safety.test.js SVG script/event/foreignObject/external reference sanitizer policy",
+        "client/src/components/canvas/element-renderers/svg-element-renderer.test.jsx SVG override interpolation hardening",
+        "shared/tests/content-safety.test.js shared SVG sanitizer adversarial fixtures",
+        "shared/tests/element-renderers.test.js SVG active content and external reference HTML export sanitization"
+      ],
+      "decision": "editor behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "svg authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "svg editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "svg.svg-content-overrides.html-export",
+      "element": "svg",
+      "control": "svg-content-overrides",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "misc-properties.jsx SVG controls",
+        "shared renderSvg sanitizer"
+      ],
+      "testCoverage": [
+        "svg svg-content-overrides html-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx SVG markup/override/reset controls",
+        "client/src/utils/content-safety.test.js SVG script/event/foreignObject/external reference sanitizer policy",
+        "client/src/components/canvas/element-renderers/svg-element-renderer.test.jsx SVG override interpolation hardening",
+        "shared/tests/content-safety.test.js shared SVG sanitizer adversarial fixtures",
+        "shared/tests/element-renderers.test.js SVG active content and external reference HTML export sanitization"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "svg authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "svg html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "svg.svg-content-overrides.pptx-export",
+      "element": "svg",
+      "control": "svg-content-overrides",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "misc-properties.jsx SVG controls",
+        "shared renderSvg sanitizer"
+      ],
+      "testCoverage": [
+        "svg svg-content-overrides pptx-export matrix target",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx SVG markup/override/reset controls",
+        "client/src/utils/content-safety.test.js SVG script/event/foreignObject/external reference sanitizer policy",
+        "client/src/components/canvas/element-renderers/svg-element-renderer.test.jsx SVG override interpolation hardening",
+        "shared/tests/content-safety.test.js shared SVG sanitizer adversarial fixtures",
+        "shared/tests/element-renderers.test.js SVG active content and external reference HTML export sanitization"
+      ],
+      "decision": "pptx-export remains an accepted fallback/export-gap for editable SVG parity; sanitizer policy is covered for canvas/shared HTML paths.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "svg authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "svg pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "svg.visibility.canvas",
+      "element": "svg",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js renderer family visibility smoke"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "svg.visibility.html-export",
+      "element": "svg",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "svg.visibility.pptx-export",
+      "element": "svg",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "table.table-structure-style.canvas",
+      "element": "table",
+      "control": "table-structure-style",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "table-properties.jsx",
+        "shared renderTable",
+        "Current audit A4"
+      ],
+      "testCoverage": [
+        "table table-structure-style canvas matrix target",
+        "client/src/components/properties/table-properties.test.jsx table structure/header/border/cell style controls",
+        "client/src/components/properties/table-properties-utils.test.js table row/column mutation drops imported merge metadata and syncs matrices",
+        "client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx table merge render boundary",
+        "shared/tests/element-renderers.test.js table merged cells, sizing, styles, and border sanitization"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "table authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "table canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "table.table-structure-style.editor",
+      "element": "table",
+      "control": "table-structure-style",
+      "surface": "editor",
+      "status": "partial",
+      "evidence": [
+        "table-properties.jsx",
+        "shared renderTable",
+        "Current audit A4"
+      ],
+      "testCoverage": [
+        "table table-structure-style editor matrix target",
+        "client/src/components/properties/table-properties.test.jsx table structure/header/border/cell style controls",
+        "client/src/components/properties/table-properties-utils.test.js table row/column mutation drops imported merge metadata and syncs matrices",
+        "client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx table merge render boundary",
+        "shared/tests/element-renderers.test.js table merged cells, sizing, styles, and border sanitization"
+      ],
+      "decision": "editor supports row/column, header, border, and per-cell style controls; merge/unmerge authoring is intentionally out of scope and imported merges remain read-only/partial.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "table authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "table editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "table.table-structure-style.html-export",
+      "element": "table",
+      "control": "table-structure-style",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "table-properties.jsx",
+        "shared renderTable",
+        "Current audit A4"
+      ],
+      "testCoverage": [
+        "table table-structure-style html-export matrix target",
+        "client/src/components/properties/table-properties.test.jsx table structure/header/border/cell style controls",
+        "client/src/components/properties/table-properties-utils.test.js table row/column mutation drops imported merge metadata and syncs matrices",
+        "client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx table merge render boundary",
+        "shared/tests/element-renderers.test.js table merged cells, sizing, styles, and border sanitization"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "table authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "table html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "table.table-structure-style.pptx-export",
+      "element": "table",
+      "control": "table-structure-style",
+      "surface": "pptx-export",
+      "status": "partial",
+      "evidence": [
+        "table-properties.jsx",
+        "shared renderTable",
+        "Current audit A4"
+      ],
+      "testCoverage": [
+        "table table-structure-style pptx-export matrix target",
+        "client/src/components/properties/table-properties.test.jsx table structure/header/border/cell style controls",
+        "client/src/components/properties/table-properties-utils.test.js table row/column mutation drops imported merge metadata and syncs matrices",
+        "client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx table merge render boundary",
+        "shared/tests/element-renderers.test.js table merged cells, sizing, styles, and border sanitization"
+      ],
+      "decision": "pptx-export preserves primary table rows, styles, and imported merge metadata where present; merge/unmerge authoring remains editor partial and non-native/fallback limits remain documented.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "table authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "table pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "table.visibility.canvas",
+      "element": "table",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js renderer family visibility smoke"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "table.visibility.html-export",
+      "element": "table",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "table.visibility.pptx-export",
+      "element": "table",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "text.rich-text-formatting.canvas",
+      "element": "text",
+      "control": "rich-text-formatting",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "ribbon-text-formatting-controls.jsx",
+        "shared renderText",
+        "PPTX text renderer",
+        "client/src/components/canvas/canvas-element-wrapper.jsx",
+        "tests/e2e/elements/text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js"
+      ],
+      "testCoverage": [
+        "text rich-text-formatting canvas matrix target",
+        "tests/e2e/elements/text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js seeded rich text render and editor formatting persistence"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "text authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "text canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "text.rich-text-formatting.editor",
+      "element": "text",
+      "control": "rich-text-formatting",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "ribbon-text-formatting-controls.jsx",
+        "shared renderText",
+        "PPTX text renderer",
+        "client/src/components/ribbon/controls/ribbon-text-formatting-controls.jsx",
+        "tests/e2e/elements/text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js"
+      ],
+      "testCoverage": [
+        "text rich-text-formatting editor matrix target",
+        "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx text command dispatch",
+        "tests/e2e/elements/text-element-rich-formatting-and-prosemirror-editing-and-persistence.spec.js rich text persistence"
+      ],
+      "decision": "editor behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "text authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "text editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "text.rich-text-formatting.html-export",
+      "element": "text",
+      "control": "rich-text-formatting",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "ribbon-text-formatting-controls.jsx",
+        "shared renderText",
+        "PPTX text renderer",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "text rich-text-formatting html-export matrix target",
+        "shared/tests/element-renderers.test.js text sanitization and style HTML export behavior"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "text authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "text html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "text.rich-text-formatting.pptx-export",
+      "element": "text",
+      "control": "rich-text-formatting",
+      "surface": "pptx-export",
+      "status": "partial",
+      "evidence": [
+        "ribbon-text-formatting-controls.jsx",
+        "shared renderText",
+        "PPTX text renderer",
+        "client/src/utils/export-pptx-basic-renderers.js",
+        "client/src/utils/export-pptx-text-runs.js"
+      ],
+      "testCoverage": [
+        "text rich-text-formatting pptx-export matrix target",
+        "client/src/utils/export-pptx-core.test.js rich HTML to PPT text runs behavior",
+        "client/src/utils/export-pptx-text-runs.test.js rich text run parser behavior"
+      ],
+      "decision": "pptx-export preserves primary rich text runs where mapped; unsupported HTML/CSS detail remains a documented partial native fidelity limit.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "text authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "text pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "text.visibility.canvas",
+      "element": "text",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances",
+        "tests/e2e/canvas/renderer-family-controls-smoke.spec.js renderer family visibility smoke"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "text.visibility.html-export",
+      "element": "text",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "text.visibility.pptx-export",
+      "element": "text",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "timeline.timeline-events-style.canvas",
+      "element": "timeline",
+      "control": "timeline-events-style",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "timeline-properties.jsx",
+        "shared renderTimeline",
+        "Current audit A2"
+      ],
+      "testCoverage": [
+        "timeline timeline-events-style canvas matrix target",
+        "client/src/components/properties/timeline-properties.test.jsx timeline connector writes events and legacy items",
+        "shared/tests/element-renderers.test.js timeline events and connectorLength/connectorOffset HTML export behavior"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "timeline authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "timeline canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "timeline.timeline-events-style.editor",
+      "element": "timeline",
+      "control": "timeline-events-style",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "timeline-properties.jsx",
+        "shared renderTimeline",
+        "Current audit A2"
+      ],
+      "testCoverage": [
+        "timeline timeline-events-style editor matrix target",
+        "client/src/components/properties/timeline-properties.test.jsx timeline connector writes events and legacy items",
+        "shared/tests/element-renderers.test.js timeline events and connectorLength/connectorOffset HTML export behavior"
+      ],
+      "decision": "editor behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "timeline authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "timeline editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "timeline.timeline-events-style.html-export",
+      "element": "timeline",
+      "control": "timeline-events-style",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "timeline-properties.jsx",
+        "shared renderTimeline",
+        "Current audit A2"
+      ],
+      "testCoverage": [
+        "timeline timeline-events-style html-export matrix target",
+        "client/src/components/properties/timeline-properties.test.jsx timeline connector writes events and legacy items",
+        "shared/tests/element-renderers.test.js timeline events and connectorLength/connectorOffset HTML export behavior"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "timeline authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "timeline html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "timeline.timeline-events-style.pptx-export",
+      "element": "timeline",
+      "control": "timeline-events-style",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "timeline-properties.jsx",
+        "shared renderTimeline",
+        "Current audit A2"
+      ],
+      "testCoverage": [
+        "timeline timeline-events-style pptx-export matrix target",
+        "client/src/components/properties/timeline-properties.test.jsx timeline connector writes events and legacy items",
+        "shared/tests/element-renderers.test.js timeline events and connectorLength/connectorOffset HTML export behavior"
+      ],
+      "decision": "pptx-export remains an accepted fallback/export-gap for timeline; shared HTML renderer consumes connector length fields.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "timeline authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "not applicable",
+        "negativeSecurityTests": "timeline pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "timeline.visibility.canvas",
+      "element": "timeline",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "timeline.visibility.html-export",
+      "element": "timeline",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "timeline.visibility.pptx-export",
+      "element": "timeline",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "video.video-source-playback.canvas",
+      "element": "video",
+      "control": "video-source-playback",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "media-properties.jsx",
+        "shared renderVideo",
+        "Current audit A1/A2",
+        "client/src/utils/migrate-video-src.js",
+        "client/src/components/properties/media-properties.jsx",
+        "client/src/components/canvas/canvas-element-wrapper.jsx",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "video video-source-playback canvas matrix target",
+        "client/src/utils/migrate-video-src.test.js canonical src wins and legacy videoUrl is retained as fallback",
+        "client/src/components/properties/media-properties-single-source.test.jsx Source URL writes canonical src only",
+        "client/src/components/canvas/canvas-element-wrapper.test.jsx video src precedence and unsafe media URL neutralization"
+      ],
+      "decision": "canvas behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "video authoring controls or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "video canvas adversarial payload policy target"
+      }
+    },
+    {
+      "id": "video.video-source-playback.editor",
+      "element": "video",
+      "control": "video-source-playback",
+      "surface": "editor",
+      "status": "partial",
+      "evidence": [
+        "media-properties.jsx",
+        "shared renderVideo",
+        "Current audit A1/A2",
+        "client/src/utils/migrate-video-src.js",
+        "client/src/components/properties/media-properties.jsx",
+        "client/src/components/canvas/canvas-element-wrapper.jsx",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "video video-source-playback editor matrix target",
+        "client/src/utils/migrate-video-src.test.js canonical src wins and legacy videoUrl is retained as fallback",
+        "client/src/components/properties/media-properties-single-source.test.jsx Source URL writes canonical src only"
+      ],
+      "decision": "editor works for the primary path but has a documented secondary limitation.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "video authoring controls or imported presentation JSON",
+        "sink": "editor renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "video editor adversarial payload policy target"
+      }
+    },
+    {
+      "id": "video.video-source-playback.html-export",
+      "element": "video",
+      "control": "video-source-playback",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "media-properties.jsx",
+        "shared renderVideo",
+        "Current audit A1/A2",
+        "client/src/utils/migrate-video-src.js",
+        "client/src/components/properties/media-properties.jsx",
+        "client/src/components/canvas/canvas-element-wrapper.jsx",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "video video-source-playback html-export matrix target",
+        "client/src/utils/migrate-video-src.test.js canonical src wins and legacy videoUrl is retained as fallback",
+        "client/src/components/properties/media-properties-single-source.test.jsx Source URL writes canonical src only",
+        "shared/tests/bug-fixes-element-renderers.test.js video src precedence and unsafe media URL neutralization"
+      ],
+      "decision": "html-export behavior is included in the current supported contract.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "video authoring controls or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "video html-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "video.video-source-playback.pptx-export",
+      "element": "video",
+      "control": "video-source-playback",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "media-properties.jsx",
+        "shared renderVideo",
+        "Current audit A1/A2",
+        "client/src/utils/migrate-video-src.js",
+        "client/src/components/properties/media-properties.jsx",
+        "client/src/components/canvas/canvas-element-wrapper.jsx",
+        "shared/src/element-renderers.js"
+      ],
+      "testCoverage": [
+        "video video-source-playback pptx-export matrix target",
+        "client/src/utils/migrate-video-src.test.js canonical src wins and legacy videoUrl is retained as fallback",
+        "client/src/components/properties/media-properties-single-source.test.jsx Source URL writes canonical src only"
+      ],
+      "decision": "pptx-export has an accepted or pending fidelity gap documented for video.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "video authoring controls or imported presentation JSON",
+        "sink": "pptx-export renderer/output",
+        "sanitizerOrEscaper": "renderer-specific escaping/sanitization where applicable",
+        "urlSchemePolicy": "safe URL/media policy must be documented and negatively tested",
+        "negativeSecurityTests": "video pptx-export adversarial payload policy target"
+      }
+    },
+    {
+      "id": "video.visibility.canvas",
+      "element": "video",
+      "control": "visibility",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "SlideCanvas hidden-element filter",
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js"
+      ],
+      "testCoverage": [
+        "tests/e2e/canvas/element-hide-show.spec.js",
+        "tests/e2e/canvas/selection-lock-visibility.spec.js selection pane lock/hide canvas affordances"
+      ],
+      "decision": "canvas omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "video.visibility.html-export",
+      "element": "video",
+      "control": "visibility",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js renderSlideElements hidden filter",
+        "shared/tests/element-renderers.test.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js omits hidden elements from shared HTML export output"
+      ],
+      "decision": "html-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    },
+    {
+      "id": "video.visibility.pptx-export",
+      "element": "video",
+      "control": "visibility",
+      "surface": "pptx-export",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/exportPptx.js hidden filter",
+        "server/utils/server-export.js hidden filter",
+        "server/utils/server-export.test.js"
+      ],
+      "testCoverage": [
+        "server/utils/server-export.test.js omits hidden elements from PPTX viewer export output"
+      ],
+      "decision": "pptx-export omits hidden elements from viewer output; project/archive JSON may still retain authored content."
+    }
+  ]
+}

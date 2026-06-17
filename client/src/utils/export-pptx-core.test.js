@@ -42,6 +42,11 @@ describe('export-pptx-core', () => {
     expect(normalizeImageSource('/uploads/figure.png')).toEqual({ path: '/uploads/figure.png' })
   })
 
+  it('rejects non-image data URIs for PPTX image sources', () => {
+    expect(normalizeImageSource('data:text/html,<script>alert(1)</script>')).toBeNull()
+    expect(normalizeImageSource('data:video/mp4;base64,abc')).toBeNull()
+  })
+
   it('converts rich HTML into PPT runs with bullets and emphasis', () => {
     const runs = htmlToPptTextRuns(
       '<h2 style="text-align:center">Heading</h2><p>Hello <strong>bold</strong> and <em>italic</em></p><ul><li>One</li><li><u>Two</u></li></ul>'

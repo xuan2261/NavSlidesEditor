@@ -67,6 +67,13 @@ describe('FormatTabContent — contextual controls', () => {
       expect(screen.getByLabelText('Chart type')).toBeTruthy()
     })
 
+    it('[cap:element.chart depth:behavior] exposes only chart types supported by Properties', () => {
+      render(<FormatTabContent selectedElement={chart} />)
+      const values = Array.from(screen.getByLabelText('Chart type').querySelectorAll('option')).map((option) => option.value)
+      expect(values).toEqual(['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea'])
+      expect(values).not.toContain('scatter')
+    })
+
     it('calls onUpdateElement for chart type change', () => {
       const onUpdateElement = vi.fn()
       render(<FormatTabContent selectedElement={chart} onUpdateElement={onUpdateElement} />)

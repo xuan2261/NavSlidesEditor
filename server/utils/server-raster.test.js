@@ -13,6 +13,25 @@ function makeRoute(url) {
 }
 
 describe('server-raster route isolation', () => {
+  it('does not collect hidden elements as raster targets', () => {
+    const targets = __private.collectRasterTargets(
+      {
+        slides: [
+          {
+            elements: [
+              { id: 'html-visible', type: 'html' },
+              { id: 'html-hidden', type: 'html', hidden: true },
+              { id: 'latex-hidden', type: 'latex', hidden: true },
+            ],
+          },
+        ],
+      },
+      new Set(['html', 'latex'])
+    )
+
+    expect(targets).toEqual([{ id: 'html-visible', slideIndex: 0 }])
+  })
+
   it('blocks outbound network requests when baseUrl is empty', async () => {
     let handler
     const page = {

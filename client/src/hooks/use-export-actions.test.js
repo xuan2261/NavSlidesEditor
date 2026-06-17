@@ -30,6 +30,7 @@ beforeEach(() => {
   h.generateOfflineHTML.mockResolvedValue('<html>offline</html>')
   h.exportToPptx.mockResolvedValue([])
   globalThis.alert = vi.fn()
+  delete globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__
 })
 
 describe('useExportActions', () => {
@@ -48,13 +49,21 @@ describe('useExportActions', () => {
   })
 
   it('onExportPPTX dynamic-imports exportToPptx and surfaces warnings via alert', async () => {
-    h.exportToPptx.mockResolvedValueOnce(['Unsupported element X'])
+    const warnings = ['Unsupported element X']
+    Object.defineProperty(warnings, 'exportReport', {
+      enumerable: false,
+      value: { surface: 'pptx-export', warningCount: 1, warnings: [] },
+    })
+    h.exportToPptx.mockResolvedValueOnce(warnings)
     const { result } = renderHook(() => useExportActions(presentation))
     await act(async () => {
       await result.current.onExportPPTX()
     })
     expect(h.exportToPptx).toHaveBeenCalledWith(presentation)
     expect(globalThis.alert).toHaveBeenCalledWith(expect.stringContaining('Unsupported element X'))
+    expect(globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__).toEqual(
+      expect.objectContaining({ surface: 'pptx-export', warningCount: 1 })
+    )
   })
 
   it('onExportPPTX does NOT alert when there are no warnings', async () => {

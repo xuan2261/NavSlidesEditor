@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { renderElement } from '../src/element-renderers.js'
+import { renderElement, renderSlideElements } from '../src/element-renderers.js'
 
 describe('element-renderers safety behavior', () => {
   const base = {
@@ -60,6 +60,26 @@ describe('element-renderers safety behavior', () => {
     expect(html).not.toContain('<script')
     expect(html).not.toContain('<foreignObject')
     expect(html).not.toContain('onload=')
+  })
+
+  it('[cap:element.svg tier:deep depth:export] sanitizes active svg payloads and external references', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'svg',
+        content:
+          '<svg><script>alert(1)</script><foreignObject></foreignObject><rect onclick="x()" width="10" height="10" /><use href="https://evil.example/icon.svg#x"/><image xlink:href="javascript:alert(1)"/><image src="http://evil.example/p.png"/></svg>',
+      },
+      {},
+      {}
+    )
+
+    expect(html).not.toContain('<script')
+    expect(html).not.toContain('<foreignObject')
+    expect(html).not.toContain('onclick=')
+    expect(html).not.toContain('https://evil.example')
+    expect(html).not.toContain('javascript:')
+    expect(html).not.toContain('http://evil.example')
   })
 
   it('keeps html embed scripts intact', () => {
@@ -204,7 +224,7 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('<video')
   })
 
-  it('prefers videoUrl over src when both present', () => {
+  it('prefers canonical src over legacy videoUrl when both present', () => {
     const html = renderElement(
       {
         ...base,
@@ -215,8 +235,8 @@ describe('element-renderers safety behavior', () => {
       {},
       {}
     )
-    expect(html).toContain('src="https://example.com/url-video.mp4"')
-    expect(html).not.toContain('uploaded-video')
+    expect(html).toContain('src="http://localhost:3000/uploads/uploaded-video.mp4"')
+    expect(html).not.toContain('url-video.mp4')
   })
 
   it('applies trim and playback rate to videoUrl videos', () => {
@@ -401,6 +421,24 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('opacity="0.75"')
   })
 
+  it('[cap:element.drawing tier:deep depth:export] lets per-path stroke override element stroke defaults', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'drawing',
+        strokeColor: '#ffffff',
+        strokeWidth: 4,
+        paths: [{ d: 'M 0 0 L 20 20', stroke: '#111111', strokeWidth: 2 }],
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('stroke="#111111"')
+    expect(html).toContain('stroke-width="2"')
+    expect(html).not.toContain('stroke="#ffffff"')
+  })
+
   it('renders image citation link as clickable', () => {
     const html = renderElement(
       {
@@ -495,6 +533,105 @@ describe('element-renderers safety behavior', () => {
 
     expect(html).toContain('Plan Launch')
     expect(html).toContain('Plan event')
+  })
+
+  it('[cap:element.timeline tier:deep depth:export] consumes connectorLength and connectorOffset fields', () => {
+    const withLength = renderElement(
+      {
+        ...base,
+        type: 'timeline',
+        width: 800,
+        height: 400,
+        timelineStart: '2000',
+        timelineEnd: '2025',
+        events: [{ id: '1', date: '2010', title: 'Top', side: 'top', connectorLength: 40 }],
+      },
+      {},
+      {}
+    )
+    const withOffset = renderElement(
+      {
+        ...base,
+        type: 'timeline',
+        width: 800,
+        height: 400,
+        timelineStart: '2000',
+        timelineEnd: '2025',
+        events: [{ id: '1', date: '2010', title: 'Top', side: 'top', connectorOffset: 40 }],
+      },
+      {},
+      {}
+    )
+
+    expect(withLength).toContain('y1="132"')
+    expect(withOffset).toContain('y1="132"')
+  })
+
+  it('[cap:element.game depth:export] renders a static public fallback for game elements', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'game',
+        gameType: 'hot-potato',
+        title: 'Fallback title',
+        'hot-potato': {
+          title: 'Class Quiz',
+          questions: [{ question: 'Hidden?', correctIndex: 0, answer: 'Secret', points: 500 }],
+        },
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('data-game-fallback="true"')
+    expect(html).toContain('data-game-type="hot-potato"')
+    expect(html).toContain('Class Quiz')
+    expect(html).toContain('Interactive game')
+  })
+
+  it('[cap:element.game tier:deep depth:export] does not leak raw game config or live-only controls', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'game',
+        gameType: 'jeopardy',
+        title: 'Public Jeopardy',
+        presenterToken: 'presenter-secret-token',
+        adminToken: 'admin-secret-token',
+        sessionId: 'session-secret-id',
+        roomCode: 'ROOM42',
+        scoring: { mode: 'private-scoring' },
+        jeopardy: {
+          title: 'Public Board',
+          teams: [{ id: 'team-secret', name: 'Private Team', score: 1200 }],
+          questions: {
+            '0-100': {
+              question: 'Question text',
+              correctIndex: 2,
+              answer: 'Private Answer',
+              points: 100,
+            },
+          },
+        },
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('Public Board')
+    expect(html).toContain('data-game-type="jeopardy"')
+    expect(html).not.toContain('presenter-secret-token')
+    expect(html).not.toContain('admin-secret-token')
+    expect(html).not.toContain('session-secret-id')
+    expect(html).not.toContain('ROOM42')
+    expect(html).not.toContain('private-scoring')
+    expect(html).not.toContain('Private Team')
+    expect(html).not.toContain('team-secret')
+    expect(html).not.toContain('correctIndex')
+    expect(html).not.toContain('Private Answer')
+    expect(html).not.toContain('Question text')
+    expect(html).not.toContain('player')
+    expect(html).not.toContain('admin')
   })
 
   it('clips source-cropped images in the shared renderer like the editor', () => {
@@ -668,5 +805,18 @@ describe('element-renderers safety behavior', () => {
 
     const line = renderElement({ ...base, type: 'chart', chartType: 'line', chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1], color: '#6366f1' }] } }, {}, { forPrint: true })
     expect(line).toContain('"fill":false')
+  })
+
+  it('omits hidden elements from shared HTML export output', () => {
+    const html = renderSlideElements({
+      elements: [
+        { ...base, id: 'visible-text', type: 'text', content: '<p>Visible marker</p>' },
+        { ...base, id: 'hidden-text', type: 'text', hidden: true, content: '<p>Hidden marker</p>' },
+      ],
+    })
+
+    expect(html).toContain('Visible marker')
+    expect(html).not.toContain('Hidden marker')
+    expect(html).not.toContain('hidden-text')
   })
 })

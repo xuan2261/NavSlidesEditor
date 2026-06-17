@@ -1,5 +1,6 @@
 const path = require('path')
 const { UPLOADS_DIR } = require('../services/storage')
+const SAFE_IMAGE_DATA_URL = /^data:image\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]*$/i
 
 function isWithinUploads(targetPath) {
   const normalizedTarget = path.resolve(targetPath)
@@ -14,7 +15,7 @@ function normalizeServerImageSource(src) {
   if (!src) return null
   const raw = String(src)
 
-  if (raw.startsWith('data:')) return { data: raw }
+  if (raw.startsWith('data:')) return SAFE_IMAGE_DATA_URL.test(raw) ? { data: raw } : null
   if (raw.startsWith('/uploads/')) {
     const relative = path.posix.normalize(raw.slice('/uploads/'.length))
     if (relative.startsWith('..') || relative.startsWith('/')) return null

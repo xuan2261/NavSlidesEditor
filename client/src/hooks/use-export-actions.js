@@ -24,6 +24,7 @@ export function useExportActions(presentation) {
     try {
       const { exportToPptx } = await import('../utils/exportPptx')
       const warnings = await exportToPptx(presentation)
+      globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = warnings.exportReport || null
       if (warnings.length) alert(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
     } catch (err) {
       console.error('PPTX export failed:', err)

@@ -1,0 +1,499 @@
+{
+  "controls": [
+    {
+      "element": "audio",
+      "control": "audio-source-playback",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "Audio source and playback flags are user-facing controls."
+    },
+    {
+      "element": "audio",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "callout",
+      "control": "callout-number-style",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Callout number, font, and colors define the callout element."
+    },
+    {
+      "element": "callout",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "chart",
+      "control": "chart-data-options",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "Chart type, labels, datasets, and options define chart output."
+    },
+    {
+      "element": "chart",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "code",
+      "control": "code-content-language",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "Code content, language, and font size are editable and exported."
+    },
+    {
+      "element": "code",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "drawing",
+      "control": "drawing-path-style",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Drawing path style and path count are visible controls."
+    },
+    {
+      "element": "drawing",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "game",
+      "control": "game-subtype-live-policy",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "Game subtype config has editor controls but live/runtime export limits."
+    },
+    {
+      "element": "game",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "html",
+      "control": "trusted-html-content",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "HTML embeds intentionally preserve trusted programmable content."
+    },
+    {
+      "element": "html",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "icon",
+      "control": "icon-name-style",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Icon gallery, color, and stroke controls are user-facing."
+    },
+    {
+      "element": "icon",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "image",
+      "control": "media-source-and-fit",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "Image upload/URL/object-fit/crop define visible media behavior."
+    },
+    {
+      "element": "image",
+      "control": "new-border-authoring",
+      "surfaces": [
+        "editor"
+      ],
+      "scope": "out-of-scope",
+      "contentBearing": false,
+      "rationale": "Plan forbids adding controls solely for audit completeness."
+    },
+    {
+      "element": "image",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "latex",
+      "control": "latex-content-style",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "LaTeX/TikZ content and text style controls affect render output."
+    },
+    {
+      "element": "latex",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "line",
+      "control": "line-style-markers",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Line stroke, dash, and arrow marker controls are user-facing."
+    },
+    {
+      "element": "line",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "markdown",
+      "control": "markdown-content-style",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "Markdown content, color, and font size are exposed controls."
+    },
+    {
+      "element": "markdown",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "qrcode",
+      "control": "qr-data-style",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "QR data and colors are editable and affect generated output."
+    },
+    {
+      "element": "qrcode",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "shape",
+      "control": "shape-style-and-label",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "Shape fill/stroke/radius and plain labels are exposed controls."
+    },
+    {
+      "element": "shape",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "svg",
+      "control": "svg-content-overrides",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "SVG markup and fill/stroke overrides are editable and security-sensitive."
+    },
+    {
+      "element": "svg",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "table",
+      "control": "merge-unmerge-authoring",
+      "surfaces": [
+        "editor"
+      ],
+      "scope": "deferred",
+      "contentBearing": false,
+      "rationale": "Merged-cell read fidelity exists; authoring UI is deferred by plan decision."
+    },
+    {
+      "element": "table",
+      "control": "table-structure-style",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "Table structure, cell content, and style controls are user-facing."
+    },
+    {
+      "element": "table",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "text",
+      "control": "rich-text-formatting",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "TipTap rich-text controls are a canonical text authoring surface."
+    },
+    {
+      "element": "text",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "timeline",
+      "control": "timeline-events-style",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "Timeline bounds, events, connector, and style controls are exposed."
+    },
+    {
+      "element": "timeline",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    },
+    {
+      "element": "video",
+      "control": "video-source-playback",
+      "surfaces": [
+        "editor",
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": true,
+      "rationale": "Video source and playback options are user-facing media controls."
+    },
+    {
+      "element": "video",
+      "control": "visibility",
+      "surfaces": [
+        "canvas",
+        "html-export",
+        "pptx-export"
+      ],
+      "scope": "included",
+      "contentBearing": false,
+      "rationale": "Selection Pane hide/show is a cross-cutting visibility control; hidden is not a secrecy or archive redaction feature."
+    }
+  ]
+}

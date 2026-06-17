@@ -109,4 +109,54 @@ describe('server-export integration', () => {
 
     await fs.rm(tempDir, { recursive: true, force: true })
   }, 60000)
+
+  it('omits hidden elements from PPTX viewer export output', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'navslides-export-hidden-'))
+    const outFile = path.join(tempDir, 'hidden-elements.pptx')
+    const uploadsDir = path.join(tempDir, 'uploads')
+
+    const presentation = {
+      title: 'Hidden Export',
+      resolution: { width: 960, height: 540 },
+      slides: [
+        {
+          id: 's1',
+          background: { type: 'color', color: '#ffffff' },
+          elements: [
+            {
+              id: 'visible-text',
+              type: 'text',
+              x: 40,
+              y: 60,
+              width: 360,
+              height: 80,
+              content: '<p>Visible PPTX marker</p>',
+            },
+            {
+              id: 'hidden-text',
+              type: 'text',
+              hidden: true,
+              x: 40,
+              y: 180,
+              width: 360,
+              height: 80,
+              content: '<p>Hidden PPTX marker</p>',
+            },
+          ],
+        },
+      ],
+    }
+
+    await exportToFile(presentation, outFile, { strictRaster: true })
+    const imported = await importPptxFile(outFile, {
+      originalName: 'hidden-elements.pptx',
+      uploadsDir,
+    })
+
+    const content = JSON.stringify(imported.presentation.slides[0].elements).replace(/&nbsp;/g, ' ')
+    expect(content).toContain('Visible PPTX marker')
+    expect(content).not.toContain('Hidden PPTX marker')
+
+    await fs.rm(tempDir, { recursive: true, force: true })
+  }, 60000)
 })

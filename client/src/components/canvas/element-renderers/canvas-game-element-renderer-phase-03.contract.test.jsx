@@ -12,6 +12,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import React from 'react'
 import { renderToString } from 'react-dom/server'
+import { GAME_TYPES } from '../../../constants/game-element-types-constants.js'
 
 // vi.mock helpers — these take effect when the real game-element-renderer.jsx is implemented.
 // During the placeholder phase, these mock shapes are tested indirectly.
@@ -151,6 +152,32 @@ describe('Game Element Renderer — spec tests', () => {
 // Additional coverage tests
 // ---------------------------------------------------------------------------
 describe('Game Element Renderer — additional coverage', () => {
+  it('[cap:element.game depth:behavior] renders every public subtype label without crashing', () => {
+    const expectedLabels = {
+      'name-picker': 'Name Picker',
+      'hot-potato': 'Hot Potato Quiz',
+      jeopardy: 'Jeopardy',
+      'four-corners': 'Four Corners',
+      'relay-race': 'Relay Race',
+      'trivia-champ': 'Trivia Championship',
+      scattergories: 'Scattergories',
+    }
+
+    GAME_TYPES.all.forEach((gameType) => {
+      const html = render({
+        type: 'game',
+        gameType,
+        gameStatus: 'setup',
+        backgroundColor: '#1a1a2e',
+        accentColor: '#6366f1',
+        width: 640,
+        height: 480,
+      })
+
+      expect(html).toContain('Game:')
+      expect(html).toContain(expectedLabels[gameType])
+    })
+  })
 
   it('renders FourCorners game type', () => {
     const el = {

@@ -226,6 +226,40 @@ describe('htmlGenerator', () => {
     expect(html).toContain('Fragment')
   })
 
+  it('does not create extra print pages for hidden fragments', () => {
+    const html = generatePrintHTML(
+      {
+        title: 'Hidden Fragment Print',
+        slides: [
+          {
+            id: 's1',
+            elements: [
+              { id: 'visible', type: 'text', content: 'Visible', x: 0, y: 0, width: 100, height: 40 },
+              {
+                id: 'hidden-fragment',
+                type: 'text',
+                hidden: true,
+                fragment: true,
+                fragmentIndex: 1,
+                content: 'Hidden fragment',
+                x: 0,
+                y: 50,
+                width: 100,
+                height: 40,
+              },
+            ],
+          },
+        ],
+      },
+      { autoPrint: false, includePrintBar: false, fragmentMode: 'expanded' }
+    )
+
+    expect(html.match(/class="slide-page"/g)).toHaveLength(1)
+    expect(html).toContain('Visible')
+    expect(html).not.toContain('Hidden fragment')
+  })
+
+
   it('uses px text spacing in print HTML', () => {
     const html = generatePrintHTML(
       {

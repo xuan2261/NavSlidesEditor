@@ -57,7 +57,9 @@ async function exportToFile(sourcePresentation, filePath, options = {}) {
       allowFallback,
     })
 
-    const elements = [...(sourceSlide.elements || [])].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+    const elements = [...(sourceSlide.elements || [])]
+      .filter((element) => !(element.hidden || false))
+      .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
     for (const element of elements) {
       await addElementToPptxSlide({
         slide,

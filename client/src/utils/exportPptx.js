@@ -1,6 +1,11 @@
 import pptxgen from 'pptxgenjs'
 import { applySlideBackground } from './export-pptx-background'
-import { getPptxExportLayout, getPptxLayout, getPresentationResolution } from './export-pptx-core'
+import {
+  attachPptxExportReport,
+  getPptxExportLayout,
+  getPptxLayout,
+  getPresentationResolution,
+} from './export-pptx-core'
 import { addElementToPptxSlide } from './export-pptx-renderers'
 import { clearPptxRasterAssetCaches } from './export-pptx-raster'
 import { getSlideNotes } from './slide-notes'
@@ -11,7 +16,7 @@ function getSafeFilename(title) {
 
 function hasElementType(slides, types) {
   return (slides || []).some((slide) => {
-    const elements = slide.elements || []
+    const elements = (slide.elements || []).filter((element) => !(element.hidden || false))
     return elements.some((element) => types.has(element.type))
   })
 }
@@ -23,9 +28,21 @@ function hasServerOnlyElements(presentation) {
 function getServerOnlyElementIds(slides) {
   return (slides || []).flatMap((slide) =>
     (slide.elements || [])
-      .filter((element) => ['html', 'latex'].includes(element.type) && element.id)
+      .filter(
+        (element) => !(element.hidden || false) && ['html', 'latex'].includes(element.type) && element.id
+      )
       .map((element) => element.id)
   )
+}
+
+function withoutHiddenElements(presentation) {
+  return {
+    ...presentation,
+    slides: (presentation?.slides || []).map((slide) => ({
+      ...slide,
+      elements: (slide.elements || []).filter((element) => !(element.hidden || false)),
+    })),
+  }
 }
 
 function canUseServerRaster() {
@@ -45,7 +62,7 @@ async function fetchComplexElementRasters(presentation) {
   const response = await fetch('/api/presentations/raster-elements', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ presentation }),
+    body: JSON.stringify({ presentation: withoutHiddenElements(presentation) }),
   })
 
   if (!response.ok) {
@@ -71,6 +88,7 @@ async function exportToPptxClient(presentation, rasterOverrides = {}) {
   const resolution = getPresentationResolution(presentation)
   const layout = getPptxLayout(getPptxExportLayout(presentation))
   const warnings = []
+  attachPptxExportReport(warnings)
 
   pptx.defineLayout({ name: 'NAVSLIDES_CUSTOM', width: layout.width, height: layout.height })
   pptx.layout = 'NAVSLIDES_CUSTOM'
@@ -81,7 +99,9 @@ async function exportToPptxClient(presentation, rasterOverrides = {}) {
     const slide = pptx.addSlide()
     await applySlideBackground(slide, sourceSlide.background, resolution, layout, warnings, slideNumber)
 
-    const elements = [...(sourceSlide.elements || [])].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+    const elements = [...(sourceSlide.elements || [])]
+      .filter((element) => !(element.hidden || false))
+      .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
     for (const element of elements) {
       await addElementToPptxSlide({
         slide,

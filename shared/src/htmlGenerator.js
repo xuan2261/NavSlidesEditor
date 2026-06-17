@@ -497,7 +497,10 @@ function generatePrintHTML(presentation, options = {}) {
     // Expand each slide into one page per fragment step (initial + one per unique index)
     const fragIndices = [
       ...new Set(
-        (slide.elements || []).filter((el) => el.fragment).map((el) => el.fragmentIndex || 1)
+        (slide.elements || [])
+          .filter((el) => !(el.hidden || false))
+          .filter((el) => el.fragment)
+          .map((el) => el.fragmentIndex || 1)
       ),
     ].sort((a, b) => a - b)
     pages.push({ slide, maxIdx: -Infinity, countPageNumber: true }) // initial: no fragments

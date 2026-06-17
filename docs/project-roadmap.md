@@ -20,7 +20,7 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | Present mode (reveal.js)                           | Done                                                                                                      |
 | Export HTML                                        | Done (CDN-backed deck)                                                                                    |
 | Export PDF                                         | Done                                                                                                      |
-| Export PPTX                                        | Done (hybrid native + high-res raster fallback, split helpers)                                            |
+| Export PPTX                                        | Done (hybrid native + high-res raster fallback, structured export-gap warnings/report)                    |
 | Project export/import (.navslides)                 | Done (manifest v1.1, partial media skip warnings)                                                         |
 | Import PPTX                                        | Done (editable objects plus fidelity/media hardening; strict corpus 11/11 and 5-deck real-browser audit at 0 strict failures) |
 | Offline HTML export                                | Done (self-contained)                                                                                     |

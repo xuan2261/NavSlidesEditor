@@ -1,4 +1,4 @@
-import { normalizeImageSource } from './export-pptx-core'
+import { normalizeImageSource, recordPptxExportWarning } from './export-pptx-core'
 import {
   buildPptxPlaceholderLabel,
   getMediaCoverSource,
@@ -32,18 +32,33 @@ export async function addFallbackElement(slide, element, bounds, warnings, slide
   const normalizedCover = normalizeImageSource(coverSource)
   if (normalizedCover) {
     slide.addImage({ ...normalizedCover, ...bounds, rotate: element.rotation || 0 })
-    warnings.push(`Slide ${slideNumber}: used media cover fallback for ${element.type}`)
+    recordPptxExportWarning(warnings, {
+      element,
+      slideNumber,
+      message: `Slide ${slideNumber}: used media cover fallback for ${element.type}`,
+      fallback: 'media-cover',
+    })
     return
   }
 
   const fallbackData = await renderElementFallbackDataUri(element)
   if (fallbackData) {
     slide.addImage({ data: fallbackData, ...bounds, rotate: element.rotation || 0 })
-    warnings.push(`Slide ${slideNumber}: rasterized ${element.type} for PPTX export`)
+    recordPptxExportWarning(warnings, {
+      element,
+      slideNumber,
+      message: `Slide ${slideNumber}: rasterized ${element.type} for PPTX export`,
+      fallback: 'client-raster',
+    })
     return
   }
 
   addPlaceholder(slide, bounds, element, () => {
-    warnings.push(`Slide ${slideNumber}: inserted placeholder for ${element.type}`)
+    recordPptxExportWarning(warnings, {
+      element,
+      slideNumber,
+      message: `Slide ${slideNumber}: inserted placeholder for ${element.type}`,
+      fallback: 'placeholder',
+    })
   })
 }
