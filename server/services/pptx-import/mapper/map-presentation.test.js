@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import JSZip from 'jszip'
 import presentationMapper from './map-presentation.js'
 
 const { mapPptxOutput } = presentationMapper
@@ -114,5 +115,118 @@ describe('pptx presentation mapper', () => {
       uploadsDir: '/tmp',
       signal: controller.signal,
     })).rejects.toThrow(/aborted/i)
+  })
+
+  it('surfaces native OOXML chart and SmartArt coverage gaps', async () => {
+    const zip = new JSZip()
+    zip.file('ppt/charts/chart1.xml', '<c:chartSpace />')
+    zip.file('ppt/diagrams/data1.xml', '<dgm:dataModel />')
+    zip.file('ppt/diagrams/layout1.xml', '<dgm:layoutDef />')
+    zip.file('ppt/slides/slide1.xml', '<p:sld />')
+    zip.file('ppt/slides/_rels/slide1.xml.rels', `
+      <Relationships>
+        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart1.xml" />
+        <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramData" Target="../diagrams/data1.xml" />
+      </Relationships>
+    `)
+
+    const result = await mapPptxOutput({
+      output: { size: { width: 960, height: 540 }, slides: [{ elements: [] }] },
+      zip,
+      originalName: 'NativeObjects.pptx',
+      uploadsDir: '/tmp',
+    })
+
+    expect(result.stats).toMatchObject({
+      nativeChartCount: 1,
+      nativeSmartArtCount: 1,
+      nativeObjectCoverage: {
+        chartEvidenceCount: 1,
+        smartArtEvidenceCount: 1,
+        mappedNativeChartCount: 0,
+        mappedNativeDiagramCount: 0,
+        chartCoverageGapCount: 1,
+        smartArtCoverageGapCount: 1,
+        slides: [{
+          slideIndex: 0,
+          chartEvidenceCount: 1,
+          smartArtEvidenceCount: 1,
+          mappedNativeChartCount: 0,
+          mappedNativeDiagramCount: 0,
+          chartCoverageGapCount: 1,
+          smartArtCoverageGapCount: 1,
+        }],
+      },
+      ooxml: {
+        nativeChartCount: 1,
+        nativeSmartArtCount: 1,
+      },
+    })
+    expect(result.warnings).toEqual(expect.arrayContaining([
+      {
+        slideIndex: 0,
+        type: 'native-chart-degraded',
+        message: expect.stringContaining('slide 1'),
+      },
+      {
+        slideIndex: 0,
+        type: 'native-smartart-degraded',
+        message: expect.stringContaining('slide 1'),
+      },
+    ]))
+  })
+
+  it('does not let a mapped chart on another slide hide an OOXML chart gap', async () => {
+    const zip = new JSZip()
+    zip.file('ppt/charts/chart1.xml', '<c:chartSpace />')
+    zip.file('ppt/charts/chart2.xml', '<c:chartSpace />')
+    zip.file('ppt/slides/slide1.xml', '<p:sld />')
+    zip.file('ppt/slides/slide2.xml', '<p:sld />')
+    zip.file('ppt/slides/_rels/slide1.xml.rels', `
+      <Relationships>
+        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart1.xml" />
+      </Relationships>
+    `)
+    zip.file('ppt/slides/_rels/slide2.xml.rels', `
+      <Relationships>
+        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart2.xml" />
+      </Relationships>
+    `)
+
+    const result = await mapPptxOutput({
+      output: {
+        size: { width: 960, height: 540 },
+        slides: [
+          { elements: [] },
+          {
+            elements: [{
+              type: 'chart',
+              chartType: 'barChart',
+              left: 100,
+              top: 100,
+              width: 400,
+              height: 300,
+              data: [{ key: 'Series 1', values: [{ x: 'A', y: 10 }] }],
+            }],
+          },
+        ],
+      },
+      zip,
+      originalName: 'CrossSlide.pptx',
+      uploadsDir: '/tmp',
+    })
+
+    expect(result.stats.nativeObjectCoverage).toMatchObject({
+      chartEvidenceCount: 2,
+      mappedNativeChartCount: 1,
+      chartCoverageGapCount: 1,
+    })
+    expect(result.warnings).toEqual([
+      {
+        slideIndex: 0,
+        type: 'native-chart-degraded',
+        message: expect.stringContaining('slide 1'),
+      },
+    ])
   })
 })

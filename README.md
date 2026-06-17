@@ -284,8 +284,11 @@ Verification typically runs in this order:
    npm run test:pptx:browser-audit        # strict smoke subset for PR/runtime-sensitive checks
    npm run test:pptx:browser-audit:full   # strict full 5-deck release gate
    npm run test:pptx:browser-audit:headed # headed full audit for manual inspection
-   npm run test:pptx:strict               # corpus + full browser audit
+   npm run test:pptx:strict               # corpus + strict smoke browser audit
    ```
+   The strict corpus gate currently requires average semantic >= 98% and an
+   average production round-trip floor >= 50%; the full browser audit remains a
+   separate release signoff command.
 6. Load tests with `k6`:
    ```bash
    npm run test:load:api

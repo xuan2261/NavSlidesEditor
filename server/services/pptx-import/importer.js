@@ -5,6 +5,29 @@ const { mapPptxOutput } = require('./mapper')
 const { validatePptxPackage } = require('./pptx-guards')
 const { runParserWorker } = require('./worker-runner')
 
+function buildImportStats({ mappedStats = {}, parsed = {}, startedAt = Date.now(), now = Date.now() }) {
+  return {
+    parser: 'pptxtojson',
+    fallbackParserUsed: Boolean(parsed.fallback),
+    packageVersion: parsed.packageVersion,
+    slideCount: mappedStats.slideCount,
+    textCount: mappedStats.textCount,
+    imageCount: mappedStats.imageCount,
+    shapeCount: mappedStats.shapeCount,
+    tableCount: mappedStats.tableCount,
+    chartCount: mappedStats.chartCount || 0,
+    diagramCount: mappedStats.diagramCount || 0,
+    nativeChartCount: mappedStats.nativeChartCount || 0,
+    nativeSmartArtCount: mappedStats.nativeSmartArtCount || 0,
+    nativeChartImportedCount: mappedStats.nativeChartImportedCount || 0,
+    nativeSmartArtImportedCount: mappedStats.nativeSmartArtImportedCount || 0,
+    nativeObjectCoverage: mappedStats.nativeObjectCoverage,
+    ooxml: mappedStats.ooxml,
+    placeholderCount: mappedStats.placeholderCount,
+    durationMs: now - startedAt,
+  }
+}
+
 async function importPptxFile(filePath, options = {}) {
   const started = Date.now()
   const originalName = options.originalName || filePath
@@ -35,19 +58,7 @@ async function importPptxFile(filePath, options = {}) {
 
   return {
     ...mapped,
-    stats: {
-      parser: 'pptxtojson',
-      fallbackParserUsed: Boolean(parsed.fallback),
-      packageVersion: parsed.packageVersion,
-      slideCount: mapped.stats.slideCount,
-      textCount: mapped.stats.textCount,
-      imageCount: mapped.stats.imageCount,
-      shapeCount: mapped.stats.shapeCount,
-      tableCount: mapped.stats.tableCount,
-      chartCount: mapped.stats.chartCount || 0,
-      placeholderCount: mapped.stats.placeholderCount,
-      durationMs: Date.now() - started,
-    },
+    stats: buildImportStats({ mappedStats: mapped.stats, parsed, startedAt: started }),
     warnings: [
       ...mapped.warnings,
       ...(parsed.fallback
@@ -58,5 +69,6 @@ async function importPptxFile(filePath, options = {}) {
 }
 
 module.exports = {
+  buildImportStats,
   importPptxFile,
 }

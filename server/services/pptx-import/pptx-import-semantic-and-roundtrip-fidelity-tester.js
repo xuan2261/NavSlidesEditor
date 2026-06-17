@@ -23,6 +23,27 @@ const STRICT_AVG_MIN_SEMANTIC = 0.98
 const STRICT_AVG_MIN_ROUND_TRIP = 0.5
 const STRICT_MIN_CORPUS_FILES = 10
 const STRICT_CLASS_DROP_TYPES = ['image', 'shape', 'table', 'text', 'chart', 'group', 'diagram', 'line', 'other']
+const formatStrictPercent = (value) => `${(value * 100).toFixed(Number.isInteger(value * 100) ? 0 : 1)}%`
+const STRICT_CORPUS_GATES = Object.freeze({
+  minCorpusFiles: STRICT_MIN_CORPUS_FILES,
+  avgSemanticFidelity: {
+    min: STRICT_AVG_MIN_SEMANTIC,
+    label: formatStrictPercent(STRICT_AVG_MIN_SEMANTIC),
+  },
+  avgRoundTripStability: {
+    min: STRICT_AVG_MIN_ROUND_TRIP,
+    label: formatStrictPercent(STRICT_AVG_MIN_ROUND_TRIP),
+  },
+  perDeckSemantic: {
+    min: DEFAULT_PER_DECK_MIN_SEMANTIC,
+    label: formatStrictPercent(DEFAULT_PER_DECK_MIN_SEMANTIC),
+  },
+  maxClassDrop: {
+    max: DEFAULT_MAX_CLASS_DROP,
+    label: formatStrictPercent(DEFAULT_MAX_CLASS_DROP),
+  },
+  classDropTypes: STRICT_CLASS_DROP_TYPES,
+})
 
 // ---------------------------------------------------------------------------
 // Raw pptxtojson parsing (bypasses the full importer to get baseline)
@@ -454,8 +475,8 @@ function strictGeometryThreshold(type) {
 
 function applyStrictPerTypeGates(result, options = {}) {
   const {
-    perDeckMin = DEFAULT_PER_DECK_MIN_SEMANTIC,
-    maxClassDrop = DEFAULT_MAX_CLASS_DROP,
+    perDeckMin = STRICT_CORPUS_GATES.perDeckSemantic.min,
+    maxClassDrop = STRICT_CORPUS_GATES.maxClassDrop.max,
     excludeClassDrop = [],
   } = options
   const errors = []
@@ -469,7 +490,7 @@ function applyStrictPerTypeGates(result, options = {}) {
   const excluded = new Set(excludeClassDrop.map((type) => String(type).toLowerCase()))
   const sourceByType = result.elementCount?.sourceByType || {}
   const navByType = result.elementCount?.navByType || {}
-  for (const type of STRICT_CLASS_DROP_TYPES) {
+  for (const type of STRICT_CORPUS_GATES.classDropTypes) {
     if (excluded.has(type)) continue
     const sourceCount = sourceByType[type] || 0
     if (sourceCount <= 0) continue
@@ -1139,8 +1160,8 @@ async function runCorpusTests(corpusDir = DEFAULT_CORPUS, options = {}) {
     allowFallback = false,
     strict = false,
     baseUrl = process.env.NAVSLIDES_API_URL || '',
-    perDeckMin = DEFAULT_PER_DECK_MIN_SEMANTIC,
-    maxClassDrop = DEFAULT_MAX_CLASS_DROP,
+    perDeckMin = STRICT_CORPUS_GATES.perDeckSemantic.min,
+    maxClassDrop = STRICT_CORPUS_GATES.maxClassDrop.max,
     excludeClassDrop = [],
   } = options
   const effectiveSkipRoundTrip = strict ? false : skipRoundTrip
@@ -1350,6 +1371,7 @@ module.exports = {
   reportResults,
   writeDriftRows,
   DEFAULT_CORPUS, DEFAULT_MAX_CLASS_DROP, DEFAULT_PER_DECK_MIN_SEMANTIC,
+  STRICT_CORPUS_GATES,
   STRICT_AVG_MIN_ROUND_TRIP, STRICT_AVG_MIN_SEMANTIC, STRICT_MIN_CORPUS_FILES,
   parsePercentFlag,
 }

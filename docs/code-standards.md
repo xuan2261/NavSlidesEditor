@@ -45,7 +45,10 @@ E2E structure conventions:
   `npm run test:pptx:browser-audit` for strict smoke and
   `npm run test:pptx:browser-audit:full` for release signoff. Use
   `npm run test:pptx:browser-audit:headed` when manual visual inspection is
-  needed. Audit artifacts stay under ignored
+  needed. `npm run test:pptx:strict` is intentionally corpus plus strict smoke,
+  not the full release audit. The strict corpus gate documents average semantic >= 98%
+  and average production round-trip floor >= 50% as the active global thresholds.
+  Audit artifacts stay under ignored
   `plans/reports/pptx-import-real-browser-audit-runs/`.
 
 Canvas selector IDs are stable and must not be renamed:

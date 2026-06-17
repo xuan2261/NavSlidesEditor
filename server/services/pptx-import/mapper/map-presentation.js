@@ -13,6 +13,7 @@ const { flattenGroupElement } = require('./map-group')
 const { flattenDiagramElement } = require('./map-diagram')
 const { fitBoxWithinBounds, normalizeSourceSize } = require('../geometry')
 const { CANVAS_SIZE } = require('../constants')
+const { inspectOoxmlCoverage } = require('../ooxml-inspection')
 
 async function mapElement(element, context) {
   if (element.type === 'group') return flattenGroupElement(element, context, mapElement)
@@ -152,14 +153,48 @@ async function mapPptxOutput({ output, zip, originalName, uploadsDir, onProgress
   const scale = sourceSize.scale
   const mediaIndex = createMediaIndex(zip)
   const warnings = []
-  const stats = { textCount: 0, imageCount: 0, shapeCount: 0, tableCount: 0, chartCount: 0, placeholderCount: 0, videoCount: 0, audioCount: 0, mathCount: 0 }
+  const ooxml = await inspectOoxmlCoverage(zip)
+  const stats = { textCount: 0, imageCount: 0, shapeCount: 0, tableCount: 0, chartCount: 0, diagramCount: 0, placeholderCount: 0, videoCount: 0, audioCount: 0, mathCount: 0 }
   const slides = []
+  const nativeObjectSlides = []
   const totalSlides = Math.max(1, (output.slides || []).length)
   for (const [slideIndex, slide] of (output.slides || []).entries()) {
     signal?.throwIfAborted?.()
     onProgress?.({ stage: 'mapping', percent: 80 + Math.round((slideIndex / totalSlides) * 15), message: `Processing slide ${slideIndex + 1} of ${totalSlides}` })
     const elements = await mapSlideElements(slide, { mediaIndex, scale, slideIndex, warnings, stats, uploadsDir, signal })
     signal?.throwIfAborted?.()
+    const evidence = ooxml.slidesByIndex[slideIndex] || { chartEntries: [], smartArtEntries: [] }
+    const mappedNativeChartCount = elements.filter((element) => element?.type === 'chart').length
+    const mappedNativeDiagramCount = elements.filter((element) => element?.type === 'diagram').length
+    const chartEvidenceCount = evidence.chartEntries.length
+    const smartArtEvidenceCount = evidence.smartArtEntries.length
+    const chartCoverageGapCount = Math.max(0, chartEvidenceCount - mappedNativeChartCount)
+    const smartArtCoverageGapCount = Math.max(0, smartArtEvidenceCount - mappedNativeDiagramCount)
+    if (chartEvidenceCount || smartArtEvidenceCount || mappedNativeChartCount || mappedNativeDiagramCount) {
+      nativeObjectSlides.push({
+        slideIndex,
+        chartEvidenceCount,
+        smartArtEvidenceCount,
+        mappedNativeChartCount,
+        mappedNativeDiagramCount,
+        chartCoverageGapCount,
+        smartArtCoverageGapCount,
+      })
+    }
+    if (chartCoverageGapCount > 0) {
+      warnings.push({
+        slideIndex,
+        type: 'native-chart-degraded',
+        message: `${chartEvidenceCount} native chart evidence item(s) found in OOXML slide ${slideIndex + 1}; ${mappedNativeChartCount} imported as native chart element(s).`,
+      })
+    }
+    if (smartArtCoverageGapCount > 0) {
+      warnings.push({
+        slideIndex,
+        type: 'native-smartart-degraded',
+        message: `${smartArtEvidenceCount} native SmartArt evidence item(s) found in OOXML slide ${slideIndex + 1}; ${mappedNativeDiagramCount} imported as native diagram element(s).`,
+      })
+    }
     slides.push({
       id: uuidv4(),
       background: mapSlideBackground(slide, { slideIndex, warnings }),
@@ -167,6 +202,18 @@ async function mapPptxOutput({ output, zip, originalName, uploadsDir, onProgress
       notes: slide.note ? sanitizeHtml(slide.note) : '',
       ...mapSlideTransition(slide),
     })
+  }
+
+  const nativeChartImportedCount = nativeObjectSlides.reduce((sum, slide) => sum + slide.mappedNativeChartCount, 0)
+  const nativeSmartArtImportedCount = nativeObjectSlides.reduce((sum, slide) => sum + slide.mappedNativeDiagramCount, 0)
+  const nativeObjectCoverage = {
+    chartEvidenceCount: ooxml.nativeChartCount,
+    smartArtEvidenceCount: ooxml.nativeSmartArtCount,
+    mappedNativeChartCount: nativeChartImportedCount,
+    mappedNativeDiagramCount: nativeSmartArtImportedCount,
+    chartCoverageGapCount: nativeObjectSlides.reduce((sum, slide) => sum + slide.chartCoverageGapCount, 0),
+    smartArtCoverageGapCount: nativeObjectSlides.reduce((sum, slide) => sum + slide.smartArtCoverageGapCount, 0),
+    slides: nativeObjectSlides,
   }
 
   return {
@@ -182,7 +229,16 @@ async function mapPptxOutput({ output, zip, originalName, uploadsDir, onProgress
         themeColors: output.themeColors || [],
       },
     },
-    stats: { ...stats, slideCount: slides.length },
+    stats: {
+      ...stats,
+      nativeChartCount: ooxml.nativeChartCount,
+      nativeSmartArtCount: ooxml.nativeSmartArtCount,
+      nativeChartImportedCount,
+      nativeSmartArtImportedCount,
+      nativeObjectCoverage,
+      ooxml,
+      slideCount: slides.length,
+    },
     warnings,
   }
 }

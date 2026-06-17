@@ -1,7 +1,7 @@
 # PPTX Import Fidelity Report
 
 **Phase:** Ongoing PPTX Import Fidelity Hardening
-**Generated:** 2026-04-27; updated 2026-05-25
+**Generated:** 2026-04-27; updated 2026-06-17
 **Test Suite:** `server/services/pptx-import/`
 
 ## Test Suite Summary
@@ -22,6 +22,23 @@
 | `chart-output-to-navslides-mapper.test.js` | 2 | ✅ Pass |
 | `import-fidelity-properties.test.jsx` | 2 | ✅ Pass |
 | **Total** | **172** | **✅ All Pass** |
+
+## 2026-06-17 Strict Gate And OOXML Visibility Update
+
+- `test:pptx:strict` now runs `test:corpus` plus the strict smoke browser audit;
+  `test:pptx:browser-audit:full` remains the release signoff command.
+- Strict corpus diagnostics now print threshold labels generated from the
+  enforced constants. Current global gates are average semantic >= 98%, average
+  production round-trip floor >= 50%, corpus size >= 10, production export only,
+  per-deck semantic >= 95%, and element-class drop <= 15%.
+- Latest pre-change corpus baseline was `11/11` decks, `100.0%` semantic
+  fidelity, and `70.0%` average round-trip stability. The 50% round-trip floor
+  is a regression floor while the per-type round-trip report remains diagnostic.
+- Import now inspects OOXML slide relationship evidence for native charts
+  (`ppt/charts/chart*.xml`) and SmartArt data (`ppt/diagrams/data*.xml`),
+  exposes additive `stats.nativeObjectCoverage`, `stats.ooxml`,
+  `nativeChartCount`, and `nativeSmartArtCount`, and warns when those native
+  evidence entries are not imported as native chart/diagram elements.
 
 ## 2026-04-27 Coordinate Fidelity Hardening Update
 
@@ -101,9 +118,10 @@
   abort propagation, SSE-to-polling fallback, and route-level SSE lifecycle
   coverage.
 - Phase 9 expanded the default corpus to `server/data/test-corpus/` with 10
-  decks and made `npm run test:corpus` enforce the final v1 acceptance gate:
+  decks. At the time, `npm run test:corpus` enforced the final v1 acceptance gate:
   aggregate semantic >= 98%, aggregate round-trip >= 99%, no deck below 95%
-  semantic, no element-class drop above 15%, and n >= 10. The final run passes
+  semantic, no element-class drop above 15%, and n >= 10; the current production
+  round-trip floor is documented in the 2026-06-17 update above. The final run passes
   10/10 decks at `100.0%` semantic fidelity and `99.0%` round-trip stability.
   The chart decks are native PPTX chart files, but current `pptxtojson` metrics
   expose them as shape-backed content; true parser chart extraction remains a
@@ -353,8 +371,8 @@ Strict run guarantees:
 - Export method is `production` for every deck
 - Only exact/proximity matches count as stable; `type-only` remains diagnostic
 - Fails if production export is unavailable
-- Fails if average semantic fidelity drops below 98%
-- Fails if average round-trip stability drops below 50% while production-export round-trip matching remains a report-grade metric
+- Fails if average semantic fidelity drops below 98%; CLI diagnostics use the same constant as the gate
+- Fails if average round-trip stability drops below 50%; CLI diagnostics use the same constant as the gate
 - Fails if any deck drops below 95% semantic fidelity
 - Fails if any tracked element class drops more than 15%
 - Fails if the default corpus has fewer than 10 decks
@@ -453,7 +471,7 @@ server/data/test-corpus/
 
 ## Next Steps
 
-1. **Add true chart/SmartArt parser coverage** → current generated chart decks are parsed as shape-backed content by `pptxtojson`.
+1. **Add true chart/SmartArt parser coverage** → current importer records native OOXML chart/SmartArt package evidence, but full native SmartArt/chart reconstruction remains parser work.
 2. **Expand with more real decks** → add Office 365 and SmartArt-heavy decks beyond the initial n=10 corpus.
 3. **Track per-type round-trip gates** → optionally enforce per-type round-trip targets in strict mode.
 4. **Performance benchmarks** → measure 100-slide deck import + round-trip runtime.

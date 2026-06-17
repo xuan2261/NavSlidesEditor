@@ -33,8 +33,8 @@ baseline counts them under `shape` until parser chart extraction improves.
 The Phase 9 acceptance gate expects:
 
 - at least 10 `.pptx` files in this directory
-- average semantic fidelity >= 98%
-- average round-trip stability >= 99%
+- average semantic >= 98%
+- average production round-trip floor >= 50% as a regression floor
 - no deck below 95% semantic fidelity
 - no element-class count drop above 15%
 - imported presentations satisfy the reusable PPTX acceptance invariants:

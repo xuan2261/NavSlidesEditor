@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- PPTX import strict verification now aligns scripts, diagnostics, and docs: `test:pptx:strict` runs corpus plus strict smoke browser audit while full audit stays release-only, corpus CLI threshold text comes from canonical enforced constants, and import reports additive per-slide OOXML chart/SmartArt relationship-evidence stats plus degradation warnings.
+
 ## v1.14.3 — 2026-06-16
 
 - Completed Phase 2 of `plans/260615-1641-long-term-automated-coverage-expansion-tdd`: coverage matrix now supports optional `depth:*` assertion-depth labels, a small `coverage-depth-policy.json`, generated Depth columns, and warn-first `DEPTH-WARN` gate output without changing the 100/100 editor-core PASS count.

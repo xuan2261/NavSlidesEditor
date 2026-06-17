@@ -76,8 +76,10 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
   possible to avoid placeholder-only output.
 - Present mode and standard HTML export still depend on CDN resources at
   runtime.
-- PPTX harness `--roundtrip` now uses the production export pipeline; strict
-  mode keeps the >=95 semantic / >=98 round-trip gate. Imported PPTX media now
+- PPTX harness `--roundtrip` uses the production export pipeline; strict mode
+  keeps aggregate semantic >=98%, per-deck semantic >=95%, element-class
+  retention, corpus-size, production-export, and aggregate round-trip >=50%
+  regression-floor gates. Imported PPTX media now
   uses SHA256 dedup, extension allowlist, magic-byte checks, external media URL
   gating, worker startup ACK handling, `/api/pptx` upload rate limiting, a
   split mapper module tree under `server/services/pptx-import/mapper/`, and
@@ -188,18 +190,20 @@ Benchmarked 4 JavaScript `.pptx` parser candidates against 4 real decks / 145 sl
 ### Phase 10 - Editable PPTX Import Phase 1 (Complete - 2026-04-24)
 
 Shipped server-side editable `.pptx` import using `pptxtojson@2.0.2`, with
-`pptx2json@0.0.10` as metadata fallback inspector only. Supports text, images,
-basic shapes/lines, and tables; charts, equations, OLE, SmartArt, and complex
-groups become locked placeholders with warnings.
+`pptx2json@0.0.10` as metadata fallback inspector only. Current mapper support
+includes text, images, basic shapes/lines, tables, native chart output when the
+parser exposes chart data, and flattened SmartArt/diagram data. Unsupported
+equations, OLE, and complex objects degrade to placeholders or warnings.
 
 **Plan:** `plans/260424-1841-pptx-import/`
 
 ### PPTX Round-trip Harness Unification (Complete - 2026-04-25)
 
-Unified the round-trip harness with the production export pipeline. Strict mode
-now requires production export and keeps the ≥95 semantic / ≥98 round-trip
+Unified the round-trip harness with the production export pipeline. At the time,
+strict mode required production export and used a ≥95 semantic / ≥98 round-trip
 gate; latest 4-deck corpus result: 97.0% semantic fidelity, 99.0% round-trip
-stability.
+stability. Current strict thresholds are documented in the active export
+limitations section above.
 
 **Plan:** `plans/260425-1802-unify-roundtrip-harness/`
 

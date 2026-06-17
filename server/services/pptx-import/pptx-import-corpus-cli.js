@@ -1,11 +1,7 @@
 const fs = require('fs-extra')
 const {
   DEFAULT_CORPUS,
-  DEFAULT_MAX_CLASS_DROP,
-  DEFAULT_PER_DECK_MIN_SEMANTIC,
-  STRICT_AVG_MIN_ROUND_TRIP,
-  STRICT_AVG_MIN_SEMANTIC,
-  STRICT_MIN_CORPUS_FILES,
+  STRICT_CORPUS_GATES,
   parsePercentFlag,
   reportResults,
   runCorpusTests,
@@ -20,7 +16,7 @@ function parseListFlags(args, name) {
     .filter(Boolean)
 }
 
-function baselineFromResults(results, summary, gates) {
+function baselineFromResults(results, summary, gates = STRICT_CORPUS_GATES) {
   return {
     summary: Object.fromEntries(Object.entries(summary).filter(([key]) => key !== 'runAt')),
     gates,
@@ -36,16 +32,16 @@ function baselineFromResults(results, summary, gates) {
 function enforceStrictSummary(summary, results) {
   if (summary.failedFiles > 0) return 1
   if (!summary.strict) return 0
-  if (summary.totalFiles < STRICT_MIN_CORPUS_FILES) {
-    console.error(`Strict mode failed: corpus has fewer than ${STRICT_MIN_CORPUS_FILES} files`)
+  if (summary.totalFiles < STRICT_CORPUS_GATES.minCorpusFiles) {
+    console.error(`Strict mode failed: corpus has fewer than ${STRICT_CORPUS_GATES.minCorpusFiles} files`)
     return 1
   }
-  if (summary.avgSemanticFidelity == null || summary.avgSemanticFidelity < STRICT_AVG_MIN_SEMANTIC) {
-    console.error('Strict mode failed: average semantic fidelity is below 98%')
+  if (summary.avgSemanticFidelity == null || summary.avgSemanticFidelity < STRICT_CORPUS_GATES.avgSemanticFidelity.min) {
+    console.error(`Strict mode failed: average semantic fidelity is below ${STRICT_CORPUS_GATES.avgSemanticFidelity.label}`)
     return 1
   }
-  if (summary.avgRoundTripStability == null || summary.avgRoundTripStability < STRICT_AVG_MIN_ROUND_TRIP) {
-    console.error('Strict mode failed: average round-trip stability is below 99%')
+  if (summary.avgRoundTripStability == null || summary.avgRoundTripStability < STRICT_CORPUS_GATES.avgRoundTripStability.min) {
+    console.error(`Strict mode failed: average round-trip stability is below ${STRICT_CORPUS_GATES.avgRoundTripStability.label}`)
     return 1
   }
   if (results.some((result) => result.roundTripExportMethod !== 'production')) {
@@ -63,11 +59,11 @@ async function runFromCli(args = process.argv.slice(2)) {
   const driftOut = args.find((arg) => arg.startsWith('--drift-out='))?.slice('--drift-out='.length) || ''
   const perDeckMin = parsePercentFlag(
     args.find((arg) => arg.startsWith('--per-deck-min='))?.slice('--per-deck-min='.length),
-    DEFAULT_PER_DECK_MIN_SEMANTIC
+    STRICT_CORPUS_GATES.perDeckSemantic.min
   )
   const maxClassDrop = parsePercentFlag(
     args.find((arg) => arg.startsWith('--max-class-drop='))?.slice('--max-class-drop='.length),
-    DEFAULT_MAX_CLASS_DROP
+    STRICT_CORPUS_GATES.maxClassDrop.max
   )
   const options = {
     allowFallback: args.includes('--allow-fallback'),
@@ -88,9 +84,10 @@ async function runFromCli(args = process.argv.slice(2)) {
     await fs.outputJson(
       baselineOut,
       baselineFromResults(results, summary, {
+        ...STRICT_CORPUS_GATES,
         excludeClassDrop: options.excludeClassDrop,
-        maxClassDrop,
-        perDeckMinSemantic: perDeckMin,
+        maxClassDrop: { ...STRICT_CORPUS_GATES.maxClassDrop, max: maxClassDrop, label: `${(maxClassDrop * 100).toFixed(Number.isInteger(maxClassDrop * 100) ? 0 : 1)}%` },
+        perDeckSemantic: { ...STRICT_CORPUS_GATES.perDeckSemantic, min: perDeckMin, label: `${(perDeckMin * 100).toFixed(Number.isInteger(perDeckMin * 100) ? 0 : 1)}%` },
       }),
       { spaces: 2 }
     )
