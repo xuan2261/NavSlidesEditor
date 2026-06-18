@@ -104,6 +104,29 @@ describe('htmlGenerator', () => {
     expect(html).toContain("revealConfig.navigationMode = 'linear';")
   })
 
+  it('[cap:element.code depth:export] skips walkthrough code blocks during print highlighting', () => {
+    const html = generatePrintHTML({
+      title: 'Walkthrough Print',
+      slides: [
+        {
+          id: 's1',
+          elements: [
+            {
+              type: 'code',
+              content: 'const a = 1\nreturn a',
+              language: 'javascript',
+              walkthroughSteps: [{ label: 'Return', startLine: 2, endLine: 2 }],
+              defaultStepIndex: 0,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(html).toContain('data-code-walkthrough=')
+    expect(html).toContain("document.querySelectorAll('pre:not([data-code-walkthrough]) code')")
+  })
+
   it('renders basic and sequence footer modes in reveal and print HTML', () => {
     const presentation = {
       title: 'Footers',

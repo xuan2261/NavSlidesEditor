@@ -120,6 +120,195 @@ function QuestionCard({ question, timeLeft, selectedAnswer, onSelect, disabled }
   )
 }
 
+function PollCard({ pollState, selectedOption, onVote }) {
+  const totalVotes = pollState?.totalVotes || 0
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
+        <h2 className="text-lg font-semibold text-text-primary mb-4 text-center">
+          {pollState?.prompt || 'Live Poll'}
+        </h2>
+        <div className="space-y-3">
+          {(pollState?.options || []).map((option) => {
+            const selected = selectedOption === option.id
+            const pct = totalVotes > 0 ? Math.round(((option.votes || 0) / totalVotes) * 100) : 0
+            return (
+              <button
+                key={option.id}
+                onClick={() => onVote(option.id)}
+                className={`relative w-full overflow-hidden p-4 rounded-xl border-2 text-left font-medium transition-all ${
+                  selected
+                    ? 'border-accent bg-accent/10 text-accent'
+                    : 'border-border hover:border-accent/50 hover:bg-surface-2 text-text-primary'
+                }`}
+              >
+                <span className="relative flex justify-between gap-3">
+                  <span>{option.text}</span>
+                  <span className="text-text-muted">{option.votes || 0} · {pct}%</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        {selectedOption && <p className="text-xs text-text-muted text-center mt-4">Vote saved. Tap another option to change it.</p>}
+      </div>
+    </div>
+  )
+}
+
+function WordCloudCard({ wordCloudState, submissionCount, onSubmit }) {
+  const [text, setText] = useState('')
+  const maxLength = 40
+  const maxSubmissions = 5
+  const canSubmit = text.trim() && submissionCount < maxSubmissions
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!canSubmit) return
+    onSubmit(text)
+    setText('')
+  }
+
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
+        <h2 className="text-lg font-semibold text-text-primary mb-4 text-center">
+          {wordCloudState?.prompt || 'Word Cloud'}
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            value={text}
+            maxLength={maxLength}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Type a word or short phrase"
+            className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="w-full bg-accent hover:bg-accent-hover disabled:bg-border disabled:text-text-muted text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm"
+          >
+            Submit
+          </button>
+        </form>
+        <p className="text-xs text-text-muted text-center mt-3">
+          {submissionCount}/{maxSubmissions} submissions used · {text.length}/{maxLength} chars
+        </p>
+        {(wordCloudState?.entries || []).length > 0 && (
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {wordCloudState.entries.slice(0, 20).map((entry) => (
+              <span
+                key={entry.text}
+                className="rounded-full bg-accent/10 px-3 py-1 text-sm font-semibold text-accent"
+              >
+                {entry.text} ×{entry.count}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function resolveRevealedPairs(matchingState) {
+  const promptsById = new Map((matchingState?.prompts || []).map((prompt) => [prompt.id, prompt.text]))
+  const targetsById = new Map((matchingState?.targets || []).map((target) => [target.id, target.text]))
+  return (matchingState?.answerKey || []).map((pair) => ({
+    prompt: promptsById.get(pair.promptId) || pair.promptId,
+    target: targetsById.get(pair.targetId) || pair.targetId,
+  }))
+}
+
+export function MatchingCard({ matchingState, matchingResult, onSubmit }) {
+  const prompts = matchingState?.prompts || []
+  const targets = matchingState?.targets || []
+  const [selectedPromptId, setSelectedPromptId] = useState(null)
+  const [mapping, setMapping] = useState({})
+  const mappedCount = Object.keys(mapping).length
+  const canSubmit = prompts.length > 0 && mappedCount === prompts.length
+
+  const handleTarget = (targetId) => {
+    if (!selectedPromptId) return
+    setMapping((current) => ({ ...current, [selectedPromptId]: targetId }))
+    setSelectedPromptId(null)
+  }
+
+  const isTargetUsed = (targetId) =>
+    Object.entries(mapping).some(([promptId, mappedTargetId]) => (
+      promptId !== selectedPromptId && mappedTargetId === targetId
+    ))
+
+  return (
+    <div className="w-full max-w-2xl mx-auto">
+      <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
+        <h2 className="text-lg font-semibold text-text-primary mb-2 text-center">
+          {matchingState?.prompt || 'Matching'}
+        </h2>
+        <p className="text-xs text-text-muted text-center mb-4">
+          Select a prompt, then select its matching target.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2" aria-label="Prompts">
+            {prompts.map((prompt) => (
+              <button
+                key={prompt.id}
+                onClick={() => setSelectedPromptId(prompt.id)}
+                className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                  selectedPromptId === prompt.id
+                    ? 'border-accent bg-accent/10 text-accent'
+                    : 'border-border bg-surface-2 text-text-primary'
+                }`}
+              >
+                {prompt.text}
+                {mapping[prompt.id] && (
+                  <span className="block text-[10px] text-text-muted">Matched</span>
+                )}
+              </button>
+            ))}
+          </div>
+          <div className="space-y-2" aria-label="Targets">
+            {targets.map((target) => (
+              <button
+                key={target.id}
+                onClick={() => handleTarget(target.id)}
+                disabled={!selectedPromptId || isTargetUsed(target.id)}
+                className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-left text-sm text-text-primary transition-colors hover:border-accent/60 disabled:opacity-60"
+              >
+                {target.text}
+              </button>
+            ))}
+          </div>
+        </div>
+        <button
+          onClick={() => onSubmit(prompts.map((prompt) => ({ promptId: prompt.id, targetId: mapping[prompt.id] })))}
+          disabled={!canSubmit}
+          className="mt-4 w-full bg-accent hover:bg-accent-hover disabled:bg-border disabled:text-text-muted text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm"
+        >
+          Submit matches
+        </button>
+        {matchingResult && (
+          <p className="text-sm text-text-muted text-center mt-3">
+            Score: {matchingResult.score}/{matchingResult.total}
+          </p>
+        )}
+        {matchingState?.answerKey && (
+          <div className="mt-4 rounded-lg border border-border bg-surface-2 p-3">
+            <div className="text-xs font-semibold text-text-primary mb-2">Revealed answers</div>
+            <ul className="space-y-1 text-xs text-text-muted">
+              {resolveRevealedPairs(matchingState).map((pair, index) => (
+                <li key={`${pair.prompt}-${index}`}>
+                  {pair.prompt} → {pair.target}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Answered State ───────────────────────────────────────────────────────────────
 function AnsweredState({ answerResult, question }) {
   return (
@@ -200,17 +389,26 @@ export default function GamePlayerPage() {
   const urlName = searchParams.get('name')
   const resolvedName = playerName || urlName
 
-  const gameId = `${slideId}-${elementId}`
+  const gameId = elementId
 
   const {
     status,
     _players,
     playerCount,
     currentQuestion,
+    pollState,
+    wordCloudState,
+    matchingState,
     timeLeft,
     selectedAnswer,
+    selectedPollOption,
+    wordCloudSubmissionCount,
+    matchingResult,
     answerResult,
     submitAnswer,
+    submitPollVote,
+    submitWordCloudText,
+    submitMatchingPairs,
     myScore,
     myRank,
     leaderboard,
@@ -255,6 +453,54 @@ export default function GamePlayerPage() {
           selectedAnswer={selectedAnswer}
           onSelect={submitAnswer}
           disabled={status !== 'question'}
+        />
+      </div>
+    )
+  }
+
+  if (status === 'poll' && pollState) {
+    return (
+      <div className="min-h-screen bg-editor-bg flex flex-col justify-center p-4">
+        <div className="flex items-center justify-between mb-4 text-sm text-text-muted">
+          <span>👤 {resolvedName}</span>
+          <span>📊 Live poll</span>
+        </div>
+        <PollCard
+          pollState={pollState}
+          selectedOption={selectedPollOption}
+          onVote={submitPollVote}
+        />
+      </div>
+    )
+  }
+
+  if (status === 'word-cloud' && wordCloudState) {
+    return (
+      <div className="min-h-screen bg-editor-bg flex flex-col justify-center p-4">
+        <div className="flex items-center justify-between mb-4 text-sm text-text-muted">
+          <span>👤 {resolvedName}</span>
+          <span>☁ Word cloud</span>
+        </div>
+        <WordCloudCard
+          wordCloudState={wordCloudState}
+          submissionCount={wordCloudSubmissionCount}
+          onSubmit={submitWordCloudText}
+        />
+      </div>
+    )
+  }
+
+  if (status === 'matching' && matchingState) {
+    return (
+      <div className="min-h-screen bg-editor-bg flex flex-col justify-center p-4">
+        <div className="flex items-center justify-between mb-4 text-sm text-text-muted">
+          <span>👤 {resolvedName}</span>
+          <span>🔗 Matching</span>
+        </div>
+        <MatchingCard
+          matchingState={matchingState}
+          matchingResult={matchingResult}
+          onSubmit={submitMatchingPairs}
         />
       </div>
     )

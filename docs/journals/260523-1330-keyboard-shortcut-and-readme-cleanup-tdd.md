@@ -28,7 +28,7 @@ RED state pre-fix: exactly 8 failures, one per missing wire. GREEN state post-fi
 
 README line 36 said "20 element types." `Object.keys(ELEMENT_DEFAULTS).length` in `client/src/data/element-defaults.js` is 19. The prose enumeration inflated the count by listing `divider` (a `line` preset — the Insert button calls `addElement('line', {...preset})`, not a distinct type) and `inline math` (a TipTap text-formatting feature on `text` elements, not a type at all).
 
-Fixed README line 36 to "19 element types," removed `divider` and `inline math` from the prose enumeration, added a footnote explaining why the Insert ribbon shows ~27 actions (shape sub-variants + 7 game variants all resolve to a single type). Same fix in `docs/project-overview-pdr.md`: corrected the line 23 enumeration AND removed the `divider` row from the 20-row element table at lines 46–69.
+Fixed README line 36 to "19 element types," removed `divider` and `inline math` from the prose enumeration, added a footnote explaining why the Insert ribbon shows ~27 actions (shape sub-variants + game variants all resolve to a single type). Same fix in `docs/project-overview-pdr.md`: corrected the line 23 enumeration AND removed the `divider` row from the 20-row element table at lines 46–69.
 
 Guard: `client/src/data/element-defaults.test.js` (10 lines) pins `Object.keys(ELEMENT_DEFAULTS).length === 19`. Future additions to `element-defaults.js` that forget to update the README now fail this test.
 

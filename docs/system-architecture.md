@@ -110,7 +110,7 @@ client/src/components/canvas/
 Constants:
 - `client/src/constants/` holds typed constants and factory functions. Each
   element group gets its own file (`*-element-*-constants.js`).
-- `game-element-types-constants.js` exports `GAME_TYPES` (7 game types), `DEFAULT_GAME_COLORS`,
+- `game-element-types-constants.js` exports `GAME_TYPES` (10 game types), `DEFAULT_GAME_COLORS`,
   `createGameElement()`, `createQuestion()`, and `createTeam()`.
 ```
 

@@ -1,5 +1,9 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../data/slide-constants'
-import { DEFAULT_BACKGROUND_COLOR, DEFAULT_TEXT_COLOR, normalizeCssColor } from './export-pptx-color-utils'
+import {
+  DEFAULT_BACKGROUND_COLOR,
+  DEFAULT_TEXT_COLOR,
+  normalizeCssColor,
+} from './export-pptx-color-utils'
 
 const DEFAULT_PPT_WIDTH = 10
 const DEFAULT_PPT_HEIGHT = 10
@@ -20,6 +24,23 @@ const PPTX_EXPORT_CONTROLS_BY_TYPE = {
   timeline: 'timeline-events-style',
   video: 'video-source-playback',
   'slide-background': 'slide-background-export',
+}
+
+function getPptxExportControl(element) {
+  if (element?.type === 'html' && element.embedKind === 'mermaid') return 'mermaid-authoring'
+  if (element?.type === 'html' && element.embedKind === 'stem-simulation') {
+    return 'stem-simulation-embed-presets'
+  }
+  if (
+    element?.type === 'code' &&
+    Array.isArray(element.walkthroughSteps) &&
+    element.walkthroughSteps.length > 0
+  ) {
+    return 'code-walkthrough-controls'
+  }
+  return (
+    PPTX_EXPORT_CONTROLS_BY_TYPE[String(element?.type || 'unknown')] || 'unknown-export-control'
+  )
 }
 
 function roundCoord(value) {
@@ -128,7 +149,7 @@ export function recordPptxExportWarning(
 
   const report = attachPptxExportReport(warnings)
   const elementType = String(element?.type || 'unknown')
-  const control = PPTX_EXPORT_CONTROLS_BY_TYPE[elementType] || 'unknown-export-control'
+  const control = getPptxExportControl(element)
   const rowId = `${elementType}.${control}.pptx-export`
 
   report.warnings.push({

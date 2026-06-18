@@ -37,7 +37,12 @@ describe('element-renderers safety behavior', () => {
     expect(plain).not.toContain('overflow-wrap:anywhere')
 
     const imported = renderElement(
-      { ...base, type: 'text', content: '<p>Imported</p>', _pptxImportMeta: { textFit: 'wrap', version: 1 } },
+      {
+        ...base,
+        type: 'text',
+        content: '<p>Imported</p>',
+        _pptxImportMeta: { textFit: 'wrap', version: 1 },
+      },
       {},
       {}
     )
@@ -94,6 +99,75 @@ describe('element-renderers safety behavior', () => {
     expect(decodeURIComponent(encoded)).toContain('window.__trusted = true')
   })
 
+  it('[cap:element.html depth:export] renders Mermaid html embeds with vendored runtime', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'html',
+        embedKind: 'mermaid',
+        mermaidSource: 'flowchart TD\n  A-->B',
+      },
+      {},
+      {}
+    )
+    const encoded = html.match(/src="data:text\/html;charset=utf-8,([^"]+)"/)[1]
+    const decoded = decodeURIComponent(encoded)
+
+    expect(decoded).toContain('/vendor/mermaid/mermaid.min.js')
+    expect(decoded).toContain('flowchart TD')
+    expect(decoded).toContain('mermaid.run()')
+  })
+
+  it('[cap:element.html depth:export] preserves STEM simulation iframe attributes', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'html',
+        embedKind: 'stem-simulation',
+        provider: 'desmos',
+        sourceUrl: 'https://www.desmos.com/calculator/calc123',
+        content:
+          '<iframe src="https://www.desmos.com/calculator/calc123" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" allow="fullscreen" referrerpolicy="no-referrer" loading="lazy"></iframe>',
+      },
+      {},
+      {}
+    )
+    const encoded = html.match(/src="data:text\/html;charset=utf-8,([^"]+)"/)[1]
+    const decoded = decodeURIComponent(encoded)
+
+    expect(decoded).toContain('https://www.desmos.com/calculator/calc123')
+    expect(decoded).toContain('sandbox="allow-scripts allow-same-origin allow-forms allow-popups"')
+    expect(decoded).toContain('referrerpolicy="no-referrer"')
+    expect(decoded).toContain('loading="lazy"')
+  })
+
+  it('[cap:element.game depth:export] renders matching public fallback without participant data', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'game',
+        gameType: 'matching',
+        matching: {
+          title: 'Matching',
+          prompt: 'Match networking terms',
+          pairs: [
+            { promptId: 'p-http', prompt: 'HTTP', targetId: 't-protocol', target: 'Protocol' },
+            { promptId: 'p-tls', prompt: 'TLS', targetId: 't-security', target: 'Security' },
+          ],
+        },
+        matchingSubmissions: [{ playerName: 'Alice', pairs: [{ promptId: 'p-http', targetId: 't-protocol' }] }],
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('Match networking terms')
+    expect(html).toContain('HTTP → Protocol')
+    expect(html).toContain('TLS → Security')
+    expect(html).not.toContain('Alice')
+    expect(html).not.toContain('matchingSubmissions')
+  })
+
   it('[cap:element.code depth:export] renders code language class and escaped source', () => {
     const html = renderElement(
       {
@@ -112,9 +186,36 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('font-size:calc(18px * var(--font-zoom, 1))')
   })
 
+  it('[cap:element.code depth:export] preserves walkthrough metadata and highlights default lines', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'code',
+        language: 'javascript',
+        content: 'const a = 1\nconst b = 2\nreturn a + b',
+        walkthroughSteps: [{ label: 'Return', startLine: 2, endLine: 3 }],
+        defaultStepIndex: 0,
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('data-code-walkthrough=')
+    expect(html).toContain('data-code-line="1"')
+    expect(html).toContain('data-code-line="2" data-walkthrough-active="true"')
+    expect(html).toContain('data-code-line="3" data-walkthrough-active="true"')
+    expect(html).toContain('class="language-javascript nohighlight"')
+    expect(html).not.toContain('class="language-javascript" data-trim')
+    expect(html).toContain('return a + b')
+  })
+
   it('adds base URL to data URL html embeds so local assets resolve', () => {
     const html = renderElement(
-      { ...base, type: 'html', content: '<img src="/uploads/local.png"><script src="/vendor/d3/dist/d3.js"></script>' },
+      {
+        ...base,
+        type: 'html',
+        content: '<img src="/uploads/local.png"><script src="/vendor/d3/dist/d3.js"></script>',
+      },
       {},
       {}
     )
@@ -155,6 +256,21 @@ describe('element-renderers safety behavior', () => {
     const printHtml = renderElement(element, {}, { forPrint: true })
     expect(printHtml).toContain('font-size:calc(28px * var(--font-zoom, 1))')
     expect(printHtml).toContain('color:#10b981')
+  })
+
+  it('[cap:element.latex depth:export] normalizes documented display math wrappers', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'latex',
+        content: '\\[ E = mc^2 \\]',
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('data-math-latex="E = mc^2"')
+    expect(html).not.toContain('data-math-latex="\\[')
   })
 
   it('[cap:element.video depth:export] renders video trim and playback rate attributes', () => {
@@ -634,6 +750,63 @@ describe('element-renderers safety behavior', () => {
     expect(html).not.toContain('admin')
   })
 
+  it('[cap:element.game depth:export] exports poll prompt and options without raw vote data', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'game',
+        gameType: 'poll',
+        poll: {
+          title: 'Exit Ticket',
+          prompt: 'Which topic needs review?',
+          options: [
+            { id: 'a', text: 'Vectors', votes: 987 },
+            { id: 'b', text: 'Matrices', votes: 654 },
+          ],
+        },
+        pollVotes: { 'player-secret': 'a' },
+        rawResponses: [{ playerName: 'Alice', optionId: 'a' }],
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('data-game-type="poll"')
+    expect(html).toContain('Exit Ticket')
+    expect(html).toContain('Which topic needs review?')
+    expect(html).toContain('Vectors')
+    expect(html).toContain('Matrices')
+    expect(html).not.toContain('player-secret')
+    expect(html).not.toContain('Alice')
+    expect(html).not.toContain('987')
+    expect(html).not.toContain('654')
+  })
+
+  it('[cap:element.game depth:export] exports word cloud prompt without raw submissions or aggregate text', () => {
+    const html = renderElement(
+      {
+        ...base,
+        type: 'game',
+        gameType: 'word-cloud',
+        'word-cloud': {
+          title: 'Warmup Cloud',
+          prompt: 'One word about entropy',
+        },
+        wordCloudCounts: { 'entropy-secret': 987 },
+        wordCloudRawSubmissions: [{ playerName: 'Alice', text: 'entropy-secret' }],
+      },
+      {},
+      {}
+    )
+
+    expect(html).toContain('data-game-type="word-cloud"')
+    expect(html).toContain('Warmup Cloud')
+    expect(html).toContain('One word about entropy')
+    expect(html).not.toContain('Alice')
+    expect(html).not.toContain('entropy-secret')
+    expect(html).not.toContain('987')
+  })
+
   it('clips source-cropped images in the shared renderer like the editor', () => {
     const html = renderElement(
       {
@@ -664,7 +837,11 @@ describe('element-renderers safety behavior', () => {
         type: 'text',
         content: '<p>Imported</p>',
         fontSize: 18,
-        _pptxImportMeta: { textFit: 'wrap', version: 1, fitFontSizePx: '1);background:url(javascript:alert(1))' },
+        _pptxImportMeta: {
+          textFit: 'wrap',
+          version: 1,
+          fitFontSizePx: '1);background:url(javascript:alert(1))',
+        },
       },
       {},
       {}
@@ -680,12 +857,16 @@ describe('element-renderers safety behavior', () => {
         type: 'table',
         data: [['A']],
         cellStyles: {
-          borders: [[{
-            top: { color: '#ff0000', width: 2, style: 'dashed' },
-            right: { color: '#00ff00', width: 3, style: 'solid' },
-            bottom: { color: '#0000ff', width: 4, style: 'dotted' },
-            left: { color: '#111111', width: 5, style: 'double' },
-          }]],
+          borders: [
+            [
+              {
+                top: { color: '#ff0000', width: 2, style: 'dashed' },
+                right: { color: '#00ff00', width: 3, style: 'solid' },
+                bottom: { color: '#0000ff', width: 4, style: 'dotted' },
+                left: { color: '#111111', width: 5, style: 'double' },
+              },
+            ],
+          ],
         },
       },
       {},
@@ -739,13 +920,17 @@ describe('element-renderers safety behavior', () => {
         borderColor: '#cccccc',
         data: [['A']],
         cellStyles: {
-          borders: [[{
-            top: {
-              color: 'red;display:block',
-              width: '2;position:absolute',
-              style: 'solid;background:url(javascript:alert(1))',
-            },
-          }]],
+          borders: [
+            [
+              {
+                top: {
+                  color: 'red;display:block',
+                  width: '2;position:absolute',
+                  style: 'solid;background:url(javascript:alert(1))',
+                },
+              },
+            ],
+          ],
         },
       },
       {},
@@ -800,10 +985,28 @@ describe('element-renderers safety behavior', () => {
   })
 
   it('does not stack a plain bar chart or fill a plain line chart', () => {
-    const bar = renderElement({ ...base, type: 'chart', chartType: 'bar', chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1], color: '#6366f1' }] } }, {}, { forPrint: true })
+    const bar = renderElement(
+      {
+        ...base,
+        type: 'chart',
+        chartType: 'bar',
+        chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1], color: '#6366f1' }] },
+      },
+      {},
+      { forPrint: true }
+    )
     expect(bar).not.toContain('"stacked":true')
 
-    const line = renderElement({ ...base, type: 'chart', chartType: 'line', chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1], color: '#6366f1' }] } }, {}, { forPrint: true })
+    const line = renderElement(
+      {
+        ...base,
+        type: 'chart',
+        chartType: 'line',
+        chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1], color: '#6366f1' }] },
+      },
+      {},
+      { forPrint: true }
+    )
     expect(line).toContain('"fill":false')
   })
 

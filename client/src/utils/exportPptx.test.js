@@ -7,7 +7,13 @@ vi.mock('pptxgenjs', () => ({
   default: class MockPptx {
     constructor() {
       this.ShapeType = { rect: 'rect', ellipse: 'ellipse', line: 'line' }
-      this.ChartType = { bar: 'bar', line: 'line', pie: 'pie', doughnut: 'doughnut', radar: 'radar' }
+      this.ChartType = {
+        bar: 'bar',
+        line: 'line',
+        pie: 'pie',
+        doughnut: 'doughnut',
+        radar: 'radar',
+      }
     }
 
     defineLayout() {}
@@ -52,7 +58,9 @@ describe('exportPptx', () => {
       set src(value) {
         Promise.resolve().then(() => this.onload && this.onload())
       }
-      get src() { return '' }
+      get src() {
+        return ''
+      }
     }
     // Ensure canvas has getContext
     if (!globalThis.document?.createElement('canvas').getContext) {
@@ -260,21 +268,138 @@ describe('exportPptx', () => {
     )
   })
 
+  it('[cap:element.code depth:export] keeps code readable and warns when walkthrough semantics are static', async () => {
+    const warnings = await exportToPptx({
+      title: 'Code walkthrough export',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'code-1',
+              type: 'code',
+              x: 10,
+              y: 20,
+              width: 320,
+              height: 180,
+              content: 'const a = 1\nreturn a',
+              language: 'javascript',
+              walkthroughSteps: [{ label: 'Return', startLine: 2, endLine: 2 }],
+              defaultStepIndex: 0,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(slides[0].addText).toHaveBeenCalledWith(
+      'const a = 1\nreturn a',
+      expect.objectContaining({ fontFace: 'Courier New' })
+    )
+    expect(warnings).toContain('Slide 1: code walkthrough steps exported as static readable code')
+    expect(warnings.exportReport.warnings[0]).toEqual(
+      expect.objectContaining({
+        elementId: 'code-1',
+        elementType: 'code',
+        control: 'code-walkthrough-controls',
+        matrixRowId: 'code.code-walkthrough-controls.pptx-export',
+        fallback: 'static-code',
+      })
+    )
+  })
+
+  it('[cap:element.html depth:export] reports Mermaid PPTX fallback with the Mermaid matrix row', async () => {
+    globalThis.window = {}
+    globalThis.document = {}
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ rasters: { 'mermaid-1': 'data:image/png;base64,mermaid' } }),
+    })
+    const warnings = await exportToPptx({
+      title: 'Mermaid fallback export',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'mermaid-1',
+              type: 'html',
+              embedKind: 'mermaid',
+              mermaidSource: 'flowchart TD\nA-->B',
+              x: 10,
+              y: 20,
+              width: 320,
+              height: 180,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(warnings.exportReport.warnings[0]).toEqual(
+      expect.objectContaining({
+        elementId: 'mermaid-1',
+        elementType: 'html',
+        control: 'mermaid-authoring',
+        matrixRowId: 'html.mermaid-authoring.pptx-export',
+        fallback: 'server-raster',
+      })
+    )
+  })
+
+  it('[cap:element.html depth:export] reports STEM simulation PPTX fallback matrix row', async () => {
+    globalThis.window = {}
+    globalThis.document = {}
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ rasters: { 'stem-1': 'data:image/png;base64,stem' } }),
+    })
+    const warnings = await exportToPptx({
+      title: 'STEM fallback export',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'stem-1',
+              type: 'html',
+              embedKind: 'stem-simulation',
+              provider: 'desmos',
+              sourceUrl: 'https://www.desmos.com/calculator/calc123',
+              content: '<iframe src="https://www.desmos.com/calculator/calc123"></iframe>',
+              x: 10,
+              y: 20,
+              width: 320,
+              height: 180,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(warnings.exportReport.warnings[0]).toEqual(
+      expect.objectContaining({
+        elementId: 'stem-1',
+        elementType: 'html',
+        control: 'stem-simulation-embed-presets',
+        matrixRowId: 'html.stem-simulation-embed-presets.pptx-export',
+        fallback: 'server-raster',
+      })
+    )
+  })
+
   it('warns when gradient backgrounds cannot be rasterized', { timeout: 60000 }, async () => {
     // Mock canvas operations for gradient rasterization
-    const origCreateElement = globalThis.document?.createElement;
-    globalThis.document = globalThis.document || {};
+    const origCreateElement = globalThis.document?.createElement
+    globalThis.document = globalThis.document || {}
     globalThis.document.createElement = (tag) => {
       if (tag === 'canvas') {
-        return { width: 0, height: 0, getContext: () => null };
+        return { width: 0, height: 0, getContext: () => null }
       }
-      return origCreateElement ? origCreateElement(tag) : {};
-    };
+      return origCreateElement ? origCreateElement(tag) : {}
+    }
     // Ensure window and fetch are available
-    globalThis.window = globalThis.window || {};
-    globalThis.fetch = globalThis.fetch || (() => Promise.resolve({ ok: false }));
-    globalThis.requestAnimationFrame = (fn) => setTimeout(fn, 0);
-    globalThis.cancelAnimationFrame = (id) => clearTimeout(id);
+    globalThis.window = globalThis.window || {}
+    globalThis.fetch = globalThis.fetch || (() => Promise.resolve({ ok: false }))
+    globalThis.requestAnimationFrame = (fn) => setTimeout(fn, 0)
+    globalThis.cancelAnimationFrame = (id) => clearTimeout(id)
     const warnings = await exportToPptx({
       title: 'Gradient fallback',
       slides: [

@@ -213,7 +213,7 @@ composition.
 - `element-factory.js` creates typed elements and replaces inline callbacks.
 - Canvas coordinates stay in logical px at 960 x 540; scaling is CSS-only.
 - `MainLayout` owns the shared shell, while live routes stay outside it.
-- Game elements are first-class `type: 'game'` elements with 7 game types and a dedicated presenter/player flow; they are not collaborative slide-editing primitives.
+- Game elements are first-class `type: 'game'` elements with 10 game types and a dedicated presenter/player flow; they are not collaborative slide-editing primitives.
 - **Ribbon UI**: `EditorPage` composes `RibbonHeaderBar` and `RibbonPanel`. Active tab state lives in `ui-store.activeTab` and persists to localStorage. The old `Toolbar.jsx`, `InsertMenu.jsx`, and `EditorMenuBar.jsx` components have been removed in favor of the tab-based ribbon.
 - **Ribbon layout primitive**: tab content should render through `RibbonTabContentRow` when it participates in the classic ribbon command-row contract. Keep horizontal scrolling on that row only; do not add nested scroll owners inside individual groups.
 - **RibbonBigButton**: primary tab actions use `RibbonBigButton` (icon ~22px over an 11px label, ~52px tall) for PowerPoint-style visual hierarchy. Applied to Home→Paste and Insert→Text Box + Picture. Accepts explicit `aria-label` so the visible label can differ from the accessible name used by tests.

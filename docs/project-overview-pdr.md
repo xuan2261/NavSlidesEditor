@@ -65,7 +65,7 @@ Existing tools (Google Slides, PowerPoint) require cloud accounts or lack develo
 | line     | Straight line with adjustable stroke and arrow heads   |
 | svg      | Inline SVG markup                                      |
 | timeline | Timeline element with events                           |
-| game     | Interactive game elements (7 game types)               |
+| game     | Interactive game elements (10 game types)              |
 
 ### Slides
 

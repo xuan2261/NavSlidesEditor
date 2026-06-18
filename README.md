@@ -4,7 +4,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.14.4** — element-control audit matrix governance, export-fidelity warning classification, PPTX strict verification alignment, and release-confidence CI validation.
+Current release: **v1.15.0** — teaching interactivity elements, Mermaid/STEM authoring, new game subtypes, LaTeX UX, technical symbols, and release-gate verification.
 
 ## Features
 
@@ -35,7 +35,7 @@ Current release: **v1.14.4** — element-control audit matrix governance, export
 
 ### Element Types
 
-19 element types: text (TipTap rich text), image (upload/URL, crop, filters, round corners), shape (rectangle, circle, triangle, arrow, star), code (10 themes, 25+ languages), LaTeX / TikZ (KaTeX + TikZJax), HTML embeds, Markdown, Chart.js charts (bar, line, pie, doughnut, radar, polar area), video / audio (with start/end trim, playback speed), table (drag-resize, inline editing), QR code, icon (60+ Lucide icons), callout, drawing, line, SVG, timeline, and **game** (7 interactive game types). The Insert ribbon shows ~27 actions because shapes (rectangle, circle, triangle, arrow, star) and games (7 variants) expose sub-variants from a single element type. The 19 canonical types are listed in `client/src/data/element-defaults.js`.
+19 element types: text (TipTap rich text), image (upload/URL, crop, filters, round corners), shape (rectangle, circle, triangle, arrow, star), code (10 themes, 25+ languages), LaTeX / TikZ (KaTeX + TikZJax), HTML embeds, Markdown, Chart.js charts (bar, line, pie, doughnut, radar, polar area), video / audio (with start/end trim, playback speed), table (drag-resize, inline editing), QR code, icon (60+ Lucide icons), callout, drawing, line, SVG, timeline, and **game** (10 interactive game types). The Insert ribbon shows 30+ actions because shapes, technical symbol packs, and games (10 variants) expose sub-variants from existing element types. The 19 canonical types are listed in `client/src/data/element-defaults.js`.
 
 ### Slides
 
@@ -47,7 +47,7 @@ Broadcast to viewers via Socket.IO with a server-issued presenter token. Include
 
 ### Game Mode
 
-7 interactive game element types with a dedicated player join page (`/player/:slideId/:elementId`), game-specific socket handler, leaderboard, scoring, and presenter shortcuts (HUD, timer, reveal, leaderboard, pause, team select).
+10 interactive game element types with a dedicated player join page (`/player/:slideId/:elementId`), game-specific socket handler, leaderboard, scoring, and presenter shortcuts (HUD, timer, reveal, leaderboard, pause, team select).
 
 ### AI Tools
 

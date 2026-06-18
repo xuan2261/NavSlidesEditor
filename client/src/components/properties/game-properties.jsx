@@ -137,6 +137,9 @@ function ContentTab({ gt, _element, gameConfig, onUpdate, onItemsChange, onPicke
   const hasTeams = gt === 'jeopardy'
   const hasQuestions = ['hot-potato', 'jeopardy', 'relay-race', 'trivia-champ'].includes(gt)
   const hasNameList = gt === 'name-picker'
+  const isPoll = gt === 'poll'
+  const isWordCloud = gt === 'word-cloud'
+  const isMatching = gt === 'matching'
 
   return (
     <div className="space-y-2.5">
@@ -235,6 +238,174 @@ function ContentTab({ gt, _element, gameConfig, onUpdate, onItemsChange, onPicke
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {isPoll && (
+        <div className="space-y-2">
+          <div>
+            <div className="text-[11px] text-text-muted mb-0.5">Prompt</div>
+            <textarea
+              className="w-full min-h-[56px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] resize-y box-border"
+              value={gameConfig.prompt || ''}
+              onChange={(e) => onUpdate({ [gt]: { ...gameConfig, prompt: e.target.value } })}
+              placeholder="Ask a quick class poll..."
+            />
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-0.5">
+              <div className="text-[11px] text-text-muted">Options</div>
+              <button
+                onClick={() => {
+                  const options = Array.isArray(gameConfig.options) ? gameConfig.options : []
+                  if (options.length >= 6) return
+                  onUpdate({
+                    [gt]: {
+                      ...gameConfig,
+                      options: [
+                        ...options,
+                        { id: `option-${Date.now()}`, text: `Option ${options.length + 1}` },
+                      ],
+                    },
+                  })
+                }}
+                disabled={(gameConfig.options || []).length >= 6}
+                className="text-[10px] text-accent hover:text-accent/80 disabled:text-text-muted px-1.5 py-0.5 border border-accent/40 rounded disabled:border-border"
+              >
+                + Add
+              </button>
+            </div>
+            <div className="space-y-1">
+              {(gameConfig.options || []).map((option, i) => (
+                <div key={option.id || i} className="flex gap-1">
+                  <input
+                    className="prop-input flex-1 px-1.5 py-1 text-[11px]"
+                    value={option.text || ''}
+                    onChange={(e) => {
+                      const options = [...(gameConfig.options || [])]
+                      options[i] = { ...option, text: e.target.value }
+                      onUpdate({ [gt]: { ...gameConfig, options } })
+                    }}
+                    placeholder={`Option ${i + 1}`}
+                  />
+                  <button
+                    onClick={() => {
+                      const options = (gameConfig.options || []).filter((_, idx) => idx !== i)
+                      if (options.length < 2) return
+                      onUpdate({ [gt]: { ...gameConfig, options } })
+                    }}
+                    disabled={(gameConfig.options || []).length <= 2}
+                    className="text-[10px] text-text-muted hover:text-red-400 disabled:opacity-40 px-1"
+                  >
+                    X
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="text-[9px] text-text-muted mt-1">Use 2–6 options. Votes are live aggregates only.</div>
+          </div>
+        </div>
+      )}
+
+      {isWordCloud && (
+        <div className="space-y-2">
+          <div>
+            <div className="text-[11px] text-text-muted mb-0.5">Prompt</div>
+            <textarea
+              className="w-full min-h-[56px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] resize-y box-border"
+              value={gameConfig.prompt || ''}
+              onChange={(e) => onUpdate({ [gt]: { ...gameConfig, prompt: e.target.value } })}
+              placeholder="Ask for words or short phrases..."
+            />
+          </div>
+          <div className="rounded border border-border bg-hover px-2 py-1.5 text-[10px] text-text-muted">
+            Submissions are limited to {gameConfig.maxPhraseLength || 40} characters and{' '}
+            {gameConfig.maxSubmissionsPerPlayer || 5} entries per player.
+          </div>
+        </div>
+      )}
+
+      {isMatching && (
+        <div className="space-y-2">
+          <div>
+            <div className="text-[11px] text-text-muted mb-0.5">Prompt</div>
+            <textarea
+              className="w-full min-h-[56px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] resize-y box-border"
+              value={gameConfig.prompt || ''}
+              onChange={(e) => onUpdate({ [gt]: { ...gameConfig, prompt: e.target.value } })}
+              placeholder="Ask learners to match items..."
+            />
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-0.5">
+              <div className="text-[11px] text-text-muted">Pairs</div>
+              <button
+                onClick={() => {
+                  const pairs = Array.isArray(gameConfig.pairs) ? gameConfig.pairs : []
+                  if (pairs.length >= 8) return
+                  const n = pairs.length + 1
+                  onUpdate({
+                    [gt]: {
+                      ...gameConfig,
+                      pairs: [
+                        ...pairs,
+                        {
+                          promptId: `prompt-${Date.now()}`,
+                          prompt: `Term ${n}`,
+                          targetId: `target-${Date.now()}`,
+                          target: `Definition ${n}`,
+                        },
+                      ],
+                    },
+                  })
+                }}
+                disabled={(gameConfig.pairs || []).length >= 8}
+                className="text-[10px] text-accent hover:text-accent/80 disabled:text-text-muted px-1.5 py-0.5 border border-accent/40 rounded disabled:border-border"
+              >
+                + Add
+              </button>
+            </div>
+            <div className="space-y-1">
+              {(gameConfig.pairs || []).map((pair, i) => (
+                <div key={pair.promptId || i} className="grid grid-cols-[1fr_1fr_auto] gap-1">
+                  <input
+                    aria-label={`Pair ${i + 1} prompt`}
+                    className="prop-input px-1.5 py-1 text-[11px]"
+                    value={pair.prompt || ''}
+                    onChange={(e) => {
+                      const pairs = [...(gameConfig.pairs || [])]
+                      pairs[i] = { ...pair, prompt: e.target.value }
+                      onUpdate({ [gt]: { ...gameConfig, pairs } })
+                    }}
+                    placeholder={`Term ${i + 1}`}
+                  />
+                  <input
+                    aria-label={`Pair ${i + 1} target`}
+                    className="prop-input px-1.5 py-1 text-[11px]"
+                    value={pair.target || ''}
+                    onChange={(e) => {
+                      const pairs = [...(gameConfig.pairs || [])]
+                      pairs[i] = { ...pair, target: e.target.value }
+                      onUpdate({ [gt]: { ...gameConfig, pairs } })
+                    }}
+                    placeholder={`Definition ${i + 1}`}
+                  />
+                  <button
+                    onClick={() => {
+                      const pairs = (gameConfig.pairs || []).filter((_, idx) => idx !== i)
+                      if (pairs.length < 2) return
+                      onUpdate({ [gt]: { ...gameConfig, pairs } })
+                    }}
+                    disabled={(gameConfig.pairs || []).length <= 2}
+                    className="text-[10px] text-text-muted hover:text-red-400 disabled:opacity-40 px-1"
+                  >
+                    X
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="text-[9px] text-text-muted mt-1">Use 2–8 pairs. Players submit IDs only.</div>
           </div>
         </div>
       )}
@@ -352,6 +523,34 @@ function getGameTypeDefaults(type) {
     'relay-race': { questionsPerRound: 4, shuffleTeams: true, passOnWrong: true, timerDuration: 30 },
     'trivia-champ': { rounds: [], lightningRound: { enabled: false, timePerQ: 10 }, jackpotRound: { enabled: false, multiplier: 2 }, timerDuration: 30 },
     'scattergories': { timePerRound: 60, letterMode: 'random', categories: [], scoring: 'unique', timerDuration: 30 },
+    'poll': {
+      title: 'Live Poll',
+      prompt: 'What do you think?',
+      options: [
+        { id: 'option-a', text: 'Option A' },
+        { id: 'option-b', text: 'Option B' },
+      ],
+      showResults: true,
+      allowVoteChange: true,
+      timerDuration: 30,
+    },
+    'word-cloud': {
+      title: 'Word Cloud',
+      prompt: 'Share one word or short phrase',
+      maxPhraseLength: 40,
+      maxSubmissionsPerPlayer: 5,
+      displayLimit: 50,
+      timerDuration: 30,
+    },
+    'matching': {
+      title: 'Matching',
+      prompt: 'Match each item to its answer',
+      pairs: [
+        { promptId: 'prompt-1', prompt: 'Term 1', targetId: 'target-1', target: 'Definition 1' },
+        { promptId: 'prompt-2', prompt: 'Term 2', targetId: 'target-2', target: 'Definition 2' },
+      ],
+      timerDuration: 60,
+    },
   }
   return d[type] || d['name-picker']
 }

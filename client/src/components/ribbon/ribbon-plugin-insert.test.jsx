@@ -36,6 +36,34 @@ describe('InsertTabContent plugin section', () => {
     expect(screen.queryByText('Animated Counter')).toBeNull()
   })
 
+  it('[cap:element.html depth:behavior] exposes Mermaid insert as an html embed preset', () => {
+    const onAddMermaid = vi.fn()
+    render(<InsertTabContent pluginTypes={[]} onAddMermaid={onAddMermaid} />)
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Add Mermaid diagram' }))
+
+    expect(onAddMermaid).toHaveBeenCalledTimes(1)
+  })
+
+  it('[cap:element.html depth:behavior] opens STEM preset modal and inserts validated embed', () => {
+    const onAddStemSimulation = vi.fn()
+    render(<InsertTabContent pluginTypes={[]} onAddStemSimulation={onAddStemSimulation} />)
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Add STEM simulation' }))
+    fireEvent.change(screen.getByLabelText(/Provider/i), { target: { value: 'geogebra' } })
+    fireEvent.change(screen.getByLabelText(/URL or ID/i), { target: { value: 'abc123' } })
+    fireEvent.click(screen.getByText('Insert'))
+
+    expect(onAddStemSimulation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'html',
+        embedKind: 'stem-simulation',
+        provider: 'geogebra',
+        sourceUrl: 'https://www.geogebra.org/material/iframe/id/abc123',
+      })
+    )
+  })
+
   it('[cap:element.game depth:behavior] exposes every game subtype and maps each to onAddGame', () => {
     const onAddGame = vi.fn()
     render(<InsertTabContent pluginTypes={[]} onAddGame={onAddGame} />)
@@ -53,6 +81,9 @@ describe('InsertTabContent plugin section', () => {
           'relay-race': 'Relay Race',
           'trivia-champ': 'Trivia',
           scattergories: 'Scattergories',
+          poll: 'Live Poll',
+          'word-cloud': 'Word Cloud',
+          matching: 'Matching',
         }[gameType]
       )
       fireEvent.mouseDown(option)

@@ -4,7 +4,7 @@ Biến bất kỳ bộ slide nào thành một hoạt động tương tác với
 
 ## Các loại game
 
-NavSlides đi kèm **7 loại phần tử game tương tác**:
+NavSlides đi kèm **10 loại phần tử game tương tác**:
 
 | Game | Chức năng |
 |---|---|
@@ -15,6 +15,9 @@ NavSlides đi kèm **7 loại phần tử game tương tác**:
 | Tiếp sức (relay race) | Đua theo đội qua một bộ câu hỏi, chia theo vòng |
 | Đố vui (trivia champ) | Đố vui nhiều vòng với các vòng chớp nhoáng (lightning) và jackpot tùy chọn |
 | Scattergories | Động não theo chủ đề tính giờ, chấm điểm dựa trên đáp án độc nhất |
+| Live poll | Thăm dò ý kiến do người trình bày điều khiển với kết quả tổng hợp công khai |
+| Word cloud | Tổng hợp phản hồi của khán giả thành đám mây từ khóa |
+| Matching | Hoạt động kéo-thả ghép cặp |
 
 Một game chỉ là một **loại phần tử** khác mà bạn chèn lên slide, nên một bài trình chiếu có sẵn có thể được nâng lên thành game mà không cần biên soạn một tệp riêng.
 

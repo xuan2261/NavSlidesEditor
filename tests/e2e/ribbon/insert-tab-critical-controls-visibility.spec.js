@@ -107,6 +107,9 @@ test.describe('Insert Tab Critical Controls Visibility', () => {
       'Relay Race',
       'Trivia',
       'Scattergories',
+      'Live Poll',
+      'Word Cloud',
+      'Matching',
     ]) {
       await expect(page.getByRole('button', { name: game, exact: true })).toBeVisible()
     }

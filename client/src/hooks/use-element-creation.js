@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { createElement } from '../utils/element-factory'
 import { createGameElement } from '../constants/game-element-types-constants'
 import { createPluginElement, loadPlugins } from '../plugins'
+import { buildStemSimulationEmbed } from '../utils/stem-embed-presets'
+import { sanitizeSvgContent } from '../utils/content-safety'
+import { findTechnicalSymbol } from '../data/technical-symbol-packs'
 
 const DEFAULT_HTML = `<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <style>* { box-sizing: border-box; margin: 0; } body { background: transparent; overflow: hidden; }</style>
@@ -14,6 +17,17 @@ svg.selectAll('circle').data(data).join('circle')
   .attr('cx', d => d.x).attr('cy', d => d.y).attr('r', d => d.r)
   .attr('fill', (d,i) => d3.schemeTableau10[i%10]).attr('opacity', 0.8);
 </script>`
+
+export const MERMAID_SOURCE_LIMIT = 12000
+
+export const DEFAULT_MERMAID_SOURCE = `flowchart TD
+  A[Plan] --> B[Teach]
+  B --> C[Check understanding]`
+
+export function buildMermaidEmbedContent(source) {
+  const safeSource = String(source || '').slice(0, MERMAID_SOURCE_LIMIT)
+  return `<!doctype html><html><head><meta charset="utf-8"><script src="/vendor/mermaid/mermaid.min.js"></script><style>*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;height:100%;overflow:auto;background:transparent;color:#f8fafc;font-family:system-ui,sans-serif}.mermaid{width:100%;min-height:100%;display:flex;align-items:center;justify-content:center;padding:12px}.mermaid svg{max-width:100%;height:auto}.mermaid-error{margin:12px;padding:10px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.12);color:#fde68a;font:13px/1.4 ui-monospace,monospace;white-space:pre-wrap}</style></head><body><pre class="mermaid">${safeSource.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre><script>function showMermaidError(error){document.body.innerHTML='<div class="mermaid-error">Mermaid render error: '+String(error&&error.message||error).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c]})+'</div>'}Promise.resolve().then(function(){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:'dark'});return mermaid.run()}).catch(showMermaidError)</script></body></html>`
+}
 
 /**
  * Element-creation handlers extracted from EditorPage. Orchestrates the
@@ -160,10 +174,47 @@ export function useElementCreation({
     setHtmlEditorState({ elementId: newEl.id, content: DEFAULT_HTML })
   }, [addElement, setHtmlEditorState])
 
+  const addMermaidElement = useCallback(() => {
+    const content = buildMermaidEmbedContent(DEFAULT_MERMAID_SOURCE)
+    const newEl = addElement('html', {
+      embedKind: 'mermaid',
+      mermaidSource: DEFAULT_MERMAID_SOURCE,
+      content,
+      width: 420,
+      height: 280,
+    })
+    setHtmlEditorState({
+      elementId: newEl.id,
+      embedKind: 'mermaid',
+      content,
+      mermaidSource: DEFAULT_MERMAID_SOURCE,
+    })
+  }, [addElement, setHtmlEditorState])
+
+  const addStemSimulationElement = useCallback(
+    (providerOrEmbed, source) => {
+      const embed =
+        typeof providerOrEmbed === 'object'
+          ? providerOrEmbed
+          : buildStemSimulationEmbed(providerOrEmbed, source)
+      return addElement('html', embed)
+    },
+    [addElement]
+  )
+
   const openHtmlEditor = useCallback(
     (elementId) => {
       const element = getActiveSlide()?.elements?.find((el) => el.id === elementId)
       if (!element || element.type !== 'html') return
+      if (element.embedKind === 'mermaid') {
+        setHtmlEditorState({
+          elementId,
+          embedKind: 'mermaid',
+          content: element.content || buildMermaidEmbedContent(element.mermaidSource),
+          mermaidSource: element.mermaidSource || '',
+        })
+        return
+      }
       setHtmlEditorState({ elementId, content: element.content || '' })
     },
     [getActiveSlide, setHtmlEditorState]
@@ -171,6 +222,19 @@ export function useElementCreation({
 
   const commitHtmlEdit = useCallback(() => {
     if (!htmlEditorState) return
+    if (htmlEditorState.embedKind === 'mermaid') {
+      const mermaidSource = String(htmlEditorState.mermaidSource || '').slice(
+        0,
+        MERMAID_SOURCE_LIMIT
+      )
+      updateElement(htmlEditorState.elementId, {
+        embedKind: 'mermaid',
+        mermaidSource,
+        content: buildMermaidEmbedContent(mermaidSource),
+      })
+      setHtmlEditorState(null)
+      return
+    }
     updateElement(htmlEditorState.elementId, { content: htmlEditorState.content })
     setHtmlEditorState(null)
   }, [htmlEditorState, updateElement, setHtmlEditorState])
@@ -243,7 +307,8 @@ export function useElementCreation({
   const addCalloutElement = useCallback(
     (number) => {
       const num =
-        number || (getActiveSlide()?.elements || []).filter((el) => el.type === 'callout').length + 1
+        number ||
+        (getActiveSlide()?.elements || []).filter((el) => el.type === 'callout').length + 1
       return addElement('callout', { calloutNumber: num })
     },
     [getActiveSlide, addElement]
@@ -283,9 +348,28 @@ export function useElementCreation({
   )
 
   const addDrawingElement = useCallback(() => addElement('drawing'), [addElement])
-  const addLineElement = useCallback((overrides = {}) => addElement('line', overrides), [addElement])
+  const addLineElement = useCallback(
+    (overrides = {}) => addElement('line', overrides),
+    [addElement]
+  )
   const addSvgElement = useCallback(
     (svgContent) => addElement('svg', svgContent ? { content: svgContent } : {}),
+    [addElement]
+  )
+  const addTechnicalSymbolElement = useCallback(
+    (symbolId) => {
+      const symbol = findTechnicalSymbol(symbolId)
+      if (!symbol) return null
+      const overrides = { ...(symbol.overrides || {}) }
+      if (symbol.elementType === 'svg' && overrides.content) {
+        overrides.content = sanitizeSvgContent(overrides.content)
+      }
+      return addElement(symbol.elementType, {
+        width: symbol.elementType === 'svg' ? 180 : 120,
+        height: symbol.elementType === 'svg' ? 120 : 120,
+        ...overrides,
+      })
+    },
     [addElement]
   )
 
@@ -302,6 +386,8 @@ export function useElementCreation({
     addGameElement,
     addPluginElement,
     addHtmlElement,
+    addMermaidElement,
+    addStemSimulationElement,
     openHtmlEditor,
     commitHtmlEdit,
     addCodeElement,
@@ -321,5 +407,6 @@ export function useElementCreation({
     addDrawingElement,
     addLineElement,
     addSvgElement,
+    addTechnicalSymbolElement,
   }
 }

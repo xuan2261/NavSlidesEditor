@@ -18,7 +18,7 @@ Một ngăn xếp hoàn tác/làm lại theo dõi mọi thay đổi (`Ctrl+Z` / 
 
 ## Các loại phần tử
 
-NavSlides Editor có **19 loại phần tử chuẩn**. Dải lệnh Insert hiển thị khoảng 27 hành động vì hình khối (rectangle, circle, triangle, arrow, star) và game (7 biến thể) bộc lộ các biến thể con từ một loại phần tử duy nhất.
+NavSlides Editor có **19 loại phần tử chuẩn**. Dải lệnh Insert hiển thị hơn 30 hành động vì hình khối (rectangle, circle, triangle, arrow, star), gói biểu tượng kỹ thuật và game (10 biến thể) bộc lộ các biến thể con từ các loại phần tử hiện có.
 
 | Phần tử | Mô tả |
 |---|---|
@@ -40,7 +40,7 @@ NavSlides Editor có **19 loại phần tử chuẩn**. Dải lệnh Insert hi�
 | Line | Đường nối thẳng hoặc cong với đầu mũi tên |
 | SVG | SVG nội dòng với ghi đè fill/stroke |
 | Timeline | Dòng thời gian theo ngày với các sự kiện |
-| Game | 7 loại game tương tác (bốc thăm tên, khoai tây nóng (hot potato), Jeopardy, bốn góc, tiếp sức, đố vui, Scattergories) |
+| Game | 10 loại game tương tác (bốc thăm tên, khoai tây nóng (hot potato), Jeopardy, bốn góc, tiếp sức, đố vui, Scattergories, live poll, word cloud, matching) |
 
 Danh sách chuẩn nằm tại `client/src/data/element-defaults.js`.
 
@@ -66,7 +66,7 @@ Danh sách chuẩn nằm tại `client/src/data/element-defaults.js`.
 
 ## Chế độ Game
 
-Chạy **7 loại phần tử game tương tác** — bốc thăm tên, khoai tây nóng (hot potato), Jeopardy, bốn góc, tiếp sức, đố vui, Scattergories — với trang tham gia dành riêng cho người chơi, bảng xếp hạng, tính điểm và phím tắt cho người trình bày. Xem [Chế độ Game](/vi/features/game-mode).
+Chạy **10 loại phần tử game tương tác** — bốc thăm tên, khoai tây nóng (hot potato), Jeopardy, bốn góc, tiếp sức, đố vui, Scattergories, live poll, word cloud và matching — với trang tham gia dành riêng cho người chơi, bảng xếp hạng, tính điểm và phím tắt cho người trình bày. Xem [Chế độ Game](/vi/features/game-mode).
 
 ## Hệ thống chân trang
 

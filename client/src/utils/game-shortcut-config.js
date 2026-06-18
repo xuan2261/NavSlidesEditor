@@ -73,6 +73,36 @@ export const GAME_SHORTCUT_CONFIG = {
     timerAdd: { label: '+30s', key: '+', action: 'addTime', delta: 30 },
     timerSub: { label: '-30s', key: '-', action: 'subTime', delta: -30 },
   },
+  'poll': {
+    timer: { label: 'Start Poll', key: 'Space', action: 'startPoll' },
+    reveal: { label: 'Refresh Results', key: 'R', action: 'refreshResults' },
+    leaderboard: null,
+    nextPhase: null,
+    pause: null,
+    teamSelect: null,
+    timerAdd: null,
+    timerSub: null,
+  },
+  'word-cloud': {
+    timer: { label: 'Start Cloud', key: 'Space', action: 'startWordCloud' },
+    reveal: { label: 'Refresh Cloud', key: 'R', action: 'refreshWordCloud' },
+    leaderboard: null,
+    nextPhase: null,
+    pause: null,
+    teamSelect: null,
+    timerAdd: null,
+    timerSub: null,
+  },
+  'matching': {
+    timer: { label: 'Start Matching', key: 'Space', action: 'startMatching' },
+    reveal: { label: 'Reveal Matches', key: 'R', action: 'revealMatching' },
+    leaderboard: null,
+    nextPhase: null,
+    pause: null,
+    teamSelect: null,
+    timerAdd: null,
+    timerSub: null,
+  },
 }
 
 export const GAME_TYPES = Object.keys(GAME_SHORTCUT_CONFIG)

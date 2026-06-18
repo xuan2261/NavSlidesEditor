@@ -204,3 +204,30 @@ describe('Shape gallery preview icons', () => {
     expect(unique.size, `expected multiple distinct primitives, got ${[...unique]}`).toBeGreaterThan(2)
   })
 })
+
+describe('Technical symbol packs gallery', () => {
+  it('[cap:element.svg depth:behavior] shows UML, network, circuit, and cloud packs', () => {
+    render(<InsertTabContent pluginTypes={[]} />)
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Technical symbols' }))
+    const popup = document.body.querySelector('[data-ribbon-popup="technical-symbol-gallery"]')
+    expect(popup).toBeTruthy()
+
+    for (const label of ['UML', 'Network', 'Circuit', 'Cloud']) {
+      expect(Array.from(popup.querySelectorAll('div')).some((node) => node.textContent === label)).toBe(true)
+    }
+  })
+
+  it('[cap:element.svg depth:behavior] inserts selected technical symbols through existing element types', () => {
+    const onAddTechnicalSymbol = vi.fn()
+    render(<InsertTabContent pluginTypes={[]} onAddTechnicalSymbol={onAddTechnicalSymbol} />)
+
+    const launcher = screen.getByRole('button', { name: 'Technical symbols' })
+    fireEvent.mouseDown(launcher)
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Class' }))
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Class' }))
+
+    expect(onAddTechnicalSymbol).toHaveBeenCalledWith('uml-class')
+    expect(document.activeElement).toBe(launcher)
+  })
+})

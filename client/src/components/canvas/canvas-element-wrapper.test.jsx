@@ -241,6 +241,47 @@ describe('CanvasElement image crop diagnostics', () => {
   })
 })
 
+describe('CanvasElement code walkthrough', () => {
+  it('[cap:element.code depth:behavior] highlights default walkthrough line range', () => {
+    renderCanvasElement({
+      id: 'code-1',
+      type: 'code',
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 240,
+      content: 'const a = 1\nconst b = 2\nreturn a + b',
+      language: 'javascript',
+      walkthroughSteps: [{ label: 'Return', startLine: 2, endLine: 3 }],
+      defaultStepIndex: 0,
+    })
+
+    const wrapper = screen.getByTestId('slide-element-code-1')
+    expect(wrapper.querySelector('[data-code-line="1"]').getAttribute('data-walkthrough-active')).toBeNull()
+    expect(wrapper.querySelector('[data-code-line="2"]').getAttribute('data-walkthrough-active')).toBe('true')
+    expect(wrapper.querySelector('[data-code-line="3"]').getAttribute('data-walkthrough-active')).toBe('true')
+  })
+
+  it('[cap:element.code depth:behavior] renders plaintext for unsupported legacy languages', () => {
+    renderCanvasElement({
+      id: 'code-legacy',
+      type: 'code',
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 240,
+      content: 'legacy <tag>',
+      language: 'made-up-language',
+      walkthroughSteps: [{ label: 'Legacy', startLine: 1, endLine: 1 }],
+      defaultStepIndex: 0,
+    })
+
+    const wrapper = screen.getByTestId('slide-element-code-legacy')
+    expect(wrapper.querySelector('[data-code-line="1"]').textContent).toBe('legacy <tag>')
+    expect(wrapper.querySelector('[data-code-line="1"]').getAttribute('data-walkthrough-active')).toBe('true')
+  })
+})
+
 describe('CanvasElement html embed sandbox', () => {
   const htmlElement = {
     id: 'html-1',
@@ -249,7 +290,8 @@ describe('CanvasElement html embed sandbox', () => {
     y: 0,
     width: 500,
     height: 380,
-    content: '<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script><div id="anim"></div>',
+    content:
+      '<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script><div id="anim"></div>',
   }
 
   it('renders html embed iframe with allow-same-origin so CDN scripts can load', () => {
@@ -269,5 +311,20 @@ describe('CanvasElement html embed sandbox', () => {
     const iframe = wrapper.querySelector('iframe')
 
     expect(iframe.getAttribute('srcdoc')).toContain('animejs')
+  })
+
+  it('renders Mermaid html embeds from mermaidSource with the vendored runtime', () => {
+    renderCanvasElement({
+      ...htmlElement,
+      embedKind: 'mermaid',
+      mermaidSource: 'flowchart TD\n  A-->B',
+      content: '',
+    })
+    const wrapper = screen.getByTestId('slide-element-html-1')
+    const iframe = wrapper.querySelector('iframe')
+
+    expect(iframe.getAttribute('title')).toBe('Mermaid diagram preview')
+    expect(iframe.getAttribute('srcdoc')).toContain('/vendor/mermaid/mermaid.min.js')
+    expect(iframe.getAttribute('srcdoc')).toContain('flowchart TD')
   })
 })

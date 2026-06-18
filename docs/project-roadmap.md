@@ -33,7 +33,7 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | Dark/light editor theme                            | Done                                                                                                      |
 | AI copywriting + translation                       | Done                                                                                                      |
 | Media library (Unsplash, Giphy)                    | Done                                                                                                      |
-| Gamification Game Controls (7 game types)          | Done                                                                                                      |
+| Gamification Game Controls (10 game types)         | Done                                                                                                      |
 | Game socket remediation                             | Done (dedicated `/games` namespace, stable player identity, host authz, duplicate-answer guard, room cleanup) |
 | Ribbon UI migration                                 | Done (replaced Toolbar.jsx, InsertMenu.jsx, EditorMenuBar.jsx with tab-based ribbon; Advanced direct actions and portal popup overlay hardening complete) |
 | Parallax feature port                               | Done (font-weight, line-height, timeline element, video controls, LaTeX improvements)                    |
@@ -120,11 +120,11 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 
 **Sub-phases:**
 
-1. Phase 1: Game element types foundation — 7 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories), `createGameElement`/`createQuestion`/`createTeam` factories, placeholder renderer, 68 unit tests added
+1. Phase 1: Game element types foundation — 10 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories, poll, word-cloud, matching), `createGameElement`/`createQuestion`/`createTeam` factories, placeholder renderer, 68 unit tests added
 2. Phase 2: Backend game engine — Socket.IO room management (`server/services/game-room-manager-singleton-service.js`, `server/routes/games-rest-api-handler.js`), random picker, leaderboard, scoring, team management, timer/question lifecycle
-3. Phase 3: Canvas renderer — SVG previews for all 7 game types (wheel, bomb, Jeopardy board, corner grid, relay baton, trophy, letter grid) with `GameElementRenderer.jsx`
+3. Phase 3: Canvas renderer — SVG previews for all 10 game types (wheel, bomb, Jeopardy board, corner grid, relay baton, trophy, letter grid, poll, word cloud, matching) with `GameElementRenderer.jsx`
 4. Phase 4: Game properties panel — Content/Display/Scoring tabs with team config, question list, timer, difficulty, colors, scoring rules, bonus/penalty settings
-5. Phase 5: Toolbar integration — InsertMenu "Games" category with icon grid for all 7 types, `createGameElement` wired to EditorPage insert handler
+5. Phase 5: Toolbar integration — InsertMenu "Games" category with icon grid for all 10 types, `createGameElement` wired to EditorPage insert handler
 6. Phase 6: Player join page — `/player/:slideId/:elementId` route, `game-player-join-page.jsx`, `useGameSocket` hook, Socket.IO connection, team assignment, spectator mode
 7. Phase 7: Interactive wheel spin, confetti burst, hot-potato bomb animation, timer ring countdown
 8. Phase 8: Jeopardy board — 5 categories, 5 questions each, dollar values 100-500, reveal animation, double-jeopardy + final round

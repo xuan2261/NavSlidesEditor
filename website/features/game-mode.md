@@ -4,7 +4,7 @@ Turn any deck into an audience-interaction activity. Game Mode reuses the slide 
 
 ## Game types
 
-NavSlides ships **7 interactive game element types**:
+NavSlides ships **10 interactive game element types**:
 
 | Game | What it does |
 |---|---|
@@ -15,6 +15,9 @@ NavSlides ships **7 interactive game element types**:
 | Relay race | Round-based team race through a question set |
 | Trivia champ | Multi-round trivia with optional lightning and jackpot rounds |
 | Scattergories | Timed category brainstorm scored on unique answers |
+| Live poll | Presenter-driven polls with public aggregate results |
+| Word cloud | Audience responses summarized into a word cloud |
+| Matching | Drag-and-drop pair matching activity |
 
 A game is just another **element type** you insert on a slide, so an existing presentation can be promoted to a game without authoring a separate file.
 

@@ -115,6 +115,11 @@ async function downloadRemotePlugins() {
       url: 'https://cdn.jsdelivr.net/npm/reveal.js-plugins@4.6.0/customcontrols/style.css',
       dest: path.join(vendorDir, 'reveal-plugins/customcontrols/style.css'),
     },
+    {
+      url: 'https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js',
+      dest: path.join(vendorDir, 'mermaid/mermaid.min.js'),
+      required: true,
+    },
     // Chalkboard image assets (cursors, eraser, board backgrounds)
     ...chalkboardImages.map((img) => ({
       url: `https://cdn.jsdelivr.net/npm/reveal.js-plugins@4.6.0/chalkboard/img/${img}`,
@@ -122,6 +127,7 @@ async function downloadRemotePlugins() {
     })),
   ]
 
+  const failures = []
   for (const file of remoteFiles) {
     try {
       if (fs.existsSync(file.dest)) continue
@@ -141,7 +147,11 @@ async function downloadRemotePlugins() {
       console.log(`✓ Fetched remote plugin: ${path.relative(process.cwd(), file.dest)}`)
     } catch (err) {
       console.error(`✗ Failed to download ${file.url}: ${err.message}`)
+      if (file.required) failures.push(file.url)
     }
+  }
+  if (failures.length) {
+    throw new Error(`Required vendor asset download failed: ${failures.join(', ')}`)
   }
   console.log('\n✅ Vendor assets ready.')
 }

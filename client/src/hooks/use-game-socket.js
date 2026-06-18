@@ -22,7 +22,7 @@ function getPlayerId() {
   return id
 }
 
-export function useGameSocket(gameId, playerName, role = 'player') {
+export function useGameSocket(gameId, playerName, role = 'player', gameOptions = null) {
   const [socket, setSocket] = useState(null)
   const [isConnected, setIsConnected] = useState(false)
   const [joinError, setJoinError] = useState(null)
@@ -54,6 +54,7 @@ export function useGameSocket(gameId, playerName, role = 'player') {
         playerName,
         playerId: getPlayerId(),
         role,
+        ...(gameOptions || {}),
       })
     })
 
@@ -95,6 +96,57 @@ export function useGameSocket(gameId, playerName, role = 'player') {
       setLastEvent({ type: 'question', ...data })
     })
 
+    sock.on('game-poll-started', (data) => {
+      if (cancelled) return
+      setGameState({ type: 'poll', ...data })
+      setLastEvent({ type: 'poll-started', ...data })
+    })
+
+    sock.on('game-poll-results', (data) => {
+      if (cancelled) return
+      setGameState({ type: 'poll', ...data })
+      setLastEvent({ type: 'poll-results', ...data })
+    })
+
+    sock.on('game-poll-vote-accepted', (data) => {
+      if (cancelled) return
+      setLastEvent({ type: 'poll-vote-accepted', ...data })
+    })
+
+    sock.on('game-word-cloud-started', (data) => {
+      if (cancelled) return
+      setGameState({ type: 'word-cloud', ...data })
+      setLastEvent({ type: 'word-cloud-started', ...data })
+    })
+
+    sock.on('game-word-cloud-results', (data) => {
+      if (cancelled) return
+      setGameState({ type: 'word-cloud', ...data })
+      setLastEvent({ type: 'word-cloud-results', ...data })
+    })
+
+    sock.on('game-word-cloud-submit-accepted', (data) => {
+      if (cancelled) return
+      setLastEvent({ type: 'word-cloud-submit-accepted', ...data })
+    })
+
+    sock.on('game-matching-started', (data) => {
+      if (cancelled) return
+      setGameState({ type: 'matching', ...data })
+      setLastEvent({ type: 'matching-started', ...data })
+    })
+
+    sock.on('game-matching-results', (data) => {
+      if (cancelled) return
+      setGameState({ type: 'matching', ...data })
+      setLastEvent({ type: 'matching-results', ...data })
+    })
+
+    sock.on('game-matching-submit-accepted', (data) => {
+      if (cancelled) return
+      setLastEvent({ type: 'matching-submit-accepted', ...data })
+    })
+
     sock.on('game-ended', (data) => {
       if (cancelled) return
       setGameState(null)
@@ -118,7 +170,7 @@ export function useGameSocket(gameId, playerName, role = 'player') {
       setSocket(null)
       setIsConnected(false)
     }
-  }, [gameId, playerName, role])
+  }, [gameId, playerName, role, gameOptions])
 
   return {
     socket,

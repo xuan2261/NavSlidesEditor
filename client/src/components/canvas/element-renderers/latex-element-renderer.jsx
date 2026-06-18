@@ -1,5 +1,8 @@
+import { normalizeLatexForRender } from 'revealjs-shared'
+
 function generateLatexIframeHtml(content, options = {}) {
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
+  const renderContent = hasTikz ? content : normalizeLatexForRender(content)
   const fontSize = options.fontSize || 16
   const textColor = options.textColor || options.fontColor || '#ffffff'
   const tikzScript = hasTikz
@@ -14,7 +17,7 @@ function generateLatexIframeHtml(content, options = {}) {
     bodyContent = `<div id="math"></div>
     <script>
       try {
-        katex.render(${JSON.stringify(content)}, document.getElementById('math'), { displayMode: true, throwOnError: false });
+        katex.render(${JSON.stringify(renderContent)}, document.getElementById('math'), { displayMode: true, throwOnError: false });
       } catch(e) {
         document.getElementById('math').textContent = e.message;
       }

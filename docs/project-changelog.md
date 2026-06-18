@@ -2,13 +2,18 @@
 
 ## Unreleased
 
+## v1.15.0 — 2026-06-19
+
+- Added teaching interactivity elements and controls: Mermaid diagram authoring, STEM simulation embed presets, live poll, word cloud, matching, code walkthrough controls, LaTeX authoring UX, and technical symbol packs.
+- Kept the canonical element count at 19 while updating docs, website pages, coverage matrices, export warnings, and final release-gate evidence for 10 game subtypes.
+
 ## v1.14.4 — 2026-06-17
 
 - Added the element-control audit matrix harness and completed Phase 02 cross-cutting canvas coverage: hidden elements are omitted from shared HTML/PPTX viewer exports, hidden fragments no longer create print pages, geometry/lock/visibility/group/z-order/guides now have targeted Playwright coverage, renderer-family shared controls have smoke coverage, and project/archive data remains non-redacted by design.
 - Completed Phase 03 media controls: video source migration keeps `src` canonical while retaining legacy `videoUrl` fallback, canvas/shared video renderers no longer let stale `videoUrl` shadow edited `src`, audio canvas/export flags are covered, Copy URL and render paths reject unsafe media schemes, PPTX image sources reject non-image data URIs, and image PPTX `fill`/`none` objectFit plus CSS filters/rounded corners are documented accepted native gaps.
 - Advanced Phase 04 content controls: code/markdown/chart properties and HTML/Code/LaTeX editor modals have focused coverage, HTML authoring now shows a trusted-active-content warning, Format/Properties chart type options are aligned by removing unsupported `scatter`, and matrix rows now distinguish supported text/code/markdown/chart behavior from accepted PPTX/fallback gaps.
 - Advanced Phase 05 structured/vector/data controls: shape/line/table/SVG/timeline/drawing controls now have focused property and shared-render coverage, table merge authoring is explicitly read-only/partial while row/column mutations drop imported merge metadata, drawing controls are documented as element-default updates that preserve per-path stroke data, and SVG sanitizer coverage now includes scripts, event attributes, `foreignObject`, unsafe links, and external references.
-- Advanced Phase 06 game/live-only coverage: Insert ribbon now has executable coverage for all 7 game subtypes, `GameProperties` persists at least one non-default nested config path per subtype, canvas preview labels render for every subtype, shared HTML export emits a whitelist-only static game fallback, and PPTX export now has an explicit placeholder-warning contract for live-only game elements.
+- Advanced Phase 06 game/live-only coverage: Insert ribbon now has executable coverage for all 10 game subtypes, `GameProperties` persists at least one non-default nested config path per subtype, canvas preview labels render for every subtype, shared HTML export emits a whitelist-only static game fallback, and PPTX export now has an explicit placeholder-warning contract for live-only game elements.
 - Completed Phase 07 export fidelity classification: every current PPTX `export-gap` row is classified as fallback-warning or accepted-limit, fallback paths now emit structured machine-readable `exportReport` warnings with matrix row ids while preserving legacy string warnings, and export warnings remain user-visible through the browser export-result modal.
 - PPTX import strict verification now aligns scripts, diagnostics, and docs: `test:pptx:strict` runs corpus plus strict smoke browser audit while full audit stays release-only, corpus CLI threshold text comes from canonical enforced constants, and import reports additive per-slide OOXML chart/SmartArt relationship-evidence stats plus degradation warnings.
 - Removed local debug/import-review artifacts from version control before release tagging.
@@ -358,19 +363,19 @@ CommandPalette is editor-only. It renders only inside `EditorPage`. `LiveViewPag
 - Completed Gamification Game Controls feature (Phases 1-11):
 
   **Phase 1 - Game Element Types Foundation:**
-  Added `game` element type with 7 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories). Created `game-element-types-constants.js` with `GAME_TYPES`, `DEFAULT_GAME_COLORS`, `createGameElement`/`createQuestion`/`createTeam` factories. Created placeholder renderer `game-element-placeholder-renderer.jsx`. Registered renderer in `registry.js`. Added `ELEMENT_DEFAULTS.game` and `DEFAULT_POSITIONS.game` in `element-defaults.js`.
+  Added `game` element type with 10 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories, poll, word-cloud, matching). Created `game-element-types-constants.js` with `GAME_TYPES`, `DEFAULT_GAME_COLORS`, `createGameElement`/`createQuestion`/`createTeam` factories. Created placeholder renderer `game-element-placeholder-renderer.jsx`. Registered renderer in `registry.js`. Added `ELEMENT_DEFAULTS.game` and `DEFAULT_POSITIONS.game` in `element-defaults.js`.
 
   **Phase 2 - Backend Game Engine:**
   Added Socket.IO room management for game sessions (`server/services/game-room-manager-singleton-service.js`, `server/routes/games-rest-api-handler.js`), random picker with weights, leaderboard generation, scoring, team management, timer/question lifecycle, and game state persistence. REST endpoints: `POST/GET/DELETE /api/games/:sessionId`, `POST /api/games/:sessionId/join`, `POST /api/games/:sessionId/action`, `GET /api/games/:sessionId/leaderboard`, `DELETE /api/games/:sessionId/leave`.
 
   **Phase 3 - Canvas Renderer with Static SVG Previews:**
-  Added `GameElementRenderer.jsx` with SVG previews for all 7 game types: spinning wheel (name-picker), ticking bomb (hot-potato), Jeopardy board (jeopardy), corner grid (four-corners), relay baton (relay-race), trophy (trivia-champ), letter grid (scattergories). Integrated into canvas element registry. Element defaults and positions updated.
+  Added `GameElementRenderer.jsx` with SVG previews for all 10 game types: spinning wheel (name-picker), ticking bomb (hot-potato), Jeopardy board (jeopardy), corner grid (four-corners), relay baton (relay-race), trophy (trivia-champ), letter grid (scattergories), live poll, word cloud, matching. Integrated into canvas element registry. Element defaults and positions updated.
 
   **Phase 4 - Game Properties Panel:**
   Added Content/Display/Scoring tabbed properties panel for game elements. Content tab: game type selector, team count/names, question list with add/edit/delete, timer duration, difficulty, topic tags, auto-advance toggle. Display tab: primary/secondary/accent colors, background, font, show answers toggle, custom rules text. Scoring tab: points per difficulty, bonus multipliers, streak bonus, penalty settings, tiebreaker rules. Backed by `game-properties.jsx`.
 
   **Phase 5 - Toolbar Integration:**
-  Integrated game element insertion via `InsertMenu.jsx`. Added "Games" category with icon grid for all 7 game types. `createGameElement` factory wired to `EditorPage` insert handler. Default element sizes set per game type.
+  Integrated game element insertion via `InsertMenu.jsx`. Added "Games" category with icon grid for all 10 game types. `createGameElement` factory wired to `EditorPage` insert handler. Default element sizes set per game type.
 
   **Phase 6 - Player Join Page:**
   Added `/player/:slideId/:elementId` route with `game-player-join-page.jsx`. `useGameSocket` hook manages Socket.IO connection, join flow (name + optional team selection), connection status, and session state. Team assignment, spectator mode, and game element ID validation implemented.
@@ -389,7 +394,7 @@ CommandPalette is editor-only. It renders only inside `EditorPage`. `LiveViewPag
 
 ## 2026-04-29 (continued)
 
-- Completed Phase 1 of Gamification Feature (Phase 1-11 total): Added `game` element type with 7 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories). Created `game-element-types-constants.js` with `GAME_TYPES`, `DEFAULT_GAME_COLORS`, `createGameElement`/`createQuestion`/`createTeam` factories. Created placeholder renderer `game-element-placeholder-renderer.jsx` (full rendering deferred to Phase 3). Registered renderer in `registry.js`. Added `ELEMENT_DEFAULTS.game` and `DEFAULT_POSITIONS.game` in `element-defaults.js`. 68 unit tests added (592 total tests passing).
+- Completed Phase 1 of Gamification Feature (Phase 1-11 total): Added `game` element type with 10 game types (name-picker, hot-potato, jeopardy, four-corners, relay-race, trivia-champ, scattergories, poll, word-cloud, matching). Created `game-element-types-constants.js` with `GAME_TYPES`, `DEFAULT_GAME_COLORS`, `createGameElement`/`createQuestion`/`createTeam` factories. Created placeholder renderer `game-element-placeholder-renderer.jsx` (full rendering deferred to Phase 3). Registered renderer in `registry.js`. Added `ELEMENT_DEFAULTS.game` and `DEFAULT_POSITIONS.game` in `element-defaults.js`. 68 unit tests added (592 total tests passing).
 - Files created: `client/src/constants/game-element-types-constants.js`, `client/src/components/canvas/element-renderers/game-element-placeholder-renderer.jsx`, `client/src/hooks/game-element-foundation.test.js`.
 - Files modified: `client/src/data/element-defaults.js`, `client/src/components/canvas/element-renderers/registry.js`, `client/src/utils/tailwind-inline-style-audit.test.js`.
 

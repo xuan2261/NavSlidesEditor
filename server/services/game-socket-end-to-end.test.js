@@ -180,4 +180,212 @@ describe('game socket end-to-end', () => {
     expect(typeof hr.winnerIndex).toBe('number')
     expect(hr.winnerIndex).toBe(vr.winnerIndex)
   })
+
+  it('runs poll start, vote update, host authorization, and aggregate broadcast through sockets', async () => {
+    const host = connectClient()
+    await waitConnect(host)
+    await joinAndWait(host, {
+      gameId: 'poll-room',
+      playerName: 'Host',
+      playerId: 'p-host',
+      role: 'host',
+      gameType: 'poll',
+      options: {
+        prompt: 'Choose one',
+        options: [
+          { id: 'a', text: 'Alpha' },
+          { id: 'b', text: 'Beta' },
+        ],
+      },
+    })
+
+    const player = connectClient()
+    await waitConnect(player)
+    await joinAndWait(player, {
+      gameId: 'poll-room',
+      playerName: 'Alice',
+      playerId: 'p-alice',
+      role: 'player',
+    })
+
+    const inactiveErr = once(player, 'game-error')
+    player.emit('game-poll-submit', { gameId: 'poll-room', optionId: 'a' })
+    expect((await inactiveErr).message).toBe('poll-not-active')
+
+    const nonHostErr = once(player, 'game-error')
+    player.emit('game-poll-reveal', { gameId: 'poll-room' })
+    expect((await nonHostErr).message).toContain('host only')
+
+    const startedHost = once(host, 'game-poll-started')
+    const startedPlayer = once(player, 'game-poll-started')
+    host.emit('game-poll-start', { gameId: 'poll-room' })
+    await Promise.all([startedHost, startedPlayer])
+
+    const firstAggregate = once(host, 'game-poll-results')
+    player.emit('game-poll-submit', { gameId: 'poll-room', optionId: 'a' })
+    expect(await firstAggregate).toMatchObject({
+      totalVotes: 1,
+      options: [
+        { id: 'a', votes: 1 },
+        { id: 'b', votes: 0 },
+      ],
+    })
+
+    const updatedAggregate = once(host, 'game-poll-results')
+    player.emit('game-poll-submit', { gameId: 'poll-room', optionId: 'b' })
+    expect(await updatedAggregate).toMatchObject({
+      totalVotes: 1,
+      options: [
+        { id: 'a', votes: 0 },
+        { id: 'b', votes: 1 },
+      ],
+    })
+
+    const crossRoomErr = once(player, 'game-error')
+    player.emit('game-poll-submit', { gameId: 'other-room', optionId: 'b' })
+    expect((await crossRoomErr).message).toBe('Invalid game room for this socket')
+
+    const leaveAggregate = once(host, 'game-poll-results')
+    player.emit('game-leave', { gameId: 'poll-room' })
+    expect(await leaveAggregate).toMatchObject({ totalVotes: 0 })
+  })
+
+  it('runs word cloud start, bounded text submit, rate limit, and clear through sockets', async () => {
+    const host = connectClient()
+    await waitConnect(host)
+    await joinAndWait(host, {
+      gameId: 'cloud-room',
+      playerName: 'Host',
+      playerId: 'p-host',
+      role: 'host',
+      gameType: 'word-cloud',
+      options: {
+        prompt: 'One word',
+      },
+    })
+
+    const player = connectClient()
+    await waitConnect(player)
+    await joinAndWait(player, {
+      gameId: 'cloud-room',
+      playerName: 'Alice',
+      playerId: 'p-alice',
+      role: 'player',
+    })
+
+    const inactiveErr = once(player, 'game-error')
+    player.emit('game-word-cloud-submit', { gameId: 'cloud-room', text: 'early' })
+    expect((await inactiveErr).message).toBe('word-cloud-not-active')
+
+    const nonHostErr = once(player, 'game-error')
+    player.emit('game-word-cloud-clear', { gameId: 'cloud-room' })
+    expect((await nonHostErr).message).toContain('host only')
+
+    const startedHost = once(host, 'game-word-cloud-started')
+    const startedPlayer = once(player, 'game-word-cloud-started')
+    host.emit('game-word-cloud-start', { gameId: 'cloud-room' })
+    await Promise.all([startedHost, startedPlayer])
+
+    const firstAggregate = once(host, 'game-word-cloud-results')
+    player.emit('game-word-cloud-submit', { gameId: 'cloud-room', text: '  Quantum   Field  ' })
+    expect(await firstAggregate).toMatchObject({
+      totalSubmissions: 1,
+      entries: [{ text: 'quantum field', count: 1 }],
+    })
+
+    const revealedAggregate = once(host, 'game-word-cloud-results')
+    host.emit('game-word-cloud-reveal', { gameId: 'cloud-room' })
+    expect(await revealedAggregate).toMatchObject({
+      totalSubmissions: 1,
+      entries: [{ text: 'quantum field', count: 1 }],
+    })
+
+    for (let i = 0; i < 4; i++) {
+      const aggregate = once(host, 'game-word-cloud-results')
+      player.emit('game-word-cloud-submit', { gameId: 'cloud-room', text: `term ${i}` })
+      await aggregate
+    }
+    const limitErr = once(player, 'game-error')
+    player.emit('game-word-cloud-submit', { gameId: 'cloud-room', text: 'term 5' })
+    expect((await limitErr).message).toBe('word-cloud-rate-limit')
+
+    const crossRoomErr = once(player, 'game-error')
+    player.emit('game-word-cloud-submit', { gameId: 'other-room', text: 'wrong room' })
+    expect((await crossRoomErr).message).toBe('Invalid game room for this socket')
+
+    const cleared = once(host, 'game-word-cloud-results')
+    host.emit('game-word-cloud-clear', { gameId: 'cloud-room' })
+    expect(await cleared).toMatchObject({ totalSubmissions: 0, entries: [] })
+  })
+
+  it('runs matching start, submit, reveal, and room binding through sockets', async () => {
+    const host = connectClient()
+    await waitConnect(host)
+    await joinAndWait(host, {
+      gameId: 'match-room',
+      playerName: 'Host',
+      playerId: 'p-host',
+      role: 'host',
+      gameType: 'matching',
+      options: {
+        prompt: 'Match terms',
+        pairs: [
+          { promptId: 'p-http', prompt: 'HTTP', targetId: 't-protocol', target: 'Protocol' },
+          { promptId: 'p-tls', prompt: 'TLS', targetId: 't-security', target: 'Security' },
+        ],
+      },
+    })
+
+    const player = connectClient()
+    await waitConnect(player)
+    await joinAndWait(player, {
+      gameId: 'match-room',
+      playerName: 'Alice',
+      playerId: 'p-alice',
+      role: 'player',
+    })
+
+    const inactiveErr = once(player, 'game-error')
+    player.emit('game-matching-submit', {
+      gameId: 'match-room',
+      pairs: [{ promptId: 'p-http', targetId: 't-protocol' }],
+    })
+    expect((await inactiveErr).message).toBe('matching-not-active')
+
+    const startedPlayer = once(player, 'game-matching-started')
+    host.emit('game-matching-start', { gameId: 'match-room' })
+    expect(await startedPlayer).toMatchObject({
+      prompt: 'Match terms',
+      prompts: [{ id: 'p-http', text: 'HTTP' }, { id: 'p-tls', text: 'TLS' }],
+      targets: [{ id: 't-security', text: 'Security' }, { id: 't-protocol', text: 'Protocol' }],
+    })
+
+    const accepted = once(player, 'game-matching-submit-accepted')
+    const summary = once(host, 'game-matching-results')
+    player.emit('game-matching-submit', {
+      gameId: 'match-room',
+      pairs: [
+        { promptId: 'p-http', targetId: 't-protocol' },
+        { promptId: 'p-tls', targetId: 't-security' },
+      ],
+    })
+    expect(await accepted).toMatchObject({ score: 2, total: 2, correct: true })
+    expect(await summary).toMatchObject({ submissions: 1 })
+
+    const crossRoomErr = once(player, 'game-error')
+    player.emit('game-matching-submit', {
+      gameId: 'other-room',
+      pairs: [{ promptId: 'p-http', targetId: 't-protocol' }],
+    })
+    expect((await crossRoomErr).message).toBe('Invalid game room for this socket')
+
+    const revealed = once(player, 'game-matching-results')
+    host.emit('game-matching-reveal', { gameId: 'match-room' })
+    expect(await revealed).toMatchObject({
+      answerKey: [
+        { promptId: 'p-http', targetId: 't-protocol' },
+        { promptId: 'p-tls', targetId: 't-security' },
+      ],
+    })
+  })
 })

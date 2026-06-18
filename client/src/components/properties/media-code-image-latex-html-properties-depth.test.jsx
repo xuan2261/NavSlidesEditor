@@ -49,6 +49,54 @@ describe('canonical media/code/image/latex/html property depth', () => {
     expect(onUpdate).toHaveBeenCalledWith({ borderRadius: 16 })
   })
 
+  it('[cap:element.code depth:behavior] authors walkthrough steps and default highlight', () => {
+    const onUpdate = vi.fn()
+    const { rerender } = render(
+      <CodeProperties element={{ id: 'code-1', type: 'code', walkthroughSteps: [] }} onUpdate={onUpdate} />
+    )
+
+    fireEvent.click(screen.getByTestId('prop-code-walkthrough-add'))
+    expect(onUpdate).toHaveBeenCalledWith({
+      walkthroughSteps: [{ label: 'Step 1', startLine: 1, endLine: 1 }],
+      defaultStepIndex: 0,
+    })
+
+    rerender(
+      <CodeProperties
+        element={{
+          id: 'code-1',
+          type: 'code',
+          defaultStepIndex: 0,
+          walkthroughSteps: [{ label: 'Intro', startLine: 1, endLine: 2 }],
+        }}
+        onUpdate={onUpdate}
+      />
+    )
+
+    fireEvent.change(screen.getByTestId('prop-code-walkthrough-label-0'), {
+      target: { value: 'Explain return' },
+    })
+    fireEvent.change(screen.getByTestId('prop-code-walkthrough-start-0'), {
+      target: { value: '2' },
+    })
+    fireEvent.change(screen.getByTestId('prop-code-walkthrough-end-0'), {
+      target: { value: '4' },
+    })
+
+    expect(onUpdate).toHaveBeenCalledWith({
+      walkthroughSteps: [{ label: 'Explain return', startLine: 1, endLine: 2 }],
+    })
+    expect(onUpdate).toHaveBeenCalledWith({
+      walkthroughSteps: [{ label: 'Intro', startLine: 2, endLine: 2 }],
+    })
+    expect(onUpdate).toHaveBeenCalledWith({
+      walkthroughSteps: [{ label: 'Intro', startLine: 1, endLine: 4 }],
+    })
+
+    fireEvent.click(screen.getByTestId('prop-code-walkthrough-remove-0'))
+    expect(onUpdate).toHaveBeenCalledWith({ walkthroughSteps: [], defaultStepIndex: 0 })
+  })
+
   it('[cap:element.video depth:behavior] writes trim and playback properties', () => {
     const onUpdate = vi.fn()
     render(<MediaProperties element={{ id: 'video-1', type: 'video', src: '/demo.mp4' }} onUpdate={onUpdate} />)

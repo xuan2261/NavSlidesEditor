@@ -629,7 +629,7 @@ ${pagesHtml}
     window.addEventListener('load', function() {
       var iframePromises = [];
       // Highlight code blocks
-      document.querySelectorAll('pre code').forEach(function(el) { try { hljs.highlightElement(el); } catch(e) {} });
+      document.querySelectorAll('pre:not([data-code-walkthrough]) code').forEach(function(el) { try { hljs.highlightElement(el); } catch(e) {} });
       // Render KaTeX math
       document.querySelectorAll('span[data-math-latex]').forEach(function(el) {
         try { katex.render(el.getAttribute('data-math-latex'), el, { throwOnError: false, displayMode: el.getAttribute('data-math-display') === 'true' }); } catch(e) {}

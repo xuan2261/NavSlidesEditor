@@ -4,7 +4,7 @@
 
 NavSlides Editor is a self-hostable presentation editor built as a monorepo with
 `client/`, `server/`, `shared/`, and `electron/` runtimes. Current release is
-`v1.14.4`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
+`v1.15.0`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
 checked-in corpus / report artifacts used for verification. The editor shell
 uses the tab-based ribbon as the default controls surface.
 
@@ -217,11 +217,11 @@ navslides-editor/
 - New code should stay under the 200 LOC guideline where practical; legacy
   oversize files are refactor targets, not automatic violations.
 - Game elements are first-class slide elements with dedicated presenter/player
-  flows and 7 game types.
+  flows and 10 game types.
 
 ## Repo Notes
 
-- Root package version is `1.14.4`.
+- Root package version is `1.15.0`.
 - Runtime baseline is Node.js 20+.
 - There is no database layer; persistence is file-based by design.
 - There is no full TypeScript migration; JSDoc is the type system.

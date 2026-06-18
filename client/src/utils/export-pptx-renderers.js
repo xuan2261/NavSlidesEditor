@@ -56,6 +56,14 @@ export async function addElementToPptxSlide({
         addTableElement(slide, element, bounds)
         break
       case 'code':
+        if (Array.isArray(element.walkthroughSteps) && element.walkthroughSteps.length > 0) {
+          recordPptxExportWarning(warnings, {
+            element,
+            slideNumber,
+            message: `Slide ${slideNumber}: code walkthrough steps exported as static readable code`,
+            fallback: 'static-code',
+          })
+        }
         addCodeElement(slide, element, bounds)
         break
       case 'chart':

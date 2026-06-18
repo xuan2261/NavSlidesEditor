@@ -11,49 +11,61 @@ describe('generateOfflineHTML', () => {
     vi.stubGlobal('window', {
       location: new URL('http://localhost:4173/editor/deck-1'),
     })
-    vi.stubGlobal('FileReader', class {
-      readAsDataURL(blob) {
-        // Convert Blob chunks to base64 using Response.arrayBuffer
-        const resp = new Response(blob)
-        resp.arrayBuffer().then((ab) => {
-          const bytes = Buffer.from(ab)
-          this.result = `data:${blob.type || 'image/png'};base64,${bytes.toString('base64')}`
-          this.onloadend?.()
-        })
-      }
-    })
-    vi.stubGlobal('fetch', vi.fn(async (url) => {
-      const requestUrl = String(url)
-      if (requestUrl.includes('theme/black.css')) {
-        return {
-          ok: true,
-          text: async () => '.reveal{background:#000}',
+    vi.stubGlobal(
+      'FileReader',
+      class {
+        readAsDataURL(blob) {
+          // Convert Blob chunks to base64 using Response.arrayBuffer
+          const resp = new Response(blob)
+          resp.arrayBuffer().then((ab) => {
+            const bytes = Buffer.from(ab)
+            this.result = `data:${blob.type || 'image/png'};base64,${bytes.toString('base64')}`
+            this.onloadend?.()
+          })
         }
       }
-      if (requestUrl.includes('reveal-overrides.css')) {
-        return {
-          ok: true,
-          text: async () => '.reveal section{line-height:normal!important}',
+    )
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url) => {
+        const requestUrl = String(url)
+        if (requestUrl.includes('theme/black.css')) {
+          return {
+            ok: true,
+            text: async () => '.reveal{background:#000}',
+          }
         }
-      }
-      if (requestUrl.includes('reveal.js')) {
-        return {
-          ok: true,
-          text: async () => 'window.Reveal={initialize(){}};// </script safe',
+        if (requestUrl.includes('reveal-overrides.css')) {
+          return {
+            ok: true,
+            text: async () => '.reveal section{line-height:normal!important}',
+          }
         }
-      }
-      if (requestUrl.includes('/uploads/image.png')) {
-        return {
-          ok: true,
-          blob: async () => blobFrom('png-bytes', 'image/png'),
+        if (requestUrl.includes('reveal.js')) {
+          return {
+            ok: true,
+            text: async () => 'window.Reveal={initialize(){}};// </script safe',
+          }
         }
-      }
-      return {
-        ok: false,
-        text: async () => '',
-        blob: async () => blobFrom(''),
-      }
-    }))
+        if (requestUrl.includes('mermaid/mermaid.min.js')) {
+          return {
+            ok: true,
+            text: async () => 'window.mermaid={initialize(){},run(){}};',
+          }
+        }
+        if (requestUrl.includes('/uploads/image.png')) {
+          return {
+            ok: true,
+            blob: async () => blobFrom('png-bytes', 'image/png'),
+          }
+        }
+        return {
+          ok: false,
+          text: async () => '',
+          blob: async () => blobFrom(''),
+        }
+      })
+    )
   })
 
   afterEach(() => {
@@ -81,5 +93,17 @@ describe('generateOfflineHTML', () => {
     expect(offline).toContain('<style>/* /reveal-overrides.css */')
     expect(offline).toContain('<\\/script safe')
     expect(offline).toContain('data:image/png;base64')
+  })
+
+  it('inlines Mermaid runtime inside data-url html embed iframes', async () => {
+    const iframeHtml = encodeURIComponent(
+      `<!doctype html><html><head><script src="/vendor/mermaid/mermaid.min.js"></script></head><body><pre class="mermaid">flowchart TD\nA-->B</pre></body></html>`
+    )
+    const html = `<!doctype html><html><body><iframe src="data:text/html;charset=utf-8,${iframeHtml}"></iframe></body></html>`
+
+    const offline = await generateOfflineHTML(html)
+
+    expect(offline).toContain('data-offline-id="__offline_iframe_0"')
+    expect(fetch).toHaveBeenCalledWith('http://localhost:4173/vendor/mermaid/mermaid.min.js')
   })
 })

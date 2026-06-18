@@ -28,7 +28,7 @@ test.describe('Game Element — Toolbar Integration', () => {
     } catch {}
   })
 
-  test('Insert menu shows all 7 game types', async ({ page }) => {
+  test('Insert menu shows all 10 game types', async ({ page }) => {
     await page.getByRole('tab', { name: 'Insert' }).click()
     const insertPanel = page.getByRole('tabpanel', { name: 'Insert' })
     await expect(insertPanel).toBeVisible({ timeout: 5000 })
@@ -42,6 +42,9 @@ test.describe('Game Element — Toolbar Integration', () => {
     await expect(page.getByRole('button', { name: 'Relay Race' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Trivia' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Scattergories' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Live Poll' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Word Cloud' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Matching' })).toBeVisible()
   })
 })
 

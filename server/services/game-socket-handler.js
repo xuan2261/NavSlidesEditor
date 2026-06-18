@@ -24,6 +24,21 @@ function setupGameSocketHandlers(io) {
       })
     }
 
+    const emitPollAggregate = (gid) => {
+      const aggregate = GameEngine.getPollAggregate(gid)
+      if (aggregate) gameNamespace.to(gid).emit('game-poll-results', aggregate)
+    }
+
+    const emitWordCloudAggregate = (gid) => {
+      const aggregate = GameEngine.getWordCloudAggregate(gid)
+      if (aggregate) gameNamespace.to(gid).emit('game-word-cloud-results', aggregate)
+    }
+
+    const emitMatchingState = (gid, options = {}) => {
+      const state = GameEngine.getMatchingState(gid, options)
+      if (state) gameNamespace.to(gid).emit('game-matching-results', state)
+    }
+
     // Reject events from a socket that is not the room host.
     const requireHost = (gid) => {
       if (GameEngine.isHost(gid, currentPlayerId)) return true
@@ -32,10 +47,13 @@ function setupGameSocketHandlers(io) {
     }
 
     // Player joins a game room
-    socket.on('game-join', ({ gameId, playerName, playerId, role }) => {
+    socket.on('game-join', ({ gameId, playerName, playerId, role, gameType, options }) => {
       if (!gameId || !playerName) {
         socket.emit('game-error', { message: 'gameId and playerName are required' })
         return
+      }
+      if (!GameEngine.getRoom(gameId) && role === 'host' && gameType) {
+        GameEngine.createRoom(gameId, gameType, options || {})
       }
       const pid = playerId || socket.id
       const result = GameEngine.joinRoom(gameId, pid, playerName, { socketId: socket.id, role })
@@ -76,6 +94,185 @@ function setupGameSocketHandlers(io) {
 
       const lb = GameEngine.getLeaderboard(gid)
       if (lb) gameNamespace.to(gid).emit('game-leaderboard', { scores: lb })
+    })
+
+    socket.on('game-poll-submit', ({ gameId, optionId }) => {
+      if (!currentGameId) {
+        socket.emit('game-error', { message: 'Not in a game room' })
+        return
+      }
+      if (!gameId || gameId !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      const result = GameEngine.submitPollVote(gameId, currentPlayerId, optionId, { socketId: socket.id })
+      if (!result || !result.ok) {
+        socket.emit('game-error', { message: result?.error || 'Room not found or invalid poll' })
+        return
+      }
+      socket.emit('game-poll-vote-accepted', { optionId })
+      gameNamespace.to(gameId).emit('game-poll-results', result.aggregate)
+    })
+
+    socket.on('game-poll-start', ({ gameId }) => {
+      if (!currentGameId) {
+        socket.emit('game-error', { message: 'Not in a game room' })
+        return
+      }
+      const gid = gameId || currentGameId
+      if (gid !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      if (!requireHost(gid)) return
+      const room = GameEngine.getRoom(gid)
+      if (!room || room.gameType !== 'poll') {
+        socket.emit('game-error', { message: 'Room not found or invalid poll' })
+        return
+      }
+      room.status = 'active'
+      gameNamespace.to(gid).emit('game-poll-started', GameEngine.getPollAggregate(gid))
+    })
+
+    socket.on('game-poll-reveal', ({ gameId }) => {
+      if (!currentGameId) {
+        socket.emit('game-error', { message: 'Not in a game room' })
+        return
+      }
+      const gid = gameId || currentGameId
+      if (gid !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      if (!requireHost(gid)) return
+      emitPollAggregate(gid)
+    })
+
+    socket.on('game-word-cloud-submit', ({ gameId, text }) => {
+      if (!currentGameId) {
+        socket.emit('game-error', { message: 'Not in a game room' })
+        return
+      }
+      if (!gameId || gameId !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      const result = GameEngine.submitWordCloudText(gameId, currentPlayerId, text, { socketId: socket.id })
+      if (!result || !result.ok) {
+        socket.emit('game-error', { message: result?.error || 'Room not found or invalid word cloud' })
+        return
+      }
+      socket.emit('game-word-cloud-submit-accepted', { text: result.text })
+      gameNamespace.to(gameId).emit('game-word-cloud-results', result.aggregate)
+    })
+
+    socket.on('game-word-cloud-start', ({ gameId }) => {
+      if (!currentGameId) {
+        socket.emit('game-error', { message: 'Not in a game room' })
+        return
+      }
+      const gid = gameId || currentGameId
+      if (gid !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      if (!requireHost(gid)) return
+      const room = GameEngine.getRoom(gid)
+      if (!room || room.gameType !== 'word-cloud') {
+        socket.emit('game-error', { message: 'Room not found or invalid word cloud' })
+        return
+      }
+      room.status = 'active'
+      gameNamespace.to(gid).emit('game-word-cloud-started', GameEngine.getWordCloudAggregate(gid))
+    })
+
+    socket.on('game-word-cloud-reveal', ({ gameId }) => {
+      if (!currentGameId) {
+        socket.emit('game-error', { message: 'Not in a game room' })
+        return
+      }
+      const gid = gameId || currentGameId
+      if (gid !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      if (!requireHost(gid)) return
+      emitWordCloudAggregate(gid)
+    })
+
+    socket.on('game-word-cloud-clear', ({ gameId }) => {
+      if (!currentGameId) {
+        socket.emit('game-error', { message: 'Not in a game room' })
+        return
+      }
+      const gid = gameId || currentGameId
+      if (gid !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      if (!requireHost(gid)) return
+      const aggregate = GameEngine.clearWordCloud(gid)
+      if (!aggregate) {
+        socket.emit('game-error', { message: 'Room not found or invalid word cloud' })
+        return
+      }
+      gameNamespace.to(gid).emit('game-word-cloud-results', aggregate)
+    })
+
+    socket.on('game-matching-submit', ({ gameId, pairs }) => {
+      if (!currentGameId) {
+        socket.emit('game-error', { message: 'Not in a game room' })
+        return
+      }
+      if (!gameId || gameId !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      const result = GameEngine.submitMatchingPairs(gameId, currentPlayerId, pairs, { socketId: socket.id })
+      if (!result || !result.ok) {
+        socket.emit('game-error', { message: result?.error || 'Room not found or invalid matching game' })
+        return
+      }
+      socket.emit('game-matching-submit-accepted', {
+        score: result.score,
+        total: result.total,
+        correct: result.correct,
+      })
+      gameNamespace.to(gameId).emit('game-matching-results', result.summary)
+    })
+
+    socket.on('game-matching-start', ({ gameId }) => {
+      if (!currentGameId) {
+        socket.emit('game-error', { message: 'Not in a game room' })
+        return
+      }
+      const gid = gameId || currentGameId
+      if (gid !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      if (!requireHost(gid)) return
+      const room = GameEngine.getRoom(gid)
+      if (!room || room.gameType !== 'matching') {
+        socket.emit('game-error', { message: 'Room not found or invalid matching game' })
+        return
+      }
+      room.status = 'active'
+      gameNamespace.to(gid).emit('game-matching-started', GameEngine.getMatchingState(gid))
+    })
+
+    socket.on('game-matching-reveal', ({ gameId }) => {
+      if (!currentGameId) {
+        socket.emit('game-error', { message: 'Not in a game room' })
+        return
+      }
+      const gid = gameId || currentGameId
+      if (gid !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      if (!requireHost(gid)) return
+      emitMatchingState(gid, { revealed: true })
     })
 
     // Presenter triggers random picker (host only)
@@ -144,6 +341,9 @@ function setupGameSocketHandlers(io) {
       const room = GameEngine.getRoom(gid)
       if (room && room.players.size > 0) {
         broadcastPlayers(gid)
+        if (room.gameType === 'poll') emitPollAggregate(gid)
+        if (room.gameType === 'word-cloud') emitWordCloudAggregate(gid)
+        if (room.gameType === 'matching') emitMatchingState(gid)
       } else {
         GameEngine.scheduleEmptyCleanup(gid)
       }
@@ -153,9 +353,9 @@ function setupGameSocketHandlers(io) {
     socket.on('disconnect', () => {
       if (!currentGameId) return
       const gid = currentGameId
-      GameEngine.leaveRoom(gid, currentPlayerId)
+      GameEngine.disconnectRoom(gid, currentPlayerId, socket.id)
       const room = GameEngine.getRoom(gid)
-      if (room && room.players.size > 0) {
+      if (room && Array.from(room.players.values()).some((player) => player.socketId)) {
         broadcastPlayers(gid)
       } else {
         GameEngine.scheduleEmptyCleanup(gid)

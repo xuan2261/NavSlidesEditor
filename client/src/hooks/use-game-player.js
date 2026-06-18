@@ -26,6 +26,12 @@ export function useGamePlayer({ gameId, playerName }) {
   const [status, setStatus] = useState('joining') // joining | waiting | question | answered | result | finished
   const [players, setPlayers] = useState([])
   const [currentQuestion, setCurrentQuestion] = useState(null)
+  const [pollState, setPollState] = useState(null)
+  const [selectedPollOption, setSelectedPollOption] = useState(null)
+  const [wordCloudState, setWordCloudState] = useState(null)
+  const [wordCloudSubmissionCount, setWordCloudSubmissionCount] = useState(0)
+  const [matchingState, setMatchingState] = useState(null)
+  const [matchingResult, setMatchingResult] = useState(null)
   const [selectedAnswer, setSelectedAnswer] = useState(null)
   const [answerResult, setAnswerResult] = useState(null)
   const [myScore, setMyScore] = useState(0)
@@ -74,6 +80,22 @@ export function useGamePlayer({ gameId, playerName }) {
     stopTimer()
   }, [gameId, status, stopTimer])
 
+  const submitPollVote = useCallback((optionId) => {
+    if (!socketRef.current || status !== 'poll') return
+    socketRef.current.emit('game-poll-submit', { gameId, optionId })
+    setSelectedPollOption(optionId)
+  }, [gameId, status])
+
+  const submitWordCloudText = useCallback((text) => {
+    if (!socketRef.current || status !== 'word-cloud') return
+    socketRef.current.emit('game-word-cloud-submit', { gameId, text })
+  }, [gameId, status])
+
+  const submitMatchingPairs = useCallback((pairs) => {
+    if (!socketRef.current || status !== 'matching') return
+    socketRef.current.emit('game-matching-submit', { gameId, pairs })
+  }, [gameId, status])
+
   useEffect(() => {
     if (!gameId || !playerName) return
     let cancelled = false
@@ -119,6 +141,60 @@ export function useGamePlayer({ gameId, playerName }) {
       setAnswerResult(null)
       setStatus('question')
       startTimer(data.timeLimit || 30)
+    })
+
+    sock.on('game-poll-started', (data) => {
+      if (cancelled) return
+      setPollState(data)
+      setSelectedPollOption(null)
+      setStatus('poll')
+    })
+
+    sock.on('game-poll-results', (data) => {
+      if (cancelled) return
+      setPollState(data)
+      setStatus('poll')
+    })
+
+    sock.on('game-poll-vote-accepted', ({ optionId }) => {
+      if (cancelled) return
+      setSelectedPollOption(optionId)
+    })
+
+    sock.on('game-word-cloud-started', (data) => {
+      if (cancelled) return
+      setWordCloudState(data)
+      setWordCloudSubmissionCount(0)
+      setStatus('word-cloud')
+    })
+
+    sock.on('game-word-cloud-results', (data) => {
+      if (cancelled) return
+      setWordCloudState(data)
+      setStatus('word-cloud')
+    })
+
+    sock.on('game-word-cloud-submit-accepted', () => {
+      if (cancelled) return
+      setWordCloudSubmissionCount((count) => count + 1)
+    })
+
+    sock.on('game-matching-started', (data) => {
+      if (cancelled) return
+      setMatchingState(data)
+      setMatchingResult(null)
+      setStatus('matching')
+    })
+
+    sock.on('game-matching-results', (data) => {
+      if (cancelled) return
+      setMatchingState(data)
+      setStatus('matching')
+    })
+
+    sock.on('game-matching-submit-accepted', (data) => {
+      if (cancelled) return
+      setMatchingResult(data)
     })
 
     sock.on('game-answer-result', (data) => {
@@ -169,10 +245,19 @@ export function useGamePlayer({ gameId, playerName }) {
     players,
     playerCount: players.length,
     currentQuestion,
+    pollState,
+    wordCloudState,
+    matchingState,
     timeLeft,
     selectedAnswer,
     answerResult,
     submitAnswer,
+    submitPollVote,
+    submitWordCloudText,
+    submitMatchingPairs,
+    selectedPollOption,
+    wordCloudSubmissionCount,
+    matchingResult,
     myScore,
     myRank,
     leaderboard,

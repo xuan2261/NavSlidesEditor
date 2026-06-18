@@ -3,6 +3,7 @@ import { marked } from 'marked'
 import QRCode from 'qrcode'
 import iconPaths from '../../../shared/data/icon-paths.json'
 import { createSvgDataUri, normalizeCssColor } from './export-pptx-core'
+import { sanitizeSvgContent } from './content-safety'
 import {
   renderHtmlDocumentToPngDataUri,
   renderHtmlToPngDataUri,
@@ -335,7 +336,7 @@ export async function renderElementFallbackDataUri(element) {
         width: Math.max(width, height),
       })
     case 'svg':
-      return element?.content ? createSvgDataUri(element.content) : null
+      return element?.content ? createSvgDataUri(sanitizeSvgContent(element.content)) : null
     default:
       return null
   }

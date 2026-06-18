@@ -12,6 +12,7 @@
  *  - Present mode (isPresenting === true): live game UI with controls
  */
 import React from 'react'
+import { useGameSocket } from '../../../hooks/use-game-socket.js'
  
 
 // Phase 10: Interactive sub-renderers (lazy-loaded via dynamic import for ESM compatibility)
@@ -51,6 +52,9 @@ const GAME_TYPE_LABELS = {
   'relay-race': 'Relay Race',
   'trivia-champ': 'Trivia Championship',
   'scattergories': 'Scattergories',
+  'poll': 'Live Poll',
+  'word-cloud': 'Word Cloud',
+  'matching': 'Matching',
 }
 
 // ---------------------------------------------------------------------------
@@ -207,6 +211,241 @@ function HotPotatoRenderer({ element, _isPresenting }) {
       )}
       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>
         {element.questions ? `${element.questions.length} question${element.questions.length !== 1 ? 's' : ''}` : 'No questions'}
+      </div>
+    </div>
+  )
+}
+
+function PollRenderer({ element, isPresenting }) {
+  const pollConfig = element.poll || element
+  const options = React.useMemo(
+    () => (Array.isArray(pollConfig.options) ? pollConfig.options : []),
+    [pollConfig.options]
+  )
+  const socketOptions = React.useMemo(() => ({
+    gameType: 'poll',
+    options: {
+      prompt: pollConfig.prompt || 'Live Poll',
+      options,
+    },
+  }), [pollConfig.prompt, options])
+  const socketResult = useGameSocket(
+    isPresenting ? element.id || 'poll' : null,
+    isPresenting ? 'presenter' : null,
+    'host',
+    socketOptions
+  )
+  const { emit, gameState, isConnected } = socketResult
+  const aggregateOptions = gameState?.options || options.map(option => ({ ...option, votes: 0 }))
+  const totalVotes = gameState?.totalVotes || 0
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 360 }}>
+      <div style={{ fontSize: 15, fontWeight: 'bold', color: 'white', textAlign: 'center' }}>
+        {pollConfig.prompt || 'Live Poll'}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {aggregateOptions.map((option) => {
+          const pct = totalVotes > 0 ? Math.round(((option.votes || 0) / totalVotes) * 100) : 0
+          return (
+            <div key={option.id} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.85)' }}>
+                <span>{option.text}</span>
+                <span>{option.votes || 0} · {pct}%</span>
+              </div>
+              <div style={{ height: 8, borderRadius: 999, background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
+                <div style={{ width: `${pct}%`, height: '100%', background: element.accentColor || '#6366f1' }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      {isPresenting && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 4 }}>
+          <button
+            onClick={() => emit?.('game-poll-start', { gameId: element.id || 'poll' })}
+            style={{ background: element.accentColor || '#6366f1', color: 'white', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
+          >
+            {isConnected ? 'Start poll' : 'Connecting…'}
+          </button>
+          <button
+            onClick={() => emit?.('game-poll-reveal', { gameId: element.id || 'poll' })}
+            style={{ background: 'rgba(255,255,255,0.16)', color: 'white', border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
+          >
+            Refresh
+          </button>
+        </div>
+      )}
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
+        {totalVotes} vote{totalVotes === 1 ? '' : 's'} · anonymous aggregate
+      </div>
+    </div>
+  )
+}
+
+function WordCloudRenderer({ element, isPresenting }) {
+  const cloudConfig = element['word-cloud'] || element
+  const socketOptions = React.useMemo(() => ({
+    gameType: 'word-cloud',
+    options: {
+      prompt: cloudConfig.prompt || 'Word Cloud',
+      maxPhraseLength: cloudConfig.maxPhraseLength || 40,
+      maxSubmissionsPerPlayer: cloudConfig.maxSubmissionsPerPlayer || 5,
+      displayLimit: cloudConfig.displayLimit || 50,
+    },
+  }), [
+    cloudConfig.displayLimit,
+    cloudConfig.maxPhraseLength,
+    cloudConfig.maxSubmissionsPerPlayer,
+    cloudConfig.prompt,
+  ])
+  const socketResult = useGameSocket(
+    isPresenting ? element.id || 'word-cloud' : null,
+    isPresenting ? 'presenter' : null,
+    'host',
+    socketOptions
+  )
+  const { emit, gameState, isConnected } = socketResult
+  const entries = gameState?.entries || []
+  const maxCount = Math.max(1, ...entries.map((entry) => entry.count || 0))
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 420, alignItems: 'center' }}>
+      <div style={{ fontSize: 15, fontWeight: 'bold', color: 'white', textAlign: 'center' }}>
+        {cloudConfig.prompt || 'Word Cloud'}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', alignItems: 'center', minHeight: 120 }}>
+        {entries.length === 0 && (
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>Waiting for submissions…</span>
+        )}
+        {entries.slice(0, cloudConfig.displayLimit || 50).map((entry) => {
+          const size = 12 + Math.round(((entry.count || 1) / maxCount) * 18)
+          return (
+            <span
+              key={entry.text}
+              style={{
+                color: element.accentColor || '#6366f1',
+                fontSize: size,
+                fontWeight: 800,
+                lineHeight: 1,
+                padding: '3px 6px',
+              }}
+            >
+              {entry.text}
+            </span>
+          )
+        })}
+      </div>
+      {isPresenting && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 4 }}>
+          <button
+            onClick={() => emit?.('game-word-cloud-start', { gameId: element.id || 'word-cloud' })}
+            style={{ background: element.accentColor || '#6366f1', color: 'white', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
+          >
+            {isConnected ? 'Start cloud' : 'Connecting…'}
+          </button>
+          <button
+            onClick={() => emit?.('game-word-cloud-reveal', { gameId: element.id || 'word-cloud' })}
+            style={{ background: 'rgba(255,255,255,0.16)', color: 'white', border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
+          >
+            Refresh
+          </button>
+          <button
+            onClick={() => emit?.('game-word-cloud-clear', { gameId: element.id || 'word-cloud' })}
+            style={{ background: 'rgba(239,68,68,0.2)', color: 'white', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
+          >
+            Clear
+          </button>
+        </div>
+      )}
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
+        {gameState?.totalSubmissions || 0} submission{gameState?.totalSubmissions === 1 ? '' : 's'} · aggregate only
+      </div>
+    </div>
+  )
+}
+
+function MatchingRenderer({ element, isPresenting }) {
+  const matchingConfig = element.matching || element
+  const pairs = React.useMemo(
+    () => (Array.isArray(matchingConfig.pairs) ? matchingConfig.pairs : []),
+    [matchingConfig.pairs]
+  )
+  const socketOptions = React.useMemo(() => ({
+    gameType: 'matching',
+    options: {
+      prompt: matchingConfig.prompt || 'Matching',
+      pairs,
+    },
+  }), [matchingConfig.prompt, pairs])
+  const socketResult = useGameSocket(
+    isPresenting ? element.id || 'matching' : null,
+    isPresenting ? 'presenter' : null,
+    'host',
+    socketOptions
+  )
+  const { emit, gameState, isConnected } = socketResult
+  const prompts = gameState?.prompts || pairs.map(pair => ({ id: pair.promptId, text: pair.prompt }))
+  const targets = gameState?.targets || pairs.map(pair => ({ id: pair.targetId, text: pair.target }))
+  const promptsById = React.useMemo(() => new Map(prompts.map(prompt => [prompt.id, prompt.text])), [prompts])
+  const targetsById = React.useMemo(() => new Map(targets.map(target => [target.id, target.text])), [targets])
+  const revealedPairs = (gameState?.answerKey || []).map(pair => ({
+    prompt: promptsById.get(pair.promptId) || pair.promptId,
+    target: targetsById.get(pair.targetId) || pair.targetId,
+  }))
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 420, alignItems: 'center' }}>
+      <div style={{ fontSize: 15, fontWeight: 'bold', color: 'white', textAlign: 'center' }}>
+        {matchingConfig.prompt || 'Matching'}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%' }}>
+        {[prompts, targets].map((items, columnIndex) => (
+          <div key={columnIndex} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {items.slice(0, 8).map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  borderRadius: 8,
+                  padding: '6px 8px',
+                  fontSize: 11,
+                  color: 'rgba(255,255,255,0.86)',
+                  background: 'rgba(255,255,255,0.08)',
+                }}
+              >
+                {item.text}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      {isPresenting && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 4 }}>
+          <button
+            onClick={() => emit?.('game-matching-start', { gameId: element.id || 'matching' })}
+            style={{ background: element.accentColor || '#6366f1', color: 'white', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
+          >
+            {isConnected ? 'Start matching' : 'Connecting…'}
+          </button>
+          <button
+            onClick={() => emit?.('game-matching-reveal', { gameId: element.id || 'matching' })}
+            style={{ background: 'rgba(255,255,255,0.16)', color: 'white', border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
+          >
+            Reveal
+          </button>
+        </div>
+      )}
+      {revealedPairs.length > 0 && (
+        <div style={{ width: '100%', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 8, padding: 8, fontSize: 10, color: 'rgba(255,255,255,0.75)' }}>
+          <strong style={{ display: 'block', color: 'white', marginBottom: 4 }}>Answers</strong>
+          {revealedPairs.map((pair, index) => (
+            <div key={`${pair.prompt}-${index}`}>{pair.prompt} → {pair.target}</div>
+          ))}
+        </div>
+      )}
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', textAlign: 'center' }}>
+        {gameState?.submissions || 0} submission{gameState?.submissions === 1 ? '' : 's'} · pair IDs only
       </div>
     </div>
   )
@@ -1269,6 +1508,12 @@ export function GameElementRenderer(props) {
         return <TriviaChampRenderer element={el} isPresenting={isPresenting} />
       case 'scattergories':
         return <ScattergoriesRenderer element={el} isPresenting={isPresenting} />
+      case 'poll':
+        return <PollRenderer element={el} isPresenting={isPresenting} />
+      case 'word-cloud':
+        return <WordCloudRenderer element={el} isPresenting={isPresenting} />
+      case 'matching':
+        return <MatchingRenderer element={el} isPresenting={isPresenting} />
       default:
         return <FallbackRenderer element={el} />
     }
@@ -1344,7 +1589,7 @@ export function GameElementRenderer(props) {
       )}
 
       {/* Controls — only in presentation mode (name-picker has its own controls) */}
-      {isPresenting && (isRunning || !isEnded) && el.gameType !== 'name-picker' && (
+      {isPresenting && (isRunning || !isEnded) && !['name-picker', 'poll', 'word-cloud'].includes(el.gameType) && (
         <GameControls element={el} />
       )}
     </div>

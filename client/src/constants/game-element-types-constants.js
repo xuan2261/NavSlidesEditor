@@ -11,6 +11,9 @@ export const GAME_TYPES = {
   'relay-race': 'relay-race',
   'trivia-champ': 'trivia-champ',
   'scattergories': 'scattergories',
+  'poll': 'poll',
+  'word-cloud': 'word-cloud',
+  'matching': 'matching',
 }
 GAME_TYPES.all = Object.values(GAME_TYPES)
 
@@ -120,6 +123,34 @@ export function createGameElement(gameType = 'name-picker', overrides = {}) {
       letterMode: 'random',
       categories: [],
       scoring: 'unique',
+    },
+    'poll': {
+      title: 'Live Poll',
+      prompt: 'What do you think?',
+      options: [
+        { id: 'option-a', text: 'Option A' },
+        { id: 'option-b', text: 'Option B' },
+      ],
+      showResults: true,
+      allowVoteChange: true,
+      timerDuration: 30,
+    },
+    'word-cloud': {
+      title: 'Word Cloud',
+      prompt: 'Share one word or short phrase',
+      maxPhraseLength: 40,
+      maxSubmissionsPerPlayer: 5,
+      displayLimit: 50,
+      timerDuration: 30,
+    },
+    'matching': {
+      title: 'Matching',
+      prompt: 'Match each item to its answer',
+      pairs: [
+        { promptId: 'prompt-1', prompt: 'Term 1', targetId: 'target-1', target: 'Definition 1' },
+        { promptId: 'prompt-2', prompt: 'Term 2', targetId: 'target-2', target: 'Definition 2' },
+      ],
+      timerDuration: 60,
     },
   }
 

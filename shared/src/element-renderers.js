@@ -3,9 +3,15 @@
  * Eliminates ~300 lines of duplicated rendering logic.
  */
 const { shapeSvgString } = require('./shapeUtils.js')
-const { sanitizeRichTextHtml, sanitizeSvgHtml, sanitizeHref, sanitizeMediaSrc } = require('./content-safety.js')
+const {
+  sanitizeRichTextHtml,
+  sanitizeSvgHtml,
+  sanitizeHref,
+  sanitizeMediaSrc,
+} = require('./content-safety.js')
 const { resolveColorField, svgPaint, isTokenVar } = require('./design-tokens.js')
 const { resolveMergedCells } = require('./table-merge-resolver.js')
+const { normalizeLatexForRender } = require('./latex-utils.js')
 
 /**
  * Inline SVG paint that preserves the exact `name="value"` token shape for
@@ -117,6 +123,17 @@ function toHtmlDataUrl(html) {
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
 }
 
+const MERMAID_SOURCE_LIMIT = 12000
+
+function getMermaidSource(el) {
+  const source = String(el.mermaidSource || el.content || '').slice(0, MERMAID_SOURCE_LIMIT)
+  return source
+}
+
+function buildMermaidDocument(source) {
+  return `<!doctype html><html><head><meta charset="utf-8"><script src="/vendor/mermaid/mermaid.min.js"></script><style>*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;height:100%;overflow:auto;background:transparent;color:#f8fafc;font-family:system-ui,sans-serif}.mermaid{width:100%;min-height:100%;display:flex;align-items:center;justify-content:center;padding:12px}.mermaid svg{max-width:100%;height:auto}.mermaid-error{margin:12px;padding:10px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.12);color:#fde68a;font:13px/1.4 ui-monospace,monospace;white-space:pre-wrap}</style></head><body><pre class="mermaid">${escapeHtml(source)}</pre><script>function showMermaidError(error){document.body.innerHTML='<div class="mermaid-error">Mermaid render error: '+String(error&&error.message||error).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c]})+'</div>'}Promise.resolve().then(function(){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:'dark'});return mermaid.run()}).catch(showMermaidError)</script></body></html>`
+}
+
 /** Build the shared base positioning style for an element */
 // eslint-disable-next-line unused-imports/no-unused-vars
 function buildBaseStyle(el, opts = {}) {
@@ -151,7 +168,9 @@ function renderText(el, style, wrap, vis) {
   const importedFit = Number(el._pptxImportMeta?.fitFontSizePx)
   const fontSize = Number.isFinite(importedFit) && importedFit > 0 ? importedFit : el.fontSize
   const fs = fontSize ? `;font-size:calc(${fontSize}px * var(--font-zoom, 1))` : ''
-  const fit = el._pptxImportMeta ? ';overflow-wrap:anywhere;word-break:normal;white-space:pre-wrap' : ''
+  const fit = el._pptxImportMeta
+    ? ';overflow-wrap:anywhere;word-break:normal;white-space:pre-wrap'
+    : ''
   const padding = el._pptxImportMeta ? '0' : '8px 12px'
   return `<div${wrap} style="${style}${vis}padding:${padding};color:white${tc}${ff}${fs}${fit}">${sanitizeRichTextHtml(el.content || '')}</div>`
 }
@@ -183,7 +202,9 @@ function renderImage(el, style, wrap, vis, opts) {
     .filter(Boolean)
     .join(' ')
   const filterStyle = imgFilterParts ? `filter:${imgFilterParts};` : ''
-  const flipParts = [el.flipH ? 'scaleX(-1)' : '', el.flipV ? 'scaleY(-1)' : ''].filter(Boolean).join(' ')
+  const flipParts = [el.flipH ? 'scaleX(-1)' : '', el.flipV ? 'scaleY(-1)' : '']
+    .filter(Boolean)
+    .join(' ')
   const flipStyle = flipParts ? `transform:${flipParts};` : ''
   const borderW = Number(el.borderWidth)
   const borderColor = el.borderColor ? safeCssColor(el.borderColor, null) : null
@@ -211,15 +232,49 @@ function renderShape(el, style, wrap, vis) {
   return `<div${wrap} style="${style}${vis}">${shapeSvgString(el)}</div>`
 }
 
+function getCodeWalkthroughStep(el) {
+  const steps = Array.isArray(el.walkthroughSteps) ? el.walkthroughSteps : []
+  if (!steps.length) return null
+  const index = Number.isInteger(el.defaultStepIndex) ? el.defaultStepIndex : 0
+  return steps[Math.min(Math.max(index, 0), steps.length - 1)] || null
+}
+
+function isCodeLineInStep(lineNumber, step) {
+  if (!step) return false
+  const start = Math.max(1, Number(step.startLine) || 1)
+  const end = Math.max(start, Number(step.endLine) || start)
+  return lineNumber >= start && lineNumber <= end
+}
+
+function renderCodeLines(el) {
+  const step = getCodeWalkthroughStep(el)
+  const lines = String(el.content || '').split('\n')
+  return lines
+    .map((line, index) => {
+      const lineNumber = index + 1
+      const active = isCodeLineInStep(lineNumber, step)
+      const activeAttr = active ? ' data-walkthrough-active="true"' : ''
+      const activeStyle = active ? 'background:rgba(250,204,21,.18);box-shadow:inset 3px 0 0 #facc15;' : ''
+      return `<span data-code-line="${lineNumber}"${activeAttr} style="display:block;margin:0 -14px;padding:0 14px;${activeStyle}">${escapeHtml(line || ' ')}</span>`
+    })
+    .join('')
+}
+
 function renderCode(el, style, wrap, vis) {
   const lang = el.language || 'plaintext'
-  const codeContent = escapeHtml(el.content || '')
+  const hasWalkthrough = Array.isArray(el.walkthroughSteps) && el.walkthroughSteps.length
   const cls = vis ? ' class="hljs"' : ''
-  return `<div${wrap} style="${style}${vis}"><pre${cls} style="margin:0;padding:10px 14px;width:100%;height:100%;overflow:hidden;box-sizing:border-box;font-family:'Fira Code','JetBrains Mono','Courier New',monospace;font-size:calc(${el.fontSize || 14}px * var(--font-zoom, 1));line-height:1.5;"><code class="language-${lang}" data-trim>${codeContent}</code></pre></div>`
+  const walkthroughAttr = hasWalkthrough
+    ? ` data-code-walkthrough="${escapeHtml(JSON.stringify({ defaultStepIndex: el.defaultStepIndex || 0, steps: el.walkthroughSteps }))}"`
+    : ''
+  const codeClass = `language-${escapeHtml(lang)}${hasWalkthrough ? ' nohighlight' : ''}`
+  const trimAttr = hasWalkthrough ? '' : ' data-trim'
+  return `<div${wrap} style="${style}${vis}"><pre${cls}${walkthroughAttr} style="margin:0;padding:10px 14px;width:100%;height:100%;overflow:hidden;box-sizing:border-box;font-family:'Fira Code','JetBrains Mono','Courier New',monospace;font-size:calc(${el.fontSize || 14}px * var(--font-zoom, 1));line-height:1.5;"><code class="${codeClass}"${trimAttr}>${renderCodeLines(el)}</code></pre></div>`
 }
 
 function renderHtml(el, style, wrap, vis, opts) {
-  const content = el.content || ''
+  const isMermaid = el.embedKind === 'mermaid'
+  const content = isMermaid ? buildMermaidDocument(getMermaidSource(el)) : el.content || ''
 
   // PDF mode: use data-pdf-iframe with blob URL initialization.
   // Iframes with srcdoc break Chrome's CSS paged media engine layout, causing
@@ -227,7 +282,9 @@ function renderHtml(el, style, wrap, vis, opts) {
   // and inject a script at the end of the print HTML to convert data-pdf-iframe
   // into a Blob URL at runtime, avoiding the layout breakage while keeping interactivity.
   if (opts.forPrint) {
-    const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style></head><body>${content}</body></html>`
+    const wrappedContent = isMermaid
+      ? content
+      : `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style></head><body>${content}</body></html>`
     return `<iframe${wrap} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
   }
 
@@ -236,7 +293,9 @@ function renderHtml(el, style, wrap, vis, opts) {
   // Wrapped in a div so reveal.js fragment animations work correctly.
   const _origin = getAssetOrigin()
   const base = _origin ? `<base href="${_origin}/">` : ''
-  const wrappedContent = `<!doctype html><html><head><meta charset="utf-8">${base}<style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style></head><body>${content}</body></html>`
+  const wrappedContent = isMermaid
+    ? content.replace('<head><meta charset="utf-8">', `<head><meta charset="utf-8">${base}`)
+    : `<!doctype html><html><head><meta charset="utf-8">${base}<style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style></head><body>${content}</body></html>`
   return `<div${wrap} style="${style}${vis}"><iframe src="${toHtmlDataUrl(wrappedContent)}" style="width:100%;height:100%;border:none;background:transparent;" scrolling="no"></iframe></div>`
 }
 
@@ -321,7 +380,8 @@ function renderIcon(el, style, wrap, vis) {
 
   // Normalize icon name in case it has an 'Icon' suffix (from lucide-react aliases)
   const rawName = el.iconName || 'Star'
-  const iconKey = rawName.endsWith('Icon') && rawName !== 'ImageIcon' ? rawName.replace(/Icon$/, '') : rawName
+  const iconKey =
+    rawName.endsWith('Icon') && rawName !== 'ImageIcon' ? rawName.replace(/Icon$/, '') : rawName
   const path = ICON_PATHS[iconKey] || ICON_PATHS['Star'] || ''
   const ip = svgPaint('stroke', color)
   const ipStyle = ip.style ? ` style="${ip.style}"` : ''
@@ -331,12 +391,18 @@ function renderIcon(el, style, wrap, vis) {
 function renderLatex(el, style, wrap, vis, opts) {
   const content = el.content || ''
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
+  const renderContent = hasTikz ? content : normalizeLatexForRender(content)
   const fontSize = el.latexFontSize || el.fontSize || 16
-  const textColor = el.latexColor || resolveColorField(el.textColor, 'latex', 'textColor') || el.fontColor || '#ffffff'
+  const textColor =
+    el.latexColor ||
+    resolveColorField(el.textColor, 'latex', 'textColor') ||
+    el.fontColor ||
+    '#ffffff'
 
   // [FIX #13] If _fallbackSrc is available and content doesn't look like valid LaTeX, use image fallback.
   // This handles malformed LaTeX strings imported from PPTX that KaTeX cannot render.
-  const hasFallbackImg = el._fallbackSrc && /^(data:image|\/uploads\/)/.test(String(el._fallbackSrc))
+  const hasFallbackImg =
+    el._fallbackSrc && /^(data:image|\/uploads\/)/.test(String(el._fallbackSrc))
   const looksLikeLatex = /\\[a-zA-Z]+|[\^$_]|\\frac|\\sqrt|\\begin|\\left|\\right/.test(content)
   if (hasFallbackImg && !looksLikeLatex) {
     const fallbackSrc = absoluteSrc(el._fallbackSrc)
@@ -349,11 +415,11 @@ function renderLatex(el, style, wrap, vis, opts) {
       const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" type="text/css" href="${_origin}/vendor/tikzjax/fonts.css"><script src="${_origin}/vendor/tikzjax/tikzjax.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1))}svg{max-width:100%;max-height:100%}</style></head><body><script type="text/tikz">${content}</script></body></html>`
       return `<iframe${wrap} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
     }
-    return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));"><span data-math-latex="${escapeHtml(content)}" data-math-display="true"></span></div>`
+    return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));"><span data-math-latex="${escapeHtml(renderContent)}" data-math-display="true"></span></div>`
   }
 
   if (!hasTikz) {
-    return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));"><span data-math-latex="${escapeHtml(content)}" data-math-display="true"></span></div>`
+    return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));"><span data-math-latex="${escapeHtml(renderContent)}" data-math-display="true"></span></div>`
   }
 
   const _origin = getAssetOrigin()
@@ -364,7 +430,7 @@ function renderLatex(el, style, wrap, vis, opts) {
   if (hasTikz) {
     bodyContent = `<script type="text/tikz">${content}</script>`
   } else {
-    bodyContent = `<div id="m"></div><script>katex.render(${JSON.stringify(content)},document.getElementById('m'),{displayMode:true,throwOnError:false})</script>`
+    bodyContent = `<div id="m"></div><script>katex.render(${JSON.stringify(renderContent)},document.getElementById('m'),{displayMode:true,throwOnError:false})</script>`
   }
   const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="${_origin}/vendor/katex/dist/katex.min.css"><script src="${_origin}/vendor/katex/dist/katex.min.js"></script>${tikzScript}<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1))}.katex{font-size:1.4em;color:inherit}svg{max-width:100%;max-height:100%}</style></head><body>${bodyContent}</body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(srcdoc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
@@ -383,7 +449,9 @@ function renderVideo(el, style, wrap, vis, opts) {
   if (el.muted) attrs.push('muted')
   const playbackRate = getPlaybackRate(el.playbackRate)
   const playbackAttr =
-    playbackRate && playbackRate !== 1 ? ` onloadedmetadata="this.playbackRate=${playbackRate}"` : ''
+    playbackRate && playbackRate !== 1
+      ? ` onloadedmetadata="this.playbackRate=${playbackRate}"`
+      : ''
   const poster = sanitizeMediaSrc(el.poster)
   const posterAttr = poster ? ` poster="${absoluteSrc(poster)}"` : ''
   return `<div${wrap} style="${style}"><video src="${src}" ${attrs.join(' ')}${posterAttr}${playbackAttr} style="width:100%;height:100%;object-fit:${el.objectFit || 'contain'};display:block;"></video></div>`
@@ -403,31 +471,39 @@ function renderAudio(el, style, wrap, vis, opts) {
 
 function renderTable(el, style, wrap, vis) {
   const data = el.data || [['']]
-  const headerBg = resolveColorField(el.headerBgColor, 'table', 'headerBgColor') || 'rgba(99,102,241,0.3)'
+  const headerBg =
+    resolveColorField(el.headerBgColor, 'table', 'headerBgColor') || 'rgba(99,102,241,0.3)'
   const cellBg = resolveColorField(el.cellBgColor, 'table', 'cellBgColor') || 'transparent'
-  const borderColor = resolveColorField(el.borderColor, 'table', 'borderColor') || 'rgba(255,255,255,0.2)'
+  const borderColor =
+    resolveColorField(el.borderColor, 'table', 'borderColor') || 'rgba(255,255,255,0.2)'
   const borderWidth = el.borderWidth ?? 1
   const textColor = resolveColorField(el.textColor, 'table', 'textColor') || '#ffffff'
-  const headerTextColor = resolveColorField(el.headerTextColor, 'table', 'headerTextColor') || textColor
+  const headerTextColor =
+    resolveColorField(el.headerTextColor, 'table', 'headerTextColor') || textColor
   const tableBorderStyle = safeBorderStyle(el.borderStyle)
   const fontSize = el.fontSize || 14
   const cellPadding = el.cellPadding || 8
   const cellStyles = el.cellStyles || {}
-  const colgroup = Array.isArray(el.colWidths) && el.colWidths.length
-    ? `<colgroup>${el.colWidths.map((width) => {
-      const safeWidth = Number(width)
-      return Number.isFinite(safeWidth) && safeWidth > 0
-        ? `<col style="width:${Math.round(safeWidth)}px" />`
-        : '<col />'
-    }).join('')}</colgroup>`
-    : ''
+  const colgroup =
+    Array.isArray(el.colWidths) && el.colWidths.length
+      ? `<colgroup>${el.colWidths
+          .map((width) => {
+            const safeWidth = Number(width)
+            return Number.isFinite(safeWidth) && safeWidth > 0
+              ? `<col style="width:${Math.round(safeWidth)}px" />`
+              : '<col />'
+          })
+          .join('')}</colgroup>`
+      : ''
   const borderCss = (ri, ci) => {
     const borders = cellStyles.borders?.[ri]?.[ci]
     if (!borders) return `border:${borderWidth}px ${tableBorderStyle} ${borderColor};`
     return ['top', 'right', 'bottom', 'left']
       .map((side) => {
         const border = borders[side] || {}
-        const width = Number.isFinite(Number(border.width)) ? Math.max(0, Number(border.width)) : borderWidth
+        const width = Number.isFinite(Number(border.width))
+          ? Math.max(0, Number(border.width))
+          : borderWidth
         const style = safeBorderStyle(border.style ?? el.borderStyle)
         const color = safeCssColor(border.color, borderColor)
         return `border-${side}:${width}px ${style} ${color};`
@@ -446,9 +522,14 @@ function renderTable(el, style, wrap, vis) {
             : ''
           const isHeader = el.headerRow && ri === 0
           const bg = safeCssColor(cellStyles.bgColors?.[ri]?.[ci], isHeader ? headerBg : cellBg)
-          const color = safeCssColor(cellStyles.textColors?.[ri]?.[ci], isHeader ? headerTextColor : textColor)
+          const color = safeCssColor(
+            cellStyles.textColors?.[ri]?.[ci],
+            isHeader ? headerTextColor : textColor
+          )
           const bold = cellStyles.isBold?.[ri]?.[ci]
-          const align = ['left', 'center', 'right', 'justify'].includes(cellStyles.aligns?.[ri]?.[ci])
+          const align = ['left', 'center', 'right', 'justify'].includes(
+            cellStyles.aligns?.[ri]?.[ci]
+          )
             ? cellStyles.aligns[ri][ci]
             : 'left'
           const verticalAlign = ['top', 'middle', 'bottom'].includes(cellStyles.vAligns?.[ri]?.[ci])
@@ -457,12 +538,16 @@ function renderTable(el, style, wrap, vis) {
           const cellFontSize = safeCssFontSize(cellStyles.fontSizes?.[ri]?.[ci]) || fontSize
           const cellFontFamily = safeCssFontFamily(cellStyles.fontFamilies?.[ri]?.[ci])
           const familyCss = cellFontFamily ? `font-family:${cellFontFamily};` : ''
-          const weightCss = bold != null ? `font-weight:${bold ? 600 : 400};` : isHeader ? 'font-weight:600;' : ''
+          const weightCss =
+            bold != null ? `font-weight:${bold ? 600 : 400};` : isHeader ? 'font-weight:600;' : ''
           return `<td${spanAttrs} style="padding:${cellPadding}px;${borderCss(ri, ci)}background:${bg};color:${color};font-size:calc(${cellFontSize}px * var(--font-zoom, 1));${familyCss}${weightCss}text-align:${align};vertical-align:${verticalAlign};">${escapeHtml(cell || '')}</td>`
         })
         .join('')
       const rowHeight = Array.isArray(el.rowHeights) ? Number(el.rowHeights[ri]) : 0
-      const rowStyle = Number.isFinite(rowHeight) && rowHeight > 0 ? ` style="height:${Math.round(rowHeight)}px"` : ''
+      const rowStyle =
+        Number.isFinite(rowHeight) && rowHeight > 0
+          ? ` style="height:${Math.round(rowHeight)}px"`
+          : ''
       return `<tr${rowStyle}>${cells}</tr>`
     })
     .join('')
@@ -540,9 +625,7 @@ function renderSvg(el, style, wrap, vis) {
     return segments
       .map((seg, i) => {
         if (i % 2 === 1) return seg // odd segments are <defs>...</defs> blocks
-        return seg
-          .replace(attrRe, `${name}="${value}"`)
-          .replace(styleRe, `$1${name}:${value}`)
+        return seg.replace(attrRe, `${name}="${value}"`).replace(styleRe, `$1${name}:${value}`)
       })
       .join('')
   }
@@ -589,7 +672,8 @@ function renderTimeline(el, style, wrap, vis, _opts) {
     connectorLength: item.connectorLength ?? item.connectorOffset ?? el.connectorOffset ?? 0,
   }))
   const spacing = el.tickSpacing || 'auto'
-  const yearMode = ['year', '10year', '100year', '1000year'].includes(spacing) ||
+  const yearMode =
+    ['year', '10year', '100year', '1000year'].includes(spacing) ||
     (spacing === 'auto' && /^-?\d+$/.test(String(startDate)))
 
   function datePos(d) {
@@ -609,9 +693,19 @@ function renderTimeline(el, style, wrap, vis, _opts) {
   if (yearMode) {
     const y0 = parseInt(startDate) || 0
     const y1 = parseInt(endDate) || 0
-    const step = spacing === '1000year' ? 1000 : spacing === '100year' ? 100 : spacing === '10year' ? 10 : Math.abs(y1 - y0) > 8 ? 2 : 1
+    const step =
+      spacing === '1000year'
+        ? 1000
+        : spacing === '100year'
+          ? 100
+          : spacing === '10year'
+            ? 10
+            : Math.abs(y1 - y0) > 8
+              ? 2
+              : 1
     const sY = y0 < y1 ? Math.ceil(y0 / step) * step : Math.floor(y0 / step) * step
-    for (let y = sY; y0 < y1 ? y <= y1 : y >= y1; y += y0 < y1 ? step : -step) ticks.push({ date: String(y), label: String(y) })
+    for (let y = sY; y0 < y1 ? y <= y1 : y >= y1; y += y0 < y1 ? step : -step)
+      ticks.push({ date: String(y), label: String(y) })
   }
 
   let svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;overflow:visible">`
@@ -672,7 +766,11 @@ function isSafePluginAssetPath(value) {
 }
 
 function isSafeSandboxFile(value) {
-  return typeof value === 'string' && /^[a-zA-Z0-9][a-zA-Z0-9._/-]{0,127}$/.test(value) && !value.includes('..')
+  return (
+    typeof value === 'string' &&
+    /^[a-zA-Z0-9][a-zA-Z0-9._/-]{0,127}$/.test(value) &&
+    !value.includes('..')
+  )
 }
 
 function getPluginFallbackText(el) {
@@ -707,10 +805,20 @@ function renderPlugin(el, style, wrap, vis, opts) {
 // Mirrors renderPluginFallback's contract: never returns '' and never throws.
 function renderGame(el, style, wrap, vis) {
   const gameType = el.gameType || 'game'
-  const title = el[gameType] && el[gameType].title ? el[gameType].title : el.title || 'Game'
+  const gameConfig = el[gameType] || {}
+  const title = gameConfig.title || el.title || (gameType === 'poll' ? 'Live Poll' : gameType === 'word-cloud' ? 'Word Cloud' : gameType === 'matching' ? 'Matching' : 'Game')
   const label = escapeHtml(title)
   const badge = escapeHtml(gameType)
-  return `<div${wrap} data-game-fallback="true" data-game-type="${badge}" style="${style}${vis}display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:${safeCssColor(el.backgroundColor, '#1a1a2e')};border:1px solid rgba(148,163,184,0.35);border-radius:8px;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong style="font-size:calc(20px * var(--font-zoom, 1));">${label}</strong><span style="font-size:calc(12px * var(--font-zoom, 1));text-transform:uppercase;letter-spacing:0.05em;padding:2px 10px;border-radius:999px;background:${safeCssColor(el.accentColor, '#6366f1')};opacity:.92;">${badge}</span><span style="font-size:calc(11px * var(--font-zoom, 1));opacity:.6;">Interactive game</span></div>`
+  const pollPublicContent = gameType === 'poll'
+    ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Live Poll')}</div><ul style="margin:0;padding-left:20px;font-size:calc(11px * var(--font-zoom, 1));opacity:.72;">${(gameConfig.options || el.options || []).slice(0, 6).map((option) => `<li>${escapeHtml(option.text || option.label || option)}</li>`).join('')}</ul>`
+    : ''
+  const wordCloudPublicContent = gameType === 'word-cloud'
+    ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Word Cloud')}</div>`
+    : ''
+  const matchingPublicContent = gameType === 'matching'
+    ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Matching')}</div><ul style="margin:0;padding-left:20px;font-size:calc(11px * var(--font-zoom, 1));opacity:.72;">${(gameConfig.pairs || el.pairs || []).slice(0, 8).map((pair) => `<li>${escapeHtml(pair.prompt || '')} → ${escapeHtml(pair.target || '')}</li>`).join('')}</ul>`
+    : ''
+  return `<div${wrap} data-game-fallback="true" data-game-type="${badge}" style="${style}${vis}display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:${safeCssColor(el.backgroundColor, '#1a1a2e')};border:1px solid rgba(148,163,184,0.35);border-radius:8px;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong style="font-size:calc(20px * var(--font-zoom, 1));">${label}</strong><span style="font-size:calc(12px * var(--font-zoom, 1));text-transform:uppercase;letter-spacing:0.05em;padding:2px 10px;border-radius:999px;background:${safeCssColor(el.accentColor, '#6366f1')};opacity:.92;">${badge}</span>${pollPublicContent}${wordCloudPublicContent}${matchingPublicContent}<span style="font-size:calc(11px * var(--font-zoom, 1));opacity:.6;">Interactive game</span></div>`
 }
 
 // ─── Dispatcher ──────────────────────────────────────────────────────────────

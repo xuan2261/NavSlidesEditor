@@ -18,7 +18,7 @@ An undo/redo stack tracks every change (`Ctrl+Z` / `Ctrl+Y`).
 
 ## Element Types
 
-NavSlides Editor has **19 canonical element types**. The Insert ribbon shows ~27 actions because shapes (rectangle, circle, triangle, arrow, star) and games (7 variants) expose sub-variants from a single element type.
+NavSlides Editor has **19 canonical element types**. The Insert ribbon shows 30+ actions because shapes (rectangle, circle, triangle, arrow, star), technical symbol packs, and games (10 variants) expose sub-variants from existing element types.
 
 | Element | Description |
 |---|---|
@@ -40,7 +40,7 @@ NavSlides Editor has **19 canonical element types**. The Insert ribbon shows ~27
 | Line | Straight or curved connectors with arrowheads |
 | SVG | Inline SVG with fill/stroke overrides |
 | Timeline | Date-based timeline with events |
-| Game | 7 interactive game types (name picker, hot potato, Jeopardy, four corners, relay race, trivia champ, scattergories) |
+| Game | 10 interactive game types (name picker, hot potato, Jeopardy, four corners, relay race, trivia champ, scattergories, live poll, word cloud, matching) |
 
 The canonical list lives in `client/src/data/element-defaults.js`.
 
@@ -66,7 +66,7 @@ Set a slide background to `type: fx` for one of **8 animated canvas effects**: g
 
 ## Game Mode
 
-Run **7 interactive game element types** — name picker, hot potato, Jeopardy, four corners, relay race, trivia champ, scattergories — with a dedicated player join page, leaderboard, scoring, and presenter shortcuts. See [Game Mode](/features/game-mode).
+Run **10 interactive game element types** — name picker, hot potato, Jeopardy, four corners, relay race, trivia champ, scattergories, live poll, word cloud, and matching — with a dedicated player join page, leaderboard, scoring, and presenter shortcuts. See [Game Mode](/features/game-mode).
 
 ## Footer System
 

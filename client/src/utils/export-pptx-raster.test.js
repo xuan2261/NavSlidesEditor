@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { Buffer } from 'node:buffer'
 import { buildLatexRasterMarkup, renderElementFallbackDataUri } from './export-pptx-raster'
 
 describe('export-pptx-raster', () => {
@@ -109,5 +110,21 @@ describe('export-pptx-raster', () => {
     expect(html).toContain('katex-html')
     expect(html).not.toContain('katex-mathml')
     expect(html).not.toContain('<annotation')
+  })
+
+  it('[cap:element.svg depth:export] sanitizes SVG fallback data URIs for PPTX', async () => {
+    const result = await renderElementFallbackDataUri({
+      type: 'svg',
+      content:
+        '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><rect onload="evil()" width="10" height="10"/></svg>',
+      width: 100,
+      height: 100,
+    })
+    const svg = Buffer.from(result.split(',')[1], 'base64').toString('utf8')
+
+    expect(svg).toContain('<svg')
+    expect(svg).toContain('<rect')
+    expect(svg).not.toContain('<script')
+    expect(svg).not.toContain('onload')
   })
 })

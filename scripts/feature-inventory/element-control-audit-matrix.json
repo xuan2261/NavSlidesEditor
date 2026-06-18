@@ -606,10 +606,7 @@
       "control": "drawing-path-style",
       "surface": "canvas",
       "status": "works",
-      "evidence": [
-        "misc-properties.jsx drawing controls",
-        "shared renderDrawing"
-      ],
+      "evidence": ["misc-properties.jsx drawing controls", "shared renderDrawing"],
       "testCoverage": [
         "drawing drawing-path-style canvas matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx drawing controls update element stroke defaults only",
@@ -623,10 +620,7 @@
       "control": "drawing-path-style",
       "surface": "editor",
       "status": "partial",
-      "evidence": [
-        "misc-properties.jsx drawing controls",
-        "shared renderDrawing"
-      ],
+      "evidence": ["misc-properties.jsx drawing controls", "shared renderDrawing"],
       "testCoverage": [
         "drawing drawing-path-style editor matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx drawing controls update element stroke defaults only",
@@ -640,10 +634,7 @@
       "control": "drawing-path-style",
       "surface": "html-export",
       "status": "works",
-      "evidence": [
-        "misc-properties.jsx drawing controls",
-        "shared renderDrawing"
-      ],
+      "evidence": ["misc-properties.jsx drawing controls", "shared renderDrawing"],
       "testCoverage": [
         "drawing drawing-path-style html-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx drawing controls update element stroke defaults only",
@@ -657,10 +648,7 @@
       "control": "drawing-path-style",
       "surface": "pptx-export",
       "status": "export-gap",
-      "evidence": [
-        "misc-properties.jsx drawing controls",
-        "shared renderDrawing"
-      ],
+      "evidence": ["misc-properties.jsx drawing controls", "shared renderDrawing"],
       "testCoverage": [
         "drawing drawing-path-style pptx-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx drawing controls update element stroke defaults only",
@@ -979,6 +967,195 @@
       }
     },
     {
+      "id": "html.mermaid-authoring.canvas",
+      "element": "html",
+      "control": "mermaid-authoring",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "client/src/hooks/use-element-creation.js",
+        "client/src/components/canvas/canvas-element-wrapper.jsx",
+        "client/src/components/HtmlEditorModal.jsx"
+      ],
+      "testCoverage": [
+        "client/src/hooks/use-element-creation.test.js Mermaid html metadata",
+        "client/src/components/canvas/canvas-element-wrapper.test.jsx Mermaid preview runtime"
+      ],
+      "decision": "canvas preview renders Mermaid as an html embedKind through a sandboxed iframe with vendored runtime.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "Mermaid authoring modal or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "Mermaid source is HTML-escaped inside pre.mermaid before runtime rendering",
+        "urlSchemePolicy": "runtime loaded from local /vendor/mermaid path",
+        "negativeSecurityTests": "canvas Mermaid source escaping and render-error fallback target"
+      }
+    },
+    {
+      "id": "html.mermaid-authoring.editor",
+      "element": "html",
+      "control": "mermaid-authoring",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.jsx",
+        "client/src/hooks/use-element-creation.js",
+        "client/src/components/HtmlEditorModal.jsx"
+      ],
+      "testCoverage": [
+        "client/src/components/ribbon/ribbon-plugin-insert.test.jsx Mermaid insert action",
+        "client/src/hooks/use-element-creation.test.js Mermaid html metadata",
+        "client/src/components/content-editor-modals.test.jsx Mermaid source editing"
+      ],
+      "decision": "editor inserts and edits Mermaid through the existing html element with embedKind metadata and source length feedback.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "Mermaid authoring modal or imported presentation JSON",
+        "sink": "presentation JSON",
+        "sanitizerOrEscaper": "source is stored as text and escaped when converted to iframe HTML",
+        "urlSchemePolicy": "runtime loaded from local /vendor/mermaid path",
+        "negativeSecurityTests": "editor Mermaid source length and escaping target"
+      }
+    },
+    {
+      "id": "html.mermaid-authoring.html-export",
+      "element": "html",
+      "control": "mermaid-authoring",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": [
+        "shared/src/element-renderers.js",
+        "client/src/utils/offlineExport.js",
+        "scripts/copy-vendor.js"
+      ],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js Mermaid html export runtime",
+        "client/src/utils/offlineExport.test.js Mermaid runtime inlined from data-url iframe"
+      ],
+      "decision": "html-export emits Mermaid iframe HTML with the vendored runtime and offline export inlines data-url iframe dependencies.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "Mermaid authoring modal or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "Mermaid source is HTML-escaped inside pre.mermaid before runtime rendering",
+        "urlSchemePolicy": "runtime loaded from local /vendor/mermaid path and inlined for offline export",
+        "negativeSecurityTests": "html-export Mermaid source escaping and offline runtime target"
+      }
+    },
+    {
+      "id": "html.mermaid-authoring.pptx-export",
+      "element": "html",
+      "control": "mermaid-authoring",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "client/src/utils/export-pptx-core.js",
+        "client/src/utils/export-pptx-fallback-renderer.js"
+      ],
+      "testCoverage": ["client/src/utils/exportPptx.test.js Mermaid PPTX fallback matrix row"],
+      "decision": "pptx-export does not claim editable Mermaid parity; it emits a structured fallback warning under the Mermaid matrix row.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "Mermaid authoring modal or imported presentation JSON",
+        "sink": "pptx-export report",
+        "sanitizerOrEscaper": "fallback report only includes metadata and does not execute source",
+        "urlSchemePolicy": "not applicable to placeholder fallback",
+        "negativeSecurityTests": "PPTX Mermaid fallback warning target"
+      }
+    },
+    {
+      "id": "html.stem-simulation-embed-presets.canvas",
+      "element": "html",
+      "control": "stem-simulation-embed-presets",
+      "surface": "canvas",
+      "status": "works",
+      "evidence": [
+        "client/src/utils/stem-embed-presets.js",
+        "client/src/hooks/use-element-creation.js",
+        "client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.jsx"
+      ],
+      "testCoverage": [
+        "client/src/utils/stem-embed-presets.test.js provider allowlist and iframe attributes",
+        "client/src/hooks/use-element-creation.test.js STEM html metadata"
+      ],
+      "decision": "canvas uses the existing html iframe path for validated online-only STEM simulation embeds.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "STEM simulation preset modal or imported presentation JSON",
+        "sink": "canvas renderer/output",
+        "sanitizerOrEscaper": "strict provider URL builder emits fixed iframe template only",
+        "urlSchemePolicy": "HTTPS allowlist for PhET, GeoGebra, Desmos, and CircuitJS/Falstad only",
+        "negativeSecurityTests": "STEM preset rejects javascript/data/private/unknown domains"
+      }
+    },
+    {
+      "id": "html.stem-simulation-embed-presets.editor",
+      "element": "html",
+      "control": "stem-simulation-embed-presets",
+      "surface": "editor",
+      "status": "works",
+      "evidence": [
+        "client/src/components/stem-simulation-preset-modal.jsx",
+        "client/src/utils/stem-embed-presets.js",
+        "client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.jsx"
+      ],
+      "testCoverage": [
+        "client/src/components/stem-simulation-preset-modal.test.jsx warning and validation",
+        "client/src/components/ribbon/ribbon-plugin-insert.test.jsx STEM insert wiring"
+      ],
+      "decision": "editor exposes four provider presets that insert canonical html elements with online-only warning text.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "STEM simulation preset modal",
+        "sink": "presentation JSON",
+        "sanitizerOrEscaper": "strict provider URL builder emits fixed iframe template only",
+        "urlSchemePolicy": "HTTPS allowlist for PhET, GeoGebra, Desmos, and CircuitJS/Falstad only",
+        "negativeSecurityTests": "STEM preset rejects javascript/data/private/unknown domains"
+      }
+    },
+    {
+      "id": "html.stem-simulation-embed-presets.html-export",
+      "element": "html",
+      "control": "stem-simulation-embed-presets",
+      "surface": "html-export",
+      "status": "works",
+      "evidence": ["shared/src/element-renderers.js", "client/src/utils/stem-embed-presets.js"],
+      "testCoverage": [
+        "shared/tests/element-renderers.test.js STEM iframe attributes preserved",
+        "client/src/utils/stem-embed-presets.test.js provider allowlist and iframe attributes"
+      ],
+      "decision": "html-export preserves validated STEM iframe embeds through the existing trusted HTML export path.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "STEM simulation preset modal or imported presentation JSON",
+        "sink": "html-export renderer/output",
+        "sanitizerOrEscaper": "strict provider URL builder emits fixed iframe template only",
+        "urlSchemePolicy": "HTTPS allowlist for PhET, GeoGebra, Desmos, and CircuitJS/Falstad only",
+        "negativeSecurityTests": "STEM preset rejects javascript/data/private/unknown domains"
+      }
+    },
+    {
+      "id": "html.stem-simulation-embed-presets.pptx-export",
+      "element": "html",
+      "control": "stem-simulation-embed-presets",
+      "surface": "pptx-export",
+      "status": "export-gap",
+      "evidence": [
+        "client/src/utils/export-pptx-core.js",
+        "client/src/utils/export-pptx-fallback-renderer.js"
+      ],
+      "testCoverage": ["client/src/utils/exportPptx.test.js STEM PPTX fallback matrix row"],
+      "decision": "pptx-export uses the existing HTML fallback/raster warning path and reports STEM-specific matrix metadata.",
+      "security": {
+        "trustBoundary": "trusted author content per NavSlides security model",
+        "inputSource": "STEM simulation preset modal or imported presentation JSON",
+        "sink": "pptx-export report",
+        "sanitizerOrEscaper": "fallback report only includes metadata and does not execute source",
+        "urlSchemePolicy": "not applicable to PPTX fallback report",
+        "negativeSecurityTests": "PPTX STEM fallback warning target"
+      }
+    },
+    {
       "id": "html.visibility.canvas",
       "element": "html",
       "control": "visibility",
@@ -1034,10 +1211,7 @@
       "control": "icon-name-style",
       "surface": "canvas",
       "status": "works",
-      "evidence": [
-        "misc-properties.jsx IconGallery",
-        "shared renderIcon"
-      ],
+      "evidence": ["misc-properties.jsx IconGallery", "shared renderIcon"],
       "testCoverage": [
         "icon icon-name-style canvas matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx icon stroke width control",
@@ -1051,10 +1225,7 @@
       "control": "icon-name-style",
       "surface": "editor",
       "status": "works",
-      "evidence": [
-        "misc-properties.jsx IconGallery",
-        "shared renderIcon"
-      ],
+      "evidence": ["misc-properties.jsx IconGallery", "shared renderIcon"],
       "testCoverage": [
         "icon icon-name-style editor matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx icon stroke width control",
@@ -1068,10 +1239,7 @@
       "control": "icon-name-style",
       "surface": "html-export",
       "status": "works",
-      "evidence": [
-        "misc-properties.jsx IconGallery",
-        "shared renderIcon"
-      ],
+      "evidence": ["misc-properties.jsx IconGallery", "shared renderIcon"],
       "testCoverage": [
         "icon icon-name-style html-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx icon stroke width control",
@@ -1085,10 +1253,7 @@
       "control": "icon-name-style",
       "surface": "pptx-export",
       "status": "export-gap",
-      "evidence": [
-        "misc-properties.jsx IconGallery",
-        "shared renderIcon"
-      ],
+      "evidence": ["misc-properties.jsx IconGallery", "shared renderIcon"],
       "testCoverage": [
         "icon icon-name-style pptx-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx icon stroke width control",
@@ -1469,11 +1634,7 @@
       "control": "line-style-markers",
       "surface": "canvas",
       "status": "works",
-      "evidence": [
-        "shape-properties.jsx line branch",
-        "shared renderLine",
-        "addLineElement"
-      ],
+      "evidence": ["shape-properties.jsx line branch", "shared renderLine", "addLineElement"],
       "testCoverage": [
         "line line-style-markers canvas matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx line excludes fill and writes dash/markers",
@@ -1487,11 +1648,7 @@
       "control": "line-style-markers",
       "surface": "editor",
       "status": "works",
-      "evidence": [
-        "shape-properties.jsx line branch",
-        "shared renderLine",
-        "addLineElement"
-      ],
+      "evidence": ["shape-properties.jsx line branch", "shared renderLine", "addLineElement"],
       "testCoverage": [
         "line line-style-markers editor matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx line excludes fill and writes dash/markers",
@@ -1505,11 +1662,7 @@
       "control": "line-style-markers",
       "surface": "html-export",
       "status": "works",
-      "evidence": [
-        "shape-properties.jsx line branch",
-        "shared renderLine",
-        "addLineElement"
-      ],
+      "evidence": ["shape-properties.jsx line branch", "shared renderLine", "addLineElement"],
       "testCoverage": [
         "line line-style-markers html-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx line excludes fill and writes dash/markers",
@@ -1523,11 +1676,7 @@
       "control": "line-style-markers",
       "surface": "pptx-export",
       "status": "works",
-      "evidence": [
-        "shape-properties.jsx line branch",
-        "shared renderLine",
-        "addLineElement"
-      ],
+      "evidence": ["shape-properties.jsx line branch", "shared renderLine", "addLineElement"],
       "testCoverage": [
         "line line-style-markers pptx-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx line excludes fill and writes dash/markers",
@@ -1739,10 +1888,7 @@
       "control": "qr-data-style",
       "surface": "canvas",
       "status": "works",
-      "evidence": [
-        "misc-properties.jsx QR controls",
-        "shared QR config"
-      ],
+      "evidence": ["misc-properties.jsx QR controls", "shared QR config"],
       "testCoverage": [
         "qrcode qr-data-style canvas matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx QR data and error correction controls",
@@ -1764,10 +1910,7 @@
       "control": "qr-data-style",
       "surface": "editor",
       "status": "works",
-      "evidence": [
-        "misc-properties.jsx QR controls",
-        "shared QR config"
-      ],
+      "evidence": ["misc-properties.jsx QR controls", "shared QR config"],
       "testCoverage": [
         "qrcode qr-data-style editor matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx QR data and error correction controls",
@@ -1789,10 +1932,7 @@
       "control": "qr-data-style",
       "surface": "html-export",
       "status": "works",
-      "evidence": [
-        "misc-properties.jsx QR controls",
-        "shared QR config"
-      ],
+      "evidence": ["misc-properties.jsx QR controls", "shared QR config"],
       "testCoverage": [
         "qrcode qr-data-style html-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx QR data and error correction controls",
@@ -1814,10 +1954,7 @@
       "control": "qr-data-style",
       "surface": "pptx-export",
       "status": "export-gap",
-      "evidence": [
-        "misc-properties.jsx QR controls",
-        "shared QR config"
-      ],
+      "evidence": ["misc-properties.jsx QR controls", "shared QR config"],
       "testCoverage": [
         "qrcode qr-data-style pptx-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx QR data and error correction controls",
@@ -1889,11 +2026,7 @@
       "control": "shape-style-and-label",
       "surface": "canvas",
       "status": "works",
-      "evidence": [
-        "shape-properties.jsx",
-        "shape-element-renderer.jsx",
-        "addShapeElement"
-      ],
+      "evidence": ["shape-properties.jsx", "shape-element-renderer.jsx", "addShapeElement"],
       "testCoverage": [
         "shape shape-style-and-label canvas matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx shape fill/stroke/opacity/radius/label typography controls",
@@ -1915,11 +2048,7 @@
       "control": "shape-style-and-label",
       "surface": "editor",
       "status": "works",
-      "evidence": [
-        "shape-properties.jsx",
-        "shape-element-renderer.jsx",
-        "addShapeElement"
-      ],
+      "evidence": ["shape-properties.jsx", "shape-element-renderer.jsx", "addShapeElement"],
       "testCoverage": [
         "shape shape-style-and-label editor matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx shape fill/stroke/opacity/radius/label typography controls",
@@ -1941,11 +2070,7 @@
       "control": "shape-style-and-label",
       "surface": "html-export",
       "status": "works",
-      "evidence": [
-        "shape-properties.jsx",
-        "shape-element-renderer.jsx",
-        "addShapeElement"
-      ],
+      "evidence": ["shape-properties.jsx", "shape-element-renderer.jsx", "addShapeElement"],
       "testCoverage": [
         "shape shape-style-and-label html-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx shape fill/stroke/opacity/radius/label typography controls",
@@ -1967,11 +2092,7 @@
       "control": "shape-style-and-label",
       "surface": "pptx-export",
       "status": "works",
-      "evidence": [
-        "shape-properties.jsx",
-        "shape-element-renderer.jsx",
-        "addShapeElement"
-      ],
+      "evidence": ["shape-properties.jsx", "shape-element-renderer.jsx", "addShapeElement"],
       "testCoverage": [
         "shape shape-style-and-label pptx-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx shape fill/stroke/opacity/radius/label typography controls",
@@ -2043,10 +2164,7 @@
       "control": "svg-content-overrides",
       "surface": "canvas",
       "status": "works",
-      "evidence": [
-        "misc-properties.jsx SVG controls",
-        "shared renderSvg sanitizer"
-      ],
+      "evidence": ["misc-properties.jsx SVG controls", "shared renderSvg sanitizer"],
       "testCoverage": [
         "svg svg-content-overrides canvas matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx SVG markup/override/reset controls",
@@ -2071,10 +2189,7 @@
       "control": "svg-content-overrides",
       "surface": "editor",
       "status": "works",
-      "evidence": [
-        "misc-properties.jsx SVG controls",
-        "shared renderSvg sanitizer"
-      ],
+      "evidence": ["misc-properties.jsx SVG controls", "shared renderSvg sanitizer"],
       "testCoverage": [
         "svg svg-content-overrides editor matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx SVG markup/override/reset controls",
@@ -2099,10 +2214,7 @@
       "control": "svg-content-overrides",
       "surface": "html-export",
       "status": "works",
-      "evidence": [
-        "misc-properties.jsx SVG controls",
-        "shared renderSvg sanitizer"
-      ],
+      "evidence": ["misc-properties.jsx SVG controls", "shared renderSvg sanitizer"],
       "testCoverage": [
         "svg svg-content-overrides html-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx SVG markup/override/reset controls",
@@ -2127,10 +2239,7 @@
       "control": "svg-content-overrides",
       "surface": "pptx-export",
       "status": "export-gap",
-      "evidence": [
-        "misc-properties.jsx SVG controls",
-        "shared renderSvg sanitizer"
-      ],
+      "evidence": ["misc-properties.jsx SVG controls", "shared renderSvg sanitizer"],
       "testCoverage": [
         "svg svg-content-overrides pptx-export matrix target",
         "client/src/components/properties/shape-line-misc-properties-depth.test.jsx SVG markup/override/reset controls",
@@ -2205,11 +2314,7 @@
       "control": "table-structure-style",
       "surface": "canvas",
       "status": "works",
-      "evidence": [
-        "table-properties.jsx",
-        "shared renderTable",
-        "Current audit A4"
-      ],
+      "evidence": ["table-properties.jsx", "shared renderTable", "Current audit A4"],
       "testCoverage": [
         "table table-structure-style canvas matrix target",
         "client/src/components/properties/table-properties.test.jsx table structure/header/border/cell style controls",
@@ -2233,11 +2338,7 @@
       "control": "table-structure-style",
       "surface": "editor",
       "status": "partial",
-      "evidence": [
-        "table-properties.jsx",
-        "shared renderTable",
-        "Current audit A4"
-      ],
+      "evidence": ["table-properties.jsx", "shared renderTable", "Current audit A4"],
       "testCoverage": [
         "table table-structure-style editor matrix target",
         "client/src/components/properties/table-properties.test.jsx table structure/header/border/cell style controls",
@@ -2261,11 +2362,7 @@
       "control": "table-structure-style",
       "surface": "html-export",
       "status": "works",
-      "evidence": [
-        "table-properties.jsx",
-        "shared renderTable",
-        "Current audit A4"
-      ],
+      "evidence": ["table-properties.jsx", "shared renderTable", "Current audit A4"],
       "testCoverage": [
         "table table-structure-style html-export matrix target",
         "client/src/components/properties/table-properties.test.jsx table structure/header/border/cell style controls",
@@ -2289,11 +2386,7 @@
       "control": "table-structure-style",
       "surface": "pptx-export",
       "status": "partial",
-      "evidence": [
-        "table-properties.jsx",
-        "shared renderTable",
-        "Current audit A4"
-      ],
+      "evidence": ["table-properties.jsx", "shared renderTable", "Current audit A4"],
       "testCoverage": [
         "table table-structure-style pptx-export matrix target",
         "client/src/components/properties/table-properties.test.jsx table structure/header/border/cell style controls",
@@ -2526,11 +2619,7 @@
       "control": "timeline-events-style",
       "surface": "canvas",
       "status": "works",
-      "evidence": [
-        "timeline-properties.jsx",
-        "shared renderTimeline",
-        "Current audit A2"
-      ],
+      "evidence": ["timeline-properties.jsx", "shared renderTimeline", "Current audit A2"],
       "testCoverage": [
         "timeline timeline-events-style canvas matrix target",
         "client/src/components/properties/timeline-properties.test.jsx timeline connector writes events and legacy items",
@@ -2552,11 +2641,7 @@
       "control": "timeline-events-style",
       "surface": "editor",
       "status": "works",
-      "evidence": [
-        "timeline-properties.jsx",
-        "shared renderTimeline",
-        "Current audit A2"
-      ],
+      "evidence": ["timeline-properties.jsx", "shared renderTimeline", "Current audit A2"],
       "testCoverage": [
         "timeline timeline-events-style editor matrix target",
         "client/src/components/properties/timeline-properties.test.jsx timeline connector writes events and legacy items",
@@ -2578,11 +2663,7 @@
       "control": "timeline-events-style",
       "surface": "html-export",
       "status": "works",
-      "evidence": [
-        "timeline-properties.jsx",
-        "shared renderTimeline",
-        "Current audit A2"
-      ],
+      "evidence": ["timeline-properties.jsx", "shared renderTimeline", "Current audit A2"],
       "testCoverage": [
         "timeline timeline-events-style html-export matrix target",
         "client/src/components/properties/timeline-properties.test.jsx timeline connector writes events and legacy items",
@@ -2604,11 +2685,7 @@
       "control": "timeline-events-style",
       "surface": "pptx-export",
       "status": "export-gap",
-      "evidence": [
-        "timeline-properties.jsx",
-        "shared renderTimeline",
-        "Current audit A2"
-      ],
+      "evidence": ["timeline-properties.jsx", "shared renderTimeline", "Current audit A2"],
       "testCoverage": [
         "timeline timeline-events-style pptx-export matrix target",
         "client/src/components/properties/timeline-properties.test.jsx timeline connector writes events and legacy items",

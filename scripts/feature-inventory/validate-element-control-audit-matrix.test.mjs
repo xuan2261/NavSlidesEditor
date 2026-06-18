@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ELEMENT_DEFAULTS } from '../../client/src/data/element-defaults.js'
+import expectedControlInventory from './element-control-expected-controls.json' with { type: 'json' }
 import { validateElementControlAuditMatrix } from './validate-element-control-audit-matrix.mjs'
 
 const canonicalElements = Object.keys(ELEMENT_DEFAULTS)
@@ -109,6 +110,76 @@ describe('validateElementControlAuditMatrix', () => {
     )
   })
 
+  it('allows deferred teaching controls to have no placeholder matrix rows', () => {
+    const rows = [
+      row({
+        element: 'html',
+        control: 'trusted-html-content',
+        surface: 'editor',
+        security: security(),
+      }),
+    ]
+    const expectedControls = [
+      expectedControl({
+        element: 'html',
+        control: 'trusted-html-content',
+        surfaces: ['editor'],
+        contentBearing: true,
+      }),
+      expectedControl({
+        element: 'html',
+        control: 'mermaid-authoring',
+        surfaces: ['editor', 'canvas', 'html-export', 'pptx-export'],
+        scope: 'deferred',
+        contentBearing: true,
+        rationale: 'future implementation must add real evidence before inclusion',
+      }),
+    ]
+    const result = validate({ rows, expectedControls, canonical: ['html'] })
+
+    expect(result.ok).toBe(true)
+  })
+
+  it('rejects matrix rows that claim deferred teaching behavior before implementation', () => {
+    const rows = [
+      row({
+        element: 'html',
+        control: 'trusted-html-content',
+        surface: 'editor',
+        security: security(),
+      }),
+      row({
+        element: 'html',
+        control: 'mermaid-authoring',
+        surface: 'editor',
+        status: 'works',
+        security: security(),
+      }),
+    ]
+    const expectedControls = [
+      expectedControl({
+        element: 'html',
+        control: 'trusted-html-content',
+        surfaces: ['editor'],
+        contentBearing: true,
+      }),
+      expectedControl({
+        element: 'html',
+        control: 'mermaid-authoring',
+        surfaces: ['editor'],
+        scope: 'deferred',
+        contentBearing: true,
+        rationale: 'future implementation must add real evidence before inclusion',
+      }),
+    ]
+    const result = validate({ rows, expectedControls, canonical: ['html'] })
+
+    expect(result.ok).toBe(false)
+    expect(result.errors).toContain(
+      'row html.mermaid-authoring.editor is not an expected element/control/surface'
+    )
+  })
+
   it('fails on a status outside works, partial, broken, export-gap', () => {
     const rows = [
       row({
@@ -197,7 +268,9 @@ describe('validateElementControlAuditMatrix', () => {
 
     expect(result.ok).toBe(false)
     expect(result.errors).toContain('row text.rich-text-formatting.editor missing evidence')
-    expect(result.errors).toContain('row text.rich-text-formatting.editor missing target test coverage')
+    expect(result.errors).toContain(
+      'row text.rich-text-formatting.editor missing target test coverage'
+    )
   })
 
   it('fails when a content-bearing row omits required security fields', () => {
@@ -220,6 +293,46 @@ describe('validateElementControlAuditMatrix', () => {
     const result = validate({ rows, expectedControls, canonical: ['html'] })
 
     expect(result.ok).toBe(false)
-    expect(result.errors).toContain('row html.trusted-html-content.editor missing security.negativeSecurityTests')
+    expect(result.errors).toContain(
+      'row html.trusted-html-content.editor missing security.negativeSecurityTests'
+    )
+  })
+
+  it('predeclares teaching interactivity controls on canonical element rows only', () => {
+    const controls = expectedControlInventory.controls
+    const plannedControls = [
+      ['html', 'mermaid-authoring'],
+      ['html', 'stem-simulation-embed-presets'],
+      ['game', 'live-poll-subtype'],
+      ['game', 'word-cloud-subtype'],
+      ['game', 'drag-drop-matching-subtype'],
+      ['code', 'code-walkthrough-controls'],
+      ['latex', 'latex-authoring-ux'],
+      ['svg', 'technical-symbol-packs'],
+      ['icon', 'technical-symbol-packs'],
+      ['shape', 'technical-symbol-packs'],
+    ]
+
+    for (const [element, control] of plannedControls) {
+      const entry = controls.find((item) => item.element === element && item.control === control)
+      const implementedControls = new Set(['mermaid-authoring', 'stem-simulation-embed-presets'])
+      expect(entry).toMatchObject({
+        element,
+        control,
+        scope: implementedControls.has(control) ? 'included' : 'deferred',
+      })
+      expect(entry.surfaces).toEqual(
+        expect.arrayContaining(['editor', 'canvas', 'html-export', 'pptx-export'])
+      )
+      expect(entry.rationale).not.toMatch(/^(tbd|todo|placeholder)$/i)
+    }
+
+    expect(controls).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ element: 'mermaid' }),
+        expect.objectContaining({ element: 'poll' }),
+        expect.objectContaining({ element: 'stem-simulation' }),
+      ])
+    )
   })
 })

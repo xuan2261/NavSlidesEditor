@@ -161,6 +161,9 @@ describe('Game Element Renderer — additional coverage', () => {
       'relay-race': 'Relay Race',
       'trivia-champ': 'Trivia Championship',
       scattergories: 'Scattergories',
+      poll: 'Live Poll',
+      'word-cloud': 'Word Cloud',
+      matching: 'Matching',
     }
 
     GAME_TYPES.all.forEach((gameType) => {

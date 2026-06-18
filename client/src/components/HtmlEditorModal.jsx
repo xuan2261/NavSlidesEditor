@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Button } from '../components/ui'
 import { isBackdropClick } from '../lib/utils'
+import { MERMAID_SOURCE_LIMIT } from '../hooks/use-element-creation'
 
 export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) {
   const [isOpen, setIsOpen] = useState(true)
+  const isMermaid = state.embedKind === 'mermaid'
+  const mermaidSource = state.mermaidSource || ''
+  const isTooLong = isMermaid && mermaidSource.length > MERMAID_SOURCE_LIMIT
 
   const handleClose = () => {
     setIsOpen(false)
@@ -11,7 +15,9 @@ export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) 
   }
 
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    const handler = (e) => {
+      if (e.key === 'Escape') handleClose()
+    }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -35,9 +41,13 @@ export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) 
       >
         <div className="px-4 py-3 border-b border-border flex justify-between items-center shrink-0">
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-            <h2 id="html-editor-modal-title" className="font-semibold text-sm">HTML / D3 Embed</h2>
+            <h2 id="html-editor-modal-title" className="font-semibold text-sm">
+              {isMermaid ? 'Mermaid Diagram' : 'HTML / D3 Embed'}
+            </h2>
             <span className="text-xs text-text-muted">
-              D3, plain HTML, or any JavaScript — renders in an iframe
+              {isMermaid
+                ? 'Edit Mermaid source — renders through the trusted HTML embed pipeline'
+                : 'D3, plain HTML, or any JavaScript — renders in an iframe'}
             </span>
             <span data-testid="html-trusted-content-warning" className="text-xs text-amber-300">
               Trusted author content only; scripts are preserved in preview and export.
@@ -47,14 +57,32 @@ export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) 
             <Button variant="secondary" className="text-xs" onClick={onCancel}>
               Cancel
             </Button>
-            <Button variant="primary" className="text-xs" onClick={onApply}>
+            <Button variant="primary" className="text-xs" onClick={onApply} disabled={isTooLong}>
               Apply
             </Button>
           </div>
         </div>
+        {isMermaid && (
+          <div className="border-b border-border px-4 py-2 text-xs text-text-muted">
+            <span data-testid="mermaid-source-count">
+              {mermaidSource.length}/{MERMAID_SOURCE_LIMIT}
+            </span>
+            {isTooLong && (
+              <span data-testid="mermaid-source-error" className="ml-3 text-amber-300">
+                Mermaid source is too long.
+              </span>
+            )}
+          </div>
+        )}
         <textarea
-          value={state.content}
-          onChange={(e) => onChange({ ...state, content: e.target.value })}
+          value={isMermaid ? mermaidSource : state.content}
+          onChange={(e) =>
+            onChange(
+              isMermaid
+                ? { ...state, mermaidSource: e.target.value }
+                : { ...state, content: e.target.value }
+            )
+          }
           className="flex-1 bg-[#0d0d1a] text-[#e2e8f0] font-mono text-[13px] p-4 md:p-5 border-none outline-none resize-none rounded-b-xl leading-relaxed"
           style={{ tabSize: 2 }}
           spellCheck={false}
@@ -65,7 +93,7 @@ export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) 
               const { selectionStart: s, selectionEnd: end, value } = e.target
               const next = value.substring(0, s) + '  ' + value.substring(end)
               e.target.value = next
-              onChange({ ...state, content: next })
+              onChange(isMermaid ? { ...state, mermaidSource: next } : { ...state, content: next })
               requestAnimationFrame(() => {
                 e.target.selectionStart = e.target.selectionEnd = s + 2
               })

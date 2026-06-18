@@ -217,7 +217,6 @@ async function inlineSrcdocDeps(inner) {
 export async function generateOfflineHTML(html) {
   let result = html
   try {
-
     // ── 1. Inline all <link> vendor CSS ──────────────────────────────────────
     const cssMatches = [
       ...result.matchAll(
@@ -230,21 +229,21 @@ export async function generateOfflineHTML(html) {
       let css = await cachedFetchText(vendorPath)
       const origin = window.location.origin
 
-    // Resolve KaTeX font relative paths to absolute URLs
-    if (vendorPath.includes('katex') && vendorPath.endsWith('.css')) {
-      const katexFontsBase = `${origin}/vendor/katex/dist/fonts`
-      css = css.replace(/url\(fonts\//g, `url(${katexFontsBase}/`)
-      css = css.replace(/url\("fonts\//g, `url("${katexFontsBase}/`)
-      css = css.replace(/url\('fonts\//g, `url('${katexFontsBase}/`)
-    }
+      // Resolve KaTeX font relative paths to absolute URLs
+      if (vendorPath.includes('katex') && vendorPath.endsWith('.css')) {
+        const katexFontsBase = `${origin}/vendor/katex/dist/fonts`
+        css = css.replace(/url\(fonts\//g, `url(${katexFontsBase}/`)
+        css = css.replace(/url\("fonts\//g, `url("${katexFontsBase}/`)
+        css = css.replace(/url\('fonts\//g, `url('${katexFontsBase}/`)
+      }
 
-    // Resolve Font Awesome webfont relative paths (../webfonts/) to absolute URLs
-    if (vendorPath.includes('font-awesome') && vendorPath.endsWith('.css')) {
-      const faWebfontsBase = `${origin}/vendor/font-awesome/webfonts`
-      css = css.replace(/url\(\.\.\/webfonts\//g, `url(${faWebfontsBase}/`)
-      css = css.replace(/url\("\.\.\/webfonts\//g, `url("${faWebfontsBase}/`)
-      css = css.replace(/url\('\.\.\/webfonts\//g, `url('${faWebfontsBase}/`)
-    }
+      // Resolve Font Awesome webfont relative paths (../webfonts/) to absolute URLs
+      if (vendorPath.includes('font-awesome') && vendorPath.endsWith('.css')) {
+        const faWebfontsBase = `${origin}/vendor/font-awesome/webfonts`
+        css = css.replace(/url\(\.\.\/webfonts\//g, `url(${faWebfontsBase}/`)
+        css = css.replace(/url\("\.\.\/webfonts\//g, `url("${faWebfontsBase}/`)
+        css = css.replace(/url\('\.\.\/webfonts\//g, `url('${faWebfontsBase}/`)
+      }
 
       result = result.split(match[0]).join(`<style>/* ${vendorPath} */\n${css}\n</style>`)
     }
@@ -272,38 +271,38 @@ export async function generateOfflineHTML(html) {
       let js = await cachedFetchText(vendorPath)
       let safe = safeInlineJS(js)
 
-    // Patch plugin scriptPath() after inlining — plugins use
-    // document.currentScript.src to locate their images/assets.
-    // When inlined (no src attr), currentScript.src is empty → all
-    // relative image paths (sponge.png, blackboard.png, cursors) break.
-    const _origin = window.location.origin
-    if (vendorPath.includes('chalkboard/plugin.js')) {
-      const imgRegex = /path \+ '([^']+)'/g
-      let match
-      const replacements = []
-      while ((match = imgRegex.exec(safe)) !== null) {
-        replacements.push(match[1]) // e.g. "img/sponge.png"
-      }
-      for (const imgPath of [...new Set(replacements)]) {
-        const cleanPath = imgPath.split(')')[0]
-        const dataUri = await fetchAsDataUri(`/vendor/reveal-plugins/chalkboard/${cleanPath}`)
-        if (dataUri) {
-          const suffix = imgPath.substring(cleanPath.length)
-          safe = safe.split(`path + '${imgPath}'`).join(`'${dataUri}${suffix}'`)
+      // Patch plugin scriptPath() after inlining — plugins use
+      // document.currentScript.src to locate their images/assets.
+      // When inlined (no src attr), currentScript.src is empty → all
+      // relative image paths (sponge.png, blackboard.png, cursors) break.
+      const _origin = window.location.origin
+      if (vendorPath.includes('chalkboard/plugin.js')) {
+        const imgRegex = /path \+ '([^']+)'/g
+        let match
+        const replacements = []
+        while ((match = imgRegex.exec(safe)) !== null) {
+          replacements.push(match[1]) // e.g. "img/sponge.png"
         }
+        for (const imgPath of [...new Set(replacements)]) {
+          const cleanPath = imgPath.split(')')[0]
+          const dataUri = await fetchAsDataUri(`/vendor/reveal-plugins/chalkboard/${cleanPath}`)
+          if (dataUri) {
+            const suffix = imgPath.substring(cleanPath.length)
+            safe = safe.split(`path + '${imgPath}'`).join(`'${dataUri}${suffix}'`)
+          }
+        }
+        // Replace scriptPath() to return empty string since we inlined everything
+        safe = safe.replace('function scriptPath() {', `function scriptPath() { return '';`)
       }
-      // Replace scriptPath() to return empty string since we inlined everything
-      safe = safe.replace('function scriptPath() {', `function scriptPath() { return '';`)
-    }
-    if (vendorPath.includes('menu/menu.js')) {
-      // The menu plugin dynamically loads css using P(...) which breaks offline mode.
-      // We already inlined the menu CSS, so we just replace the dynamic loader with a delayed ready callback.
-      // Calling M() immediately crashes Reveal since setupDOM hasn't completed yet.
-      safe = safe.replace(
-        'P(r.path+"menu.css","stylesheet",(function(){void 0===r.loadIcons||r.loadIcons?P(r.path+"font-awesome/css/all.css","stylesheet",M):M()}))',
-        '(Reveal.isReady()?M():Reveal.on("ready",M))'
-      )
-    }
+      if (vendorPath.includes('menu/menu.js')) {
+        // The menu plugin dynamically loads css using P(...) which breaks offline mode.
+        // We already inlined the menu CSS, so we just replace the dynamic loader with a delayed ready callback.
+        // Calling M() immediately crashes Reveal since setupDOM hasn't completed yet.
+        safe = safe.replace(
+          'P(r.path+"menu.css","stylesheet",(function(){void 0===r.loadIcons||r.loadIcons?P(r.path+"font-awesome/css/all.css","stylesheet",M):M()}))',
+          '(Reveal.isReady()?M():Reveal.on("ready",M))'
+        )
+      }
 
       result = result.split(match[0]).join(`<script>/* ${vendorPath} */\n${safe}\n</script>`)
     }
@@ -319,62 +318,80 @@ export async function generateOfflineHTML(html) {
     )
 
     // ── 4. Convert iframes from srcdoc to blob-URL based loading ─────────────
-  // The srcdoc approach breaks when inlined libraries are very large (280KB+ D3,
-  // 200KB+ Chart.js). Browser HTML parsers can struggle with huge srcdoc attributes
-  // encoded as HTML entities. Instead, we store iframe HTML content in a JS object
-  // and create blob URLs at runtime, which works reliably even with large content.
+    // The srcdoc approach breaks when inlined libraries are very large (280KB+ D3,
+    // 200KB+ Chart.js). Browser HTML parsers can struggle with huge srcdoc attributes
+    // encoded as HTML entities. Instead, we store iframe HTML content in a JS object
+    // and create blob URLs at runtime, which works reliably even with large content.
 
-  const srcdocRegex = /(<iframe[^>]*?)srcdoc="([^"]*)"([^>]*>)/g
-  let srcdocMatch
-  const iframeEntries = [] // { id, html }
-  let iframeCounter = 0
-  const iframeReplacements = []
+    const srcdocRegex = /(<iframe[^>]*?)srcdoc="([^"]*)"([^>]*>)/g
+    let srcdocMatch
+    const iframeEntries = [] // { id, html }
+    let iframeCounter = 0
+    const iframeReplacements = []
 
-  while ((srcdocMatch = srcdocRegex.exec(result)) !== null) {
-    const beforeSrcdoc = srcdocMatch[1]
-    const raw = srcdocMatch[2]
-    const afterSrcdoc = srcdocMatch[3]
-    let inner = decodeSrcdoc(raw)
+    while ((srcdocMatch = srcdocRegex.exec(result)) !== null) {
+      const beforeSrcdoc = srcdocMatch[1]
+      const raw = srcdocMatch[2]
+      const afterSrcdoc = srcdocMatch[3]
+      let inner = decodeSrcdoc(raw)
 
-    const { html: processedInner } = await inlineSrcdocDeps(inner)
+      const { html: processedInner } = await inlineSrcdocDeps(inner)
 
-    const iframeId = `__offline_iframe_${iframeCounter++}`
-    iframeEntries.push({ id: iframeId, html: processedInner })
+      const iframeId = `__offline_iframe_${iframeCounter++}`
+      iframeEntries.push({ id: iframeId, html: processedInner })
 
-    // Replace srcdoc with a placeholder data attribute + about:blank src
-    iframeReplacements.push({
-      original: srcdocMatch[0],
-      replacement: `${beforeSrcdoc}data-offline-id="${iframeId}" src="about:blank"${afterSrcdoc}`,
-    })
-  }
+      // Replace srcdoc with a placeholder data attribute + about:blank src
+      iframeReplacements.push({
+        original: srcdocMatch[0],
+        replacement: `${beforeSrcdoc}data-offline-id="${iframeId}" src="about:blank"${afterSrcdoc}`,
+      })
+    }
 
-  // Apply replacements in reverse order to preserve string positions
-  for (const r of iframeReplacements.reverse()) {
-    result = result.split(r.original).join(r.replacement)
-  }
+    const dataUrlRegex = /(<iframe[^>]*?)src="data:text\/html;charset=utf-8,([^"]*)"([^>]*>)/g
+    let dataUrlMatch
+    while ((dataUrlMatch = dataUrlRegex.exec(result)) !== null) {
+      const beforeSrc = dataUrlMatch[1]
+      const raw = dataUrlMatch[2]
+      const afterSrc = dataUrlMatch[3]
+      let inner = decodeURIComponent(raw)
+
+      const { html: processedInner } = await inlineSrcdocDeps(inner)
+
+      const iframeId = `__offline_iframe_${iframeCounter++}`
+      iframeEntries.push({ id: iframeId, html: processedInner })
+      iframeReplacements.push({
+        original: dataUrlMatch[0],
+        replacement: `${beforeSrc}data-offline-id="${iframeId}" src="about:blank"${afterSrc}`,
+      })
+    }
+
+    // Apply replacements in reverse order to preserve string positions
+    for (const r of iframeReplacements.reverse()) {
+      result = result.split(r.original).join(r.replacement)
+    }
 
     // ── 5. Inject iframe initialization script ───────────────────────────────
     if (iframeEntries.length > 0) {
-    // Build the iframe data as base64-encoded strings to avoid any escaping issues
-    const iframeDataParts = iframeEntries.map((entry) => {
-      // Convert HTML to base64 to completely avoid escaping issues
-      try {
-        const base64 = btoa(unescape(encodeURIComponent(entry.html)))
-        return `    '${entry.id}': '${base64}'`
-      } catch {
-        // Fallback: use TextEncoder for content that btoa can't handle
-        const bytes = new TextEncoder().encode(entry.html)
-        let binary = ''
-        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
-        const base64 = btoa(binary)
-        return `    '${entry.id}': '${base64}'`
-      }
-    })
+      // Build the iframe data as base64-encoded strings to avoid any escaping issues
+      const iframeDataParts = iframeEntries.map((entry) => {
+        // Convert HTML to base64 to completely avoid escaping issues
+        try {
+          const base64 = btoa(unescape(encodeURIComponent(entry.html)))
+          return `    '${entry.id}': '${base64}'`
+        } catch {
+          // Fallback: use TextEncoder for content that btoa can't handle
+          const bytes = new TextEncoder().encode(entry.html)
+          let binary = ''
+          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+          const base64 = btoa(binary)
+          return `    '${entry.id}': '${base64}'`
+        }
+      })
 
-    const initScript =
-      `
+      const initScript =
+        `
   <` +
-      `script>
+        `script>
   // Offline iframe initialization with retry logic
   (function() {
     var _iframeB64 = {
@@ -436,23 +453,31 @@ ${iframeDataParts.join(',\n')}
     setTimeout(_initAll, 5000);
   })();
   <` +
-      `/script>`
+        `/script>`
 
-    // Insert before the Reveal.initialize script (look for Reveal.initialize)
-    // This ensures our iframe data is available when Reveal fires its events.
-    // IMPORTANT: Use lastIndexOf because after inlining vendor JS, 'Reveal.initialize('
-    // appears inside the inlined reveal.js source code too. We need the LAST occurrence
-    // which is the actual init call in the page's own script block.
-    const revealInitIdx = result.lastIndexOf('Reveal.initialize(')
-    if (revealInitIdx !== -1) {
-      // Find the <script> tag that contains Reveal.initialize
-      const scriptBeforeInit = result.lastIndexOf('<script>', revealInitIdx)
-      if (scriptBeforeInit !== -1) {
-        result =
-          result.substring(0, scriptBeforeInit) +
-          initScript +
-          '\n' +
-          result.substring(scriptBeforeInit)
+      // Insert before the Reveal.initialize script (look for Reveal.initialize)
+      // This ensures our iframe data is available when Reveal fires its events.
+      // IMPORTANT: Use lastIndexOf because after inlining vendor JS, 'Reveal.initialize('
+      // appears inside the inlined reveal.js source code too. We need the LAST occurrence
+      // which is the actual init call in the page's own script block.
+      const revealInitIdx = result.lastIndexOf('Reveal.initialize(')
+      if (revealInitIdx !== -1) {
+        // Find the <script> tag that contains Reveal.initialize
+        const scriptBeforeInit = result.lastIndexOf('<script>', revealInitIdx)
+        if (scriptBeforeInit !== -1) {
+          result =
+            result.substring(0, scriptBeforeInit) +
+            initScript +
+            '\n' +
+            result.substring(scriptBeforeInit)
+        } else {
+          // Fallback: insert before </body>
+          const bodyCloseIdx = result.lastIndexOf('</body>')
+          if (bodyCloseIdx !== -1) {
+            result =
+              result.substring(0, bodyCloseIdx) + initScript + '\n' + result.substring(bodyCloseIdx)
+          }
+        }
       } else {
         // Fallback: insert before </body>
         const bodyCloseIdx = result.lastIndexOf('</body>')
@@ -461,60 +486,52 @@ ${iframeDataParts.join(',\n')}
             result.substring(0, bodyCloseIdx) + initScript + '\n' + result.substring(bodyCloseIdx)
         }
       }
-    } else {
-      // Fallback: insert before </body>
-      const bodyCloseIdx = result.lastIndexOf('</body>')
-      if (bodyCloseIdx !== -1) {
-        result =
-          result.substring(0, bodyCloseIdx) + initScript + '\n' + result.substring(bodyCloseIdx)
-      }
     }
-  }
 
     // ── 6. Inline uploaded images as base64 data URIs ─────────────────────────
-  // This makes the offline HTML truly self-contained — images won't depend on the server
-  const imgSrcMatches = [
-    ...new Set(
-      (result.match(/(?:src|data-background-image)=["'](\/?uploads\/[^"']+)["']/g) || [])
-        .map((m) => m.match(/["'](\/?uploads\/[^"']+)["']/)?.[1])
-        .filter(Boolean)
-    ),
-  ]
-  for (const imgPath of imgSrcMatches) {
-    const dataUri = await fetchAsDataUri(imgPath.startsWith('/') ? imgPath : `/${imgPath}`)
-    if (dataUri) {
-      // Replace all occurrences of this image path with the data URI
-      const escaped = imgPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      result = result.replace(new RegExp(escaped, 'g'), dataUri)
+    // This makes the offline HTML truly self-contained — images won't depend on the server
+    const imgSrcMatches = [
+      ...new Set(
+        (result.match(/(?:src|data-background-image)=["'](\/?uploads\/[^"']+)["']/g) || [])
+          .map((m) => m.match(/["'](\/?uploads\/[^"']+)["']/)?.[1])
+          .filter(Boolean)
+      ),
+    ]
+    for (const imgPath of imgSrcMatches) {
+      const dataUri = await fetchAsDataUri(imgPath.startsWith('/') ? imgPath : `/${imgPath}`)
+      if (dataUri) {
+        // Replace all occurrences of this image path with the data URI
+        const escaped = imgPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        result = result.replace(new RegExp(escaped, 'g'), dataUri)
+      }
     }
-  }
 
     // ── 6b. Inline external/CDN images (best-effort, timeout-guarded) ─────────
-  // Make the offline HTML self-contained for remote images too. Each fetch is
-  // bounded by a timeout; on failure (CORS, network, timeout) we leave the
-  // original URL untouched and warn — external inlining never fails the export.
-  // Cross-origin assets that lack permissive CORS headers can't be inlined.
-  const externalImgMatches = [
-    ...new Set(
-      (result.match(/(?:src|data-background-image)=["'](https?:\/\/[^"']+)["']/g) || [])
-        .map((m) => m.match(/["'](https?:\/\/[^"']+)["']/)?.[1])
-        .filter(Boolean)
-    ),
-  ]
-  for (const imgUrl of externalImgMatches) {
-    const dataUri = await fetchExternalAsDataUri(imgUrl)
-    if (dataUri) {
-      const escaped = imgUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      result = result.replace(new RegExp(escaped, 'g'), dataUri)
-    } else if (typeof console !== 'undefined') {
-      console.warn(`Offline export: kept remote image (could not inline): ${imgUrl}`)
+    // Make the offline HTML self-contained for remote images too. Each fetch is
+    // bounded by a timeout; on failure (CORS, network, timeout) we leave the
+    // original URL untouched and warn — external inlining never fails the export.
+    // Cross-origin assets that lack permissive CORS headers can't be inlined.
+    const externalImgMatches = [
+      ...new Set(
+        (result.match(/(?:src|data-background-image)=["'](https?:\/\/[^"']+)["']/g) || [])
+          .map((m) => m.match(/["'](https?:\/\/[^"']+)["']/)?.[1])
+          .filter(Boolean)
+      ),
+    ]
+    for (const imgUrl of externalImgMatches) {
+      const dataUri = await fetchExternalAsDataUri(imgUrl)
+      if (dataUri) {
+        const escaped = imgUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        result = result.replace(new RegExp(escaped, 'g'), dataUri)
+      } else if (typeof console !== 'undefined') {
+        console.warn(`Offline export: kept remote image (could not inline): ${imgUrl}`)
+      }
     }
-  }
 
     // ── 7. Remove base href to avoid cross-origin SecurityError on file:// protocol ──
-  // The htmlGenerator might inject a <base href="..."> for live presentations,
-  // but for offline HTML this causes Reveal.js history API to crash.
-  result = result.replace(/<base[^>]*>/i, '')
+    // The htmlGenerator might inject a <base href="..."> for live presentations,
+    // but for offline HTML this causes Reveal.js history API to crash.
+    result = result.replace(/<base[^>]*>/i, '')
 
     return result
   } finally {

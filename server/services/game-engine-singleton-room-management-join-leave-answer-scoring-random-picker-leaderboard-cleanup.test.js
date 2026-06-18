@@ -246,6 +246,318 @@ describe('GameEngine', () => {
     })
   })
 
+  describe('poll subtype', () => {
+    it('stores poll votes outside player answer history and broadcasts aggregate only', () => {
+      GameEngine.createRoom('poll-1', 'poll', {
+        prompt: 'Choose one',
+        options: [
+          { id: 'a', text: 'Alpha' },
+          { id: 'b', text: 'Beta' },
+        ],
+      })
+      GameEngine.getRoom('poll-1').status = 'active'
+      GameEngine.joinRoom('poll-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+
+      const result = GameEngine.submitPollVote('poll-1', 'player-1', 'a', { socketId: 'socket-1' })
+
+      expect(result.ok).toBe(true)
+      expect(result.aggregate).toEqual({
+        prompt: 'Choose one',
+        options: [
+          { id: 'a', text: 'Alpha', votes: 1 },
+          { id: 'b', text: 'Beta', votes: 0 },
+        ],
+        totalVotes: 1,
+      })
+      expect(GameEngine.getRoom('poll-1').players.get('player-1').answers).toEqual([])
+    })
+
+    it('uses last-write-wins when a poll player changes votes', () => {
+      GameEngine.createRoom('poll-1', 'poll', {
+        options: [
+          { id: 'a', text: 'Alpha' },
+          { id: 'b', text: 'Beta' },
+        ],
+      })
+      GameEngine.getRoom('poll-1').status = 'active'
+      GameEngine.joinRoom('poll-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+
+      GameEngine.submitPollVote('poll-1', 'player-1', 'a', { socketId: 'socket-1' })
+      const result = GameEngine.submitPollVote('poll-1', 'player-1', 'b', { socketId: 'socket-1' })
+
+      expect(result.aggregate.options).toEqual([
+        { id: 'a', text: 'Alpha', votes: 0 },
+        { id: 'b', text: 'Beta', votes: 1 },
+      ])
+      expect(result.aggregate.totalVotes).toBe(1)
+    })
+
+    it('rejects stale poll submissions from an old socket session', () => {
+      GameEngine.createRoom('poll-1', 'poll', {
+        options: [{ id: 'a', text: 'Alpha' }],
+      })
+      GameEngine.getRoom('poll-1').status = 'active'
+      GameEngine.joinRoom('poll-1', 'player-1', 'Alice', { socketId: 'socket-2' })
+
+      const result = GameEngine.submitPollVote('poll-1', 'player-1', 'a', { socketId: 'socket-1' })
+
+      expect(result).toEqual({ ok: false, error: 'stale-player-session' })
+      expect(GameEngine.getPollAggregate('poll-1').totalVotes).toBe(0)
+    })
+
+    it('preserves poll identity through disconnect and reconnect without duplicate votes', () => {
+      GameEngine.createRoom('poll-1', 'poll', {
+        options: [
+          { id: 'a', text: 'Alpha' },
+          { id: 'b', text: 'Beta' },
+        ],
+      })
+      GameEngine.getRoom('poll-1').status = 'active'
+      GameEngine.joinRoom('poll-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+      GameEngine.submitPollVote('poll-1', 'player-1', 'a', { socketId: 'socket-1' })
+      GameEngine.disconnectRoom('poll-1', 'player-1', 'socket-1')
+      GameEngine.joinRoom('poll-1', 'player-1', 'Alice', { socketId: 'socket-2' })
+      const result = GameEngine.submitPollVote('poll-1', 'player-1', 'b', { socketId: 'socket-2' })
+
+      expect(result.aggregate.options).toEqual([
+        { id: 'a', text: 'Alpha', votes: 0 },
+        { id: 'b', text: 'Beta', votes: 1 },
+      ])
+      expect(result.aggregate.totalVotes).toBe(1)
+    })
+
+    it('rejects poll votes before the host starts the poll', () => {
+      GameEngine.createRoom('poll-1', 'poll', {
+        options: [{ id: 'a', text: 'Alpha' }],
+      })
+      GameEngine.joinRoom('poll-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+
+      const result = GameEngine.submitPollVote('poll-1', 'player-1', 'a', { socketId: 'socket-1' })
+
+      expect(result).toEqual({ ok: false, error: 'poll-not-active' })
+      expect(GameEngine.getPollAggregate('poll-1').totalVotes).toBe(0)
+    })
+  })
+
+  describe('word-cloud subtype', () => {
+    it('normalizes text, aggregates counts, and keeps player answer history empty', () => {
+      GameEngine.createRoom('cloud-1', 'word-cloud', {
+        prompt: 'Describe it',
+      })
+      GameEngine.getRoom('cloud-1').status = 'active'
+      GameEngine.joinRoom('cloud-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+      GameEngine.joinRoom('cloud-1', 'player-2', 'Bob', { socketId: 'socket-2' })
+
+      GameEngine.submitWordCloudText('cloud-1', 'player-1', '  Quantum   Field  ', { socketId: 'socket-1' })
+      const result = GameEngine.submitWordCloudText('cloud-1', 'player-2', 'quantum field', { socketId: 'socket-2' })
+
+      expect(result.ok).toBe(true)
+      expect(result.aggregate).toEqual({
+        prompt: 'Describe it',
+        entries: [{ text: 'quantum field', count: 2 }],
+        totalSubmissions: 2,
+      })
+      expect(GameEngine.getRoom('cloud-1').players.get('player-1').answers).toEqual([])
+    })
+
+    it('bounds word cloud text to 40 characters', () => {
+      GameEngine.createRoom('cloud-1', 'word-cloud', {})
+      GameEngine.getRoom('cloud-1').status = 'active'
+      GameEngine.joinRoom('cloud-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+
+      const result = GameEngine.submitWordCloudText(
+        'cloud-1',
+        'player-1',
+        'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz',
+        { socketId: 'socket-1' }
+      )
+
+      expect(result.text).toHaveLength(40)
+      expect(result.aggregate.entries[0].text).toHaveLength(40)
+    })
+
+    it('rejects more than 5 word cloud submissions per player', () => {
+      GameEngine.createRoom('cloud-1', 'word-cloud', {})
+      GameEngine.getRoom('cloud-1').status = 'active'
+      GameEngine.joinRoom('cloud-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+
+      for (let i = 0; i < 5; i++) {
+        expect(GameEngine.submitWordCloudText('cloud-1', 'player-1', `word ${i}`, { socketId: 'socket-1' }).ok).toBe(true)
+      }
+      const result = GameEngine.submitWordCloudText('cloud-1', 'player-1', 'word 6', { socketId: 'socket-1' })
+
+      expect(result).toEqual({ ok: false, error: 'word-cloud-rate-limit' })
+      expect(GameEngine.getWordCloudAggregate('cloud-1').totalSubmissions).toBe(5)
+    })
+
+    it('keeps word cloud submission limit across leave and rejoin for the same player', () => {
+      GameEngine.createRoom('cloud-1', 'word-cloud', {})
+      GameEngine.getRoom('cloud-1').status = 'active'
+      GameEngine.joinRoom('cloud-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+
+      for (let i = 0; i < 5; i++) {
+        GameEngine.submitWordCloudText('cloud-1', 'player-1', `word ${i}`, { socketId: 'socket-1' })
+      }
+      GameEngine.leaveRoom('cloud-1', 'player-1')
+      GameEngine.joinRoom('cloud-1', 'player-1', 'Alice', { socketId: 'socket-2' })
+
+      expect(GameEngine.submitWordCloudText('cloud-1', 'player-1', 'extra', { socketId: 'socket-2' })).toEqual({
+        ok: false,
+        error: 'word-cloud-rate-limit',
+      })
+    })
+
+    it('normalizes word cloud text with runtime-locale-independent lowercasing', () => {
+      GameEngine.createRoom('cloud-1', 'word-cloud', {})
+      GameEngine.getRoom('cloud-1').status = 'active'
+      GameEngine.joinRoom('cloud-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+
+      const result = GameEngine.submitWordCloudText('cloud-1', 'player-1', 'MIXED Case', {
+        socketId: 'socket-1',
+      })
+
+      expect(result.text).toBe('mixed case')
+      expect(result.aggregate.entries[0]).toEqual({ text: 'mixed case', count: 1 })
+    })
+
+    it('applies the 40-character word cloud bound after lowercase expansion', () => {
+      GameEngine.createRoom('cloud-1', 'word-cloud', {})
+      GameEngine.getRoom('cloud-1').status = 'active'
+      GameEngine.joinRoom('cloud-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+
+      const result = GameEngine.submitWordCloudText('cloud-1', 'player-1', 'İ'.repeat(40), {
+        socketId: 'socket-1',
+      })
+
+      expect(result.text.length).toBeLessThanOrEqual(40)
+      expect(result.aggregate.entries[0].text.length).toBeLessThanOrEqual(40)
+    })
+
+    it('sorts equal-count word cloud entries deterministically by text', () => {
+      GameEngine.createRoom('cloud-1', 'word-cloud', {})
+      GameEngine.getRoom('cloud-1').status = 'active'
+      GameEngine.joinRoom('cloud-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+
+      GameEngine.submitWordCloudText('cloud-1', 'player-1', 'banana', { socketId: 'socket-1' })
+      const result = GameEngine.submitWordCloudText('cloud-1', 'player-1', 'apple', { socketId: 'socket-1' })
+
+      expect(result.aggregate.entries.map((entry) => entry.text)).toEqual(['apple', 'banana'])
+    })
+
+    it('rejects stale word cloud submissions and submissions before start', () => {
+      GameEngine.createRoom('cloud-1', 'word-cloud', {})
+      GameEngine.joinRoom('cloud-1', 'player-1', 'Alice', { socketId: 'socket-2' })
+
+      expect(GameEngine.submitWordCloudText('cloud-1', 'player-1', 'early', { socketId: 'socket-2' })).toEqual({
+        ok: false,
+        error: 'word-cloud-not-active',
+      })
+
+      GameEngine.getRoom('cloud-1').status = 'active'
+      expect(GameEngine.submitWordCloudText('cloud-1', 'player-1', 'late', { socketId: 'socket-1' })).toEqual({
+        ok: false,
+        error: 'stale-player-session',
+      })
+    })
+
+    it('clears word cloud aggregate and per-player rate limits', () => {
+      GameEngine.createRoom('cloud-1', 'word-cloud', {})
+      GameEngine.getRoom('cloud-1').status = 'active'
+      GameEngine.joinRoom('cloud-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+      GameEngine.submitWordCloudText('cloud-1', 'player-1', 'alpha', { socketId: 'socket-1' })
+
+      const aggregate = GameEngine.clearWordCloud('cloud-1')
+
+      expect(aggregate).toMatchObject({ entries: [], totalSubmissions: 0 })
+      expect(GameEngine.submitWordCloudText('cloud-1', 'player-1', 'beta', { socketId: 'socket-1' }).ok).toBe(true)
+    })
+  })
+
+  describe('matching subtype', () => {
+    const matchingOptions = {
+      prompt: 'Match terms',
+      pairs: [
+        { promptId: 'p-http', prompt: 'HTTP', targetId: 't-protocol', target: 'Protocol' },
+        { promptId: 'p-tls', prompt: 'TLS', targetId: 't-security', target: 'Security' },
+        { promptId: 'p-dns', prompt: 'DNS', targetId: 't-name', target: 'Name service' },
+      ],
+    }
+
+    it('scores correct, partial, and incorrect matching submissions deterministically', () => {
+      GameEngine.createRoom('match-1', 'matching', matchingOptions)
+      GameEngine.getRoom('match-1').status = 'active'
+      GameEngine.joinRoom('match-1', 'player-1', 'Alice', { socketId: 'socket-1' })
+      GameEngine.joinRoom('match-1', 'player-2', 'Bob', { socketId: 'socket-2' })
+      GameEngine.joinRoom('match-1', 'player-3', 'Cara', { socketId: 'socket-3' })
+
+      const correct = GameEngine.submitMatchingPairs('match-1', 'player-1', [
+        { promptId: 'p-http', targetId: 't-protocol' },
+        { promptId: 'p-tls', targetId: 't-security' },
+        { promptId: 'p-dns', targetId: 't-name' },
+      ], { socketId: 'socket-1' })
+      const partial = GameEngine.submitMatchingPairs('match-1', 'player-2', [
+        { promptId: 'p-http', targetId: 't-protocol' },
+        { promptId: 'p-tls', targetId: 't-name' },
+        { promptId: 'p-dns', targetId: 't-security' },
+      ], { socketId: 'socket-2' })
+      const incorrect = GameEngine.submitMatchingPairs('match-1', 'player-3', [
+        { promptId: 'p-http', targetId: 't-name' },
+        { promptId: 'p-tls', targetId: 't-protocol' },
+        { promptId: 'p-dns', targetId: 't-security' },
+      ], { socketId: 'socket-3' })
+
+      expect(correct).toEqual(expect.objectContaining({ ok: true, score: 3, total: 3, correct: true }))
+      expect(partial).toEqual(expect.objectContaining({ ok: true, score: 1, total: 3, correct: false }))
+      expect(incorrect).toEqual(expect.objectContaining({ ok: true, score: 0, total: 3, correct: false }))
+      expect(GameEngine.getRoom('match-1').players.get('player-1').answers).toEqual([])
+      expect(GameEngine.getMatchingState('match-1')).toEqual(expect.objectContaining({ submissions: 3 }))
+    })
+
+    it('rejects stale sessions, unknown ids, duplicate prompts, and inactive matching games', () => {
+      GameEngine.createRoom('match-1', 'matching', matchingOptions)
+      GameEngine.joinRoom('match-1', 'player-1', 'Alice', { socketId: 'socket-2' })
+
+      expect(GameEngine.submitMatchingPairs('match-1', 'player-1', [
+        { promptId: 'p-http', targetId: 't-protocol' },
+      ], { socketId: 'socket-2' })).toEqual({ ok: false, error: 'matching-not-active' })
+
+      GameEngine.getRoom('match-1').status = 'active'
+      expect(GameEngine.submitMatchingPairs('match-1', 'player-1', [
+        { promptId: 'p-http', targetId: 't-protocol' },
+      ], { socketId: 'socket-1' })).toEqual({ ok: false, error: 'stale-player-session' })
+
+      expect(GameEngine.submitMatchingPairs('match-1', 'player-1', [
+        { promptId: 'p-http', targetId: 'unknown-target' },
+      ], { socketId: 'socket-2' })).toEqual({ ok: false, error: 'invalid-matching-pairs' })
+
+      expect(GameEngine.submitMatchingPairs('match-1', 'player-1', [
+        { promptId: 'p-http', targetId: 't-protocol' },
+        { promptId: 'p-http', targetId: 't-security' },
+      ], { socketId: 'socket-2' })).toEqual({ ok: false, error: 'invalid-matching-pairs' })
+
+      expect(GameEngine.submitMatchingPairs('match-1', 'player-1', [
+        { promptId: 'p-http', targetId: 't-protocol' },
+        { promptId: 'p-tls', targetId: 't-protocol' },
+      ], { socketId: 'socket-2' })).toEqual({ ok: false, error: 'invalid-matching-pairs' })
+    })
+
+    it('reveals answer ids only when requested', () => {
+      GameEngine.createRoom('match-1', 'matching', matchingOptions)
+
+      expect(GameEngine.getMatchingState('match-1').answerKey).toBeUndefined()
+      expect(GameEngine.getMatchingState('match-1').targets.map((target) => target.id)).toEqual([
+        't-security',
+        't-name',
+        't-protocol',
+      ])
+      expect(GameEngine.getMatchingState('match-1', { revealed: true }).answerKey).toEqual([
+        { promptId: 'p-http', targetId: 't-protocol' },
+        { promptId: 'p-tls', targetId: 't-security' },
+        { promptId: 'p-dns', targetId: 't-name' },
+      ])
+    })
+  })
+
   describe('cleanup', () => {
     it('removes room from storage', () => {
       GameEngine.createRoom('slide1-el1', 'hot-potato', {})

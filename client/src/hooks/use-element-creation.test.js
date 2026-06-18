@@ -98,6 +98,70 @@ describe('useElementCreation', () => {
     )
   })
 
+  it('addMermaidElement appends a canonical html element with mermaid metadata', () => {
+    const setHtmlEditorState = vi.fn()
+    const { getPresentation, deps } = makeDeps({ setHtmlEditorState })
+    const { result } = renderHook(() => useElementCreation(deps))
+    act(() => {
+      result.current.addMermaidElement()
+    })
+    const slide = getPresentation().slides[0]
+    const added = slide.elements[slide.elements.length - 1]
+
+    expect(added.type).toBe('html')
+    expect(added.embedKind).toBe('mermaid')
+    expect(added.mermaidSource).toContain('flowchart TD')
+    expect(added.content).toContain('/vendor/mermaid/mermaid.min.js')
+    expect(setHtmlEditorState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        elementId: added.id,
+        embedKind: 'mermaid',
+        mermaidSource: expect.stringContaining('flowchart TD'),
+      })
+    )
+  })
+
+  it('commitHtmlEdit stores Mermaid source and regenerated iframe content', () => {
+    const updateElement = vi.fn()
+    const { deps } = makeDeps({
+      updateElement,
+      htmlEditorState: {
+        elementId: 'html-1',
+        embedKind: 'mermaid',
+        mermaidSource: 'sequenceDiagram\n  Alice->>Bob: Hi',
+      },
+    })
+    const { result } = renderHook(() => useElementCreation(deps))
+    act(() => {
+      result.current.commitHtmlEdit()
+    })
+
+    expect(updateElement).toHaveBeenCalledWith(
+      'html-1',
+      expect.objectContaining({
+        embedKind: 'mermaid',
+        mermaidSource: 'sequenceDiagram\n  Alice->>Bob: Hi',
+        content: expect.stringContaining('/vendor/mermaid/mermaid.min.js'),
+      })
+    )
+  })
+
+  it('addStemSimulationElement appends a canonical html simulation embed', () => {
+    const { getPresentation, deps } = makeDeps()
+    const { result } = renderHook(() => useElementCreation(deps))
+    act(() => {
+      result.current.addStemSimulationElement('desmos', 'calculator-id')
+    })
+    const slide = getPresentation().slides[0]
+    const added = slide.elements[slide.elements.length - 1]
+
+    expect(added.type).toBe('html')
+    expect(added.embedKind).toBe('stem-simulation')
+    expect(added.provider).toBe('desmos')
+    expect(added.sourceUrl).toBe('https://www.desmos.com/calculator/calculator-id')
+    expect(added.content).toContain('referrerpolicy="no-referrer"')
+  })
+
   it('addGameElement uses the game factory and selects it', () => {
     const { getPresentation, getSelected, deps } = makeDeps()
     const { result } = renderHook(() => useElementCreation(deps))
@@ -121,6 +185,26 @@ describe('useElementCreation', () => {
     const embed = els[els.length - 1]
     expect(embed.type).toBe('html')
     expect(embed.content).toBe('<div>embed</div>')
+  })
+
+  it('addTechnicalSymbolElement appends existing editable element types', () => {
+    const { getPresentation, deps } = makeDeps()
+    const { result } = renderHook(() => useElementCreation(deps))
+    act(() => {
+      result.current.addTechnicalSymbolElement('uml-class')
+    })
+    act(() => {
+      result.current.addTechnicalSymbolElement('network-router')
+    })
+    act(() => {
+      result.current.addTechnicalSymbolElement('cloud-service')
+    })
+
+    const added = getPresentation().slides[0].elements.slice(-3)
+    expect(added.map((element) => element.type)).toEqual(['svg', 'icon', 'shape'])
+    expect(added[0].content).toContain('<svg')
+    expect(added[1].iconName).toBe('Router')
+    expect(added[2].shape).toBe('cloud')
   })
 
   it('exposes pluginTypes (array)', () => {

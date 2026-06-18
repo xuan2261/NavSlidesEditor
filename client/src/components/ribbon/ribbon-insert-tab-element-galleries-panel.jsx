@@ -1,11 +1,36 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  Type, Image as ImageIcon, Shapes, Minus, ArrowUpRight,
-  BarChart3, Table2, FileCode, Code, Sigma, QrCode,
-  Video, Music, FolderOpen, HardDrive,
-  Globe, Pencil, SeparatorHorizontal, FileImage,
-  Wand2, Grid3x3, Clapperboard, Box, Clock,
-  Gamepad2, MessageSquare, Sticker, Package, Link,
+  Type,
+  Image as ImageIcon,
+  Shapes,
+  Minus,
+  ArrowUpRight,
+  BarChart3,
+  Table2,
+  FileCode,
+  Code,
+  Sigma,
+  QrCode,
+  Video,
+  Music,
+  FolderOpen,
+  HardDrive,
+  Globe,
+  Pencil,
+  SeparatorHorizontal,
+  FileImage,
+  Wand2,
+  Grid3x3,
+  Clapperboard,
+  Box,
+  Clock,
+  Workflow,
+  Atom,
+  Gamepad2,
+  MessageSquare,
+  Sticker,
+  Package,
+  Link,
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import RibbonSection from './ribbon-section'
@@ -18,6 +43,8 @@ import { Button } from '../ui'
 import { GAME_TYPES } from '../../constants/game-element-types-constants'
 import PromptPopover from '../PromptPopover'
 import { api } from '../../utils/api'
+import StemSimulationPresetModal from '../stem-simulation-preset-modal'
+import { getTechnicalSymbolPacks } from '../../data/technical-symbol-packs'
 
 const { SHAPES = [], shapeSvgString = () => '' } = shared
 
@@ -68,10 +95,12 @@ function ShapeGallery({ open, anchorRef, onSelect, onClose }) {
                     onSelect(shapeType)
                     onClose()
                   }}
-                  onKeyDown={(e) => handleKeyboardActivation(e, () => {
-                    onSelect(shapeType)
-                    onClose()
-                  })}
+                  onKeyDown={(e) =>
+                    handleKeyboardActivation(e, () => {
+                      onSelect(shapeType)
+                      onClose()
+                    })
+                  }
                 >
                   <span
                     className="ribbon-shape-gallery-icon relative inline-block text-text-primary"
@@ -88,14 +117,76 @@ function ShapeGallery({ open, anchorRef, onSelect, onClose }) {
   )
 }
 
+function TechnicalSymbolGallery({ open, anchorRef, onSelect, onClose }) {
+  const packs = getTechnicalSymbolPacks()
+  const firstSymbolButtonRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    firstSymbolButtonRef.current?.focus()
+  }, [open])
+
+  const handleSelect = (symbolId) => {
+    onSelect(symbolId)
+    anchorRef?.current?.focus?.()
+    onClose()
+  }
+
+  let symbolIndex = 0
+  return (
+    <RibbonFloatingOverlay
+      open={open}
+      anchorRef={anchorRef}
+      onClose={onClose}
+      dataRibbonPopup="technical-symbol-gallery"
+      className="bg-card border border-border rounded-lg p-3 shadow-xl w-[360px]"
+    >
+      <div className="text-xs font-semibold text-text-primary mb-2">Technical symbols</div>
+      <div className="grid grid-cols-2 gap-3">
+        {packs.map((pack) => (
+          <section key={pack.id}>
+            <div className="text-[10px] text-text-muted mb-1">{pack.label}</div>
+            <div className="flex flex-col gap-1">
+              {pack.symbols.map((symbol) => (
+                <Button
+                  key={symbol.id}
+                  ref={symbolIndex++ === 0 ? firstSymbolButtonRef : undefined}
+                  variant="ghost"
+                  className="justify-start h-7 px-2 text-[11px] border border-border bg-secondary"
+                  aria-label={symbol.label}
+                  title={symbol.label}
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    handleSelect(symbol.id)
+                  }}
+                  onKeyDown={(e) =>
+                    handleKeyboardActivation(e, () => {
+                      handleSelect(symbol.id)
+                    })
+                  }
+                >
+                  {symbol.label}
+                </Button>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </RibbonFloatingOverlay>
+  )
+}
+
 const GAME_LABELS = {
   'name-picker': 'Name Picker',
   'hot-potato': 'Hot Potato',
-  'jeopardy': 'Jeopardy',
+  jeopardy: 'Jeopardy',
   'four-corners': 'Four Corners',
   'relay-race': 'Relay Race',
   'trivia-champ': 'Trivia',
-  'scattergories': 'Scattergories',
+  scattergories: 'Scattergories',
+  poll: 'Live Poll',
+  'word-cloud': 'Word Cloud',
+  matching: 'Matching',
 }
 
 const isActivationKey = (event) => event.key === 'Enter' || event.key === ' '
@@ -139,9 +230,11 @@ function GameGalleryDropdown({ open, anchorRef, onSelect, onClose }) {
               e.preventDefault()
               handleSelect(type)
             }}
-            onKeyDown={(e) => handleKeyboardActivation(e, () => {
-              handleSelect(type)
-            })}
+            onKeyDown={(e) =>
+              handleKeyboardActivation(e, () => {
+                handleSelect(type)
+              })
+            }
           >
             <Gamepad2 size={12} />
             {GAME_LABELS[type] || type}
@@ -164,35 +257,46 @@ function TableSizePicker({ open, anchorRef, onSelect, onClose }) {
       dataRibbonPopup="table-picker"
       className="bg-card border border-border rounded-lg p-2 shadow-xl"
     >
-      <div onMouseLeave={() => { setHoverR(0); setHoverC(0); onClose() }}>
-      <div className="text-[10px] text-text-muted mb-1">
-        {hoverR > 0 ? `${hoverR}×${hoverC}` : '3×3 default'}
-      </div>
-      <div className="grid grid-cols-8 gap-0.5">
-        {Array.from({ length: 6 }, (_, r) =>
-          Array.from({ length: 8 }, (_, c) => (
-            <div
-              key={`${r}-${c}`}
-              className={`ribbon-table-picker-cell rounded-sm cursor-pointer ${
-                r < hoverR && c < hoverC ? 'bg-primary' : 'bg-border'
-              }`}
-              onMouseEnter={() => { setHoverR(r + 1); setHoverC(c + 1) }}
-              onMouseDown={(e) => {
-                e.preventDefault()
-                onSelect(r + 1, c + 1)
-                onClose()
-              }}
-              onKeyDown={(e) => handleKeyboardActivation(e, () => {
-                onSelect(r + 1, c + 1)
-                onClose()
-              })}
-              role="button"
-              tabIndex={0}
-              aria-label={`Insert ${r + 1} by ${c + 1} table`}
-            />
-          ))
-        )}
-      </div>
+      <div
+        onMouseLeave={() => {
+          setHoverR(0)
+          setHoverC(0)
+          onClose()
+        }}
+      >
+        <div className="text-[10px] text-text-muted mb-1">
+          {hoverR > 0 ? `${hoverR}×${hoverC}` : '3×3 default'}
+        </div>
+        <div className="grid grid-cols-8 gap-0.5">
+          {Array.from({ length: 6 }, (_, r) =>
+            Array.from({ length: 8 }, (_, c) => (
+              <div
+                key={`${r}-${c}`}
+                className={`ribbon-table-picker-cell rounded-sm cursor-pointer ${
+                  r < hoverR && c < hoverC ? 'bg-primary' : 'bg-border'
+                }`}
+                onMouseEnter={() => {
+                  setHoverR(r + 1)
+                  setHoverC(c + 1)
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  onSelect(r + 1, c + 1)
+                  onClose()
+                }}
+                onKeyDown={(e) =>
+                  handleKeyboardActivation(e, () => {
+                    onSelect(r + 1, c + 1)
+                    onClose()
+                  })
+                }
+                role="button"
+                tabIndex={0}
+                aria-label={`Insert ${r + 1} by ${c + 1} table`}
+              />
+            ))
+          )}
+        </div>
       </div>
     </RibbonFloatingOverlay>
   )
@@ -205,7 +309,10 @@ function AdvancedActionButton({ label, title, icon: Icon, onAction }) {
       className="h-6 w-6"
       title={title}
       aria-label={label}
-      onMouseDown={(e) => { e.preventDefault(); onAction?.() }}
+      onMouseDown={(e) => {
+        e.preventDefault()
+        onAction?.()
+      }}
       onKeyDown={(e) => handleKeyboardActivation(e, onAction)}
     >
       <Icon size={13} />
@@ -232,9 +339,12 @@ export default function InsertTabContent({
   onOpenMediaLibrary,
   onOpenFileBrowser,
   onAddHtml,
+  onAddMermaid,
+  onAddStemSimulation,
   onAddSvg,
   onAddDrawing,
   onAddDivider,
+  onAddTechnicalSymbol,
   onAddKineticText,
   onAddMathGrid,
   onAddAnime,
@@ -249,10 +359,13 @@ export default function InsertTabContent({
   const [showTablePicker, setShowTablePicker] = useState(false)
   const [showVideoPrompt, setShowVideoPrompt] = useState(false)
   const [showGameGallery, setShowGameGallery] = useState(false)
+  const [showStemPreset, setShowStemPreset] = useState(false)
+  const [showTechnicalSymbols, setShowTechnicalSymbols] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const shapeTriggerRef = useRef(null)
   const iconTriggerRef = useRef(null)
   const tableTriggerRef = useRef(null)
+  const technicalSymbolTriggerRef = useRef(null)
   const advancedLauncherRef = useRef(null)
 
   const handleFileUpload = (accept, handler) => {
@@ -299,14 +412,38 @@ export default function InsertTabContent({
     <RibbonTabContentRow>
       <RibbonSection label="Basic" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5">
-          <RibbonBigButton icon={Type} label="Text Box" title="Add text" aria-label="Add text"
+          <RibbonBigButton
+            icon={Type}
+            label="Text Box"
+            title="Add text"
+            aria-label="Add text"
             data-testid="ribbon-insert-text"
-            onMouseDown={(e) => { e.preventDefault(); onAddText?.() }} />
-          <RibbonBigButton icon={ImageIcon} label="Picture" title="Insert picture" aria-label="Picture"
-            onMouseDown={(e) => { e.preventDefault(); handleFileUpload('image/*', (f) => onAddImageUpload?.(f)) }} />
-          <Button variant="icon" className="h-7 w-7" title="Add image (URL)" aria-label="Add image"
-            onMouseDown={(e) => { e.preventDefault(); onAddImage?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddImage)}>
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddText?.()
+            }}
+          />
+          <RibbonBigButton
+            icon={ImageIcon}
+            label="Picture"
+            title="Insert picture"
+            aria-label="Picture"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              handleFileUpload('image/*', (f) => onAddImageUpload?.(f))
+            }}
+          />
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Add image (URL)"
+            aria-label="Add image"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddImage?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddImage)}
+          >
             <Link size={14} />
           </Button>
         </div>
@@ -314,11 +451,18 @@ export default function InsertTabContent({
 
       <RibbonSection label="Shapes" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5 relative">
-          <Button variant="ribbon" title="Shapes" aria-label="Insert shape"
+          <Button
+            variant="ribbon"
+            title="Shapes"
+            aria-label="Insert shape"
             data-testid="ribbon-insert-shape"
             ref={shapeTriggerRef}
-            onMouseDown={(e) => { e.preventDefault(); setShowShapeGallery((v) => !v) }}
-            onKeyDown={(e) => handleKeyboardActivation(e, () => setShowShapeGallery((v) => !v))}>
+            onMouseDown={(e) => {
+              e.preventDefault()
+              setShowShapeGallery((v) => !v)
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, () => setShowShapeGallery((v) => !v))}
+          >
             <Shapes size={14} />
           </Button>
           {showShapeGallery && (
@@ -329,25 +473,57 @@ export default function InsertTabContent({
               onClose={() => setShowShapeGallery(false)}
             />
           )}
-          <Button variant="icon" className="h-7 w-7" title="Line" aria-label="Add line"
-            onMouseDown={(e) => { e.preventDefault(); onAddLine?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddLine)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Line"
+            aria-label="Add line"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddLine?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddLine)}
+          >
             <Minus size={14} />
           </Button>
-          <Button variant="icon" className="h-7 w-7" title="Arrow" aria-label="Add arrow"
-            onMouseDown={(e) => { e.preventDefault(); onAddLine?.({ arrowEnd: 'arrow' }) }}
-            onKeyDown={(e) => handleKeyboardActivation(e, () => onAddLine?.({ arrowEnd: 'arrow' }))}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Arrow"
+            aria-label="Add arrow"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddLine?.({ arrowEnd: 'arrow' })
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, () => onAddLine?.({ arrowEnd: 'arrow' }))}
+          >
             <ArrowUpRight size={14} />
           </Button>
-          <Button variant="icon" className="h-7 w-7" title="Callout" aria-label="Add callout"
-            onMouseDown={(e) => { e.preventDefault(); onAddCallout?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddCallout)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Callout"
+            aria-label="Add callout"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddCallout?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddCallout)}
+          >
             <MessageSquare size={14} />
           </Button>
-          <Button variant="icon" className="h-7 w-7" title="Icon" aria-label="Add icon"
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Icon"
+            aria-label="Add icon"
             ref={iconTriggerRef}
-            onMouseDown={(e) => { e.preventDefault(); setShowIconGallery((v) => !v) }}
-            onKeyDown={(e) => handleKeyboardActivation(e, () => setShowIconGallery((v) => !v))}>
+            onMouseDown={(e) => {
+              e.preventDefault()
+              setShowIconGallery((v) => !v)
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, () => setShowIconGallery((v) => !v))}
+          >
             <Sticker size={14} />
           </Button>
           {showIconGallery && (
@@ -358,21 +534,61 @@ export default function InsertTabContent({
               onClose={() => setShowIconGallery(false)}
             />
           )}
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Technical symbols"
+            aria-label="Technical symbols"
+            ref={technicalSymbolTriggerRef}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              setShowTechnicalSymbols((v) => !v)
+            }}
+            onKeyDown={(e) =>
+              handleKeyboardActivation(e, () => setShowTechnicalSymbols((v) => !v))
+            }
+          >
+            <Package size={14} />
+          </Button>
+          {showTechnicalSymbols && (
+            <TechnicalSymbolGallery
+              open={showTechnicalSymbols}
+              anchorRef={technicalSymbolTriggerRef}
+              onSelect={(symbolId) => onAddTechnicalSymbol?.(symbolId)}
+              onClose={() => setShowTechnicalSymbols(false)}
+            />
+          )}
         </div>
       </RibbonSection>
 
       <RibbonSection label="Content" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5">
-          <Button variant="icon" className="h-7 w-7" title="Chart" aria-label="Add chart"
-            onMouseDown={(e) => { e.preventDefault(); onAddChart?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddChart)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Chart"
+            aria-label="Add chart"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddChart?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddChart)}
+          >
             <BarChart3 size={14} />
           </Button>
           <div className="relative">
-            <Button variant="icon" className="h-7 w-7" title="Table" aria-label="Add table"
+            <Button
+              variant="icon"
+              className="h-7 w-7"
+              title="Table"
+              aria-label="Add table"
               ref={tableTriggerRef}
-              onMouseDown={(e) => { e.preventDefault(); setShowTablePicker((v) => !v) }}
-              onKeyDown={(e) => handleKeyboardActivation(e, () => setShowTablePicker((v) => !v))}>
+              onMouseDown={(e) => {
+                e.preventDefault()
+                setShowTablePicker((v) => !v)
+              }}
+              onKeyDown={(e) => handleKeyboardActivation(e, () => setShowTablePicker((v) => !v))}
+            >
               <Table2 size={14} />
             </Button>
             {showTablePicker && (
@@ -384,24 +600,56 @@ export default function InsertTabContent({
               />
             )}
           </div>
-          <Button variant="icon" className="h-7 w-7" title="Code block" aria-label="Add code block"
-            onMouseDown={(e) => { e.preventDefault(); onAddCode?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddCode)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Code block"
+            aria-label="Add code block"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddCode?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddCode)}
+          >
             <Code size={14} />
           </Button>
-          <Button variant="icon" className="h-7 w-7" title="Markdown" aria-label="Add markdown"
-            onMouseDown={(e) => { e.preventDefault(); onAddMarkdown?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddMarkdown)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Markdown"
+            aria-label="Add markdown"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddMarkdown?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddMarkdown)}
+          >
             <FileCode size={14} />
           </Button>
-          <Button variant="icon" className="h-7 w-7" title="LaTeX" aria-label="Add LaTeX"
-            onMouseDown={(e) => { e.preventDefault(); onAddLatex?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddLatex)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="LaTeX"
+            aria-label="Add LaTeX"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddLatex?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddLatex)}
+          >
             <Sigma size={14} />
           </Button>
-          <Button variant="icon" className="h-7 w-7" title="QR Code" aria-label="Add QR code"
-            onMouseDown={(e) => { e.preventDefault(); onAddQrCode?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddQrCode)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="QR Code"
+            aria-label="Add QR code"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddQrCode?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddQrCode)}
+          >
             <QrCode size={14} />
           </Button>
         </div>
@@ -409,25 +657,61 @@ export default function InsertTabContent({
 
       <RibbonSection label="Media" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5">
-          <Button variant="icon" className="h-7 w-7" title="Add video" aria-label="Add video"
-            onMouseDown={(e) => { e.preventDefault(); setShowVideoPrompt(true) }}
-            onKeyDown={(e) => handleKeyboardActivation(e, () => setShowVideoPrompt(true))}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Add video"
+            aria-label="Add video"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              setShowVideoPrompt(true)
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, () => setShowVideoPrompt(true))}
+          >
             <Video size={14} />
           </Button>
-          <Button variant="icon" className="h-7 w-7" title="Audio / Upload" aria-label="Audio / Upload"
-            onMouseDown={(e) => { e.preventDefault(); handleFileUpload('audio/*,video/*', handleMediaUpload) }}
-            onKeyDown={(e) => handleKeyboardActivation(e, () => handleFileUpload('audio/*,video/*', handleMediaUpload))}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Audio / Upload"
+            aria-label="Audio / Upload"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              handleFileUpload('audio/*,video/*', handleMediaUpload)
+            }}
+            onKeyDown={(e) =>
+              handleKeyboardActivation(e, () =>
+                handleFileUpload('audio/*,video/*', handleMediaUpload)
+              )
+            }
+          >
             <Music size={14} />
           </Button>
-          <Button variant="icon" className="h-7 w-7" title="Open media library" aria-label="Open media library"
-            onMouseDown={(e) => { e.preventDefault(); onOpenMediaLibrary?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onOpenMediaLibrary)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Open media library"
+            aria-label="Open media library"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onOpenMediaLibrary?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onOpenMediaLibrary)}
+          >
             <FolderOpen size={14} />
           </Button>
           {onOpenFileBrowser && (
-            <Button variant="icon" className="h-7 w-7" title="Open file browser" aria-label="Open file browser"
-              onMouseDown={(e) => { e.preventDefault(); onOpenFileBrowser?.() }}
-              onKeyDown={(e) => handleKeyboardActivation(e, onOpenFileBrowser)}>
+            <Button
+              variant="icon"
+              className="h-7 w-7"
+              title="Open file browser"
+              aria-label="Open file browser"
+              onMouseDown={(e) => {
+                e.preventDefault()
+                onOpenFileBrowser?.()
+              }}
+              onKeyDown={(e) => handleKeyboardActivation(e, onOpenFileBrowser)}
+            >
               <HardDrive size={14} />
             </Button>
           )}
@@ -436,24 +720,82 @@ export default function InsertTabContent({
 
       <RibbonSection label="Embed" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5">
-          <Button variant="icon" className="h-7 w-7" title="Add HTML embed" aria-label="Add HTML embed"
-            onMouseDown={(e) => { e.preventDefault(); onAddHtml?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddHtml)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Add HTML embed"
+            aria-label="Add HTML embed"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddHtml?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddHtml)}
+          >
             <Globe size={14} />
           </Button>
-          <Button variant="icon" className="h-7 w-7" title="Add SVG" aria-label="Add SVG"
-            onMouseDown={(e) => { e.preventDefault(); handleSvgFileUpload() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, handleSvgFileUpload)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Add Mermaid diagram"
+            aria-label="Add Mermaid diagram"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddMermaid?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddMermaid)}
+          >
+            <Workflow size={14} />
+          </Button>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Add STEM simulation"
+            aria-label="Add STEM simulation"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              setShowStemPreset(true)
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, () => setShowStemPreset(true))}
+          >
+            <Atom size={14} />
+          </Button>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Add SVG"
+            aria-label="Add SVG"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              handleSvgFileUpload()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, handleSvgFileUpload)}
+          >
             <FileImage size={14} />
           </Button>
-          <Button variant="icon" className="h-7 w-7" title="Add drawing" aria-label="Add drawing"
-            onMouseDown={(e) => { e.preventDefault(); onAddDrawing?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddDrawing)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Add drawing"
+            aria-label="Add drawing"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddDrawing?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddDrawing)}
+          >
             <Pencil size={14} />
           </Button>
-          <Button variant="icon" className="h-7 w-7" title="Add divider" aria-label="Add divider"
-            onMouseDown={(e) => { e.preventDefault(); onAddDivider?.() }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddDivider)}>
+          <Button
+            variant="icon"
+            className="h-7 w-7"
+            title="Add divider"
+            aria-label="Add divider"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onAddDivider?.()
+            }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddDivider)}
+          >
             <SeparatorHorizontal size={14} />
           </Button>
         </div>
@@ -461,11 +803,36 @@ export default function InsertTabContent({
 
       <RibbonSection label="Advanced" className="px-1">
         <div className="flex items-center gap-0.5">
-          <AdvancedActionButton label="Add kinetic text" title="Kinetic Text" icon={Wand2} onAction={onAddKineticText} />
-          <AdvancedActionButton label="Add math grid" title="Math Grid" icon={Grid3x3} onAction={onAddMathGrid} />
-          <AdvancedActionButton label="Add Anime.js" title="Anime.js" icon={Clapperboard} onAction={onAddAnime} />
-          <AdvancedActionButton label="Add Three.js" title="Three.js" icon={Box} onAction={onAddThree} />
-          <AdvancedActionButton label="Add timeline" title="Timeline" icon={Clock} onAction={onAddTimeline} />
+          <AdvancedActionButton
+            label="Add kinetic text"
+            title="Kinetic Text"
+            icon={Wand2}
+            onAction={onAddKineticText}
+          />
+          <AdvancedActionButton
+            label="Add math grid"
+            title="Math Grid"
+            icon={Grid3x3}
+            onAction={onAddMathGrid}
+          />
+          <AdvancedActionButton
+            label="Add Anime.js"
+            title="Anime.js"
+            icon={Clapperboard}
+            onAction={onAddAnime}
+          />
+          <AdvancedActionButton
+            label="Add Three.js"
+            title="Three.js"
+            icon={Box}
+            onAction={onAddThree}
+          />
+          <AdvancedActionButton
+            label="Add timeline"
+            title="Timeline"
+            icon={Clock}
+            onAction={onAddTimeline}
+          />
           <RibbonDropdownMenuGroup
             triggerRef={advancedLauncherRef}
             triggerTestId="ribbon-insert-game"
@@ -474,7 +841,12 @@ export default function InsertTabContent({
             triggerVariant="icon"
             triggerClassName="h-6 w-6"
             items={[
-              { id: 'games', icon: Gamepad2, label: 'Games...', onAction: () => setShowGameGallery(true) },
+              {
+                id: 'games',
+                icon: Gamepad2,
+                label: 'Games...',
+                onAction: () => setShowGameGallery(true),
+              },
               ...pluginTypes.map((plugin) => ({
                 id: plugin.fullType,
                 icon: Package,
@@ -507,6 +879,15 @@ export default function InsertTabContent({
           anchorRef={advancedLauncherRef}
           onSelect={(type) => onAddGame?.(type)}
           onClose={() => setShowGameGallery(false)}
+        />
+      )}
+      {showStemPreset && (
+        <StemSimulationPresetModal
+          onInsert={(embed) => {
+            onAddStemSimulation?.(embed)
+            setShowStemPreset(false)
+          }}
+          onCancel={() => setShowStemPreset(false)}
         />
       )}
       {uploadError && (
