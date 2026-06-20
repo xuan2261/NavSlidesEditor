@@ -45,7 +45,7 @@ NavSlides Editor có **19 loại phần tử chuẩn**. Dải lệnh Insert hi�
 Danh sách chuẩn nằm tại `client/src/data/element-defaults.js`.
 
 ::: tip
-Để chèn một phần tử, dùng tab **Insert** trên dải lệnh ở đầu trình soạn thảo, hoặc nhấp chuột phải vào vùng canvas của slide.
+Để chèn một phần tử, dùng tab **Insert** trên dải lệnh ở đầu trình soạn thảo, hoặc nhấp chuột phải vào vùng canvas của slide. Các công cụ dạy học hiển thị tại đây: **Mermaid**, **STEM simulation**, **LaTeX / TikZ**, **Technical symbols** và **Games**.
 :::
 
 ## Slide

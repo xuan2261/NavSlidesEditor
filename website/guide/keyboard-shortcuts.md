@@ -53,3 +53,7 @@ A complete reference for keyboard shortcuts available in NavSlides Editor.
 ::: tip
 Press `Escape` once to finish editing text while keeping the element selected. Press `Escape` again to fully deselect.
 :::
+
+## Keyboard-accessible teaching flows
+
+Use `Tab` to reach the **Insert** ribbon controls, then press `Enter` or `Space` to open Mermaid, STEM simulation, LaTeX / TikZ, technical symbols, or Games. In teaching modals, `Escape` closes the dialog and validation messages are announced when required fields block insertion.

@@ -228,6 +228,14 @@ function handleKeyboardClick(event, callback) {
   callback(event)
 }
 
+function getPresetTeachingBadge(preset) {
+  const haystack = `${preset.title || ''} ${preset.description || ''} ${preset.category || ''}`.toLowerCase()
+  if (/code|engineering|academic|circuit|điện|kỹ thuật|vi xử lý/.test(haystack)) {
+    return 'Teaching starter'
+  }
+  return null
+}
+
 const DASHBOARD_CARD_CLASS =
   'group bg-card border border-border rounded-lg overflow-hidden transition-[background-color,border-color,box-shadow,opacity] duration-150 hover:border-border-strong hover:shadow-[0_12px_28px_rgba(36,25,21,0.14)] focus-within:ring-2 focus-within:ring-focus/25'
 
@@ -731,6 +739,22 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   const [marketplaceCategory, setMarketplaceCategory] = useState('')
   const [marketplaceSearch, setMarketplaceSearch] = useState('')
 
+  const filteredMarketplaceTemplates = useMemo(() => {
+    return (marketplaceCategory
+      ? marketplaceData.templates.filter((t) => t.category === marketplaceCategory)
+      : marketplaceData.templates
+    ).filter((t) => {
+      if (!marketplaceSearch.trim()) return true
+      const q = marketplaceSearch.toLowerCase()
+      return (
+        (t.title || '').toLowerCase().includes(q) ||
+        (t.titleVi || '').toLowerCase().includes(q) ||
+        (t.description || '').toLowerCase().includes(q) ||
+        (t.tags || []).some((tag) => tag.toLowerCase().includes(q))
+      )
+    })
+  }, [marketplaceCategory, marketplaceData.templates, marketplaceSearch])
+
   useEffect(() => {
     if (isMarketplaceView && marketplaceData.templates.length === 0) {
       api.getMarketplaceTemplates().then(setMarketplaceData).catch(console.error)
@@ -1089,6 +1113,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     ? { background: bg }
                     : { backgroundColor: bg }
                   const tone = getPresetTextTone(preset.thumbnail)
+                  const teachingBadge = getPresetTeachingBadge(preset)
                   return (
                     <div
                       key={preset.id}
@@ -1118,6 +1143,11 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                           size={16}
                           className="absolute top-2 right-2 opacity-25"
                         />
+                        {teachingBadge && (
+                          <span className="absolute left-2 top-2 rounded-full border border-white/30 bg-black/45 px-2 py-0.5 text-[10px] font-semibold text-white">
+                            {teachingBadge}
+                          </span>
+                        )}
                       </div>
                       <div className="px-4 py-3">
                         <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
@@ -1130,6 +1160,20 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     </div>
                   )
                 })}
+                {filteredPresets.length === 0 && (
+                  <div className="col-span-full text-center py-20 px-5 text-text-muted">
+                    <LayoutTemplate size={48} />
+                    <p className="text-[17px] font-semibold text-text-secondary mb-2">
+                      No built-in templates in this category
+                    </p>
+                    <p className="text-sm text-text-muted mb-6">
+                      Pick another category or start a blank presentation.
+                    </p>
+                    <Button variant="primary" onClick={handleOpenModal}>
+                      <Plus size={14} /> <span>Start blank</span>
+                    </Button>
+                  </div>
+                )}
               </div>
             </>
           ) : isMyTemplateView ? (
@@ -1267,21 +1311,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                 ))}
               </div>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5">
-                {(marketplaceCategory
-                  ? marketplaceData.templates.filter((t) => t.category === marketplaceCategory)
-                  : marketplaceData.templates
-                )
-                  .filter((t) => {
-                    if (!marketplaceSearch.trim()) return true
-                    const q = marketplaceSearch.toLowerCase()
-                    return (
-                      (t.title || '').toLowerCase().includes(q) ||
-                      (t.titleVi || '').toLowerCase().includes(q) ||
-                      (t.description || '').toLowerCase().includes(q) ||
-                      (t.tags || []).some((tag) => tag.includes(q))
-                    )
-                  })
-                  .map((tmpl) => {
+                {filteredMarketplaceTemplates.map((tmpl) => {
                     const bg = getCardBg(tmpl.thumbnail)
                     const bgProp = isGradientOrImage(tmpl.thumbnail)
                       ? { background: bg }
@@ -1318,6 +1348,26 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     <p className="text-[17px] font-semibold text-text-secondary mb-2">
                       Loading templates...
                     </p>
+                  </div>
+                )}
+                {marketplaceData.templates.length > 0 && filteredMarketplaceTemplates.length === 0 && (
+                  <div className="col-span-full text-center py-20 px-5 text-text-muted">
+                    <Search size={48} />
+                    <p className="text-[17px] font-semibold text-text-secondary mb-2">
+                      No marketplace templates match
+                    </p>
+                    <p className="text-sm text-text-muted mb-6">
+                      Clear the search or choose another category.
+                    </p>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setMarketplaceSearch('')
+                        setMarketplaceCategory('')
+                      }}
+                    >
+                      <X size={14} /> <span>Clear filters</span>
+                    </Button>
                   </div>
                 )}
               </div>

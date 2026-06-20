@@ -8,6 +8,7 @@ describe('StemSimulationPresetModal', () => {
     render(<StemSimulationPresetModal onInsert={onInsert} onCancel={vi.fn()} />)
 
     expect(screen.getByTestId('stem-online-warning').textContent).toContain('Online-only')
+    expect(screen.getByRole('dialog').getAttribute('aria-describedby')).toBe('stem-online-warning')
     expect(screen.getByText('PhET')).toBeTruthy()
     expect(screen.getByText('GeoGebra')).toBeTruthy()
     expect(screen.getByText('Desmos')).toBeTruthy()
@@ -37,7 +38,11 @@ describe('StemSimulationPresetModal', () => {
     })
     fireEvent.click(screen.getByText('Insert'))
 
-    expect(screen.getByText(/not allowed/i)).toBeTruthy()
+    expect(screen.getByRole('alert').textContent).toMatch(/not allowed/i)
+    expect(screen.getByLabelText(/URL or ID/i).getAttribute('aria-invalid')).toBe('true')
+    expect(screen.getByLabelText(/URL or ID/i).getAttribute('aria-describedby')).toContain(
+      'stem-source-error'
+    )
     expect(onInsert).not.toHaveBeenCalled()
   })
 })

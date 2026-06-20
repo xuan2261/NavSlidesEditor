@@ -14,6 +14,7 @@ export default function RibbonDropdownMenuGroup({
   triggerVariant = 'ribbon',
   triggerClassName = '',
   triggerTestId,
+  triggerDescribedBy,
 }) {
   const [open, setOpen] = useState(false)
   const localTriggerRef = useRef(null)
@@ -37,6 +38,7 @@ export default function RibbonDropdownMenuGroup({
         className={triggerClassName}
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-describedby={triggerDescribedBy}
         onMouseDown={(e) => {
           e.preventDefault()
           toggleOpen()

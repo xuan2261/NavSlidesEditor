@@ -73,6 +73,7 @@ export default function LatexEditorModal({ state, onChange, onApply, onCancel })
       role="dialog"
       aria-modal="true"
       aria-labelledby="latex-editor-modal-title"
+      aria-describedby="latex-editor-helper latex-parse-feedback"
     >
       <div
         className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl"
@@ -80,8 +81,8 @@ export default function LatexEditorModal({ state, onChange, onApply, onCancel })
       >
         <div className="px-4 py-3 border-b border-border flex justify-between items-center shrink-0 gap-3">
           <h2 id="latex-editor-modal-title" className="font-semibold text-sm">LaTeX / TikZ</h2>
-          <span className="text-xs text-text-muted">
-            Supports KaTeX math and TikZ diagrams (via TikZJax)
+          <span id="latex-editor-helper" className="text-xs text-text-muted">
+            Supports KaTeX math and TikZ diagrams. TikZ diagrams use TikZJax and may require network access in exported HTML.
           </span>
           <div className="flex gap-2 ml-auto">
             <Button variant="secondary" className="text-xs" onClick={onCancel}>
@@ -119,6 +120,7 @@ export default function LatexEditorModal({ state, onChange, onApply, onCancel })
             />
             <div
               data-testid="latex-parse-feedback"
+              id="latex-parse-feedback"
               role={parseError ? 'alert' : 'status'}
               aria-live="polite"
               className={`px-4 py-2 text-xs border-t border-border ${parseError ? 'text-red-300 bg-red-950/40' : 'text-text-muted bg-card'}`}

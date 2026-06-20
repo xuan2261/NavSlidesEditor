@@ -32,3 +32,22 @@ describe('responsive source contracts', () => {
     expect(src).toContain('min-w-0')
   })
 })
+
+describe('HomePage teaching UX polish source contracts', () => {
+  it('keeps dashboard/template empty states distinct and actionable', () => {
+    const src = homeSource()
+
+    expect(src).toMatch(/No built-in templates in this category/)
+    expect(src).toMatch(/No marketplace templates match/)
+    expect(src).toMatch(/Clear filters/)
+    expect(src).toMatch(/Create your first presentation/)
+  })
+
+  it('highlights teaching-friendly starter presets without changing template schema', () => {
+    const src = homeSource()
+
+    expect(src).toMatch(/function getPresetTeachingBadge/)
+    expect(src).toMatch(/Teaching starter/)
+    expect(src).not.toMatch(/teachingBadge:\s*['"]/)
+  })
+})

@@ -40,10 +40,16 @@ function JoinForm({ onJoin }) {
                 onChange={(e) => { setName(e.target.value); setError('') }}
                 placeholder="e.g. Minh or Team Red"
                 maxLength={30}
+                aria-invalid={error ? 'true' : 'false'}
+                aria-describedby={error ? 'player-name-error' : undefined}
                 autoFocus
                 className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none transition-colors"
               />
-              {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
+              {error && (
+                <p id="player-name-error" role="alert" className="text-xs text-red-400 mt-1">
+                  {error}
+                </p>
+              )}
             </div>
             <button type="submit" className="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm">
               Join Game

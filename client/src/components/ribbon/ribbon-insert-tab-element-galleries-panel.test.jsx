@@ -206,6 +206,25 @@ describe('Shape gallery preview icons', () => {
 })
 
 describe('Technical symbol packs gallery', () => {
+  it('[cap:teaching.discovery depth:a11y] exposes teaching insert controls with helper descriptions', () => {
+    render(<InsertTabContent pluginTypes={[]} />)
+
+    const expected = [
+      ['Add Mermaid diagram', /flowcharts and sequence diagrams/i],
+      ['Add STEM simulation', /PhET, GeoGebra, Desmos, or CircuitJS/i],
+      ['Add LaTeX / TikZ', /math formulas and TikZ diagrams/i],
+      ['Technical symbols', /UML, network, circuit, and cloud symbols/i],
+      ['More advanced insert options', /classroom games and plugin inserts/i],
+    ]
+
+    for (const [name, helperPattern] of expected) {
+      const button = screen.getByRole('button', { name })
+      const descriptionId = button.getAttribute('aria-describedby')
+      expect(descriptionId, `${name} should reference helper copy`).toBeTruthy()
+      expect(document.getElementById(descriptionId).textContent).toMatch(helperPattern)
+    }
+  })
+
   it('[cap:element.svg depth:behavior] shows UML, network, circuit, and cloud packs', () => {
     render(<InsertTabContent pluginTypes={[]} />)
 

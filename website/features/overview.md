@@ -45,7 +45,7 @@ NavSlides Editor has **19 canonical element types**. The Insert ribbon shows 30+
 The canonical list lives in `client/src/data/element-defaults.js`.
 
 ::: tip
-To insert an element, use the **Insert** tab in the ribbon at the top of the editor, or right-click on the slide canvas.
+To insert an element, use the **Insert** tab in the ribbon at the top of the editor, or right-click on the slide canvas. Teaching tools are visible there: **Mermaid**, **STEM simulation**, **LaTeX / TikZ**, **Technical symbols**, and **Games**.
 :::
 
 ## Slides

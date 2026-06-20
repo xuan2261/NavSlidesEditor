@@ -2,6 +2,8 @@
 
 A self-hostable WYSIWYG presentation editor được xây dựng dựa trên [reveal.js](https://revealjs.com/). Build và trình chiếu slide trực tiếp trên trình duyệt — không cần tài khoản, không cần đám mây, không bị theo dõi. Đồng thời cung cấp dưới dạng ứng dụng desktop độc lập thông qua Electron.
 
+Phiên bản hiện tại: **v1.15.0** — phần tử tương tác cho giảng dạy, Mermaid/STEM authoring, 10 game subtype, UX LaTeX, biểu tượng kỹ thuật và kiểm chứng release gate.
+
 ## Features
 
 ### Editing
@@ -25,6 +27,8 @@ A self-hostable WYSIWYG presentation editor được xây dựng dựa trên [re
 
 ### Element Types
 
+NavSlides Editor có **19 loại phần tử chuẩn**. Dải lệnh Insert hiển thị hơn 30 hành động vì hình khối, gói biểu tượng kỹ thuật và game (10 biến thể) là các biến thể con của những loại phần tử hiện có.
+
 - **Text boxes** — nội dung HTML phong phú với đầy đủ định dạng TipTap
 - **Images** — tải lên hoặc qua URL, cắt (crop), thu phóng (pan), bộ lọc độ sáng/độ tương phản/ảnh đen trắng, bo góc
 - **Shapes** — hình chữ nhật, hình tròn, hình tam giác, mũi tên, ngôi sao, đường kẻ với các tùy chọn về màu tô/viền/độ mờ/bo góc
@@ -38,10 +42,13 @@ A self-hostable WYSIWYG presentation editor được xây dựng dựa trên [re
 - **Tables** — đối tượng bảng có thể kéo/thay đổi kích thước với hàng tiêu đề, khả năng chỉnh sửa trực tiếp trên ô (inline cell editing), và tùy chỉnh phong cách
 - **Icons** — thư viện có thể tìm kiếm với hơn 60 biểu tượng SVG dạng Lucide có thể tùy chỉnh màu sắc và đường viền
 - **Callout bubbles** — các vòng tròn chú thích có đánh số với khả năng tùy chỉnh màu sắc và kích thước
+- **Game** — 10 loại game tương tác: name picker, hot potato, Jeopardy, four corners, relay race, trivia champ, scattergories, live poll, word cloud và matching
+
+Các công cụ dạy học có thể khám phá từ tab **Insert**: Mermaid diagram, STEM simulation, LaTeX / TikZ, technical symbols và Games.
 
 ### Slides
 
-- **Full-Deck Templates** — thư viện gồm hơn 10 theme thuyết trình chất lượng cao có sẵn trực tiếp từ trang chủ
+- **Full-Deck Templates** — hơn 20 mẫu trọn bộ, bao gồm mô phỏng tương tác và bộ slide quiz
 - **Slide templates** — trống, tiêu đề, hai cột, ba cột, hình ảnh+văn bản, tiêu đề phần, so sánh, số lớn
 - **Global Settings** — quản lý tập trung các cấu hình Reveal.js (auto-slide, loop, navigation modes)
 - **Slide backgrounds** — màu đơn sắc, dải màu gradient CSS, hoặc hình ảnh cho từng slide thông qua popup trên thanh công cụ
@@ -59,7 +66,7 @@ A self-hostable WYSIWYG presentation editor được xây dựng dựa trên [re
 
 - **11 reveal.js themes** — black, white, league, beige, sky, night, serif, simple, solarized, moon, dracula
 - **Transitions** — none, fade, slide, convex, concave, zoom
-- **Preset themes** — 6 cài đặt trước về thiết kế: Minimal Dark, Minimal Light, Academic, Gradient, Corporate, Neon
+- **Preset themes** — 39 preset thiết kế dựa trên token thuộc 7 nhóm, hiển thị trong ThemeGallery của dải lệnh Design
 - **Custom templates** — tạo, chỉnh sửa, và quản lý các mẫu bài thuyết trình có thể tái sử dụng của riêng bạn; bắt đầu các bài thuyết trình mới từ bất kỳ mẫu nào
 - **Dark / light editor theme** — chuyển đổi giao diện trình chỉnh sửa giữa chế độ tối (dark mode) và sáng (light mode)
 

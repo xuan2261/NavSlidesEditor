@@ -73,6 +73,21 @@ const TOUR_STEPS = [
     isFixed: true,
   },
   {
+    target: '.tour-step-ribbon',
+    content: (
+      <div>
+        <h3 className="mb-2.5 text-base text-text-primary">Teaching tools</h3>
+        <p className="text-sm leading-relaxed text-text-secondary">
+          Open Insert to add Mermaid diagrams, STEM simulations, LaTeX/TikZ math, technical
+          symbols, and classroom games.
+        </p>
+      </div>
+    ),
+    placement: 'bottom-start',
+    skipBeacon: true,
+    isFixed: true,
+  },
+  {
     target: '.tour-step-canvas',
     content: (
       <div>

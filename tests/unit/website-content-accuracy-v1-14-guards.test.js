@@ -10,12 +10,13 @@ const mdFiles = (dir) =>
     .filter((f) => f.endsWith('.md'))
     .map((f) => r('website', dir, f))
 
-// Pins the most error-prone v1.14.0 facts against doc drift. Cheap + bounded
+// Pins the most error-prone v1.15.0 facts against doc drift. Cheap + bounded
 // (YAGNI — not a full doc-vs-code generator). Source of truth: README.md +
 // client/src/data/element-defaults.js (19 types) + shared/src/theme-presets.js
-// (39 presets / 7 categories). Charts per README: bar/line/pie/doughnut/radar/
-// polar area (NO scatter). Present shortcut is F5, not bare F.
-describe('website content accuracy (v1.14.0)', () => {
+// (39 presets / 7 categories) + game constants (10 subtypes). Charts per README:
+// bar/line/pie/doughnut/radar/polar area (NO scatter). Present shortcut is F5,
+// not bare F.
+describe('website content accuracy (v1.15.0)', () => {
   it('features/overview.md lists current chart types, not scatter', () => {
     const body = read('website', 'features', 'overview.md')
     // "scattergories" (a game type) is allowed; a bare "scatter" chart claim is not.
@@ -59,11 +60,26 @@ describe('website content accuracy (v1.14.0)', () => {
     expect(body).toMatch(/19\s+(canonical\s+)?element types/i)
   })
 
-  it('features/overview.md reflects v1.14.0 surface (FX, vertical slides, layouts, game)', () => {
+  it('features/overview.md reflects v1.15.0 surface (FX, vertical slides, layouts, game)', () => {
     const body = read('website', 'features', 'overview.md')
     expect(body).toMatch(/8 animated/i)
     expect(body).toMatch(/vertical/i)
     expect(body).toMatch(/35 layouts/i)
-    expect(body).toMatch(/7 interactive game/i)
+    expect(body).toMatch(/10 interactive game/i)
+  })
+
+  it('English and Vietnamese feature pages document 10 game subtypes', () => {
+    for (const path of [
+      ['website', 'features', 'overview.md'],
+      ['website', 'vi', 'features', 'overview.md'],
+      ['website', 'features', 'game-mode.md'],
+      ['website', 'vi', 'features', 'game-mode.md'],
+    ]) {
+      const body = read(...path)
+      expect(body, `${path.join('/')} missing 10-game claim`).toMatch(
+        /10\s+(interactive game|loại phần tử game tương tác)/i
+      )
+      expect(body, `${path.join('/')} still claims 7 games`).not.toMatch(/7\s+interactive game/i)
+    }
   })
 })

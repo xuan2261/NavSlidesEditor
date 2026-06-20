@@ -34,6 +34,11 @@ export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) 
       role="dialog"
       aria-modal="true"
       aria-labelledby="html-editor-modal-title"
+      aria-describedby={
+        isMermaid
+          ? 'html-editor-helper html-trusted-content-warning mermaid-editor-helper'
+          : 'html-editor-helper html-trusted-content-warning'
+      }
     >
       <div
         className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl"
@@ -44,12 +49,16 @@ export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) 
             <h2 id="html-editor-modal-title" className="font-semibold text-sm">
               {isMermaid ? 'Mermaid Diagram' : 'HTML / D3 Embed'}
             </h2>
-            <span className="text-xs text-text-muted">
+            <span id="html-editor-helper" className="text-xs text-text-muted">
               {isMermaid
                 ? 'Edit Mermaid source — renders through the trusted HTML embed pipeline'
                 : 'D3, plain HTML, or any JavaScript — renders in an iframe'}
             </span>
-            <span data-testid="html-trusted-content-warning" className="text-xs text-amber-300">
+            <span
+              id="html-trusted-content-warning"
+              data-testid="html-trusted-content-warning"
+              className="text-xs text-amber-300"
+            >
               Trusted author content only; scripts are preserved in preview and export.
             </span>
           </div>
@@ -63,12 +72,20 @@ export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) 
           </div>
         </div>
         {isMermaid && (
-          <div className="border-b border-border px-4 py-2 text-xs text-text-muted">
+          <div
+            id="mermaid-editor-helper"
+            className="border-b border-border px-4 py-2 text-xs text-text-muted"
+          >
+            <span>Mermaid diagrams render as trusted author HTML embeds. </span>
             <span data-testid="mermaid-source-count">
               {mermaidSource.length}/{MERMAID_SOURCE_LIMIT}
             </span>
             {isTooLong && (
-              <span data-testid="mermaid-source-error" className="ml-3 text-amber-300">
+              <span
+                data-testid="mermaid-source-error"
+                role="alert"
+                className="ml-3 text-amber-300"
+              >
                 Mermaid source is too long.
               </span>
             )}

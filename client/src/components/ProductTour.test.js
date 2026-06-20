@@ -63,14 +63,20 @@ describe('ProductTour', () => {
       blockTargetInteraction: true,
     })
 
-    expect(props.steps).toHaveLength(6)
+    expect(props.steps).toHaveLength(7)
     expect(props.steps.every((step) => step.skipBeacon === true)).toBe(true)
     expect(props.steps[0].placement).toBe('center')
     expect(props.steps[1].placement).toBe('bottom-end')
     expect(props.steps[2].placement).toBe('right')
     expect(props.steps[3].placement).toBe('bottom-start')
-    expect(props.steps[4].placement).toBe('center')
-    expect(props.steps[5].placement).toBe('left')
+    expect(renderToString(props.steps[4].content)).toMatch(/Mermaid/)
+    expect(renderToString(props.steps[4].content)).toMatch(/STEM/)
+    expect(renderToString(props.steps[4].content)).toMatch(/LaTeX/)
+    expect(renderToString(props.steps[4].content)).toMatch(/technical symbols/)
+    expect(renderToString(props.steps[4].content)).toMatch(/games/)
+    expect(props.steps[4].placement).toBe('bottom-start')
+    expect(props.steps[5].placement).toBe('center')
+    expect(props.steps[6].placement).toBe('left')
   })
 
   it('does not rerun once the tutorial has been seen', () => {

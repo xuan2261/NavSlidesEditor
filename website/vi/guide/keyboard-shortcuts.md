@@ -53,3 +53,7 @@ Tài liệu tham khảo đầy đủ về các phím tắt có sẵn trong NavSl
 ::: tip
 Nhấn `Escape` một lần để kết thúc chỉnh sửa văn bản mà vẫn giữ phần tử được chọn. Nhấn `Escape` lần nữa để bỏ chọn hoàn toàn.
 :::
+
+## Luồng dạy học dùng được bằng bàn phím
+
+Dùng `Tab` để tới các điều khiển trên dải lệnh **Insert**, rồi nhấn `Enter` hoặc `Space` để mở Mermaid, STEM simulation, LaTeX / TikZ, technical symbols hoặc Games. Trong các hộp thoại dạy học, `Escape` đóng hộp thoại và thông báo xác thực sẽ được đọc khi trường bắt buộc chặn thao tác chèn.

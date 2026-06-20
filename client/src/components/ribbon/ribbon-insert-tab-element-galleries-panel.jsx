@@ -410,6 +410,21 @@ export default function InsertTabContent({
 
   return (
     <RibbonTabContentRow>
+      <span id="insert-help-technical-symbols" className="sr-only">
+        Insert UML, network, circuit, and cloud symbols as editable SVG elements.
+      </span>
+      <span id="insert-help-latex" className="sr-only">
+        Add math formulas and TikZ diagrams with KaTeX and TikZJax.
+      </span>
+      <span id="insert-help-mermaid" className="sr-only">
+        Add Mermaid flowcharts and sequence diagrams through the trusted HTML embed pipeline.
+      </span>
+      <span id="insert-help-stem" className="sr-only">
+        Add online STEM simulations from PhET, GeoGebra, Desmos, or CircuitJS.
+      </span>
+      <span id="insert-help-games" className="sr-only">
+        Open classroom games and plugin inserts, including live poll, word cloud, and matching.
+      </span>
       <RibbonSection label="Basic" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5">
           <RibbonBigButton
@@ -539,6 +554,7 @@ export default function InsertTabContent({
             className="h-7 w-7"
             title="Technical symbols"
             aria-label="Technical symbols"
+            aria-describedby="insert-help-technical-symbols"
             ref={technicalSymbolTriggerRef}
             onMouseDown={(e) => {
               e.preventDefault()
@@ -629,8 +645,9 @@ export default function InsertTabContent({
           <Button
             variant="icon"
             className="h-7 w-7"
-            title="LaTeX"
-            aria-label="Add LaTeX"
+            title="Add LaTeX / TikZ"
+            aria-label="Add LaTeX / TikZ"
+            aria-describedby="insert-help-latex"
             onMouseDown={(e) => {
               e.preventDefault()
               onAddLatex?.()
@@ -738,6 +755,7 @@ export default function InsertTabContent({
             className="h-7 w-7"
             title="Add Mermaid diagram"
             aria-label="Add Mermaid diagram"
+            aria-describedby="insert-help-mermaid"
             onMouseDown={(e) => {
               e.preventDefault()
               onAddMermaid?.()
@@ -751,6 +769,7 @@ export default function InsertTabContent({
             className="h-7 w-7"
             title="Add STEM simulation"
             aria-label="Add STEM simulation"
+            aria-describedby="insert-help-stem"
             onMouseDown={(e) => {
               e.preventDefault()
               setShowStemPreset(true)
@@ -838,6 +857,7 @@ export default function InsertTabContent({
             triggerTestId="ribbon-insert-game"
             icon={Package}
             label="More advanced insert options"
+            triggerDescribedBy="insert-help-games"
             triggerVariant="icon"
             triggerClassName="h-6 w-6"
             items={[

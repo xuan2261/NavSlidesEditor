@@ -24,6 +24,7 @@ export default function StemSimulationPresetModal({ onInsert, onCancel }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="stem-simulation-modal-title"
+      aria-describedby="stem-online-warning"
       onClick={(event) => {
         if (isBackdropClick(event)) onCancel?.()
       }}
@@ -36,7 +37,11 @@ export default function StemSimulationPresetModal({ onInsert, onCancel }) {
           <h2 id="stem-simulation-modal-title" className="text-sm font-semibold">
             STEM Simulation
           </h2>
-          <p className="mt-1 text-xs text-amber-300" data-testid="stem-online-warning">
+          <p
+            id="stem-online-warning"
+            className="mt-1 text-xs text-amber-300"
+            data-testid="stem-online-warning"
+          >
             Online-only embed. Only PhET, GeoGebra, Desmos, and CircuitJS/Falstad URLs are allowed.
           </p>
         </div>
@@ -61,12 +66,18 @@ export default function StemSimulationPresetModal({ onInsert, onCancel }) {
               value={source}
               onChange={(event) => setSource(event.target.value)}
               placeholder="Paste an allowed URL or provider ID"
+              aria-invalid={error ? 'true' : 'false'}
+              aria-describedby={error ? 'stem-online-warning stem-source-error' : 'stem-online-warning'}
               className="mt-1 w-full rounded-md border border-border bg-hover px-2 py-2 text-sm text-text-primary"
               autoFocus
             />
           </label>
           {error && (
-            <div className="rounded-md border border-danger bg-danger/10 px-3 py-2 text-xs text-danger">
+            <div
+              id="stem-source-error"
+              role="alert"
+              className="rounded-md border border-danger bg-danger/10 px-3 py-2 text-xs text-danger"
+            >
               {error}
             </div>
           )}

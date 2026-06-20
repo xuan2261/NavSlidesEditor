@@ -22,6 +22,9 @@ describe('content editor modals', () => {
     expect(screen.getByTestId('html-trusted-content-warning').textContent).toContain(
       'Trusted author content'
     )
+    expect(screen.getByRole('dialog').getAttribute('aria-describedby')).toContain(
+      'html-trusted-content-warning'
+    )
     fireEvent.change(screen.getByRole('textbox'), {
       target: { value: '<p>safe by author policy</p>' },
     })
@@ -48,6 +51,7 @@ describe('content editor modals', () => {
     )
 
     expect(screen.getByText('Mermaid Diagram')).toBeTruthy()
+    expect(screen.getByText(/Mermaid diagrams render as trusted author HTML/i)).toBeTruthy()
     expect(screen.getByTestId('mermaid-source-count').textContent).toContain('/12000')
     fireEvent.change(screen.getByRole('textbox'), {
       target: { value: 'sequenceDiagram\nA->>B: Hi' },
@@ -186,6 +190,10 @@ describe('content editor modals', () => {
     )
 
     expect(screen.getByLabelText('LaTeX source')).toBeTruthy()
+    expect(screen.getByRole('dialog').getAttribute('aria-describedby')).toContain(
+      'latex-editor-helper'
+    )
+    expect(screen.getByText(/TikZ diagrams use TikZJax and may require network access/i)).toBeTruthy()
     expect(screen.getByTestId('latex-parse-feedback').textContent).toContain('LaTeX syntax looks valid')
     expect(screen.getByTestId('latex-parse-feedback').getAttribute('aria-live')).toBe('polite')
     expect(screen.getByTitle('LaTeX Preview').getAttribute('srcdoc')).toContain('E = mc^2')
