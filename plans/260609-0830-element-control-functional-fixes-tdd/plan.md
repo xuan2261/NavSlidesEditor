@@ -5,7 +5,7 @@ created: 2026-06-09
 mode: deep
 tdd: true
 scope: project
-blockedBy: []
+blockedBy: [260629-2154-full-application-qa-verification-deep-tdd]
 blocks: []
 ---
 

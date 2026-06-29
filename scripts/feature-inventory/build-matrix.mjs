@@ -71,6 +71,12 @@ export function buildMatrix({
   for (const cap of inventory) {
     const occ = tags[cap.id] || []
     let status = computeBaseStatus(occ, runIndex)
+    if (
+      cap.coverageMode === 'inventory-only' &&
+      (status === 'GAP' || status === 'TAGGED' || status === 'SKIP')
+    ) {
+      status = 'INVENTORY'
+    }
     if (status === 'PASS' && needsDeep(cap) && !hasDeepPass(occ, runIndex)) {
       status = 'DEEP-GAP'
     }

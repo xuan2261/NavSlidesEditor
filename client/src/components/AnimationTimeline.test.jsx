@@ -13,7 +13,7 @@ function makeSlide(elements) {
 }
 
 describe('AnimationTimeline', () => {
-  it('renders empty-state hint when no animated elements exist', () => {
+  it('[cap:control.timeline-animation] renders empty-state hint when no animated elements exist', () => {
     const slide = makeSlide([textEl('a'), textEl('b')])
     render(
       <AnimationTimeline

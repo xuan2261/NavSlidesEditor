@@ -10,7 +10,7 @@ created: 2026-05-22
 createdBy: ck-plan-skill
 source: skill
 mode: "--deep --tdd"
-blockedBy: []
+blockedBy: [260629-2154-full-application-qa-verification-deep-tdd]
 blocks: []
 ---
 

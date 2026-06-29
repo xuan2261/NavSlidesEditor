@@ -30,9 +30,33 @@
     { "id": "control.format.align",       "risk": "low", "tiers": ["smoke"] },
     { "id": "control.insert.text",        "risk": "low", "tiers": ["smoke"] },
     { "id": "control.insert.shape",       "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.ribbon.home",        "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.ribbon.insert",      "risk": "high", "tiers": ["smoke"] },
+    { "id": "control.ribbon.design",      "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.ribbon.transitions", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.ribbon.animations",  "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.ribbon.view",        "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.ribbon.contextual-format", "risk": "high", "tiers": ["smoke"] },
+    { "id": "control.status.zoom",        "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.status.view-mode",   "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.properties.panel",   "risk": "high", "tiers": ["smoke"] },
+    { "id": "control.slide-panel",        "risk": "high", "tiers": ["smoke"], "coverageMode": "inventory-only" },
+    { "id": "control.selection-pane",     "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.timeline-animation", "risk": "low", "tiers": ["smoke"] },
     { "id": "control.view.smartGuides",   "risk": "low", "tiers": ["smoke"] },
     { "id": "control.view.selectionPane", "risk": "low", "tiers": ["smoke"] },
     { "id": "control.file.menu",          "risk": "low", "tiers": ["smoke"] }
+  ],
+  "variant": [
+    { "id": "variant.shape", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
+    { "id": "variant.chart", "risk": "high", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
+    { "id": "variant.slide-layout", "risk": "high", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
+    { "id": "variant.design-preset", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
+    { "id": "variant.fx-background", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
+    { "id": "variant.reveal-theme", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
+    { "id": "variant.transition", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
+    { "id": "variant.game-subtype", "risk": "high", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
+    { "id": "variant.insert-subaction", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" }
   ],
   "command": [
     { "id": "command.insertSlide",    "risk": "low", "tiers": ["smoke"] },
@@ -72,10 +96,32 @@
   "game": [
     { "id": "game.score", "risk": "high", "tiers": ["smoke"], "scope": "game", "targetLayer": "e2e", "coverageMode": "executable" }
   ],
+  "teaching": [
+    { "id": "teaching.discovery", "risk": "low", "tiers": ["smoke"], "targetLayer": "unit", "coverageMode": "inventory-only" }
+  ],
   "sync": [
     { "id": "sync.rclone-status", "risk": "high", "tiers": ["smoke"], "scope": "sync", "targetLayer": "contract", "coverageMode": "contract-only" }
   ],
   "history": [
     { "id": "history.snapshot", "risk": "low", "tiers": ["smoke"], "scope": "history", "targetLayer": "e2e", "coverageMode": "executable" }
+  ],
+  "plugin": [
+    { "id": "plugin.runtime", "risk": "high", "tiers": ["smoke"], "scope": "plugin", "targetLayer": "e2e", "coverageMode": "inventory-only" },
+    { "id": "plugin.sandbox", "risk": "high", "tiers": ["smoke", "deep"], "scope": "plugin", "targetLayer": "contract", "coverageMode": "inventory-only" }
+  ],
+  "marketplace": [
+    { "id": "marketplace.browse", "risk": "low", "tiers": ["smoke"], "scope": "marketplace", "targetLayer": "e2e", "coverageMode": "inventory-only" }
+  ],
+  "explore": [
+    { "id": "explore.browse", "risk": "low", "tiers": ["smoke"], "scope": "explore", "targetLayer": "e2e", "coverageMode": "inventory-only" }
+  ],
+  "analytics": [
+    { "id": "analytics.view-tracking", "risk": "high", "tiers": ["smoke"], "scope": "analytics", "targetLayer": "e2e", "coverageMode": "inventory-only" }
+  ],
+  "electron": [
+    { "id": "electron.startup", "risk": "high", "tiers": ["smoke"], "scope": "electron", "targetLayer": "contract", "coverageMode": "inventory-only" },
+    { "id": "electron.preload", "risk": "high", "tiers": ["smoke"], "scope": "electron", "targetLayer": "contract", "coverageMode": "inventory-only" },
+    { "id": "electron.package", "risk": "high", "tiers": ["smoke"], "scope": "electron", "targetLayer": "contract", "coverageMode": "inventory-only" },
+    { "id": "electron.data-path", "risk": "high", "tiers": ["smoke"], "scope": "electron", "targetLayer": "contract", "coverageMode": "inventory-only" }
   ]
 }
