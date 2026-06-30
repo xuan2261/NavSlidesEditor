@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v1.15.1 — 2026-06-30
+
+- Strengthened full-application QA verification gates with a deep TDD plan, expanded feature inventory coverage to 150 capabilities, and recorded execution evidence.
+- Promoted remaining high-priority control rows to executable evidence, including the slide panel, so `npm run matrix:gate` reports 114/114 verified with 0 warnings.
+- Refreshed release verification docs and matrix contracts to match the expanded coverage baseline, and added the editor interface architecture analysis report for follow-up refactor planning.
+
 ## v1.15.0 — 2026-06-19
 
 - Added teaching interactivity elements and controls: Mermaid diagram authoring, STEM simulation embed presets, live poll, word cloud, matching, code walkthrough controls, LaTeX authoring UX, and technical symbol packs.

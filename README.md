@@ -4,7 +4,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.15.0** — teaching interactivity elements, Mermaid/STEM authoring, new game subtypes, LaTeX UX, technical symbols, and release-gate verification.
+Current release: **v1.15.1** — full-application QA verification hardening, expanded feature-coverage evidence, and release-gate matrix cleanup.
 
 ## Features
 
