@@ -40,7 +40,7 @@
     { "id": "control.status.zoom",        "risk": "low", "tiers": ["smoke"] },
     { "id": "control.status.view-mode",   "risk": "low", "tiers": ["smoke"] },
     { "id": "control.properties.panel",   "risk": "high", "tiers": ["smoke"] },
-    { "id": "control.slide-panel",        "risk": "high", "tiers": ["smoke"], "coverageMode": "inventory-only" },
+    { "id": "control.slide-panel",        "risk": "high", "tiers": ["smoke"] },
     { "id": "control.selection-pane",     "risk": "low", "tiers": ["smoke"] },
     { "id": "control.timeline-animation", "risk": "low", "tiers": ["smoke"] },
     { "id": "control.view.smartGuides",   "risk": "low", "tiers": ["smoke"] },

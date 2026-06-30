@@ -569,7 +569,7 @@
     ],
     "scope": "editor-core",
     "targetLayer": "unit",
-    "coverageMode": "inventory-only"
+    "coverageMode": "executable"
   },
   {
     "id": "control.status.view-mode",
