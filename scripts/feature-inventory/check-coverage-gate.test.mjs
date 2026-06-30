@@ -7,6 +7,7 @@ const SKIP_ROW = { id: 'control.format.bold', status: 'SKIP' }
 const TAGGED_ROW = { id: 'element.audio', status: 'TAGGED' }
 const FAIL_ROW = { id: 'flow.clipboard', status: 'FAIL' }
 const ALLOWED_ROW = { id: 'canvas.lock', status: 'ALLOWED' }
+const INVENTORY_ROW = { id: 'control.ribbon.insert', status: 'INVENTORY' }
 const DEPTH_WARN_ROW = {
   id: 'element.chart',
   status: 'PASS',
@@ -118,6 +119,12 @@ describe('coverage gate decision logic', () => {
     const r = checkGate({ rows: [ALLOWED_ROW], orphans: [], allowlist: [validEntry('canvas.lock')], now: NOW })
     expect(r.ok).toBe(true)
     expect(r.warnings.some((w) => w.includes('canvas.lock'))).toBe(true)
+  })
+
+  it('warns, but does not fail, on inventory-only rows', () => {
+    const r = checkGate({ rows: [PASS_ROW, INVENTORY_ROW], orphans: [], allowlist: [], now: NOW })
+    expect(r.ok).toBe(true)
+    expect(r.warnings.some((w) => w.includes('control.ribbon.insert'))).toBe(true)
   })
 
   it('warns, but does not fail, on missing required depth labels', () => {

@@ -41,7 +41,7 @@ describe('StatusBar editor-context gate', () => {
 describe('StatusBar zoom slider', () => {
   beforeEach(() => setEditorActive(5))
 
-  it('replaces the dropdown with a range slider', () => {
+  it('[cap:control.status.zoom] replaces the dropdown with a range slider', () => {
     render(<StatusBar />)
     expect(screen.queryByTestId('statusbar-zoom-select')).toBeNull()
     expect(screen.getByTestId('statusbar-zoom-slider')).toBeTruthy()
@@ -60,7 +60,7 @@ describe('StatusBar zoom slider', () => {
     expect(useUIStore.getState().userZoomMode).toBe(true)
   })
 
-  it('keeps the −/+/Fit buttons working', () => {
+  it('[cap:control.status.zoom] keeps the −/+/Fit buttons working', () => {
     render(<StatusBar />)
     fireEvent.click(screen.getByTestId('statusbar-zoom-in'))
     expect(useUIStore.getState().zoom).toBeCloseTo(1.1)
@@ -83,7 +83,7 @@ describe('StatusBar slide position', () => {
 describe('StatusBar view switcher', () => {
   beforeEach(() => setEditorActive(5))
 
-  it('renders Normal / Sorter / Present with pressed state from viewMode', () => {
+  it('[cap:control.status.view-mode] renders Normal / Sorter / Present with pressed state from viewMode', () => {
     render(<StatusBar />)
     expect(screen.getByTestId('statusbar-view-normal').getAttribute('aria-pressed')).toBe('true')
     expect(screen.getByTestId('statusbar-view-sorter').getAttribute('aria-pressed')).toBe('false')

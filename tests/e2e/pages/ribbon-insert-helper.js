@@ -33,7 +33,7 @@ export class RibbonInsertHelper {
     const aliases = {
       Text: 'Add text',
       'Code Block': 'Add code block',
-      'LaTeX / TikZ': 'Add LaTeX',
+      'LaTeX / TikZ': 'Add LaTeX / TikZ',
       Markdown: 'Add markdown',
       Chart: 'Add chart',
       Callout: 'Add callout',
@@ -80,6 +80,7 @@ export class RibbonInsertHelper {
       await menuItem.click()
     } else {
       const button = insertPanel.getByRole('button', { name: label, exact: true })
+      await button.scrollIntoViewIfNeeded()
       await button.click()
     }
   }

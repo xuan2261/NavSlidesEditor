@@ -61,7 +61,7 @@ describe('release verification docs contract', () => {
     const docs = `${guide}\n${matrix}\n${roadmap}`
 
     for (const requiredText of [
-      'PASS: 100',
+      'PASS: 114',
       'Release-Blocking MVP',
       'Contract-Only Coverage',
       'full Playwright suite',

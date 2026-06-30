@@ -45,8 +45,22 @@ describe('feature inventory generator', () => {
     ]))
     for (const e of extended) {
       expect(e.targetLayer).toMatch(/^(unit|contract|integration|e2e)$/)
-      expect(e.coverageMode).toMatch(/^(executable|mocked-e2e|contract-only)$/)
+      expect(e.coverageMode).toMatch(/^(executable|mocked-e2e|contract-only|inventory-only)$/)
     }
+  })
+
+  it('includes source-inventoried rows for full QA surface expansion', () => {
+    const ids = inv.map((e) => e.id)
+    expect(ids).toEqual(expect.arrayContaining([
+      'control.ribbon.insert',
+      'control.properties.panel',
+      'variant.game-subtype',
+      'plugin.runtime',
+      'marketplace.browse',
+      'explore.browse',
+      'analytics.view-tracking',
+      'electron.startup',
+    ]))
   })
 
   it('auto-sources all 44 shortcut.* including shortcut.group', () => {

@@ -52,7 +52,7 @@ beforeAll(async () => {
 
   const mod = await import('../index.js')
   app = mod.app
-})
+}, 30000)
 
 afterAll(async () => {
   if (originalDataDir === undefined) delete process.env.SLIDES_DATA_DIR

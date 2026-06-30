@@ -62,6 +62,18 @@
     "coverageMode": "mocked-e2e"
   },
   {
+    "id": "analytics.view-tracking",
+    "category": "analytics",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "analytics",
+    "targetLayer": "e2e",
+    "coverageMode": "inventory-only"
+  },
+  {
     "id": "canvas.align",
     "category": "canvas",
     "source": "manifest",
@@ -440,6 +452,162 @@
     "coverageMode": "executable"
   },
   {
+    "id": "control.properties.panel",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.animations",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.contextual-format",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.design",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.home",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.insert",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.transitions",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.view",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.selection-pane",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.slide-panel",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.status.view-mode",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.status.zoom",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.timeline-animation",
+    "category": "control",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
     "id": "control.view.selectionPane",
     "category": "control",
     "source": "manifest",
@@ -462,6 +630,54 @@
     "scope": "editor-core",
     "targetLayer": "unit",
     "coverageMode": "executable"
+  },
+  {
+    "id": "electron.data-path",
+    "category": "electron",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "electron",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "electron.package",
+    "category": "electron",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "electron",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "electron.preload",
+    "category": "electron",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "electron",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "electron.startup",
+    "category": "electron",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "electron",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
   },
   {
     "id": "element.audio",
@@ -695,6 +911,18 @@
     "coverageMode": "executable"
   },
   {
+    "id": "explore.browse",
+    "category": "explore",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "explore",
+    "targetLayer": "e2e",
+    "coverageMode": "inventory-only"
+  },
+  {
     "id": "export.html",
     "category": "export",
     "source": "manifest",
@@ -867,6 +1095,43 @@
     "scope": "live",
     "targetLayer": "e2e",
     "coverageMode": "executable"
+  },
+  {
+    "id": "marketplace.browse",
+    "category": "marketplace",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "marketplace",
+    "targetLayer": "e2e",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "plugin.runtime",
+    "category": "plugin",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "plugin",
+    "targetLayer": "e2e",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "plugin.sandbox",
+    "category": "plugin",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "plugin",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
   },
   {
     "id": "share.password",
@@ -1431,5 +1696,125 @@
     "scope": "sync",
     "targetLayer": "contract",
     "coverageMode": "contract-only"
+  },
+  {
+    "id": "teaching.discovery",
+    "category": "teaching",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "variant.chart",
+    "category": "variant",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "variant",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "variant.design-preset",
+    "category": "variant",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "variant",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "variant.fx-background",
+    "category": "variant",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "variant",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "variant.game-subtype",
+    "category": "variant",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "variant",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "variant.insert-subaction",
+    "category": "variant",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "variant",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "variant.reveal-theme",
+    "category": "variant",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "variant",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "variant.shape",
+    "category": "variant",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "variant",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "variant.slide-layout",
+    "category": "variant",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "variant",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
+  },
+  {
+    "id": "variant.transition",
+    "category": "variant",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "variant",
+    "targetLayer": "contract",
+    "coverageMode": "inventory-only"
   }
 ]

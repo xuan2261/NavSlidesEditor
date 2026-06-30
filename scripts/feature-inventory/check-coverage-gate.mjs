@@ -48,6 +48,10 @@ export function checkGate({ rows, orphans = [], allowlist = [], now = Date.now()
       warnings.push(`DEPTH-WARN: ${row.id} missing ${missing || '(unknown)'}${owner}`)
     }
     if (row.status === 'PASS') continue
+    if (row.status === 'INVENTORY') {
+      warnings.push(`INVENTORY: ${row.id} — source-inventoried capability without executable evidence yet`)
+      continue
+    }
     if (row.status === 'FAIL') {
       // A failing test is a hard fail regardless of allowlist — never mask red.
       failures.push(`FAIL: ${row.id} — a tagged test is failing (fix the test)`)

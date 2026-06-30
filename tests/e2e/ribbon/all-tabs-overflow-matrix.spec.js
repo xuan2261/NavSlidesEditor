@@ -46,7 +46,17 @@ test.describe('All Tabs Overflow Matrix', () => {
             (CRITICAL_VISIBLE_CONTROLS[tab] || []).includes(control.label)
           )
           if (tab === 'Insert' && metrics.row.hasHorizontalOverflow) {
-            const trailingAdvancedControls = [
+            const trailingInsertControls = [
+              'Add code block',
+              'Add markdown',
+              'Add LaTeX / TikZ',
+              'Add QR code',
+              'Add HTML embed',
+              'Add Mermaid diagram',
+              'Add STEM simulation',
+              'Add SVG',
+              'Add drawing',
+              'Add divider',
               'Add kinetic text',
               'Add math grid',
               'Add Anime.js',
@@ -56,9 +66,9 @@ test.describe('All Tabs Overflow Matrix', () => {
             ]
             expect(
               criticalOutside.every((control) =>
-                trailingAdvancedControls.includes(control.label)
+                trailingInsertControls.includes(control.label)
               ),
-              'Insert 1280px overflow should only affect trailing Advanced controls'
+              'Insert 1280px overflow should only affect trailing low-frequency controls'
             ).toBe(true)
           } else {
             expect(

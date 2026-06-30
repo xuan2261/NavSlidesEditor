@@ -21,7 +21,7 @@ const shapeElement = {
 }
 
 describe('PropertiesPanel warm editor contract', () => {
-  it('renders as a labelled complementary panel', () => {
+  it('[cap:control.properties.panel] renders as a labelled complementary panel', () => {
     const html = renderToString(<PropertiesPanel slide={baseSlide} />)
 
     expect(html).toContain('role="complementary"')

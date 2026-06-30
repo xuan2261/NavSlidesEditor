@@ -33,7 +33,7 @@ function lucideClass(Icon) {
 }
 
 describe('SelectionPane icon consistency', () => {
-  it('chart row uses BarChart3 (not BarChart2)', () => {
+  it('[cap:control.selection-pane] chart row uses BarChart3 (not BarChart2)', () => {
     const { container } = render(<SelectionPane {...defaultProps()} />)
     const chart3Class = lucideClass(BarChart3)
     const chart2Class = lucideClass(BarChart2)

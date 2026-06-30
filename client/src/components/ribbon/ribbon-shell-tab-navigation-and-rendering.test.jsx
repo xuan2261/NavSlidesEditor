@@ -77,7 +77,7 @@ describe('RibbonShell', () => {
     expect(selectedTab.textContent).toMatch(/home/i)
   })
 
-  it('renders the six static tab labels (no Format) when nothing is selected', () => {
+  it('[cap:control.ribbon.home] [cap:control.ribbon.insert] [cap:control.ribbon.design] [cap:control.ribbon.transitions] [cap:control.ribbon.animations] [cap:control.ribbon.view] renders the six static tab labels (no Format) when nothing is selected', () => {
     render(<RibbonShell />)
     const expectedLabels = ['Home', 'Insert', 'Design', 'Transitions', 'Animations', 'View']
     const tabs = screen.getAllByRole('tab')
@@ -88,7 +88,7 @@ describe('RibbonShell', () => {
     expect(tabs.some((t) => t.textContent.includes('Format'))).toBe(false)
   })
 
-  it('renders the contextual Format label alongside static tabs when selected', () => {
+  it('[cap:control.ribbon.contextual-format] renders the contextual Format label alongside static tabs when selected', () => {
     useUIStore.setState({ formatContext: { hasSelection: true, elementType: 'image' } })
     render(<RibbonShell />)
     const expectedLabels = ['Home', 'Insert', 'Design', 'Picture Format', 'Transitions', 'Animations', 'View']

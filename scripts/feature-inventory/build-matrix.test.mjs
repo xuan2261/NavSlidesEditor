@@ -10,6 +10,7 @@ const INVENTORY = [
   { id: 'control.format.bold', category: 'control', source: 'manifest', risk: 'low', tiers: ['smoke'], scope: 'editor-core' },
   { id: 'element.audio', category: 'element', source: 'ELEMENT_DEFAULTS', risk: 'low', tiers: ['smoke'], scope: 'editor-core' },
   { id: 'flow.autosave', category: 'flow', source: 'manifest', risk: 'high', tiers: ['smoke', 'deep'], scope: 'editor-core' },
+  { id: 'control.ribbon.insert', category: 'control', source: 'manifest', risk: 'high', tiers: ['smoke'], scope: 'editor-core', coverageMode: 'inventory-only' },
 ]
 
 const TAGS = {
@@ -88,6 +89,10 @@ describe('matrix builder status semantics', () => {
     expect(statusOf(rows, 'element.timeline')).toBe('GAP')
   })
 
+  it('INVENTORY for inventory-only capability without executable evidence', () => {
+    expect(statusOf(rows, 'control.ribbon.insert')).toBe('INVENTORY')
+  })
+
   it('ORPHAN-TAG surfaces tags for ids not in inventory', () => {
     expect(orphans).toContain('element.bogus')
   })
@@ -114,6 +119,7 @@ describe('matrix builder status semantics', () => {
   it('summary counts only PASS toward verified', () => {
     expect(summary.PASS).toBe(1)
     expect(summary.verified).toBe(1)
+    expect(summary.INVENTORY).toBe(1)
     expect(summary.total).toBe(INVENTORY.length)
   })
 

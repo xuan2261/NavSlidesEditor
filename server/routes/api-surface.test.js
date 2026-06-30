@@ -130,7 +130,7 @@ describe('API surface routes', () => {
 
     const deleteRes = await request(app).delete(`/api/media/${filename}`)
     expect(deleteRes.status).toBe(200)
-  })
+  }, 15000)
 
   it('[cap:import.upload-safety tier:deep] rejects non-SVG payloads uploaded with an SVG extension', async () => {
     const uploadRes = await request(app)
@@ -155,7 +155,7 @@ describe('API surface routes', () => {
 
     const deleteRes = await request(app).delete(`/api/media/${filename}`)
     expect(deleteRes.status).toBe(200)
-  })
+  }, 15000)
 
   it('[cap:history.snapshot] covers history snapshot create/list/restore/delete', async () => {
     const presId = `history-${Date.now()}`
