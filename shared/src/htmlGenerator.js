@@ -43,6 +43,10 @@ function getSlideTransitionAttrs(slide) {
   return attrs.length ? ` ${attrs.join(' ')}` : ''
 }
 
+function getSectionBackgroundStyle(background) {
+  return !background || background.type === 'none' ? 'background:var(--ns-bg);' : ''
+}
+
 /**
  * Build the deck-level :root token block (full merged DEFAULT + deck tokens so
  * every --ns-* resolves) plus per-slide override blocks keyed by data-slide-idx.
@@ -175,7 +179,8 @@ function generateRevealHTML(presentation) {
         : ''
 
       const fxCanvas = getFxCanvasHtml(slide.background)
-      const sectionHtml = `    <section${autoAnimateAttr}${transitionAttrs}${bgAttrs}${slideIdxAttr} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${fxCanvas}${elementsHtml}\n${footerHtml}\n${gridHtml}\n      ${notes}\n    </section>`
+      const bgStyle = getSectionBackgroundStyle(slide.background)
+      const sectionHtml = `    <section${autoAnimateAttr}${transitionAttrs}${bgAttrs}${slideIdxAttr} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${bgStyle}">\n${fxCanvas}${elementsHtml}\n${footerHtml}\n${gridHtml}\n      ${notes}\n    </section>`
 
       // Vertical slides support: if slide has children, wrap in a vertical section stack
       if (slide.children && slide.children.length > 0) {
@@ -190,7 +195,8 @@ function generateRevealHTML(presentation) {
               ? `<aside class="notes">${escapeHtml(childNotesText)}</aside>`
               : ''
             const childElements = renderSlideElements(child, { forPrint: false })
-            return `    <section${childAutoAnimate}${childTransitionAttrs}${childBg} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));">\n${childFxCanvas}${childElements}\n      ${childNotes}\n    </section>`
+            const childBgStyle = getSectionBackgroundStyle(child.background)
+            return `    <section${childAutoAnimate}${childTransitionAttrs}${childBg} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${childBgStyle}">\n${childFxCanvas}${childElements}\n      ${childNotes}\n    </section>`
           })
           .join('\n')
         return `  <section>\n${sectionHtml}\n${childSections}\n  </section>`
@@ -451,9 +457,10 @@ function downloadHTML(presentation) {
 // ΓöÇΓöÇΓöÇ PDF export (print-ready HTML, one page per fragment state) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 function getBgPrintStyle(bg, deckTokens) {
-  if (!bg || bg.type === 'none') return 'background-color:#1e1e2e;'
-  if (bg.type === 'color') return `background-color:${bg.color || '#1e1e2e'};`
-  if (bg.type === 'gradient') return `background:${formatGradientCss(bg) || '#1e1e2e'};`
+  const tokenBg = deckTokens?.colors?.bg || '#1e1e2e'
+  if (!bg || bg.type === 'none') return `background-color:${tokenBg};`
+  if (bg.type === 'color') return `background-color:${bg.color || tokenBg};`
+  if (bg.type === 'gradient') return `background:${formatGradientCss(bg) || tokenBg};`
   if (bg.type === 'fx') {
     // Canvas can't print — fall back to a solid color (author override, then the
     // theme bg token, then default).

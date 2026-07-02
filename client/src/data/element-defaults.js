@@ -75,6 +75,7 @@ svg.selectAll('circle').data(data).join('circle')
     width: 600,
     height: 380,
     zIndex: 2,
+    textColor: 'auto',
     content:
       '## Hello Markdown\n\n- Item one\n- Item two\n- Item three\n\n**Bold** and *italic* text with [links](https://example.com).\n\n```python\ndef hello():\n    print("Hello!")\n```',
   },

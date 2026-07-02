@@ -3,6 +3,8 @@ const {
   getPptxLayout,
   getPresentationResolution,
   getSlideNotes,
+  DEFAULT_TOKENS,
+  mergeTokens,
   normalizePresentationNotes,
 } = require('revealjs-shared')
 const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
@@ -48,6 +50,10 @@ async function exportToFile(sourcePresentation, filePath, options = {}) {
   for (const [index, sourceSlide] of (presentation.slides || []).entries()) {
     const slideNumber = index + 1
     const slide = pptx.addSlide()
+    const slideTokens = mergeTokens(
+      mergeTokens(DEFAULT_TOKENS, presentation.designTokens),
+      sourceSlide && sourceSlide.designTokens
+    )
 
     await applySlideBackground(slide, sourceSlide, resolution, {
       warnings,
@@ -55,6 +61,7 @@ async function exportToFile(sourcePresentation, filePath, options = {}) {
       baseUrl,
       strictRaster,
       allowFallback,
+      designTokens: slideTokens,
     })
 
     const elements = [...(sourceSlide.elements || [])]
@@ -74,6 +81,7 @@ async function exportToFile(sourcePresentation, filePath, options = {}) {
         allowFallback,
         baseUrl,
         rasterCache,
+        designTokens: slideTokens,
       })
     }
 

@@ -35,8 +35,10 @@ const COLOR_KEYS = ['bg', 'surface', 'accent', 'accent2', 'text', 'muted']
  * visually until a theme changes the token.
  */
 const AUTO_FIELD_MAP = {
+  slide: { bg: 'bg' },
   shape: { fill: 'accent', stroke: 'accent2', textColor: 'text' },
   text: { textColor: 'text' },
+  markdown: { textColor: 'text' },
   icon: { iconColor: 'text' },
   line: { stroke: 'text' },
   drawing: { strokeColor: 'text' },
@@ -81,6 +83,19 @@ function svgPaint(name, value) {
  */
 function resolveColorField(value, elementType, field) {
   return value === 'auto' ? resolveAutoColor(elementType, field) : value
+}
+
+function resolveColorForTokens(value, elementType, field, tokens) {
+  const colors = mergeTokens(DEFAULT_TOKENS, tokens).colors || {}
+  if (value === 'auto') {
+    const token = AUTO_FIELD_MAP[elementType] && AUTO_FIELD_MAP[elementType][field]
+    return colors[token || 'text'] || DEFAULT_TOKENS.colors[token || 'text']
+  }
+  if (isTokenVar(value)) {
+    const token = value.trim().match(/^var\(--ns-([a-z0-9-]+)\)$/)?.[1]
+    return colors[token] || value
+  }
+  return value
 }
 
 /** Serialize a token set into a `--ns-*: value;` declaration string for a CSS block. */
@@ -174,6 +189,7 @@ module.exports = {
   AUTO_COLOR_FIELDS,
   resolveAutoColor,
   resolveColorField,
+  resolveColorForTokens,
   isTokenVar,
   svgPaint,
   tokensToCssVars,

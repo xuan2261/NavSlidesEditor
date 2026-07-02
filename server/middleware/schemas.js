@@ -60,7 +60,7 @@ const createPresentationSchema = z
     title: z.string().max(500).optional(),
     theme: z.string().max(100).optional(),
     transition: z.string().max(100).optional(),
-    templateId: z.string().uuid().optional(),
+    templateId: z.string().min(1).max(200).optional(),
     slides: z.array(slideSchema).optional(),
   })
   .passthrough()

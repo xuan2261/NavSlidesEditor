@@ -9,6 +9,7 @@ import {
 import { addElementToPptxSlide } from './export-pptx-renderers'
 import { clearPptxRasterAssetCaches } from './export-pptx-raster'
 import { getSlideNotes } from './slide-notes'
+import { DEFAULT_TOKENS, mergeTokens } from 'revealjs-shared'
 
 function getSafeFilename(title) {
   return `${String(title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.pptx`
@@ -97,7 +98,11 @@ async function exportToPptxClient(presentation, rasterOverrides = {}) {
   for (const [slideIndex, sourceSlide] of (presentation?.slides || []).entries()) {
     const slideNumber = slideIndex + 1
     const slide = pptx.addSlide()
-    await applySlideBackground(slide, sourceSlide.background, resolution, layout, warnings, slideNumber)
+    const slideTokens = mergeTokens(
+      mergeTokens(DEFAULT_TOKENS, presentation?.designTokens),
+      sourceSlide?.designTokens
+    )
+    await applySlideBackground(slide, sourceSlide.background, resolution, layout, warnings, slideNumber, slideTokens)
 
     const elements = [...(sourceSlide.elements || [])]
       .filter((element) => !(element.hidden || false))
@@ -112,6 +117,7 @@ async function exportToPptxClient(presentation, rasterOverrides = {}) {
         warnings,
         slideNumber,
         rasterOverrides,
+        designTokens: slideTokens,
       })
     }
 

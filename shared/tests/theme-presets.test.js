@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { THEME_PRESETS, getThemePreset } from '../src/theme-presets.js'
+import {
+  BASE_REVEAL_THEME_PRESET_IDS,
+  THEME_PRESETS,
+  getDesignTokensForRevealTheme,
+  getThemePreset,
+} from '../src/theme-presets.js'
 import { COLOR_KEYS } from '../src/design-tokens.js'
 
 // The 11 reveal themes the editor's ThemeGallery exposes.
@@ -62,5 +67,13 @@ describe('theme-presets', () => {
     const first = THEME_PRESETS[0]
     expect(getThemePreset(first.id)).toBe(first)
     expect(getThemePreset('does-not-exist')).toBe(null)
+  })
+
+  it('maps base reveal themes to matching design tokens', () => {
+    for (const theme of KNOWN_REVEAL_THEMES) {
+      expect(BASE_REVEAL_THEME_PRESET_IDS[theme], `${theme} mapping`).toBeTruthy()
+      expect(getDesignTokensForRevealTheme(theme)?.colors?.bg, `${theme} bg token`).toBeTruthy()
+    }
+    expect(getDesignTokensForRevealTheme('missing-theme')).toBeUndefined()
   })
 })

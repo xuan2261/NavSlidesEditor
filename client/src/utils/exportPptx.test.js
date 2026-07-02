@@ -187,6 +187,125 @@ describe('exportPptx', () => {
     )
   })
 
+  it('resolves auto theme colors for native PPTX export', async () => {
+    const warnings = await exportToPptx({
+      title: 'Auto color export',
+      designTokens: {
+        colors: {
+          bg: '#f8fafc',
+          surface: '#e2e8f0',
+          accent: '#2563eb',
+          accent2: '#7c3aed',
+          text: '#111827',
+          muted: '#64748b',
+        },
+      },
+      slides: [
+        {
+          background: { type: 'none' },
+          elements: [
+            {
+              id: 'text-1',
+              type: 'text',
+              content: '<p>Hello</p>',
+              textColor: 'auto',
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 40,
+            },
+            {
+              id: 'shape-1',
+              type: 'shape',
+              shape: 'rect',
+              fill: 'auto',
+              stroke: 'auto',
+              textColor: 'auto',
+              text: 'Shape',
+              x: 0,
+              y: 60,
+              width: 100,
+              height: 40,
+            },
+            {
+              id: 'line-1',
+              type: 'line',
+              stroke: 'auto',
+              x: 0,
+              y: 120,
+              width: 100,
+              height: 10,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(warnings).toEqual([])
+    expect(slides[0].background).toEqual({ color: 'F8FAFC' })
+    expect(slides[0].addText).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Array),
+      expect.objectContaining({ color: '111827' })
+    )
+    expect(slides[0].addShape).toHaveBeenNthCalledWith(
+      1,
+      'rect',
+      expect.objectContaining({
+        fill: expect.objectContaining({ color: '2563EB' }),
+        line: expect.objectContaining({ color: '7C3AED' }),
+      })
+    )
+    expect(slides[0].addText).toHaveBeenNthCalledWith(
+      2,
+      'Shape',
+      expect.objectContaining({ color: '111827' })
+    )
+    expect(slides[0].addShape).toHaveBeenNthCalledWith(
+      2,
+      'line',
+      expect.objectContaining({ line: expect.objectContaining({ color: '111827' }) })
+    )
+  })
+
+  it('resolves auto theme colors for rasterized PPTX fallbacks', async () => {
+    const warnings = await exportToPptx({
+      title: 'Auto raster color export',
+      designTokens: {
+        colors: {
+          bg: '#f8fafc',
+          surface: '#e2e8f0',
+          accent: '#2563eb',
+          accent2: '#7c3aed',
+          text: '#111827',
+          muted: '#64748b',
+        },
+      },
+      slides: [
+        {
+          elements: [
+            {
+              id: 'icon-1',
+              type: 'icon',
+              iconName: 'Star',
+              iconColor: 'auto',
+              x: 0,
+              y: 0,
+              width: 24,
+              height: 24,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(warnings).toContain('Slide 1: rasterized icon for PPTX export')
+    const imageArg = slides[0].addImage.mock.calls[0][0]
+    const svg = globalThis.atob(imageArg.data.split(',')[1])
+    expect(svg).toContain('stroke="#111827"')
+    expect(svg).not.toContain('stroke="auto"')
+  })
+
   it('inserts a placeholder when an unsupported element cannot be rasterized', async () => {
     const warnings = await exportToPptx({
       title: 'Fallback export',

@@ -249,6 +249,8 @@ export function useSlideOperations({
               width: 800,
               height: 220,
               zIndex: 1,
+              textColor: 'auto',
+              fontFamily: 'var(--ns-font-heading)',
               content:
                 '<h2 style="text-align: center">New Slide</h2><p style="text-align: center">Double-click to edit</p>',
             },
@@ -260,7 +262,7 @@ export function useSlideOperations({
         const referenceSlide = prev.slides[currentIdx] || prev.slides[prev.slides.length - 1]
         const inheritedBg = referenceSlide?.background
           ? { ...referenceSlide.background }
-          : { type: 'color', color: '#1e1e2e' }
+          : { type: 'none' }
         const newSlide = {
           id: crypto.randomUUID(),
           elements: baseElements,
@@ -361,7 +363,7 @@ export function useSlideOperations({
           id: crypto.randomUUID(),
           elements: [],
           notes: '',
-          background: parent.background ? { ...parent.background } : { type: 'color', color: '#1e1e2e' },
+          background: parent.background ? { ...parent.background } : { type: 'none' },
         }
         return {
           ...prev,

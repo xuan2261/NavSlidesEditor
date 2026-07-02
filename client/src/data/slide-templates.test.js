@@ -77,6 +77,18 @@ describe('SLIDE_TEMPLATES element fields', () => {
   }
 })
 
+describe('SLIDE_TEMPLATES theme-aware colors', () => {
+  it('does not pair theme-driven fills with frozen white shape text', () => {
+    for (const [key, tmpl] of entries) {
+      tmpl.elements.forEach((el, i) => {
+        if (el.type === 'shape' && el.fill === 'auto') {
+          expect(el.textColor, `${key}.elements[${i}].textColor`).not.toBe('#ffffff')
+        }
+      })
+    }
+  })
+})
+
 describe('SLIDE_TEMPLATES bounds (960x540 grid)', () => {
   for (const [key, tmpl] of entries) {
     it(`${key}: every element fits the slide`, () => {

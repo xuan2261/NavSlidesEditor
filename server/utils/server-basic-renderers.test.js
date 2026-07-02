@@ -73,6 +73,80 @@ describe('server-basic-renderers', () => {
     expect(slide.addShape).toHaveBeenCalledTimes(2)
   })
 
+  it('resolves auto theme colors for server pptx primitives', () => {
+    const designTokens = {
+      colors: {
+        bg: '#f8fafc',
+        surface: '#e2e8f0',
+        accent: '#2563eb',
+        accent2: '#7c3aed',
+        text: '#111827',
+        muted: '#64748b',
+      },
+    }
+    const slide = { addShape: vi.fn(), addText: vi.fn(), addTable: vi.fn() }
+
+    addTextElement(
+      slide,
+      { content: '<p>Hello</p>', textColor: 'auto' },
+      { x: 0, y: 0, w: 2, h: 1 },
+      designTokens
+    )
+    addShapeElement(
+      slide,
+      { shape: 'rect', fill: 'auto', stroke: 'auto', textColor: 'auto', text: 'Shape' },
+      { x: 0, y: 0, w: 2, h: 1 },
+      designTokens
+    )
+    addLineElement(
+      slide,
+      { stroke: 'auto', width: 100, height: 20 },
+      { x: 0, y: 0, w: 1, h: 1 },
+      { width: 960, height: 540 },
+      { width: 10, height: 5.625 },
+      designTokens
+    )
+    addTableElement(
+      slide,
+      {
+        data: [['A']],
+        headerRow: true,
+        headerBgColor: 'auto',
+        textColor: 'auto',
+      },
+      { x: 0, y: 0, w: 2, h: 1 },
+      designTokens
+    )
+
+    expect(slide.addText).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Array),
+      expect.objectContaining({ color: '111827' })
+    )
+    expect(slide.addShape).toHaveBeenNthCalledWith(
+      1,
+      'rect',
+      expect.objectContaining({
+        fill: expect.objectContaining({ color: '2563EB' }),
+        line: expect.objectContaining({ color: '7C3AED' }),
+      })
+    )
+    expect(slide.addText).toHaveBeenNthCalledWith(
+      2,
+      'Shape',
+      expect.objectContaining({ color: '111827' })
+    )
+    expect(slide.addShape).toHaveBeenNthCalledWith(
+      2,
+      'line',
+      expect.objectContaining({ line: expect.objectContaining({ color: '111827' }) })
+    )
+    expect(slide.addTable.mock.calls[0][0][0][0].options).toMatchObject({
+      color: '111827',
+      fill: expect.objectContaining({ color: '2563EB' }),
+    })
+  })
+
   it('uses rich text runs for imported shape text', () => {
     const slide = { addShape: vi.fn(), addText: vi.fn() }
     addShapeElement(

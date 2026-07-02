@@ -4,6 +4,7 @@ import {
   AUTO_FIELD_MAP,
   resolveAutoColor,
   resolveColorField,
+  resolveColorForTokens,
   isTokenVar,
   tokensToCssVars,
 } from '../src/design-tokens.js'
@@ -42,6 +43,9 @@ describe('design-tokens', () => {
     it('text.textColor -> var(--ns-text)', () => {
       expect(resolveAutoColor('text', 'textColor')).toBe('var(--ns-text)')
     })
+    it('markdown.textColor -> var(--ns-text)', () => {
+      expect(resolveAutoColor('markdown', 'textColor')).toBe('var(--ns-text)')
+    })
     it('table.textColor -> var(--ns-text)', () => {
       expect(resolveAutoColor('table', 'textColor')).toBe('var(--ns-text)')
     })
@@ -72,6 +76,29 @@ describe('design-tokens', () => {
     })
     it('passes undefined through untouched', () => {
       expect(resolveColorField(undefined, 'shape', 'fill')).toBe(undefined)
+    })
+  })
+
+  describe('resolveColorForTokens', () => {
+    const tokens = {
+      colors: {
+        bg: '#f8fafc',
+        surface: '#e2e8f0',
+        accent: '#2563eb',
+        accent2: '#7c3aed',
+        text: '#111827',
+        muted: '#64748b',
+      },
+    }
+
+    it('resolves auto fields to concrete token colors for non-CSS export paths', () => {
+      expect(resolveColorForTokens('auto', 'text', 'textColor', tokens)).toBe('#111827')
+      expect(resolveColorForTokens('auto', 'shape', 'fill', tokens)).toBe('#2563eb')
+      expect(resolveColorForTokens('auto', 'slide', 'bg', tokens)).toBe('#f8fafc')
+    })
+
+    it('resolves emitted token vars to concrete token colors', () => {
+      expect(resolveColorForTokens('var(--ns-accent2)', 'shape', 'stroke', tokens)).toBe('#7c3aed')
     })
   })
 

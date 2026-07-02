@@ -9,7 +9,13 @@ import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
 
-const { BG_COLORS = [], GRADIENT_PRESETS = [], THEME_PRESETS = [], listFx } = shared
+const {
+  BG_COLORS = [],
+  GRADIENT_PRESETS = [],
+  THEME_PRESETS = [],
+  getDesignTokensForRevealTheme,
+  listFx,
+} = shared
 const FX_LIST = typeof listFx === 'function' ? listFx() : []
 
 const THEMES = [
@@ -282,7 +288,10 @@ export default function DesignTabContent({
               anchorRef={themeTriggerRef}
               current={currentTheme}
               currentTokens={presentation?.designTokens}
-              onSelect={(t) => { onUpdatePresentation?.({ theme: t }); setShowThemes(false) }}
+              onSelect={(t) => {
+                onUpdatePresentation?.({ theme: t, designTokens: getDesignTokensForRevealTheme?.(t) })
+                setShowThemes(false)
+              }}
               onSelectPreset={(preset) => {
                 // Live-switch: set deck tokens + closest reveal theme. Recolors all
                 // 'auto' content instantly (new decks + built-in templates).

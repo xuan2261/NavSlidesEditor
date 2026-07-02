@@ -4,6 +4,7 @@ import QRCode from 'qrcode'
 import iconPaths from '../../../shared/data/icon-paths.json'
 import { createSvgDataUri, normalizeCssColor } from './export-pptx-core'
 import { sanitizeSvgContent } from './content-safety'
+import { resolveColorForTokens } from 'revealjs-shared'
 import {
   renderHtmlDocumentToPngDataUri,
   renderHtmlToPngDataUri,
@@ -255,12 +256,16 @@ function buildChartSrcdoc(element) {
   return `<!doctype html><html><head><meta charset="utf-8"><script src="${assetOrigin}/vendor/chart.js/dist/chart.umd.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}canvas{width:100%!important;height:100%!important}</style></head><body><canvas id="chart"></canvas><script>(function(){function mount(){if(typeof Chart==='undefined'){setTimeout(mount,50);return}new Chart(document.getElementById('chart'),{type:${JSON.stringify(chartType)},data:{labels:${labels},datasets:${datasets}},options:{animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,0.7)',font:{size:12}}}},scales:${scales}})}mount()})()</script></body></html>`
 }
 
-function renderIconSvg(element) {
+function resolveRasterColor(value, elementType, field, designTokens, fallback) {
+  return resolveColorForTokens(value, elementType, field, designTokens) || fallback
+}
+
+function renderIconSvg(element, designTokens) {
   const rawName = element?.iconName || 'Star'
   const iconKey = rawName.endsWith('Icon') && rawName !== 'ImageIcon' ? rawName.replace(/Icon$/, '') : rawName
   const path = iconPaths[iconKey] || iconPaths.Star || ''
   const stroke = element?.iconStrokeWidth || 2
-  const color = element?.iconColor || '#ffffff'
+  const color = resolveRasterColor(element?.iconColor, 'icon', 'iconColor', designTokens, '#ffffff')
   return `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${element.width}" height="${element.height}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round">
       ${path}
@@ -268,10 +273,11 @@ function renderIconSvg(element) {
   `
 }
 
-function renderDrawingSvg(element) {
+function renderDrawingSvg(element, designTokens) {
   const paths = (element?.paths || [])
     .map((path) => {
-      const stroke = path.stroke || element.strokeColor || '#ffffff'
+      const stroke =
+        path.stroke || resolveRasterColor(element.strokeColor, 'drawing', 'strokeColor', designTokens, '#ffffff')
       const strokeWidth = path.strokeWidth || element.strokeWidth || 3
       const opacity = path.opacity ?? 1
       return `<path d="${escapeHtml(path.d || '')}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}" />`
@@ -300,19 +306,19 @@ export async function renderGradientBackgroundDataUri(background, width, height)
   })
 }
 
-export async function renderElementFallbackDataUri(element) {
+export async function renderElementFallbackDataUri(element, designTokens) {
   const width = Math.max(1, Number(element?.width) || 1)
   const height = Math.max(1, Number(element?.height) || 1)
 
   switch (element?.type) {
     case 'drawing':
-      return createSvgDataUri(renderDrawingSvg(element))
+      return createSvgDataUri(renderDrawingSvg(element, designTokens))
     case 'chart':
       return await renderIframeCanvasToPngDataUri(buildChartSrcdoc(element), width, height)
     case 'html':
       return await renderHtmlEmbedToPngDataUri(element?.content || '', width, height)
     case 'icon':
-      return createSvgDataUri(renderIconSvg(element))
+      return createSvgDataUri(renderIconSvg(element, designTokens))
     case 'latex':
       return await renderLatexToPngDataUri(element?.content || '', width, height)
     case 'markdown': {
@@ -322,7 +328,7 @@ export async function renderElementFallbackDataUri(element) {
         width,
         height,
         style:
-          'padding:12px;color:#ffffff;font-family:system-ui,sans-serif;font-size:16px;line-height:1.5;background:transparent;',
+          `padding:12px;color:${resolveRasterColor(element?.textColor, 'markdown', 'textColor', designTokens, '#ffffff')};font-family:system-ui,sans-serif;font-size:16px;line-height:1.5;background:transparent;`,
       })
     }
     case 'qrcode':

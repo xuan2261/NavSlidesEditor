@@ -300,7 +300,7 @@ function renderHtml(el, style, wrap, vis, opts) {
 }
 
 function renderMarkdown(el, style, wrap, vis, opts) {
-  const mdColor = safeCssColor(el.textColor, 'white')
+  const mdColor = safeCssColor(resolveColorField(el.textColor, 'markdown', 'textColor'), 'white')
   const mdFont = Number(el.fontSize) > 0 ? Number(el.fontSize) : null
   if (opts.forPrint) {
     const fs = mdFont || 16

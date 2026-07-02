@@ -150,6 +150,38 @@ describe('Presentations API', () => {
     await request(app).delete(`/api/presentations/${createRes.body.id}/permanent`)
   })
 
+  it('creates from built-in non-UUID template ids selected in the start-from modal', async () => {
+    const createRes = await request(app)
+      .post('/api/presentations')
+      .send({ title: 'Built-in start from test', templateId: 'deck-blank-light' })
+
+    expect(createRes.status).toBe(201)
+    expect(createRes.body.id).toBeTruthy()
+    expect(createRes.body.title).toBe('Built-in start from test')
+    expect(createRes.body.slides.length).toBeGreaterThan(0)
+
+    await request(app).delete(`/api/presentations/${createRes.body.id}/permanent`)
+  })
+
+  it('seeds blank presentations with theme tokens instead of a fixed dark slide', async () => {
+    const blackRes = await request(app)
+      .post('/api/presentations')
+      .send({ title: 'Blank black theme', theme: 'black' })
+    const whiteRes = await request(app)
+      .post('/api/presentations')
+      .send({ title: 'Blank white theme', theme: 'white' })
+
+    expect(blackRes.status).toBe(201)
+    expect(whiteRes.status).toBe(201)
+    expect(blackRes.body.slides[0].background).toEqual({ type: 'none' })
+    expect(whiteRes.body.slides[0].background).toEqual({ type: 'none' })
+    expect(blackRes.body.designTokens.colors.bg).not.toBe(whiteRes.body.designTokens.colors.bg)
+    expect(blackRes.body.slides[0].elements[0].textColor).toBe('auto')
+
+    await request(app).delete(`/api/presentations/${blackRes.body.id}/permanent`)
+    await request(app).delete(`/api/presentations/${whiteRes.body.id}/permanent`)
+  })
+
   it('removes both legacy and object-format share tokens on permanent delete', async () => {
     const created = await request(app).post('/api/presentations').send({ title: 'Cascade test' })
     expect(created.status).toBe(201)

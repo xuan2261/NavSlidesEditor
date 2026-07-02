@@ -32,7 +32,7 @@ import { summarizePptxImportWarnings } from '../utils/pptx-import-summary'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
 import { Button, Input, ModalShell, Select } from '../components/ui'
 import SlideThumbnail from '../components/SlideThumbnail'
-import { getThemePreset } from 'revealjs-shared'
+import { getDesignTokensForRevealTheme, getThemePreset } from 'revealjs-shared'
 
 const THEMES = [
   'black',
@@ -342,7 +342,10 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         try {
           const fullTemplate = await api.getMarketplaceTemplate(templateId)
           if (fullTemplate) {
-            presetData = fullTemplate
+            presetData = {
+              ...fullTemplate,
+              designTokens: fullTemplate.designTokens || presetData.designTokens,
+            }
           }
         } catch (err) {
           console.warn(
@@ -463,10 +466,12 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
   async function handleCreateTemplate() {
     try {
+      const theme = 'black'
       const template = await api.createTemplate({
         title: 'New Template',
-        theme: 'black',
+        theme,
         transition: 'slide',
+        designTokens: getDesignTokensForRevealTheme(theme),
         slides: [
           {
             id: crypto.randomUUID(),
@@ -479,12 +484,14 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                 width: 800,
                 height: 220,
                 zIndex: 1,
+                textColor: 'auto',
+                fontFamily: 'var(--ns-font-heading)',
                 content:
                   '<h2 style="text-align: center">Template Title</h2><p style="text-align: center">Edit this template</p>',
               },
             ],
             notes: '',
-            background: { type: 'color', color: '#1e1e2e' },
+            background: { type: 'none' },
           },
         ],
       })

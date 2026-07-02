@@ -13,7 +13,16 @@ describe('Phase 2: markdown canvas honors textColor/fontSize', () => {
     expect(root.style.fontSize).toBe('24px')
   })
 
-  it('falls back to white / 18px when unset (preserves current look)', () => {
+  it('does not emit the literal auto color sentinel', () => {
+    const { container } = render(
+      <MarkdownRenderer element={{ id: 'm1', type: 'markdown', content: '# Hi', textColor: 'auto' }} />
+    )
+    const root = container.firstChild
+    expect(root.getAttribute('style')).not.toContain('color: auto')
+    expect(root.style.fontSize).toBe('18px')
+  })
+
+  it('falls back to white / 18px when unset (preserves legacy look)', () => {
     const { container } = render(
       <MarkdownRenderer element={{ id: 'm1', type: 'markdown', content: '# Hi' }} />
     )

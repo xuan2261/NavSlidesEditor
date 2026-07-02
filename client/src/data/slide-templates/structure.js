@@ -115,7 +115,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 0,
         text: 'Core Idea',
         fontSize: 22,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -130,7 +130,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 2,
         text: 'Branch A',
         fontSize: 18,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -145,7 +145,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 2,
         text: 'Branch B',
         fontSize: 18,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -160,7 +160,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 2,
         text: 'Branch C',
         fontSize: 18,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -175,7 +175,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 2,
         text: 'Branch D',
         fontSize: 18,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
     ],
   },
@@ -206,7 +206,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 0,
         text: 'Client / UI',
         fontSize: 20,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -234,7 +234,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 2,
         text: 'API / Services',
         fontSize: 20,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -262,7 +262,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 2,
         text: 'Database',
         fontSize: 20,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
     ],
   },
@@ -293,7 +293,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 0,
         text: 'Start',
         fontSize: 18,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -321,7 +321,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 2,
         text: 'Valid?',
         fontSize: 18,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -349,7 +349,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 2,
         text: 'Proceed',
         fontSize: 18,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -364,7 +364,7 @@ export const STRUCTURE_TEMPLATES = {
         strokeWidth: 2,
         text: 'Reject',
         fontSize: 18,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
     ],
   },

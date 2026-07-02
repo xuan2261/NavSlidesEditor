@@ -1,19 +1,30 @@
-const { DEFAULT_BACKGROUND_COLOR, normalizeCssColor } = require('revealjs-shared')
+const { DEFAULT_BACKGROUND_COLOR, normalizeCssColor, resolveColorForTokens } = require('revealjs-shared')
 const { normalizeServerImageSource } = require('./server-image-source')
 const { rasterizeBackground } = require('./server-background-raster')
 
 async function applySlideBackground(slide, sourceSlide, resolution, options = {}) {
-  const { warnings = [], slideNumber = 0, baseUrl = '', strictRaster = true, allowFallback = false } = options
+  const {
+    warnings = [],
+    slideNumber = 0,
+    baseUrl = '',
+    strictRaster = true,
+    allowFallback = false,
+    designTokens,
+  } = options
   const bg = sourceSlide && sourceSlide.background
+  const tokenBg = normalizeCssColor(
+    resolveColorForTokens('auto', 'slide', 'bg', designTokens) || '#1e1e2e',
+    DEFAULT_BACKGROUND_COLOR
+  ).color
 
   if (!bg || bg.type === 'none') {
-    slide.background = { color: DEFAULT_BACKGROUND_COLOR }
+    slide.background = { color: tokenBg }
     return
   }
 
   if (bg.type === 'color') {
     slide.background = {
-      color: normalizeCssColor(bg.color || '#1e1e2e', DEFAULT_BACKGROUND_COLOR).color,
+      color: normalizeCssColor(bg.color || tokenBg, DEFAULT_BACKGROUND_COLOR).color,
     }
     return
   }
@@ -29,7 +40,7 @@ async function applySlideBackground(slide, sourceSlide, resolution, options = {}
       throw new Error('Background image source missing in strict mode')
     }
 
-    slide.background = { color: DEFAULT_BACKGROUND_COLOR }
+    slide.background = { color: tokenBg }
     warnings.push(`Slide ${slideNumber}: image background fallback used`)
     return
   }
@@ -50,12 +61,12 @@ async function applySlideBackground(slide, sourceSlide, resolution, options = {}
       throw new Error('Gradient background rasterization failed in strict mode')
     }
 
-    slide.background = { color: DEFAULT_BACKGROUND_COLOR }
+    slide.background = { color: tokenBg }
     warnings.push(`Slide ${slideNumber}: gradient background fallback used`)
     return
   }
 
-  slide.background = { color: DEFAULT_BACKGROUND_COLOR }
+  slide.background = { color: tokenBg }
 }
 
 module.exports = {

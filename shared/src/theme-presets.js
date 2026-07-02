@@ -171,4 +171,24 @@ function getThemePreset(id) {
   return THEME_PRESETS.find((p) => p.id === id) || null
 }
 
-module.exports = { THEME_PRESETS, getThemePreset }
+const BASE_REVEAL_THEME_PRESET_IDS = {
+  black: 'minimal-dark',
+  white: 'minimal-white',
+  league: 'corporate-clean',
+  beige: 'manuscript',
+  sky: 'ocean-breeze',
+  night: 'tokyo-night',
+  serif: 'editorial-serif',
+  simple: 'mono-paper',
+  solarized: 'solarized-dark',
+  blood: 'crimson-dark',
+  moon: 'forest-calm',
+  dracula: 'dracula',
+}
+
+function getDesignTokensForRevealTheme(theme) {
+  const presetId = BASE_REVEAL_THEME_PRESET_IDS[theme]
+  return presetId ? getThemePreset(presetId)?.tokens : undefined
+}
+
+module.exports = { THEME_PRESETS, getThemePreset, BASE_REVEAL_THEME_PRESET_IDS, getDesignTokensForRevealTheme }

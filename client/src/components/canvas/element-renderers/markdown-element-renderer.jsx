@@ -1,5 +1,6 @@
 import { markdownToHtml } from '../../../utils/markdown-utils'
 import { sanitizeRichTextHtml } from '../../../utils/content-safety'
+import { resolveColorField } from 'revealjs-shared'
 
 export function MarkdownRenderer({ element }) {
   const html = sanitizeRichTextHtml(markdownToHtml(element.content || ''))
@@ -9,7 +10,7 @@ export function MarkdownRenderer({ element }) {
     overflow: 'auto',
     padding: '8px 12px',
     boxSizing: 'border-box',
-    color: element.textColor || 'white',
+    color: resolveColorField(element.textColor, 'markdown', 'textColor') || 'white',
     fontSize: element.fontSize ? `${element.fontSize}px` : '18px',
     lineHeight: 1.5,
   }

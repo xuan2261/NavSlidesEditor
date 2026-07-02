@@ -24,9 +24,9 @@ import SlideBackgroundFxCanvas from './canvas/slide-background-fx-canvas'
 import { resolvePointerDownSelection } from '../utils/active-slide-selection'
 
 function getBgStyle(bg) {
-  if (!bg || bg.type === 'none') return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
-  if (bg.type === 'color') return { backgroundColor: bg.color || 'var(--bg-canvas-default, #ffffff)' }
-  if (bg.type === 'gradient') return { background: bg.gradient || 'var(--bg-canvas-default, #ffffff)' }
+  if (!bg || bg.type === 'none') return { backgroundColor: 'var(--ns-bg, var(--bg-canvas-default, #ffffff))' }
+  if (bg.type === 'color') return { backgroundColor: bg.color || 'var(--ns-bg, var(--bg-canvas-default, #ffffff))' }
+  if (bg.type === 'gradient') return { background: bg.gradient || 'var(--ns-bg, var(--bg-canvas-default, #ffffff))' }
   if (bg.type === 'image' && bg.image) return { backgroundImage: `url(${bg.image})`, backgroundSize: bg.size || 'cover', backgroundPosition: bg.position || 'center' }
   // 'fx' backgrounds render via the FX canvas overlay; keep the container transparent.
   if (bg.type === 'fx') return { backgroundColor: bg.fx?.fallbackColor || '#0d0221' }

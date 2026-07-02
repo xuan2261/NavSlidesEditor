@@ -383,7 +383,7 @@ export const DATA_TEMPLATES = {
         opacity: 1,
         text: 'Visitors — 10,000',
         fontSize: 20,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -399,7 +399,7 @@ export const DATA_TEMPLATES = {
         opacity: 0.8,
         text: 'Leads — 4,200',
         fontSize: 20,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -415,7 +415,7 @@ export const DATA_TEMPLATES = {
         opacity: 0.6,
         text: 'Trials — 1,500',
         fontSize: 20,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
       {
         type: 'shape',
@@ -431,7 +431,7 @@ export const DATA_TEMPLATES = {
         opacity: 0.45,
         text: 'Customers — 480',
         fontSize: 20,
-        textColor: '#ffffff',
+        textColor: 'auto',
       },
     ],
   },

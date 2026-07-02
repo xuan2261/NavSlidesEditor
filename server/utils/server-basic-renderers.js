@@ -7,6 +7,7 @@ const {
   mapArrowType,
   mapLineDashType,
   normalizeCssColor,
+  resolveColorForTokens,
   toPptFontSize,
 } = require('revealjs-shared')
 const { normalizeServerImageSource } = require('./server-image-source')
@@ -16,17 +17,22 @@ function effectiveFontSize(element) {
   return Number.isFinite(fit) && fit > 0 ? fit : element.fontSize || 16
 }
 
-function addTextElement(slide, element, bounds) {
+function resolvePptxColor(value, elementType, field, tokens, fallbackValue) {
+  return resolveColorForTokens(value, elementType, field, tokens) || fallbackValue
+}
+
+function addTextElement(slide, element, bounds, designTokens) {
   const fontSize = effectiveFontSize(element)
+  const textColor = resolvePptxColor(element.textColor, 'text', 'textColor', designTokens, '#ffffff')
   const runs = htmlToPptTextRuns(element.content || '', {
     align: element.textAlign,
-    color: element.textColor || '#ffffff',
+    color: textColor,
     fontFace: element.fontFamily,
     fontSize,
   })
   if (!runs.length) return
 
-  const baseColor = normalizeCssColor(element.textColor || '#ffffff', DEFAULT_TEXT_COLOR)
+  const baseColor = normalizeCssColor(textColor, DEFAULT_TEXT_COLOR)
   slide.addText(runs, {
     ...bounds,
     color: baseColor.color,
@@ -103,10 +109,17 @@ function addImageElement(slide, element, bounds, resolution, layout) {
   }
 }
 
-function addShapeElement(slide, element, bounds) {
+function addShapeElement(slide, element, bounds, designTokens) {
   const shapeType = getShapeType(element.shape)
-  const fill = normalizeCssColor(element.fill || '#6366f1', DEFAULT_BACKGROUND_COLOR)
-  const stroke = normalizeCssColor(element.stroke === 'none' ? '#000000' : element.stroke || '#ffffff')
+  const fill = normalizeCssColor(
+    resolvePptxColor(element.fill, 'shape', 'fill', designTokens, '#6366f1'),
+    DEFAULT_BACKGROUND_COLOR
+  )
+  const stroke = normalizeCssColor(
+    element.stroke === 'none'
+      ? '#000000'
+      : resolvePptxColor(element.stroke, 'shape', 'stroke', designTokens, '#ffffff')
+  )
   const transparency =
     element.opacity == null
       ? fill.transparency
@@ -131,7 +144,8 @@ function addShapeElement(slide, element, bounds) {
 
   if (element.text || element.textHtml) {
     const fontSize = effectiveFontSize(element)
-    const textColor = normalizeCssColor(element.textColor || '#ffffff', DEFAULT_TEXT_COLOR)
+    const resolvedTextColor = resolvePptxColor(element.textColor, 'shape', 'textColor', designTokens, '#ffffff')
+    const textColor = normalizeCssColor(resolvedTextColor, DEFAULT_TEXT_COLOR)
     const textOptions = {
       ...bounds,
       color: textColor.color,
@@ -146,7 +160,7 @@ function addShapeElement(slide, element, bounds) {
     const runs = element.textHtml
       ? htmlToPptTextRuns(element.textHtml, {
         align: element.textAlign || 'center',
-        color: element.textColor || '#ffffff',
+        color: resolvedTextColor,
         fontFace: element.fontFamily,
         fontSize,
       })
@@ -155,7 +169,7 @@ function addShapeElement(slide, element, bounds) {
   }
 }
 
-function addLineElement(slide, element, bounds, resolution, layout) {
+function addLineElement(slide, element, bounds, resolution, layout, designTokens) {
   const scaleX = layout.width / resolution.width
   const scaleY = layout.height / resolution.height
   const midY = (Number(element.height) || 0) / 2
@@ -174,7 +188,7 @@ function addLineElement(slide, element, bounds, resolution, layout) {
     flipH: x2 < x1,
     flipV: y2 < y1,
     line: {
-      color: normalizeCssColor(element.stroke || '#ffffff').color,
+      color: normalizeCssColor(resolvePptxColor(element.stroke, 'line', 'stroke', designTokens, '#ffffff')).color,
       width: element.strokeWidth || 2,
       dashType: mapLineDashType(element.dashArray),
       beginArrowType: mapArrowType(element.arrowStart),
@@ -198,9 +212,11 @@ function addCodeElement(slide, element, bounds) {
   })
 }
 
-function addCalloutElement(slide, element, bounds) {
+function addCalloutElement(slide, element, bounds, designTokens) {
   const fill = normalizeCssColor(element.calloutColor || '#ef4444')
-  const text = normalizeCssColor(element.calloutTextColor || '#ffffff')
+  const text = normalizeCssColor(
+    resolvePptxColor(element.calloutTextColor, 'callout', 'calloutTextColor', designTokens, '#ffffff')
+  )
   slide.addShape('ellipse', {
     ...bounds,
     fill: { color: fill.color, transparency: fill.transparency },
@@ -219,7 +235,7 @@ function addCalloutElement(slide, element, bounds) {
   })
 }
 
-function addTableElement(slide, element, bounds) {
+function addTableElement(slide, element, bounds, designTokens) {
   const mergedCells = Array.isArray(element.mergedCells) ? element.mergedCells : []
   const mergeByStart = new Map()
   const covered = new Set()
@@ -269,12 +285,13 @@ function addTableElement(slide, element, bounds) {
       const fillColor = normalizeCssColor(
         getCellStyle('bgColors', rowIndex, colIndex) ||
           (element.headerRow && rowIndex === 0
-            ? element.headerBgColor || '#6366f1'
-            : element.cellBgColor || '#1e1e2e'),
+            ? resolvePptxColor(element.headerBgColor, 'table', 'headerBgColor', designTokens, '#6366f1')
+            : resolvePptxColor(element.cellBgColor, 'table', 'cellBgColor', designTokens, '#1e1e2e')),
         DEFAULT_BACKGROUND_COLOR
       )
       const textColor = normalizeCssColor(
-        getCellStyle('textColors', rowIndex, colIndex) || element.textColor || '#ffffff',
+        getCellStyle('textColors', rowIndex, colIndex) ||
+          resolvePptxColor(element.textColor, 'table', 'textColor', designTokens, '#ffffff'),
         DEFAULT_TEXT_COLOR
       )
       const cellFontSize = Number(getCellStyle('fontSizes', rowIndex, colIndex))

@@ -20,6 +20,7 @@ export async function addElementToPptxSlide({
   warnings,
   slideNumber,
   rasterOverrides = {},
+  designTokens,
 }) {
   const bounds = scaleElementBounds(element, resolution, layout)
   const rasterData = element?.id ? rasterOverrides[element.id] : null
@@ -38,22 +39,22 @@ export async function addElementToPptxSlide({
   try {
     switch (element.type) {
       case 'text':
-        addTextElement(slide, element, bounds)
+        addTextElement(slide, element, bounds, designTokens)
         break
       case 'image':
         addImageElement(slide, element, bounds, resolution, layout)
         break
       case 'shape':
-        addShapeElement(slide, element, bounds)
+        addShapeElement(slide, element, bounds, designTokens)
         break
       case 'line':
-        addLineElement(slide, element, bounds, resolution, layout)
+        addLineElement(slide, element, bounds, resolution, layout, designTokens)
         break
       case 'callout':
-        addCalloutElement(slide, element, bounds)
+        addCalloutElement(slide, element, bounds, designTokens)
         break
       case 'table':
-        addTableElement(slide, element, bounds)
+        addTableElement(slide, element, bounds, designTokens)
         break
       case 'code':
         if (Array.isArray(element.walkthroughSteps) && element.walkthroughSteps.length > 0) {
@@ -70,7 +71,7 @@ export async function addElementToPptxSlide({
         addChartElement(slide, element, bounds, pptx)
         break
       default:
-        await addFallbackElement(slide, element, bounds, warnings, slideNumber)
+        await addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens)
         break
     }
   } catch (error) {
@@ -81,6 +82,6 @@ export async function addElementToPptxSlide({
       fallback: 'export-error',
       severity: 'error',
     })
-    await addFallbackElement(slide, element, bounds, warnings, slideNumber)
+    await addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens)
   }
 }

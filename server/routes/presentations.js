@@ -1,6 +1,10 @@
 const express = require('express')
 const uuidv4 = () => require('node:crypto').randomUUID()
-const { generateRevealHTML, normalizePresentationNotes } = require('revealjs-shared')
+const {
+  generateRevealHTML,
+  getDesignTokensForRevealTheme,
+  normalizePresentationNotes,
+} = require('revealjs-shared')
 const {
   readPresentations,
   withPresentations,
@@ -148,11 +152,13 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
     }
 
     if (!presentation) {
+      const designTokens = extraFields.designTokens || getDesignTokensForRevealTheme(theme || 'black')
       presentation = normalizePresentationNotes({
         id: uuidv4(),
         title: title || 'Untitled Presentation',
         theme: theme || 'black',
         transition: transition || 'slide',
+        designTokens,
         slides: [
           {
             id: uuidv4(),
@@ -165,12 +171,14 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
                 width: 800,
                 height: 220,
                 zIndex: 1,
+                textColor: 'auto',
+                fontFamily: 'var(--ns-font-heading)',
                 content:
                   '<h2 style="text-align: center">Welcome to your presentation</h2><p style="text-align: center">Double-click to start editing</p>',
               },
             ],
             notes: '',
-            background: { type: 'color', color: '#1e1e2e' },
+            background: { type: 'none' },
           },
         ],
         createdAt: now,

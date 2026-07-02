@@ -6,15 +6,17 @@ import {
   recordPptxExportWarning,
 } from './export-pptx-core'
 import { renderGradientBackgroundDataUri } from './export-pptx-raster'
+import { resolveColorForTokens } from 'revealjs-shared'
 
-export async function applySlideBackground(slide, background, resolution, layout, warnings, slideNumber) {
+export async function applySlideBackground(slide, background, resolution, layout, warnings, slideNumber, tokens) {
+  const tokenBg = normalizeCssColor(resolveColorForTokens('auto', 'slide', 'bg', tokens) || '#1e1e2e', DEFAULT_BACKGROUND_COLOR).color
   if (!background || background.type === 'none') {
-    slide.background = { color: DEFAULT_BACKGROUND_COLOR }
+    slide.background = { color: tokenBg }
     return
   }
 
   if (background.type === 'color') {
-    slide.background = { color: normalizeCssColor(background.color || '#1e1e2e', DEFAULT_BACKGROUND_COLOR).color }
+    slide.background = { color: normalizeCssColor(background.color || tokenBg, DEFAULT_BACKGROUND_COLOR).color }
     return
   }
 
@@ -40,7 +42,7 @@ export async function applySlideBackground(slide, background, resolution, layout
     }
   }
 
-  slide.background = { color: DEFAULT_BACKGROUND_COLOR }
+  slide.background = { color: tokenBg }
   recordPptxExportWarning(warnings, {
     element: { id: `slide-${slideNumber}-background`, type: 'slide-background' },
     slideNumber,

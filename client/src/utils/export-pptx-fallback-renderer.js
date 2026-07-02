@@ -27,7 +27,7 @@ function addPlaceholder(slide, bounds, element, warning) {
   warning()
 }
 
-export async function addFallbackElement(slide, element, bounds, warnings, slideNumber) {
+export async function addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens) {
   const coverSource = getMediaCoverSource(element)
   const normalizedCover = normalizeImageSource(coverSource)
   if (normalizedCover) {
@@ -41,7 +41,7 @@ export async function addFallbackElement(slide, element, bounds, warnings, slide
     return
   }
 
-  const fallbackData = await renderElementFallbackDataUri(element)
+  const fallbackData = await renderElementFallbackDataUri(element, designTokens)
   if (fallbackData) {
     slide.addImage({ data: fallbackData, ...bounds, rotate: element.rotation || 0 })
     recordPptxExportWarning(warnings, {
