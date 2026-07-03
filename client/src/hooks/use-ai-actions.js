@@ -1,7 +1,12 @@
 import { useCallback } from 'react'
 import { buildSlidesFromOutline } from '../utils/build-slides-from-outline'
-import { applyTranslatedNotes, getSlideNotesTranslationKey } from '../utils/slide-notes'
 import { sanitizeRichTextHtml } from '../utils/content-safety'
+import { applyTranslatedNotes, getSlideNotesTranslationKey } from '../utils/slide-notes'
+import { cloneInheritedDesignTokens } from '../utils/slide-template-theme-normalization'
+
+function cloneInheritedBackground(slide) {
+  return slide?.background ? JSON.parse(JSON.stringify(slide.background)) : { type: 'none' }
+}
 
 /**
  * AI action handlers extracted from EditorPage. Owns slide generation from an
@@ -26,7 +31,18 @@ export function useAiActions({ setPresentation, updateElement, selectedElementId
         const newSlides = buildSlidesFromOutline(outline)
         setPresentation((prev) => ({
           ...prev,
-          slides: [...(prev.slides || []), ...newSlides],
+          slides: [
+            ...(prev.slides || []),
+            ...newSlides.map((slide) => {
+              const referenceSlide = prev.slides?.[prev.slides.length - 1]
+              const inheritedDesignTokens = cloneInheritedDesignTokens(referenceSlide)
+              return {
+                ...slide,
+                background: cloneInheritedBackground(referenceSlide),
+                ...(inheritedDesignTokens ? { designTokens: inheritedDesignTokens } : {}),
+              }
+            }),
+          ],
         }))
       } catch (err) {
         alert('Failed to generate slides: ' + err.message)

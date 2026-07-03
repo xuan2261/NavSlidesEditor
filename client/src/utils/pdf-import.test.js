@@ -69,6 +69,7 @@ describe('pdfToSlides', () => {
     const result = await pdfToSlides(file)
 
     expect(result.slides).toHaveLength(1)
+    expect(result.slides[0].background).toEqual({ type: 'none' })
     expect(result.warnings).toEqual(['Failed to import page 2'])
   })
 

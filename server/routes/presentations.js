@@ -104,12 +104,15 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
     let presentation
 
     if (providedSlides && Array.isArray(providedSlides)) {
+      const resolvedTheme = theme || extraFields.theme || 'black'
+      const designTokens = extraFields.designTokens || getDesignTokensForRevealTheme(resolvedTheme)
       presentation = normalizePresentationNotes({
         ...extraFields,
         id: uuidv4(),
         title: title || 'Untitled Presentation',
-        theme: theme || extraFields.theme || 'black',
+        theme: resolvedTheme,
         transition: transition || extraFields.transition || 'slide',
+        designTokens,
         slides: providedSlides.map((s) => ({
           ...s,
           id: s.id || uuidv4(),

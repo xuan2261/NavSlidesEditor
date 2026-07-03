@@ -43,8 +43,8 @@ function getSlideTransitionAttrs(slide) {
   return attrs.length ? ` ${attrs.join(' ')}` : ''
 }
 
-function getSectionBackgroundStyle(background) {
-  return !background || background.type === 'none' ? 'background:var(--ns-bg);' : ''
+function getSectionBackgroundStyle(background, usesTokens) {
+  return usesTokens && (!background || background.type === 'none') ? 'background:var(--ns-bg);' : ''
 }
 
 /**
@@ -59,10 +59,18 @@ function buildTokenStyleBlock(presentation) {
   const slideOverrideIdx = new Set()
   ;(presentation.slides || []).forEach((slide, slideIndex) => {
     if (slide && slide.designTokens) {
-      slideOverrideIdx.add(slideIndex)
+      slideOverrideIdx.add(String(slideIndex))
       const merged = mergeTokens(deckTokens, slide.designTokens)
       css += `    [data-slide-idx="${slideIndex}"]{ ${tokensToCssVars(merged)} }\n`
     }
+    ;(slide?.children || []).forEach((child, childIndex) => {
+      if (child && child.designTokens) {
+        const childKey = `${slideIndex}.${childIndex}`
+        slideOverrideIdx.add(childKey)
+        const merged = mergeTokens(deckTokens, child.designTokens)
+        css += `    [data-slide-idx="${childKey}"]{ ${tokensToCssVars(merged)} }\n`
+      }
+    })
   })
   return { styleBlock: `  <style>\n${css}  </style>`, slideOverrideIdx }
 }
@@ -132,7 +140,7 @@ function generateRevealHTML(presentation) {
     .map((slide, slideIndex) => {
       const bgAttrs = getBackgroundAttrs(slide.background)
       const slideIdxAttr =
-        slideOverrideIdx && slideOverrideIdx.has(slideIndex)
+        slideOverrideIdx && slideOverrideIdx.has(String(slideIndex))
           ? ` data-slide-idx="${slideIndex}"`
           : ''
       const autoAnimateAttr = slide.autoAnimate ? ' data-auto-animate' : ''
@@ -179,14 +187,19 @@ function generateRevealHTML(presentation) {
         : ''
 
       const fxCanvas = getFxCanvasHtml(slide.background)
-      const bgStyle = getSectionBackgroundStyle(slide.background)
+      const bgStyle = getSectionBackgroundStyle(slide.background, usesTokens)
       const sectionHtml = `    <section${autoAnimateAttr}${transitionAttrs}${bgAttrs}${slideIdxAttr} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${bgStyle}">\n${fxCanvas}${elementsHtml}\n${footerHtml}\n${gridHtml}\n      ${notes}\n    </section>`
 
       // Vertical slides support: if slide has children, wrap in a vertical section stack
       if (slide.children && slide.children.length > 0) {
         const childSections = slide.children
-          .map((child) => {
+          .map((child, childIndex) => {
             const childBg = getBackgroundAttrs(child.background)
+            const childKey = `${slideIndex}.${childIndex}`
+            const childIdxAttr =
+              slideOverrideIdx && slideOverrideIdx.has(childKey)
+                ? ` data-slide-idx="${childKey}"`
+                : ''
             const childFxCanvas = getFxCanvasHtml(child.background)
             const childAutoAnimate = child.autoAnimate ? ' data-auto-animate' : ''
             const childTransitionAttrs = getSlideTransitionAttrs(child)
@@ -195,8 +208,8 @@ function generateRevealHTML(presentation) {
               ? `<aside class="notes">${escapeHtml(childNotesText)}</aside>`
               : ''
             const childElements = renderSlideElements(child, { forPrint: false })
-            const childBgStyle = getSectionBackgroundStyle(child.background)
-            return `    <section${childAutoAnimate}${childTransitionAttrs}${childBg} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${childBgStyle}">\n${childFxCanvas}${childElements}\n      ${childNotes}\n    </section>`
+            const childBgStyle = getSectionBackgroundStyle(child.background, usesTokens)
+            return `    <section${childAutoAnimate}${childTransitionAttrs}${childBg}${childIdxAttr} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${childBgStyle}">\n${childFxCanvas}${childElements}\n      ${childNotes}\n    </section>`
           })
           .join('\n')
         return `  <section>\n${sectionHtml}\n${childSections}\n  </section>`

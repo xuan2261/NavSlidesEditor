@@ -45,6 +45,27 @@ describe('useAiActions', () => {
     expect(get().slides).toHaveLength(2)
   })
 
+  it('onCreatePresentation inherits the current deck slide theme context', () => {
+    const { get, deps } = makeDeps({
+      id: 'p',
+      slides: [
+        {
+          id: 's1',
+          background: { type: 'gradient', gradient: 'linear-gradient(90deg, red, blue)' },
+          designTokens: { colors: { accent: '#ff7a18', bg: '#101828' } },
+          elements: [],
+        },
+      ],
+    })
+    const { result } = renderHook(() => useAiActions(deps))
+    act(() => {
+      result.current.onCreatePresentation([{ title: 'A', layout: 'content', bulletPoints: ['x'] }])
+    })
+    const generated = get().slides[1]
+    expect(generated.background).toEqual({ type: 'gradient', gradient: 'linear-gradient(90deg, red, blue)' })
+    expect(generated.designTokens).toEqual({ colors: { accent: '#ff7a18', bg: '#101828' } })
+  })
+
   it('onAICopywriterApply wraps text and updates the selected element', () => {
     const { get, deps } = makeDeps({
       id: 'p',

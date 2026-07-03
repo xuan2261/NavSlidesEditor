@@ -73,6 +73,31 @@ describe('htmlGenerator token injection', () => {
     // s2 only overrides accent; text should still be the deck-level #0f172a
     expect(html).toMatch(/\[data-slide-idx="1"\]\s*\{[^}]*--ns-text:#0f172a/)
   })
+
+  it('scopes vertical child slide token overrides', () => {
+    const childHtml = generateRevealHTML({
+      title: 'Child Tokens',
+      designTokens: { colors: { accent: '#e11d48', text: '#0f172a' } },
+      slides: [
+        {
+          id: 'parent',
+          elements: [],
+          children: [
+            {
+              id: 'child',
+              designTokens: { colors: { accent: '#0ea5e9' } },
+              elements: [
+                { type: 'shape', shape: 'rect', x: 0, y: 0, width: 100, height: 80, zIndex: 1, fill: 'auto' },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(childHtml).toContain('data-slide-idx="0.0"')
+    expect(childHtml).toMatch(/\[data-slide-idx="0\.0"\]\s*\{[^}]*--ns-accent:#0ea5e9/)
+  })
 })
 
 describe('htmlGenerator: deck with NO tokens stays clean', () => {

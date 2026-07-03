@@ -7,6 +7,10 @@ import {
 } from './slide-operation-helpers'
 import { invalidatePptxFitMetaForUpdates } from '../utils/pptx-import-meta'
 import { getRotatedAABB } from '../components/canvas/use-canvas-resize-rotate'
+import {
+  cloneInheritedDesignTokens,
+  cloneTemplateElementForTheme,
+} from '../utils/slide-template-theme-normalization'
 
 /**
  * Hook encapsulating multi-element operations (align, group, delete-selected)
@@ -239,7 +243,7 @@ export function useSlideOperations({
       const template =
         templateKey && SLIDE_TEMPLATES[templateKey] ? SLIDE_TEMPLATES[templateKey] : null
       const baseElements = template
-        ? template.elements.map((el) => ({ ...el, id: crypto.randomUUID() }))
+        ? template.elements.map((el) => cloneTemplateElementForTheme(el, () => crypto.randomUUID()))
         : [
             {
               id: crypto.randomUUID(),
@@ -263,11 +267,13 @@ export function useSlideOperations({
         const inheritedBg = referenceSlide?.background
           ? { ...referenceSlide.background }
           : { type: 'none' }
+        const inheritedDesignTokens = cloneInheritedDesignTokens(referenceSlide)
         const newSlide = {
           id: crypto.randomUUID(),
           elements: baseElements,
           notes: '',
           background: inheritedBg,
+          ...(inheritedDesignTokens ? { designTokens: inheritedDesignTokens } : {}),
         }
         const slides = [...prev.slides]
         slides.splice(insertAt, 0, newSlide)
@@ -364,6 +370,9 @@ export function useSlideOperations({
           elements: [],
           notes: '',
           background: parent.background ? { ...parent.background } : { type: 'none' },
+          ...(parent.designTokens
+            ? { designTokens: cloneInheritedDesignTokens(parent) }
+            : {}),
         }
         return {
           ...prev,

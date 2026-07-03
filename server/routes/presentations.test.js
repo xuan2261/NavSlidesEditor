@@ -182,6 +182,22 @@ describe('Presentations API', () => {
     await request(app).delete(`/api/presentations/${whiteRes.body.id}/permanent`)
   })
 
+  it('seeds imported slide payloads with theme tokens when none are provided', async () => {
+    const createRes = await request(app)
+      .post('/api/presentations')
+      .send({
+        title: 'Imported white deck',
+        theme: 'white',
+        slides: [{ id: 'imported-slide', elements: [] }],
+      })
+
+    expect(createRes.status).toBe(201)
+    expect(createRes.body.designTokens.colors.bg).toBe('#ffffff')
+    expect(createRes.body.designTokens.colors.text).toBe('#1d1d1f')
+
+    await request(app).delete(`/api/presentations/${createRes.body.id}/permanent`)
+  })
+
   it('removes both legacy and object-format share tokens on permanent delete', async () => {
     const created = await request(app).post('/api/presentations').send({ title: 'Cascade test' })
     expect(created.status).toBe(201)

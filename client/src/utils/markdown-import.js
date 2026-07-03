@@ -26,7 +26,7 @@ export function markdownToSlidesWithWarnings(md) {
 
   const slides = sections.map((section) => {
     let trimmed = section.trim()
-    let background = { type: 'color', color: '#1e1e2e' }
+    let background = { type: 'none' }
 
     // Parse <!-- .slide: ... --> comments
     const slideConfigMatch = trimmed.match(/<!--\s*\.slide:\s*(.+?)\s*-->/)
@@ -64,6 +64,7 @@ export function markdownToSlidesWithWarnings(md) {
           width: isTitle ? 800 : 840,
           height: isTitle ? 180 : 460,
           zIndex: 1,
+          textColor: 'auto',
           content: html,
         },
       ],
@@ -87,27 +88,27 @@ function simpleMarkdownToHtml(md, warnings = []) {
 
   // Code blocks (``` ... ```)
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-    return `<pre style="background:rgba(0,0,0,0.4);padding:12px;border-radius:6px;overflow:auto;font-size:14px;"><code>${code.trim()}</code></pre>`
+    return `<pre style="background:color-mix(in srgb, currentColor 12%, transparent);padding:12px;border-radius:6px;overflow:auto;font-size:14px;"><code>${code.trim()}</code></pre>`
   })
 
   // Inline code
   html = html.replace(
     /`([^`]+)`/g,
-    '<code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:3px;font-size:0.9em;">$1</code>'
+    '<code style="background:color-mix(in srgb, currentColor 12%, transparent);padding:2px 6px;border-radius:3px;font-size:0.9em;">$1</code>'
   )
 
   // Headings
   html = html.replace(
     /^### (.+)$/gm,
-    '<h3 style="margin:0 0 8px;font-size:24px;color:#e2e8f0;">$1</h3>'
+    '<h3 style="margin:0 0 8px;font-size:24px;">$1</h3>'
   )
   html = html.replace(
     /^## (.+)$/gm,
-    '<h2 style="margin:0 0 12px;font-size:32px;color:#f1f5f9;">$1</h2>'
+    '<h2 style="margin:0 0 12px;font-size:32px;">$1</h2>'
   )
   html = html.replace(
     /^# (.+)$/gm,
-    '<h1 style="margin:0 0 16px;font-size:42px;color:#ffffff;">$1</h1>'
+    '<h1 style="margin:0 0 16px;font-size:42px;">$1</h1>'
   )
 
   // Bold and italic
@@ -119,12 +120,12 @@ function simpleMarkdownToHtml(md, warnings = []) {
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, href) => {
     if (!isSafeHref(href)) {
       warnings.push(`Blocked unsafe markdown link: ${href}`)
-      return `<span style="color:#94a3b8;">${text}</span>`
+      return `<span>${text}</span>`
     }
     // Belt-and-suspenders: escape attribute-significant characters before
     // interpolating into href="..." even though isSafeHref already rejects them.
     const safeHref = escapeHtmlAttr(href)
-    return `<a href="${safeHref}" style="color:#818cf8;text-decoration:underline;">${text}</a>`
+    return `<a href="${safeHref}" style="color:currentColor;text-decoration:underline;">${text}</a>`
   })
 
   // Unordered lists
@@ -148,7 +149,7 @@ function simpleMarkdownToHtml(md, warnings = []) {
       const trimmed = block.trim()
       if (!trimmed) return ''
       if (/^<[huplo]/.test(trimmed)) return trimmed
-      return `<p style="margin:0 0 8px;line-height:1.6;color:#e2e8f0;">${trimmed}</p>`
+      return `<p style="margin:0 0 8px;line-height:1.6;">${trimmed}</p>`
     })
     .join('\n')
 

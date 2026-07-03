@@ -12,7 +12,12 @@ function makeSeed() {
     theme: 'black',
     showPageNumbers: false,
     slides: [
-      { id: 's1', background: { type: 'color', color: '#123456' }, elements: [] },
+      {
+        id: 's1',
+        background: { type: 'color', color: '#123456' },
+        designTokens: { colors: { accent: '#ff7a18', bg: '#101828' } },
+        elements: [],
+      },
       { id: 's2', background: { type: 'color', color: '#202020' }, elements: [] },
     ],
   }
@@ -60,13 +65,13 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-async function addSlideViaModal() {
+async function addSlideViaModal(templateLabel = 'Blank') {
   // "Add Slide" opens the template picker; pick "Blank" to add.
   const addBtn = await screen.findByRole('button', { name: /Add Slide/i })
   await act(async () => {
     fireEvent.click(addBtn)
   })
-  const blankTile = await screen.findByText('Blank')
+  const blankTile = await screen.findByText(templateLabel)
   await act(async () => {
     fireEvent.click(blankTile)
   })
@@ -104,6 +109,29 @@ describe('EditorPage slide-ops characterization', () => {
         expect(snap).toBeTruthy()
         const ids = snap.slides.map((s) => s.id)
         expect(new Set(ids).size).toBe(ids.length)
+      },
+      { timeout: 2500 }
+    )
+  })
+
+  it('adds themed template slides without freezing decorative default colors', async () => {
+    renderPage()
+    await screen.findByDisplayValue('Char Deck')
+
+    await addSlideViaModal('4-Grid')
+
+    await waitFor(
+      () => {
+        const snap = lastSaved()
+        expect(snap).toBeTruthy()
+        const added = snap.slides[2]
+        expect(added.designTokens).toEqual({ colors: { accent: '#ff7a18', bg: '#101828' } })
+        expect(added.elements.filter((el) => el.type === 'shape').map((el) => el.stroke)).toEqual([
+          'auto',
+          'auto',
+          'auto',
+          'auto',
+        ])
       },
       { timeout: 2500 }
     )

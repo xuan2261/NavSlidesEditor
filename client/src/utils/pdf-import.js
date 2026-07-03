@@ -57,7 +57,7 @@ export async function pdfToSlides(file, onProgress) {
               objectFit: 'contain',
             },
           ],
-          background: { type: 'color', color: '#ffffff' },
+          background: { type: 'none' },
         })
       }
     } catch (err) {

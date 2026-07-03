@@ -58,7 +58,14 @@ describe('DesignTabContent', () => {
     )
     fireEvent.mouseDown(screen.getByLabelText('Change theme'))
     fireEvent.mouseDown(screen.getByText('white'))
-    expect(onUpdatePresentation).toHaveBeenCalledWith({ theme: 'white' })
+    expect(onUpdatePresentation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        theme: 'white',
+        designTokens: expect.objectContaining({
+          colors: expect.objectContaining({ bg: '#ffffff' }),
+        }),
+      })
+    )
   })
 
   it('calls onUpdatePresentation for page numbers toggle', () => {

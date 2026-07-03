@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { SLIDE_TEMPLATES } from './slide-templates'
+import { cloneTemplateElementForTheme } from '../utils/slide-template-theme-normalization'
 
 const SLIDE_WIDTH = 960
 const SLIDE_HEIGHT = 540
@@ -86,6 +87,33 @@ describe('SLIDE_TEMPLATES theme-aware colors', () => {
         }
       })
     }
+  })
+
+  it('normalizes legacy decorative placeholder colors when inserting templates', () => {
+    const cloned = cloneTemplateElementForTheme(
+      { type: 'shape', fill: '#2d2d4e', stroke: '#4b5563', textColor: '#888888' },
+      () => 'new-id'
+    )
+
+    expect(cloned).toMatchObject({
+      id: 'new-id',
+      fill: 'auto',
+      stroke: 'auto',
+      textColor: 'auto',
+    })
+  })
+
+  it('preserves explicit white CTA button colors when inserting templates', () => {
+    const cloned = cloneTemplateElementForTheme(
+      { type: 'shape', fill: '#ffffff', textColor: '#6366f1', stroke: 'none' },
+      () => 'cta-id'
+    )
+
+    expect(cloned).toMatchObject({
+      id: 'cta-id',
+      fill: '#ffffff',
+      textColor: '#6366f1',
+    })
   })
 })
 

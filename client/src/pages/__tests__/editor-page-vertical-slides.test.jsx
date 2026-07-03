@@ -17,6 +17,7 @@ function makeSeed() {
       {
         id: 'p0',
         background: '#101010',
+        designTokens: { colors: { accent: '#ff7a18', bg: '#101828' } },
         elements: [{ id: 'pa', type: 'text', x: 0, y: 0, width: 100, height: 50, zIndex: 1, content: '<p>parent</p>' }],
         children: [
           {
@@ -76,6 +77,17 @@ async function addTextViaRibbon() {
   })
 }
 
+async function addVerticalSlideViaContextMenu() {
+  const slideBtn = await screen.findByLabelText('Select slide 1')
+  await act(async () => {
+    fireEvent.contextMenu(slideBtn)
+  })
+  const addVertical = await screen.findByRole('menuitem', { name: /Add Vertical Slide/i })
+  await act(async () => {
+    fireEvent.click(addVertical)
+  })
+}
+
 beforeEach(() => {
   h.seed = makeSeed()
   h.updatePresentation.mockClear()
@@ -85,6 +97,24 @@ beforeEach(() => {
 })
 
 describe('EditorPage vertical-slide editing', () => {
+  it('adding a vertical child slide inherits the parent design tokens', async () => {
+    renderPage()
+    await screen.findByDisplayValue('V Deck')
+
+    await addVerticalSlideViaContextMenu()
+
+    await waitFor(
+      () => {
+        const snap = lastSaved()
+        expect(snap).toBeTruthy()
+        expect(snap.slides[0].children[1].designTokens).toEqual({
+          colors: { accent: '#ff7a18', bg: '#101828' },
+        })
+      },
+      { timeout: 2500 }
+    )
+  })
+
   it('adding an element while a child is active lands on the CHILD, not the parent', async () => {
     renderPage()
     await screen.findByDisplayValue('V Deck')

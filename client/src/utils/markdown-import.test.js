@@ -37,6 +37,19 @@ describe('markdownToSlides', () => {
     expect(slides[0].elements[0].id).toBeDefined()
   })
 
+  it('uses theme-aware defaults when markdown does not specify a slide background', () => {
+    const slides = markdownToSlides(`# Main Title\n\nBody with [link](https://example.com)`)
+    const slide = slides[0]
+    const content = slide.elements[0].content
+
+    expect(slide.background).toEqual({ type: 'none' })
+    expect(slide.elements[0].textColor).toBe('auto')
+    expect(content).not.toContain('#1e1e2e')
+    expect(content).not.toContain('#e2e8f0')
+    expect(content).not.toContain('#f1f5f9')
+    expect(content).not.toContain('#818cf8')
+  })
+
   it('should parse slide background config from HTML comments', () => {
     const md = `<!-- .slide: data-background-color="#ff0000" -->\n# Title`
     const slides = markdownToSlides(md)
