@@ -59,6 +59,16 @@ export const ARROWHEAD_MARKERS = {
   ),
 }
 
+export function getLineMarkerUid(id) {
+  const str = String(id == null ? 'line' : id)
+  let h = 0x811c9dc5
+  for (let i = 0; i < str.length; i += 1) {
+    h ^= str.charCodeAt(i)
+    h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0
+  }
+  return `l${h.toString(36)}`
+}
+
 export function LineArrowRenderer({ element }) {
   const w = element.width,
     h = element.height
@@ -73,7 +83,7 @@ export function LineArrowRenderer({ element }) {
   const dash = element.dashArray || ''
   const startType = element.arrowStart || 'none'
   const endType = element.arrowEnd || 'none'
-  const uid = element.id?.slice(0, 8) || 'line'
+  const uid = getLineMarkerUid(element.id)
 
   const markers = []
   let markerStart = undefined,

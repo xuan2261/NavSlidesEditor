@@ -41,3 +41,11 @@ export function normalizeTableShape(update, current) {
     mergedCells: [],
   }
 }
+
+export function clampTableCell(cell, data = [['']]) {
+  const rowCount = Math.max(1, data.length)
+  const row = Math.min(Math.max(Number(cell?.row) || 0, 0), rowCount - 1)
+  const colCount = Math.max(1, (data[row] || []).length)
+  const col = Math.min(Math.max(Number(cell?.col) || 0, 0), colCount - 1)
+  return { row, col }
+}

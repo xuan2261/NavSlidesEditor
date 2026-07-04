@@ -1,23 +1,27 @@
 import { normalizeLatexForRender } from 'revealjs-shared'
 
+function escapeScriptElementContent(value) {
+  return String(value || '').replace(/<\//gi, '\\u003c/')
+}
+
 function generateLatexIframeHtml(content, options = {}) {
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
   const renderContent = hasTikz ? content : normalizeLatexForRender(content)
   const fontSize = options.fontSize || 16
   const textColor = options.textColor || options.fontColor || '#ffffff'
   const tikzScript = hasTikz
-    ? `<link rel="stylesheet" type="text/css" href="https://tikzjax.com/v1/fonts.css">
-       <script src="https://tikzjax.com/v1/tikzjax.js"></script>`
+    ? `<link rel="stylesheet" type="text/css" href="/vendor/tikzjax/fonts.css">
+       <script src="/vendor/tikzjax/tikzjax.js"></script>`
     : ''
 
   let bodyContent
   if (hasTikz) {
-    bodyContent = `<script type="text/tikz">${content}</script>`
+    bodyContent = `<script type="text/tikz">${escapeScriptElementContent(content)}</script>`
   } else {
     bodyContent = `<div id="math"></div>
     <script>
       try {
-        katex.render(${JSON.stringify(renderContent)}, document.getElementById('math'), { displayMode: true, throwOnError: false });
+        katex.render(${JSON.stringify(renderContent).replace(/</g, '\\u003c')}, document.getElementById('math'), { displayMode: true, throwOnError: false });
       } catch(e) {
         document.getElementById('math').textContent = e.message;
       }
@@ -26,8 +30,8 @@ function generateLatexIframeHtml(content, options = {}) {
 
   return `<!doctype html><html><head>
 <meta charset="utf-8">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="/vendor/katex/dist/katex.min.css">
+<script src="/vendor/katex/dist/katex.min.js"></script>
 ${tikzScript}
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }

@@ -207,7 +207,7 @@ function ContextualControls({ selectedElement, onUpdateElement }) {
   }
 }
 
-export default function FormatTabContent({ selectedElement, onUpdateElement, elements, selectedElementIds }) {
+export default function FormatTabContent({ selectedElement, onUpdateElement, elements, selectedElementIds, slideWidth, presentation }) {
   if (!selectedElement) {
     return (
       <RibbonTabContentRow>
@@ -243,6 +243,8 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
     'opacity',
   ])
   const opacityMixed = mixed.opacity?.isMixed
+  const requestedSlideWidth = slideWidth ?? presentation?.resolution?.width
+  const alignWidth = Number.isFinite(Number(requestedSlideWidth)) && Number(requestedSlideWidth) > 0 ? Number(requestedSlideWidth) : CANVAS_WIDTH
   // Blank a geometry field + show its placeholder when the selection diverges on
   // that key (parity with the Properties panel). Editing still writes — the apply
   // path fans the value to every selected element.
@@ -343,7 +345,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
             title="Align center" aria-label="Align center horizontal"
             onMouseDown={(e) => {
               e.preventDefault()
-              onUpdateElement?.({ x: Math.round((CANVAS_WIDTH - (selectedElement.width || 0)) / 2) })
+              onUpdateElement?.({ x: Math.round((alignWidth - (selectedElement.width || 0)) / 2) })
             }}>
             <AlignHorizontalJustifyCenter size={14} />
           </Button>
@@ -351,7 +353,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
             title="Align right" aria-label="Align right"
             onMouseDown={(e) => {
               e.preventDefault()
-              onUpdateElement?.({ x: Math.round(CANVAS_WIDTH - (selectedElement.width || 0)) })
+              onUpdateElement?.({ x: Math.round(alignWidth - (selectedElement.width || 0)) })
             }}>
             <AlignEndVertical size={14} />
           </Button>

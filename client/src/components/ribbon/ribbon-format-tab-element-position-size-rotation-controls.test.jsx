@@ -108,6 +108,26 @@ describe('FormatTabContent', () => {
     expect(onUpdateElement).toHaveBeenCalledWith({ x: 330 })
   })
 
+  it('uses custom slide width for horizontal center and right alignment without breaking mixed fields', () => {
+    const onUpdateElement = vi.fn()
+    render(
+      <FormatTabContent
+        selectedElement={mockElement}
+        onUpdateElement={onUpdateElement}
+        slideWidth={1600}
+        elements={[mockElement, { ...mockElement, id: 'el-2', x: 200 }]}
+        selectedElementIds={['el-1', 'el-2']}
+      />
+    )
+
+    expect(screen.getByLabelText('X position').value).toBe('')
+    expect(screen.getByLabelText('X position').placeholder).toBe('—')
+    fireEvent.mouseDown(screen.getByLabelText('Align center horizontal'))
+    expect(onUpdateElement).toHaveBeenLastCalledWith({ x: 650 })
+    fireEvent.mouseDown(screen.getByLabelText('Align right'))
+    expect(onUpdateElement).toHaveBeenLastCalledWith({ x: 1300 })
+  })
+
   it('resizes table rows and columns by updating data, not inert rows/cols fields', () => {
     const onUpdateElement = vi.fn()
     render(

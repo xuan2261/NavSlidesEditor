@@ -119,6 +119,57 @@ function escapeSrcdoc(html) {
     .replace(/>/g, '&gt;')
 }
 
+function sanitizeLinkHref(value) {
+  const href = String(value || '').trim()
+  if (!href) return '#'
+  if (href[0] === '#' || href[0] === '/' || href.startsWith('./') || href.startsWith('../')) return href
+  if (/^(https?:|mailto:)/i.test(href)) return href
+  return '#'
+}
+
+function renderMarkdownInline(value) {
+  const text = String(value || '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+  return escapeHtml(text)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, href) => {
+      return `<a href="${escapeHtml(sanitizeLinkHref(href))}" target="_blank" rel="noopener">${label}</a>`
+    })
+}
+
+function renderSafeMarkdownHtml(content) {
+  const lines = String(content || '').replace(/\r\n?/g, '\n').split('\n')
+  const html = []
+  let listItems = []
+  const flushList = () => {
+    if (!listItems.length) return
+    html.push(`<ul>${listItems.map((item) => `<li>${renderMarkdownInline(item)}</li>`).join('')}</ul>`)
+    listItems = []
+  }
+
+  for (const line of lines) {
+    const heading = line.match(/^(#{1,6})\s+(.+)$/)
+    const list = line.match(/^\s*[-*]\s+(.+)$/)
+    if (list) {
+      listItems.push(list[1])
+      continue
+    }
+    flushList()
+    if (heading) {
+      html.push(`<h${heading[1].length}>${renderMarkdownInline(heading[2])}</h${heading[1].length}>`)
+    } else if (line.trim()) {
+      html.push(`<p>${renderMarkdownInline(line)}</p>`)
+    }
+  }
+  flushList()
+  return html.join('')
+}
+
+function escapeScriptElementContent(value) {
+  return String(value || '').replace(/<\//gi, '\\u003c/')
+}
+
 function toHtmlDataUrl(html) {
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
 }
@@ -306,7 +357,7 @@ function renderMarkdown(el, style, wrap, vis, opts) {
   const mdFont = Number(el.fontSize) > 0 ? Number(el.fontSize) : null
   if (opts.forPrint) {
     const fs = mdFont || 16
-    return `<div style="${style}${vis}padding:8px 12px;color:${mdColor};overflow:auto;font-size:calc(${fs}px * var(--font-zoom, 1));line-height:1.5;">${escapeHtml(el.content || '')}</div>`
+    return `<div style="${style}${vis}padding:8px 12px;color:${mdColor};overflow:auto;font-size:calc(${fs}px * var(--font-zoom, 1));line-height:1.5;">${renderSafeMarkdownHtml(el.content || '')}</div>`
   }
   const _origin = getAssetOrigin()
   const bodyFs = mdFont || 18
@@ -362,8 +413,8 @@ function renderChart(el, style, wrap, vis, opts) {
     return `<div style="${style}${vis}"><canvas id="${canvasId}" data-chart-config='${chartConfig}' style="width:100%;height:100%;"></canvas></div>`
   }
 
-  const labels = JSON.stringify(chartData.labels || [])
-  const datasets = JSON.stringify(datasetsArr)
+  const labels = JSON.stringify(chartData.labels || []).replace(/</g, '\\u003c')
+  const datasets = JSON.stringify(datasetsArr).replace(/</g, '\\u003c')
   const _origin = getAssetOrigin()
   const chartSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/chart.js/dist/chart.umd.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style></head><body><canvas id="c" style="width:100%;height:100%"></canvas><script>new Chart(document.getElementById('c'),{type:'${chartType}',data:{labels:${labels},datasets:${datasets}},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,0.7)',font:{size:12}}}},scales:${scalesOpt}}});</script></body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(chartSrc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
@@ -414,7 +465,7 @@ function renderLatex(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
     if (hasTikz) {
       const _origin = getAssetOrigin()
-      const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" type="text/css" href="${_origin}/vendor/tikzjax/fonts.css"><script src="${_origin}/vendor/tikzjax/tikzjax.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1))}svg{max-width:100%;max-height:100%}</style></head><body><script type="text/tikz">${content}</script></body></html>`
+      const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" type="text/css" href="${_origin}/vendor/tikzjax/fonts.css"><script src="${_origin}/vendor/tikzjax/tikzjax.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1))}svg{max-width:100%;max-height:100%}</style></head><body><script type="text/tikz">${escapeScriptElementContent(content)}</script></body></html>`
       return `<iframe${wrap} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
     }
     return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));"><span data-math-latex="${escapeHtml(renderContent)}" data-math-display="true"></span></div>`
@@ -430,7 +481,7 @@ function renderLatex(el, style, wrap, vis, opts) {
     : ''
   let bodyContent
   if (hasTikz) {
-    bodyContent = `<script type="text/tikz">${content}</script>`
+    bodyContent = `<script type="text/tikz">${escapeScriptElementContent(content)}</script>`
   } else {
     bodyContent = `<div id="m"></div><script>katex.render(${JSON.stringify(renderContent)},document.getElementById('m'),{displayMode:true,throwOnError:false})</script>`
   }

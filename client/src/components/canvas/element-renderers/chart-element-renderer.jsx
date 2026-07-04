@@ -5,10 +5,11 @@ export function ChartRenderer({ element, isSelected, isDragging }) {
   const areaFill = chartType === 'line' && element.areaFill === true
   const stacked = element.stacked === true
   const stackedAxis = stacked ? 'stacked:true,' : ''
+  const safeJson = (value) => JSON.stringify(value).replace(/</g, '\\u003c')
 
   const chartHtml = `<!doctype html><html><head>
 <meta charset="utf-8">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="/vendor/chart.js/dist/chart.umd.js"></script>
 <style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style>
 </head><body>
 <canvas id="c" style="width:100%;height:100%"></canvas>
@@ -16,8 +17,8 @@ export function ChartRenderer({ element, isSelected, isDragging }) {
 new Chart(document.getElementById('c'),{
   type:'${chartType}',
   data:{
-    labels:${JSON.stringify(labels)},
-    datasets:${JSON.stringify(
+    labels:${safeJson(labels)},
+    datasets:${safeJson(
       datasets.map((ds) => ({
         label: ds.label || '',
         data: ds.data || [],

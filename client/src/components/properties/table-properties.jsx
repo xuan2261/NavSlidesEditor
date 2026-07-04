@@ -1,19 +1,20 @@
 import { useState } from 'react'
 import { Button, Input, ColorPicker, Select } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
-import { normalizeTableShape } from './table-properties-utils'
+import { clampTableCell, normalizeTableShape } from './table-properties-utils'
 export default function TableProperties({ element, onUpdate }) {
   const data = element.data || [['']]
   const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 })
+  const clampedCell = clampTableCell(selectedCell, data)
   const cellStyles = element.cellStyles || {}
-  const getCellStyle = (key, fallback) => cellStyles[key]?.[selectedCell.row]?.[selectedCell.col] ?? fallback
+  const getCellStyle = (key, fallback) => cellStyles[key]?.[clampedCell.row]?.[clampedCell.col] ?? fallback
   const updateCellStyle = (key, value) => {
     const next = { ...cellStyles, [key]: (cellStyles[key] || []).map((row) => [...(row || [])]) }
     while (next[key].length < data.length) next[key].push([])
-    while (next[key][selectedCell.row].length < (data[selectedCell.row] || []).length) {
-      next[key][selectedCell.row].push(null)
+    while (next[key][clampedCell.row].length < (data[clampedCell.row] || []).length) {
+      next[key][clampedCell.row].push(null)
     }
-    next[key][selectedCell.row][selectedCell.col] = value
+    next[key][clampedCell.row][clampedCell.col] = value
     onUpdate({ cellStyles: next })
   }
 
@@ -144,7 +145,7 @@ export default function TableProperties({ element, onUpdate }) {
         ))}
       </div>
       <div className="text-[11px] text-text-muted mt-2 mb-1">
-        Selected Cell R{selectedCell.row + 1}C{selectedCell.col + 1}
+        Selected Cell R{clampedCell.row + 1}C{clampedCell.col + 1}
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>

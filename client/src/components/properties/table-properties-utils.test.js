@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeTableShape } from './table-properties-utils'
+import { clampTableCell, normalizeTableShape } from './table-properties-utils'
 
 describe('table properties utilities', () => {
   it('keeps style matrices and row/column dimensions aligned after shape edits', () => {
@@ -63,5 +63,10 @@ describe('table properties utilities', () => {
 
     expect(next.mergedCells).toEqual([])
     expect(next.colWidths).toEqual([80, 120])
+  })
+
+  it('clamps selected cells to the nearest existing table cell', () => {
+    expect(clampTableCell({ row: 3, col: 4 }, [['A', 'B'], ['C']])).toEqual({ row: 1, col: 0 })
+    expect(clampTableCell({ row: -1, col: -1 }, [['A']])).toEqual({ row: 0, col: 0 })
   })
 })
