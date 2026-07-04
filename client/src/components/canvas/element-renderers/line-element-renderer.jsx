@@ -115,6 +115,16 @@ export function LineArrowRenderer({ element }) {
           markerEnd={markerEnd}
           style={{ pointerEvents: 'stroke' }}
         />
+        <path
+          d={pathD}
+          stroke="transparent"
+          strokeWidth={Math.max(sw + 10, 12)}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={dash}
+          style={{ pointerEvents: 'stroke' }}
+          data-line-hit-target="true"
+        />
       </svg>
     </div>
   )

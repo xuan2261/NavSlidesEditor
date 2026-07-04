@@ -49,6 +49,16 @@ describe('rubber-band marquee selection', () => {
     expect(hits).toEqual(['vis-a'])
   })
 
+  it('expands a hit grouped element to the full visible group', () => {
+    const api = setup([
+      { id: 'group-a', groupId: 'g1', x: 100, y: 100, width: 120, height: 80 },
+      { id: 'group-b', groupId: 'g1', x: 500, y: 100, width: 120, height: 80 },
+      { id: 'outside', x: 700, y: 100, width: 120, height: 80 },
+    ])
+    const hits = dragOver(api, 90, 90, 230, 190)
+    expect(hits.sort()).toEqual(['group-a', 'group-b'])
+  })
+
   it('treats a click-sized (<=4px) drag as no selection', () => {
     const api = setup([visA])
     const hits = dragOver(api, 100, 100, 103, 103)

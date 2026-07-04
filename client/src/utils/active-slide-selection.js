@@ -13,7 +13,48 @@ export function getSelectionIdsForActiveSlideElement(activeSlide, fallbackSlide,
   const slide = activeSlide || fallbackSlide
   const element = slide?.elements?.find((el) => el.id === elementId)
   if (!element?.groupId) return [elementId]
-  return (slide?.elements || []).filter((el) => el.groupId === element.groupId).map((el) => el.id)
+  return expandSelectionIdsForGroups(slide, [elementId])
+}
+
+export function expandSelectionIdsForGroups(slide, ids, { includeHidden = false } = {}) {
+  if (!slide || !Array.isArray(ids)) return []
+  const elements = slide.elements || []
+  const selected = new Set(ids)
+  for (const id of ids) {
+    const element = elements.find((el) => el.id === id)
+    if (!element?.groupId) continue
+    for (const member of elements) {
+      if (member.groupId !== element.groupId) continue
+      if (!includeHidden && member.hidden) continue
+      selected.add(member.id)
+    }
+  }
+  return [...selected]
+}
+
+export function hasBlockedGroupMutation(slide, ids) {
+  if (!slide || !Array.isArray(ids) || !ids.length) return false
+  const elements = slide.elements || []
+  const byGroup = new Map()
+  for (const element of elements) {
+    if (!element.groupId) continue
+    const members = byGroup.get(element.groupId) || []
+    members.push(element)
+    byGroup.set(element.groupId, members)
+  }
+
+  const selected = new Set(ids)
+  for (const id of selected) {
+    const element = elements.find((el) => el.id === id)
+    if (!element?.groupId) continue
+    const members = byGroup.get(element.groupId) || []
+    const hasSelectedVisibleMember = members.some(
+      (member) => selected.has(member.id) && !member.hidden
+    )
+    if (!hasSelectedVisibleMember) continue
+    if (members.some((member) => member.locked || member.hidden)) return true
+  }
+  return false
 }
 
 /**
@@ -37,8 +78,7 @@ export function resolvePointerDownSelection({
   shiftKey,
   type,
 }) {
-  const replaces =
-    type === 'move' && !shiftKey && !currentSelectionIds.includes(elementId)
+  const replaces = type === 'move' && !shiftKey && !currentSelectionIds.includes(elementId)
   if (!replaces) return currentSelectionIds
   return getSelectionIdsForActiveSlideElement(activeSlide, fallbackSlide, elementId)
 }

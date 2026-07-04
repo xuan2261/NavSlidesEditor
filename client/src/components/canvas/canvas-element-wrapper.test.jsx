@@ -39,6 +39,24 @@ function renderCanvasElement(element) {
 }
 
 describe('CanvasElement video playback', () => {
+  it('keeps unselected line wrappers clickable', () => {
+    renderCanvasElement({
+      id: 'line-1',
+      type: 'line',
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 40,
+      stroke: '#fff',
+      strokeWidth: 2,
+    })
+    const wrapper = screen.getByTestId('slide-element-line-1')
+    expect(wrapper.style.pointerEvents).toBe('auto')
+    expect(wrapper.style.overflow).toBe('visible')
+    expect(wrapper.querySelectorAll('path')).toHaveLength(2)
+    expect(wrapper.querySelector('path[stroke="transparent"]')).toBeTruthy()
+  })
+
   it('updates playbackRate when the selected video element changes', () => {
     const { rerender } = renderCanvasElement(baseElement)
     const wrapper = screen.getByTestId('slide-element-video-1')
@@ -257,9 +275,15 @@ describe('CanvasElement code walkthrough', () => {
     })
 
     const wrapper = screen.getByTestId('slide-element-code-1')
-    expect(wrapper.querySelector('[data-code-line="1"]').getAttribute('data-walkthrough-active')).toBeNull()
-    expect(wrapper.querySelector('[data-code-line="2"]').getAttribute('data-walkthrough-active')).toBe('true')
-    expect(wrapper.querySelector('[data-code-line="3"]').getAttribute('data-walkthrough-active')).toBe('true')
+    expect(
+      wrapper.querySelector('[data-code-line="1"]').getAttribute('data-walkthrough-active')
+    ).toBeNull()
+    expect(
+      wrapper.querySelector('[data-code-line="2"]').getAttribute('data-walkthrough-active')
+    ).toBe('true')
+    expect(
+      wrapper.querySelector('[data-code-line="3"]').getAttribute('data-walkthrough-active')
+    ).toBe('true')
   })
 
   it('[cap:element.code depth:behavior] renders plaintext for unsupported legacy languages', () => {
@@ -278,7 +302,9 @@ describe('CanvasElement code walkthrough', () => {
 
     const wrapper = screen.getByTestId('slide-element-code-legacy')
     expect(wrapper.querySelector('[data-code-line="1"]').textContent).toBe('legacy <tag>')
-    expect(wrapper.querySelector('[data-code-line="1"]').getAttribute('data-walkthrough-active')).toBe('true')
+    expect(
+      wrapper.querySelector('[data-code-line="1"]').getAttribute('data-walkthrough-active')
+    ).toBe('true')
   })
 })
 

@@ -20,41 +20,57 @@ export function applyCropHandle(handle, startCrop, dx, dy, elW, elH) {
       const bottom = y + h
       const nx = Math.min(Math.max(x + fdx, 0), right - MIN_CROP)
       const ny = Math.min(Math.max(y + fdy, 0), bottom - MIN_CROP)
-      x = nx; y = ny; w = right - nx; h = bottom - ny
+      x = nx
+      y = ny
+      w = right - nx
+      h = bottom - ny
       break
     }
     case 'n': {
       const bottom = y + h
       const ny = Math.min(Math.max(y + fdy, 0), bottom - MIN_CROP)
-      y = ny; h = bottom - ny
+      y = ny
+      h = bottom - ny
       break
     }
     case 'ne': {
       const bottom = y + h
       const ny = Math.min(Math.max(y + fdy, 0), bottom - MIN_CROP)
-      y = ny; h = bottom - ny
+      y = ny
+      h = bottom - ny
       w = Math.max(MIN_CROP, w + fdx)
       break
     }
-    case 'e': w = Math.max(MIN_CROP, w + fdx); break
-    case 'se': w = Math.max(MIN_CROP, w + fdx); h = Math.max(MIN_CROP, h + fdy); break
-    case 's': h = Math.max(MIN_CROP, h + fdy); break
+    case 'e':
+      w = Math.max(MIN_CROP, w + fdx)
+      break
+    case 'se':
+      w = Math.max(MIN_CROP, w + fdx)
+      h = Math.max(MIN_CROP, h + fdy)
+      break
+    case 's':
+      h = Math.max(MIN_CROP, h + fdy)
+      break
     case 'sw': {
       const right = x + w
       const nx = Math.min(Math.max(x + fdx, 0), right - MIN_CROP)
-      x = nx; w = right - nx
+      x = nx
+      w = right - nx
       h = Math.max(MIN_CROP, h + fdy)
       break
     }
     case 'w': {
       const right = x + w
       const nx = Math.min(Math.max(x + fdx, 0), right - MIN_CROP)
-      x = nx; w = right - nx
+      x = nx
+      w = right - nx
       break
     }
   }
-  x = Math.max(0, x); y = Math.max(0, y)
-  w = Math.min(w, 1 - x); h = Math.min(h, 1 - y)
+  x = Math.max(0, x)
+  y = Math.max(0, y)
+  w = Math.min(w, 1 - x)
+  h = Math.min(h, 1 - y)
   return { x, y, w, h }
 }
 
@@ -65,10 +81,24 @@ export function applyMove(startEl, dx, dy, slideW, slideH) {
   }
 }
 
+export function computeClampedBatchDelta(startEls, dx, dy, slideW, slideH) {
+  if (!Array.isArray(startEls) || !startEls.length) return { dx: 0, dy: 0 }
+  const minDx = Math.max(...startEls.map((el) => -(el.x || 0)))
+  const maxDx = Math.min(...startEls.map((el) => slideW - ((el.x || 0) + (el.width || 0))))
+  const minDy = Math.max(...startEls.map((el) => -(el.y || 0)))
+  const maxDy = Math.min(...startEls.map((el) => slideH - ((el.y || 0) + (el.height || 0))))
+  return {
+    dx: Math.max(minDx, Math.min(maxDx, dx)),
+    dy: Math.max(minDy, Math.min(maxDy, dy)),
+  }
+}
+
 export function applyMoveBatch(startEls, dx, dy, slideW, slideH) {
+  const delta = computeClampedBatchDelta(startEls, dx, dy, slideW, slideH)
   return startEls.map((sel) => ({
     id: sel.id,
-    ...applyMove(sel, dx, dy, slideW, slideH),
+    x: (sel.x || 0) + delta.dx,
+    y: (sel.y || 0) + delta.dy,
   }))
 }
 
@@ -144,9 +174,12 @@ export default function useCanvasPointerInteraction({
   slideH,
 }) {
   // Crop drag state ref accessor (needed by cropDragRef.current setter below)
-  const setCropDrag = useCallback((handle, startX, startY, startCrop, elW, elH) => {
-    cropDragRef.current = { handle, startX, startY, startCrop, elW, elH }
-  }, [cropDragRef])
+  const setCropDrag = useCallback(
+    (handle, startX, startY, startCrop, elW, elH) => {
+      cropDragRef.current = { handle, startX, startY, startCrop, elW, elH }
+    },
+    [cropDragRef]
+  )
 
   // Install document-level global mouse move/up listeners
   useEffect(() => {
@@ -159,7 +192,7 @@ export default function useCanvasPointerInteraction({
         const dx = (e.clientX - cd.startX) / scaleRef.current
         const dy = (e.clientY - cd.startY) / scaleRef.current
         const newCrop = applyCropHandle(cd.handle, cd.startCrop, dx, dy, cd.elW, cd.elH)
-        setCropMode((prev) => prev ? { ...prev, ...newCrop } : prev)
+        setCropMode((prev) => (prev ? { ...prev, ...newCrop } : prev))
         return
       }
 
@@ -205,27 +238,81 @@ export default function useCanvasPointerInteraction({
 
       if (drag.type === 'move') {
         if (drag.startEls && drag.startEls.length > 1) {
-          onUpdateElements(applyMoveBatch(drag.startEls, dx, dy, slideW, slideH))
+          let nextDx = dx
+          let nextDy = dy
+          const primary = drag.startEls.find((el) => el.id === drag.elementId) || drag.startEls[0]
+          if (showGridRef.current && primary) {
+            const rawPrimary = applyMove(primary, dx, dy, slideW, slideH)
+            const { x: snappedX, y: snappedY } = snapWithRef_(
+              rawPrimary.x,
+              rawPrimary.y,
+              primary.width,
+              primary.height,
+              primary.snapRef || 'ul',
+              snap
+            )
+            nextDx = snappedX - primary.x
+            nextDy = snappedY - primary.y
+            setActiveGuides([])
+          } else if (smartGuidesRef.current && primary) {
+            const allEls = slideRef.current?.elements || []
+            const rawPrimary = applyMove(primary, dx, dy, slideW, slideH)
+            const draggedEl = {
+              id: primary.id,
+              x: rawPrimary.x,
+              y: rawPrimary.y,
+              width: primary.width,
+              height: primary.height,
+            }
+            const { guides, snappedX, snappedY } = calculateGuides(
+              draggedEl,
+              allEls,
+              slideW,
+              slideH
+            )
+            nextDx = snappedX - primary.x
+            nextDy = snappedY - primary.y
+            setActiveGuides(guides)
+          } else {
+            setActiveGuides([])
+          }
+          onUpdateElements(applyMoveBatch(drag.startEls, nextDx, nextDy, slideW, slideH))
         } else {
           const { x: rawX, y: rawY } = applyMove(drag.startEl, dx, dy, slideW, slideH)
           let newX, newY
           if (showGridRef.current) {
             const { x: snappedX, y: snappedY } = snapWithRef_(
-              rawX, rawY, drag.startEl.width, drag.startEl.height,
-              drag.startEl.snapRef || 'ul', snap
+              rawX,
+              rawY,
+              drag.startEl.width,
+              drag.startEl.height,
+              drag.startEl.snapRef || 'ul',
+              snap
             )
             newX = Math.max(0, Math.min(slideW - drag.startEl.width, snappedX))
             newY = Math.max(0, Math.min(slideH - drag.startEl.height, snappedY))
             setActiveGuides([])
           } else if (smartGuidesRef.current) {
             const allEls = slideRef.current?.elements || []
-            const draggedEl = { id: drag.elementId, x: rawX, y: rawY, width: drag.startEl.width, height: drag.startEl.height }
-            const { guides, snappedX, snappedY } = calculateGuides(draggedEl, allEls, slideW, slideH)
+            const draggedEl = {
+              id: drag.elementId,
+              x: rawX,
+              y: rawY,
+              width: drag.startEl.width,
+              height: drag.startEl.height,
+            }
+            const { guides, snappedX, snappedY } = calculateGuides(
+              draggedEl,
+              allEls,
+              slideW,
+              slideH
+            )
             newX = Math.max(0, Math.min(slideW - drag.startEl.width, snappedX))
             newY = Math.max(0, Math.min(slideH - drag.startEl.height, snappedY))
             setActiveGuides(guides)
           } else {
-            newX = rawX; newY = rawY
+            newX = rawX
+            newY = rawY
             setActiveGuides([])
           }
           onUpdateElement(drag.elementId, { x: newX, y: newY })
@@ -266,37 +353,83 @@ export default function useCanvasPointerInteraction({
       document.removeEventListener('mouseup', onMouseUp)
     }
   }, [
-    snapToGrid, showGridRef, gridSizeRef, smartGuidesRef, slideRef,
-    onUpdateElement, onUpdateElements, snapWithRef_, getRotationAngle,
-    applyResize, applyResizeAspectRatio, clampToSlide,
-    slideW, slideH, setActiveGuides, setRubberBand, endRubberBand,
-    applyRubberBandSelection, updateRubberBand, forceUpdate, setSuppressCanvasClick,
+    snapToGrid,
+    showGridRef,
+    gridSizeRef,
+    smartGuidesRef,
+    slideRef,
+    onUpdateElement,
+    onUpdateElements,
+    snapWithRef_,
+    getRotationAngle,
+    applyResize,
+    applyResizeAspectRatio,
+    clampToSlide,
+    slideW,
+    slideH,
+    setActiveGuides,
+    setRubberBand,
+    endRubberBand,
+    applyRubberBandSelection,
+    updateRubberBand,
+    forceUpdate,
+    setSuppressCanvasClick,
     setCropMode,
-    cropDragRef, draggingRef, pendingDragRef, rubberBandRef, scaleRef,
+    cropDragRef,
+    draggingRef,
+    pendingDragRef,
+    rubberBandRef,
+    scaleRef,
   ])
 
   // startElementDrag — called by CanvasElement on pointer down
-  const startElementDrag = useCallback((e, elementId, type, handle, slide, scale, selectedIds) => {
-    if (slide?.locked) return
-    const canvasEl = document.querySelector('.slide-canvas')
-    if (!canvasEl) return
-    const rect = canvasEl.getBoundingClientRect()
-    const element = slide?.elements?.find((el) => el.id === elementId)
-    if (!element) return
-    if (element.locked) return
-    const allSelected = (slide?.elements || []).filter((el) => selectedIds.includes(el.id) && !el.locked)
-    pendingDragRef.current = {
-      type,
-      handle,
-      elementId,
-      startClientX: e.clientX,
-      startClientY: e.clientY,
-      startMouseX: (e.clientX - rect.left) / scale,
-      startMouseY: (e.clientY - rect.top) / scale,
-      startEl: { x: element.x, y: element.y, width: element.width, height: element.height, rotation: element.rotation || 0, snapRef: element.snapRef },
-      startEls: allSelected.map((el) => ({ id: el.id, x: el.x, y: el.y, width: el.width, height: el.height })),
-    }
-  }, [pendingDragRef])
+  const startElementDrag = useCallback(
+    (e, elementId, type, handle, slide, scale, selectedIds) => {
+      if (slide?.locked) return
+      const canvasEl = document.querySelector('.slide-canvas')
+      if (!canvasEl) return
+      const rect = canvasEl.getBoundingClientRect()
+      const element = slide?.elements?.find((el) => el.id === elementId)
+      if (!element) return
+      if (element.locked) return
+      const hasBlockedGroup = (slide?.elements || []).some((el) => {
+        if (!selectedIds.includes(el.id) || !el.groupId) return false
+        return (slide.elements || []).some(
+          (member) => member.groupId === el.groupId && (member.locked || member.hidden)
+        )
+      })
+      if (hasBlockedGroup) return
+      const allSelected = (slide?.elements || []).filter(
+        (el) => selectedIds.includes(el.id) && !el.locked
+      )
+      pendingDragRef.current = {
+        type,
+        handle,
+        elementId,
+        startClientX: e.clientX,
+        startClientY: e.clientY,
+        startMouseX: (e.clientX - rect.left) / scale,
+        startMouseY: (e.clientY - rect.top) / scale,
+        startEl: {
+          x: element.x,
+          y: element.y,
+          width: element.width,
+          height: element.height,
+          rotation: element.rotation || 0,
+          snapRef: element.snapRef,
+        },
+        startEls: allSelected.map((el) => ({
+          id: el.id,
+          x: el.x,
+          y: el.y,
+          width: el.width,
+          height: el.height,
+          snapRef: el.snapRef,
+        })),
+      }
+    },
+    [pendingDragRef]
+  )
 
   return {
     startElementDrag,

@@ -254,7 +254,9 @@ function renderCodeLines(el) {
       const lineNumber = index + 1
       const active = isCodeLineInStep(lineNumber, step)
       const activeAttr = active ? ' data-walkthrough-active="true"' : ''
-      const activeStyle = active ? 'background:rgba(250,204,21,.18);box-shadow:inset 3px 0 0 #facc15;' : ''
+      const activeStyle = active
+        ? 'background:rgba(250,204,21,.18);box-shadow:inset 3px 0 0 #facc15;'
+        : ''
       return `<span data-code-line="${lineNumber}"${activeAttr} style="display:block;margin:0 -14px;padding:0 14px;${activeStyle}">${escapeHtml(line || ' ')}</span>`
     })
     .join('')
@@ -567,6 +569,7 @@ function renderDrawing(el, style, wrap, vis) {
 }
 
 function renderLine(el, style, wrap, vis) {
+  const lineStyle = style.replace('overflow:hidden;', 'overflow:visible;')
   const color = resolveColorField(el.stroke, 'line', 'stroke') || '#ffffff'
   const lp = svgPaint('fill', color) // marker paint: var via style, hex via attr
   const markerPaint = `${lp.attr}${lp.style ? ` style="${lp.style}"` : ''}`
@@ -607,7 +610,10 @@ function renderLine(el, style, wrap, vis) {
     el.cx != null && el.cy != null
       ? `M ${x1} ${y1} Q ${el.cx} ${el.cy} ${x2} ${y2}`
       : `M ${x1} ${y1} L ${x2} ${y2}`
-  return `<div${wrap} style="${style}${vis}"><svg width="100%" height="100%" viewBox="0 0 ${el.width} ${el.height}" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;"><defs>${defs}</defs><path d="${pathD}"${strokePaint.attr} stroke-width="${sw}" fill="none" stroke-linecap="round"${dash}${ms}${me}${pathStyle}/></svg></div>`
+  const pad = Math.max(12, Math.ceil(sw * 6))
+  const svgW = Number(el.width || 0) + pad * 2
+  const svgH = Number(el.height || 0) + pad * 2
+  return `<div${wrap} style="${lineStyle}${vis}"><svg width="${svgW}" height="${svgH}" viewBox="${-pad} ${-pad} ${svgW} ${svgH}" preserveAspectRatio="none" style="position:absolute;left:${-pad}px;top:${-pad}px;overflow:visible;"><defs>${defs}</defs><path d="${pathD}"${strokePaint.attr} stroke-width="${sw}" fill="none" stroke-linecap="round"${dash}${ms}${me}${pathStyle}/></svg></div>`
 }
 
 function renderSvg(el, style, wrap, vis) {
@@ -806,18 +812,46 @@ function renderPlugin(el, style, wrap, vis, opts) {
 function renderGame(el, style, wrap, vis) {
   const gameType = el.gameType || 'game'
   const gameConfig = el[gameType] || {}
-  const title = gameConfig.title || el.title || (gameType === 'poll' ? 'Live Poll' : gameType === 'word-cloud' ? 'Word Cloud' : gameType === 'matching' ? 'Matching' : 'Game')
+  const title =
+    gameConfig.title ||
+    el.title ||
+    (gameType === 'poll'
+      ? 'Live Poll'
+      : gameType === 'word-cloud'
+        ? 'Word Cloud'
+        : gameType === 'matching'
+          ? 'Matching'
+          : 'Game')
   const label = escapeHtml(title)
   const badge = escapeHtml(gameType)
-  const pollPublicContent = gameType === 'poll'
-    ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Live Poll')}</div><ul style="margin:0;padding-left:20px;font-size:calc(11px * var(--font-zoom, 1));opacity:.72;">${(gameConfig.options || el.options || []).slice(0, 6).map((option) => `<li>${escapeHtml(option.text || option.label || option)}</li>`).join('')}</ul>`
-    : ''
-  const wordCloudPublicContent = gameType === 'word-cloud'
-    ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Word Cloud')}</div>`
-    : ''
-  const matchingPublicContent = gameType === 'matching'
-    ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Matching')}</div><ul style="margin:0;padding-left:20px;font-size:calc(11px * var(--font-zoom, 1));opacity:.72;">${(gameConfig.pairs || el.pairs || []).slice(0, 8).map((pair) => `<li>${escapeHtml(pair.prompt || '')} → ${escapeHtml(pair.target || '')}</li>`).join('')}</ul>`
-    : ''
+  const pollPublicContent =
+    gameType === 'poll'
+      ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Live Poll')}</div><ul style="margin:0;padding-left:20px;font-size:calc(11px * var(--font-zoom, 1));opacity:.72;">${(
+          gameConfig.options ||
+          el.options ||
+          []
+        )
+          .slice(0, 6)
+          .map((option) => `<li>${escapeHtml(option.text || option.label || option)}</li>`)
+          .join('')}</ul>`
+      : ''
+  const wordCloudPublicContent =
+    gameType === 'word-cloud'
+      ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Word Cloud')}</div>`
+      : ''
+  const matchingPublicContent =
+    gameType === 'matching'
+      ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Matching')}</div><ul style="margin:0;padding-left:20px;font-size:calc(11px * var(--font-zoom, 1));opacity:.72;">${(
+          gameConfig.pairs ||
+          el.pairs ||
+          []
+        )
+          .slice(0, 8)
+          .map(
+            (pair) => `<li>${escapeHtml(pair.prompt || '')} → ${escapeHtml(pair.target || '')}</li>`
+          )
+          .join('')}</ul>`
+      : ''
   return `<div${wrap} data-game-fallback="true" data-game-type="${badge}" style="${style}${vis}display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:${safeCssColor(el.backgroundColor, '#1a1a2e')};border:1px solid rgba(148,163,184,0.35);border-radius:8px;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong style="font-size:calc(20px * var(--font-zoom, 1));">${label}</strong><span style="font-size:calc(12px * var(--font-zoom, 1));text-transform:uppercase;letter-spacing:0.05em;padding:2px 10px;border-radius:999px;background:${safeCssColor(el.accentColor, '#6366f1')};opacity:.92;">${badge}</span>${pollPublicContent}${wordCloudPublicContent}${matchingPublicContent}<span style="font-size:calc(11px * var(--font-zoom, 1));opacity:.6;">Interactive game</span></div>`
 }
 

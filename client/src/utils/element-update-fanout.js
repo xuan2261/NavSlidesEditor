@@ -1,5 +1,6 @@
 import { ELEMENT_DEFAULTS } from '../data/element-defaults'
 import { MIN_SIZE } from '../components/canvas/use-canvas-resize-rotate'
+import { hasBlockedGroupMutation } from './active-slide-selection'
 
 /**
  * Shared rules for applying a property/geometry edit across a multi-element
@@ -34,12 +35,7 @@ const COMMON_KEYS = new Set([
   'fragmentAnimation',
 ])
 
-const SHADOW_KEYS = new Set([
-  'shadowX',
-  'shadowY',
-  'shadowBlur',
-  'shadowColor',
-])
+const SHADOW_KEYS = new Set(['shadowX', 'shadowY', 'shadowBlur', 'shadowColor'])
 
 export function normalizeRotation(value) {
   return ((value % 360) + 360) % 360
@@ -53,6 +49,21 @@ function ownsProperty(element, key) {
 
 function supportsShadow(element) {
   return element?.type !== 'html' && element?.type !== 'code'
+}
+
+export function isPureUnlockUpdate(updates) {
+  const keys = Object.keys(updates || {})
+  return keys.length === 1 && keys[0] === 'locked' && updates.locked === false
+}
+
+function isLockOnlyUpdate(updates) {
+  const keys = Object.keys(updates || {})
+  return keys.length === 1 && keys[0] === 'locked'
+}
+
+function canApplyUpdateToElement(element, updates) {
+  if (!element?.locked) return true
+  return isPureUnlockUpdate(updates)
 }
 
 /**
@@ -84,6 +95,7 @@ function valueForElement(element, primary, key, rawValue) {
  */
 export function buildSelectionUpdates(elements, ids, primaryId, updates) {
   if (!Array.isArray(elements) || !Array.isArray(ids) || !updates) return []
+  if (!isLockOnlyUpdate(updates) && hasBlockedGroupMutation({ elements }, ids)) return []
   const byId = new Map(elements.map((el) => [el.id, el]))
   const primary = byId.get(primaryId) || byId.get(ids[ids.length - 1])
   const keys = Object.keys(updates)
@@ -93,6 +105,7 @@ export function buildSelectionUpdates(elements, ids, primaryId, updates) {
   for (const id of ids) {
     const element = byId.get(id)
     if (!element) continue
+    if (!canApplyUpdateToElement(element, updates)) continue
     const partial = {}
     for (const key of keys) {
       const next = valueForElement(element, primary, key, updates[key])

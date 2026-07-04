@@ -1,16 +1,14 @@
 import { useCallback, useMemo } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 import { SLIDE_TEMPLATES } from '../data/slide-templates'
-import {
-  deleteSlidesAtIndices,
-  duplicateSlidesAtIndices,
-} from './slide-operation-helpers'
+import { deleteSlidesAtIndices, duplicateSlidesAtIndices } from './slide-operation-helpers'
 import { invalidatePptxFitMetaForUpdates } from '../utils/pptx-import-meta'
 import { getRotatedAABB } from '../components/canvas/use-canvas-resize-rotate'
 import {
   cloneInheritedDesignTokens,
   cloneTemplateElementForTheme,
 } from '../utils/slide-template-theme-normalization'
+import { hasBlockedGroupMutation } from '../utils/active-slide-selection'
 
 /**
  * Hook encapsulating multi-element operations (align, group, delete-selected)
@@ -111,6 +109,9 @@ export function useSlideOperations({
   const groupElements = useCallback(() => {
     const ids = selectedElementIdsRef.current
     if (ids.length < 2) return
+    const slide = activeSlideOf()
+    if (hasBlockedGroupMutation(slide, ids)) return
+    if ((slide?.elements || []).some((el) => ids.includes(el.id) && el.locked)) return
     const groupId = crypto.randomUUID()
     setPresentation((prev) =>
       mapActive(prev, (s) => ({
@@ -118,7 +119,7 @@ export function useSlideOperations({
         elements: (s.elements || []).map((el) => (ids.includes(el.id) ? { ...el, groupId } : el)),
       }))
     )
-  }, [setPresentation, selectedElementIdsRef, mapActive])
+  }, [setPresentation, selectedElementIdsRef, activeSlideOf, mapActive])
 
   const ungroupElements = useCallback(() => {
     const ids = selectedElementIdsRef.current
@@ -126,12 +127,17 @@ export function useSlideOperations({
     setPresentation((prev) => {
       if (!prev) return prev
       const slide = activeSlideOf()
+      if (hasBlockedGroupMutation(slide, ids)) return prev
       const groupIds = new Set(
         (slide?.elements || [])
           .filter((el) => ids.includes(el.id) && el.groupId)
           .map((el) => el.groupId)
       )
       if (!groupIds.size) return prev
+      const hasLockedMember = (slide?.elements || []).some(
+        (el) => groupIds.has(el.groupId) && el.locked
+      )
+      if (hasLockedMember) return prev
       return mapActive(prev, (s) => ({
         ...s,
         elements: (s.elements || []).map((el) =>
@@ -153,9 +159,7 @@ export function useSlideOperations({
         // deleteSelectedElements). Re-check the count AFTER filtering: a
         // selection of one free + one locked leaves a lone survivor, which
         // must not self-align.
-        const els = (slide?.elements || []).filter(
-          (el) => ids.includes(el.id) && !el.locked
-        )
+        const els = (slide?.elements || []).filter((el) => ids.includes(el.id) && !el.locked)
         if (els.length < 2) return prev
         // Align/distribute on the element's true VISUAL (rotated) bounding box.
         // Rotation is about the element center, so a rigid translation shifts the
@@ -306,7 +310,12 @@ export function useSlideOperations({
       let nextSlideIndex = null
       setPresentation((prev) => {
         if (!prev) return prev
-        const result = duplicateSlidesAtIndices(prev.slides, [index], () => crypto.randomUUID(), currentSlideIndexRef.current)
+        const result = duplicateSlidesAtIndices(
+          prev.slides,
+          [index],
+          () => crypto.randomUUID(),
+          currentSlideIndexRef.current
+        )
         nextSlideIndex = result.currentSlideIndex
         return { ...prev, slides: result.slides }
       })
@@ -320,7 +329,12 @@ export function useSlideOperations({
       let nextSlideIndex = null
       setPresentation((prev) => {
         if (!prev) return prev
-        const result = duplicateSlidesAtIndices(prev.slides, indices, () => crypto.randomUUID(), currentSlideIndexRef.current)
+        const result = duplicateSlidesAtIndices(
+          prev.slides,
+          indices,
+          () => crypto.randomUUID(),
+          currentSlideIndexRef.current
+        )
         nextSlideIndex = result.currentSlideIndex
         return { ...prev, slides: result.slides }
       })
@@ -370,9 +384,7 @@ export function useSlideOperations({
           elements: [],
           notes: '',
           background: parent.background ? { ...parent.background } : { type: 'none' },
-          ...(parent.designTokens
-            ? { designTokens: cloneInheritedDesignTokens(parent) }
-            : {}),
+          ...(parent.designTokens ? { designTokens: cloneInheritedDesignTokens(parent) } : {}),
         }
         return {
           ...prev,

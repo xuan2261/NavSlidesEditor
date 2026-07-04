@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import CanvasContextMenu, { getCopyableMediaUrl } from './canvas-right-click-context-menu-for-slide-elements'
+import CanvasContextMenu, {
+  getCopyableMediaUrl,
+} from './canvas-right-click-context-menu-for-slide-elements'
 
 function renderMenu(element, props = {}) {
   const onClose = vi.fn()
@@ -23,6 +25,24 @@ function renderMenu(element, props = {}) {
 }
 
 describe('CanvasContextMenu copy URL action', () => {
+  it('cut invokes only the cut callback and does not directly delete the context target', () => {
+    const onCut = vi.fn()
+    const onDeleteElement = vi.fn()
+    renderMenu({ id: 'shape-1', type: 'shape' }, { onCut, onDeleteElement })
+
+    fireEvent.click(screen.getByRole('button', { name: /Cut/ }))
+
+    expect(onCut).toHaveBeenCalledTimes(1)
+    expect(onDeleteElement).not.toHaveBeenCalled()
+  })
+
+  it('disables destructive actions for a locked context target', () => {
+    renderMenu({ id: 'locked-1', type: 'shape', locked: true })
+
+    expect(screen.getByRole('button', { name: /Cut/ }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: /Duplicate/ }).disabled).toBe(true)
+  })
+
   it('copies an absolute image URL and closes the menu', () => {
     const writeText = vi.fn()
     const { onClose } = renderMenu(
@@ -49,26 +69,33 @@ describe('CanvasContextMenu copy URL action', () => {
   })
 
   it('normalizes protocol-relative and relative media URLs against the origin', () => {
-    expect(getCopyableMediaUrl(
-      { src: '//cdn.example.test/video.mp4' },
-      'https://slides.test'
-    )).toBe('https://cdn.example.test/video.mp4')
-    expect(getCopyableMediaUrl(
-      { src: 'media/image.png' },
-      'https://slides.test/decks/one'
-    )).toBe('https://slides.test/decks/media/image.png')
+    expect(
+      getCopyableMediaUrl({ src: '//cdn.example.test/video.mp4' }, 'https://slides.test')
+    ).toBe('https://cdn.example.test/video.mp4')
+    expect(getCopyableMediaUrl({ src: 'media/image.png' }, 'https://slides.test/decks/one')).toBe(
+      'https://slides.test/decks/media/image.png'
+    )
   })
 
   it('keeps blob and data URLs copyable', () => {
-    expect(getCopyableMediaUrl({ src: 'blob:https://slides.test/id' })).toBe('blob:https://slides.test/id')
-    expect(getCopyableMediaUrl({ src: 'data:image/png;base64,abc' })).toBe('data:image/png;base64,abc')
+    expect(getCopyableMediaUrl({ src: 'blob:https://slides.test/id' })).toBe(
+      'blob:https://slides.test/id'
+    )
+    expect(getCopyableMediaUrl({ src: 'data:image/png;base64,abc' })).toBe(
+      'data:image/png;base64,abc'
+    )
   })
 
   it('rejects executable and unsupported URL schemes', () => {
     expect(getCopyableMediaUrl({ src: 'javascript:alert(1)' }, 'https://slides.test')).toBeNull()
     expect(getCopyableMediaUrl({ src: 'vbscript:msgbox(1)' }, 'https://slides.test')).toBeNull()
     expect(getCopyableMediaUrl({ src: 'file:///C:/secret.png' }, 'https://slides.test')).toBeNull()
-    expect(getCopyableMediaUrl({ src: 'data:text/html,<script>alert(1)</script>' }, 'https://slides.test')).toBeNull()
+    expect(
+      getCopyableMediaUrl(
+        { src: 'data:text/html,<script>alert(1)</script>' },
+        'https://slides.test'
+      )
+    ).toBeNull()
   })
 
   it('hides Copy URL for media without a usable source', () => {
@@ -141,7 +168,7 @@ describe('icon consistency pass — Lucide ctx-menu', () => {
     renderMenu({ id: 'rect-2', type: 'shape' })
     const root = getMenuRoot()
     const snapLabel = Array.from(root?.querySelectorAll('div') || []).find(
-      (d) => d.textContent === 'Snap Reference',
+      (d) => d.textContent === 'Snap Reference'
     )
     expect(snapLabel).toBeTruthy()
     const grid = snapLabel?.nextElementSibling

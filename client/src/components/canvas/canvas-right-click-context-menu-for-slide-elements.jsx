@@ -98,7 +98,6 @@ export function getCopyableMediaUrl(element, origin = globalThis.location?.origi
  *   onCut        — () => void
  *   onPaste      — () => void
  *   onDuplicate  — () => void
- *   onDeleteElement — (id) => void
  *   onUpdateElement — (id, changes) => void
  *   onStartCrop  — (elementId) => void
  *   onClose      — () => void
@@ -110,7 +109,6 @@ export default function CanvasContextMenu({
   onCut,
   onPaste,
   onDuplicate,
-  onDeleteElement,
   onUpdateElement,
   onStartCrop,
   onClose,
@@ -120,6 +118,9 @@ export default function CanvasContextMenu({
   if (!contextMenu) return null
 
   const ctxEl = slide?.elements?.find((e) => e.id === contextMenu.elementId)
+  const contextSelectionIds = contextMenu.contextSelectionIds || [contextMenu.elementId]
+  const contextElements = (slide?.elements || []).filter((e) => contextSelectionIds.includes(e.id))
+  const hasLockedContext = contextElements.some((e) => e.locked)
   const currentRef = ctxEl?.snapRef || 'ul'
   const copyableUrl = ['image', 'video'].includes(contextMenu.elementType)
     ? getCopyableMediaUrl(ctxEl, origin)
@@ -143,27 +144,40 @@ export default function CanvasContextMenu({
     >
       <Button
         variant="ghost"
-        disabled={!!ctxEl?.locked}
-        onClick={() => { onCopy?.(); onClose() }}
+        disabled={hasLockedContext}
+        onClick={() => {
+          onCopy?.()
+          onClose()
+        }}
       >
         <Copy size={14} /> Copy (Ctrl+C)
       </Button>
       <Button
         variant="ghost"
-        onClick={() => { onCut?.(); onDeleteElement(contextMenu.elementId); onClose() }}
+        disabled={hasLockedContext}
+        onClick={() => {
+          onCut?.()
+          onClose()
+        }}
       >
         <Scissors size={14} /> Cut (Ctrl+X)
       </Button>
       <Button
         variant="ghost"
-        onClick={() => { onPaste?.(); onClose() }}
+        onClick={() => {
+          onPaste?.()
+          onClose()
+        }}
       >
         <Clipboard size={14} /> Paste (Ctrl+V)
       </Button>
       <Button
         variant="ghost"
-        disabled={!!ctxEl?.locked}
-        onClick={() => { onDuplicate?.(); onClose() }}
+        disabled={hasLockedContext}
+        onClick={() => {
+          onDuplicate?.()
+          onClose()
+        }}
       >
         <CopyPlus size={14} /> Duplicate (Ctrl+D)
       </Button>
@@ -171,11 +185,19 @@ export default function CanvasContextMenu({
 
       {contextMenu.elementType === 'image' && (
         <>
-          <Button variant="ghost" onClick={() => { onStartCrop?.(contextMenu.elementId); onClose() }}>
+          <Button
+            variant="ghost"
+            disabled={hasLockedContext}
+            onClick={() => {
+              onStartCrop?.(contextMenu.elementId)
+              onClose()
+            }}
+          >
             <Crop size={14} /> Crop
           </Button>
           <Button
             variant="ghost"
+            disabled={hasLockedContext}
             onClick={() => {
               const el = slide?.elements?.find((e) => e.id === contextMenu.elementId)
               if (el && el.imageW != null) {
@@ -226,6 +248,7 @@ export default function CanvasContextMenu({
               aria-label={opt.label}
               style={getSnapReferenceButtonStyle(currentRef === opt.id)}
               onClick={() => {
+                if (hasLockedContext) return
                 onUpdateElement(contextMenu.elementId, { snapRef: opt.id })
                 onClose()
               }}

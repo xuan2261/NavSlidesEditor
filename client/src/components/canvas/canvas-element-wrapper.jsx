@@ -28,6 +28,11 @@ function getPlaybackRate(value) {
   return Number.isFinite(rate) && rate > 0 ? rate : null
 }
 
+function isLinePathEvent(element, event) {
+  if (element.type !== 'line') return true
+  return event.target?.tagName?.toLowerCase() === 'path'
+}
+
 function importedTextInsetStyles(element) {
   const insets = element?._pptxImportMeta?.textInsets
   if (!insets) return null
@@ -160,7 +165,7 @@ export default function CanvasElement({
     width: element.width,
     height: element.height,
     zIndex: element.zIndex || 1,
-    pointerEvents: element.type === 'line' && !isSelected && !isEditing ? 'none' : 'auto',
+    pointerEvents: 'auto',
     outline: element.locked
       ? '2px solid #f59e0b'
       : (isSelected || isEditing) && !isCropping
@@ -363,6 +368,7 @@ export default function CanvasElement({
       {...cropDiagnostics}
       style={elementWrapperStyle}
       onMouseDown={(e) => {
+        if (!isLinePathEvent(element, e)) return
         if (isEditing) {
           e.stopPropagation()
           return
@@ -370,11 +376,15 @@ export default function CanvasElement({
         if (!isCropping) onPointerDown(e, 'move', null)
       }}
       onClick={(e) => {
+        if (!isLinePathEvent(element, e)) return
         if (!isEditing) onClick(e)
         else e.stopPropagation()
       }}
       onDoubleClick={onDoubleClick}
-      onContextMenu={onContextMenu}
+      onContextMenu={(e) => {
+        if (!isLinePathEvent(element, e)) return
+        onContextMenu(e)
+      }}
     >
       <div data-element-content style={contentLayerStyle}>
         {element.type === 'text' && !isEditing && (

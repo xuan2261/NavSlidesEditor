@@ -12,13 +12,9 @@ import {
 import { useEditorStore } from './stores/editor-store'
 
 /**
- * Reproduction harness for EditorPage element/control interaction bugs found in
- * the diagnostic audit. Each `it.fails` asserts the CORRECT behavior — it passes
- * while the bug is present (the inner assertion throws) and turns red the moment
- * the bug is fixed, which is the signal to delete/convert the case.
- *
- * Green here = bug confirmed live. Red here = behavior is actually correct
- * (either already fixed or the finding was wrong).
+ * Regression harness for EditorPage element/control interaction bugs found in
+ * diagnostic audits. Tests assert the corrected behavior directly and should
+ * stay green after fixes land.
  */
 
 const byId = (els, id) => els.find((e) => e.id === id)
@@ -220,8 +216,7 @@ describe('align leaves locked elements in place', () => {
     const idxRef = { current: 0 }
     const editingRef = { current: null }
     const setPresentation = (updater) => {
-      state.presentation =
-        typeof updater === 'function' ? updater(state.presentation) : updater
+      state.presentation = typeof updater === 'function' ? updater(state.presentation) : updater
     }
     const { result } = renderHook(() =>
       useSlideOperations({

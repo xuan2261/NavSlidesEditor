@@ -21,13 +21,24 @@ import CanvasElement from './canvas/canvas-element-wrapper'
 import { cn } from '../lib/utils'
 import { DEFAULT_TOKENS, mergeTokens, tokensToStyleObject } from 'revealjs-shared'
 import SlideBackgroundFxCanvas from './canvas/slide-background-fx-canvas'
-import { resolvePointerDownSelection } from '../utils/active-slide-selection'
+import {
+  expandSelectionIdsForGroups,
+  resolvePointerDownSelection,
+} from '../utils/active-slide-selection'
 
 function getBgStyle(bg) {
-  if (!bg || bg.type === 'none') return { backgroundColor: 'var(--ns-bg, var(--bg-canvas-default, #ffffff))' }
-  if (bg.type === 'color') return { backgroundColor: bg.color || 'var(--ns-bg, var(--bg-canvas-default, #ffffff))' }
-  if (bg.type === 'gradient') return { background: bg.gradient || 'var(--ns-bg, var(--bg-canvas-default, #ffffff))' }
-  if (bg.type === 'image' && bg.image) return { backgroundImage: `url(${bg.image})`, backgroundSize: bg.size || 'cover', backgroundPosition: bg.position || 'center' }
+  if (!bg || bg.type === 'none')
+    return { backgroundColor: 'var(--ns-bg, var(--bg-canvas-default, #ffffff))' }
+  if (bg.type === 'color')
+    return { backgroundColor: bg.color || 'var(--ns-bg, var(--bg-canvas-default, #ffffff))' }
+  if (bg.type === 'gradient')
+    return { background: bg.gradient || 'var(--ns-bg, var(--bg-canvas-default, #ffffff))' }
+  if (bg.type === 'image' && bg.image)
+    return {
+      backgroundImage: `url(${bg.image})`,
+      backgroundSize: bg.size || 'cover',
+      backgroundPosition: bg.position || 'center',
+    }
   // 'fx' backgrounds render via the FX canvas overlay; keep the container transparent.
   if (bg.type === 'fx') return { backgroundColor: bg.fx?.fallbackColor || '#0d0221' }
   return { backgroundColor: 'var(--bg-canvas-default, #ffffff)' }
@@ -118,12 +129,24 @@ export default function SlideCanvas({
 
   // slideRef must be declared before all hooks that use it (fixes TDZ error)
   const slideRef = useRef(slide)
-  useEffect(() => { slideRef.current = slide }, [slide])
-  useEffect(() => { showGridRef.current = showGrid }, [showGrid])
-  useEffect(() => { gridSizeRef.current = gridSize }, [gridSize])
-  useEffect(() => { scaleRef.current = scale }, [scale])
-  useEffect(() => { selectedElementIdsRef.current = selectedElementIds }, [selectedElementIds])
-  useEffect(() => { smartGuidesRef.current = smartGuidesEnabled }, [smartGuidesEnabled])
+  useEffect(() => {
+    slideRef.current = slide
+  }, [slide])
+  useEffect(() => {
+    showGridRef.current = showGrid
+  }, [showGrid])
+  useEffect(() => {
+    gridSizeRef.current = gridSize
+  }, [gridSize])
+  useEffect(() => {
+    scaleRef.current = scale
+  }, [scale])
+  useEffect(() => {
+    selectedElementIdsRef.current = selectedElementIds
+  }, [selectedElementIds])
+  useEffect(() => {
+    smartGuidesRef.current = smartGuidesEnabled
+  }, [smartGuidesEnabled])
 
   // Rubber-band selection hook — must be called before useCanvasPointerInteraction
   // (its helpers are passed into that hook)
@@ -152,7 +175,8 @@ export default function SlideCanvas({
     rubberBandRef,
     onUpdateElement,
     onUpdateElements,
-    snapToGrid: (v) => showGridRef.current ? Math.round(v / gridSizeRef.current) * gridSizeRef.current : v,
+    snapToGrid: (v) =>
+      showGridRef.current ? Math.round(v / gridSizeRef.current) * gridSizeRef.current : v,
     snapWithRef,
     getRotationAngle,
     applyResize,
@@ -164,7 +188,9 @@ export default function SlideCanvas({
     setRubberBand,
     setActiveGuides,
     forceUpdate,
-    setSuppressCanvasClick: (v) => { suppressCanvasClickRef.current = v },
+    setSuppressCanvasClick: (v) => {
+      suppressCanvasClickRef.current = v
+    },
     setCropMode,
     slideW: SLIDE_W,
     slideH: SLIDE_H,
@@ -183,7 +209,6 @@ export default function SlideCanvas({
     if (containerRef.current) ro.observe(containerRef.current)
     return () => ro.disconnect()
   }, [SLIDE_H, SLIDE_W, setScale, userZoomMode])
-
 
   // Keyboard shortcuts
 
@@ -225,8 +250,8 @@ export default function SlideCanvas({
           (e.key === 'Delete' || e.key === 'Backspace') &&
           tag !== 'INPUT' &&
           tag !== 'TEXTAREA' &&
-            !slideRef.current?.locked &&
-            !hasLockedSelection
+          !slideRef.current?.locked &&
+          !hasLockedSelection
         ) {
           onDeleteSelectedElements()
           e.preventDefault()
@@ -306,7 +331,7 @@ export default function SlideCanvas({
   const startCrop = (elementId) => {
     if (slide?.locked) return // Block crop on locked slides
     const element = slide?.elements?.find((el) => el.id === elementId)
-    if (!element) return
+    if (!element || element.locked) return
     // cropMode uses {x,y,w,h} as fractions of the CURRENT element box
     setCropMode({ elementId, x: 0, y: 0, w: 1, h: 1 })
     setContextMenu(null)
@@ -315,7 +340,7 @@ export default function SlideCanvas({
   const commitCrop = useCallback(() => {
     if (!cropMode) return
     const element = slide?.elements?.find((el) => el.id === cropMode.elementId)
-    if (!element) return
+    if (!element || element.locked) return
     const { x: cx, y: cy, w: cw, h: ch } = cropMode
 
     // Pixel crop amounts relative to current element box
@@ -444,7 +469,11 @@ export default function SlideCanvas({
       >
         {/* Locked slide overlay */}
         {slide?.locked && (
-          <div className={cn('absolute inset-0 z-[997] pointer-events-none flex items-center justify-center')}>
+          <div
+            className={cn(
+              'absolute inset-0 z-[997] pointer-events-none flex items-center justify-center'
+            )}
+          >
             <span className="text-white/30 text-sm select-none">🔒 Slide Locked</span>
           </div>
         )}
@@ -484,16 +513,20 @@ export default function SlideCanvas({
 
         {/* Rubber-band selection */}
         {rubberBandRef.current && (
-          <div style={{
-            position: 'absolute',
-            left: Math.min(rubberBandRef.current.startX, rubberBandRef.current.currentX),
-            top: Math.min(rubberBandRef.current.startY, rubberBandRef.current.currentY),
-            width: Math.abs(rubberBandRef.current.currentX - rubberBandRef.current.startX),
-            height: Math.abs(rubberBandRef.current.currentY - rubberBandRef.current.startY),
-            border: '1.5px dashed #6366f1',
-            background: 'rgba(99, 102, 241, 0.08)',
-            zIndex: 998, pointerEvents: 'none', borderRadius: 2,
-          }} />
+          <div
+            style={{
+              position: 'absolute',
+              left: Math.min(rubberBandRef.current.startX, rubberBandRef.current.currentX),
+              top: Math.min(rubberBandRef.current.startY, rubberBandRef.current.currentY),
+              width: Math.abs(rubberBandRef.current.currentX - rubberBandRef.current.startX),
+              height: Math.abs(rubberBandRef.current.currentY - rubberBandRef.current.startY),
+              border: '1.5px dashed #6366f1',
+              background: 'rgba(99, 102, 241, 0.08)',
+              zIndex: 998,
+              pointerEvents: 'none',
+              borderRadius: 2,
+            }}
+          />
         )}
 
         {slide?.elements
@@ -560,9 +593,17 @@ export default function SlideCanvas({
               onContextMenu={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
+                const contextSelectionIds = selectedElementIdsRef.current.includes(element.id)
+                  ? selectedElementIdsRef.current
+                  : expandSelectionIdsForGroups(slide, [element.id])
+                if (!selectedElementIdsRef.current.includes(element.id)) {
+                  selectedElementIdsRef.current = contextSelectionIds
+                  onToggleSelectElement(element.id, false)
+                }
                 setContextMenu({
                   elementId: element.id,
                   elementType: element.type,
+                  contextSelectionIds,
                   x: e.clientX,
                   y: e.clientY,
                 })
@@ -571,7 +612,14 @@ export default function SlideCanvas({
               onCropHandleDown={(handle, clientX, clientY) => {
                 const el = slide?.elements?.find((el) => el.id === element.id)
                 if (!el) return
-                setCropDrag(handle, clientX, clientY, { x: cropMode.x, y: cropMode.y, w: cropMode.w, h: cropMode.h }, el.width, el.height)
+                setCropDrag(
+                  handle,
+                  clientX,
+                  clientY,
+                  { x: cropMode.x, y: cropMode.y, w: cropMode.w, h: cropMode.h },
+                  el.width,
+                  el.height
+                )
               }}
               onCommitCrop={commitCrop}
               onUpdateElement={onUpdateElement}
@@ -596,14 +644,25 @@ export default function SlideCanvas({
         />
 
         {/* Drop hint */}
-        {dragOver && <div style={{
-          position: 'absolute', inset: 0, display: 'flex',
-          alignItems: 'center', justifyContent: 'center',
-          pointerEvents: 'none', zIndex: 999,
-          background: 'rgba(99,102,241,0.08)',
-          fontSize: '16px', color: 'rgba(255,255,255,0.7)',
-          fontFamily: 'sans-serif',
-        }}>Drop image here</div>}
+        {dragOver && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'none',
+              zIndex: 999,
+              background: 'rgba(99,102,241,0.08)',
+              fontSize: '16px',
+              color: 'rgba(255,255,255,0.7)',
+              fontFamily: 'sans-serif',
+            }}
+          >
+            Drop image here
+          </div>
+        )}
       </div>
 
       {/* Context menu */}
@@ -622,4 +681,3 @@ export default function SlideCanvas({
     </div>
   )
 }
-

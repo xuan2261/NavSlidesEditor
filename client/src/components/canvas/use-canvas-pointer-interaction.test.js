@@ -8,7 +8,11 @@
  */
 import { cleanup, renderHook } from '@testing-library/react'
 import { afterEach, describe, it, expect, vi } from 'vitest'
-import useCanvasPointerInteraction, { applyCropHandle } from './use-canvas-pointer-interaction'
+import useCanvasPointerInteraction, {
+  applyCropHandle,
+  applyMoveBatch,
+  computeClampedBatchDelta,
+} from './use-canvas-pointer-interaction'
 
 // Re-exported pure helpers from the hook module for direct testing
 // applyCropHandle and startElementDrag are exported for testing purposes
@@ -19,12 +23,54 @@ afterEach(() => {
 
 describe('applyCropHandle (pure math)', () => {
   const cases = [
-    { handle: 'nw', dx: -0.05, dy: -0.05, crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }, expectX: true, expectY: true },
-    { handle: 'se', dx: 0.05, dy: 0.05, crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }, expectX: false, expectY: false },
-    { handle: 'e',  dx: 0.1,  dy: 0,    crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }, expectX: false, expectY: false },
-    { handle: 'n',  dx: 0,    dy: -0.1, crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }, expectX: false, expectY: true  },
-    { handle: 'w',  dx: -0.1, dy: 0,    crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }, expectX: true,  expectY: false },
-    { handle: 's',  dx: 0,    dy: 0.1,  crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 }, expectX: false, expectY: false },
+    {
+      handle: 'nw',
+      dx: -0.05,
+      dy: -0.05,
+      crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 },
+      expectX: true,
+      expectY: true,
+    },
+    {
+      handle: 'se',
+      dx: 0.05,
+      dy: 0.05,
+      crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 },
+      expectX: false,
+      expectY: false,
+    },
+    {
+      handle: 'e',
+      dx: 0.1,
+      dy: 0,
+      crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 },
+      expectX: false,
+      expectY: false,
+    },
+    {
+      handle: 'n',
+      dx: 0,
+      dy: -0.1,
+      crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 },
+      expectX: false,
+      expectY: true,
+    },
+    {
+      handle: 'w',
+      dx: -0.1,
+      dy: 0,
+      crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 },
+      expectX: true,
+      expectY: false,
+    },
+    {
+      handle: 's',
+      dx: 0,
+      dy: 0.1,
+      crop: { x: 0.1, y: 0.1, w: 0.8, h: 0.8 },
+      expectX: false,
+      expectY: false,
+    },
   ]
 
   cases.forEach(({ handle, dx, dy, crop, expectX, expectY }) => {
@@ -91,6 +137,56 @@ describe('applyCropHandle (pure math)', () => {
 describe('exports', () => {
   it('applyCropHandle is exported from the module', () => {
     expect(typeof applyCropHandle).toBe('function')
+  })
+})
+
+describe('batch move bounds', () => {
+  it('computes one shared clamped delta near the right edge', () => {
+    expect(
+      computeClampedBatchDelta(
+        [
+          { id: 'a', x: 850, y: 10, width: 100, height: 80 },
+          { id: 'b', x: 100, y: 20, width: 100, height: 80 },
+        ],
+        50,
+        0,
+        960,
+        540
+      )
+    ).toEqual({ dx: 10, dy: 0 })
+  })
+
+  it('applies the shared clamped delta to every selected element', () => {
+    expect(
+      applyMoveBatch(
+        [
+          { id: 'a', x: 850, y: 10, width: 100, height: 80 },
+          { id: 'b', x: 100, y: 20, width: 100, height: 80 },
+        ],
+        50,
+        0,
+        960,
+        540
+      )
+    ).toEqual([
+      { id: 'a', x: 860, y: 10 },
+      { id: 'b', x: 110, y: 20 },
+    ])
+  })
+
+  it('clamps top and left movement as a shared delta', () => {
+    expect(
+      computeClampedBatchDelta(
+        [
+          { id: 'a', x: 5, y: 4, width: 100, height: 80 },
+          { id: 'b', x: 100, y: 30, width: 100, height: 80 },
+        ],
+        -20,
+        -10,
+        960,
+        540
+      )
+    ).toEqual({ dx: -5, dy: -4 })
   })
 })
 

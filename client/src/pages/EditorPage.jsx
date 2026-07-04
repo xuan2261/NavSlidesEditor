@@ -30,7 +30,11 @@ import { computeMultiZOrderStep, computeMultiZOrderEdge } from '../utils/z-order
 import { pushHistory } from '../utils/history-stack'
 import { reconcileSelectionAfterHistory } from '../utils/history-selection-reconciler'
 import { resolveLegacyEditorShortcut } from '../utils/legacy-editor-keydown-resolver'
-import { getSelectionIdsForActiveSlideElement } from '../utils/active-slide-selection'
+import {
+  getSelectionIdsForActiveSlideElement,
+  hasBlockedGroupMutation,
+} from '../utils/active-slide-selection'
+import { computeClampedBatchDelta } from '../components/canvas/use-canvas-pointer-interaction'
 import SlidePanel from '../components/SlidePanel'
 import SlideCanvas from '../components/SlideCanvas'
 import PropertiesPanel from '../components/PropertiesPanel'
@@ -866,7 +870,17 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     (dir) => {
       const ids = selectedElementIdsRef.current
       if (!ids?.length) return
-      const stepped = computeMultiZOrderStep(activeSlideRef.current?.elements || [], ids, dir)
+      if (hasBlockedGroupMutation(activeSlideRef.current, ids)) return
+      const allowedIds = ids.filter((id) => {
+        const el = (activeSlideRef.current?.elements || []).find((item) => item.id === id)
+        return el && !el.locked
+      })
+      if (!allowedIds.length) return
+      const stepped = computeMultiZOrderStep(
+        activeSlideRef.current?.elements || [],
+        allowedIds,
+        dir
+      )
       updateElements(stepped.map((el) => ({ id: el.id, zIndex: el.zIndex })))
     },
     [selectedElementIdsRef, activeSlideRef, updateElements]
@@ -878,7 +892,17 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     (edge) => {
       const ids = selectedElementIdsRef.current
       if (!ids?.length) return
-      const reordered = computeMultiZOrderEdge(activeSlideRef.current?.elements || [], ids, edge)
+      if (hasBlockedGroupMutation(activeSlideRef.current, ids)) return
+      const allowedIds = ids.filter((id) => {
+        const el = (activeSlideRef.current?.elements || []).find((item) => item.id === id)
+        return el && !el.locked
+      })
+      if (!allowedIds.length) return
+      const reordered = computeMultiZOrderEdge(
+        activeSlideRef.current?.elements || [],
+        allowedIds,
+        edge
+      )
       updateElements(reordered.map((el) => ({ id: el.id, zIndex: el.zIndex })))
     },
     [selectedElementIdsRef, activeSlideRef, updateElements]
@@ -1247,13 +1271,23 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         if (dx === 0 && dy === 0) return
         e.preventDefault()
         const slide = activeSlideRef.current
+        if (hasBlockedGroupMutation(slide, ids)) return
         // One batched store write per nudge instead of N (one per selected id),
         // so a large multi-selection does not fire N renders per keypress.
-        const batch = []
-        ids.forEach((id) => {
-          const el = slide?.elements?.find((x) => x.id === id)
-          if (!el || el.locked) return
-          batch.push({ id, x: (el.x || 0) + dx, y: (el.y || 0) + dy })
+        const moving = (slide?.elements || [])
+          .filter((el) => ids.includes(el.id) && !el.locked)
+          .map((el) => ({
+            id: el.id,
+            x: el.x || 0,
+            y: el.y || 0,
+            width: el.width || 0,
+            height: el.height || 0,
+          }))
+        const slideW = presentation?.resolution?.width || 960
+        const slideH = presentation?.resolution?.height || 540
+        const delta = computeClampedBatchDelta(moving, dx, dy, slideW, slideH)
+        const batch = moving.map((el) => {
+          return { id: el.id, x: el.x + delta.dx, y: el.y + delta.dy }
         })
         if (batch.length) updateElements(batch)
         return
