@@ -25,6 +25,24 @@ function getElementStyle(element) {
   }
 }
 
+function getFrameStyle(slide, width, height, style) {
+  return {
+    width,
+    height,
+    position: 'relative',
+    ...getBackgroundStyle(slide.background),
+    ...style,
+  }
+}
+
+function getTextStyle(element) {
+  return { color: element.color || element.textColor || '#fff' }
+}
+
+function getImageStyle(element) {
+  return { objectFit: element.objectFit || 'contain' }
+}
+
 export default function TemplateSlideThumbnail({ slide, width = 960, height = 540, style }) {
   if (!slide) return null
 
@@ -32,20 +50,14 @@ export default function TemplateSlideThumbnail({ slide, width = 960, height = 54
     <div
       className="relative overflow-hidden"
       data-testid="template-slide-thumbnail"
-      style={{
-        width,
-        height,
-        position: 'relative',
-        ...getBackgroundStyle(slide.background),
-        ...style,
-      }}
+      style={getFrameStyle(slide, width, height, style)}
     >
       {(slide.elements || []).map((element) => (
         <div key={element.id} style={getElementStyle(element)}>
           {element.type === 'text' && (
             <div
               className="text-sm leading-[1.4] break-words"
-              style={{ color: element.color || element.textColor || '#fff' }}
+              style={getTextStyle(element)}
               dangerouslySetInnerHTML={{ __html: element.content || '' }}
             />
           )}
@@ -54,7 +66,7 @@ export default function TemplateSlideThumbnail({ slide, width = 960, height = 54
               src={element.src}
               alt=""
               className="w-full h-full block"
-              style={{ objectFit: element.objectFit || 'contain' }}
+              style={getImageStyle(element)}
               draggable={false}
             />
           )}
