@@ -1,13 +1,48 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, existsSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { ELEMENT_DEFAULTS } from './element-defaults'
 import { DEFAULT_SHORTCUTS } from '../utils/default-keyboard-shortcut-definitions-registry'
 import { DEFAULT_TOKENS, AUTO_FIELD_MAP, resolveColorField } from 'revealjs-shared'
 
+const THIS_DIR = dirname(fileURLToPath(import.meta.url))
+
 describe('element-defaults guards README count claim', () => {
   it('exposes exactly 19 element types (matches README "19 element types")', () => {
     expect(Object.keys(ELEMENT_DEFAULTS)).toHaveLength(19)
+  })
+})
+
+describe('shared presentation JSDoc mirrors canonical element defaults', () => {
+  const presentationTypesPath = resolve(THIS_DIR, '../../../shared/src/types/presentation.js')
+  const presentationTypesSource = readFileSync(presentationTypesPath, 'utf8')
+  const elementTypeMatch = presentationTypesSource.match(/@typedef \{([^}]+)\} ElementType/)
+  const elementTypes = elementTypeMatch?.[1]
+    .split('|')
+    .map((type) => type.trim().replace(/^'|'$/g, ''))
+    .filter(Boolean)
+
+  it('declares exactly the canonical ElementType union', () => {
+    expect(elementTypeMatch, 'ElementType typedef is present').toBeTruthy()
+    expect(elementTypes.sort()).toEqual(Object.keys(ELEMENT_DEFAULTS).sort())
+  })
+
+  it('does not retain stale qr/divider aliases and includes current concrete types', () => {
+    expect(elementTypes).not.toEqual(expect.arrayContaining(['qr', 'divider']))
+    expect(elementTypes).toEqual(expect.arrayContaining(['qrcode', 'timeline', 'game']))
+  })
+
+  it('uses current high-risk element property names in concrete typedefs', () => {
+    expect(presentationTypesSource).not.toMatch(/\bshapeType:/)
+    expect(presentationTypesSource).not.toMatch(/\bcode:/)
+    expect(presentationTypesSource).not.toMatch(/\blatex:/)
+    expect(presentationTypesSource).not.toMatch(/\bhtmlContent:/)
+    expect(presentationTypesSource).not.toMatch(/\bmarkdown:/)
+    expect(presentationTypesSource).not.toMatch(/\bcolor: string,\n \*   strokeWidth/)
+    expect(presentationTypesSource).toMatch(/\bshape:/)
+    expect(presentationTypesSource).toMatch(/\bcontent: string/)
+    expect(presentationTypesSource).toMatch(/\biconColor:/)
   })
 })
 
@@ -50,7 +85,7 @@ describe("default 'auto' colors resolve to the historical hex (no out-of-box cha
 // forcing a [cap:*] test or a dated allowlist entry. game is game-scope, excluded.
 describe('feature-coverage drift guard', () => {
   const MATRIX_JSON = resolve(
-    __dirname,
+    THIS_DIR,
     '../../../plans/260530-0854-feature-coverage-traceability-matrix-system-tdd/reports/feature-coverage-matrix.json'
   )
   const hasMatrix = existsSync(MATRIX_JSON)

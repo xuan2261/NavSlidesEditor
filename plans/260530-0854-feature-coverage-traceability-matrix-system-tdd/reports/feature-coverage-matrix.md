@@ -4,7 +4,7 @@ _Generated: local run_
 
 > ⚠️ **Run results stale or missing** — statuses derived without a fresh test run. PASS counts may be optimistic; regenerate with a fresh `--reporter=json` run.
 
-Verified (PASS only): 100/100 (100%)  |  PASS: 100
+Verified (PASS only): 114/114 (100%)  |  PASS: 114
 
 ## canvas
 
@@ -51,6 +51,19 @@ Verified (PASS only): 100/100 (100%)  |  PASS: 100
 | control.format.underline | low | smoke | unit | trace | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
 | control.insert.shape | low | smoke | unit | trace | client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx | PASS |
 | control.insert.text | low | smoke | unit | trace | client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx | PASS |
+| control.properties.panel | high | smoke | unit | trace | client/src/components/PropertiesPanel.test.jsx | PASS |
+| control.ribbon.animations | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
+| control.ribbon.contextual-format | high | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
+| control.ribbon.design | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
+| control.ribbon.home | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
+| control.ribbon.insert | high | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
+| control.ribbon.transitions | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
+| control.ribbon.view | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
+| control.selection-pane | low | smoke | unit | trace | client/src/components/SelectionPane.test.jsx | PASS |
+| control.slide-panel | high | smoke | unit | trace | client/src/components/SlidePanel.test.jsx | PASS |
+| control.status.view-mode | low | smoke | unit | trace | client/src/components/layout/StatusBar.test.jsx | PASS |
+| control.status.zoom | low | smoke | unit | trace | client/src/components/layout/StatusBar.test.jsx | PASS |
+| control.timeline-animation | low | smoke | unit | trace | client/src/components/AnimationTimeline.test.jsx | PASS |
 | control.view.selectionPane | low | smoke | unit | trace | client/src/components/ribbon/ribbon-view-tab-mode-controls-and-window-panel-toggles.test.jsx | PASS |
 | control.view.smartGuides | low | smoke | unit | trace | client/src/components/ribbon/ribbon-view-tab-mode-controls-and-window-panel-toggles.test.jsx | PASS |
 
@@ -135,4 +148,10 @@ Verified (PASS only): 100/100 (100%)  |  PASS: 100
 | shortcut.whiteScreen | low | smoke | unit | trace | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
 | shortcut.zoomIn | low | smoke | unit | trace | client/src/stores/editor-store.test.js | PASS |
 | shortcut.zoomOut | low | smoke | unit | trace | client/src/stores/editor-store.test.js | PASS |
+
+## teaching
+
+| Capability | Risk | Tier | Layer | Depth | Test(s) | Status |
+|---|---|---|---|---|---|---|
+| teaching.discovery | low | smoke | unit | trace, a11y | client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.test.jsx | PASS |
 

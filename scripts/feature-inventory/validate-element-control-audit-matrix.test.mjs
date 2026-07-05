@@ -180,7 +180,7 @@ describe('validateElementControlAuditMatrix', () => {
     )
   })
 
-  it('fails on a status outside works, partial, broken, export-gap', () => {
+  it('fails on a status outside the supported audit and capability vocabularies', () => {
     const rows = [
       row({
         element: 'text',
@@ -194,6 +194,69 @@ describe('validateElementControlAuditMatrix', () => {
     expect(result.ok).toBe(false)
     expect(result.errors).toContain(
       'row text.rich-text-formatting.editor has invalid status stable'
+    )
+  })
+
+  it('accepts explicit capability policy rows for required element surfaces', () => {
+    const surfaces = ['create', 'canvas', 'properties', 'formatRibbon', 'htmlExport', 'pptxExport']
+    const rows = surfaces.map((surface) =>
+      row({
+        element: 'text',
+        control: 'element-capability-policy',
+        surface,
+        id: `text.element-capability-policy.${surface}`,
+        status: surface === 'formatRibbon' ? 'accepted-limit' : 'implemented',
+        policy: `${surface} is explicitly classified`,
+        alternateSurface: surface === 'formatRibbon' ? 'direct canvas editing' : undefined,
+      })
+    )
+    const expectedControls = [
+      expectedControl({
+        element: 'text',
+        control: 'element-capability-policy',
+        surfaces,
+      }),
+    ]
+    const result = validate({ rows, expectedControls, canonical: ['text'] })
+
+    expect(result.ok).toBe(true)
+  })
+
+  it('fails capability policy rows with missing status or accepted-limit alternate surface', () => {
+    const rows = [
+      row({
+        element: 'text',
+        control: 'element-capability-policy',
+        surface: 'formatRibbon',
+        id: 'text.element-capability-policy.formatRibbon',
+        status: 'accepted-limit',
+        policy: 'text uses direct editing instead',
+        alternateSurface: '',
+      }),
+      row({
+        element: 'text',
+        control: 'element-capability-policy',
+        surface: 'pptxExport',
+        id: 'text.element-capability-policy.pptxExport',
+        status: 'missing',
+        policy: 'placeholder',
+      }),
+    ]
+    const expectedControls = [
+      expectedControl({
+        element: 'text',
+        control: 'element-capability-policy',
+        surfaces: ['formatRibbon', 'pptxExport'],
+      }),
+    ]
+    const result = validate({ rows, expectedControls, canonical: ['text'] })
+
+    expect(result.ok).toBe(false)
+    expect(result.errors).toContain(
+      'row text.element-capability-policy.formatRibbon accepted-limit missing alternateSurface'
+    )
+    expect(result.errors).toContain(
+      'row text.element-capability-policy.pptxExport has invalid status missing'
     )
   })
 

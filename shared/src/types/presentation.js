@@ -11,7 +11,7 @@
 
 /**
  * All supported element types in the editor.
- * @typedef {'text'|'image'|'shape'|'code'|'latex'|'html'|'markdown'|'chart'|'video'|'audio'|'table'|'icon'|'callout'|'qr'|'divider'|'line'|'drawing'|'svg'} ElementType
+ * @typedef {'text'|'image'|'shape'|'code'|'latex'|'html'|'markdown'|'chart'|'video'|'audio'|'table'|'icon'|'callout'|'qrcode'|'drawing'|'line'|'svg'|'timeline'|'game'} ElementType
  */
 
 /**
@@ -53,17 +53,17 @@
 
 /**
  * @typedef {BaseElement & {
- *   shapeType: 'rectangle'|'circle'|'triangle'|'arrow'|'star'|'line',
+ *   shape: 'rect'|'circle'|'triangle'|'arrow'|'star',
  *   fill: string,
  *   stroke: string,
  *   strokeWidth: number,
- *   cornerRadius?: number
+ *   borderRadius?: number
  * }} ShapeElement
  */
 
 /**
  * @typedef {BaseElement & {
- *   code: string,
+ *   content: string,
  *   language: string,
  *   theme?: string,
  *   borderRadius?: number
@@ -72,7 +72,7 @@
 
 /**
  * @typedef {BaseElement & {
- *   latex: string,
+ *   content: string,
  *   displayMode?: boolean,
  *   fontSize?: number,
  *   textColor?: string
@@ -80,11 +80,11 @@
  */
 
 /**
- * @typedef {BaseElement & { htmlContent: string }} HtmlElement
+ * @typedef {BaseElement & { content: string }} HtmlElement
  */
 
 /**
- * @typedef {BaseElement & { markdown: string }} MarkdownElement
+ * @typedef {BaseElement & { content: string }} MarkdownElement
  */
 
 /**
@@ -132,16 +132,17 @@
 /**
  * @typedef {BaseElement & {
  *   iconName: string,
- *   color: string,
- *   strokeWidth?: number
+ *   iconColor: string,
+ *   iconStrokeWidth?: number
  * }} IconElement
  */
 
 /**
  * @typedef {BaseElement & {
- *   number: number,
- *   color: string,
- *   size?: number
+ *   calloutNumber: number,
+ *   calloutColor: string,
+ *   calloutTextColor?: string,
+ *   fontSize?: number
  * }} CalloutElement
  */
 
@@ -150,20 +151,61 @@
  *   qrData: string,
  *   fgColor?: string,
  *   bgColor?: string
- * }} QrElement
+ * }} QrcodeElement
  */
 
 /**
  * @typedef {BaseElement & {
- *   dividerStyle?: 'solid'|'dashed'|'dotted',
- *   color?: string,
- *   thickness?: number
- * }} DividerElement
+ *   paths: Array,
+ *   strokeColor?: string,
+ *   strokeWidth?: number
+ * }} DrawingElement
+ */
+
+/**
+ * @typedef {BaseElement & {
+ *   x1: number,
+ *   y1: number,
+ *   x2: number,
+ *   y2: number,
+ *   stroke?: string,
+ *   strokeWidth?: number,
+ *   arrowStart?: string,
+ *   arrowEnd?: string
+ * }} LineElement
+ */
+
+/**
+ * @typedef {BaseElement & {
+ *   content: string,
+ *   fillOverride?: string|null,
+ *   strokeOverride?: string|null
+ * }} SvgElement
+ */
+
+/**
+ * @typedef {BaseElement & {
+ *   timelineStart?: string,
+ *   timelineEnd?: string,
+ *   startDate?: string,
+ *   endDate?: string,
+ *   events?: Array,
+ *   items?: Array
+ * }} TimelineElement
+ */
+
+/**
+ * @typedef {BaseElement & {
+ *   gameType?: string,
+ *   gameStatus?: string,
+ *   backgroundColor?: string,
+ *   accentColor?: string
+ * }} GameElement
  */
 
 /**
  * Union of all concrete element types.
- * @typedef {TextElement|ImageElement|ShapeElement|CodeElement|LatexElement|HtmlElement|MarkdownElement|ChartElement|VideoElement|AudioElement|TableElement|IconElement|CalloutElement|QrElement|DividerElement} SlideElement
+ * @typedef {TextElement|ImageElement|ShapeElement|CodeElement|LatexElement|HtmlElement|MarkdownElement|ChartElement|VideoElement|AudioElement|TableElement|IconElement|CalloutElement|QrcodeElement|DrawingElement|LineElement|SvgElement|TimelineElement|GameElement} SlideElement
  */
 
 // ────────────────────────────────────────────────────────────────────────────

@@ -1,3 +1,5 @@
+import { buildGameElementDefaults } from '../constants/game-element-types-constants.js'
+
 /**
  * Default property values for each element type.
  * Used by createElement() in element-factory.js.
@@ -224,92 +226,7 @@ svg.selectAll('circle').data(data).join('circle')
     events: [],
     items: [],
   },
-  game: {
-    type: 'game',
-    width: 640,
-    height: 480,
-    zIndex: 5,
-    backgroundColor: '#1a1a2e',
-    accentColor: '#6366f1',
-    fontFamily: 'sans-serif',
-    showSoundEffects: true,
-    gameStatus: 'setup',
-    'name-picker': {
-      pickerMode: 'wheel',
-      items: ['Học sinh 1', 'Học sinh 2', 'Học sinh 3', 'Học sinh 4',
-              'Học sinh 5', 'Học sinh 6', 'Học sinh 7', 'Học sinh 8'],
-      wheelSegments: 8,
-      wheelColors: ['#FF5722', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#00BCD4', '#FF9800', '#795548'],
-      diceCount: 2,
-      weighted: false,
-      excludeAfterPick: true,
-      animationDuration: 2500,
-    },
-    'hot-potato': {
-      title: 'Hot Potato Quiz',
-      questions: [],
-      currentQuestion: 0,
-      allowLate: false,
-      showLeaderboard: true,
-      shuffleQuestions: false,
-    },
-    'jeopardy': {
-      title: 'Jeopardy',
-      teams: [],
-      categories: [],
-      questions: {},
-      dailyDouble: [],
-    },
-    'four-corners': {
-      cornerCount: 4,
-      eliminateMode: 'wrong',
-      showTimer: true,
-    },
-    'relay-race': {
-      questionsPerRound: 4,
-      shuffleTeams: true,
-      passOnWrong: true,
-    },
-    'trivia-champ': {
-      rounds: [],
-      lightningRound: { enabled: false, timePerQ: 10 },
-      jackpotRound: { enabled: false, multiplier: 2 },
-    },
-    'scattergories': {
-      timePerRound: 60,
-      letterMode: 'random',
-      categories: [],
-      scoring: 'unique',
-    },
-    'poll': {
-      title: 'Live Poll',
-      prompt: 'What do you think?',
-      options: [
-        { id: 'option-a', text: 'Option A' },
-        { id: 'option-b', text: 'Option B' },
-      ],
-      showResults: true,
-      allowVoteChange: true,
-      timerDuration: 30,
-    },
-    'word-cloud': {
-      title: 'Word Cloud',
-      prompt: 'Share one word or short phrase',
-      maxPhraseLength: 40,
-      maxSubmissionsPerPlayer: 5,
-      displayLimit: 50,
-      timerDuration: 30,
-    },
-    'matching': {
-      title: 'Matching',
-      prompt: 'Match each item to its answer',
-      pairs: [
-        { promptId: 'prompt-1', prompt: 'Term 1', targetId: 'target-1', target: 'Definition 1' },
-        { promptId: 'prompt-2', prompt: 'Term 2', targetId: 'target-2', target: 'Definition 2' },
-      ],
-      timerDuration: 60,
-    },
-  },
+  game: buildGameElementDefaults(),
 }
 
 // Default position for each type (can be overridden)

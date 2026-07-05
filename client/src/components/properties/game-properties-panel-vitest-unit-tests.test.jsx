@@ -109,7 +109,7 @@ describe('GameProperties — renders all tabs', () => {
     expect(html).toContain('Scoring')
   })
 
-  it('renders game type selector with all 7 game types', () => {
+  it('renders game type selector with all 10 game types', () => {
     const el = makeGameElement('name-picker')
     const html = renderToString(<GameProperties element={el} onUpdate={onUpdate} onDelete={() => {}} />)
     GAME_TYPES.all.forEach(gt => {
@@ -196,7 +196,7 @@ describe('GameProperties — onUpdate interactions', () => {
   })
 })
 
-describe('GameProperties — all 7 game types render their section', () => {
+describe('GameProperties — all 10 game types render their section', () => {
   let onUpdate
 
   beforeEach(() => {

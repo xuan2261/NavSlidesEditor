@@ -4,11 +4,32 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ELEMENT_DEFAULTS, DEFAULT_POSITIONS } from '../data/element-defaults'
-import { GAME_TYPES, DEFAULT_GAME_COLORS, createGameElement, createQuestion, createTeam, resetTeamCounter } from '../constants/game-element-types-constants'
+import {
+  GAME_TYPES,
+  DEFAULT_GAME_COLORS,
+  GAME_BASE_DEFAULTS,
+  GAME_TYPE_DEFAULTS,
+  createGameElement,
+  createQuestion,
+  createTeam,
+  resetTeamCounter,
+} from '../constants/game-element-types-constants'
 
 describe('GAME_TYPES constants', () => {
-  it('exports all 7 game type keys', () => {
-    const expected = ['name-picker', 'hot-potato', 'jeopardy', 'four-corners', 'relay-race', 'trivia-champ', 'scattergories']
+  it('exports all 10 game type keys', () => {
+    const expected = [
+      'name-picker',
+      'hot-potato',
+      'jeopardy',
+      'four-corners',
+      'relay-race',
+      'trivia-champ',
+      'scattergories',
+      'poll',
+      'word-cloud',
+      'matching',
+    ]
+    expect(GAME_TYPES.all).toHaveLength(10)
     expected.forEach(gt => {
       expect(GAME_TYPES).toHaveProperty(gt)
       expect(GAME_TYPES[gt]).toBe(gt)
@@ -43,7 +64,7 @@ describe('ELEMENT_DEFAULTS.game — base schema', () => {
     expect(ELEMENT_DEFAULTS.game.type).toBe('game')
   })
 
-  it('game has all 7 gameTypes', () => {
+  it('game has all 10 gameTypes', () => {
     GAME_TYPES.all.forEach(gt => {
       expect(ELEMENT_DEFAULTS.game[gt]).toBeDefined()
     })
@@ -234,8 +255,7 @@ describe('createGameElement factory', () => {
   })
 
   it('creates element with correct gameType', () => {
-    const gameTypes = ['name-picker', 'hot-potato', 'jeopardy', 'four-corners', 'relay-race', 'trivia-champ', 'scattergories']
-    gameTypes.forEach(gt => {
+    GAME_TYPES.all.forEach(gt => {
       const el = createGameElement(gt)
       expect(el.gameType).toBe(gt)
     })
@@ -311,6 +331,33 @@ describe('createGameElement factory', () => {
     expect(el.height).toBe(600)
     expect(el.gameType).toBe('name-picker')
     expect(el.gameStatus).toBe('setup')
+  })
+
+  it('matches base defaults plus subtype defaults plus overrides', () => {
+    for (const gameType of GAME_TYPES.all) {
+      const overrides = { width: 777 }
+      expect(createGameElement(gameType, overrides)).toEqual({
+        ...structuredClone(GAME_BASE_DEFAULTS),
+        gameType,
+        ...structuredClone(GAME_TYPE_DEFAULTS[gameType]),
+        ...overrides,
+      })
+    }
+  })
+
+  it('does not share mutable nested defaults between created elements', () => {
+    const firstNamePicker = createGameElement('name-picker')
+    const secondNamePicker = createGameElement('name-picker')
+    firstNamePicker.items.push('Mutated')
+    firstNamePicker.wheelColors.push('#000000')
+    expect(secondNamePicker.items).not.toContain('Mutated')
+    expect(secondNamePicker.wheelColors).not.toContain('#000000')
+
+    const firstTrivia = createGameElement('trivia-champ')
+    const secondTrivia = createGameElement('trivia-champ')
+    firstTrivia.lightningRound.enabled = true
+    expect(secondTrivia.lightningRound.enabled).toBe(false)
+    expect(GAME_TYPE_DEFAULTS['trivia-champ'].lightningRound.enabled).toBe(false)
   })
 })
 

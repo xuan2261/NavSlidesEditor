@@ -2,7 +2,7 @@
  * Game element type constants for NavSlides editor.
  */
 
-// All 7 game types as constants
+// All game types as constants
 export const GAME_TYPES = {
   'name-picker': 'name-picker',
   'hot-potato': 'hot-potato',
@@ -27,6 +27,108 @@ export const DEFAULT_GAME_COLORS = {
     '#6366f1', '#ec4899', '#10b981', '#f59e0b',
     '#3b82f6', '#8b5cf6', '#14b8a6', '#f97316',
   ],
+}
+
+export const GAME_BASE_DEFAULTS = {
+  type: 'game',
+  width: 640,
+  height: 480,
+  zIndex: 5,
+  backgroundColor: '#1a1a2e',
+  accentColor: '#6366f1',
+  fontFamily: 'sans-serif',
+  showSoundEffects: true,
+  gameStatus: 'setup',
+}
+
+export const GAME_TYPE_DEFAULTS = {
+  'name-picker': {
+    pickerMode: 'wheel',
+    items: ['Học sinh 1', 'Học sinh 2', 'Học sinh 3', 'Học sinh 4',
+            'Học sinh 5', 'Học sinh 6', 'Học sinh 7', 'Học sinh 8'],
+    wheelSegments: 8,
+    wheelColors: DEFAULT_GAME_COLORS.wheelColors,
+    diceCount: 2,
+    weighted: false,
+    excludeAfterPick: true,
+    animationDuration: 2500,
+  },
+  'hot-potato': {
+    title: 'Hot Potato Quiz',
+    questions: [],
+    currentQuestion: 0,
+    allowLate: false,
+    showLeaderboard: true,
+    shuffleQuestions: false,
+  },
+  'jeopardy': {
+    title: 'Jeopardy',
+    teams: [],
+    categories: [],
+    questions: {},
+    dailyDouble: [],
+  },
+  'four-corners': {
+    cornerCount: 4,
+    eliminateMode: 'wrong',
+    showTimer: true,
+  },
+  'relay-race': {
+    questionsPerRound: 4,
+    shuffleTeams: true,
+    passOnWrong: true,
+  },
+  'trivia-champ': {
+    rounds: [],
+    lightningRound: { enabled: false, timePerQ: 10 },
+    jackpotRound: { enabled: false, multiplier: 2 },
+  },
+  'scattergories': {
+    timePerRound: 60,
+    letterMode: 'random',
+    categories: [],
+    scoring: 'unique',
+  },
+  'poll': {
+    title: 'Live Poll',
+    prompt: 'What do you think?',
+    options: [
+      { id: 'option-a', text: 'Option A' },
+      { id: 'option-b', text: 'Option B' },
+    ],
+    showResults: true,
+    allowVoteChange: true,
+    timerDuration: 30,
+  },
+  'word-cloud': {
+    title: 'Word Cloud',
+    prompt: 'Share one word or short phrase',
+    maxPhraseLength: 40,
+    maxSubmissionsPerPlayer: 5,
+    displayLimit: 50,
+    timerDuration: 30,
+  },
+  'matching': {
+    title: 'Matching',
+    prompt: 'Match each item to its answer',
+    pairs: [
+      { promptId: 'prompt-1', prompt: 'Term 1', targetId: 'target-1', target: 'Definition 1' },
+      { promptId: 'prompt-2', prompt: 'Term 2', targetId: 'target-2', target: 'Definition 2' },
+    ],
+    timerDuration: 60,
+  },
+}
+
+export function cloneGameDefaults(value) {
+  return structuredClone(value)
+}
+
+export function buildGameElementDefaults() {
+  const defaults = cloneGameDefaults(GAME_BASE_DEFAULTS)
+  for (const gameType of GAME_TYPES.all) {
+    defaults[gameType] = cloneGameDefaults(GAME_TYPE_DEFAULTS[gameType])
+  }
+  return defaults
 }
 
 // Factory: create a question object for quiz games
@@ -63,100 +165,10 @@ export function resetTeamCounter() { _teamCounter = 0 }
 
 // Factory: create a game element with defaults merged
 export function createGameElement(gameType = 'name-picker', overrides = {}) {
-  const base = {
-    type: 'game',
-    gameType,
-    width: 640,
-    height: 480,
-    zIndex: 5,
-    backgroundColor: '#1a1a2e',
-    accentColor: '#6366f1',
-    fontFamily: 'sans-serif',
-    showSoundEffects: true,
-    gameStatus: 'setup',
-  }
-
-  const typeDefaults = {
-    'name-picker': {
-      pickerMode: 'wheel',
-      items: ['Học sinh 1', 'Học sinh 2', 'Học sinh 3', 'Học sinh 4',
-              'Học sinh 5', 'Học sinh 6', 'Học sinh 7', 'Học sinh 8'],
-      wheelSegments: 8,
-      wheelColors: [...DEFAULT_GAME_COLORS.wheelColors],
-      diceCount: 2,
-      weighted: false,
-      excludeAfterPick: true,
-      animationDuration: 2500,
-    },
-    'hot-potato': {
-      title: 'Hot Potato Quiz',
-      questions: [],
-      currentQuestion: 0,
-      allowLate: false,
-      showLeaderboard: true,
-      shuffleQuestions: false,
-    },
-    'jeopardy': {
-      title: 'Jeopardy',
-      teams: [],
-      categories: [],
-      questions: {},
-      dailyDouble: [],
-    },
-    'four-corners': {
-      cornerCount: 4,
-      eliminateMode: 'wrong',
-      showTimer: true,
-    },
-    'relay-race': {
-      questionsPerRound: 4,
-      shuffleTeams: true,
-      passOnWrong: true,
-    },
-    'trivia-champ': {
-      rounds: [],
-      lightningRound: { enabled: false, timePerQ: 10 },
-      jackpotRound: { enabled: false, multiplier: 2 },
-    },
-    'scattergories': {
-      timePerRound: 60,
-      letterMode: 'random',
-      categories: [],
-      scoring: 'unique',
-    },
-    'poll': {
-      title: 'Live Poll',
-      prompt: 'What do you think?',
-      options: [
-        { id: 'option-a', text: 'Option A' },
-        { id: 'option-b', text: 'Option B' },
-      ],
-      showResults: true,
-      allowVoteChange: true,
-      timerDuration: 30,
-    },
-    'word-cloud': {
-      title: 'Word Cloud',
-      prompt: 'Share one word or short phrase',
-      maxPhraseLength: 40,
-      maxSubmissionsPerPlayer: 5,
-      displayLimit: 50,
-      timerDuration: 30,
-    },
-    'matching': {
-      title: 'Matching',
-      prompt: 'Match each item to its answer',
-      pairs: [
-        { promptId: 'prompt-1', prompt: 'Term 1', targetId: 'target-1', target: 'Definition 1' },
-        { promptId: 'prompt-2', prompt: 'Term 2', targetId: 'target-2', target: 'Definition 2' },
-      ],
-      timerDuration: 60,
-    },
-  }
-
   return {
-    ...base,
-    ...(typeDefaults[gameType] || typeDefaults['name-picker']),
+    ...cloneGameDefaults(GAME_BASE_DEFAULTS),
+    gameType,
+    ...cloneGameDefaults(GAME_TYPE_DEFAULTS[gameType] || GAME_TYPE_DEFAULTS['name-picker']),
     ...overrides,
   }
 }

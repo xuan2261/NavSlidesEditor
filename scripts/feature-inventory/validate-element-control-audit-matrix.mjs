@@ -11,7 +11,25 @@ const REPORT_PATH = resolve(
 )
 const ELEMENT_DEFAULTS_PATH = resolve(HERE, '../../client/src/data/element-defaults.js')
 
-const STATUSES = new Set(['works', 'partial', 'broken', 'export-gap'])
+const STATUSES = new Set([
+  'works',
+  'partial',
+  'broken',
+  'export-gap',
+  'implemented',
+  'fallback',
+  'accepted-limit',
+  'not-applicable',
+])
+const FAILING_STATUSES = new Set(['missing', 'broken'])
+const CAPABILITY_SURFACES = new Set([
+  'create',
+  'canvas',
+  'properties',
+  'formatRibbon',
+  'htmlExport',
+  'pptxExport',
+])
 const SECURITY_FIELDS = [
   'trustBoundary',
   'inputSource',
@@ -99,6 +117,16 @@ export function validateElementControlAuditMatrix({
     }
     if (!canonicalSet.has(row.element)) errors.push(`row ${row.id} references unknown element`)
     if (!STATUSES.has(row.status)) errors.push(`row ${row.id} has invalid status ${row.status}`)
+    if (FAILING_STATUSES.has(row.status)) errors.push(`row ${row.id} has failing status ${row.status}`)
+    if (row.control === 'element-capability-policy' && CAPABILITY_SURFACES.has(row.surface)) {
+      for (const field of ['policy', 'testCoverage', 'decision']) {
+        if (field === 'testCoverage') continue
+        if (!hasText(row[field])) errors.push(`row ${row.id} missing ${field}`)
+      }
+      if (row.status === 'accepted-limit' && !hasText(row.alternateSurface)) {
+        errors.push(`row ${row.id} accepted-limit missing alternateSurface`)
+      }
+    }
     if (row.id && row.id !== rowKey(row)) {
       errors.push(`row ${row.id} id must match element.control.surface`)
     }
@@ -170,7 +198,6 @@ export function renderElementControlReport({ rows, result }) {
       `| \`${id}\` | ${row.status} | ${asArray(row.evidence).join('<br>')} | ${asArray(row.testCoverage).join('<br>')} | ${row.decision} |`
     )
   }
-  lines.push('')
   return `${lines.join('\n')}\n`
 }
 

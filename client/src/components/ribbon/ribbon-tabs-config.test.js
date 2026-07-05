@@ -3,7 +3,13 @@
 // Anime.js inside Insert). Transitions → Replace, Animations → Sparkles.
 
 import { describe, expect, it } from 'vitest'
-import { RIBBON_TABS, formatTabLabel } from './ribbon-tabs-config'
+import { ELEMENT_DEFAULTS } from '../../data/element-defaults'
+import {
+  FORMAT_RIBBON_CONTEXTUAL_TYPES,
+  FORMAT_RIBBON_ELEMENT_POLICY,
+  RIBBON_TABS,
+  formatTabLabel,
+} from './ribbon-tabs-config'
 
 function iconName(tab) {
   // lucide-react@0.441 sets Component.displayName = iconName
@@ -62,5 +68,42 @@ describe('formatTabLabel', () => {
     expect(formatTabLabel(null)).toBe('Format')
     expect(formatTabLabel(undefined)).toBe('Format')
     expect(formatTabLabel('something-new')).toBe('Format')
+  })
+
+  it('has an explicit Format ribbon policy for every canonical element type', () => {
+    expect(Object.keys(FORMAT_RIBBON_ELEMENT_POLICY).sort()).toEqual(
+      Object.keys(ELEMENT_DEFAULTS).sort()
+    )
+  })
+
+  it('labels every canonical element by dedicated label or documented default', () => {
+    for (const type of Object.keys(ELEMENT_DEFAULTS)) {
+      expect(formatTabLabel(type)).toBe(FORMAT_RIBBON_ELEMENT_POLICY[type].label)
+    }
+  })
+
+  it('documents alternate surfaces for accepted Format ribbon limits', () => {
+    const verifiedAlternateSurfaces = [
+      'PropertiesPanel',
+      'direct canvas editing',
+      'Home typography controls',
+      'game PropertiesPanel',
+    ]
+
+    for (const [type, policy] of Object.entries(FORMAT_RIBBON_ELEMENT_POLICY)) {
+      expect(['contextual-controls', 'accepted-limit']).toContain(policy.status)
+      if (policy.status === 'accepted-limit') {
+        expect(
+          verifiedAlternateSurfaces.some((surface) => policy.alternateSurface.includes(surface)),
+          `${type} accepted-limit must name a verified alternate surface`
+        ).toBe(true)
+      }
+    }
+  })
+
+  it('keeps contextual control coverage explicit', () => {
+    expect(FORMAT_RIBBON_CONTEXTUAL_TYPES.sort()).toEqual(
+      ['shape', 'line', 'image', 'chart', 'table', 'video', 'audio', 'code'].sort()
+    )
   })
 })

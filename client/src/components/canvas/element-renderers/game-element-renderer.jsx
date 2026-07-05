@@ -4,8 +4,7 @@
  * Factory that dispatches to per-game-type sub-renderers.
  * Compatible with renderToString (hooks only in lazy-loaded interactive sub-modules).
  *
- * Supports 7 game types: name-picker, hot-potato, jeopardy, four-corners,
- * relay-race, trivia-champ, scattergories.
+ * Supports all game types from GAME_TYPES.
  *
  * Renders in two modes:
  *  - Edit mode  (isPresenting !== true): preview card with setup label

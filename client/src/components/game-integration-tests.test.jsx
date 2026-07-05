@@ -68,7 +68,7 @@ describe('Game Element — creation to render pipeline', () => {
     expect(html.toLowerCase()).toContain('name')
   })
 
-  it('all 7 game types render without errors', () => {
+  it('all 10 game types render without errors', () => {
     GAME_TYPES.all.forEach(gt => {
       const el = createGameElement(gt)
       expect(() => render(el)).not.toThrow()

@@ -10,6 +10,34 @@ import {
 } from './export-pptx-basic-renderers'
 import { recordPptxExportWarning, scaleElementBounds } from './export-pptx-core'
 import { addFallbackElement } from './export-pptx-fallback-renderer'
+import { getPptxElementExportPolicy } from 'revealjs-shared'
+
+const NATIVE_RENDERERS = {
+  text: (slide, element, bounds, { designTokens }) =>
+    addTextElement(slide, element, bounds, designTokens),
+  image: (slide, element, bounds, { resolution, layout }) =>
+    addImageElement(slide, element, bounds, resolution, layout),
+  shape: (slide, element, bounds, { designTokens }) =>
+    addShapeElement(slide, element, bounds, designTokens),
+  line: (slide, element, bounds, { resolution, layout, designTokens }) =>
+    addLineElement(slide, element, bounds, resolution, layout, designTokens),
+  callout: (slide, element, bounds, { designTokens }) =>
+    addCalloutElement(slide, element, bounds, designTokens),
+  table: (slide, element, bounds, { designTokens }) =>
+    addTableElement(slide, element, bounds, designTokens),
+  code: (slide, element, bounds, { warnings, slideNumber }) => {
+    if (Array.isArray(element.walkthroughSteps) && element.walkthroughSteps.length > 0) {
+      recordPptxExportWarning(warnings, {
+        element,
+        slideNumber,
+        message: `Slide ${slideNumber}: code walkthrough steps exported as static readable code`,
+        fallback: 'static-code',
+      })
+    }
+    addCodeElement(slide, element, bounds)
+  },
+  chart: (slide, element, bounds, { pptx }) => addChartElement(slide, element, bounds, pptx),
+}
 
 export async function addElementToPptxSlide({
   slide,
@@ -37,42 +65,19 @@ export async function addElementToPptxSlide({
   }
 
   try {
-    switch (element.type) {
-      case 'text':
-        addTextElement(slide, element, bounds, designTokens)
-        break
-      case 'image':
-        addImageElement(slide, element, bounds, resolution, layout)
-        break
-      case 'shape':
-        addShapeElement(slide, element, bounds, designTokens)
-        break
-      case 'line':
-        addLineElement(slide, element, bounds, resolution, layout, designTokens)
-        break
-      case 'callout':
-        addCalloutElement(slide, element, bounds, designTokens)
-        break
-      case 'table':
-        addTableElement(slide, element, bounds, designTokens)
-        break
-      case 'code':
-        if (Array.isArray(element.walkthroughSteps) && element.walkthroughSteps.length > 0) {
-          recordPptxExportWarning(warnings, {
-            element,
-            slideNumber,
-            message: `Slide ${slideNumber}: code walkthrough steps exported as static readable code`,
-            fallback: 'static-code',
-          })
-        }
-        addCodeElement(slide, element, bounds)
-        break
-      case 'chart':
-        addChartElement(slide, element, bounds, pptx)
-        break
-      default:
-        await addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens)
-        break
+    const policy = getPptxElementExportPolicy(element.type)
+    const nativeRenderer = policy.mode === 'native' ? NATIVE_RENDERERS[element.type] : null
+    if (nativeRenderer) {
+      nativeRenderer(slide, element, bounds, {
+        resolution,
+        layout,
+        pptx,
+        warnings,
+        slideNumber,
+        designTokens,
+      })
+    } else {
+      await addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens)
     }
   } catch (error) {
     recordPptxExportWarning(warnings, {

@@ -608,6 +608,253 @@
       "depthResolutionPhase": null
     },
     {
+      "id": "control.properties.panel",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/PropertiesPanel.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.animations",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.contextual-format",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.design",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.home",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.insert",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.transitions",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.view",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.selection-pane",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/SelectionPane.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.slide-panel",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/SlidePanel.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.status.view-mode",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/layout/StatusBar.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.status.zoom",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/layout/StatusBar.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.timeline-animation",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/AnimationTimeline.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
       "id": "control.view.selectionPane",
       "category": "control",
       "risk": "low",
@@ -2062,13 +2309,33 @@
       "depthStatus": "OK",
       "depthOwner": null,
       "depthResolutionPhase": null
+    },
+    {
+      "id": "teaching.discovery",
+      "category": "teaching",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "a11y"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     }
   ],
   "orphans": [],
   "summary": {
-    "total": 100,
-    "verified": 100,
-    "PASS": 100,
+    "total": 114,
+    "verified": 114,
+    "PASS": 114,
     "DEPTH-WARN": 0
   }
 }

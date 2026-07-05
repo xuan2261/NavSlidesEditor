@@ -2,6 +2,8 @@
 
 _Generated: local run_
 
+> ⚠️ **Run results stale or missing** — statuses derived without a fresh test run. PASS counts may be optimistic; regenerate with a fresh `--reporter=json` run.
+
 Verified (PASS only): 114/114 (100%)  |  PASS: 114
 
 ## canvas
