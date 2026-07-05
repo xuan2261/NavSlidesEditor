@@ -2,126 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, ChevronLeft, ChevronRight, CheckSquare, Square, Plus } from 'lucide-react'
 import { Button } from '../../components/ui'
 import { isBackdropClick } from '../../lib/utils'
-
-/**
- * Lightweight slide thumbnail renderer — avoids full SlideCanvas
- * which requires editor-specific callbacks.
- */
-function getThumbnailFrameStyle(width, height, bgStyle, style) {
-  return { width, height, position: 'relative', overflow: 'hidden', ...bgStyle, ...style }
-}
-
-function getThumbnailElementStyle(el) {
-  return {
-    position: 'absolute',
-    left: el.x,
-    top: el.y,
-    width: el.width,
-    height: el.height,
-    overflow: 'hidden',
-    zIndex: el.zIndex || 1,
-  }
-}
-
-function getThumbnailTextStyle(el) {
-  return {
-    color: el.color || '#fff',
-  }
-}
-
-function getThumbnailImageStyle(el) {
-  return {
-    objectFit: el.objectFit || 'contain',
-  }
-}
-
-function SlideThumbnail({ slide, width = 960, height = 540, style }) {
-  if (!slide) return null
-  const bg = slide.background
-  const bgStyle = !bg
-    ? { backgroundColor: 'var(--bg-card)' }
-    : bg.type === 'color'
-      ? { backgroundColor: bg.color || 'var(--bg-card)' }
-      : bg.type === 'gradient'
-        ? { background: bg.gradient || 'var(--bg-card)' }
-        : bg.type === 'image' && bg.image
-          ? {
-              backgroundImage: `url(${bg.image})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }
-          : { backgroundColor: 'var(--bg-card)' }
-
-  return (
-    <div className="relative overflow-hidden" style={getThumbnailFrameStyle(width, height, bgStyle, style)}>
-      {(slide.elements || []).map((el) => (
-        <div
-          key={el.id}
-          style={getThumbnailElementStyle(el)}
-        >
-          {el.type === 'text' && (
-            <div
-              className="text-sm leading-[1.4] break-words"
-              style={getThumbnailTextStyle(el)}
-              dangerouslySetInnerHTML={{ __html: el.content || '' }}
-            />
-          )}
-          {el.type === 'image' && (
-            <img
-              src={el.src}
-              alt=""
-              className="w-full h-full block"
-              style={getThumbnailImageStyle(el)}
-              draggable={false}
-            />
-          )}
-          {el.type === 'shape' && (
-            <div className="w-full h-full flex items-center justify-center">
-              <svg viewBox={el.viewBox || '0 0 100 100'} className="w-full h-full">
-                <path
-                  d={el.path || ''}
-                  fill={el.fill || '#6366f1'}
-                  stroke={el.stroke || 'none'}
-                  strokeWidth={el.strokeWidth || 0}
-                />
-              </svg>
-            </div>
-          )}
-          {el.type === 'code' && (
-            <pre className="m-0 p-3 bg-black/60 text-lime-200 rounded-md overflow-auto w-full h-full font-mono text-xs">
-              <code>{el.content || ''}</code>
-            </pre>
-          )}
-          {el.type === 'latex' && (
-            <div className="w-full h-full bg-black/30 flex items-center justify-center text-white font-serif italic text-lg">
-              TeX: {(el.content || '').substring(0, 60)}
-            </div>
-          )}
-          {el.type === 'html' && (
-            <div className="w-full h-full bg-primary/15 flex items-center justify-center text-white/50 text-sm">
-              &lt;/&gt; HTML
-            </div>
-          )}
-          {el.type === 'chart' && (
-            <div className="w-full h-full bg-primary/15 flex items-center justify-center text-white/50 text-sm">
-              📊 Chart
-            </div>
-          )}
-          {el.type === 'table' && (
-            <div className="w-full h-full bg-primary/10 flex items-center justify-center text-white/40 text-sm">
-              📋 Table
-            </div>
-          )}
-          {el.type === 'markdown' && (
-            <div className="w-full h-full bg-white/5 flex items-center justify-center text-white/50 font-bold text-sm">
-              MD
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
+import TemplateSlideThumbnail from './TemplateSlideThumbnail'
 
 export default function TemplatePreview({
   template,
@@ -217,7 +98,7 @@ export default function TemplatePreview({
                 <div
                   className="w-[960px] h-[540px] scale-75 origin-center relative"
                 >
-                  <SlideThumbnail slide={slides[currentSlide]} />
+                  <TemplateSlideThumbnail slide={slides[currentSlide]} />
                 </div>
               ) : (
                 <div className="text-white">No slides available</div>
@@ -279,7 +160,7 @@ export default function TemplatePreview({
                     >
                       <div className="w-full aspect-video relative pointer-events-none overflow-hidden">
                         <div className="scale-[0.22] origin-top-left w-[960px] h-[540px]">
-                          <SlideThumbnail slide={s} />
+                          <TemplateSlideThumbnail slide={s} />
                         </div>
                       </div>
                       <div className="p-2 flex justify-between items-center bg-black/50">

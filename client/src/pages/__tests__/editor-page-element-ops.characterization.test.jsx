@@ -164,6 +164,26 @@ describe('EditorPage element-ops characterization', () => {
     expect(ids).toContain('el-a')
   })
 
+  it('does NOT mutate selected elements through keyboard shortcuts when the slide is locked', async () => {
+    h.seed.slides[0].locked = true
+    renderPage()
+    await screen.findByDisplayValue('Char Deck')
+
+    await selectElements(['el-a'])
+    await pressKey({ key: 'Delete' })
+    await pressKey({ key: 'ArrowRight' })
+    await pressKey({ key: 'v', ctrlKey: true })
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 1700))
+    })
+
+    const snap = lastSaved() || h.seed
+    const a = snap.slides[0].elements.find((e) => e.id === 'el-a')
+    expect(a).toBeTruthy()
+    expect(a.x).toBe(80)
+    expect(snap.slides[0].elements).toHaveLength(2)
+  })
+
   it('[cap:shortcut.group] groups two selected elements with a shared groupId (Ctrl+G)', async () => {
     renderPage()
     await screen.findByDisplayValue('Char Deck')

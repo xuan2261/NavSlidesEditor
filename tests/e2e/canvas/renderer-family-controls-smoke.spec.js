@@ -64,7 +64,7 @@ test.describe('renderer family shared controls smoke', () => {
 
       await openSelectionPane(page)
       await page.getByTestId(`selection-pane-toggle-visibility-${element.id}`).click()
-      await expect(slideElement(page, element.id)).toHaveCount(0)
+      await expect(slideElement(page, element.id)).toBeHidden()
       await page.getByTestId(`selection-pane-toggle-visibility-${element.id}`).click()
       await expect(slideElement(page, element.id)).toBeVisible()
       await page.getByTestId(`selection-pane-toggle-lock-${element.id}`).click()

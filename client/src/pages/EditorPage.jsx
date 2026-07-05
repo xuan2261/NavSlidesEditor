@@ -25,11 +25,12 @@ import { presentInWindow } from '../utils/generateHTML'
 import { useExportActions } from '../hooks/use-export-actions'
 import { useAiActions } from '../hooks/use-ai-actions'
 import { resolveActiveSlide, mapActiveSlide } from '../utils/active-slide-mapper'
-import { buildSelectionUpdates } from '../utils/element-update-fanout'
+import { buildSelectionUpdates, isLockedElementAllowedUpdate } from '../utils/element-update-fanout'
 import { computeMultiZOrderStep, computeMultiZOrderEdge } from '../utils/z-order-step'
 import { pushHistory } from '../utils/history-stack'
 import { reconcileSelectionAfterHistory } from '../utils/history-selection-reconciler'
 import { resolveLegacyEditorShortcut } from '../utils/legacy-editor-keydown-resolver'
+import { showError, showNotice } from '../utils/app-feedback'
 import {
   getSelectionIdsForActiveSlideElement,
   hasBlockedGroupMutation,
@@ -681,7 +682,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         mapActive(prev, (s) => ({
           ...s,
           elements: (s.elements || []).map((el) =>
-            el.id === id ? { ...el, ...invalidatePptxFitMetaForUpdates(el, updates) } : el
+            el.id === id && ((!s.locked && !el.locked) || isLockedElementAllowedUpdate(updates))
+              ? { ...el, ...invalidatePptxFitMetaForUpdates(el, updates) }
+              : el
           ),
         }))
       )
@@ -691,6 +694,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
 
   const deleteElement = useCallback(
     (id) => {
+      if (activeSlide?.locked) return
       const target = activeSlide?.elements?.find((el) => el.id === id)
       if (target?.locked) return
       setPresentation((prev) =>
@@ -813,6 +817,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         presentation?.slides[currentSlideIndexRef.current],
         elementId
       )
+      if (activeSlideRef.current?.locked || element?.locked) return
       if (!element) return
       setActiveTab('home')
       setEditingElementId(elementId)
@@ -870,6 +875,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     (dir) => {
       const ids = selectedElementIdsRef.current
       if (!ids?.length) return
+      if (activeSlideRef.current?.locked) return
       if (hasBlockedGroupMutation(activeSlideRef.current, ids)) return
       const allowedIds = ids.filter((id) => {
         const el = (activeSlideRef.current?.elements || []).find((item) => item.id === id)
@@ -892,6 +898,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     (edge) => {
       const ids = selectedElementIdsRef.current
       if (!ids?.length) return
+      if (activeSlideRef.current?.locked) return
       if (hasBlockedGroupMutation(activeSlideRef.current, ids)) return
       const allowedIds = ids.filter((id) => {
         const el = (activeSlideRef.current?.elements || []).find((item) => item.id === id)
@@ -1097,14 +1104,17 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   }, [activeSlide, performCopy])
 
   const handlePaste = useCallback(() => {
+    if (activeSlide?.locked) return
     performPaste(clipboard)
-  }, [clipboard, performPaste])
+  }, [activeSlide, clipboard, performPaste])
 
   const handleCut = useCallback(() => {
+    if (activeSlide?.locked) return
     performCut(activeSlide?.elements, selectedElementIds)
   }, [activeSlide, selectedElementIds, performCut])
 
   const handleDuplicate = useCallback(() => {
+    if (activeSlide?.locked) return
     // Use createDuplicateOperation directly — reads current selection from store,
     // matching the original SlideCanvas behavior (no clipboard required).
     // Duplicate intentionally leaves the copy/cut clipboard untouched so a prior
@@ -1265,12 +1275,13 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       // walks slides like PowerPoint's slide pane.
       const ids = selectedElementIdsRef.current
       if (ids.length > 0) {
+        const slide = activeSlideRef.current
+        if (slide?.locked) return
         const step = e.shiftKey ? 1 : 10
         const dx = direction === 'left' ? -step : direction === 'right' ? step : 0
         const dy = direction === 'up' ? -step : direction === 'down' ? step : 0
         if (dx === 0 && dy === 0) return
         e.preventDefault()
-        const slide = activeSlideRef.current
         if (hasBlockedGroupMutation(slide, ids)) return
         // One batched store write per nudge instead of N (one per selected id),
         // so a large multi-selection does not fire N renders per keypress.
@@ -1468,7 +1479,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
                 setShowLiveModal(true)
                 // eslint-disable-next-line unused-imports/no-unused-vars
               } catch (err) {
-                alert('Failed to create live room')
+                showError('Failed to create live room')
               }
             }}
             onAnalytics={() => setShowAnalytics(true)}
@@ -1476,7 +1487,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
               if (selectedElement?.type === 'text' && selectedElement.content) {
                 setShowAICopywriter(true)
               } else {
-                alert('Select a text element first')
+                showNotice('Select a text element first')
               }
             }}
             onAIGenerator={() => setShowAIGenerator(true)}
@@ -1661,9 +1672,16 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
                 onOpenHtmlEditor={openHtmlEditor}
                 onOpenCodeEditor={openCodeEditor}
                 onOpenLatexEditor={openLatexEditor}
-                onAddImage={async (file, dropX, dropY) => {
+                onAddMedia={async (file, dropX, dropY) => {
                   const result = await api.uploadFile(file)
-                  if (result.url) addImageElement(result.url, dropX, dropY)
+                  if (!result.url) return
+                  if (file.type.startsWith('video/')) {
+                    addVideoElement(result.url, dropX, dropY)
+                  } else if (file.type.startsWith('audio/')) {
+                    addAudioElement(result.url, dropX, dropY)
+                  } else {
+                    addImageElement(result.url, dropX, dropY)
+                  }
                 }}
               />
             </div>

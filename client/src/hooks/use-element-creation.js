@@ -69,13 +69,14 @@ export function useElementCreation({
   // is being edited, not the parent.
   const appendElement = useCallback(
     (newEl) => {
+      if (getActiveSlide()?.locked) return null
       setPresentation((prev) =>
         mapActiveSlide(prev, (s) => ({ ...s, elements: [...(s.elements || []), newEl] }))
       )
       setSelectedElementIds([newEl.id])
       return newEl
     },
-    [setPresentation, setSelectedElementIds, mapActiveSlide]
+    [getActiveSlide, setPresentation, setSelectedElementIds, mapActiveSlide]
   )
 
   const addElement = useCallback(
@@ -171,6 +172,7 @@ export function useElementCreation({
 
   const addHtmlElement = useCallback(() => {
     const newEl = addElement('html', { content: DEFAULT_HTML })
+    if (!newEl) return
     setHtmlEditorState({ elementId: newEl.id, content: DEFAULT_HTML })
   }, [addElement, setHtmlEditorState])
 
@@ -183,6 +185,7 @@ export function useElementCreation({
       width: 420,
       height: 280,
     })
+    if (!newEl) return
     setHtmlEditorState({
       elementId: newEl.id,
       embedKind: 'mermaid',
@@ -206,6 +209,7 @@ export function useElementCreation({
     (elementId) => {
       const element = getActiveSlide()?.elements?.find((el) => el.id === elementId)
       if (!element || element.type !== 'html') return
+      if (getActiveSlide()?.locked || element.locked) return
       if (element.embedKind === 'mermaid') {
         setHtmlEditorState({
           elementId,
@@ -241,6 +245,7 @@ export function useElementCreation({
 
   const addCodeElement = useCallback(() => {
     const newEl = addElement('code')
+    if (!newEl) return
     setCodeEditorState({ elementId: newEl.id, content: newEl.content, language: newEl.language })
   }, [addElement, setCodeEditorState])
 
@@ -248,6 +253,7 @@ export function useElementCreation({
     (elementId) => {
       const element = getActiveSlide()?.elements?.find((el) => el.id === elementId)
       if (!element || element.type !== 'code') return
+      if (getActiveSlide()?.locked || element.locked) return
       setCodeEditorState({
         elementId,
         content: element.content || '',
@@ -268,6 +274,7 @@ export function useElementCreation({
 
   const addLatexElement = useCallback(() => {
     const newEl = addElement('latex')
+    if (!newEl) return
     setLatexEditorState({
       elementId: newEl.id,
       content: newEl.content,
@@ -280,6 +287,7 @@ export function useElementCreation({
     (elementId) => {
       const element = getActiveSlide()?.elements?.find((el) => el.id === elementId)
       if (!element || element.type !== 'latex') return
+      if (getActiveSlide()?.locked || element.locked) return
       setLatexEditorState({
         elementId,
         content: element.content || '',
@@ -334,8 +342,24 @@ export function useElementCreation({
     [addElement]
   )
 
-  const addVideoElement = useCallback((src) => addElement('video', { src }), [addElement])
-  const addAudioElement = useCallback((src) => addElement('audio', { src }), [addElement])
+  const addVideoElement = useCallback(
+    (src, dropX, dropY) => {
+      const posOverrides = { src }
+      if (dropX !== undefined) posOverrides.x = Math.max(0, Math.min(480, dropX - 240))
+      if (dropY !== undefined) posOverrides.y = Math.max(0, Math.min(270, dropY - 135))
+      return addElement('video', posOverrides)
+    },
+    [addElement]
+  )
+  const addAudioElement = useCallback(
+    (src, dropX, dropY) => {
+      const posOverrides = { src }
+      if (dropX !== undefined) posOverrides.x = Math.max(0, Math.min(560, dropX - 200))
+      if (dropY !== undefined) posOverrides.y = Math.max(0, Math.min(480, dropY - 30))
+      return addElement('audio', posOverrides)
+    },
+    [addElement]
+  )
 
   const addTableElement = useCallback(
     (rows = 3, cols = 3) => {

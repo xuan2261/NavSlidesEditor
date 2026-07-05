@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { api } from '../utils/api'
 import { Button, ModalShell } from '../components/ui'
+import { confirmUser } from '../utils/app-feedback'
 
 export default function HistoryModal({ presentationId, onRestore, onClose }) {
   const [isOpen, setIsOpen] = useState(true)
@@ -49,20 +50,25 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
   }
 
   const handleRestore = async (snapshotId) => {
-    if (!confirm('Restore this snapshot? Current changes will be overwritten.')) return
-
-    setPendingAction(`restore:${snapshotId}`)
-    setError('')
-    try {
-      const restored = await api.restoreSnapshot(presentationId, snapshotId)
-      onRestore(restored)
-      handleClose()
-    } catch (err) {
-      setError(err.message || 'Failed to restore snapshot.')
-    } finally {
-      setPendingAction('')
-    }
+    confirmUser(
+      'Restore this snapshot? Current changes will be overwritten.',
+      async () => {
+        setPendingAction(`restore:${snapshotId}`)
+        setError('')
+        try {
+          const restored = await api.restoreSnapshot(presentationId, snapshotId)
+          onRestore(restored)
+          handleClose()
+        } catch (err) {
+          setError(err.message || 'Failed to restore snapshot.')
+        } finally {
+          setPendingAction('')
+        }
+      },
+      { title: 'Restore snapshot', confirmLabel: 'Restore', destructive: true }
+    )
   }
+
 
   const handleDelete = async (snapshotId) => {
     setPendingAction(`delete:${snapshotId}`)

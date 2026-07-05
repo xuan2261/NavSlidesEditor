@@ -30,6 +30,7 @@ const COMMON_KEYS = new Set([
   'rotation',
   'opacity',
   'locked',
+  'hidden',
   'fragment',
   'fragmentIndex',
   'fragmentAnimation',
@@ -56,6 +57,14 @@ export function isPureUnlockUpdate(updates) {
   return keys.length === 1 && keys[0] === 'locked' && updates.locked === false
 }
 
+export function isLockedElementAllowedUpdate(updates) {
+  const keys = Object.keys(updates || {})
+  return (
+    isPureUnlockUpdate(updates) ||
+    (keys.length === 1 && keys[0] === 'hidden' && typeof updates.hidden === 'boolean')
+  )
+}
+
 function isLockOnlyUpdate(updates) {
   const keys = Object.keys(updates || {})
   return keys.length === 1 && keys[0] === 'locked'
@@ -63,7 +72,7 @@ function isLockOnlyUpdate(updates) {
 
 function canApplyUpdateToElement(element, updates) {
   if (!element?.locked) return true
-  return isPureUnlockUpdate(updates)
+  return isLockedElementAllowedUpdate(updates)
 }
 
 /**

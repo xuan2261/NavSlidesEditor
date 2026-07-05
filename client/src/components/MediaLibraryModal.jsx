@@ -4,6 +4,7 @@ import { api } from '../utils/api'
 import { searchUnsplash } from '../services/unsplash'
 import { searchGiphy } from '../services/giphy'
 import { Button, ModalShell } from '../components/ui'
+import { confirmUser } from '../utils/app-feedback'
 
 const TYPE_FILTERS = [
   { key: '', label: 'All', icon: null },
@@ -99,16 +100,21 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
 
   async function handleDelete(filename) {
     if (activeTab !== 'local') return
-    if (!confirm('Delete this file?')) return
-    setError('')
-    setStatusMessage('')
-    try {
-      await api.deleteMedia(filename)
-      setMedia((prev) => prev.filter((m) => m.filename !== filename))
-      setStatusMessage('File deleted.')
-    } catch (err) {
-      setError(err.message || 'Delete failed')
-    }
+    confirmUser(
+      'Delete this file?',
+      async () => {
+        setError('')
+        setStatusMessage('')
+        try {
+          await api.deleteMedia(filename)
+          setMedia((prev) => prev.filter((m) => m.filename !== filename))
+          setStatusMessage('File deleted.')
+        } catch (err) {
+          setError(err.message || 'Delete failed')
+        }
+      },
+      { title: 'Delete media file', confirmLabel: 'Delete', destructive: true }
+    )
   }
 
   async function handleInsert(item) {

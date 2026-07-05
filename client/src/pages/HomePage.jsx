@@ -29,6 +29,8 @@ import { api } from '../utils/api'
 import { markdownToSlidesWithWarnings } from '../utils/markdown-import'
 import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../utils/import-project'
 import { summarizePptxImportWarnings } from '../utils/pptx-import-summary'
+import { filterMarketplaceTemplates } from '../utils/template-filters'
+import { showError, showNotice } from '../utils/app-feedback'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
 import { Button, Input, ModalShell, Select } from '../components/ui'
 import SlideThumbnail from '../components/SlideThumbnail'
@@ -519,7 +521,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         setImportProgress(`Converting page ${cur}/${total}...`)
       })
       if (slides.length === 0) {
-        alert('No pages found in PDF')
+        showError('No pages found in PDF')
         return
       }
       if (warnings.length) {
@@ -535,7 +537,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       onOpen(pres.id)
     } catch (err) {
       console.error('PDF import failed:', err)
-      alert('Failed to import PDF: ' + err.message)
+      showError('Failed to import PDF: ' + err.message)
     } finally {
       setImportProgress(null)
     }
@@ -548,7 +550,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       const text = await file.text()
       const { slides, warnings } = markdownToSlidesWithWarnings(text)
       if (slides.length === 0) {
-        alert('No content found in Markdown')
+        showError('No content found in Markdown')
         return
       }
       if (warnings.length) {
@@ -564,7 +566,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       onOpen(pres.id)
     } catch (err) {
       console.error('Markdown import failed:', err)
-      alert('Failed to import Markdown: ' + err.message)
+      showError('Failed to import Markdown: ' + err.message)
     }
   }
 
@@ -576,7 +578,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       const parsed = await parseProjectFile(file)
       const { valid, errors, warnings } = validateProjectFile(parsed)
       if (!valid) {
-        alert('Invalid project file: ' + errors.join(', '))
+        showError('Invalid project file: ' + errors.join(', '))
         return
       }
       if (warnings.length) console.warn('Import warnings:', warnings)
@@ -603,7 +605,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       onOpen(pres.id)
     } catch (err) {
       console.error('Project import failed:', err)
-      alert('Failed to import project: ' + err.message)
+      showError('Failed to import project: ' + err.message)
     } finally {
       setImportProgress(null)
     }
@@ -612,7 +614,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   async function handleImportPptx(file) {
     if (!file) return
     if (!/\.pptx$/i.test(file.name)) {
-      alert('Only .pptx files are supported')
+      showError('Only .pptx files are supported')
       return
     }
 
@@ -670,12 +672,12 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       const warningSummary = summarizePptxImportWarnings(imported)
       if (warningSummary) {
         setImportWarningSummary(warningSummary)
-        alert(warningSummary)
+        showNotice(warningSummary, { title: 'PPTX import completed with warnings' })
       }
       onOpen(pres.id)
     } catch (err) {
       console.error('PPTX import failed:', err)
-      alert('Failed to import PPTX: ' + err.message)
+      showError('Failed to import PPTX: ' + err.message)
     } finally {
       pptxImportRef.current?.es?.close()
       pptxImportRef.current = null
@@ -747,19 +749,11 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   const [marketplaceSearch, setMarketplaceSearch] = useState('')
 
   const filteredMarketplaceTemplates = useMemo(() => {
-    return (marketplaceCategory
-      ? marketplaceData.templates.filter((t) => t.category === marketplaceCategory)
-      : marketplaceData.templates
-    ).filter((t) => {
-      if (!marketplaceSearch.trim()) return true
-      const q = marketplaceSearch.toLowerCase()
-      return (
-        (t.title || '').toLowerCase().includes(q) ||
-        (t.titleVi || '').toLowerCase().includes(q) ||
-        (t.description || '').toLowerCase().includes(q) ||
-        (t.tags || []).some((tag) => tag.toLowerCase().includes(q))
-      )
-    })
+    return filterMarketplaceTemplates(
+      marketplaceData.templates,
+      marketplaceCategory,
+      marketplaceSearch
+    )
   }, [marketplaceCategory, marketplaceData.templates, marketplaceSearch])
 
   useEffect(() => {
@@ -1213,24 +1207,27 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                       ? { background: bg }
                       : { backgroundColor: bg }
                     return (
-                      <div
+                      <article
                         key={tmpl.id}
-                        className={`${DASHBOARD_CARD_CLASS} cursor-pointer`}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => onOpen(tmpl.id, true)}
-                        onKeyDown={(event) => handleKeyboardClick(event, () => onOpen(tmpl.id, true))}
+                        className={`${DASHBOARD_CARD_CLASS} overflow-hidden`}
                       >
-                        <SlideThumbnail id={tmpl.id} bgProp={bgProp} />
-                        <div className="px-4 py-3">
-                          <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
-                            {tmpl.title || 'Untitled Template'}
-                          </h3>
-                          <p className="text-[12px] text-text-secondary truncate">
-                            {tmpl.slideCount} slide{tmpl.slideCount !== 1 ? 's' : ''} &middot;{' '}
-                            {formatDate(tmpl.updatedAt)}
-                          </p>
-                        </div>
+                        <button
+                          type="button"
+                          className="flex w-full cursor-pointer flex-col border-0 bg-transparent p-0 text-left"
+                          aria-label={`Open template ${tmpl.title || 'Untitled Template'}`}
+                          onClick={() => onOpen(tmpl.id, true)}
+                        >
+                          <SlideThumbnail id={tmpl.id} bgProp={bgProp} />
+                          <div className="px-4 py-3">
+                            <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
+                              {tmpl.title || 'Untitled Template'}
+                            </h3>
+                            <p className="text-[12px] text-text-secondary truncate">
+                              {tmpl.slideCount} slide{tmpl.slideCount !== 1 ? 's' : ''} &middot;{' '}
+                              {formatDate(tmpl.updatedAt)}
+                            </p>
+                          </div>
+                        </button>
                         <div className="flex justify-end gap-1 px-3 py-2 border-t border-border">
                           <Button
                             variant="icon"
@@ -1264,7 +1261,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                             <Trash2 size={14} />
                           </Button>
                         </div>
-                      </div>
+                      </article>
                     )
                   })
                 )}
@@ -1484,29 +1481,32 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                           ? { background: bg }
                           : { backgroundColor: bg }
                         return (
-                          <div
+                          <article
                             key={pres.id}
-                            className={`${DASHBOARD_CARD_CLASS} flex h-full cursor-pointer flex-col`}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => onOpen(pres.id)}
-                            onKeyDown={(event) => handleKeyboardClick(event, () => onOpen(pres.id))}
+                            className={`${DASHBOARD_CARD_CLASS} flex h-full flex-col overflow-hidden`}
                           >
-                            <SlideThumbnail
-                              id={pres.id}
-                              bgProp={bgProp}
-                              fallback={!pres.thumbnail || pres.thumbnail.type === 'none'}
-                              className="aspect-video"
-                            />
-                            <div className="px-4 py-3 flex-1">
-                              <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
-                                {pres.title || 'Untitled'}
-                              </h3>
-                              <p className="text-[12px] text-text-secondary truncate">
-                                {pres.slideCount} slide{pres.slideCount !== 1 ? 's' : ''} &middot;{' '}
-                                {formatDate(pres.updatedAt)}
-                              </p>
-                            </div>
+                            <button
+                              type="button"
+                              className="flex flex-1 cursor-pointer flex-col border-0 bg-transparent p-0 text-left"
+                              aria-label={`Open ${pres.title || 'Untitled'}`}
+                              onClick={() => onOpen(pres.id)}
+                            >
+                              <SlideThumbnail
+                                id={pres.id}
+                                bgProp={bgProp}
+                                fallback={!pres.thumbnail || pres.thumbnail.type === 'none'}
+                                className="aspect-video"
+                              />
+                              <div className="px-4 py-3 flex-1">
+                                <h3 className="text-[14px] font-semibold text-text-primary mb-1 truncate">
+                                  {pres.title || 'Untitled'}
+                                </h3>
+                                <p className="text-[12px] text-text-secondary truncate">
+                                  {pres.slideCount} slide{pres.slideCount !== 1 ? 's' : ''} &middot;{' '}
+                                  {formatDate(pres.updatedAt)}
+                                </p>
+                              </div>
+                            </button>
                             <div className="flex justify-end gap-1 px-3 py-2 border-t border-border">
                               <Button
                                 variant="icon"
@@ -1537,7 +1537,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                                 <Trash2 size={14} />
                               </Button>
                             </div>
-                          </div>
+                          </article>
                         )
                       })}
                     </div>

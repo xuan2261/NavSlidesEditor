@@ -8,6 +8,7 @@ const {
 const {
   readPresentations,
   withPresentations,
+  withTemplates,
   withShareTokens,
   withUploadHashes,
   DATA_DIR,
@@ -17,10 +18,15 @@ const {
 const fs = require('fs-extra')
 const path = require('path')
 const { validate } = require('../middleware/validate')
-const { createPresentationSchema, updatePresentationSchema } = require('../middleware/schemas')
+const {
+  createPresentationSchema,
+  updatePresentationSchema,
+  saveAsTemplateSchema,
+} = require('../middleware/schemas')
 const { rasterizeComplexElements } = require('../services/pptx-exporter')
 const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
 const { findServeablePresentation } = require('../services/presentation-finder')
+const { normalizeBuiltInTemplates } = require('../services/template-normalization')
 
 const router = express.Router()
 const UPLOAD_HASHES_FILE = path.join(DATA_DIR, 'upload-hashes.json')
@@ -132,7 +138,7 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
           const builtIn = await fs.readJson(
             path.join(__dirname, '..', 'data', 'built-in-templates.json')
           )
-          template = builtIn.find((t) => t.id === templateId)
+          template = normalizeBuiltInTemplates(builtIn).find((t) => t.id === templateId)
           // eslint-disable-next-line unused-imports/no-unused-vars
         } catch (e) {}
       }
@@ -422,7 +428,7 @@ router.get('/:id/present', async (req, res) => {
           const builtIn = await fs.readJson(
             path.join(__dirname, '..', 'data', 'built-in-templates.json')
           )
-          presentation = builtIn.find((t) => t.id === req.params.id)
+          presentation = normalizeBuiltInTemplates(builtIn).find((t) => t.id === req.params.id)
           // eslint-disable-next-line unused-imports/no-unused-vars
         } catch (e) {}
       }
@@ -448,9 +454,8 @@ router.get('/:id/present', async (req, res) => {
 })
 
 // POST /api/presentations/:id/save-as-template
-router.post('/:id/save-as-template', async (req, res) => {
+router.post('/:id/save-as-template', validate(saveAsTemplateSchema), async (req, res) => {
   try {
-    const { readTemplates, writeTemplates } = require('../services/storage')
     const pres = await findServeablePresentation(req.params.id, { normalize: false })
     if (!pres) return res.status(404).json({ error: 'Not found' })
     const now = new Date().toISOString()
@@ -462,9 +467,9 @@ router.post('/:id/save-as-template', async (req, res) => {
       createdAt: now,
       updatedAt: now,
     })
-    const templates = await readTemplates()
-    templates.push(template)
-    await writeTemplates(templates)
+    await withTemplates((templates) => {
+      templates.push(template)
+    })
     res.status(201).json(template)
   } catch (err) {
     res.status(500).json({ error: err.message })

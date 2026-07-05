@@ -8,6 +8,8 @@ const h = vi.hoisted(() => ({
   generateOfflineHTML: vi.fn(() => Promise.resolve('<html>offline</html>')),
   exportProject: vi.fn(() => Promise.resolve()),
   exportToPptx: vi.fn(() => Promise.resolve([])),
+  showNotice: vi.fn(),
+  showError: vi.fn(),
 }))
 
 vi.mock('../utils/generateHTML', () => ({
@@ -19,6 +21,7 @@ vi.mock('../utils/generateHTML', () => ({
 vi.mock('../utils/offlineExport', () => ({ generateOfflineHTML: h.generateOfflineHTML }))
 vi.mock('../utils/export-project', () => ({ exportProject: h.exportProject }))
 vi.mock('../utils/exportPptx', () => ({ exportToPptx: h.exportToPptx }))
+vi.mock('../utils/app-feedback', () => ({ showNotice: h.showNotice, showError: h.showError }))
 
 import { useExportActions } from './use-export-actions'
 
@@ -29,7 +32,8 @@ beforeEach(() => {
   h.generateRevealHTML.mockReturnValue('<html></html>')
   h.generateOfflineHTML.mockResolvedValue('<html>offline</html>')
   h.exportToPptx.mockResolvedValue([])
-  globalThis.alert = vi.fn()
+  h.showNotice.mockClear()
+  h.showError.mockClear()
   delete globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__
 })
 
@@ -48,7 +52,7 @@ describe('useExportActions', () => {
     expect(h.downloadHTML).toHaveBeenCalledWith(presentation)
   })
 
-  it('onExportPPTX dynamic-imports exportToPptx and surfaces warnings via alert', async () => {
+  it('onExportPPTX dynamic-imports exportToPptx and surfaces warnings via themed notice', async () => {
     const warnings = ['Unsupported element X']
     Object.defineProperty(warnings, 'exportReport', {
       enumerable: false,
@@ -60,19 +64,19 @@ describe('useExportActions', () => {
       await result.current.onExportPPTX()
     })
     expect(h.exportToPptx).toHaveBeenCalledWith(presentation)
-    expect(globalThis.alert).toHaveBeenCalledWith(expect.stringContaining('Unsupported element X'))
+    expect(h.showNotice).toHaveBeenCalledWith(expect.stringContaining('Unsupported element X'))
     expect(globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__).toEqual(
       expect.objectContaining({ surface: 'pptx-export', warningCount: 1 })
     )
   })
 
-  it('onExportPPTX does NOT alert when there are no warnings', async () => {
+  it('onExportPPTX does NOT show a notice when there are no warnings', async () => {
     const { result } = renderHook(() => useExportActions(presentation))
     await act(async () => {
       await result.current.onExportPPTX()
     })
     expect(h.exportToPptx).toHaveBeenCalled()
-    expect(globalThis.alert).not.toHaveBeenCalled()
+    expect(h.showNotice).not.toHaveBeenCalled()
   })
 
   it('onExportOffline builds offline HTML and triggers a download', async () => {

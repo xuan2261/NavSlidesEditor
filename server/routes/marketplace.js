@@ -1,6 +1,7 @@
 const express = require('express')
 const path = require('path')
 const fs = require('fs')
+const { normalizeBuiltInTemplates } = require('../services/template-normalization')
 
 const router = express.Router()
 
@@ -15,12 +16,22 @@ function loadBuiltInTemplates() {
   const now = Date.now()
   if (cachedTemplates && now - cacheTimestamp < CACHE_TTL) return cachedTemplates
   try {
-    cachedTemplates = JSON.parse(fs.readFileSync(BUILT_IN_PATH, 'utf-8'))
+    cachedTemplates = normalizeBuiltInTemplates(JSON.parse(fs.readFileSync(BUILT_IN_PATH, 'utf-8')))
     cacheTimestamp = now
-  } catch {
+  } catch (err) {
+    console.error('Failed to load built-in templates:', err)
     cachedTemplates = []
   }
   return cachedTemplates
+}
+
+function parseTagsQuery(tags) {
+  if (!tags) return []
+  const values = Array.isArray(tags) ? tags : [tags]
+  return values
+    .flatMap((value) => String(value).split(','))
+    .map((tag) => tag.trim())
+    .filter(Boolean)
 }
 
 // Category metadata — existing + 11 engineering subjects
@@ -87,7 +98,7 @@ router.get('/templates', (req, res) => {
     let result = templates
 
     if (category) {
-      result = result.filter((t) => t.category === category)
+      result = result.filter((t) => t.category === category || (t.tags || []).includes(category))
     }
 
     if (search) {
@@ -96,12 +107,12 @@ router.get('/templates', (req, res) => {
         (t) =>
           (t.title || '').toLowerCase().includes(q) ||
           (t.description || '').toLowerCase().includes(q) ||
-          (t.tags || []).some((tag) => tag.includes(q))
+          (t.tags || []).some((tag) => tag.toLowerCase().includes(q))
       )
     }
 
     if (tags) {
-      const tagList = tags.split(',')
+      const tagList = parseTagsQuery(tags)
       result = result.filter((t) => tagList.every((tag) => (t.tags || []).includes(tag)))
     }
 

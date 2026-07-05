@@ -1,5 +1,6 @@
 const { readPresentations, readTemplates } = require('./storage')
 const { normalizePptxImportedPresentationForRead } = require('./presentation-normalization')
+const { normalizeBuiltInTemplates } = require('./template-normalization')
 const path = require('path')
 const fs = require('fs-extra')
 
@@ -11,7 +12,7 @@ async function findPresentationById(id) {
   // 1. Check user presentations
   const presentations = await readPresentations()
   const found = presentations.find((p) => p.id === id)
-  if (found) return normalizePptxImportedPresentationForRead(found)
+  if (found && !found.deletedAt) return normalizePptxImportedPresentationForRead(found)
 
   // 2. Check custom templates
   const templates = await readTemplates()
@@ -21,7 +22,7 @@ async function findPresentationById(id) {
   // 3. Check built-in templates
   try {
     const builtIn = await fs.readJson(path.join(__dirname, '..', 'data', 'built-in-templates.json'))
-    const bi = builtIn.find((t) => t.id === id)
+    const bi = normalizeBuiltInTemplates(builtIn).find((t) => t.id === id)
     if (bi) return bi
   } catch {
     // built-in templates file may not exist

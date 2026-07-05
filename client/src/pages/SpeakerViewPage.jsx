@@ -200,7 +200,7 @@ export default function SpeakerViewPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/')}
-            className="bg-transparent border-none text-slate-400 cursor-pointer flex items-center gap-1 text-[13px] hover:text-white transition-colors"
+            className="bg-transparent border-none text-text-secondary cursor-pointer flex items-center gap-1 text-[13px] hover:text-text-primary transition-colors"
           >
             <Home size={14} /> Exit
           </button>

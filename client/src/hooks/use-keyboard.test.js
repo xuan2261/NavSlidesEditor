@@ -12,6 +12,21 @@ function createEvent(key, extra = {}) {
 }
 
 describe('createKeyboardHandler', () => {
+  it('ignores events that another keyboard owner already handled', () => {
+    const shortcuts = getShortcuts({})
+    const onPaste = vi.fn()
+    const event = createEvent('v', { ctrlKey: true, defaultPrevented: true })
+
+    createKeyboardHandler({
+      shortcuts,
+      onPaste,
+      getActiveElement: () => null,
+    })(event)
+
+    expect(onPaste).not.toHaveBeenCalled()
+    expect(event.preventDefault).not.toHaveBeenCalled()
+  })
+
   it('[cap:shortcut.copy][cap:shortcut.cut][cap:shortcut.paste][cap:shortcut.duplicate][cap:shortcut.undo][cap:shortcut.redo][cap:shortcut.delete][cap:shortcut.selectAll][cap:shortcut.toggleFindReplace][cap:shortcut.escape] maps editor shortcuts to callbacks and prevents browser defaults', () => {
     const callbacks = {
       onCopy: vi.fn(),

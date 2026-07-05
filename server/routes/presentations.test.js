@@ -118,6 +118,25 @@ describe('Presentations API', () => {
     expect((await request(app).get('/api/presentations/missing/export')).status).toBe(404)
   })
 
+  it('validates save-as-template title payloads', async () => {
+    const createRes = await request(app)
+      .post('/api/presentations')
+      .send({ title: 'Template validation source', slides: [{ id: 's1', elements: [] }] })
+    expect(createRes.status).toBe(201)
+
+    const objectTitleRes = await request(app)
+      .post(`/api/presentations/${createRes.body.id}/save-as-template`)
+      .send({ title: { bad: true } })
+    expect(objectTitleRes.status).toBe(400)
+
+    const longTitleRes = await request(app)
+      .post(`/api/presentations/${createRes.body.id}/save-as-template`)
+      .send({ title: 'x'.repeat(501) })
+    expect(longTitleRes.status).toBe(400)
+
+    await request(app).delete(`/api/presentations/${createRes.body.id}/permanent`)
+  })
+
   it('accepts persisted plugin elements in presentation payloads', async () => {
     const pluginElement = {
       id: 'plugin-counter-1',
@@ -243,6 +262,27 @@ describe('Presentations API', () => {
     expect(persisted.resolution).toEqual({ width: 720, height: 540 })
 
     await request(app).delete(`/api/presentations/${id}/permanent`)
+  })
+
+  it('normalizes built-in templates when creating a presentation from a template id', async () => {
+    const createRes = await request(app)
+      .post('/api/presentations')
+      .send({ templateId: 'digi-lecture-overview' })
+
+    expect(createRes.status).toBe(201)
+    expect(createRes.body.slides[0].background).toMatchObject({
+      type: 'color',
+      color: '#0a1628',
+    })
+
+    for (const slide of createRes.body.slides) {
+      for (const element of slide.elements || []) {
+        expect(typeof element.id).toBe('string')
+        expect(typeof element.zIndex).toBe('number')
+      }
+    }
+
+    await request(app).delete(`/api/presentations/${createRes.body.id}/permanent`)
   })
 })
 

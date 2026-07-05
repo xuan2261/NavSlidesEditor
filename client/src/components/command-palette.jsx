@@ -42,26 +42,11 @@ export function CommandPalette({ open, onClose, commands = [] }) {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        paddingTop: '100px',
-        zIndex: 100000,
-      }}
+      className="fixed inset-0 z-[100000] flex items-start justify-center bg-black/50 pt-[100px]"
       onClick={onClose}
     >
       <div
-        style={{
-          width: '500px',
-          backgroundColor: '#1e1e2e',
-          borderRadius: '8px',
-          overflow: 'hidden',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-        }}
+        className="w-[min(500px,calc(100vw-2rem))] overflow-hidden rounded-lg border border-border bg-card shadow-[0_8px_32px_rgba(0,0,0,0.36)]"
         onClick={(e) => e.stopPropagation()}
       >
         <input
@@ -70,33 +55,13 @@ export function CommandPalette({ open, onClose, commands = [] }) {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a command..."
-          style={{
-            width: '100%',
-            padding: '16px',
-            border: 'none',
-            backgroundColor: '#1e1e2e',
-            color: '#fff',
-            fontSize: '16px',
-            outline: 'none',
-            boxSizing: 'border-box',
-          }}
+          className="box-border w-full border-0 bg-card p-4 text-base text-text-primary outline-none placeholder:text-text-muted"
         />
         <ul
-          style={{
-            listStyle: 'none',
-            margin: 0,
-            padding: 0,
-            maxHeight: '300px',
-            overflowY: 'auto',
-          }}
+          className="m-0 max-h-[300px] list-none overflow-y-auto p-0"
         >
           {filtered.length === 0 && (
-            <li
-              style={{
-                padding: '12px 16px',
-                color: 'rgba(255,255,255,0.4)',
-              }}
-            >
+            <li className="px-4 py-3 text-text-muted">
               No commands found
             </li>
           )}
@@ -107,26 +72,13 @@ export function CommandPalette({ open, onClose, commands = [] }) {
                 cmd.action()
                 onClose()
               }}
-              style={{
-                padding: '10px 16px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                backgroundColor: i === selectedIndex ? 'rgba(255,255,255,0.1)' : 'transparent',
-                cursor: 'pointer',
-              }}
+              className={`flex cursor-pointer items-center justify-between px-4 py-2.5 ${
+                i === selectedIndex ? 'bg-hover' : 'bg-transparent'
+              }`}
             >
-              <span style={{ color: '#fff' }}>{cmd.label}</span>
+              <span className="text-text-primary">{cmd.label}</span>
               {cmd.shortcut && (
-                <kbd
-                  style={{
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    color: 'rgba(255,255,255,0.7)',
-                  }}
-                >
+                <kbd className="rounded bg-secondary px-2 py-0.5 text-xs text-text-secondary">
                   {cmd.shortcut}
                 </kbd>
               )}

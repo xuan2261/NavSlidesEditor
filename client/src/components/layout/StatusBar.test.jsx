@@ -70,6 +70,13 @@ describe('StatusBar zoom slider', () => {
     fireEvent.click(screen.getByTestId('statusbar-zoom-fit'))
     expect(useUIStore.getState().userZoomMode).toBe(false)
   })
+
+  it('exposes larger touch-comfort zoom controls before compact sm breakpoint classes', () => {
+    render(<StatusBar />)
+    expect(screen.getByTestId('statusbar-zoom-in').className).toContain('h-7')
+    expect(screen.getByTestId('statusbar-zoom-in').className).toContain('sm:h-5')
+    expect(screen.getByTestId('statusbar-zoom-fit').className).toContain('h-7')
+  })
 })
 
 describe('StatusBar slide position', () => {

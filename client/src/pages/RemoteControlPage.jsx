@@ -128,7 +128,7 @@ export default function RemoteControlPage() {
       <div className="px-4 py-3 flex justify-between items-center border-b border-border">
         <button
           onClick={() => navigate('/')}
-          className="bg-transparent border-none text-slate-400 cursor-pointer flex items-center gap-1 text-[13px] hover:text-white transition-colors"
+          className="bg-transparent border-none text-text-secondary cursor-pointer flex items-center gap-1 text-[13px] hover:text-text-primary transition-colors"
         >
           <Home size={16} /> Exit
         </button>

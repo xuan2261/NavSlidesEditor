@@ -147,8 +147,11 @@ test.describe('Editor POM Workflow', () => {
     failSave = false
 
     failRestore = true
-    page.once('dialog', (dialog) => dialog.accept())
     await page.getByRole('button', { name: 'Restore' }).first().click()
+    await page
+      .getByRole('dialog', { name: 'Restore snapshot' })
+      .getByRole('button', { name: 'Restore', exact: true })
+      .click()
     await expect(page.getByText('Restore snapshot failed')).toBeVisible()
     await expect(historyDialog).toBeVisible()
     failRestore = false

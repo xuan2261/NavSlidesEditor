@@ -87,6 +87,17 @@ describe('socket-handler', () => {
           },
         ],
       },
+      {
+        id: 'trashed-deck',
+        title: 'Trashed Deck',
+        deletedAt: '2026-01-01T00:00:00.000Z',
+        slides: [
+          {
+            id: 's1',
+            elements: [{ id: 't1', type: 'text', content: '<h2>Deleted title</h2>' }],
+          },
+        ],
+      },
     ])
   })
 
@@ -139,6 +150,24 @@ describe('socket-handler', () => {
       event: 'control-navigate',
       payload: { slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 },
     })
+  })
+
+  it('does not emit live presentation payloads for trashed decks', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('TRASH1', presenterToken)
+
+    const presenter = io.connect('presenter-trash')
+    await presenter.trigger('join-room', {
+      roomId: 'TRASH1',
+      role: 'presenter',
+      presentationId: 'trashed-deck',
+      presenterToken,
+    })
+
+    expect(io.emitted.some((item) => item.event === 'presentation-data')).toBe(false)
+    expect(liveRooms.getRoomState('TRASH1').presentationId).toBeNull()
   })
 
   it('rejects unknown rooms and notifies viewers when the presenter disconnects', async () => {

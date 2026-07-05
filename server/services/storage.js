@@ -149,6 +149,15 @@ async function writeTemplates(data) {
   return withFileLock(TEMPLATES_FILE, async () => writeJsonAtomic(TEMPLATES_FILE, data, { spaces: 2 }))
 }
 
+async function withTemplates(fn) {
+  return withFileLock(TEMPLATES_FILE, async () => {
+    const templates = await fs.readJson(TEMPLATES_FILE)
+    const result = await fn(templates)
+    await writeJsonAtomic(TEMPLATES_FILE, templates, { spaces: 2 })
+    return result
+  })
+}
+
 // ── Share Tokens ─────────────────────────────────────────────────────────────
 async function readShareTokens() {
   return withFileLock(SHARE_FILE, async () => fs.readJson(SHARE_FILE))
@@ -269,6 +278,7 @@ module.exports = {
   withPresentations,
   readTemplates,
   writeTemplates,
+  withTemplates,
   readShareTokens,
   writeShareTokens,
   withShareTokens,

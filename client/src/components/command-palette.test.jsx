@@ -18,6 +18,17 @@ describe('CommandPalette', () => {
     expect(document.body.textContent).toContain('Ctrl+M')
   })
 
+  it('uses tokenized classes for shell colors instead of inline color literals', () => {
+    const commands = [
+      { id: 'a', label: 'Insert Slide', shortcut: 'Ctrl+M', action: vi.fn() },
+    ]
+    const { container } = render(<CommandPalette open={true} onClose={vi.fn()} commands={commands} />)
+
+    expect(container.querySelector('[style*="#1e1e2e"]')).toBeNull()
+    expect(container.innerHTML).toContain('bg-card')
+    expect(container.innerHTML).toContain('text-text-primary')
+  })
+
   it('does not crash when Enter pressed with no matching commands', () => {
     const commands = [
       { id: 'a', label: 'Insert Slide', shortcut: 'Ctrl+M', action: vi.fn() },

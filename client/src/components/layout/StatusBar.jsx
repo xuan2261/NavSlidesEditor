@@ -20,7 +20,7 @@ function ZoomControls() {
         title="Zoom out"
         aria-label="Zoom out"
         onClick={zoomOut}
-        className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
+        className="h-7 w-7 sm:h-5 sm:w-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
       >
         −
       </button>
@@ -36,7 +36,7 @@ function ZoomControls() {
           setZoom(parseInt(e.target.value, 10) / 100)
           setUserZoomMode(true)
         }}
-        className="w-24 h-1 cursor-pointer accent-white/80"
+        className="h-6 w-28 sm:h-1 sm:w-24 cursor-pointer accent-white/80"
       />
       <button
         type="button"
@@ -44,7 +44,7 @@ function ZoomControls() {
         title="Zoom in"
         aria-label="Zoom in"
         onClick={zoomIn}
-        className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
+        className="h-7 w-7 sm:h-5 sm:w-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
       >
         +
       </button>
@@ -54,7 +54,7 @@ function ZoomControls() {
         title="Fit to window"
         aria-label="Fit to window"
         onClick={fitZoom}
-        className="px-1.5 h-5 rounded hover:bg-white/15 transition-colors cursor-pointer whitespace-nowrap"
+        className="h-7 sm:h-5 px-2 sm:px-1.5 rounded hover:bg-white/15 transition-colors cursor-pointer whitespace-nowrap"
       >
         Fit
       </button>
@@ -78,7 +78,7 @@ function ViewSwitcher() {
   const setViewMode = useEditorStore((s) => s.setViewMode)
   const presentHandler = useUIStore((s) => s.presentHandler)
 
-  const btn = 'w-6 h-5 flex items-center justify-center rounded transition-colors cursor-pointer'
+  const btn = 'h-7 w-7 sm:w-6 sm:h-5 flex items-center justify-center rounded transition-colors cursor-pointer'
   const active = 'bg-white/25'
   const idle = 'hover:bg-white/15'
 
@@ -141,7 +141,7 @@ export default function StatusBar() {
   const editorActive = total > 0
 
   return (
-    <footer className="h-6 bg-accent text-white flex items-center justify-between gap-2 overflow-hidden px-2 text-[11px] select-none z-[100] shrink-0 font-medium sm:px-6">
+    <footer className="min-h-8 sm:h-6 bg-accent text-white flex items-center justify-between gap-2 overflow-hidden px-2 text-[11px] select-none z-[100] shrink-0 font-medium sm:px-6">
       <div className="flex min-w-0 items-center h-full gap-2 sm:gap-4">
         <AttributionItem title="Application Name" path={<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />}>
           NavSlides Editor

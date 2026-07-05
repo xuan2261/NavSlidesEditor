@@ -82,6 +82,7 @@ export default function SlideCanvas({
   onDeleteElement,
   onDeleteSelectedElements,
   onAddImage,
+  onAddMedia,
   onOpenHtmlEditor,
   onOpenCodeEditor,
   onOpenLatexEditor,
@@ -214,6 +215,7 @@ export default function SlideCanvas({
 
   useEffect(() => {
     const onKeyDown = (e) => {
+      if (e.defaultPrevented) return
       if (cropMode) {
         if (e.key === 'Enter') {
           commitCropRef.current?.()
@@ -384,11 +386,13 @@ export default function SlideCanvas({
   const onDrop = async (e) => {
     e.preventDefault()
     setDragOver(false)
+    if (slide?.locked) return
     const files = Array.from(e.dataTransfer.files).filter(
       (f) =>
         f.type.startsWith('image/') || f.type.startsWith('video/') || f.type.startsWith('audio/')
     )
-    if (!files.length || !onAddImage) return
+    const addMedia = onAddMedia || onAddImage
+    if (!files.length || !addMedia) return
     // Get drop position in slide coordinates
     let dropX = 130,
       dropY = 100
@@ -398,7 +402,7 @@ export default function SlideCanvas({
       dropY = Math.round((e.clientY - rect.top) / scale)
     }
     for (const file of files) {
-      await onAddImage(file, dropX, dropY)
+      await addMedia(file, dropX, dropY)
     }
   }
 

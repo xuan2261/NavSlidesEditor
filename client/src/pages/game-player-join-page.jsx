@@ -20,7 +20,7 @@ function JoinForm({ onJoin }) {
   }
 
   return (
-    <div className="min-h-screen bg-editor-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-workspace flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="bg-card rounded-xl border border-border p-8 shadow-2xl">
           <div className="text-center mb-6">
@@ -67,7 +67,7 @@ function JoinForm({ onJoin }) {
 // ── Waiting Room ─────────────────────────────────────────────────────────────────
 function WaitingRoom({ playerCount, error }) {
   return (
-    <div className="min-h-screen bg-editor-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-workspace flex items-center justify-center p-4">
       <div className="text-center">
         <div className="text-5xl mb-4 animate-pulse">⏳</div>
         <h2 className="text-xl font-bold text-text-primary mb-2">Waiting for teacher to start...</h2>
@@ -318,7 +318,7 @@ export function MatchingCard({ matchingState, matchingResult, onSubmit }) {
 // ── Answered State ───────────────────────────────────────────────────────────────
 function AnsweredState({ answerResult, question }) {
   return (
-    <div className="min-h-screen bg-editor-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-workspace flex items-center justify-center p-4">
       <div className="text-center">
         <div className="text-5xl mb-4">{answerResult?.correct ? '✅' : '❌'}</div>
         <h2 className="text-xl font-bold text-text-primary mb-2">
@@ -341,7 +341,7 @@ function AnsweredState({ answerResult, question }) {
 // ── Final Results ───────────────────────────────────────────────────────────────
 function FinalResults({ leaderboard, myScore, myRank, playerName }) {
   return (
-    <div className="min-h-screen bg-editor-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-workspace flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
           <div className="text-5xl mb-2">🏆</div>
@@ -447,7 +447,7 @@ export default function GamePlayerPage() {
 
   if (status === 'question' && currentQuestion) {
     return (
-      <div className="min-h-screen bg-editor-bg flex flex-col justify-center p-4">
+      <div className="min-h-screen bg-workspace flex flex-col justify-center p-4">
         {/* Player info bar */}
         <div className="flex items-center justify-between mb-4 text-sm text-text-muted">
           <span>👤 {resolvedName}</span>
@@ -466,7 +466,7 @@ export default function GamePlayerPage() {
 
   if (status === 'poll' && pollState) {
     return (
-      <div className="min-h-screen bg-editor-bg flex flex-col justify-center p-4">
+      <div className="min-h-screen bg-workspace flex flex-col justify-center p-4">
         <div className="flex items-center justify-between mb-4 text-sm text-text-muted">
           <span>👤 {resolvedName}</span>
           <span>📊 Live poll</span>
@@ -482,7 +482,7 @@ export default function GamePlayerPage() {
 
   if (status === 'word-cloud' && wordCloudState) {
     return (
-      <div className="min-h-screen bg-editor-bg flex flex-col justify-center p-4">
+      <div className="min-h-screen bg-workspace flex flex-col justify-center p-4">
         <div className="flex items-center justify-between mb-4 text-sm text-text-muted">
           <span>👤 {resolvedName}</span>
           <span>☁ Word cloud</span>
@@ -498,7 +498,7 @@ export default function GamePlayerPage() {
 
   if (status === 'matching' && matchingState) {
     return (
-      <div className="min-h-screen bg-editor-bg flex flex-col justify-center p-4">
+      <div className="min-h-screen bg-workspace flex flex-col justify-center p-4">
         <div className="flex items-center justify-between mb-4 text-sm text-text-muted">
           <span>👤 {resolvedName}</span>
           <span>🔗 Matching</span>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link2, Copy, Trash2, Plus, Lock, Clock, Eye, Loader2, Check } from 'lucide-react'
 import { Button, ModalShell } from '../components/ui'
+import { confirmUser } from '../utils/app-feedback'
 
 export default function ShareModal({ presentationId, onClose }) {
   const [isOpen, setIsOpen] = useState(true)
@@ -68,17 +69,22 @@ export default function ShareModal({ presentationId, onClose }) {
   }
 
   const handleDelete = async (token) => {
-    if (!confirm('Delete this share link?')) return
-    setError('')
-    setStatusMessage('')
-    try {
-      const res = await fetch(`/api/shares/${token}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete share link')
-      setStatusMessage('Share link deleted.')
-      await loadShares()
-    } catch (err) {
-      setError(err.message || 'Failed to delete share link')
-    }
+    confirmUser(
+      'Delete this share link?',
+      async () => {
+        setError('')
+        setStatusMessage('')
+        try {
+          const res = await fetch(`/api/shares/${token}`, { method: 'DELETE' })
+          if (!res.ok) throw new Error('Failed to delete share link')
+          setStatusMessage('Share link deleted.')
+          await loadShares()
+        } catch (err) {
+          setError(err.message || 'Failed to delete share link')
+        }
+      },
+      { title: 'Delete share link', confirmLabel: 'Delete', destructive: true }
+    )
   }
 
   const copyToClipboard = (text, id) => {

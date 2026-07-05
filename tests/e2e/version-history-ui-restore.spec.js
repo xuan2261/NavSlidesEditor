@@ -41,9 +41,11 @@ test.describe('Version history UI restore', () => {
     const dialog = page.getByRole('dialog', { name: 'Version History' })
     await expect(dialog.getByText('Original Snapshot')).toBeVisible()
 
-    // Restore prompts a confirm() before issuing the request.
-    page.once('dialog', (d) => d.accept())
     await dialog.getByRole('button', { name: 'Restore' }).first().click()
+    await page
+      .getByRole('dialog', { name: 'Restore snapshot' })
+      .getByRole('button', { name: 'Restore', exact: true })
+      .click()
 
     await expect(dialog).toHaveCount(0)
     await expect(el).toContainText('ORIGINAL CONTENT')

@@ -33,8 +33,8 @@ export default function RibbonPanel(props) {
   return (
     <Tabs.Root value={effectiveTab} onValueChange={setActiveTab}>
       <div
-        data-testid="ribbon-panel-container"
-        className="tour-step-ribbon relative h-[80px] overflow-hidden bg-background border-b border-border"
+          data-testid="ribbon-panel-container"
+          className="tour-step-ribbon relative h-[80px] overflow-hidden bg-panel border-b border-border"
       >
         {Object.entries(TAB_PANELS).map(([id, Content]) => (
           <Tabs.Content

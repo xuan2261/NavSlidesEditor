@@ -35,7 +35,16 @@ function ElementTypeProperties({ element, onUpdate, onEditHtml, onEditCode, onEd
     case 'timeline':
       return <TimelineProperties element={element} onUpdate={onUpdate} />
     case 'text':
-      return null // Text editing is handled by TipTap directly
+      return (
+        <CollapsibleSection title="Text Formatting" defaultOpen={true}>
+          <div className="rounded-md border border-border bg-card p-3 text-[11px] leading-5 text-text-secondary">
+            <p className="m-0">
+              Use direct text editing on the slide or the Home and Format ribbon controls to
+              change font, size, color, alignment, lists, and spacing.
+            </p>
+          </div>
+        </CollapsibleSection>
+      )
     default:
       return (
         <MiscProperties

@@ -8,6 +8,7 @@ import {
   validateProjectFile,
 } from '../utils/import-project'
 import { api } from '../utils/api'
+import { showError, showNotice } from '../utils/app-feedback'
 
 /**
  * Export/import action handlers extracted from EditorPage. Pure relocation —
@@ -25,10 +26,10 @@ export function useExportActions(presentation) {
       const { exportToPptx } = await import('../utils/exportPptx')
       const warnings = await exportToPptx(presentation)
       globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = warnings.exportReport || null
-      if (warnings.length) alert(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
+      if (warnings.length) showNotice(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
     } catch (err) {
       console.error('PPTX export failed:', err)
-      alert('PPTX export failed: ' + err.message)
+      showError('PPTX export failed: ' + err.message)
     }
   }, [presentation])
 
@@ -37,7 +38,7 @@ export function useExportActions(presentation) {
       downloadHTML(presentation)
     } catch (err) {
       console.error('HTML export failed:', err)
-      alert('HTML export failed: ' + err.message)
+      showError('HTML export failed: ' + err.message)
     }
   }, [presentation])
 
@@ -54,7 +55,7 @@ export function useExportActions(presentation) {
       URL.revokeObjectURL(url)
     } catch (err) {
       console.error('Offline export failed:', err)
-      alert('Offline export failed: ' + err.message)
+      showError('Offline export failed: ' + err.message)
     }
   }, [presentation])
 
@@ -63,7 +64,7 @@ export function useExportActions(presentation) {
       await exportProject(presentation)
     } catch (err) {
       console.error('Project export failed:', err)
-      alert('Project export failed: ' + err.message)
+      showError('Project export failed: ' + err.message)
     }
   }, [presentation])
 
@@ -78,7 +79,7 @@ export function useExportActions(presentation) {
         const parsed = await parseProjectFile(file)
         const { valid, errors, warnings } = validateProjectFile(parsed)
         if (!valid) {
-          alert('Invalid project file: ' + errors.join(', '))
+          showError('Invalid project file: ' + errors.join(', '))
           return
         }
         if (warnings.length) console.warn('Import warnings:', warnings)
@@ -95,7 +96,7 @@ export function useExportActions(presentation) {
         window.location.href = `/editor/${newPres.id}`
       } catch (err) {
         console.error('Import failed:', err)
-        alert('Import failed: ' + err.message)
+        showError('Import failed: ' + err.message)
       }
     }
     input.click()

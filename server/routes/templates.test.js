@@ -46,4 +46,38 @@ describe('Templates API', () => {
 
     expect((await request(app).get(`/api/templates/${id}`)).status).toBe(404)
   })
+
+  it('rejects invalid custom template payloads', async () => {
+    const missingSlides = await request(app).post('/api/templates').send({ title: 'No Slides' })
+    expect(missingSlides.status).toBe(400)
+
+    const missingTitle = await request(app).post('/api/templates').send({
+      slides: [{ id: 's1', elements: [] }],
+    })
+    expect(missingTitle.status).toBe(400)
+  })
+
+  it('serializes concurrent template mutations through one transaction lock', async () => {
+    const ids = await Promise.all(
+      ['Concurrent A', 'Concurrent B'].map(async (title) => {
+        const res = await request(app)
+          .post('/api/templates')
+          .send({
+            title,
+            theme: 'black',
+            transition: 'slide',
+            slides: [{ id: title, elements: [] }],
+          })
+        expect(res.status).toBe(201)
+        return res.body.id
+      })
+    )
+
+    const listRes = await request(app).get('/api/templates')
+    expect(listRes.status).toBe(200)
+    for (const id of ids) {
+      expect(listRes.body.some((item) => item.id === id)).toBe(true)
+      await request(app).delete(`/api/templates/${id}`)
+    }
+  })
 })

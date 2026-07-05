@@ -6,10 +6,11 @@ import CanvasContextMenu, {
 
 function renderMenu(element, props = {}) {
   const onClose = vi.fn()
+  const slide = props.slide || { elements: [element] }
   render(
     <CanvasContextMenu
       contextMenu={{ elementId: element.id, elementType: element.type, x: 10, y: 20 }}
-      slide={{ elements: [element] }}
+      slide={slide}
       onCopy={vi.fn()}
       onCut={vi.fn()}
       onPaste={vi.fn()}
@@ -41,6 +42,22 @@ describe('CanvasContextMenu copy URL action', () => {
 
     expect(screen.getByRole('button', { name: /Cut/ }).disabled).toBe(true)
     expect(screen.getByRole('button', { name: /Duplicate/ }).disabled).toBe(true)
+  })
+
+  it('disables mutation actions when the whole slide is locked', () => {
+    const onPaste = vi.fn()
+    const onUpdateElement = vi.fn()
+    renderMenu(
+      { id: 'shape-locked-slide', type: 'shape' },
+      { slide: { locked: true, elements: [{ id: 'shape-locked-slide', type: 'shape' }] }, onPaste, onUpdateElement }
+    )
+
+    expect(screen.getByRole('button', { name: /Cut/ }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: /Paste/ }).disabled).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: 'Upper Left' }))
+
+    expect(onPaste).not.toHaveBeenCalled()
+    expect(onUpdateElement).not.toHaveBeenCalled()
   })
 
   it('copies an absolute image URL and closes the menu', () => {

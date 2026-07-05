@@ -132,8 +132,8 @@ export default function FindReplaceBar({
     : 'Enter text to search'
 
   return (
-    <div className="find-replace-bar absolute right-2.5 top-[46px] z-[9990] flex min-w-[380px] flex-col gap-1.5 rounded-b-md border border-border bg-card p-2 shadow-[0_14px_36px_rgba(0,0,0,0.22)]">
-      <div className="flex items-center gap-1.5">
+    <div className="find-replace-bar absolute left-2.5 right-2.5 top-[46px] z-[9990] flex w-auto max-w-[520px] flex-col gap-1.5 rounded-b-md border border-border bg-card p-2 shadow-[0_14px_36px_rgba(0,0,0,0.22)] sm:left-auto sm:w-[min(520px,calc(100vw-1.25rem))]">
+      <div className="flex flex-wrap items-center gap-1.5">
         <Search size={14} className="text-text-muted shrink-0" />
         <input
           ref={searchRef}
@@ -157,7 +157,7 @@ export default function FindReplaceBar({
         </span>
         <Button
           variant="ghost"
-          className={`find-btn h-6 w-6 p-0 shrink-0 ${matchCase ? 'bg-accent text-white hover:bg-accent' : ''}`}
+          className={`find-btn h-8 w-8 p-0 shrink-0 sm:h-6 sm:w-6 ${matchCase ? 'bg-accent text-white hover:bg-accent' : ''}`}
           onClick={() => setMatchCase((v) => !v)}
           title="Match case"
           aria-pressed={matchCase}
@@ -166,7 +166,7 @@ export default function FindReplaceBar({
         </Button>
         <Button
           variant="icon"
-          className="find-btn h-6 w-6 p-0 shrink-0"
+          className="find-btn h-8 w-8 p-0 shrink-0 sm:h-6 sm:w-6"
           onClick={handlePrev}
           title="Previous"
         >
@@ -174,7 +174,7 @@ export default function FindReplaceBar({
         </Button>
         <Button
           variant="icon"
-          className="find-btn h-6 w-6 p-0 shrink-0"
+          className="find-btn h-8 w-8 p-0 shrink-0 sm:h-6 sm:w-6"
           onClick={handleNext}
           title="Next"
         >
@@ -182,7 +182,7 @@ export default function FindReplaceBar({
         </Button>
         <Button
           variant="ghost"
-          className={`find-btn h-6 w-6 p-0 shrink-0 ${showReplace ? 'bg-accent text-white hover:bg-accent' : ''}`}
+          className={`find-btn h-8 w-8 p-0 shrink-0 sm:h-6 sm:w-6 ${showReplace ? 'bg-accent text-white hover:bg-accent' : ''}`}
           onClick={() => setShowReplace((v) => !v)}
           title="Toggle replace"
           aria-pressed={showReplace}
@@ -191,7 +191,7 @@ export default function FindReplaceBar({
         </Button>
         <Button
           variant="icon"
-          className="find-btn h-6 w-6 p-0 shrink-0"
+          className="find-btn h-8 w-8 p-0 shrink-0 sm:h-6 sm:w-6"
           onClick={onClose}
           title="Close (Esc)"
         >
@@ -199,7 +199,7 @@ export default function FindReplaceBar({
         </Button>
       </div>
       {showReplace && (
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Replace size={14} className="text-text-muted shrink-0" />
           <input
             type="text"

@@ -9,6 +9,7 @@ import {
   cloneTemplateElementForTheme,
 } from '../utils/slide-template-theme-normalization'
 import { hasBlockedGroupMutation } from '../utils/active-slide-selection'
+import { isPureUnlockUpdate } from '../utils/element-update-fanout'
 
 /**
  * Hook encapsulating multi-element operations (align, group, delete-selected)
@@ -57,12 +58,15 @@ export function useSlideOperations({
         if (!prev) return prev
         const map = {}
         updates.forEach((u) => {
-          map[u.id] = u
+          const { id, ...partial } = u
+          map[id] = partial
         })
         return mapActive(prev, (s) => ({
           ...s,
           elements: (s.elements || []).map((el) =>
-            map[el.id] ? { ...el, ...invalidatePptxFitMetaForUpdates(el, map[el.id]) } : el
+            map[el.id] && ((!s.locked && !el.locked) || isPureUnlockUpdate(map[el.id]))
+              ? { ...el, ...invalidatePptxFitMetaForUpdates(el, map[el.id]) }
+              : el
           ),
         }))
       })
@@ -75,6 +79,7 @@ export function useSlideOperations({
     const ids = selectedElementIdsRef.current
     if (!ids.length) return
     const activeSlide = activeSlideOf()
+    if (activeSlide?.locked) return
     const lockedIds = new Set(
       (activeSlide?.elements || [])
         .filter((el) => ids.includes(el.id) && el.locked)
@@ -110,6 +115,7 @@ export function useSlideOperations({
     const ids = selectedElementIdsRef.current
     if (ids.length < 2) return
     const slide = activeSlideOf()
+    if (slide?.locked) return
     if (hasBlockedGroupMutation(slide, ids)) return
     if ((slide?.elements || []).some((el) => ids.includes(el.id) && el.locked)) return
     const groupId = crypto.randomUUID()
@@ -127,6 +133,7 @@ export function useSlideOperations({
     setPresentation((prev) => {
       if (!prev) return prev
       const slide = activeSlideOf()
+      if (slide?.locked) return prev
       if (hasBlockedGroupMutation(slide, ids)) return prev
       const groupIds = new Set(
         (slide?.elements || [])
@@ -155,6 +162,7 @@ export function useSlideOperations({
       setPresentation((prev) => {
         if (!prev) return prev
         const slide = activeSlideOf()
+        if (slide?.locked) return prev
         // Locked elements are protected from bulk moves (matching
         // deleteSelectedElements). Re-check the count AFTER filtering: a
         // selection of one free + one locked leaves a lone survivor, which

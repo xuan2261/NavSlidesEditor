@@ -29,6 +29,21 @@ function makeDeck() {
 }
 
 describe('Find & Replace — vertical child slides', () => {
+  it('uses responsive viewport-safe sizing instead of a fixed minimum width', () => {
+    const { container } = render(
+      <FindReplaceBar
+        presentation={makeDeck()}
+        onUpdatePresentation={() => {}}
+        currentSlideIndex={0}
+        onNavigateToSlide={() => {}}
+        onClose={() => {}}
+      />
+    )
+    const bar = container.querySelector('.find-replace-bar')
+    expect(bar.className).toContain('max-w-[520px]')
+    expect(bar.className).not.toContain('min-w-[380px]')
+  })
+
   it('search finds matches inside slide.children[].elements', () => {
     render(
       <FindReplaceBar

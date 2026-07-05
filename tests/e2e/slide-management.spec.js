@@ -91,7 +91,7 @@ test.describe('Slide Management Advanced', () => {
     await page.getByRole('button', { name: 'color' }).click()
     const swatches = page.getByRole('button', { name: /^Background / }).filter({ visible: true })
     await expect(swatches.first()).toBeVisible()
-    await swatches.nth(1).click()
+    await swatches.nth(2).click()
     await expect
       .poll(
         async () =>

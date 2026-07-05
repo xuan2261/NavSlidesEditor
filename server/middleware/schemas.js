@@ -48,7 +48,7 @@ const slideSchema = z
   .object({
     id: z.string().optional(),
     elements: z.array(elementSchema).optional().default([]),
-    notes: z.string().optional().default(''),
+    notes: z.string().optional(),
     speakerNotes: z.string().optional(),
     background: z.any().optional(),
   })
@@ -72,6 +72,31 @@ const updatePresentationSchema = z
     theme: z.string().max(100).optional(),
     transition: z.string().max(100).optional(),
     slides: z.array(slideSchema).optional(),
+  })
+  .passthrough()
+
+// ─── Templates ───────────────────────────────────────────────────────────────
+const createTemplateSchema = z
+  .object({
+    title: z.string().trim().min(1).max(500),
+    theme: z.string().max(100).optional(),
+    transition: z.string().max(100).optional(),
+    slides: z.array(slideSchema).min(1),
+  })
+  .passthrough()
+
+const updateTemplateSchema = z
+  .object({
+    title: z.string().trim().min(1).max(500).optional(),
+    theme: z.string().max(100).optional(),
+    transition: z.string().max(100).optional(),
+    slides: z.array(slideSchema).min(1).optional(),
+  })
+  .passthrough()
+
+const saveAsTemplateSchema = z
+  .object({
+    title: z.string().trim().min(1).max(500).optional(),
   })
   .passthrough()
 
@@ -123,6 +148,9 @@ const aiTranslateSchema = z.object({
 module.exports = {
   createPresentationSchema,
   updatePresentationSchema,
+  createTemplateSchema,
+  updateTemplateSchema,
+  saveAsTemplateSchema,
   createShareSchema,
   verifyShareSchema,
   aiGenerateSchema,

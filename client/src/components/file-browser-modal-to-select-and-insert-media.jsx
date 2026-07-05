@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { confirmUser } from '../utils/app-feedback'
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`
@@ -43,13 +44,18 @@ export default function FileBrowserModal({ presentationId, onInsert, onClose }) 
   const handleDelete = async (event, file) => {
     event.stopPropagation()
     if (!presentationId || !file.filename) return
-    if (!confirm(`Delete ${file.filename}?`)) return
-    const res = await fetch(
-      `/api/presentations/${presentationId}/uploads/${encodeURIComponent(file.filename)}`,
-      { method: 'DELETE' }
+    confirmUser(
+      `Delete ${file.filename}?`,
+      async () => {
+        const res = await fetch(
+          `/api/presentations/${presentationId}/uploads/${encodeURIComponent(file.filename)}`,
+          { method: 'DELETE' }
+        )
+        if (!res.ok) return
+        setFiles((current) => current.filter((item) => item.filename !== file.filename))
+      },
+      { title: 'Delete uploaded file', confirmLabel: 'Delete', destructive: true }
     )
-    if (!res.ok) return
-    setFiles((current) => current.filter((item) => item.filename !== file.filename))
   }
 
   return (

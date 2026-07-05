@@ -121,6 +121,7 @@ export default function CanvasContextMenu({
   const contextSelectionIds = contextMenu.contextSelectionIds || [contextMenu.elementId]
   const contextElements = (slide?.elements || []).filter((e) => contextSelectionIds.includes(e.id))
   const hasLockedContext = contextElements.some((e) => e.locked)
+  const isReadOnly = !!slide?.locked || hasLockedContext
   const currentRef = ctxEl?.snapRef || 'ul'
   const copyableUrl = ['image', 'video'].includes(contextMenu.elementType)
     ? getCopyableMediaUrl(ctxEl, origin)
@@ -144,7 +145,7 @@ export default function CanvasContextMenu({
     >
       <Button
         variant="ghost"
-        disabled={hasLockedContext}
+        disabled={isReadOnly}
         onClick={() => {
           onCopy?.()
           onClose()
@@ -154,7 +155,7 @@ export default function CanvasContextMenu({
       </Button>
       <Button
         variant="ghost"
-        disabled={hasLockedContext}
+        disabled={isReadOnly}
         onClick={() => {
           onCut?.()
           onClose()
@@ -164,7 +165,9 @@ export default function CanvasContextMenu({
       </Button>
       <Button
         variant="ghost"
+        disabled={!!slide?.locked}
         onClick={() => {
+          if (slide?.locked) return
           onPaste?.()
           onClose()
         }}
@@ -173,7 +176,7 @@ export default function CanvasContextMenu({
       </Button>
       <Button
         variant="ghost"
-        disabled={hasLockedContext}
+        disabled={isReadOnly}
         onClick={() => {
           onDuplicate?.()
           onClose()
@@ -187,7 +190,7 @@ export default function CanvasContextMenu({
         <>
           <Button
             variant="ghost"
-            disabled={hasLockedContext}
+            disabled={isReadOnly}
             onClick={() => {
               onStartCrop?.(contextMenu.elementId)
               onClose()
@@ -197,7 +200,7 @@ export default function CanvasContextMenu({
           </Button>
           <Button
             variant="ghost"
-            disabled={hasLockedContext}
+            disabled={isReadOnly}
             onClick={() => {
               const el = slide?.elements?.find((e) => e.id === contextMenu.elementId)
               if (el && el.imageW != null) {
@@ -246,9 +249,10 @@ export default function CanvasContextMenu({
               key={opt.id}
               title={opt.label}
               aria-label={opt.label}
+              disabled={isReadOnly}
               style={getSnapReferenceButtonStyle(currentRef === opt.id)}
               onClick={() => {
-                if (hasLockedContext) return
+                if (isReadOnly) return
                 onUpdateElement(contextMenu.elementId, { snapRef: opt.id })
                 onClose()
               }}

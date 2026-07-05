@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Globe, Layers, Calendar, ExternalLink, Copy } from 'lucide-react'
 import { Button } from '../components/ui'
+import { showError } from '../utils/app-feedback'
 
 export default function ExplorePage() {
   const navigate = useNavigate()
@@ -27,7 +28,7 @@ export default function ExplorePage() {
       const data = await res.json()
       const token = data.shares?.[0]?.token
       if (!token) {
-        alert('No share token found')
+        showError('No share token found')
         return
       }
 
@@ -41,7 +42,7 @@ export default function ExplorePage() {
         navigate(`/editor/${forkData.presentation.id}`)
       }
     } catch (err) {
-      alert('Fork failed: ' + err.message)
+      showError('Fork failed: ' + err.message)
     }
   }
 

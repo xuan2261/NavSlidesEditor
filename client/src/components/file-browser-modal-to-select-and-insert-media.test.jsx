@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import FileBrowserModal from './file-browser-modal-to-select-and-insert-media.jsx'
 
+vi.mock('../utils/app-feedback', () => ({
+  confirmUser: vi.fn((message, onConfirm) => onConfirm()),
+}))
+
 const mockFiles = [
   { filename: 'photo.jpg', url: '/uploads/pres-1/photo.jpg', size: 102400, type: 'image/jpeg' },
   { filename: 'video.mp4', url: '/uploads/pres-1/video.mp4', size: 5242880, type: 'video/mp4' },
@@ -10,7 +14,6 @@ const mockFiles = [
 
 describe('FileBrowserModal', () => {
   beforeEach(() => {
-    globalThis.confirm = vi.fn(() => true)
     globalThis.fetch = vi.fn().mockResolvedValue({
       json: () => Promise.resolve(mockFiles),
     })

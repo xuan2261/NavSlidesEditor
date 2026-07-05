@@ -3,6 +3,7 @@ import { buildSlidesFromOutline } from '../utils/build-slides-from-outline'
 import { sanitizeRichTextHtml } from '../utils/content-safety'
 import { applyTranslatedNotes, getSlideNotesTranslationKey } from '../utils/slide-notes'
 import { cloneInheritedDesignTokens } from '../utils/slide-template-theme-normalization'
+import { showError } from '../utils/app-feedback'
 
 function cloneInheritedBackground(slide) {
   return slide?.background ? JSON.parse(JSON.stringify(slide.background)) : { type: 'none' }
@@ -45,7 +46,7 @@ export function useAiActions({ setPresentation, updateElement, selectedElementId
           ],
         }))
       } catch (err) {
-        alert('Failed to generate slides: ' + err.message)
+        showError('Failed to generate slides: ' + err.message)
       }
     },
     [setPresentation]

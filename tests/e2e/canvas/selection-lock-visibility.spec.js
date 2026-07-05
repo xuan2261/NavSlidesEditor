@@ -64,7 +64,7 @@ test.describe('selection lock and visibility', () => {
     await expect(page.getByTestId('resize-handle-se')).toHaveCount(0)
 
     await page.getByTestId('selection-pane-toggle-visibility-text-a').click()
-    await expect(slideElement(page, 'text-a')).toHaveCount(0)
+    await expect(slideElement(page, 'text-a')).toBeHidden()
 
     await expect
       .poll(async () => {

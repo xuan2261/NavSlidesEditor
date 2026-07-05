@@ -44,6 +44,7 @@ export function createKeyboardHandler({
   ...callbacks
 }) {
   return (e) => {
+    if (e.defaultPrevented) return
     if (isEditing) return
     const active = getActiveElement()
     const tag = active?.tagName
