@@ -34,9 +34,9 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
   const data = element.data || [['']]
   const headerBg = resolveColorField(element.headerBgColor, 'table', 'headerBgColor') || 'rgba(99,102,241,0.3)'
   const cellBg = resolveColorField(element.cellBgColor, 'table', 'cellBgColor') || 'transparent'
-  const borderColor = resolveColorField(element.borderColor, 'table', 'borderColor') || 'rgba(255,255,255,0.2)'
+  const borderColor = resolveColorField(element.borderColor, 'table', 'borderColor') || 'rgba(20,20,19,0.22)'
   const borderWidth = element.borderWidth ?? 1
-  const textColor = resolveColorField(element.textColor, 'table', 'textColor') || '#ffffff'
+  const textColor = resolveColorField(element.textColor, 'table', 'textColor') || '#141413'
   const headerTextColor = resolveColorField(element.headerTextColor, 'table', 'headerTextColor') || textColor
   const fontSize = element.fontSize || 14
   const cellPadding = element.cellPadding || 8

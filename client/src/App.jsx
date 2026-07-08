@@ -12,6 +12,7 @@ const RemoteControlPage = lazy(() => import('./pages/RemoteControlPage'))
 const SpeakerViewPage = lazy(() => import('./pages/SpeakerViewPage'))
 const ExplorePage = lazy(() => import('./pages/ExplorePage'))
 const GamePlayerPage = lazy(() => import('./pages/game-player-join-page'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function EditorRoute({ isTemplate = false }) {
   const { id } = useParams()
@@ -65,6 +66,7 @@ function AppRoutes() {
         <Route path="/remote/:roomCode" element={<RemoteControlPage />} />
         <Route path="/speaker/:roomCode" element={<SpeakerViewPage />} />
         <Route path="/player/:slideId/:elementId" element={<GamePlayerPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
   )

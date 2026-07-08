@@ -1,8 +1,18 @@
 import React from 'react'
-import { fireEvent, render } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import { ModalShell } from './ModalShell'
+import { ModalShell, useModalFocusTrap } from './ModalShell'
+
+function CustomTrapModal() {
+  const { dialogRef, handleFocusTrapKeyDown } = useModalFocusTrap({ autoFocus: false })
+  return (
+    <div ref={dialogRef} role="dialog" aria-modal="true" onKeyDown={handleFocusTrapKeyDown}>
+      <button type="button">First</button>
+      <textarea aria-label="Editor" autoFocus onKeyDown={(event) => event.preventDefault()} />
+    </div>
+  )
+}
 
 describe('ModalShell', () => {
   it('renders an accessible dialog shell with a labelled title and close button', () => {
@@ -81,6 +91,53 @@ describe('ModalShell', () => {
 
     expect(firstClose).not.toHaveBeenCalled()
     expect(latestClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('[red defect:modal.focus] traps Tab inside the dialog and restores opener focus', () => {
+    render(<button type="button">Open modal</button>)
+    const opener = screen.getByText('Open modal')
+    opener.focus()
+    expect(document.activeElement).toBe(opener)
+
+    const { unmount } = render(
+      <ModalShell
+        titleId="focus-modal-title"
+        title="Focus modal"
+        onClose={() => {}}
+        footer={<button type="button">Save</button>}
+      >
+        <button type="button">Body action</button>
+      </ModalShell>
+    )
+
+    const close = screen.getByTestId('modal-shell-close-btn')
+    const save = screen.getByText('Save')
+    expect(document.activeElement).toBe(close)
+
+    fireEvent.keyDown(screen.getByTestId('modal-shell-overlay'), { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(save)
+
+    fireEvent.keyDown(screen.getByTestId('modal-shell-overlay'), { key: 'Tab' })
+    expect(document.activeElement).toBe(close)
+
+    unmount()
+    expect(document.activeElement).toBe(opener)
+  })
+
+  it('[red defect:modal.focus] preserves opener restore and child-owned Tab behavior', () => {
+    render(<button type="button">Open custom modal</button>)
+    const opener = screen.getByText('Open custom modal')
+    opener.focus()
+
+    const { unmount } = render(<CustomTrapModal />)
+    const editor = screen.getByLabelText('Editor')
+    editor.focus()
+
+    fireEvent.keyDown(editor, { key: 'Tab' })
+    expect(document.activeElement).toBe(editor)
+
+    unmount()
+    expect(document.activeElement).toBe(opener)
   })
 
   it('ignores missing or non-function Escape close handlers', () => {

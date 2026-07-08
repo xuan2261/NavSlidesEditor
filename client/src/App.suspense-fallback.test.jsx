@@ -11,4 +11,9 @@ describe('App lazy route fallback', () => {
     expect(APP_SOURCE).toContain('role="status"')
     expect(APP_SOURCE).toContain('Loading NavSlides')
   })
+
+  it('[red defect:route.404] declares a wildcard Not Found recovery route', () => {
+    expect(APP_SOURCE).toContain("import('./pages/NotFoundPage')")
+    expect(APP_SOURCE).toContain('path="*"')
+  })
 })

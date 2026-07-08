@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { BarChart3, X, Eye, TrendingUp, Clock, Loader2 } from 'lucide-react'
-import { Button } from '../components/ui'
-import { isBackdropClick } from '../lib/utils'
+import { Eye, TrendingUp, Clock, Loader2 } from 'lucide-react'
+import { ModalShell } from '../components/ui'
 
 export default function AnalyticsModal({ presentationId, onClose }) {
   const [data, setData] = useState(null)
@@ -56,38 +55,16 @@ export default function AnalyticsModal({ presentationId, onClose }) {
     onClose()
   }
 
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') handleClose() }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex justify-center items-center z-[10000]"
-      onClick={(event) => {
-        if (isBackdropClick(event)) handleClose()
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="analytics-modal-title"
+    <ModalShell
+      titleId="analytics-modal-title"
+      title="Analytics"
+      onClose={handleClose}
+      size="lg"
+      bodyClassName="max-h-[75vh]"
     >
-      <div
-        className="bg-card rounded-xl p-6 w-[560px] max-h-[85vh] overflow-y-auto shadow-2xl border border-border"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h3 id="analytics-modal-title" className="m-0 flex items-center gap-2 text-base">
-            <BarChart3 size={18} /> Analytics
-          </h3>
-          <Button variant="icon" onClick={handleClose} className="p-1" aria-label="Close">
-            <X size={16} />
-          </Button>
-        </div>
-
         {loading ? (
           <div className="text-center p-10 text-text-muted">
             <Loader2 size={20} className="animate-spin" /> Loading...
@@ -204,7 +181,6 @@ export default function AnalyticsModal({ presentationId, onClose }) {
             )}
           </>
         )}
-      </div>
-    </div>
+    </ModalShell>
   )
 }

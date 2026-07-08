@@ -53,4 +53,20 @@ describe('chart element renderer', () => {
     expect(srcDoc).toContain('scales:{}')
     expect(srcDoc).not.toContain('scales:{x:')
   })
+
+  it('[red defect:renderer.contrast] uses readable chart defaults on light backgrounds', () => {
+    const { container } = render(
+      <ChartRenderer
+        element={{
+          chartType: 'bar',
+          chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
+        }}
+      />
+    )
+
+    const srcDoc = container.querySelector('iframe').getAttribute('srcdoc')
+    expect(srcDoc).toContain("ticks:{color:'#141413'}")
+    expect(srcDoc).toContain("grid:{color:'rgba(20,20,19,0.16)'}")
+    expect(srcDoc).toContain("legend:{labels:{color:'#141413'")
+  })
 })

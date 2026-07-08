@@ -18,6 +18,18 @@ describe('responsive source contracts', () => {
     expect(src).toContain('md:flex-col')
   })
 
+  it('[red defect:home.mobile] gives the Home header a two-row mobile layout with reachable actions', () => {
+    const src = homeSource()
+
+    expect(src).toContain('flex-col gap-3')
+    expect(src).toContain('sm:h-14 sm:flex-row')
+    expect(src).toContain('min-h-10 w-10')
+    expect(src).toContain('sm:min-h-8 sm:w-8')
+    expect(src).toContain('min-h-10 px-3 sm:min-h-8')
+    expect(src).toContain('aria-label="New presentation"')
+    expect(src).toContain('min-[360px]:inline')
+  })
+
   it('Editor shows a deliberate small-screen guard instead of hiding the canvas', () => {
     const src = editorSource()
 

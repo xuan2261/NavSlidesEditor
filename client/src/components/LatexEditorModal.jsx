@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import katex from 'katex'
 import { normalizeLatexForRender } from 'revealjs-shared'
-import { Button } from '../components/ui'
+import { Button, useModalFocusTrap } from '../components/ui'
 import { isBackdropClick } from '../lib/utils'
 import LatexSymbolPalette from './latex-symbol-palette'
 
@@ -19,6 +19,7 @@ function getLatexError(content, hasTikz) {
 export default function LatexEditorModal({ state, onChange, onApply, onCancel }) {
   const [isOpen, setIsOpen] = useState(true)
   const textareaRef = useRef(null)
+  const { dialogRef, handleFocusTrapKeyDown } = useModalFocusTrap({ autoFocus: false })
 
   const handleClose = () => {
     setIsOpen(false)
@@ -74,6 +75,8 @@ export default function LatexEditorModal({ state, onChange, onApply, onCancel })
       aria-modal="true"
       aria-labelledby="latex-editor-modal-title"
       aria-describedby="latex-editor-helper latex-parse-feedback"
+      ref={dialogRef}
+      onKeyDown={handleFocusTrapKeyDown}
     >
       <div
         className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl"

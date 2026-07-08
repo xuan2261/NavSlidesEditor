@@ -32,7 +32,7 @@ export default function TabBar({ activeTab, onTabChange }) {
             aria-controls={`ribbon-panel-${tab.id}`}
             className={cn(
               'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors',
-              'border-b-2 -mb-px outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'border-b-2 -mb-px outline-none focus-visible:ring-2 focus-visible:ring-focus',
               isActive
                 ? 'border-primary text-text-primary bg-panel'
                 : 'border-transparent text-text-muted hover:text-text-primary hover:bg-hover'

@@ -30,4 +30,18 @@ describe('TableRenderer', () => {
     expect(cell?.style.fontSize).toBe('24px')
     expect(cell?.style.fontFamily).toBe('Arial')
   })
+
+  it('[red defect:renderer.contrast] uses readable light-background defaults', () => {
+    const { container } = render(
+      <TableRenderer
+        element={{ id: 'table-1', type: 'table', data: [['A']] }}
+        isEditing={false}
+        onUpdateElement={vi.fn()}
+      />
+    )
+
+    const cell = container.querySelector('td')
+    expect(cell?.style.color).toBe('rgb(20, 20, 19)')
+    expect(cell?.style.border).toContain('rgba(20,20,19,0.22)')
+  })
 })

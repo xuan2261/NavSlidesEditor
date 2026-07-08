@@ -61,6 +61,7 @@ describe('ProductTour', () => {
       overlayClickAction: false,
       dismissKeyAction: false,
       blockTargetInteraction: true,
+      overlayColor: 'rgba(0, 0, 0, 0.45)',
     })
 
     expect(props.steps).toHaveLength(7)

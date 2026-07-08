@@ -38,4 +38,21 @@ describe('Tailwind app chrome token contract', () => {
     expect(offenders).not.toContain('client/src/components/ribbon/ribbon-panel.jsx:bg-background')
     expect(offenders).not.toContain('client/src/components/ribbon/tab-bar-with-scroll-and-icons.jsx:bg-background')
   })
+
+  it('[red defect:token.focus] does not use undefined focus ring aliases in scoped UI chrome', () => {
+    const supported = new Set(colorKeys(tailwindConfig.theme.extend.colors))
+    const offenders = []
+
+    for (const relativePath of SCOPED_FILES) {
+      const source = fs.readFileSync(path.join(REPO_ROOT, relativePath), 'utf8')
+      for (const match of source.matchAll(/\bring-([a-z][a-z0-9-]*)\b/g)) {
+        const token = match[1]
+        if (!supported.has(token) && !token.includes('/')) {
+          offenders.push(`${relativePath}:ring-${token}`)
+        }
+      }
+    }
+
+    expect(offenders).toEqual([])
+  })
 })

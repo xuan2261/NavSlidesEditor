@@ -33,6 +33,23 @@ function isLinePathEvent(element, event) {
   return event.target?.tagName?.toLowerCase() === 'path'
 }
 
+function isEditableEventTarget(target) {
+  if (!target) return false
+  return Boolean(
+    target.closest?.('input, textarea, select, [contenteditable="true"], .ProseMirror')
+  )
+}
+
+function getElementAccessibleName(element) {
+  const typeLabel = `${String(element.type || 'slide')} element`
+  if (element.locked) return `${typeLabel}, locked`
+  return typeLabel
+}
+
+function isTextEditableElement(element) {
+  return ['text', 'table'].includes(element.type)
+}
+
 function importedTextInsetStyles(element) {
   const insets = element?._pptxImportMeta?.textInsets
   if (!insets) return null
@@ -119,6 +136,7 @@ function renderHighlightedCodeLines(element) {
 export default function CanvasElement({
   element,
   isSelected,
+  selectedElementCount = isSelected ? 1 : 0,
   isEditing,
   isCropping,
   cropState,
@@ -131,6 +149,8 @@ export default function CanvasElement({
   onCropHandleDown,
   onCommitCrop,
   onUpdateElement,
+  onDeleteElement,
+  onStartEdit,
   iconPaths,
 }) {
   const contentRef = useRef(null)
@@ -233,6 +253,49 @@ export default function CanvasElement({
     element.type === 'image' && element._pptxImportMeta?.sourceCrop
       ? element._pptxImportMeta.cropData
       : null
+  const handleKeyboardAction = (event) => {
+    if (isEditableEventTarget(event.target) || isCropping) return
+    const key = event.key
+    if (!['Enter', ' ', 'F2', 'Delete', 'Backspace', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape'].includes(key)) {
+      return
+    }
+
+    if ((key === 'Enter' || key === ' ') && !isSelected) {
+      event.preventDefault()
+      onClick?.({ ...event, shiftKey: false, stopPropagation: () => event.stopPropagation() })
+      return
+    }
+
+    if ((key === 'Enter' || key === 'F2') && isSelected && isTextEditableElement(element)) {
+      event.preventDefault()
+      onStartEdit?.(element.id)
+      return
+    }
+
+    if ((key === 'Delete' || key === 'Backspace') && isSelected && !element.locked) {
+      if (selectedElementCount > 1) return
+      event.preventDefault()
+      onDeleteElement?.(element.id)
+      return
+    }
+
+    const nudges = {
+      ArrowUp: { x: 0, y: -1 },
+      ArrowDown: { x: 0, y: 1 },
+      ArrowLeft: { x: -1, y: 0 },
+      ArrowRight: { x: 1, y: 0 },
+    }
+    const nudge = nudges[key]
+    if (nudge && isSelected && !element.locked) {
+      if (selectedElementCount > 1) return
+      event.preventDefault()
+      const step = event.shiftKey ? 1 : 10
+      onUpdateElement?.(element.id, {
+        x: Math.max(0, (Number(element.x) || 0) + nudge.x * step),
+        y: Math.max(0, (Number(element.y) || 0) + nudge.y * step),
+      })
+    }
+  }
   const cropDiagnostics = sourceCropData
     ? {
         'data-pptx-crop-intent': 'source-crop',
@@ -365,8 +428,13 @@ export default function CanvasElement({
       data-testid={`slide-element-${element.id}`}
       data-element-id={element.id}
       data-element-type={element.type}
+      role="group"
+      tabIndex={0}
+      aria-label={getElementAccessibleName(element)}
+      data-selected={isSelected ? 'true' : 'false'}
       {...cropDiagnostics}
       style={elementWrapperStyle}
+      onKeyDown={handleKeyboardAction}
       onMouseDown={(e) => {
         if (!isLinePathEvent(element, e)) return
         if (isEditing) {

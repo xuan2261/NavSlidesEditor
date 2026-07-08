@@ -1,3 +1,11 @@
+function safeChartColor(value, fallback) {
+  const color = typeof value === 'string' ? value.trim() : ''
+  if (/^#[0-9a-f]{3,8}$/i.test(color)) return color
+  if (/^rgba?\(\s*[\d.\s,%]+\)$/i.test(color)) return color
+  if (/^hsla?\(\s*[\d.\s,%deg]+\)$/i.test(color)) return color
+  return fallback
+}
+
 export function ChartRenderer({ element, isSelected, isDragging }) {
   const { chartType = 'bar', chartData = {} } = element
   const labels = chartData.labels || []
@@ -5,12 +13,15 @@ export function ChartRenderer({ element, isSelected, isDragging }) {
   const areaFill = chartType === 'line' && element.areaFill === true
   const stacked = element.stacked === true
   const stackedAxis = stacked ? 'stacked:true,' : ''
+  const axisTextColor = safeChartColor(element.axisTextColor, '#141413')
+  const gridColor = safeChartColor(element.gridColor, 'rgba(20,20,19,0.16)')
+  const legendTextColor = safeChartColor(element.legendTextColor, axisTextColor)
   const scales =
     chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'
       ? '{}'
       : chartType === 'radar'
-        ? "{r:{angleLines:{color:'rgba(255,255,255,0.1)'},ticks:{color:'rgba(255,255,255,0.6)',backdropColor:'transparent'},grid:{color:'rgba(255,255,255,0.1)'},pointLabels:{color:'rgba(255,255,255,0.7)'}}}"
-        : `{x:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`
+        ? `{r:{angleLines:{color:'${gridColor}'},ticks:{color:'${axisTextColor}',backdropColor:'transparent'},grid:{color:'${gridColor}'},pointLabels:{color:'${axisTextColor}'}}}`
+        : `{x:{${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}},y:{${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}}}`
   const safeJson = (value) => JSON.stringify(value).replace(/</g, '\\u003c')
 
   const chartHtml = `<!doctype html><html><head>
@@ -38,7 +49,7 @@ new Chart(document.getElementById('c'),{
   options:{
     responsive:true,
     maintainAspectRatio:false,
-    plugins:{legend:{labels:{color:'rgba(255,255,255,0.7)',font:{size:12}}}},
+    plugins:{legend:{labels:{color:'${legendTextColor}',font:{size:12}}}},
     scales:${scales}
   }
 });

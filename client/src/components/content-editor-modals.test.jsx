@@ -25,6 +25,7 @@ describe('content editor modals', () => {
     expect(screen.getByRole('dialog').getAttribute('aria-describedby')).toContain(
       'html-trusted-content-warning'
     )
+    expect(document.activeElement).toBe(screen.getByRole('textbox'))
     fireEvent.change(screen.getByRole('textbox'), {
       target: { value: '<p>safe by author policy</p>' },
     })
@@ -190,6 +191,7 @@ describe('content editor modals', () => {
     )
 
     expect(screen.getByLabelText('LaTeX source')).toBeTruthy()
+    expect(document.activeElement).toBe(screen.getByLabelText('LaTeX source'))
     expect(screen.getByRole('dialog').getAttribute('aria-describedby')).toContain(
       'latex-editor-helper'
     )

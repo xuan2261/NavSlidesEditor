@@ -191,7 +191,7 @@ const ProductTour = () => {
         buttons: ['back', 'skip', 'primary'],
         arrowColor: 'var(--bg-panel)',
         backgroundColor: 'var(--bg-panel)',
-        overlayColor: 'rgba(0, 0, 0, 0.6)',
+        overlayColor: 'rgba(0, 0, 0, 0.45)',
         primaryColor: 'var(--accent)',
         textColor: 'var(--text-primary)',
         zIndex: TOUR_Z_INDEX,

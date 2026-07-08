@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { Button } from '../components/ui'
+import { Button, useModalFocusTrap } from '../components/ui'
 import { isBackdropClick } from '../lib/utils'
 
 export default function CSSEditorModal({ customCSS, onUpdate, onClose }) {
   const [isOpen, setIsOpen] = useState(true)
+  const { dialogRef, handleFocusTrapKeyDown } = useModalFocusTrap()
 
   const handleClose = () => {
     setIsOpen(false)
@@ -29,6 +30,8 @@ export default function CSSEditorModal({ customCSS, onUpdate, onClose }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="css-editor-modal-title"
+      ref={dialogRef}
+      onKeyDown={handleFocusTrapKeyDown}
     >
       <div
         className="bg-[#1e1e2e] rounded-xl w-[560px] max-h-[80vh] flex flex-col border border-white/10 shadow-2xl"

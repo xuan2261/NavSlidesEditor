@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Button } from '../components/ui'
+import { Button, useModalFocusTrap } from '../components/ui'
 import { isBackdropClick } from '../lib/utils'
 import { MERMAID_SOURCE_LIMIT } from '../hooks/use-element-creation'
 
 export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) {
   const [isOpen, setIsOpen] = useState(true)
+  const { dialogRef, handleFocusTrapKeyDown } = useModalFocusTrap({ autoFocus: false })
   const isMermaid = state.embedKind === 'mermaid'
   const mermaidSource = state.mermaidSource || ''
   const isTooLong = isMermaid && mermaidSource.length > MERMAID_SOURCE_LIMIT
@@ -39,6 +40,8 @@ export default function HtmlEditorModal({ state, onChange, onApply, onCancel }) 
           ? 'html-editor-helper html-trusted-content-warning mermaid-editor-helper'
           : 'html-editor-helper html-trusted-content-warning'
       }
+      ref={dialogRef}
+      onKeyDown={handleFocusTrapKeyDown}
     >
       <div
         className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl"

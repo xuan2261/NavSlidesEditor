@@ -542,6 +542,7 @@ export default function SlideCanvas({
               key={element.id}
               element={element}
               isSelected={selectedElementIds.includes(element.id)}
+              selectedElementCount={selectedElementIds.length}
               isEditing={editingElementId === element.id}
               isCropping={cropMode?.elementId === element.id}
               cropState={cropMode?.elementId === element.id ? cropMode : null}
@@ -627,6 +628,8 @@ export default function SlideCanvas({
               }}
               onCommitCrop={commitCrop}
               onUpdateElement={onUpdateElement}
+              onDeleteElement={onDeleteElement}
+              onStartEdit={onStartEdit}
             />
           ))}
 

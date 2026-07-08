@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import CanvasElement from './canvas-element-wrapper'
@@ -17,28 +17,122 @@ const baseElement = {
 }
 
 function renderCanvasElement(element, props = {}) {
-  return render(
+  const handlers = {
+    onPointerDown: vi.fn(),
+    onClick: vi.fn(),
+    onDoubleClick: vi.fn(),
+    onContextMenu: vi.fn(),
+    onCropHandleDown: vi.fn(),
+    onCommitCrop: vi.fn(),
+    onUpdateElement: vi.fn(),
+    onDeleteElement: vi.fn(),
+    onStartEdit: vi.fn(),
+    ...props.handlers,
+  }
+  return {
+    handlers,
+    ...render(
     <CanvasElement
       element={element}
       isSelected={props.isSelected ?? false}
+      selectedElementCount={props.selectedElementCount}
       isEditing={props.isEditing ?? false}
       isCropping={props.isCropping ?? false}
       cropState={null}
       isDragging={props.isDragging ?? false}
       editor={null}
-      onPointerDown={vi.fn()}
-      onClick={vi.fn()}
-      onDoubleClick={vi.fn()}
-      onContextMenu={vi.fn()}
-      onCropHandleDown={vi.fn()}
-      onCommitCrop={vi.fn()}
-      onUpdateElement={vi.fn()}
+      onPointerDown={handlers.onPointerDown}
+      onClick={handlers.onClick}
+      onDoubleClick={handlers.onDoubleClick}
+      onContextMenu={handlers.onContextMenu}
+      onCropHandleDown={handlers.onCropHandleDown}
+      onCommitCrop={handlers.onCommitCrop}
+      onUpdateElement={handlers.onUpdateElement}
+      onDeleteElement={handlers.onDeleteElement}
+      onStartEdit={handlers.onStartEdit}
       iconPaths={{}}
     />
-  )
+    ),
+  }
 }
 
 describe('CanvasElement video playback', () => {
+  it('[red defect:canvas.keyboard] exposes focusable element semantics', () => {
+    renderCanvasElement(baseElement)
+    const wrapper = screen.getByTestId('slide-element-video-1')
+
+    expect(wrapper.getAttribute('role')).toBe('group')
+    expect(wrapper.getAttribute('tabindex')).toBe('0')
+    expect(wrapper.getAttribute('aria-label')).toBe('video element')
+    expect(wrapper.getAttribute('data-selected')).toBe('false')
+    expect(wrapper.hasAttribute('aria-selected')).toBe(false)
+  })
+
+  it('[red defect:canvas.keyboard] selects focused elements with Enter or Space', () => {
+    const { handlers } = renderCanvasElement(baseElement)
+    const wrapper = screen.getByTestId('slide-element-video-1')
+
+    fireEvent.keyDown(wrapper, { key: 'Enter' })
+    fireEvent.keyDown(wrapper, { key: ' ' })
+
+    expect(handlers.onClick).toHaveBeenCalledTimes(2)
+  })
+
+  it('[red defect:canvas.keyboard] nudges and deletes selected unlocked elements', () => {
+    const { handlers } = renderCanvasElement(baseElement, { isSelected: true })
+    const wrapper = screen.getByTestId('slide-element-video-1')
+
+    fireEvent.keyDown(wrapper, { key: 'ArrowRight', shiftKey: true })
+    fireEvent.keyDown(wrapper, { key: 'Delete' })
+
+    expect(handlers.onUpdateElement).toHaveBeenCalledWith('video-1', { x: 1, y: 0 })
+    expect(handlers.onDeleteElement).toHaveBeenCalledWith('video-1')
+  })
+
+  it('[red defect:canvas.keyboard] lets document shortcuts handle multi-selection delete and nudge', () => {
+    const { handlers } = renderCanvasElement(baseElement, {
+      isSelected: true,
+      selectedElementCount: 2,
+    })
+    const wrapper = screen.getByTestId('slide-element-video-1')
+
+    const arrow = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true })
+    const del = new KeyboardEvent('keydown', { key: 'Delete', bubbles: true, cancelable: true })
+    wrapper.dispatchEvent(arrow)
+    wrapper.dispatchEvent(del)
+
+    expect(arrow.defaultPrevented).toBe(false)
+    expect(del.defaultPrevented).toBe(false)
+    expect(handlers.onUpdateElement).not.toHaveBeenCalled()
+    expect(handlers.onDeleteElement).not.toHaveBeenCalled()
+  })
+
+  it('[red defect:canvas.keyboard] enters edit mode for selected text-like elements', () => {
+    const { handlers } = renderCanvasElement(
+      { id: 'text-1', type: 'text', x: 0, y: 0, width: 200, height: 80, content: '<p>Hi</p>' },
+      { isSelected: true }
+    )
+    const wrapper = screen.getByTestId('slide-element-text-1')
+
+    fireEvent.keyDown(wrapper, { key: 'F2' })
+
+    expect(handlers.onStartEdit).toHaveBeenCalledWith('text-1')
+  })
+
+  it('[red defect:canvas.keyboard] does not mutate locked elements through keyboard paths', () => {
+    const { handlers } = renderCanvasElement(
+      { ...baseElement, locked: true },
+      { isSelected: true }
+    )
+    const wrapper = screen.getByTestId('slide-element-video-1')
+
+    fireEvent.keyDown(wrapper, { key: 'ArrowDown' })
+    fireEvent.keyDown(wrapper, { key: 'Backspace' })
+
+    expect(handlers.onUpdateElement).not.toHaveBeenCalled()
+    expect(handlers.onDeleteElement).not.toHaveBeenCalled()
+  })
+
   it('keeps unselected line wrappers clickable', () => {
     renderCanvasElement({
       id: 'line-1',

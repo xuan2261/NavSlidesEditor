@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Button } from '../components/ui'
+import { Button, useModalFocusTrap } from '../components/ui'
 import { isBackdropClick } from '../lib/utils'
 
 const LANGUAGES = [
@@ -38,6 +38,7 @@ export default function CodeEditorModal({
   onChangeTheme,
 }) {
   const [isOpen, setIsOpen] = useState(true)
+  const { dialogRef, handleFocusTrapKeyDown } = useModalFocusTrap({ autoFocus: false })
 
   const handleClose = () => {
     setIsOpen(false)
@@ -62,6 +63,8 @@ export default function CodeEditorModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="code-editor-modal-title"
+      ref={dialogRef}
+      onKeyDown={handleFocusTrapKeyDown}
     >
       <div
         className="bg-card border border-border rounded-xl w-[78vw] max-w-[960px] h-[78vh] flex flex-col shadow-2xl"

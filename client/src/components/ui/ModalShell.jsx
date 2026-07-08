@@ -11,46 +11,39 @@ const sizeClasses = {
   '2xl': 'max-w-[960px]',
 }
 
-export function ModalShell({
-  title,
-  titleId,
-  children,
-  onClose,
-  footer,
-  size = 'md',
-  className,
-  bodyClassName,
-  closeLabel,
-  closeOnBackdrop = true,
-}) {
-  const closeButtonRef = useRef(null)
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+function getFocusableElements(root) {
+  return Array.from(root?.querySelectorAll(FOCUSABLE_SELECTOR) || []).filter(
+    (element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true'
+  )
+}
+
+export function useModalFocusTrap({ initialFocusRef, autoFocus = true } = {}) {
   const dialogRef = useRef(null)
-  const previousFocusRef = useRef(null)
-
-  const handleClose = () => {
-    if (typeof onClose === 'function') onClose()
-  }
-
-  useEscapeClose(handleClose)
+  const previousFocusRef = useRef(
+    typeof document === 'undefined' ? null : document.activeElement
+  )
 
   useEffect(() => {
-    previousFocusRef.current = document.activeElement
-    closeButtonRef.current?.focus()
+    const previousFocus = previousFocusRef.current
+
+    if (autoFocus) {
+      const target = initialFocusRef?.current || getFocusableElements(dialogRef.current)[0]
+      target?.focus?.()
+    }
 
     return () => {
-      previousFocusRef.current?.focus?.()
+      if (previousFocus?.isConnected) previousFocus.focus?.()
     }
-  }, [])
+  }, [autoFocus, initialFocusRef])
 
-  const handleKeyDown = (event) => {
+  const handleFocusTrapKeyDown = (event) => {
+    if (event.defaultPrevented) return
     if (event.key !== 'Tab') return
 
-    const focusableElements = Array.from(
-      dialogRef.current?.querySelectorAll(
-        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      ) || []
-    )
-
+    const focusableElements = getFocusableElements(dialogRef.current)
     if (!focusableElements.length) return
 
     const firstElement = focusableElements[0]
@@ -65,6 +58,32 @@ export function ModalShell({
     }
   }
 
+  return { dialogRef, handleFocusTrapKeyDown }
+}
+
+export function ModalShell({
+  title,
+  titleId,
+  children,
+  onClose,
+  footer,
+  size = 'md',
+  className,
+  bodyClassName,
+  closeLabel,
+  closeOnBackdrop = true,
+}) {
+  const closeButtonRef = useRef(null)
+  const { dialogRef, handleFocusTrapKeyDown } = useModalFocusTrap({
+    initialFocusRef: closeButtonRef,
+  })
+
+  const handleClose = () => {
+    if (typeof onClose === 'function') onClose()
+  }
+
+  useEscapeClose(handleClose)
+
   return (
     <div
       data-testid="modal-shell-overlay"
@@ -75,7 +94,7 @@ export function ModalShell({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      onKeyDown={handleKeyDown}
+      onKeyDown={handleFocusTrapKeyDown}
     >
       <div
         ref={dialogRef}

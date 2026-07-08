@@ -10,7 +10,7 @@ export function MarkdownRenderer({ element }) {
     overflow: 'auto',
     padding: '8px 12px',
     boxSizing: 'border-box',
-    color: resolveColorField(element.textColor, 'markdown', 'textColor') || 'white',
+    color: resolveColorField(element.textColor, 'markdown', 'textColor') || '#141413',
     fontSize: element.fontSize ? `${element.fontSize}px` : '18px',
     lineHeight: 1.5,
   }

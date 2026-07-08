@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Github, Settings, Check, X } from 'lucide-react'
 import { api } from '../utils/api'
-import { Button } from '../components/ui'
-import { isBackdropClick } from '../lib/utils'
+import { Button, ModalShell } from '../components/ui'
 
 export default function GitHubPushModal({ presentationId, presentationTitle, onClose }) {
   const [isOpen, setIsOpen] = useState(true)
@@ -23,12 +22,6 @@ export default function GitHubPushModal({ presentationId, presentationTitle, onC
     setIsOpen(false)
     onClose()
   }
-
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') handleClose() }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isOpen) return null
 
@@ -56,26 +49,12 @@ export default function GitHubPushModal({ presentationId, presentationTitle, onC
 
 
   return (
-    <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
-      onClick={(event) => {
-        if (isBackdropClick(event)) onClose()
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="github-push-modal-title"
+    <ModalShell
+      titleId="github-push-modal-title"
+      title="Save to GitHub"
+      onClose={handleClose}
+      size="md"
     >
-      <div
-        className="bg-card rounded-xl p-6 w-[420px] max-w-[90vw] shadow-2xl border border-border"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h3 id="github-push-modal-title" className="m-0 text-base text-text-primary">Save to GitHub</h3>
-          <Button variant="ghost" onClick={onClose} className="p-1" aria-label="Close">
-            <X size={16} />
-          </Button>
-        </div>
-
         <div className="flex flex-col gap-3">
           <div>
             <label className="text-xs text-text-muted block mb-1">Repository Owner</label>
@@ -156,7 +135,6 @@ export default function GitHubPushModal({ presentationId, presentationTitle, onC
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }

@@ -22,12 +22,12 @@ describe('Phase 2: markdown canvas honors textColor/fontSize', () => {
     expect(root.style.fontSize).toBe('18px')
   })
 
-  it('falls back to white / 18px when unset (preserves legacy look)', () => {
+  it('[red defect:renderer.contrast] falls back to readable dark text / 18px when unset', () => {
     const { container } = render(
       <MarkdownRenderer element={{ id: 'm1', type: 'markdown', content: '# Hi' }} />
     )
     const root = container.firstChild
-    expect(root.style.color).toBe('white')
+    expect(root.style.color).toBe('rgb(20, 20, 19)')
     expect(root.style.fontSize).toBe('18px')
   })
 })

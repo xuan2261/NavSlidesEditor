@@ -353,7 +353,7 @@ function renderHtml(el, style, wrap, vis, opts) {
 }
 
 function renderMarkdown(el, style, wrap, vis, opts) {
-  const mdColor = safeCssColor(resolveColorField(el.textColor, 'markdown', 'textColor'), 'white')
+  const mdColor = safeCssColor(resolveColorField(el.textColor, 'markdown', 'textColor'), '#141413')
   const mdFont = Number(el.fontSize) > 0 ? Number(el.fontSize) : null
   if (opts.forPrint) {
     const fs = mdFont || 16
@@ -369,6 +369,9 @@ function renderChart(el, style, wrap, vis, opts) {
   const { chartType = 'bar', chartData = {} } = el
   const areaFill = chartType === 'line' && el.areaFill === true
   const stacked = el.stacked === true
+  const axisTextColor = safeCssColor(el.axisTextColor, '#141413')
+  const gridColor = safeCssColor(el.gridColor, 'rgba(20,20,19,0.16)')
+  const legendTextColor = safeCssColor(el.legendTextColor, axisTextColor)
   const datasetsArr = (chartData.datasets || []).map((ds) => ({
     label: ds.label || '',
     data: ds.data || [],
@@ -380,30 +383,30 @@ function renderChart(el, style, wrap, vis, opts) {
   const stackedAxis = stacked ? 'stacked:true,' : ''
   const radialScales = {
     r: {
-      angleLines: { color: 'rgba(255,255,255,0.1)' },
-      ticks: { color: 'rgba(255,255,255,0.6)', backdropColor: 'transparent' },
-      grid: { color: 'rgba(255,255,255,0.1)' },
-      pointLabels: { color: 'rgba(255,255,255,0.7)' },
+      angleLines: { color: gridColor },
+      ticks: { color: axisTextColor, backdropColor: 'transparent' },
+      grid: { color: gridColor },
+      pointLabels: { color: axisTextColor },
     },
   }
   const cartesianScales = {
     x: {
       ...(stacked ? { stacked: true } : {}),
-      ticks: { color: 'rgba(255,255,255,0.6)' },
-      grid: { color: 'rgba(255,255,255,0.1)' },
+      ticks: { color: axisTextColor },
+      grid: { color: gridColor },
     },
     y: {
       ...(stacked ? { stacked: true } : {}),
-      ticks: { color: 'rgba(255,255,255,0.6)' },
-      grid: { color: 'rgba(255,255,255,0.1)' },
+      ticks: { color: axisTextColor },
+      grid: { color: gridColor },
     },
   }
   const scalesOpt =
     chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'
       ? '{}'
       : chartType === 'radar'
-        ? "{r:{angleLines:{color:'rgba(255,255,255,0.1)'},ticks:{color:'rgba(255,255,255,0.6)',backdropColor:'transparent'},grid:{color:'rgba(255,255,255,0.1)'},pointLabels:{color:'rgba(255,255,255,0.7)'}}}"
-        : `{x:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`
+        ? `{r:{angleLines:{color:'${gridColor}'},ticks:{color:'${axisTextColor}',backdropColor:'transparent'},grid:{color:'${gridColor}'},pointLabels:{color:'${axisTextColor}'}}}`
+        : `{x:{${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}},y:{${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}}}`
   const scalesConfig =
     chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'
       ? {}
@@ -420,7 +423,7 @@ function renderChart(el, style, wrap, vis, opts) {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
-        plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 12 } } } },
+        plugins: { legend: { labels: { color: legendTextColor, font: { size: 12 } } } },
         scales: scalesConfig,
       },
     }).replace(/</g, '\\u003c')
@@ -430,7 +433,7 @@ function renderChart(el, style, wrap, vis, opts) {
   const labels = JSON.stringify(chartData.labels || []).replace(/</g, '\\u003c')
   const datasets = JSON.stringify(datasetsArr).replace(/</g, '\\u003c')
   const _origin = getAssetOrigin()
-  const chartSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/chart.js/dist/chart.umd.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style></head><body><canvas id="c" style="width:100%;height:100%"></canvas><script>new Chart(document.getElementById('c'),{type:'${chartType}',data:{labels:${labels},datasets:${datasets}},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'rgba(255,255,255,0.7)',font:{size:12}}}},scales:${scalesOpt}}});</script></body></html>`
+  const chartSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/chart.js/dist/chart.umd.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style></head><body><canvas id="c" style="width:100%;height:100%"></canvas><script>new Chart(document.getElementById('c'),{type:'${chartType}',data:{labels:${labels},datasets:${datasets}},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'${legendTextColor}',font:{size:12}}}},scales:${scalesOpt}}});</script></body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(chartSrc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
 }
 
@@ -542,9 +545,9 @@ function renderTable(el, style, wrap, vis) {
     resolveColorField(el.headerBgColor, 'table', 'headerBgColor') || 'rgba(99,102,241,0.3)'
   const cellBg = resolveColorField(el.cellBgColor, 'table', 'cellBgColor') || 'transparent'
   const borderColor =
-    resolveColorField(el.borderColor, 'table', 'borderColor') || 'rgba(255,255,255,0.2)'
+    resolveColorField(el.borderColor, 'table', 'borderColor') || 'rgba(20,20,19,0.22)'
   const borderWidth = el.borderWidth ?? 1
-  const textColor = resolveColorField(el.textColor, 'table', 'textColor') || '#ffffff'
+  const textColor = resolveColorField(el.textColor, 'table', 'textColor') || '#141413'
   const headerTextColor =
     resolveColorField(el.headerTextColor, 'table', 'headerTextColor') || textColor
   const tableBorderStyle = safeBorderStyle(el.borderStyle)

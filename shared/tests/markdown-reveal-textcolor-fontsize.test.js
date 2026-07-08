@@ -41,9 +41,9 @@ describe('Phase 2 reveal: markdown honors textColor/fontSize (red-team M3)', () 
     expect(html).not.toContain('javascript:')
   })
 
-  it('keeps white / 18px defaults when unset (srcdoc)', () => {
+  it('[red defect:renderer.contrast] uses readable dark text / 18px defaults when unset (srcdoc)', () => {
     const html = renderElement({ ...base, content: '# Hi' }, {}, {})
-    expect(html).toContain('color:white')
+    expect(html).toContain('color:#141413')
     expect(html).toContain('18px')
   })
 })

@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Radio, Play, X } from 'lucide-react'
-import { Button } from '../components/ui'
-import { isBackdropClick } from '../lib/utils'
+import { useState } from 'react'
+import { Play } from 'lucide-react'
+import { Button, ModalShell } from '../components/ui'
 
 export default function LivePresentationModal({ presentationId, roomCode, presenterToken, onClose }) {
   const [isOpen, setIsOpen] = useState(true)
@@ -11,37 +10,15 @@ export default function LivePresentationModal({ presentationId, roomCode, presen
     onClose()
   }
 
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') handleClose() }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50"
-      onClick={(event) => {
-        if (isBackdropClick(event)) handleClose()
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="live-presentation-modal-title"
+    <ModalShell
+      titleId="live-presentation-modal-title"
+      title="Present Live"
+      onClose={handleClose}
+      size="sm"
     >
-      <div
-        className="bg-card rounded-xl p-6 w-[400px] shadow-2xl border border-border"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h3 id="live-presentation-modal-title" className="m-0 text-base flex items-center gap-2 text-text-primary">
-            <Radio size={18} /> Present Live
-          </h3>
-          <Button variant="icon" onClick={handleClose} className="w-6 h-6" aria-label="Close">
-            <X size={16} />
-          </Button>
-        </div>
         <div className="text-center mb-4">
           <div className="text-[13px] text-text-muted mb-2">Room Code</div>
           <div className="text-4xl font-bold text-text-primary py-3 font-mono tracking-[0.25em]">
@@ -114,7 +91,6 @@ export default function LivePresentationModal({ presentationId, roomCode, presen
         >
           <Play size={14} /> Start Presenting
         </Button>
-      </div>
-    </div>
+    </ModalShell>
   )
 }

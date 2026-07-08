@@ -6,6 +6,15 @@ import CanvasControls from './controls/canvas-controls'
 import { useUIStore } from '../../stores/ui-store'
 import { useEditorStore } from '../../stores/editor-store'
 
+function keyboardActivate(handler) {
+  return (event) => {
+    if (event.repeat) return
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    handler?.()
+  }
+}
+
 export default function ViewTabContent({
   viewMode,
   onTimeline,
@@ -82,7 +91,8 @@ export default function ViewTabContent({
           <Button variant="ribbon"
             className={`h-7 ${leftPanelOpen ? 'bg-primary-light text-accent' : ''}`}
             title="Toggle slide panel" aria-label="Toggle slide panel" aria-pressed={leftPanelOpen}
-            onMouseDown={(e) => { e.preventDefault(); toggleLeftPanel() }}>
+            onMouseDown={(e) => { e.preventDefault(); toggleLeftPanel() }}
+            onKeyDown={keyboardActivate(toggleLeftPanel)}>
             <PanelLeft size={14} />
             <span className="text-[11px] hidden lg:inline">Slides</span>
           </Button>
@@ -90,21 +100,24 @@ export default function ViewTabContent({
             data-testid="view-toggle-selection-pane"
             className={`h-7 ${rightPanelOpen ? 'bg-primary-light text-accent' : ''}`}
             title="Toggle properties panel" aria-label="Toggle properties panel" aria-pressed={rightPanelOpen}
-            onMouseDown={(e) => { e.preventDefault(); toggleRightPanel() }}>
+            onMouseDown={(e) => { e.preventDefault(); toggleRightPanel() }}
+            onKeyDown={keyboardActivate(toggleRightPanel)}>
             <PanelRight size={14} />
             <span className="text-[11px] hidden lg:inline">Properties</span>
           </Button>
           <Button variant="ribbon"
             className={`h-7 ${viewMode === 'sorter' ? 'bg-primary-light text-accent' : ''}`}
             title="Slide Sorter" aria-label="Slide Sorter" aria-pressed={viewMode === 'sorter'}
-            onMouseDown={(e) => { e.preventDefault(); onToggleSlideSorter?.() }}>
+            onMouseDown={(e) => { e.preventDefault(); onToggleSlideSorter?.() }}
+            onKeyDown={keyboardActivate(onToggleSlideSorter)}>
             <LayoutGrid size={14} />
             <span className="text-[11px] hidden lg:inline">Sorter</span>
           </Button>
           <Button variant="ribbon"
             className={`h-7 ${showDesignIdeas ? 'bg-primary-light text-accent' : ''}`}
             title="Design Ideas" aria-label="Toggle design ideas panel" aria-pressed={showDesignIdeas}
-            onMouseDown={(e) => { e.preventDefault(); toggleDesignIdeas() }}>
+            onMouseDown={(e) => { e.preventDefault(); toggleDesignIdeas() }}
+            onKeyDown={keyboardActivate(toggleDesignIdeas)}>
             <Lightbulb size={14} />
             <span className="text-[11px] hidden lg:inline">Ideas</span>
           </Button>
