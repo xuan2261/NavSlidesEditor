@@ -682,7 +682,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         mapActive(prev, (s) => ({
           ...s,
           elements: (s.elements || []).map((el) =>
-            el.id === id && ((!s.locked && !el.locked) || isLockedElementAllowedUpdate(updates))
+            el.id === id && !s.locked && (!el.locked || isLockedElementAllowedUpdate(updates))
               ? { ...el, ...invalidatePptxFitMetaForUpdates(el, updates) }
               : el
           ),

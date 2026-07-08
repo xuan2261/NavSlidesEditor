@@ -48,18 +48,16 @@ describe('getRotatedAABB', () => {
 })
 
 describe('clampToSlide rotation-awareness', () => {
-  it('preserves the world anchor of a rotated resize near a slide edge', () => {
+  it('keeps a rotated resize visually inside the slide near an edge', () => {
     // Rotated element resized so its axis-aligned box would spill past x=0.
     const start = { x: 20, y: 200, width: 200, height: 100, rotation: 45 }
     const out = applyResize('w', start, -300, 0) // drag west edge far left
-    const before = { ...out }
     clampToSlide(out, start, null, 960, 540)
-    // The axis-aligned clamp is skipped for rotated elements: x/y/w/h untouched
-    // (beyond the MIN_SIZE floor already applied), so the anchor is preserved.
-    expect(out.x).toBe(before.x)
-    expect(out.y).toBe(before.y)
-    expect(out.width).toBe(before.width)
-    expect(out.height).toBe(before.height)
+    const box = getRotatedAABB({ ...start, ...out })
+    expect(box.left).toBeGreaterThanOrEqual(0)
+    expect(box.top).toBeGreaterThanOrEqual(0)
+    expect(box.right).toBeLessThanOrEqual(960)
+    expect(box.bottom).toBeLessThanOrEqual(540)
     expect(out.width).toBeGreaterThanOrEqual(MIN_SIZE)
   })
 

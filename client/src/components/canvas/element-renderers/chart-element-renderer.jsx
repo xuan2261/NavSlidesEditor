@@ -5,6 +5,12 @@ export function ChartRenderer({ element, isSelected, isDragging }) {
   const areaFill = chartType === 'line' && element.areaFill === true
   const stacked = element.stacked === true
   const stackedAxis = stacked ? 'stacked:true,' : ''
+  const scales =
+    chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'
+      ? '{}'
+      : chartType === 'radar'
+        ? "{r:{angleLines:{color:'rgba(255,255,255,0.1)'},ticks:{color:'rgba(255,255,255,0.6)',backdropColor:'transparent'},grid:{color:'rgba(255,255,255,0.1)'},pointLabels:{color:'rgba(255,255,255,0.7)'}}}"
+        : `{x:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`
   const safeJson = (value) => JSON.stringify(value).replace(/</g, '\\u003c')
 
   const chartHtml = `<!doctype html><html><head>
@@ -33,7 +39,7 @@ new Chart(document.getElementById('c'),{
     responsive:true,
     maintainAspectRatio:false,
     plugins:{legend:{labels:{color:'rgba(255,255,255,0.7)',font:{size:12}}}},
-    scales:${chartType === 'pie' || chartType === 'doughnut' ? '{}' : `{x:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`}
+    scales:${scales}
   }
 });
 </script></body></html>`

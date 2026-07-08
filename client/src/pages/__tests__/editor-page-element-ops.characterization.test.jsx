@@ -184,6 +184,42 @@ describe('EditorPage element-ops characterization', () => {
     expect(snap.slides[0].elements).toHaveLength(2)
   })
 
+  it('does NOT toggle element visibility from the selection pane when the slide is locked', async () => {
+    h.seed.slides[0].locked = true
+    renderPage()
+    await screen.findByDisplayValue('Char Deck')
+
+    await selectElements(['el-a'])
+    fireEvent.click(screen.getByRole('button', { name: /selection pane/i }))
+    fireEvent.click(screen.getByTestId('selection-pane-toggle-visibility-el-a'))
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 1700))
+    })
+
+    const snap = lastSaved() || h.seed
+    const a = snap.slides[0].elements.find((e) => e.id === 'el-a')
+    expect(a.hidden).not.toBe(true)
+  })
+
+  it('does NOT batch-unlock selected elements when the slide is locked', async () => {
+    h.seed.slides[0].locked = true
+    h.seed.slides[0].elements[0].locked = true
+    h.seed.slides[0].elements[1].locked = true
+    renderPage()
+    await screen.findByDisplayValue('Char Deck')
+
+    await selectElements(['el-a', 'el-b'])
+    fireEvent.click(screen.getByTestId('prop-lock-toggle'))
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 1700))
+    })
+
+    const snap = lastSaved() || h.seed
+    const elements = snap.slides[0].elements
+    expect(elements.find((e) => e.id === 'el-a').locked).toBe(true)
+    expect(elements.find((e) => e.id === 'el-b').locked).toBe(true)
+  })
+
   it('[cap:shortcut.group] groups two selected elements with a shared groupId (Ctrl+G)', async () => {
     renderPage()
     await screen.findByDisplayValue('Char Deck')

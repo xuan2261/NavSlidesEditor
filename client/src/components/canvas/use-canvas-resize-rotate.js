@@ -173,6 +173,23 @@ export function clampToSlide(updates, startEl, snapFn, slideW, slideH) {
   if (startEl.rotation) {
     updates.width = Math.max(MIN_SIZE, updates.width)
     updates.height = Math.max(MIN_SIZE, updates.height)
+    let box = getRotatedAABB({ ...startEl, ...updates })
+    const scale = Math.min(1, slideW / box.width, slideH / box.height)
+    if (Number.isFinite(scale) && scale < 1) {
+      const safeScale = Math.max(0, scale - 1e-9)
+      updates.width = Math.max(MIN_SIZE, updates.width * safeScale)
+      updates.height = Math.max(MIN_SIZE, updates.height * safeScale)
+      box = getRotatedAABB({ ...startEl, ...updates })
+    }
+    let shiftX = 0
+    let shiftY = 0
+    const EPS = 1e-9
+    if (box.left < EPS) shiftX = EPS - box.left
+    if (box.right + shiftX > slideW - EPS) shiftX += slideW - EPS - (box.right + shiftX)
+    if (box.top < EPS) shiftY = EPS - box.top
+    if (box.bottom + shiftY > slideH - EPS) shiftY += slideH - EPS - (box.bottom + shiftY)
+    updates.x += shiftX
+    updates.y += shiftY
     return
   }
   updates.x = snapFn ? snapFn(Math.max(0, updates.x)) : Math.max(0, updates.x)

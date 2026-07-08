@@ -1010,6 +1010,32 @@ describe('element-renderers safety behavior', () => {
     expect(line).toContain('"fill":false')
   })
 
+  it('[cap:element.chart tier:deep depth:export] renders radial chart scales for iframe and print output', () => {
+    const radar = {
+      ...base,
+      type: 'chart',
+      chartType: 'radar',
+      chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1], color: '#6366f1' }] },
+    }
+    const polar = { ...radar, chartType: 'polarArea' }
+
+    const radarIframe = renderElement(radar, {}, {})
+    expect(radarIframe).toContain('scales:{r:')
+    expect(radarIframe).not.toContain('scales:{x:')
+
+    const radarPrint = renderElement(radar, {}, { forPrint: true })
+    expect(radarPrint).toContain('"r":{')
+    expect(radarPrint).not.toContain('"x":{')
+
+    const polarIframe = renderElement(polar, {}, {})
+    expect(polarIframe).toContain('scales:{}')
+    expect(polarIframe).not.toContain('scales:{x:')
+
+    const polarPrint = renderElement(polar, {}, { forPrint: true })
+    expect(polarPrint).toContain('"scales":{}')
+    expect(polarPrint).not.toContain('"x":{')
+  })
+
   it('omits hidden elements from shared HTML export output', () => {
     const html = renderSlideElements({
       elements: [

@@ -23,4 +23,34 @@ describe('chart element renderer', () => {
     expect(srcDoc).not.toContain('</script><img')
     expect(srcDoc).toContain('\\u003c/script>')
   })
+
+  it('[cap:element.chart depth:behavior] uses radial scales for radar charts', () => {
+    const { container } = render(
+      <ChartRenderer
+        element={{
+          chartType: 'radar',
+          chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
+        }}
+      />
+    )
+
+    const srcDoc = container.querySelector('iframe').getAttribute('srcdoc')
+    expect(srcDoc).toContain('scales:{r:')
+    expect(srcDoc).not.toContain('scales:{x:')
+  })
+
+  it('[cap:element.chart depth:behavior] does not emit cartesian scales for polar area charts', () => {
+    const { container } = render(
+      <ChartRenderer
+        element={{
+          chartType: 'polarArea',
+          chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
+        }}
+      />
+    )
+
+    const srcDoc = container.querySelector('iframe').getAttribute('srcdoc')
+    expect(srcDoc).toContain('scales:{}')
+    expect(srcDoc).not.toContain('scales:{x:')
+  })
 })

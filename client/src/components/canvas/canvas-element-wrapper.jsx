@@ -244,7 +244,7 @@ export default function CanvasElement({
     height: '100%',
     border: 'none',
     display: 'block',
-    pointerEvents: 'none',
+    pointerEvents: isSelected && !isDragging ? 'auto' : 'none',
   }
   const codeBlockStyle = {
     margin: 0,

@@ -64,7 +64,7 @@ export function useSlideOperations({
         return mapActive(prev, (s) => ({
           ...s,
           elements: (s.elements || []).map((el) =>
-            map[el.id] && ((!s.locked && !el.locked) || isPureUnlockUpdate(map[el.id]))
+            map[el.id] && !s.locked && (!el.locked || isPureUnlockUpdate(map[el.id]))
               ? { ...el, ...invalidatePptxFitMetaForUpdates(el, map[el.id]) }
               : el
           ),

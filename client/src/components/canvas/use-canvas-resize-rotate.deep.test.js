@@ -3,6 +3,8 @@ import {
   getRotationAngle,
   applyResizeAspectRatio,
   applyResize,
+  clampToSlide,
+  getRotatedAABB,
   MIN_SIZE,
 } from './use-canvas-resize-rotate'
 
@@ -93,5 +95,37 @@ describe('[cap:canvas.resize-aspect tier:deep] aspect-ratio preserving resize', 
     applyResizeAspectRatio('se', start, updates)
     expect(updates.width).toBeGreaterThanOrEqual(MIN_SIZE)
     expect(updates.height).toBeGreaterThanOrEqual(MIN_SIZE)
+  })
+})
+
+describe('[cap:canvas.resize-boundary tier:deep] rotated resize stays inside slide bounds', () => {
+  it('shifts a rotated resize result back inside the slide visual bounds', () => {
+    const start = { x: 2, y: 100, width: 120, height: 80, rotation: 45 }
+    const updates = applyResize('w', start, -80, 0)
+
+    clampToSlide(updates, start, null, 960, 540)
+
+    const box = getRotatedAABB({ ...start, ...updates })
+    expect(box.left).toBeGreaterThanOrEqual(0)
+    expect(box.top).toBeGreaterThanOrEqual(0)
+    expect(box.right).toBeLessThanOrEqual(960)
+    expect(box.bottom).toBeLessThanOrEqual(540)
+  })
+
+  it('shrinks an oversized rotated resize result when shifting alone cannot fit it', () => {
+    const slideW = 300
+    const slideH = 220
+    const start = { x: 40, y: 40, width: 200, height: 120, rotation: 45 }
+    const updates = applyResize('e', start, 800, 0)
+
+    clampToSlide(updates, start, null, slideW, slideH)
+
+    const box = getRotatedAABB({ ...start, ...updates })
+    expect(box.width).toBeLessThanOrEqual(slideW)
+    expect(box.height).toBeLessThanOrEqual(slideH)
+    expect(box.left).toBeGreaterThanOrEqual(0)
+    expect(box.top).toBeGreaterThanOrEqual(0)
+    expect(box.right).toBeLessThanOrEqual(slideW)
+    expect(box.bottom).toBeLessThanOrEqual(slideH)
   })
 })

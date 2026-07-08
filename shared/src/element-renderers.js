@@ -378,10 +378,38 @@ function renderChart(el, style, wrap, vis, opts) {
     fill: chartType === 'line' ? areaFill : undefined,
   }))
   const stackedAxis = stacked ? 'stacked:true,' : ''
+  const radialScales = {
+    r: {
+      angleLines: { color: 'rgba(255,255,255,0.1)' },
+      ticks: { color: 'rgba(255,255,255,0.6)', backdropColor: 'transparent' },
+      grid: { color: 'rgba(255,255,255,0.1)' },
+      pointLabels: { color: 'rgba(255,255,255,0.7)' },
+    },
+  }
+  const cartesianScales = {
+    x: {
+      ...(stacked ? { stacked: true } : {}),
+      ticks: { color: 'rgba(255,255,255,0.6)' },
+      grid: { color: 'rgba(255,255,255,0.1)' },
+    },
+    y: {
+      ...(stacked ? { stacked: true } : {}),
+      ticks: { color: 'rgba(255,255,255,0.6)' },
+      grid: { color: 'rgba(255,255,255,0.1)' },
+    },
+  }
   const scalesOpt =
-    chartType === 'pie' || chartType === 'doughnut'
+    chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'
       ? '{}'
-      : `{x:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`
+      : chartType === 'radar'
+        ? "{r:{angleLines:{color:'rgba(255,255,255,0.1)'},ticks:{color:'rgba(255,255,255,0.6)',backdropColor:'transparent'},grid:{color:'rgba(255,255,255,0.1)'},pointLabels:{color:'rgba(255,255,255,0.7)'}}}"
+        : `{x:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}},y:{${stackedAxis}ticks:{color:'rgba(255,255,255,0.6)'},grid:{color:'rgba(255,255,255,0.1)'}}}`
+  const scalesConfig =
+    chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'
+      ? {}
+      : chartType === 'radar'
+        ? radialScales
+        : cartesianScales
 
   if (opts.forPrint) {
     const canvasId = `chart-${el.id || Math.random().toString(36).slice(2, 8)}`
@@ -393,21 +421,7 @@ function renderChart(el, style, wrap, vis, opts) {
         maintainAspectRatio: false,
         animation: false,
         plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 12 } } } },
-        scales:
-          chartType === 'pie' || chartType === 'doughnut'
-            ? {}
-            : {
-                x: {
-                  ...(stacked ? { stacked: true } : {}),
-                  ticks: { color: 'rgba(255,255,255,0.6)' },
-                  grid: { color: 'rgba(255,255,255,0.1)' },
-                },
-                y: {
-                  ...(stacked ? { stacked: true } : {}),
-                  ticks: { color: 'rgba(255,255,255,0.6)' },
-                  grid: { color: 'rgba(255,255,255,0.1)' },
-                },
-              },
+        scales: scalesConfig,
       },
     }).replace(/</g, '\\u003c')
     return `<div style="${style}${vis}"><canvas id="${canvasId}" data-chart-config='${chartConfig}' style="width:100%;height:100%;"></canvas></div>`

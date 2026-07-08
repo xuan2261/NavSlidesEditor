@@ -16,15 +16,15 @@ const baseElement = {
   playbackRate: 1,
 }
 
-function renderCanvasElement(element) {
+function renderCanvasElement(element, props = {}) {
   return render(
     <CanvasElement
       element={element}
-      isSelected={false}
-      isEditing={false}
-      isCropping={false}
+      isSelected={props.isSelected ?? false}
+      isEditing={props.isEditing ?? false}
+      isCropping={props.isCropping ?? false}
       cropState={null}
-      isDragging={false}
+      isDragging={props.isDragging ?? false}
       editor={null}
       onPointerDown={vi.fn()}
       onClick={vi.fn()}
@@ -352,5 +352,13 @@ describe('CanvasElement html embed sandbox', () => {
     expect(iframe.getAttribute('title')).toBe('Mermaid diagram preview')
     expect(iframe.getAttribute('srcdoc')).toContain('/vendor/mermaid/mermaid.min.js')
     expect(iframe.getAttribute('srcdoc')).toContain('flowchart TD')
+  })
+
+  it('[cap:element.html depth:behavior] enables iframe interaction after the element is selected', () => {
+    renderCanvasElement(htmlElement, { isSelected: true })
+    const wrapper = screen.getByTestId('slide-element-html-1')
+    const iframe = wrapper.querySelector('iframe')
+
+    expect(iframe.style.pointerEvents).toBe('auto')
   })
 })
