@@ -2,25 +2,32 @@
 /**
  * PPTX visual oracle CLI (Phase 02).
  *
- * Primary CI path: compare present-mode captures (or fixture buffers) to committed
- * golden metrics / baseline JSON. LibreOffice is optional for regenerating goldens.
+ * Primary CI path: SSIM of Nav present captures vs committed golden PNGs under
+ * oracle/goldens/{deckStem}/slide-N.png. LibreOffice optional for refresh only.
  *
  * Exit codes:
  *   0 — pass (or local skip with PPTX_ORACLE=off in non-CI)
- *   1 — metric fail
- *   2 — oracle dependency missing when required
+ *   1 — metric fail / missing goldens
+ *   2 — oracle binary missing when LO required
  */
 const fs = require('fs-extra')
 const path = require('node:path')
 const { computeSsim, roundSsim } = require('./ssim')
 const { getMilestone } = require('../sla-contract')
-const { findLibreOfficeBinary } = require('./render-libreoffice')
+const { findLibreOfficeBinary, renderPptxWithLibreOffice } = require('./render-libreoffice')
+const { compareCorpusToGoldens, listCorpusPptx, deckStem } = require('./compare-goldens')
+const { encodePngRgba } = require('./png-rgba')
+
+const DEFAULT_GOLDENS = path.join('server', 'services', 'pptx-import', 'oracle', 'goldens')
+const DEFAULT_BASELINE = path.join('server', 'services', 'pptx-import', 'oracle', 'baseline-ssim.json')
 
 function parseArgs(argv) {
   const args = {
     corpus: path.join('server', 'data', 'test-corpus'),
+    goldensDir: DEFAULT_GOLDENS,
+    actualsDir: null,
     baselineOut: null,
-    baselineIn: path.join('server', 'services', 'pptx-import', 'oracle', 'baseline-ssim.json'),
+    baselineIn: DEFAULT_BASELINE,
     reportDir: path.join('plans', 'reports', 'pptx-oracle-runs'),
     milestone: 'phase02',
     meanThreshold: null,
@@ -30,12 +37,17 @@ function parseArgs(argv) {
     pairB: null,
     width: 32,
     height: 32,
+    mode: 'golden', // golden | baseline | seed-goldens
+    requireActuals: false,
+    requireLo: false,
     help: false,
   }
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i]
     if (a === '--help' || a === '-h') args.help = true
     else if (a === '--corpus') args.corpus = argv[++i]
+    else if (a === '--goldens-dir') args.goldensDir = argv[++i]
+    else if (a === '--actuals-dir') args.actualsDir = argv[++i]
     else if (a === '--baseline-out') args.baselineOut = argv[++i]
     else if (a === '--baseline-in') args.baselineIn = argv[++i]
     else if (a === '--report-dir') args.reportDir = argv[++i]
@@ -47,6 +59,9 @@ function parseArgs(argv) {
     else if (a === '--pair-b') args.pairB = argv[++i]
     else if (a === '--width') args.width = Number(argv[++i])
     else if (a === '--height') args.height = Number(argv[++i])
+    else if (a === '--mode') args.mode = argv[++i]
+    else if (a === '--require-actuals') args.requireActuals = true
+    else if (a === '--require-lo') args.requireLo = true
   }
   return args
 }
@@ -64,13 +79,14 @@ function resolveThresholds(args) {
   return { mean, min, milestoneId: milestone?.id || args.milestone }
 }
 
-function buildReport({ decks, meanSsim, skipped, reason }) {
+function buildReport({ decks, meanSsim, skipped, reason, extra = {} }) {
   return {
     generatedAt: new Date().toISOString(),
     skipped: Boolean(skipped),
     reason: reason || null,
     meanSsim: meanSsim == null ? null : roundSsim(meanSsim),
     decks: decks || [],
+    ...extra,
   }
 }
 
@@ -84,34 +100,67 @@ async function compareRawPair(args) {
   })
 }
 
-async function loadOrRecordBaseline(args) {
-  if (args.baselineOut) {
-    // Record debt baseline: synthetic self-ssim=1 per corpus pptx until captures exist
-    const files = (await fs.readdir(args.corpus).catch(() => []))
-      .filter((n) => n.toLowerCase().endsWith('.pptx'))
-      .sort((a, b) => a.localeCompare(b))
-    const decks = files.map((file) => ({
-      file,
-      slides: [{ index: 0, ssim: 1, note: 'placeholder-until-present-capture' }],
-      meanSsim: 1,
-    }))
-    const report = buildReport({ decks, meanSsim: files.length ? 1 : null })
-    await fs.ensureDir(path.dirname(args.baselineOut))
-    await fs.writeJson(args.baselineOut, report, { spaces: 2 })
-    return report
+/**
+ * Seed minimal placeholder goldens (8×8 solid) per corpus deck when missing.
+ * Maintainer replaces with LO/PP goldens offline.
+ */
+async function seedPlaceholderGoldens(args) {
+  const files = await listCorpusPptx(args.corpus)
+  const rgba = Buffer.alloc(8 * 8 * 4, 128)
+  for (let i = 0; i < 8 * 8; i += 1) rgba[i * 4 + 3] = 255
+  const png = encodePngRgba(8, 8, rgba)
+  for (const file of files) {
+    const dir = path.join(args.goldensDir, deckStem(file))
+    await fs.ensureDir(dir)
+    const slide0 = path.join(dir, 'slide-0.png')
+    if (!(await fs.pathExists(slide0))) await fs.writeFile(slide0, png)
   }
+  return files.length
+}
 
-  if (await fs.pathExists(args.baselineIn)) {
-    const baseline = await fs.readJson(args.baselineIn)
-    return buildReport({
-      decks: baseline.decks || [],
-      meanSsim: baseline.meanSsim,
-      skipped: baseline.skipped,
-      reason: baseline.reason || 'loaded-baseline',
-    })
+async function runGoldenMode(args) {
+  const comparison = await compareCorpusToGoldens({
+    corpusDir: args.corpus,
+    goldensDir: args.goldensDir,
+    actualsDir: args.actualsDir,
+    requireAllGoldens: true,
+    requireActuals: args.requireActuals,
+  })
+  return buildReport({
+    decks: comparison.decks,
+    meanSsim: comparison.meanSsim,
+    reason: comparison.failed ? 'missing-goldens' : 'golden-compare',
+    extra: {
+      missingGoldens: comparison.missingGoldens,
+      deckCount: comparison.deckCount,
+      failed: comparison.failed,
+      debt: !args.actualsDir,
+      claim: 'Nav present vs golden SSIM (goldens may be placeholder until LO/PP refresh)',
+    },
+  })
+}
+
+async function writeBaseline(args, report) {
+  const out = args.baselineOut || args.baselineIn
+  await fs.ensureDir(path.dirname(out))
+  const baseline = {
+    generatedAt: report.generatedAt,
+    milestone: report.milestone,
+    meanSsim: report.meanSsim,
+    debt: report.debt !== false,
+    claim: report.claim,
+    deckCount: report.deckCount || report.decks?.length || 0,
+    decks: (report.decks || []).map((d) => ({
+      file: d.file,
+      meanSsim: d.meanSsim,
+      slideCount: d.slides?.length || 0,
+      goldenCount: d.goldenCount,
+      error: d.error || null,
+    })),
   }
-
-  return buildReport({ decks: [], meanSsim: null, skipped: true, reason: 'no-baseline' })
+  await fs.writeJson(out, baseline, { spaces: 2 })
+  report.baselinePath = out
+  return report
 }
 
 async function writeTimestampedReport(reportDir, report) {
@@ -126,7 +175,14 @@ async function main(argv = process.argv.slice(2)) {
   const args = parseArgs(argv)
   if (args.help) {
     process.stdout.write(
-      'Usage: pptx-oracle-cli [--corpus dir] [--baseline-out path] [--force-threshold n] [--pair-a|--pair-b raw]\n'
+      [
+        'Usage: pptx-oracle-cli [options]',
+        '  --mode golden|seed-goldens   (default golden)',
+        '  --corpus dir --goldens-dir dir --actuals-dir dir',
+        '  --baseline-out path --force-threshold n',
+        '  --pair-a|--pair-b raw buffers + --width --height',
+        '',
+      ].join('\n')
     )
     return 0
   }
@@ -143,23 +199,45 @@ async function main(argv = process.argv.slice(2)) {
     return 0
   }
 
+  if (args.mode === 'seed-goldens') {
+    const n = await seedPlaceholderGoldens(args)
+    process.stdout.write(JSON.stringify({ seeded: n, goldensDir: args.goldensDir }) + '\n')
+    return 0
+  }
+
+  const loBinary = findLibreOfficeBinary()
+  if ((args.requireLo || process.env.PPTX_ORACLE_LO === '1') && !loBinary) {
+    process.stderr.write('LibreOffice required but not found (exit 2)\n')
+    return 2
+  }
+
   let report
   if (args.pairA && args.pairB) {
     report = await compareRawPair(args)
   } else {
-    report = await loadOrRecordBaseline(args)
+    report = await runGoldenMode(args)
   }
 
   const { mean, min, milestoneId } = resolveThresholds(args)
   report.milestone = milestoneId
   report.thresholds = { mean, min }
-  report.libreOffice = findLibreOfficeBinary()
+  report.libreOffice = loBinary
+
+  if (args.baselineOut || args.mode === 'baseline') {
+    await writeBaseline(args, report)
+  }
+
+  // Optional LO probe when PPTX_ORACLE_LO=1 (maintainer tooling; not required)
+  if (process.env.PPTX_ORACLE_LO === '1' && report.libreOffice) {
+    report.loAvailable = true
+  }
 
   const reportPath = await writeTimestampedReport(args.reportDir, report)
   report.reportPath = reportPath
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
 
   if (report.skipped && !args.forceThreshold) return 0
+  if (report.failed) return 1
 
   if (mean != null && report.meanSsim != null && report.meanSsim < mean) return 1
   if (min != null && report.decks?.length) {
@@ -186,4 +264,6 @@ module.exports = {
   resolveThresholds,
   buildReport,
   main,
+  seedPlaceholderGoldens,
+  renderPptxWithLibreOffice,
 }

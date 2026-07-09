@@ -65,4 +65,24 @@ describe('parseSpTree (T3.1 T3.2 T3.3)', () => {
     expect(chart).toBeTruthy()
     expect(chart.graphicKind).toBe('chart')
   })
+
+  it('T3.4 SmartArt diagram graphicFrame → diagram evidence node', () => {
+    const xml = `<?xml version="1.0"?>
+    <p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+     xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+      <p:cSld><p:spTree>
+        <p:nvGrpSpPr/><p:grpSpPr/>
+        <p:graphicFrame>
+          <p:nvGraphicFramePr><p:cNvPr id="5" name="Diagram 1"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr>
+          <a:graphic>
+            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/diagram"/>
+          </a:graphic>
+        </p:graphicFrame>
+      </p:spTree></p:cSld>
+    </p:sld>`
+    const nodes = parseSpTree(xml)
+    const diagram = nodes.find((n) => n.kind === 'graphicFrame')
+    expect(diagram).toBeTruthy()
+    expect(diagram.graphicKind).toBe('diagram')
+  })
 })

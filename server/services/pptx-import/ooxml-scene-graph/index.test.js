@@ -59,10 +59,21 @@ describe('buildOoxmlSceneGraph + reconcile (T3.1 T3.6 T3.7 T3.8)', () => {
     expect(warnings[0].type).toBe('scene-graph-unmapped')
   })
 
-  it('T3.7 PPTX_SLA_STRICT throws on unmapped', async () => {
+  it('T3.7 empty-mapped slide fails under strictCountGate', async () => {
     const graph = await buildOoxmlSceneGraph(await fixtureZip())
     const presentation = { slides: [{ elements: [] }] }
-    expect(() => reconcileSceneGraph(graph, presentation, { strict: true })).toThrow(/PPTX_SLA_STRICT/)
+    expect(() => reconcileSceneGraph(graph, presentation, { strictCountGate: true })).toThrow(
+      /PPTX_SLA_STRICT_COUNT|empty/
+    )
+  })
+
+  it('count heuristic alone does not throw under default reconcile', async () => {
+    const graph = await buildOoxmlSceneGraph(await fixtureZip())
+    // One mapped element but graph has more leaves — warning only
+    const presentation = { slides: [{ elements: [{ type: 'shape' }] }] }
+    expect(() => reconcileSceneGraph(graph, presentation, { strictCountGate: true })).not.toThrow()
+    const { warnings } = reconcileSceneGraph(graph, presentation)
+    expect(warnings.some((w) => w.type === 'scene-graph-unmapped')).toBe(true)
   })
 
   it('T3.8 chart graph nodes ≥ inspectOoxmlCoverage chart count', async () => {

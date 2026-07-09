@@ -23,19 +23,18 @@
 | `import-fidelity-properties.test.jsx` | 2 | ✅ Pass |
 | **Total** | **172** | **✅ All Pass** |
 
-## 2026-07-09 Cook progress (Phases 01–08 foundations)
+## 2026-07-09 Cook progress (Phases 01–08)
 
-| Phase | Delivered this cook |
-|-------|---------------------|
-| 01 | Zero-loss `original.pptx` + atomic create + download + SLA contract |
-| 02 | `npm run test:pptx:oracle`, pure SSIM, CLI, baseline JSON placeholder |
-| 03 | `ooxml-scene-graph` (spTree walk, rels, reconcile, `PPTX_SLA_STRICT`) |
-| 04 | `theme-resolve`, `sanitizeCssColor` (T4.1/T4.5) |
-| 05 | `chart-support-matrix` (native/coerced/unsupported-strict) |
-| 07 | `emf-wmf-sandbox` (no shell; disabled unless `PPTX_EMF_CONVERT=1`) |
-| 08 | `roundtrip-policy` (prefer original bytes when unedited) |
+| Phase | Status |
+|-------|--------|
+| 01 | **Done** — zero-loss original + atomic create |
+| 02 | **Done (machinery)** — `npm run test:pptx:oracle`, PNG goldens compare, 11-deck baseline, placeholder 8×8 goldens under `oracle/goldens/` |
+| 03 | **In progress** — scene graph + diagram kind + strict reconcile wired in importer |
+| 04 | **In progress** — theme/color + `assertNoPrimitivePlaceholders` (`PPTX_SLA_STRICT_PRIMITIVES=1`) |
+| 05–08 | Scaffolds (chart matrix, EMF sandbox, roundtrip policy) |
 
-**Not claimed:** product 1:1 visual/editable SLA (requires remaining phase depth + goldens).
+**Oracle debt:** placeholder goldens self-compare to SSIM 1 until LO/PP goldens + Nav present actuals land.  
+**Not claimed:** product 1:1 visual/editable SLA.
 
 ## 2026-07-09 Zero-Loss Original Package (Phase 01 SLA foundation)
 

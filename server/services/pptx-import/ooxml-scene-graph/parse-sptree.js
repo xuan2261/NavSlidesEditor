@@ -81,6 +81,22 @@ function extractGraphicUri(chunk) {
   return attrsOf(m[0]).uri || null
 }
 
+/** Relationship id embedded on chart/diagram/table parts inside a graphicFrame. */
+function extractGraphicRelId(chunk) {
+  const patterns = [
+    /<(?:[a-z0-9]+:)?chart\b[^>]*\b(?:r:)?id=(["'])(.*?)\1/i,
+    /<(?:[a-z0-9]+:)?relIds\b[^>]*\b(?:r:)?dm=(["'])(.*?)\1/i,
+    /<(?:[a-z0-9]+:)?tbl\b[^>]*\b(?:r:)?id=(["'])(.*?)\1/i,
+  ]
+  for (const re of patterns) {
+    const m = String(chunk || '').match(re)
+    if (m) return m[2]
+  }
+  // Fallback: first r:id / r:embed inside graphicData
+  const any = String(chunk || '').match(/\b(?:r:)?(?:id|embed)=(["'])(rId\d+)\1/i)
+  return any ? any[2] : null
+}
+
 /**
  * Walk slide XML and collect nodes under p:spTree (depth-limited groups).
  * @param {string} slideXml
@@ -123,6 +139,8 @@ function parseSpTree(slideXml, options = {}) {
       if (kind === 'graphicFrame') {
         const uri = extractGraphicUri(chunk)
         if (uri) node.graphicUri = uri
+        const relId = extractGraphicRelId(chunk)
+        if (relId) node.rels.graphicRelId = relId
         if (/chart/i.test(uri || '') || /charts\/chart/i.test(chunk)) node.graphicKind = 'chart'
         else if (/diagram|smartart|dm/i.test(uri || '') || /diagrams\//i.test(chunk)) node.graphicKind = 'diagram'
         else if (/table/i.test(uri || '') || /<a:tbl\b/i.test(chunk)) node.graphicKind = 'table'
@@ -145,4 +163,5 @@ module.exports = {
   parseXfrm,
   kindFromTag,
   localName,
+  extractGraphicRelId,
 }

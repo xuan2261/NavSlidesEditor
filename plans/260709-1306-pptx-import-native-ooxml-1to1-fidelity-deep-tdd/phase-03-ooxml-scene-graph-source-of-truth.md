@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "OOXML scene graph source of truth"
-status: pending
+status: in-progress
 priority: P0
 effort: "5-10d"
 dependencies: [1]

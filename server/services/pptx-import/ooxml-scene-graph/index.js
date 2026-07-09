@@ -48,14 +48,20 @@ async function buildOoxmlSceneGraph(zip) {
         next.rels.blipTarget = target
       }
       if (next.kind === 'graphicFrame') {
-        for (const r of rels) {
-          if (/charts\/chart/i.test(r.target)) {
-            next.rels.chartTarget = rejectTraversalTarget(r.target)
-            next.graphicKind = next.graphicKind || 'chart'
-          }
-          if (/diagrams\/data/i.test(r.target)) {
-            next.rels.diagramTarget = rejectTraversalTarget(r.target)
-            next.graphicKind = next.graphicKind || 'diagram'
+        // Bind only the relationship declared on this frame (not every chart/diagram on the slide).
+        const rid = next.rels.graphicRelId
+        if (rid && relById[rid]) {
+          const target = rejectTraversalTarget(relById[rid].target)
+          if (target) {
+            if (/charts\/chart/i.test(target)) {
+              next.rels.chartTarget = target
+              next.graphicKind = next.graphicKind || 'chart'
+            } else if (/diagrams\/data/i.test(target)) {
+              next.rels.diagramTarget = target
+              next.graphicKind = next.graphicKind || 'diagram'
+            } else {
+              next.rels.graphicTarget = target
+            }
           }
         }
       }
@@ -91,18 +97,42 @@ async function buildOoxmlSceneGraph(zip) {
 
 /**
  * Reconcile mapped presentation elements against scene graph inventory.
+ *
+ * Count comparison is diagnostic only (flatten/group/diagram can diverge).
+ * Strict fail is opt-in via options.strictCountGate or PPTX_SLA_STRICT_COUNT=1 —
+ * default PPTX_SLA_STRICT no longer hard-fails on count heuristics (false positives).
+ *
  * @returns {{ unmapped: object[], warnings: object[] }}
  */
 function reconcileSceneGraph(graph, presentation, options = {}) {
-  const strict = options.strict === true || process.env.PPTX_SLA_STRICT === '1'
+  const strictCount =
+    options.strictCountGate === true || process.env.PPTX_SLA_STRICT_COUNT === '1'
   const warnings = []
   const unmapped = []
 
   const mappedBySlide = (presentation?.slides || []).map((slide) => (slide.elements || []).length)
   for (const gSlide of graph?.slides || []) {
-    const graphCount = (gSlide.nodes || []).filter((n) => n.kind !== 'grpSp').length
+    const leaves = (gSlide.nodes || []).filter((n) => n.kind !== 'grpSp')
+    const graphCount = leaves.length
     const mappedCount = mappedBySlide[gSlide.index] || 0
-    // Inventory check: mapped elements should cover graph leaf nodes (heuristic)
+    // Empty mapped slide with non-empty graph is a real inventory miss
+    if (graphCount > 0 && mappedCount === 0) {
+      const detail = {
+        slideIndex: gSlide.index,
+        graphCount,
+        mappedCount,
+        gap: graphCount,
+        severity: 'empty-mapped',
+      }
+      unmapped.push(detail)
+      warnings.push({
+        slideIndex: gSlide.index,
+        type: 'scene-graph-unmapped',
+        message: `Scene graph has ${graphCount} leaf nodes but mapped slide is empty`,
+      })
+      continue
+    }
+    // Soft diagnostic when mapped count is lower (may be false positive after flatten)
     if (mappedCount < graphCount) {
       const gap = graphCount - mappedCount
       const detail = {
@@ -110,21 +140,24 @@ function reconcileSceneGraph(graph, presentation, options = {}) {
         graphCount,
         mappedCount,
         gap,
+        severity: 'count-heuristic',
       }
       unmapped.push(detail)
       warnings.push({
         slideIndex: gSlide.index,
         type: 'scene-graph-unmapped',
-        message: `Scene graph has ${graphCount} leaf nodes but only ${mappedCount} mapped elements (gap ${gap})`,
+        message: `Scene graph leaf count ${graphCount} > mapped elements ${mappedCount} (gap ${gap}; heuristic until nodeId mapping)`,
       })
     }
   }
 
-  if (strict && unmapped.length) {
-    const err = new Error(`PPTX_SLA_STRICT: ${unmapped.length} slide(s) have unmapped scene-graph nodes`)
+  // Only hard-fail empty-mapped slides under strict count gate
+  const hard = unmapped.filter((u) => u.severity === 'empty-mapped')
+  if (strictCount && hard.length) {
+    const err = new Error(`PPTX_SLA_STRICT_COUNT: ${hard.length} slide(s) have empty mapping for non-empty scene graph`)
     err.type = 'import-failed'
     err.code = 'scene-graph-unmapped'
-    err.unmapped = unmapped
+    err.unmapped = hard
     throw err
   }
 

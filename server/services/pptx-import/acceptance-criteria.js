@@ -162,18 +162,57 @@ function assertSourceFontSizesWithinTolerance(sourceOutput, presentation, tolera
   }
 }
 
-function assertPresentationAcceptance(presentation, expectedSize = CANVAS_SIZE, sourceOutput = null) {
+/**
+ * Phase 04: permanent placeholders banned for primitive classes under strict SLA.
+ * Types still allowed until later phases: chart-*, diagram-*, unsupported-image (EMF), media video/audio/math.
+ */
+const PRIMITIVE_PLACEHOLDER_TYPES = Object.freeze([
+  'unknown-object',
+  'media-missing',
+  'grouped-complex',
+  'table-unusable',
+])
+
+function countPrimitivePlaceholders(presentation) {
+  const hits = []
+  for (const [slideIndex, slide] of (presentation?.slides || []).entries()) {
+    for (const [elementIndex, element] of (slide.elements || []).entries()) {
+      const t = element?.importPlaceholderType
+      if (t && PRIMITIVE_PLACEHOLDER_TYPES.includes(t)) {
+        hits.push({ slideIndex, elementIndex, type: t })
+      }
+    }
+  }
+  return hits
+}
+
+function assertNoPrimitivePlaceholders(presentation) {
+  const hits = countPrimitivePlaceholders(presentation)
+  if (hits.length) {
+    throw new Error(
+      `PPTX acceptance failed: ${hits.length} permanent primitive placeholder(s) (e.g. ${hits[0].type} on slide ${hits[0].slideIndex + 1})`
+    )
+  }
+}
+
+function assertPresentationAcceptance(presentation, expectedSize = CANVAS_SIZE, sourceOutput = null, options = {}) {
   assertResolutionInvariant(presentation, expectedSize)
   assertFiniteLengthFields(presentation)
   assertNoRawUnits(presentation)
   if (sourceOutput) assertSourceFontSizesWithinTolerance(sourceOutput, presentation)
+  if (options.strictPrimitives === true || process.env.PPTX_SLA_STRICT_PRIMITIVES === '1') {
+    assertNoPrimitivePlaceholders(presentation)
+  }
 }
 
 module.exports = {
   assertFiniteLengthFields,
   assertNoRawUnits,
+  assertNoPrimitivePlaceholders,
   assertPresentationAcceptance,
   assertResolutionInvariant,
   assertSourceFontSizesWithinTolerance,
   assertTextFontSizeWithinTolerance,
+  countPrimitivePlaceholders,
+  PRIMITIVE_PLACEHOLDER_TYPES,
 }

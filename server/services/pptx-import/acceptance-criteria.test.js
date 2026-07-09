@@ -4,6 +4,7 @@ import acceptance from './acceptance-criteria.js'
 const {
   assertFiniteLengthFields,
   assertNoRawUnits,
+  assertNoPrimitivePlaceholders,
   assertPresentationAcceptance,
   assertResolutionInvariant,
   assertSourceFontSizesWithinTolerance,
@@ -105,5 +106,25 @@ describe('pptx import acceptance criteria', () => {
     }, undefined, {
       slides: [{ elements: [{ type: 'text', fontSz: 18 }] }],
     })).not.toThrow()
+  })
+
+  it('T4.3 fails strictPrimitives when permanent primitive placeholders remain', () => {
+    const presentation = {
+      resolution: { width: 960, height: 540 },
+      slides: [{
+        elements: [{
+          type: 'shape',
+          x: 0,
+          y: 0,
+          width: 10,
+          height: 10,
+          importPlaceholderType: 'unknown-object',
+        }],
+      }],
+    }
+    expect(() => assertNoPrimitivePlaceholders(presentation)).toThrow(/primitive placeholder/i)
+    expect(() =>
+      assertPresentationAcceptance(presentation, undefined, null, { strictPrimitives: true })
+    ).toThrow(/primitive placeholder/i)
   })
 })

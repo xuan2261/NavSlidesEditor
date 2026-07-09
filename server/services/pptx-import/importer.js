@@ -5,6 +5,7 @@ const { mapPptxOutput } = require('./mapper')
 const { validatePptxPackage } = require('./pptx-guards')
 const { runParserWorker } = require('./worker-runner')
 const { buildOoxmlSceneGraph, reconcileSceneGraph } = require('./ooxml-scene-graph')
+const { assertPresentationAcceptance } = require('./acceptance-criteria')
 
 function buildImportStats({ mappedStats = {}, parsed = {}, startedAt = Date.now(), now = Date.now() }) {
   return {
@@ -72,11 +73,12 @@ async function importPptxFile(filePath, options = {}) {
   if (sceneGraph && !sceneGraph.error) {
     try {
       const reconciliation = reconcileSceneGraph(sceneGraph, mapped.presentation, {
-        strict: options.strict === true || process.env.PPTX_SLA_STRICT === '1',
+        strictCountGate:
+          options.strictCountGate === true || process.env.PPTX_SLA_STRICT_COUNT === '1',
       })
       sceneWarnings = reconciliation.warnings || []
     } catch (err) {
-      if (err?.code === 'scene-graph-unmapped' || /PPTX_SLA_STRICT/.test(err?.message || '')) {
+      if (err?.code === 'scene-graph-unmapped' || /PPTX_SLA_STRICT_COUNT/.test(err?.message || '')) {
         throw new PptxImportError(err.message, {
           status: 422,
           type: FAILURE_TYPES.importFailed,
@@ -86,8 +88,28 @@ async function importPptxFile(filePath, options = {}) {
     }
   }
 
+  const strict = options.strict === true || process.env.PPTX_SLA_STRICT === '1'
+  if (strict) {
+    try {
+      assertPresentationAcceptance(mapped.presentation, undefined, parsed.output, {
+        strictPrimitives: process.env.PPTX_SLA_STRICT_PRIMITIVES === '1' || options.strictPrimitives === true,
+      })
+    } catch (err) {
+      throw new PptxImportError(err.message || 'PPTX acceptance failed', {
+        status: 422,
+        type: FAILURE_TYPES.schemaUnusable,
+      })
+    }
+  }
+
   const stats = buildImportStats({ mappedStats: mapped.stats, parsed, startedAt: started })
   if (sceneGraph?.stats) stats.sceneGraph = sceneGraph.stats
+  stats.primitivePlaceholderCount = (mapped.presentation?.slides || []).reduce((sum, slide) => {
+    return (
+      sum +
+      (slide.elements || []).filter((el) => el?.importPlaceholderType).length
+    )
+  }, 0)
 
   return {
     ...mapped,

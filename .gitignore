@@ -29,6 +29,7 @@ plans/reports/pptx-import-real-browser-screenshots/
 plans/reports/pptx-import-real-browser-audit-latest.json
 plans/reports/pptx-import-real-browser-audit.json
 plans/reports/pptx-import-real-browser-audit.md
+plans/reports/pptx-oracle-runs/
 PPTX/*_imported_browser.png
 
 # Coverage (Vitest v8)
