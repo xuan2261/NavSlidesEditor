@@ -302,8 +302,8 @@ npm run test:pptx:strict && npm run test:pptx:oracle && npm run test:pptx:sla-1t
 | 04 Editable primitives | **advanced** — placeholder inject + primitive ban tests |
 | 05 Native charts | **advanced** — corpus chart decks E2 gap 0 via OOXML inject (T5.2–T5.5) |
 | 06 Native SmartArt | **advanced** — data.xml parser + inject shapes with `_pptxDiagram` model |
-| 07 EMF/WMF | **scaffold** — emf-wmf-sandbox policy (convert off by default) |
-| 08 Master/layout/theme/roundtrip | **scaffold** — roundtrip-policy prefers original bytes when unedited |
+| 07 EMF/WMF | **advanced** — convert→PNG when enabled; strict fails without convert |
+| 08 Master/layout/theme/roundtrip | **advanced** — original-bytes export policy + `test:pptx:sla-1to1` module gate |
 
 ## Success criteria (whole plan)
 

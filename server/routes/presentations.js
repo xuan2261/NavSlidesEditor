@@ -288,27 +288,29 @@ router.post('/raster-elements', async (req, res) => {
 })
 
 // GET /api/presentations/:id/pptx-original — stream stored original bytes (server maps id→uuid only)
+// Phase 08c: uses roundtrip policy (hash check; hybrid fallback not generated here).
 router.get('/:id/pptx-original', async (req, res) => {
   try {
     const presentation = await findServeablePresentation(req.params.id, { normalize: false })
     if (!presentation) return res.status(404).json({ error: 'Not found' })
-    const originalId = presentation.pptxOriginal?.id
-    if (!originalId) return res.status(404).json({ error: 'No original PPTX package' })
-    try {
-      assertSafeOriginalId(originalId)
-    } catch {
-      return res.status(404).json({ error: 'No original PPTX package' })
+    const { resolvePptxExportPayload } = require('../services/pptx-import/roundtrip-original-parts')
+    const payload = await resolvePptxExportPayload(presentation, {
+      forceHybrid: req.query.forceHybrid === '1',
+    })
+    if (payload.mode !== 'original-bytes' || !payload.buffer) {
+      return res.status(404).json({
+        error: 'No original PPTX package available for zero-loss export',
+        reason: payload.reason,
+        mode: payload.mode,
+      })
     }
-    const bytes = await readOriginalPptx(originalId)
-    if (!bytes) return res.status(404).json({ error: 'Original PPTX package missing on disk' })
     const safeTitle = String(presentation.title || 'presentation').replace(/[^a-z0-9._-]+/gi, '_')
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation')
+    res.setHeader('Content-Type', payload.contentType)
     res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.pptx"`)
-    res.setHeader('Content-Length', String(bytes.byteLength))
-    if (presentation.pptxOriginal?.sha256) {
-      res.setHeader('X-Pptx-Original-Sha256', presentation.pptxOriginal.sha256)
-    }
-    res.send(bytes)
+    res.setHeader('Content-Length', String(payload.byteLength))
+    res.setHeader('X-Pptx-Export-Mode', payload.mode)
+    if (payload.sha256) res.setHeader('X-Pptx-Original-Sha256', payload.sha256)
+    res.send(payload.buffer)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

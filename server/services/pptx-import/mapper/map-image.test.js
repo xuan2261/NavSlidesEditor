@@ -195,6 +195,58 @@ describe('pptx mapImage', () => {
     }
   })
 
+  it('T7.2 maps EMF to image when converter returns PNG', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-emf-ok-'))
+    try {
+      const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82])
+      // minimal valid-ish: use encode from oracle if available
+      let pngBuf = png
+      try {
+        const { encodePngRgba } = require('../oracle/png-rgba.js')
+        const rgba = Buffer.alloc(4 * 4 * 4, 180)
+        for (let i = 0; i < 16; i += 1) rgba[i * 4 + 3] = 255
+        pngBuf = encodePngRgba(4, 4, rgba)
+      } catch {
+        /* keep stub */
+      }
+      const ctx = {
+        ...context(dir),
+        convertVectorFn: (_in, out) => {
+          require('fs').writeFileSync(out, pngBuf)
+          return { ok: true, outPath: out }
+        },
+      }
+      const result = await mapImage({
+        type: 'image',
+        left: 10,
+        top: 20,
+        width: 100,
+        height: 50,
+        base64: `data:image/x-emf;base64,${EMF.toString('base64')}`,
+      }, ctx)
+      expect(result[0].type).toBe('image')
+      expect(result[0].src).toMatch(/^\/uploads\/.+\.png$/)
+      expect(result[0].importPlaceholderType).toBeUndefined()
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('T7.3 strict mode throws when EMF convert unavailable', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-emf-strict-'))
+    try {
+      const ctx = { ...context(dir), strict: true }
+      await expect(
+        mapImage({
+          type: 'image',
+          base64: `data:image/x-emf;base64,${EMF.toString('base64')}`,
+        }, ctx)
+      ).rejects.toMatchObject({ code: 'emf-convert-failed' })
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
   it('leaves supported PNG media as a normal image (regression lock)', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-png-ok-'))
     try {

@@ -55,6 +55,7 @@
     "test:pptx:strict": "npm run test:corpus && npm run test:pptx:browser-audit",
     "test:pptx:oracle": "node server/services/pptx-import/oracle/pptx-oracle-cli.js",
     "test:pptx:oracle:capture": "node server/services/pptx-import/oracle/pptx-oracle-cli.js --mode capture-present --actuals-dir plans/reports/pptx-oracle-runs/actuals",
+    "test:pptx:sla-1to1": "node server/services/pptx-import/pptx-sla-1to1-cli.js",
     "electron:dev": "npm run build && electron .",
     "electron:prepare": "npm run build && node scripts/prepare-electron.js",
     "electron:build": "npm run electron:prepare && npx electron-builder",

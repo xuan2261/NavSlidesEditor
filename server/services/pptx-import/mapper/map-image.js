@@ -1,8 +1,44 @@
 const { fitBoxWithinBounds, mapBox, readNumber } = require('../geometry')
-const { persistImageForElement } = require('../media')
+const { persistImageForElement, getElementImagePayload } = require('../media')
+const { convertAndPersistVectorImage } = require('../vector-media-convert')
 const { baseElement, placeholder, scaleLength } = require('./utils-base')
 const { plainText } = require('./utils-text')
 const { pushMediaWarning } = require('./media-warning')
+
+async function loadSourceImageBuffer(element, context) {
+  const payload = getElementImagePayload(element)
+  if (payload?.buffer) return payload.buffer
+  const refs = [element?.ref, element?.fill?.value?.ref].filter(Boolean)
+  for (const ref of refs) {
+    const normalized = String(ref || '').replace(/\\/g, '/').replace(/^\/+/, '')
+    const entry = context.mediaIndex?.files?.get?.(normalized)
+    if (!entry) continue
+    try {
+      const value = await entry.async('nodebuffer')
+      return Buffer.isBuffer(value) ? value : Buffer.from(value)
+    } catch {
+      /* try next */
+    }
+  }
+  return null
+}
+
+async function tryConvertUnsupportedVector(element, context) {
+  const buffer = await loadSourceImageBuffer(element, context)
+  if (!buffer) return null
+  const force =
+    context.forceEmfConvert === true ||
+    process.env.PPTX_EMF_CONVERT === '1' ||
+    typeof context.convertVectorFn === 'function'
+  const result = await convertAndPersistVectorImage(buffer, context.uploadsDir, {
+    force,
+    convertFn: context.convertVectorFn,
+    signal: context.signal,
+    binary: context.emfBinary,
+    timeoutMs: context.emfTimeoutMs,
+  })
+  return result
+}
 
 // pptxtojson@2.0.2 emits PowerPoint color corrections as parseInt(@val)/1e5
 // fractions: brightness/contrast are OFFSETS (neutral 0, range −1..+1) and
@@ -32,20 +68,39 @@ async function mapImage(element, context) {
   context.signal?.throwIfAborted?.()
   const media = await persistImageForElement(element, context.mediaIndex, context.uploadsDir, { signal: context.signal })
   pushMediaWarning(context, media.warning)
-  const src = media.url
+  let src = media.url
   if (media.unsupportedBrowserImage) {
-    // EMF/WMF are vector formats the browser cannot render. Persisting their URL
-    // produces a broken <img>; render a labelled placeholder instead so layout
-    // is preserved and the loss is surfaced. Rasterization is a future plan.
-    return [placeholder(
-      element,
-      context.scale,
-      context.zIndex,
-      context.slideIndex,
-      context.warnings,
-      'unsupported-image',
-      'EMF/WMF not supported'
-    )]
+    // Phase 07: convert EMF/WMF → PNG via sandboxed converter when enabled.
+    const converted = await tryConvertUnsupportedVector(element, context)
+    if (converted?.url) {
+      pushMediaWarning(context, converted.warning)
+      src = converted.url
+      // fall through to normal image mapping with converted PNG url
+    } else {
+      const strict = context.strict === true || process.env.PPTX_SLA_STRICT === '1'
+      const allowPlaceholder = process.env.PPTX_ALLOW_EMF_PLACEHOLDER === '1'
+      if (strict && !allowPlaceholder) {
+        const err = new Error(
+          converted?.warning?.message ||
+            'EMF/WMF conversion required but unavailable (set PPTX_EMF_CONVERT=1 or provide converter)'
+        )
+        err.code = 'emf-convert-failed'
+        err.type = 'emf-convert-failed'
+        throw err
+      }
+      // Non-strict default: labelled placeholder (layout preserved). Opt-in permanent via flag.
+      return [
+        placeholder(
+          element,
+          context.scale,
+          context.zIndex,
+          context.slideIndex,
+          context.warnings,
+          'unsupported-image',
+          'EMF/WMF not supported'
+        ),
+      ]
+    }
   }
   if (!src) {
     return [placeholder(
