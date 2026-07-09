@@ -31,7 +31,8 @@
 | 02 | **Done (machinery)** — goldens compare + **present capture** (`test:pptx:oracle:capture` via Playwright + reveal HTML) |
 | 03 | **Advanced** — scene graph leaves stamped as `_pptxSource.nodeId`; node-level unmapped warnings; `PPTX_SLA_STRICT_NODES` |
 | 04 | **Advanced** — layout placeholder injection when slide text empty; theme/color sanitize; primitive ban list |
-| 05–08 | Scaffolds (chart matrix, EMF sandbox, roundtrip policy) |
+| 05 | **Advanced** — `ooxml-chart-parser` reads chart XML series; injects native `chart` elements when scene graph has chart nodes |
+| 06–08 | Scaffolds (SmartArt native, EMF sandbox, roundtrip policy) |
 
 **Oracle debt:** placeholder goldens self-compare to SSIM 1 until LO/PP goldens + Nav present actuals land.  
 **Not claimed:** product 1:1 visual/editable SLA.

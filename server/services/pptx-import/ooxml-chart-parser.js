@@ -1,0 +1,242 @@
+/**
+ * Parse OOXML ppt/charts/chartN.xml into NavSlides chart payload (Phase 05).
+ * Extracts cached categories/values from chart series (no xlsx embedding required when cache present).
+ */
+
+const { supportRow } = require('./chart-support-matrix')
+
+const CHART_KIND_RE =
+  /<(?:[a-z0-9]+:)?(barChart|lineChart|pieChart|doughnutChart|areaChart|scatterChart|radarChart|ofPieChart|stockChart|surfaceChart|bubbleChart)\b/i
+
+function textBetween(xml, openRe, closeTag) {
+  const m = String(xml || '').match(openRe)
+  if (!m) return ''
+  const start = m.index + m[0].length
+  const close = String(xml).indexOf(closeTag, start)
+  if (close < 0) return String(xml).slice(start)
+  return String(xml).slice(start, close)
+}
+
+function parsePtValues(fragment) {
+  const pts = []
+  for (const m of String(fragment || '').matchAll(/<(?:[a-z0-9]+:)?pt\b[^>]*idx=(["'])(\d+)\1[^>]*>\s*<(?:[a-z0-9]+:)?v>([\s\S]*?)<\/(?:[a-z0-9]+:)?v>/gi)) {
+    pts.push({ idx: Number(m[2]), v: m[3].trim() })
+  }
+  pts.sort((a, b) => a.idx - b.idx)
+  return pts.map((p) => p.v)
+}
+
+function parseSeriesBlocks(xml) {
+  const blocks = []
+  const re = /<(?:[a-z0-9]+:)?ser\b[^>]*>([\s\S]*?)<\/(?:[a-z0-9]+:)?ser>/gi
+  let m
+  while ((m = re.exec(String(xml || '')))) blocks.push(m[1])
+  return blocks
+}
+
+function seriesName(serXml) {
+  // Prefer cached str: <c:tx>...<c:v>Name</c:v>
+  const tx = textBetween(serXml, /<(?:[a-z0-9]+:)?tx\b[^>]*>/i, '</c:tx>')
+  const cached = parsePtValues(tx)
+  if (cached[0]) return cached[0]
+  const plain = serXml.match(/<(?:[a-z0-9]+:)?v>([^<]+)<\/(?:[a-z0-9]+:)?v>/i)
+  return plain ? plain[1].trim() : null
+}
+
+function seriesColor(serXml) {
+  const m = String(serXml || '').match(/<(?:[a-z0-9]+:)?srgbClr\b[^>]*val=(["'])([0-9A-Fa-f]{6})\1/i)
+  return m ? `#${m[2]}` : null
+}
+
+function seriesCategories(serXml) {
+  const cat = textBetween(serXml, /<(?:[a-z0-9]+:)?cat\b[^>]*>/i, '</c:cat>')
+  if (!cat) return []
+  // multiLvlStrCache or strCache
+  return parsePtValues(cat)
+}
+
+function seriesValues(serXml) {
+  const val = textBetween(serXml, /<(?:[a-z0-9]+:)?val\b[^>]*>/i, '</c:val>')
+  if (!val) {
+    // scatter yVal
+    const yVal = textBetween(serXml, /<(?:[a-z0-9]+:)?yVal\b[^>]*>/i, '</c:yVal>')
+    return parsePtValues(yVal).map((v) => Number(v)).map((n) => (Number.isFinite(n) ? n : 0))
+  }
+  return parsePtValues(val).map((v) => Number(v)).map((n) => (Number.isFinite(n) ? n : 0))
+}
+
+function detectOoxmlChartType(xml) {
+  const m = String(xml || '').match(CHART_KIND_RE)
+  return m ? m[1] : 'barChart'
+}
+
+/**
+ * @param {string} chartXml
+ * @returns {{ ooxmlType: string, navType: string, supportStatus: string, chartData: { labels: string[], datasets: object[] }, title: string|null } | null}
+ */
+function parseOoxmlChart(chartXml) {
+  if (!chartXml || typeof chartXml !== 'string') return null
+  const ooxmlType = detectOoxmlChartType(chartXml)
+  const row = supportRow(ooxmlType)
+  const seriesBlocks = parseSeriesBlocks(chartXml)
+  if (!seriesBlocks.length) {
+    return {
+      ooxmlType,
+      navType: row.navType || 'bar',
+      supportStatus: row.status,
+      chartData: { labels: [], datasets: [] },
+      title: null,
+      empty: true,
+    }
+  }
+
+  let labels = seriesCategories(seriesBlocks[0])
+  const datasets = seriesBlocks.map((ser, i) => {
+    const cats = seriesCategories(ser)
+    if ((!labels || !labels.length) && cats.length) labels = cats
+    const values = seriesValues(ser)
+    // Align labels length
+    if (values.length && labels.length < values.length) {
+      labels = values.map((_, idx) => labels[idx] || String(idx + 1))
+    }
+    return {
+      label: seriesName(ser) || `Series ${i + 1}`,
+      data: values,
+      color: seriesColor(ser) || undefined,
+    }
+  })
+
+  const titleMatch = String(chartXml).match(/<(?:[a-z0-9]+:)?title\b[\s\S]*?<(?:[a-z0-9]+:)?t>([\s\S]*?)<\/(?:[a-z0-9]+:)?t>/i)
+  const title = titleMatch ? titleMatch[1].trim() : null
+
+  return {
+    ooxmlType,
+    navType: row.navType || 'bar',
+    supportStatus: row.status,
+    chartData: {
+      labels: labels.length ? labels : datasets[0]?.data.map((_, i) => String(i + 1)) || [],
+      datasets: datasets.map((d, i) => ({
+        label: d.label,
+        data: d.data,
+        color: d.color || ['#6366f1', '#ef4444', '#22c55e', '#f59e0b', '#3b82f6'][i % 5],
+      })),
+    },
+    title,
+    empty: false,
+  }
+}
+
+async function readZipText(zip, entry) {
+  const file = zip?.file?.(entry)
+  if (!file) return ''
+  try {
+    return await file.async('string')
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * Inject native chart elements for scene-graph chart nodes missing a mapped chart.
+ */
+async function injectChartsFromSceneGraph({
+  elements,
+  graphSlide,
+  zip,
+  slideIndex = 0,
+  stats = {},
+  warnings = [],
+  strict = false,
+}) {
+  const list = Array.isArray(elements) ? [...elements] : []
+  if (!zip || !graphSlide) return list
+
+  const chartNodes = (graphSlide.nodes || []).filter(
+    (n) => n.graphicKind === 'chart' || n.rels?.chartTarget || /chart/i.test(n.name || '')
+  )
+  if (!chartNodes.length) return list
+
+  for (const node of chartNodes) {
+    const already = list.some(
+      (el) =>
+        el?.type === 'chart' &&
+        (el._pptxSource?.nodeId === String(node.id) ||
+          (el._pptxChartMeta?.chartPath && el._pptxChartMeta.chartPath === node.rels?.chartTarget))
+    )
+    if (already) continue
+
+    const chartPath = node.rels?.chartTarget
+    if (!chartPath) {
+      warnings.push({
+        slideIndex,
+        type: 'native-chart-degraded',
+        message: `Chart node ${node.id} has no chart relationship target`,
+      })
+      continue
+    }
+
+    const xml = await readZipText(zip, chartPath)
+    const parsed = parseOoxmlChart(xml)
+    if (!parsed || parsed.empty) {
+      warnings.push({
+        slideIndex,
+        type: 'native-chart-degraded',
+        message: `Chart ${chartPath} produced no series data`,
+      })
+      continue
+    }
+
+    if (parsed.supportStatus === 'unsupported-strict' && strict) {
+      warnings.push({
+        slideIndex,
+        type: 'chart-unsupported-strict',
+        message: `Chart type ${parsed.ooxmlType} is unsupported under PPTX_SLA_STRICT`,
+      })
+      continue
+    }
+
+    const x = Number(node.xfrm?.x)
+    const y = Number(node.xfrm?.y)
+    const w = Number(node.xfrm?.cx)
+    const h = Number(node.xfrm?.cy)
+    list.push({
+      id: `chart-ooxml-${node.id}-${slideIndex}`,
+      type: 'chart',
+      chartType: parsed.navType,
+      chartData: parsed.chartData,
+      x: Number.isFinite(x) ? x : 80,
+      y: Number.isFinite(y) ? y : 80,
+      width: Number.isFinite(w) && w > 0 ? w : 400,
+      height: Number.isFinite(h) && h > 0 ? h : 280,
+      zIndex: list.length + 1,
+      rotation: 0,
+      opacity: 1,
+      _pptxSource: {
+        nodeId: String(node.id),
+        kind: 'graphicFrame',
+        graphicKind: 'chart',
+        slideIndex,
+        name: node.name || null,
+      },
+      _pptxChartMeta: {
+        originalType: parsed.ooxmlType,
+        source: 'ooxml-chart-parser',
+        chartPath,
+        supportStatus: parsed.supportStatus,
+        title: parsed.title,
+      },
+    })
+    stats.chartCount = (stats.chartCount || 0) + 1
+  }
+
+  return list
+}
+
+module.exports = {
+  parseOoxmlChart,
+  detectOoxmlChartType,
+  injectChartsFromSceneGraph,
+  parseSeriesBlocks,
+  seriesValues,
+  seriesCategories,
+}

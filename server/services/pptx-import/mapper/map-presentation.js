@@ -16,6 +16,8 @@ const { CANVAS_SIZE } = require('../constants')
 const { inspectOoxmlCoverage } = require('../ooxml-inspection')
 const { attachSourceNodes } = require('../ooxml-scene-graph/attach-source-nodes')
 const { resolveLayoutPlaceholders } = require('./placeholder-resolve')
+const { injectChartsFromSceneGraph } = require('../ooxml-chart-parser')
+const { supportRow } = require('../chart-support-matrix')
 
 async function mapElement(element, context) {
   if (element.type === 'group') return flattenGroupElement(element, context, mapElement)
@@ -32,12 +34,32 @@ async function mapElement(element, context) {
 }
 
 function mapChartElement(element, context) {
+  const row = supportRow(element?.chartType)
+  if (row.status === 'unsupported-strict' && (context.strict || process.env.PPTX_SLA_STRICT === '1')) {
+    context.warnings.push({
+      slideIndex: context.slideIndex,
+      type: 'chart-unsupported-strict',
+      message: `Chart type ${element.chartType} is unsupported under PPTX_SLA_STRICT`,
+    })
+    return []
+  }
   const chartEl = mapChart(element)
   if (chartEl) {
+    if (row.navType) chartEl.chartType = row.navType
     context.stats.chartCount = (context.stats.chartCount || 0) + 1
     return [{ ...baseElement(element, context.scale, context.zIndex), ...chartEl }]
   }
-  return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'chart-unsupported', 'Chart type unsupported')]
+  return [
+    placeholder(
+      element,
+      context.scale,
+      context.zIndex,
+      context.slideIndex,
+      context.warnings,
+      'chart-unsupported',
+      'Chart type unsupported'
+    ),
+  ]
 }
 
 function mapText(element, context) {
@@ -149,13 +171,23 @@ function mapSlideTransition(slide) {
   }
 }
 
-async function mapPptxOutput({ output, zip, originalName, uploadsDir, onProgress, signal, sceneGraph = null }) {
+async function mapPptxOutput({
+  output,
+  zip,
+  originalName,
+  uploadsDir,
+  onProgress,
+  signal,
+  sceneGraph = null,
+  strict = false,
+}) {
   signal?.throwIfAborted?.()
   const sourceSize = normalizeSourceSize(output.size)
   const scale = sourceSize.scale
   const mediaIndex = createMediaIndex(zip)
   const warnings = []
   const ooxml = await inspectOoxmlCoverage(zip)
+  const isStrict = strict === true || process.env.PPTX_SLA_STRICT === '1'
   const stats = { textCount: 0, imageCount: 0, shapeCount: 0, tableCount: 0, chartCount: 0, diagramCount: 0, placeholderCount: 0, videoCount: 0, audioCount: 0, mathCount: 0, layoutPlaceholderInjected: 0 }
   const slides = []
   const nativeObjectSlides = []
@@ -164,19 +196,42 @@ async function mapPptxOutput({ output, zip, originalName, uploadsDir, onProgress
   for (const [slideIndex, slide] of (output.slides || []).entries()) {
     signal?.throwIfAborted?.()
     onProgress?.({ stage: 'mapping', percent: 80 + Math.round((slideIndex / totalSlides) * 15), message: `Processing slide ${slideIndex + 1} of ${totalSlides}` })
-    let elements = await mapSlideElements(slide, { mediaIndex, scale, slideIndex, warnings, stats, uploadsDir, signal })
+    let elements = await mapSlideElements(slide, {
+      mediaIndex,
+      scale,
+      slideIndex,
+      warnings,
+      stats,
+      uploadsDir,
+      signal,
+      strict: isStrict,
+    })
     signal?.throwIfAborted?.()
     const graphSlide = graphByIndex[slideIndex]
     if (graphSlide) {
       const resolved = resolveLayoutPlaceholders({ elements }, graphSlide, { slideIndex })
       elements = resolved.elements
       stats.layoutPlaceholderInjected += resolved.injected
+      // OOXML-first charts when parser omitted type:chart but package has chart parts
+      elements = await injectChartsFromSceneGraph({
+        elements,
+        graphSlide,
+        zip,
+        slideIndex,
+        stats,
+        warnings,
+        strict: isStrict,
+      })
       attachSourceNodes(elements, graphSlide.nodes, slideIndex)
     }
     const evidence = ooxml.slidesByIndex[slideIndex] || { chartEntries: [], smartArtEntries: [] }
     const mappedNativeChartCount = elements.filter((element) => element?.type === 'chart').length
     const mappedNativeDiagramCount = elements.filter((element) => element?.type === 'diagram').length
-    const chartEvidenceCount = evidence.chartEntries.length
+    // Prefer package chart evidence; also count scene-graph chart nodes when present
+    const graphChartCount = graphSlide
+      ? (graphSlide.nodes || []).filter((n) => n.graphicKind === 'chart' || n.rels?.chartTarget).length
+      : 0
+    const chartEvidenceCount = Math.max(evidence.chartEntries.length, graphChartCount)
     const smartArtEvidenceCount = evidence.smartArtEntries.length
     const chartCoverageGapCount = Math.max(0, chartEvidenceCount - mappedNativeChartCount)
     const smartArtCoverageGapCount = Math.max(0, smartArtEvidenceCount - mappedNativeDiagramCount)

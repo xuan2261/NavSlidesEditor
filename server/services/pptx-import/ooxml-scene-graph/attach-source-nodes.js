@@ -55,8 +55,14 @@ function attachSourceNodes(elements, graphNodes, slideIndex) {
     if (!el || typeof el !== 'object') continue
     if (el._pptxSource?.nodeId != null && el._pptxSource.nodeId !== '') continue
     const hint = navKindHint(el)
-    let node = leaves.find((n) => !n._used && n.kind === hint)
-    if (!node) node = leaves.find((n) => !n._used)
+    // Prefer cNvPr-aligned identity: parser name / id match graph node
+    const elName = el.name || el._pptxSource?.name || null
+    const elSrcId = el.sourceId || el.ooxmlId || el.shapeId || null
+    let node =
+      (elSrcId != null && leaves.find((n) => !n._used && String(n.id) === String(elSrcId))) ||
+      (elName && leaves.find((n) => !n._used && n.name && String(n.name) === String(elName))) ||
+      leaves.find((n) => !n._used && n.kind === hint) ||
+      leaves.find((n) => !n._used)
     if (!node) continue
     node._used = true
     assigned += 1
@@ -67,6 +73,7 @@ function attachSourceNodes(elements, graphNodes, slideIndex) {
       slideIndex,
       ...(node.graphicKind ? { graphicKind: node.graphicKind } : {}),
       ...(node.name ? { name: node.name } : {}),
+      ...(elSrcId != null ? { matchedBy: 'sourceId' } : elName ? { matchedBy: 'name' } : { matchedBy: 'order' }),
     }
   }
 

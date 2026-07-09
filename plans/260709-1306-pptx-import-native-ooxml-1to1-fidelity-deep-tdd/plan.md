@@ -298,9 +298,9 @@ npm run test:pptx:strict && npm run test:pptx:oracle && npm run test:pptx:sla-1t
 |-------|--------|
 | 01 Zero-loss package + SLA contract | **completed** |
 | 02 Visual oracle SSIM | **completed** (+ `capture-present` / `test:pptx:oracle:capture`; real LO goldens still debt) |
-| 03 OOXML scene graph | **advanced** — `_pptxSource.nodeId` attach + node reconcile + `PPTX_SLA_STRICT_NODES` |
-| 04 Editable primitives | **advanced** — layout placeholder inject (T4.2) + theme/color + primitive ban list |
-| 05 Native charts | **scaffold** — chart-support-matrix; full E2 editable gap close open |
+| 03 OOXML scene graph | **advanced** — nodeId + name/sourceId match + multi-slide keys |
+| 04 Editable primitives | **advanced** — placeholder inject + primitive ban tests |
+| 05 Native charts | **advanced** — OOXML chart parser + inject from scene graph; matrix strict path |
 | 06 Native SmartArt | **pending** (scaffold not started beyond existing flatten) |
 | 07 EMF/WMF | **scaffold** — emf-wmf-sandbox policy (convert off by default) |
 | 08 Master/layout/theme/roundtrip | **scaffold** — roundtrip-policy prefers original bytes when unedited |

@@ -68,6 +68,7 @@ async function importPptxFile(filePath, options = {}) {
     onProgress: options.onProgress,
     signal: options.signal,
     sceneGraph: sceneGraph && !sceneGraph.error ? sceneGraph : null,
+    strict: options.strict === true || process.env.PPTX_SLA_STRICT === '1',
   })
 
   let sceneWarnings = []
