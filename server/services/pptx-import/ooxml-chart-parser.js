@@ -139,6 +139,30 @@ async function readZipText(zip, entry) {
 /**
  * Inject native chart elements for scene-graph chart nodes missing a mapped chart.
  */
+function scaleAxis(scale) {
+  if (!scale || typeof scale !== 'object') return { x: 1, y: 1 }
+  const x = Number(scale.x)
+  const y = Number(scale.y)
+  return {
+    x: Number.isFinite(x) && x > 0 ? x : 1,
+    y: Number.isFinite(y) && y > 0 ? y : 1,
+  }
+}
+
+function applyScaleBox(node, scale) {
+  const s = scaleAxis(scale)
+  const x = Number(node?.xfrm?.x)
+  const y = Number(node?.xfrm?.y)
+  const w = Number(node?.xfrm?.cx)
+  const h = Number(node?.xfrm?.cy)
+  return {
+    x: Number.isFinite(x) ? Math.round(x * s.x * 10) / 10 : 80,
+    y: Number.isFinite(y) ? Math.round(y * s.y * 10) / 10 : 80,
+    width: Number.isFinite(w) && w > 0 ? Math.max(1, Math.round(w * s.x * 10) / 10) : 400,
+    height: Number.isFinite(h) && h > 0 ? Math.max(1, Math.round(h * s.y * 10) / 10) : 280,
+  }
+}
+
 async function injectChartsFromSceneGraph({
   elements,
   graphSlide,
@@ -147,6 +171,7 @@ async function injectChartsFromSceneGraph({
   stats = {},
   warnings = [],
   strict = false,
+  scale = { x: 1, y: 1 },
 }) {
   const list = Array.isArray(elements) ? [...elements] : []
   if (!zip || !graphSlide) return list
@@ -155,6 +180,62 @@ async function injectChartsFromSceneGraph({
     (n) => n.graphicKind === 'chart' || n.rels?.chartTarget || /chart/i.test(n.name || '')
   )
   if (!chartNodes.length) return list
+
+  // Claim unstamped parser charts first (pptxtojson path has no nodeId/chartPath yet).
+  const claimedCharts = new Set()
+  const unstampedCharts = list.filter(
+    (el) => el?.type === 'chart' && !el._pptxSource?.nodeId && !el._pptxChartMeta?.chartPath
+  )
+  let unstampedIdx = 0
+  for (const node of chartNodes) {
+    const byId = list.find(
+      (el) => el?.type === 'chart' && el._pptxSource?.nodeId === String(node.id)
+    )
+    if (byId) {
+      claimedCharts.add(byId)
+      continue
+    }
+    const byPath =
+      node.rels?.chartTarget &&
+      list.find(
+        (el) => el?.type === 'chart' && el._pptxChartMeta?.chartPath === node.rels.chartTarget
+      )
+    if (byPath) {
+      claimedCharts.add(byPath)
+      byPath._pptxSource = {
+        ...(byPath._pptxSource || {}),
+        nodeId: String(node.id),
+        kind: 'graphicFrame',
+        graphicKind: 'chart',
+        slideIndex,
+      }
+      byPath._pptxChartMeta = {
+        ...(byPath._pptxChartMeta || {}),
+        chartPath: node.rels.chartTarget,
+        source: byPath._pptxChartMeta?.source || 'parser',
+      }
+      continue
+    }
+    if (unstampedIdx < unstampedCharts.length) {
+      const el = unstampedCharts[unstampedIdx++]
+      claimedCharts.add(el)
+      el._pptxSource = {
+        ...(el._pptxSource || {}),
+        nodeId: String(node.id),
+        kind: 'graphicFrame',
+        graphicKind: 'chart',
+        slideIndex,
+        name: node.name || null,
+      }
+      if (node.rels?.chartTarget) {
+        el._pptxChartMeta = {
+          ...(el._pptxChartMeta || {}),
+          chartPath: node.rels.chartTarget,
+          source: el._pptxChartMeta?.source || 'parser-claimed',
+        }
+      }
+    }
+  }
 
   for (const node of chartNodes) {
     const already = list.some(
@@ -195,19 +276,13 @@ async function injectChartsFromSceneGraph({
       continue
     }
 
-    const x = Number(node.xfrm?.x)
-    const y = Number(node.xfrm?.y)
-    const w = Number(node.xfrm?.cx)
-    const h = Number(node.xfrm?.cy)
+    const box = applyScaleBox(node, scale)
     list.push({
       id: `chart-ooxml-${node.id}-${slideIndex}`,
       type: 'chart',
       chartType: parsed.navType,
       chartData: parsed.chartData,
-      x: Number.isFinite(x) ? x : 80,
-      y: Number.isFinite(y) ? y : 80,
-      width: Number.isFinite(w) && w > 0 ? w : 400,
-      height: Number.isFinite(h) && h > 0 ? h : 280,
+      ...box,
       zIndex: list.length + 1,
       rotation: 0,
       opacity: 1,

@@ -85,6 +85,51 @@ describe('injectChartsFromSceneGraph (T5.2-ish)', () => {
     })
     expect(elements.filter((e) => e.type === 'chart')).toHaveLength(1)
   })
+
+  it('claims unstamped parser chart instead of duplicating', async () => {
+    const zip = await chartZip()
+    const graph = await buildOoxmlSceneGraph(zip)
+    const elements = await injectChartsFromSceneGraph({
+      elements: [
+        {
+          type: 'chart',
+          chartType: 'bar',
+          chartData: { labels: ['X'], datasets: [{ label: 'S', data: [1] }] },
+        },
+      ],
+      graphSlide: graph.slides[0],
+      zip,
+      slideIndex: 0,
+      stats: {},
+      warnings: [],
+      scale: { x: 0.75, y: 0.75 },
+    })
+    expect(elements.filter((e) => e.type === 'chart')).toHaveLength(1)
+    expect(elements[0]._pptxSource?.nodeId).toBeTruthy()
+  })
+
+  it('applies scale to injected geometry', async () => {
+    const zip = await chartZip()
+    const graph = await buildOoxmlSceneGraph(zip)
+    // Force inject by starting empty
+    const graphSlide = graph.slides[0]
+    const node = graphSlide.nodes.find((n) => n.kind === 'graphicFrame')
+    node.xfrm = { x: 100, y: 200, cx: 400, cy: 300 }
+    const elements = await injectChartsFromSceneGraph({
+      elements: [],
+      graphSlide,
+      zip,
+      slideIndex: 0,
+      stats: {},
+      warnings: [],
+      scale: { x: 0.5, y: 0.5 },
+    })
+    const chart = elements.find((e) => e.type === 'chart')
+    expect(chart.x).toBe(50)
+    expect(chart.y).toBe(100)
+    expect(chart.width).toBe(200)
+    expect(chart.height).toBe(150)
+  })
 })
 
 describe('parseOoxmlChart support matrix', () => {

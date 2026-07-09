@@ -221,6 +221,7 @@ async function mapPptxOutput({
         stats,
         warnings,
         strict: isStrict,
+        scale,
       })
       attachSourceNodes(elements, graphSlide.nodes, slideIndex)
     }
