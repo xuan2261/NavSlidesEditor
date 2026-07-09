@@ -23,6 +23,19 @@
 | `import-fidelity-properties.test.jsx` | 2 | ✅ Pass |
 | **Total** | **172** | **✅ All Pass** |
 
+## 2026-07-09 Zero-Loss Original Package (Phase 01 SLA foundation)
+
+- Successful PPTX import **atomically** persists `original.pptx` under
+  `server/data/pptx-originals/{uuid}.pptx` and creates the presentation
+  server-side with `pptxOriginal.{id,sha256,byteLength,uploadedAt}`.
+- Job done payload includes `presentationId` (client opens that id; no
+  client path bind of originals).
+- `GET /api/presentations/:id/pptx-original` streams bytes; permanent delete
+  unlinks the original. Engineering milestone contract lives in
+  `server/services/pptx-import/sla-contract.js` (Phase 01 requires **P1** only).
+- This does **not** claim visual 1:1; later phases own SSIM/oracle and editable
+  parity. Plan: `plans/260709-1306-pptx-import-native-ooxml-1to1-fidelity-deep-tdd/`.
+
 ## 2026-06-17 Strict Gate And OOXML Visibility Update
 
 - `test:pptx:strict` now runs `test:corpus` plus the strict smoke browser audit;

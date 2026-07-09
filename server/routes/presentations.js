@@ -27,9 +27,21 @@ const { rasterizeComplexElements } = require('../services/pptx-exporter')
 const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
 const { findServeablePresentation } = require('../services/presentation-finder')
 const { normalizeBuiltInTemplates } = require('../services/template-normalization')
+const {
+  deleteOriginalPptx,
+  readOriginalPptx,
+  assertSafeOriginalId,
+} = require('../services/pptx-import/original-package')
+const { stripClientPptxOriginalPaths } = require('../services/pptx-import/create-imported-presentation')
 
 const router = express.Router()
 const UPLOAD_HASHES_FILE = path.join(DATA_DIR, 'upload-hashes.json')
+
+async function unlinkPresentationOriginal(presentation) {
+  const originalId = presentation?.pptxOriginal?.id
+  if (!originalId) return
+  await deleteOriginalPptx(originalId).catch(() => {})
+}
 
 function getUploadMimeType(filename) {
   const ext = path.extname(filename).toLowerCase()
@@ -97,6 +109,8 @@ router.get('/', async (req, res) => {
 // POST /api/presentations - create new (optionally from template)
 router.post('/', validate(createPresentationSchema), async (req, res) => {
   try {
+    // RT-04: never accept client-supplied pptxOriginal path bindings
+    const safeBody = stripClientPptxOriginalPaths(req.body) || {}
     const {
       title,
       theme,
@@ -104,7 +118,9 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
       templateId,
       slides: providedSlides,
       ...extraFields
-    } = req.body
+    } = safeBody
+    // Defense in depth: strip again from passthrough extras
+    delete extraFields.pptxOriginal
     const now = new Date().toISOString()
     const { readTemplates } = require('../services/storage')
     let presentation
@@ -130,6 +146,7 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
       delete presentation.isTemplate
       delete presentation.description
       delete presentation.thumbnail
+      delete presentation.pptxOriginal
     } else if (templateId) {
       const templates = await readTemplates()
       let template = templates.find((t) => t.id === templateId)
@@ -201,6 +218,8 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
       })
     }
 
+    delete presentation.pptxOriginal
+
     const result = await withPresentations((presentations) => {
       presentations.push(presentation)
       return presentation
@@ -268,6 +287,33 @@ router.post('/raster-elements', async (req, res) => {
   }
 })
 
+// GET /api/presentations/:id/pptx-original — stream stored original bytes (server maps id→uuid only)
+router.get('/:id/pptx-original', async (req, res) => {
+  try {
+    const presentation = await findServeablePresentation(req.params.id, { normalize: false })
+    if (!presentation) return res.status(404).json({ error: 'Not found' })
+    const originalId = presentation.pptxOriginal?.id
+    if (!originalId) return res.status(404).json({ error: 'No original PPTX package' })
+    try {
+      assertSafeOriginalId(originalId)
+    } catch {
+      return res.status(404).json({ error: 'No original PPTX package' })
+    }
+    const bytes = await readOriginalPptx(originalId)
+    if (!bytes) return res.status(404).json({ error: 'Original PPTX package missing on disk' })
+    const safeTitle = String(presentation.title || 'presentation').replace(/[^a-z0-9._-]+/gi, '_')
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation')
+    res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.pptx"`)
+    res.setHeader('Content-Length', String(bytes.byteLength))
+    if (presentation.pptxOriginal?.sha256) {
+      res.setHeader('X-Pptx-Original-Sha256', presentation.pptxOriginal.sha256)
+    }
+    res.send(bytes)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // GET /api/presentations/:id
 router.get('/:id', async (req, res) => {
   try {
@@ -282,13 +328,19 @@ router.get('/:id', async (req, res) => {
 // PUT /api/presentations/:id
 router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
   try {
+    // RT-04: client cannot inject/rebind pptxOriginal (paths or id steal)
+    const safeBody = { ...req.body }
+    delete safeBody.pptxOriginal
     const result = await withPresentations((presentations) => {
       const index = presentations.findIndex((p) => p.id === req.params.id)
       if (index === -1) return null
+      const previous = presentations[index]
       presentations[index] = normalizePresentationNotes({
-        ...presentations[index],
-        ...req.body,
+        ...previous,
+        ...safeBody,
         id: req.params.id,
+        // Preserve server-owned original package metadata
+        pptxOriginal: previous.pptxOriginal,
         updatedAt: new Date().toISOString(),
       })
       return presentations[index]
@@ -301,6 +353,7 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
 })
 
 // DELETE /api/presentations/:id — soft delete (move to trash)
+// Keeps original.pptx for restore (lifecycle = presentation lifetime including trash).
 router.delete('/:id', async (req, res) => {
   try {
     const presId = req.params.id
@@ -339,13 +392,16 @@ router.post('/:id/restore', async (req, res) => {
 router.delete('/:id/permanent', async (req, res) => {
   try {
     const presId = req.params.id
-    const result = await withPresentations((presentations) => {
+    const removed = await withPresentations((presentations) => {
       const index = presentations.findIndex((p) => p.id === presId)
       if (index === -1) return null
-      presentations.splice(index, 1)
-      return true
+      const [pres] = presentations.splice(index, 1)
+      return pres
     })
-    if (!result) return res.status(404).json({ error: 'Not found' })
+    if (!removed) return res.status(404).json({ error: 'Not found' })
+
+    // Cascade: remove original.pptx package (zero-loss lifecycle ends with presentation)
+    await unlinkPresentationOriginal(removed)
 
     // Cascade: remove share tokens
     try {
@@ -375,6 +431,7 @@ router.delete('/:id/permanent', async (req, res) => {
 // POST /api/presentations/:id/duplicate
 router.post('/:id/duplicate', async (req, res) => {
   try {
+    const { persistOriginalPptx, readOriginalPptx } = require('../services/pptx-import/original-package')
     const result = await withPresentations(async (presentations) => {
       const original = presentations.find((p) => p.id === req.params.id)
       if (!original || original.deletedAt) return null
@@ -384,6 +441,26 @@ router.post('/:id/duplicate', async (req, res) => {
       copy.title = (copy.title || 'Untitled') + ' (copy)'
       copy.createdAt = now
       copy.updatedAt = now
+      // H1: never share pptxOriginal.id across decks (permanent delete would unlink sibling).
+      // Copy-on-write: new uuid file when bytes exist; strip binding if source package missing.
+      if (copy.pptxOriginal?.id) {
+        try {
+          const bytes = await readOriginalPptx(copy.pptxOriginal.id)
+          if (bytes) {
+            const artifact = await persistOriginalPptx(bytes)
+            copy.pptxOriginal = {
+              id: artifact.id,
+              sha256: artifact.sha256,
+              byteLength: artifact.byteLength,
+              uploadedAt: artifact.uploadedAt,
+            }
+          } else {
+            delete copy.pptxOriginal
+          }
+        } catch {
+          delete copy.pptxOriginal
+        }
+      }
       const normalizedCopy = normalizePresentationNotes(copy)
       presentations.push(normalizedCopy)
       return normalizedCopy

@@ -6,6 +6,11 @@ const uuidv4 = () => require('node:crypto').randomUUID()
 const { MAX_FILE_BYTES, TEMP_UPLOAD_DIR } = require('../services/pptx-import/constants')
 const { PptxImportError, sanitizeDiagnostic } = require('../services/pptx-import/diagnostics')
 const { importPptxFile } = require('../services/pptx-import/importer')
+const {
+  persistOriginalPptx,
+  deleteOriginalPptx,
+} = require('../services/pptx-import/original-package')
+const { createImportedPresentation } = require('../services/pptx-import/create-imported-presentation')
 const defaultJobManager = require('../services/pptx-import-job-manager')
 
 fs.ensureDirSync(TEMP_UPLOAD_DIR)
@@ -38,9 +43,24 @@ function isValidJobId(jobId) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(jobId)
 }
 
-async function runImport({ jobId, filePath, originalName, importer, jobManager }) {
+/**
+ * Atomic import: map → persist original → create presentation server-side.
+ * On create failure, original is rolled back. Cancel leaves no original.
+ */
+async function runImport({
+  jobId,
+  filePath,
+  originalName,
+  importer,
+  jobManager,
+  persistOriginal = persistOriginalPptx,
+  createPresentation = createImportedPresentation,
+  deleteOriginal = deleteOriginalPptx,
+  originalBaseDir,
+}) {
   const abortController = new AbortController()
   jobManager.registerCancelHandler?.(jobId, () => abortController.abort())
+  let originalArtifact = null
   try {
     jobManager.emitProgress(jobId, { stage: 'parsing', percent: 1, message: 'Starting PPTX import' })
     const result = await importer(filePath, {
@@ -52,8 +72,39 @@ async function runImport({ jobId, filePath, originalName, importer, jobManager }
       jobManager.completeCancellation?.(jobId)
       return
     }
-    jobManager.completeJob(jobId, result)
+
+    jobManager.emitProgress(jobId, { stage: 'persisting-original', percent: 92, message: 'Saving original package' })
+    originalArtifact = await persistOriginal(filePath, originalBaseDir ? { baseDir: originalBaseDir } : {})
+
+    if (abortController.signal.aborted) {
+      await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
+      originalArtifact = null
+      jobManager.completeCancellation?.(jobId)
+      return
+    }
+
+    jobManager.emitProgress(jobId, { stage: 'creating-presentation', percent: 96, message: 'Creating presentation' })
+    let presentation
+    try {
+      presentation = await createPresentation(result.presentation, originalArtifact, { originalName })
+    } catch (createErr) {
+      await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
+      originalArtifact = null
+      throw createErr
+    }
+
+    // If cancel races after create, still complete as done — presentation+original already committed.
+    jobManager.completeJob(jobId, {
+      presentationId: presentation.id,
+      stats: result.stats,
+      warnings: result.warnings || [],
+      // Keep presentation payload for transitional clients; prefer presentationId.
+      presentation: result.presentation,
+    })
   } catch (err) {
+    if (originalArtifact?.id) {
+      await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
+    }
     if (abortController.signal.aborted) jobManager.completeCancellation?.(jobId)
     else jobManager.failJob(jobId, sanitizeDiagnostic(err))
   } finally {
@@ -61,7 +112,14 @@ async function runImport({ jobId, filePath, originalName, importer, jobManager }
   }
 }
 
-function createPptxImportRouter({ importer = importPptxFile, jobManager = defaultJobManager } = {}) {
+function createPptxImportRouter({
+  importer = importPptxFile,
+  jobManager = defaultJobManager,
+  persistOriginal = persistOriginalPptx,
+  createPresentation = createImportedPresentation,
+  deleteOriginal = deleteOriginalPptx,
+  originalBaseDir,
+} = {}) {
   const router = express.Router()
 
   router.param('jobId', (req, res, next, jobId) => {
@@ -109,6 +167,10 @@ function createPptxImportRouter({ importer = importPptxFile, jobManager = defaul
         originalName: req.file.originalname,
         importer,
         jobManager,
+        persistOriginal,
+        createPresentation,
+        deleteOriginal,
+        originalBaseDir,
       }).catch((err) => {
         jobManager.failJob(jobId, sanitizeDiagnostic(err))
         fs.unlink(req.file.path).catch(() => {})

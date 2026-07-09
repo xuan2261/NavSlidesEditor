@@ -39,6 +39,17 @@ export const api = {
     fetch(`${BASE}/presentations/${id}/restore`, { method: 'POST' }).then(handleResponse),
   permanentDeletePresentation: (id) =>
     fetch(`${BASE}/presentations/${id}/permanent`, { method: 'DELETE' }).then(handleResponse),
+  /** Download original imported .pptx bytes (server maps presentation id → stored uuid only). */
+  downloadPptxOriginal: (id) =>
+    fetch(`${BASE}/presentations/${id}/pptx-original`).then(async (r) => {
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
+        const err = new Error(body.error || `Request failed (${r.status})`)
+        err.status = r.status
+        throw err
+      }
+      return r.blob()
+    }),
 
   uploadFile: (file) => {
     const fd = new FormData()

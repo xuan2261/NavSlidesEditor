@@ -258,6 +258,7 @@ server/uploads/
 - `initDataFiles()` creates the data directories and default JSON files on
   first run.
 - `tmp-pptx-imports/` is a temporary workspace for PPTX import uploads and is cleaned after each import.
+- `pptx-originals/{uuid}.pptx` stores the zero-loss original package for each successful PPTX import (lifecycle = presentation lifetime). Metadata on the presentation is `pptxOriginal: { id, sha256, byteLength, uploadedAt }` only — no client filesystem paths. Download via `GET /api/presentations/:id/pptx-original`. Import jobs complete with `{ presentationId, stats, warnings }` after server-side create.
 - Optional user plugins live under `server/data/plugins/<slug>/`; bundled
   plugins live under top-level `plugins/<slug>/`.
 

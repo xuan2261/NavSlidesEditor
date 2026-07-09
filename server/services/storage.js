@@ -82,6 +82,8 @@ function initDataFiles() {
   fs.ensureDirSync(DATA_DIR)
   fs.ensureDirSync(UPLOADS_DIR)
   fs.ensureDirSync(HISTORY_DIR)
+  // Zero-loss PPTX originals (presentation lifetime)
+  fs.ensureDirSync(path.join(DATA_DIR, 'pptx-originals'))
 
   if (!fs.existsSync(DATA_FILE)) fs.writeJsonSync(DATA_FILE, [])
   if (!fs.existsSync(SHARE_FILE)) fs.writeJsonSync(SHARE_FILE, {})

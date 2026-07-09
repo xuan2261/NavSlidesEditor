@@ -276,6 +276,10 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   const [previewTemplate, setPreviewTemplate] = useState(null)
   const [confirmDialog, setConfirmDialog] = useState(null) // { title, message, onConfirm, variant }
   const pptxImportRef = useRef(null)
+  const pptxInputRef = useRef(null)
+  const pdfInputRef = useRef(null)
+  const markdownInputRef = useRef(null)
+  const projectInputRef = useRef(null)
 
   // Dashboard state
   const [sidebarView, setSidebarView] = useState('all')
@@ -667,14 +671,23 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           })
         }
       })
-      setImportProgress('Creating presentation...')
-      const pres = await api.createPresentation(imported.presentation)
+      // Server creates presentation + binds original.pptx atomically (Phase 01).
+      // Prefer presentationId from job result; fall back to client create only for legacy servers.
+      let presentationId = imported?.presentationId
+      if (!presentationId && imported?.presentation) {
+        setImportProgress('Creating presentation...')
+        const pres = await api.createPresentation(imported.presentation)
+        presentationId = pres.id
+      }
+      if (!presentationId) {
+        throw new Error('PPTX import completed without presentationId')
+      }
       const warningSummary = summarizePptxImportWarnings(imported)
       if (warningSummary) {
         setImportWarningSummary(warningSummary)
         showNotice(warningSummary, { title: 'PPTX import completed with warnings' })
       }
-      onOpen(pres.id)
+      onOpen(presentationId)
     } catch (err) {
       console.error('PPTX import failed:', err)
       showError('Failed to import PPTX: ' + err.message)
@@ -900,70 +913,90 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
             <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted px-3 pt-2 pb-1.5">
               Import
             </div>
-            <label
+            <Button
+              type="button"
               data-testid="home-import-pptx-btn"
+              variant="ghost"
               className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
+              onClick={() => pptxInputRef.current?.click()}
             >
               <FileUp size={16} />
               <span>Import PPTX</span>
-              <input
-                data-testid="home-import-pptx-input"
-                type="file"
-                accept=".pptx"
-                className="hidden"
-                onChange={(e) => {
-                  handleImportPptx(e.target.files?.[0])
-                  e.target.value = ''
-                }}
-              />
-            </label>
-            <label
+            </Button>
+            <input
+              ref={pptxInputRef}
+              data-testid="home-import-pptx-input"
+              type="file"
+              accept=".pptx"
+              className="hidden"
+              tabIndex={-1}
+              onChange={(e) => {
+                handleImportPptx(e.target.files?.[0])
+                e.target.value = ''
+              }}
+            />
+            <Button
+              type="button"
+              variant="ghost"
               className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
+              onClick={() => pdfInputRef.current?.click()}
             >
               <BookOpen size={16} />
               <span>Import PDF</span>
-              <input
-                type="file"
-                accept=".pdf"
-                className="hidden"
-                onChange={(e) => {
-                  handleImportPdf(e.target.files?.[0])
-                  e.target.value = ''
-                }}
-              />
-            </label>
-            <label
+            </Button>
+            <input
+              ref={pdfInputRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              tabIndex={-1}
+              onChange={(e) => {
+                handleImportPdf(e.target.files?.[0])
+                e.target.value = ''
+              }}
+            />
+            <Button
+              type="button"
               data-testid="home-import-markdown-btn"
+              variant="ghost"
               className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
+              onClick={() => markdownInputRef.current?.click()}
             >
               <BookOpen size={16} />
               <span>Import Markdown</span>
-              <input
-                data-testid="home-import-markdown-input"
-                type="file"
-                accept=".md,.markdown,.txt"
-                className="hidden"
-                onChange={(e) => {
-                  handleImportMarkdown(e.target.files?.[0])
-                  e.target.value = ''
-                }}
-              />
-            </label>
-            <label
+            </Button>
+            <input
+              ref={markdownInputRef}
+              data-testid="home-import-markdown-input"
+              type="file"
+              accept=".md,.markdown,.txt"
+              className="hidden"
+              tabIndex={-1}
+              onChange={(e) => {
+                handleImportMarkdown(e.target.files?.[0])
+                e.target.value = ''
+              }}
+            />
+            <Button
+              type="button"
+              variant="ghost"
               className="flex items-center gap-2.5 px-3 py-2 rounded text-[13px] font-medium text-text-secondary cursor-pointer transition-colors border-none bg-transparent w-full text-left hover:bg-hover hover:text-text-primary"
+              onClick={() => projectInputRef.current?.click()}
             >
               <FolderOpen size={16} />
               <span>Import Project</span>
-              <input
-                type="file"
-                accept=".navslides,.json"
-                className="hidden"
-                onChange={(e) => {
-                  handleImportProject(e.target.files?.[0])
-                  e.target.value = ''
-                }}
-              />
-            </label>
+            </Button>
+            <input
+              ref={projectInputRef}
+              type="file"
+              accept=".navslides,.json"
+              className="hidden"
+              tabIndex={-1}
+              onChange={(e) => {
+                handleImportProject(e.target.files?.[0])
+                e.target.value = ''
+              }}
+            />
           </div>
 
           <div className="h-px bg-border my-2 mx-3" />

@@ -8,8 +8,10 @@ import JSZip from 'jszip'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import routeModule from './pptx-import.js'
 import jobManager from '../services/pptx-import-job-manager.js'
+import originalPackage from '../services/pptx-import/original-package.js'
 
-const { createPptxImportRouter } = routeModule
+const { createPptxImportRouter, runImport } = routeModule
+const { persistOriginalPptx, getOriginalsDir, sha256Buffer } = originalPackage
 
 async function writeMinimalPptx(filePath) {
   const zip = new JSZip()
@@ -19,12 +21,26 @@ async function writeMinimalPptx(filePath) {
 }
 
 async function waitForJob(app, jobId, status = 'done') {
-  for (let attempt = 0; attempt < 20; attempt += 1) {
+  for (let attempt = 0; attempt < 40; attempt += 1) {
     const res = await request(app).get(`/api/pptx/jobs/${jobId}`)
     if (res.body.status === status) return res
-    await new Promise((resolve) => setTimeout(resolve, 10))
+    await new Promise((resolve) => setTimeout(resolve, 15))
   }
   return request(app).get(`/api/pptx/jobs/${jobId}`)
+}
+
+function mockAtomicDeps(overrides = {}) {
+  return {
+    persistOriginal: async () => ({
+      id: '11111111-1111-4111-8111-111111111111',
+      sha256: 'a'.repeat(64),
+      byteLength: 12,
+      uploadedAt: new Date().toISOString(),
+    }),
+    createPresentation: async () => ({ id: 'pres-test-1' }),
+    deleteOriginal: async () => true,
+    ...overrides,
+  }
 }
 
 describe('PPTX import route', () => {
@@ -34,7 +50,7 @@ describe('PPTX import route', () => {
 
   it('[cap:import.upload-safety] rejects missing file and non-PPTX uploads', async () => {
     const app = express()
-    app.use('/api/pptx', createPptxImportRouter({ importer: async () => ({ ok: true }) }))
+    app.use('/api/pptx', createPptxImportRouter({ importer: async () => ({ ok: true }), ...mockAtomicDeps() }))
 
     const missing = await request(app).post('/api/pptx/import')
     expect(missing.status).toBe(400)
@@ -54,6 +70,7 @@ describe('PPTX import route', () => {
       app.use(
         '/api/pptx',
         createPptxImportRouter({
+          ...mockAtomicDeps(),
           importer: async () => ({
             presentation: { title: 'valid', theme: 'white', transition: 'slide', slides: [] },
             stats: { parser: 'pptxtojson', fallbackParserUsed: false, slideCount: 0 },
@@ -71,8 +88,130 @@ describe('PPTX import route', () => {
       expect(poll.body).toMatchObject({
         jobId: res.body.jobId,
         status: 'done',
-        result: { stats: { parser: 'pptxtojson' } },
+        result: { stats: { parser: 'pptxtojson' }, presentationId: 'pres-test-1' },
       })
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('T1.4 successful job includes presentationId + stats; original sha256 bound on create', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-t14-'))
+    const file = path.join(dir, 'valid.pptx')
+    const originalsBase = path.join(dir, 'data')
+    /** @type {object|null} */
+    let createdPayload = null
+    try {
+      await writeMinimalPptx(file)
+      const fileBuf = await fs.readFile(file)
+      const expectedSha = sha256Buffer(fileBuf)
+      const app = express()
+      app.use(
+        '/api/pptx',
+        createPptxImportRouter({
+          originalBaseDir: originalsBase,
+          persistOriginal: (fp, opts) => persistOriginalPptx(fp, opts),
+          createPresentation: async (presentation, artifact) => {
+            createdPayload = { presentation, artifact }
+            return { id: 'pres-bound-1', pptxOriginal: artifact }
+          },
+          deleteOriginal: async () => true,
+          importer: async () => ({
+            presentation: { title: 'bound', theme: 'white', slides: [] },
+            stats: { parser: 'pptxtojson', slideCount: 0 },
+            warnings: [{ type: 'test', message: 'warn' }],
+          }),
+        })
+      )
+
+      const res = await request(app).post('/api/pptx/import').attach('file', file)
+      const poll = await waitForJob(app, res.body.jobId)
+      expect(poll.body.status).toBe('done')
+      expect(poll.body.result.presentationId).toBe('pres-bound-1')
+      expect(poll.body.result.stats.parser).toBe('pptxtojson')
+      expect(poll.body.result.warnings).toHaveLength(1)
+      expect(createdPayload.artifact.sha256).toBe(expectedSha)
+      expect(createdPayload.artifact.id).toMatch(/^[0-9a-f-]{36}$/i)
+      const stored = await fs.readFile(
+        path.join(getOriginalsDir(originalsBase), `${createdPayload.artifact.id}.pptx`)
+      )
+      expect(stored.equals(fileBuf)).toBe(true)
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('T1.7 cancelled import leaves no original in pptx-originals', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-t17-'))
+    const file = path.join(dir, 'valid.pptx')
+    const originalsBase = path.join(dir, 'data')
+    let finishImport
+    try {
+      await writeMinimalPptx(file)
+      const app = express()
+      app.use(
+        '/api/pptx',
+        createPptxImportRouter({
+          jobManager,
+          originalBaseDir: originalsBase,
+          persistOriginal: (fp, opts) => persistOriginalPptx(fp, opts),
+          createPresentation: async () => ({ id: 'should-not-create' }),
+          deleteOriginal: (id, opts) => originalPackage.deleteOriginalPptx(id, opts),
+          importer: (_filePath, options) =>
+            new Promise((resolve) => {
+              options.signal.addEventListener('abort', () => {})
+              finishImport = () =>
+                resolve({ presentation: { slides: [] }, stats: {}, warnings: [] })
+            }),
+        })
+      )
+
+      const first = await request(app).post('/api/pptx/import').attach('file', file)
+      expect(first.status).toBe(202)
+      expect(await request(app).delete(`/api/pptx/jobs/${first.body.jobId}`)).toMatchObject({ status: 204 })
+      finishImport()
+      const cancelled = await waitForJob(app, first.body.jobId, 'cancelled')
+      expect(cancelled.body.status).toBe('cancelled')
+
+      const originalsDir = getOriginalsDir(originalsBase)
+      const names = await fs.readdir(originalsDir).catch(() => [])
+      expect(names.filter((n) => n.endsWith('.pptx'))).toHaveLength(0)
+    } finally {
+      finishImport?.()
+      await new Promise((resolve) => setTimeout(resolve, 20))
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('T1.10 createPresentation failure rolls back original file', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-t110-'))
+    const file = path.join(dir, 'valid.pptx')
+    const originalsBase = path.join(dir, 'data')
+    try {
+      await writeMinimalPptx(file)
+      const app = express()
+      app.use(
+        '/api/pptx',
+        createPptxImportRouter({
+          originalBaseDir: originalsBase,
+          persistOriginal: (fp, opts) => persistOriginalPptx(fp, opts),
+          createPresentation: async () => {
+            throw new Error('storage full')
+          },
+          deleteOriginal: (id, opts) => originalPackage.deleteOriginalPptx(id, opts),
+          importer: async () => ({
+            presentation: { title: 'fail-create', slides: [] },
+            stats: { parser: 'pptxtojson' },
+            warnings: [],
+          }),
+        })
+      )
+
+      const res = await request(app).post('/api/pptx/import').attach('file', file)
+      const poll = await waitForJob(app, res.body.jobId, 'failed')
+      expect(poll.body.status).toBe('failed')
+      const names = await fs.readdir(getOriginalsDir(originalsBase)).catch(() => [])
+      expect(names.filter((n) => n.endsWith('.pptx'))).toHaveLength(0)
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
     }
@@ -89,9 +228,11 @@ describe('PPTX import route', () => {
         '/api/pptx',
         createPptxImportRouter({
           jobManager,
-          importer: () => new Promise((resolve) => {
-            finishImport = () => resolve({ presentation: { slides: [] }, stats: {}, warnings: [] })
-          }),
+          ...mockAtomicDeps(),
+          importer: () =>
+            new Promise((resolve) => {
+              finishImport = () => resolve({ presentation: { slides: [] }, stats: {}, warnings: [] })
+            }),
         })
       )
 
@@ -111,7 +252,7 @@ describe('PPTX import route', () => {
   it('rejects a concurrent import before requiring multipart upload parsing', async () => {
     const app = express()
     const activeJobId = jobManager.createJob()
-    app.use('/api/pptx', createPptxImportRouter({ jobManager, importer: async () => ({ ok: true }) }))
+    app.use('/api/pptx', createPptxImportRouter({ jobManager, importer: async () => ({ ok: true }), ...mockAtomicDeps() }))
 
     const res = await request(app).post('/api/pptx/import')
 
@@ -123,7 +264,7 @@ describe('PPTX import route', () => {
   it('returns job lifecycle statuses for GET and DELETE', async () => {
     const app = express()
     const jobId = jobManager.createJob()
-    app.use('/api/pptx', createPptxImportRouter({ jobManager, importer: async () => ({ ok: true }) }))
+    app.use('/api/pptx', createPptxImportRouter({ jobManager, importer: async () => ({ ok: true }), ...mockAtomicDeps() }))
 
     const poll = await request(app).get(`/api/pptx/jobs/${jobId}`)
     expect(poll.status).toBe(200)
@@ -150,10 +291,12 @@ describe('PPTX import route', () => {
         '/api/pptx',
         createPptxImportRouter({
           jobManager,
-          importer: (_filePath, options) => new Promise((resolve) => {
-            options.signal.addEventListener('abort', () => {})
-            finishImport = () => resolve({ presentation: { slides: [] }, stats: {}, warnings: [] })
-          }),
+          ...mockAtomicDeps(),
+          importer: (_filePath, options) =>
+            new Promise((resolve) => {
+              options.signal.addEventListener('abort', () => {})
+              finishImport = () => resolve({ presentation: { slides: [] }, stats: {}, warnings: [] })
+            }),
         })
       )
 
@@ -180,7 +323,7 @@ describe('PPTX import route', () => {
   it('streams SSE progress and detaches clients on close', async () => {
     const app = express()
     const jobId = jobManager.createJob()
-    app.use('/api/pptx', createPptxImportRouter({ jobManager, importer: async () => ({ ok: true }) }))
+    app.use('/api/pptx', createPptxImportRouter({ jobManager, importer: async () => ({ ok: true }), ...mockAtomicDeps() }))
     const server = app.listen(0)
     const port = server.address().port
 
@@ -229,5 +372,11 @@ describe('PPTX import route', () => {
       vi.resetModules()
       process.env.NODE_ENV = originalNodeEnv
     }
+  })
+})
+
+describe('runImport atomic helpers', () => {
+  it('exports runImport for unit wiring', () => {
+    expect(typeof runImport).toBe('function')
   })
 })
