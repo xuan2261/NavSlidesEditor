@@ -5,6 +5,7 @@ exports[`pptx mapper golden masters > maps diagram deterministically 1`] = `
   {
     "_pptxDiagram": {
       "connections": [],
+      "graphicNodeId": "parser-diagram-0",
       "nodes": [
         {
           "text": "Node",
@@ -25,6 +26,12 @@ exports[`pptx mapper golden masters > maps diagram deterministically 1`] = `
       "textFit": "wrap",
       "textLength": 4,
       "version": 1,
+    },
+    "_pptxSource": {
+      "graphicKind": "diagram",
+      "kind": "graphicFrame",
+      "nodeId": "parser-diagram-0",
+      "slideIndex": 0,
     },
     "fill": "#e5e7eb",
     "height": 40,

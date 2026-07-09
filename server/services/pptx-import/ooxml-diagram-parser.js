@@ -96,6 +96,14 @@ function scaleAxis(scale) {
  * Inject editable shape nodes for scene-graph diagram frames missing mapped diagram content.
  * Attaches shared `_pptxDiagram` model for re-edit of node text.
  */
+function diagramInstanceKey(el) {
+  return (
+    el?._pptxDiagram?.graphicNodeId ||
+    (el?._pptxSource?.graphicKind === 'diagram' && el?._pptxSource?.nodeId) ||
+    null
+  )
+}
+
 async function injectDiagramsFromSceneGraph({
   elements,
   graphSlide,
@@ -113,13 +121,41 @@ async function injectDiagramsFromSceneGraph({
   )
   if (!diagramNodes.length) return list
 
-  // If parser already produced diagram-derived shapes with _pptxDiagram, skip inject for that model
-  const hasDiagramModel = list.some((el) => el?._pptxDiagram?.nodes?.length)
-  if (hasDiagramModel) return list
-
   const s = scaleAxis(scale)
+  let sanitizeHtml
+  try {
+    ;({ sanitizeHtml } = require('./sanitize'))
+  } catch {
+    sanitizeHtml = (v) => String(v || '').replace(/[<>&]/g, '')
+  }
 
   for (const node of diagramNodes) {
+    // Per-diagram claim (like charts): skip only this graphicFrame instance
+    const already = list.some((el) => diagramInstanceKey(el) === String(node.id))
+    if (already) continue
+
+    // Also claim parser-flatten models that lack graphicNodeId (one unstamped model per remaining node)
+    const unstampedModel = list.find(
+      (el) => el?._pptxDiagram?.nodes?.length && !el._pptxDiagram.graphicNodeId && !el._pptxSource?.nodeId
+    )
+    if (unstampedModel) {
+      const model = unstampedModel._pptxDiagram
+      model.graphicNodeId = String(node.id)
+      model.dataPath = node.rels?.diagramTarget || model.dataPath
+      for (const el of list) {
+        if (el._pptxDiagram === model) {
+          el._pptxSource = {
+            ...(el._pptxSource || {}),
+            nodeId: String(node.id),
+            kind: 'graphicFrame',
+            graphicKind: 'diagram',
+            slideIndex,
+          }
+        }
+      }
+      continue
+    }
+
     const dataPath = node.rels?.diagramTarget
     if (!dataPath) {
       warnings.push({
@@ -158,6 +194,8 @@ async function injectDiagramsFromSceneGraph({
     }
 
     for (const [i, n] of laidOut.entries()) {
+      const safeText = String(n.text || `Node ${i + 1}`)
+      const safeHtml = sanitizeHtml(`<p>${safeText}</p>`) || `<p>Node ${i + 1}</p>`
       list.push({
         id: `diagram-ooxml-${node.id}-${i}`,
         type: 'shape',
@@ -170,10 +208,10 @@ async function injectDiagramsFromSceneGraph({
         fill: '#e0e7ff',
         stroke: '#6366f1',
         strokeWidth: 1,
-        text: n.text || `Node ${i + 1}`,
+        text: safeText.replace(/<[^>]+>/g, ''),
         textColor: '#111827',
         fontSize: 16,
-        content: n.text ? `<p>${n.text}</p>` : `<p>Node ${i + 1}</p>`,
+        content: safeHtml,
         _pptxSource: {
           nodeId: String(node.id),
           kind: 'graphicFrame',
@@ -207,9 +245,17 @@ function stampDiagramModelOnFlattened(elements, sourceElement, slideIndex = 0) {
         .trim(),
       type: 'node',
     }))
+  // Stable id for golden snapshots / coverage (avoid mapper UUID noise)
+  const graphicNodeId = String(
+    sourceElement?._pptxSource?.nodeId ||
+      sourceElement?.sourceId ||
+      sourceElement?.name ||
+      `parser-diagram-${slideIndex}`
+  )
   const model = {
     source: 'parser-flatten',
     slideIndex,
+    graphicNodeId,
     nodes: textNodes,
     connections: [],
     originalType: sourceElement?.diagramType || sourceElement?.type || 'diagram',
@@ -217,6 +263,13 @@ function stampDiagramModelOnFlattened(elements, sourceElement, slideIndex = 0) {
   for (const el of list) {
     if (el.type === 'shape' || el.type === 'text') {
       el._pptxDiagram = model
+      el._pptxSource = {
+        ...(el._pptxSource || {}),
+        nodeId: graphicNodeId,
+        kind: el._pptxSource?.kind || 'graphicFrame',
+        graphicKind: 'diagram',
+        slideIndex,
+      }
     }
   }
   return list

@@ -237,17 +237,17 @@ async function mapPptxOutput({
     }
     const evidence = ooxml.slidesByIndex[slideIndex] || { chartEntries: [], smartArtEntries: [] }
     const mappedNativeChartCount = elements.filter((element) => element?.type === 'chart').length
-    // Count unique SmartArt graphic instances (diagram type or shapes with _pptxDiagram model)
+    // Count unique SmartArt graphicFrame instances (shared model id), not per-shape rows
     const mappedNativeDiagramCount = new Set(
       elements
         .filter((element) => element?.type === 'diagram' || element?._pptxDiagram?.nodes?.length)
         .map(
           (element) =>
-            element._pptxSource?.nodeId ||
             element._pptxDiagram?.graphicNodeId ||
-            element.id ||
-            'diagram'
+            (element._pptxSource?.graphicKind === 'diagram' && element._pptxSource?.nodeId) ||
+            null
         )
+        .filter(Boolean)
     ).size
     // Prefer package chart evidence; also count scene-graph chart nodes when present
     const graphChartCount = graphSlide

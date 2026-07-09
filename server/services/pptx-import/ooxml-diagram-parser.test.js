@@ -55,6 +55,67 @@ describe('ooxml-diagram-parser (T6.1 T6.3 T6.4)', () => {
     expect(json.nodes[0].text).toBe('Changed')
   })
 
+  it('does not skip second diagram when first has model', async () => {
+    const zip = new JSZip()
+    zip.file('[Content_Types].xml', '<Types/>')
+    zip.file(
+      'ppt/slides/slide1.xml',
+      `<?xml version="1.0"?>
+      <p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+       xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+        <p:cSld><p:spTree>
+          <p:nvGrpSpPr/><p:grpSpPr/>
+          <p:graphicFrame>
+            <p:nvGraphicFramePr><p:cNvPr id="5" name="D1"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr>
+            <a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/diagram">
+              <dgm:relIds xmlns:dgm="http://schemas.openxmlformats.org/drawingml/2006/diagram" r:dm="rId2"/>
+            </a:graphicData></a:graphic>
+          </p:graphicFrame>
+          <p:graphicFrame>
+            <p:nvGraphicFramePr><p:cNvPr id="6" name="D2"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr>
+            <a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/diagram">
+              <dgm:relIds xmlns:dgm="http://schemas.openxmlformats.org/drawingml/2006/diagram" r:dm="rId3"/>
+            </a:graphicData></a:graphic>
+          </p:graphicFrame>
+        </p:spTree></p:cSld>
+      </p:sld>`
+    )
+    zip.file(
+      'ppt/slides/_rels/slide1.xml.rels',
+      `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+        <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramData" Target="../diagrams/data1.xml"/>
+        <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramData" Target="../diagrams/data2.xml"/>
+      </Relationships>`
+    )
+    zip.file('ppt/diagrams/data1.xml', DATA_XML)
+    zip.file(
+      'ppt/diagrams/data2.xml',
+      DATA_XML.replace('Step One', 'Alpha').replace('Step Two', 'Beta').replace('Step Three', 'Gamma')
+    )
+    const graph = await buildOoxmlSceneGraph(zip)
+    const elements = await injectDiagramsFromSceneGraph({
+      elements: [
+        {
+          type: 'shape',
+          text: 'Parser',
+          _pptxDiagram: { nodes: [{ id: 'p', text: 'Parser', type: 'node' }], graphicNodeId: '5' },
+          _pptxSource: { nodeId: '5', graphicKind: 'diagram' },
+        },
+      ],
+      graphSlide: graph.slides[0],
+      zip,
+      slideIndex: 0,
+      stats: {},
+      warnings: [],
+      scale: { x: 1, y: 1 },
+    })
+    const ids = new Set(elements.map((e) => e._pptxDiagram?.graphicNodeId).filter(Boolean))
+    expect(ids.has('5')).toBe(true)
+    expect(ids.has('6')).toBe(true)
+    expect(elements.some((e) => e.text === 'Alpha')).toBe(true)
+  })
+
   it('injects shapes from scene graph diagram rels', async () => {
     const zip = new JSZip()
     zip.file('[Content_Types].xml', '<Types/>')
