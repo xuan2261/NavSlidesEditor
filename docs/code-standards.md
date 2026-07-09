@@ -179,6 +179,13 @@ Logic extracted from `EditorPage` lives in `hooks/`.
 | --- | --- | --- |
 | `useAutosave` | `use-autosave.js` | Debounced auto-save (1500ms) |
 | `useClipboard` | `use-clipboard.js` | Copy/cut/paste/duplicate elements |
+
+### Element lock, cut, table merge, find-replace
+
+- **Lock policy:** Delete, Cut, and Duplicate **skip locked** elements (mixed selection operates on free members only). Copy may still include locked elements; paste preserves `locked` when present on the clipboard payload. Group mutations are blocked when any group member is locked or hidden (`hasBlockedGroupMutation`) — surface feedback via `showNotice` + `getBlockedActionNotice`.
+- **Table merges:** `normalizeTableShape` **preserves in-bounds** `mergedCells` on ±row/col; drops only OOB merges (`preserveValidMerges`). Do not reintroduce wipe-all `mergedCells: []`.
+- **Find/replace types:** text, code, markdown, latex, html, shape text, and **table cells** (`data[r][c]`). Keep collect + replace paths in sync via `collectElementSearchMatches`.
+- **Geometry floor:** canvas resize / multi-select W-H fan-out uses `MIN_SIZE` (40). New callout defaults are ≥ 40.
 | `useKeyboard` | `use-keyboard.js` | Keyboard shortcut dispatch |
 | `useLivePresentation` | `use-live-presentation.js` | Socket.IO live mode |
 | `useLiveTimer` | `use-live-timer.js` | Presenter timer UI state |

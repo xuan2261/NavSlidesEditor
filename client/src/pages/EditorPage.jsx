@@ -35,6 +35,7 @@ import {
   getSelectionIdsForActiveSlideElement,
   hasBlockedGroupMutation,
 } from '../utils/active-slide-selection'
+import { getBlockedActionNotice } from '../utils/blocked-action-notice'
 import { computeClampedBatchDelta } from '../components/canvas/use-canvas-pointer-interaction'
 import SlidePanel from '../components/SlidePanel'
 import SlideCanvas from '../components/SlideCanvas'
@@ -919,11 +920,25 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   // across every selected element so a multi-selection mutates as a whole, not
   // just the last-clicked id. Reads selection/slide from refs so the callback
   // identity stays stable across renders.
+  const notifyBlockedAction = useCallback((reason) => {
+    showNotice(getBlockedActionNotice(reason), {
+      title: 'Selection locked',
+      testId: 'editor-blocked-action-notice',
+    })
+  }, [])
+
   const updateSelectedElements = useCallback(
     (updates) => {
       const ids = selectedElementIdsRef.current
       const slide = activeSlideRef.current
       if (!ids?.length || !slide) return
+      // Only notify when group block prevents the write — not lock-only unlock or empty type-gate.
+      const updateKeys = Object.keys(updates || {})
+      const isLockOnly = updateKeys.length === 1 && updateKeys[0] === 'locked'
+      if (!isLockOnly && hasBlockedGroupMutation(slide, ids)) {
+        notifyBlockedAction('group-locked')
+        return
+      }
       const primaryId = ids[ids.length - 1]
       const batch = buildSelectionUpdates(slide.elements || [], ids, primaryId, updates)
       if (batch.length === 1) {
@@ -933,7 +948,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         updateElements(batch)
       }
     },
-    [selectedElementIdsRef, activeSlideRef, updateElement, updateElements]
+    [selectedElementIdsRef, activeSlideRef, updateElement, updateElements, notifyBlockedAction]
   )
 
   // Undo/Redo handlers (called by QuickAccessToolbar and keyboard shortcuts)
@@ -1282,7 +1297,10 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         const dy = direction === 'up' ? -step : direction === 'down' ? step : 0
         if (dx === 0 && dy === 0) return
         e.preventDefault()
-        if (hasBlockedGroupMutation(slide, ids)) return
+        if (hasBlockedGroupMutation(slide, ids)) {
+          notifyBlockedAction('group-locked')
+          return
+        }
         // One batched store write per nudge instead of N (one per selected id),
         // so a large multi-selection does not fire N renders per keypress.
         const moving = (slide?.elements || [])
@@ -1669,6 +1687,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
                 onCut={handleCut}
                 onPaste={handlePaste}
                 onDuplicate={handleDuplicate}
+                onBlockedAction={notifyBlockedAction}
                 onOpenHtmlEditor={openHtmlEditor}
                 onOpenCodeEditor={openCodeEditor}
                 onOpenLatexEditor={openLatexEditor}
@@ -1688,7 +1707,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
           </div>
 
           {rightPanelOpen && (
-            <div className="mt-[80px] flex h-[calc(100%-80px)] shrink-0">
+            <div className="flex h-full min-h-0 shrink-0">
               <PropertiesPanel
                 slide={activeSlide}
                 selectedElement={selectedElement}
@@ -1724,7 +1743,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
             </div>
           )}
           {showDesignIdeas && (
-            <div className="mt-[80px] flex h-[calc(100%-80px)] shrink-0">
+            <div className="flex h-full min-h-0 shrink-0">
               <DesignIdeasPanel
                 slide={activeSlide}
                 presentation={presentation}

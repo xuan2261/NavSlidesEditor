@@ -18,6 +18,27 @@ export function syncTableStyleMatrices(cellStyles = {}, rows, cols) {
   ]))
 }
 
+/**
+ * Keep merges that still fit entirely inside the new table bounds.
+ * Drop OOB / degenerate merges — do not wipe all merges on every shape change.
+ */
+export function preserveValidMerges(mergedCells, rows, cols) {
+  const list = Array.isArray(mergedCells) ? mergedCells : []
+  const safeRows = Math.max(1, Number(rows) || 1)
+  const safeCols = Math.max(1, Number(cols) || 1)
+  const next = []
+  for (const merge of list) {
+    const row = Number(merge?.row)
+    const col = Number(merge?.col)
+    if (!Number.isFinite(row) || !Number.isFinite(col) || row < 0 || col < 0) continue
+    const rowSpan = Math.max(1, Number(merge?.rowSpan) || 1)
+    const colSpan = Math.max(1, Number(merge?.colSpan) || 1)
+    if (row + rowSpan > safeRows || col + colSpan > safeCols) continue
+    next.push({ row, col, rowSpan, colSpan })
+  }
+  return next
+}
+
 export function normalizeTableShape(update, current) {
   const data = update.data || current.data || [['']]
   const rows = data.length
@@ -38,7 +59,7 @@ export function normalizeTableShape(update, current) {
     ...(Array.isArray(current.rowHeights) && {
       rowHeights: Array.from({ length: rows }, (_, index) => current.rowHeights[index] ?? rowFallback),
     }),
-    mergedCells: [],
+    mergedCells: preserveValidMerges(current.mergedCells, rows, cols),
   }
 }
 

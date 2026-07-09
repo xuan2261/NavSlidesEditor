@@ -160,8 +160,8 @@ svg.selectAll('circle').data(data).join('circle')
     iconStrokeWidth: 2,
   },
   callout: {
-    width: 36,
-    height: 36,
+    width: 40, // >= MIN_SIZE (40) so first resize/panel edit does not jump
+    height: 40,
     zIndex: 10,
     calloutNumber: 1,
     calloutColor: '#ef4444',

@@ -115,6 +115,43 @@ export function replaceInHtml(html, searchTerm, replaceTerm, matchCase, global =
   return serializeDocument(doc, html)
 }
 
+function replaceInTableData(data, regex, replaceTerm, global = true) {
+  let didReplace = false
+  const next = (data || []).map((row) =>
+    (row || []).map((cell) => {
+      const text = cell == null ? '' : String(cell)
+      if (!global && didReplace) return cell
+      const replaced = text.replace(regex, replaceTerm)
+      if (replaced !== text) {
+        didReplace = true
+        return replaced
+      }
+      return cell
+    })
+  )
+  return next
+}
+
+/**
+ * Replace a single occurrence inside one table cell (pos is index within that cell).
+ */
+export function replaceOnceInTableCell(element, searchTerm, replaceTerm, matchCase, tableRow, tableCol, pos = 0) {
+  if (element?.type !== 'table' || !Array.isArray(element.data)) return element
+  const regex = createSearchRegex(searchTerm, matchCase, false)
+  const data = element.data.map((row, ri) =>
+    (row || []).map((cell, ci) => {
+      if (ri !== tableRow || ci !== tableCol) return cell
+      const text = cell == null ? '' : String(cell)
+      const start = Math.max(0, Number(pos) || 0)
+      const before = text.slice(0, start)
+      const from = text.slice(start)
+      const replacedFrom = from.replace(regex, replaceTerm)
+      return before + replacedFrom
+    })
+  )
+  return { ...element, data }
+}
+
 function replaceInElement(element, searchTerm, replaceTerm, matchCase, regex) {
   if (element.type === 'text') {
     return {
@@ -134,7 +171,42 @@ function replaceInElement(element, searchTerm, replaceTerm, matchCase, regex) {
   if (element.type === 'shape' && element.text) {
     return { ...element, text: element.text.replace(regex, replaceTerm) }
   }
+  if (element.type === 'table' && Array.isArray(element.data)) {
+    return {
+      ...element,
+      data: replaceInTableData(element.data, regex, replaceTerm, true),
+      // mergedCells / styles untouched
+    }
+  }
   return element
+}
+
+/** Collect searchable plain segments for match counting (keeps Find UI in sync with replace). */
+export function collectElementSearchMatches(el, searchTerm, matchCase) {
+  if (!searchTerm || !el) return []
+  const term = matchCase ? searchTerm : searchTerm.toLowerCase()
+  const hits = []
+  const pushFromText = (text, extra = {}) => {
+    const compare = matchCase ? text : text.toLowerCase()
+    let pos = 0
+    while ((pos = compare.indexOf(term, pos)) !== -1) {
+      hits.push({ elementId: el.id, elementType: el.type, pos, ...extra })
+      pos += term.length
+    }
+  }
+  if (el.type === 'text') pushFromText(stripHtml(el.content))
+  else if (el.type === 'code' || el.type === 'markdown' || el.type === 'latex')
+    pushFromText(el.content || '')
+  else if (el.type === 'html') pushFromText(stripHtml(el.content || ''))
+  else if (el.type === 'shape' && el.text) pushFromText(el.text)
+  else if (el.type === 'table' && Array.isArray(el.data)) {
+    el.data.forEach((row, ri) => {
+      ;(row || []).forEach((cell, ci) => {
+        pushFromText(cell == null ? '' : String(cell), { tableRow: ri, tableCol: ci })
+      })
+    })
+  }
+  return hits
 }
 
 export function replaceAllInSlides(slides, searchTerm, replaceTerm, matchCase) {

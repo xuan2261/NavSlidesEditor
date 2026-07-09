@@ -190,14 +190,15 @@ describe('batch move bounds', () => {
   })
 })
 
-function renderPointerInteraction() {
+function renderPointerInteraction(options = {}) {
   const pendingDragRef = { current: null }
-  const slide = {
+  const slide = options.slide || {
     elements: [
       { id: 'free', x: 10, y: 20, width: 100, height: 80 },
       { id: 'locked', locked: true, x: 200, y: 220, width: 120, height: 90 },
     ],
   }
+  const onBlockedAction = options.onBlockedAction || vi.fn()
 
   const canvas = document.createElement('div')
   canvas.className = 'slide-canvas'
@@ -219,6 +220,7 @@ function renderPointerInteraction() {
       suppressCanvasClickRef: { current: false },
       onUpdateElement: vi.fn(),
       onUpdateElements: vi.fn(),
+      onBlockedAction,
       snapToGrid: (value) => value,
       snapWithRef: (x, y) => ({ x, y }),
       getRotationAngle: vi.fn(),
@@ -239,7 +241,7 @@ function renderPointerInteraction() {
     })
   )
 
-  return { hook, pendingDragRef, slide }
+  return { hook, pendingDragRef, slide, onBlockedAction }
 }
 
 describe('startElementDrag lock handling', () => {
@@ -275,5 +277,40 @@ describe('startElementDrag lock handling', () => {
     expect(pendingDragRef.current.startEls).toEqual([
       { id: 'free', x: 10, y: 20, width: 100, height: 80 },
     ])
+  })
+
+  it('notifies element-locked when starting drag on a locked element', () => {
+    const { hook, slide, onBlockedAction } = renderPointerInteraction()
+    hook.result.current.startElementDrag(
+      { clientX: 210, clientY: 230 },
+      'locked',
+      'move',
+      null,
+      slide,
+      1,
+      ['locked']
+    )
+    expect(onBlockedAction).toHaveBeenCalledWith('element-locked')
+  })
+
+  it('notifies group-locked when selection group has a locked member', () => {
+    const slide = {
+      elements: [
+        { id: 'a', groupId: 'g1', x: 10, y: 10, width: 50, height: 50 },
+        { id: 'b', groupId: 'g1', locked: true, x: 70, y: 10, width: 50, height: 50 },
+      ],
+    }
+    const { hook, pendingDragRef, onBlockedAction } = renderPointerInteraction({ slide })
+    hook.result.current.startElementDrag(
+      { clientX: 15, clientY: 15 },
+      'a',
+      'move',
+      null,
+      slide,
+      1,
+      ['a', 'b']
+    )
+    expect(pendingDragRef.current).toBeNull()
+    expect(onBlockedAction).toHaveBeenCalledWith('group-locked')
   })
 })

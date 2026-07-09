@@ -197,6 +197,99 @@ describe('createCutOperation', () => {
     expect(result.clipboardData[1]).toMatchObject({ type: 'image' })
     expect(result.clipboardData[1].id).toBeUndefined()
   })
+
+  it('skips locked members and cuts free only (mixed selection)', () => {
+    const result = createCutOperation({
+      slideElements: [
+        makeEl('el-1', { type: 'text', content: 'Free' }),
+        makeEl('el-2', { locked: true, type: 'shape' }),
+        makeEl('el-3', { type: 'image' }),
+      ],
+      selectedElementIds: ['el-1', 'el-2', 'el-3'],
+    })
+    expect(result.idsToDelete).toEqual(['el-1', 'el-3'])
+    expect(result.clipboardData).toHaveLength(2)
+    expect(result.clipboardData.map((el) => el.type)).toEqual(['text', 'image'])
+    expect(result.clipboardData.every((el) => el.id === undefined)).toBe(true)
+  })
+
+  it('returns empty when every selected element is locked', () => {
+    const result = createCutOperation({
+      slideElements: [makeEl('el-1', { locked: true }), makeEl('el-2', { locked: true })],
+      selectedElementIds: ['el-1', 'el-2'],
+    })
+    expect(result).toEqual({ clipboardData: null, idsToDelete: [] })
+  })
+})
+
+describe('useClipboard performCut lock policy', () => {
+  const makeEl = (id, overrides = {}) => ({
+    id,
+    type: 'shape',
+    x: 100,
+    y: 100,
+    locked: false,
+    ...overrides,
+  })
+
+  beforeEach(() => {
+    uuidIndex = 0
+    useEditorStore.setState({ selectedElementIds: [], clipboard: null, pasteCount: 0 })
+  })
+
+  it('does not remove locked elements and keeps them selected on mixed cut', () => {
+    let deck = {
+      slides: [
+        {
+          id: 's1',
+          elements: [
+            makeEl('free', { type: 'text' }),
+            makeEl('lock', { locked: true, type: 'shape' }),
+          ],
+        },
+      ],
+    }
+    const setPresentation = (updater) => {
+      deck = updater(deck)
+    }
+    const mapActiveSlide = (prev, fn) => ({
+      ...prev,
+      slides: prev.slides.map((slide, index) => (index === 0 ? fn(slide) : slide)),
+    })
+    const { result } = renderHook(() => useClipboard({ mapActiveSlide, setPresentation }))
+
+    act(() => {
+      result.current.performCut(deck.slides[0].elements, ['free', 'lock'])
+    })
+
+    expect(deck.slides[0].elements.map((el) => el.id)).toEqual(['lock'])
+    expect(useEditorStore.getState().selectedElementIds).toEqual(['lock'])
+    expect(useEditorStore.getState().clipboard).toHaveLength(1)
+    expect(useEditorStore.getState().clipboard[0].type).toBe('text')
+  })
+
+  it('is a no-op when every selected element is locked', () => {
+    let deck = {
+      slides: [{ id: 's1', elements: [makeEl('a', { locked: true }), makeEl('b', { locked: true })] }],
+    }
+    const setPresentation = (updater) => {
+      deck = updater(deck)
+    }
+    const mapActiveSlide = (prev, fn) => ({
+      ...prev,
+      slides: prev.slides.map((slide, index) => (index === 0 ? fn(slide) : slide)),
+    })
+    useEditorStore.setState({ clipboard: [{ type: 'prior' }], selectedElementIds: ['a', 'b'] })
+    const { result } = renderHook(() => useClipboard({ mapActiveSlide, setPresentation }))
+
+    act(() => {
+      result.current.performCut(deck.slides[0].elements, ['a', 'b'])
+    })
+
+    expect(deck.slides[0].elements.map((el) => el.id)).toEqual(['a', 'b'])
+    expect(useEditorStore.getState().clipboard).toEqual([{ type: 'prior' }])
+    expect(useEditorStore.getState().selectedElementIds).toEqual(['a', 'b'])
+  })
 })
 
 describe('createDuplicateOperation', () => {

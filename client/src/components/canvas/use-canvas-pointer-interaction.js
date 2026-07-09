@@ -172,6 +172,7 @@ export default function useCanvasPointerInteraction({
   setCropMode,
   slideW,
   slideH,
+  onBlockedAction,
 }) {
   // Crop drag state ref accessor (needed by cropDragRef.current setter below)
   const setCropDrag = useCallback(
@@ -385,20 +386,29 @@ export default function useCanvasPointerInteraction({
   // startElementDrag — called by CanvasElement on pointer down
   const startElementDrag = useCallback(
     (e, elementId, type, handle, slide, scale, selectedIds) => {
-      if (slide?.locked) return
+      if (slide?.locked) {
+        onBlockedAction?.('slide-locked')
+        return
+      }
       const canvasEl = document.querySelector('.slide-canvas')
       if (!canvasEl) return
       const rect = canvasEl.getBoundingClientRect()
       const element = slide?.elements?.find((el) => el.id === elementId)
       if (!element) return
-      if (element.locked) return
+      if (element.locked) {
+        onBlockedAction?.('element-locked')
+        return
+      }
       const hasBlockedGroup = (slide?.elements || []).some((el) => {
         if (!selectedIds.includes(el.id) || !el.groupId) return false
         return (slide.elements || []).some(
           (member) => member.groupId === el.groupId && (member.locked || member.hidden)
         )
       })
-      if (hasBlockedGroup) return
+      if (hasBlockedGroup) {
+        onBlockedAction?.('group-locked')
+        return
+      }
       const allSelected = (slide?.elements || []).filter(
         (el) => selectedIds.includes(el.id) && !el.locked
       )
@@ -428,7 +438,7 @@ export default function useCanvasPointerInteraction({
         })),
       }
     },
-    [pendingDragRef]
+    [pendingDragRef, onBlockedAction]
   )
 
   return {

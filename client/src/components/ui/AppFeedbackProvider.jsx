@@ -65,6 +65,7 @@ export function AppFeedbackProvider() {
     >
       <p
         id={messageId}
+        data-testid={feedback.testId || 'app-feedback-message'}
         role={feedback.tone === 'danger' ? 'alert' : 'status'}
         className="m-0 whitespace-pre-wrap text-sm leading-6 text-text-secondary"
       >

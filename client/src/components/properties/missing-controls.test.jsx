@@ -109,7 +109,10 @@ describe('Phase 4: generic panel opacity (P0-PANEL-OPACITY)', () => {
     const a = { ...textEl, id: 'a', opacity: 1 }
     const b = { ...textEl, id: 'b', opacity: 0.5 }
     renderCommon(a, { elements: [a, b], selectedElementIds: ['a', 'b'] })
-    expect(screen.getByTestId('prop-opacity').getAttribute('data-mixed')).toBe('true')
+    const slider = screen.getByTestId('prop-opacity')
+    expect(slider.getAttribute('data-mixed')).toBe('true')
+    expect(slider.getAttribute('aria-valuetext')).toBe('mixed')
+    expect(screen.getByText(/Multiple values/i)).toBeTruthy()
   })
 })
 

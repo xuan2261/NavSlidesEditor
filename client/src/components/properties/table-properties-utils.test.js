@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { clampTableCell, normalizeTableShape } from './table-properties-utils'
+import {
+  clampTableCell,
+  normalizeTableShape,
+  preserveValidMerges,
+} from './table-properties-utils'
 
 describe('table properties utilities', () => {
   it('keeps style matrices and row/column dimensions aligned after shape edits', () => {
@@ -22,10 +26,11 @@ describe('table properties utilities', () => {
     expect(next.cellStyles.fontFamilies).toEqual([['Arial', 'Aptos'], [null, null], [null, null]])
     expect(next.colWidths).toEqual([80, 120])
     expect(next.rowHeights).toEqual([40, 40, 40])
-    expect(next.mergedCells).toEqual([])
+    // In-bounds colspan merge is preserved when appending rows
+    expect(next.mergedCells).toEqual([{ row: 0, col: 0, rowSpan: 1, colSpan: 2 }])
   })
 
-  it('drops imported merged-cell metadata whenever rows are added', () => {
+  it('preserves in-bounds merge when appending a row', () => {
     const next = normalizeTableShape(
       {
         data: [
@@ -43,7 +48,7 @@ describe('table properties utilities', () => {
       }
     )
 
-    expect(next.mergedCells).toEqual([])
+    expect(next.mergedCells).toEqual([{ row: 0, col: 0, rowSpan: 2, colSpan: 2 }])
     expect(next.cellStyles.textColors).toEqual([
       [null, null],
       [null, null],
@@ -51,7 +56,18 @@ describe('table properties utilities', () => {
     ])
   })
 
-  it('drops imported merged-cell metadata whenever columns are removed', () => {
+  it('preserves in-bounds merge when appending a column', () => {
+    const next = normalizeTableShape(
+      { data: [['A', 'B', ''], ['C', 'D', '']] },
+      {
+        data: [['A', 'B'], ['C', 'D']],
+        mergedCells: [{ row: 0, col: 0, rowSpan: 2, colSpan: 2 }],
+      }
+    )
+    expect(next.mergedCells).toEqual([{ row: 0, col: 0, rowSpan: 2, colSpan: 2 }])
+  })
+
+  it('drops merge that exceeds bounds after removing last column', () => {
     const next = normalizeTableShape(
       { data: [['A', 'B'], ['C', 'D']] },
       {
@@ -63,6 +79,40 @@ describe('table properties utilities', () => {
 
     expect(next.mergedCells).toEqual([])
     expect(next.colWidths).toEqual([80, 120])
+  })
+
+  it('keeps unaffected merge when removing last row outside the merge', () => {
+    const next = normalizeTableShape(
+      {
+        data: [
+          ['A', 'B'],
+          ['C', 'D'],
+        ],
+      },
+      {
+        data: [
+          ['A', 'B'],
+          ['C', 'D'],
+          ['E', 'F'],
+        ],
+        mergedCells: [{ row: 0, col: 0, rowSpan: 2, colSpan: 2 }],
+      }
+    )
+    expect(next.mergedCells).toEqual([{ row: 0, col: 0, rowSpan: 2, colSpan: 2 }])
+  })
+
+  it('preserveValidMerges drops degenerate and OOB entries', () => {
+    expect(
+      preserveValidMerges(
+        [
+          { row: 0, col: 0, rowSpan: 2, colSpan: 2 },
+          { row: 5, col: 0, rowSpan: 1, colSpan: 1 },
+          { row: -1, col: 0, rowSpan: 1, colSpan: 1 },
+        ],
+        2,
+        2
+      )
+    ).toEqual([{ row: 0, col: 0, rowSpan: 2, colSpan: 2 }])
   })
 
   it('clamps selected cells to the nearest existing table cell', () => {

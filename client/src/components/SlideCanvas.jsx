@@ -20,6 +20,7 @@ import useCanvasRubberBandSelection from './canvas/use-canvas-rubber-band-drag-s
 import CanvasElement from './canvas/canvas-element-wrapper'
 import { cn } from '../lib/utils'
 import { DEFAULT_TOKENS, mergeTokens, tokensToStyleObject } from 'revealjs-shared'
+import { Lock } from 'lucide-react'
 import SlideBackgroundFxCanvas from './canvas/slide-background-fx-canvas'
 import {
   expandSelectionIdsForGroups,
@@ -91,6 +92,7 @@ export default function SlideCanvas({
   onCut,
   onPaste,
   onDuplicate,
+  onBlockedAction,
 }) {
   const SLIDE_W = resolution?.width || 960
   const SLIDE_H = resolution?.height || 540
@@ -176,6 +178,7 @@ export default function SlideCanvas({
     rubberBandRef,
     onUpdateElement,
     onUpdateElements,
+    onBlockedAction,
     snapToGrid: (v) =>
       showGridRef.current ? Math.round(v / gridSizeRef.current) * gridSizeRef.current : v,
     snapWithRef,
@@ -478,7 +481,9 @@ export default function SlideCanvas({
               'absolute inset-0 z-[997] pointer-events-none flex items-center justify-center'
             )}
           >
-            <span className="text-white/30 text-sm select-none">🔒 Slide Locked</span>
+            <span className="inline-flex items-center gap-1 text-white/30 text-sm select-none">
+              <Lock size={14} aria-hidden="true" /> Slide Locked
+            </span>
           </div>
         )}
 

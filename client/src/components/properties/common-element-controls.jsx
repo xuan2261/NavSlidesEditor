@@ -106,7 +106,10 @@ export default function CommonElementControls({
       {element.type !== 'shape' && element.type !== 'line' && (
         <div className="mb-2.5">
           <div className="text-[11px] text-text-muted mb-1">
-            Opacity: {mixed.opacity?.isMixed ? '—' : `${Math.round((element.opacity ?? 1) * 100)}%`}
+            Opacity:{' '}
+            {mixed.opacity?.isMixed
+              ? 'Multiple values'
+              : `${Math.round((element.opacity ?? 1) * 100)}%`}
           </div>
           <input
             data-testid="prop-opacity"
@@ -115,7 +118,9 @@ export default function CommonElementControls({
             className="w-full accent-accent"
             min="0"
             max="100"
-            value={Math.round((element.opacity ?? 1) * 100)}
+            // Mixed selection: mid thumb + aria so we do not claim a single authoritative %
+            value={mixed.opacity?.isMixed ? 50 : Math.round((element.opacity ?? 1) * 100)}
+            aria-valuetext={mixed.opacity?.isMixed ? 'mixed' : undefined}
             onChange={(e) => {
               const value = clampNumber(e.target.value, 0, 100, null)
               if (value === null) return

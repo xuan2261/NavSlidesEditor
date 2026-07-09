@@ -12,6 +12,11 @@ describe('element-defaults guards README count claim', () => {
   it('exposes exactly 19 element types (matches README "19 element types")', () => {
     expect(Object.keys(ELEMENT_DEFAULTS)).toHaveLength(19)
   })
+
+  it('callout default width/height are >= canvas MIN_SIZE (40)', () => {
+    expect(ELEMENT_DEFAULTS.callout.width).toBeGreaterThanOrEqual(40)
+    expect(ELEMENT_DEFAULTS.callout.height).toBeGreaterThanOrEqual(40)
+  })
 })
 
 describe('shared presentation JSDoc mirrors canonical element defaults', () => {

@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Search, Replace, X, ChevronUp, ChevronDown, CaseSensitive } from 'lucide-react'
 import { Button } from '../components/ui'
 import {
+  collectElementSearchMatches,
   createSearchRegex,
   replaceAllInSlides,
   replaceInHtml,
-  stripHtml,
+  replaceOnceInTableCell,
 } from './find-replace-helpers'
 
 export default function FindReplaceBar({
@@ -30,20 +31,9 @@ export default function FindReplaceBar({
   const matches = useMemo(() => {
     const nextMatches = []
     if (!searchTerm || !presentation) return nextMatches
-    const term = matchCase ? searchTerm : searchTerm.toLowerCase()
     const collect = (el, si, childIndex) => {
-      let text = ''
-      if (el.type === 'text') text = stripHtml(el.content)
-      else if (el.type === 'code') text = el.content || ''
-      else if (el.type === 'shape' && el.text) text = el.text
-      else if (el.type === 'markdown') text = el.content || ''
-      else if (el.type === 'latex') text = el.content || ''
-      else if (el.type === 'html') text = stripHtml(el.content || '')
-      const compare = matchCase ? text : text.toLowerCase()
-      let pos = 0
-      while ((pos = compare.indexOf(term, pos)) !== -1) {
-        nextMatches.push({ slideIndex: si, childIndex, elementId: el.id, elementType: el.type, pos })
-        pos += term.length
+      for (const hit of collectElementSearchMatches(el, searchTerm, matchCase)) {
+        nextMatches.push({ slideIndex: si, childIndex, ...hit })
       }
     }
     presentation.slides.forEach((slide, si) => {
@@ -97,6 +87,17 @@ export default function FindReplaceBar({
       }
       if (el.type === 'shape') {
         return { ...el, text: (el.text || '').replace(singleMatchRegex, replaceTerm) }
+      }
+      if (el.type === 'table' && match.tableRow != null && match.tableCol != null) {
+        return replaceOnceInTableCell(
+          el,
+          searchTerm,
+          replaceTerm,
+          matchCase,
+          match.tableRow,
+          match.tableCol,
+          match.pos
+        )
       }
       return el
     }

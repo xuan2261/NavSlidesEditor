@@ -134,8 +134,9 @@ export function createCutOperation({ slideElements, selectedElementIds }) {
   if (!slideElements || selectedElementIds.length === 0) {
     return { clipboardData: null, idsToDelete: [] }
   }
-  const elementsToCut = (slideElements || []).filter((el) =>
-    selectedElementIds.includes(el.id)
+  // Skip locked members (parity with delete + duplicate). Mixed selection cuts free only.
+  const elementsToCut = (slideElements || []).filter(
+    (el) => selectedElementIds.includes(el.id) && !el.locked
   )
   if (elementsToCut.length === 0) {
     return { clipboardData: null, idsToDelete: [] }
@@ -193,12 +194,17 @@ export function useClipboard({ mapActiveSlide, setPresentation }) {
   )
 
   const performCut = useCallback(
-    (slideElements, idsToDelete) => {
-      const { clipboardData } = createCutOperation({ slideElements: slideElements || [], selectedElementIds: idsToDelete || [] })
+    (slideElements, selectedIds) => {
+      const selectedElementIds = selectedIds || []
+      const { clipboardData, idsToDelete } = createCutOperation({
+        slideElements: slideElements || [],
+        selectedElementIds,
+      })
       if (clipboardData) {
         setClipboard(clipboardData)
         resetPasteCount()
       }
+      // Only delete free ids returned by the pure op — never raw selection (locked stay).
       if (!idsToDelete?.length) return
       setPresentation((prev) =>
         mapActiveSlide(prev, (s) => ({
@@ -206,9 +212,22 @@ export function useClipboard({ mapActiveSlide, setPresentation }) {
           elements: (s.elements || []).filter((el) => !idsToDelete.includes(el.id)),
         }))
       )
-      clearSelection()
+      // Mirror deleteSelectedElements: keep selection on remaining locked members.
+      const lockedSurvivors = selectedElementIds.filter((id) => !idsToDelete.includes(id))
+      if (lockedSurvivors.length) {
+        setSelectedElementIds(lockedSurvivors)
+      } else {
+        clearSelection()
+      }
     },
-    [mapActiveSlide, setPresentation, setClipboard, clearSelection, resetPasteCount]
+    [
+      mapActiveSlide,
+      setPresentation,
+      setClipboard,
+      clearSelection,
+      resetPasteCount,
+      setSelectedElementIds,
+    ]
   )
 
   const performDuplicate = useCallback(
