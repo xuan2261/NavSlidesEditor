@@ -1,7 +1,41 @@
+const { resolveColorValue, resolveSchemeColor } = require('./theme-resolve')
+
+const DANGEROUS_CSS_COLOR_RE = /expression\s*\(|url\s*\(|javascript:|@import\b|behavior\s*:/i
+
+/**
+ * Sanitize CSS color tokens used for shape fills / strokes (T4.5).
+ * Rejects expression()/url() injection; allows hex, rgb(a), named colors, scheme tokens.
+ */
+function sanitizeCssColor(value, fallback = 'transparent') {
+  if (value == null || value === '') return fallback
+  if (typeof value === 'object' && value.scheme) {
+    return resolveSchemeColor(value.scheme) || fallback
+  }
+  const resolved = resolveColorValue(value)
+  const s = String(resolved || '').trim()
+  if (!s) return fallback
+  // Strip trailing junk after first semicolon (e.g. "red; expression(...)")
+  const head = s.split(';')[0].trim()
+  if (!head || DANGEROUS_CSS_COLOR_RE.test(head)) return fallback
+  if (
+    /^#([0-9a-f]{3,8})$/i.test(head) ||
+    /^rgba?\(/i.test(head) ||
+    /^hsla?\(/i.test(head) ||
+    /^[a-z]{1,30}$/i.test(head) ||
+    head === 'transparent' ||
+    head === 'none' ||
+    head === 'gradient'
+  ) {
+    return head
+  }
+  return fallback
+}
+
 function colorValue(value, fallback = 'transparent') {
-  if (typeof value === 'string' && value) return value
-  if (value?.type === 'color' && value.value) return value.value
-  if (value?.color) return value.color
+  if (typeof value === 'string' && value) return sanitizeCssColor(resolveColorValue(value), fallback)
+  if (value?.type === 'color' && value.value) return sanitizeCssColor(resolveColorValue(value.value), fallback)
+  if (value?.color) return sanitizeCssColor(resolveColorValue(value.color), fallback)
+  if (value?.scheme) return sanitizeCssColor(resolveSchemeColor(value.scheme), fallback)
   if (value?.type === 'none') return 'none'
   if (value?.type === 'gradient') return 'gradient'
   if (value?.type === 'pattern') return 'transparent'
@@ -75,6 +109,7 @@ function arrowMarker(value) {
 module.exports = {
   arrowMarker,
   colorValue,
+  sanitizeCssColor,
   gradientBackground,
   normalizeGradientStops,
   svgAttr,

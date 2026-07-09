@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import colorUtils from './utils-color.js'
 
-const { arrowMarker, colorValue, gradientBackground, normalizeGradientStops, svgAttr } = colorUtils
+const { arrowMarker, colorValue, sanitizeCssColor, gradientBackground, normalizeGradientStops, svgAttr } = colorUtils
 
 describe('pptx mapper color utilities', () => {
   it('normalizes PPTX color values and fallback cases', () => {
@@ -12,6 +12,12 @@ describe('pptx mapper color utilities', () => {
     expect(colorValue({ type: 'gradient' })).toBe('gradient')
     expect(colorValue({ type: 'pattern' })).toBe('transparent')
     expect(colorValue(null, '#fff')).toBe('#fff')
+  })
+
+  it('T4.5 rejects CSS expression injection in colors', () => {
+    expect(sanitizeCssColor('red; expression(alert(1))')).toBe('red')
+    expect(sanitizeCssColor('expression(alert(1))')).toBe('transparent')
+    expect(colorValue('red; expression(alert(1))')).toBe('red')
   })
 
   it('normalizes gradient stops and CSS background output', () => {

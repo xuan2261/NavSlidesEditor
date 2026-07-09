@@ -23,6 +23,20 @@
 | `import-fidelity-properties.test.jsx` | 2 | ✅ Pass |
 | **Total** | **172** | **✅ All Pass** |
 
+## 2026-07-09 Cook progress (Phases 01–08 foundations)
+
+| Phase | Delivered this cook |
+|-------|---------------------|
+| 01 | Zero-loss `original.pptx` + atomic create + download + SLA contract |
+| 02 | `npm run test:pptx:oracle`, pure SSIM, CLI, baseline JSON placeholder |
+| 03 | `ooxml-scene-graph` (spTree walk, rels, reconcile, `PPTX_SLA_STRICT`) |
+| 04 | `theme-resolve`, `sanitizeCssColor` (T4.1/T4.5) |
+| 05 | `chart-support-matrix` (native/coerced/unsupported-strict) |
+| 07 | `emf-wmf-sandbox` (no shell; disabled unless `PPTX_EMF_CONVERT=1`) |
+| 08 | `roundtrip-policy` (prefer original bytes when unedited) |
+
+**Not claimed:** product 1:1 visual/editable SLA (requires remaining phase depth + goldens).
+
 ## 2026-07-09 Zero-Loss Original Package (Phase 01 SLA foundation)
 
 - Successful PPTX import **atomically** persists `original.pptx` under

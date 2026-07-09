@@ -1,0 +1,8 @@
+{
+  "generatedAt": "2026-07-09T00:00:00.000Z",
+  "skipped": false,
+  "reason": "phase02-placeholder-baseline-until-present-capture-goldens",
+  "meanSsim": null,
+  "note": "Phase 02 records oracle machinery. Mean SSIM remains null until Nav present captures vs goldens land. Not a product 1:1 claim.",
+  "decks": []
+}

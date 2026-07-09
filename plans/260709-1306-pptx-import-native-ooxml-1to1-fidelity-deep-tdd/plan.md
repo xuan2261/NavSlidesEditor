@@ -297,13 +297,13 @@ npm run test:pptx:strict && npm run test:pptx:oracle && npm run test:pptx:sla-1t
 | Phase | Status |
 |-------|--------|
 | 01 Zero-loss package + SLA contract | **completed** (2026-07-09 cook --auto --tdd) |
-| 02 Visual oracle SSIM | pending |
-| 03 OOXML scene graph | pending |
-| 04 Editable primitives | pending |
-| 05 Native charts | pending |
-| 06 Native SmartArt | pending |
-| 07 EMF/WMF | pending |
-| 08 Master/layout/theme/roundtrip | pending |
+| 02 Visual oracle SSIM | **foundation** — SSIM + CLI + `test:pptx:oracle`; goldens/present capture still open |
+| 03 OOXML scene graph | **foundation** — spTree graph + reconcile + importer wire; strict mode works |
+| 04 Editable primitives | **partial** — theme-resolve + sanitizeCssColor; placeholder ban/SSIM 0.95 open |
+| 05 Native charts | **scaffold** — chart-support-matrix; full E2 editable gap close open |
+| 06 Native SmartArt | **pending** (scaffold not started beyond existing flatten) |
+| 07 EMF/WMF | **scaffold** — emf-wmf-sandbox policy (convert off by default) |
+| 08 Master/layout/theme/roundtrip | **scaffold** — roundtrip-policy prefers original bytes when unedited |
 
 ## Success criteria (whole plan)
 
