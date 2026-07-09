@@ -34,7 +34,7 @@
 | 05 | **Advanced** — corpus `chart-*.pptx` E2 gap 0 via OOXML inject; editable chartData |
 | 06 | **Advanced** — `ooxml-diagram-parser` + `_pptxDiagram` editable node model (corpus has no SmartArt OOXML) |
 | 07 | **Advanced** — EMF/WMF → PNG via sandboxed convert (`PPTX_EMF_CONVERT=1`); strict throws if unavailable |
-| 08 | **Advanced** — original-bytes export via roundtrip policy; `npm run test:pptx:sla-1to1` (module gate, not numeric 0.99) |
+| 08 | **Advanced** — theme/layout XML resolve; animation inventory; original-bytes export + PUT dirty flag; `test:pptx:sla-1to1` module gate (not numeric 0.99) |
 
 **Oracle debt:** placeholder goldens self-compare to SSIM 1 until LO/PP goldens + Nav present actuals land.  
 **Not claimed:** product 1:1 visual/editable SLA.

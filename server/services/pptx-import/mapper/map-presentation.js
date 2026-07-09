@@ -19,6 +19,10 @@ const { resolveLayoutPlaceholders } = require('./placeholder-resolve')
 const { injectChartsFromSceneGraph } = require('../ooxml-chart-parser')
 const { injectDiagramsFromSceneGraph } = require('../ooxml-diagram-parser')
 const { supportRow } = require('../chart-support-matrix')
+const { parseThemeFromZip } = require('../ooxml-theme-parse')
+const { resolveLayoutFromZip } = require('../ooxml-layout-resolve')
+const { parseSlideAnimations, classifyUnsupportedPackageFeatures } = require('../ooxml-animation')
+const { resolveSchemeColor } = require('./theme-resolve')
 
 async function mapElement(element, context) {
   if (element.type === 'group') return flattenGroupElement(element, context, mapElement)
@@ -157,18 +161,56 @@ function mapSlideBackground(slide, context) {
   return { type: 'color', color: colorValue(slide.fill, '#ffffff') }
 }
 
-function mapSlideTransition(slide) {
+const TRANSITION_MAP = Object.freeze({
+  none: 'none',
+  fade: 'fade',
+  dissolve: 'fade',
+  flash: 'fade',
+  cube: 'fade',
+  doors: 'fade',
+  flip: 'fade',
+  zoom: 'zoom',
+  push: 'slide',
+  cover: 'slide',
+  uncover: 'slide',
+  split: 'slide',
+  wipe: 'slide',
+  cut: 'none',
+  random: 'slide',
+  morph: 'fade',
+})
+
+function mapSlideTransition(slide, warnings, slideIndex) {
   if (!slide.transition) return {}
-  const transitionType = String(slide.transition?.type || slide.transition || '').toLowerCase()
-  const transition = transitionType === 'none'
-    ? 'none'
-    : ['fade', 'dissolve', 'flash', 'cube', 'doors', 'flip', 'zoom'].includes(transitionType) ? 'fade' : 'slide'
+  const rawType = String(slide.transition?.type || slide.transition || '').toLowerCase()
+  let transition = TRANSITION_MAP[rawType]
+  if (transition == null) {
+    transition = 'slide'
+    if (rawType && rawType !== 'slide') {
+      warnings?.push({
+        slideIndex,
+        type: 'unsupported-transition',
+        message: `Transition "${rawType}" mapped to slide (unsupported exact type)`,
+      })
+    }
+  }
   const transitionDuration = slide.transition.duration || null
   const transitionDirection = slide.transition.direction || null
   return {
     transition,
     ...(transitionDuration != null && { transitionDuration }),
     ...(transitionDirection && { transitionDirection }),
+    ...(rawType && rawType !== transition ? { _pptxTransitionSource: rawType } : {}),
+  }
+}
+
+async function readZipText(zip, entry) {
+  const file = zip?.file?.(entry)
+  if (!file) return ''
+  try {
+    return await file.async('string')
+  } catch {
+    return ''
   }
 }
 
@@ -189,11 +231,31 @@ async function mapPptxOutput({
   const warnings = []
   const ooxml = await inspectOoxmlCoverage(zip)
   const isStrict = strict === true || process.env.PPTX_SLA_STRICT === '1'
-  const stats = { textCount: 0, imageCount: 0, shapeCount: 0, tableCount: 0, chartCount: 0, diagramCount: 0, placeholderCount: 0, videoCount: 0, audioCount: 0, mathCount: 0, layoutPlaceholderInjected: 0 }
+  const stats = {
+    textCount: 0,
+    imageCount: 0,
+    shapeCount: 0,
+    tableCount: 0,
+    chartCount: 0,
+    diagramCount: 0,
+    placeholderCount: 0,
+    videoCount: 0,
+    audioCount: 0,
+    mathCount: 0,
+    layoutPlaceholderInjected: 0,
+    animationCount: 0,
+    unsupportedAnimationCount: 0,
+  }
   const slides = []
   const nativeObjectSlides = []
   const totalSlides = Math.max(1, (output.slides || []).length)
   const graphByIndex = Object.fromEntries((sceneGraph?.slides || []).map((s) => [s.index, s]))
+  const themeInfo = zip ? await parseThemeFromZip(zip) : { scheme: null, fonts: {}, themePath: null }
+  const packageEntries = Object.keys(zip?.files || {}).map((e) => e.replace(/\\/g, '/'))
+  const unsupportedFeatures = classifyUnsupportedPackageFeatures(packageEntries)
+  for (const feature of unsupportedFeatures) {
+    warnings.push({ slideIndex: null, type: feature.type, message: `${feature.feature}: ${feature.entry}` })
+  }
   for (const [slideIndex, slide] of (output.slides || []).entries()) {
     signal?.throwIfAborted?.()
     onProgress?.({ stage: 'mapping', percent: 80 + Math.round((slideIndex / totalSlides) * 15), message: `Processing slide ${slideIndex + 1} of ${totalSlides}` })
@@ -210,9 +272,29 @@ async function mapPptxOutput({
     signal?.throwIfAborted?.()
     const graphSlide = graphByIndex[slideIndex]
     if (graphSlide) {
-      const resolved = resolveLayoutPlaceholders({ elements }, graphSlide, { slideIndex })
+      const resolved = resolveLayoutPlaceholders({ elements }, graphSlide, {
+        slideIndex,
+        fonts: themeInfo.fonts,
+        scheme: themeInfo.scheme,
+      })
       elements = resolved.elements
       stats.layoutPlaceholderInjected += resolved.injected
+    }
+    // 08a: layout XML fallback when slide still has no text placeholders
+    if (zip) {
+      const fromLayout = await resolveLayoutFromZip(
+        { elements },
+        zip,
+        {
+          slideIndex,
+          fonts: themeInfo.fonts,
+          scheme: themeInfo.scheme,
+        }
+      )
+      elements = fromLayout.elements
+      stats.layoutPlaceholderInjected += fromLayout.injected
+    }
+    if (graphSlide) {
       // OOXML-first charts when parser omitted type:chart but package has chart parts
       elements = await injectChartsFromSceneGraph({
         elements,
@@ -234,6 +316,22 @@ async function mapPptxOutput({
         scale,
       })
       attachSourceNodes(elements, graphSlide.nodes, slideIndex)
+    }
+
+    // 08b: animation inventory from slide XML
+    let animationMeta = { animations: [], unsupported: [], fragmentHints: [] }
+    if (zip) {
+      const slideXml = await readZipText(zip, `ppt/slides/slide${slideIndex + 1}.xml`)
+      animationMeta = parseSlideAnimations(slideXml)
+      stats.animationCount += animationMeta.animations.length
+      stats.unsupportedAnimationCount += animationMeta.unsupported.length
+      for (const u of animationMeta.unsupported) {
+        warnings.push({
+          slideIndex,
+          type: 'unsupported-animation',
+          message: u.message || `Unrecognized animation ${u.tag || ''}`,
+        })
+      }
     }
     const evidence = ooxml.slidesByIndex[slideIndex] || { chartEntries: [], smartArtEntries: [] }
     const mappedNativeChartCount = elements.filter((element) => element?.type === 'chart').length
@@ -290,7 +388,24 @@ async function mapPptxOutput({
       background: mapSlideBackground(slide, { slideIndex, warnings }),
       elements,
       notes: slide.note ? sanitizeHtml(slide.note) : '',
-      ...mapSlideTransition(slide),
+      ...mapSlideTransition(slide, warnings, slideIndex),
+      ...(animationMeta.fragmentHints.length
+        ? {
+            _pptxAnimations: {
+              mapped: animationMeta.animations,
+              unsupported: animationMeta.unsupported,
+              fragmentHints: animationMeta.fragmentHints,
+            },
+          }
+        : animationMeta.unsupported.length
+          ? {
+              _pptxAnimations: {
+                mapped: [],
+                unsupported: animationMeta.unsupported,
+                fragmentHints: [],
+              },
+            }
+          : {}),
     })
   }
 
@@ -306,6 +421,12 @@ async function mapPptxOutput({
     slides: nativeObjectSlides,
   }
 
+  const themeColors = themeInfo.scheme
+    ? Object.fromEntries(
+        Object.entries(themeInfo.scheme).map(([k, v]) => [k, resolveSchemeColor(k, themeInfo.scheme) || v])
+      )
+    : output.themeColors || []
+
   return {
     presentation: {
       title: String(originalName || 'Imported PPTX').replace(/\.pptx$/i, ''),
@@ -316,7 +437,13 @@ async function mapPptxOutput({
       _pptxMeta: {
         originalSize: { width: sourceSize.width, height: sourceSize.height },
         usedFonts: output.usedFonts || [],
-        themeColors: output.themeColors || [],
+        themeColors: Array.isArray(output.themeColors) && output.themeColors.length
+          ? output.themeColors
+          : themeColors,
+        themeScheme: themeInfo.scheme || null,
+        themeFonts: themeInfo.fonts || null,
+        themePath: themeInfo.themePath || null,
+        unsupportedFeatures,
       },
     },
     stats: {
@@ -328,9 +455,10 @@ async function mapPptxOutput({
       nativeObjectCoverage,
       ooxml,
       slideCount: slides.length,
+      unsupportedFeatureCount: unsupportedFeatures.length,
     },
     warnings,
   }
 }
 
-module.exports = { mapElement, mapPptxOutput }
+module.exports = { mapElement, mapPptxOutput, mapSlideTransition, TRANSITION_MAP }

@@ -337,12 +337,22 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
       const index = presentations.findIndex((p) => p.id === req.params.id)
       if (index === -1) return null
       const previous = presentations[index]
+      // Phase 08c: user edits invalidate original-bytes re-export preference
+      const contentEdited =
+        Boolean(previous.pptxOriginal) &&
+        (safeBody.slides !== undefined ||
+          safeBody.title !== undefined ||
+          safeBody.theme !== undefined ||
+          safeBody.transition !== undefined)
       presentations[index] = normalizePresentationNotes({
         ...previous,
         ...safeBody,
         id: req.params.id,
         // Preserve server-owned original package metadata
         pptxOriginal: previous.pptxOriginal,
+        ...(contentEdited
+          ? { _pptxEdited: true, _pptxEditedAt: new Date().toISOString() }
+          : {}),
         updatedAt: new Date().toISOString(),
       })
       return presentations[index]

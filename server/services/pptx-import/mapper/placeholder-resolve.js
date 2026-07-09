@@ -25,19 +25,19 @@ function resolveLayoutPlaceholders(slide, graphSlide, options = {}) {
   if (hasText) return { elements, injected: 0 }
 
   const placeholders = graphPlaceholderNodes(graphSlide)
+  const fonts = options.fonts || {}
   let injected = 0
   for (const ph of placeholders) {
     const phType = String(ph.ph?.type || '').toLowerCase()
     // title / body family only (minimal Phase 04)
     if (!/title|body|^obj$/i.test(phType)) continue
-    const label =
-      phType.includes('title') || phType === 'ctrtitle'
-        ? 'Click to edit title'
-        : 'Click to edit text'
+    const isTitle = phType.includes('title') || phType === 'ctrtitle'
+    const label = isTitle ? 'Click to edit title' : 'Click to edit text'
     const x = Number(ph.xfrm?.x) || 80
-    const y = Number(ph.xfrm?.y) || (phType.includes('title') ? 80 : 200)
+    const y = Number(ph.xfrm?.y) || (isTitle ? 80 : 200)
     const width = Number(ph.xfrm?.cx) || 800
     const height = Number(ph.xfrm?.cy) || 80
+    const fontFamily = isTitle ? fonts.major : fonts.minor
     elements.push({
       id: `layout-ph-${ph.id || injected}`,
       type: 'text',
@@ -47,8 +47,9 @@ function resolveLayoutPlaceholders(slide, graphSlide, options = {}) {
       height,
       zIndex: elements.length + 1,
       content: `<p>${label}</p>`,
-      fontSize: phType.includes('title') ? 36 : 18,
-      textColor: '#111111',
+      fontSize: isTitle ? 36 : 18,
+      ...(fontFamily ? { fontFamily } : {}),
+      textColor: options.scheme?.dk1 || '#111111',
       _pptxSource: {
         nodeId: String(ph.id),
         kind: ph.kind || 'shape',
