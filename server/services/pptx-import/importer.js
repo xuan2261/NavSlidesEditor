@@ -67,6 +67,7 @@ async function importPptxFile(filePath, options = {}) {
     uploadsDir: options.uploadsDir || UPLOADS_DIR,
     onProgress: options.onProgress,
     signal: options.signal,
+    sceneGraph: sceneGraph && !sceneGraph.error ? sceneGraph : null,
   })
 
   let sceneWarnings = []
@@ -75,10 +76,19 @@ async function importPptxFile(filePath, options = {}) {
       const reconciliation = reconcileSceneGraph(sceneGraph, mapped.presentation, {
         strictCountGate:
           options.strictCountGate === true || process.env.PPTX_SLA_STRICT_COUNT === '1',
+        strictNodeGate:
+          options.strictNodeGate === true || process.env.PPTX_SLA_STRICT_NODES === '1',
       })
       sceneWarnings = reconciliation.warnings || []
+      if (mapped.stats) {
+        mapped.stats.sceneGraphMappedNodes = reconciliation.mappedNodeIds?.length || 0
+        mapped.stats.sceneGraphUnmapped = reconciliation.unmapped?.length || 0
+      }
     } catch (err) {
-      if (err?.code === 'scene-graph-unmapped' || /PPTX_SLA_STRICT_COUNT/.test(err?.message || '')) {
+      if (
+        err?.code === 'scene-graph-unmapped' ||
+        /PPTX_SLA_STRICT_COUNT|PPTX_SLA_STRICT_NODES/.test(err?.message || '')
+      ) {
         throw new PptxImportError(err.message, {
           status: 422,
           type: FAILURE_TYPES.importFailed,

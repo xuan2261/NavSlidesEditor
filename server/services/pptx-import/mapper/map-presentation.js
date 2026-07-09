@@ -14,6 +14,8 @@ const { flattenDiagramElement } = require('./map-diagram')
 const { fitBoxWithinBounds, normalizeSourceSize } = require('../geometry')
 const { CANVAS_SIZE } = require('../constants')
 const { inspectOoxmlCoverage } = require('../ooxml-inspection')
+const { attachSourceNodes } = require('../ooxml-scene-graph/attach-source-nodes')
+const { resolveLayoutPlaceholders } = require('./placeholder-resolve')
 
 async function mapElement(element, context) {
   if (element.type === 'group') return flattenGroupElement(element, context, mapElement)
@@ -147,22 +149,30 @@ function mapSlideTransition(slide) {
   }
 }
 
-async function mapPptxOutput({ output, zip, originalName, uploadsDir, onProgress, signal }) {
+async function mapPptxOutput({ output, zip, originalName, uploadsDir, onProgress, signal, sceneGraph = null }) {
   signal?.throwIfAborted?.()
   const sourceSize = normalizeSourceSize(output.size)
   const scale = sourceSize.scale
   const mediaIndex = createMediaIndex(zip)
   const warnings = []
   const ooxml = await inspectOoxmlCoverage(zip)
-  const stats = { textCount: 0, imageCount: 0, shapeCount: 0, tableCount: 0, chartCount: 0, diagramCount: 0, placeholderCount: 0, videoCount: 0, audioCount: 0, mathCount: 0 }
+  const stats = { textCount: 0, imageCount: 0, shapeCount: 0, tableCount: 0, chartCount: 0, diagramCount: 0, placeholderCount: 0, videoCount: 0, audioCount: 0, mathCount: 0, layoutPlaceholderInjected: 0 }
   const slides = []
   const nativeObjectSlides = []
   const totalSlides = Math.max(1, (output.slides || []).length)
+  const graphByIndex = Object.fromEntries((sceneGraph?.slides || []).map((s) => [s.index, s]))
   for (const [slideIndex, slide] of (output.slides || []).entries()) {
     signal?.throwIfAborted?.()
     onProgress?.({ stage: 'mapping', percent: 80 + Math.round((slideIndex / totalSlides) * 15), message: `Processing slide ${slideIndex + 1} of ${totalSlides}` })
-    const elements = await mapSlideElements(slide, { mediaIndex, scale, slideIndex, warnings, stats, uploadsDir, signal })
+    let elements = await mapSlideElements(slide, { mediaIndex, scale, slideIndex, warnings, stats, uploadsDir, signal })
     signal?.throwIfAborted?.()
+    const graphSlide = graphByIndex[slideIndex]
+    if (graphSlide) {
+      const resolved = resolveLayoutPlaceholders({ elements }, graphSlide, { slideIndex })
+      elements = resolved.elements
+      stats.layoutPlaceholderInjected += resolved.injected
+      attachSourceNodes(elements, graphSlide.nodes, slideIndex)
+    }
     const evidence = ooxml.slidesByIndex[slideIndex] || { chartEntries: [], smartArtEntries: [] }
     const mappedNativeChartCount = elements.filter((element) => element?.type === 'chart').length
     const mappedNativeDiagramCount = elements.filter((element) => element?.type === 'diagram').length

@@ -259,7 +259,7 @@ server/uploads/
   first run.
 - `tmp-pptx-imports/` is a temporary workspace for PPTX import uploads and is cleaned after each import.
 - `pptx-originals/{uuid}.pptx` stores the zero-loss original package for each successful PPTX import (lifecycle = presentation lifetime). Metadata on the presentation is `pptxOriginal: { id, sha256, byteLength, uploadedAt }` only — no client filesystem paths. Download via `GET /api/presentations/:id/pptx-original`. Import jobs complete with `{ presentationId, stats, warnings }` after server-side create.
-- PPTX import builds an OOXML **scene graph** (`ooxml-scene-graph/`) as inventory truth alongside `pptxtojson` mapping; `stats.sceneGraph` summarizes node counts. Visual oracle tooling lives under `pptx-import/oracle/` (`npm run test:pptx:oracle`).
+- PPTX import builds an OOXML **scene graph** (`ooxml-scene-graph/`) as inventory truth alongside `pptxtojson` mapping; mapped elements receive `_pptxSource.nodeId` for reconcile. Visual oracle tooling lives under `pptx-import/oracle/` (`npm run test:pptx:oracle`, `test:pptx:oracle:capture` for present-mode actuals).
 - Optional user plugins live under `server/data/plugins/<slug>/`; bundled
   plugins live under top-level `plugins/<slug>/`.
 

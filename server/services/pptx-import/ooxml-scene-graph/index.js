@@ -1,6 +1,7 @@
 const { parseSpTree } = require('./parse-sptree')
 const { parseRelationshipTargets, rejectTraversalTarget } = require('./parse-rels')
 const { inspectOoxmlCoverage } = require('../ooxml-inspection')
+const { collectMappedNodeIds, leafNodes, sourceKey } = require('./attach-source-nodes')
 
 async function readZipText(zip, entry) {
   const file = zip?.file?.(entry)
@@ -98,33 +99,37 @@ async function buildOoxmlSceneGraph(zip) {
 /**
  * Reconcile mapped presentation elements against scene graph inventory.
  *
- * Count comparison is diagnostic only (flatten/group/diagram can diverge).
- * Strict fail is opt-in via options.strictCountGate or PPTX_SLA_STRICT_COUNT=1 —
- * default PPTX_SLA_STRICT no longer hard-fails on count heuristics (false positives).
+ * Prefers nodeId coverage via `_pptxSource.nodeId` when present.
+ * Count comparison remains soft diagnostic.
+ * Strict fail:
+ *   - PPTX_SLA_STRICT_COUNT=1 → empty-mapped slides
+ *   - PPTX_SLA_STRICT_NODES=1 / options.strictNodeGate → unmapped leaf nodeIds
  *
- * @returns {{ unmapped: object[], warnings: object[] }}
+ * @returns {{ unmapped: object[], warnings: object[], mappedNodeIds: string[] }}
  */
 function reconcileSceneGraph(graph, presentation, options = {}) {
   const strictCount =
     options.strictCountGate === true || process.env.PPTX_SLA_STRICT_COUNT === '1'
+  const strictNodes =
+    options.strictNodeGate === true || process.env.PPTX_SLA_STRICT_NODES === '1'
   const warnings = []
   const unmapped = []
+  const mappedIds = collectMappedNodeIds(presentation)
+  const hasNodeStamps = mappedIds.size > 0
 
-  const mappedBySlide = (presentation?.slides || []).map((slide) => (slide.elements || []).length)
   for (const gSlide of graph?.slides || []) {
-    const leaves = (gSlide.nodes || []).filter((n) => n.kind !== 'grpSp')
+    const leaves = leafNodes(gSlide.nodes)
     const graphCount = leaves.length
-    const mappedCount = mappedBySlide[gSlide.index] || 0
-    // Empty mapped slide with non-empty graph is a real inventory miss
+    const mappedCount = (presentation?.slides?.[gSlide.index]?.elements || []).length
+
     if (graphCount > 0 && mappedCount === 0) {
-      const detail = {
+      unmapped.push({
         slideIndex: gSlide.index,
         graphCount,
         mappedCount,
         gap: graphCount,
         severity: 'empty-mapped',
-      }
-      unmapped.push(detail)
+      })
       warnings.push({
         slideIndex: gSlide.index,
         type: 'scene-graph-unmapped',
@@ -132,36 +137,62 @@ function reconcileSceneGraph(graph, presentation, options = {}) {
       })
       continue
     }
-    // Soft diagnostic when mapped count is lower (may be false positive after flatten)
-    if (mappedCount < graphCount) {
+
+    if (hasNodeStamps) {
+      const missing = leaves.filter((n) => !mappedIds.has(sourceKey(gSlide.index, n.id)))
+      for (const node of missing) {
+        unmapped.push({
+          slideIndex: gSlide.index,
+          nodeId: String(node.id),
+          kind: node.kind,
+          severity: 'node-unmapped',
+        })
+      }
+      if (missing.length) {
+        warnings.push({
+          slideIndex: gSlide.index,
+          type: 'scene-graph-unmapped',
+          message: `${missing.length} scene-graph leaf node(s) lack _pptxSource mapping on slide ${gSlide.index + 1}`,
+        })
+      }
+    } else if (mappedCount < graphCount) {
       const gap = graphCount - mappedCount
-      const detail = {
+      unmapped.push({
         slideIndex: gSlide.index,
         graphCount,
         mappedCount,
         gap,
         severity: 'count-heuristic',
-      }
-      unmapped.push(detail)
+      })
       warnings.push({
         slideIndex: gSlide.index,
         type: 'scene-graph-unmapped',
-        message: `Scene graph leaf count ${graphCount} > mapped elements ${mappedCount} (gap ${gap}; heuristic until nodeId mapping)`,
+        message: `Scene graph leaf count ${graphCount} > mapped elements ${mappedCount} (gap ${gap}; no nodeId stamps)`,
       })
     }
   }
 
-  // Only hard-fail empty-mapped slides under strict count gate
-  const hard = unmapped.filter((u) => u.severity === 'empty-mapped')
-  if (strictCount && hard.length) {
-    const err = new Error(`PPTX_SLA_STRICT_COUNT: ${hard.length} slide(s) have empty mapping for non-empty scene graph`)
+  const hardEmpty = unmapped.filter((u) => u.severity === 'empty-mapped')
+  if (strictCount && hardEmpty.length) {
+    const err = new Error(
+      `PPTX_SLA_STRICT_COUNT: ${hardEmpty.length} slide(s) have empty mapping for non-empty scene graph`
+    )
     err.type = 'import-failed'
     err.code = 'scene-graph-unmapped'
-    err.unmapped = hard
+    err.unmapped = hardEmpty
     throw err
   }
 
-  return { unmapped, warnings }
+  const hardNodes = unmapped.filter((u) => u.severity === 'node-unmapped')
+  if (strictNodes && hardNodes.length) {
+    const err = new Error(`PPTX_SLA_STRICT_NODES: ${hardNodes.length} leaf node(s) unmapped`)
+    err.type = 'import-failed'
+    err.code = 'scene-graph-unmapped'
+    err.unmapped = hardNodes
+    throw err
+  }
+
+  return { unmapped, warnings, mappedNodeIds: [...mappedIds] }
 }
 
 module.exports = {

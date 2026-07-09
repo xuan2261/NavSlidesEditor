@@ -28,9 +28,9 @@
 | Phase | Status |
 |-------|--------|
 | 01 | **Done** — zero-loss original + atomic create |
-| 02 | **Done (machinery)** — `npm run test:pptx:oracle`, PNG goldens compare, 11-deck baseline, placeholder 8×8 goldens under `oracle/goldens/` |
-| 03 | **In progress** — scene graph + diagram kind + strict reconcile wired in importer |
-| 04 | **In progress** — theme/color + `assertNoPrimitivePlaceholders` (`PPTX_SLA_STRICT_PRIMITIVES=1`) |
+| 02 | **Done (machinery)** — goldens compare + **present capture** (`test:pptx:oracle:capture` via Playwright + reveal HTML) |
+| 03 | **Advanced** — scene graph leaves stamped as `_pptxSource.nodeId`; node-level unmapped warnings; `PPTX_SLA_STRICT_NODES` |
+| 04 | **Advanced** — layout placeholder injection when slide text empty; theme/color sanitize; primitive ban list |
 | 05–08 | Scaffolds (chart matrix, EMF sandbox, roundtrip policy) |
 
 **Oracle debt:** placeholder goldens self-compare to SSIM 1 until LO/PP goldens + Nav present actuals land.  

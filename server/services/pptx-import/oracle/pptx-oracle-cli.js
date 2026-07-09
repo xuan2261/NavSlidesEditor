@@ -17,6 +17,7 @@ const { getMilestone } = require('../sla-contract')
 const { findLibreOfficeBinary, renderPptxWithLibreOffice } = require('./render-libreoffice')
 const { compareCorpusToGoldens, listCorpusPptx, deckStem } = require('./compare-goldens')
 const { encodePngRgba } = require('./png-rgba')
+const { capturePresentSlides } = require('./capture-present')
 
 const DEFAULT_GOLDENS = path.join('server', 'services', 'pptx-import', 'oracle', 'goldens')
 const DEFAULT_BASELINE = path.join('server', 'services', 'pptx-import', 'oracle', 'baseline-ssim.json')
@@ -37,9 +38,10 @@ function parseArgs(argv) {
     pairB: null,
     width: 32,
     height: 32,
-    mode: 'golden', // golden | baseline | seed-goldens
+    mode: 'golden', // golden | baseline | seed-goldens | capture-present
     requireActuals: false,
     requireLo: false,
+    maxDecks: null,
     help: false,
   }
   for (let i = 0; i < argv.length; i += 1) {
@@ -48,6 +50,7 @@ function parseArgs(argv) {
     else if (a === '--corpus') args.corpus = argv[++i]
     else if (a === '--goldens-dir') args.goldensDir = argv[++i]
     else if (a === '--actuals-dir') args.actualsDir = argv[++i]
+    else if (a === '--max-decks') args.maxDecks = Number(argv[++i])
     else if (a === '--baseline-out') args.baselineOut = argv[++i]
     else if (a === '--baseline-in') args.baselineIn = argv[++i]
     else if (a === '--report-dir') args.reportDir = argv[++i]
@@ -118,6 +121,37 @@ async function seedPlaceholderGoldens(args) {
   return files.length
 }
 
+/**
+ * Import corpus decks and capture present-mode actual PNGs (Playwright).
+ */
+async function capturePresentActuals(args) {
+  const { importPptxFile } = require('../importer')
+  let files = await listCorpusPptx(args.corpus)
+  if (args.maxDecks && Number.isFinite(args.maxDecks)) files = files.slice(0, args.maxDecks)
+  const actualsDir = args.actualsDir || path.join(args.reportDir, 'actuals')
+  await fs.ensureDir(actualsDir)
+  const results = []
+  for (const file of files) {
+    const pptxPath = path.join(args.corpus, file)
+    try {
+      const imported = await importPptxFile(pptxPath, { originalName: file })
+      const capture = await capturePresentSlides(imported.presentation, {
+        outDir: actualsDir,
+        deckStem: deckStem(file),
+      })
+      results.push({
+        file,
+        ok: capture.ok,
+        files: capture.files?.length || 0,
+        error: capture.error || null,
+      })
+    } catch (err) {
+      results.push({ file, ok: false, files: 0, error: err.message })
+    }
+  }
+  return { actualsDir, results, deckCount: files.length }
+}
+
 async function runGoldenMode(args) {
   const comparison = await compareCorpusToGoldens({
     corpusDir: args.corpus,
@@ -177,8 +211,8 @@ async function main(argv = process.argv.slice(2)) {
     process.stdout.write(
       [
         'Usage: pptx-oracle-cli [options]',
-        '  --mode golden|seed-goldens   (default golden)',
-        '  --corpus dir --goldens-dir dir --actuals-dir dir',
+        '  --mode golden|seed-goldens|capture-present   (default golden)',
+        '  --corpus dir --goldens-dir dir --actuals-dir dir --max-decks N',
         '  --baseline-out path --force-threshold n',
         '  --pair-a|--pair-b raw buffers + --width --height',
         '',
@@ -203,6 +237,13 @@ async function main(argv = process.argv.slice(2)) {
     const n = await seedPlaceholderGoldens(args)
     process.stdout.write(JSON.stringify({ seeded: n, goldensDir: args.goldensDir }) + '\n')
     return 0
+  }
+
+  if (args.mode === 'capture-present') {
+    const capture = await capturePresentActuals(args)
+    process.stdout.write(`${JSON.stringify(capture, null, 2)}\n`)
+    const failed = capture.results.some((r) => !r.ok)
+    return failed ? 1 : 0
   }
 
   const loBinary = findLibreOfficeBinary()
@@ -265,5 +306,6 @@ module.exports = {
   buildReport,
   main,
   seedPlaceholderGoldens,
+  capturePresentActuals,
   renderPptxWithLibreOffice,
 }

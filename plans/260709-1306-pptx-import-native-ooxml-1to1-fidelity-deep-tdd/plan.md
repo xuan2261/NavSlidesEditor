@@ -297,9 +297,9 @@ npm run test:pptx:strict && npm run test:pptx:oracle && npm run test:pptx:sla-1t
 | Phase | Status |
 |-------|--------|
 | 01 Zero-loss package + SLA contract | **completed** |
-| 02 Visual oracle SSIM | **completed** (machinery + 11-deck baseline + placeholder goldens; present-capture actuals still debt) |
-| 03 OOXML scene graph | **in-progress** — graph + SmartArt node kind + reconcile + strict; corpus node snapshots open |
-| 04 Editable primitives | **in-progress** — theme/color + `assertNoPrimitivePlaceholders` / `PPTX_SLA_STRICT_PRIMITIVES` |
+| 02 Visual oracle SSIM | **completed** (+ `capture-present` / `test:pptx:oracle:capture`; real LO goldens still debt) |
+| 03 OOXML scene graph | **advanced** — `_pptxSource.nodeId` attach + node reconcile + `PPTX_SLA_STRICT_NODES` |
+| 04 Editable primitives | **advanced** — layout placeholder inject (T4.2) + theme/color + primitive ban list |
 | 05 Native charts | **scaffold** — chart-support-matrix; full E2 editable gap close open |
 | 06 Native SmartArt | **pending** (scaffold not started beyond existing flatten) |
 | 07 EMF/WMF | **scaffold** — emf-wmf-sandbox policy (convert off by default) |
