@@ -17,6 +17,7 @@ const { inspectOoxmlCoverage } = require('../ooxml-inspection')
 const { attachSourceNodes } = require('../ooxml-scene-graph/attach-source-nodes')
 const { resolveLayoutPlaceholders } = require('./placeholder-resolve')
 const { injectChartsFromSceneGraph } = require('../ooxml-chart-parser')
+const { injectDiagramsFromSceneGraph } = require('../ooxml-diagram-parser')
 const { supportRow } = require('../chart-support-matrix')
 
 async function mapElement(element, context) {
@@ -223,17 +224,40 @@ async function mapPptxOutput({
         strict: isStrict,
         scale,
       })
+      elements = await injectDiagramsFromSceneGraph({
+        elements,
+        graphSlide,
+        zip,
+        slideIndex,
+        stats,
+        warnings,
+        scale,
+      })
       attachSourceNodes(elements, graphSlide.nodes, slideIndex)
     }
     const evidence = ooxml.slidesByIndex[slideIndex] || { chartEntries: [], smartArtEntries: [] }
     const mappedNativeChartCount = elements.filter((element) => element?.type === 'chart').length
-    const mappedNativeDiagramCount = elements.filter((element) => element?.type === 'diagram').length
+    // Count unique SmartArt graphic instances (diagram type or shapes with _pptxDiagram model)
+    const mappedNativeDiagramCount = new Set(
+      elements
+        .filter((element) => element?.type === 'diagram' || element?._pptxDiagram?.nodes?.length)
+        .map(
+          (element) =>
+            element._pptxSource?.nodeId ||
+            element._pptxDiagram?.graphicNodeId ||
+            element.id ||
+            'diagram'
+        )
+    ).size
     // Prefer package chart evidence; also count scene-graph chart nodes when present
     const graphChartCount = graphSlide
       ? (graphSlide.nodes || []).filter((n) => n.graphicKind === 'chart' || n.rels?.chartTarget).length
       : 0
+    const graphDiagramCount = graphSlide
+      ? (graphSlide.nodes || []).filter((n) => n.graphicKind === 'diagram' || n.rels?.diagramTarget).length
+      : 0
     const chartEvidenceCount = Math.max(evidence.chartEntries.length, graphChartCount)
-    const smartArtEvidenceCount = evidence.smartArtEntries.length
+    const smartArtEvidenceCount = Math.max(evidence.smartArtEntries.length, graphDiagramCount)
     const chartCoverageGapCount = Math.max(0, chartEvidenceCount - mappedNativeChartCount)
     const smartArtCoverageGapCount = Math.max(0, smartArtEvidenceCount - mappedNativeDiagramCount)
     if (chartEvidenceCount || smartArtEvidenceCount || mappedNativeChartCount || mappedNativeDiagramCount) {

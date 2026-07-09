@@ -300,8 +300,8 @@ npm run test:pptx:strict && npm run test:pptx:oracle && npm run test:pptx:sla-1t
 | 02 Visual oracle SSIM | **completed** (+ `capture-present` / `test:pptx:oracle:capture`; real LO goldens still debt) |
 | 03 OOXML scene graph | **advanced** — nodeId + name/sourceId match + multi-slide keys |
 | 04 Editable primitives | **advanced** — placeholder inject + primitive ban tests |
-| 05 Native charts | **advanced** — OOXML chart parser + inject from scene graph; matrix strict path |
-| 06 Native SmartArt | **pending** (scaffold not started beyond existing flatten) |
+| 05 Native charts | **advanced** — corpus chart decks E2 gap 0 via OOXML inject (T5.2–T5.5) |
+| 06 Native SmartArt | **advanced** — data.xml parser + inject shapes with `_pptxDiagram` model |
 | 07 EMF/WMF | **scaffold** — emf-wmf-sandbox policy (convert off by default) |
 | 08 Master/layout/theme/roundtrip | **scaffold** — roundtrip-policy prefers original bytes when unedited |
 

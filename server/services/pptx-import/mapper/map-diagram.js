@@ -107,6 +107,18 @@ function flattenDiagramElement(element, context) {
     if (isConnectorNode(node)) results.push(mapDiagramConnector(node, element, context))
   }
 
+  // Phase 06: keep editable SmartArt model on flattened shapes (not permanent raster).
+  try {
+    const { stampDiagramModelOnFlattened } = require('../ooxml-diagram-parser')
+    stampDiagramModelOnFlattened(results, element, context.slideIndex)
+  } catch {
+    /* optional */
+  }
+  if (context.stats) {
+    context.stats.diagramCount = (context.stats.diagramCount || 0) + 1
+    context.stats.nativeSmartArtImportedCount = (context.stats.nativeSmartArtImportedCount || 0) + 1
+  }
+
   return results
 }
 

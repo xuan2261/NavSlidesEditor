@@ -1,4 +1,5 @@
-const DEFAULT_ACK_TIMEOUT_MS = 1000
+// Windows cold fork + NODE_PATH scan can exceed 1s; keep bounded but realistic.
+const DEFAULT_ACK_TIMEOUT_MS = 15_000
 
 function getWorkerAckTimeoutMs(value = process.env.PPTX_WORKER_ACK_MS, fallback = DEFAULT_ACK_TIMEOUT_MS) {
   const parsed = Number(value)
