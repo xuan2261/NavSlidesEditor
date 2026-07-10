@@ -48,6 +48,8 @@ export default function FileDropdown({
 }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef(null)
+  const itemRefs = useRef([])
+  const menuItems = MENU_GROUPS.flatMap((group) => group.items)
 
   const callbacks = {
     onOpenProject, onExportPDF, onExportPPTX, onExportHTML,
@@ -57,18 +59,24 @@ export default function FileDropdown({
   const handleAction = (actionKey) => {
     callbacks[actionKey]?.()
     setOpen(false)
+    triggerRef.current?.focus?.()
   }
 
-  const closeMenu = useCallback(() => setOpen(false), [])
+  const closeMenu = useCallback(() => {
+    setOpen(false)
+    triggerRef.current?.focus?.()
+  }, [])
 
   const handleKeyboardActivation = (event, action) => {
     if (event.key !== 'Enter' && event.key !== ' ') return
     event.preventDefault()
+    if (event.repeat) return
     action()
   }
 
   useEffect(() => {
     if (!open) return undefined
+    itemRefs.current[0]?.focus?.()
     const closeOnEscape = (event) => {
       if (event.key !== 'Escape') return
       event.preventDefault()
@@ -78,6 +86,29 @@ export default function FileDropdown({
     document.addEventListener('keydown', closeOnEscape, true)
     return () => document.removeEventListener('keydown', closeOnEscape, true)
   }, [closeMenu, open])
+
+  const focusMenuItem = (index) => {
+    const nextIndex = (index + menuItems.length) % menuItems.length
+    itemRefs.current[nextIndex]?.focus?.()
+  }
+
+  const handleMenuItemKeyDown = (event, index, action) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      focusMenuItem(index + 1)
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      focusMenuItem(index - 1)
+    } else if (event.key === 'Home') {
+      event.preventDefault()
+      focusMenuItem(0)
+    } else if (event.key === 'End') {
+      event.preventDefault()
+      focusMenuItem(menuItems.length - 1)
+    } else {
+      handleKeyboardActivation(event, action)
+    }
+  }
 
   return (
     <div className="relative">
@@ -116,9 +147,13 @@ export default function FileDropdown({
                 </div>
                 {group.items.map((item) => {
                   const Icon = item.icon
+                  const itemIndex = menuItems.findIndex((menuItem) => menuItem.id === item.id)
                   return (
                     <button
                       key={item.id}
+                      ref={(node) => {
+                        itemRefs.current[itemIndex] = node
+                      }}
                       data-testid={
                         item.id === 'pptx'
                           ? 'ribbon-file-export-pptx'
@@ -128,11 +163,14 @@ export default function FileDropdown({
                       }
                       className="dropdown-item w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-text-primary hover:bg-secondary cursor-pointer transition-colors text-left"
                       role="menuitem"
+                      tabIndex={-1}
                       onMouseDown={(e) => {
                         e.preventDefault()
                         handleAction(item.action)
                       }}
-                      onKeyDown={(e) => handleKeyboardActivation(e, () => handleAction(item.action))}
+                      onKeyDown={(e) =>
+                        handleMenuItemKeyDown(e, itemIndex, () => handleAction(item.action))
+                      }
                     >
                       <Icon size={14} className="text-text-muted" />
                       {item.label}

@@ -15,6 +15,7 @@ process.env.PLAYWRIGHT_TEST_BASE_URL = baseURL
 
 module.exports = defineConfig({
   testDir: './tests/e2e',
+  globalSetup: './tests/e2e/global-setup.js',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,

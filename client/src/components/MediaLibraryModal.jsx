@@ -34,6 +34,7 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
   const [statusMessage, setStatusMessage] = useState('')
   const [visibleLimit, setVisibleLimit] = useState(INITIAL_MEDIA_LIMIT)
   const closeTimerRef = useRef(null)
+  const uploadInputRef = useRef(null)
 
   const loadMedia = useCallback(async () => {
     setLoading(true)
@@ -206,8 +207,8 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
       </div>
 
       {/* Toolbar: Search + Filter + Upload */}
-      <div className="flex gap-2 items-center px-6 mb-4">
-        <div className="relative flex-1">
+      <div className="flex flex-wrap gap-2 items-center px-6 mb-4">
+        <div className="relative min-w-[180px] flex-1">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
             className="w-full pl-9 pr-3 py-1.5 rounded-md border border-border bg-secondary text-text-primary text-sm focus:border-accent focus:outline-none transition-colors"
@@ -218,7 +219,7 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
           />
         </div>
         {activeTab === 'local' && (
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {TYPE_FILTERS.map((f) => (
               <Button
                 variant="ghost"
@@ -231,18 +232,26 @@ export default function MediaLibraryModal({ onClose, onInsert }) {
             ))}
           </div>
         )}
-        <label className="flex items-center justify-center gap-1.5 px-4 py-1.5 text-[13px] bg-accent hover:bg-accent-hover text-white rounded-md cursor-pointer transition-colors font-medium ml-2">
+        <Button
+          type="button"
+          variant="ghost"
+          className="flex items-center justify-center gap-1.5 px-4 py-1.5 text-[13px] bg-accent hover:bg-accent-hover text-white rounded-md cursor-pointer transition-colors font-medium sm:ml-2"
+          onClick={() => uploadInputRef.current?.click()}
+          disabled={uploading}
+        >
           <Upload size={14} />
           {uploading ? 'Uploading...' : 'Upload'}
-          <input
-            type="file"
-            multiple
-            accept="image/*,video/*,audio/*,.svg"
-            className="hidden"
-            onChange={handleUpload}
-            disabled={uploading}
-          />
-        </label>
+        </Button>
+        <input
+          ref={uploadInputRef}
+          type="file"
+          multiple
+          accept="image/*,video/*,audio/*,.svg"
+          className="hidden"
+          tabIndex={-1}
+          onChange={handleUpload}
+          disabled={uploading}
+        />
       </div>
 
       {/* Grid */}

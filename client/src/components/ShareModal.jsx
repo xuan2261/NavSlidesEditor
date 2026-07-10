@@ -132,21 +132,33 @@ export default function ShareModal({ presentationId, onClose }) {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-0 mb-4 border-b border-border">
+      <div className="flex gap-0 mb-4 border-b border-border" role="tablist" aria-label="Share options">
         {['links', 'embed'].map((t) => (
           <Button
             variant="ghost"
             key={t}
+            id={`share-tab-${t}`}
+            role="tab"
+            aria-selected={tab === t}
+            aria-controls={`share-panel-${t}`}
             onClick={() => setTab(t)}
             className={`px-4 py-2 text-[13px] rounded-none border-b-2 ${tab === t ? 'border-accent text-accent font-semibold' : 'border-transparent text-text-muted hover:text-text-primary font-normal'}`}
           >
-            {t === 'links' ? '🔗 Links' : '📋 Embed'}
+            {t === 'links' ? (
+              <>
+                <Link2 size={14} aria-hidden="true" /> Links
+              </>
+            ) : (
+              <>
+                <Copy size={14} aria-hidden="true" /> Embed
+              </>
+            )}
           </Button>
         ))}
       </div>
 
       {tab === 'links' && (
-        <>
+        <div id="share-panel-links" role="tabpanel" aria-labelledby="share-tab-links">
           {loading ? (
             <div className="text-center p-5 text-text-muted" role="status">
               Loading...
@@ -159,10 +171,10 @@ export default function ShareModal({ presentationId, onClose }) {
                   <table className="w-full border-collapse text-[13px]">
                     <thead>
                       <tr className="border-b border-border text-left">
-                        <th className="py-2 px-1 text-text-muted font-medium">Name</th>
-                        <th className="text-center py-2 px-1 text-text-muted font-medium">Views</th>
-                        <th className="text-center py-2 px-1 text-text-muted font-medium">🔒</th>
-                        <th className="text-right py-2 px-1 text-text-muted font-medium">
+                        <th scope="col" className="py-2 px-1 text-text-muted font-medium">Name</th>
+                        <th scope="col" className="text-center py-2 px-1 text-text-muted font-medium">Views</th>
+                        <th scope="col" className="text-center py-2 px-1 text-text-muted font-medium">Password protected</th>
+                        <th scope="col" className="text-right py-2 px-1 text-text-muted font-medium">
                           Actions
                         </th>
                       </tr>
@@ -296,11 +308,11 @@ export default function ShareModal({ presentationId, onClose }) {
               )}
             </>
           )}
-        </>
+        </div>
       )}
 
       {tab === 'embed' && (
-        <div>
+        <div id="share-panel-embed" role="tabpanel" aria-labelledby="share-tab-embed">
           <p className="text-[13px] text-text-muted mb-3">
             Copy the embed code below to embed this presentation on any website.
           </p>

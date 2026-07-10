@@ -51,4 +51,17 @@ describe('SlidePanel control contract', () => {
     fireEvent.contextMenu(thumbnails[0], { clientX: 10, clientY: 20 })
     expect(screen.getByRole('menu', { name: 'Slide actions' })).toBeTruthy()
   })
+
+  it('[F2] keeps hidden thumbnail actions out of tab order until the slide has focus', () => {
+    render(<SlidePanel {...defaultProps()} />)
+    const duplicate = screen.getAllByTitle('Duplicate')[0]
+
+    expect(duplicate.getAttribute('tabindex')).toBe('-1')
+
+    fireEvent.focus(screen.getByRole('button', { name: 'Select slide 1' }))
+
+    expect(duplicate.getAttribute('tabindex')).toBe('0')
+    expect(screen.getByRole('button', { name: 'Duplicate slide 1' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Delete slide 1' })).toBeTruthy()
+  })
 })

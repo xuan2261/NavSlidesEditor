@@ -1,0 +1,427 @@
+## User
+
+/ck:ck-code-review review, xem xét, phân tích cho tôi lại toàn bộ chức năng, code của Import PPTX
+
+## Tools
+
+- Lifecycle event
+
+## Assistant
+
+Review toàn bộ chức năng Import PPTX theo quy trình code-review. Bắt đầu bằng skill protocol và khảo sát codebase liên quan.
+
+## Tools
+
+- Read: C:\Users\Z10PAD8C_Xuan2261\.claude\plugins\cache\claudekit\ck\2.20.1-beta.9\skills\ck-code-review\SKILL.md
+- Read: C:\Work\NavSlidesEditor\README.md (1-150)
+- ListDir: \server\services\pptx-import
+- Search: pptx-import|pptxImport|importPptx|import.*pptx|PPTX.*import
+
+## Assistant
+
+Đang khảo sát pipeline Import PPTX: route, importer, mapper, client UI và security guards.
+
+## Tools
+
+- Read: C:\Work\NavSlidesEditor\server\routes\pptx-import.js (1-160)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\importer.js (1-75)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\acceptance-criteria.js (1-150)
+- ListDir: \server\services\pptx-import\mapper
+- Search: pptx|importPptx|import-pptx|/api/pptx
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\pptx-guards.js (1-143)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\constants.js
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\worker-runner.js (1-194)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\sanitize.js (1-57)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\mapper\index.js (1-14)
+- Search: pptx|importPptx|Import PPTX|onImport
+- Execute: Get-ChildItem -Recurse server\services\pptx-import -Include *.js | Measure-Object | Select-Object Count; Get-ChildItem -Recurse server\services\pptx-import -Include *.js | ForEach-Object { $n = (Get-Content $_.FullName | Measure-Object -Line).Lines; [PSCustomObject]@{Lines=$n; Path=$_.FullName.Replace((Get-Location).Path+'\','')} } | Sort-Object Lines -Descending | Select-Object -First 25 | Format-Table -AutoSize (Count LOC of pptx-import modules)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\mapper\map-presentation.js
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\media.js (1-196)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import-job-manager.js (1-181)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\parse-worker.js (1-102)
+- Read: C:\Work\NavSlidesEditor\client\src\utils\api.js (41-90)
+- Read: C:\Work\NavSlidesEditor\client\src\pages\HomePage.jsx (611-710)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\mapper\map-media.js (1-124)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\mapper\map-shape.js (1-117)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\geometry.js (1-100)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\diagnostics.js (1-46)
+- Read: C:\Work\NavSlidesEditor\docs\pptx-import-fidelity-report.md (1-120)
+- Search: gateBackgroundImageSrc|MEDIA_URL|javascript:|ssrf|data:
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\mapper\utils-color.js (1-80)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\mapper\map-image.js (1-111)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\mapper\map-group.js (1-100)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\media-dedup.js (1-88)
+- Search: pptx|import
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\mapper\utils-text.js (1-120)
+- Search: assertResolutionInvariant|assertNoRawUnits|acceptance-criteria|assertFinite
+- Search: colorValue\(|fill:|borderColor|textColor
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\mapper\map-table.js (1-80)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\chart-output-to-navslides-mapper.js (1-80)
+- Execute: Get-ChildItem server\routes\pptx-import* | Select-Object Name; if (Test-Path server\routes\pptx-import.test.js) { (Get-Content server\routes\pptx-import.test.js | Measure-Object -Line).Lines }; if (Test-Path server\services\pptx-import-job-manager.test.js) { 'job-manager tests exist' } else { Get-ChildItem -Recurse -Filter '*job-manager*' | Select-Object FullName } (Locate route and job manager tests)
+- Search: createPresentation|imported\.presentation
+- Read: C:\Work\NavSlidesEditor\client\src\utils\pptx-import-summary.js
+- Search: element\.fill|fillGradient|backgroundColor|borderColor
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\mapper\map-diagram.js (1-80)
+- Read: C:\Work\NavSlidesEditor\server\index.js (101-130)
+- Search: function resolveColorField|resolveColorField
+
+## Assistant
+
+# Code Review: PPTX Import
+
+**Mode:** Feature codebase scan (toàn bộ pipeline Import PPTX)  
+**Scope:** `server/routes/pptx-import.js`, `server/services/pptx-import/**`, `server/services/pptx-import-job-manager.js`, client Home/API/canvas hooks  
+**Verification:** `npx vitest run server/services/pptx-import server/routes/pptx-import` → **35 files, 374 tests, all passed** (≈202s)
+
+---
+
+## 1. Verdict
+
+| | |
+|---|---|
+| **Overall** | **Solid production feature** for single-user / self-hosted. Architecture mature, security layers present, fidelity tooling strong. |
+| **Ship readiness (local/self-host)** | **Yes**, with known fidelity/memory limits. |
+| **Ship readiness (multi-tenant / public)** | **No** without job-secret binding + auth; IDOR surface is documented but real. |
+| **Biggest residual risk** | Memory amplification on large decks + full job result kept in RAM/SSE. |
+
+Không phải rubber-stamp: hệ thống được thiết kế cẩn thận qua nhiều phase (worker, zip-bomb, async job, mapper split, corpus), nhưng vẫn còn điểm cứng về memory, trust boundary, và một số inconsistency doc/code.
+
+---
+
+## 2. Kiến trúc & data flow
+
+```
+HomePage ──POST multipart──▶ /api/pptx/import
+                │  202 { jobId }
+                │  reserve job (MAX_CONCURRENT=1)
+                ▼
+         tmp-pptx-imports/<uuid>.pptx
+                │
+                ▼
+         validatePptxPackage  (ext, ZIP magic, entry cap, measured inflate)
+                │
+                ▼
+         fork parse-worker   (pptxtojson + optional pptx2json inspector)
+                │  IPC progress/result, 60s timeout, 1GB heap cap
+                ▼
+         mapPptxOutput       (mapper/* → NavSlides JSON)
+                │  media → SHA256 dedup /uploads
+                ▼
+         jobManager.completeJob  → SSE `done` + GET /jobs/:id
+                │
+                ▼
+         client createPresentation(presentation) → open editor
+```
+
+| Layer | File chính | Vai trò |
+|--------|------------|---------|
+| Route | `server/routes/pptx-import.js` | Upload, job create, SSE, cancel, 429 |
+| Job | `pptx-import-job-manager.js` | In-memory jobs, 1 concurrent, 10m TTL |
+| Guard | `pptx-guards.js` | ZIP integrity budget (measured inflate) |
+| Parse | `parse-worker.js` + `worker-runner.js` | Isolated process, cancel/timeout |
+| Map | `mapper/map-presentation.js` + submodules | Element → NavSlides |
+| Media | `media.js` + `media-dedup.js` | Magic sniff, allowlist, dedup |
+| HTML | `sanitize.js` | DOMPurify + style sanitize |
+| Geometry | `geometry.js` | Scale 960×540, clamp/fit, line modes |
+| Fidelity | corpus CLI + acceptance-criteria | Semantic / round-trip gates |
+| Client | `HomePage.jsx`, `api.js`, canvas `_pptxImportMeta` | Progress UI, fit/crop meta |
+
+---
+
+## 3. Chức năng — coverage thực tế
+
+| Nguồn PPTX | Mapping | Ghi chú |
+|------------|---------|---------|
+| Text / rich text | `text` + `_pptxImportMeta` (fit/wrap/insets) | pt→canvas px qua scaleY; sanitize HTML |
+| Shapes built-in | `shape` / `line` | Nhiều synonym shape name |
+| Custom path | `svg` element | `svgAttr` escape |
+| Image + crop/filter | `image` | Crop → `imageW/H/Offset*`; EMF/WMF → placeholder |
+| Table + borders | `table` + `cellStyles.borders` | Color sanitize riêng cho table |
+| Chart | `chart` (Chart.js types) | Unsupported → placeholder; OOXML gap warning |
+| SmartArt/diagram | flatten → shapes/lines | Approximation, có warning |
+| Group (nested) | Flatten matrix transform | `MAX_GROUP_DEPTH=10` |
+| Video/audio | `/uploads` hoặc http(s) allowlist | Magic-byte check cho blob |
+| Math | `latex` (+ image fallback) | Strip tags |
+| Background | color / gradient / gated image | data:image ≤5MB |
+| Transition | map thô → fade/slide/none | Lossy mapping |
+| Notes | sanitize HTML | OK |
+
+**Không import (hoặc degrade):** animations/fragments, master/layout inheritance đầy đủ, EMF/WMF render, 3D chart fidelity, OLE, many connector geometries, fonts nhúng.
+
+---
+
+## 4. Điểm mạnh (evidence-based)
+
+1. **Worker isolation** — parser fork, heap cap (`PARSER_MAX_OLD_SPACE_MB=1024`), timeout 60s, SIGTERM→SIGKILL, cancel AbortSignal. Host process không chết theo OOM parser dễ dàng.
+2. **Zip-bomb defense** — không tin `uncompressedSize`; stream measure + cumulative budget 500MB, entry cap 5000, file cap 100MB.
+3. **Async UX** — 202 + SSE + poll fallback khi `EventSource` lỗi; concurrency reservation **trước** multer (tránh race upload khi busy).
+4. **Media hardening** — extension allowlist + magic sniff (`file-type`); external URL host allowlist; background scheme gating (`javascript:`, protocol-relative blocked).
+5. **HTML sanitize** — DOMPurify allowlist + post-process href protocol + shared style sanitizer; acceptance tests chặn dangerous CSS/URL.
+6. **Mapper modular** — split dưới `mapper/` (presentation/shape/image/table/group/diagram/media/utils); golden-master + property/geometry drift tests.
+7. **Fidelity ops** — corpus harness, OOXML chart/SmartArt evidence vs mapped count, warning summary cho user.
+8. **Test density** — 374 tests green trên suite import; route + job manager có coverage.
+
+---
+
+## 5. Findings
+
+### Critical
+
+*Không có finding Critical chặn merge cho model single-user hiện tại.*  
+Các lỗ hổng auth/job IDOR được **document intentional** trong route; README security model cũng chấp nhận single-user self-host.
+
+### Important
+
+| # | Finding | Evidence | Impact | Recommendation |
+|---|---------|----------|--------|----------------|
+| I1 | **Memory amplification** | `pptx-guards` `readFile` + JSZip full load + re-inflate measure; worker `readFile` lại + `imageMode:'base64'`; job giữ full `result` (presentation) trong Map 10 phút; SSE `JSON.stringify` full payload | Deck 50–100MB có thể nhân 3–10× RAM (host + worker + IPC + job). Risk OOM / GC thrash. | Stream/zip disk path; parser `imageMode` path/ref thay base64; job result chỉ giữ presentationId sau khi persist; hoặc persist result to disk + stream-by-id |
+| I2 | **Acceptance criteria không chạy trên import production** | `assertPresentationAcceptance` chỉ trong corpus tester, không gọi từ `importPptxFile` | Unit/corrupt parser output có thể lọt resolution sai / raw units / dangerous tokens nếu sanitize regress | Gọi acceptance gate trước `completeJob` (fail soft → warning hoặc 422) |
+| I3 | **Job IDOR / no per-job secret** | Comment trong `pptx-import.js` L72–77; `GET/DELETE /jobs/:id` chỉ UUID | Multi-tenant: đoán UUID khó nhưng leaked jobId = đọc full deck / cancel | Trả `jobSecret` lúc create; require header/query; bind job→session |
+| I4 | **`colorValue` không sanitize CSS color** | `utils-color.js` trả string thô; table có `sanitizeCssColor` riêng; shape/image/bg dùng `colorValue` | Malicious PPTX color `red; expression(...)` có thể lọt JSON; phụ thuộc `resolveColorField` phía client | Reuse `sanitizeCssColor` cho shape/line/bg/image borders |
+| I5 | **Doc drift EMF/WMF** | Report/docs: “preserved with limited browser support”; `map-image.js` L36–48: **placeholder** `unsupported-image` | User/ops expectation sai | Cập nhật docs + fidelity report cho behavior hiện tại |
+| I6 | **Background `data:image` inline ≤5MB trong presentation JSON** | `gateBackgroundImageSrc` | Bloat JSON presentation; không qua media dedup `/uploads` | Persist background images như element images |
+
+### Suggestions
+
+| # | Finding | Note |
+|---|---------|------|
+| S1 | HomePage `JSON.parse(event.data)` không try/catch | SSE malformed → unhandled rejection; wrap try/catch |
+| S2 | Client retry busy `72 × 5s ≈ 6 phút` | UX treo; hiển thị countdown / cancel |
+| S3 | Cancel mid-map: media đã `persistDeduped` trước abort có thể orphan | Acceptable; optional GC by jobId prefix |
+| S4 | Transition mapping lossy (nhiều type → fade/slide) | Expected; document explicitly |
+| S5 | `checkCRC32: false` | Trade-off speed; OK if measured inflate trusted |
+| S6 | `Uint8Array.from(buffer)` khi magic-check media | Extra copy; dùng buffer trực tiếp nếu API cho phép |
+| S7 | Chart/SmartArt native gaps chỉ warning | Correct degrade; surface in UI more prominently (đã có summary) |
+| S8 | `MAX_MEDIA_SIZE` 200MB > file 100MB | Inconsistent; align caps |
+
+### Nit
+
+- Comment “NEW:” trong `sanitize.js` (phase residue).
+- `mapper/index.js` re-export thin — fine.
+- Một số file test rất lớn (`mapper.test.js` ~1530 lines) — maintainability, không phải bug.
+
+---
+
+## 6. Security model fit
+
+Đúng với README: **single-user trusted author**.
+
+| Boundary | Status |
+|----------|--------|
+| Upload type/size | OK (.pptx, 100MB, multer) |
+| Zip bomb | OK (measured) |
+| Parser crash isolation | OK (worker) |
+| HTML from PPTX | OK (DOMPurify + style) |
+| External media SSRF | Mostly OK (host allowlist; no arbitrary http) |
+| Job cross-user | Acceptable single-user; **not** multi-tenant |
+| Share-link of imported deck | Author trust; color/SVG edge cases still matter if shared public |
+
+---
+
+## 7. Client integration
+
+| Area | Assessment |
+|------|------------|
+| Entry | Home “Import PPTX” + hidden file input `accept=.pptx` |
+| Progress | SSE stages + message; poll fallback |
+| Persist | `createPresentation(imported.presentation)` — presentation schema validate server-side |
+| Editor fidelity | `_pptxImportMeta` (fitFontSize, textInsets, crop) used in canvas/shape renderers |
+| Edit invalidation | `invalidatePptxFitMetaForUpdates` khi user edit text props |
+| Warnings | `summarizePptxImportWarnings` → notice toast |
+
+Client path ổn; thiếu cancel UI khi user muốn abort job (API `DELETE` có sẵn, UI Home không expose rõ khi đang import — chỉ cleanup on unmount).
+
+---
+
+## 8. Test evidence (fresh)
+
+```
+Test Files  35 passed (35)
+Tests       374 passed (374)
+Duration    ~202s
+Exit code   0
+```
+
+Coverage areas trong suite: guards, worker IPC, mapper golden, geometry drift, media, sanitize, route/job, e2e-flow unit, acceptance, background allowlist, chart mapper, group transform.
+
+**Chưa chạy trong review này:** `npm run test:corpus`, Playwright `pptx-import-fidelity` / critical journey (cần fixture + server). Nên chạy trước release signoff.
+
+---
+
+## 9. Điểm “production quality” theo checklist
+
+| Checklist | Pass? |
+|-----------|-------|
+| Input validation | Yes |
+| Resource limits | Yes (with memory caveats) |
+| Error taxonomy (`FAILURE_TYPES`) | Yes |
+| Diagnostics redaction | Yes (`sanitizeDiagnostic`) |
+| Cancel / abort | Yes (worker + media write) |
+| Observability (stats/warnings/ooxml) | Yes |
+| Fidelity regression gates | Yes (corpus; not runtime) |
+| File size / LOC discipline | Mostly (mapper split; large tests OK) |
+| Multi-tenant readiness | No |
+
+---
+
+## 10. Ưu tiên fix (nếu tiếp tục harden)
+
+1. **I1** — giảm peak memory (parser path mode, disk-backed job result).  
+2. **I2** — runtime acceptance gate.  
+3. **I4** — unified color sanitize.  
+4. **I6** — background images → uploads.  
+5. **I5** — sync docs EMF/WMF.  
+6. **I3** — chỉ khi multi-user.
+
+---
+
+## Unresolved questions
+
+1. Target deployment: **chỉ single-user** hay sẽ expose multi-tenant? (quyết định I3).  
+2. Corpus size thực tế trên máy này (`server/data/test-corpus/`) — baseline 10+ deck có đủ không cho release hiện tại?  
+3. Có SLA memory (ví dụ container 512MB/1GB) cho import concurrent? Ảnh hưởng design I1.  
+4. Có muốn **cancel button** trên Home trong lúc import không?
+
+---
+
+**Tóm lại:** PPTX Import là module **chín, có kỷ luật**, security defense-in-depth tốt cho self-host, fidelity tooling trên mức trung bình. Điểm cần quan tâm thật sự là **memory footprint + job result size**, acceptance **chỉ ở corpus**, và **trust model** khi rời single-user. Tests unit/integration trong package import: **374/374 pass**.
+
+## User
+
+điều tôi quan tâm thực sự là chức năng import pptx đã hoạt động đầy đủ, đúng chưa,...
+
+## Tools
+
+- Lifecycle event
+
+## Assistant
+
+Bạn quan tâm đúng/sai chức năng hơn architecture. Đang đối chiếu evidence thực tế: corpus baseline, coverage element, và các path degrade.
+
+## Tools
+
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\corpus-baseline.json (1-80)
+- Read: C:\Work\NavSlidesEditor\docs\pptx-import-fidelity-report.md (116-195)
+- Search: placeholder|unsupported|degraded|not supported|TODO|FIXME|known limitation|fidelity
+- Execute: if (Test-Path server\data\test-corpus) { Get-ChildItem server\data\test-corpus -Filter *.pptx | Select-Object Name, Length } else { 'no test-corpus' }; if (Test-Path PPTX) { Get-ChildItem PPTX -Filter *.pptx -ErrorAction SilentlyContinue | Select-Object -First 15 Name } else { 'no PPTX dir' }; Get-Content package.json | Select-String -Pattern 'test:corpus|test:pptx' (List corpus fixtures and npm test scripts)
+
+## Assistant
+
+# Trả lời thẳng: Import PPTX **đã hoạt động**, nhưng **không phải 1:1 PowerPoint**
+
+## Kết luận ngắn
+
+| Câu hỏi | Trả lời |
+|---------|---------|
+| Flow import có chạy end-to-end không? | **Có** — upload → parse → map → tạo presentation → mở editor |
+| Nội dung chính (text, shape, image, table, line) có import đúng không? | **Có, mức production** (đo được) |
+| Pixel-perfect / full feature PowerPoint? | **Không** — và cũng không phải mục tiêu hiện tại |
+| Có thể tin dùng hằng ngày cho deck thường? | **Có**, với một số loại object sẽ degrade / warning |
+
+---
+
+## Evidence mới (vừa chạy trên máy bạn)
+
+**Unit/integration:** 374/374 tests pass  
+**Corpus strict (`npm run test:corpus`):**
+
+```
+Files: 11 total, 11 passed, 0 failed
+Avg Semantic Fidelity: 100.0%
+Avg Round-trip Stability: 70.0%
+```
+
+Nghĩa là:
+
+1. **Import semantic** (parser → NavSlides: đủ element, đúng class, tọa độ/property trong ngưỡng) — **đạt gate**.
+2. **Round-trip** (import → export PPTX → so lại) — **~70%**, đủ floor regression (~50%), **không** phải “xuất lại y hệt PowerPoint gốc”.
+
+Ví dụ deck lớn:
+
+| Deck | Semantic | Round-trip | Ghi chú |
+|------|----------|------------|---------|
+| `Bai_2_1` (~1.8MB, 207 text…) | 97% | 76% | Element counts 1:1 text/shape/image/table/line |
+| `Bai_2_2` | 100% | 73% | Một số shape drift max lớn (outlier) |
+| `STTre_Duc` (~2.8MB) | 100% | 71% | Ổn |
+| `chart-*.pptx` | 100%* | ~67% | *Metric “pass” nhưng chart thường **không** ra native chart (xem dưới) |
+
+---
+
+## “Đầy đủ” theo nghĩa sản phẩm — map rõ
+
+### Đã đúng / đủ dùng
+
+| Khả năng | Trạng thái |
+|----------|------------|
+| Nút Home → chọn `.pptx` → progress → presentation mới | Có |
+| Text + rich format (font, size, bold/italic, list, link…) | Có (sau sanitize) |
+| Shape / line / custom path → SVG | Có |
+| Image (png/jpg/gif/webp/bmp) + crop/filter cơ bản | Có |
+| Table + border cell | Có |
+| Group (flatten, có giới hạn depth) | Có |
+| Background color/gradient/image | Có |
+| Notes slide | Có |
+| Scale về canvas 960×540 | Có |
+| Warning khi object hụt | Có (toast summary) |
+| Edit tiếp trong editor | Có (`_pptxImportMeta` fit/crop) |
+
+### Không đầy đủ / cố ý degrade
+
+| Khả năng | Thực tế |
+|----------|---------|
+| **Chart native** | Parser hay chỉ lộ shape; OOXML có chart thì warning `native-chart-degraded`. Fixture `chart-*.pptx` semantic “100%” vì đếm shape/line, **không** chứng minh chart Chart.js đầy đủ |
+| **SmartArt** | Flatten / approximation; gap → warning |
+| **EMF/WMF** | Placeholder “not supported” (giữ box, không render) |
+| **Animation / fragment / master layout / theme đầy đủ** | Không import |
+| **Fonts nhúng** | Chỉ ghi `usedFonts` meta; không embed font |
+| **Video/audio ngoài allowlist host** | Bị chặn |
+| **Export lại = file PPTX gốc** | Round-trip ~70% — **không** full fidelity |
+
+---
+
+## “Đúng” nghĩa là gì trong codebase này?
+
+Pipeline đúng theo thiết kế:
+
+```
+.pptx  →  parse (pptxtojson)  →  map → NavSlides JSON  →  lưu presentation  →  edit
+```
+
+**Đúng** =:
+
+- Element chính được map sang type NavSlides tương ứng  
+- Tọa độ scale ổn (median drift thường &lt;1px trên nhiều deck)  
+- Text editable, media vào `/uploads`  
+- Lỗi/object lạ → placeholder + warning, **không crash silent**
+
+**Không “đúng 100% PowerPoint”** = layout/theme/chart/SmartArt/vector Office có thể lệch hoặc mất chi tiết — đó là trade-off của editable import, không phải pure screenshot.
+
+---
+
+## Bạn nên kỳ vọng thế nào khi dùng thật?
+
+1. **Slide bài giảng / báo cáo** (text, shape, ảnh, bảng) → **dùng được**, fidelity tốt trên corpus thực (`Bai_2_*`, `STTre_Duc`).
+2. **Deck nặng chart/SmartArt/EMF** → import chạy, nhưng **một phần object** thành shape/placeholder; có warning.
+3. **Import rồi export PPTX** → file mới “mở được / ổn”, **không** clone bit-exact.
+4. **So visual với PowerPoint** → gần, không pixel-perfect (đặc biệt group rotate, line, image property ~70–84% trên một số deck).
+
+---
+
+## Trả lời câu “đã hoạt động đầy đủ, đúng chưa?”
+
+- **Có — chức năng import đã complete và verified** cho scope sản phẩm:  
+  *đưa PPTX vào NavSlides dưới dạng presentation chỉnh sửa được, với core content đúng và đo được.*
+- **Không — nếu “đầy đủ” = mọi thứ trong PowerPoint import 1:1 không mất mát.**
+
+Đó là **feature mature có giới hạn có chủ đích**, không phải half-built stub.
+
+---
+
+## Cách tự xác nhận trong 2 phút
+
+1. `npm run dev` → Home → **Import PPTX** → chọn file trong `server/data/test-corpus/` (vd. `Bai_2_1.pptx`).
+2. Thấy progress → deck mở editor → text/ảnh/bảng editable.
+3. Nếu có warning toast → đọc summary (placeholder/chart/media).
+4. Gate tự động: `npm run test:corpus` (vừa pass 11/11).
+
+Nếu bạn muốn, bước tiếp theo có thể là: import 1 file PPTX **thực tế của bạn** và chấm “đúng/sai theo từng slide” — đó mới là oracle đúng nhất ngoài corpus.

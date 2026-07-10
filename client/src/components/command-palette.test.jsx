@@ -18,6 +18,23 @@ describe('CommandPalette', () => {
     expect(document.body.textContent).toContain('Ctrl+M')
   })
 
+  it('[F1] exposes labelled modal dialog semantics and restores focus on Escape', () => {
+    const onClose = vi.fn()
+    const opener = document.createElement('button')
+    document.body.appendChild(opener)
+    opener.focus()
+
+    render(<CommandPalette open={true} onClose={onClose} commands={[]} />)
+
+    expect(screen.getByRole('dialog', { name: 'Command palette' }).getAttribute('aria-modal')).toBe(
+      'true'
+    )
+    expect(screen.getByRole('textbox', { name: 'Search commands' })).toBeTruthy()
+
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'Search commands' }), { key: 'Escape' })
+    expect(onClose).toHaveBeenCalled()
+  })
+
   it('uses tokenized classes for shell colors instead of inline color literals', () => {
     const commands = [
       { id: 'a', label: 'Insert Slide', shortcut: 'Ctrl+M', action: vi.fn() },
@@ -56,6 +73,20 @@ describe('CommandPalette', () => {
     fireEvent.keyDown(input, { key: 'Enter' })
     expect(actionB).toHaveBeenCalled()
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('[F1] does not route Enter from a focused result button to the active input result', () => {
+    const actionA = vi.fn()
+    const actionB = vi.fn()
+    const commands = [
+      { id: 'a', label: 'Insert Slide', shortcut: 'Ctrl+M', action: actionA },
+      { id: 'b', label: 'Delete Slide', shortcut: 'Ctrl+D', action: actionB },
+    ]
+    render(<CommandPalette open={true} onClose={vi.fn()} commands={commands} />)
+
+    fireEvent.keyDown(screen.getByRole('button', { name: /Delete Slide/ }), { key: 'Enter' })
+
+    expect(actionA).not.toHaveBeenCalled()
   })
 
   it('filters commands by query', () => {

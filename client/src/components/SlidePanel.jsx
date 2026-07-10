@@ -141,6 +141,7 @@ export default function SlidePanel({
   const [ctxMenu, setCtxMenu] = useState(null) // { x, y, index }
   const ctxMenuRef = useRef(null)
   const [selectedIndices, setSelectedIndices] = useState([currentIndex])
+  const [activeActionIndex, setActiveActionIndex] = useState(null)
   const slideWidth = resolution?.width || DEFAULT_SLIDE_WIDTH
   const slideHeight = resolution?.height || DEFAULT_SLIDE_HEIGHT
 
@@ -220,6 +221,10 @@ export default function SlidePanel({
                 onSelect(index)
               }}
               onContextMenu={(e) => handleContextMenu(e, index)}
+              onFocus={() => setActiveActionIndex(index)}
+              onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget)) setActiveActionIndex(null)
+              }}
               onKeyDown={(e) => {
                 if (isKeyboardActivation(e)) {
                   e.preventDefault()
@@ -368,12 +373,18 @@ export default function SlidePanel({
                       </div>
                     )}
                     {el.type === 'drawing' && (
-                      <div className="w-full h-full flex items-center justify-center text-[6px] text-white/40">
+                      <div
+                        className="w-full h-full flex items-center justify-center text-[6px] text-white/40"
+                        aria-hidden="true"
+                      >
                         ✏
                       </div>
                     )}
                     {el.type === 'line' && (
-                      <div className="w-full h-full flex items-center justify-center text-[8px] text-white/40">
+                      <div
+                        className="w-full h-full flex items-center justify-center text-[8px] text-white/40"
+                        aria-hidden="true"
+                      >
                         ↗
                       </div>
                     )}
@@ -386,10 +397,12 @@ export default function SlidePanel({
                 ))}
               </div>
 
-              <div className="absolute top-1 right-1 flex gap-0.5 opacity-0 transition-opacity z-10 group-hover:opacity-100">
+              <div className="absolute top-1 right-1 flex gap-0.5 opacity-0 transition-opacity z-10 group-hover:opacity-100 group-focus-within:opacity-100">
                 <button
                   className="bg-black/60 border-none text-white p-1 rounded-[3px] cursor-pointer flex items-center justify-center hover:bg-accent/80"
                   title="Duplicate"
+                  aria-label={`Duplicate slide ${index + 1}`}
+                  tabIndex={activeActionIndex === index ? 0 : -1}
                   onClick={(e) => {
                     e.stopPropagation()
                     onDuplicate(index)
@@ -400,7 +413,11 @@ export default function SlidePanel({
                 <button
                   className={`bg-black/60 border-none p-1 rounded-[3px] flex items-center justify-center ${slides.length > 1 ? 'text-white hover:bg-accent/80 cursor-pointer' : 'text-white/30 cursor-not-allowed opacity-50'}`}
                   title={slides.length <= 1 ? 'Cannot delete last slide' : 'Delete'}
+                  aria-label={
+                    slides.length <= 1 ? 'Cannot delete last slide' : `Delete slide ${index + 1}`
+                  }
                   disabled={slides.length <= 1}
+                  tabIndex={activeActionIndex === index ? 0 : -1}
                   onClick={(e) => {
                     e.stopPropagation()
                     if (slides.length > 1) onDelete(index)

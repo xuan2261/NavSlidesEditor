@@ -34,7 +34,14 @@
 - M1 PUT rebind hole → freeze server `pptxOriginal`.
 - Cancel-after-create → still `done`.
 
-## Unresolved
+## Follow-up cook (same day)
 
-1. HomePage working tree also contains import-button a11y ref changes beyond presentationId wiring — confirm whether to ship together.
-2. Other UI remediation files dirty in worktree are **out of scope** for this phase commit.
+Committed `efb7efa2` with Phase 02–08 **foundations** (not full SLA):
+- Oracle SSIM + CLI (`test:pptx:oracle`)
+- OOXML scene graph + strict reconcile
+- Theme/color harden, chart matrix, EMF sandbox policy, roundtrip policy
+
+## Unresolved (honest)
+
+1. Full product 1:1 claim still needs multi-month depth (goldens capture, primitives ban, native charts/SmartArt/EMF, layout/animation).
+2. Unrelated UI remediation files remain dirty in worktree (out of scope).

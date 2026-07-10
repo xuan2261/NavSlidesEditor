@@ -57,7 +57,7 @@ function renderCanvasElement(element, props = {}) {
 }
 
 describe('CanvasElement video playback', () => {
-  it('[red defect:canvas.keyboard] exposes focusable element semantics', () => {
+  it('[F4 red defect:canvas.keyboard] exposes focusable element semantics', () => {
     renderCanvasElement(baseElement)
     const wrapper = screen.getByTestId('slide-element-video-1')
 
@@ -66,6 +66,23 @@ describe('CanvasElement video playback', () => {
     expect(wrapper.getAttribute('aria-label')).toBe('video element')
     expect(wrapper.getAttribute('data-selected')).toBe('false')
     expect(wrapper.hasAttribute('aria-selected')).toBe(false)
+  })
+
+  it('[F4] includes useful sanitized content in the accessible element name', () => {
+    renderCanvasElement({
+      id: 'text-1',
+      type: 'text',
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 80,
+      content: '<p>Quarterly <strong>Goals</strong></p>',
+      locked: true,
+    })
+
+    expect(screen.getByTestId('slide-element-text-1').getAttribute('aria-label')).toBe(
+      'text element, "Quarterly Goals", locked'
+    )
   })
 
   it('[red defect:canvas.keyboard] selects focused elements with Enter or Space', () => {
@@ -78,15 +95,24 @@ describe('CanvasElement video playback', () => {
     expect(handlers.onClick).toHaveBeenCalledTimes(2)
   })
 
-  it('[red defect:canvas.keyboard] nudges and deletes selected unlocked elements', () => {
+  it('[F5 red defect:canvas.keyboard] nudges and deletes selected unlocked elements', () => {
     const { handlers } = renderCanvasElement(baseElement, { isSelected: true })
     const wrapper = screen.getByTestId('slide-element-video-1')
 
     fireEvent.keyDown(wrapper, { key: 'ArrowRight', shiftKey: true })
     fireEvent.keyDown(wrapper, { key: 'Delete' })
 
-    expect(handlers.onUpdateElement).toHaveBeenCalledWith('video-1', { x: 1, y: 0 })
+    expect(handlers.onUpdateElement).toHaveBeenCalledWith('video-1', { x: 10, y: 0 })
     expect(handlers.onDeleteElement).toHaveBeenCalledWith('video-1')
+  })
+
+  it('[F5] nudges selected elements by 1px without Shift', () => {
+    const { handlers } = renderCanvasElement(baseElement, { isSelected: true })
+    const wrapper = screen.getByTestId('slide-element-video-1')
+
+    fireEvent.keyDown(wrapper, { key: 'ArrowRight' })
+
+    expect(handlers.onUpdateElement).toHaveBeenCalledWith('video-1', { x: 1, y: 0 })
   })
 
   it('[red defect:canvas.keyboard] lets document shortcuts handle multi-selection delete and nudge', () => {

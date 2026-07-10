@@ -148,7 +148,7 @@ export default function TemplatePickerModal({ onSelect, onClose }) {
       {CATEGORY_ORDER.map((category) => (
         <div key={category} className="mb-6">
           <h3 className="text-sm text-text-muted mb-3 capitalize">{getCategoryLabel(category)}</h3>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {Object.entries(SLIDE_TEMPLATES)
               .filter(([_, tmpl]) => tmpl.category === category)
               .map(([key, tmpl]) => (

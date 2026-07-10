@@ -42,8 +42,20 @@ function isEditableEventTarget(target) {
 
 function getElementAccessibleName(element) {
   const typeLabel = `${String(element.type || 'slide')} element`
-  if (element.locked) return `${typeLabel}, locked`
-  return typeLabel
+  const rawContent =
+    element.type === 'text'
+      ? element.content
+      : element.type === 'shape'
+        ? element.text
+        : ['code', 'markdown', 'latex', 'html'].includes(element.type)
+          ? element.content
+          : element.alt || element.title || element.name
+  const content = String(rawContent || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60)
+  return [typeLabel, content && `"${content}"`, element.locked && 'locked'].filter(Boolean).join(', ')
 }
 
 function isTextEditableElement(element) {
@@ -187,11 +199,11 @@ export default function CanvasElement({
     zIndex: element.zIndex || 1,
     pointerEvents: 'auto',
     outline: element.locked
-      ? '2px solid #f59e0b'
+      ? '2px solid var(--warning, #f59e0b)'
       : (isSelected || isEditing) && !isCropping
-        ? '2px solid #6366f1'
+        ? '2px solid var(--selection)'
         : isCropping
-          ? '2px solid #f59e0b'
+          ? '2px solid var(--warning, #f59e0b)'
           : 'none',
     cursor: isCropping
       ? 'crosshair'
@@ -289,7 +301,7 @@ export default function CanvasElement({
     if (nudge && isSelected && !element.locked) {
       if (selectedElementCount > 1) return
       event.preventDefault()
-      const step = event.shiftKey ? 1 : 10
+      const step = event.shiftKey ? 10 : 1
       onUpdateElement?.(element.id, {
         x: Math.max(0, (Number(element.x) || 0) + nudge.x * step),
         y: Math.max(0, (Number(element.y) || 0) + nudge.y * step),
@@ -364,7 +376,7 @@ export default function CanvasElement({
     left: 0,
     zIndex: 101,
     pointerEvents: 'none',
-    background: '#8b5cf6',
+    background: 'var(--selection-muted)',
     color: 'white',
     fontSize: '10px',
     fontFamily: 'sans-serif',
@@ -379,7 +391,7 @@ export default function CanvasElement({
     right: 0,
     zIndex: 101,
     pointerEvents: 'none',
-    background: '#14b8a6',
+    background: 'var(--accent)',
     color: 'white',
     fontSize: '9px',
     fontFamily: 'sans-serif',
@@ -391,7 +403,7 @@ export default function CanvasElement({
     position: 'absolute',
     width: 10,
     height: 10,
-    background: '#6366f1',
+    background: 'var(--selection)',
     border: '2px solid white',
     borderRadius: 2,
     zIndex: 100,
@@ -404,7 +416,7 @@ export default function CanvasElement({
     transform: 'translateX(-50%)',
     width: 1,
     height: 20,
-    background: '#6366f1',
+    background: 'var(--selection)',
     zIndex: 100,
     pointerEvents: 'none',
   }
@@ -416,7 +428,7 @@ export default function CanvasElement({
     width: 14,
     height: 14,
     borderRadius: '50%',
-    background: '#6366f1',
+    background: 'var(--selection)',
     border: '2px solid white',
     zIndex: 100,
     cursor: 'grab',

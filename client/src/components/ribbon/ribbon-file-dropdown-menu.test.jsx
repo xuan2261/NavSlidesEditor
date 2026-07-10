@@ -98,4 +98,26 @@ describe('FileDropdown', () => {
     expect(screen.queryByText('Open Project')).toBeNull()
     expect(document.activeElement).toBe(trigger)
   })
+
+  it('[F8] supports wrapped arrow navigation plus Home and End', () => {
+    render(<FileDropdown />)
+
+    fireEvent.keyDown(screen.getByLabelText('File menu'), { key: 'Enter' })
+
+    const first = screen.getByRole('menuitem', { name: 'Open Project' })
+    const last = screen.getByRole('menuitem', { name: 'Version History' })
+    expect(document.activeElement).toBe(first)
+
+    fireEvent.keyDown(first, { key: 'ArrowUp' })
+    expect(document.activeElement).toBe(last)
+
+    fireEvent.keyDown(last, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(first)
+
+    fireEvent.keyDown(first, { key: 'End' })
+    expect(document.activeElement).toBe(last)
+
+    fireEvent.keyDown(last, { key: 'Home' })
+    expect(document.activeElement).toBe(first)
+  })
 })
