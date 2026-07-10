@@ -41,6 +41,8 @@ export function AnnotationToolbar({
           key={t.id}
           onClick={() => onToolChange(t.id)}
           title={t.title}
+          aria-label={t.label}
+          aria-pressed={tool === t.id}
           style={{
             backgroundColor: tool === t.id ? 'rgba(255,255,255,0.2)' : 'transparent',
             border: '1px solid rgba(255,255,255,0.2)',
@@ -63,6 +65,8 @@ export function AnnotationToolbar({
               <button
                 key={c}
                 onClick={() => onColorChange(c)}
+                aria-label={`Use ${c} annotation color`}
+                aria-pressed={color === c}
                 style={{
                   width: '20px',
                   height: '20px',

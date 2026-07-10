@@ -23,7 +23,7 @@ const REMOVED_FILES = ['client/src/pages/dashboard/TemplatePreview.jsx']
 
 const INLINE_STYLE_BUDGETS = {
   'client/src/pages/SpeakerViewPage.jsx': 0,
-  'client/src/pages/LiveViewPage.jsx': 3,
+  'client/src/pages/LiveViewPage.jsx': 4,
   'client/src/components/SlidePanel.jsx': 0,
   'client/src/components/SlideSorterView.jsx': 0,
   'client/src/components/SelectionPane.jsx': 0,

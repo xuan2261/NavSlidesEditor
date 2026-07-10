@@ -3,6 +3,7 @@ import path from 'node:path'
 import { EditorPage } from './pages/editor-page.js'
 import { postPptxImportWhenAvailable } from './helpers/pptx-import-api-helper.js'
 import {
+  apiDeletePresentation,
   apiGetPresentation,
   apiUpdatePresentation,
   expect,
@@ -45,9 +46,10 @@ test.describe('PPTX import fidelity', () => {
     expect(importRes.status()).toBe(202)
     const { jobId } = await importRes.json()
     const imported = await waitForPptxImport(request, jobId)
-    expect(imported.presentation?.slides?.length).toBeGreaterThan(0)
-
-    const presentation = await apiUpdatePresentation(request, testPresentation.id, imported.presentation)
+    const importedPresentation = await apiGetPresentation(request, imported.presentationId)
+    expect(importedPresentation.slides?.length).toBeGreaterThan(0)
+    const presentation = await apiUpdatePresentation(request, testPresentation.id, importedPresentation)
+    await apiDeletePresentation(request, imported.presentationId)
 
     const editor = new EditorPage(page)
     await editor.gotoPresentation(presentation.id)

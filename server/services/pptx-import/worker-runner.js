@@ -54,11 +54,13 @@ function buildParserExecArgv(execArgv = process.execArgv) {
   return filtered
 }
 
-function killChild(child) {
-  if (!child.killed) child.kill('SIGTERM')
-  setTimeout(() => {
-    if (!child.killed) child.kill('SIGKILL')
-  }, PARSER_KILL_GRACE_MS).unref()
+function killChild(child, state, graceMs = PARSER_KILL_GRACE_MS) {
+  if (!state.exited && !state.closed) child.kill('SIGTERM')
+  const escalation = setTimeout(() => {
+    if (!state.exited && !state.closed) child.kill('SIGKILL')
+  }, graceMs)
+  escalation.unref()
+  return escalation
 }
 
 function runParserWorker(filePath, options = {}) {
@@ -78,13 +80,19 @@ function runParserWorker(filePath, options = {}) {
     let stderr = ''
     let stdout = ''
     let ignoredMessages = ''
+    const childState = { exited: false, closed: false }
+    let resolveClosed
+    const workerClosed = new Promise((resolveClosedPromise) => {
+      resolveClosed = resolveClosedPromise
+    })
 
     const finish = (result) => {
       if (settled) return
       settled = true
       clearTimeout(timer)
       options.signal?.removeEventListener?.('abort', abortWorker)
-      killChild(child)
+      result.workerClosed = workerClosed
+      killChild(child, childState, options.killGraceMs)
       resolve(result)
     }
 
@@ -153,6 +161,7 @@ function runParserWorker(filePath, options = {}) {
       })
     })
     child.on('exit', (code, signal) => {
+      childState.exited = true
       if (settled) return
       finish({
         ok: false,
@@ -167,7 +176,7 @@ function runParserWorker(filePath, options = {}) {
     ;(async () => {
       try {
         await waitForAck(child, ackTimeoutMs)
-        if (!settled) child.send({ filePath })
+        if (!settled) child.send({ filePath, originalName: options.originalName || filePath })
       } catch (err) {
         finish({
           ok: false,
@@ -179,6 +188,11 @@ function runParserWorker(filePath, options = {}) {
         })
       }
     })()
+
+    child.on('close', (code, signal) => {
+      childState.closed = true
+      resolveClosed({ code, signal })
+    })
   })
 }
 

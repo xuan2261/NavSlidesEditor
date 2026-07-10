@@ -3,17 +3,24 @@ const fs = require('fs-extra')
 const multer = require('multer')
 const path = require('path')
 const uuidv4 = () => require('node:crypto').randomUUID()
-const { MAX_FILE_BYTES, TEMP_UPLOAD_DIR } = require('../services/pptx-import/constants')
+const { IMPORT_TIMEOUT_MS, MAX_FILE_BYTES, TEMP_UPLOAD_DIR } = require('../services/pptx-import/constants')
 const { PptxImportError, sanitizeDiagnostic } = require('../services/pptx-import/diagnostics')
 const { importPptxFile } = require('../services/pptx-import/importer')
 const {
   persistOriginalPptx,
   deleteOriginalPptx,
 } = require('../services/pptx-import/original-package')
-const { createImportedPresentation } = require('../services/pptx-import/create-imported-presentation')
+const {
+  createImportedPresentation,
+  deleteImportedPresentation,
+} = require('../services/pptx-import/create-imported-presentation')
 const defaultJobManager = require('../services/pptx-import-job-manager')
+const { createMediaTransaction } = require('../services/pptx-import/media-dedup')
+const { sweepStaleTempUploads } = require('../services/pptx-import/temp-upload-sweep')
 
 fs.ensureDirSync(TEMP_UPLOAD_DIR)
+const activeTempUploads = new Set()
+setImmediate(() => sweepStaleTempUploads(TEMP_UPLOAD_DIR, { activePaths: activeTempUploads }).catch(() => {}))
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, TEMP_UPLOAD_DIR),
@@ -43,6 +50,45 @@ function isValidJobId(jobId) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(jobId)
 }
 
+function withAbort(promise, signal, cleanupLateResult, trackCleanup) {
+  const cleanupLate = (value) => {
+    try {
+      const cleanup = Promise.resolve(cleanupLateResult?.(value)).catch(() => {})
+      trackCleanup?.(cleanup)
+    } catch {}
+  }
+  if (signal.aborted) {
+    Promise.resolve(promise).then(cleanupLate, () => {})
+    return Promise.reject(signal.reason || new Error('PPTX import cancelled'))
+  }
+  return new Promise((resolve, reject) => {
+    let settled = false
+    const onAbort = () => {
+      if (settled) return
+      settled = true
+      reject(signal.reason || new Error('PPTX import cancelled'))
+    }
+    signal.addEventListener('abort', onAbort, { once: true })
+    Promise.resolve(promise).then(
+      (value) => {
+        if (settled) {
+          cleanupLate(value)
+          return
+        }
+        settled = true
+        signal.removeEventListener('abort', onAbort)
+        resolve(value)
+      },
+      (error) => {
+        if (settled) return
+        settled = true
+        signal.removeEventListener('abort', onAbort)
+        reject(error)
+      }
+    )
+  })
+}
+
 /**
  * Atomic import: map → persist original → create presentation server-side.
  * On create failure, original is rolled back. Cancel leaves no original.
@@ -55,60 +101,104 @@ async function runImport({
   jobManager,
   persistOriginal = persistOriginalPptx,
   createPresentation = createImportedPresentation,
+  deletePresentation = deleteImportedPresentation,
   deleteOriginal = deleteOriginalPptx,
   originalBaseDir,
+  timeoutMs = IMPORT_TIMEOUT_MS,
 }) {
   const abortController = new AbortController()
+  const mediaTransaction = createMediaTransaction()
+  const stagePromises = []
+  const cleanupPromises = []
+  const trackStage = (promise) => {
+    const tracked = Promise.resolve(promise)
+    stagePromises.push(tracked)
+    return tracked
+  }
+  let deadlineExceeded = false
+  const deadlineTimer = setTimeout(() => {
+    deadlineExceeded = true
+    abortController.abort(new Error('PPTX import deadline exceeded'))
+  }, timeoutMs)
+  deadlineTimer.unref?.()
+  activeTempUploads.add(filePath)
+  jobManager.holdOperation?.(jobId)
   jobManager.registerCancelHandler?.(jobId, () => abortController.abort())
+  const finishAbortedJob = () => {
+    if (deadlineExceeded) jobManager.failJob(jobId, 'PPTX import deadline exceeded')
+    else jobManager.completeCancellation?.(jobId)
+  }
   let originalArtifact = null
   try {
     jobManager.emitProgress(jobId, { stage: 'parsing', percent: 1, message: 'Starting PPTX import' })
-    const result = await importer(filePath, {
+    const result = await withAbort(trackStage(importer(filePath, {
       originalName,
       onProgress: (progress) => jobManager.emitProgress(jobId, progress),
       signal: abortController.signal,
-    })
+      mediaTransaction,
+    })), abortController.signal)
     if (abortController.signal.aborted) {
-      jobManager.completeCancellation?.(jobId)
+      finishAbortedJob()
+      await mediaTransaction.rollback()
       return
     }
 
     jobManager.emitProgress(jobId, { stage: 'persisting-original', percent: 92, message: 'Saving original package' })
-    originalArtifact = await persistOriginal(filePath, originalBaseDir ? { baseDir: originalBaseDir } : {})
+    const originalOptions = originalBaseDir ? { baseDir: originalBaseDir } : {}
+    originalArtifact = await withAbort(
+      trackStage(persistOriginal(filePath, originalOptions)),
+      abortController.signal,
+      (artifact) => deleteOriginal(artifact?.id, originalOptions),
+      (cleanup) => cleanupPromises.push(cleanup)
+    )
 
     if (abortController.signal.aborted) {
+      finishAbortedJob()
       await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
       originalArtifact = null
-      jobManager.completeCancellation?.(jobId)
+      await mediaTransaction.rollback()
       return
     }
 
     jobManager.emitProgress(jobId, { stage: 'creating-presentation', percent: 96, message: 'Creating presentation' })
     let presentation
     try {
-      presentation = await createPresentation(result.presentation, originalArtifact, { originalName })
+      presentation = await withAbort(
+        trackStage(createPresentation(result.presentation, originalArtifact, { originalName })),
+        abortController.signal,
+        (created) => deletePresentation(created?.id),
+        (cleanup) => cleanupPromises.push(cleanup)
+      )
     } catch (createErr) {
-      await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
-      originalArtifact = null
+      if (!abortController.signal.aborted) {
+        await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
+        originalArtifact = null
+      }
       throw createErr
     }
 
     // If cancel races after create, still complete as done — presentation+original already committed.
+    await mediaTransaction.commit()
     jobManager.completeJob(jobId, {
       presentationId: presentation.id,
       stats: result.stats,
       warnings: result.warnings || [],
-      // Keep presentation payload for transitional clients; prefer presentationId.
-      presentation: result.presentation,
     })
   } catch (err) {
+    const aborted = abortController.signal.aborted
+    if (aborted) finishAbortedJob()
+    await mediaTransaction.rollback().catch(() => {})
     if (originalArtifact?.id) {
       await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
     }
-    if (abortController.signal.aborted) jobManager.completeCancellation?.(jobId)
-    else jobManager.failJob(jobId, sanitizeDiagnostic(err))
+    if (!aborted) jobManager.failJob(jobId, sanitizeDiagnostic(err))
   } finally {
-    await fs.unlink(filePath).catch(() => {})
+    clearTimeout(deadlineTimer)
+    Promise.allSettled(stagePromises).then(() => Promise.allSettled(cleanupPromises)).then(async () => {
+      activeTempUploads.delete(filePath)
+      await fs.unlink(filePath).catch(() => {})
+      jobManager.settleOperation?.(jobId)
+    })
   }
 }
 
@@ -117,8 +207,10 @@ function createPptxImportRouter({
   jobManager = defaultJobManager,
   persistOriginal = persistOriginalPptx,
   createPresentation = createImportedPresentation,
+  deletePresentation = deleteImportedPresentation,
   deleteOriginal = deleteOriginalPptx,
   originalBaseDir,
+  importTimeoutMs = IMPORT_TIMEOUT_MS,
 } = {}) {
   const router = express.Router()
 
@@ -169,8 +261,10 @@ function createPptxImportRouter({
         jobManager,
         persistOriginal,
         createPresentation,
+        deletePresentation,
         deleteOriginal,
         originalBaseDir,
+        timeoutMs: importTimeoutMs,
       }).catch((err) => {
         jobManager.failJob(jobId, sanitizeDiagnostic(err))
         fs.unlink(req.file.path).catch(() => {})

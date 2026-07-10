@@ -23,8 +23,10 @@ async function checkP1() {
   return { id: METRIC_IDS.P1, ok: typeof mod.persistOriginalPptx === 'function' }
 }
 
-async function checkOracleBaseline() {
-  const baselinePath = path.join(__dirname, 'oracle', 'baseline-ssim.json')
+async function checkOracleBaseline(
+  milestone,
+  baselinePath = path.join(__dirname, 'oracle', 'baseline-ssim.json')
+) {
   const exists = await fs.pathExists(baselinePath)
   if (!exists) {
     return [
@@ -33,53 +35,68 @@ async function checkOracleBaseline() {
     ]
   }
   const baseline = await fs.readJson(baselinePath)
-  const present = Boolean(baseline.deckCount >= 1 || (baseline.decks && baseline.decks.length))
-  // Module gate only — numeric SSIM floors still debt until real goldens/actuals
+  const present = Boolean(
+    (typeof baseline.deckCount === 'number' &&
+      Number.isInteger(baseline.deckCount) &&
+      baseline.deckCount >= 1) ||
+      (Array.isArray(baseline.decks) && baseline.decks.length >= 1)
+  )
+  const numeric = present && baseline.debt === false
+  const mean = baseline.meanSsim
+  const min = baseline.minSsim
+  const meanOk =
+    numeric &&
+    typeof mean === 'number' &&
+    Number.isFinite(mean) &&
+    (milestone?.meanSsim == null || mean >= milestone.meanSsim)
+  const minOk =
+    numeric &&
+    typeof min === 'number' &&
+    Number.isFinite(min) &&
+    (milestone?.minSsim == null || min >= milestone.minSsim)
   return [
     {
       id: METRIC_IDS.V1,
-      ok: present,
-      detail: baseline.debt ? 'debt-recorded' : 'baseline-present',
+      ok: meanOk,
+      detail: baseline.debt ? 'debt-recorded-not-evidence' : meanOk ? 'numeric-mean-pass' : 'numeric-mean-fail',
       meanSsim: baseline.meanSsim,
     },
     {
       id: METRIC_IDS.V2,
-      ok: present,
-      detail: 'min-ssim-module-gate-only',
+      ok: minOk,
+      detail: baseline.debt ? 'debt-recorded-not-evidence' : minOk ? 'numeric-min-pass' : 'missing-or-failing-min',
+      minSsim: baseline.minSsim,
     },
   ]
 }
 
-async function checkChartE2Module() {
-  const chart = require('./ooxml-chart-parser')
-  return { id: METRIC_IDS.E2, ok: typeof chart.injectChartsFromSceneGraph === 'function' }
+function metricCheck(id, actual, limit, comparison = 'max') {
+  const numeric = typeof actual === 'number' && Number.isFinite(actual)
+  const ok =
+    numeric &&
+    (limit == null ||
+      (comparison === 'min' ? actual >= Number(limit) : actual <= Number(limit)))
+  return { id, ok, actual: numeric ? actual : null, limit, detail: ok ? 'numeric-pass' : 'missing-or-failing-evidence' }
 }
 
-async function checkSmartArtE3Module() {
-  const dgm = require('./ooxml-diagram-parser')
-  return { id: METRIC_IDS.E3, ok: typeof dgm.injectDiagramsFromSceneGraph === 'function' }
-}
-
-async function checkE1SceneGraph() {
-  const attach = require('./ooxml-scene-graph/attach-source-nodes')
-  const graph = require('./ooxml-scene-graph')
-  return {
-    id: METRIC_IDS.E1,
-    ok: typeof attach.attachSourceNodes === 'function' && typeof graph.reconcileSceneGraph === 'function',
+async function checkCorpusEvidence(milestone, baselinePath = path.join(__dirname, 'corpus-baseline.json')) {
+  if (!(await fs.pathExists(baselinePath))) {
+    return [METRIC_IDS.E1, METRIC_IDS.E2, METRIC_IDS.E3, METRIC_IDS.E4, METRIC_IDS.R1]
+      .map((id) => ({ id, ok: false, detail: 'missing-corpus-baseline' }))
   }
-}
-
-async function checkE4Primitives() {
-  const acc = require('./acceptance-criteria')
-  return {
-    id: METRIC_IDS.E4,
-    ok: typeof acc.assertNoPrimitivePlaceholders === 'function',
+  const baseline = await fs.readJson(baselinePath)
+  const evidence = baseline.summary?.corpusEvidence || {}
+  if (baseline.evidenceVersion !== 2) {
+    return [METRIC_IDS.E1, METRIC_IDS.E2, METRIC_IDS.E3, METRIC_IDS.E4, METRIC_IDS.R1]
+      .map((id) => ({ id, ok: false, detail: 'stale-corpus-evidence' }))
   }
-}
-
-async function checkR1Roundtrip() {
-  const rt = require('./roundtrip-original-parts')
-  return { id: METRIC_IDS.R1, ok: typeof rt.resolvePptxExportPayload === 'function' }
+  return [
+    metricCheck(METRIC_IDS.E1, evidence.sceneGraphUnmapped, milestone.sceneGraphUnmappedMax),
+    metricCheck(METRIC_IDS.E2, evidence.chartCoverageGapCount, milestone.chartGapMax),
+    metricCheck(METRIC_IDS.E3, evidence.smartArtCoverageGapCount, milestone.smartArtGapMax),
+    metricCheck(METRIC_IDS.E4, evidence.permanentPlaceholderCount, milestone.permanentPlaceholderMax),
+    metricCheck(METRIC_IDS.R1, baseline.summary?.avgRoundTripStability, milestone.roundTripMin, 'min'),
+  ]
 }
 
 async function main(argv = process.argv.slice(2)) {
@@ -87,12 +104,8 @@ async function main(argv = process.argv.slice(2)) {
   const milestone = getMilestone(args.milestone) || getMilestone('phase08_full')
   const nested = await Promise.all([
     checkP1(),
-    checkOracleBaseline(),
-    checkE1SceneGraph(),
-    checkChartE2Module(),
-    checkSmartArtE3Module(),
-    checkE4Primitives(),
-    checkR1Roundtrip(),
+    checkOracleBaseline(milestone),
+    checkCorpusEvidence(milestone),
   ])
   const checks = nested.flat()
   const byId = Object.fromEntries(checks.map((c) => [c.id, c]))
@@ -100,13 +113,12 @@ async function main(argv = process.argv.slice(2)) {
   const failed = required.filter((id) => !byId[id]?.ok)
   const report = {
     milestone: milestone?.id || args.milestone,
-    productOneToOneClaimAllowed: Boolean(milestone?.productOneToOneClaimAllowed),
+    productOneToOneClaimAllowed:
+      Boolean(milestone?.productOneToOneClaimAllowed) && failed.length === 0,
     checks,
     failed,
     // Full numeric SLA not claimed until oracle actuals + corpus floors green
-    claim: failed.length
-      ? 'sla-gate-failed'
-      : 'engineering-modules-present-not-numeric-sla',
+    claim: failed.length ? 'sla-gate-failed' : 'numeric-sla-evidence-passed',
   }
   if (args.json) process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
   else {
@@ -125,4 +137,4 @@ if (require.main === module) {
     })
 }
 
-module.exports = { main, parseArgs }
+module.exports = { checkCorpusEvidence, checkOracleBaseline, main, metricCheck, parseArgs }

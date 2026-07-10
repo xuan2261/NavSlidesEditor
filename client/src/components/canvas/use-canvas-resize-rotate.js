@@ -113,6 +113,46 @@ export function applyResize(handle, startEl, dx, dy) {
   return { x: cx1 - w1 / 2, y: cy1 - h1 / 2, width: w1, height: h1 }
 }
 
+function getFixedCorner(handle, element) {
+  const signs = {
+    nw: { x: 1, y: 1 },
+    ne: { x: -1, y: 1 },
+    sw: { x: 1, y: -1 },
+    se: { x: -1, y: -1 },
+  }[handle]
+  if (!signs) return null
+  const radians = ((element.rotation || 0) * Math.PI) / 180
+  const cos = Math.cos(radians)
+  const sin = Math.sin(radians)
+  const centerX = element.x + element.width / 2
+  const centerY = element.y + element.height / 2
+  return {
+    signs,
+    cos,
+    sin,
+    x:
+      centerX +
+      ((signs.x * element.width) / 2) * cos -
+      ((signs.y * element.height) / 2) * sin,
+    y:
+      centerY +
+      ((signs.x * element.width) / 2) * sin +
+      ((signs.y * element.height) / 2) * cos,
+  }
+}
+
+function positionFromFixedCorner(anchor, width, height) {
+  const centerX =
+    anchor.x -
+    (((anchor.signs.x * width) / 2) * anchor.cos -
+      ((anchor.signs.y * height) / 2) * anchor.sin)
+  const centerY =
+    anchor.y -
+    (((anchor.signs.x * width) / 2) * anchor.sin +
+      ((anchor.signs.y * height) / 2) * anchor.cos)
+  return { x: centerX - width / 2, y: centerY - height / 2, width, height }
+}
+
 /**
  * Apply resize with aspect-ratio constraint (when Shift is held).
  * Mutates updates in place.
@@ -127,14 +167,55 @@ export function applyResizeAspectRatio(handle, startEl, updates) {
   if (!startEl.width || !startEl.height) return
   const ratio = startEl.width / startEl.height
   if (Math.abs(updates.width - startEl.width) >= Math.abs(updates.height - startEl.height)) {
-    updates.height = Math.max(MIN_SIZE, Math.round(updates.width / ratio))
-    if (handle === 'ne' || handle === 'nw')
-      updates.y = startEl.y + startEl.height - updates.height
+    updates.height = Math.max(MIN_SIZE, updates.width / ratio)
   } else {
-    updates.width = Math.max(MIN_SIZE, Math.round(updates.height * ratio))
-    if (handle === 'nw' || handle === 'sw')
-      updates.x = startEl.x + startEl.width - updates.width
+    updates.width = Math.max(MIN_SIZE, updates.height * ratio)
   }
+
+  Object.assign(
+    updates,
+    positionFromFixedCorner(getFixedCorner(handle, startEl), updates.width, updates.height)
+  )
+}
+
+export function clampAspectResizeToSlide(handle, updates, startEl, slideW, slideH) {
+  const anchor = getFixedCorner(handle, startEl)
+  if (!anchor) return false
+  const fits = (geometry) => {
+    const box = getRotatedAABB({ ...startEl, ...geometry })
+    return box.left >= 0 && box.top >= 0 && box.right <= slideW && box.bottom <= slideH
+  }
+  if (fits(updates)) return true
+
+  const minScale = Math.min(
+    1,
+    Math.max(MIN_SIZE / updates.width, MIN_SIZE / updates.height)
+  )
+  let low = minScale
+  let high = 1
+  let best = positionFromFixedCorner(
+    anchor,
+    updates.width * minScale,
+    updates.height * minScale
+  )
+  if (!fits(best)) return false
+
+  for (let index = 0; index < 40; index += 1) {
+    const scale = (low + high) / 2
+    const candidate = positionFromFixedCorner(
+      anchor,
+      updates.width * scale,
+      updates.height * scale
+    )
+    if (fits(candidate)) {
+      best = candidate
+      low = scale
+    } else {
+      high = scale
+    }
+  }
+  Object.assign(updates, best)
+  return true
 }
 
 /**

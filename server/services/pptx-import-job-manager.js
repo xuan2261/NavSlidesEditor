@@ -26,6 +26,7 @@ function createJob() {
     createdAt: now,
     updatedAt: now,
     terminalState: false,
+    operationPending: false,
     cleanupTimer: null,
     cancel: null,
     sseClients: new Set(),
@@ -36,7 +37,7 @@ function createJob() {
 function runningCount() {
   let count = 0
   for (const job of jobs.values()) {
-    if (job.status === 'running' || job.status === 'cancelling') count += 1
+    if (job.status === 'running' || job.status === 'cancelling' || job.operationPending) count += 1
   }
   return count
 }
@@ -67,7 +68,11 @@ function attachSseClient(jobId, res) {
   }
   job.sseClients.add(res)
   writeEvent(res, 'progress', serializeJob(job))
-  if (job.terminalState) writeEvent(res, terminalEvent(job.status), serializeJob(job))
+  if (job.terminalState) {
+    writeEvent(res, terminalEvent(job.status), serializeJob(job))
+    closeSseClients(job)
+    scheduleCleanup(jobId)
+  }
   return job
 }
 
@@ -122,12 +127,27 @@ function registerCancelHandler(jobId, cancel) {
   return job
 }
 
+function holdOperation(jobId) {
+  const job = getJob(jobId)
+  if (job) job.operationPending = true
+  return job
+}
+
+function settleOperation(jobId) {
+  const job = getJob(jobId)
+  if (!job) return null
+  job.operationPending = false
+  if (job.terminalState) scheduleCleanup(jobId)
+  return job
+}
+
 function finishJob(jobId, status, fields) {
   const job = getJob(jobId)
   if (!job || job.terminalState) return null
   updateJob(job, { ...fields, status, terminalState: true })
   broadcast(job, terminalEvent(status))
-  if (job.sseClients.size === 0) scheduleCleanup(jobId)
+  closeSseClients(job)
+  scheduleCleanup(jobId)
   return job
 }
 
@@ -152,13 +172,18 @@ function broadcast(job, event) {
   for (const res of job.sseClients) writeEvent(res, event, payload)
 }
 
+function closeSseClients(job) {
+  for (const res of job.sseClients) res.end?.()
+  job.sseClients.clear()
+}
+
 function writeEvent(res, event, payload) {
   res.write(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`)
 }
 
 function scheduleCleanup(jobId) {
   const job = getJob(jobId)
-  if (!job) return
+  if (!job || job.operationPending) return
   if (job.cleanupTimer) clearTimeout(job.cleanupTimer)
   job.cleanupTimer = setTimeout(() => cleanup(jobId), JOB_TTL_MS)
   job.cleanupTimer.unref?.()
@@ -177,4 +202,4 @@ function _reset() {
   jobs.clear()
 }
 
-module.exports = { JOB_TTL_MS, MAX_CONCURRENT_RUNNING, PptxImportJobLimitError, attachSseClient, cancelJob, cleanup, completeCancellation, completeJob, createJob, detachSseClient, emitProgress, failJob, getJob, registerCancelHandler, serializeJob, _reset }
+module.exports = { JOB_TTL_MS, MAX_CONCURRENT_RUNNING, PptxImportJobLimitError, attachSseClient, cancelJob, cleanup, completeCancellation, completeJob, createJob, detachSseClient, emitProgress, failJob, getJob, holdOperation, registerCancelHandler, serializeJob, settleOperation, _reset }

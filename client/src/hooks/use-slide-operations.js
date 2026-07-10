@@ -74,6 +74,27 @@ export function useSlideOperations({
     [setPresentation, mapActive]
   )
 
+  const replaceElementZOrder = useCallback(
+    (updates) => {
+      setPresentation((prev) => {
+        if (!prev) return prev
+        const zById = Object.fromEntries(updates.map(({ id, zIndex }) => [id, zIndex]))
+        return mapActive(prev, (slide) => {
+          if (slide.locked) return slide
+          return {
+            ...slide,
+            elements: (slide.elements || []).map((element) =>
+              zById[element.id] === undefined
+                ? element
+                : { ...element, zIndex: zById[element.id] }
+            ),
+          }
+        })
+      })
+    },
+    [setPresentation, mapActive]
+  )
+
   // ── Delete all selected elements ───────────────────────────────────────────
   const deleteSelectedElements = useCallback(() => {
     const ids = selectedElementIdsRef.current
@@ -452,6 +473,7 @@ export function useSlideOperations({
 
   return {
     updateElements,
+    replaceElementZOrder,
     deleteSelectedElements,
     groupElements,
     ungroupElements,

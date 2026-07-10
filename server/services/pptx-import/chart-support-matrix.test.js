@@ -16,4 +16,11 @@ describe('chart-support-matrix (Phase 05 scaffold)', () => {
   it('coerces scatter to line', () => {
     expect(supportRow('scatterChart')).toMatchObject({ status: 'coerced', navType: 'line' })
   })
+
+  it('classifies polarAreaChart as native before broad area coercion', () => {
+    expect(supportRow('polarAreaChart')).toEqual({
+      status: 'native',
+      navType: 'polarArea',
+    })
+  })
 })

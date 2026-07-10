@@ -128,6 +128,7 @@ describe('PPTX import route', () => {
       const poll = await waitForJob(app, res.body.jobId)
       expect(poll.body.status).toBe('done')
       expect(poll.body.result.presentationId).toBe('pres-bound-1')
+      expect(poll.body.result.presentation).toBeUndefined()
       expect(poll.body.result.stats.parser).toBe('pptxtojson')
       expect(poll.body.result.warnings).toHaveLength(1)
       expect(createdPayload.artifact.sha256).toBe(expectedSha)
@@ -249,6 +250,114 @@ describe('PPTX import route', () => {
     }
   })
 
+  it('fails an import at the overall deadline even when the importer ignores abort', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-deadline-'))
+    const file = path.join(dir, 'valid.pptx')
+    let finishImport
+    try {
+      await writeMinimalPptx(file)
+      const app = express()
+      app.use('/api/pptx', createPptxImportRouter({
+        jobManager,
+        ...mockAtomicDeps(),
+        importTimeoutMs: 10,
+        importer: () => new Promise((resolve) => {
+          finishImport = () => resolve({ presentation: { slides: [] }, stats: {}, warnings: [] })
+        }),
+      }))
+
+      const res = await request(app).post('/api/pptx/import').attach('file', file)
+      const poll = await waitForJob(app, res.body.jobId, 'failed')
+      expect(poll.body).toMatchObject({
+        status: 'failed',
+        error: 'PPTX import deadline exceeded',
+      })
+      expect((await request(app).post('/api/pptx/import')).status).toBe(429)
+
+      finishImport()
+      await vi.waitFor(() => expect(jobManager.getJob(res.body.jobId)?.operationPending).toBe(false))
+      expect((await request(app).post('/api/pptx/import')).status).toBe(400)
+    } finally {
+      finishImport?.()
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('fails a hanging original persistence stage and deletes a late artifact', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-persist-deadline-'))
+    const file = path.join(dir, 'valid.pptx')
+    let finishPersist
+    let finishDelete
+    const deleteOriginal = vi.fn(() => new Promise((resolve) => {
+      finishDelete = () => resolve(true)
+    }))
+    try {
+      await writeMinimalPptx(file)
+      const app = express()
+      app.use('/api/pptx', createPptxImportRouter({
+        ...mockAtomicDeps({ deleteOriginal }),
+        importTimeoutMs: 10,
+        importer: async () => ({ presentation: { slides: [] }, stats: {}, warnings: [] }),
+        persistOriginal: () => new Promise((resolve) => {
+          finishPersist = () => resolve({ id: 'late-original', sha256: 'b'.repeat(64) })
+        }),
+      }))
+
+      const res = await request(app).post('/api/pptx/import').attach('file', file)
+      const poll = await waitForJob(app, res.body.jobId, 'failed')
+      expect(poll.body.error).toBe('PPTX import deadline exceeded')
+
+      finishPersist()
+      await vi.waitFor(() => expect(deleteOriginal).toHaveBeenCalledWith('late-original', {}))
+      expect((await request(app).post('/api/pptx/import')).status).toBe(429)
+      finishDelete()
+      await vi.waitFor(async () => {
+        expect((await request(app).post('/api/pptx/import')).status).toBe(400)
+      })
+    } finally {
+      finishPersist?.()
+      finishDelete?.()
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('fails a hanging presentation create stage and deletes a late presentation', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-create-deadline-'))
+    const file = path.join(dir, 'valid.pptx')
+    let finishCreate
+    let finishOriginalDelete
+    const deletePresentation = vi.fn(async () => true)
+    const deleteOriginal = vi.fn(() => new Promise((resolve) => {
+      finishOriginalDelete = () => resolve(true)
+    }))
+    try {
+      await writeMinimalPptx(file)
+      const app = express()
+      app.use('/api/pptx', createPptxImportRouter({
+        ...mockAtomicDeps({ deleteOriginal }),
+        deletePresentation,
+        importTimeoutMs: 10,
+        importer: async () => ({ presentation: { slides: [] }, stats: {}, warnings: [] }),
+        createPresentation: () => new Promise((resolve) => {
+          finishCreate = () => resolve({ id: 'late-presentation' })
+        }),
+      }))
+
+      const res = await request(app).post('/api/pptx/import').attach('file', file)
+      const poll = await waitForJob(app, res.body.jobId, 'failed')
+      expect(poll.body.error).toBe('PPTX import deadline exceeded')
+      expect(deleteOriginal).toHaveBeenCalled()
+
+      finishCreate()
+      await vi.waitFor(() => expect(deletePresentation).toHaveBeenCalledWith('late-presentation'))
+      finishOriginalDelete()
+    } finally {
+      finishCreate?.()
+      finishOriginalDelete?.()
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
   it('rejects a concurrent import before requiring multipart upload parsing', async () => {
     const app = express()
     const activeJobId = jobManager.createJob()
@@ -310,6 +419,7 @@ describe('PPTX import route', () => {
       finishImport()
       const cancelled = await waitForJob(app, first.body.jobId, 'cancelled')
       expect(cancelled.body.status).toBe('cancelled')
+      await vi.waitFor(() => expect(jobManager.getJob(first.body.jobId)?.operationPending).toBe(false))
 
       const secondAfterSettled = await request(app).post('/api/pptx/import')
       expect(secondAfterSettled.status).toBe(400)

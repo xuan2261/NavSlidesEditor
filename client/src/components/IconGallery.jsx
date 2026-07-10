@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import RibbonFloatingOverlay from './ribbon/ribbon-floating-overlay'
-import { Button } from './ui'
+import { Button, Input } from './ui'
 
 const INITIAL_LIMIT = 240
 const SEARCH_LIMIT = 600
@@ -93,14 +93,14 @@ export default function IconGallery({ open, anchorRef, onSelect, onClose, iconPa
         )}
       </div>
 
-      <input
+      <Input
         ref={searchRef}
         type="text"
         placeholder="Search icons (e.g. arrow, heart, check)..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         onKeyDown={(e) => e.stopPropagation()}
-        className="prop-input mb-2 text-xs w-full"
+        className="mb-2 w-full text-xs"
         aria-label="Search icons"
         data-testid="icon-gallery-search"
       />

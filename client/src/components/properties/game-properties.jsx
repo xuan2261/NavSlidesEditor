@@ -1,9 +1,36 @@
 import React, { useState } from 'react'
 import { ColorPicker } from '../ui'
-import { GAME_TYPES } from '../../constants/game-element-types-constants'
+import {
+  GAME_TYPES,
+  GAME_TYPE_DEFAULTS,
+} from '../../constants/game-element-types-constants'
 import { GamePropertiesQuestionEditor } from './game-properties-question-editor'
 
-const TABS = ['Content', 'Display', 'Scoring']
+export const GAME_PROPERTY_CAPABILITIES = {
+  'name-picker': { confetti: true },
+  'hot-potato': { questions: true },
+  jeopardy: { teams: true, timer: true, timerVisibility: true },
+  'four-corners': { timer: true, timerVisibility: true },
+  'relay-race': { timer: true },
+  'trivia-champ': {},
+  scattergories: {},
+  poll: {},
+  'word-cloud': {},
+  matching: {},
+}
+
+const CONTROL_INPUT_CLASS =
+  'w-full min-h-8 rounded-md border border-border bg-card px-2 py-1 text-xs text-text-primary focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/25'
+
+export function resolveGameConfig(element, gameType) {
+  const defaults = GAME_TYPE_DEFAULTS[gameType] || {}
+  const flat = Object.fromEntries(
+    Object.keys(defaults)
+      .filter((key) => element[key] !== undefined)
+      .map((key) => [key, element[key]])
+  )
+  return { ...defaults, ...flat, ...(element[gameType] || {}) }
+}
 
 export default function GameProperties({ element, onUpdate, onDelete }) {
   const [activeTab, setActiveTab] = useState('Content')
@@ -11,14 +38,27 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
   const [showQuestionEditor, setShowQuestionEditor] = useState(false)
 
   const gt = element.gameType || 'name-picker'
-  const gameConfig = element[gt] || {}
+  const gameConfig = resolveGameConfig(element, gt)
+  const capabilities = GAME_PROPERTY_CAPABILITIES[gt] || {}
+  const tabs = ['Content', 'Display']
 
-  const handleUpdate = (changes) => onUpdate(changes)
+  const handleUpdate = (changes) => {
+    const subtypeChanges = changes?.[gt]
+    if (subtypeChanges && typeof subtypeChanges === 'object') {
+      onUpdate({ ...subtypeChanges, [gt]: subtypeChanges })
+      return
+    }
+    onUpdate(changes)
+  }
 
   const handleGameTypeChange = (e) => {
     const newType = e.target.value
     const typeDefaults = getGameTypeDefaults(newType)
-    handleUpdate({ gameType: newType, ...typeDefaults })
+    const persistedConfig =
+      element[newType] && typeof element[newType] === 'object' ? element[newType] : {}
+    const nextConfig = { ...typeDefaults, ...persistedConfig }
+    setActiveTab('Content')
+    onUpdate({ gameType: newType, ...nextConfig, [newType]: nextConfig })
   }
 
   const handleItemsChange = (e) => {
@@ -38,20 +78,14 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
   const handleColorChange = (key) => (e) => handleUpdate({ [key]: e.target.value })
 
   const handleConfettiToggle = (e) => handleUpdate({ showConfetti: e.target.checked })
-  const handleSoundToggle = (e) => handleUpdate({ showSoundEffects: e.target.checked })
   const handleTimerToggle = (e) => handleUpdate({ showTimer: e.target.checked })
-  const handleLeaderboardToggle = (e) => handleUpdate({ showLeaderboard: e.target.checked })
-
-  const handlePointsChange = (e) => handleUpdate({ pointsPerCorrect: parseInt(e.target.value, 10) || 10 })
-  const handleBonusChange = (e) => handleUpdate({ bonusMultiplier: parseFloat(e.target.value) || 1 })
-  const handleLeaderboardTopNChange = (e) => handleUpdate({ leaderboardTopN: parseInt(e.target.value, 10) || 5 })
-
   return (
     <div className="mb-2.5">
       <div className="flex items-center justify-between mb-2">
         <div className="text-[11px] text-text-muted font-semibold">Game Settings</div>
         <button
           onClick={onDelete}
+          aria-label="Delete game"
           className="text-[10px] text-red-400 hover:text-red-300 px-1.5 py-0.5 rounded border border-red-400/30 hover:border-red-400 transition-colors"
         >
           Delete
@@ -63,7 +97,7 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
         <select
           value={gt}
           onChange={handleGameTypeChange}
-          className="prop-input px-1.5 py-1 w-full"
+          className={`${CONTROL_INPUT_CLASS} px-1.5 py-1`}
         >
           {GAME_TYPES.all.map(type => (
             <option key={type} value={type}>{GAME_TYPES[type] || type}</option>
@@ -72,7 +106,7 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
       </div>
 
       <div className="flex border-b border-border mb-2">
-        {TABS.map(tab => (
+        {tabs.map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -91,6 +125,7 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
         {activeTab === 'Content' && (
           <ContentTab
             gt={gt} element={element} gameConfig={gameConfig}
+            capabilities={capabilities}
             onUpdate={handleUpdate} onItemsChange={handleItemsChange}
             onPickerModeChange={handlePickerModeChange} onTimerChange={handleTimerChange}
             onOpenQuestionEditor={(question) => { setEditingQuestion(question); setShowQuestionEditor(true) }}
@@ -99,15 +134,9 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
         {activeTab === 'Display' && (
           <DisplayTab
             element={element} onColorChange={handleColorChange}
-            onConfettiToggle={handleConfettiToggle} onSoundToggle={handleSoundToggle}
+            capabilities={capabilities}
+            onConfettiToggle={handleConfettiToggle}
             onTimerToggle={handleTimerToggle}
-          />
-        )}
-        {activeTab === 'Scoring' && (
-          <ScoringTab
-            element={element} onPointsChange={handlePointsChange}
-            onBonusChange={handleBonusChange} onLeaderboardToggle={handleLeaderboardToggle}
-            onLeaderboardTopNChange={handleLeaderboardTopNChange}
           />
         )}
       </div>
@@ -116,7 +145,7 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
         isOpen={showQuestionEditor}
         question={editingQuestion}
         onSave={(saved) => {
-          const questions = [...(gameConfig.questions || [])]
+          const questions = Array.isArray(gameConfig.questions) ? [...gameConfig.questions] : []
           const idx = questions.findIndex(q => q.id === saved.id)
           if (idx >= 0) {
             questions[idx] = saved
@@ -133,9 +162,9 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
   )
 }
 
-function ContentTab({ gt, _element, gameConfig, onUpdate, onItemsChange, onPickerModeChange, onTimerChange, onOpenQuestionEditor }) {
-  const hasTeams = gt === 'jeopardy'
-  const hasQuestions = ['hot-potato', 'jeopardy', 'relay-race', 'trivia-champ'].includes(gt)
+function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsChange, onPickerModeChange, onTimerChange, onOpenQuestionEditor }) {
+  const hasTeams = capabilities.teams
+  const hasQuestions = capabilities.questions
   const hasNameList = gt === 'name-picker'
   const isPoll = gt === 'poll'
   const isWordCloud = gt === 'word-cloud'
@@ -226,13 +255,15 @@ function ContentTab({ gt, _element, gameConfig, onUpdate, onItemsChange, onPicke
                 <span className="shrink-0 text-text-muted">{q.points ?? 10}pt</span>
                 <button
                   onClick={() => onOpenQuestionEditor(q)}
-                  className="shrink-0 text-text-muted hover:text-accent opacity-0 group-hover:opacity-100 transition-opacity text-[10px]"
+                  aria-label={`Edit question ${i + 1}`}
+                  className="shrink-0 text-text-muted hover:text-accent transition-colors text-[10px]"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => onUpdate({ [gt]: { ...gameConfig, questions: gameConfig.questions.filter(x => (x.id || i) !== (q.id || i)) } })}
-                  className="shrink-0 text-text-muted hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-[10px]"
+                  aria-label={`Delete question ${i + 1}`}
+                  className="shrink-0 text-text-muted hover:text-red-400 transition-colors text-[10px]"
                 >
                   X
                 </button>
@@ -280,7 +311,7 @@ function ContentTab({ gt, _element, gameConfig, onUpdate, onItemsChange, onPicke
               {(gameConfig.options || []).map((option, i) => (
                 <div key={option.id || i} className="flex gap-1">
                   <input
-                    className="prop-input flex-1 px-1.5 py-1 text-[11px]"
+                    className={`${CONTROL_INPUT_CLASS} flex-1 px-1.5 py-1 text-[11px]`}
                     value={option.text || ''}
                     onChange={(e) => {
                       const options = [...(gameConfig.options || [])]
@@ -371,7 +402,7 @@ function ContentTab({ gt, _element, gameConfig, onUpdate, onItemsChange, onPicke
                 <div key={pair.promptId || i} className="grid grid-cols-[1fr_1fr_auto] gap-1">
                   <input
                     aria-label={`Pair ${i + 1} prompt`}
-                    className="prop-input px-1.5 py-1 text-[11px]"
+                    className={`${CONTROL_INPUT_CLASS} px-1.5 py-1 text-[11px]`}
                     value={pair.prompt || ''}
                     onChange={(e) => {
                       const pairs = [...(gameConfig.pairs || [])]
@@ -382,7 +413,7 @@ function ContentTab({ gt, _element, gameConfig, onUpdate, onItemsChange, onPicke
                   />
                   <input
                     aria-label={`Pair ${i + 1} target`}
-                    className="prop-input px-1.5 py-1 text-[11px]"
+                    className={`${CONTROL_INPUT_CLASS} px-1.5 py-1 text-[11px]`}
                     value={pair.target || ''}
                     onChange={(e) => {
                       const pairs = [...(gameConfig.pairs || [])]
@@ -410,7 +441,7 @@ function ContentTab({ gt, _element, gameConfig, onUpdate, onItemsChange, onPicke
         </div>
       )}
 
-      <div>
+      {capabilities.timer && <div>
         <div className="text-[11px] text-text-muted mb-0.5">
           Timer: <span className="text-text-primary font-medium">{gameConfig.timerDuration || 30}s</span>
         </div>
@@ -423,12 +454,12 @@ function ContentTab({ gt, _element, gameConfig, onUpdate, onItemsChange, onPicke
         <div className="flex justify-between text-[9px] text-text-muted mt-0.5">
           <span>5s</span><span>120s</span>
         </div>
-      </div>
+      </div>}
     </div>
   )
 }
 
-function DisplayTab({ element, onColorChange, onConfettiToggle, onSoundToggle, onTimerToggle }) {
+function DisplayTab({ element, capabilities, onColorChange, onConfettiToggle, onTimerToggle }) {
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
@@ -449,12 +480,11 @@ function DisplayTab({ element, onColorChange, onConfettiToggle, onSoundToggle, o
           />
         </div>
       </div>
-      <div className="space-y-1">
+      {(capabilities.confetti || capabilities.timerVisibility) && <div className="space-y-1">
         {[
-          ['showSoundEffects', element.showSoundEffects !== false, onSoundToggle, 'Sound effects'],
-          ['showConfetti', !!element.showConfetti, onConfettiToggle, 'Confetti animation'],
-          ['showTimer', element.showTimer !== false, onTimerToggle, 'Show timer'],
-        ].map(([key, checked, onChange, label]) => (
+          capabilities.confetti && ['showConfetti', element.showConfetti !== false, onConfettiToggle, 'Confetti animation'],
+          capabilities.timerVisibility && ['showTimer', element.showTimer !== false, onTimerToggle, 'Show timer'],
+        ].filter(Boolean).map(([key, checked, onChange, label]) => (
           <label key={key} className="flex items-center gap-1.5 cursor-pointer">
             <input
               type="checkbox" checked={checked} onChange={onChange}
@@ -463,53 +493,7 @@ function DisplayTab({ element, onColorChange, onConfettiToggle, onSoundToggle, o
             <span className="text-[11px] text-text-primary">{label}</span>
           </label>
         ))}
-      </div>
-    </div>
-  )
-}
-
-function ScoringTab({ element, onPointsChange, onBonusChange, onLeaderboardToggle, onLeaderboardTopNChange }) {
-  return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <div className="text-[11px] text-text-muted mb-0.5">Points per correct</div>
-          <input
-            type="number" min="1" max="100"
-            value={element.pointsPerCorrect || 10}
-            onChange={onPointsChange}
-            className="prop-input w-full px-1.5 py-1 text-[11px]"
-          />
-        </div>
-        <div>
-          <div className="text-[11px] text-text-muted mb-0.5">Bonus multiplier</div>
-          <input
-            type="number" min="1" max="5" step="0.5"
-            value={element.bonusMultiplier || 1}
-            onChange={onBonusChange}
-            className="prop-input w-full px-1.5 py-1 text-[11px]"
-          />
-        </div>
-      </div>
-      <div>
-        <div className="text-[11px] text-text-muted mb-0.5">
-          Leaderboard: Top{' '}
-          <input
-            type="number" min="1" max="20"
-            value={element.leaderboardTopN || 5}
-            onChange={onLeaderboardTopNChange}
-            className="prop-input w-10 px-1 py-0.5 text-[11px] text-center"
-          />
-        </div>
-      </div>
-      <label className="flex items-center gap-1.5 cursor-pointer">
-        <input
-          type="checkbox" checked={element.showLeaderboard !== false}
-          onChange={onLeaderboardToggle}
-          className="w-3.5 h-3.5 accent-accent rounded"
-        />
-        <span className="text-[11px] text-text-primary">Show leaderboard</span>
-      </label>
+      </div>}
     </div>
   )
 }

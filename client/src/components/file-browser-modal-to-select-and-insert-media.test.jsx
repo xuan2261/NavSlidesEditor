@@ -1,10 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react'
 import FileBrowserModal from './file-browser-modal-to-select-and-insert-media.jsx'
-
-vi.mock('../utils/app-feedback', () => ({
-  confirmUser: vi.fn((message, onConfirm) => onConfirm()),
-}))
+import { AppFeedbackProvider } from './ui/AppFeedbackProvider.jsx'
 
 const mockFiles = [
   { filename: 'photo.jpg', url: '/uploads/pres-1/photo.jpg', size: 102400, type: 'image/jpeg' },
@@ -85,12 +82,22 @@ describe('FileBrowserModal', () => {
     globalThis.fetch = vi.fn()
       .mockResolvedValueOnce({ json: () => Promise.resolve(mockFiles) })
       .mockResolvedValueOnce({ ok: true })
-    render(<FileBrowserModal presentationId="pres-1" onInsert={vi.fn()} onClose={vi.fn()} />)
+    render(
+      <>
+        <AppFeedbackProvider />
+        <FileBrowserModal presentationId="pres-1" onInsert={vi.fn()} onClose={vi.fn()} />
+      </>
+    )
     await waitFor(() => {
       expect(screen.getByText('photo.jpg')).toBeTruthy()
     })
 
     fireEvent.click(screen.getAllByText('Delete')[0])
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Delete uploaded file' })).getByRole('button', {
+        name: 'Delete',
+      })
+    )
 
     await waitFor(() => {
       expect(globalThis.fetch).toHaveBeenCalledWith(
@@ -99,6 +106,26 @@ describe('FileBrowserModal', () => {
       )
       expect(screen.queryByText('photo.jpg')).toBeNull()
     })
+  })
+
+  it('keeps the file browser open when Escape dismisses its nested confirmation', async () => {
+    const onClose = vi.fn()
+    render(
+      <>
+        <AppFeedbackProvider />
+        <FileBrowserModal presentationId="pres-1" onInsert={vi.fn()} onClose={onClose} />
+      </>
+    )
+    await screen.findByText('photo.jpg')
+
+    fireEvent.click(screen.getAllByText('Delete')[0])
+    expect(screen.getByRole('dialog', { name: 'Delete uploaded file' })).toBeTruthy()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(screen.queryByRole('dialog', { name: 'Delete uploaded file' })).toBeNull()
+    expect(screen.getByRole('dialog', { name: 'File Browser' })).toBeTruthy()
+    expect(onClose).not.toHaveBeenCalled()
   })
 
   it('handles empty file list', async () => {

@@ -49,6 +49,18 @@ async function chartZip() {
   return zip
 }
 
+async function unsupportedChartZip() {
+  const zip = await chartZip()
+  zip.file(
+    'ppt/charts/chart1.xml',
+    BAR_XML.replace(
+      '</c:plotArea>',
+      '<c:lineChart><c:ser><c:val><c:numLit><c:pt idx="0"><c:v>1</c:v></c:pt></c:numLit></c:val></c:ser></c:lineChart></c:plotArea>'
+    )
+  )
+  return zip
+}
+
 describe('injectChartsFromSceneGraph (T5.2-ish)', () => {
   it('injects editable chart element from OOXML when none mapped', async () => {
     const zip = await chartZip()
@@ -129,6 +141,28 @@ describe('injectChartsFromSceneGraph (T5.2-ish)', () => {
     expect(chart.y).toBe(100)
     expect(chart.width).toBe(200)
     expect(chart.height).toBe(150)
+  })
+
+  it('throws instead of warning and dropping an unsupported chart in strict mode', async () => {
+    const zip = await unsupportedChartZip()
+    const graph = await buildOoxmlSceneGraph(zip)
+    const warnings = []
+    await expect(
+      injectChartsFromSceneGraph({
+        elements: [],
+        graphSlide: graph.slides[0],
+        zip,
+        slideIndex: 0,
+        stats: {},
+        warnings,
+        strict: true,
+      })
+    ).rejects.toMatchObject({
+      type: 'import-failed',
+      code: 'chart-unsupported-strict',
+      chartType: 'comboChart',
+    })
+    expect(warnings).toEqual([])
   })
 })
 

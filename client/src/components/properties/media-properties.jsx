@@ -96,19 +96,12 @@ export default function MediaProperties({ element, onUpdate }) {
         </>
       )}
       <div className="flex flex-col gap-1">
-        {(isVideo
-          ? [
-              ['controls', 'Show controls'],
-              ['autoplay', 'Autoplay'],
-              ['loop', 'Loop'],
-              ['muted', 'Muted'],
-            ]
-          : [
-              ['autoplay', 'Autoplay'],
-              ['loop', 'Loop'],
-              ['muted', 'Muted'],
-            ]
-        ).map(([key, label]) => (
+        {[
+          ['controls', 'Show controls'],
+          ['autoplay', 'Autoplay'],
+          ['loop', 'Loop'],
+          ['muted', 'Muted'],
+        ].map(([key, label]) => (
           <label
             key={key}
             className="flex items-center gap-1.5 cursor-pointer"

@@ -4,8 +4,12 @@ import manager from './pptx-import-job-manager.js'
 function responseSink() {
   return {
     chunks: [],
+    ended: false,
     write(chunk) {
       this.chunks.push(chunk)
+    },
+    end() {
+      this.ended = true
     },
   }
 }
@@ -42,16 +46,14 @@ describe('pptx import job manager', () => {
     expect(b.chunks.join('')).toContain('event: done')
   })
 
-  it('keeps terminal jobs while clients are attached and cleans after detach TTL', () => {
+  it('closes terminal SSE clients so they cannot pin jobs indefinitely', () => {
     const jobId = manager.createJob()
     const res = responseSink()
 
     manager.attachSseClient(jobId, res)
     manager.completeJob(jobId, { ok: true })
-    vi.advanceTimersByTime(manager.JOB_TTL_MS + 1)
-    expect(manager.getJob(jobId)).toBeTruthy()
-
-    manager.detachSseClient(jobId, res)
+    expect(res.ended).toBe(true)
+    expect(manager.getJob(jobId).sseClients.size).toBe(0)
     vi.advanceTimersByTime(manager.JOB_TTL_MS + 1)
     expect(manager.getJob(jobId)).toBeNull()
   })
@@ -78,6 +80,18 @@ describe('pptx import job manager', () => {
     expect(() => manager.createJob()).toThrow('import-in-progress')
 
     manager.completeCancellation(jobId)
+    expect(manager.createJob()).toMatch(/^[0-9a-f-]{36}$/i)
+  })
+
+  it('keeps terminal jobs counted while their background operation is pending', () => {
+    const jobId = manager.createJob()
+    manager.holdOperation(jobId)
+    manager.failJob(jobId, 'deadline exceeded')
+
+    expect(manager.getJob(jobId)).toMatchObject({ status: 'failed', operationPending: true })
+    expect(() => manager.createJob()).toThrow('import-in-progress')
+
+    manager.settleOperation(jobId)
     expect(manager.createJob()).toMatch(/^[0-9a-f-]{36}$/i)
   })
 })

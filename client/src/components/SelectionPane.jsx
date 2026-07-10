@@ -71,6 +71,11 @@ export default function SelectionPane({
     setRenameValue(el.name || el.type || 'Element')
   }
 
+  const cancelRename = () => {
+    setRenamingId(null)
+    setRenameValue('')
+  }
+
   const commitRename = () => {
     if (renamingId && renameValue.trim()) {
       onRename(renamingId, renameValue.trim())
@@ -79,7 +84,42 @@ export default function SelectionPane({
     setRenameValue('')
   }
 
+  const handleItemKeyDown = (e, el, idx) => {
+    if (e.target !== e.currentTarget) return
+
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleItemClick(e, el)
+      return
+    }
+    if (e.key === 'F2') {
+      e.preventDefault()
+      handleDoubleClick(el)
+      return
+    }
+    if (e.key === 'Escape' && renamingId === el.id) {
+      e.preventDefault()
+      cancelRename()
+      return
+    }
+    if (
+      e.altKey &&
+      !el.locked &&
+      (e.key === 'ArrowUp' || e.key === 'ArrowDown')
+    ) {
+      const toIdx = idx + (e.key === 'ArrowUp' ? -1 : 1)
+      if (toIdx >= 0 && toIdx < elements.length) {
+        e.preventDefault()
+        onReorder?.(idx, toIdx)
+      }
+    }
+  }
+
   const handleDragStart = (e, idx) => {
+    if (elements[idx]?.locked) {
+      e.preventDefault()
+      return
+    }
     dragItem.current = idx
     e.dataTransfer.effectAllowed = 'move'
   }
@@ -111,7 +151,7 @@ export default function SelectionPane({
   }
 
   return (
-    <div className="selection-pane select-none">
+    <div className="selection-pane select-none" role="list" aria-label="Slide layers">
       {elements.length === 0 && (
         <div className="px-1.5 py-2 text-[11px] italic text-text-muted">
           No elements on this slide
@@ -128,13 +168,18 @@ export default function SelectionPane({
         return (
           <div
             key={el.id}
+            role="listitem"
+            tabIndex={0}
+            aria-label={`${label}, ${typeLabel}${isLocked ? ', locked' : ''}${isHidden ? ', hidden' : ''}`}
+            aria-selected={isSelected}
             className={`selection-pane-item flex items-center gap-1 px-1 py-[3px] rounded text-xs cursor-pointer transition-colors ${isSelected ? 'bg-accent/15 border-l-2 border-accent' : 'bg-transparent border-l-2 border-transparent'} ${isHidden ? 'opacity-45' : 'opacity-100'}`}
-            draggable
+            draggable={!isLocked}
             onDragStart={(e) => handleDragStart(e, idx)}
             onDragOver={(e) => handleDragOver(e, idx)}
             onDrop={(e) => handleDrop(e, idx)}
             onDragEnd={handleDragEnd}
             onClick={(e) => handleItemClick(e, el)}
+            onKeyDown={(e) => handleItemKeyDown(e, el, idx)}
             onDoubleClick={() => handleDoubleClick(el)}
             title={`${label} — ${typeLabel}${isLocked ? ' (locked)' : ''}${isHidden ? ' (hidden)' : ''}`}
           >
@@ -154,12 +199,11 @@ export default function SelectionPane({
                 onBlur={commitRename}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') commitRename()
-                  if (e.key === 'Escape') {
-                    setRenamingId(null)
-                  }
+                  if (e.key === 'Escape') cancelRename()
                   e.stopPropagation()
                 }}
                 onClick={(e) => e.stopPropagation()}
+                aria-label={`Rename ${label}`}
                 className="min-w-0 flex-1 rounded-sm border border-accent bg-input px-[3px] text-xs text-text-primary"
               />
             ) : (

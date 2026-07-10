@@ -25,6 +25,10 @@ describe('mapChartType', () => {
     expect(mapChartType('stackedBar')).toBe('bar')
     expect(mapChartType('bar')).toBe('bar')
   })
+
+  it('keeps polarAreaChart native instead of broad area coercion', () => {
+    expect(mapChartType('polarAreaChart')).toBe('polarArea')
+  })
 })
 
 describe('mapChart', () => {

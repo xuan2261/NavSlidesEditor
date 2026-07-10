@@ -30,14 +30,16 @@ describe('useAnnotationSync', () => {
       })
     )
 
-    expect(mockSocket.on).toHaveBeenCalledTimes(4)
+    expect(mockSocket.on).toHaveBeenCalledTimes(6)
     expect(mockSocket.on).toHaveBeenCalledWith('annotation:add', expect.any(Function))
     expect(mockSocket.on).toHaveBeenCalledWith('annotation:removed', expect.any(Function))
     expect(mockSocket.on).toHaveBeenCalledWith('annotation:cleared', expect.any(Function))
     expect(mockSocket.on).toHaveBeenCalledWith('annotations:sync', expect.any(Function))
+    expect(mockSocket.on).toHaveBeenCalledWith('navigate', expect.any(Function))
+    expect(mockSocket.on).toHaveBeenCalledWith('sync-state', expect.any(Function))
 
     unmount()
-    expect(mockSocket.off).toHaveBeenCalledTimes(4)
+    expect(mockSocket.off).toHaveBeenCalledTimes(6)
   })
 
   it('calls onAnnotationAdd when annotation:add matches current slide', () => {
@@ -56,7 +58,7 @@ describe('useAnnotationSync', () => {
     mockSocket._trigger('annotation:add', { slideIndex: 0, annotation })
 
     expect(onAdd).toHaveBeenCalledTimes(1)
-    expect(onAdd).toHaveBeenCalledWith(annotation)
+    expect(onAdd).toHaveBeenCalledWith(annotation, 0)
   })
 
   it('ignores annotation:add for a different slide', () => {
@@ -89,7 +91,7 @@ describe('useAnnotationSync', () => {
 
     mockSocket._trigger('annotation:removed', { slideIndex: 0, annotationId: 'a1' })
     expect(onRemove).toHaveBeenCalledTimes(1)
-    expect(onRemove).toHaveBeenCalledWith('a1')
+    expect(onRemove).toHaveBeenCalledWith('a1', 0)
   })
 
   it('ignores annotation:removed for a different slide', () => {
@@ -165,8 +167,8 @@ describe('useAnnotationSync', () => {
 
     // Only slide 0's annotations should be added (2 calls)
     expect(onAdd).toHaveBeenCalledTimes(2)
-    expect(onAdd).toHaveBeenNthCalledWith(1, { id: 'a1', d: 'M0 0', color: '#FF0000' })
-    expect(onAdd).toHaveBeenNthCalledWith(2, { id: 'a2', d: 'M1 1 L2 2', color: '#00FF00' })
+    expect(onAdd).toHaveBeenNthCalledWith(1, { id: 'a1', d: 'M0 0', color: '#FF0000' }, 0)
+    expect(onAdd).toHaveBeenNthCalledWith(2, { id: 'a2', d: 'M1 1 L2 2', color: '#00FF00' }, 0)
   })
 
   it('replaces strokes from a slide-scoped annotations:sync on navigate (I-R4.1)', () => {
@@ -189,8 +191,9 @@ describe('useAnnotationSync', () => {
     })
 
     expect(onClear).toHaveBeenCalledTimes(1)
+    expect(onClear).toHaveBeenCalledWith(1)
     expect(onAdd).toHaveBeenCalledTimes(1)
-    expect(onAdd).toHaveBeenCalledWith({ id: 'b1', d: 'M1 1', color: '#00FF00' })
+    expect(onAdd).toHaveBeenCalledWith({ id: 'b1', d: 'M1 1', color: '#00FF00' }, 1)
   })
 
   it('ignores a slide-scoped annotations:sync for a different slide', () => {
@@ -209,6 +212,53 @@ describe('useAnnotationSync', () => {
     mockSocket._trigger('annotations:sync', {
       slideIndex: 2,
       annotations: [{ id: 'c1', d: 'M2 2' }],
+    })
+
+    expect(onClear).not.toHaveBeenCalled()
+    expect(onAdd).not.toHaveBeenCalled()
+  })
+
+  it('uses the synchronously current slide when navigate and sync arrive back-to-back', () => {
+    const onAdd = vi.fn()
+    const onClear = vi.fn()
+    renderHook(() =>
+      useAnnotationSync({
+        socket: mockSocket,
+        slideIndex: 0,
+        onAnnotationAdd: onAdd,
+        onAnnotationRemove: vi.fn(),
+        onAnnotationsClear: onClear,
+      })
+    )
+
+    mockSocket._trigger('navigate', { slideIndex: 1 })
+    mockSocket._trigger('annotations:sync', {
+      slideIndex: 1,
+      annotations: [{ id: 'target-slide', d: 'M1 1' }],
+    })
+
+    expect(onClear).toHaveBeenCalledTimes(1)
+    expect(onClear).toHaveBeenCalledWith(1)
+    expect(onAdd).toHaveBeenCalledWith({ id: 'target-slide', d: 'M1 1' }, 1)
+  })
+
+  it('does not display a scoped sync for a slide that is no longer current', () => {
+    const onAdd = vi.fn()
+    const onClear = vi.fn()
+    renderHook(() =>
+      useAnnotationSync({
+        socket: mockSocket,
+        slideIndex: 0,
+        onAnnotationAdd: onAdd,
+        onAnnotationRemove: vi.fn(),
+        onAnnotationsClear: onClear,
+      })
+    )
+
+    mockSocket._trigger('sync-state', { slideIndex: 2 })
+    mockSocket._trigger('annotations:sync', {
+      slideIndex: 1,
+      annotations: [{ id: 'stale-slide', d: 'M1 1' }],
     })
 
     expect(onClear).not.toHaveBeenCalled()
@@ -250,7 +300,7 @@ describe('useAnnotationSync', () => {
 
     // Should only be added once
     expect(onAdd).toHaveBeenCalledTimes(1)
-    expect(onAdd).toHaveBeenCalledWith(annotation)
+    expect(onAdd).toHaveBeenCalledWith(annotation, 0)
   })
 
   it('clears seen IDs on annotation:cleared so re-adds are allowed', () => {
@@ -319,6 +369,6 @@ describe('useAnnotationSync', () => {
     expect(onAdd).toHaveBeenCalledTimes(1)
 
     unmount()
-    expect(mockSocket.off).toHaveBeenCalledTimes(4)
+    expect(mockSocket.off).toHaveBeenCalledTimes(6)
   })
 })

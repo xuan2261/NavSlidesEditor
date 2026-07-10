@@ -11,6 +11,16 @@ describe('element-renderers safety behavior', () => {
     zIndex: 1,
   }
 
+  it('[cap:element.audio depth:export] honors disabled player controls', () => {
+    const html = renderElement(
+      { ...base, type: 'audio', src: '/uploads/audio.mp3', controls: false },
+      {},
+      {}
+    )
+    expect(html).toContain('<audio')
+    expect(html).not.toMatch(/<audio[^>]*\scontrols(?:\s|>)/)
+  })
+
   it('[cap:element.text depth:export] sanitizes text element HTML and applies typography', () => {
     const html = renderElement(
       {

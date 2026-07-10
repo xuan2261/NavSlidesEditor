@@ -35,6 +35,7 @@ export default function SlideThumbnail({ id, bgProp, fallback, className = '' })
         }}
         scrolling="no"
         tabIndex={-1}
+        aria-hidden="true"
         title={`Thumbnail for ${id}`}
       />
       {fallback && (

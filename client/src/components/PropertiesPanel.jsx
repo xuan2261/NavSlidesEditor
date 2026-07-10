@@ -16,7 +16,7 @@ import { MousePointer2 } from 'lucide-react'
  * Type-specific property panel router.
  * Renders the correct sub-panel based on element.type.
  */
-function ElementTypeProperties({ element, onUpdate, onEditHtml, onEditCode, onEditLatex, elements, selectedElementIds }) {
+function ElementTypeProperties({ element, onUpdate, onDelete, onEditHtml, onEditCode, onEditLatex, elements, selectedElementIds }) {
   switch (element.type) {
     case 'shape':
     case 'line':
@@ -50,6 +50,7 @@ function ElementTypeProperties({ element, onUpdate, onEditHtml, onEditCode, onEd
         <MiscProperties
           element={element}
           onUpdate={onUpdate}
+          onDelete={onDelete}
           onEditHtml={onEditHtml}
           onEditLatex={onEditLatex}
         />
@@ -63,6 +64,7 @@ export default function PropertiesPanel({
   onUpdateSlide,
   onUpdateElement,
   onUpdateElements,
+  onReorderElements,
   onDeleteElement,
   onBringForward,
   onSendBackward,
@@ -153,7 +155,9 @@ export default function PropertiesPanel({
                 const [moved] = els.splice(fromIdx, 1)
                 els.splice(toIdx, 0, moved)
                 const updates = els.map((el, i) => ({ id: el.id, zIndex: i }))
-                if (typeof onUpdateElements === 'function') {
+                if (typeof onReorderElements === 'function') {
+                  onReorderElements(updates)
+                } else if (typeof onUpdateElements === 'function') {
                   onUpdateElements(updates)
                 } else {
                   updates.forEach(({ id, zIndex }) => onUpdateElement(id, { zIndex }))
@@ -166,6 +170,7 @@ export default function PropertiesPanel({
           <ElementTypeProperties
             element={selectedElement}
             onUpdate={onUpdateElement}
+            onDelete={onDeleteElement}
             onEditHtml={onEditHtml}
             onEditCode={onEditCode}
             onEditLatex={onEditLatex}

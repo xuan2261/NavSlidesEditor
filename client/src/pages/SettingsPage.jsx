@@ -52,7 +52,8 @@ const PROVIDERS = [
   { value: 'custom', label: 'Custom (OpenAI-compatible)', models: [] },
 ]
 
-const fieldClass = 'w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:outline-none focus:border-accent'
+const fieldClass =
+  'w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:outline-none focus:border-accent'
 const DEFAULT_SETTINGS = {
   ai: {
     provider: 'openai',
@@ -110,7 +111,9 @@ export default function SettingsPage() {
     setOverrides(loaded)
     setShortcuts(getShortcuts(loaded))
   }, [])
-  useEffect(() => { refreshShortcuts() }, [refreshShortcuts])
+  useEffect(() => {
+    refreshShortcuts()
+  }, [refreshShortcuts])
 
   // Global key listener for shortcut recording
   useEffect(() => {
@@ -154,15 +157,25 @@ export default function SettingsPage() {
     }
 
     window.addEventListener('keydown', handleKeyDown, { capture: true })
-    recordCancelRef.current = () => {
+    const cancelRecording = () => {
       window.removeEventListener('keydown', handleKeyDown, { capture: true })
       setRecordingId(null)
     }
+    recordCancelRef.current = cancelRecording
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown, { capture: true })
+      if (recordCancelRef.current === cancelRecording) recordCancelRef.current = null
     }
   }, [recordingId, overrides, refreshShortcuts])
+
+  const cancelShortcutRecording = () => {
+    if (recordCancelRef.current) {
+      recordCancelRef.current()
+    } else {
+      setRecordingId(null)
+    }
+  }
 
   const handleResetOne = (id) => {
     resetOverride(id)
@@ -210,8 +223,7 @@ export default function SettingsPage() {
     setTestStatus('testing')
     setTestError('')
     try {
-      // testAIConnection sends test payload directly — no server-side settings read needed
-      await testAIConnection()
+      await testAIConnection(settings.ai)
       setTestStatus('ok')
     } catch (err) {
       setTestStatus('fail')
@@ -219,8 +231,7 @@ export default function SettingsPage() {
     }
   }
 
-  const update = (key, val) =>
-    setSettings((s) => ({ ...(s || DEFAULT_SETTINGS), [key]: val }))
+  const update = (key, val) => setSettings((s) => ({ ...(s || DEFAULT_SETTINGS), [key]: val }))
   const updateAI = (key, val) =>
     setSettings((s) => ({
       ...(s || DEFAULT_SETTINGS),
@@ -242,7 +253,14 @@ export default function SettingsPage() {
     <div className="h-full flex flex-col bg-panel">
       <div className="flex items-center justify-between px-6 h-14 border-b border-border bg-secondary shrink-0">
         <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={() => navigate('/')} className="px-2.5 py-1.5">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              cancelShortcutRecording()
+              navigate('/')
+            }}
+            className="px-2.5 py-1.5"
+          >
             <ChevronLeft size={16} />
           </Button>
           <h1 className="text-xl">
@@ -276,10 +294,11 @@ export default function SettingsPage() {
           <div className="flex flex-col gap-4">
             {/* Provider */}
             <div>
-              <label className="text-[13px] text-text-muted block mb-1.5">
+              <label htmlFor="ai-provider" className="text-[13px] text-text-muted block mb-1.5">
                 Provider
               </label>
               <select
+                id="ai-provider"
                 value={settings?.ai?.provider || 'openai'}
                 onChange={(e) => updateAI('provider', e.target.value)}
                 className={fieldClass}
@@ -295,10 +314,11 @@ export default function SettingsPage() {
             {/* API Key (not for custom without key) */}
             {currentProvider.value !== 'custom' && (
               <div>
-                <label className="text-[13px] text-text-muted block mb-1.5">
+                <label htmlFor="ai-api-key" className="text-[13px] text-text-muted block mb-1.5">
                   API Key
                 </label>
                 <input
+                  id="ai-api-key"
                   type="password"
                   value={settings?.ai?.apiKey || ''}
                   onChange={(e) => updateAI('apiKey', e.target.value)}
@@ -311,10 +331,11 @@ export default function SettingsPage() {
             {/* Model selector for known providers */}
             {currentProvider.models.length > 0 && (
               <div>
-                <label className="text-[13px] text-text-muted block mb-1.5">
+                <label htmlFor="ai-model" className="text-[13px] text-text-muted block mb-1.5">
                   Model
                 </label>
                 <select
+                  id="ai-model"
                   value={settings?.ai?.model || currentProvider.models[0]}
                   onChange={(e) => updateAI('model', e.target.value)}
                   className={fieldClass}
@@ -332,10 +353,14 @@ export default function SettingsPage() {
             {currentProvider.value === 'custom' && (
               <>
                 <div>
-                  <label className="text-[13px] text-text-muted block mb-1.5">
+                  <label
+                    htmlFor="ai-custom-endpoint"
+                    className="text-[13px] text-text-muted block mb-1.5"
+                  >
                     Endpoint URL
                   </label>
                   <input
+                    id="ai-custom-endpoint"
                     type="text"
                     value={settings?.ai?.customEndpoint || ''}
                     onChange={(e) => updateAI('customEndpoint', e.target.value)}
@@ -347,10 +372,14 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <div>
-                  <label className="text-[13px] text-text-muted block mb-1.5">
+                  <label
+                    htmlFor="ai-custom-model"
+                    className="text-[13px] text-text-muted block mb-1.5"
+                  >
                     Model Name
                   </label>
                   <input
+                    id="ai-custom-model"
                     type="text"
                     value={settings?.ai?.customModel || ''}
                     onChange={(e) => updateAI('customModel', e.target.value)}
@@ -377,12 +406,20 @@ export default function SettingsPage() {
                 Test Connection
               </Button>
               {testStatus === 'ok' && (
-                <span className="text-success text-[13px] flex items-center gap-1">
+                <span
+                  role="status"
+                  aria-live="polite"
+                  className="text-success text-[13px] flex items-center gap-1"
+                >
                   <CheckCircle size={14} /> Connected
                 </span>
               )}
               {testStatus === 'fail' && (
-                <span className="text-danger text-[13px] flex items-center gap-1">
+                <span
+                  role="status"
+                  aria-live="polite"
+                  className="text-danger text-[13px] flex items-center gap-1"
+                >
                   <XCircle size={14} /> {testError || 'Failed'}
                 </span>
               )}
@@ -408,10 +445,12 @@ export default function SettingsPage() {
 
           {recordingId !== null && (
             <div className="mb-4 px-4 py-3 rounded-md border border-accent bg-accent/10 text-[13px]">
-              <span className="font-medium text-accent">Recording shortcut —</span>
-              {' '}Press any key combination, or{' '}
-              <kbd className="px-1.5 py-0.5 rounded bg-accent/20 text-accent font-mono text-xs">Esc</kbd>
-              {' '}to cancel
+              <span className="font-medium text-accent">Recording shortcut —</span> Press any key
+              combination, or{' '}
+              <kbd className="px-1.5 py-0.5 rounded bg-accent/20 text-accent font-mono text-xs">
+                Esc
+              </kbd>{' '}
+              to cancel
             </div>
           )}
 
@@ -419,8 +458,8 @@ export default function SettingsPage() {
             <div className="mb-4 px-4 py-3 rounded-md border border-amber-500 bg-amber-500/10 text-[13px] flex items-center gap-2">
               <AlertTriangle size={14} className="text-amber-500 shrink-0" />
               <span>
-                <span className="font-medium text-amber-500">{reservedWarning}</span>
-                {' '}is reserved by the browser and cannot be used.
+                <span className="font-medium text-amber-500">{reservedWarning}</span> is reserved by
+                the browser and cannot be used.
               </span>
             </div>
           )}
@@ -429,7 +468,8 @@ export default function SettingsPage() {
             <div className="mb-4 px-4 py-3 rounded-md border border-amber-500 bg-amber-500/10 text-[13px] flex items-center gap-2">
               <AlertTriangle size={14} className="text-amber-500 shrink-0" />
               <span>
-                Shortcut <span className="font-mono font-medium">{conflictWith}</span> is already assigned to another command.
+                Shortcut <span className="font-mono font-medium">{conflictWith}</span> is already
+                assigned to another command.
               </span>
             </div>
           )}
@@ -469,10 +509,11 @@ export default function SettingsPage() {
                             onClick={() =>
                               isRecording ? setRecordingId(null) : handleStartRecord(shortcut.id)
                             }
+                            aria-label={`${isRecording ? 'Cancel editing' : 'Edit'} ${shortcut.label}`}
                             className={`h-6 px-2 text-[11px] ${
                               isRecording
                                 ? 'text-danger hover:text-danger'
-                                : 'text-text-muted opacity-0 group-hover:opacity-100 hover:text-accent'
+                                : 'text-text-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:text-accent'
                             }`}
                           >
                             {isRecording ? 'Cancel' : 'Edit'}
@@ -482,8 +523,9 @@ export default function SettingsPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleResetOne(shortcut.id)}
-                              className="h-6 px-1.5 text-[11px] text-text-muted opacity-0 group-hover:opacity-100 hover:text-danger"
+                              className="h-6 px-1.5 text-[11px] text-text-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:text-danger"
                               title="Reset to default"
+                              aria-label={`Reset ${shortcut.label} to default`}
                             >
                               <RotateCcw size={11} />
                             </Button>
@@ -508,10 +550,11 @@ export default function SettingsPage() {
           </h2>
           <div className="flex flex-col gap-4">
             <div>
-              <label className="text-[13px] text-text-muted block mb-1.5">
+              <label htmlFor="default-theme" className="text-[13px] text-text-muted block mb-1.5">
                 Default Theme
               </label>
               <select
+                id="default-theme"
                 value={settings?.defaultTheme || 'black'}
                 onChange={(e) => update('defaultTheme', e.target.value)}
                 className={fieldClass}
@@ -524,10 +567,14 @@ export default function SettingsPage() {
               </select>
             </div>
             <div>
-              <label className="text-[13px] text-text-muted block mb-1.5">
+              <label
+                htmlFor="default-transition"
+                className="text-[13px] text-text-muted block mb-1.5"
+              >
                 Default Transition
               </label>
               <select
+                id="default-transition"
                 value={settings?.defaultTransition || 'slide'}
                 onChange={(e) => update('defaultTransition', e.target.value)}
                 className={fieldClass}
@@ -550,7 +597,10 @@ export default function SettingsPage() {
           <Button
             variant="secondary"
             data-testid="settings-open-sync"
-            onClick={() => setShowSyncModal(true)}
+            onClick={() => {
+              cancelShortcutRecording()
+              setShowSyncModal(true)
+            }}
             className="flex items-center gap-1.5"
           >
             <CloudUpload size={14} />

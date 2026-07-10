@@ -4,6 +4,11 @@ import { clampNumber } from '../../utils/number-input'
 import IconGallery, { IconSvgPreview } from '../IconGallery'
 import GameProperties from './game-properties.jsx'
 
+const CONTROL_INPUT_CLASS =
+  'w-full min-h-8 rounded-md border border-border bg-card px-2 py-1 text-xs text-text-primary focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/25'
+const SECONDARY_BUTTON_CLASS =
+  'inline-flex min-h-8 items-center rounded-md border border-border bg-card px-3 py-1.5 text-text-primary hover:border-border-strong hover:bg-hover'
+
 function IconElementProperties({ element, onUpdate }) {
   const [showIconGallery, setShowIconGallery] = useState(false)
   const triggerRef = useRef(null)
@@ -22,7 +27,7 @@ function IconElementProperties({ element, onUpdate }) {
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Stroke</div>
           <input
-            className="prop-input"
+            className={CONTROL_INPUT_CLASS}
             type="number"
             min="0.5"
             max="4"
@@ -42,7 +47,7 @@ function IconElementProperties({ element, onUpdate }) {
       <button
         ref={triggerRef}
         data-testid="prop-icon-change"
-        className="btn btn-secondary w-full justify-center text-xs flex items-center gap-2"
+        className={`${SECONDARY_BUTTON_CLASS} w-full justify-center gap-2 text-xs`}
         onMouseDown={(e) => { e.preventDefault(); setShowIconGallery((v) => !v) }}
       >
         <IconSvgPreview name={element.iconName || 'Star'} size={14} />
@@ -63,11 +68,11 @@ function IconElementProperties({ element, onUpdate }) {
 /**
  * Misc element properties: callout, icon, qrcode, drawing, line/arrow, svg, html, latex, markdown, game.
  */
-export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLatex }) {
+export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml, onEditLatex }) {
   const t = element.type
 
   if (t === 'game') {
-    return <GameProperties element={element} onUpdate={onUpdate} onDelete={() => {}} />
+    return <GameProperties element={element} onUpdate={onUpdate} onDelete={onDelete} />
   }
 
   if (t === 'html')
@@ -75,7 +80,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
       <div className="mb-2.5">
         <button
           data-testid="prop-html-edit"
-          className="btn btn-secondary w-full justify-center text-xs mb-1.5"
+          className={`${SECONDARY_BUTTON_CLASS} mb-1.5 w-full justify-center text-xs`}
           onClick={onEditHtml}
         >
           Edit HTML / D3 Code
@@ -94,7 +99,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
             <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
             <input
               data-testid="prop-latex-font-size"
-              className="prop-input"
+              className={CONTROL_INPUT_CLASS}
               type="number"
               min="8"
               max="96"
@@ -118,7 +123,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
         </div>
         <button
           data-testid="prop-latex-edit"
-          className="btn btn-secondary w-full justify-center text-xs mb-1.5"
+          className={`${SECONDARY_BUTTON_CLASS} mb-1.5 w-full justify-center text-xs`}
           onClick={onEditLatex}
         >
           Edit LaTeX / TikZ
@@ -156,7 +161,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
             <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
             <input
               data-testid="prop-markdown-font-size"
-              className="prop-input"
+              className={CONTROL_INPUT_CLASS}
               type="number"
               min={8}
               max={120}
@@ -183,7 +188,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
             <div key={k}>
               <div className="text-[11px] text-text-muted mb-0.5">{l}</div>
               <input
-                className="prop-input"
+                className={CONTROL_INPUT_CLASS}
                 type={type}
                 {...extra}
                 value={element[k] || d}
@@ -223,7 +228,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
           QR Data / URL
         </div>
         <input
-          className="prop-input mb-2"
+          className={`${CONTROL_INPUT_CLASS} mb-2`}
           type="text"
           value={element.qrData || ''}
           onChange={(e) => onUpdate({ qrData: e.target.value })}
@@ -248,7 +253,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
           Error Correction Level
         </div>
         <select
-          className="prop-input px-1.5 py-1 mb-2"
+          className={`${CONTROL_INPUT_CLASS} mb-2 px-1.5 py-1`}
           value={element.qrErrorLevel || 'M'}
           onChange={(e) => onUpdate({ qrErrorLevel: e.target.value })}
         >
@@ -277,7 +282,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
           <div>
             <div className="text-[11px] text-text-muted mb-0.5">Width</div>
             <input
-              className="prop-input"
+              className={CONTROL_INPUT_CLASS}
               type="number"
               min="1"
               max="20"
@@ -313,7 +318,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
           <div>
             <div className="text-[11px] text-text-muted mb-0.5">Width</div>
             <input
-              className="prop-input"
+              className={CONTROL_INPUT_CLASS}
               type="number"
               min="1"
               max="20"
@@ -334,7 +339,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
             <div key={k}>
               <div className="text-[11px] text-text-muted mb-0.5">{l}</div>
               <select
-                className="prop-input px-1.5 py-1"
+                className={`${CONTROL_INPUT_CLASS} px-1.5 py-1`}
                 value={element[k] || 'none'}
                 onChange={(e) => onUpdate({ [k]: e.target.value })}
               >
@@ -352,7 +357,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
             Dash Pattern
           </div>
           <select
-            className="prop-input px-1.5 py-1"
+            className={`${CONTROL_INPUT_CLASS} px-1.5 py-1`}
             value={element.dashArray || ''}
             onChange={(e) => onUpdate({ dashArray: e.target.value })}
           >
@@ -384,7 +389,7 @@ export default function MiscProperties({ element, onUpdate, onEditHtml, onEditLa
           ))}
         </div>
         <button
-          className="btn btn-secondary w-full text-[11px] px-2 py-1 justify-center mb-1"
+          className={`${SECONDARY_BUTTON_CLASS} mb-1 w-full justify-center px-2 py-1 text-[11px]`}
           onClick={() => onUpdate({ fillOverride: null, strokeOverride: null })}
         >
           Reset Overrides

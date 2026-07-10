@@ -46,6 +46,16 @@ async function createImportedPresentation(mappedPresentation, originalArtifact, 
   })
 }
 
+async function deleteImportedPresentation(id) {
+  if (!id) return false
+  return withPresentations((presentations) => {
+    const index = presentations.findIndex((presentation) => presentation.id === id)
+    if (index === -1) return false
+    presentations.splice(index, 1)
+    return true
+  })
+}
+
 /**
  * Strip client-supplied original path bindings from create body (RT-04).
  */
@@ -59,5 +69,6 @@ function stripClientPptxOriginalPaths(body) {
 
 module.exports = {
   createImportedPresentation,
+  deleteImportedPresentation,
   stripClientPptxOriginalPaths,
 }

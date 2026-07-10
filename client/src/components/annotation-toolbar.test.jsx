@@ -65,6 +65,8 @@ describe('AnnotationToolbar', () => {
     )
     const penBtn1 = Array.from(c1.querySelectorAll('button')).find((b) => b.textContent === 'Pen')
     expect(penBtn1.style.backgroundColor).toMatch(/rgba\(255,\s*255,\s*255,\s*0\.2\)/)
+    expect(penBtn1.getAttribute('aria-label')).toBe('Pen')
+    expect(penBtn1.getAttribute('aria-pressed')).toBe('true')
 
     const { container: c2 } = render(
       <AnnotationToolbar
@@ -78,6 +80,9 @@ describe('AnnotationToolbar', () => {
     )
     const selectBtn = Array.from(c2.querySelectorAll('button')).find((b) => b.textContent === 'Select')
     expect(selectBtn.style.backgroundColor).toMatch(/rgba\(255,\s*255,\s*255,\s*0\.2\)/)
+    expect(selectBtn.getAttribute('aria-pressed')).toBe('true')
+    expect(Array.from(c2.querySelectorAll('button')).find((b) => b.textContent === 'Pen')
+      .getAttribute('aria-pressed')).toBe('false')
   })
 
   it('shows color picker when pen tool selected', () => {
@@ -126,6 +131,7 @@ describe('AnnotationToolbar', () => {
     )
     const colorBtns = container.querySelectorAll('button')
     const firstColorBtn = colorBtns[5]
+    expect(firstColorBtn.getAttribute('aria-label')).toBeTruthy()
     fireEvent.click(firstColorBtn)
     expect(onColorChange).toHaveBeenCalled()
   })

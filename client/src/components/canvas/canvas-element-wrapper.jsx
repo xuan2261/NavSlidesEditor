@@ -10,6 +10,7 @@ import { HANDLE_STYLES } from './use-canvas-resize-rotate'
 import PluginSandbox from '../../plugins/plugin-sandbox'
 import { isPluginElementType } from '../../plugins'
 import { buildMermaidEmbedContent } from '../../hooks/use-element-creation'
+import { getKeyboardNudgeStep } from '../../utils/keyboard-nudge'
 
 function getMediaFragmentSrc(src, startTime, endTime) {
   if (!src) return src
@@ -301,7 +302,7 @@ export default function CanvasElement({
     if (nudge && isSelected && !element.locked) {
       if (selectedElementCount > 1) return
       event.preventDefault()
-      const step = event.shiftKey ? 10 : 1
+      const step = getKeyboardNudgeStep(event.shiftKey)
       onUpdateElement?.(element.id, {
         x: Math.max(0, (Number(element.x) || 0) + nudge.x * step),
         y: Math.max(0, (Number(element.y) || 0) + nudge.y * step),
@@ -613,7 +614,7 @@ export default function CanvasElement({
                 <div style={audioWrapperStyle}>
                   <audio
                     src={sanitizeMediaSrc(element.src)}
-                    controls
+                    controls={element.controls !== false}
                     autoPlay={element.autoplay || false}
                     loop={element.loop || false}
                     muted={element.muted || false}

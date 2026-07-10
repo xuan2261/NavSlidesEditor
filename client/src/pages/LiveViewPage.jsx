@@ -163,22 +163,22 @@ export default function LiveViewPage() {
   // Annotation sync — handlers operate on the current slide's stroke bucket.
   const slideIndex = liveState.slideIndex
 
-  const handleAnnotationAdd = useCallback((annotation) => {
+  const handleAnnotationAdd = useCallback((annotation, targetSlideIndex = slideIndex) => {
     setStrokesBySlide((prev) => ({
       ...prev,
-      [slideIndex]: [...(prev[slideIndex] || []), annotation],
+      [targetSlideIndex]: [...(prev[targetSlideIndex] || []), annotation],
     }))
   }, [slideIndex])
 
-  const handleAnnotationRemove = useCallback((annotationId) => {
+  const handleAnnotationRemove = useCallback((annotationId, targetSlideIndex = slideIndex) => {
     setStrokesBySlide((prev) => ({
       ...prev,
-      [slideIndex]: (prev[slideIndex] || []).filter((a) => a.id !== annotationId),
+      [targetSlideIndex]: (prev[targetSlideIndex] || []).filter((a) => a.id !== annotationId),
     }))
   }, [slideIndex])
 
-  const handleAnnotationsClear = useCallback(() => {
-    setStrokesBySlide((prev) => ({ ...prev, [slideIndex]: [] }))
+  const handleAnnotationsClear = useCallback((targetSlideIndex = slideIndex) => {
+    setStrokesBySlide((prev) => ({ ...prev, [targetSlideIndex]: [] }))
   }, [slideIndex])
 
   useAnnotationSync({
@@ -190,6 +190,12 @@ export default function LiveViewPage() {
   })
 
   const annotationStrokes = strokesBySlide[slideIndex] || []
+  const normalizedAnnotationStrokes = annotationStrokes.filter(
+    (annotation) => annotation.coordinateSpace === 'normalized'
+  )
+  const legacyAnnotationStrokes = annotationStrokes.filter(
+    (annotation) => annotation.coordinateSpace !== 'normalized'
+  )
 
   // Timer sync (Phase 2): subscribe to server timer events
   const timerStatesRef = useLiveTimerSync(socketRef.current, (elementId) => {
@@ -345,7 +351,7 @@ export default function LiveViewPage() {
 
 
       {/* Annotation overlay — KEEP inline: dynamic SVG paths */}
-      {annotationStrokes.length > 0 && (
+      {legacyAnnotationStrokes.length > 0 && (
         <svg
           style={{
             position: 'absolute',
@@ -356,13 +362,45 @@ export default function LiveViewPage() {
             zIndex: 9998,
           }}
         >
-          {annotationStrokes.map((a, i) => (
+          {legacyAnnotationStrokes.map((a, i) => (
             <path
-              key={i}
+              key={a.id || i}
               d={a.d}
               stroke={a.color || '#ff0000'}
               strokeWidth={a.strokeWidth || 3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
               fill="none"
+              opacity={a.type === 'highlighter' ? 0.3 : 1}
+            />
+          ))}
+        </svg>
+      )}
+      {normalizedAnnotationStrokes.length > 0 && (
+        <svg
+          data-testid="live-annotation-overlay"
+          viewBox="0 0 1 1"
+          preserveAspectRatio="none"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            zIndex: 9998,
+          }}
+        >
+          {normalizedAnnotationStrokes.map((a, i) => (
+            <path
+              key={a.id || i}
+              d={a.d}
+              stroke={a.color || '#ff0000'}
+              strokeWidth={a.strokeWidth || 3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+              opacity={a.type === 'highlighter' ? 0.3 : 1}
+              vectorEffect="non-scaling-stroke"
             />
           ))}
         </svg>

@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { expect } from '@playwright/test'
-import { apiCreatePresentation, apiUpdatePresentation } from '../fixtures/test-fixtures.js'
+import { apiGetPresentation } from '../fixtures/test-fixtures.js'
 import { postPptxImportWhenAvailable } from '../helpers/pptx-import-api-helper.js'
 
 export const AUDIT_VIEWPORT = { width: 1600, height: 1000 }
@@ -53,10 +53,8 @@ export async function importDeckForAudit(page, request, pptxDir, deckName) {
 
   const { jobId } = await importRes.json()
   const imported = await waitForPptxImport(request, jobId)
-  expect(imported.presentation?.slides?.length).toBeGreaterThan(0)
-
-  const presentation = await apiCreatePresentation(request, `Audit ${deckName}`)
-  await apiUpdatePresentation(request, presentation.id, imported.presentation)
+  const presentation = await apiGetPresentation(request, imported.presentationId)
+  expect(presentation.slides?.length).toBeGreaterThan(0)
 
   await page.goto(`/editor/${presentation.id}`, { timeout: 30000 })
   await expect(page.locator('.slide-canvas')).toBeVisible({ timeout: 30000 })

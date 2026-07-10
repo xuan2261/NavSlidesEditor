@@ -37,6 +37,23 @@ describe('GameEngine', () => {
       const duplicate = GameEngine.createRoom('slide1-el1', 'hot-potato', {})
       expect(duplicate).toBeNull()
     })
+
+    it('normalizes untrusted question timing and scoring bounds', () => {
+      const room = GameEngine.createRoom('bounded', 'hot-potato', {
+        questions: [
+          { id: 'high', timeLimit: 9999, points: 100000 },
+          { id: 'low', timeLimit: -1, points: -50 },
+          { id: 'missing' },
+          null,
+        ],
+      })
+
+      expect(room.questions).toEqual([
+        expect.objectContaining({ timeLimit: 300, points: 1000 }),
+        expect.objectContaining({ timeLimit: 5, points: 1 }),
+        expect.objectContaining({ points: 10 }),
+      ])
+    })
   })
 
   describe('joinRoom', () => {

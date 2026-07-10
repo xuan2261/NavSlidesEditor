@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
+  apiDeletePresentation,
   apiGetPresentation,
   apiUpdatePresentation,
   expect,
@@ -32,9 +33,11 @@ async function importAndUpdate(request, fixturePath, testPresentation) {
   })
   expect(importRes.status()).toBe(202)
   const { jobId } = await importRes.json()
-  const imported = await waitForPptxImport(request, jobId)
-  expect(imported.presentation?.slides?.length).toBeGreaterThan(0)
-  const presentation = await apiUpdatePresentation(request, testPresentation.id, imported.presentation)
+  const result = await waitForPptxImport(request, jobId)
+  const imported = await apiGetPresentation(request, result.presentationId)
+  expect(imported.slides?.length).toBeGreaterThan(0)
+  const presentation = await apiUpdatePresentation(request, testPresentation.id, imported)
+  await apiDeletePresentation(request, result.presentationId)
   return { imported, presentation }
 }
 
@@ -50,7 +53,7 @@ test.describe('PPTX import endpoint and presentation creation roundtrip across m
 
       expect(presentation.id).toBeTruthy()
       expect(Array.isArray(presentation.slides)).toBe(true)
-      expect(presentation.slides.length).toBe(imported.presentation.slides.length)
+      expect(presentation.slides.length).toBe(imported.slides.length)
 
       const fetched = await apiGetPresentation(request, presentation.id)
       expect(fetched.slides.length).toBe(presentation.slides.length)

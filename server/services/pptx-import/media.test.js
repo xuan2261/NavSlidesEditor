@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import media from './media.js'
 import dedup from './media-dedup.js'
 import { DATA_DIR } from '../storage.js'
+import budgets from './resource-budgets.js'
 
 const { persistImageBuffer, persistMediaBlob, MAX_MEDIA_SIZE } = media
 const { persistDedupedBuffer } = dedup
@@ -65,6 +66,20 @@ describe('pptx media persistence', () => {
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
     }
+  })
+
+  it('shares an aggregate byte budget across persisted images', async () => {
+    await withHashFileRestored(async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-aggregate-'))
+      const mediaBudget = budgets.createMediaBudget(validPng.length * 2 - 1)
+      try {
+        await persistImageBuffer(validPng, 'image/png', dir, { mediaBudget })
+        await expect(persistImageBuffer(validPng, 'image/png', dir, { mediaBudget }))
+          .rejects.toThrow(/aggregate media budget/i)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
   })
 
   it('rejects files exceeding MAX_MEDIA_SIZE in persistMediaBlob', async () => {
@@ -293,6 +308,53 @@ describe('pptx media persistence', () => {
         await expect(
           persistDedupedBuffer(validMp4, 'mp4', dir, { signal, mimeType: 'video/mp4' })
         ).rejects.toThrow('aborted')
+        expect(await fs.readdir(dir)).toHaveLength(0)
+        expect(JSON.parse(await fs.readFile(HASHES_FILE, 'utf-8'))).toEqual({})
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  it('rolls back only newly-created transaction media and preserves pre-existing deduped media', async () => {
+    await withHashFileRestored(async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-transaction-'))
+      const transaction = dedup.createMediaTransaction()
+      try {
+        await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
+        await fs.writeFile(path.join(dir, 'existing.png'), validPng)
+        await fs.writeFile(HASHES_FILE, JSON.stringify({
+          existing: { [sha256(validPng)]: { filename: 'existing.png' } },
+        }))
+        const fresh = Buffer.from(validPng)
+        fresh[fresh.length - 1] ^= 1
+        await persistDedupedBuffer(validPng, 'png', dir, { transaction })
+        const created = await persistDedupedBuffer(fresh, 'png', dir, { transaction })
+
+        await transaction.rollback()
+
+        expect(await fs.access(path.join(dir, 'existing.png')).then(() => true)).toBe(true)
+        await expect(fs.access(path.join(dir, path.basename(created.url)))).rejects.toThrow()
+        const hashes = JSON.parse(await fs.readFile(HASHES_FILE, 'utf-8'))
+        expect(hashes.existing[sha256(validPng)].filename).toBe('existing.png')
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  it('rejects late media writes after transaction rollback without leaving files or hashes', async () => {
+    await withHashFileRestored(async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-closed-transaction-'))
+      const transaction = dedup.createMediaTransaction()
+      try {
+        await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
+        await fs.writeFile(HASHES_FILE, '{}')
+        await transaction.rollback()
+
+        await expect(
+          persistDedupedBuffer(validPng, 'png', dir, { transaction })
+        ).rejects.toThrow('transaction is already closed')
         expect(await fs.readdir(dir)).toHaveLength(0)
         expect(JSON.parse(await fs.readFile(HASHES_FILE, 'utf-8'))).toEqual({})
       } finally {

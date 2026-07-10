@@ -145,18 +145,51 @@ describe('ooxml-diagram-parser (T6.1 T6.3 T6.4)', () => {
     zip.file('ppt/diagrams/data1.xml', DATA_XML)
     const graph = await buildOoxmlSceneGraph(zip)
     const stats = {}
+    const warnings = []
     const elements = await injectDiagramsFromSceneGraph({
       elements: [],
       graphSlide: graph.slides[0],
       zip,
       slideIndex: 0,
       stats,
-      warnings: [],
+      warnings,
       scale: { x: 1, y: 1 },
     })
-    expect(elements.length).toBe(3)
+    expect(elements.filter((e) => e.type === 'shape')).toHaveLength(3)
+    expect(elements.filter((e) => e.type === 'line')).toHaveLength(2)
     expect(elements.every((e) => e._pptxDiagram?.nodes?.length === 3)).toBe(true)
-    expect(elements[0].text).toBe('Step One')
+    expect(elements.some((e) => e.text === 'Step One')).toBe(true)
+    expect(warnings).toContainEqual(expect.objectContaining({
+      type: 'native-smartart-layout-degraded',
+      layoutMode: 'linear-fallback',
+    }))
     expect(stats.diagramCount).toBe(1)
+  })
+
+  it('strict mode rejects unsupported linear SmartArt layout fallback', async () => {
+    const zip = new JSZip()
+    const graphSlide = {
+      nodes: [{
+        id: '5',
+        name: 'Diagram',
+        graphicKind: 'diagram',
+        rels: { diagramTarget: 'ppt/diagrams/data1.xml' },
+        xfrm: { x: 0, y: 0, cx: 600, cy: 200 },
+      }],
+    }
+    zip.file('ppt/diagrams/data1.xml', DATA_XML)
+    await expect(injectDiagramsFromSceneGraph({
+      elements: [],
+      graphSlide,
+      zip,
+      slideIndex: 0,
+      stats: {},
+      warnings: [],
+      strict: true,
+    })).rejects.toMatchObject({
+      type: 'import-failed',
+      code: 'smartart-layout-unsupported-strict',
+      layoutMode: 'linear-fallback',
+    })
   })
 })

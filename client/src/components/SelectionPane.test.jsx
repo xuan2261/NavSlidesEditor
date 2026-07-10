@@ -2,7 +2,7 @@
 // uses ImageIcon (alias for the Lucide Image component).
 
 import { describe, expect, it, vi } from 'vitest'
-import { render } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { BarChart2, BarChart3, Image as LucideImage } from 'lucide-react'
 import SelectionPane from './SelectionPane'
@@ -51,5 +51,71 @@ describe('SelectionPane icon consistency', () => {
     const svgs = Array.from(container.querySelectorAll('svg.lucide'))
     const tokens = svgs.flatMap((s) => (s.getAttribute('class') || '').split(/\s+/))
     expect(tokens).toContain(imageClassToken)
+  })
+})
+
+describe('SelectionPane keyboard access', () => {
+  it('exposes focusable semantic rows and selects with Enter or Space', () => {
+    const props = defaultProps()
+    render(<SelectionPane {...props} />)
+
+    const imageRow = screen.getByRole('listitem', { name: /Hero image/i })
+    const chartRow = screen.getByRole('listitem', { name: /Bar chart/i })
+
+    expect(imageRow.tabIndex).toBe(0)
+    fireEvent.keyDown(imageRow, { key: 'Enter' })
+    fireEvent.keyDown(chartRow, { key: ' ', ctrlKey: true })
+
+    expect(props.onSelect).toHaveBeenNthCalledWith(1, 'el-img', false)
+    expect(props.onSelect).toHaveBeenNthCalledWith(2, 'el-chart', true)
+  })
+
+  it('starts rename with F2, commits with Enter, and cancels with Escape', () => {
+    const props = defaultProps()
+    render(<SelectionPane {...props} />)
+    const row = screen.getByRole('listitem', { name: /Hero image/i })
+
+    fireEvent.keyDown(row, { key: 'F2' })
+    const input = screen.getByRole('textbox', { name: /Rename Hero image/i })
+    fireEvent.change(input, { target: { value: 'Cover artwork' } })
+    fireEvent.keyDown(input, { key: 'Escape' })
+    expect(props.onRename).not.toHaveBeenCalled()
+
+    fireEvent.keyDown(row, { key: 'F2' })
+    const reopenedInput = screen.getByRole('textbox', { name: /Rename Hero image/i })
+    fireEvent.change(reopenedInput, { target: { value: 'Cover artwork' } })
+    fireEvent.keyDown(reopenedInput, { key: 'Enter' })
+    expect(props.onRename).toHaveBeenCalledWith('el-img', 'Cover artwork')
+  })
+
+  it('reorders with Alt+Arrow keys but does not reorder locked rows', () => {
+    const props = defaultProps()
+    const lockedElements = elements.map((element) =>
+      element.id === 'el-chart' ? { ...element, locked: true } : element
+    )
+    render(<SelectionPane {...props} elements={lockedElements} />)
+
+    fireEvent.keyDown(screen.getByRole('listitem', { name: /Hero image/i }), {
+      key: 'ArrowDown',
+      altKey: true,
+    })
+    fireEvent.keyDown(screen.getByRole('listitem', { name: /Bar chart/i }), {
+      key: 'ArrowDown',
+      altKey: true,
+    })
+
+    expect(props.onReorder).toHaveBeenCalledTimes(1)
+    expect(props.onReorder).toHaveBeenCalledWith(0, 1)
+  })
+
+  it('does not select a row when a nested visibility button handles Enter', () => {
+    const props = defaultProps()
+    render(<SelectionPane {...props} />)
+
+    fireEvent.keyDown(screen.getByTestId('selection-pane-toggle-visibility-el-img'), {
+      key: 'Enter',
+    })
+
+    expect(props.onSelect).not.toHaveBeenCalled()
   })
 })

@@ -42,6 +42,10 @@
    DESIGN SYSTEM — Color Tokens
    ════════════════════════════════════════════ */
 :root {
+  --font-ui-sans: 'Anthropic Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  --font-ui-serif: 'Anthropic Serif', Georgia, 'Times New Roman', serif;
+
   /* Primary */
   --color-primary: #c96442;
   --color-primary-hover: #a94d31;
@@ -162,24 +166,21 @@ body,
   overflow: hidden;
 }
 body {
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+  font-family: var(--font-ui-sans);
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-h1 {
-  font-weight: 700;
+#root :is(h1, h2):not(.slide-canvas *):not(.slide-text-content *):not(.ProseMirror *) {
+  font-family: var(--font-ui-serif);
+  font-weight: 500;
+}
+#root h1:not(.slide-canvas *):not(.slide-text-content *):not(.ProseMirror *) {
   letter-spacing: -0.02em;
 }
-h2 {
-  font-weight: 600;
+#root h2:not(.slide-canvas *):not(.slide-text-content *):not(.ProseMirror *) {
   letter-spacing: -0.01em;
 }
 .label-caps {

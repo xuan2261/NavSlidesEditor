@@ -55,7 +55,7 @@ export class MenuBarDropdownHelper {
 
   async startBroadcast() {
     await this.openMenuItem('Share', 'Present Live')
-    await this.page.waitForSelector('h3:has-text("Present Live")')
+    await expect(this.page.getByRole('dialog', { name: 'Present Live' })).toBeVisible()
   }
 
   async openAnalytics() {

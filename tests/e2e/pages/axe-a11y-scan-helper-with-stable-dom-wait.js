@@ -32,7 +32,7 @@ export async function waitForStableDOM(page, { quietMs = 500, timeout = 10000 } 
 }
 
 /**
- * Run an axe scan after waiting for DOM stability. Returns full result + critical filter.
+ * Run an axe scan after waiting for DOM stability.
  */
 export async function scanA11y(page, label, opts = {}) {
   const { include, exclude, disableRules = [] } = opts
@@ -43,25 +43,52 @@ export async function scanA11y(page, label, opts = {}) {
   if (disableRules.length) builder.disableRules(disableRules)
   const results = await builder.analyze()
   const critical = results.violations.filter((v) => v.impact === 'critical')
-  return { results, critical, label }
+  const blocking = results.violations.filter((v) =>
+    v.impact === 'critical' || v.impact === 'serious'
+  )
+  return { results, critical, blocking, label }
 }
 
 /**
- * Known critical a11y violations baselined from current implementation.
+ * Known serious or critical a11y node targets baselined from current implementation.
  * These are real component bugs (unlabeled selects, untitled inputs) that
  * require component refactoring outside the Phase 7 coverage scope.
- * The Phase 7 gate asserts "no NEW critical violations beyond this baseline".
+ * The gate asserts no new serious or critical violations beyond this baseline.
  * Tracked in reports/a11y-baseline-known-critical-violations-2026-05-19.md.
  */
-export const A11Y_BASELINE_KNOWN_CRITICAL = {
-  editor: ['label', 'select-name'],
-  home: ['label', 'select-name', 'button-name', 'link-name'],
-  present: [],
-  share: [],
-  'live-viewer': [],
+export const A11Y_BASELINE_KNOWN_BLOCKING = {
+  editor: {
+    label: ['["input[min=\\"0\\"]"]'],
+    'nested-interactive': [
+      '[".border-accent"]',
+      '["div[aria-label=\\"Select slide 2\\"]"]',
+    ],
+    'select-name': ['["select"]'],
+  },
+  home: {
+    'frame-focusable-content': ['["iframe","html"]'],
+    'select-name': ['["select"]'],
+  },
+  present: {
+    'html-has-lang': ['["html"]'],
+  },
+  share: {
+    'html-has-lang': ['["html"]'],
+  },
+  'live-viewer': {},
+  settings: {
+    'button-name': ['[".px-2\\\\.5"]'],
+  },
+  'share-modal': {},
 }
 
-export function newCriticalViolations(critical, baselineLabel) {
-  const allowed = new Set(A11Y_BASELINE_KNOWN_CRITICAL[baselineLabel] || [])
-  return critical.filter((v) => !allowed.has(v.id))
+export function newBlockingViolations(violations, baselineLabel) {
+  const baseline = A11Y_BASELINE_KNOWN_BLOCKING[baselineLabel] || {}
+  return violations.flatMap((violation) => {
+    const allowedTargets = new Set(baseline[violation.id] || [])
+    const newNodes = violation.nodes.filter(
+      (node) => !allowedTargets.has(JSON.stringify(node.target))
+    )
+    return newNodes.length ? [{ ...violation, nodes: newNodes }] : []
+  })
 }

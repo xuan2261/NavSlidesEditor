@@ -12,6 +12,26 @@ const rooms = new Map() // gameId -> room object
 const ROOM_TTL_MS = 5 * 60 * 1000 // 5 minutes after game ends
 let emptyRoomTtlMs = 30 * 1000 // grace window before an emptied room is reaped
 
+function clampInteger(value, min, max, fallback) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return fallback
+  return Math.min(max, Math.max(min, Math.round(parsed)))
+}
+
+function normalizeQuestions(questions) {
+  if (!Array.isArray(questions)) return []
+  return questions
+    .filter((question) => question && typeof question === 'object' && !Array.isArray(question))
+    .map((question) => ({
+      ...question,
+      timeLimit:
+        question.timeLimit == null
+          ? question.timeLimit
+          : clampInteger(question.timeLimit, 5, 300, 30),
+      points: clampInteger(question.points, 1, 1000, 10),
+    }))
+}
+
 function createRoom(gameId, gameType, options = {}) {
   if (rooms.has(gameId)) return null
 
@@ -23,7 +43,7 @@ function createRoom(gameId, gameType, options = {}) {
     hostPlayerId: null,
     hostExplicit: false, // true once a role==='host' joiner claimed it
     currentQuestion: 0,
-    questions: options.questions || [],
+    questions: normalizeQuestions(options.questions),
     poll: normalizePollOptions(options.poll || options),
     pollVotes: new Map(), // playerId -> optionId
     wordCloud: normalizeWordCloudOptions(options.wordCloud || options),

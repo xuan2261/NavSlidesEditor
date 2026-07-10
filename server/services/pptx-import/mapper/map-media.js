@@ -66,7 +66,11 @@ async function mapVideo(element, context) {
     return [{ ...baseElement(element, context.scale, context.zIndex), type: 'video', src, controls: true, autoplay: false, loop: false, muted: false }]
   }
   context.signal?.throwIfAborted?.()
-  const media = await persistMediaBlob(context.mediaIndex, ref, context.uploadsDir, { signal: context.signal })
+  const media = await persistMediaBlob(context.mediaIndex, ref, context.uploadsDir, {
+    signal: context.signal,
+    mediaBudget: context.mediaBudget,
+    mediaTransaction: context.mediaTransaction,
+  })
   pushMediaWarning(context, media.warning)
   const src = media.url
   if (!src) return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'video-missing', 'Video media unavailable')]
@@ -83,7 +87,11 @@ async function mapAudio(element, context) {
     return [{ ...baseElement(element, context.scale, context.zIndex), type: 'audio', src, autoplay: false, loop: false, muted: false }]
   }
   context.signal?.throwIfAborted?.()
-  const media = await persistMediaBlob(context.mediaIndex, ref, context.uploadsDir, { signal: context.signal })
+  const media = await persistMediaBlob(context.mediaIndex, ref, context.uploadsDir, {
+    signal: context.signal,
+    mediaBudget: context.mediaBudget,
+    mediaTransaction: context.mediaTransaction,
+  })
   pushMediaWarning(context, media.warning)
   const src = media.url
   if (!src) return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'audio-missing', 'Audio media unavailable')]

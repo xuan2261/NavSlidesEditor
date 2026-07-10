@@ -47,6 +47,7 @@ function attachSourceNodes(elements, graphNodes, slideIndex) {
         nodeId: String(existingId),
         slideIndex: el._pptxSource.slideIndex ?? slideIndex,
         kind: el._pptxSource.kind || node.kind,
+        authoritative: el._pptxSource.authoritative !== false,
       }
     }
   }
@@ -58,11 +59,24 @@ function attachSourceNodes(elements, graphNodes, slideIndex) {
     // Prefer cNvPr-aligned identity: parser name / id match graph node
     const elName = el.name || el._pptxSource?.name || null
     const elSrcId = el.sourceId || el.ooxmlId || el.shapeId || null
-    let node =
-      (elSrcId != null && leaves.find((n) => !n._used && String(n.id) === String(elSrcId))) ||
-      (elName && leaves.find((n) => !n._used && n.name && String(n.name) === String(elName))) ||
-      leaves.find((n) => !n._used && n.kind === hint) ||
-      leaves.find((n) => !n._used)
+    let matchedBy = null
+    let node = null
+    if (elSrcId != null) {
+      node = leaves.find((n) => !n._used && String(n.id) === String(elSrcId))
+      if (node) matchedBy = 'sourceId'
+    }
+    if (!node && elName) {
+      node = leaves.find((n) => !n._used && n.name && String(n.name) === String(elName))
+      if (node) matchedBy = 'name'
+    }
+    if (!node) {
+      node = leaves.find((n) => !n._used && n.kind === hint)
+      if (node) matchedBy = 'kind'
+    }
+    if (!node) {
+      node = leaves.find((n) => !n._used)
+      if (node) matchedBy = 'order'
+    }
     if (!node) continue
     node._used = true
     assigned += 1
@@ -73,7 +87,8 @@ function attachSourceNodes(elements, graphNodes, slideIndex) {
       slideIndex,
       ...(node.graphicKind ? { graphicKind: node.graphicKind } : {}),
       ...(node.name ? { name: node.name } : {}),
-      ...(elSrcId != null ? { matchedBy: 'sourceId' } : elName ? { matchedBy: 'name' } : { matchedBy: 'order' }),
+      matchedBy,
+      authoritative: matchedBy === 'sourceId' || matchedBy === 'name',
     }
   }
 
@@ -88,6 +103,7 @@ function collectMappedNodeIds(presentation) {
     for (const el of slide.elements || []) {
       const id = el?._pptxSource?.nodeId
       if (id == null || id === '') continue
+      if (el._pptxSource.authoritative === false) continue
       const si = el._pptxSource.slideIndex != null ? el._pptxSource.slideIndex : slideIndex
       ids.add(sourceKey(si, id))
     }

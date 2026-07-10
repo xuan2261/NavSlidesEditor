@@ -59,6 +59,35 @@ function getActionPrompt(action) {
   return prompts[action] || 'Rewrite this text.'
 }
 
+const aiConnectionConfigSchema = z
+  .object({
+    provider: z.enum(['openai', 'gemini', 'custom']),
+    apiKey: z.string().max(10000).optional().default(''),
+    model: z.string().max(200).optional().default(''),
+    customEndpoint: z.string().max(2048).optional().default(''),
+    customModel: z.string().max(200).optional().default(''),
+  })
+  .superRefine((config, ctx) => {
+    if (config.provider === 'custom' && !config.customEndpoint) {
+      ctx.addIssue({ code: 'custom', path: ['customEndpoint'], message: 'Endpoint is required' })
+    }
+    if (config.provider !== 'custom' && !config.apiKey) {
+      ctx.addIssue({ code: 'custom', path: ['apiKey'], message: 'API key is required' })
+    }
+  })
+
+// POST /api/ai/test-connection
+// Uses the submitted configuration only for this request. Credentials are
+// neither persisted nor included in responses or logs.
+router.post('/test-connection', validate(aiConnectionConfigSchema), async (req, res) => {
+  try {
+    await callAI(req.body, 'Reply with only OK. This is a connection test.', 'Connection test')
+    res.json({ ok: true })
+  } catch {
+    sendAiProviderFailure(res)
+  }
+})
+
 // POST /api/ai/rewrite
 router.post(
   '/rewrite',

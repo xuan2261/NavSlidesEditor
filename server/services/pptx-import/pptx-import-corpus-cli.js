@@ -17,8 +17,27 @@ function parseListFlags(args, name) {
 }
 
 function baselineFromResults(results, summary, gates = STRICT_CORPUS_GATES) {
+  const sumMetric = (read) => {
+    const values = results.map(read)
+    return values.every(Number.isFinite) ? values.reduce((sum, value) => sum + value, 0) : null
+  }
   return {
-    summary: Object.fromEntries(Object.entries(summary).filter(([key]) => key !== 'runAt')),
+    evidenceVersion: 2,
+    summary: {
+      ...Object.fromEntries(Object.entries(summary).filter(([key]) => key !== 'runAt')),
+      corpusEvidence: {
+        sceneGraphUnmapped: sumMetric((result) => result.stats?.sceneGraphUnmapped),
+        chartCoverageGapCount: sumMetric(
+          (result) => result.stats?.nativeObjectCoverage?.chartCoverageGapCount
+        ),
+        smartArtCoverageGapCount: sumMetric(
+          (result) => result.stats?.nativeObjectCoverage?.smartArtCoverageGapCount
+        ),
+        permanentPlaceholderCount: sumMetric(
+          (result) => result.stats?.primitivePlaceholderCount ?? result.stats?.placeholderCount
+        ),
+      },
+    },
     gates,
     perDeck: Object.fromEntries(results.map((result) => [result.file, {
       semanticFidelity: result.semanticFidelity,

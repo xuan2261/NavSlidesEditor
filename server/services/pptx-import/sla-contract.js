@@ -90,6 +90,8 @@ const MILESTONES = Object.freeze({
     permanentPlaceholderMax: 0,
     chartGapMax: 0,
     smartArtGapMax: 0,
+    sceneGraphUnmappedMax: 0,
+    roundTripMin: 0.99,
     originalPptxRequired: true,
     productOneToOneClaimAllowed: true,
   }),

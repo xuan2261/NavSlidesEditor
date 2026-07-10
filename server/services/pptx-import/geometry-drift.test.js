@@ -7,7 +7,7 @@ import mapperModule from './mapper'
 import testerModule from './pptx-import-semantic-and-roundtrip-fidelity-tester.js'
 
 const { mapPptxOutput } = mapperModule
-const { computeDetailedFidelityMetrics, writeDriftRows } = testerModule
+const { applyStrictPerTypeGates, computeDetailedFidelityMetrics, writeDriftRows } = testerModule
 const PNG_DATA_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII='
 
@@ -180,6 +180,45 @@ describe('pptx geometry drift coverage', () => {
       expect(result.presentation.resolution).toEqual({ width: 960, height: 540 })
       expect(result.presentation._pptxMeta.originalSize).toEqual({ width: 1920, height: 1080 })
     })
+  })
+
+  it('normalizes source coordinates before calculating 4:3 geometry drift', () => {
+    const detail = computeDetailedFidelityMetrics(
+      {
+        size: { width: 720, height: 540 },
+        slides: [{ elements: [{ type: 'shape', left: 360, top: 270, width: 90, height: 54 }] }],
+      },
+      {
+        resolution: { width: 960, height: 540 },
+        slides: [{ elements: [{ type: 'shape', x: 480, y: 270, width: 120, height: 54 }] }],
+      }
+    )
+    expect(detail.geometryDrift.byType.shape.maxPx).toBe(0)
+  })
+
+  it('compares clipped image geometry against the visible canvas box', () => {
+    const detail = computeDetailedFidelityMetrics(
+      {
+        size: { width: 960, height: 540 },
+        slides: [{ elements: [{ type: 'image', left: -16, top: 10, width: 100, height: 80 }] }],
+      },
+      {
+        resolution: { width: 960, height: 540 },
+        slides: [{ elements: [{ type: 'image', x: 0, y: 10, width: 100, height: 80 }] }],
+      }
+    )
+    expect(detail.geometryDrift.byType.image.maxPx).toBe(0)
+  })
+
+  it('enforces geometry gates for measured corpus decks regardless of filename', () => {
+    const errors = applyStrictPerTypeGates({
+      file: 'real-corpus-deck.pptx',
+      semanticFidelity: 1,
+      elementCount: { sourceByType: { shape: 1 }, navByType: { shape: 1 } },
+      geometryDrift: { byType: { shape: { maxPx: 4, medianPx: 4, count: 1 } } },
+      propertyCoverage: { byType: {} },
+    })
+    expect(errors).toContainEqual(expect.stringContaining('geometry gate failed for shape'))
   })
 
   it('converts absolute line endpoints into local endpoints inside wrapper box', async () => {

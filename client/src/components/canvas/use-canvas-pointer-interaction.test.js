@@ -10,8 +10,11 @@ import { cleanup, renderHook } from '@testing-library/react'
 import { afterEach, describe, it, expect, vi } from 'vitest'
 import useCanvasPointerInteraction, {
   applyCropHandle,
+  applyMove,
   applyMoveBatch,
   computeClampedBatchDelta,
+  getVisualGuideElement,
+  rotateDeltaToLocal,
 } from './use-canvas-pointer-interaction'
 
 // Re-exported pure helpers from the hook module for direct testing
@@ -141,6 +144,33 @@ describe('exports', () => {
 })
 
 describe('batch move bounds', () => {
+  it('keeps the visual AABB of a rotated element inside the slide', () => {
+    const moved = applyMove(
+      { x: 20, y: 20, width: 100, height: 100, rotation: 45 },
+      -100,
+      -100,
+      960,
+      540
+    )
+    expect(moved.x).toBeCloseTo(20.710678, 5)
+    expect(moved.y).toBeCloseTo(20.710678, 5)
+  })
+
+  it('clamps a batch using each rotated visual AABB', () => {
+    expect(
+      computeClampedBatchDelta(
+        [{ id: 'a', x: 20, y: 20, width: 100, height: 100, rotation: 45 }],
+        -100,
+        -100,
+        960,
+        540
+      )
+    ).toEqual({
+      dx: expect.closeTo(0.710678, 5),
+      dy: expect.closeTo(0.710678, 5),
+    })
+  })
+
   it('computes one shared clamped delta near the right edge', () => {
     expect(
       computeClampedBatchDelta(
@@ -187,6 +217,36 @@ describe('batch move bounds', () => {
         540
       )
     ).toEqual({ dx: -5, dy: -4 })
+  })
+})
+
+describe('rotated crop pointer deltas', () => {
+  it('maps screen movement into the rotated element local axes', () => {
+    expect(rotateDeltaToLocal(0, 20, 90)).toEqual({
+      dx: expect.closeTo(20, 6),
+      dy: expect.closeTo(0, 6),
+    })
+  })
+
+  it('preserves screen axes for an unrotated element', () => {
+    expect(rotateDeltaToLocal(12, -8, 0)).toEqual({ dx: 12, dy: -8 })
+  })
+})
+
+describe('rotated smart-guide geometry', () => {
+  it('uses the visual AABB for rotated guide edges', () => {
+    const guideElement = getVisualGuideElement({
+      id: 'rotated',
+      x: 100,
+      y: 100,
+      width: 100,
+      height: 100,
+      rotation: 45,
+    })
+
+    expect(guideElement.id).toBe('rotated')
+    expect(guideElement.width).toBeCloseTo(100 * Math.SQRT2, 6)
+    expect(guideElement.x).toBeCloseTo(79.2893219, 6)
   })
 })
 
@@ -275,7 +335,7 @@ describe('startElementDrag lock handling', () => {
     )
 
     expect(pendingDragRef.current.startEls).toEqual([
-      { id: 'free', x: 10, y: 20, width: 100, height: 80 },
+      { id: 'free', x: 10, y: 20, width: 100, height: 80, rotation: 0 },
     ])
   })
 

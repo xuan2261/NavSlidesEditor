@@ -26,7 +26,7 @@ function findSlide(slides, state) {
   )
 }
 
-function PreviewFrame({ htmlContent, state, title }) {
+function PreviewFrame({ htmlContent, state, title, children }) {
   const { iframeRef } = useRevealPreviewFrame(htmlContent, state)
 
   return (
@@ -49,8 +49,32 @@ function PreviewFrame({ htmlContent, state, title }) {
             Waiting for presentation...
           </div>
         )}
+        {children}
       </div>
     </div>
+  )
+}
+
+function LegacyAnnotationOverlay({ strokes }) {
+  if (strokes.length === 0) return null
+  return (
+    <svg
+      data-testid="speaker-legacy-annotation-overlay"
+      className="absolute inset-0 w-full h-full pointer-events-none z-[99989]"
+    >
+      {strokes.map((stroke, index) => (
+        <path
+          key={stroke.id || index}
+          d={stroke.d}
+          stroke={stroke.color || '#ff0000'}
+          strokeWidth={stroke.strokeWidth || 3}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+          opacity={stroke.type === 'highlighter' ? 0.3 : 1}
+        />
+      ))}
+    </svg>
   )
 }
 
@@ -71,7 +95,7 @@ export default function SpeakerViewPage() {
   const [roomNotFound, setRoomNotFound] = useState(false)
 
   // Annotation state
-  const [annotationTool, setAnnotationTool] = useState('none') // 'none'|'pen'|'highlighter'|'eraser'
+  const [annotationTool, setAnnotationTool] = useState('none') // 'none'|'pen'|'laser'|'highlighter'|'eraser'
   const [annotationColor, setAnnotationColor] = useState('#FF0000')
   const [annotationStrokes, setAnnotationStrokes] = useState([])
 
@@ -140,7 +164,9 @@ export default function SpeakerViewPage() {
 
   // Annotation event handlers
   const handleAnnotationAdd = useCallback((annotation) => {
-    setAnnotationStrokes((prev) => [...prev, annotation])
+    setAnnotationStrokes((prev) => (
+      prev.some((existing) => existing.id === annotation.id) ? prev : [...prev, annotation]
+    ))
   }, [])
 
   const handleAnnotationRemove = useCallback((annotationId) => {
@@ -162,12 +188,17 @@ export default function SpeakerViewPage() {
       color: stroke.color,
       strokeWidth: stroke.strokeWidth,
       type: stroke.type || 'path',
+      coordinateSpace: stroke.coordinateSpace,
       createdAt: new Date().toISOString(),
       createdBy: 'presenter',
     }
     socket.emit('annotation:add', { slideIndex: liveState.slideIndex, annotation })
-    setAnnotationStrokes((prev) => [...prev, { ...stroke, id: annotation.id }])
+    setAnnotationStrokes((prev) => [...prev, annotation])
   }, [liveState.slideIndex, socket])
+
+  const handleLaserChange = useCallback((position) => {
+    socketRef.current?.emit('laser', position)
+  }, [])
 
   useAnnotationSync({
     socket,
@@ -193,10 +224,17 @@ export default function SpeakerViewPage() {
     })
   }
 
+  const normalizedAnnotationStrokes = annotationStrokes.filter(
+    (annotation) => annotation.coordinateSpace === 'normalized'
+  )
+  const legacyAnnotationStrokes = annotationStrokes.filter(
+    (annotation) => annotation.coordinateSpace !== 'normalized'
+  )
+
   return (
     <LiveSocketContext.Provider value={socket}>
-    <div className="w-screen h-screen bg-surface-0 text-text-primary grid grid-rows-[auto_1fr_auto] font-sans overflow-hidden">
-      <div className="px-4 py-2 flex justify-between items-center border-b border-border-strong bg-surface-1">
+    <div className="w-screen h-screen min-w-0 bg-surface-0 text-text-primary grid grid-rows-[auto_1fr_auto] font-sans overflow-hidden">
+      <div className="px-4 py-2 flex flex-wrap justify-between items-center gap-2 border-b border-border-strong bg-surface-1">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/')}
@@ -223,34 +261,44 @@ export default function SpeakerViewPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-px overflow-hidden">
-        <div className="p-4 grid grid-rows-[minmax(0,1fr)_140px] gap-3 min-h-0">
-          <PreviewFrame htmlContent={htmlContent} state={liveState} title="Current Slide" />
+      <div
+        data-testid="speaker-main"
+        className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-px overflow-y-auto lg:overflow-hidden min-h-0"
+      >
+        <div
+          data-testid="speaker-previews"
+          className="p-4 grid grid-rows-[minmax(240px,1fr)_140px] gap-3 min-h-[420px] lg:min-h-0"
+        >
+          <PreviewFrame htmlContent={htmlContent} state={liveState} title="Current Slide">
+            <LegacyAnnotationOverlay strokes={legacyAnnotationStrokes} />
+            <AnnotationCanvas
+              tool={annotationTool}
+              color={annotationColor}
+              strokeWidth={3}
+              strokes={normalizedAnnotationStrokes}
+              onStrokeComplete={handleStrokeComplete}
+              onLaserChange={handleLaserChange}
+              onErase={(strokeId) => {
+                socketRef.current?.emit('annotation:remove', {
+                  slideIndex: liveState.slideIndex,
+                  annotationId: strokeId,
+                })
+              }}
+            />
+          </PreviewFrame>
           <PreviewFrame htmlContent={htmlContent} state={nextState} title="Next Slide" />
         </div>
 
-        <div className="p-4 border-l border-border-strong flex flex-col overflow-hidden">
+        <div
+          data-testid="speaker-notes"
+          className="p-4 min-h-[240px] lg:min-h-0 border-t lg:border-t-0 lg:border-l border-border-strong flex flex-col overflow-hidden"
+        >
           <h4 className="label-caps m-0 mb-3">Speaker Notes</h4>
           <div className="flex-1 overflow-y-auto text-base leading-[1.8] text-text-primary whitespace-pre-wrap">
             {currentSlide?.notes || 'No speaker notes for this slide.'}
           </div>
         </div>
       </div>
-
-      {/* Annotation canvas overlay (absolute positioned) */}
-      <AnnotationCanvas
-        tool={annotationTool}
-        color={annotationColor}
-        strokeWidth={3}
-        strokes={annotationStrokes}
-        onStrokeComplete={handleStrokeComplete}
-        onErase={(strokeId) => {
-          if (socketRef.current) socketRef.current.emit('annotation:remove', { slideIndex: liveState.slideIndex, annotationId: strokeId })
-        }}
-        onClear={() => {
-          if (socketRef.current) socketRef.current.emit('annotation:clear', { slideIndex: liveState.slideIndex })
-        }}
-      />
 
       {/* Annotation toolbar */}
       <AnnotationToolbar

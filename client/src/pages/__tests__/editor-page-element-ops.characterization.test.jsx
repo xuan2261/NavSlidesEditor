@@ -184,6 +184,53 @@ describe('EditorPage element-ops characterization', () => {
     expect(snap.slides[0].elements).toHaveLength(2)
   })
 
+  it('duplicates the unlocked members of a mixed locked selection', async () => {
+    h.seed.slides[0].elements[1].locked = true
+    renderPage()
+    await screen.findByDisplayValue('Char Deck')
+
+    await selectElements(['el-a', 'el-b'])
+    await pressKey({ key: 'd', ctrlKey: true })
+
+    await waitFor(() => {
+      const elements = lastSaved()?.slides?.[0]?.elements
+      expect(elements).toHaveLength(3)
+      expect(elements.filter((element) => element.locked)).toHaveLength(1)
+    }, { timeout: 2500 })
+  })
+
+  it('uses a 1px default document-level keyboard nudge', async () => {
+    renderPage()
+    await screen.findByDisplayValue('Char Deck')
+
+    await selectElements(['el-a'])
+    await pressKey({ key: 'ArrowRight' })
+
+    await waitFor(() => {
+      expect(lastSaved()?.slides?.[0]?.elements?.find((element) => element.id === 'el-a')?.x).toBe(
+        81
+      )
+    }, { timeout: 2500 })
+  })
+
+  it('steps an unlocked element across a locked neighbor without duplicate z-indexes', async () => {
+    h.seed.slides[0].elements[1].locked = true
+    renderPage()
+    await screen.findByDisplayValue('Char Deck')
+
+    await selectElements(['el-a'])
+    await pressKey({ key: ']', ctrlKey: true })
+
+    await waitFor(() => {
+      const elements = lastSaved()?.slides?.[0]?.elements
+      const zIndexes = elements?.map((element) => element.zIndex)
+      expect(new Set(zIndexes).size).toBe(elements?.length)
+      expect(elements?.find((element) => element.id === 'el-a')?.zIndex).toBeGreaterThan(
+        elements?.find((element) => element.id === 'el-b')?.zIndex
+      )
+    }, { timeout: 2500 })
+  })
+
   it('does NOT toggle element visibility from the selection pane when the slide is locked', async () => {
     h.seed.slides[0].locked = true
     renderPage()

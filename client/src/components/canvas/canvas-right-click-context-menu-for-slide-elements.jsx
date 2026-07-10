@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { Button } from '../ui'
 import { sanitizeMediaSrc } from '../../utils/url-safety'
+import { computeCropResetGeometry } from './image-crop-geometry'
 
 const SNAP_REF_OPTIONS = [
   { id: 'ul', label: 'Upper Left', fx: 0, fy: 0 },
@@ -121,7 +122,9 @@ export default function CanvasContextMenu({
   const contextSelectionIds = contextMenu.contextSelectionIds || [contextMenu.elementId]
   const contextElements = (slide?.elements || []).filter((e) => contextSelectionIds.includes(e.id))
   const hasLockedContext = contextElements.some((e) => e.locked)
+  const hasMutableContext = contextElements.some((e) => !e.locked)
   const isReadOnly = !!slide?.locked || hasLockedContext
+  const mutationDisabled = !!slide?.locked || !hasMutableContext
   const currentRef = ctxEl?.snapRef || 'ul'
   const copyableUrl = ['image', 'video'].includes(contextMenu.elementType)
     ? getCopyableMediaUrl(ctxEl, origin)
@@ -145,7 +148,6 @@ export default function CanvasContextMenu({
     >
       <Button
         variant="ghost"
-        disabled={isReadOnly}
         onClick={() => {
           onCopy?.()
           onClose()
@@ -155,7 +157,7 @@ export default function CanvasContextMenu({
       </Button>
       <Button
         variant="ghost"
-        disabled={isReadOnly}
+        disabled={mutationDisabled}
         onClick={() => {
           onCut?.()
           onClose()
@@ -176,7 +178,7 @@ export default function CanvasContextMenu({
       </Button>
       <Button
         variant="ghost"
-        disabled={isReadOnly}
+        disabled={mutationDisabled}
         onClick={() => {
           onDuplicate?.()
           onClose()
@@ -204,11 +206,9 @@ export default function CanvasContextMenu({
             onClick={() => {
               const el = slide?.elements?.find((e) => e.id === contextMenu.elementId)
               if (el && el.imageW != null) {
+                const geometry = computeCropResetGeometry(el)
                 onUpdateElement(contextMenu.elementId, {
-                  x: el.x + (el.imageOffsetX ?? 0),
-                  y: el.y + (el.imageOffsetY ?? 0),
-                  width: el.imageW,
-                  height: el.imageH,
+                  ...geometry,
                   imageW: null,
                   imageH: null,
                   imageOffsetX: null,

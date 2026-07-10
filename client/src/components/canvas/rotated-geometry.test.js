@@ -5,6 +5,7 @@ import {
   getRotatedAABB,
   applyResize,
   applyResizeAspectRatio,
+  clampAspectResizeToSlide,
   clampToSlide,
   MIN_SIZE,
 } from './use-canvas-resize-rotate'
@@ -167,4 +168,107 @@ describe('aspect-ratio resize guards a zero-dimension element', () => {
     expect(updates.width).toBeGreaterThanOrEqual(MIN_SIZE)
     expect(updates.height).toBeGreaterThanOrEqual(MIN_SIZE)
   })
+})
+
+describe('rotated aspect-ratio resize', () => {
+  it.each(['nw', 'ne', 'sw', 'se'])(
+    'preserves the opposite world corner for the %s handle',
+    (handle) => {
+      const start = { x: 100, y: 100, width: 200, height: 100, rotation: 45 }
+      const fixed = {
+        nw: [start.x + start.width, start.y + start.height],
+        ne: [start.x, start.y + start.height],
+        sw: [start.x + start.width, start.y],
+        se: [start.x, start.y],
+      }[handle]
+      const oldCenter = {
+        x: start.x + start.width / 2,
+        y: start.y + start.height / 2,
+      }
+      const before = rotatePoint(fixed[0], fixed[1], oldCenter.x, oldCenter.y, start.rotation)
+      const updates = applyResize(handle, start, 80, 25)
+
+      applyResizeAspectRatio(handle, start, updates)
+
+      const newCenter = {
+        x: updates.x + updates.width / 2,
+        y: updates.y + updates.height / 2,
+      }
+      const localFixed = {
+        nw: [updates.x + updates.width, updates.y + updates.height],
+        ne: [updates.x, updates.y + updates.height],
+        sw: [updates.x + updates.width, updates.y],
+        se: [updates.x, updates.y],
+      }[handle]
+      const after = rotatePoint(
+        localFixed[0],
+        localFixed[1],
+        newCenter.x,
+        newCenter.y,
+        start.rotation
+      )
+      expect(after.x).toBeCloseTo(before.x, 5)
+      expect(after.y).toBeCloseTo(before.y, 5)
+      expect(updates.width / updates.height).toBeCloseTo(2, 5)
+    }
+  )
+
+  it('keeps the fixed corner while constraining an oversized Shift-resize', () => {
+    const start = { x: 300, y: 200, width: 200, height: 100, rotation: 45 }
+    const oldCenter = { x: 400, y: 250 }
+    const fixedBefore = rotatePoint(300, 200, oldCenter.x, oldCenter.y, start.rotation)
+    const updates = applyResize('se', start, 1000, 1000)
+    applyResizeAspectRatio('se', start, updates)
+
+    expect(clampAspectResizeToSlide('se', updates, start, 960, 540)).toBe(true)
+
+    const newCenter = {
+      x: updates.x + updates.width / 2,
+      y: updates.y + updates.height / 2,
+    }
+    const fixedAfter = rotatePoint(
+      updates.x,
+      updates.y,
+      newCenter.x,
+      newCenter.y,
+      start.rotation
+    )
+    const box = getRotatedAABB({ ...start, ...updates })
+    expect(fixedAfter.x).toBeCloseTo(fixedBefore.x, 5)
+    expect(fixedAfter.y).toBeCloseTo(fixedBefore.y, 5)
+    expect(box.left).toBeGreaterThanOrEqual(0)
+    expect(box.top).toBeGreaterThanOrEqual(0)
+    expect(box.right).toBeLessThanOrEqual(960)
+    expect(box.bottom).toBeLessThanOrEqual(540)
+  })
+
+  it.each([
+    ['nw', -1000, -1000, { x: 500, y: 300 }],
+    ['ne', 1000, -1000, { x: 300, y: 300 }],
+    ['sw', -1000, 1000, { x: 500, y: 200 }],
+    ['se', 1000, 1000, { x: 300, y: 200 }],
+  ])(
+    'keeps an unrotated %s resize inside while preserving its fixed corner',
+    (handle, dx, dy, fixed) => {
+      const start = { x: 300, y: 200, width: 200, height: 100, rotation: 0 }
+      const updates = applyResize(handle, start, dx, dy)
+      applyResizeAspectRatio(handle, start, updates)
+
+      expect(clampAspectResizeToSlide(handle, updates, start, 960, 540)).toBe(true)
+
+      const resultingFixed = {
+        nw: { x: updates.x + updates.width, y: updates.y + updates.height },
+        ne: { x: updates.x, y: updates.y + updates.height },
+        sw: { x: updates.x + updates.width, y: updates.y },
+        se: { x: updates.x, y: updates.y },
+      }[handle]
+      expect(resultingFixed.x).toBeCloseTo(fixed.x, 5)
+      expect(resultingFixed.y).toBeCloseTo(fixed.y, 5)
+      expect(updates.width / updates.height).toBeCloseTo(2, 6)
+      expect(updates.x).toBeGreaterThanOrEqual(0)
+      expect(updates.y).toBeGreaterThanOrEqual(0)
+      expect(updates.x + updates.width).toBeLessThanOrEqual(960)
+      expect(updates.y + updates.height).toBeLessThanOrEqual(540)
+    }
+  )
 })

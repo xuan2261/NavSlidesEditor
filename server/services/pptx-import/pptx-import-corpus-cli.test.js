@@ -46,6 +46,14 @@ describe('pptx import corpus cli strict gates', () => {
         roundTrip: { overall: STRICT_AVG_MIN_ROUND_TRIP },
         propertyCoverage: { overall: 1 },
         elementCount: {},
+        stats: {
+          sceneGraphUnmapped: 0,
+          primitivePlaceholderCount: 0,
+          nativeObjectCoverage: {
+            chartCoverageGapCount: 0,
+            smartArtCoverageGapCount: 0,
+          },
+        },
       }],
       strictSummary()
     )
@@ -56,6 +64,17 @@ describe('pptx import corpus cli strict gates', () => {
       perDeckSemantic: STRICT_CORPUS_GATES.perDeckSemantic,
       maxClassDrop: STRICT_CORPUS_GATES.maxClassDrop,
       classDropTypes: STRICT_CORPUS_GATES.classDropTypes,
+    })
+    expect(baseline).toMatchObject({
+      evidenceVersion: 2,
+      summary: {
+        corpusEvidence: {
+          sceneGraphUnmapped: 0,
+          chartCoverageGapCount: 0,
+          smartArtCoverageGapCount: 0,
+          permanentPlaceholderCount: 0,
+        },
+      },
     })
   })
 })

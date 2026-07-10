@@ -2,10 +2,12 @@ const { UPLOADS_DIR } = require('../storage')
 const { FAILURE_TYPES } = require('./constants')
 const { PptxImportError, sanitizeDiagnostic } = require('./diagnostics')
 const { mapPptxOutput } = require('./mapper')
-const { validatePptxPackage } = require('./pptx-guards')
+const { loadPptxArchive } = require('./pptx-guards')
 const { runParserWorker } = require('./worker-runner')
 const { buildOoxmlSceneGraph, reconcileSceneGraph } = require('./ooxml-scene-graph')
+const { resolveSceneGraphStrictPolicy } = require('./ooxml-scene-graph/strict-policy')
 const { assertPresentationAcceptance } = require('./acceptance-criteria')
+const { createMediaBudget } = require('./resource-budgets')
 
 function buildImportStats({ mappedStats = {}, parsed = {}, startedAt = Date.now(), now = Date.now() }) {
   return {
@@ -33,21 +35,26 @@ function buildImportStats({ mappedStats = {}, parsed = {}, startedAt = Date.now(
 async function importPptxFile(filePath, options = {}) {
   const started = Date.now()
   const originalName = options.originalName || filePath
-  const packageInfo = await validatePptxPackage(filePath, originalName, { signal: options.signal })
-  options.signal?.throwIfAborted?.()
+  const strictPolicy = resolveSceneGraphStrictPolicy(options)
   const parsed = await runParserWorker(filePath, {
     ...(options.workerOptions || {}),
     onProgress: options.onProgress,
     signal: options.signal,
+    originalName,
   })
 
   if (!parsed.ok) {
     throw new PptxImportError(parsed.error?.message || 'PPTX parse failed', {
-      status: 422,
+      status: parsed.error?.status || 422,
       type: parsed.error?.type || FAILURE_TYPES.parseFailed,
     })
   }
 
+  options.signal?.throwIfAborted?.()
+  const packageInfo = {
+    ...parsed.packageInfo,
+    zip: await loadPptxArchive(filePath),
+  }
   options.signal?.throwIfAborted?.()
   // Scene graph is inventory truth (Phase 03); mapper still uses pptxtojson payloads.
   let sceneGraph = null
@@ -67,18 +74,18 @@ async function importPptxFile(filePath, options = {}) {
     uploadsDir: options.uploadsDir || UPLOADS_DIR,
     onProgress: options.onProgress,
     signal: options.signal,
+    mediaBudget: options.mediaBudget || createMediaBudget(options.maxAggregateMediaBytes),
+    mediaTransaction: options.mediaTransaction,
     sceneGraph: sceneGraph && !sceneGraph.error ? sceneGraph : null,
-    strict: options.strict === true || process.env.PPTX_SLA_STRICT === '1',
+    strict: strictPolicy.strict,
   })
 
   let sceneWarnings = []
   if (sceneGraph && !sceneGraph.error) {
     try {
       const reconciliation = reconcileSceneGraph(sceneGraph, mapped.presentation, {
-        strictCountGate:
-          options.strictCountGate === true || process.env.PPTX_SLA_STRICT_COUNT === '1',
-        strictNodeGate:
-          options.strictNodeGate === true || process.env.PPTX_SLA_STRICT_NODES === '1',
+        strictCountGate: strictPolicy.strictCountGate,
+        strictNodeGate: strictPolicy.strictNodeGate,
       })
       sceneWarnings = reconciliation.warnings || []
       if (mapped.stats) {
@@ -99,8 +106,7 @@ async function importPptxFile(filePath, options = {}) {
     }
   }
 
-  const strict = options.strict === true || process.env.PPTX_SLA_STRICT === '1'
-  if (strict) {
+  if (strictPolicy.strict) {
     try {
       assertPresentationAcceptance(mapped.presentation, undefined, parsed.output, {
         strictPrimitives: process.env.PPTX_SLA_STRICT_PRIMITIVES === '1' || options.strictPrimitives === true,

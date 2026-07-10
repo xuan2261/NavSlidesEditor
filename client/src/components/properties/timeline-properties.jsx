@@ -1,5 +1,6 @@
-import { Input, Select, ColorPicker } from '../../components/ui'
+import { Button, Input, Select, ColorPicker } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
+import { getSafeMidpointDate } from './timeline-date-utils'
 
 export default function TimelineProperties({ element, onUpdate }) {
   const spacing = element.tickSpacing || 'auto'
@@ -48,9 +49,7 @@ export default function TimelineProperties({ element, onUpdate }) {
     const endYear = parseInt(endDate) || 2025
     const midDate = yearMode
       ? String(Math.round((startYear + endYear) / 2))
-      : new Date((new Date(startDate).getTime() + new Date(endDate).getTime()) / 2)
-          .toISOString()
-          .split('T')[0]
+      : getSafeMidpointDate(startDate, endDate)
     updateItems([
         ...items,
         {
@@ -237,12 +236,13 @@ export default function TimelineProperties({ element, onUpdate }) {
           </div>
         </div>
       ))}
-      <button
-        className="btn btn-secondary w-full justify-center text-xs py-1.5"
+      <Button
+        variant="secondary"
+        className="w-full justify-center py-1.5 text-xs"
         onClick={addItem}
       >
         + Add Event
-      </button>
+      </Button>
     </div>
   )
 }

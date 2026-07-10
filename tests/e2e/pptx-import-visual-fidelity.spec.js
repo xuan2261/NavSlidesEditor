@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
+  apiDeletePresentation,
+  apiGetPresentation,
   apiUpdatePresentation,
   expect,
   test,
@@ -43,8 +45,11 @@ async function importDeckIntoPresentation(request, testPresentation, deckName) {
   expect(importRes.status()).toBe(202)
   const { jobId } = await importRes.json()
   const imported = await waitForPptxImport(request, jobId)
-  expect(imported.presentation?.slides?.length).toBeGreaterThan(0)
-  return apiUpdatePresentation(request, testPresentation.id, imported.presentation)
+  const importedPresentation = await apiGetPresentation(request, imported.presentationId)
+  expect(importedPresentation.slides?.length).toBeGreaterThan(0)
+  const presentation = await apiUpdatePresentation(request, testPresentation.id, importedPresentation)
+  await apiDeletePresentation(request, imported.presentationId)
+  return presentation
 }
 
 test.describe('PPTX import visual fidelity', () => {

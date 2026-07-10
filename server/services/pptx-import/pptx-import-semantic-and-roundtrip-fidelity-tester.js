@@ -12,7 +12,7 @@ const JSZip = require('jszip')
 const pptxgen = require('pptxgenjs')
 const { mapPptxOutput, sanitizeHtml } = require('./mapper')
 const { assertPresentationAcceptance } = require('./acceptance-criteria')
-const { identityMatrix, mapBoxByMatrix, multiply, readCoord, readNumber, rotateAround, scaleAround, translate } = require('./geometry')
+const { fitBoxWithinBounds, identityMatrix, mapBoxByMatrix, multiply, readCoord, readNumber, rotateAround, scaleAround, translate } = require('./geometry')
 const { UPLOADS_DIR } = require('../storage')
 
 const DEFAULT_CORPUS = path.join(__dirname, '..', '..', 'data', 'test-corpus')
@@ -327,6 +327,70 @@ function transformSourceChild(child, matrix) {
   }
 }
 
+function sourceToNavScale(source, nav) {
+  const sourceWidth = Number(source?.size?.width)
+  const sourceHeight = Number(source?.size?.height)
+  const navWidth = Number(nav?.resolution?.width)
+  const navHeight = Number(nav?.resolution?.height)
+  return {
+    x:
+      Number.isFinite(sourceWidth) && sourceWidth > 0 && Number.isFinite(navWidth) && navWidth > 0
+        ? navWidth / sourceWidth
+        : 1,
+    y:
+      Number.isFinite(sourceHeight) && sourceHeight > 0 && Number.isFinite(navHeight) && navHeight > 0
+        ? navHeight / sourceHeight
+        : 1,
+  }
+}
+
+function normalizeSourceElementGeometry(element, scale) {
+  const bounds = semanticBounds(element)
+  const scaled = {
+    x: bounds.x * scale.x,
+    y: bounds.y * scale.y,
+    width: bounds.width * scale.x,
+    height: bounds.height * scale.y,
+  }
+  const type = sourceSemanticType(element)
+  const expected = type === 'image' || type === 'text' ? fitBoxWithinBounds(scaled) : scaled
+  return {
+    ...element,
+    left: expected.x,
+    top: expected.y,
+    x: expected.x,
+    y: expected.y,
+    width: expected.width,
+    height: expected.height,
+  }
+}
+
+function globallyMatchSourceEntries(sourceEntries, navElements) {
+  const candidates = []
+  for (const [sourceIndex, entry] of sourceEntries.entries()) {
+    const preferred = semanticTypePreferences(sourceSemanticType(entry.element))
+    for (const [navIndex, nav] of navElements.entries()) {
+      if (!preferred.includes(normalizeSemanticType(nav?.type))) continue
+      candidates.push({
+        sourceIndex,
+        navIndex,
+        score: semanticCandidateScore(entry.element, nav),
+      })
+    }
+  }
+  candidates.sort((a, b) => b.score - a.score)
+  const usedSources = new Set()
+  const usedNavs = new Set()
+  const matches = new Map()
+  for (const candidate of candidates) {
+    if (usedSources.has(candidate.sourceIndex) || usedNavs.has(candidate.navIndex)) continue
+    usedSources.add(candidate.sourceIndex)
+    usedNavs.add(candidate.navIndex)
+    matches.set(candidate.sourceIndex, navElements[candidate.navIndex])
+  }
+  return matches
+}
+
 function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
   const pptxSlides = (pptxtojsonJSON?.slides || []).map((slide) => slide.elements || [])
   const navSlides = (navslidesJSON?.slides || []).map((slide) => slide.elements || [])
@@ -338,11 +402,11 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
   const navByType = {}
   let coverageTotal = 0
   let coverageCaptured = 0
+  const sourceScale = sourceToNavScale(pptxtojsonJSON, navslidesJSON)
 
   for (let si = 0; si < Math.max(pptxSlides.length, navSlides.length); si++) {
     const pptsRaw = pptxSlides[si] || []
     const navs = navSlides[si] || []
-    const usedNavIndices = new Set()
 
     for (const navEl of navs) {
       // An unsupported-image placeholder still represents the source image (the
@@ -367,7 +431,10 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
             const childPath = [...pathParts, childIndex]
             if (c.type === 'group') recurse(c, childPath, groupMatrix)
             else ppts.push({
-              element: transformSourceChild(c, groupMatrix),
+              element: normalizeSourceElementGeometry(
+                transformSourceChild(c, groupMatrix),
+                sourceScale
+              ),
               sourceIndex,
               sourcePath: childPath.join('.'),
             })
@@ -375,10 +442,15 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
         }
         recurse(el, [sourceIndex])
       } else {
-        ppts.push({ element: el, sourceIndex, sourcePath: String(sourceIndex) })
+        ppts.push({
+          element: normalizeSourceElementGeometry(el, sourceScale),
+          sourceIndex,
+          sourcePath: String(sourceIndex),
+        })
       }
     }
 
+    const matchedNavs = globallyMatchSourceEntries(ppts, navs)
     for (let flattenedIndex = 0; flattenedIndex < ppts.length; flattenedIndex++) {
       const pptxEntry = ppts[flattenedIndex]
       const pptxEl = pptxEntry.element
@@ -386,7 +458,7 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
       sourceByType[type] = (sourceByType[type] || 0) + 1
       if (!coverageByType[type]) coverageByType[type] = { captured: 0, total: 0 }
 
-      const navEl = findMatchingNavElement(pptxEl, navs, usedNavIndices)
+      const navEl = matchedNavs.get(flattenedIndex)
       if (!navEl) {
         coverageByType[type].total += 1
         coverageTotal += 1
@@ -502,10 +574,6 @@ function applyStrictPerTypeGates(result, options = {}) {
       )
     }
   }
-
-  const name = String(result.file || '').toLowerCase()
-  const isGeneratedFixture = name.includes('generated') || name.includes('fixture')
-  if (!isGeneratedFixture) return errors
 
   for (const [type, stats] of Object.entries(result.geometryDrift?.byType || {})) {
     const threshold = strictGeometryThreshold(type)

@@ -1,6 +1,6 @@
 {
   "name": "navslides-editor",
-  "version": "1.15.5",
+  "version": "1.15.6",
   "private": true,
   "license": "AGPL-3.0-only",
   "description": "NavSlides Editor — A WYSIWYG presentation editor powered by Reveal.js",
@@ -36,7 +36,7 @@
     "matrix:extended-report": "npm run matrix && node scripts/feature-inventory/extended-domain-report.mjs",
     "matrix:baseline-report": "npm run matrix && node scripts/feature-inventory/check-coverage-gate.mjs && node scripts/feature-inventory/baseline-gap-report.mjs",
     "matrix:gate": "npm run matrix && node scripts/feature-inventory/check-coverage-gate.mjs && node scripts/feature-inventory/check-manifest-completeness.mjs && npm run matrix:element-control",
-    "test:audit": "vitest run client/src/components/ribbon/__tests__/audit-* client/src/lib/__tests__/tailwind-config-* client/src/components/ribbon/__tests__/audit-ribbon-onmousedown-preventdefault-tiptap-whitelist-compliance.test.jsx",
+    "test:audit": "vitest run client/src/utils/legacy-control-class-audit.test.js client/src/utils/native-dialog-audit.test.js client/src/utils/presentation-ui-token-audit.test.js client/src/utils/ui-typography-token-audit.test.js client/src/utils/tailwind-inline-style-audit.test.js tests/unit/pptx-import-audit-helper.test.js tests/unit/dependency-audit-security-floor.test.js scripts/feature-inventory/validate-element-control-audit-matrix.test.mjs",
     "test:e2e": "playwright test",
     "test:e2e:report": "playwright show-report",
     "test:e2e:shard": "playwright test --shard",

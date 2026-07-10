@@ -26,4 +26,27 @@ describe('timeline properties controls', () => {
       items: [expect.objectContaining({ id: 'event-1', connectorLength: 64 })],
     })
   })
+
+  it('adds a deterministic valid event when a date range endpoint is empty', () => {
+    const onUpdate = vi.fn()
+    render(
+      <TimelineProperties
+        element={{
+          id: 'timeline-1',
+          type: 'timeline',
+          tickSpacing: 'day',
+          timelineStart: '',
+          timelineEnd: '2025-01-10',
+          events: [],
+        }}
+        onUpdate={onUpdate}
+      />
+    )
+
+    expect(() => fireEvent.click(screen.getByRole('button', { name: /Add Event/ }))).not.toThrow()
+    expect(onUpdate).toHaveBeenCalledWith({
+      events: [expect.objectContaining({ date: '2025-01-10' })],
+      items: [expect.objectContaining({ date: '2025-01-10' })],
+    })
+  })
 })

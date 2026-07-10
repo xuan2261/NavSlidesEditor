@@ -217,4 +217,28 @@ describe('pptx parser worker runner', () => {
       await fs.rm(dir, { recursive: true, force: true })
     }
   })
+
+  it.skipIf(process.platform === 'win32')('escalates to SIGKILL when a child ignores SIGTERM', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-worker-stubborn-'))
+    const workerPath = path.join(dir, 'stubborn-worker.js')
+    const controller = new AbortController()
+    try {
+      await fs.writeFile(
+        workerPath,
+        "process.on('SIGTERM',()=>{});process.on('message',()=>{});process.send({type:'ready'})"
+      )
+      const pending = runParserWorker('deck.pptx', {
+        workerPath,
+        timeoutMs: 1000,
+        killGraceMs: 20,
+        signal: controller.signal,
+      })
+      controller.abort()
+      const result = await pending
+      expect(result.ok).toBe(false)
+      await expect(result.workerClosed).resolves.toMatchObject({ signal: 'SIGKILL' })
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
 })

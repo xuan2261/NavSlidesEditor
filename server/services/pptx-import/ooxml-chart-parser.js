@@ -3,10 +3,10 @@
  * Extracts cached categories/values from chart series (no xlsx embedding required when cache present).
  */
 
-const { supportRow } = require('./chart-support-matrix')
+const { assertStrictChartSupport } = require('./chart-support-matrix')
 
 const CHART_KIND_RE =
-  /<(?:[a-z0-9]+:)?(barChart|lineChart|pieChart|doughnutChart|areaChart|scatterChart|radarChart|ofPieChart|stockChart|surfaceChart|bubbleChart)\b/i
+  /<(?:[a-z0-9]+:)?(polarAreaChart|barChart|lineChart|pieChart|doughnutChart|areaChart|scatterChart|radarChart|ofPieChart|stockChart|surfaceChart|bubbleChart)\b/i
 
 function textBetween(xml, openRe, closeTag) {
   const m = String(xml || '').match(openRe)
@@ -66,6 +66,17 @@ function seriesValues(serXml) {
 }
 
 function detectOoxmlChartType(xml) {
+  const plotArea = textBetween(
+    String(xml || ''),
+    /<(?:[a-z0-9]+:)?plotArea\b[^>]*>/i,
+    '</c:plotArea>'
+  )
+  const kinds = [
+    ...plotArea.matchAll(
+      /<(?:[a-z0-9]+:)?(polarAreaChart|barChart|lineChart|pieChart|doughnutChart|areaChart|scatterChart|radarChart|ofPieChart|stockChart|surfaceChart|bubbleChart)\b/gi
+    ),
+  ].map((match) => match[1].toLowerCase())
+  if (new Set(kinds).size > 1) return 'comboChart'
   const m = String(xml || '').match(CHART_KIND_RE)
   return m ? m[1] : 'barChart'
 }
@@ -74,10 +85,10 @@ function detectOoxmlChartType(xml) {
  * @param {string} chartXml
  * @returns {{ ooxmlType: string, navType: string, supportStatus: string, chartData: { labels: string[], datasets: object[] }, title: string|null } | null}
  */
-function parseOoxmlChart(chartXml) {
+function parseOoxmlChart(chartXml, options = {}) {
   if (!chartXml || typeof chartXml !== 'string') return null
   const ooxmlType = detectOoxmlChartType(chartXml)
-  const row = supportRow(ooxmlType)
+  const row = assertStrictChartSupport(ooxmlType, options.strict === true, options.context)
   const seriesBlocks = parseSeriesBlocks(chartXml)
   if (!seriesBlocks.length) {
     return {
@@ -208,6 +219,8 @@ async function injectChartsFromSceneGraph({
         kind: 'graphicFrame',
         graphicKind: 'chart',
         slideIndex,
+        matchedBy: 'relationship',
+        authoritative: true,
       }
       byPath._pptxChartMeta = {
         ...(byPath._pptxChartMeta || {}),
@@ -226,6 +239,8 @@ async function injectChartsFromSceneGraph({
         graphicKind: 'chart',
         slideIndex,
         name: node.name || null,
+        matchedBy: 'order',
+        authoritative: false,
       }
       if (node.rels?.chartTarget) {
         el._pptxChartMeta = {
@@ -257,21 +272,15 @@ async function injectChartsFromSceneGraph({
     }
 
     const xml = await readZipText(zip, chartPath)
-    const parsed = parseOoxmlChart(xml)
+    const parsed = parseOoxmlChart(xml, {
+      strict,
+      context: { slideIndex, chartPath, nodeId: String(node.id) },
+    })
     if (!parsed || parsed.empty) {
       warnings.push({
         slideIndex,
         type: 'native-chart-degraded',
         message: `Chart ${chartPath} produced no series data`,
-      })
-      continue
-    }
-
-    if (parsed.supportStatus === 'unsupported-strict' && strict) {
-      warnings.push({
-        slideIndex,
-        type: 'chart-unsupported-strict',
-        message: `Chart type ${parsed.ooxmlType} is unsupported under PPTX_SLA_STRICT`,
       })
       continue
     }
@@ -292,6 +301,8 @@ async function injectChartsFromSceneGraph({
         graphicKind: 'chart',
         slideIndex,
         name: node.name || null,
+        matchedBy: 'relationship',
+        authoritative: true,
       },
       _pptxChartMeta: {
         originalType: parsed.ooxmlType,

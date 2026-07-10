@@ -26,6 +26,7 @@ import {
   expandSelectionIdsForGroups,
   resolvePointerDownSelection,
 } from '../utils/active-slide-selection'
+import { computeCropCommitGeometry } from './canvas/image-crop-geometry'
 
 function getBgStyle(bg) {
   if (!bg || bg.type === 'none')
@@ -246,17 +247,12 @@ export default function SlideCanvas({
         }
         return // Block other keys when editing
       }
-      const selectedElements = (slideRef.current?.elements || []).filter((el) =>
-        selectedElementIds.includes(el.id)
-      )
-      const hasLockedSelection = selectedElements.some((el) => el.locked)
       if (selectedElementIds.length > 0) {
         if (
           (e.key === 'Delete' || e.key === 'Backspace') &&
           tag !== 'INPUT' &&
           tag !== 'TEXTAREA' &&
-          !slideRef.current?.locked &&
-          !hasLockedSelection
+          !slideRef.current?.locked
         ) {
           onDeleteSelectedElements()
           e.preventDefault()
@@ -274,10 +270,6 @@ export default function SlideCanvas({
             e.preventDefault()
           }
           if (e.key === 'x' || e.key === 'X') {
-            if (hasLockedSelection) {
-              e.preventDefault()
-              return
-            }
             onCut?.()
             e.preventDefault()
           }
@@ -286,10 +278,6 @@ export default function SlideCanvas({
             e.preventDefault()
           }
           if (e.key === 'd' || e.key === 'D') {
-            if (hasLockedSelection) {
-              e.preventDefault()
-              return
-            }
             onDuplicate?.()
             e.preventDefault()
           }
@@ -346,13 +334,12 @@ export default function SlideCanvas({
     if (!cropMode) return
     const element = slide?.elements?.find((el) => el.id === cropMode.elementId)
     if (!element || element.locked) return
-    const { x: cx, y: cy, w: cw, h: ch } = cropMode
+    const { x: cx, y: cy } = cropMode
 
     // Pixel crop amounts relative to current element box
     const dx = Math.round(cx * element.width)
     const dy = Math.round(cy * element.height)
-    const newW = Math.round(cw * element.width)
-    const newH = Math.round(ch * element.height)
+    const geometry = computeCropCommitGeometry(element, cropMode)
 
     // imageW/H = the absolute pixel size the image renders at (never changes after first crop)
     const imgW = element.imageW ?? element.width
@@ -362,10 +349,7 @@ export default function SlideCanvas({
     const offY = (element.imageOffsetY ?? 0) - dy
 
     onUpdateElement(cropMode.elementId, {
-      x: element.x + dx,
-      y: element.y + dy,
-      width: newW,
-      height: newH,
+      ...geometry,
       imageW: imgW,
       imageH: imgH,
       imageOffsetX: offX,
@@ -628,7 +612,8 @@ export default function SlideCanvas({
                   clientY,
                   { x: cropMode.x, y: cropMode.y, w: cropMode.w, h: cropMode.h },
                   el.width,
-                  el.height
+                  el.height,
+                  el.rotation || 0
                 )
               }}
               onCommitCrop={commitCrop}

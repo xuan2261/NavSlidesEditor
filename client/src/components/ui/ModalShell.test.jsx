@@ -93,6 +93,40 @@ describe('ModalShell', () => {
     expect(latestClose).toHaveBeenCalledTimes(1)
   })
 
+  it('only closes the topmost modal on Escape and removes unmounted modals from the stack', () => {
+    const underlyingClose = vi.fn()
+    const topmostClose = vi.fn()
+
+    const { rerender, unmount } = render(
+      <>
+        <ModalShell titleId="underlying-title" title="Underlying" onClose={underlyingClose}>
+          Underlying body
+        </ModalShell>
+        <ModalShell titleId="topmost-title" title="Topmost" onClose={topmostClose}>
+          Topmost body
+        </ModalShell>
+      </>
+    )
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(topmostClose).toHaveBeenCalledTimes(1)
+    expect(underlyingClose).not.toHaveBeenCalled()
+
+    rerender(
+      <ModalShell titleId="underlying-title" title="Underlying" onClose={underlyingClose}>
+        Underlying body
+      </ModalShell>
+    )
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(underlyingClose).toHaveBeenCalledTimes(1)
+
+    unmount()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(underlyingClose).toHaveBeenCalledTimes(1)
+  })
+
   it('[red defect:modal.focus] traps Tab inside the dialog and restores opener focus', () => {
     render(<button type="button">Open modal</button>)
     const opener = screen.getByText('Open modal')

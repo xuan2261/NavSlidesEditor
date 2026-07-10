@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { exportPDF, downloadHTML, generateRevealHTML } from '../utils/generateHTML'
 import { generateOfflineHTML } from '../utils/offlineExport'
 import { exportProject } from '../utils/export-project'
@@ -10,6 +10,31 @@ import {
 import { api } from '../utils/api'
 import { showError, showNotice } from '../utils/app-feedback'
 
+function pptxContentFingerprint(presentation) {
+  if (!presentation) return ''
+  const content = { ...presentation }
+  for (const metadataKey of [
+    'id',
+    'pptxOriginal',
+    '_pptxEdited',
+    '_pptxEditedAt',
+    'createdAt',
+    'updatedAt',
+  ]) {
+    delete content[metadataKey]
+  }
+  return JSON.stringify(content)
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
 /**
  * Export/import action handlers extracted from EditorPage. Pure relocation —
  * same alert/console error UX as the inline closures.
@@ -19,10 +44,48 @@ import { showError, showNotice } from '../utils/app-feedback'
  *   onExportProject, onOpenProject}}
  */
 export function useExportActions(presentation) {
+  const pptxCleanStateRef = useRef({ presentationId: null, fingerprint: '', locallyEdited: false })
+  const cleanState = pptxCleanStateRef.current
+  if (cleanState.presentationId !== presentation?.id) {
+    cleanState.presentationId = presentation?.id || null
+    cleanState.fingerprint = presentation?.pptxOriginal
+      ? pptxContentFingerprint(presentation)
+      : ''
+    cleanState.locallyEdited = false
+  } else if (
+    cleanState.fingerprint &&
+    cleanState.fingerprint !== pptxContentFingerprint(presentation)
+  ) {
+    cleanState.locallyEdited = true
+  }
+
   const onExportPDF = useCallback(() => exportPDF(presentation), [presentation])
 
   const onExportPPTX = useCallback(async () => {
     try {
+      const canDownloadOriginal = Boolean(
+        presentation?.id &&
+          presentation?.pptxOriginal?.id &&
+          presentation?.pptxOriginal?.sha256 &&
+          !presentation?._pptxEdited &&
+          !cleanState.locallyEdited
+      )
+      if (canDownloadOriginal) {
+        try {
+          const original = await api.downloadPptxOriginal(presentation.id)
+          const filename = `${(presentation.title || 'presentation').replace(/[^a-z0-9._-]+/gi, '_')}.pptx`
+          downloadBlob(original, filename)
+          globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = {
+            surface: 'pptx-export',
+            mode: 'original-bytes',
+            warningCount: 0,
+            warnings: [],
+          }
+          return
+        } catch (err) {
+          if (err?.status !== 404) throw err
+        }
+      }
       const { exportToPptx } = await import('../utils/exportPptx')
       const warnings = await exportToPptx(presentation)
       globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = warnings.exportReport || null
@@ -31,7 +94,7 @@ export function useExportActions(presentation) {
       console.error('PPTX export failed:', err)
       showError('PPTX export failed: ' + err.message)
     }
-  }, [presentation])
+  }, [presentation, cleanState])
 
   const onExportHTML = useCallback(async () => {
     try {
@@ -47,12 +110,10 @@ export function useExportActions(presentation) {
       const html = generateRevealHTML(presentation)
       const offline = await generateOfflineHTML(html)
       const blob = new Blob([offline], { type: 'text/html' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}_offline.html`
-      a.click()
-      URL.revokeObjectURL(url)
+      downloadBlob(
+        blob,
+        `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}_offline.html`
+      )
     } catch (err) {
       console.error('Offline export failed:', err)
       showError('Offline export failed: ' + err.message)

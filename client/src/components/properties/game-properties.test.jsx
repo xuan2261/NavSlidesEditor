@@ -2,7 +2,7 @@ import React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import GameProperties from './game-properties.jsx'
-import { createGameElement, GAME_TYPES } from '../../constants/game-element-types-constants.js'
+import { createGameElement } from '../../constants/game-element-types-constants.js'
 
 const nestedDefaults = {
   'name-picker': {
@@ -86,8 +86,118 @@ function makeElement(gameType) {
 }
 
 describe('GameProperties game subtype persistence', () => {
-  it('[cap:element.game depth:persistence] writes a non-default persisted config path for every subtype', () => {
-    GAME_TYPES.all.forEach((gameType) => {
+  it('only exposes controls backed by the selected subtype schema', () => {
+    const { rerender } = render(
+      <GameProperties element={makeElement('name-picker')} onUpdate={vi.fn()} onDelete={() => {}} />
+    )
+
+    expect(screen.queryByRole('button', { name: 'Scoring' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Display' })).toBeTruthy()
+
+    rerender(
+      <GameProperties element={makeElement('relay-race')} onUpdate={vi.fn()} onDelete={() => {}} />
+    )
+    expect(screen.queryByText(/Questions \(/)).toBeNull()
+
+    rerender(
+      <GameProperties element={makeElement('trivia-champ')} onUpdate={vi.fn()} onDelete={() => {}} />
+    )
+    expect(screen.queryByText(/Questions \(/)).toBeNull()
+
+    rerender(
+      <GameProperties element={makeElement('jeopardy')} onUpdate={vi.fn()} onDelete={() => {}} />
+    )
+    expect(screen.queryByText(/Questions \(/)).toBeNull()
+    expect(screen.getByText('+ Add Team')).toBeTruthy()
+
+    rerender(
+      <GameProperties element={makeElement('hot-potato')} onUpdate={vi.fn()} onDelete={() => {}} />
+    )
+    expect(screen.getByText(/Questions \(/)).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Scoring' })).toBeNull()
+  })
+
+  it('keeps question row actions and correct-answer choices keyboard accessible', () => {
+    const onUpdate = vi.fn()
+    render(
+      <GameProperties
+        element={{
+          ...makeElement('hot-potato'),
+          'hot-potato': {
+            ...nestedDefaults['hot-potato'],
+            questions: [{
+              id: 'q-1',
+              question: 'Accessible question',
+              options: ['Yes', 'No'],
+              correctIndex: 0,
+              points: 10,
+            }],
+          },
+        }}
+        onUpdate={onUpdate}
+        onDelete={() => {}}
+      />
+    )
+
+    const edit = screen.getByRole('button', { name: 'Edit question 1' })
+    const remove = screen.getByRole('button', { name: 'Delete question 1' })
+    expect(edit.className).not.toContain('opacity-0')
+    expect(remove.className).not.toContain('opacity-0')
+    fireEvent.click(edit)
+    expect(screen.getByRole('radio', { name: 'Mark option A as correct' })).toBeTruthy()
+  })
+
+  it('reads flat factory data and writes both canonical flat and legacy nested fields', () => {
+    const onUpdate = vi.fn()
+    render(
+      <GameProperties
+        element={createGameElement('name-picker')}
+        onUpdate={onUpdate}
+        onDelete={() => {}}
+      />
+    )
+
+    expect(screen.getByRole('textbox').value).toContain('Học sinh 1')
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Ada, Grace' } })
+
+    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+      items: ['Ada', 'Grace'],
+      'name-picker': expect.objectContaining({ items: ['Ada', 'Grace'] }),
+    }))
+  })
+
+  it('preserves existing subtype config when switching game types and fills missing defaults', () => {
+    const onUpdate = vi.fn()
+    render(
+      <GameProperties
+        element={{
+          ...makeElement('name-picker'),
+          poll: {
+            prompt: 'Keep this poll prompt',
+            options: [{ id: 'custom-option', text: 'Custom answer' }],
+          },
+        }}
+        onUpdate={onUpdate}
+        onDelete={() => {}}
+      />
+    )
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'poll' } })
+
+    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+      gameType: 'poll',
+      prompt: 'Keep this poll prompt',
+      showResults: true,
+      poll: expect.objectContaining({
+        prompt: 'Keep this poll prompt',
+        options: [{ id: 'custom-option', text: 'Custom answer' }],
+        showResults: true,
+      }),
+    }))
+  })
+
+  it('[cap:element.game depth:persistence] writes non-default persisted config for supported controls', () => {
+    ['name-picker', 'jeopardy', 'four-corners', 'relay-race'].forEach((gameType) => {
       const onUpdate = vi.fn()
       const { container, unmount } = render(
         <GameProperties element={makeElement(gameType)} onUpdate={onUpdate} onDelete={() => {}} />
@@ -97,15 +207,17 @@ describe('GameProperties game subtype persistence', () => {
         fireEvent.change(screen.getByRole('textbox'), {
           target: { value: 'Ada, Grace, Linus' },
         })
-        expect(onUpdate).toHaveBeenLastCalledWith({
+        expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+          items: ['Ada', 'Grace', 'Linus'],
           [gameType]: expect.objectContaining({ items: ['Ada', 'Grace', 'Linus'] }),
-        })
+        }))
       } else {
         const timer = container.querySelector('input[type="range"]')
         fireEvent.change(timer, { target: { value: '45' } })
-        expect(onUpdate).toHaveBeenLastCalledWith({
+        expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+          timerDuration: 45,
           [gameType]: expect.objectContaining({ timerDuration: 45 }),
-        })
+        }))
       }
 
       unmount()
@@ -118,14 +230,15 @@ describe('GameProperties game subtype persistence', () => {
 
     fireEvent.click(screen.getByText('+ Add Team'))
 
-    expect(onUpdate).toHaveBeenCalledWith({
+    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      teams: expect.any(Array),
       jeopardy: expect.objectContaining({
         teams: expect.arrayContaining([
           expect.objectContaining({ name: 'Red' }),
           expect.objectContaining({ name: 'Team 2', color: '#888888', score: 0 }),
         ]),
       }),
-    })
+    }))
   })
 
   it('[cap:element.game depth:behavior] edits poll prompt and option config under the selected subtype', () => {
@@ -135,20 +248,22 @@ describe('GameProperties game subtype persistence', () => {
     fireEvent.change(screen.getByPlaceholderText('Ask a quick class poll...'), {
       target: { value: 'Which theorem should we review?' },
     })
-    expect(onUpdate).toHaveBeenLastCalledWith({
+    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+      prompt: 'Which theorem should we review?',
       poll: expect.objectContaining({ prompt: 'Which theorem should we review?' }),
-    })
+    }))
 
     fireEvent.change(screen.getByDisplayValue('Option A'), {
       target: { value: 'Pythagorean theorem' },
     })
-    expect(onUpdate).toHaveBeenLastCalledWith({
+    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+      options: expect.any(Array),
       poll: expect.objectContaining({
         options: expect.arrayContaining([
           expect.objectContaining({ id: 'option-a', text: 'Pythagorean theorem' }),
         ]),
       }),
-    })
+    }))
   })
 
   it('[cap:element.game depth:behavior] edits word cloud prompt under the selected subtype', () => {
@@ -159,9 +274,10 @@ describe('GameProperties game subtype persistence', () => {
       target: { value: 'Describe today in one word' },
     })
 
-    expect(onUpdate).toHaveBeenLastCalledWith({
+    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+      prompt: 'Describe today in one word',
       'word-cloud': expect.objectContaining({ prompt: 'Describe today in one word' }),
-    })
+    }))
   })
 
   it('[cap:element.game depth:behavior] edits matching prompt and pair config under the selected subtype', () => {
@@ -171,14 +287,16 @@ describe('GameProperties game subtype persistence', () => {
     fireEvent.change(screen.getByPlaceholderText('Ask learners to match items...'), {
       target: { value: 'Match networking terms' },
     })
-    expect(onUpdate).toHaveBeenLastCalledWith({
+    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+      prompt: 'Match networking terms',
       matching: expect.objectContaining({ prompt: 'Match networking terms' }),
-    })
+    }))
 
     fireEvent.change(screen.getByLabelText('Pair 1 target'), {
       target: { value: 'Application protocol' },
     })
-    expect(onUpdate).toHaveBeenLastCalledWith({
+    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+      pairs: expect.any(Array),
       matching: expect.objectContaining({
         pairs: expect.arrayContaining([
           expect.objectContaining({
@@ -189,7 +307,7 @@ describe('GameProperties game subtype persistence', () => {
           }),
         ]),
       }),
-    })
+    }))
   })
 
   it('[cap:element.game depth:behavior] enforces matching pair authoring bounds', () => {
@@ -215,12 +333,13 @@ describe('GameProperties game subtype persistence', () => {
     expect(onUpdate).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByText('+ Add'))
-    expect(onUpdate).toHaveBeenCalledWith({
+    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      pairs: expect.any(Array),
       matching: expect.objectContaining({
         pairs: expect.arrayContaining([
           expect.objectContaining({ prompt: 'Term 3', target: 'Definition 3' }),
         ]),
       }),
-    })
+    }))
   })
 })

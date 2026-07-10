@@ -48,4 +48,35 @@ describe('attach-source-nodes', () => {
     expect(navKindHint({ type: 'table' })).toBe('graphicFrame')
     expect(navKindHint({ type: 'image' })).toBe('pic')
   })
+
+  it('keeps order and kind fallbacks tentative and out of authoritative coverage', () => {
+    const elements = [{ type: 'shape' }, { type: 'image' }]
+    attachSourceNodes(
+      elements,
+      [{ id: '2', kind: 'shape' }, { id: '3', kind: 'pic' }],
+      0
+    )
+    expect(elements[0]._pptxSource).toMatchObject({
+      nodeId: '2',
+      matchedBy: 'kind',
+      authoritative: false,
+    })
+    expect(elements[1]._pptxSource).toMatchObject({
+      nodeId: '3',
+      matchedBy: 'kind',
+      authoritative: false,
+    })
+    expect(collectMappedNodeIds({ slides: [{ elements }] }).size).toBe(0)
+  })
+
+  it('counts source-id and name matches as authoritative', () => {
+    const elements = [{ type: 'shape', sourceId: '2' }, { type: 'image', name: 'Photo' }]
+    attachSourceNodes(
+      elements,
+      [{ id: '2', kind: 'shape' }, { id: '3', kind: 'pic', name: 'Photo' }],
+      0
+    )
+    expect(elements.every((element) => element._pptxSource.authoritative === true)).toBe(true)
+    expect(collectMappedNodeIds({ slides: [{ elements }] }).size).toBe(2)
+  })
 })

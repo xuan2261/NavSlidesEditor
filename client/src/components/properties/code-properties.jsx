@@ -158,7 +158,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
               <div className="flex items-center gap-1">
                 <Input
                   data-testid={`prop-code-walkthrough-label-${index}`}
-                  className="prop-input flex-1 px-1.5 py-1 text-[11px]"
+                  className="flex-1 px-1.5 py-1 text-[11px]"
                   value={step.label || ''}
                   onChange={(e) => updateStep(index, { label: e.target.value })}
                   placeholder={`Step ${index + 1}`}
@@ -174,7 +174,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
               <div className="grid grid-cols-2 gap-1">
                 <Input
                   data-testid={`prop-code-walkthrough-start-${index}`}
-                  className="prop-input px-1.5 py-1 text-[11px]"
+                  className="px-1.5 py-1 text-[11px]"
                   type="number"
                   min="1"
                   value={step.startLine || 1}
@@ -182,7 +182,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
                 />
                 <Input
                   data-testid={`prop-code-walkthrough-end-${index}`}
-                  className="prop-input px-1.5 py-1 text-[11px]"
+                  className="px-1.5 py-1 text-[11px]"
                   type="number"
                   min="1"
                   value={step.endLine || step.startLine || 1}

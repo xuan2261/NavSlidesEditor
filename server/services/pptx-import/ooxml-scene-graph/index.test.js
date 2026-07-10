@@ -95,6 +95,28 @@ describe('buildOoxmlSceneGraph + reconcile (T3.1 T3.6 T3.7 T3.8)', () => {
     )
   })
 
+  it('strict node identity rejects equal-count heuristic-only mappings', async () => {
+    const graph = await buildOoxmlSceneGraph(await fixtureZip())
+    const leaves = graph.slides[0].nodes.filter((node) => node.kind !== 'grpSp')
+    const presentation = {
+      slides: [{
+        elements: leaves.map((leaf) => ({
+          type: 'shape',
+          _pptxSource: {
+            nodeId: leaf.id,
+            slideIndex: 0,
+            matchedBy: 'order',
+            authoritative: false,
+          },
+        })),
+      }],
+    }
+
+    expect(() => reconcileSceneGraph(graph, presentation, { strictNodeGate: true })).toThrow(
+      /PPTX_SLA_STRICT_NODES/
+    )
+  })
+
   it('multi-slide reuses node ids without false coverage', async () => {
     const zip = new JSZip()
     zip.file('[Content_Types].xml', '<Types/>')

@@ -73,4 +73,19 @@ describe('ooxml-chart-parser (T5.1)', () => {
     const empty = parseOoxmlChart('<c:chartSpace/>')
     expect(empty.empty).toBe(true)
   })
+
+  it('detects combo multi-plot OOXML and throws a structured strict failure', () => {
+    const combo = BAR_CHART_XML.replace(
+      '</c:plotArea>',
+      '<c:lineChart><c:ser><c:val><c:numLit><c:pt idx="0"><c:v>1</c:v></c:pt></c:numLit></c:val></c:ser></c:lineChart></c:plotArea>'
+    )
+    expect(detectOoxmlChartType(combo)).toBe('comboChart')
+    expect(() => parseOoxmlChart(combo, { strict: true })).toThrow(
+      expect.objectContaining({
+        type: 'import-failed',
+        code: 'chart-unsupported-strict',
+        chartType: 'comboChart',
+      })
+    )
+  })
 })

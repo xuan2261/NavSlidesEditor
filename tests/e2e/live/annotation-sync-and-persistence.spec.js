@@ -74,6 +74,30 @@ test.describe('Annotation sync and persistence across presenter and viewer', () 
     expect(dAttr).toBe(annotation.d)
   })
 
+  test('viewer renders normalized highlighter strokes with shared semantics', async ({ page }) => {
+    await page.goto(`/live/${roomCode}`)
+    await expect(page.locator('iframe[title="Live Presentation"]')).toBeVisible({ timeout: 15000 })
+
+    presenterSocket.emit('annotation:add', {
+      slideIndex: 0,
+      annotation: {
+        id: 'normalized-highlighter',
+        d: 'M 0.1 0.2 L 0.8 0.7',
+        color: '#ffff00',
+        strokeWidth: 0.02,
+        type: 'highlighter',
+        coordinateSpace: 'normalized',
+      },
+    })
+
+    const overlay = page.locator('svg[data-testid="live-annotation-overlay"]')
+    await expect(overlay).toHaveAttribute('viewBox', '0 0 1 1')
+    const stroke = overlay.locator('path')
+    await expect(stroke).toHaveAttribute('opacity', '0.3')
+    await expect(stroke).toHaveAttribute('stroke-linecap', 'round')
+    await expect(stroke).toHaveAttribute('stroke-linejoin', 'round')
+  })
+
   test('annotation:clear removes all strokes for current slide', async ({ page }) => {
     await page.goto(`/live/${roomCode}`)
     await expect(page.locator('iframe[title="Live Presentation"]')).toBeVisible({ timeout: 15000 })

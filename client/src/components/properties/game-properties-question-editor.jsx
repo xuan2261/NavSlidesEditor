@@ -4,6 +4,11 @@
  */
 import { useEffect, useRef, useState, startTransition } from 'react'
 import { X } from 'lucide-react'
+import { clampNumber } from '../../utils/number-input'
+
+export function normalizeQuestionNumber(value, min, max, fallback) {
+  return Math.round(clampNumber(value, min, max, fallback))
+}
 
 export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, question }) {
   const [form, setForm] = useState(() => buildDefaultForm(question))
@@ -104,15 +109,20 @@ export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, questio
             <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
               Options <span className="text-red-400">*</span>
             </label>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5" role="radiogroup" aria-label="Correct answer">
               {form.options.map((opt, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 text-[10px] font-bold cursor-pointer transition-colors ${form.correctIndex === idx ? 'bg-green-500 border-green-500 text-white' : 'border-border text-text-muted hover:border-accent'}`}
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={form.correctIndex === idx}
+                    aria-label={`Mark option ${String.fromCharCode(65 + idx)} as correct`}
+                    className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 text-[10px] font-bold cursor-pointer transition-colors ${form.correctIndex === idx ? 'bg-green-500 border-green-500 text-white' : 'border-border text-text-muted hover:border-accent'}`}
                     onClick={() => setForm(f => ({ ...f, correctIndex: idx }))}
                     title="Mark as correct"
                   >
                     {String.fromCharCode(65 + idx)}
-                  </span>
+                  </button>
                   <input
                     type="text"
                     value={opt}
@@ -138,7 +148,10 @@ export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, questio
                 min={5}
                 max={300}
                 value={form.timeLimit}
-                onChange={e => setForm(f => ({ ...f, timeLimit: parseInt(e.target.value, 10) || 30 }))}
+                onChange={e => setForm(f => ({
+                  ...f,
+                  timeLimit: normalizeQuestionNumber(e.target.value, 5, 300, 30),
+                }))}
                 className="w-full bg-surface-2 border border-border rounded px-2 py-1.5 text-sm text-text-primary focus:border-accent focus:outline-none"
               />
             </div>
@@ -151,7 +164,10 @@ export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, questio
                 min={1}
                 max={1000}
                 value={form.points}
-                onChange={e => setForm(f => ({ ...f, points: parseInt(e.target.value, 10) || 10 }))}
+                onChange={e => setForm(f => ({
+                  ...f,
+                  points: normalizeQuestionNumber(e.target.value, 1, 1000, 10),
+                }))}
                 className="w-full bg-surface-2 border border-border rounded px-2 py-1.5 text-sm text-text-primary focus:border-accent focus:outline-none"
               />
             </div>
@@ -185,8 +201,8 @@ export function buildDefaultForm(question) {
       question: question.question || '',
       options: [...(question.options || ['', '', '', ''])],
       correctIndex: question.correctIndex ?? 0,
-      timeLimit: question.timeLimit ?? 30,
-      points: question.points ?? 10,
+      timeLimit: normalizeQuestionNumber(question.timeLimit, 5, 300, 30),
+      points: normalizeQuestionNumber(question.points, 1, 1000, 10),
     }
   }
   return {

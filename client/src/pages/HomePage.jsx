@@ -29,6 +29,7 @@ import { api } from '../utils/api'
 import { markdownToSlidesWithWarnings } from '../utils/markdown-import'
 import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../utils/import-project'
 import { summarizePptxImportWarnings } from '../utils/pptx-import-summary'
+import { waitForPptxJob } from '../utils/pptx-job-wait'
 import { filterMarketplaceTemplates } from '../utils/template-filters'
 import { showError, showNotice } from '../utils/app-feedback'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
@@ -265,6 +266,8 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   const [templates, setTemplates] = useState([])
   const [trashItems, setTrashItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(null)
+  const [hasLoadedData, setHasLoadedData] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({
     title: '',
@@ -289,7 +292,9 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   const [templateCategory, setTemplateCategory] = useState('All')
 
   useEffect(() => {
-    loadData()
+    loadData(true)
+    // Initial dashboard fetch runs once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => () => {
@@ -299,7 +304,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     pptxImportRef.current = null
   }, [])
 
-  async function loadData() {
+  async function loadData(isInitialLoad = loading) {
     try {
       const [presData, tmplData, trashData] = await Promise.all([
         api.getPresentations(),
@@ -309,14 +314,23 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       setPresentations(Array.isArray(presData) ? presData : [])
       setTemplates(Array.isArray(tmplData) ? tmplData : [])
       setTrashItems(Array.isArray(trashData) ? trashData : [])
+      setLoadError(null)
+      setHasLoadedData(true)
     } catch (err) {
       console.error('Failed to load data', err)
-      setPresentations([])
-      setTemplates([])
-      setTrashItems([])
+      setLoadError(
+        isInitialLoad
+          ? 'Could not load dashboard data. Check your connection and try again.'
+          : 'Could not refresh dashboard data. Your existing dashboard data is still shown.'
+      )
     } finally {
       setLoading(false)
     }
+  }
+
+  const retryLoadData = () => {
+    setLoading(true)
+    loadData(true)
   }
 
   async function handleCreate(e) {
@@ -333,6 +347,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       onOpen(pres.id)
     } catch (err) {
       console.error('Failed to create presentation', err)
+      showError('Failed to create presentation: ' + err.message)
     } finally {
       setCreating(false)
     }
@@ -378,6 +393,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       }
     } catch (err) {
       console.error('Failed to create from template', err)
+      showError('Failed to create presentation from template: ' + err.message)
     } finally {
       setCreating(false)
     }
@@ -390,6 +406,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       loadData()
     } catch (err) {
       console.error('Failed to duplicate', err)
+      showError('Failed to duplicate presentation: ' + err.message)
     }
   }
 
@@ -405,6 +422,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           loadData()
         } catch (err) {
           console.error('Failed to delete presentation', err)
+          showError('Failed to move presentation to trash: ' + err.message)
         }
       },
     })
@@ -417,6 +435,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       loadData()
     } catch (err) {
       console.error('Failed to restore presentation', err)
+      showError('Failed to restore presentation: ' + err.message)
     }
   }
 
@@ -432,6 +451,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           loadData()
         } catch (err) {
           console.error('Failed to permanently delete', err)
+          showError('Failed to permanently delete presentation: ' + err.message)
         }
       },
     })
@@ -448,6 +468,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           loadData()
         } catch (err) {
           console.error('Failed to empty trash', err)
+          showError('Failed to empty trash: ' + err.message)
         }
       },
     })
@@ -465,6 +486,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           setTemplates((prev) => prev.filter((t) => t.id !== id))
         } catch (err) {
           console.error('Failed to delete template', err)
+          showError('Failed to delete template: ' + err.message)
         }
       },
     })
@@ -504,6 +526,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       onOpen(template.id, true)
     } catch (err) {
       console.error('Failed to create template', err)
+      showError('Failed to create template: ' + err.message)
     }
   }
 
@@ -631,45 +654,13 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         busyRetryDelayMs: 5000,
         onBusyRetry: () => setImportProgress('Another PPTX import is running. Waiting to retry...'),
       })
-      const imported = await new Promise((resolve, reject) => {
-        const es = new EventSource(`/api/pptx/jobs/${jobId}/stream`)
-        let settled = false
-        pptxImportRef.current = { es, jobId }
-        es.addEventListener('progress', (event) => {
-          const progress = JSON.parse(event.data)
-          if (progress.message) setImportProgress(progress.message)
-        })
-        es.addEventListener('done', (event) => {
-          settled = true
-          es.close()
-          pptxImportRef.current = null
-          resolve(JSON.parse(event.data).result)
-        })
-        es.addEventListener('failed', (event) => {
-          settled = true
-          es.close()
-          pptxImportRef.current = null
-          reject(new Error(JSON.parse(event.data).error || 'PPTX import failed'))
-        })
-        es.addEventListener('cancelled', () => {
-          settled = true
-          es.close()
-          pptxImportRef.current = null
-          reject(new Error('PPTX import cancelled'))
-        })
-        es.onerror = () => {
-          if (settled) return
-          es.close()
-          pollPptxJobUntilTerminal(jobId).then((result) => {
-            settled = true
-            pptxImportRef.current = null
-            resolve(result)
-          }).catch((err) => {
-            settled = true
-            pptxImportRef.current = null
-            reject(err)
-          })
-        }
+      const imported = await waitForPptxJob({
+        jobId,
+        api,
+        onProgress: setImportProgress,
+        onConnection: (connection) => {
+          pptxImportRef.current = connection
+        },
       })
       // Server creates presentation + binds original.pptx atomically (Phase 01).
       // Prefer presentationId from job result; fall back to client create only for legacy servers.
@@ -696,19 +687,6 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       pptxImportRef.current = null
       setImportProgress(null)
     }
-  }
-
-  async function pollPptxJobUntilTerminal(jobId) {
-    for (let attempt = 0; attempt < 120; attempt += 1) {
-      const job = await api.pollPptxJob(jobId)
-      if (job.message) setImportProgress(job.message)
-      if (job.status === 'done') return job.result
-      if (job.status === 'failed' || job.status === 'cancelled') {
-        throw new Error(job.error || `PPTX import ${job.status}`)
-      }
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-    }
-    throw new Error('PPTX import progress timed out')
   }
 
   // ── Filtered & sorted data ──
@@ -1055,9 +1033,31 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto px-4 pb-7 pt-7 sm:px-8">
+          {loadError && hasLoadedData && !loading && (
+            <div
+              role="alert"
+              className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-text-primary"
+            >
+              <span>{loadError}</span>
+              <Button variant="secondary" onClick={() => loadData(false)}>
+                Retry refresh
+              </Button>
+            </div>
+          )}
           {loading ? (
             <div className="text-text-muted text-center p-20">
               Loading...
+            </div>
+          ) : loadError && !hasLoadedData ? (
+            <div
+              role="alert"
+              className="flex flex-col items-center justify-center gap-4 px-10 py-20 text-center text-text-primary"
+            >
+              <AlertCircle size={40} className="text-danger" aria-hidden="true" />
+              <p className="m-0 max-w-md text-sm text-text-secondary">{loadError}</p>
+              <Button variant="primary" onClick={retryLoadData}>
+                Retry loading dashboard
+              </Button>
             </div>
           ) : isTrashView ? (
             /* ── Trash View ── */
@@ -1824,6 +1824,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
               onOpen(pres.id)
             } catch (err) {
               console.error('Failed to create from marketplace template', err)
+              showError('Failed to create presentation from marketplace template: ' + err.message)
             } finally {
               setCreating(false)
             }

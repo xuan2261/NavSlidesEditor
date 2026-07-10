@@ -41,4 +41,21 @@ describe('pptx import docs contract', () => {
     expect(docs).toContain('evidence entries')
     expect(docs).toContain('full native SmartArt/chart reconstruction remains parser work')
   })
+
+  it('keeps public PPTX workflow and round-trip limits accurate in English and Vietnamese', () => {
+    const english = readText('website', 'features', 'pptx-import-export.md')
+    const vietnamese = readText('website', 'vi', 'features', 'pptx-import-export.md')
+
+    expect(english).toContain('Home dashboard')
+    expect(english).toContain('original uploaded bytes')
+    expect(english).toContain('client-side reconstructed export')
+    expect(english).toContain('editable shapes')
+    expect(english).not.toContain('SmartArt is rasterized')
+
+    expect(vietnamese).toContain('trang chủ')
+    expect(vietnamese).toContain('byte gốc')
+    expect(vietnamese).toContain('xuất dựng lại ở phía máy khách')
+    expect(vietnamese).toContain('hình khối có thể chỉnh sửa')
+    expect(vietnamese).not.toContain('SmartArt được kết xuất thành hình ảnh')
+  })
 })

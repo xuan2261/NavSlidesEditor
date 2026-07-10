@@ -97,8 +97,48 @@ function extractGraphicRelId(chunk) {
   return any ? any[2] : null
 }
 
+function tokenizeXmlTree(xml) {
+  const root = { name: '#document', children: [], start: 0, end: xml.length }
+  const stack = [root]
+  const tagRe = /<!--[\s\S]*?-->|<\?[\s\S]*?\?>|<![^>]*>|<\/?[A-Za-z_][^>]*>/g
+  let match
+  while ((match = tagRe.exec(xml))) {
+    const tag = match[0]
+    if (tag.startsWith('<?') || tag.startsWith('<!')) continue
+    if (tag.startsWith('</')) {
+      const closingName = localName(tag)
+      for (let i = stack.length - 1; i > 0; i -= 1) {
+        const node = stack.pop()
+        node.end = tagRe.lastIndex
+        if (node.name === closingName) break
+      }
+      continue
+    }
+    const node = {
+      name: localName(tag),
+      openTag: tag,
+      start: match.index,
+      end: tagRe.lastIndex,
+      children: [],
+    }
+    stack[stack.length - 1].children.push(node)
+    if (!/\/\s*>$/.test(tag)) stack.push(node)
+  }
+  for (const node of stack.slice(1)) node.end = xml.length
+  return root
+}
+
+function findFirstNode(root, name) {
+  for (const child of root.children || []) {
+    if (child.name === name) return child
+    const found = findFirstNode(child, name)
+    if (found) return found
+  }
+  return null
+}
+
 /**
- * Walk slide XML and collect nodes under p:spTree (depth-limited groups).
+ * Walk a tokenized slide XML tree and collect direct shape/group descendants.
  * @param {string} slideXml
  * @param {{ maxDepth?: number }} [options]
  */
@@ -106,21 +146,15 @@ function parseSpTree(slideXml, options = {}) {
   const maxDepth = options.maxDepth ?? 8
   const nodes = []
   const xml = String(slideXml || '')
+  const root = tokenizeXmlTree(xml)
+  const tree = findFirstNode(root, 'sptree') || root
 
-  // Find spTree body
-  const treeMatch = xml.match(/<(?:[a-z0-9]+:)?spTree\b[^>]*>([\s\S]*?)<\/(?:[a-z0-9]+:)?spTree>/i)
-  const body = treeMatch ? treeMatch[1] : xml
-
-  function walk(fragment, depth, parentId) {
+  function walk(treeNode, depth, parentId) {
     if (depth > maxDepth) return
-    // Match top-level shape-like elements in this fragment (non-greedy balanced-ish by tag name)
-    const re = /<(?:[a-z0-9]+:)?(sp|pic|cxnSp|grpSp|graphicFrame|contentPart)\b([^>]*)>([\s\S]*?)<\/(?:[a-z0-9]+:)?\1\s*>/gi
-    let m
-    while ((m = re.exec(fragment))) {
-      const tag = m[1]
-      const kind = kindFromTag(tag.toLowerCase())
+    for (const xmlNode of treeNode.children || []) {
+      const kind = kindFromTag(xmlNode.name)
       if (!kind) continue
-      const chunk = m[0]
+      const chunk = xml.slice(xmlNode.start, xmlNode.end)
       const nv = extractNvName(chunk)
       const node = {
         id: nv.id || `auto-${nodes.length + 1}`,
@@ -148,13 +182,12 @@ function parseSpTree(slideXml, options = {}) {
       }
       nodes.push(node)
       if (kind === 'grpSp') {
-        // children live inside grpSp after grpSpPr / nvGrpSpPr
-        walk(m[3], depth + 1, node.id)
+        walk(xmlNode, depth + 1, node.id)
       }
     }
   }
 
-  walk(body, 0, null)
+  walk(tree, 0, null)
   return nodes
 }
 
@@ -164,4 +197,5 @@ module.exports = {
   kindFromTag,
   localName,
   extractGraphicRelId,
+  tokenizeXmlTree,
 }

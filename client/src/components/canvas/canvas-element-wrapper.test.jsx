@@ -257,6 +257,24 @@ describe('CanvasElement video playback', () => {
     expect(audio.controls).toBe(true)
   })
 
+  it('honors disabled audio controls in the canvas preview', () => {
+    renderCanvasElement({
+      id: 'audio-without-controls',
+      type: 'audio',
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 60,
+      src: '/uploads/a.mp3',
+      controls: false,
+    })
+
+    const audio = screen
+      .getByTestId('slide-element-audio-without-controls')
+      .querySelector('audio')
+    expect(audio.controls).toBe(false)
+  })
+
   it('neutralizes unsafe media URLs on canvas', () => {
     renderCanvasElement({
       ...baseElement,

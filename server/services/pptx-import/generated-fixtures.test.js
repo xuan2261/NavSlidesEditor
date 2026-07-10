@@ -50,12 +50,16 @@ describe('generated fixture fidelity gates', () => {
     expect(errors.some((error) => error.includes('line'))).toBe(true)
   })
 
-  it('does not enforce generated thresholds on regular corpus files', () => {
+  it('enforces the same measured thresholds on regular corpus files', () => {
     const errors = applyStrictPerTypeGates({
       file: 'Bai_2_1.pptx',
       geometryDrift: { byType: { line: { maxPx: 999, medianPx: 999, count: 1 } } },
       propertyCoverage: { byType: { table: 0.1, chart: 0.1 } },
     })
-    expect(errors).toEqual([])
+    expect(errors).toEqual(expect.arrayContaining([
+      expect.stringContaining('geometry gate failed for line'),
+      expect.stringContaining('property gate failed for table'),
+      expect.stringContaining('property gate failed for chart'),
+    ]))
   })
 })

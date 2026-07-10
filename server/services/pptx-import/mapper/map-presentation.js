@@ -18,7 +18,7 @@ const { attachSourceNodes } = require('../ooxml-scene-graph/attach-source-nodes'
 const { resolveLayoutPlaceholders } = require('./placeholder-resolve')
 const { injectChartsFromSceneGraph } = require('../ooxml-chart-parser')
 const { injectDiagramsFromSceneGraph } = require('../ooxml-diagram-parser')
-const { supportRow } = require('../chart-support-matrix')
+const { assertStrictChartSupport } = require('../chart-support-matrix')
 const { parseThemeFromZip } = require('../ooxml-theme-parse')
 const { resolveLayoutFromZip } = require('../ooxml-layout-resolve')
 const { parseSlideAnimations, classifyUnsupportedPackageFeatures } = require('../ooxml-animation')
@@ -39,15 +39,15 @@ async function mapElement(element, context) {
 }
 
 function mapChartElement(element, context) {
-  const row = supportRow(element?.chartType)
-  if (row.status === 'unsupported-strict' && (context.strict || process.env.PPTX_SLA_STRICT === '1')) {
-    context.warnings.push({
-      slideIndex: context.slideIndex,
-      type: 'chart-unsupported-strict',
-      message: `Chart type ${element.chartType} is unsupported under PPTX_SLA_STRICT`,
-    })
-    return []
-  }
+  const sourceChartType =
+    element?.isCombo || element?.combo || element?._pptxChartMeta?.comboDetected
+      ? 'comboChart'
+      : element?.chartType
+  const row = assertStrictChartSupport(
+    sourceChartType,
+    context.strict || process.env.PPTX_SLA_STRICT === '1',
+    { slideIndex: context.slideIndex, source: 'parser' }
+  )
   const chartEl = mapChart(element)
   if (chartEl) {
     if (row.navType) chartEl.chartType = row.navType
@@ -161,6 +161,20 @@ function mapSlideBackground(slide, context) {
   return { type: 'color', color: colorValue(slide.fill, '#ffffff') }
 }
 
+function isMeaningfulRelatedChart(element) {
+  if (element?.type !== 'chart') return false
+  if (element?._pptxSource?.authoritative !== true) return false
+  if (!element?._pptxChartMeta?.chartPath) return false
+  const labels = element?.chartData?.labels
+  const datasets = element?.chartData?.datasets
+  return (
+    Array.isArray(labels) &&
+    labels.length > 0 &&
+    Array.isArray(datasets) &&
+    datasets.some((dataset) => Array.isArray(dataset?.data) && dataset.data.length > 0)
+  )
+}
+
 const TRANSITION_MAP = Object.freeze({
   none: 'none',
   fade: 'fade',
@@ -221,6 +235,8 @@ async function mapPptxOutput({
   uploadsDir,
   onProgress,
   signal,
+  mediaBudget,
+  mediaTransaction,
   sceneGraph = null,
   strict = false,
 }) {
@@ -267,6 +283,8 @@ async function mapPptxOutput({
       stats,
       uploadsDir,
       signal,
+      mediaBudget,
+      mediaTransaction,
       strict: isStrict,
     })
     signal?.throwIfAborted?.()
@@ -313,6 +331,7 @@ async function mapPptxOutput({
         slideIndex,
         stats,
         warnings,
+        strict: isStrict,
         scale,
       })
       attachSourceNodes(elements, graphSlide.nodes, slideIndex)
@@ -334,11 +353,15 @@ async function mapPptxOutput({
       }
     }
     const evidence = ooxml.slidesByIndex[slideIndex] || { chartEntries: [], smartArtEntries: [] }
-    const mappedNativeChartCount = elements.filter((element) => element?.type === 'chart').length
+    const mappedNativeChartCount = elements.filter(isMeaningfulRelatedChart).length
     // Count unique SmartArt graphicFrame instances (shared model id), not per-shape rows
     const mappedNativeDiagramCount = new Set(
       elements
-        .filter((element) => element?.type === 'diagram' || element?._pptxDiagram?.nodes?.length)
+        .filter(
+          (element) =>
+            element?._pptxSource?.authoritative === true &&
+            (element?.type === 'diagram' || element?._pptxDiagram?.nodes?.length)
+        )
         .map(
           (element) =>
             element._pptxDiagram?.graphicNodeId ||
@@ -461,4 +484,10 @@ async function mapPptxOutput({
   }
 }
 
-module.exports = { mapElement, mapPptxOutput, mapSlideTransition, TRANSITION_MAP }
+module.exports = {
+  mapElement,
+  mapPptxOutput,
+  mapSlideTransition,
+  isMeaningfulRelatedChart,
+  TRANSITION_MAP,
+}

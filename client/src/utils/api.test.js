@@ -70,4 +70,26 @@ describe('PPTX import API', () => {
     expect(fetch).toHaveBeenNthCalledWith(1, '/api/pptx/jobs/job-1')
     expect(fetch).toHaveBeenNthCalledWith(2, '/api/pptx/jobs/job-1', { method: 'DELETE' })
   })
+
+  it('downloads original PPTX bytes as a blob and preserves 404 for hybrid fallback', async () => {
+    const blob = new Blob(['pptx'])
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, blob: async () => blob })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 404,
+          json: async () => ({ error: 'No original', mode: 'hybrid-export' }),
+        })
+    )
+
+    await expect(api.downloadPptxOriginal('deck-1')).resolves.toBe(blob)
+    await expect(api.downloadPptxOriginal('deck-1')).rejects.toMatchObject({
+      message: 'No original',
+      status: 404,
+    })
+    expect(fetch).toHaveBeenNthCalledWith(1, '/api/presentations/deck-1/pptx-original')
+  })
 })

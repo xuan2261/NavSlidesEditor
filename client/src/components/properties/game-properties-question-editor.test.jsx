@@ -9,7 +9,11 @@
 import React from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
-import { GamePropertiesQuestionEditor, buildDefaultForm } from './game-properties-question-editor'
+import {
+  GamePropertiesQuestionEditor,
+  buildDefaultForm,
+  normalizeQuestionNumber,
+} from './game-properties-question-editor'
 
 // ── Pure function tests ────────────────────────────────────────────────────────
 describe('buildDefaultForm', () => {
@@ -41,6 +45,14 @@ describe('buildDefaultForm', () => {
     expect(form.correctIndex).toBe(0)
     expect(form.timeLimit).toBe(30)
     expect(form.points).toBe(10)
+  })
+})
+
+describe('normalizeQuestionNumber', () => {
+  it('clamps question time and points to their supported ranges', () => {
+    expect(normalizeQuestionNumber('500', 5, 300, 30)).toBe(300)
+    expect(normalizeQuestionNumber('-5', 1, 1000, 10)).toBe(1)
+    expect(normalizeQuestionNumber('', 5, 300, 30)).toBe(30)
   })
 })
 

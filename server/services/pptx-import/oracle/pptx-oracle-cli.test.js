@@ -41,6 +41,11 @@ describe('pptx-oracle-cli (T2.3 T2.4 T2.6 T2.7)', () => {
       decks: [{ file: 'a.pptx', slides: [{ index: 0, ssim: 0.91 }] }],
     })
     expect(report.generatedAt).toBeTruthy()
+    expect(parseArgs([]).requireActuals).toBe(true)
+    expect(parseArgs(['--debt-record'])).toMatchObject({
+      requireActuals: false,
+      debtRecord: true,
+    })
   })
 
   it('T2.4 PPTX_ORACLE=off exits 0 with skipped outside CI', async () => {

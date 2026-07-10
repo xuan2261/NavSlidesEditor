@@ -28,8 +28,10 @@ exports[`pptx mapper golden masters > maps diagram deterministically 1`] = `
       "version": 1,
     },
     "_pptxSource": {
+      "authoritative": false,
       "graphicKind": "diagram",
       "kind": "graphicFrame",
+      "matchedBy": "parser-fallback",
       "nodeId": "parser-diagram-0",
       "slideIndex": 0,
     },

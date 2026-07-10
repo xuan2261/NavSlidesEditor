@@ -1,6 +1,8 @@
 const fs = require('fs-extra')
 const { classifyError, sanitizeDiagnostic } = require('./diagnostics')
-const { FAILURE_TYPES } = require('./constants')
+const { assertUsableParserOutput } = require('./output-usability')
+const { validatePptxPackage } = require('./pptx-guards')
+const { assertParsedOutputBudget } = require('./resource-budgets')
 
 function toArrayBuffer(buffer) {
   return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
@@ -34,7 +36,8 @@ async function inspectWithPptx2Json(filePath, reason) {
   }
 }
 
-async function parseFile(filePath) {
+async function parseFile(filePath, originalName) {
+  const validated = await validatePptxPackage(filePath, originalName)
   const { parse } = require('pptxtojson/dist/index.cjs')
   const pkg = require('pptxtojson/package.json')
   const buffer = await fs.readFile(filePath)
@@ -59,11 +62,18 @@ async function parseFile(filePath) {
     ? await inspectWithPptx2Json(filePath, 'primary-output-missing-object-evidence')
     : null
 
+  const parsedOutputBytes = assertParsedOutputBudget(output)
   return {
     ok: true,
     parser: 'pptxtojson',
     packageVersion: pkg.version,
     output,
+    parsedOutputBytes,
+    packageInfo: {
+      entryCount: validated.entryCount,
+      decompressedBytes: validated.decompressedBytes,
+      fileSize: validated.fileSize,
+    },
     fallback,
   }
 }
@@ -72,20 +82,10 @@ function sendProgress(stage, percent, message) {
   process.send?.({ type: 'progress', stage, percent, message })
 }
 
-process.on('message', async ({ filePath }) => {
+process.on('message', async ({ filePath, originalName }) => {
   try {
-    const result = await parseFile(filePath)
-    if (!Array.isArray(result.output?.slides) || result.output.slides.length === 0) {
-      process.send({
-        ok: false,
-        error: {
-          type: FAILURE_TYPES.outputEmpty,
-          message: 'PPTX parser returned no slides',
-        },
-        fallback: result.fallback,
-      })
-      return
-    }
+    const result = await parseFile(filePath, originalName || filePath)
+    assertUsableParserOutput(result.output)
     process.send(result)
   } catch (err) {
     process.send({
@@ -93,6 +93,7 @@ process.on('message', async ({ filePath }) => {
       error: {
         type: classifyError(err),
         message: sanitizeDiagnostic(err),
+        status: Number.isInteger(err?.status) ? err.status : undefined,
       },
     })
   }

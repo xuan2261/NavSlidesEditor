@@ -46,8 +46,8 @@ describe('compare-goldens', () => {
     const actuals = path.join(root, 'actuals', 'deck-a')
     await fs.mkdir(goldens, { recursive: true })
     await fs.mkdir(actuals, { recursive: true })
-    const g = encodePngRgba(4, 4, solid(4, 4, 0))
-    const a = encodePngRgba(4, 4, solid(4, 4, 255))
+    const g = encodePngRgba(16, 16, solid(16, 16, 0))
+    const a = encodePngRgba(16, 16, solid(16, 16, 255))
     await fs.writeFile(path.join(goldens, 'slide-0.png'), g)
     await fs.writeFile(path.join(actuals, 'slide-0.png'), a)
     const deck = await compareDeck({
@@ -59,17 +59,44 @@ describe('compare-goldens', () => {
     expect(deck.slides[0].ssim).toBeLessThan(0.2)
   })
 
-  it('self-compares golden when actuals absent (debt recording)', async () => {
+  it('fails missing actuals by default', async () => {
     const root = await temp()
     const goldens = path.join(root, 'goldens', 'deck-a')
     await fs.mkdir(goldens, { recursive: true })
-    await fs.writeFile(path.join(goldens, 'slide-0.png'), encodePngRgba(2, 2, solid(2, 2, 50)))
+    await fs.writeFile(path.join(goldens, 'slide-0.png'), encodePngRgba(16, 16, solid(16, 16, 50)))
     const deck = await compareDeck({
       deckFile: 'deck-a.pptx',
       goldensDir: path.join(root, 'goldens'),
       actualsDir: null,
     })
+    expect(deck).toMatchObject({ ok: false, error: 'missing-actuals', meanSsim: null })
+  })
+
+  it('self-compares only in explicit debt-record mode', async () => {
+    const root = await temp()
+    const goldens = path.join(root, 'goldens', 'deck-a')
+    await fs.mkdir(goldens, { recursive: true })
+    await fs.writeFile(path.join(goldens, 'slide-0.png'), encodePngRgba(16, 16, solid(16, 16, 50)))
+    const deck = await compareDeck({
+      deckFile: 'deck-a.pptx',
+      goldensDir: path.join(root, 'goldens'),
+      actualsDir: null,
+      debtRecord: true,
+    })
     expect(deck.meanSsim).toBe(1)
     expect(deck.slides[0].note).toContain('golden-self')
+  })
+
+  it('rejects placeholder 8x8 goldens even in debt-record mode', async () => {
+    const root = await temp()
+    const goldens = path.join(root, 'goldens', 'deck-a')
+    await fs.mkdir(goldens, { recursive: true })
+    await fs.writeFile(path.join(goldens, 'slide-0.png'), encodePngRgba(8, 8, solid(8, 8, 50)))
+    const deck = await compareDeck({
+      deckFile: 'deck-a.pptx',
+      goldensDir: path.join(root, 'goldens'),
+      debtRecord: true,
+    })
+    expect(deck).toMatchObject({ ok: false, error: 'placeholder-goldens', meanSsim: null })
   })
 })

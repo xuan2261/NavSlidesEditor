@@ -5,6 +5,7 @@ import JSZip from 'jszip'
 import { EditorPage } from './pages/editor-page.js'
 import { postPptxImportWhenAvailable } from './helpers/pptx-import-api-helper.js'
 import {
+  apiDeletePresentation,
   apiGetPresentation,
   apiUpdatePresentation,
   expect,
@@ -41,18 +42,20 @@ async function importFixtureIntoPresentation(request, testPresentation) {
   expect(importRes.status()).toBe(202)
 
   const { jobId } = await importRes.json()
-  const imported = await waitForPptxImport(request, jobId)
-  expect(imported.presentation.slides.length).toBeGreaterThan(1)
+  const result = await waitForPptxImport(request, jobId)
+  const imported = await apiGetPresentation(request, result.presentationId)
+  expect(imported.slides.length).toBeGreaterThan(1)
 
-  const slideIndex = imported.presentation.slides.findIndex((slide) =>
+  const slideIndex = imported.slides.findIndex((slide) =>
     (slide.elements || []).some((element) => element.type === 'text')
   )
   expect(slideIndex).toBeGreaterThanOrEqual(0)
-  const elementIndex = imported.presentation.slides[slideIndex].elements.findIndex(
+  const elementIndex = imported.slides[slideIndex].elements.findIndex(
     (element) => element.type === 'text'
   )
 
-  await apiUpdatePresentation(request, testPresentation.id, imported.presentation)
+  await apiUpdatePresentation(request, testPresentation.id, imported)
+  await apiDeletePresentation(request, result.presentationId)
   return { elementIndex, slideIndex }
 }
 

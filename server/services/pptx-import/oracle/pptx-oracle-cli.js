@@ -39,7 +39,8 @@ function parseArgs(argv) {
     width: 32,
     height: 32,
     mode: 'golden', // golden | baseline | seed-goldens | capture-present
-    requireActuals: false,
+    requireActuals: true,
+    debtRecord: false,
     requireLo: false,
     maxDecks: null,
     help: false,
@@ -64,6 +65,10 @@ function parseArgs(argv) {
     else if (a === '--height') args.height = Number(argv[++i])
     else if (a === '--mode') args.mode = argv[++i]
     else if (a === '--require-actuals') args.requireActuals = true
+    else if (a === '--debt-record') {
+      args.debtRecord = true
+      args.requireActuals = false
+    }
     else if (a === '--require-lo') args.requireLo = true
   }
   return args
@@ -158,18 +163,20 @@ async function runGoldenMode(args) {
     goldensDir: args.goldensDir,
     actualsDir: args.actualsDir,
     requireAllGoldens: true,
-    requireActuals: args.requireActuals,
+    debtRecord: args.debtRecord,
   })
   return buildReport({
     decks: comparison.decks,
     meanSsim: comparison.meanSsim,
-    reason: comparison.failed ? 'missing-goldens' : 'golden-compare',
+    reason: comparison.failed ? 'golden-evidence-invalid' : 'golden-compare',
     extra: {
       missingGoldens: comparison.missingGoldens,
       deckCount: comparison.deckCount,
       failed: comparison.failed,
-      debt: !args.actualsDir,
-      claim: 'Nav present vs golden SSIM (goldens may be placeholder until LO/PP refresh)',
+      debt: args.debtRecord,
+      claim: args.debtRecord
+        ? 'debt-record-only-no-numeric-evidence'
+        : 'Nav present vs golden SSIM numeric evidence',
     },
   })
 }
@@ -177,10 +184,14 @@ async function runGoldenMode(args) {
 async function writeBaseline(args, report) {
   const out = args.baselineOut || args.baselineIn
   await fs.ensureDir(path.dirname(out))
+  const slideScores = (report.decks || []).flatMap((deck) =>
+    (deck.slides || []).map((slide) => slide.ssim).filter(Number.isFinite)
+  )
   const baseline = {
     generatedAt: report.generatedAt,
     milestone: report.milestone,
     meanSsim: report.meanSsim,
+    minSsim: slideScores.length ? Math.min(...slideScores) : null,
     debt: report.debt !== false,
     claim: report.claim,
     deckCount: report.deckCount || report.decks?.length || 0,
@@ -213,7 +224,7 @@ async function main(argv = process.argv.slice(2)) {
         'Usage: pptx-oracle-cli [options]',
         '  --mode golden|seed-goldens|capture-present   (default golden)',
         '  --corpus dir --goldens-dir dir --actuals-dir dir --max-decks N',
-        '  --baseline-out path --force-threshold n',
+        '  --baseline-out path --force-threshold n --debt-record',
         '  --pair-a|--pair-b raw buffers + --width --height',
         '',
       ].join('\n')

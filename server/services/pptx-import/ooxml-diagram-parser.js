@@ -104,6 +104,17 @@ function diagramInstanceKey(el) {
   )
 }
 
+function unsupportedSmartArtLayoutError(context = {}) {
+  const err = new Error(
+    'SmartArt layout requires unsupported OOXML layout rendering; linear fallback is not allowed in strict mode'
+  )
+  err.type = 'import-failed'
+  err.code = 'smartart-layout-unsupported-strict'
+  err.layoutMode = 'linear-fallback'
+  err.details = { layoutMode: err.layoutMode, ...context }
+  return err
+}
+
 async function injectDiagramsFromSceneGraph({
   elements,
   graphSlide,
@@ -111,6 +122,7 @@ async function injectDiagramsFromSceneGraph({
   slideIndex = 0,
   stats = {},
   warnings = [],
+  strict = false,
   scale = { x: 1, y: 1 },
 }) {
   const list = Array.isArray(elements) ? [...elements] : []
@@ -183,6 +195,19 @@ async function injectDiagramsFromSceneGraph({
       width: Number(node.xfrm?.cx) || 800,
       height: Number(node.xfrm?.cy) || 200,
     }
+    if (strict) {
+      throw unsupportedSmartArtLayoutError({
+        slideIndex,
+        nodeId: String(node.id),
+        dataPath,
+      })
+    }
+    warnings.push({
+      slideIndex,
+      type: 'native-smartart-layout-degraded',
+      layoutMode: 'linear-fallback',
+      message: `SmartArt ${dataPath} uses editable linear fallback; original layout parity is not claimed`,
+    })
     const laidOut = layoutNodesLinear(parsed.nodes, box)
     const model = {
       source: 'ooxml-diagram-parser',
@@ -218,9 +243,43 @@ async function injectDiagramsFromSceneGraph({
           graphicKind: 'diagram',
           slideIndex,
           diagramNodeId: n.id,
+          matchedBy: 'relationship',
+          authoritative: true,
         },
         _pptxDiagram: model,
         _pptxDiagramNode: { id: n.id, index: i },
+      })
+    }
+    const positions = new Map(laidOut.map((item) => [String(item.id), item]))
+    for (const [i, connection] of parsed.connections.entries()) {
+      const src = positions.get(String(connection.src))
+      const dest = positions.get(String(connection.dest))
+      if (!src || !dest) continue
+      list.push({
+        id: `diagram-ooxml-${node.id}-connector-${i}`,
+        type: 'line',
+        x1: Math.round((src.x + src.width) * s.x * 10) / 10,
+        y1: Math.round((src.y + src.height / 2) * s.y * 10) / 10,
+        x2: Math.round(dest.x * s.x * 10) / 10,
+        y2: Math.round((dest.y + dest.height / 2) * s.y * 10) / 10,
+        zIndex: list.length + 1,
+        rotation: 0,
+        opacity: 1,
+        stroke: '#6366f1',
+        strokeWidth: 1,
+        arrowStart: 'none',
+        arrowEnd: 'triangle',
+        _pptxSource: {
+          nodeId: String(node.id),
+          kind: 'graphicFrame',
+          graphicKind: 'diagram',
+          slideIndex,
+          diagramConnectionIndex: i,
+          matchedBy: 'relationship',
+          authoritative: true,
+        },
+        _pptxDiagram: model,
+        _pptxDiagramConnection: { ...connection, index: i },
       })
     }
     stats.diagramCount = (stats.diagramCount || 0) + 1
@@ -269,6 +328,8 @@ function stampDiagramModelOnFlattened(elements, sourceElement, slideIndex = 0) {
         kind: el._pptxSource?.kind || 'graphicFrame',
         graphicKind: 'diagram',
         slideIndex,
+        matchedBy: 'parser-fallback',
+        authoritative: false,
       }
     }
   }
@@ -281,4 +342,5 @@ module.exports = {
   injectDiagramsFromSceneGraph,
   stampDiagramModelOnFlattened,
   extractTextFromPt,
+  unsupportedSmartArtLayoutError,
 }

@@ -31,6 +31,7 @@ import { pushHistory } from '../utils/history-stack'
 import { reconcileSelectionAfterHistory } from '../utils/history-selection-reconciler'
 import { resolveLegacyEditorShortcut } from '../utils/legacy-editor-keydown-resolver'
 import { showError, showNotice } from '../utils/app-feedback'
+import { getKeyboardNudgeStep } from '../utils/keyboard-nudge'
 import {
   getSelectionIdsForActiveSlideElement,
   hasBlockedGroupMutation,
@@ -847,6 +848,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
 
   const {
     updateElements,
+    replaceElementZOrder,
     deleteSelectedElements,
     groupElements,
     ungroupElements,
@@ -888,9 +890,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         allowedIds,
         dir
       )
-      updateElements(stepped.map((el) => ({ id: el.id, zIndex: el.zIndex })))
+      replaceElementZOrder(stepped.map((el) => ({ id: el.id, zIndex: el.zIndex })))
     },
-    [selectedElementIdsRef, activeSlideRef, updateElements]
+    [selectedElementIdsRef, activeSlideRef, replaceElementZOrder]
   )
 
   // Move the whole selection to a stack edge as one block, so the ribbon/property
@@ -911,9 +913,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         allowedIds,
         edge
       )
-      updateElements(reordered.map((el) => ({ id: el.id, zIndex: el.zIndex })))
+      replaceElementZOrder(reordered.map((el) => ({ id: el.id, zIndex: el.zIndex })))
     },
-    [selectedElementIdsRef, activeSlideRef, updateElements]
+    [selectedElementIdsRef, activeSlideRef, replaceElementZOrder]
   )
 
   // Single chokepoint for control-driven property edits: fan one partial update
@@ -1286,13 +1288,13 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     },
     onArrow: (direction, e) => {
       // Text editing exits the handler earlier, so this only runs on the canvas.
-      // Selection present → nudge elements (Shift = fine 1px); empty → up/down
+      // Selection present → nudge elements (Shift = coarse 10px); empty → up/down
       // walks slides like PowerPoint's slide pane.
       const ids = selectedElementIdsRef.current
       if (ids.length > 0) {
         const slide = activeSlideRef.current
         if (slide?.locked) return
-        const step = e.shiftKey ? 1 : 10
+        const step = getKeyboardNudgeStep(e.shiftKey)
         const dx = direction === 'left' ? -step : direction === 'right' ? step : 0
         const dy = direction === 'up' ? -step : direction === 'down' ? step : 0
         if (dx === 0 && dy === 0) return
@@ -1311,6 +1313,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
             y: el.y || 0,
             width: el.width || 0,
             height: el.height || 0,
+            rotation: el.rotation || 0,
           }))
         const slideW = presentation?.resolution?.width || 960
         const slideH = presentation?.resolution?.height || 540
@@ -1737,6 +1740,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
                 selectedElementIds={selectedElementIds}
                 onSelectElement={toggleElementSelection}
                 onUpdateElements={updateElements}
+                onReorderElements={replaceElementZOrder}
                 onDeleteSelectedElements={deleteSelectedElements}
                 isTemplate={isTemplate}
               />

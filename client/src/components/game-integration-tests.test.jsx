@@ -89,14 +89,14 @@ describe('Game Element — creation to render pipeline', () => {
 })
 
 describe('Game Properties — element update pipeline', () => {
-  it('game properties renders with game element', () => {
+  it('game properties hides unsupported scoring controls for name picker', () => {
     const el = createGameElement('name-picker')
     const html = renderToString(
       <GameProperties element={el} onUpdate={() => {}} onDelete={() => {}} />
     )
     expect(html).toContain('Content')
     expect(html).toContain('Display')
-    expect(html).toContain('Scoring')
+    expect(html).not.toContain('Scoring')
     expect(html).toContain('name-picker')
   })
 

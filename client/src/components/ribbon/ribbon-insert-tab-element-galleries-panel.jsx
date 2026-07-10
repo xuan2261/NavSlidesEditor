@@ -437,6 +437,7 @@ export default function InsertTabContent({
               e.preventDefault()
               onAddText?.()
             }}
+            onKeyDown={(e) => handleKeyboardActivation(e, onAddText)}
           />
           <RibbonBigButton
             icon={ImageIcon}
@@ -447,6 +448,11 @@ export default function InsertTabContent({
               e.preventDefault()
               handleFileUpload('image/*', (f) => onAddImageUpload?.(f))
             }}
+            onKeyDown={(e) =>
+              handleKeyboardActivation(e, () =>
+                handleFileUpload('image/*', (f) => onAddImageUpload?.(f))
+              )
+            }
           />
           <Button
             variant="icon"
@@ -560,9 +566,7 @@ export default function InsertTabContent({
               e.preventDefault()
               setShowTechnicalSymbols((v) => !v)
             }}
-            onKeyDown={(e) =>
-              handleKeyboardActivation(e, () => setShowTechnicalSymbols((v) => !v))
-            }
+            onKeyDown={(e) => handleKeyboardActivation(e, () => setShowTechnicalSymbols((v) => !v))}
           >
             <Package size={14} />
           </Button>

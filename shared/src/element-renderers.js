@@ -532,7 +532,8 @@ function renderAudio(el, style, wrap, vis, opts) {
     return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));">&#9835; Audio</div>`
   }
   const src = absoluteSrc(sanitizeMediaSrc(el.src))
-  const attrs = ['controls']
+  const attrs = []
+  if (el.controls !== false) attrs.push('controls')
   if (el.autoplay) attrs.push('autoplay')
   if (el.loop) attrs.push('loop')
   if (el.muted) attrs.push('muted')

@@ -136,7 +136,12 @@ async function validatePptxPackage(filePath, originalName = filePath, limits = {
   return { zip, entryCount: entries.length, decompressedBytes: measuredBytes, fileSize: stat.size }
 }
 
+async function loadPptxArchive(filePath) {
+  return JSZip.loadAsync(await fs.readFile(filePath), { checkCRC32: false })
+}
+
 module.exports = {
   assertPptxExtension,
+  loadPptxArchive,
   validatePptxPackage,
 }

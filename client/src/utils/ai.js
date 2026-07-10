@@ -44,11 +44,11 @@ export async function aiTranslate(texts, targetLanguage) {
   return res.json()
 }
 
-export async function testAIConnection() {
-  const res = await fetch(`${API_BASE}/rewrite`, {
+export async function testAIConnection(config) {
+  const res = await fetch(`${API_BASE}/test-connection`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: 'Hello', action: 'improve' }),
+    body: JSON.stringify(config),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))

@@ -38,10 +38,14 @@ describe('CanvasContextMenu copy URL action', () => {
   })
 
   it('disables destructive actions for a locked context target', () => {
-    renderMenu({ id: 'locked-1', type: 'shape', locked: true })
+    const onCopy = vi.fn()
+    renderMenu({ id: 'locked-1', type: 'shape', locked: true }, { onCopy })
 
     expect(screen.getByRole('button', { name: /Cut/ }).disabled).toBe(true)
     expect(screen.getByRole('button', { name: /Duplicate/ }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: /Copy \(Ctrl\+C\)/ }).disabled).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: /Copy \(Ctrl\+C\)/ }))
+    expect(onCopy).toHaveBeenCalledTimes(1)
   })
 
   it('disables mutation actions when the whole slide is locked', () => {
@@ -54,10 +58,39 @@ describe('CanvasContextMenu copy URL action', () => {
 
     expect(screen.getByRole('button', { name: /Cut/ }).disabled).toBe(true)
     expect(screen.getByRole('button', { name: /Paste/ }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: /Copy \(Ctrl\+C\)/ }).disabled).toBe(false)
     fireEvent.click(screen.getByRole('button', { name: 'Upper Left' }))
 
     expect(onPaste).not.toHaveBeenCalled()
     expect(onUpdateElement).not.toHaveBeenCalled()
+  })
+
+  it('enables partial mutation actions for a mixed locked context selection', () => {
+    const elements = [
+      { id: 'free', type: 'shape' },
+      { id: 'locked', type: 'shape', locked: true },
+    ]
+    render(
+      <CanvasContextMenu
+        contextMenu={{
+          elementId: 'free',
+          elementType: 'shape',
+          contextSelectionIds: ['free', 'locked'],
+          x: 10,
+          y: 20,
+        }}
+        slide={{ elements }}
+        onCopy={vi.fn()}
+        onCut={vi.fn()}
+        onPaste={vi.fn()}
+        onDuplicate={vi.fn()}
+        onUpdateElement={vi.fn()}
+        onClose={vi.fn()}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: /Cut/ }).disabled).toBe(false)
+    expect(screen.getByRole('button', { name: /Duplicate/ }).disabled).toBe(false)
   })
 
   it('copies an absolute image URL and closes the menu', () => {

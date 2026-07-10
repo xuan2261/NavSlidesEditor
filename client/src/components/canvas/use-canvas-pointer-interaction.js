@@ -1,5 +1,27 @@
 import { useCallback, useEffect } from 'react'
 import { calculateGuides } from '../../utils/smartGuides'
+import {
+  clampAspectResizeToSlide,
+  getRotatedAABB,
+} from './use-canvas-resize-rotate'
+
+export function rotateDeltaToLocal(dx, dy, rotation = 0) {
+  if (!rotation) return { dx, dy }
+  const radians = (rotation * Math.PI) / 180
+  const cos = Math.cos(radians)
+  const sin = Math.sin(radians)
+  return {
+    dx: dx * cos + dy * sin,
+    dy: -dx * sin + dy * cos,
+  }
+}
+
+export function getVisualGuideElement(element, overrides = {}) {
+  return {
+    ...getRotatedAABB({ ...element, ...overrides }),
+    id: element.id,
+  }
+}
 
 /**
  * Pure crop math — extracted to module level for testability.
@@ -75,18 +97,28 @@ export function applyCropHandle(handle, startCrop, dx, dy, elW, elH) {
 }
 
 export function applyMove(startEl, dx, dy, slideW, slideH) {
+  const delta = computeClampedBatchDelta([startEl], dx, dy, slideW, slideH)
   return {
-    x: Math.max(0, Math.min(slideW - startEl.width, startEl.x + dx)),
-    y: Math.max(0, Math.min(slideH - startEl.height, startEl.y + dy)),
+    x: startEl.x + delta.dx,
+    y: startEl.y + delta.dy,
   }
 }
 
 export function computeClampedBatchDelta(startEls, dx, dy, slideW, slideH) {
   if (!Array.isArray(startEls) || !startEls.length) return { dx: 0, dy: 0 }
-  const minDx = Math.max(...startEls.map((el) => -(el.x || 0)))
-  const maxDx = Math.min(...startEls.map((el) => slideW - ((el.x || 0) + (el.width || 0))))
-  const minDy = Math.max(...startEls.map((el) => -(el.y || 0)))
-  const maxDy = Math.min(...startEls.map((el) => slideH - ((el.y || 0) + (el.height || 0))))
+  const boxes = startEls.map((el) =>
+    getRotatedAABB({
+      ...el,
+      x: el.x || 0,
+      y: el.y || 0,
+      width: el.width || 0,
+      height: el.height || 0,
+    })
+  )
+  const minDx = Math.max(...boxes.map((box) => -box.left))
+  const maxDx = Math.min(...boxes.map((box) => slideW - box.right))
+  const minDy = Math.max(...boxes.map((box) => -box.top))
+  const maxDy = Math.min(...boxes.map((box) => slideH - box.bottom))
   return {
     dx: Math.max(minDx, Math.min(maxDx, dx)),
     dy: Math.max(minDy, Math.min(maxDy, dy)),
@@ -176,8 +208,8 @@ export default function useCanvasPointerInteraction({
 }) {
   // Crop drag state ref accessor (needed by cropDragRef.current setter below)
   const setCropDrag = useCallback(
-    (handle, startX, startY, startCrop, elW, elH) => {
-      cropDragRef.current = { handle, startX, startY, startCrop, elW, elH }
+    (handle, startX, startY, startCrop, elW, elH, rotation = 0) => {
+      cropDragRef.current = { handle, startX, startY, startCrop, elW, elH, rotation }
     },
     [cropDragRef]
   )
@@ -190,8 +222,9 @@ export default function useCanvasPointerInteraction({
       // Crop drag
       if (cropDragRef.current) {
         const cd = cropDragRef.current
-        const dx = (e.clientX - cd.startX) / scaleRef.current
-        const dy = (e.clientY - cd.startY) / scaleRef.current
+        const screenDx = (e.clientX - cd.startX) / scaleRef.current
+        const screenDy = (e.clientY - cd.startY) / scaleRef.current
+        const { dx, dy } = rotateDeltaToLocal(screenDx, screenDy, cd.rotation)
         const newCrop = applyCropHandle(cd.handle, cd.startCrop, dx, dy, cd.elW, cd.elH)
         setCropMode((prev) => (prev ? { ...prev, ...newCrop } : prev))
         return
@@ -258,21 +291,16 @@ export default function useCanvasPointerInteraction({
           } else if (smartGuidesRef.current && primary) {
             const allEls = slideRef.current?.elements || []
             const rawPrimary = applyMove(primary, dx, dy, slideW, slideH)
-            const draggedEl = {
-              id: primary.id,
-              x: rawPrimary.x,
-              y: rawPrimary.y,
-              width: primary.width,
-              height: primary.height,
-            }
+            const draggedEl = getVisualGuideElement(primary, rawPrimary)
+            const guideElements = allEls.map((element) => getVisualGuideElement(element))
             const { guides, snappedX, snappedY } = calculateGuides(
               draggedEl,
-              allEls,
+              guideElements,
               slideW,
               slideH
             )
-            nextDx = snappedX - primary.x
-            nextDy = snappedY - primary.y
+            nextDx = rawPrimary.x + snappedX - draggedEl.x - primary.x
+            nextDy = rawPrimary.y + snappedY - draggedEl.y - primary.y
             setActiveGuides(guides)
           } else {
             setActiveGuides([])
@@ -290,26 +318,38 @@ export default function useCanvasPointerInteraction({
               drag.startEl.snapRef || 'ul',
               snap
             )
-            newX = Math.max(0, Math.min(slideW - drag.startEl.width, snappedX))
-            newY = Math.max(0, Math.min(slideH - drag.startEl.height, snappedY))
-            setActiveGuides([])
-          } else if (smartGuidesRef.current) {
-            const allEls = slideRef.current?.elements || []
-            const draggedEl = {
-              id: drag.elementId,
-              x: rawX,
-              y: rawY,
-              width: drag.startEl.width,
-              height: drag.startEl.height,
-            }
-            const { guides, snappedX, snappedY } = calculateGuides(
-              draggedEl,
-              allEls,
+            const clamped = applyMove(
+              drag.startEl,
+              snappedX - drag.startEl.x,
+              snappedY - drag.startEl.y,
               slideW,
               slideH
             )
-            newX = Math.max(0, Math.min(slideW - drag.startEl.width, snappedX))
-            newY = Math.max(0, Math.min(slideH - drag.startEl.height, snappedY))
+            newX = clamped.x
+            newY = clamped.y
+            setActiveGuides([])
+          } else if (smartGuidesRef.current) {
+            const allEls = slideRef.current?.elements || []
+            const draggedEl = getVisualGuideElement(
+              { ...drag.startEl, id: drag.elementId },
+              { x: rawX, y: rawY }
+            )
+            const guideElements = allEls.map((element) => getVisualGuideElement(element))
+            const { guides, snappedX, snappedY } = calculateGuides(
+              draggedEl,
+              guideElements,
+              slideW,
+              slideH
+            )
+            const clamped = applyMove(
+              drag.startEl,
+              rawX + snappedX - draggedEl.x - drag.startEl.x,
+              rawY + snappedY - draggedEl.y - drag.startEl.y,
+              slideW,
+              slideH
+            )
+            newX = clamped.x
+            newY = clamped.y
             setActiveGuides(guides)
           } else {
             newX = rawX
@@ -320,8 +360,18 @@ export default function useCanvasPointerInteraction({
         }
       } else if (drag.type === 'resize') {
         let updates = applyResize(drag.handle, drag.startEl, dx, dy)
-        if (e.shiftKey) applyResizeAspectRatio(drag.handle, drag.startEl, updates)
-        clampToSlide(updates, drag.startEl, snap, slideW, slideH)
+        let aspectClamped = false
+        if (e.shiftKey) {
+          applyResizeAspectRatio(drag.handle, drag.startEl, updates)
+          aspectClamped = clampAspectResizeToSlide(
+            drag.handle,
+            updates,
+            drag.startEl,
+            slideW,
+            slideH
+          )
+        }
+        if (!aspectClamped) clampToSlide(updates, drag.startEl, snap, slideW, slideH)
         onUpdateElement(drag.elementId, updates)
       } else if (drag.type === 'rotate') {
         const rotation = getRotationAngle(drag.startEl, mouseX, mouseY, e.shiftKey)
@@ -434,6 +484,7 @@ export default function useCanvasPointerInteraction({
           y: el.y,
           width: el.width,
           height: el.height,
+          rotation: el.rotation || 0,
           snapRef: el.snapRef,
         })),
       }

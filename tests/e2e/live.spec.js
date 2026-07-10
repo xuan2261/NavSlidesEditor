@@ -99,9 +99,7 @@ test.describe('Live Presentation & WebSockets', () => {
 
     await editor.startBroadcast()
 
-    // Wait for API call and modal to open
-    await page.waitForSelector('h3:has-text("Present Live")', { timeout: 10000 })
-    await expect(page.locator('h3:has-text("Present Live")')).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Present Live' })).toBeVisible()
   })
 
   test('live room URL contains room code', async ({ page }) => {
@@ -161,6 +159,23 @@ test.describe('Live Presentation & WebSockets', () => {
     await waitForRevealIndex(viewer, 'Live Presentation', '1:0:0')
     await expect(remote.getByText('Notes B')).toBeVisible({ timeout: 10000 })
     await expect(remote.getByTestId('remote-viewer-count')).toContainText('1')
+  })
+
+  test('speaker view stacks and scrolls at narrow desktop widths', async ({ page, request }) => {
+    const room = await createRoom(request)
+    await page.setViewportSize({ width: 640, height: 700 })
+    await page.goto(`/speaker/${room.roomCode}`)
+
+    const main = page.getByTestId('speaker-main')
+    const previews = page.getByTestId('speaker-previews')
+    const notes = page.getByTestId('speaker-notes')
+    await expect(main).toBeVisible()
+
+    const previewBox = await previews.boundingBox()
+    const notesBox = await notes.boundingBox()
+    expect(notesBox.y).toBeGreaterThanOrEqual(previewBox.y + previewBox.height)
+    expect(await main.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(640)
   })
 
 })

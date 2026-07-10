@@ -2,6 +2,7 @@ const { parseSpTree } = require('./parse-sptree')
 const { parseRelationshipTargets, rejectTraversalTarget } = require('./parse-rels')
 const { inspectOoxmlCoverage } = require('../ooxml-inspection')
 const { collectMappedNodeIds, leafNodes, sourceKey } = require('./attach-source-nodes')
+const { resolveSceneGraphStrictPolicy } = require('./strict-policy')
 
 async function readZipText(zip, entry) {
   const file = zip?.file?.(entry)
@@ -108,19 +109,25 @@ async function buildOoxmlSceneGraph(zip) {
  * @returns {{ unmapped: object[], warnings: object[], mappedNodeIds: string[] }}
  */
 function reconcileSceneGraph(graph, presentation, options = {}) {
-  const strictCount =
-    options.strictCountGate === true || process.env.PPTX_SLA_STRICT_COUNT === '1'
-  const strictNodes =
-    options.strictNodeGate === true || process.env.PPTX_SLA_STRICT_NODES === '1'
+  const policy = resolveSceneGraphStrictPolicy(options)
+  const strictCount = policy.strictCountGate
+  const strictNodes = policy.strictNodeGate
   const warnings = []
   const unmapped = []
   const mappedIds = collectMappedNodeIds(presentation)
-  const hasNodeStamps = mappedIds.size > 0
 
   for (const gSlide of graph?.slides || []) {
     const leaves = leafNodes(gSlide.nodes)
     const graphCount = leaves.length
-    const mappedCount = (presentation?.slides?.[gSlide.index]?.elements || []).length
+    const mappedElements = presentation?.slides?.[gSlide.index]?.elements || []
+    const mappedCount = mappedElements.length
+    const authoritativeIds = new Set(
+      mappedElements
+        .filter((element) => element?._pptxSource?.authoritative !== false)
+        .map((element) => element?._pptxSource?.nodeId)
+        .filter((id) => id != null && id !== '')
+        .map((id) => sourceKey(gSlide.index, id))
+    )
 
     if (graphCount > 0 && mappedCount === 0) {
       unmapped.push({
@@ -138,7 +145,7 @@ function reconcileSceneGraph(graph, presentation, options = {}) {
       continue
     }
 
-    if (hasNodeStamps) {
+    if (authoritativeIds.size > 0) {
       const missing = leaves.filter((n) => !mappedIds.has(sourceKey(gSlide.index, n.id)))
       for (const node of missing) {
         unmapped.push({
@@ -155,6 +162,20 @@ function reconcileSceneGraph(graph, presentation, options = {}) {
           message: `${missing.length} scene-graph leaf node(s) lack _pptxSource mapping on slide ${gSlide.index + 1}`,
         })
       }
+    } else if (strictNodes && graphCount > 0) {
+      for (const node of leaves) {
+        unmapped.push({
+          slideIndex: gSlide.index,
+          nodeId: String(node.id),
+          kind: node.kind,
+          severity: 'node-unverifiable',
+        })
+      }
+      warnings.push({
+        slideIndex: gSlide.index,
+        type: 'scene-graph-unverifiable',
+        message: `${graphCount} scene-graph leaf node(s) lack authoritative identity on slide ${gSlide.index + 1}`,
+      })
     } else if (mappedCount < graphCount) {
       const gap = graphCount - mappedCount
       unmapped.push({
@@ -183,7 +204,9 @@ function reconcileSceneGraph(graph, presentation, options = {}) {
     throw err
   }
 
-  const hardNodes = unmapped.filter((u) => u.severity === 'node-unmapped')
+  const hardNodes = unmapped.filter(
+    (u) => u.severity === 'node-unmapped' || u.severity === 'node-unverifiable'
+  )
   if (strictNodes && hardNodes.length) {
     const err = new Error(`PPTX_SLA_STRICT_NODES: ${hardNodes.length} leaf node(s) unmapped`)
     err.type = 'import-failed'

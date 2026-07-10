@@ -85,4 +85,22 @@ describe('parseSpTree (T3.1 T3.2 T3.3)', () => {
     expect(diagram).toBeTruthy()
     expect(diagram.graphicKind).toBe('diagram')
   })
+
+  it('walks groups nested two or more levels without losing siblings', () => {
+    const xml = `<p:sld xmlns:p="p"><p:cSld><p:spTree>
+      <p:grpSp><p:nvGrpSpPr><p:cNvPr id="10" name="Outer"/></p:nvGrpSpPr><p:grpSpPr/>
+        <p:sp><p:nvSpPr><p:cNvPr id="11" name="Outer child"/></p:nvSpPr><p:spPr/></p:sp>
+        <p:grpSp><p:nvGrpSpPr><p:cNvPr id="20" name="Inner"/></p:nvGrpSpPr><p:grpSpPr/>
+          <p:sp><p:nvSpPr><p:cNvPr id="21" name="Deep A"/></p:nvSpPr><p:spPr/></p:sp>
+          <p:grpSp><p:nvGrpSpPr><p:cNvPr id="30" name="Deep group"/></p:nvGrpSpPr><p:grpSpPr/>
+            <p:sp><p:nvSpPr><p:cNvPr id="31" name="Deep B"/></p:nvSpPr><p:spPr/></p:sp>
+          </p:grpSp>
+        </p:grpSp>
+      </p:grpSp>
+    </p:spTree></p:cSld></p:sld>`
+    const nodes = parseSpTree(xml)
+    expect(nodes.map((node) => node.id)).toEqual(['10', '11', '20', '21', '30', '31'])
+    expect(nodes.find((node) => node.id === '20')?.parentId).toBe('10')
+    expect(nodes.find((node) => node.id === '31')).toMatchObject({ parentId: '30', depth: 3 })
+  })
 })

@@ -106,7 +106,7 @@ describe('GameProperties — renders all tabs', () => {
     const html = renderToString(<GameProperties element={el} onUpdate={onUpdate} onDelete={() => {}} />)
     expect(html).toContain('Content')
     expect(html).toContain('Display')
-    expect(html).toContain('Scoring')
+    expect(html).not.toContain('Scoring')
   })
 
   it('renders game type selector with all 10 game types', () => {
@@ -134,8 +134,8 @@ describe('GameProperties — renders all tabs', () => {
     expect(html).toContain('button')
   })
 
-  it('renders timer config slider', () => {
-    const el = makeGameElement('name-picker')
+  it('renders timer config slider only for a timer-backed subtype', () => {
+    const el = makeGameElement('relay-race')
     const html = renderToString(<GameProperties element={el} onUpdate={onUpdate} onDelete={() => {}} />)
     expect(html).toContain('Timer')
     expect(html).toContain('30')
@@ -161,13 +161,10 @@ describe('GameProperties — renders all tabs', () => {
     expect(html).toContain('Display')
   })
 
-  it('renders Scoring tab fields', () => {
-    // Render once to get Content tab, again for Display tab
-    const el = makeGameElement('name-picker')
+  it('does not expose unsupported global scoring controls', () => {
+    const el = makeGameElement('hot-potato')
     const defaultHtml = renderToString(<GameProperties element={el} onUpdate={onUpdate} onDelete={() => {}} />)
-    expect(defaultHtml).toContain('Scoring')
-    // Scoring tab content appears when rendered with activeTab forced via props
-    // The default state starts on Content — verify tab buttons exist
+    expect(defaultHtml).not.toContain('Scoring')
     expect(defaultHtml).toContain('Content')
     expect(defaultHtml).toContain('Display')
   })
@@ -211,7 +208,7 @@ describe('GameProperties — all 10 game types render their section', () => {
       // Should render without throwing
       expect(html).toContain('Content')
       expect(html).toContain('Display')
-      expect(html).toContain('Scoring')
+      expect(html).not.toContain('Scoring')
     })
   })
 })

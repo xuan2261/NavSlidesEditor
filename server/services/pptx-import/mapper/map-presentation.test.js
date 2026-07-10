@@ -218,15 +218,45 @@ describe('pptx presentation mapper', () => {
 
     expect(result.stats.nativeObjectCoverage).toMatchObject({
       chartEvidenceCount: 2,
-      mappedNativeChartCount: 1,
-      chartCoverageGapCount: 1,
+      mappedNativeChartCount: 0,
+      chartCoverageGapCount: 2,
     })
-    expect(result.warnings).toEqual([
-      {
-        slideIndex: 0,
+    expect(result.warnings).toEqual(expect.arrayContaining([
+      expect.objectContaining({
         type: 'native-chart-degraded',
-        message: expect.stringContaining('slide 1'),
+      }),
+      expect.objectContaining({
+        slideIndex: 1,
+        type: 'native-chart-degraded',
+      }),
+    ]))
+  })
+
+  it('throws a structured failure for unsupported parser charts in strict mode', async () => {
+    await expect(mapPptxOutput({
+      output: {
+        size: { width: 960, height: 540 },
+        slides: [{
+          elements: [{
+            type: 'chart',
+            chartType: 'barChart',
+            isCombo: true,
+            left: 10,
+            top: 10,
+            width: 400,
+            height: 300,
+            data: [{ key: 'S1', values: [{ x: 'A', y: 1 }] }],
+          }],
+        }],
       },
-    ])
+      zip: { files: {} },
+      originalName: 'Combo.pptx',
+      uploadsDir: '/tmp',
+      strict: true,
+    })).rejects.toMatchObject({
+      type: 'import-failed',
+      code: 'chart-unsupported-strict',
+      chartType: 'comboChart',
+    })
   })
 })

@@ -6,21 +6,22 @@ describe('summarizePptxImportWarnings', () => {
     expect(summarizePptxImportWarnings({ warnings: [], stats: {} })).toBeNull()
   })
 
-  it('summarizes placeholders, unsupported types, and failed media', () => {
+  it('reports authoritative import stats and grouped warning categories', () => {
     const summary = summarizePptxImportWarnings({
       warnings: [
         { type: 'grouped-complex' },
         { type: 'media-missing' },
-        { type: 'media-missing' },
+        { type: 'media-ref-missing' },
         { type: 'fallback-inspector' },
+        { type: 'future-warning' },
+        { type: 'future-warning' },
       ],
-      stats: { placeholderCount: 3 },
+      stats: { slideCount: 2, textCount: 5, shapeCount: 3, placeholderCount: 3 },
     })
-    expect(summary).toContain('PPTX import fidelity:')
-    expect(summary).toContain('approximated 1')
-    expect(summary).toContain('failed 2')
-    expect(summary).toContain('Placeholders: 3')
-    expect(summary).toContain('grouped-complex')
-    expect(summary).toContain('Failed warnings: 2')
+    expect(summary).toContain('Import stats: slides 2, text 5, shapes 3, placeholders 3.')
+    expect(summary).toContain('Warning groups: approximated 1, placeholder 1, failed 2, other 2.')
+    expect(summary).toContain('future-warning (2)')
+    expect(summary).not.toContain('exact')
+    expect(summary).not.toContain('approximated 3')
   })
 })

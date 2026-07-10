@@ -1,6 +1,7 @@
 import React from 'react'
 import { renderToString } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
 import PropertiesPanel from './PropertiesPanel'
 
 const baseSlide = {
@@ -48,5 +49,33 @@ describe('PropertiesPanel warm editor contract', () => {
     expect(html).not.toContain('🔓')
     expect(html).not.toContain('↑ Forward')
     expect(html).not.toContain('↓ Backward')
+  })
+
+  it('wires the game-specific Delete button to the selected element callback', () => {
+    const onDeleteElement = vi.fn()
+    const gameElement = {
+      id: 'game-1',
+      type: 'game',
+      gameType: 'name-picker',
+      items: ['Ada'],
+      x: 10,
+      y: 20,
+      width: 640,
+      height: 480,
+      rotation: 0,
+    }
+    render(
+      <PropertiesPanel
+        slide={{ ...baseSlide, elements: [gameElement] }}
+        selectedElement={gameElement}
+        selectedElementIds={[gameElement.id]}
+        onUpdateElement={() => {}}
+        onDeleteElement={onDeleteElement}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete game' }))
+
+    expect(onDeleteElement).toHaveBeenCalledTimes(1)
   })
 })

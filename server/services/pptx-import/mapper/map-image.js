@@ -1,6 +1,6 @@
 const { fitBoxWithinBounds, mapBox, readNumber } = require('../geometry')
-const { persistImageForElement, getElementImagePayload } = require('../media')
-const { convertAndPersistVectorImage } = require('../vector-media-convert')
+const { persistImageBuffer, persistImageForElement, getElementImagePayload } = require('../media')
+const { convertEmfWmfBuffer } = require('../vector-media-convert')
 const { baseElement, placeholder, scaleLength } = require('./utils-base')
 const { plainText } = require('./utils-text')
 const { pushMediaWarning } = require('./media-warning')
@@ -30,14 +30,24 @@ async function tryConvertUnsupportedVector(element, context) {
     context.forceEmfConvert === true ||
     process.env.PPTX_EMF_CONVERT === '1' ||
     typeof context.convertVectorFn === 'function'
-  const result = await convertAndPersistVectorImage(buffer, context.uploadsDir, {
+  const converted = await convertEmfWmfBuffer(buffer, {
     force,
     convertFn: context.convertVectorFn,
     signal: context.signal,
     binary: context.emfBinary,
     timeoutMs: context.emfTimeoutMs,
   })
-  return result
+  if (!converted.ok) {
+    return { url: null, warning: { code: converted.code || 'emf-convert-failed', message: converted.error } }
+  }
+  const persisted = await persistImageBuffer(converted.buffer, 'image/png', context.uploadsDir, {
+    signal: context.signal,
+    mediaBudget: context.mediaBudget,
+    mediaTransaction: context.mediaTransaction,
+  })
+  return persisted.url
+    ? { ...persisted, warning: { code: 'emf-converted-to-png', source: 'emf-wmf' }, converted: true }
+    : persisted
 }
 
 // pptxtojson@2.0.2 emits PowerPoint color corrections as parseInt(@val)/1e5
@@ -66,7 +76,11 @@ function mapImageFilters(filters) {
 
 async function mapImage(element, context) {
   context.signal?.throwIfAborted?.()
-  const media = await persistImageForElement(element, context.mediaIndex, context.uploadsDir, { signal: context.signal })
+  const media = await persistImageForElement(element, context.mediaIndex, context.uploadsDir, {
+    signal: context.signal,
+    mediaBudget: context.mediaBudget,
+    mediaTransaction: context.mediaTransaction,
+  })
   pushMediaWarning(context, media.warning)
   let src = media.url
   if (media.unsupportedBrowserImage) {

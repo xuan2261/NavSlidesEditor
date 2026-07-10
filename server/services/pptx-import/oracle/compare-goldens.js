@@ -41,9 +41,10 @@ async function loadPngRgba(filePath) {
 
 /**
  * Compare one deck's actual PNGs vs goldens.
- * If actuals missing, compare golden to itself (records baseline debt as ssim=1 with note).
+ * Missing actuals fail by default. Golden self-comparison is available only
+ * through explicit debt-record mode and never constitutes numeric evidence.
  */
-async function compareDeck({ deckFile, goldensDir, actualsDir, requireActuals = false }) {
+async function compareDeck({ deckFile, goldensDir, actualsDir, debtRecord = false }) {
   const stem = deckStem(deckFile)
   const goldenDeckDir = path.join(goldensDir, stem)
   const actualDeckDir = actualsDir ? path.join(actualsDir, stem) : null
@@ -59,8 +60,21 @@ async function compareDeck({ deckFile, goldensDir, actualsDir, requireActuals = 
     }
   }
 
+  for (const goldenName of goldenSlides) {
+    const image = await loadPngRgba(path.join(goldenDeckDir, goldenName))
+    if (image.width <= 8 && image.height <= 8) {
+      return {
+        file: deckFile,
+        ok: false,
+        error: 'placeholder-goldens',
+        slides: [],
+        meanSsim: null,
+      }
+    }
+  }
+
   const actualSlides = actualDeckDir ? await listSlidePngs(actualDeckDir) : []
-  if (requireActuals && actualSlides.length === 0) {
+  if (!debtRecord && actualSlides.length < goldenSlides.length) {
     return {
       file: deckFile,
       ok: false,
@@ -92,12 +106,15 @@ async function compareDeck({ deckFile, goldensDir, actualsDir, requireActuals = 
       }
       ssim = roundSsim(computeSsim(actual.data, golden.data, { width: golden.width, height: golden.height }))
       note = 'actual-vs-golden'
-    } else {
+    } else if (debtRecord) {
       // Self-compare golden → ssim 1; marks debt until present captures land
       ssim = roundSsim(
         computeSsim(golden.data, golden.data, { width: golden.width, height: golden.height })
       )
       note = 'golden-self-until-present-capture'
+    } else {
+      slides.push({ index: i, ssim: 0, error: 'missing-actual' })
+      continue
     }
     slides.push({ index: i, ssim, note, golden: goldenSlides[i] })
     sum += ssim
@@ -123,13 +140,13 @@ async function compareCorpusToGoldens({
   goldensDir,
   actualsDir = null,
   requireAllGoldens = true,
-  requireActuals = false,
+  debtRecord = false,
 }) {
   const decksFiles = await listCorpusPptx(corpusDir)
   const decks = []
   const missingGoldens = []
   for (const file of decksFiles) {
-    const result = await compareDeck({ deckFile: file, goldensDir, actualsDir, requireActuals })
+    const result = await compareDeck({ deckFile: file, goldensDir, actualsDir, debtRecord })
     decks.push(result)
     if (result.error === 'missing-goldens') missingGoldens.push(file)
   }
@@ -137,7 +154,8 @@ async function compareCorpusToGoldens({
   const meanSsim = valid.length
     ? roundSsim(valid.reduce((s, d) => s + d.meanSsim, 0) / valid.length)
     : null
-  const failed = requireAllGoldens && missingGoldens.length > 0
+  const failed =
+    (requireAllGoldens && missingGoldens.length > 0) || decks.some((deck) => deck.ok === false)
   return {
     decks,
     meanSsim,
