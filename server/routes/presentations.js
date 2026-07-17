@@ -27,21 +27,29 @@ const { rasterizeComplexElements } = require('../services/pptx-exporter')
 const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
 const { findServeablePresentation } = require('../services/presentation-finder')
 const { normalizeBuiltInTemplates } = require('../services/template-normalization')
-const {
-  deleteOriginalPptx,
-  readOriginalPptx,
-  assertSafeOriginalId,
-} = require('../services/pptx-import/original-package')
 const { stripClientPptxOriginalPaths } = require('../services/pptx-import/create-imported-presentation')
+const { sanitizeClientEditableData } = require('../services/pptx-import/authority-sanitizer')
+const { drainPackageCompatibilityOutbox } = require('../services/pptx-import/compatibility-view')
+const { toPresentationEditorDto } = require('../services/pptx-import/package-store/dto')
+const {
+  duplicatePackageOwner,
+  quarantinePackageOwner,
+  releasePackageOwner,
+  retainPackageHead,
+} = require('../services/package-lifecycle-integration')
+const {
+  getPackageGeneration,
+  savePackageProjection,
+} = require('../services/generation-safe-save')
+const { withPackageStore } = require('../services/pptx-import/package-store-runtime')
+const { createEditedExportHandler } = require('./pptx-edited-export')
+const {
+  editedExportAvailability,
+  executeValidatedEditedExport,
+} = require('../services/validated-edited-export')
 
 const router = express.Router()
 const UPLOAD_HASHES_FILE = path.join(DATA_DIR, 'upload-hashes.json')
-
-async function unlinkPresentationOriginal(presentation) {
-  const originalId = presentation?.pptxOriginal?.id
-  if (!originalId) return
-  await deleteOriginalPptx(originalId).catch(() => {})
-}
 
 function getUploadMimeType(filename) {
   const ext = path.extname(filename).toLowerCase()
@@ -110,7 +118,7 @@ router.get('/', async (req, res) => {
 router.post('/', validate(createPresentationSchema), async (req, res) => {
   try {
     // RT-04: never accept client-supplied pptxOriginal path bindings
-    const safeBody = stripClientPptxOriginalPaths(req.body) || {}
+    const safeBody = sanitizeClientEditableData(stripClientPptxOriginalPaths(req.body) || {})
     const {
       title,
       theme,
@@ -224,7 +232,7 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
       presentations.push(presentation)
       return presentation
     })
-    res.status(201).json(normalizePresentationNotes(result))
+    res.status(201).json(toPresentationEditorDto(normalizePresentationNotes(result)))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -287,19 +295,67 @@ router.post('/raster-elements', async (req, res) => {
   }
 })
 
-// GET /api/presentations/:id/pptx-original — stream stored original bytes (server maps id→uuid only)
-// Phase 08c: uses roundtrip policy (hash check; hybrid fallback not generated here).
+// GET /api/presentations/:id/pptx-fidelity — safe capability and export summary.
+router.get('/:id/pptx-fidelity', async (req, res) => {
+  try {
+    const presentation = await findServeablePresentation(req.params.id, { normalize: false })
+    if (!presentation) return res.status(404).json({ error: 'Not found' })
+    const { buildFidelityDto } = require('../services/pptx-import/fidelity-contract')
+    let verifiedOriginalAvailable = false
+    if ((presentation.pptxOriginal?.id && presentation.pptxOriginal?.sha256) ||
+      presentation.pptxAggregateHead?.packageRevisionId) {
+      try {
+        const { resolvePptxOriginalPayload } = require(
+          '../services/pptx-import/roundtrip-original-parts'
+        )
+        const {
+          resolveImmutableOriginalRevisionBytes,
+        } = require('../services/pptx-import/package-revision-resolver')
+        const payload = await resolvePptxOriginalPayload(presentation, {
+          resolveImmutableOriginalRevision: resolveImmutableOriginalRevisionBytes,
+        })
+        verifiedOriginalAvailable = Boolean(payload.buffer)
+      } catch {
+        verifiedOriginalAvailable = false
+      }
+    }
+    const editedAvailability = await editedExportAvailability(presentation)
+    const fidelity = buildFidelityDto(presentation, {
+      verifiedOriginalAvailable,
+      validatedEditedAvailable: editedAvailability.available,
+      validatedEditedReasonCode: editedAvailability.reasonCode,
+    })
+    const {
+      buildPrivateFidelityCapability,
+    } = require('../services/pptx-import/evidence/private-fidelity-capability')
+    res.json({
+      ...fidelity,
+      localEvidence: buildPrivateFidelityCapability(presentation, fidelity, {
+        officeCliAvailable: false,
+        originalAvailable: verifiedOriginalAvailable,
+      }),
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// GET /api/presentations/:id/pptx-original — stream immutable upload/R0 bytes only.
 router.get('/:id/pptx-original', async (req, res) => {
   try {
     const presentation = await findServeablePresentation(req.params.id, { normalize: false })
     if (!presentation) return res.status(404).json({ error: 'Not found' })
-    const { resolvePptxExportPayload } = require('../services/pptx-import/roundtrip-original-parts')
-    const payload = await resolvePptxExportPayload(presentation, {
-      forceHybrid: req.query.forceHybrid === '1',
+    const { resolvePptxOriginalPayload } = require('../services/pptx-import/roundtrip-original-parts')
+    const {
+      resolveImmutableOriginalRevisionBytes,
+    } = require('../services/pptx-import/package-revision-resolver')
+    const payload = await resolvePptxOriginalPayload(presentation, {
+      resolveImmutableOriginalRevision: resolveImmutableOriginalRevisionBytes,
     })
-    if (payload.mode !== 'original-bytes' || !payload.buffer) {
-      return res.status(404).json({
-        error: 'No original PPTX package available for zero-loss export',
+    if (!payload.buffer) {
+      return res.status(payload.status || 404).json({
+        error: 'No immutable original PPTX package is available',
+        code: payload.code || 'ORIGINAL_UNAVAILABLE',
         reason: payload.reason,
         mode: payload.mode,
       })
@@ -309,19 +365,32 @@ router.get('/:id/pptx-original', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.pptx"`)
     res.setHeader('Content-Length', String(payload.byteLength))
     res.setHeader('X-Pptx-Export-Mode', payload.mode)
-    if (payload.sha256) res.setHeader('X-Pptx-Original-Sha256', payload.sha256)
+    if (payload.sha256) {
+      res.setHeader('X-Pptx-Package-Sha256', payload.sha256)
+      res.setHeader('X-Pptx-Original-Sha256', payload.sha256)
+    }
     res.send(payload.buffer)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(err.status || 500).json({ error: err.message, code: err.code })
   }
 })
+
+// POST /api/presentations/:id/pptx-edited — authoritative, fail-closed package export.
+router.post('/:id/pptx-edited', createEditedExportHandler({
+  findPresentation: (id) => findServeablePresentation(id, { normalize: false }),
+  getAvailability: editedExportAvailability,
+  execute: executeValidatedEditedExport,
+}))
 
 // GET /api/presentations/:id
 router.get('/:id', async (req, res) => {
   try {
     const presentation = await findServeablePresentation(req.params.id)
     if (!presentation) return res.status(404).json({ error: 'Not found' })
-    res.json(normalizePresentationNotes(presentation))
+    const generation = await getPackageGeneration(req.params.id)
+    res.json(toPresentationEditorDto(normalizePresentationNotes(presentation), {
+      aggregateGeneration: generation,
+    }))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -330,15 +399,46 @@ router.get('/:id', async (req, res) => {
 // PUT /api/presentations/:id
 router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
   try {
+    let packageResult
+    const expectedGeneration = req.body?.aggregateGeneration
+    const baseRevisionId = req.body?.baseRevisionId
+    const idempotencyKey = req.get('Idempotency-Key') || req.body?.idempotencyKey
     // RT-04: client cannot inject/rebind pptxOriginal (paths or id steal)
-    const safeBody = { ...req.body }
-    delete safeBody.pptxOriginal
+    const safeBody = sanitizeClientEditableData(req.body)
+    delete safeBody.aggregateGeneration
+    delete safeBody.baseRevisionId
+    delete safeBody.idempotencyKey
+    packageResult = await savePackageProjection({
+      presentationId: req.params.id,
+      expectedGeneration,
+      baseRevisionId,
+      idempotencyKey,
+      after: { ...safeBody, id: req.params.id },
+      loadStored: async () => {
+        const presentations = await readPresentations()
+        return presentations.find((item) => item.id === req.params.id) || null
+      },
+    })
+    if (packageResult.packageBacked && !packageResult.ok) {
+      return res.status(packageResult.status).json({
+        error: packageResult.reason,
+        code: packageResult.reason,
+        reason: packageResult.reason,
+        currentGeneration: packageResult.currentGeneration,
+        currentRevisionId: packageResult.currentRevisionId,
+      })
+    }
+    if (packageResult.packageBacked) Object.assign(safeBody, packageResult.projection, {
+      pptxAggregateHead: packageResult.aggregateHead,
+    })
     const result = await withPresentations((presentations) => {
       const index = presentations.findIndex((p) => p.id === req.params.id)
       if (index === -1) return null
       const previous = presentations[index]
-      // Phase 08c: user edits invalidate original-bytes re-export preference
+      // Legacy reconstructed export still observes this marker. Package-backed saves
+      // instead record a server-owned pending journal and retain immutable R0 bytes.
       const contentEdited =
+        !packageResult?.packageBacked &&
         Boolean(previous.pptxOriginal) &&
         (safeBody.slides !== undefined ||
           safeBody.title !== undefined ||
@@ -353,14 +453,28 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
         ...(contentEdited
           ? { _pptxEdited: true, _pptxEditedAt: new Date().toISOString() }
           : {}),
-        updatedAt: new Date().toISOString(),
+        updatedAt: packageResult?.packageBacked
+          ? packageResult.projection.updatedAt
+          : new Date().toISOString(),
       })
       return presentations[index]
     })
     if (!result) return res.status(404).json({ error: 'Not found' })
-    res.json(normalizePresentationNotes(result))
+    if (packageResult?.packageBacked) {
+      await withPackageStore((store) => drainPackageCompatibilityOutbox(store))
+    }
+    res.json({
+      ...toPresentationEditorDto(normalizePresentationNotes(result), {
+        aggregateGeneration: packageResult?.packageBacked ? packageResult.generation : undefined,
+      }),
+      ...(!packageResult?.packageBacked
+        ? {}
+        : { saveOutcome: packageResult.idempotent ? 'idempotent-replay' : 'committed' }),
+    })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    const code = err.code || 'PACKAGE_SAVE_FAILED'
+    const status = code === 'SNAPSHOT_BUDGET_EXCEEDED' ? 413 : 500
+    res.status(status).json({ error: err.message, code, reason: code })
   }
 })
 
@@ -404,6 +518,33 @@ router.post('/:id/restore', async (req, res) => {
 router.delete('/:id/permanent', async (req, res) => {
   try {
     const presId = req.params.id
+    const presentation = (await readPresentations()).find((item) => item.id === presId)
+    if (!presentation) return res.status(404).json({ error: 'Not found' })
+
+    const presHistDir = path.join(HISTORY_DIR, presId)
+    const historyFiles = (await fs.pathExists(presHistDir))
+      ? (await fs.readdir(presHistDir)).filter((file) => file.endsWith('.json'))
+      : []
+
+    // Lifecycle operations must complete before deleting JSON or derived state.
+    // Package bytes remain immutable; owners only govern recoverability.
+    let quarantinedHead
+    try {
+      quarantinedHead = await quarantinePackageOwner(presId, { compatibilityRemove: true })
+      for (const file of historyFiles) {
+        await releasePackageOwner({
+          ownerType: 'history',
+          ownerId: `${presId}:${path.basename(file, '.json')}`,
+        })
+      }
+    } catch {
+      return res.status(503).json({
+        error: 'Package lifecycle is temporarily unavailable; retry deletion',
+        code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+        retryable: true,
+      })
+    }
+
     const removed = await withPresentations((presentations) => {
       const index = presentations.findIndex((p) => p.id === presId)
       if (index === -1) return null
@@ -411,9 +552,6 @@ router.delete('/:id/permanent', async (req, res) => {
       return pres
     })
     if (!removed) return res.status(404).json({ error: 'Not found' })
-
-    // Cascade: remove original.pptx package (zero-loss lifecycle ends with presentation)
-    await unlinkPresentationOriginal(removed)
 
     // Cascade: remove share tokens
     try {
@@ -428,11 +566,13 @@ router.delete('/:id/permanent', async (req, res) => {
       })
     } catch {}
 
-    // Cascade: remove history snapshots
+    // Owner releases completed above; only remove the now-unreferenced snapshots.
     try {
-      const presHistDir = path.join(HISTORY_DIR, presId)
-      if (fs.existsSync(presHistDir)) fs.removeSync(presHistDir)
+      await fs.remove(presHistDir)
     } catch {}
+    if (quarantinedHead) {
+      await withPackageStore((store) => drainPackageCompatibilityOutbox(store))
+    }
 
     res.json({ success: true })
   } catch (err) {
@@ -453,9 +593,11 @@ router.post('/:id/duplicate', async (req, res) => {
       copy.title = (copy.title || 'Untitled') + ' (copy)'
       copy.createdAt = now
       copy.updatedAt = now
+      const packageHead = await duplicatePackageOwner(original.id, copy.id)
+      if (packageHead) copy.pptxAggregateHead = packageHead
       // H1: never share pptxOriginal.id across decks (permanent delete would unlink sibling).
       // Copy-on-write: new uuid file when bytes exist; strip binding if source package missing.
-      if (copy.pptxOriginal?.id) {
+      if (!packageHead && copy.pptxOriginal?.id) {
         try {
           const bytes = await readOriginalPptx(copy.pptxOriginal.id)
           if (bytes) {
@@ -478,7 +620,7 @@ router.post('/:id/duplicate', async (req, res) => {
       return normalizedCopy
     })
     if (!result) return res.status(404).json({ error: 'Not found' })
-    res.status(201).json(result)
+    res.status(201).json(toPresentationEditorDto(result))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -544,23 +686,35 @@ router.get('/:id/present', async (req, res) => {
 
 // POST /api/presentations/:id/save-as-template
 router.post('/:id/save-as-template', validate(saveAsTemplateSchema), async (req, res) => {
+  let retainedTemplateId
   try {
     const pres = await findServeablePresentation(req.params.id, { normalize: false })
     if (!pres) return res.status(404).json({ error: 'Not found' })
     const now = new Date().toISOString()
     const template = normalizePresentationNotes({
-      ...JSON.parse(JSON.stringify(normalizePptxImportedPresentationForRead(pres))),
+      ...sanitizeClientEditableData(JSON.parse(JSON.stringify(normalizePptxImportedPresentationForRead(pres)))),
       id: uuidv4(),
       title: (req.body.title || pres.title || 'Untitled') + ' (template)',
       isTemplate: true,
       createdAt: now,
       updatedAt: now,
     })
+    await retainPackageHead(
+      { ownerType: 'template', ownerId: template.id },
+      pres.id
+    )
+    retainedTemplateId = template.id
     await withTemplates((templates) => {
       templates.push(template)
     })
-    res.status(201).json(template)
+    res.status(201).json(toPresentationEditorDto(template))
   } catch (err) {
+    if (retainedTemplateId) {
+      await releasePackageOwner({
+        ownerType: 'template',
+        ownerId: retainedTemplateId,
+      }).catch(() => {})
+    }
     res.status(500).json({ error: err.message })
   }
 })

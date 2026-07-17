@@ -96,7 +96,8 @@ function createLocalMutationIngressPolicy(options = {}) {
     parseBoolean(process.env.NAVSLIDES_ALLOW_MISSING_ORIGIN, true)
 
   return (req, res, next) => {
-    if (!UNSAFE_METHODS.has(req.method) || !req.path.startsWith('/api/')) return next()
+    const requestPath = typeof req.path === 'string' ? req.path.toLowerCase() : ''
+    if (!UNSAFE_METHODS.has(req.method) || !requestPath.startsWith('/api/')) return next()
 
     const remoteAddress = normalizeAddress(req.socket?.remoteAddress)
     const trustedProxy = trustedProxyAddresses.has(remoteAddress)

@@ -15,4 +15,17 @@ describe('production mutation ingress', () => {
       code: LOCAL_MUTATION_INGRESS_DENIAL_CODE,
     })
   })
+
+  it('applies the same ingress denial to Express case-insensitive API paths', async () => {
+    const response = await request(app)
+      .post('/API/pptx/import')
+      .set('Host', 'attacker.example')
+      .set('Origin', 'https://attacker.example')
+
+    expect(response.status).toBe(403)
+    expect(response.body).toEqual({
+      error: 'Request denied',
+      code: LOCAL_MUTATION_INGRESS_DENIAL_CODE,
+    })
+  })
 })
