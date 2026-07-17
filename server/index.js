@@ -13,6 +13,7 @@ const {
   withShareTokens,
 } = require('./services/storage')
 const { errorHandler } = require('./middleware/error-handler')
+const { createLocalMutationIngressPolicy } = require('./middleware/local-mutation-ingress')
 const { generateRevealHTML } = require('revealjs-shared')
 const { normalizePptxImportedPresentationForRead } = require('./services/presentation-normalization')
 const { findServeablePresentation } = require('./services/presentation-finder')
@@ -69,6 +70,9 @@ app.param('jobId', (req, res, next, jobId) => {
 // ── Middleware ────────────────────────────────────────────────────────────────
 const corsOptions = process.env.NODE_ENV === 'production' ? { origin: false } : { origin: true }
 app.use(cors(corsOptions))
+// Local deployment and CSRF boundary, not multi-user authentication. This runs
+// before body parsing, upload handling, rate-limit accounting, and every route.
+app.use(createLocalMutationIngressPolicy())
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: false }))
 
