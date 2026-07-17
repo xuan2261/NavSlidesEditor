@@ -240,14 +240,42 @@ function validateMatrixDependency(dependency, matrix = CANONICAL_FEATURE_MATRIX_
 
 const MATRIX_AUTHORITY_TYPES = Object.freeze(['qualification', 'capability', 'journal', 'claim'])
 
-function createMatrixAuthoritySubjects(matrix = CANONICAL_FEATURE_MATRIX_ENVELOPE) {
-  const dependency = createMatrixDependency(matrix)
+function createMatrixAuthoritySubject(matrix = CANONICAL_FEATURE_MATRIX_ENVELOPE, evolutionEpoch = 1) {
+  if (!Number.isSafeInteger(evolutionEpoch) || evolutionEpoch < 1) {
+    throw new TypeError('Matrix authority evolution epoch must be a positive integer')
+  }
+  return Object.freeze({ ...createMatrixDependency(matrix), evolutionEpoch })
+}
+
+function validateMatrixAuthoritySubject(subject, matrix = CANONICAL_FEATURE_MATRIX_ENVELOPE,
+  evolutionEpoch = 1) {
+  if (!Number.isSafeInteger(evolutionEpoch) || evolutionEpoch < 1) {
+    return Object.freeze({ authorized: false, reasons: Object.freeze(['invalid-matrix-authority-epoch']) })
+  }
+  if (!isPlainRecord(subject) || ownKeys(subject)?.length !== 4 ||
+    !['schemaVersion', 'matrixVersion', 'hash', 'evolutionEpoch'].every((key) => ownData(subject, key) !== INVALID)) {
+    return Object.freeze({ authorized: false, reasons: Object.freeze(['missing-matrix-authority-subject']) })
+  }
+  const dependency = validateMatrixDependency({
+    schemaVersion: ownData(subject, 'schemaVersion'),
+    matrixVersion: ownData(subject, 'matrixVersion'),
+    hash: ownData(subject, 'hash'),
+  }, matrix)
+  if (!dependency.authorized) return dependency
+  if (ownData(subject, 'evolutionEpoch') !== evolutionEpoch) {
+    return Object.freeze({ authorized: false, reasons: Object.freeze(['stale-matrix-authority-epoch']) })
+  }
+  return Object.freeze({ authorized: true, reasons: Object.freeze([]) })
+}
+
+function createMatrixAuthoritySubjects(matrix = CANONICAL_FEATURE_MATRIX_ENVELOPE, evolutionEpoch = 1) {
   return Object.freeze(Object.fromEntries(
-    MATRIX_AUTHORITY_TYPES.map((type) => [type, Object.freeze({ ...dependency })])
+    MATRIX_AUTHORITY_TYPES.map((type) => [type, createMatrixAuthoritySubject(matrix, evolutionEpoch)])
   ))
 }
 
-function validateMatrixAuthoritySubjects(subjects, matrix = CANONICAL_FEATURE_MATRIX_ENVELOPE) {
+function validateMatrixAuthoritySubjects(subjects, matrix = CANONICAL_FEATURE_MATRIX_ENVELOPE,
+  evolutionEpoch = 1) {
   if (!isPlainRecord(subjects)) {
     return Object.freeze({
       authorized: false,
@@ -256,9 +284,10 @@ function validateMatrixAuthoritySubjects(subjects, matrix = CANONICAL_FEATURE_MA
   }
   const reasons = []
   for (const type of MATRIX_AUTHORITY_TYPES) {
-    const verdict = validateMatrixDependency(ownData(subjects, type), matrix)
+    const verdict = validateMatrixAuthoritySubject(ownData(subjects, type), matrix, evolutionEpoch)
     if (!verdict.authorized) {
-      reasons.push(...verdict.reasons.map((reason) => `${reason.replace('matrix-subject', `${type}-matrix-subject`)}`))
+      reasons.push(...verdict.reasons.map((reason) =>
+        `${reason.replace('matrix-authority-', `${type}-matrix-authority-`).replace('matrix-subject', `${type}-matrix-subject`)}`))
     }
   }
   return Object.freeze({
@@ -277,6 +306,7 @@ module.exports = {
   FEATURE_TIERS,
   canonicalMatrixBytes,
   canonicalFeatureMatrixHash,
+  createMatrixAuthoritySubject,
   createMatrixAuthoritySubjects,
   createMatrixDependency,
   featureMatrixHash,
@@ -284,6 +314,7 @@ module.exports = {
   getFeatureRow,
   parseCanonicalFeatureMatrix,
   unsupportedBlockingVerdict,
+  validateMatrixAuthoritySubject,
   validateMatrixAuthoritySubjects,
   validateMatrixDependency,
 }

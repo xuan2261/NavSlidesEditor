@@ -426,6 +426,9 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
         reason: packageResult.reason,
         currentGeneration: packageResult.currentGeneration,
         currentRevisionId: packageResult.currentRevisionId,
+        reasonCode: packageResult.reasonCode,
+        reasonCodes: packageResult.reasonCodes,
+        reasonCodeSubject: packageResult.reasonCodeSubject,
       })
     }
     if (packageResult.packageBacked) Object.assign(safeBody, packageResult.projection, {

@@ -57,7 +57,31 @@ const REASON_PRECEDENCE = Object.freeze([
   'JOURNAL_MATRIX_VERSION_MISMATCH',
   'JOURNAL_MATRIX_HASH_MISSING',
   'JOURNAL_MATRIX_HASH_MISMATCH',
+  'JOURNAL_MATRIX_AUTHORITY_SUBJECT_MISSING',
+  'JOURNAL_MATRIX_AUTHORITY_SUBJECT_INVALID',
+  'JOURNAL_MATRIX_AUTHORITY_SUBJECT_STALE',
+  'JOURNAL_REASON_CODE_SUBJECT_MISSING',
+  'JOURNAL_REASON_CODE_SUBJECT_INVALID',
+  'JOURNAL_REASON_CODE_SUBJECT_STALE',
   'STALE_MATRIX_AUTHORITY',
+  'PRESENTATION_PACKAGE_HEAD_MISSING',
+  'PACKAGE_SAVE_ENVELOPE_REQUIRED',
+  'INVALID_EXPECTED_GENERATION',
+  'INVALID_IDEMPOTENCY_KEY',
+  'INVALID_BASE_REVISION',
+  'NOT_FOUND',
+  'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
+  'STALE_GENERATION',
+  'BASE_REVISION_MISMATCH',
+  'IDEMPOTENCY_KEY_CONFLICT',
+  'CANCELLED',
+  'unsafe-or-oversized-package',
+  'encrypted-or-invalid-package',
+  'protected-or-active-content',
+  'ADAPTER_DISPATCH_UNAVAILABLE',
+  'CANONICAL_PROJECTION_UNAVAILABLE',
+  'CANONICAL_TEXT_JOURNAL_INVALID',
+  'SOURCE_MAP_MISMATCH',
   'TIPTAP_LEGACY_PLAIN_STRING_NOT_ALLOWED',
   'TIPTAP_XML_CHARACTER_INVALID',
   'TIPTAP_HARD_BREAK_NOT_ALLOWED',
@@ -70,6 +94,18 @@ function reasonCodeSubject() {
     version: CANONICAL_REASON_CODE_VERSION,
     hash: createHash('sha256').update(JSON.stringify(REASON_PRECEDENCE)).digest('hex'),
   })
+}
+
+function validateReasonCodeSubject(subject) {
+  const expected = reasonCodeSubject()
+  if (!subject || typeof subject !== 'object' || Array.isArray(subject)) {
+    return Object.freeze({ authorized: false, reasonCode: 'missing-reason-code-subject' })
+  }
+  if (subject.schemaVersion !== expected.schemaVersion ||
+    subject.version !== expected.version || subject.hash !== expected.hash) {
+    return Object.freeze({ authorized: false, reasonCode: 'stale-reason-code-subject' })
+  }
+  return Object.freeze({ authorized: true, reasonCode: null })
 }
 
 function canonicalReasonCodes(codes) {
@@ -92,4 +128,5 @@ module.exports = {
   canonicalReasonCodes,
   publicReasonCodes,
   reasonCodeSubject,
+  validateReasonCodeSubject,
 }

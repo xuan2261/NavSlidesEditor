@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import plannerModule from './transactional-patch-planner.js'
 import matrixModule from './canonical-feature-matrix.js'
+import reasonModule from './reason-code-contract.js'
 
-const { compilePatchPlan } = plannerModule
-const { CANONICAL_FEATURE_MATRIX_VERSION, FEATURE_MATRIX_SCHEMA_VERSION, featureMatrixHash } = matrixModule
+const { compilePatchPlan: rawCompilePatchPlan } = plannerModule
+const compilePatchPlan = (input) => rawCompilePatchPlan(input, { matrixAuthorityEpoch: 1 })
+const {
+  CANONICAL_FEATURE_MATRIX_VERSION, FEATURE_MATRIX_SCHEMA_VERSION, featureMatrixHash,
+  createMatrixAuthoritySubject,
+} = matrixModule
+const { reasonCodeSubject } = reasonModule
 const BINDINGS = {
   transportId: 'server-snapshot-diff', transportSchemaVersion: 1,
   eligibilityPolicyId: 'tiptap-single-plain-run', eligibilityPolicyVersion: 1,
@@ -38,6 +44,8 @@ function journal(operations) {
     featureMatrixSchemaVersion: FEATURE_MATRIX_SCHEMA_VERSION,
     featureMatrixVersion: CANONICAL_FEATURE_MATRIX_VERSION,
     featureMatrixHash: featureMatrixHash(),
+    matrixAuthoritySubject: createMatrixAuthoritySubject(),
+    reasonCodeSubject: reasonCodeSubject(),
     operations,
   }
 }
@@ -107,5 +115,16 @@ describe('transactional patch planner input safety', () => {
       reasonCodeSubject: expect.objectContaining({ schemaVersion: 1, version: '1.0.0' }),
     })
     expect(result.reasonCodes).toEqual(['JOURNAL_MATRIX_SCHEMA_MISSING'])
+  })
+
+  it('fails closed unless successful plans retain current authority subjects', () => {
+    const incomplete = journal([operation()])
+    delete incomplete.matrixAuthoritySubject
+    const result = compilePatchPlan(incomplete)
+
+    expect(result).toMatchObject({
+      ok: false,
+      reasonCode: 'JOURNAL_MATRIX_AUTHORITY_SUBJECT_MISSING',
+    })
   })
 })
