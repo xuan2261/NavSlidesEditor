@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "repository": "https://github.com/iOfficeAI/OfficeCLI",
+    "releaseTag": "v1.0.135",
+    "releaseCommit": "d2d9c60f44537004c3e1f46680c24ea38d9659c2",
+    "releasePage": "https://github.com/iOfficeAI/OfficeCLI/releases/tag/v1.0.135"
+  },
+  "version": "1.0.135",
+  "releaseAsset": {
+    "assetName": "officecli-win-x64.exe",
+    "installedName": "officecli.exe",
+    "sourceAssetUrl": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.135/officecli-win-x64.exe",
+    "byteLength": 33111928,
+    "sha256": "937DB176B585E874AA5BFF48D536BCE78037665CD862B5DEEFE56E79977E6588",
+    "checksumManifestUrl": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.135/SHA256SUMS",
+    "checksumManifestSha256": "9A991E1DB05C6C6896C6747C76D833735F0B907648CB1A416F80F1840999A3D5",
+    "signatureStatus": "unsigned",
+    "provenanceStatus": "administrator-provided-hash-pinned"
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "noticesStatus": "upstream-license-reviewed",
+    "sbomStatus": "not-published"
+  },
+  "distribution": {
+    "supportedPlatform": "win32",
+    "acquisition": "administrator-provided-configured-absolute-path",
+    "bundled": false,
+    "runtimeDownload": false
+  }
+}
