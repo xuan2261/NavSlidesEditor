@@ -1,5 +1,6 @@
 const { CLAIM_LEVELS } = require('./claim-contract')
 const { hashCanonical } = require('./canonical-hash')
+const { validateReasonCodeSubject } = require('../reason-code-contract')
 const { canonicalMatrixSubject, verifyLocalEvidenceManifest } = require('./local-evidence-validator')
 const {
   BOUNDED_COMPATIBILITY, LOCAL_AUTHORITY, LOCAL_EVIDENCE_SCHEMA_VERSION,
@@ -25,6 +26,7 @@ function buildLocalEvidenceManifest({ subject, stage, artifacts, claimLadder, co
   const canonicalSubject = {
     ...subject,
     matrix: subject?.matrix || canonicalMatrixSubject(),
+    reasonCodeSubject: subject?.reasonCodeSubject,
   }
   return {
     schemaVersion: LOCAL_EVIDENCE_SCHEMA_VERSION,
@@ -55,6 +57,7 @@ function buildPrivateCapabilityDto({ manifest, generation, rows, officeCli, loca
     subjectHash: manifest?.subjectHash || null,
     packageRevisionHash: manifest?.subject?.packageRevisionHash || null,
     matrix: manifest?.subject?.matrix || null,
+    reasonCodeSubject: manifest?.subject?.reasonCodeSubject || null,
     claimLadder: isRecord(manifest?.claimLadder)
       ? Object.fromEntries(CLAIM_LEVELS.map((level) => [
         level,
@@ -91,11 +94,17 @@ function claimCore(representation) {
     authority: representation.authority,
     subjectHash: representation.subjectHash,
     matrix: representation.matrix,
+    reasonCodeSubject: representation.reasonCodeSubject,
     claimLadder: representation.claimLadder,
     limitations: representation.limitations,
     artifacts: representation.artifacts || representation.applicationArtifacts || [],
     rows: Array.isArray(representation.rows) ? representation.rows : [],
   }
+}
+
+function validateCapabilityEnvelope(envelope) {
+  const subject = envelope?.reasonCodeSubject
+  return Object.freeze(validateReasonCodeSubject(subject))
 }
 
 function compareClaimRepresentations(representations) {
@@ -161,6 +170,7 @@ module.exports = {
   buildLocalEvidenceManifest,
   buildPrivateCapabilityDto,
   compareClaimRepresentations,
+  validateCapabilityEnvelope,
   verifyLocalEvidenceManifest,
   verifyStageLineage,
 }

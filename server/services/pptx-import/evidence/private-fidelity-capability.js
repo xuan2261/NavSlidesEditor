@@ -1,6 +1,7 @@
 const { buildLocalEvidenceManifest, buildPrivateCapabilityDto } = require('./local-evidence-contract')
 const { hashCanonical } = require('./canonical-hash')
 const { validateMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
+const { validateReasonCodeSubject } = require('../reason-code-contract')
 
 function digest(value) {
   return hashCanonical({ value: value ?? null })
@@ -38,8 +39,11 @@ function buildPrivateFidelityCapability(presentation, fidelityDto, {
   originalAvailable = false,
 } = {}) {
   const authorities = validateMatrixAuthoritySubjects(
-    presentation?.pptxAggregateHead?.matrixAuthoritySubjects
+    presentation?.pptxAggregateHead?.matrixAuthoritySubjects,
+    undefined,
+    presentation?.pptxAggregateHead?.matrixAuthorityEpoch
   )
+  const reasonAuthority = validateReasonCodeSubject(fidelityDto?.reasonCodeSubject)
   const packageRevision = presentation?.pptxAggregateHead?.packageRevisionId
   const original = presentation?.pptxOriginal?.sha256
   const matrix = fidelityDto.matrix
@@ -52,6 +56,7 @@ function buildPrivateFidelityCapability(presentation, fidelityDto, {
       sourceMapVersion: 'unavailable',
       compactedJournalHash: digest(presentation?.pptxAggregateHead?.journalRevisionId),
       matrix,
+      reasonCodeSubject: fidelityDto?.reasonCodeSubject,
       policyDigest: digest('fidelity-capability-policy-v1'),
       corpusHash: digest('unavailable'),
       commandSetHash: digest('unavailable'),
@@ -69,9 +74,15 @@ function buildPrivateFidelityCapability(presentation, fidelityDto, {
   return buildPrivateCapabilityDto({
     manifest,
     generation: presentation?.pptxAggregateHead?.generation,
-    rows: capabilityRows(fidelityDto.fidelity?.rows).map((row) => authorities.authorized
+    rows: capabilityRows(fidelityDto.fidelity?.rows).map((row) => authorities.authorized && reasonAuthority.authorized
       ? row
-      : { ...row, eligible: false, promoted: false, verdict: 'stale', reasons: ['STALE_MATRIX_AUTHORITY'] }),
+      : {
+        ...row,
+        eligible: false,
+        promoted: false,
+        verdict: 'stale',
+        reasons: [authorities.authorized ? 'unknown-reason-code' : 'STALE_MATRIX_AUTHORITY'],
+      }),
     officeCli: { verdict: officeCliAvailable ? 'available' : 'unavailable' },
     localOracle: { verdict: 'unavailable' },
     originalAvailable,

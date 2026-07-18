@@ -5,6 +5,7 @@ const {
   FEATURE_MATRIX_SCHEMA_VERSION,
   featureMatrixHash,
 } = require('./canonical-feature-matrix')
+const { reasonCodeSubject, validateReasonCodeSubject } = require('./reason-code-contract')
 
 const CLAIM_CEILING_LEVELS = Object.freeze({
   'original-recovery': 1,
@@ -50,12 +51,22 @@ const targetClaimLevel = Math.max(...CANONICAL_FEATURE_MATRIX.map(
   (row) => CLAIM_CEILING_LEVELS[row.claimCeiling] || 0,
 ))
 
-module.exports = Object.freeze({
+const capabilities = Object.freeze({
   schemaVersion: 1,
   matrix,
   maxClaimLevel: 0,
   achievedClaimLevel: 0,
   verifiedClaimLevel: 0,
   targetClaimLevel,
+  reasonCodeSubject: reasonCodeSubject(),
   rows,
 })
+
+function validatePresentationCapabilities(envelope) {
+  if (!envelope || validateReasonCodeSubject(envelope.reasonCodeSubject).authorized !== true) {
+    return Object.freeze({ authorized: false, reasonCode: 'unknown-reason-code' })
+  }
+  return Object.freeze({ authorized: true, reasonCode: null })
+}
+
+module.exports = Object.freeze({ ...capabilities, validatePresentationCapabilities })

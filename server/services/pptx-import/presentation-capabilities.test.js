@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import matrixModule from './canonical-feature-matrix.js'
 import capabilities from './presentation-capabilities.js'
+import reasonModule from './reason-code-contract.js'
 
 const {
   CANONICAL_FEATURE_MATRIX,
@@ -9,6 +10,7 @@ const {
   FEATURE_MATRIX_SCHEMA_VERSION,
   featureMatrixHash,
 } = matrixModule
+const { reasonCodeSubject } = reasonModule
 
 function driftedMatrix() {
   const matrix = JSON.parse(JSON.stringify(CANONICAL_FEATURE_MATRIX_ENVELOPE))
@@ -37,6 +39,7 @@ describe('presentation behavior capability matrix', () => {
       achievedClaimLevel: 0,
       verifiedClaimLevel: 0,
       targetClaimLevel: 4,
+      reasonCodeSubject: reasonCodeSubject(),
     })
   })
 
@@ -44,5 +47,19 @@ describe('presentation behavior capability matrix', () => {
     expect(featureMatrixHash(driftedMatrix())).not.toBe(featureMatrixHash(CANONICAL_FEATURE_MATRIX_ENVELOPE))
     expect(capabilities.matrix.hash).toBe(featureMatrixHash(CANONICAL_FEATURE_MATRIX_ENVELOPE))
     expect(capabilities.rows.every((row) => !('adapterId' in row || 'fixtureIds' in row || 'requiredTestIds' in row))).toBe(true)
+  })
+
+  it('rejects capability envelopes whose reason-code subject is missing or stale', () => {
+    expect(capabilities.validatePresentationCapabilities(capabilities)).toEqual({
+      authorized: true,
+      reasonCode: null,
+    })
+    expect(capabilities.validatePresentationCapabilities({
+      ...capabilities,
+      reasonCodeSubject: { ...reasonCodeSubject(), hash: '0'.repeat(64) },
+    })).toEqual({
+      authorized: false,
+      reasonCode: 'unknown-reason-code',
+    })
   })
 })

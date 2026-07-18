@@ -15,6 +15,7 @@ const SUBJECT_FIELDS = Object.freeze([
   'packageRevisionHash', 'originalSha256', 'exportSha256', 'projectionRevisionHash',
   'sourceMapVersion', 'compactedJournalHash', 'matrix', 'policyDigest', 'corpusHash',
   'commandSetHash', 'environmentIdentity', 'applicationArtifacts', 'outputs', 'thresholds',
+  'reasonCodeSubject',
 ])
 
 function sha256(value) {

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import localEvidence from './local-evidence-contract.js'
 import matrixSubject from './matrix-subject.js'
+import reasonModule from '../reason-code-contract.js'
 
 const {
   buildLocalEvidenceManifest,
@@ -11,11 +12,15 @@ const {
   verifyStageLineage,
 } = localEvidence
 const { canonicalMatrixSubject } = matrixSubject
+const { reasonCodeSubject } = reasonModule
 
 const hash = (value) => createHash('sha256').update(value).digest('hex')
 const sha = (name) => hash(`local-evidence-${name}`)
 
-function fixture() {
+function fixture(options = {}) {
+  const subjectReasonCode = Object.hasOwn(options, 'subjectReasonCode')
+    ? options.subjectReasonCode
+    : reasonCodeSubject()
   const contents = {
     'package.json': Buffer.from('package report'),
     'semantic.json': Buffer.from('semantic report'),
@@ -39,6 +44,7 @@ function fixture() {
         sourceMapVersion: 'source-map-v1',
         compactedJournalHash: sha('journal'),
         matrix: canonicalMatrixSubject(),
+        reasonCodeSubject: subjectReasonCode,
         policyDigest: sha('policy'),
         corpusHash: sha('corpus'),
         commandSetHash: sha('commands'),
@@ -83,6 +89,19 @@ describe('local evidence claim contract', () => {
         'separate-approvers-not-proven',
       ]),
     })
+  })
+
+  it.each([
+    ['missing', undefined],
+    ['stale', { ...reasonCodeSubject(), hash: '0'.repeat(64) }],
+    ['mismatched', { ...reasonCodeSubject(), version: '0.0.0' }],
+  ])('rejects a %s reason-code subject before evidence validation succeeds', (_name, subjectReasonCode) => {
+    const { manifest, contents } = fixture({ subjectReasonCode })
+
+    expect(verifyLocalEvidenceManifest(manifest, contents)).toEqual(expect.objectContaining({
+      verified: false,
+      reasons: expect.arrayContaining(['stale-subject-reason-code-subject']),
+    }))
   })
 
   it.each([
@@ -135,6 +154,7 @@ describe('local evidence claim contract', () => {
       authority: manifest.authority,
       subjectHash: manifest.subjectHash,
       matrix: manifest.subject.matrix,
+      reasonCodeSubject: manifest.subject.reasonCodeSubject,
       claimLadder: manifest.claimLadder,
       limitations: manifest.limitations,
       artifacts: manifest.subject.applicationArtifacts,

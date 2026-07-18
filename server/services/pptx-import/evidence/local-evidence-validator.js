@@ -1,6 +1,7 @@
 const { canonicalMatrixSubject, validateMatrixSubject } = require('./matrix-subject')
 const { CLAIM_LEVELS } = require('./claim-contract')
 const { hashCanonical } = require('./canonical-hash')
+const { validateReasonCodeSubject } = require('../reason-code-contract')
 const {
   BOUNDED_COMPATIBILITY, LOCAL_AUTHORITY, LOCAL_EVIDENCE_SCHEMA_VERSION,
   LOCAL_LIMITATIONS, SUBJECT_FIELDS, isRecord, isSha256, sha256, unique,
@@ -27,6 +28,9 @@ function verifySubject(subject, reasons) {
   reasons.push(...validateMatrixSubject(subject.matrix, {
     missing: 'missing-subject-matrix', invalid: 'invalid-subject-matrix', stale: 'stale-subject-matrix',
   }))
+  if (!validateReasonCodeSubject(subject.reasonCodeSubject).authorized) {
+    reasons.push('stale-subject-reason-code-subject')
+  }
   push(reasons, !isRecord(subject.environmentIdentity), 'invalid-subject-environment-identity')
   push(reasons, !Array.isArray(subject.applicationArtifacts), 'invalid-subject-application-artifacts')
   push(reasons, !Array.isArray(subject.outputs), 'invalid-subject-outputs')
