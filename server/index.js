@@ -11,6 +11,7 @@ const {
   UPLOADS_DIR,
   readShareTokens,
   withShareTokens,
+  DATA_DIR,
 } = require('./services/storage')
 const { errorHandler } = require('./middleware/error-handler')
 const { createLocalMutationIngressPolicy } = require('./middleware/local-mutation-ingress')
@@ -20,6 +21,10 @@ const { findServeablePresentation } = require('./services/presentation-finder')
 const { recordView } = require('./routes/analytics')
 const { setupSocketHandlers } = require('./services/socket-handler')
 const { setupGameSocketHandlers } = require('./services/game-socket-handler')
+const {
+  initializePackageStore,
+  shutdownPackageStore,
+} = require('./services/pptx-import/package-store-runtime')
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const presentationsRouter = require('./routes/presentations')
@@ -322,10 +327,18 @@ if (process.env.NODE_ENV === 'production') {
 app.use(errorHandler)
 
 // ── Server start ─────────────────────────────────────────────────────────────
-function startServer(port) {
+async function startServer(port) {
   const p = port || PORT
-  return new Promise((resolve) => {
+  await initializePackageStore({ rootDir: path.resolve(DATA_DIR) })
+  return new Promise((resolve, reject) => {
     const server = http.createServer(app)
+    server.once('close', () => {
+      shutdownPackageStore().catch(() => {})
+    })
+    server.once('error', async (error) => {
+      await shutdownPackageStore().catch(() => {})
+      reject(error)
+    })
 
     // Attach Socket.IO
     const corsOptions = process.env.NODE_ENV === 'production' ? { origin: false } : { origin: '*' }
@@ -343,7 +356,10 @@ function startServer(port) {
 }
 
 if (require.main === module) {
-  startServer()
+  startServer().catch((error) => {
+    console.error('Server failed to start', error)
+    process.exitCode = 1
+  })
 }
 
 module.exports = { app, startServer }

@@ -40,5 +40,22 @@ export default function () {
     'is status 200 or 201': (r) => r.status === 200 || r.status === 201,
   })
 
+  // Permanent cleanup keeps presentations.json from accumulating multi-MB load fixtures.
+  // Soft-delete alone would leave the payload on disk and drive rewrite latency over threshold.
+  if (res.status === 200 || res.status === 201) {
+    let id = null
+    try {
+      id = res.json('id')
+    } catch {
+      id = null
+    }
+    if (id) {
+      const del = http.del(`${BASE_URL}/presentations/${id}/permanent`, null, params)
+      check(del, {
+        'cleanup is status 200': (r) => r.status === 200,
+      })
+    }
+  }
+
   sleep(1)
 }

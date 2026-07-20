@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import request from 'supertest'
 import express from 'express'
+import { openPackageStore } from '../services/pptx-import/package-store/index.js'
 import * as storage from '../services/storage.js'
 import templatesRouter from './templates.js'
 
@@ -36,15 +37,52 @@ describe('Templates API', () => {
     expect(getRes.status).toBe(200)
     expect(getRes.body.id).toBe(id)
 
+    await storage.withTemplates((templates) => {
+      const template = templates.find((item) => item.id === id)
+      template.pptxAggregateHead = { packageRevisionId: 'server-owned-revision' }
+    })
     const updateRes = await request(app).put(`/api/templates/${id}`).send({ title: 'Updated Template' })
     expect(updateRes.status).toBe(200)
     expect(updateRes.body.title).toBe('Updated Template')
+    expect(updateRes.body).not.toHaveProperty('pptxAggregateHead')
 
     const deleteRes = await request(app).delete(`/api/templates/${id}`)
     expect(deleteRes.status).toBe(200)
     expect(deleteRes.body.success).toBe(true)
 
     expect((await request(app).get(`/api/templates/${id}`)).status).toBe(404)
+  })
+
+  it('leaves the template JSON intact when package owner release is unavailable', async () => {
+    const created = await request(app)
+      .post('/api/templates')
+      .send({
+        title: `Release failure ${Date.now()}`,
+        slides: [{ id: 'release-failure-slide', elements: [] }],
+      })
+    expect(created.status).toBe(201)
+    const id = created.body.id
+    const heldStore = await openPackageStore({ rootDir: storage.DATA_DIR })
+    await heldStore.acquireWriter()
+    let deleteRes
+    try {
+      deleteRes = await request(app).delete(`/api/templates/${id}`)
+    } finally {
+      await heldStore.releaseWriter()
+    }
+
+    expect(deleteRes.status).toBe(503)
+    expect(deleteRes.body).toEqual({
+      error: 'Package lifecycle is temporarily unavailable; retry deletion',
+      code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+      retryable: true,
+    })
+    expect((await storage.readTemplates()).find((template) => template.id === id)).toMatchObject({
+      id,
+      title: created.body.title,
+    })
+
+    await request(app).delete(`/api/templates/${id}`)
   })
 
   it('rejects invalid custom template payloads', async () => {

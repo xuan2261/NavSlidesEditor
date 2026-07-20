@@ -29,7 +29,6 @@ const { findServeablePresentation } = require('../services/presentation-finder')
 const { normalizeBuiltInTemplates } = require('../services/template-normalization')
 const { stripClientPptxOriginalPaths } = require('../services/pptx-import/create-imported-presentation')
 const { sanitizeClientEditableData } = require('../services/pptx-import/authority-sanitizer')
-const { drainPackageCompatibilityOutbox } = require('../services/pptx-import/compatibility-view')
 const { toPresentationEditorDto } = require('../services/pptx-import/package-store/dto')
 const {
   duplicatePackageOwner,
@@ -41,7 +40,7 @@ const {
   getPackageGeneration,
   savePackageProjection,
 } = require('../services/generation-safe-save')
-const { withPackageStore } = require('../services/pptx-import/package-store-runtime')
+const { drainPackageCompatibilityOutbox } = require('../services/pptx-import/package-store-runtime')
 const { createEditedExportHandler } = require('./pptx-edited-export')
 const {
   editedExportAvailability,
@@ -464,7 +463,7 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
     })
     if (!result) return res.status(404).json({ error: 'Not found' })
     if (packageResult?.packageBacked) {
-      await withPackageStore((store) => drainPackageCompatibilityOutbox(store))
+      await drainPackageCompatibilityOutbox()
     }
     res.json({
       ...toPresentationEditorDto(normalizePresentationNotes(result), {
@@ -574,7 +573,7 @@ router.delete('/:id/permanent', async (req, res) => {
       await fs.remove(presHistDir)
     } catch {}
     if (quarantinedHead) {
-      await withPackageStore((store) => drainPackageCompatibilityOutbox(store))
+      await drainPackageCompatibilityOutbox()
     }
 
     res.json({ success: true })

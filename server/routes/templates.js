@@ -4,6 +4,9 @@ const { readTemplates, withTemplates } = require('../services/storage')
 const { normalizePresentationNotes } = require('revealjs-shared')
 const { validate } = require('../middleware/validate')
 const { createTemplateSchema, updateTemplateSchema } = require('../middleware/schemas')
+const { releasePackageOwner } = require('../services/package-lifecycle-integration')
+const { sanitizeClientEditableData } = require('../services/pptx-import/authority-sanitizer')
+const { toPresentationEditorDto } = require('../services/pptx-import/package-store/dto')
 
 const router = express.Router()
 
@@ -32,7 +35,7 @@ router.post('/', validate(createTemplateSchema), async (req, res) => {
   try {
     const now = new Date().toISOString()
     const template = normalizePresentationNotes({
-      ...req.body,
+      ...sanitizeClientEditableData(req.body),
       id: uuidv4(),
       isTemplate: true,
       createdAt: now,
@@ -41,7 +44,7 @@ router.post('/', validate(createTemplateSchema), async (req, res) => {
     await withTemplates((templates) => {
       templates.push(template)
     })
-    res.status(201).json(normalizePresentationNotes(template))
+    res.status(201).json(toPresentationEditorDto(normalizePresentationNotes(template)))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -53,7 +56,7 @@ router.get('/:id', async (req, res) => {
     const templates = await readTemplates()
     const template = templates.find((t) => t.id === req.params.id)
     if (!template) return res.status(404).json({ error: 'Not found' })
-    res.json(normalizePresentationNotes(template))
+    res.json(toPresentationEditorDto(normalizePresentationNotes(template)))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -67,14 +70,14 @@ router.put('/:id', validate(updateTemplateSchema), async (req, res) => {
       if (index === -1) return null
       templates[index] = normalizePresentationNotes({
         ...templates[index],
-        ...req.body,
+        ...sanitizeClientEditableData(req.body),
         id: req.params.id,
         updatedAt: new Date().toISOString(),
       })
       return templates[index]
     })
     if (!updated) return res.status(404).json({ error: 'Not found' })
-    res.json(normalizePresentationNotes(updated))
+    res.json(toPresentationEditorDto(normalizePresentationNotes(updated)))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -83,6 +86,19 @@ router.put('/:id', validate(updateTemplateSchema), async (req, res) => {
 // DELETE /api/templates/:id
 router.delete('/:id', async (req, res) => {
   try {
+    const template = (await readTemplates()).find((item) => item.id === req.params.id)
+    if (!template) return res.status(404).json({ error: 'Not found' })
+
+    try {
+      await releasePackageOwner({ ownerType: 'template', ownerId: req.params.id })
+    } catch {
+      return res.status(503).json({
+        error: 'Package lifecycle is temporarily unavailable; retry deletion',
+        code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+        retryable: true,
+      })
+    }
+
     const deleted = await withTemplates((templates) => {
       const index = templates.findIndex((t) => t.id === req.params.id)
       if (index === -1) return false
