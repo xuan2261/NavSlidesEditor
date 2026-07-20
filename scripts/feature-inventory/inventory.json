@@ -1446,6 +1446,18 @@
     "coverageMode": "executable"
   },
   {
+    "id": "shortcut.save",
+    "category": "shortcut",
+    "source": "DEFAULT_SHORTCUTS",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
     "id": "shortcut.selectAll",
     "category": "shortcut",
     "source": "DEFAULT_SHORTCUTS",

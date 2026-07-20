@@ -4,7 +4,7 @@ _Generated: local run_
 
 > ⚠️ **Run results stale or missing** — statuses derived without a fresh test run. PASS counts may be optimistic; regenerate with a fresh `--reporter=json` run.
 
-Verified (PASS only): 114/114 (100%)  |  PASS: 114
+Verified (PASS only): 115/115 (100%)  |  PASS: 115
 
 ## canvas
 
@@ -128,6 +128,7 @@ Verified (PASS only): 114/114 (100%)  |  PASS: 114
 | shortcut.penTool | low | smoke | unit | trace | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
 | shortcut.redo | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.resetZoom | low | smoke | unit | trace | client/src/stores/editor-store.test.js | PASS |
+| shortcut.save | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.selectAll | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.sendBackward | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx | PASS |
 | shortcut.slideFirst | low | smoke | unit | trace | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |

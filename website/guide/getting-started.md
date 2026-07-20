@@ -14,8 +14,10 @@ Unlike editing raw Markdown or HTML reveal.js files, NavSlides Editor lets you:
 ## Key capabilities
 
 - **Rich text formatting** via TipTap: headings, bold/italic/underline, font size & color, highlight, lists, tables, and code blocks
-- **Ribbon UI** — a familiar PowerPoint-style ribbon (Home, Insert, Design, View) with a contextual Format tab that appears when an element is selected
-- **PowerPoint-style status bar** — zoom slider with Fit controls, current slide position, and a Normal / Slide Sorter / Present view switcher
+- **Ribbon UI** — a familiar PowerPoint-style ribbon (Home, Insert, Design, View) with a contextual Format tab that appears when an element is selected; an explicit **More** menu keeps lower-frequency groups reachable at constrained widths
+- **PowerPoint-style status bar** — zoom slider with Fit controls, current slide position, and a Normal / Slide Sorter / Present view switcher; status bar, ribbon, canvas controls, shortcuts, and command palette share the same zoom state
+- **Adaptive workspace** — the slide navigator and shared Properties / Design Ideas inspector dock when space permits and open as overlays at narrower editor widths so the canvas stays usable
+- **Mouse, pen, and touch editing** — select, drag, resize, rotate, and crop through one pointer interaction model, with 2-finger pinch zoom on touch devices
 - **LaTeX & TikZ** — write display math or full TikZ diagrams in a split-pane editor with live preview
 - **Charts** — insert bar, line, pie, doughnut, radar, and polar area charts powered by Chart.js
 - **Slide navigation** — first-class vertical (child) slides, reorderable slides, speaker notes
@@ -55,6 +57,10 @@ Once running, navigate to `http://localhost:3002` in your browser. You'll land o
 4. Use the ribbon's **Home** tab (or the contextual **Format** tab) to change font, size, or color.
 5. Press **Escape** to deselect and return to slide-selection mode.
 6. Click the **+** button in the slide panel to add a new slide.
+
+Changes auto-save after a short delay. Press **Ctrl+S** (or **Cmd+S** on macOS)
+to save immediately; the quick-access Save button, File menu, and command palette
+use the same save command.
 
 ## Next steps
 

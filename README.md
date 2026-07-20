@@ -11,9 +11,11 @@ Current release: **v1.15.6** — hardened PPTX import fidelity, editor workflows
 ### Editing
 
 - **WYSIWYG editing** — click and type directly on slides with TipTap rich text
-- **Tab-based ribbon UI** — Home / Insert / Design / Transitions / Animations / View tabs replace the old toolbar/menu system; active tab persists across sessions (`Ctrl+Alt+R` toggles). Primary actions (Paste, Text Box, Picture) use large icon-over-label buttons for a familiar command hierarchy
+- **Tab-based ribbon UI** — Home / Insert / Design / Transitions / Animations / View tabs replace the old toolbar/menu system; active tab persists across sessions (`Ctrl+Alt+R` toggles). Primary actions (Paste, Text Box, Picture) use large icon-over-label buttons, while constrained widths place lower-frequency groups in an explicit **More** menu
 - **Contextual Format tab** — appears only when an element is selected and relabels itself to the selection type (Shape Format / Picture Format / Table Design / Chart Design / Code / Media); auto-activates on the first selection and hides again when the selection clears
-- **PowerPoint-style status bar** — zoom slider with −/+/Fit controls, current slide position (Slide X / Y), and a Normal / Slide Sorter / Present view switcher; the editor cluster hides outside the editor
+- **PowerPoint-style status bar** — zoom slider with −/+/Fit controls, current slide position (Slide X / Y), and a Normal / Slide Sorter / Present view switcher; status bar, ribbon, canvas controls, keyboard shortcuts, and command palette share one zoom state
+- **Adaptive editor workspace** — the canvas remains primary across compact, standard, and wide tiers; the slide navigator docks from 1024 px, and Properties / Design Ideas share one right inspector that docks on wide screens and opens as an overlay at narrower widths
+- **Accessible slide navigator** — slide thumbnails expose list semantics, stable selection, keyboard focus, and named actions for reordering and vertical slides
 - **Rich formatting** — headings, bold/italic/underline/strikethrough, text color, highlight, font family, font size, font weight, line height, alignment, lists, tables, code blocks, links, images, inline math
 - **Multi-select** — shift-click to select multiple elements, move or delete them together
 - **Group / ungroup** — group multiple elements so they select, move, and resize as a unit (`Ctrl+G` / `Ctrl+Shift+G`)
@@ -26,9 +28,9 @@ Current release: **v1.15.6** — hardened PPTX import fidelity, editor workflows
 - **Find & replace** — `Ctrl+F` to search text across all slides with case-sensitive matching, navigate matches, replace one or all
 - **Undo / redo** — `Ctrl+Z` / `Ctrl+Y` with 50-step bounded history
 - **Clipboard** — `Ctrl+C/X/V` and `Ctrl+D` to copy/cut/paste/duplicate elements
-- **Auto-save** — debounced saves every 1.5 s with last-saved timestamp; visible failure status with `Retry` action
+- **Auto-save** — debounced saves every 1.5 s with last-saved timestamp; `Ctrl+S`, the quick-access control, File menu, and command palette dispatch the same immediate save command, while visible transient failures retain a separate `Retry` action
 - **Command palette** — `Ctrl+K` for quick command lookup
-- **Touch gestures** — tap, double-tap, long-press, swipe, and 2-finger pinch zoom for tablets and trackpads
+- **Pointer and touch editing** — mouse, pen, and touch share Pointer Events for selection, drag, resize, rotate, crop, rulers, and guides; 2-finger pinch zoom remains available on tablets and trackpads
 - **Translucent presenter UI** — floating tools and slide navigation dim to 15% opacity when idle
 - **Interactive onboarding** — step-by-step product tour via React-Joyride
 - **Copy URL** — right-click images/videos to copy their resolved media URL
@@ -206,6 +208,7 @@ slides.example.com {
 | `Ctrl+D`                       | Duplicate element                     |
 | `Ctrl+F`                       | Find & replace                        |
 | `Ctrl+K`                       | Command palette                       |
+| `Ctrl+S`                       | Save now                              |
 | `Ctrl+M`                       | Insert new slide                      |
 | `Ctrl+G` / `Ctrl+Shift+G`      | Group / ungroup elements              |
 | `Ctrl+]` / `Ctrl+[`            | Bring forward / send backward         |

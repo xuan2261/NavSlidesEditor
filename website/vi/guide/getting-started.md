@@ -14,8 +14,10 @@ Khác với việc chỉnh sửa trực tiếp các tệp Markdown hay HTML reve
 ## Các tính năng chính
 
 - **Định dạng văn bản phong phú** qua TipTap: tiêu đề, in đậm/in nghiêng/gạch chân, cỡ chữ & màu chữ, tô sáng (highlight), danh sách, bảng và khối mã
-- **Giao diện dải lệnh (ribbon)** — một dải lệnh quen thuộc theo phong cách PowerPoint (Home, Insert, Design, View) cùng tab Format theo ngữ cảnh xuất hiện khi một phần tử được chọn
-- **Thanh trạng thái kiểu PowerPoint** — thanh trượt thu phóng với các nút Fit, vị trí slide hiện tại và bộ chuyển đổi chế độ xem Normal / Slide Sorter / Present
+- **Giao diện dải lệnh (ribbon)** — một dải lệnh quen thuộc theo phong cách PowerPoint (Home, Insert, Design, View) cùng tab Format theo ngữ cảnh xuất hiện khi một phần tử được chọn; menu **More** giúp các nhóm lệnh ít dùng vẫn truy cập được khi chiều rộng bị giới hạn
+- **Thanh trạng thái kiểu PowerPoint** — thanh trượt thu phóng với các nút Fit, vị trí slide hiện tại và bộ chuyển đổi chế độ xem Normal / Slide Sorter / Present; thanh trạng thái, dải lệnh, canvas, phím tắt và bảng lệnh dùng chung một trạng thái thu phóng
+- **Không gian làm việc thích ứng** — bộ điều hướng slide và trình kiểm tra chung Properties / Design Ideas được ghim khi đủ chỗ, đồng thời mở dưới dạng lớp phủ ở chiều rộng hẹp hơn để ưu tiên canvas
+- **Chỉnh sửa bằng chuột, bút và cảm ứng** — chọn, kéo, đổi kích thước, xoay và cắt qua một mô hình tương tác con trỏ thống nhất, kèm thu phóng bằng hai ngón tay trên thiết bị cảm ứng
 - **LaTeX & TikZ** — viết công thức toán dạng hiển thị hoặc sơ đồ TikZ hoàn chỉnh trong trình soạn thảo chia đôi khung với xem trước trực tiếp
 - **Biểu đồ** — chèn biểu đồ cột, đường, tròn, vành khuyên (doughnut), radar và vùng cực (polar area) được vận hành bởi Chart.js
 - **Điều hướng slide** — slide dọc (slide con) hạng nhất, slide có thể sắp xếp lại, ghi chú người trình bày
@@ -55,6 +57,10 @@ Sau khi chạy, hãy truy cập `http://localhost:3002` trên trình duyệt c�
 4. Dùng tab **Home** của dải lệnh (hoặc tab **Format** theo ngữ cảnh) để đổi phông chữ, cỡ chữ hoặc màu sắc.
 5. Nhấn **Escape** để bỏ chọn và quay lại chế độ chọn slide.
 6. Nhấp nút **+** trong bảng slide để thêm một slide mới.
+
+Các thay đổi được tự động lưu sau một khoảng trễ ngắn. Nhấn **Ctrl+S** (hoặc
+**Cmd+S** trên macOS) để lưu ngay; nút Save trên thanh truy cập nhanh, menu File
+và bảng lệnh đều dùng chung lệnh lưu này.
 
 ## Các bước tiếp theo
 

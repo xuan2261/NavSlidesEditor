@@ -5,7 +5,7 @@ status: pending
 priority: P1
 branch: "master"
 tags: [frontend, ui, ux, accessibility, tdd, keyboard, responsive, design-tokens]
-blockedBy: []
+blockedBy: [260711-1038-editorpage-ui-ux-remediation-deep-tdd]
 blocks: [260708-1900-verified-ui-accessibility-ux-remediation-deep-tdd, 260705-0000-frontend-ui-hygiene-ux-consistency-deep-tdd]
 created: "2026-07-09T02:13:58.623Z"
 createdBy: "ck:plan"

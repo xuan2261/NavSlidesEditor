@@ -6,7 +6,7 @@ priority: P1
 effort: "8-14 dev-days"
 branch: master
 tags: [frontend, ui, ux, accessibility, responsive, ribbon, tdd]
-blockedBy: [260708-1900-verified-ui-accessibility-ux-remediation-deep-tdd]
+blockedBy: [260708-1900-verified-ui-accessibility-ux-remediation-deep-tdd, 260711-1038-editorpage-ui-ux-remediation-deep-tdd]
 blocks: []
 created: 2026-07-05
 createdBy: ck-plan-skill

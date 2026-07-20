@@ -1931,6 +1931,25 @@
       "depthResolutionPhase": null
     },
     {
+      "id": "shortcut.save",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
       "id": "shortcut.selectAll",
       "category": "shortcut",
       "risk": "low",
@@ -2333,9 +2352,9 @@
   ],
   "orphans": [],
   "summary": {
-    "total": 114,
-    "verified": 114,
-    "PASS": 114,
+    "total": 115,
+    "verified": 115,
+    "PASS": 115,
     "DEPTH-WARN": 0
   }
 }

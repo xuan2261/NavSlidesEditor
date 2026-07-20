@@ -24,6 +24,8 @@ const getTimeMinutes = (row) => {
 
 const getMappings = (row) => row.split('|')[2]?.trim() ?? ''
 const getCheck = (row) => row.split('|')[4]?.trim() ?? ''
+const getPassRows = (markdown) =>
+  markdown.split('\n').filter((line) => /^\| [^|]+ \| [^|]+ \| [^|]+ \| [^|]+ \| [^|]+ \| [^|]+ \| PASS \|$/.test(line))
 
 describe('release verification docs contract', () => {
   it('keeps manual smoke checklist bounded and mapped to capability IDs or manual risks', () => {
@@ -59,15 +61,20 @@ describe('release verification docs contract', () => {
     const matrix = readText('docs', 'feature-coverage-matrix.md')
     const roadmap = readText('docs', 'project-roadmap.md')
     const docs = `${guide}\n${matrix}\n${roadmap}`
+    const headerCounts = matrix.match(/^Verified \(PASS only\): (\d+)\/(\d+) \(100%\)\s+\|\s+PASS: (\d+)$/m)
+    const passRows = getPassRows(matrix)
+
+    expect(headerCounts, 'Matrix header must contain verified, total, and PASS counts').not.toBeNull()
+    expect(headerCounts?.slice(1).map(Number)).toEqual([passRows.length, passRows.length, passRows.length])
 
     for (const requiredText of [
-      'PASS: 114',
       'Release-Blocking MVP',
       'Contract-Only Coverage',
       'full Playwright suite',
       'canvas.lock',
       'command.startSlideshow',
       'shortcut.penTool',
+      'shortcut.save',
     ]) {
       expect(docs).toContain(requiredText)
     }

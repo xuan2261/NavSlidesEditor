@@ -74,7 +74,10 @@ navslides-editor/
   persisted in localStorage.
 - `QuickAccessToolbar` surfaces save progress, visible save failures, and an
   explicit retry action so autosave errors remain recoverable after the menu
-  bar removal.
+  bar removal. Pending saves also retain a route-scoped browser draft before
+  transport; reload presents remote-first recovery with explicit local/remote
+  reconciliation, while storage-disabled/private-browsing limits remain
+  documented in `docs/system-architecture.md`.
 - Editor chrome a11y is tightened: toolbar state toggles and active rich-text
   commands expose `aria-pressed`, slide background swatches are keyboard
   reachable and labelled, the highlight palette uses `listbox` / `option`

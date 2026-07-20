@@ -179,6 +179,8 @@ Logic extracted from `EditorPage` lives in `hooks/`.
 | --- | --- | --- |
 | `useAutosave` | `use-autosave.js` | Debounced auto-save (1500ms) |
 | `useClipboard` | `use-clipboard.js` | Copy/cut/paste/duplicate elements |
+| `useEditorPersistenceController` | `use-editor-persistence-controller.js` | Route-aware autosave, manual save, and conflict actions |
+| `useEditorRecoveryController` | `use-editor-recovery-controller.js` | Durable browser-draft reconciliation after interrupted saves |
 
 ### Element lock, cut, table merge, find-replace
 

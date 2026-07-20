@@ -13,8 +13,17 @@ A complete reference for keyboard shortcuts available in NavSlides Editor.
 | `Ctrl+V` | Paste element(s) |
 | `Ctrl+D` | Duplicate selected element(s) |
 | `Ctrl+F` | Find & replace |
+| `Ctrl+S` | Save now |
 | `Delete` / `Backspace` | Delete selected element(s) |
 | `Escape` | Deselect element / stop editing text / close panel |
+
+## View shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+0` | Fit slide to the workspace |
+| `Ctrl++` / `Ctrl+=` | Zoom in |
+| `Ctrl+-` | Zoom out |
 
 ## Positioning & resizing
 

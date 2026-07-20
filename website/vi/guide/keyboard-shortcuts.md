@@ -13,8 +13,17 @@ Tài liệu tham khảo đầy đủ về các phím tắt có sẵn trong NavSl
 | `Ctrl+V` | Dán (các) phần tử |
 | `Ctrl+D` | Nhân bản (các) phần tử đang chọn |
 | `Ctrl+F` | Tìm & thay thế |
+| `Ctrl+S` | Lưu ngay |
 | `Delete` / `Backspace` | Xóa (các) phần tử đang chọn |
 | `Escape` | Bỏ chọn phần tử / dừng chỉnh sửa văn bản / đóng bảng |
+
+## Phím tắt hiển thị
+
+| Phím tắt | Hành động |
+|---|---|
+| `Ctrl+0` | Vừa slide với không gian làm việc |
+| `Ctrl++` / `Ctrl+=` | Phóng to |
+| `Ctrl+-` | Thu nhỏ |
 
 ## Định vị & đổi kích thước
 

@@ -1,13 +1,14 @@
 ---
 title: "PPTX Import Native OOXML 1:1 Fidelity Deep TDD"
 description: "Option B: native OOXML scene graph inside NavSlides for visual+editable 1:1 PowerPoint import, zero-loss original.pptx, SSIM oracle vs LibreOffice/PowerPoint, permanent-placeholder ban, TDD gates per phase."
-status: in-progress
+status: stopped
 priority: P0
 effort: "4-9+ calendar months for full SLA claim (see effort honesty); MVP after Phase 01-04 ~4-8 weeks"
 branch: "master"
 tags: [deep, tdd, pptx-import, ooxml, fidelity, visual-oracle, charts, smartart, roundtrip]
 blockedBy: []
 blocks: []
+supersededBy: "../260710-1757-pptx-package-first-officecli-roundtrip-deep-tdd/plan.md"
 relatedPlans:
   - 260617-0815-pptx-import-gates-and-parser-coverage-tdd
   - 260617-0814-pptx-import-strict-gates-and-ooxml-inspection-tdd
@@ -24,6 +25,10 @@ validationResult: "passed-with-amendments"
 ---
 
 # PPTX Import Native OOXML 1:1 Fidelity Deep TDD
+
+> **Stopped 2026-07-10.** Superseded by the package-first OfficeCLI roundtrip plan at
+> [`../260710-1757-pptx-package-first-officecli-roundtrip-deep-tdd/plan.md`](../260710-1757-pptx-package-first-officecli-roundtrip-deep-tdd/plan.md).
+> Reusable native OOXML, scene-graph, corpus, and oracle work remains an input to the successor plan.
 
 ## Overview
 

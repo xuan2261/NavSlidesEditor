@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added durable browser drafts for pending autosaves, including oversized unload receipts, generation/idempotency-preserving retry, and an explicit remote-first recovery dialog. Drafts clean up only after a matching commit or user-selected remote version; storage-disabled/private-browsing limits remain documented.
+
 ## v1.15.1 — 2026-06-30
 
 - Strengthened full-application QA verification gates with a deep TDD plan, expanded feature inventory coverage to 150 capabilities, and recorded execution evidence.

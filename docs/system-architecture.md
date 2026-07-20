@@ -46,6 +46,10 @@ Browser / Electron
   `use-autosave.js`, `use-clipboard.js`,
   `use-keyboard.js`, `use-live-presentation.js`, `use-slide-operations.js`,
   and `use-reveal-preview-frame.js`.
+- Page-level orchestration is divided among focused hooks in
+  `hooks/editor-controller/`: active slide, element operations, history,
+  keyboard, persistence/save, preview styles, rich text, and selection.
+  `use-editor-command-model.js` supplies the shared command-palette actions.
 - `animation-preview-helpers.js` and `find-replace-helpers.js` keep
   animation preview and find-replace logic isolated from the page component.
 
@@ -59,15 +63,43 @@ Browser / Electron
 - Modal-visibility flags live in `ui-store` (not local `useState`). Modal-mount JSX is
   lifted into `EditorModals.jsx` + `editor-modals-secondary.jsx`. Element-creation,
   export, and AI handlers are extracted into `use-element-creation`, `use-export-actions`,
-  and `use-ai-actions` hooks. EditorPage is ~1356 LOC (down from 2071).
+  and `use-ai-actions` hooks. `EditorPage` remains the composition root and passes
+  controller results into the extracted editor shell, ribbon, workspace, and modal
+  surfaces.
 - **Ribbon polish**: contextual Format tab driven by `ui-store.formatContext`
   (`{ hasSelection, elementType }`). `RibbonBigButton` promotes primary tab actions.
-  `StatusBar` zoom slider two-way bound to `ui-store.zoom`; view switcher toggles
-  `editor-store.viewMode` (Normal / Slide Sorter / Present) via `ui-store.presentHandler`.
+  `RibbonDensityProvider` measures the ribbon container and uses wide, condensed, or
+  compact density. Lower-frequency groups move into a named `More` menu rather than
+  depending on an invisible horizontal scrollbar.
+- **Responsive workspace**: compact (`<1024`), standard (`1024-1279`), and wide
+  (`>=1280`) tiers are derived from editor workspace width. The navigator docks in
+  standard and wide tiers. Properties and Design Ideas share one inspector host,
+  which docks only in the wide tier; narrower tiers open navigator and inspector
+  overlays without shrinking the canvas.
+- `StatusBar` zoom, ribbon/canvas controls, keyboard shortcuts, and command palette
+  all read and update `ui-store.zoom`. Manual zoom sets `userZoomMode`; auto-fit uses
+  `setAutoFitZoom` so a resize does not overwrite a user's chosen zoom. The view
+  switcher toggles `editor-store.viewMode` (Normal / Slide Sorter / Present) via
+  `ui-store.presentHandler`.
 - Editor save lifecycle status is explicit in the shell (`saving` / `saved` /
-  `error`) with non-destructive autosave failure handling and retry action.
-- `SlideCanvas.jsx` owns the core drag, resize, rotate, and snap
-  interaction model.
+  `error`). Autosave and every manual-save surface call the same persistence
+  controller; transient retry preserves its failed snapshot and idempotency key,
+  while stale-generation conflicts use the dedicated conflict flow.
+- Pending saves also write a route-scoped browser draft before the network request.
+  The synchronous `localStorage` receipt covers the supported Chromium/Electron
+  path, with IndexedDB as a quota/availability fallback. A reload loads the
+  remote deck first and then requires an explicit `Recover Local Draft` or `Use
+  Remote` choice; no draft replaces remote content automatically. Drafts are
+  removed only after a matching committed response or explicit remote choice.
+  Storage-disabled/private-browsing modes and a hard kill before an asynchronous
+  IndexedDB fallback commits remain documented durability limits.
+- `SlidePanel.jsx` is a semantic slide navigator. It uses list/listitem roles,
+  stable slide IDs for selection, keyboard-focusable thumbnails, named controls,
+  and a menu surface for reorder, duplicate, vertical-slide, and delete actions.
+- `SlideCanvas.jsx` owns the core drag, resize, rotate, crop, and snap interaction
+  model. Mouse, pen, and touch use Pointer Events with pointer capture and
+  cancellation rollback; `use-pinch-zoom.js` handles two-contact zoom and its touch
+  fallback.
 - `PropertiesPanel.jsx` routes to type-specific editors in
   `components/properties/`.
 - Layout sub-components live in `components/layout/` (`MainLayout`,
@@ -118,14 +150,20 @@ Text, image, media (video/audio), HTML embed, and code renderers remain inline i
 
 ### Command Layer Architecture
 
-Clipboard and keyboard commands are unified through a callback-only interface. `SlideCanvas` no longer owns keyboard listeners or clipboard state.
+Clipboard, save, zoom, and keyboard commands are unified through callback-only
+interfaces. `SlideCanvas` no longer owns keyboard listeners or clipboard state.
 
 ```
 use-clipboard.js         # performCopy/Cut/Paste/Duplicate — owns clipboard semantics
 use-keyboard.js          # createKeyboardHandler — dispatches from registry to callbacks
+use-editor-command-model.js       # command palette entries reuse canonical callbacks
+use-editor-persistence-controller.js  # autosave + immediate manual save entry point
+use-editor-save-controller.js     # serialized generation-aware save queue and retry
+ui-store.js              # canonical zoom value, manual zoom actions, and auto-fit action
 SlideCanvas.jsx          # Receives onCopy/onCut/onPaste/onDuplicate as props; no inline clipboard
 EditorPage.jsx           # Wires useKeyboard + useClipboard; passes callbacks to SlideCanvas
-Context menu             # Calls same command callbacks as keyboard shortcuts
+Ribbon/File/status UI    # Calls the same save and zoom callbacks as keyboard commands
+Context menu             # Calls the same clipboard callbacks as keyboard shortcuts
 ```
 
 `createDuplicateOperation` is synchronous (uses `crypto.randomUUID()`) with a +20/+20 offset; includes locked-element guard. `useKeyboard` uses a registry-based dispatch: `shortcut.id → on{capitalize(id)}` callback.
