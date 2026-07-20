@@ -70,6 +70,19 @@ describe('OfficeCLI direct execution boundary', () => {
     expect(closed).toBe(true)
   })
 
+  it('fails closed when the direct child does not exit within cleanup grace', async () => {
+    const spawnImpl = () => {
+      const child = new EventEmitter()
+      child.stdout = new PassThrough()
+      child.stderr = new PassThrough()
+      child.kill = () => {}
+      return child
+    }
+
+    await expect(runLauncher({ timeoutMs: 5, cleanupGraceMs: 10, spawnImpl }))
+      .rejects.toMatchObject({ code: 'CLEANUP_UNCERTAIN' })
+  })
+
   it('rejects a launcher request that is already aborted', async () => {
     const controller = new AbortController()
     controller.abort(new Error('shutdown'))

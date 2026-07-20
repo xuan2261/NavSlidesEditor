@@ -12,11 +12,11 @@ async function createImportedPresentation(mappedPresentation, originalArtifact, 
   const source = mappedPresentation && typeof mappedPresentation === 'object' ? mappedPresentation : {}
   const theme = source.theme || 'black'
   const designTokens = source.designTokens || getDesignTokensForRevealTheme(theme)
-  const pptxOriginal = toPptxOriginalMeta(originalArtifact)
+  const pptxOriginal = originalArtifact ? toPptxOriginalMeta(originalArtifact) : undefined
 
   const presentation = normalizePresentationNotes({
     ...source,
-    id: uuidv4(),
+    id: options.id || uuidv4(),
     title: source.title || options.originalName || 'Imported Presentation',
     theme,
     transition: source.transition || 'slide',
@@ -27,6 +27,7 @@ async function createImportedPresentation(mappedPresentation, originalArtifact, 
       elements: (s.elements || []).map((el) => ({ ...el, id: el.id || uuidv4() })),
     })),
     pptxOriginal,
+    ...(options.packageHead ? { pptxAggregateHead: options.packageHead } : {}),
     createdAt: now,
     updatedAt: now,
   })

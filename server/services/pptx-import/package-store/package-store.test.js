@@ -414,6 +414,27 @@ describe('package store lifecycle MVP', () => {
     expect(state.mutationResults).toHaveLength(0)
     expect(state.jobs).toHaveLength(0)
   })
+  it('rejects an import when a projected element lacks a source-map entry', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const projection = {
+      id: 'deck-missing-source',
+      slides: [{ id: 's1', elements: [{ id: 'e1', type: 'shape' }] }],
+    }
+
+    await expect(store.commitImport(await minimalPptx(), {
+      jobId: 'job-missing-source',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+    })).rejects.toThrow(/source map.*projection element/i)
+
+    const state = store.getState()
+    expect(state.heads).toHaveLength(0)
+    expect(state.owners).toHaveLength(0)
+    expect(state.mutationResults).toHaveLength(0)
+  })
+
 
   it('rebinds a package source map and its entries to committed R0 generation one', async () => {
     const { store } = await tempStore()

@@ -69,6 +69,12 @@ describe('attach-source-nodes', () => {
     expect(collectMappedNodeIds({ slides: [{ elements }] }).size).toBe(0)
   })
 
+  it('does not promote ambiguous source-name matches [cap:import.pptx]', () => {
+    const elements = [{ type: 'shape', name: 'Duplicate' }]
+    attachSourceNodes(elements, [{ id: '2', kind: 'shape', name: 'Duplicate' }, { id: '3', kind: 'shape', name: 'Duplicate' }], 0)
+    expect(elements[0]._pptxSource).toMatchObject({ matchedBy: 'kind', authoritative: false })
+  })
+
   it('counts source-id and name matches as authoritative', () => {
     const elements = [{ type: 'shape', sourceId: '2' }, { type: 'image', name: 'Photo' }]
     attachSourceNodes(

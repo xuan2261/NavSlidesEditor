@@ -14,18 +14,23 @@ async function setup() {
   const bytes = Buffer.from('guarded-pptx')
   const sha256 = crypto.createHash('sha256').update(bytes).digest('hex').toUpperCase()
   const revision = createRevisionDescriptor({ id: 'r1', sha256: sha256.toLowerCase(), byteLength: bytes.length, safetyVerdict: { rawZipSafe: true, xmlSafe: true, verifiedSha256: sha256.toLowerCase() } })
-  const executionCopy = { canonicalPath: 'C:\\protected\\officecli.exe', sha256, byteLength: bytes.length }
+  const binary = {
+    canonicalPath: 'C:\\OfficeCli\\officecli-1.0.135-pinned-937db176.exe',
+    sha256,
+    byteLength: bytes.length,
+    volumeIdentity: 'volume-1',
+    fileId: 'file-1',
+    linkCount: 1,
+  }
   const qualification = {
     available: true,
-    candidate: { version: '1.0.135', identity: { sha256, size: bytes.length } },
-    executionCopy,
-    containmentReceipt: {
-      kind: 'officecli-containment-receipt-v1',
-      verdict: 'qualified',
-      executionCopy,
-      launcher: { sha256: 'launcher-sha', version: '1.0.0' },
-      binary: { sha256, version: '1.0.135' },
-      policyDigest: 'policy-sha',
+    validation: true,
+    candidate: { version: '1.0.135', identity: binary },
+    receipt: {
+      kind: 'officecli-direct-qualification-v1',
+      authority: 'local',
+      version: '1.0.135',
+      binary,
     },
   }
   return { root, bytes, revision, qualification }
@@ -35,21 +40,38 @@ afterEach(async () => { await Promise.all(roots.splice(0).map((root) => fs.rm(ro
 describe('OfficeCLI command contract', () => {
   it('passes no arbitrary argv, path, or environment across its public boundary', async () => {
     const { root, bytes, revision, qualification } = await setup()
-    const launcherClient = { run: vi.fn(async () => ({ exitCode: 0, receipt: { ok: true } })) }
-    const gateway = createOfficeCliGateway({ workspaceRoot: root, platform: 'win32', qualification: async () => qualification, readRevision: async () => bytes, launcherClient, executionCopyVerifier: async () => true })
+    const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: '{"valid":true}' }))
+    const gateway = createOfficeCliGateway({
+      workspaceRoot: root,
+      platform: 'win32',
+      qualification: async () => qualification,
+      readRevision: async () => bytes,
+      runOfficeCli,
+    })
     expect('execute' in gateway).toBe(false)
-    await gateway.validatePackage(revision)
-    expect(launcherClient.run).toHaveBeenCalledWith(expect.objectContaining({ operation: 'validate', inputPath: expect.stringMatching(/input\.pptx$/) }))
-    expect(launcherClient.run.mock.calls[0][0]).not.toHaveProperty('argv')
+    await gateway.validatePackage(revision, {
+      binary: 'C:\\attacker.exe',
+      argv: ['--unsafe'],
+      env: { SECRET: 'leak' },
+      inputPath: 'C:\\attacker.pptx',
+    })
+    const request = runOfficeCli.mock.calls[0][0]
+    expect(request).toMatchObject({
+      binary: qualification.receipt.binary.canonicalPath,
+      argv: ['validate', expect.stringMatching(/input\.pptx$/), '--json'],
+    })
+    expect(request.argv).toHaveLength(3)
+    expect(request).not.toHaveProperty('operation')
+    expect(request).not.toHaveProperty('env')
   })
 
   it('fails rendering and inspection before a workspace or process call', async () => {
     const { root, bytes, revision, qualification } = await setup()
-    const launcherClient = { run: vi.fn() }
-    const gateway = createOfficeCliGateway({ workspaceRoot: root, platform: 'win32', qualification: async () => qualification, readRevision: async () => bytes, launcherClient, executionCopyVerifier: async () => true })
+    const runOfficeCli = vi.fn()
+    const gateway = createOfficeCliGateway({ workspaceRoot: root, platform: 'win32', qualification: async () => qualification, readRevision: async () => bytes, runOfficeCli })
     await expect(gateway.renderInformativePreview(revision)).rejects.toMatchObject({ code: 'RENDERING_UNAVAILABLE' })
     await expect(gateway.readRawPart(revision, 'ppt/slides/slide1.xml')).rejects.toMatchObject({ code: 'INSPECTION_UNAVAILABLE' })
-    expect(launcherClient.run).not.toHaveBeenCalled()
+    expect(runOfficeCli).not.toHaveBeenCalled()
     expect(await fs.readdir(root)).toEqual([])
   })
 })

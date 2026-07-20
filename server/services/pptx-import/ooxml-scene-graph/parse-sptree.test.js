@@ -48,6 +48,7 @@ describe('parseSpTree (T3.1 T3.2 T3.3)', () => {
     expect(kinds).toContain('pic')
     const pic = nodes.find((n) => n.kind === 'pic')
     expect(pic.rels.blipEmbed).toBe('rId2')
+    expect(pic.xfrm.emu).toEqual({ x: 0, y: 0, width: 500000, height: 500000 })
   })
 
   it('T3.2 group with 2 children lists children with depth', () => {

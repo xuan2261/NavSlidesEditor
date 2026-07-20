@@ -1,140 +1,115 @@
 #!/usr/bin/env node
-/**
- * Composite SLA gate for Phase 08c (engineering).
- * Exit 0 only when configured metric checks pass.
- * Does NOT claim product 1:1 unless phase08_full thresholds are green.
- */
 const fs = require('fs-extra')
 const path = require('node:path')
-const { getMilestone, METRIC_IDS } = require('./sla-contract')
+const { CLAIM_LEVELS, evaluateClaim } = require('./evidence/evidence-contract')
+const { parseTrustedConfig } = require('./evidence/trusted-config')
+
+const MAX_ARTIFACTS = 256
+const MAX_ARTIFACT_BYTES = 64 * 1024 * 1024
+const MAX_TOTAL_BYTES = 256 * 1024 * 1024
+const SAFE_CLAIM = /^[a-z0-9-]+$/
+const STATIC_FAILURES = new Set(['invalid-claim-level', 'invalid-claim-level-input'])
+
+function validClaimLevel(value) {
+  return typeof value === 'string' && CLAIM_LEVELS.includes(value) && SAFE_CLAIM.test(value)
+}
+
+async function regularRealPath(filePath, root, maxBytes = MAX_ARTIFACT_BYTES) {
+  const stat = await fs.lstat(filePath)
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size > maxBytes) throw new Error('invalid-evidence-file')
+  const real = await fs.realpath(filePath)
+  const realRoot = await fs.realpath(root)
+  if (real !== realRoot && !real.startsWith(`${realRoot}${path.sep}`)) throw new Error('invalid-evidence-path')
+  return { real, size: stat.size }
+}
 
 function parseArgs(argv) {
-  const args = { milestone: 'phase08_full', json: false }
+  const args = { claimLevel: null, json: false, milestone: null, runDir: null, trustRoot: null, trustedConfig: null }
   for (let i = 0; i < argv.length; i += 1) {
-    if (argv[i] === '--milestone') args.milestone = argv[++i]
-    if (argv[i] === '--json') args.json = true
+    const value = argv[i]
+    if (value === '--milestone') args.milestone = argv[++i]
+    else if (value.startsWith('--milestone=')) args.milestone = value.slice(12)
+    else if (value === '--claim-level') args.claimLevel = argv[++i]
+    else if (value === '--run-dir') args.runDir = argv[++i]
+    else if (value === '--trust-root') args.trustRoot = argv[++i]
+    else if (value === '--trusted-config') args.trustedConfig = argv[++i]
+    else if (value === '--json') args.json = true
   }
   return args
 }
 
-async function checkP1() {
-  // original package module exists + baseline original.pptx API
-  const mod = require('./original-package')
-  return { id: METRIC_IDS.P1, ok: typeof mod.persistOriginalPptx === 'function' }
+function writeClaimReport(report, json) {
+  if (json) return process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
+  process.stdout.write(`PPTX claim ${report.claimLevel || 'invalid'}: ${report.passed ? 'PASS' : 'UNAVAILABLE'}\n`)
+  for (const reason of report.reasons) process.stdout.write(`  ${reason}\n`)
 }
 
-async function checkOracleBaseline(
-  milestone,
-  baselinePath = path.join(__dirname, 'oracle', 'baseline-ssim.json')
-) {
-  const exists = await fs.pathExists(baselinePath)
-  if (!exists) {
-    return [
-      { id: METRIC_IDS.V1, ok: false, detail: 'missing-baseline' },
-      { id: METRIC_IDS.V2, ok: false, detail: 'missing-baseline' },
-    ]
+async function readArtifactContents(runDir, manifest) {
+  const contents = Object.create(null)
+  const root = path.resolve(runDir)
+  const artifacts = Array.isArray(manifest?.artifacts) ? manifest.artifacts : []
+  if (artifacts.length > MAX_ARTIFACTS) throw new Error('artifact-count-limit')
+  const seen = new Set()
+  let total = 0
+  for (const artifact of artifacts) {
+    if (!artifact || typeof artifact.path !== 'string' || artifact.path.length === 0 || artifact.path.length > 240) {
+      throw new Error('invalid-artifact-path')
+    }
+    if (seen.has(artifact.path)) throw new Error('duplicate-artifact-path')
+    seen.add(artifact.path)
+    const filePath = path.resolve(root, artifact.path)
+    if (filePath !== root && !filePath.startsWith(`${root}${path.sep}`)) throw new Error('invalid-artifact-path')
+    const checked = await regularRealPath(filePath, root)
+    total += checked.size
+    if (total > MAX_TOTAL_BYTES) throw new Error('artifact-total-size-limit')
+    contents[artifact.path] = await fs.readFile(checked.real)
   }
-  const baseline = await fs.readJson(baselinePath)
-  const present = Boolean(
-    (typeof baseline.deckCount === 'number' &&
-      Number.isInteger(baseline.deckCount) &&
-      baseline.deckCount >= 1) ||
-      (Array.isArray(baseline.decks) && baseline.decks.length >= 1)
-  )
-  const numeric = present && baseline.debt === false
-  const mean = baseline.meanSsim
-  const min = baseline.minSsim
-  const meanOk =
-    numeric &&
-    typeof mean === 'number' &&
-    Number.isFinite(mean) &&
-    (milestone?.meanSsim == null || mean >= milestone.meanSsim)
-  const minOk =
-    numeric &&
-    typeof min === 'number' &&
-    Number.isFinite(min) &&
-    (milestone?.minSsim == null || min >= milestone.minSsim)
-  return [
-    {
-      id: METRIC_IDS.V1,
-      ok: meanOk,
-      detail: baseline.debt ? 'debt-recorded-not-evidence' : meanOk ? 'numeric-mean-pass' : 'numeric-mean-fail',
-      meanSsim: baseline.meanSsim,
-    },
-    {
-      id: METRIC_IDS.V2,
-      ok: minOk,
-      detail: baseline.debt ? 'debt-recorded-not-evidence' : minOk ? 'numeric-min-pass' : 'missing-or-failing-min',
-      minSsim: baseline.minSsim,
-    },
-  ]
+  return contents
 }
 
-function metricCheck(id, actual, limit, comparison = 'max') {
-  const numeric = typeof actual === 'number' && Number.isFinite(actual)
-  const ok =
-    numeric &&
-    (limit == null ||
-      (comparison === 'min' ? actual >= Number(limit) : actual <= Number(limit)))
-  return { id, ok, actual: numeric ? actual : null, limit, detail: ok ? 'numeric-pass' : 'missing-or-failing-evidence' }
-}
-
-async function checkCorpusEvidence(milestone, baselinePath = path.join(__dirname, 'corpus-baseline.json')) {
-  if (!(await fs.pathExists(baselinePath))) {
-    return [METRIC_IDS.E1, METRIC_IDS.E2, METRIC_IDS.E3, METRIC_IDS.E4, METRIC_IDS.R1]
-      .map((id) => ({ id, ok: false, detail: 'missing-corpus-baseline' }))
-  }
-  const baseline = await fs.readJson(baselinePath)
-  const evidence = baseline.summary?.corpusEvidence || {}
-  if (baseline.evidenceVersion !== 2) {
-    return [METRIC_IDS.E1, METRIC_IDS.E2, METRIC_IDS.E3, METRIC_IDS.E4, METRIC_IDS.R1]
-      .map((id) => ({ id, ok: false, detail: 'stale-corpus-evidence' }))
-  }
-  return [
-    metricCheck(METRIC_IDS.E1, evidence.sceneGraphUnmapped, milestone.sceneGraphUnmappedMax),
-    metricCheck(METRIC_IDS.E2, evidence.chartCoverageGapCount, milestone.chartGapMax),
-    metricCheck(METRIC_IDS.E3, evidence.smartArtCoverageGapCount, milestone.smartArtGapMax),
-    metricCheck(METRIC_IDS.E4, evidence.permanentPlaceholderCount, milestone.permanentPlaceholderMax),
-    metricCheck(METRIC_IDS.R1, baseline.summary?.avgRoundTripStability, milestone.roundTripMin, 'min'),
-  ]
+function unavailable(claimLevel, reason, json) {
+  writeClaimReport({ claimLevel: CLAIM_LEVELS.includes(claimLevel) ? claimLevel : null,
+    outcome: 'unavailable', passed: false, reasons: [reason], wording: null }, json)
+  return 1
 }
 
 async function main(argv = process.argv.slice(2)) {
   const args = parseArgs(argv)
-  const milestone = getMilestone(args.milestone) || getMilestone('phase08_full')
-  const nested = await Promise.all([
-    checkP1(),
-    checkOracleBaseline(milestone),
-    checkCorpusEvidence(milestone),
-  ])
-  const checks = nested.flat()
-  const byId = Object.fromEntries(checks.map((c) => [c.id, c]))
-  const required = milestone?.requires || []
-  const failed = required.filter((id) => !byId[id]?.ok)
-  const report = {
-    milestone: milestone?.id || args.milestone,
-    productOneToOneClaimAllowed:
-      Boolean(milestone?.productOneToOneClaimAllowed) && failed.length === 0,
-    checks,
-    failed,
-    // Full numeric SLA not claimed until oracle actuals + corpus floors green
-    claim: failed.length ? 'sla-gate-failed' : 'numeric-sla-evidence-passed',
+  if (args.claimLevel != null && !validClaimLevel(args.claimLevel)) {
+    return unavailable(null, 'invalid-claim-level', args.json)
   }
-  if (args.json) process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
-  else {
-    process.stdout.write(`SLA gate ${report.milestone}: ${failed.length ? 'FAIL' : 'PASS'} (${report.claim})\n`)
-    for (const c of checks) process.stdout.write(`  ${c.id}: ${c.ok ? 'ok' : 'FAIL'} ${c.detail || ''}\n`)
+  if (args.milestone) return unavailable(args.claimLevel, 'legacy-milestone-unsupported', args.json)
+  if (!args.runDir) return unavailable(args.claimLevel, 'fresh-composite-run-required', args.json)
+  if (!args.trustRoot) return unavailable(args.claimLevel, 'trusted-root-required', args.json)
+  if (!args.trustedConfig) return unavailable(args.claimLevel, 'trusted-config-required', args.json)
+  const root = path.resolve(args.runDir)
+  const trustPath = path.resolve(args.trustRoot)
+  const configPath = path.resolve(args.trustedConfig)
+  if ([trustPath, configPath].some((file) => file === root || file.startsWith(`${root}${path.sep}`))) {
+    return unavailable(args.claimLevel, 'trust-root-must-be-independent', args.json)
   }
-  return failed.length ? 1 : 0
+  let report
+  try {
+    const runRoot = await fs.realpath(root)
+    const readRunJson = async (name) => {
+      const file = path.join(runRoot, name)
+      const checked = await regularRealPath(file, runRoot, MAX_ARTIFACT_BYTES)
+      return fs.readJson(checked.real)
+    }
+    const trust = await regularRealPath(trustPath, path.dirname(trustPath), MAX_ARTIFACT_BYTES)
+    const config = await regularRealPath(configPath, path.dirname(configPath), MAX_ARTIFACT_BYTES)
+    const manifest = await readRunJson('manifest.json')
+    report = evaluateClaim({ manifest, corpus: await readRunJson('corpus-manifest.json'),
+      trustRoot: await fs.readJson(trust.real), trustedConfig: parseTrustedConfig(await fs.readJson(config.real)),
+      ledger: await readRunJson('epoch-ledger.json'), artifactContents: await readArtifactContents(runRoot, manifest) })
+  } catch { return unavailable(args.claimLevel, 'invalid-composite-run-file', args.json) }
+  if (args.claimLevel && report.claimLevel !== args.claimLevel) {
+    report = { ...report, passed: false, outcome: 'unavailable',
+      reasons: [...new Set([...report.reasons, 'requested-claim-level-mismatch'])].sort(), claimLevel: args.claimLevel }
+  }
+  writeClaimReport(report, args.json)
+  return report.passed ? 0 : 1
 }
 
-if (require.main === module) {
-  main()
-    .then((code) => process.exit(code))
-    .catch((err) => {
-      console.error(err)
-      process.exit(1)
-    })
-}
-
-module.exports = { checkCorpusEvidence, checkOracleBaseline, main, metricCheck, parseArgs }
+if (require.main === module) main().then((code) => { process.exitCode = code }).catch(() => { process.exitCode = 1 })
+module.exports = { main, parseArgs, readArtifactContents }

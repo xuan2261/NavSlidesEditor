@@ -4,7 +4,11 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { persistOriginalPptx } from './original-package.js'
-import { resolvePptxExportPayload, markPresentationEdited } from './roundtrip-original-parts.js'
+import {
+  markPresentationEdited,
+  resolvePptxExportPayload,
+  resolvePptxOriginalPayload,
+} from './roundtrip-original-parts.js'
 
 describe('roundtrip-original-parts (T8.4)', () => {
   /** @type {string[]} */
@@ -17,7 +21,7 @@ describe('roundtrip-original-parts (T8.4)', () => {
     const baseDir = await fs.mkdtemp(path.join(os.tmpdir(), 'rt-orig-'))
     temps.push(baseDir)
     const buf = Buffer.from('PK-fake-pptx-bytes')
-    const artifact = await persistOriginalPptx(buf, { baseDir })
+    await persistOriginalPptx(buf, { baseDir })
     // Point original package at temp baseDir by writing via real API needs DATA_DIR —
     // use persist with default DATA_DIR in integration; here mock read by using real store under DATA_DIR
     // For unit: call resolve with inject — instead re-persist under default data if needed.
@@ -56,5 +60,63 @@ describe('roundtrip-original-parts (T8.4)', () => {
       const { deleteOriginalPptx } = require('./original-package.js')
       await deleteOriginalPptx(art.id)
     }
+  })
+
+  it('returns legacy immutable original bytes even after an edit marker', async () => {
+    const bytes = Buffer.from('legacy-immutable-original')
+    const artifact = await persistOriginalPptx(bytes)
+    try {
+      const payload = await resolvePptxOriginalPayload(markPresentationEdited({
+        pptxOriginal: { id: artifact.id, sha256: artifact.sha256 },
+      }))
+      expect(payload).toMatchObject({ mode: 'original-bytes', sha256: artifact.sha256 })
+      expect(payload.buffer.equals(bytes)).toBe(true)
+    } finally {
+      const { deleteOriginalPptx } = require('./original-package.js')
+      await deleteOriginalPptx(artifact.id)
+    }
+  })
+
+  it('uses the immutable package-original resolver instead of the package-head resolver', async () => {
+    const currentHeadResolver = () => {
+      throw new Error('original download must not resolve the current package head')
+    }
+    const originalBytes = Buffer.from('r0-bytes')
+    const originalSha256 = crypto.createHash('sha256').update(originalBytes).digest('hex')
+    const payload = await resolvePptxOriginalPayload({
+      id: 'deck',
+      pptxAggregateHead: {
+        generation: 2,
+        originalRevisionId: 'r0',
+        packageRevisionId: 'r1',
+      },
+    }, {
+      resolvePackageRevision: currentHeadResolver,
+      resolveImmutableOriginalRevision: async ({ presentationId }) => {
+        expect(presentationId).toBe('deck')
+        return { bytes: originalBytes, sha256: originalSha256, revisionId: 'r0' }
+      },
+    })
+
+    expect(payload).toMatchObject({
+      mode: 'immutable-package-original',
+      reason: 'authoritative-original-revision',
+      revisionId: 'r0',
+    })
+    expect(payload.buffer.equals(Buffer.from('r0-bytes'))).toBe(true)
+  })
+
+  it('fails closed when a package-backed original resolver is unavailable', async () => {
+    await expect(resolvePptxOriginalPayload({
+      id: 'deck',
+      pptxAggregateHead: {
+        generation: 2,
+        originalRevisionId: 'r0',
+        packageRevisionId: 'r1',
+      },
+    })).rejects.toMatchObject({
+      code: 'IMMUTABLE_ORIGINAL_RESOLVER_UNAVAILABLE',
+      status: 422,
+    })
   })
 })

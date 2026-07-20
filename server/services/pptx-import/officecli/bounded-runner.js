@@ -4,6 +4,7 @@ const { gatewayError } = require('./errors')
 
 const DEFAULT_TIMEOUT_MS = 30_000
 const DEFAULT_MAX_OUTPUT_BYTES = 1_048_576
+const DEFAULT_CLEANUP_GRACE_MS = 5_000
 
 class ChildRegistry {
   constructor() { this.children = new Set() }
@@ -32,6 +33,7 @@ function runBoundedProcess({
   env,
   signal,
   timeoutMs = DEFAULT_TIMEOUT_MS,
+  cleanupGraceMs = DEFAULT_CLEANUP_GRACE_MS,
   maxStdoutBytes = DEFAULT_MAX_OUTPUT_BYTES,
   maxStderrBytes = DEFAULT_MAX_OUTPUT_BYTES,
   spawnImpl = spawn,
@@ -40,6 +42,7 @@ function runBoundedProcess({
     return Promise.reject(gatewayError('PROCESS_REQUEST_INVALID', 'OfficeCLI process request is invalid'))
   }
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0 ||
+      !Number.isSafeInteger(cleanupGraceMs) || cleanupGraceMs <= 0 ||
       !Number.isSafeInteger(maxStdoutBytes) || maxStdoutBytes <= 0 ||
       !Number.isSafeInteger(maxStderrBytes) || maxStderrBytes <= 0) {
     return Promise.reject(gatewayError('PROCESS_LIMIT_INVALID', 'OfficeCLI process limits are invalid'))
@@ -50,6 +53,7 @@ function runBoundedProcess({
     let child
     let settled = false
     let failure = null
+    let cleanupTimer = null
     let stdoutBytes = 0
     let stderrBytes = 0
     const stdout = []
@@ -61,6 +65,7 @@ function runBoundedProcess({
       if (settled || !failure) return
       settled = true
       clearTimeout(timeout)
+      clearTimeout(cleanupTimer)
       signal?.removeEventListener?.('abort', abort)
       reject(failure)
     }
@@ -68,10 +73,15 @@ function runBoundedProcess({
     function stop() {
       clearTimeout(timeout)
       signal?.removeEventListener?.('abort', abort)
-      if (!child || child.killed) {
+      if (!child) {
         finishFailure()
         return
       }
+      cleanupTimer = setTimeout(() => {
+        if (settled) return
+        failure = gatewayError('CLEANUP_UNCERTAIN', 'OfficeCLI process cleanup could not be proven')
+        finishFailure()
+      }, cleanupGraceMs)
       child.kill()
     }
 
@@ -113,6 +123,7 @@ function runBoundedProcess({
       }
       settled = true
       clearTimeout(timeout)
+      clearTimeout(cleanupTimer)
       signal?.removeEventListener?.('abort', abort)
       resolve(Object.freeze({
         exitCode,

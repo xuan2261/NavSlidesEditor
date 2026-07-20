@@ -17,6 +17,19 @@ const METRIC_IDS = Object.freeze({
   G1: 'G1',
 })
 
+const { CLAIM_LEVELS, CLAIM_WORDING } = require('./evidence/evidence-contract')
+
+const CLAIM_POLICIES = Object.freeze(Object.fromEntries(CLAIM_LEVELS.map((claimLevel, index) => [
+  claimLevel,
+  Object.freeze({
+    claimLevel,
+    level: index + 1,
+    requiresProtectedCi: true,
+    requiresProtectedProvider: index === CLAIM_LEVELS.length - 1,
+    allowedWording: CLAIM_WORDING[claimLevel],
+  }),
+])))
+
 /**
  * Progressive engineering gates (not product 1:1 until phase08_full).
  * meanSsim / minSsim null means not required at that milestone.
@@ -107,6 +120,8 @@ function phase01RequiresP1Only() {
 }
 
 module.exports = {
+  CLAIM_LEVELS,
+  CLAIM_POLICIES,
   METRIC_IDS,
   MILESTONES,
   getMilestone,

@@ -46,6 +46,13 @@ async function chartZip() {
     </Relationships>`
   )
   zip.file('ppt/charts/chart1.xml', BAR_XML)
+  zip.file(
+    'ppt/charts/_rels/chart1.xml.rels',
+    `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+      <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/package" Target="../embeddings/Microsoft_Excel_Worksheet1.xlsx"/>
+    </Relationships>`
+  )
+  zip.file('ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx', 'workbook')
   return zip
 }
 
@@ -80,6 +87,12 @@ describe('injectChartsFromSceneGraph (T5.2-ish)', () => {
     expect(chart.chartData.datasets[0].data).toEqual([10, 20])
     expect(chart.chartData.labels).toEqual(['A', 'B'])
     expect(chart._pptxSource.nodeId).toBeTruthy()
+    expect(chart._pptxChartMeta.native.relationshipClosure).toEqual([
+      expect.objectContaining({
+        id: 'rId1',
+        target: 'ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx',
+      }),
+    ])
     expect(stats.chartCount).toBe(1)
   })
 
@@ -118,6 +131,13 @@ describe('injectChartsFromSceneGraph (T5.2-ish)', () => {
     })
     expect(elements.filter((e) => e.type === 'chart')).toHaveLength(1)
     expect(elements[0]._pptxSource?.nodeId).toBeTruthy()
+    expect(elements[0]._pptxChartMeta).toMatchObject({
+      originalType: 'barChart',
+      chartPath: 'ppt/charts/chart1.xml',
+      supportStatus: 'conditional',
+      preservationTier: 'editable',
+      source: 'ooxml-chart-parser',
+    })
   })
 
   it('applies scale to injected geometry', async () => {
@@ -143,26 +163,34 @@ describe('injectChartsFromSceneGraph (T5.2-ish)', () => {
     expect(chart.height).toBe(150)
   })
 
-  it('throws instead of warning and dropping an unsupported chart in strict mode', async () => {
+  it('preserves an unsupported chart without coercing it in strict mode', async () => {
     const zip = await unsupportedChartZip()
     const graph = await buildOoxmlSceneGraph(zip)
     const warnings = []
-    await expect(
-      injectChartsFromSceneGraph({
-        elements: [],
-        graphSlide: graph.slides[0],
-        zip,
-        slideIndex: 0,
-        stats: {},
-        warnings,
-        strict: true,
-      })
-    ).rejects.toMatchObject({
-      type: 'import-failed',
-      code: 'chart-unsupported-strict',
-      chartType: 'comboChart',
+    const result = await injectChartsFromSceneGraph({
+      elements: [],
+      graphSlide: graph.slides[0],
+      zip,
+      slideIndex: 0,
+      stats: {},
+      warnings,
+      strict: true,
     })
-    expect(warnings).toEqual([])
+    expect(result).toEqual([
+      expect.objectContaining({
+        type: 'chart',
+        chartType: 'bar',
+        _pptxChartMeta: expect.objectContaining({
+          originalType: 'comboChart',
+          supportStatus: 'preserve-only',
+          preservationTier: 'preserve-only',
+          native: expect.objectContaining({ nativeFamily: ['barChart', 'lineChart'] }),
+        }),
+      }),
+    ])
+    expect(warnings).toEqual([
+      expect.objectContaining({ type: 'native-chart-preserved' }),
+    ])
   })
 })
 

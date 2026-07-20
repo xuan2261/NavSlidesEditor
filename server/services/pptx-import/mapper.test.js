@@ -1106,7 +1106,7 @@ describe('pptx mapper', () => {
     ['pieChart', 'pie'],
     ['doughnutChart', 'doughnut'],
     ['radarChart', 'radar'],
-    ['scatterChart', 'line'],  // Note: test uses CommonChart format; real pptxtojson uses [xVals, yVals]
+    ['scatterChart', 'line'],
     ['bubbleChart', 'bar'],
     ['areaChart', 'line'],
     ['stockChart', 'line'],
@@ -1135,6 +1135,7 @@ describe('pptx mapper', () => {
         const chart = result.presentation.slides[0].elements[0]
         expect(chart.type).toBe('chart')
         expect(chart.chartType).toBe(expected)
+        expect(chart._pptxChartMeta.originalType).toBe(pptxType)
         expect(chart.chartData.datasets.length).toBeGreaterThan(0)
       } finally {
         await fs.rm(dir, { recursive: true, force: true })

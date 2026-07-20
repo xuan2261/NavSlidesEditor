@@ -1,12 +1,28 @@
 import crypto from 'node:crypto'
+import path from 'node:path'
 import express from 'express'
 import request from 'supertest'
 import { beforeAll, describe, expect, it } from 'vitest'
 import * as storage from '../services/storage.js'
 import presentationsRouter from './presentations.js'
 import originalPackage from '../services/pptx-import/original-package.js'
+import packageStoreModule from '../services/pptx-import/package-store/index.js'
 
-const { persistOriginalPptx, getOriginalsDir, sha256Buffer, readOriginalPptx } = originalPackage
+const { persistOriginalPptx, sha256Buffer, readOriginalPptx } = originalPackage
+const { openPackageStore } = packageStoreModule
+
+async function commitPackageOriginal(bytes, presentationId) {
+  const store = await openPackageStore({ rootDir: path.resolve(storage.DATA_DIR) })
+  await store.acquireWriter()
+  try {
+    return await store.commitOriginal(bytes, {
+      ownerType: 'presentation',
+      ownerId: presentationId,
+    })
+  } finally {
+    await store.releaseWriter()
+  }
+}
 
 function createApp() {
   const app = express()
@@ -70,13 +86,14 @@ describe('PPTX original package routes (T1.5 T1.6 T1.9)', () => {
     await request(app).delete(`/api/presentations/${createRes.body.id}/permanent`)
   })
 
-  it('T1.6 permanent DELETE unlinks original; soft-delete keeps file for restore lifecycle', async () => {
+  it('T1.6 permanent DELETE releases ownership but retains immutable recovery bytes', async () => {
     const buf = Buffer.from(`lifecycle-${crypto.randomUUID()}`)
     const artifact = await persistOriginalPptx(buf)
     const createRes = await request(app)
       .post('/api/presentations')
       .send({ title: `Life ${Date.now()}`, slides: [{ id: 's1', elements: [] }] })
     const id = createRes.body.id
+    const committed = await commitPackageOriginal(buf, id)
     await storage.withPresentations((presentations) => {
       const pres = presentations.find((p) => p.id === id)
       pres.pptxOriginal = {
@@ -94,7 +111,27 @@ describe('PPTX original package routes (T1.5 T1.6 T1.9)', () => {
 
     const permanent = await request(app).delete(`/api/presentations/${id}/permanent`)
     expect(permanent.status).toBe(200)
-    expect(await readOriginalPptx(artifact.id)).toBeNull()
+
+    // Deleted presentation routes cannot expose retained internal bytes.
+    expect((await request(app).get(`/api/presentations/${id}`)).status).toBe(404)
+    expect((await request(app).get(`/api/presentations/${id}/pptx-original`)).status).toBe(404)
+
+    // Phase 3 is collector-only: release/quarantine metadata, never physical GC.
+    expect(await readOriginalPptx(artifact.id)).toEqual(buf)
+    const store = await openPackageStore({ rootDir: path.resolve(storage.DATA_DIR) })
+    const state = store.getState()
+    expect(state.heads.some((head) => head.presentationId === id)).toBe(false)
+    expect(
+      state.owners.some((owner) => owner.ownerType === 'presentation' && owner.ownerId === id)
+    ).toBe(false)
+    expect(await store.readBlob(committed.blob.sha256)).toEqual(buf)
+    expect(store.auditCollection()).toEqual(
+      expect.objectContaining({
+        mode: 'audit-only',
+        physicalDeletionEnabled: false,
+        candidates: expect.arrayContaining([committed.blob.sha256]),
+      })
+    )
   })
 
   it('T1.9 wrong presentation id → 404; invalid id format rejected at app level when mounted', async () => {
@@ -136,8 +173,74 @@ describe('PPTX original package routes (T1.5 T1.6 T1.9)', () => {
 
     await request(app).delete(`/api/presentations/${dup.body.id}/permanent`)
     expect(await readOriginalPptx(artifact.id)).not.toBeNull()
-    expect(await readOriginalPptx(dup.body.pptxOriginal.id)).toBeNull()
+    expect(await readOriginalPptx(dup.body.pptxOriginal.id)).toEqual(buf)
 
+    await request(app).delete(`/api/presentations/${id}/permanent`)
+    expect(await readOriginalPptx(artifact.id)).toEqual(buf)
+    expect(await readOriginalPptx(dup.body.pptxOriginal.id)).toEqual(buf)
+  })
+
+  it('H1 package-backed duplicate retains shared legacy and package recovery bytes', async () => {
+    const buf = Buffer.from(`shared-dup-${crypto.randomUUID()}`)
+    const artifact = await persistOriginalPptx(buf)
+    const createRes = await request(app)
+      .post('/api/presentations')
+      .send({ title: `SharedDup ${Date.now()}`, slides: [{ id: 's1', elements: [] }] })
+    const id = createRes.body.id
+    const committed = await commitPackageOriginal(buf, id)
+    await storage.withPresentations((presentations) => {
+      presentations.find((presentation) => presentation.id === id).pptxOriginal = {
+        id: artifact.id,
+        sha256: artifact.sha256,
+        byteLength: artifact.byteLength,
+        uploadedAt: artifact.uploadedAt,
+      }
+    })
+
+    const dup = await request(app).post(`/api/presentations/${id}/duplicate`)
+    expect(dup.status).toBe(201)
+    expect(dup.body.pptxOriginal.id).toBe(artifact.id)
+
+    expect((await request(app).delete(`/api/presentations/${dup.body.id}/permanent`)).status).toBe(
+      200
+    )
+    expect((await request(app).delete(`/api/presentations/${id}/permanent`)).status).toBe(200)
+    expect(await readOriginalPptx(artifact.id)).toEqual(buf)
+
+    const store = await openPackageStore({ rootDir: path.resolve(storage.DATA_DIR) })
+    expect(await store.readBlob(committed.blob.sha256)).toEqual(buf)
+    expect(store.auditCollection()).toMatchObject({
+      mode: 'audit-only',
+      physicalDeletionEnabled: false,
+    })
+  })
+
+  it('downloads exact immutable package-store original bytes for an unchanged package-backed import', async () => {
+    const buf = Buffer.from(`package-only-${crypto.randomUUID()}`)
+    const createRes = await request(app)
+      .post('/api/presentations')
+      .send({ title: `PackageOnly ${Date.now()}`, slides: [{ id: 's1', elements: [] }] })
+    const id = createRes.body.id
+    await commitPackageOriginal(buf, id)
+    const store = await openPackageStore({ rootDir: path.resolve(storage.DATA_DIR) })
+    const head = store.getState().heads.find((item) => item.presentationId === id)
+    await storage.withPresentations((presentations) => {
+      presentations.find((presentation) => presentation.id === id).pptxAggregateHead = head
+    })
+
+    const download = await request(app)
+      .get(`/api/presentations/${id}/pptx-original`)
+      .buffer(true)
+      .parse((res, cb) => {
+        const chunks = []
+        res.on('data', (chunk) => chunks.push(chunk))
+        res.on('end', () => cb(null, Buffer.concat(chunks)))
+      })
+
+    expect(download.status).toBe(200)
+    expect(download.headers['x-pptx-export-mode']).toBe('immutable-package-original')
+    expect(download.headers['x-pptx-original-sha256']).toBe(sha256Buffer(buf))
+    expect(Buffer.isBuffer(download.body) && download.body.equals(buf)).toBe(true)
     await request(app).delete(`/api/presentations/${id}/permanent`)
   })
 

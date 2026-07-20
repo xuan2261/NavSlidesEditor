@@ -13,6 +13,7 @@ const {
   readOriginalPptx,
   resolveOriginalPath,
   getOriginalsDir,
+  migrateLegacyOriginal,
 } = originalPackage
 
 describe('original-package (T1.x zero-loss)', () => {
@@ -77,5 +78,19 @@ describe('original-package (T1.x zero-loss)', () => {
     const artifact = await persistOriginalPptx(src, { baseDir })
     expect(artifact.sha256).toBe(sha256Buffer(buf))
     expect((await readOriginalPptx(artifact.id, { baseDir })).equals(buf)).toBe(true)
+  })
+
+  it('migrates legacy metadata through the package-store compatibility wrapper', async () => {
+    const baseDir = await tempBase()
+    const exact = Buffer.from([0, 80, 75, 3, 4, 255])
+    const artifact = await persistOriginalPptx(exact, { baseDir })
+    const migrated = await migrateLegacyOriginal(
+      { id: artifact.id, uploadedAt: artifact.uploadedAt },
+      { ownerType: 'presentation', ownerId: 'legacy-deck' },
+      { baseDir }
+    )
+
+    expect(migrated.blob.sha256).toBe(artifact.sha256)
+    expect(await readOriginalPptx(artifact.id, { baseDir })).toEqual(exact)
   })
 })

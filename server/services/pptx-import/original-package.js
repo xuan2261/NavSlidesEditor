@@ -117,6 +117,21 @@ function toPptxOriginalMeta(artifact) {
   }
 }
 
+async function migrateLegacyOriginal(meta, owner, { baseDir = DATA_DIR } = {}) {
+  const { openPackageStore } = require('./package-store')
+  const { withPackageStore } = require('./package-store-runtime')
+  if (path.resolve(baseDir) === path.resolve(DATA_DIR)) {
+    return withPackageStore((store) => store.migrateLegacyOriginal(meta, owner))
+  }
+  const store = await openPackageStore({ rootDir: path.resolve(baseDir) })
+  await store.acquireWriter()
+  try {
+    return await store.migrateLegacyOriginal(meta, owner)
+  } finally {
+    await store.releaseWriter()
+  }
+}
+
 module.exports = {
   ORIGINALS_SUBDIR,
   getOriginalsDir,
@@ -128,4 +143,5 @@ module.exports = {
   readOriginalPptx,
   toPptxOriginalMeta,
   assertSafeOriginalId,
+  migrateLegacyOriginal,
 }

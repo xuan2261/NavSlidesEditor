@@ -24,6 +24,11 @@ function sourceKey(slideIndex, nodeId) {
   return `${Number(slideIndex)}:${String(nodeId)}`
 }
 
+function uniqueUnusedNode(leaves, predicate) {
+  const matches = leaves.filter((node) => !node._used && predicate(node))
+  return matches.length === 1 ? matches[0] : null
+}
+
 /**
  * Prefer matching leaf kind when available; otherwise take next unused leaf.
  * Preserves existing _pptxSource (e.g. layout placeholder inject).
@@ -62,11 +67,11 @@ function attachSourceNodes(elements, graphNodes, slideIndex) {
     let matchedBy = null
     let node = null
     if (elSrcId != null) {
-      node = leaves.find((n) => !n._used && String(n.id) === String(elSrcId))
+      node = uniqueUnusedNode(leaves, (n) => String(n.id) === String(elSrcId))
       if (node) matchedBy = 'sourceId'
     }
     if (!node && elName) {
-      node = leaves.find((n) => !n._used && n.name && String(n.name) === String(elName))
+      node = uniqueUnusedNode(leaves, (n) => n.name && String(n.name) === String(elName))
       if (node) matchedBy = 'name'
     }
     if (!node) {

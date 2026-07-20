@@ -51,6 +51,11 @@ function createImportSourceMap(sourceMap, presentationId, revisionId, projection
       throw importCommitError(`Source map entry does not match a projection element: ${key}`)
     }
   }
+  for (const key of elementKeys) {
+    if (!Object.hasOwn(rebound.entries, key)) {
+      throw importCommitError(`Source map is missing a projection element: ${key}`)
+    }
+  }
   return rebound
 }
 

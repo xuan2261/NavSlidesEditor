@@ -64,4 +64,28 @@ describe('corpus chart native import (T5.2–T5.5)', () => {
     const again = clone.slides[0].elements.find((e) => e.type === 'chart')
     expect(again.chartData.datasets[0].data[0]).toBe(before + 1)
   })
+
+  it('preserves pie and scatter native descriptors without family coercion', async () => {
+    const { mapped } = await mapDeckWithOoxml('chart-pie-scatter.pptx')
+    const charts = mapped.presentation.slides.flatMap((slide) => slide.elements || [])
+      .filter((element) => element.type === 'chart')
+    const byFamily = new Map(charts.map((chart) => [chart._pptxChartMeta?.originalType, chart]))
+
+    for (const [family, displayType] of [['pieChart', 'pie'], ['scatterChart', 'line']]) {
+      expect(byFamily.get(family)).toMatchObject({
+        chartType: displayType,
+        _pptxSource: {
+          graphicKind: 'chart',
+          authoritative: true,
+        },
+        _pptxChartMeta: {
+          originalType: family,
+          supportStatus: 'preserve-only',
+          preservationTier: 'preserve-only',
+          source: 'ooxml-chart-parser',
+          native: { nativeFamily: [family] },
+        },
+      })
+    }
+  })
 })

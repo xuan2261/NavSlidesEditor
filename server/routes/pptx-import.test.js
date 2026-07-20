@@ -39,6 +39,7 @@ function mockAtomicDeps(overrides = {}) {
     }),
     createPresentation: async () => ({ id: 'pres-test-1' }),
     deleteOriginal: async () => true,
+    packageCommit: null,
     ...overrides,
   }
 }
@@ -90,6 +91,90 @@ describe('PPTX import route', () => {
         status: 'done',
         result: { stats: { parser: 'pptxtojson' }, presentationId: 'pres-test-1' },
       })
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('publishes the production import through the package transaction before completing the API job', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-package-authority-'))
+    const file = path.join(dir, 'valid.pptx')
+    let commitInput
+    try {
+      await writeMinimalPptx(file)
+      const app = express()
+      app.use('/api/pptx', createPptxImportRouter({
+        importer: async () => ({
+          presentation: { title: 'authoritative', theme: 'white', slides: [] },
+          stats: { parser: 'pptxtojson', slideCount: 0 },
+          warnings: [],
+        }),
+        createPresentation: async (presentation, original, options) => {
+          expect(original).toBeNull()
+          expect(options.packageHead).toMatchObject({
+            originalRevisionId: 'r0-authoritative',
+            packageRevisionId: 'r0-authoritative',
+            generation: 1,
+          })
+          return { ...presentation, id: options.id }
+        },
+        deletePresentation: async () => true,
+        packageCommit: async (source, input) => {
+          commitInput = { source, input }
+          return {
+            revision: { id: 'r0-authoritative' },
+            head: {
+              originalRevisionId: 'r0-authoritative',
+              packageRevisionId: 'r0-authoritative',
+              generation: 1,
+            },
+          }
+        },
+      }))
+
+      const res = await request(app).post('/api/pptx/import').attach('file', file)
+      const poll = await waitForJob(app, res.body.jobId)
+
+      expect(poll.body).toMatchObject({
+        status: 'done',
+        result: { presentationId: commitInput.input.presentationId },
+      })
+      expect(commitInput.source).toBeTruthy()
+      expect(commitInput.input).toMatchObject({
+        jobId: res.body.jobId,
+        presentationId: expect.any(String),
+        projection: { id: commitInput.input.presentationId, title: 'authoritative', slides: [] },
+      })
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('fails closed before making a compatibility presentation visible when package publication fails', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-package-failure-'))
+    const file = path.join(dir, 'valid.pptx')
+    const deletePresentation = vi.fn(async () => true)
+    try {
+      await writeMinimalPptx(file)
+      const app = express()
+      app.use('/api/pptx', createPptxImportRouter({
+        importer: async () => ({
+          presentation: { title: 'blocked', slides: [] },
+          stats: { parser: 'pptxtojson', slideCount: 0 },
+          warnings: [],
+        }),
+        createPresentation: async (presentation, _original, options) => ({ ...presentation, id: options.id }),
+        deletePresentation,
+        packageCommit: async () => {
+          throw new Error('package transaction failed')
+        },
+      }))
+
+      const res = await request(app).post('/api/pptx/import').attach('file', file)
+      const poll = await waitForJob(app, res.body.jobId, 'failed')
+
+      expect(poll.body).toMatchObject({ status: 'failed', error: 'package transaction failed' })
+      expect(deletePresentation).not.toHaveBeenCalled()
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
     }

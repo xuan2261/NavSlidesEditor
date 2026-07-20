@@ -8,6 +8,8 @@ const { buildOoxmlSceneGraph, reconcileSceneGraph } = require('./ooxml-scene-gra
 const { resolveSceneGraphStrictPolicy } = require('./ooxml-scene-graph/strict-policy')
 const { assertPresentationAcceptance } = require('./acceptance-criteria')
 const { createMediaBudget } = require('./resource-budgets')
+const { runShadowReconciliation } = require('./reconciliation')
+const { buildImportSourceMap } = require('./source-map')
 
 function buildImportStats({ mappedStats = {}, parsed = {}, startedAt = Date.now(), now = Date.now() }) {
   return {
@@ -119,7 +121,24 @@ async function importPptxFile(filePath, options = {}) {
     }
   }
 
+  let shadowReconciliation = null
+  if (options.shadowReconciliation?.enabled === true) {
+    const shadowResult = await runShadowReconciliation({
+      ...options.shadowReconciliation,
+      enabled: true,
+      nativeProjection: mapped.presentation,
+      sceneGraph: sceneGraph && !sceneGraph.error ? sceneGraph : null,
+      signal: options.signal,
+    })
+    shadowReconciliation = shadowResult.shadow
+  }
+
   const stats = buildImportStats({ mappedStats: mapped.stats, parsed, startedAt: started })
+  const sourceMap = await buildImportSourceMap(
+    mapped.presentation,
+    sceneGraph && !sceneGraph.error ? sceneGraph : null,
+    packageInfo.zip
+  )
   if (sceneGraph?.stats) stats.sceneGraph = sceneGraph.stats
   stats.primitivePlaceholderCount = (mapped.presentation?.slides || []).reduce((sum, slide) => {
     return (
@@ -130,10 +149,12 @@ async function importPptxFile(filePath, options = {}) {
 
   return {
     ...mapped,
+    sourceMap,
     stats,
     sceneGraph: sceneGraph?.stats
       ? { stats: sceneGraph.stats, slideCount: sceneGraph.slides?.length }
       : sceneGraph,
+    shadowReconciliation,
     warnings: [
       ...mapped.warnings,
       ...sceneWarnings,

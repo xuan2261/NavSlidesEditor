@@ -3,6 +3,8 @@
  * Maps pptxtojson chart output to NavSlides chart schema.
  */
 
+const { supportRow } = require('./chart-support-matrix')
+
 const DEFAULT_COLORS = [
   '#6366f1', '#ef4444', '#22c55e', '#f59e0b',
   '#3b82f6', '#ec4899', '#14b8a6', '#8b5cf6',
@@ -113,6 +115,10 @@ function mapChart(element) {
   if (!element || element.type !== 'chart') return null
 
   const type = String(element.chartType || '').toLowerCase()
+  const isCombo = Boolean(element.isCombo || element.combo)
+  const originalType = element._pptxChartMeta?.originalType || element.chartType
+  const supportType = isCombo ? 'comboChart' : originalType
+  const support = supportRow(supportType)
   // scatter → mapScatterChart (native [x,y] format); bubble → mapCommonChart
   const isScatter = type.includes('scatter')
 
@@ -123,13 +129,23 @@ function mapChart(element) {
   return {
     ...element,
     type: 'chart',
+    // Chart.js receives only its supported display types. Preserve the exact OOXML
+    // family in native metadata rather than leaking it into the render contract.
     chartType: mapped.chartType,
     chartData: mapped.chartData,
     legend: mapped.legend,
     xAxisTitle: mapped.xAxisTitle,
     yAxisTitle: mapped.yAxisTitle,
     ...chartGroupingFlags(element),
-    _pptxChartMeta: mapped._pptxChartMeta,
+    _pptxChartMeta: {
+      ...element._pptxChartMeta,
+      ...mapped._pptxChartMeta,
+      originalType,
+      ...(isCombo ? { comboFamily: 'comboChart' } : {}),
+      supportStatus: support.status,
+      preservationTier: support.status === 'preserve-only' ? 'preserve-only' : 'editable',
+      source: element._pptxChartMeta?.source || 'pptxtojson',
+    },
   }
 }
 

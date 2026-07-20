@@ -15,10 +15,36 @@ function resolveExportStrategy(presentation, options = {}) {
   if (options.forceHybrid) {
     return { mode: 'hybrid-export', reason: 'forced' }
   }
+  const edited = options.edited === true || presentation?._pptxEdited === true
+  if (edited && presentation?.pptxCapabilitySummary?.editedExport === 'unsupported-blocking') {
+    return { mode: 'unsupported-blocking', reason: 'unsafe-complex-object-impact' }
+  }
+  const head = presentation?.pptxAggregateHead
+  if (head?.packageRevisionId && Number.isSafeInteger(head.generation)) {
+    if (head.pendingJournalHash ||
+        (head.packageRevisionId === head.originalRevisionId && head.journalRevisionId)) {
+      return {
+        mode: 'pending-edited-export',
+        reason: 'validated-edited-export-required',
+      }
+    }
+    if (head.packageRevisionId !== head.originalRevisionId) {
+      return {
+        mode: 'package-head',
+        reason: 'authoritative-journal-head',
+        revisionId: head.packageRevisionId,
+      }
+    }
+    return {
+      mode: 'package-head',
+      reason: 'authoritative-unchanged-head',
+      revisionId: head.packageRevisionId,
+    }
+  }
   if (!shouldPreferOriginalPackage(presentation)) {
     return { mode: 'hybrid-export', reason: 'no-original-package' }
   }
-  if (options.edited === true || presentation?._pptxEdited === true) {
+  if (edited) {
     return { mode: 'hybrid-export', reason: 'edited-after-import' }
   }
   // Unedited import: prefer streaming original.pptx for true zero-loss download/re-export

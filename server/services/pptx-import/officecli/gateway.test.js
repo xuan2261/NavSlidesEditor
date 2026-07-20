@@ -17,20 +17,7 @@ async function fixture() {
 }
 
 function qualified(sha256, size) {
-  const executionCopy = { canonicalPath: 'C:\\private\\officecli.exe', sha256, byteLength: size }
-  return {
-    available: true,
-    candidate: { version: '1.0.135', identity: { sha256, size } },
-    executionCopy,
-    containmentReceipt: {
-      kind: 'officecli-containment-receipt-v1',
-      verdict: 'qualified',
-      executionCopy,
-      launcher: { sha256: 'launcher-sha', version: '1.0.0' },
-      binary: { sha256, version: '1.0.135' },
-      policyDigest: 'policy-sha',
-    },
-  }
+  return directQualified(sha256, size)
 }
 
 function directQualified(sha256, size) {
@@ -58,6 +45,51 @@ function directQualified(sha256, size) {
 afterEach(async () => { await Promise.all(roots.splice(0).map((root) => fs.rm(root, { recursive: true, force: true }))) })
 
 describe('contained OfficeCLI gateway', () => {
+  it('fails before staging when the immutable input exceeds the configured resource budget', async () => {
+    const { root, bytes, revision, sha256 } = await fixture()
+    const readRevision = vi.fn(async () => bytes)
+    const runOfficeCli = vi.fn()
+    const gateway = createOfficeCliGateway({
+      workspaceRoot: root,
+      platform: 'win32',
+      qualification: async () => directQualified(sha256, bytes.length),
+      readRevision,
+      runOfficeCli,
+      limits: { maxInputBytes: bytes.length - 1 },
+    })
+
+    await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'INPUT_LIMIT_EXCEEDED' })
+    expect(runOfficeCli).not.toHaveBeenCalled()
+    expect(await fs.readdir(root)).toEqual([])
+  })
+
+  it('never treats zero exit with a failed validation result as success', async () => {
+    const { root, bytes, revision, sha256 } = await fixture()
+    const gateway = createOfficeCliGateway({
+      workspaceRoot: root,
+      platform: 'win32',
+      qualification: async () => directQualified(sha256, bytes.length),
+      readRevision: async () => bytes,
+      runOfficeCli: async () => ({ exitCode: 0, stdout: '{"valid":false}' }),
+    })
+
+    await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'OUTPUT_INVALID' })
+  })
+
+  it('quarantines an uncleaned workspace and returns one cleanup-uncertain failure', async () => {
+    const { root, bytes, revision, sha256 } = await fixture()
+    const gateway = createOfficeCliGateway({
+      workspaceRoot: root,
+      platform: 'win32',
+      qualification: async () => directQualified(sha256, bytes.length),
+      readRevision: async () => bytes,
+      runOfficeCli: async () => ({ exitCode: 0, stdout: '{"valid":true}' }),
+      cleanupWorkspace: async () => { throw new Error('cleanup failed') },
+    })
+
+    await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'CLEANUP_UNCERTAIN' })
+  })
+
   it('starts only the freshly qualified canonical OfficeCLI binary with fixed direct validation arguments', async () => {
     const { root, bytes, revision, sha256 } = await fixture()
     const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: '{"valid":true}' }))
@@ -76,12 +108,17 @@ describe('contained OfficeCLI gateway', () => {
     }))
   })
 
-  it('runs only a typed validate request through the launcher', async () => {
+  it('does not accept a legacy launcher qualification as executable authority', async () => {
     const { root, bytes, revision, sha256 } = await fixture()
     const launcherClient = { run: vi.fn(async () => ({ exitCode: 0, receipt: { ok: true } })) }
-    const gateway = createOfficeCliGateway({ workspaceRoot: root, platform: 'win32', qualification: async () => qualified(sha256, bytes.length), readRevision: async () => bytes, launcherClient, executionCopyVerifier: async () => true })
-    await expect(gateway.validatePackage(revision)).resolves.toMatchObject({ ok: true, data: { ok: true } })
-    expect(launcherClient.run).toHaveBeenCalledWith(expect.objectContaining({ operation: 'validate', inputPath: expect.stringMatching(/input\.pptx$/) }))
+    const legacy = {
+      available: true,
+      candidate: { version: '1.0.135', identity: { canonicalPath: 'C:\\private\\officecli.exe', sha256, byteLength: bytes.length } },
+      containmentReceipt: { kind: 'officecli-containment-receipt-v1' },
+    }
+    const gateway = createOfficeCliGateway({ workspaceRoot: root, platform: 'win32', qualification: async () => legacy, readRevision: async () => bytes, launcherClient })
+    await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'QUALIFICATION_REQUIRED' })
+    expect(launcherClient.run).not.toHaveBeenCalled()
   })
 
   it('rejects unavailable qualification before reading or creating a workspace', async () => {
@@ -93,20 +130,18 @@ describe('contained OfficeCLI gateway', () => {
     expect(await fs.readdir(root)).toEqual([])
   })
 
-  it('rejects candidate identity without a qualified containment receipt before reading or staging', async () => {
+  it('rejects a direct candidate without its current local receipt before reading or staging', async () => {
     const { root, bytes, revision, sha256 } = await fixture()
     const readRevision = vi.fn(async () => bytes)
     const candidateOnly = qualified(sha256, bytes.length)
-    delete candidateOnly.containmentReceipt
+    delete candidateOnly.receipt
     const gateway = createOfficeCliGateway({
       workspaceRoot: root,
       platform: 'win32',
       qualification: async () => candidateOnly,
       readRevision,
-      launcherClient: { run: vi.fn() },
-      executionCopyVerifier: async () => true,
     })
-    await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'QUALIFICATION_RECEIPT_REQUIRED' })
+    await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'QUALIFICATION_REQUIRED' })
     expect(readRevision).not.toHaveBeenCalled()
     expect(await fs.readdir(root)).toEqual([])
   })
@@ -126,21 +161,19 @@ describe('contained OfficeCLI gateway', () => {
     expect(readRevision).not.toHaveBeenCalled()
   })
 
-  it('uses the receipt-bound execution copy when the qualification has no top-level copy', async () => {
+  it('uses only the canonical direct binary bound to the local receipt', async () => {
     const { root, bytes, revision, sha256 } = await fixture()
     const qualifiedReceipt = qualified(sha256, bytes.length)
-    delete qualifiedReceipt.executionCopy
-    const launcherClient = { run: vi.fn(async () => ({ exitCode: 0, receipt: { ok: true } })) }
+    const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: '{"valid":true}' }))
     const gateway = createOfficeCliGateway({
       workspaceRoot: root,
       platform: 'win32',
       qualification: async () => qualifiedReceipt,
       readRevision: async () => bytes,
-      launcherClient,
-      executionCopyVerifier: async () => true,
+      runOfficeCli,
     })
-    await expect(gateway.validatePackage(revision)).resolves.toMatchObject({ ok: true, data: { ok: true } })
-    expect(launcherClient.run).toHaveBeenCalledOnce()
+    await expect(gateway.validatePackage(revision)).resolves.toMatchObject({ ok: true, data: { valid: true } })
+    expect(runOfficeCli).toHaveBeenCalledWith(expect.objectContaining({ binary: qualifiedReceipt.receipt.binary.canonicalPath }))
   })
 
   it('rechecks qualification so a revoked tuple cannot be reused', async () => {
@@ -154,8 +187,7 @@ describe('contained OfficeCLI gateway', () => {
       platform: 'win32',
       qualification: qualify,
       readRevision: async () => bytes,
-      launcherClient: { run: vi.fn(async () => ({ exitCode: 0, receipt: { ok: true } })) },
-      executionCopyVerifier: async () => true,
+      runOfficeCli: async () => ({ exitCode: 0, stdout: '{"valid":true}' }),
     })
     await expect(gateway.validatePackage(revision)).resolves.toMatchObject({ ok: true })
     await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'QUALIFICATION_REQUIRED' })
@@ -167,14 +199,13 @@ describe('contained OfficeCLI gateway', () => {
     let releaseAdmission
     let current = qualified(sha256, bytes.length)
     const qualify = vi.fn(async () => current)
-    const launcherClient = { run: vi.fn(async () => ({ exitCode: 0, receipt: { ok: true } })) }
+    const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: '{"valid":true}' }))
     const gateway = createOfficeCliGateway({
       workspaceRoot: root,
       platform: 'win32',
       qualification: qualify,
       readRevision: async () => bytes,
-      launcherClient,
-      executionCopyVerifier: async () => true,
+      runOfficeCli,
       admission: { reserve: vi.fn(() => new Promise((resolve) => { releaseAdmission = resolve })) },
     })
     const pending = gateway.validatePackage(revision)
@@ -182,7 +213,7 @@ describe('contained OfficeCLI gateway', () => {
     current = { available: false }
     releaseAdmission(() => {})
     await expect(pending).rejects.toMatchObject({ code: 'QUALIFICATION_REQUIRED' })
-    expect(launcherClient.run).not.toHaveBeenCalled()
+    expect(runOfficeCli).not.toHaveBeenCalled()
     expect(qualify).toHaveBeenCalledOnce()
   })
 
@@ -190,14 +221,13 @@ describe('contained OfficeCLI gateway', () => {
     const { root, bytes, revision, sha256 } = await fixture()
     let releaseAdmission
     let reserveSignal
-    const launcherClient = { run: vi.fn() }
+    const runOfficeCli = vi.fn()
     const gateway = createOfficeCliGateway({
       workspaceRoot: root,
       platform: 'win32',
       qualification: async () => qualified(sha256, bytes.length),
       readRevision: async () => bytes,
-      launcherClient,
-      executionCopyVerifier: async () => true,
+      runOfficeCli,
       admission: { reserve: vi.fn(({ signal }) => new Promise((resolve) => {
         reserveSignal = signal
         releaseAdmission = resolve
@@ -210,17 +240,17 @@ describe('contained OfficeCLI gateway', () => {
     releaseAdmission(() => {})
     await shutdown
     await expect(pending).rejects.toBeInstanceOf(Error)
-    expect(launcherClient.run).not.toHaveBeenCalled()
+    expect(runOfficeCli).not.toHaveBeenCalled()
   })
 
   it('disables all OfficeCLI work on non-Windows before reading, workspace, or process launch', async () => {
     const { root, bytes, revision } = await fixture()
     const readRevision = vi.fn(async () => bytes)
-    const launcherClient = { run: vi.fn() }
-    const gateway = createOfficeCliGateway({ workspaceRoot: root, platform: 'linux', qualification: vi.fn(), readRevision, launcherClient })
+    const runOfficeCli = vi.fn()
+    const gateway = createOfficeCliGateway({ workspaceRoot: root, platform: 'linux', qualification: vi.fn(), readRevision, runOfficeCli })
     await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'CAPABILITY_UNAVAILABLE' })
     expect(readRevision).not.toHaveBeenCalled()
-    expect(launcherClient.run).not.toHaveBeenCalled()
+    expect(runOfficeCli).not.toHaveBeenCalled()
     expect(await fs.readdir(root)).toEqual([])
   })
 
@@ -229,52 +259,51 @@ describe('contained OfficeCLI gateway', () => {
     const release = vi.fn()
     const gateway = createOfficeCliGateway({
       workspaceRoot: root, platform: 'win32', qualification: async () => qualified(sha256, bytes.length), readRevision: async () => bytes,
-      launcherClient: { run: vi.fn(async () => ({ exitCode: 0, receipt: { ok: true } })) }, executionCopyVerifier: async () => true,
+      runOfficeCli: async () => ({ exitCode: 0, stdout: '{"valid":true}' }),
       admission: { reserve: vi.fn(async () => release) }, cleanupWorkspace: async () => { throw new Error('cleanup failed') },
     })
-    await expect(gateway.validatePackage(revision)).rejects.toThrow('cleanup failed')
+    await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'CLEANUP_UNCERTAIN' })
     expect(release).toHaveBeenCalledOnce()
   })
 
-  it('aborts an active launcher request during shutdown', async () => {
+  it('aborts an active direct request during shutdown', async () => {
     const { root, bytes, revision, sha256 } = await fixture()
     let signal
-    const launcherClient = { run: vi.fn(({ signal: requestSignal }) => new Promise((resolve, reject) => {
+    const runOfficeCli = vi.fn(({ signal: requestSignal }) => new Promise((resolve, reject) => {
       signal = requestSignal
       requestSignal.addEventListener('abort', () => reject(requestSignal.reason), { once: true })
-    })) }
-    const gateway = createOfficeCliGateway({ workspaceRoot: root, platform: 'win32', qualification: async () => qualified(sha256, bytes.length), readRevision: async () => bytes, launcherClient, executionCopyVerifier: async () => true })
+    }))
+    const gateway = createOfficeCliGateway({ workspaceRoot: root, platform: 'win32', qualification: async () => qualified(sha256, bytes.length), readRevision: async () => bytes, runOfficeCli })
     const pending = gateway.validatePackage(revision)
-    await vi.waitFor(() => expect(launcherClient.run).toHaveBeenCalledOnce())
+    await vi.waitFor(() => expect(runOfficeCli).toHaveBeenCalledOnce())
     await gateway.shutdown()
     await expect(pending).rejects.toBe(signal.reason)
     expect(signal.aborted).toBe(true)
   })
 
-  it('waits for active cleanup and closes the gateway before returning', async () => {
+  it('waits for active direct request cleanup before returning', async () => {
     const { root, bytes, revision, sha256 } = await fixture()
     let drained = false
-    const launcherClient = { run: vi.fn(({ signal }) => new Promise((_resolve, reject) => {
+    const runOfficeCli = vi.fn(({ signal }) => new Promise((_resolve, reject) => {
       signal.addEventListener('abort', () => {
         setTimeout(() => {
           drained = true
           reject(new Error('launcher drained'))
         }, 40)
       }, { once: true })
-    })) }
+    }))
     const gateway = createOfficeCliGateway({
       workspaceRoot: root,
       platform: 'win32',
       qualification: async () => qualified(sha256, bytes.length),
       readRevision: async () => bytes,
-      launcherClient,
-      executionCopyVerifier: async () => true,
+      runOfficeCli,
     })
     const pending = gateway.validatePackage(revision)
-    await vi.waitFor(() => expect(launcherClient.run).toHaveBeenCalledOnce())
+    await vi.waitFor(() => expect(runOfficeCli).toHaveBeenCalledOnce())
     await gateway.shutdown()
     expect(drained).toBe(true)
-    await expect(pending).rejects.toThrow('launcher drained')
+    await expect(pending).rejects.toMatchObject({ code: 'CANCELLED' })
     await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'GATEWAY_CLOSED' })
   })
 

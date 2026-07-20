@@ -17,6 +17,10 @@ const {
 const defaultJobManager = require('../services/pptx-import-job-manager')
 const { createMediaTransaction } = require('../services/pptx-import/media-dedup')
 const { sweepStaleTempUploads } = require('../services/pptx-import/temp-upload-sweep')
+const {
+  getPackageStore,
+  withPackageStore,
+} = require('../services/pptx-import/package-store-runtime')
 
 fs.ensureDirSync(TEMP_UPLOAD_DIR)
 const activeTempUploads = new Set()
@@ -90,8 +94,9 @@ function withAbort(promise, signal, cleanupLateResult, trackCleanup) {
 }
 
 /**
- * Atomic import: map → persist original → create presentation server-side.
- * On create failure, original is rolled back. Cancel leaves no original.
+ * Production imports publish package authority before compatibility presentation
+ * visibility and API-job completion. Legacy dependency injection retains the
+ * original artifact path for focused route tests and legacy records.
  */
 async function runImport({
   jobId,
@@ -103,6 +108,8 @@ async function runImport({
   createPresentation = createImportedPresentation,
   deletePresentation = deleteImportedPresentation,
   deleteOriginal = deleteOriginalPptx,
+  packageCommit = null,
+  packageRollback = null,
   originalBaseDir,
   timeoutMs = IMPORT_TIMEOUT_MS,
 }) {
@@ -143,38 +150,82 @@ async function runImport({
       return
     }
 
-    jobManager.emitProgress(jobId, { stage: 'persisting-original', percent: 92, message: 'Saving original package' })
-    const originalOptions = originalBaseDir ? { baseDir: originalBaseDir } : {}
-    originalArtifact = await withAbort(
-      trackStage(persistOriginal(filePath, originalOptions)),
-      abortController.signal,
-      (artifact) => deleteOriginal(artifact?.id, originalOptions),
-      (cleanup) => cleanupPromises.push(cleanup)
-    )
-
-    if (abortController.signal.aborted) {
-      finishAbortedJob()
-      await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
-      originalArtifact = null
-      await mediaTransaction.rollback()
-      return
-    }
-
     jobManager.emitProgress(jobId, { stage: 'creating-presentation', percent: 96, message: 'Creating presentation' })
     let presentation
-    try {
-      presentation = await withAbort(
-        trackStage(createPresentation(result.presentation, originalArtifact, { originalName })),
+    if (packageCommit) {
+      const presentationId = uuidv4()
+      try {
+        jobManager.emitProgress(jobId, { stage: 'committing-package', percent: 96, message: 'Publishing package authority' })
+        const packageResult = await withAbort(trackStage(packageCommit(filePath, {
+          jobId,
+          presentationId,
+          projection: { ...result.presentation, id: presentationId },
+          sourceMap: result.sourceMap,
+        })), abortController.signal, () => packageRollback?.({ jobId, presentationId }),
+        (cleanup) => cleanupPromises.push(cleanup))
+        if (abortController.signal.aborted) {
+          finishAbortedJob()
+          if (packageRollback) await packageRollback({ jobId, presentationId }).catch(() => {})
+          await mediaTransaction.rollback()
+          return
+        }
+        jobManager.emitProgress(jobId, { stage: 'creating-presentation', percent: 98, message: 'Creating presentation' })
+        presentation = await withAbort(
+          trackStage(createPresentation(result.presentation, null, {
+            originalName,
+            id: presentationId,
+            packageHead: packageResult.head,
+          })),
+          abortController.signal,
+          (created) => deletePresentation(created?.id),
+          (cleanup) => cleanupPromises.push(cleanup)
+        )
+        if (abortController.signal.aborted) {
+          finishAbortedJob()
+          await deletePresentation(presentation.id).catch(() => {})
+          if (packageRollback) await packageRollback({ jobId, presentationId }).catch(() => {})
+          await mediaTransaction.rollback()
+          return
+        }
+      } catch (packageErr) {
+        if (!abortController.signal.aborted) {
+          if (presentation?.id) await deletePresentation(presentation.id).catch(() => {})
+          if (packageRollback) await packageRollback({ jobId, presentationId }).catch(() => {})
+        }
+        throw packageErr
+      }
+    } else {
+      jobManager.emitProgress(jobId, { stage: 'persisting-original', percent: 92, message: 'Saving original package' })
+      const originalOptions = originalBaseDir ? { baseDir: originalBaseDir } : {}
+      originalArtifact = await withAbort(
+        trackStage(persistOriginal(filePath, originalOptions)),
         abortController.signal,
-        (created) => deletePresentation(created?.id),
+        (artifact) => deleteOriginal(artifact?.id, originalOptions),
         (cleanup) => cleanupPromises.push(cleanup)
       )
-    } catch (createErr) {
-      if (!abortController.signal.aborted) {
+
+      if (abortController.signal.aborted) {
+        finishAbortedJob()
         await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
         originalArtifact = null
+        await mediaTransaction.rollback()
+        return
       }
-      throw createErr
+
+      try {
+        presentation = await withAbort(
+          trackStage(createPresentation(result.presentation, originalArtifact, { originalName })),
+          abortController.signal,
+          (created) => deletePresentation(created?.id),
+          (cleanup) => cleanupPromises.push(cleanup)
+        )
+      } catch (createErr) {
+        if (!abortController.signal.aborted) {
+          await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
+          originalArtifact = null
+        }
+        throw createErr
+      }
     }
 
     // If cancel races after create, still complete as done — presentation+original already committed.
@@ -186,12 +237,16 @@ async function runImport({
     })
   } catch (err) {
     const aborted = abortController.signal.aborted
-    if (aborted) finishAbortedJob()
-    await mediaTransaction.rollback().catch(() => {})
     if (originalArtifact?.id) {
-      await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
+      const cleanup = Promise.resolve(deleteOriginal(
+        originalArtifact.id,
+        originalBaseDir ? { baseDir: originalBaseDir } : {}
+      )).catch(() => {})
+      cleanupPromises.push(cleanup)
     }
-    if (!aborted) jobManager.failJob(jobId, sanitizeDiagnostic(err))
+    await mediaTransaction.rollback().catch(() => {})
+    if (aborted) finishAbortedJob()
+    else jobManager.failJob(jobId, sanitizeDiagnostic(err))
   } finally {
     clearTimeout(deadlineTimer)
     Promise.allSettled(stagePromises).then(() => Promise.allSettled(cleanupPromises)).then(async () => {
@@ -202,6 +257,15 @@ async function runImport({
   }
 }
 
+async function commitImportedPackage(source, input) {
+  const prepared = await getPackageStore().prepareImport(source, input)
+  return withPackageStore((store) => store.publishImport(prepared))
+}
+
+async function rollbackImportedPackage(input) {
+  return withPackageStore((store) => store.rollbackImport(input))
+}
+
 function createPptxImportRouter({
   importer = importPptxFile,
   jobManager = defaultJobManager,
@@ -209,6 +273,8 @@ function createPptxImportRouter({
   createPresentation = createImportedPresentation,
   deletePresentation = deleteImportedPresentation,
   deleteOriginal = deleteOriginalPptx,
+  packageCommit = process.env.NODE_ENV === 'test' ? null : commitImportedPackage,
+  packageRollback = process.env.NODE_ENV === 'test' ? null : rollbackImportedPackage,
   originalBaseDir,
   importTimeoutMs = IMPORT_TIMEOUT_MS,
 } = {}) {
@@ -263,6 +329,8 @@ function createPptxImportRouter({
         createPresentation,
         deletePresentation,
         deleteOriginal,
+        packageCommit,
+        packageRollback,
         originalBaseDir,
         timeoutMs: importTimeoutMs,
       }).catch((err) => {

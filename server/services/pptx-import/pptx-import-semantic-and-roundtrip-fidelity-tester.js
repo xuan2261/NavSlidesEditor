@@ -8,9 +8,9 @@
 const path = require('path')
 const os = require('os')
 const fs = require('fs-extra')
-const JSZip = require('jszip')
 const pptxgen = require('pptxgenjs')
-const { mapPptxOutput, sanitizeHtml } = require('./mapper')
+const { sanitizeHtml } = require('./mapper')
+const { importPptxFile } = require('./importer')
 const { assertPresentationAcceptance } = require('./acceptance-criteria')
 const { fitBoxWithinBounds, identityMatrix, mapBoxByMatrix, multiply, readCoord, readNumber, rotateAround, scaleAround, translate } = require('./geometry')
 const { UPLOADS_DIR } = require('../storage')
@@ -58,20 +58,28 @@ async function parsePptxWithPptxtojson(filePath) {
 // Import presentation (full NavSlides pipeline)
 // ---------------------------------------------------------------------------
 
-async function importPresentation(filePath, uploadsDir) {
-  const dir = uploadsDir || UPLOADS_DIR
-  const zip = await JSZip.loadAsync(await fs.readFile(filePath), { checkCRC32: false })
-  const parsed = await parsePptxWithPptxtojson(filePath)
-  if (!parsed.ok) {
-    return { ok: false, error: parsed.error, stats: {}, warnings: [], presentation: null }
-  }
-  const mapped = await mapPptxOutput({
-    output: parsed.output,
-    zip,
+async function importPresentation(filePath, uploadsDir, options = {}) {
+  const { importer = importPptxFile, ...importOptions } = options
+  const imported = await importer(filePath, {
     originalName: path.basename(filePath),
-    uploadsDir: dir,
+    ...(uploadsDir ? { uploadsDir } : {}),
+    ...importOptions,
   })
-  return { ok: true, ...mapped }
+  return { ok: true, ...imported }
+}
+
+function productionImportOptions(overrides = {}) {
+  return { ...overrides }
+}
+
+function corpusFileOptions(options, effectiveSkipRoundTrip) {
+  return {
+    skipRoundTrip: effectiveSkipRoundTrip,
+    allowFallback: options.allowFallback,
+    strict: options.strict,
+    baseUrl: options.baseUrl,
+    importOptions: productionImportOptions(options.importOptions),
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1150,11 +1158,8 @@ async function testCorpusFile(filePath, options = {}) {
       return result
     }
 
-    const imported = await importPresentation(filePath)
-    if (!imported.ok) {
-      result.errors.push(`import failed: ${imported.error?.message}`)
-      return result
-    }
+    const importPolicy = productionImportOptions(options.importOptions)
+    const imported = await importPresentation(filePath, undefined, importPolicy)
 
     result.warnings = imported.warnings || []
     result.stats = imported.stats || {}
@@ -1198,12 +1203,8 @@ async function testCorpusFile(filePath, options = {}) {
           throw new Error('Production export required in strict mode')
         }
 
-        const reimported = await importPresentation(roundTripPath, roundTripUploads)
-        if (!reimported.ok) {
-          result.roundTrip = { available: false, reason: `round-trip import failed: ${reimported.error?.message}` }
-        } else {
-          result.roundTrip = await computeRoundTripStability(imported.presentation, reimported.presentation)
-        }
+        const reimported = await importPresentation(roundTripPath, roundTripUploads, importPolicy)
+        result.roundTrip = await computeRoundTripStability(imported.presentation, reimported.presentation)
       } catch (err) {
         result.roundTrip = { available: false, reason: String(err.message) }
       } finally {
@@ -1249,12 +1250,12 @@ async function runCorpusTests(corpusDir = DEFAULT_CORPUS, options = {}) {
     totalFiles++
     const filePath = path.join(effectiveCorpusDir, file)
     const stat = await fs.stat(filePath)
-    const testResult = await testCorpusFile(filePath, {
-      skipRoundTrip: effectiveSkipRoundTrip,
+    const testResult = await testCorpusFile(filePath, corpusFileOptions({
       allowFallback,
       strict,
       baseUrl,
-    })
+      importOptions: options.importOptions,
+    }, effectiveSkipRoundTrip))
     testResult.fileSizeBytes = stat.size
 
     if (!effectiveSkipRoundTrip && !testResult.roundTrip?.available) {
@@ -1435,6 +1436,8 @@ module.exports = {
   evaluateCapture,
   applyStrictPerTypeGates,
   testCorpusFile,
+  productionImportOptions,
+  corpusFileOptions,
   runCorpusTests,
   reportResults,
   writeDriftRows,

@@ -161,6 +161,31 @@ describe('mapChart', () => {
     expect(result.stacked).toBeUndefined()
   })
 
+  it.each(['areaChart', 'bubbleChart', 'comboChart', 'scatterChart'])('uses a valid Chart.js display type for preserve-only %s charts', (chartType) => {
+    const result = mapChart(makeChart({ chartType }))
+    expect(['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea']).toContain(result.chartType)
+    expect(result._pptxChartMeta).toMatchObject({
+      originalType: chartType,
+      preservationTier: 'preserve-only',
+    })
+  })
+
+  it('preserves raw combo constituent metadata while classifying the combo as preserve-only', () => {
+    const result = mapChart(makeChart({
+      chartType: 'lineChart',
+      isCombo: true,
+      _pptxChartMeta: { chartPath: 'ppt/charts/chart1.xml', nativeFamily: ['lineChart'] },
+    }))
+    expect(result.chartType).toBe('line')
+    expect(result._pptxChartMeta).toMatchObject({
+      originalType: 'lineChart',
+      comboFamily: 'comboChart',
+      chartPath: 'ppt/charts/chart1.xml',
+      nativeFamily: ['lineChart'],
+      supportStatus: 'preserve-only',
+    })
+  })
+
   it('does not set stacked/areaFill for a plain clustered bar', () => {
     const chart = makeChart({ chartType: 'barChart', grouping: 'clustered' })
     const result = mapChart(chart)
@@ -174,6 +199,11 @@ describe('mapChart', () => {
     const result = mapChart(chart)
     expect(result.chartType).toBe('line')
     expect(result.areaFill).toBeUndefined()
+    expect(result._pptxChartMeta).toMatchObject({
+      originalType: 'lineChart',
+      supportStatus: 'preserve-only',
+      preservationTier: 'preserve-only',
+    })
   })
 })
 
@@ -204,7 +234,7 @@ describe('mapScatterChart', () => {
       data: [[1, 2, 3], [4, 5, 6]], // Format A: x-values, y-values
     }
     const result = mapChart(chart)
-    expect(result.chartType).toBe('line') // scatter maps to 'line' in NavSlides
+    expect(result.chartType).toBe('line')
     expect(result.chartData.labels).toEqual(['1', '2', '3'])
     expect(result.chartData.datasets[0].data).toEqual([4, 5, 6])
   })

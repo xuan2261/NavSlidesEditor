@@ -25,6 +25,11 @@ function emuToPx(value) {
   return n / EMU_PER_PX
 }
 
+function emuValue(value) {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : null
+}
+
 function parseXfrm(chunk) {
   if (!chunk) return null
   const off = chunk.match(/<(?:[a-z0-9]+:)?off\b[^>]*>/i)
@@ -38,6 +43,12 @@ function parseXfrm(chunk) {
     y: emuToPx(offA.y),
     cx: emuToPx(extA.cx),
     cy: emuToPx(extA.cy),
+    emu: {
+      x: emuValue(offA.x),
+      y: emuValue(offA.y),
+      width: emuValue(extA.cx),
+      height: emuValue(extA.cy),
+    },
     rot: xfA.rot != null ? Number(xfA.rot) : null,
     flipH: xfA.fliph === '1' || xfA.fliph === 'true',
     flipV: xfA.flipv === '1' || xfA.flipv === 'true',
@@ -165,6 +176,7 @@ function parseSpTree(slideXml, options = {}) {
         rels: {},
         parentId: parentId || null,
         depth,
+        sourceXml: chunk,
       }
       if (kind === 'pic') {
         const embed = extractBlipEmbed(chunk)

@@ -232,14 +232,14 @@ describe('pptx presentation mapper', () => {
     ]))
   })
 
-  it('throws a structured failure for unsupported parser charts in strict mode', async () => {
-    await expect(mapPptxOutput({
+  it('preserves unsupported parser chart families while using a supported display type in strict mode', async () => {
+    const result = await mapPptxOutput({
       output: {
         size: { width: 960, height: 540 },
         slides: [{
           elements: [{
             type: 'chart',
-            chartType: 'barChart',
+            chartType: 'lineChart',
             isCombo: true,
             left: 10,
             top: 10,
@@ -253,10 +253,17 @@ describe('pptx presentation mapper', () => {
       originalName: 'Combo.pptx',
       uploadsDir: '/tmp',
       strict: true,
-    })).rejects.toMatchObject({
-      type: 'import-failed',
-      code: 'chart-unsupported-strict',
-      chartType: 'comboChart',
+    })
+    expect(result.presentation.slides[0].elements[0]).toMatchObject({
+      type: 'chart',
+      chartType: 'line',
+      _pptxChartMeta: {
+        originalType: 'lineChart',
+        comboFamily: 'comboChart',
+        supportStatus: 'preserve-only',
+        preservationTier: 'preserve-only',
+        source: 'pptxtojson',
+      },
     })
   })
 })

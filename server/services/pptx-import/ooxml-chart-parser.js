@@ -3,10 +3,12 @@
  * Extracts cached categories/values from chart series (no xlsx embedding required when cache present).
  */
 
+const path = require('node:path').posix
 const { assertStrictChartSupport } = require('./chart-support-matrix')
+const { mapChartType } = require('./chart-output-to-navslides-mapper')
+const { nativeChartMetadata } = require('./chart-native-metadata')
 
-const CHART_KIND_RE =
-  /<(?:[a-z0-9]+:)?(polarAreaChart|barChart|lineChart|pieChart|doughnutChart|areaChart|scatterChart|radarChart|ofPieChart|stockChart|surfaceChart|bubbleChart)\b/i
+const CHART_KIND_RE = /<(?:[a-z0-9]+:)?([a-z][a-z0-9]*Chart)\b/i
 
 function textBetween(xml, openRe, closeTag) {
   const m = String(xml || '').match(openRe)
@@ -73,12 +75,12 @@ function detectOoxmlChartType(xml) {
   )
   const kinds = [
     ...plotArea.matchAll(
-      /<(?:[a-z0-9]+:)?(polarAreaChart|barChart|lineChart|pieChart|doughnutChart|areaChart|scatterChart|radarChart|ofPieChart|stockChart|surfaceChart|bubbleChart)\b/gi
+      /<(?:[a-z0-9]+:)?([a-z][a-z0-9]*Chart)\b/gi
     ),
   ].map((match) => match[1].toLowerCase())
   if (new Set(kinds).size > 1) return 'comboChart'
   const m = String(xml || '').match(CHART_KIND_RE)
-  return m ? m[1] : 'barChart'
+  return m ? m[1] : 'unknownChart'
 }
 
 /**
@@ -89,15 +91,22 @@ function parseOoxmlChart(chartXml, options = {}) {
   if (!chartXml || typeof chartXml !== 'string') return null
   const ooxmlType = detectOoxmlChartType(chartXml)
   const row = assertStrictChartSupport(ooxmlType, options.strict === true, options.context)
+  const native = nativeChartMetadata(
+    chartXml,
+    options.chartPath || options.context?.chartPath || '',
+    options.relationshipsXml
+  )
   const seriesBlocks = parseSeriesBlocks(chartXml)
   if (!seriesBlocks.length) {
     return {
       ooxmlType,
-      navType: row.navType || 'bar',
+      navType: row.navType,
+      displayType: mapChartType(ooxmlType),
       supportStatus: row.status,
       chartData: { labels: [], datasets: [] },
       title: null,
       empty: true,
+      native,
     }
   }
 
@@ -122,7 +131,8 @@ function parseOoxmlChart(chartXml, options = {}) {
 
   return {
     ooxmlType,
-    navType: row.navType || 'bar',
+    navType: row.navType,
+    displayType: mapChartType(ooxmlType),
     supportStatus: row.status,
     chartData: {
       labels: labels.length ? labels : datasets[0]?.data.map((_, i) => String(i + 1)) || [],
@@ -134,6 +144,7 @@ function parseOoxmlChart(chartXml, options = {}) {
     },
     title,
     empty: false,
+    native,
   }
 }
 
@@ -145,6 +156,12 @@ async function readZipText(zip, entry) {
   } catch {
     return ''
   }
+}
+
+function chartRelationshipsPath(chartPath) {
+  const normalized = path.normalize(String(chartPath || '')).replace(/^\.\//, '')
+  if (!/^ppt\/charts\/[^/]+\.xml$/i.test(normalized)) return null
+  return `${path.dirname(normalized)}/_rels/${path.basename(normalized)}.rels`
 }
 
 /**
@@ -171,6 +188,40 @@ function applyScaleBox(node, scale) {
     y: Number.isFinite(y) ? Math.round(y * s.y * 10) / 10 : 80,
     width: Number.isFinite(w) && w > 0 ? Math.max(1, Math.round(w * s.x * 10) / 10) : 400,
     height: Number.isFinite(h) && h > 0 ? Math.max(1, Math.round(h * s.y * 10) / 10) : 280,
+  }
+}
+
+async function stampClaimedChartMetadata(element, node, zip, slideIndex, strict, warnings) {
+  const chartPath = node.rels?.chartTarget
+  if (!chartPath) return
+
+  const xml = await readZipText(zip, chartPath)
+  const relationshipsPath = chartRelationshipsPath(chartPath)
+  const relationshipsXml = relationshipsPath ? await readZipText(zip, relationshipsPath) : ''
+  const parsed = parseOoxmlChart(xml, {
+    strict,
+    context: { slideIndex, chartPath, nodeId: String(node.id) },
+    relationshipsXml,
+  })
+  if (!parsed || parsed.empty) return
+
+  const preserveOnly = parsed.supportStatus === 'preserve-only'
+  element._pptxChartMeta = {
+    ...(element._pptxChartMeta || {}),
+    originalType: parsed.ooxmlType,
+    source: 'ooxml-chart-parser',
+    chartPath,
+    supportStatus: parsed.supportStatus,
+    preservationTier: preserveOnly ? 'preserve-only' : 'editable',
+    native: parsed.native,
+    title: parsed.title,
+  }
+  if (preserveOnly) {
+    warnings.push({
+      slideIndex,
+      type: 'native-chart-preserved',
+      message: `Chart ${chartPath} remains native preserve-only (${parsed.ooxmlType})`,
+    })
   }
 }
 
@@ -204,6 +255,7 @@ async function injectChartsFromSceneGraph({
     )
     if (byId) {
       claimedCharts.add(byId)
+      await stampClaimedChartMetadata(byId, node, zip, slideIndex, strict, warnings)
       continue
     }
     const byPath =
@@ -227,6 +279,7 @@ async function injectChartsFromSceneGraph({
         chartPath: node.rels.chartTarget,
         source: byPath._pptxChartMeta?.source || 'parser',
       }
+      await stampClaimedChartMetadata(byPath, node, zip, slideIndex, strict, warnings)
       continue
     }
     if (unstampedIdx < unstampedCharts.length) {
@@ -248,6 +301,7 @@ async function injectChartsFromSceneGraph({
           chartPath: node.rels.chartTarget,
           source: el._pptxChartMeta?.source || 'parser-claimed',
         }
+        await stampClaimedChartMetadata(el, node, zip, slideIndex, strict, warnings)
       }
     }
   }
@@ -272,9 +326,12 @@ async function injectChartsFromSceneGraph({
     }
 
     const xml = await readZipText(zip, chartPath)
+    const relationshipsPath = chartRelationshipsPath(chartPath)
+    const relationshipsXml = relationshipsPath ? await readZipText(zip, relationshipsPath) : ''
     const parsed = parseOoxmlChart(xml, {
       strict,
       context: { slideIndex, chartPath, nodeId: String(node.id) },
+      relationshipsXml,
     })
     if (!parsed || parsed.empty) {
       warnings.push({
@@ -284,12 +341,20 @@ async function injectChartsFromSceneGraph({
       })
       continue
     }
+    const preserveOnly = parsed.supportStatus === 'preserve-only'
+    if (preserveOnly) {
+      warnings.push({
+        slideIndex,
+        type: 'native-chart-preserved',
+        message: `Chart ${chartPath} remains native preserve-only (${parsed.ooxmlType})`,
+      })
+    }
 
     const box = applyScaleBox(node, scale)
     list.push({
       id: `chart-ooxml-${node.id}-${slideIndex}`,
       type: 'chart',
-      chartType: parsed.navType,
+      chartType: parsed.displayType,
       chartData: parsed.chartData,
       ...box,
       zIndex: list.length + 1,
@@ -309,6 +374,8 @@ async function injectChartsFromSceneGraph({
         source: 'ooxml-chart-parser',
         chartPath,
         supportStatus: parsed.supportStatus,
+        preservationTier: preserveOnly ? 'preserve-only' : 'editable',
+        native: parsed.native,
         title: parsed.title,
       },
     })

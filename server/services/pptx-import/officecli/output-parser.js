@@ -33,4 +33,12 @@ function parseBoundedJson(stdout, { maxBytes = DEFAULT_MAX_OUTPUT_BYTES } = {}) 
   }
 }
 
-module.exports = { DEFAULT_MAX_OUTPUT_BYTES, parseBoundedJson }
+function parseValidationResult(stdout, options) {
+  const result = parseBoundedJson(stdout, options)
+  if (Array.isArray(result) || result.valid !== true) {
+    throw new Error('OfficeCLI validation output does not report success')
+  }
+  return Object.freeze({ valid: true })
+}
+
+module.exports = { DEFAULT_MAX_OUTPUT_BYTES, parseBoundedJson, parseValidationResult }

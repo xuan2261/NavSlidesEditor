@@ -24,7 +24,8 @@ describe('server-image-source', () => {
     expect(normalizeServerImageSource(uploadsAbsolute)).toEqual({ path: uploadsAbsolute })
 
     expect(normalizeServerImageSource(path.resolve('outside', 'local.png'))).toBeNull()
-    expect(normalizeServerImageSource('server/uploads/local.png')?.path).toContain(path.join('server', 'uploads'))
+    const uploadsRelative = path.relative(process.cwd(), uploadsAbsolute)
+    expect(normalizeServerImageSource(uploadsRelative)).toEqual({ path: uploadsAbsolute })
     expect(normalizeServerImageSource('')).toBeNull()
   })
 
