@@ -31,36 +31,66 @@ export default function LiveViewPage() {
   const [roomNotFound, setRoomNotFound] = useState(false)
   const [joinError, setJoinError] = useState('')
   const { iframeRef } = useRevealPreviewFrame(htmlContent, liveState)
+  const [iframeElement, setIframeElement] = useState(null)
 
-  // Keyboard shortcuts for viewer (black/white overlays, escape to dismiss)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      const shortcuts = getShortcuts({})
+  const handleIframeRef = useCallback((node) => {
+    iframeRef.current = node
+    setIframeElement(node)
+  }, [iframeRef])
 
-      const normalizeKey = (ev) => {
-        const mods = []
-        if (ev.ctrlKey || ev.metaKey) mods.push('Ctrl')
-        if (ev.shiftKey) mods.push('Shift')
-        if (ev.altKey) mods.push('Alt')
-        const key = ev.key.length === 1 ? ev.key.toUpperCase() : ev.key
-        return mods.length > 0 ? [...mods, key].join('+') : key
-      }
+  const handleOverlayKeyDown = useCallback((event) => {
+    if (event.defaultPrevented || event.isComposing) return
 
-      const chord = normalizeKey(e)
-      const shortcut = shortcuts.find((s) => s.activeKey === chord)
-      if (!shortcut) return
+    const target = event.target
+    const tag = target?.tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) return
 
-      if (shortcut.id === 'blackScreen') { e.preventDefault(); setOverlayColor('black'); return }
-      if (shortcut.id === 'whiteScreen') { e.preventDefault(); setOverlayColor('white'); return }
-      if (shortcut.id === 'escape') {
-        e.preventDefault()
-        if (overlayColor) { setOverlayColor(null); return }
-      }
+    const shortcuts = getShortcuts({})
+
+    const normalizeKey = (keyboardEvent) => {
+      const mods = []
+      if (keyboardEvent.ctrlKey || keyboardEvent.metaKey) mods.push('Ctrl')
+      if (keyboardEvent.shiftKey) mods.push('Shift')
+      if (keyboardEvent.altKey) mods.push('Alt')
+      const key = keyboardEvent.key.length === 1 ? keyboardEvent.key.toUpperCase() : keyboardEvent.key
+      return mods.length > 0 ? [...mods, key].join('+') : key
     }
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [overlayColor])
+    const shortcut = shortcuts.find((item) => item.activeKey === normalizeKey(event))
+    if (!shortcut) return
+
+    if (shortcut.id === 'blackScreen') { event.preventDefault(); setOverlayColor('black'); return }
+    if (shortcut.id === 'whiteScreen') { event.preventDefault(); setOverlayColor('white'); return }
+    if (shortcut.id === 'escape') {
+      event.preventDefault()
+      setOverlayColor((currentOverlayColor) => currentOverlayColor ? null : currentOverlayColor)
+    }
+  }, [])
+
+  // A focused same-origin presentation iframe does not bubble keyboard events to its parent.
+  useEffect(() => {
+    document.addEventListener('keydown', handleOverlayKeyDown)
+
+    const iframe = iframeElement
+    let iframeDocument = null
+    const attachIframeKeyboardHandler = () => {
+      const nextDocument = iframe?.contentDocument
+      if (!nextDocument || nextDocument === iframeDocument) return
+
+      iframeDocument?.removeEventListener('keydown', handleOverlayKeyDown)
+      nextDocument.addEventListener('keydown', handleOverlayKeyDown)
+      iframeDocument = nextDocument
+    }
+
+    attachIframeKeyboardHandler()
+    iframe?.addEventListener('load', attachIframeKeyboardHandler)
+
+    return () => {
+      document.removeEventListener('keydown', handleOverlayKeyDown)
+      iframe?.removeEventListener('load', attachIframeKeyboardHandler)
+      iframeDocument?.removeEventListener('keydown', handleOverlayKeyDown)
+    }
+  }, [handleOverlayKeyDown, iframeElement])
 
   // 1. Socket.IO connection
   useEffect(() => {
@@ -408,7 +438,7 @@ export default function LiveViewPage() {
 
       {/* Presentation iframe — renders the full presentation HTML with all resources */}
       <iframe
-        ref={iframeRef}
+        ref={handleIframeRef}
         className="w-full h-full border-none block"
         title="Live Presentation"
         sandbox="allow-scripts allow-same-origin"

@@ -57,14 +57,7 @@ export async function scanA11y(page, label, opts = {}) {
  * Tracked in reports/a11y-baseline-known-critical-violations-2026-05-19.md.
  */
 export const A11Y_BASELINE_KNOWN_BLOCKING = {
-  editor: {
-    label: ['["input[min=\\"0\\"]"]'],
-    'nested-interactive': [
-      '[".border-accent"]',
-      '["div[aria-label=\\"Select slide 2\\"]"]',
-    ],
-    'select-name': ['["select"]'],
-  },
+  editor: {},
   home: {
     'frame-focusable-content': ['["iframe","html"]'],
     'select-name': ['["select"]'],

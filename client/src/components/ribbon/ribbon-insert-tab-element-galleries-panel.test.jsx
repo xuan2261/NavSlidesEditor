@@ -250,3 +250,21 @@ describe('Technical symbol packs gallery', () => {
     expect(document.activeElement).toBe(launcher)
   })
 })
+
+describe('Table size picker ergonomics', () => {
+  it('uses one grid tab stop and supports keyboard selection', () => {
+    const onAddTable = vi.fn()
+    render(<InsertTabContent pluginTypes={[]} onAddTable={onAddTable} />)
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Add table' }))
+
+    const grid = screen.getByRole('grid', { name: /Table size 3 by 3/i })
+    expect(grid.tabIndex).toBe(0)
+    expect(screen.getAllByRole('gridcell')).toHaveLength(48)
+    expect(screen.getAllByRole('gridcell').every((cell) => cell.tabIndex === -1)).toBe(true)
+
+    fireEvent.keyDown(grid, { key: 'ArrowRight' })
+    fireEvent.keyDown(grid, { key: 'ArrowDown' })
+    fireEvent.keyDown(grid, { key: 'Enter' })
+    expect(onAddTable).toHaveBeenCalledWith(4, 4)
+  })
+})

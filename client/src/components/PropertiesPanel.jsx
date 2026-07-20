@@ -185,8 +185,9 @@ export default function PropertiesPanel({
         <CollapsibleSection title="Presentation Settings" defaultOpen={true}>
           <div className="flex flex-col gap-2.5">
             <div>
-              <div className="text-[10px] text-text-muted mb-0.5">Auto-slide (s)</div>
+              <label htmlFor="presentation-auto-slide" className="text-[10px] text-text-muted mb-0.5">Auto-slide (s)</label>
               <Input
+                id="presentation-auto-slide"
                 className="w-full px-2.5 py-1.5 text-xs"
                 type="number"
                 min="0"
@@ -211,8 +212,9 @@ export default function PropertiesPanel({
             </div>
           </div>
           <div className="mt-2.5">
-            <div className="text-[10px] text-text-muted mb-0.5">Navigation Mode</div>
+            <label htmlFor="presentation-navigation-mode" className="text-[10px] text-text-muted mb-0.5">Navigation Mode</label>
             <Select
+              id="presentation-navigation-mode"
               className="w-full px-2.5 py-1.5 text-xs"
               value={presentation.navigationMode || 'default'}
               onChange={(e) => onUpdatePresentation({ navigationMode: e.target.value })}

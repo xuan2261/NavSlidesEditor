@@ -13,7 +13,6 @@ const initialState = {
   showTimeline: false,
   showFindReplace: false,
   viewMode: 'normal',
-  zoom: 1,
 }
 
 describe('editor-store', () => {
@@ -70,38 +69,4 @@ describe('editor-store', () => {
     })
   })
 
-  it('zoom state initializes to 1', () => {
-    expect(useEditorStore.getState().zoom).toBe(1)
-  })
-
-  it('[cap:shortcut.zoomIn][cap:command.zoomIn] zoomIn increases zoom by 0.25, clamped to max 4', () => {
-    useEditorStore.getState().setZoom(1)
-    useEditorStore.getState().zoomIn()
-    expect(useEditorStore.getState().zoom).toBe(1.25)
-    useEditorStore.getState().setZoom(4)
-    useEditorStore.getState().zoomIn()
-    expect(useEditorStore.getState().zoom).toBe(4) // clamped
-  })
-
-  it('[cap:shortcut.zoomOut][cap:command.zoomOut] zoomOut decreases zoom by 0.25, clamped to min 0.25', () => {
-    useEditorStore.getState().setZoom(1)
-    useEditorStore.getState().zoomOut()
-    expect(useEditorStore.getState().zoom).toBe(0.75)
-    useEditorStore.getState().setZoom(0.25)
-    useEditorStore.getState().zoomOut()
-    expect(useEditorStore.getState().zoom).toBe(0.25) // clamped
-  })
-
-  it('[cap:shortcut.resetZoom][cap:command.resetZoom] resetZoom sets zoom to 1', () => {
-    useEditorStore.getState().setZoom(2.5)
-    useEditorStore.getState().resetZoom()
-    expect(useEditorStore.getState().zoom).toBe(1)
-  })
-
-  it('setZoom clamps to [0.25, 4]', () => {
-    useEditorStore.getState().setZoom(10)
-    expect(useEditorStore.getState().zoom).toBe(4)
-    useEditorStore.getState().setZoom(-1)
-    expect(useEditorStore.getState().zoom).toBe(0.25)
-  })
 })

@@ -47,6 +47,27 @@ describe('ChartProperties', () => {
     })
   })
 
+  it('[cap:element.chart depth:behavior] keeps preserve-only imported charts read-only', () => {
+    const onUpdate = vi.fn()
+    render(<ChartProperties
+      element={{
+        ...chart,
+        _pptxChartMeta: { originalType: 'waterfallChart', preservationTier: 'preserve-only' },
+      }}
+      onUpdate={onUpdate}
+    />)
+
+    expect(screen.getByTestId('prop-chart-preserve-only-notice').textContent).toBe(
+      'WaterfallChart is preserved from the original PPTX and cannot be edited.'
+    )
+    expect(screen.getByTestId('prop-chart-type').disabled).toBe(true)
+    expect(screen.getByTestId('prop-chart-labels').disabled).toBe(true)
+    expect(screen.getByTestId('prop-chart-series-label-0').disabled).toBe(true)
+    expect(screen.getByTestId('prop-chart-values-0').disabled).toBe(true)
+    expect(screen.getByTestId('prop-chart-color-0').disabled).toBe(true)
+    expect(screen.getByTestId('prop-chart-add-series').disabled).toBe(true)
+  })
+
   it('[cap:element.chart depth:behavior] writes area fill, stacked, add series, and remove series', () => {
     const onUpdate = vi.fn()
     const multiSeriesChart = {

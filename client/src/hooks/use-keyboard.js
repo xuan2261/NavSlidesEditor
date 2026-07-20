@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { normalizeKey } from '../utils/shortcut-normalizer'
 import { getShortcuts } from '../utils/default-keyboard-shortcut-definitions-registry'
 import { loadOverrides } from '../utils/shortcut-local-storage-persistence'
@@ -37,6 +37,7 @@ const EDITOR_SUPPRESSED_GAME_IDS = new Set([
  */
 export function createKeyboardHandler({
   shortcuts,
+  disabled = false,
   isEditing = false,
   isPresenting = false,
   activeGameType = null,
@@ -45,7 +46,25 @@ export function createKeyboardHandler({
 }) {
   return (e) => {
     if (e.defaultPrevented) return
-    if (isEditing) return
+
+    const ctrl = e.ctrlKey || e.metaKey
+    const activeScope =
+      isPresenting && activeGameType ? 'presentation-game' : isPresenting ? 'presentation' : 'editor'
+    const scopeShortcuts = shortcuts.filter(
+      (s) =>
+        s.scopes.includes(activeScope) ||
+        (!isPresenting && s.scopes.includes('canvas')) ||
+        (activeGameType && s.scopes.includes('presentation-game'))
+    )
+    const saveShortcut = ctrl && scopeShortcuts.find(
+      (shortcut) => shortcut.id === 'save' && shortcut.activeKey === normalizeKey(e)
+    )
+    if (saveShortcut) {
+      if (!disabled) callbacks.onSave?.()
+      e.preventDefault()
+      return
+    }
+    if (disabled || isEditing) return
     const active = getActiveElement()
     const tag = active?.tagName
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
@@ -54,21 +73,6 @@ export function createKeyboardHandler({
     // the canvas-level shortcuts must stand down whenever the caret lives in any
     // contenteditable region.
     if (active?.isContentEditable) return
-
-    const ctrl = e.ctrlKey || e.metaKey
-
-    // Resolve active scope
-    const activeScope =
-      isPresenting && activeGameType ? 'presentation-game' : isPresenting ? 'presentation' : 'editor'
-
-    // Determine which shortcuts are active in the current scope.
-    // In editor mode, include canvas shortcuts too (editor IS the canvas).
-    const scopeShortcuts = shortcuts.filter(
-      (s) =>
-        s.scopes.includes(activeScope) ||
-        (!isPresenting && s.scopes.includes('canvas')) ||
-        (activeGameType && s.scopes.includes('presentation-game'))
-    )
 
     // Standalone keys (no Ctrl) — F5, arrows, B, W, Home, End, Escape in presentation
     if (!ctrl) {
@@ -145,7 +149,7 @@ export function createKeyboardHandler({
  */
 export function useKeyboard(options) {
   const optionsRef = useRef(options)
-  useEffect(() => {
+  useLayoutEffect(() => {
     optionsRef.current = options
   })
 

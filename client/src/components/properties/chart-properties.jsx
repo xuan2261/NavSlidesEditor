@@ -5,6 +5,9 @@ import { Button, Input, Select, ColorPicker } from '../../components/ui'
 
 export default function ChartProperties({ element, onUpdate }) {
   const chartData = element.chartData || {}
+  const preserveOnly = element._pptxChartMeta?.preservationTier === 'preserve-only'
+  const originalType = String(element._pptxChartMeta?.originalType || 'chart')
+  const originalTypeLabel = `${originalType.charAt(0).toUpperCase()}${originalType.slice(1)}`
   const datasets = chartData.datasets?.length
     ? chartData.datasets
     : [{ label: 'Series 1', data: [], color: '#6366f1' }]
@@ -28,11 +31,17 @@ export default function ChartProperties({ element, onUpdate }) {
 
   return (
     <div className="mb-2.5">
+      {preserveOnly && (
+        <div data-testid="prop-chart-preserve-only-notice" className="mb-2 rounded-sm border border-border bg-hover px-2 py-1.5 text-[11px] text-text-secondary">
+          {originalTypeLabel} is preserved from the original PPTX and cannot be edited.
+        </div>
+      )}
       <div className="text-[11px] text-text-muted mb-1">Chart Type</div>
       <Select
         data-testid="prop-chart-type"
         className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2"
         value={element.chartType || 'bar'}
+        disabled={preserveOnly}
         onChange={(e) => onUpdate({ chartType: e.target.value })}
       >
         {['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea'].map((t) => (
@@ -48,6 +57,7 @@ export default function ChartProperties({ element, onUpdate }) {
               data-testid="prop-chart-area-fill"
               type="checkbox"
               checked={element.areaFill === true}
+              disabled={preserveOnly}
               onChange={(e) => onUpdate({ areaFill: e.target.checked })}
               className="accent-accent"
             />
@@ -59,6 +69,7 @@ export default function ChartProperties({ element, onUpdate }) {
             data-testid="prop-chart-stacked"
             type="checkbox"
             checked={element.stacked === true}
+            disabled={preserveOnly}
             onChange={(e) => onUpdate({ stacked: e.target.checked })}
             className="accent-accent"
           />
@@ -73,6 +84,7 @@ export default function ChartProperties({ element, onUpdate }) {
         className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-[11px] transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-1.5"
         type="text"
         value={(element.chartData?.labels || []).join(', ')}
+        disabled={preserveOnly}
         onChange={(e) =>
           onUpdate({
             chartData: {
@@ -90,7 +102,7 @@ export default function ChartProperties({ element, onUpdate }) {
               data-testid={`prop-chart-remove-series-${index}`}
               variant="secondary"
               className="text-[11px] px-1.5 py-0.5"
-              disabled={datasets.length <= 1}
+              disabled={preserveOnly || datasets.length <= 1}
               onClick={() => removeSeries(index)}
             >
               Remove
@@ -102,6 +114,7 @@ export default function ChartProperties({ element, onUpdate }) {
             className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-[11px] transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-1.5"
             type="text"
             value={dataset.label || ''}
+            disabled={preserveOnly}
             onChange={(e) => updateDataset(index, { label: e.target.value })}
           />
           <div className="text-[11px] text-text-muted mb-1">Values (comma-separated)</div>
@@ -110,6 +123,7 @@ export default function ChartProperties({ element, onUpdate }) {
             className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-[11px] transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-1.5"
             type="text"
             value={(dataset.data || []).join(', ')}
+            disabled={preserveOnly}
             onChange={(e) =>
               updateDataset(index, {
                 data: e.target.value.split(',').map((s) => Number(s.trim()) || 0),
@@ -122,6 +136,7 @@ export default function ChartProperties({ element, onUpdate }) {
               data-testid={`prop-chart-color-${index}`}
               className="w-7 h-7 p-0.5 bg-card border border-border rounded cursor-pointer"
               value={dataset.color || '#6366f1'}
+              disabled={preserveOnly}
               onChange={(e) => updateDataset(index, { color: e.target.value })}
             />
           </div>
@@ -131,6 +146,7 @@ export default function ChartProperties({ element, onUpdate }) {
         data-testid="prop-chart-add-series"
         variant="secondary"
         className="w-full text-[11px] px-1.5 py-1 justify-center"
+        disabled={preserveOnly}
         onClick={addSeries}
       >
         Add Series

@@ -31,6 +31,25 @@ describe('presentation-store', () => {
     expect(usePresentationStore.getState().loading).toBe(false)
   })
 
+  it('adopts successor generation without replacing local edits', () => {
+    usePresentationStore.getState().setPresentation({ ...deck(), title: 'Local', aggregateGeneration: 2 })
+    usePresentationStore.getState().adoptAggregateGeneration(3)
+    expect(usePresentationStore.getState().presentation).toMatchObject({
+      title: 'Local',
+      aggregateGeneration: 3,
+    })
+  })
+
+  it('retains local and remote choices for generation conflicts', () => {
+    const local = { ...deck(), title: 'Unsaved local' }
+    usePresentationStore.getState().setSaveConflict(local, 7)
+    expect(usePresentationStore.getState().saveConflict).toEqual({
+      local,
+      remoteGeneration: 7,
+      choices: ['keep-local', 'use-remote'],
+    })
+  })
+
   it('does not have dead CRUD actions', () => {
     const store = usePresentationStore.getState()
     expect(typeof store.setCurrentSlide).toBe('undefined')

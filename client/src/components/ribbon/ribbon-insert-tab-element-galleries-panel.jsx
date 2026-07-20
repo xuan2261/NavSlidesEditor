@@ -246,8 +246,38 @@ function GameGalleryDropdown({ open, anchorRef, onSelect, onClose }) {
 }
 
 function TableSizePicker({ open, anchorRef, onSelect, onClose }) {
-  const [hoverR, setHoverR] = useState(0)
-  const [hoverC, setHoverC] = useState(0)
+  const [active, setActive] = useState({ row: 3, column: 3 })
+  const gridRef = useRef(null)
+
+  useEffect(() => {
+    if (open) requestAnimationFrame(() => gridRef.current?.focus())
+  }, [open])
+
+  const choose = () => {
+    onSelect(active.row, active.column)
+    onClose()
+  }
+
+  const handleGridKeyDown = (event) => {
+    const movement = {
+      ArrowLeft: [0, -1],
+      ArrowRight: [0, 1],
+      ArrowUp: [-1, 0],
+      ArrowDown: [1, 0],
+    }[event.key]
+    if (movement) {
+      event.preventDefault()
+      setActive(({ row, column }) => ({
+        row: Math.min(6, Math.max(1, row + movement[0])),
+        column: Math.min(8, Math.max(1, column + movement[1])),
+      }))
+    } else if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault()
+      setActive((value) => ({ ...value, column: event.key === 'Home' ? 1 : 8 }))
+    } else {
+      handleKeyboardActivation(event, choose)
+    }
+  }
 
   return (
     <RibbonFloatingOverlay
@@ -257,43 +287,46 @@ function TableSizePicker({ open, anchorRef, onSelect, onClose }) {
       dataRibbonPopup="table-picker"
       className="bg-card border border-border rounded-lg p-2 shadow-xl"
     >
-      <div
-        onMouseLeave={() => {
-          setHoverR(0)
-          setHoverC(0)
-          onClose()
-        }}
-      >
+      <div>
         <div className="text-[10px] text-text-muted mb-1">
-          {hoverR > 0 ? `${hoverR}×${hoverC}` : '3×3 default'}
+          {`${active.row}×${active.column}`}
         </div>
-        <div className="grid grid-cols-8 gap-0.5">
+        <div
+          ref={gridRef}
+          role="grid"
+          tabIndex={0}
+          aria-label={`Table size ${active.row} by ${active.column}`}
+          aria-activedescendant={`table-cell-${active.row}-${active.column}`}
+          className="grid grid-cols-8 gap-0.5 outline-none"
+          onKeyDown={handleGridKeyDown}
+        >
           {Array.from({ length: 6 }, (_, r) =>
             Array.from({ length: 8 }, (_, c) => (
               <div
                 key={`${r}-${c}`}
-                className={`ribbon-table-picker-cell rounded-sm cursor-pointer ${
-                  r < hoverR && c < hoverC ? 'bg-primary' : 'bg-border'
+                id={`table-cell-${r + 1}-${c + 1}`}
+                role="gridcell"
+                aria-rowindex={r + 1}
+                aria-colindex={c + 1}
+                aria-selected={r + 1 === active.row && c + 1 === active.column}
+              >
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className={`ribbon-table-picker-cell min-h-11 min-w-11 rounded-sm cursor-pointer ${
+                  r < active.row && c < active.column ? 'bg-primary' : 'bg-border'
                 }`}
-                onMouseEnter={() => {
-                  setHoverR(r + 1)
-                  setHoverC(c + 1)
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault()
-                  onSelect(r + 1, c + 1)
-                  onClose()
-                }}
-                onKeyDown={(e) =>
-                  handleKeyboardActivation(e, () => {
+                  onPointerEnter={() => {
+                    setActive({ row: r + 1, column: c + 1 })
+                  }}
+                  onPointerDown={(e) => {
+                    e.preventDefault()
                     onSelect(r + 1, c + 1)
                     onClose()
-                  })
-                }
-                role="button"
-                tabIndex={0}
-                aria-label={`Insert ${r + 1} by ${c + 1} table`}
-              />
+                  }}
+                  aria-label={`Insert ${r + 1} by ${c + 1} table`}
+                />
+              </div>
             ))
           )}
         </div>
@@ -824,7 +857,7 @@ export default function InsertTabContent({
         </div>
       </RibbonSection>
 
-      <RibbonSection label="Advanced" className="px-1">
+      <RibbonSection label="Advanced" alwaysDirect className="px-1">
         <div className="flex items-center gap-0.5">
           <AdvancedActionButton
             label="Add kinetic text"

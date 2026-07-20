@@ -9,14 +9,22 @@ const CROP_HANDLES = [
   { id: 'w', px: 0, py: 0.5, cursor: 'w-resize' },
 ]
 
-export function CropOverlay({ crop, elW: _elW, elH: _elH, onHandleDown, onCommit }) {
+export function CropOverlay({
+  crop,
+  elW: _elW,
+  elH: _elH,
+  onHandleDown,
+  onCommit,
+}) {
   const { x, y, w, h } = crop
   const dimStyle = { position: 'absolute', background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }
 
-  const handleMouseDown = (e, handle) => {
+  const handlePointerDown = (e, handle) => {
+    if (e.button !== 0) return
     e.stopPropagation()
     e.preventDefault()
-    onHandleDown(handle, e.clientX, e.clientY)
+    e.currentTarget.setPointerCapture?.(e.pointerId)
+    onHandleDown(handle, e.clientX, e.clientY, e.pointerId, e.currentTarget)
   }
 
   const cropOverlayStyle = {
@@ -121,15 +129,14 @@ export function CropOverlay({ crop, elW: _elW, elH: _elH, onHandleDown, onCommit
       {CROP_HANDLES.map((ch) => (
         <div
           key={ch.id}
+          data-testid={`crop-handle-${ch.id}`}
           style={getCropHandleStyle(ch)}
-          onMouseDown={(e) => handleMouseDown(e, ch.id)}
+          onPointerDown={(e) => handlePointerDown(e, ch.id)}
+          onClick={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => e.stopPropagation()}
         />
       ))}
-      <div
-        style={cropCommitStyle}
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={onCommit}
-      >
+      <div style={cropCommitStyle} onPointerDown={(e) => e.stopPropagation()} onClick={onCommit}>
         Apply ↵
       </div>
     </div>

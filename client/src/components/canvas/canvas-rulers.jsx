@@ -65,23 +65,31 @@ function getLeftRulerTickStyle(index) {
  *   onAddGuide — callback({ axis, position })
  */
 export default function CanvasRulers({ scale, onAddGuide }) {
-  const handleRulerMouseDown = (axis, _e) => {
+  const handleRulerPointerDown = (axis, event) => {
+    if (event.button !== 0) return
     const canvasEl = document.querySelector('.slide-canvas')
     if (!canvasEl) return
     const rect = canvasEl.getBoundingClientRect()
-    const onMove = () => {}
+    const pointerId = event.pointerId
+    event.currentTarget.setPointerCapture?.(pointerId)
     const onUp = (me) => {
+      if (me.pointerId !== pointerId) return
       const pos = axis === 'x'
         ? (me.clientX - rect.left) / scale
         : (me.clientY - rect.top) / scale
       if (pos >= 0 && pos <= (axis === 'x' ? SLIDE_W : SLIDE_H)) {
         onAddGuide?.({ axis, position: Math.round(pos) })
       }
-      document.removeEventListener('mousemove', onMove)
-      document.removeEventListener('mouseup', onUp)
+      document.removeEventListener('pointerup', onUp)
+      document.removeEventListener('pointercancel', onCancel)
     }
-    document.addEventListener('mousemove', onMove)
-    document.addEventListener('mouseup', onUp)
+    const onCancel = (me) => {
+      if (me.pointerId !== pointerId) return
+      document.removeEventListener('pointerup', onUp)
+      document.removeEventListener('pointercancel', onCancel)
+    }
+    document.addEventListener('pointerup', onUp)
+    document.addEventListener('pointercancel', onCancel)
   }
 
   const topStyle = { ...topRulerStyle, transform: `translateX(calc(-50% * 1)) scale(${scale})` }
@@ -94,7 +102,7 @@ export default function CanvasRulers({ scale, onAddGuide }) {
         className={cn('bg-panel/90 border-b border-border text-text-muted')}
         data-testid="top-ruler"
         style={topStyle}
-        onMouseDown={(e) => handleRulerMouseDown('x', e)}
+        onPointerDown={(e) => handleRulerPointerDown('x', e)}
       >
         {Array.from({ length: Math.ceil(SLIDE_W / 50) }, (_, i) => (
           <div key={i} style={getTopRulerTickStyle(i)}>
@@ -107,7 +115,7 @@ export default function CanvasRulers({ scale, onAddGuide }) {
         className={cn('bg-panel/90 border-r border-border text-text-muted')}
         data-testid="left-ruler"
         style={leftStyle}
-        onMouseDown={(e) => handleRulerMouseDown('y', e)}
+        onPointerDown={(e) => handleRulerPointerDown('y', e)}
       >
         {Array.from({ length: Math.ceil(SLIDE_H / 50) }, (_, i) => (
           <div key={i} style={getLeftRulerTickStyle(i)}>

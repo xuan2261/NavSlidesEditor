@@ -112,13 +112,20 @@ describe('ui-store', () => {
       expect(userZoomMode).toBe(false)
     })
 
-    it('setZoom updates zoom, clamped to [0.1, 4]', () => {
+    it('setZoom updates zoom, enters manual mode, and clamps to [0.1, 4]', () => {
       useUIStore.getState().setZoom(0.5)
       expect(useUIStore.getState().zoom).toBe(0.5)
+      expect(useUIStore.getState().userZoomMode).toBe(true)
       useUIStore.getState().setZoom(10)
       expect(useUIStore.getState().zoom).toBe(4)
       useUIStore.getState().setZoom(0.01)
       expect(useUIStore.getState().zoom).toBe(0.1)
+    })
+
+    it('setAutoFitZoom updates zoom without disabling future resize fitting', () => {
+      useUIStore.setState({ userZoomMode: true })
+      useUIStore.getState().setAutoFitZoom(0.75)
+      expect(useUIStore.getState()).toMatchObject({ zoom: 0.75, userZoomMode: false })
     })
 
     it('zoomIn increases zoom by 0.1 and sets userZoomMode true', () => {

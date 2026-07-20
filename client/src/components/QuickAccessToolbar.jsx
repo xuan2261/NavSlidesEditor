@@ -5,6 +5,8 @@ import { AlertCircle, CheckCircle2, Loader2, Redo2, Save, Undo2 } from 'lucide-r
 
 export default function QuickAccessToolbar({
   onSave,
+  onRetry,
+  retryAvailable = true,
   onUndo,
   onRedo,
   saving,
@@ -59,14 +61,16 @@ export default function QuickAccessToolbar({
         <div className="flex items-center gap-1 text-[11px] text-danger" role="alert">
           <AlertCircle size={14} />
           <span>Save failed</span>
-          <button
-            className="rounded px-1.5 py-0.5 text-danger underline-offset-2 hover:bg-danger/10 hover:underline"
-            onClick={onSave}
-            title={statusTitle}
-            aria-label="Retry"
-          >
-            Retry
-          </button>
+          {retryAvailable && (
+            <button
+              className="rounded px-1.5 py-0.5 text-danger underline-offset-2 hover:bg-danger/10 hover:underline"
+              onClick={onRetry}
+              title={statusTitle}
+              aria-label="Retry"
+            >
+              Retry
+            </button>
+          )}
         </div>
       )}
 

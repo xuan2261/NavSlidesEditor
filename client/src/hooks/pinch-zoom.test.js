@@ -1,13 +1,17 @@
-import { describe, expect, it, vi } from 'vitest'
-import { renderHook } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { usePinchZoom } from './use-pinch-zoom'
 
-function makePointerEvent(pointerId, clientX, clientY) {
-  return { pointerId, clientX, clientY }
+function pointer(pointerId, clientX, clientY, pointerType = 'touch') {
+  return { pointerId, clientX, clientY, pointerType }
 }
 
-describe('usePinchZoom hook', () => {
-  it('returns container props with pointer handlers', () => {
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
+describe('usePinchZoom Pointer Events transport', () => {
+  it('exposes capture-phase Pointer Event handlers only', () => {
     const { result } = renderHook(() =>
       usePinchZoom({
         containerRef: { current: { dataset: { zoom: '1' } } },
@@ -15,98 +19,97 @@ describe('usePinchZoom hook', () => {
       })
     )
 
-    expect(result.current.containerProps).toBeDefined()
-    expect(typeof result.current.containerProps.onPointerDown).toBe('function')
-    expect(typeof result.current.containerProps.onPointerMove).toBe('function')
-    expect(typeof result.current.containerProps.onPointerUp).toBe('function')
+    expect(typeof result.current.containerProps.onPointerDownCapture).toBe('function')
+    expect(typeof result.current.containerProps.onPointerMoveCapture).toBe('function')
+    expect(typeof result.current.containerProps.onPointerUpCapture).toBe('function')
+    expect(typeof result.current.containerProps.onPointerCancelCapture).toBe('function')
+    expect(result.current.containerProps).not.toHaveProperty('onTouchStart')
+    expect(result.current.containerProps).not.toHaveProperty('onTouchMove')
+    expect(result.current.containerProps).not.toHaveProperty('onTouchEnd')
+    expect(result.current.containerProps).not.toHaveProperty('onTouchCancel')
     expect(result.current.containerProps.style).toEqual({ touchAction: 'none' })
   })
 
-  it('changes zoom when two pointers move apart', () => {
+  it('ignores mouse and pen contacts, then starts only for a touch pair', () => {
+    const onPinchStart = vi.fn()
     const onZoomChange = vi.fn()
-    const containerRef = { current: { dataset: { zoom: '2' } } }
     const { result } = renderHook(() =>
       usePinchZoom({
-        containerRef,
+        containerRef: { current: { dataset: { zoom: '1' } } },
         onZoomChange,
-        minZoom: 0.25,
-        maxZoom: 4.0,
+        onPinchStart,
       })
     )
+    const handlers = result.current.containerProps
 
-    // First pointer down
-    result.current.containerProps.onPointerDown(makePointerEvent(1, 100, 100))
-    // Second pointer down — sets initial distance
-    result.current.containerProps.onPointerDown(makePointerEvent(2, 200, 100))
-    // Move both pointers apart (pinch out)
-    result.current.containerProps.onPointerMove(makePointerEvent(1, 80, 100))
-    result.current.containerProps.onPointerMove(makePointerEvent(2, 220, 100))
+    act(() => {
+      handlers.onPointerDownCapture(pointer(1, 100, 100, 'mouse'))
+      handlers.onPointerDownCapture(pointer(2, 200, 100, 'pen'))
+      handlers.onPointerDownCapture(pointer(3, 100, 100))
+      handlers.onPointerDownCapture(pointer(4, 200, 100))
+      handlers.onPointerMoveCapture(pointer(3, 80, 100))
+      handlers.onPointerMoveCapture(pointer(4, 220, 100))
+    })
 
+    expect(onPinchStart).toHaveBeenCalledTimes(1)
     expect(onZoomChange).toHaveBeenCalled()
   })
 
-  it('clamps zoom to [minZoom, maxZoom]', () => {
+  it('rebaselines safely after third-touch and release changes the pair', () => {
+    const onPinchStart = vi.fn()
     const onZoomChange = vi.fn()
-    const containerRef = { current: { dataset: { zoom: '1' } } }
     const { result } = renderHook(() =>
       usePinchZoom({
-        containerRef,
+        containerRef: { current: { dataset: { zoom: '2' } } },
         onZoomChange,
-        minZoom: 0.25,
-        maxZoom: 4.0,
+        onPinchStart,
       })
     )
+    const handlers = result.current.containerProps
 
-    result.current.containerProps.onPointerDown(makePointerEvent(1, 100, 100))
-    result.current.containerProps.onPointerDown(makePointerEvent(2, 200, 100))
-    // Very large pinch out
-    result.current.containerProps.onPointerMove(makePointerEvent(1, 0, 100))
-    result.current.containerProps.onPointerMove(makePointerEvent(2, 900, 100))
+    act(() => {
+      handlers.onPointerDownCapture(pointer(1, 100, 100))
+      handlers.onPointerDownCapture(pointer(2, 200, 100))
+      handlers.onPointerMoveCapture(pointer(1, 80, 100))
+      handlers.onPointerMoveCapture(pointer(2, 220, 100))
+    })
+    const callsBeforeThirdContact = onZoomChange.mock.calls.length
 
-    const lastCall = onZoomChange.mock.calls[onZoomChange.mock.calls.length - 1]
-    expect(lastCall[0]).toBeLessThanOrEqual(4.0)
-    expect(lastCall[0]).toBeGreaterThanOrEqual(0.25)
+    act(() => {
+      handlers.onPointerDownCapture(pointer(3, 300, 100))
+      handlers.onPointerMoveCapture(pointer(1, 60, 100))
+      handlers.onPointerUpCapture(pointer(3, 300, 100))
+      handlers.onPointerMoveCapture(pointer(1, 60, 100))
+      handlers.onPointerMoveCapture(pointer(2, 240, 100))
+    })
+
+    expect(onPinchStart).toHaveBeenCalledTimes(1)
+    expect(onZoomChange.mock.calls.length).toBeGreaterThan(callsBeforeThirdContact)
   })
 
-  it('resets initial distance when pointers drop below 2', () => {
+  it('clears tracked contacts on disable and unmount', () => {
+    const onPinchStart = vi.fn()
     const onZoomChange = vi.fn()
-    const containerRef = { current: { dataset: { zoom: '1' } } }
-    const { result } = renderHook(() =>
-      usePinchZoom({
-        containerRef,
-        onZoomChange,
-        minZoom: 0.25,
-        maxZoom: 4.0,
-      })
+    const { result, rerender, unmount } = renderHook(
+      ({ enabled }) =>
+        usePinchZoom({
+          containerRef: { current: { dataset: { zoom: '1' } } },
+          onZoomChange,
+          onPinchStart,
+          enabled,
+        }),
+      { initialProps: { enabled: true } }
     )
 
-    result.current.containerProps.onPointerDown(makePointerEvent(1, 100, 100))
-    result.current.containerProps.onPointerDown(makePointerEvent(2, 200, 100))
-    result.current.containerProps.onPointerUp(makePointerEvent(2)) // drop second pointer
-    // Zoom should not change with only one pointer
-    result.current.containerProps.onPointerMove(makePointerEvent(1, 80, 100))
+    act(() => {
+      result.current.containerProps.onPointerDownCapture(pointer(1, 100, 100))
+      result.current.containerProps.onPointerDownCapture(pointer(2, 200, 100))
+    })
+    expect(onPinchStart).toHaveBeenCalledTimes(1)
 
+    rerender({ enabled: false })
+    act(() => result.current.containerProps.onPointerMoveCapture(pointer(1, 80, 100)))
     expect(onZoomChange).not.toHaveBeenCalled()
-  })
-
-  it('returns empty handlers when enabled=false', () => {
-    const onZoomChange = vi.fn()
-    const { result } = renderHook(() =>
-      usePinchZoom({
-        containerRef: { current: null },
-        onZoomChange,
-        enabled: false,
-      })
-    )
-
-    // Should not throw, should not call onZoomChange
-    result.current.containerProps.onPointerDown(makePointerEvent(1, 100, 100))
-    result.current.containerProps.onPointerDown(makePointerEvent(2, 200, 100))
-    result.current.containerProps.onPointerMove(makePointerEvent(1, 80, 100))
-    result.current.containerProps.onPointerMove(makePointerEvent(2, 220, 100))
-    result.current.containerProps.onPointerUp(makePointerEvent(1))
-    result.current.containerProps.onPointerUp(makePointerEvent(2))
-
-    expect(onZoomChange).not.toHaveBeenCalled()
+    unmount()
   })
 })

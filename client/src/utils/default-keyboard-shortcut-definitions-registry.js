@@ -46,6 +46,7 @@ export const DEFAULT_SHORTCUTS = [
   { id: 'ungroup',              label: 'Ungroup Elements',            category: 'editing', defaultKey: 'Ctrl+Shift+G',  scopes: ['editor'] },
   { id: 'bringForward',          label: 'Bring Forward',               category: 'editing', defaultKey: 'Ctrl+]',        scopes: ['editor'] },
   { id: 'sendBackward',         label: 'Send Backward',               category: 'editing', defaultKey: 'Ctrl+[',        scopes: ['editor'] },
+  { id: 'save',                 label: 'Save',                        category: 'editing', defaultKey: 'Ctrl+S',        scopes: ['editor'] },
   { id: 'resetZoom',            label: 'Reset Zoom',                  category: 'view',    defaultKey: 'Ctrl+0',        scopes: ['editor'] },
   { id: 'zoomIn',               label: 'Zoom In',                     category: 'view',    defaultKey: 'Ctrl+=',        scopes: ['editor'] },
   { id: 'zoomOut',              label: 'Zoom Out',                    category: 'view',    defaultKey: 'Ctrl+-',        scopes: ['editor'] },

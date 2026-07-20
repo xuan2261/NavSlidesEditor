@@ -6,7 +6,7 @@
  * - startElementDrag side-effects only (sets pendingDragRef) — test via ref inspection
  * - No @testing-library/react needed (not installed in client)
  */
-import { cleanup, renderHook } from '@testing-library/react'
+import { act, cleanup, renderHook } from '@testing-library/react'
 import { afterEach, describe, it, expect, vi } from 'vitest'
 import useCanvasPointerInteraction, {
   applyCropHandle,
@@ -252,6 +252,9 @@ describe('rotated smart-guide geometry', () => {
 
 function renderPointerInteraction(options = {}) {
   const pendingDragRef = { current: null }
+  const draggingRef = { current: null }
+  const cropDragRef = { current: null }
+  const setSuppressCanvasClick = vi.fn()
   const slide = options.slide || {
     elements: [
       { id: 'free', x: 10, y: 20, width: 100, height: 80 },
@@ -273,9 +276,9 @@ function renderPointerInteraction(options = {}) {
       smartGuidesRef: { current: false },
       slideRef: { current: slide },
       selectedElementIdsRef: { current: ['free', 'locked'] },
-      draggingRef: { current: null },
+      draggingRef,
       pendingDragRef,
-      cropDragRef: { current: null },
+      cropDragRef,
       rubberBandRef: { current: null },
       suppressCanvasClickRef: { current: false },
       onUpdateElement: vi.fn(),
@@ -294,14 +297,22 @@ function renderPointerInteraction(options = {}) {
       setRubberBand: vi.fn(),
       setActiveGuides: vi.fn(),
       forceUpdate: vi.fn(),
-      setSuppressCanvasClick: vi.fn(),
+      setSuppressCanvasClick,
       setCropMode: vi.fn(),
       slideW: 960,
       slideH: 540,
     })
   )
 
-  return { hook, pendingDragRef, slide, onBlockedAction }
+  return {
+    hook,
+    pendingDragRef,
+    draggingRef,
+    cropDragRef,
+    setSuppressCanvasClick,
+    slide,
+    onBlockedAction,
+  }
 }
 
 describe('startElementDrag lock handling', () => {
@@ -372,5 +383,151 @@ describe('startElementDrag lock handling', () => {
     )
     expect(pendingDragRef.current).toBeNull()
     expect(onBlockedAction).toHaveBeenCalledWith('group-locked')
+  })
+})
+
+describe('Pointer Event admission', () => {
+  it('rejects a non-primary button before it creates a session', () => {
+    const { hook, pendingDragRef, slide } = renderPointerInteraction()
+
+    expect(
+      hook.result.current.startElementDrag(
+        { button: 2, clientX: 20, clientY: 30, pointerId: 7 },
+        'free',
+        'move',
+        null,
+        slide,
+        1,
+        ['free']
+      )
+    ).toBe(false)
+    expect(pendingDragRef.current).toBeNull()
+  })
+
+  it('reports admission and never replaces the current Pointer Event session', () => {
+    const { hook, pendingDragRef, slide } = renderPointerInteraction()
+    expect(
+      hook.result.current.startElementDrag(
+        { button: 0, clientX: 20, clientY: 30, pointerId: 7 },
+        'free',
+        'move',
+        null,
+        slide,
+        1,
+        ['free']
+      )
+    ).toBe(true)
+    const session = pendingDragRef.current
+
+    expect(
+      hook.result.current.startElementDrag(
+        { button: 0, clientX: 20, clientY: 30, pointerId: 8 },
+        'free',
+        'rotate',
+        null,
+        slide,
+        1,
+        ['free']
+      )
+    ).toBe(false)
+    expect(pendingDragRef.current).toBe(session)
+  })
+})
+
+describe('post-interaction click suppression', () => {
+  it('keeps normal and Shift clicks available after stationary pending presses', () => {
+    const { hook, setSuppressCanvasClick, slide } = renderPointerInteraction()
+
+    for (const [pointerId, shiftKey] of [
+      [7, false],
+      [8, true],
+    ]) {
+      hook.result.current.startElementDrag(
+        { clientX: 20, clientY: 30, pointerId },
+        'free',
+        'move',
+        null,
+        slide,
+        1,
+        ['free']
+      )
+      act(() => {
+        document.dispatchEvent(
+          new PointerEvent('pointerup', { clientX: 20, clientY: 30, pointerId, shiftKey })
+        )
+      })
+    }
+
+    expect(setSuppressCanvasClick).not.toHaveBeenCalledWith(true)
+  })
+
+  it.each(['resize', 'rotate'])(
+    'suppresses the compatibility click after a stationary pending %s press',
+    (type) => {
+      const { hook, setSuppressCanvasClick, slide } = renderPointerInteraction()
+      hook.result.current.startElementDrag(
+        { clientX: 20, clientY: 30, pointerId: 7 },
+        'free',
+        type,
+        type === 'resize' ? 'se' : null,
+        slide,
+        1,
+        ['free']
+      )
+
+      act(() => {
+        document.dispatchEvent(
+          new PointerEvent('pointerup', { clientX: 20, clientY: 30, pointerId: 7 })
+        )
+      })
+
+      expect(setSuppressCanvasClick).toHaveBeenCalledWith(true)
+    }
+  )
+
+  it('suppresses the compatibility click after an actual drag', () => {
+    const { hook, setSuppressCanvasClick, slide } = renderPointerInteraction()
+    hook.result.current.startElementDrag(
+      { clientX: 20, clientY: 30, pointerId: 7 },
+      'free',
+      'move',
+      null,
+      slide,
+      1,
+      ['free']
+    )
+
+    act(() => {
+      document.dispatchEvent(
+        new PointerEvent('pointermove', { clientX: 30, clientY: 30, pointerId: 7 })
+      )
+      document.dispatchEvent(
+        new PointerEvent('pointerup', { clientX: 30, clientY: 30, pointerId: 7 })
+      )
+    })
+
+    expect(setSuppressCanvasClick).toHaveBeenCalledWith(true)
+  })
+
+  it('suppresses the compatibility click after crop completion', () => {
+    const { hook, setSuppressCanvasClick } = renderPointerInteraction()
+    hook.result.current.setCropDrag(
+      'se',
+      20,
+      30,
+      { x: 0.1, y: 0.1, w: 0.8, h: 0.8 },
+      100,
+      80,
+      0,
+      7
+    )
+
+    act(() => {
+      document.dispatchEvent(
+        new PointerEvent('pointerup', { clientX: 20, clientY: 30, pointerId: 7 })
+      )
+    })
+
+    expect(setSuppressCanvasClick).toHaveBeenCalledWith(true)
   })
 })

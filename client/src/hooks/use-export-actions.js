@@ -16,6 +16,8 @@ function pptxContentFingerprint(presentation) {
   for (const metadataKey of [
     'id',
     'pptxOriginal',
+    'pptxSourceAvailable',
+    'aggregateGeneration',
     '_pptxEdited',
     '_pptxEditedAt',
     'createdAt',
@@ -48,7 +50,7 @@ export function useExportActions(presentation) {
   const cleanState = pptxCleanStateRef.current
   if (cleanState.presentationId !== presentation?.id) {
     cleanState.presentationId = presentation?.id || null
-    cleanState.fingerprint = presentation?.pptxOriginal
+    cleanState.fingerprint = presentation?.pptxOriginal || presentation?.pptxSourceAvailable
       ? pptxContentFingerprint(presentation)
       : ''
     cleanState.locallyEdited = false
@@ -65,8 +67,8 @@ export function useExportActions(presentation) {
     try {
       const canDownloadOriginal = Boolean(
         presentation?.id &&
-          presentation?.pptxOriginal?.id &&
-          presentation?.pptxOriginal?.sha256 &&
+          (presentation?.pptxSourceAvailable ||
+            (presentation?.pptxOriginal?.id && presentation?.pptxOriginal?.sha256)) &&
           !presentation?._pptxEdited &&
           !cleanState.locallyEdited
       )
@@ -95,6 +97,50 @@ export function useExportActions(presentation) {
       showError('PPTX export failed: ' + err.message)
     }
   }, [presentation, cleanState])
+
+  const onDownloadPptxOriginal = useCallback(async () => {
+    try {
+      const original = await api.downloadPptxOriginal(presentation.id)
+      const filename = `${(presentation.title || 'presentation').replace(/[^a-z0-9._-]+/gi, '_')}.pptx`
+      downloadBlob(original, filename)
+    } catch (err) {
+      console.error('Original PPTX download failed:', err)
+      showError('Original PPTX download failed: ' + err.message)
+    }
+  }, [presentation])
+
+  const onGenerateReconstructedPPTX = useCallback(async () => {
+    try {
+      const { exportToPptx } = await import('../utils/exportPptx')
+      const warnings = await exportToPptx(presentation)
+      globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = warnings.exportReport || null
+      if (warnings.length) showNotice(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
+    } catch (err) {
+      console.error('Reconstructed PPTX export failed:', err)
+      showError('Reconstructed PPTX export failed: ' + err.message)
+    }
+  }, [presentation])
+
+  const onExportValidatedEditedRevision = useCallback(async () => {
+    try {
+      const fidelity = await api.getPptxFidelity(presentation.id)
+      const generation = fidelity.aggregateGeneration
+      if (!fidelity.exports?.validatedEdited?.available || !Number.isSafeInteger(generation)) {
+        throw new Error('Validated edited export is not currently available')
+      }
+      const key = globalThis.crypto?.randomUUID?.() ||
+        `export-${presentation.id}-${generation}`
+      const bytes = await api.downloadValidatedEditedPptx(
+        presentation.id, generation, key
+      )
+      const filename = `${(presentation.title || 'presentation')
+        .replace(/[^a-z0-9._-]+/gi, '_')}.pptx`
+      downloadBlob(bytes, filename)
+    } catch (err) {
+      console.error('Validated edited PPTX export failed:', err)
+      showError('Validated edited PPTX export failed: ' + err.message)
+    }
+  }, [presentation])
 
   const onExportHTML = useCallback(async () => {
     try {
@@ -163,5 +209,15 @@ export function useExportActions(presentation) {
     input.click()
   }, [])
 
-  return { onExportPDF, onExportPPTX, onExportHTML, onExportOffline, onExportProject, onOpenProject }
+  return {
+    onExportPDF,
+    onExportPPTX,
+    onDownloadPptxOriginal,
+    onExportValidatedEditedRevision,
+    onGenerateReconstructedPPTX,
+    onExportHTML,
+    onExportOffline,
+    onExportProject,
+    onOpenProject,
+  }
 }

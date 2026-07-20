@@ -15,7 +15,17 @@ import { create } from 'zustand'
 export const usePresentationStore = create((set, get) => ({
   presentation: null,
   loading: true,
+  saveConflict: null,
 
   setLoading: (loading) => set({ loading }),
-  setPresentation: (p) => set({ presentation: p, loading: false }),
+  setPresentation: (p) => set({ presentation: p, loading: false, saveConflict: null }),
+  adoptAggregateGeneration: (generation) => set((state) => ({
+    presentation: Number.isSafeInteger(generation) && state.presentation
+      ? { ...state.presentation, aggregateGeneration: generation }
+      : state.presentation,
+  })),
+  setSaveConflict: (local, remoteGeneration) => set({
+    saveConflict: { local, remoteGeneration, choices: ['keep-local', 'use-remote'] },
+  }),
+  clearSaveConflict: () => set({ saveConflict: null }),
 }))

@@ -58,4 +58,9 @@ describe('playwright config testIgnore', () => {
     expect(mobile.testMatch.test('tests/e2e/a11y/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js')).toBe(true)
     expect(mobile.testMatch.test('tests/e2e/a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js')).toBe(false)
   })
+
+  it('publishes the isolated API endpoint to test workers', () => {
+    expect(process.env.PLAYWRIGHT_API_BASE_URL).toBe(config.webServer.env.PLAYWRIGHT_API_BASE_URL)
+    expect(process.env.PLAYWRIGHT_API_BASE_URL).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/api$/)
+  })
 })

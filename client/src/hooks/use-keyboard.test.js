@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { renderHook } from '@testing-library/react'
+import { render, renderHook } from '@testing-library/react'
+import { createElement, useLayoutEffect } from 'react'
 import { createKeyboardHandler, useKeyboard } from './use-keyboard'
 import { getShortcuts } from '../utils/default-keyboard-shortcut-definitions-registry'
 
@@ -9,6 +10,17 @@ function createEvent(key, extra = {}) {
     preventDefault: vi.fn(),
     ...extra,
   }
+}
+
+function KeyboardHarness({ disabled, onSave }) {
+  useKeyboard({ disabled, onSave })
+  useLayoutEffect(() => {
+    if (!disabled) return
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 's', ctrlKey: true, cancelable: true })
+    )
+  }, [disabled])
+  return null
 }
 
 describe('createKeyboardHandler', () => {
@@ -90,6 +102,60 @@ describe('createKeyboardHandler', () => {
     expect(onCopy).not.toHaveBeenCalled()
   })
 
+  it('stands down while the editor route is loading', () => {
+    const shortcuts = getShortcuts({})
+    const onSave = vi.fn()
+    const event = createEvent('s', { ctrlKey: true })
+
+    createKeyboardHandler({
+      disabled: true,
+      onSave,
+      shortcuts,
+      getActiveElement: () => null,
+    })(event)
+
+    expect(onSave).not.toHaveBeenCalled()
+    expect(event.preventDefault).toHaveBeenCalledTimes(1)
+  })
+
+  it('[cap:shortcut.save] saves from editable controls and prevents the browser Save Page action', () => {
+    const shortcuts = getShortcuts({})
+    const onSave = vi.fn()
+    const event = createEvent('s', { ctrlKey: true })
+
+    createKeyboardHandler({
+      onSave,
+      shortcuts,
+      isEditing: true,
+      getActiveElement: () => ({ tagName: 'INPUT' }),
+    })(event)
+
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(event.preventDefault).toHaveBeenCalledTimes(1)
+  })
+
+  it('honors a customized Save shortcut from the registry in editable controls', () => {
+    const shortcuts = getShortcuts({}).map((shortcut) =>
+      shortcut.id === 'save' ? { ...shortcut, activeKey: 'Ctrl+Shift+S' } : shortcut
+    )
+    const onSave = vi.fn()
+    const handler = createKeyboardHandler({
+      onSave,
+      shortcuts,
+      isEditing: true,
+      getActiveElement: () => ({ tagName: 'INPUT' }),
+    })
+    const defaultSave = createEvent('s', { ctrlKey: true })
+    const overriddenSave = createEvent('s', { ctrlKey: true, shiftKey: true })
+
+    handler(defaultSave)
+    handler(overriddenSave)
+
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(defaultSave.preventDefault).not.toHaveBeenCalled()
+    expect(overriddenSave.preventDefault).toHaveBeenCalledTimes(1)
+  })
+
   it('stands down when the caret is inside a contenteditable region even if the editing flag is unset', () => {
     const shortcuts = getShortcuts({})
     const onCopy = vi.fn()
@@ -159,6 +225,15 @@ describe('createKeyboardHandler', () => {
 })
 
 describe('useKeyboard hook integration', () => {
+  it('publishes disabled state before an immediate route-loading shortcut', () => {
+    const onSave = vi.fn()
+    const { rerender } = render(createElement(KeyboardHarness, { disabled: false, onSave }))
+
+    rerender(createElement(KeyboardHarness, { disabled: true, onSave }))
+
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
   it('forwards onCommandPalette through hook → handler (regression I-003)', () => {
     // Pre-fix bug: useKeyboard did not destructure or forward onCommandPalette,
     // so Ctrl+K matched the editor-scoped shortcut but the callback was never

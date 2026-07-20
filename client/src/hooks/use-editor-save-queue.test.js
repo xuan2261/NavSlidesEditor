@@ -57,6 +57,30 @@ describe('flushPendingSave', () => {
     expect(sendKeepalive).not.toHaveBeenCalled()
   })
 
+  it('counts UTF-8 bytes when deciding whether keepalive is safe', () => {
+    const sendKeepalive = vi.fn()
+    const sendSync = vi.fn()
+    const snapshot = { id: 'deck-1', text: '漢'.repeat(KEEPALIVE_MAX_BYTES / 2) }
+
+    const dispatched = flushPendingSave(snapshot, {
+      isTemplate: false,
+      sendKeepalive,
+      sendSync,
+    })
+
+    expect(dispatched).toBe(true)
+    expect(sendSync).toHaveBeenCalledTimes(1)
+    expect(sendKeepalive).not.toHaveBeenCalled()
+  })
+
+  it('does not dispatch an oversized payload without the unload-only sync transport', () => {
+    const sendKeepalive = vi.fn()
+    const snapshot = { id: 'deck-1', blob: 'x'.repeat(KEEPALIVE_MAX_BYTES + 1) }
+
+    expect(flushPendingSave(snapshot, { isTemplate: false, sendKeepalive })).toBe(false)
+    expect(sendKeepalive).not.toHaveBeenCalled()
+  })
+
   it('does nothing when there is no pending snapshot', () => {
     const sendKeepalive = vi.fn()
     expect(flushPendingSave(null, { sendKeepalive })).toBe(false)

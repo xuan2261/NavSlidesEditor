@@ -9,6 +9,8 @@ const h = vi.hoisted(() => ({
   exportProject: vi.fn(() => Promise.resolve()),
   exportToPptx: vi.fn(() => Promise.resolve([])),
   downloadPptxOriginal: vi.fn(),
+  getPptxFidelity: vi.fn(),
+  downloadValidatedEditedPptx: vi.fn(),
   showNotice: vi.fn(),
   showError: vi.fn(),
 }))
@@ -22,7 +24,11 @@ vi.mock('../utils/generateHTML', () => ({
 vi.mock('../utils/offlineExport', () => ({ generateOfflineHTML: h.generateOfflineHTML }))
 vi.mock('../utils/export-project', () => ({ exportProject: h.exportProject }))
 vi.mock('../utils/exportPptx', () => ({ exportToPptx: h.exportToPptx }))
-vi.mock('../utils/api', () => ({ api: { downloadPptxOriginal: h.downloadPptxOriginal } }))
+vi.mock('../utils/api', () => ({ api: {
+  downloadPptxOriginal: h.downloadPptxOriginal,
+  getPptxFidelity: h.getPptxFidelity,
+  downloadValidatedEditedPptx: h.downloadValidatedEditedPptx,
+} }))
 vi.mock('../utils/app-feedback', () => ({ showNotice: h.showNotice, showError: h.showError }))
 
 import { useExportActions } from './use-export-actions'
@@ -39,6 +45,10 @@ beforeEach(() => {
       type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     })
   )
+  h.getPptxFidelity.mockResolvedValue({
+    aggregateGeneration: 2, exports: { validatedEdited: { available: true } },
+  })
+  h.downloadValidatedEditedPptx.mockResolvedValue(new Blob(['edited']))
   h.showNotice.mockClear()
   h.showError.mockClear()
   delete globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__
@@ -109,6 +119,30 @@ describe('useExportActions', () => {
     URL.revokeObjectURL.mockRestore()
   })
 
+  it('downloads authoritative source bytes for a package-backed presentation', async () => {
+    const packageBacked = { ...presentation, pptxSourceAvailable: true }
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:package')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const clickSpy = vi.fn()
+    const original = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+      const element = original(tag)
+      if (tag === 'a') element.click = clickSpy
+      return element
+    })
+
+    const { result } = renderHook(() => useExportActions(packageBacked))
+    await act(async () => result.current.onExportPPTX())
+
+    expect(h.downloadPptxOriginal).toHaveBeenCalledWith('p1')
+    expect(h.exportToPptx).not.toHaveBeenCalled()
+    expect(clickSpy).toHaveBeenCalled()
+
+    document.createElement.mockRestore()
+    URL.createObjectURL.mockRestore()
+    URL.revokeObjectURL.mockRestore()
+  })
+
   it('falls back to reconstructed export when original bytes return 404', async () => {
     const imported = {
       ...presentation,
@@ -161,6 +195,34 @@ describe('useExportActions', () => {
     })
     expect(h.exportToPptx).toHaveBeenCalled()
     expect(h.showNotice).not.toHaveBeenCalled()
+  })
+
+  it('keeps reconstructed generation explicit even when original bytes exist', async () => {
+    const imported = {
+      ...presentation,
+      pptxOriginal: { id: 'original-1', sha256: 'a'.repeat(64) },
+    }
+    const { result } = renderHook(() => useExportActions(imported))
+    await act(async () => result.current.onGenerateReconstructedPPTX())
+    expect(h.downloadPptxOriginal).not.toHaveBeenCalled()
+    expect(h.exportToPptx).toHaveBeenCalledWith(imported)
+  })
+
+  it('exports a validated edited revision only after current capability validation', async () => {
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:edited')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const click = vi.fn()
+    const original = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+      const element = original(tag)
+      if (tag === 'a') element.click = click
+      return element
+    })
+    const { result } = renderHook(() => useExportActions(presentation))
+    await act(async () => result.current.onExportValidatedEditedRevision())
+    expect(h.getPptxFidelity).toHaveBeenCalledWith('p1')
+    expect(h.downloadValidatedEditedPptx).toHaveBeenCalledWith('p1', 2, expect.any(String))
+    expect(click).toHaveBeenCalled()
   })
 
   it('onExportOffline builds offline HTML and triggers a download', async () => {

@@ -9,6 +9,7 @@
 import { act, render, fireEvent, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { LiveSocketContext } from '../contexts/live-socket-context-provider.jsx'
+import { api } from '../utils/api'
 
 function deck(id, title) {
   return {
@@ -51,6 +52,7 @@ function renderPage(presentationId = 'deck-a') {
 let fetchMock
 
 beforeEach(() => {
+  localStorage.clear()
   h.updatePresentation.mockClear()
   h.updatePresentation.mockImplementation(() => Promise.resolve({}))
   fetchMock = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) }))
@@ -123,6 +125,41 @@ describe('editor teardown persistence', () => {
     expect(puts[0][0]).toBe('/api/presentations/deck-a')
     expect(JSON.parse(puts[0][1].body).title).toBe('A Pending')
   })
+
+  it('blocks editing the outgoing deck while the next route is loading', async () => {
+    let resolveB
+    api.getPresentation
+      .mockImplementationOnce((id) => Promise.resolve(deck(id, `Deck ${id}`)))
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveB = resolve
+          })
+      )
+
+    const { rerender } = renderPage('deck-a')
+    await screen.findByDisplayValue('Deck deck-a')
+
+    await act(async () => {
+      rerender(
+        <LiveSocketContext.Provider value={null}>
+          <EditorPage presentationId="deck-b" onGoHome={() => {}} />
+        </LiveSocketContext.Provider>
+      )
+      await Promise.resolve()
+    })
+
+    expect(screen.getByText('Loading...')).toBeTruthy()
+    expect(screen.queryByDisplayValue('Deck deck-a')).toBeNull()
+
+    await act(async () => {
+      resolveB(deck('deck-b', 'Deck deck-b'))
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(await screen.findByDisplayValue('Deck deck-b')).toBeTruthy()
+  })
 })
 
 describe('editor undo history seeding', () => {
@@ -149,7 +186,7 @@ describe('editor undo history seeding', () => {
 })
 
 describe('editor save failure recovery', () => {
-  it('does not hot-loop a rejected save and resends on the next edit', async () => {
+  it('does not hot-loop a rejected save and retries it before the next edit', async () => {
     const { unmount } = renderPage('deck-a')
     const title = await screen.findByDisplayValue('Deck deck-a')
 
@@ -170,18 +207,24 @@ describe('editor save failure recovery', () => {
     })
     expect(h.updatePresentation).toHaveBeenCalledTimes(1)
 
-    // A new edit resends.
+    const failedBody = h.updatePresentation.mock.calls[0][1]
+
+    // A new edit retries the uncertain write with the same idempotency key,
+    // then saves the successor against the generation accepted by the retry.
     await act(async () => {
       fireEvent.change(title, { target: { value: 'Second Try' } })
       await vi.runAllTimersAsync()
     })
-    expect(h.updatePresentation).toHaveBeenCalledTimes(2)
-    expect(h.updatePresentation.mock.calls[1][1].title).toBe('Second Try')
+    expect(h.updatePresentation).toHaveBeenCalledTimes(3)
+    expect(h.updatePresentation.mock.calls[1][1].title).toBe('Will Fail')
+    expect(h.updatePresentation.mock.calls[1][1].idempotencyKey).toBe(
+      failedBody.idempotencyKey,
+    )
+    expect(h.updatePresentation.mock.calls[2][1].title).toBe('Second Try')
 
     vi.useRealTimers()
     act(() => unmount())
-    // The retained-dirty snapshot survives nowhere to leak: the queue is clean
-    // after a successful resend, so teardown emits no further PUT.
+    // The queue is clean after both writes succeed, so teardown emits no PUT.
     expect(teardownSaveCalls()).toHaveLength(0)
   })
 

@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { FileText, FolderOpen, Download, FileDown, History, Github, CloudUpload } from 'lucide-react'
 import { Button } from '../ui'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
+import { PptxFidelityPanel } from '../PptxFidelityPanel'
 
 const MENU_GROUPS = [
   {
     label: 'File',
     items: [
       { id: 'open', label: 'Open Project', icon: FolderOpen, action: 'onOpenProject' },
+      { id: 'save', label: 'Save', icon: FileText, action: 'onSave' },
     ],
   },
   {
@@ -36,6 +38,7 @@ const MENU_GROUPS = [
 ]
 
 export default function FileDropdown({
+  onSave,
   onOpenProject,
   onExportPDF,
   onExportPPTX,
@@ -45,6 +48,10 @@ export default function FileDropdown({
   onGithub,
   onSync,
   onHistory,
+  pptxFidelity,
+  pptxActions,
+  pptxBusy,
+  onReloadPptxFidelity,
 }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef(null)
@@ -52,7 +59,7 @@ export default function FileDropdown({
   const menuItems = MENU_GROUPS.flatMap((group) => group.items)
 
   const callbacks = {
-    onOpenProject, onExportPDF, onExportPPTX, onExportHTML,
+    onSave, onOpenProject, onExportPDF, onExportPPTX, onExportHTML,
     onExportOffline, onExportProject, onGithub, onSync, onHistory,
   }
 
@@ -135,7 +142,9 @@ export default function FileDropdown({
           open={open}
           anchorRef={triggerRef}
           onClose={closeMenu}
-          className="bg-card border border-border rounded-lg shadow-xl w-[220px] py-1"
+          className={`bg-card border border-border rounded-lg shadow-xl py-1 ${
+            pptxFidelity ? 'w-[min(520px,calc(100vw-16px))]' : 'w-[220px]'
+          }`}
           role="menu"
           ariaLabel="File menu"
           dataRibbonPopup="file-menu"
@@ -180,6 +189,16 @@ export default function FileDropdown({
                 <div className="mx-2 my-0.5 border-t border-border" />
               </div>
             ))}
+            {pptxFidelity && (
+              <div className="p-2">
+                <PptxFidelityPanel
+                  contract={pptxFidelity}
+                  actions={pptxActions}
+                  busy={pptxBusy}
+                  onReload={onReloadPptxFidelity}
+                />
+              </div>
+            )}
         </RibbonFloatingOverlay>
       )}
     </div>

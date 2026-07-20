@@ -27,6 +27,16 @@ import {
   resolvePointerDownSelection,
 } from '../utils/active-slide-selection'
 import { computeCropCommitGeometry } from './canvas/image-crop-geometry'
+import { usePinchZoom } from '../hooks/use-pinch-zoom'
+
+function getActiveSlideNavigationIdentity(slide) {
+  return JSON.stringify([
+    slide?.id ?? null,
+    slide?.parentId ?? slide?.parentSlideId ?? null,
+    slide?.verticalIndex ?? slide?.childIndex ?? null,
+    slide?.childId ?? null,
+  ])
+}
 
 function getBgStyle(bg) {
   if (!bg || bg.type === 'none')
@@ -97,10 +107,12 @@ export default function SlideCanvas({
 }) {
   const SLIDE_W = resolution?.width || 960
   const SLIDE_H = resolution?.height || 540
+  const activeSlideNavigationIdentity = getActiveSlideNavigationIdentity(slide)
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
   const scale = useUIStore((s) => s.zoom)
-  const setScale = useUIStore((s) => s.setZoom)
+  const setScale = useUIStore((s) => s.setAutoFitZoom)
+  const setManualScale = useUIStore((s) => s.setZoom)
   const userZoomMode = useUIStore((s) => s.userZoomMode)
   const setUserZoomMode = useUIStore((s) => s.setUserZoomMode)
   const pendingDragRef = useRef(null)
@@ -113,8 +125,14 @@ export default function SlideCanvas({
   const [contextMenu, setContextMenu] = useState(null) // { elementId, x, y }
   const [cropMode, setCropMode] = useState(null) // { elementId, x, y, w, h }
   const cropDragRef = useRef(null) // { handle, startX, startY, startCrop, elW, elH }
+  const pinchActiveRef = useRef(false)
+  const setPinchActive = useCallback((isActive) => {
+    pinchActiveRef.current = isActive
+  }, [])
   const [dragOver, setDragOver] = useState(false)
   const [activeGuides, setActiveGuides] = useState([])
+  const [elementPreview, setElementPreview] = useState({})
+  const clearElementPreview = useCallback(() => setElementPreview({}), [])
   const scaleRef = useRef(scale)
   const smartGuidesRef = useRef(smartGuidesEnabled)
   const rubberBandRef = useRef(null) // { startX, startY, currentX, currentY }
@@ -166,39 +184,53 @@ export default function SlideCanvas({
   })
 
   // Wire useCanvasPointerInteraction hook (Phase 2: replaces inline mouse listeners)
-  const { startElementDrag, setCropDrag } = useCanvasPointerInteraction({
-    scaleRef,
-    showGridRef,
-    gridSizeRef,
-    smartGuidesRef,
-    slideRef,
-    selectedElementIdsRef,
-    draggingRef,
-    pendingDragRef,
-    cropDragRef,
-    rubberBandRef,
-    onUpdateElement,
-    onUpdateElements,
-    onBlockedAction,
-    snapToGrid: (v) =>
-      showGridRef.current ? Math.round(v / gridSizeRef.current) * gridSizeRef.current : v,
-    snapWithRef,
-    getRotationAngle,
-    applyResize,
-    applyResizeAspectRatio,
-    clampToSlide,
-    updateRubberBand: rbUpdate,
-    endRubberBand: rbEnd,
-    applyRubberBandSelection: rbApply,
-    setRubberBand,
-    setActiveGuides,
-    forceUpdate,
-    setSuppressCanvasClick: (v) => {
-      suppressCanvasClickRef.current = v
-    },
-    setCropMode,
-    slideW: SLIDE_W,
-    slideH: SLIDE_H,
+  const { startElementDrag, setCropDrag, startRubberBand, cancelActiveInteraction } =
+    useCanvasPointerInteraction({
+      scaleRef,
+      showGridRef,
+      gridSizeRef,
+      smartGuidesRef,
+      slideRef,
+      selectedElementIdsRef,
+      draggingRef,
+      pendingDragRef,
+      cropDragRef,
+      rubberBandRef,
+      onUpdateElement,
+      onUpdateElements,
+      onBlockedAction,
+      snapToGrid: (v) =>
+        showGridRef.current ? Math.round(v / gridSizeRef.current) * gridSizeRef.current : v,
+      snapWithRef,
+      getRotationAngle,
+      applyResize,
+      applyResizeAspectRatio,
+      clampToSlide,
+      startRubberBand: rbStart,
+      updateRubberBand: rbUpdate,
+      endRubberBand: rbEnd,
+      applyRubberBandSelection: rbApply,
+      setRubberBand,
+      setActiveGuides,
+      setElementPreview,
+      clearElementPreview,
+      forceUpdate,
+      setSuppressCanvasClick: (v) => {
+        suppressCanvasClickRef.current = v
+      },
+      setCropMode,
+      slideW: SLIDE_W,
+      slideH: SLIDE_H,
+      pinchActiveRef,
+      activeSlideIdentity: activeSlideNavigationIdentity,
+    })
+  const { containerProps: pinchProps } = usePinchZoom({
+    containerRef,
+    minZoom: 0.1,
+    maxZoom: 4,
+    onZoomChange: setManualScale,
+    onPinchStart: cancelActiveInteraction,
+    onPinchActiveChange: setPinchActive,
   })
 
   // Scale to fit container (skip auto-fit when user manually zoomed)
@@ -414,7 +446,8 @@ export default function SlideCanvas({
   return (
     <div
       ref={containerRef}
-      className="tour-step-canvas bg-workspace w-full h-full flex items-center justify-center overflow-hidden relative"
+      data-zoom={scale}
+      className="tour-step-canvas bg-workspace w-full h-full touch-pan-x touch-pan-y flex items-center justify-center overflow-hidden relative"
       onWheel={(e) => {
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault()
@@ -423,6 +456,7 @@ export default function SlideCanvas({
           setUserZoomMode(true)
         }
       }}
+      {...pinchProps}
     >
       {/* Rulers */}
       {showRulers && <CanvasRulers scale={scale} onAddGuide={onAddGuide} />}
@@ -442,16 +476,11 @@ export default function SlideCanvas({
             onStopEdit()
           }
         }}
-        onMouseDown={(e) => {
-          if (slide?.locked) return
-          if (cropMode) return
-          if (e.target !== canvasRef.current) return
-          if (e.button !== 0) return
-          if (!canvasRef.current) return
+        onPointerDown={(e) => {
+          if (slide?.locked || cropMode || pinchActiveRef.current) return
+          if (e.target !== canvasRef.current || e.button !== 0 || !canvasRef.current) return
           const rect = canvasRef.current.getBoundingClientRect()
-          const mx = (e.clientX - rect.left) / scale
-          const my = (e.clientY - rect.top) / scale
-          rbStart(mx, my)
+          startRubberBand(e, (e.clientX - rect.left) / scale, (e.clientY - rect.top) / scale)
         }}
         onContextMenu={(e) => e.preventDefault()}
         onDragOver={onDragOver}
@@ -526,10 +555,12 @@ export default function SlideCanvas({
           ?.filter((el) => !(el.hidden || false)) // hide elements with hidden:true
           .slice()
           .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
-          .map((element) => (
+          .map((element) => {
+            const previewedElement = { ...element, ...(elementPreview[element.id] || {}) }
+            return (
             <CanvasElement
               key={element.id}
-              element={element}
+              element={previewedElement}
               isSelected={selectedElementIds.includes(element.id)}
               selectedElementCount={selectedElementIds.length}
               isEditing={editingElementId === element.id}
@@ -539,14 +570,9 @@ export default function SlideCanvas({
               editor={editor}
               iconPaths={iconPaths}
               onPointerDown={(e, type, handle) => {
-                if (cropMode) return
-                if (editingElementId === element.id) return
+                if (cropMode || editingElementId === element.id || pinchActiveRef.current) return
                 if (element.locked && type === 'move') return
                 e.stopPropagation()
-                // Resolve the drag's selection synchronously: grabbing an
-                // unselected element (plain move) replaces selection — expanding
-                // to its group — while already-selected / shift / handle grabs
-                // keep the current multi-selection so group drags stay intact.
                 const dragIds = resolvePointerDownSelection({
                   activeSlide: slide,
                   elementId: element.id,
@@ -554,14 +580,18 @@ export default function SlideCanvas({
                   shiftKey: e.shiftKey,
                   type,
                 })
+                if (!startElementDrag(e, element.id, type, handle, slide, scale, dragIds)) return
                 if (dragIds !== selectedElementIdsRef.current) {
                   selectedElementIdsRef.current = dragIds
                   onToggleSelectElement(element.id, false)
                 }
-                startElementDrag(e, element.id, type, handle, slide, scale, dragIds)
               }}
               onClick={(e) => {
                 e.stopPropagation()
+                if (suppressCanvasClickRef.current) {
+                  suppressCanvasClickRef.current = false
+                  return
+                }
                 if (!cropMode && editingElementId !== element.id) {
                   if (
                     selectedElementIdsRef.current.includes(element.id) &&
@@ -603,8 +633,9 @@ export default function SlideCanvas({
                 })
               }}
               onStopEdit={onStopEdit}
-              onCropHandleDown={(handle, clientX, clientY) => {
-                const el = slide?.elements?.find((el) => el.id === element.id)
+              onCropHandleDown={(handle, clientX, clientY, pointerId, captureTarget) => {
+                if (pinchActiveRef.current) return
+                const el = slide?.elements?.find((item) => item.id === element.id)
                 if (!el) return
                 setCropDrag(
                   handle,
@@ -613,7 +644,9 @@ export default function SlideCanvas({
                   { x: cropMode.x, y: cropMode.y, w: cropMode.w, h: cropMode.h },
                   el.width,
                   el.height,
-                  el.rotation || 0
+                  el.rotation || 0,
+                  pointerId,
+                  captureTarget
                 )
               }}
               onCommitCrop={commitCrop}
@@ -621,7 +654,8 @@ export default function SlideCanvas({
               onDeleteElement={onDeleteElement}
               onStartEdit={onStartEdit}
             />
-          ))}
+            )
+          })}
 
         {/* Footer overlay */}
         <CanvasFooterOverlay

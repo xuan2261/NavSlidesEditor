@@ -56,7 +56,9 @@ function getElementAccessibleName(element) {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 60)
-  return [typeLabel, content && `"${content}"`, element.locked && 'locked'].filter(Boolean).join(', ')
+  return [typeLabel, content && `"${content}"`, element.locked && 'locked']
+    .filter(Boolean)
+    .join(', ')
 }
 
 function isTextEditableElement(element) {
@@ -199,6 +201,7 @@ export default function CanvasElement({
     height: element.height,
     zIndex: element.zIndex || 1,
     pointerEvents: 'auto',
+    touchAction: 'none',
     outline: element.locked
       ? '2px solid var(--warning, #f59e0b)'
       : (isSelected || isEditing) && !isCropping
@@ -269,7 +272,20 @@ export default function CanvasElement({
   const handleKeyboardAction = (event) => {
     if (isEditableEventTarget(event.target) || isCropping) return
     const key = event.key
-    if (!['Enter', ' ', 'F2', 'Delete', 'Backspace', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape'].includes(key)) {
+    if (
+      ![
+        'Enter',
+        ' ',
+        'F2',
+        'Delete',
+        'Backspace',
+        'ArrowUp',
+        'ArrowDown',
+        'ArrowLeft',
+        'ArrowRight',
+        'Escape',
+      ].includes(key)
+    ) {
       return
     }
 
@@ -408,6 +424,7 @@ export default function CanvasElement({
     border: '2px solid white',
     borderRadius: 2,
     zIndex: 100,
+    touchAction: 'none',
     ...handleStyle,
   })
   const rotationGuideStyle = {
@@ -448,8 +465,8 @@ export default function CanvasElement({
       {...cropDiagnostics}
       style={elementWrapperStyle}
       onKeyDown={handleKeyboardAction}
-      onMouseDown={(e) => {
-        if (!isLinePathEvent(element, e)) return
+      onPointerDown={(e) => {
+        if (e.button !== 0 || !isLinePathEvent(element, e)) return
         if (isEditing) {
           e.stopPropagation()
           return
@@ -654,10 +671,13 @@ export default function CanvasElement({
             key={handle}
             data-testid={`resize-handle-${handle}`}
             style={getResizeHandleStyle(hStyle)}
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
+              if (e.button !== 0) return
               e.stopPropagation()
               onPointerDown(e, 'resize', handle)
             }}
+            onClick={(e) => e.stopPropagation()}
+            onDoubleClick={(e) => e.stopPropagation()}
           />
         ))}
       {isSelected && !isEditing && !isCropping && !element.locked && (
@@ -666,10 +686,13 @@ export default function CanvasElement({
           <div
             style={rotationHandleStyle}
             data-testid="rotation-handle"
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
+              if (e.button !== 0) return
               e.stopPropagation()
               onPointerDown(e, 'rotate', null)
             }}
+            onClick={(e) => e.stopPropagation()}
+            onDoubleClick={(e) => e.stopPropagation()}
           />
         </>
       )}

@@ -21,6 +21,7 @@ describe('e2e suite is sleep-free', () => {
     // fixed interval inside a bounded status-polling loop (checking job.status each
     // iteration, not waiting on an unobservable side effect) are allowed.
     const POLL_ALLOWLIST = new Set([
+      'tests/e2e/global-setup.js',
       'tests/e2e/pptx-import-fidelity.spec.js',
       'tests/e2e/pptx-import-visual-fidelity.spec.js',
       'tests/e2e/export/pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js',

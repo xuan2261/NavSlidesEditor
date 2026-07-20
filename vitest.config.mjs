@@ -1,12 +1,52 @@
+import { randomUUID } from 'node:crypto'
+import { rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
+
+const configRoot = path.dirname(fileURLToPath(import.meta.url))
+const productionDataDir = path.join(configRoot, 'server', 'data')
+const productionUploadsDir = path.join(configRoot, 'server', 'uploads')
+
+function isWithinOrEqual(parent, child) {
+  const relative = path.relative(parent, child)
+  return relative === '' || (!relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative))
+}
+
+const configuredTempDir = path.resolve(tmpdir())
+const invocationBase = [productionDataDir, productionUploadsDir].some((productionDir) =>
+  isWithinOrEqual(productionDir, configuredTempDir)
+)
+  ? path.resolve(configRoot, '..')
+  : configuredTempDir
+const invocationRoot = path.join(invocationBase, `navslides-vitest-${process.pid}-${randomUUID()}`)
+const callerDataDir = process.env.SLIDES_DATA_DIR
+const callerUploadsDir = process.env.SLIDES_UPLOADS_DIR
+const dataDir = callerDataDir || path.join(invocationRoot, 'data')
+const uploadsDir = callerUploadsDir || path.join(invocationRoot, 'uploads')
+
+if (!callerDataDir || !callerUploadsDir) {
+  process.once('exit', () => {
+    try {
+      rmSync(invocationRoot, { force: true, maxRetries: 3, recursive: true, retryDelay: 100 })
+    } catch (error) {
+      process.stderr.write(`[vitest] Failed to remove isolated storage: ${error.message}\n`)
+    }
+  })
+}
 
 export default defineConfig({
   test: {
-    exclude: ['**/node_modules/**', '**/dist/**', '**/dist-electron/**', 'tests/e2e/**'],
+    env: {
+      SLIDES_DATA_DIR: dataDir,
+      SLIDES_UPLOADS_DIR: uploadsDir,
+    },
+    exclude: ['**/node_modules/**', '**/dist/**', '**/dist-electron/**', '**/.claude/worktrees/**', 'tests/e2e/**'],
     fileParallelism: false,
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./vitest-setup-jsdom-pointer-event-polyfills-for-radix-ui.js'],
+    setupFiles: [path.join(configRoot, 'vitest-setup-jsdom-pointer-event-polyfills-for-radix-ui.js')],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov', 'json-summary'],

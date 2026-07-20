@@ -27,16 +27,25 @@ export function saveUrlFor(id, isTemplate) {
 // `sendKeepalive(url, body)` and `sendSync(url, body)` are injected so the
 // decision logic (URL routing + size-based transport selection) is unit
 // testable without a real network or DOM.
+function utf8ByteLength(value) {
+  if (typeof TextEncoder !== 'undefined') return new TextEncoder().encode(value).byteLength
+  if (typeof Blob !== 'undefined') return new Blob([value]).size
+  return value.length
+}
+
 export function flushPendingSave(snapshot, { isTemplate, sendKeepalive, sendSync } = {}) {
   if (!snapshot?.id) return false
 
   const body = JSON.stringify(snapshot)
   const url = saveUrlFor(snapshot.id, isTemplate)
-  const oversize = body.length > KEEPALIVE_MAX_BYTES
+  const oversize = utf8ByteLength(body) > KEEPALIVE_MAX_BYTES
 
-  if (oversize && typeof sendSync === 'function') {
-    sendSync(url, body)
-    return true
+  if (oversize) {
+    if (typeof sendSync === 'function') {
+      sendSync(url, body)
+      return true
+    }
+    return false
   }
   if (typeof sendKeepalive === 'function') {
     sendKeepalive(url, body)

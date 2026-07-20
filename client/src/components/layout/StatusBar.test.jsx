@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import StatusBar from './StatusBar'
+import StatusBar, { getStatusBarDensity } from './StatusBar'
 import { useUIStore } from '../../stores/ui-store'
 import { useEditorStore } from '../../stores/editor-store'
 
@@ -35,6 +35,23 @@ describe('StatusBar editor-context gate', () => {
     expect(screen.getByText(/NavSlides Editor/)).toBeTruthy()
     expect(screen.getByText(/Designed by Xuan Bui Thanh/)).toBeTruthy()
     expect(screen.getByText(/^v/)).toBeTruthy()
+  })
+})
+
+describe('StatusBar density', () => {
+  it.each([
+    [500, 'compact'],
+    [800, 'standard'],
+    [1100, 'wide'],
+  ])('maps a %ipx container to %s density', (width, density) => {
+    expect(getStatusBarDensity(width)).toBe(density)
+  })
+
+  it('marks attribution as lowest priority while critical controls remain fixed', () => {
+    setEditorActive()
+    render(<StatusBar />)
+    expect(screen.getByTestId('statusbar-attribution').getAttribute('data-priority')).toBe('low')
+    expect(screen.getByTestId('statusbar-critical-controls').className).toContain('shrink-0')
   })
 })
 

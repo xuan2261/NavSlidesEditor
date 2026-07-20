@@ -39,7 +39,16 @@ describe('ViewTabContent', () => {
     render(<ViewTabContent />)
     expect(screen.getByLabelText('Zoom in')).toBeTruthy()
     expect(screen.getByLabelText('Zoom out')).toBeTruthy()
-    expect(screen.getByLabelText('Reset zoom')).toBeTruthy()
+    expect(screen.getByLabelText('Fit to window')).toBeTruthy()
+  })
+
+  it('returns zoom to automatic fit mode from the View ribbon', () => {
+    useUIStore.setState({ userZoomMode: true })
+    render(<ViewTabContent />)
+
+    fireEvent.click(screen.getByLabelText('Fit to window'))
+
+    expect(useUIStore.getState().userZoomMode).toBe(false)
   })
 
   it('renders window panel toggles', () => {

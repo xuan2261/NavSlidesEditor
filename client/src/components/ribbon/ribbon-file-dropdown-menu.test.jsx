@@ -12,6 +12,7 @@ describe('FileDropdown', () => {
     render(<FileDropdown />)
     fireEvent.mouseDown(screen.getByLabelText('File menu'))
     expect(screen.getByText('Open Project')).toBeTruthy()
+    expect(screen.getByText('Save')).toBeTruthy()
   })
 
   it('[cap:control.file.menu] opens and exposes expected file commands', () => {
@@ -28,6 +29,27 @@ describe('FileDropdown', () => {
     expect(screen.getByText('Version History')).toBeTruthy()
   })
 
+  it('renders imported presentation fidelity choices with explicit actions', () => {
+    const downloadOriginal = vi.fn()
+    render(<FileDropdown pptxFidelity={{
+      fidelity: { status: 'source-backed', editabilityTier: 'structural-mvp' },
+      exports: {
+        original: { available: true },
+        validatedEdited: { available: false },
+        reconstructed: { available: true },
+      },
+      officeCli: { available: true },
+    }} pptxActions={{ downloadOriginal }} />)
+    fireEvent.mouseDown(screen.getByLabelText('File menu'))
+
+    expect(screen.getByLabelText('PPTX fidelity')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Download Original' })).toBeTruthy()
+    expect(screen.getByRole('button', {
+      name: 'Export Validated Edited Revision',
+    }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Generate Reconstructed PPTX' })).toBeTruthy()
+  })
+
   it('shows version history option', () => {
     render(<FileDropdown />)
     fireEvent.mouseDown(screen.getByLabelText('File menu'))
@@ -40,6 +62,14 @@ describe('FileDropdown', () => {
     fireEvent.mouseDown(screen.getByLabelText('File menu'))
     fireEvent.mouseDown(screen.getByText('Open Project'))
     expect(onOpenProject).toHaveBeenCalled()
+  })
+
+  it('calls onSave when Save clicked', () => {
+    const onSave = vi.fn()
+    render(<FileDropdown onSave={onSave} />)
+    fireEvent.mouseDown(screen.getByLabelText('File menu'))
+    fireEvent.mouseDown(screen.getByText('Save'))
+    expect(onSave).toHaveBeenCalledTimes(1)
   })
 
   it('calls onExportPDF when Export PDF clicked', () => {

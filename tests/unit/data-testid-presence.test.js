@@ -22,7 +22,7 @@ const REQUIRED_TESTIDS = [
   { file: 'client/src/components/ribbon/ribbon-view-mode-controls-content.jsx', testid: 'view-toggle-selection-pane' },
   { file: 'client/src/components/SelectionPane.jsx', testid: 'selection-pane-toggle-visibility-${el.id}' },
   { file: 'client/src/components/SelectionPane.jsx', testid: 'selection-pane-toggle-lock-${el.id}' },
-  { file: 'client/src/components/SlidePanel.jsx', testid: 'slide-panel-item' },
+  { file: 'client/src/components/slide-panel/slide-navigator-item.jsx', testid: 'slide-panel-item' },
   { file: 'client/src/components/layout/StatusBar.jsx', testid: 'statusbar-zoom-slider' },
   { file: 'client/src/components/layout/StatusBar.jsx', testid: 'statusbar-zoom-fit' },
   { file: 'client/src/components/layout/StatusBar.jsx', testid: 'statusbar-view-normal' },

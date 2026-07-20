@@ -91,6 +91,7 @@ function RibbonActionDropdown({ label, icon: Icon, items }) {
 }
 
 export default function RibbonHeaderBar({
+  onSave,
   onOpenProject,
   onExportPDF,
   onExportPPTX,
@@ -107,6 +108,10 @@ export default function RibbonHeaderBar({
   onLive,
   onAnalytics,
   onPresent,
+  pptxFidelity,
+  pptxActions,
+  pptxBusy,
+  onReloadPptxFidelity,
 }) {
   const activeTab = useUIStore((s) => s.activeTab)
   const setActiveTab = useUIStore((s) => s.setActiveTab)
@@ -122,6 +127,7 @@ export default function RibbonHeaderBar({
     <Tabs.Root value={effectiveTab} onValueChange={setActiveTab} className="flex min-w-0 flex-1">
       <div className="flex min-w-0 flex-1 items-center border-b border-border bg-secondary">
         <FileDropdown
+          onSave={onSave}
           onOpenProject={onOpenProject}
           onExportPDF={onExportPDF}
           onExportPPTX={onExportPPTX}
@@ -131,6 +137,10 @@ export default function RibbonHeaderBar({
           onGithub={onGithub}
           onSync={onSync}
           onHistory={onHistory}
+          pptxFidelity={pptxFidelity}
+          pptxActions={pptxActions}
+          pptxBusy={pptxBusy}
+          onReloadPptxFidelity={onReloadPptxFidelity}
         />
         <TabBar activeTab={effectiveTab} onTabChange={setActiveTab} />
         <div className="ml-auto flex shrink-0 items-center gap-1 px-1">

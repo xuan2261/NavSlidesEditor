@@ -7,6 +7,7 @@ import FormatTabContent from './ribbon-format-tab-element-position-size-rotation
 import TransitionsTabContent from './transitions-tab-content'
 import AnimationsTabContent from './ribbon-element-animation-effect-controls-tab-content'
 import ViewTabContent from './ribbon-view-mode-controls-content'
+import { RibbonDensityProvider } from './ribbon-density-context'
 
 const TAB_PANELS = {
   home: HomeTabContent,
@@ -32,7 +33,7 @@ export default function RibbonPanel(props) {
 
   return (
     <Tabs.Root value={effectiveTab} onValueChange={setActiveTab}>
-      <div
+      <RibbonDensityProvider
           data-testid="ribbon-panel-container"
           className="tour-step-ribbon relative h-[80px] overflow-hidden bg-panel border-b border-border"
       >
@@ -48,7 +49,7 @@ export default function RibbonPanel(props) {
             <Content {...props} slideElements={props.slide?.elements || []} />
           </Tabs.Content>
         ))}
-      </div>
+      </RibbonDensityProvider>
     </Tabs.Root>
   )
 }

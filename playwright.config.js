@@ -4,6 +4,7 @@ const clientPort = process.env.PLAYWRIGHT_CLIENT_PORT || '4173'
 const serverPort = process.env.PLAYWRIGHT_SERVER_PORT || '3202'
 const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || `http://127.0.0.1:${clientPort}`
 const apiTarget = `http://127.0.0.1:${serverPort}`
+const apiBaseUrl = process.env.PLAYWRIGHT_API_BASE_URL || `${apiTarget}/api`
 const runId =
   process.env.PLAYWRIGHT_RUN_ID ||
   `${new Date().toISOString().replace(/[:.]/g, '-')}-${process.pid}`
@@ -12,6 +13,8 @@ const dataDir = path.join(runRoot, 'data')
 const uploadsDir = path.join(runRoot, 'uploads')
 
 process.env.PLAYWRIGHT_TEST_BASE_URL = baseURL
+// webServer.env only reaches child processes; test workers need the direct API URL too.
+process.env.PLAYWRIGHT_API_BASE_URL = apiBaseUrl
 
 module.exports = defineConfig({
   testDir: './tests/e2e',
@@ -42,8 +45,22 @@ module.exports = defineConfig({
         /tests\/e2e\/live(?:\.spec\.js$|\/.*\.spec\.js$)/,
         /tests\/e2e\/visual(?:\/.*\.spec\.js$)/,
         /tests\/e2e\/visual-regression\.spec\.js$/,
+        /tests\/e2e\/a11y\/tablet-touch-editor-interactions\.spec\.js$/,
       ],
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'tablet-touch',
+      testMatch: [
+        /tests\/e2e\/a11y\/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport\.spec\.js$/,
+        /tests\/e2e\/a11y\/tablet-touch-editor-interactions\.spec\.js$/,
+      ],
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1024, height: 768 },
+        hasTouch: true,
+        isMobile: true,
+      },
     },
     {
       name: 'chromium-live',
@@ -82,7 +99,7 @@ module.exports = defineConfig({
       ...process.env,
       DATA_DIR: dataDir,
       PORT: serverPort,
-      PLAYWRIGHT_API_BASE_URL: `${apiTarget}/api`,
+      PLAYWRIGHT_API_BASE_URL: apiBaseUrl,
       SLIDES_DATA_DIR: dataDir,
       SLIDES_UPLOADS_DIR: uploadsDir,
       VITE_API_PROXY_TARGET: apiTarget,

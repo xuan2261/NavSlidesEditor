@@ -1,61 +1,111 @@
-import { useRef, useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+
+function getDistance(first, second) {
+  const dx = second.clientX - first.clientX
+  const dy = second.clientY - first.clientY
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
+function readZoom(container) {
+  const zoom = Number.parseFloat(container?.dataset.zoom)
+  return Number.isFinite(zoom) ? zoom : 1
+}
 
 export function usePinchZoom({
   containerRef,
   onZoomChange,
   minZoom = 0.25,
-  maxZoom = 4.0,
+  maxZoom = 4,
   enabled = true,
+  onPinchStart,
+  onPinchActiveChange,
 }) {
-  const pointers = useRef(new Map())
-  const initialDistance = useRef(0)
-  const initialZoom = useRef(1)
+  const contactsRef = useRef(new Map())
+  const initialDistanceRef = useRef(0)
+  const initialZoomRef = useRef(1)
+  const latestZoomRef = useRef(1)
+  const activeRef = useRef(false)
 
-  const getDistance = (p1, p2) => {
-    const dx = p2.clientX - p1.clientX
-    const dy = p2.clientY - p1.clientY
-    return Math.sqrt(dx * dx + dy * dy)
-  }
+  const setActive = useCallback(
+    (isActive) => {
+      activeRef.current = isActive
+      onPinchActiveChange?.(isActive)
+    },
+    [onPinchActiveChange]
+  )
 
-  const handlePointerDown = useCallback((e) => {
-    if (!enabled) return
-    pointers.current.set(e.pointerId, e)
-    if (pointers.current.size === 2) {
-      const pts = Array.from(pointers.current.values())
-      initialDistance.current = getDistance(pts[0], pts[1])
-      initialZoom.current = containerRef.current?.dataset.zoom
-        ? parseFloat(containerRef.current.dataset.zoom)
-        : 1
+  const clear = useCallback(() => {
+    contactsRef.current.clear()
+    initialDistanceRef.current = 0
+    setActive(false)
+  }, [setActive])
+
+  const rebaseline = useCallback(() => {
+    const contacts = Array.from(contactsRef.current.values())
+    setActive(contacts.length >= 2)
+    if (contacts.length !== 2) {
+      initialDistanceRef.current = 0
+      return
     }
-  }, [enabled, containerRef])
+    const distance = getDistance(contacts[0], contacts[1])
+    initialDistanceRef.current = distance > 0 ? distance : 0
+    initialZoomRef.current = latestZoomRef.current || readZoom(containerRef.current)
+  }, [containerRef, setActive])
 
-  const handlePointerMove = useCallback((e) => {
-    if (!enabled || !pointers.current.has(e.pointerId)) return
-    pointers.current.set(e.pointerId, e)
+  useEffect(() => {
+    if (!enabled) clear()
+    return clear
+  }, [clear, enabled])
 
-    if (pointers.current.size === 2 && initialDistance.current > 0) {
-      const pts = Array.from(pointers.current.values())
-      const currentDistance = getDistance(pts[0], pts[1])
-      const ratio = currentDistance / initialDistance.current
-      const newZoom = Math.min(maxZoom, Math.max(minZoom, initialZoom.current * ratio))
-      onZoomChange?.(newZoom)
-    }
-  }, [enabled, onZoomChange, maxZoom, minZoom])
+  const handlePointerDown = useCallback(
+    (event) => {
+      if (!enabled || event.pointerType !== 'touch') return
+      const hadPinch = activeRef.current
+      contactsRef.current.set(event.pointerId, {
+        clientX: event.clientX,
+        clientY: event.clientY,
+      })
+      if (!hadPinch && contactsRef.current.size === 2) {
+        latestZoomRef.current = readZoom(containerRef.current)
+        onPinchStart?.()
+      }
+      rebaseline()
+    },
+    [activeRef, containerRef, enabled, onPinchStart, rebaseline]
+  )
 
-  const handlePointerUp = useCallback((e) => {
-    pointers.current.delete(e.pointerId)
-    if (pointers.current.size < 2) {
-      initialDistance.current = 0
-    }
-  }, [])
+  const handlePointerMove = useCallback(
+    (event) => {
+      if (!enabled || event.pointerType !== 'touch' || !contactsRef.current.has(event.pointerId)) return
+      contactsRef.current.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY })
+      if (contactsRef.current.size !== 2 || initialDistanceRef.current <= 0) return
+      const contacts = Array.from(contactsRef.current.values())
+      const zoom = Math.min(
+        maxZoom,
+        Math.max(minZoom, initialZoomRef.current * (getDistance(contacts[0], contacts[1]) / initialDistanceRef.current))
+      )
+      latestZoomRef.current = zoom
+      onZoomChange?.(zoom)
+    },
+    [enabled, maxZoom, minZoom, onZoomChange]
+  )
+
+  const handlePointerEnd = useCallback(
+    (event) => {
+      if (event.pointerType !== 'touch') return
+      contactsRef.current.delete(event.pointerId)
+      rebaseline()
+    },
+    [rebaseline]
+  )
 
   return {
     containerProps: {
-      onPointerDown: handlePointerDown,
-      onPointerMove: handlePointerMove,
-      onPointerUp: handlePointerUp,
-      onPointerCancel: handlePointerUp,
-      // Capture all pointers for pinch
+      onPointerDownCapture: handlePointerDown,
+      onPointerMoveCapture: handlePointerMove,
+      onPointerUpCapture: handlePointerEnd,
+      onPointerCancelCapture: handlePointerEnd,
+      onLostPointerCapture: handlePointerEnd,
       style: { touchAction: 'none' },
     },
   }

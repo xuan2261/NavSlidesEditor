@@ -47,11 +47,13 @@ describe('sparkles semantic separation', () => {
   })
 
   it('SlidePanel autoAnimate badge + ctx-menu item + Insert Template use Wand2/LayoutTemplate', () => {
-    const content = readSrc('components/SlidePanel.jsx')
-    expect(content).not.toMatch(/\bSparkles\b/)
-    expect(content).toMatch(/<Wand2\s+size=\{9\}/)
-    expect(content).toMatch(/<Wand2\s+size=\{14\}/)
-    expect(content).toMatch(/<LayoutTemplate\s+size=\{14\}/)
+    const panelContent = readSrc('components/SlidePanel.jsx')
+    const itemContent = readSrc('components/slide-panel/slide-navigator-item.jsx')
+    expect(panelContent).not.toMatch(/\bSparkles\b/)
+    expect(itemContent).not.toMatch(/\bSparkles\b/)
+    expect(itemContent).toMatch(/<Wand2\s+size=\{9\}/)
+    expect(panelContent).toMatch(/<Wand2\s+size=\{14\}/)
+    expect(panelContent).toMatch(/<LayoutTemplate\s+size=\{14\}/)
   })
 
   it('AI modules still import Sparkles (regression guard for AI use case)', () => {

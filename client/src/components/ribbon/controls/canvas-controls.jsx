@@ -1,6 +1,7 @@
 import { Grid3x3, Magnet, Ruler, ZoomIn, ZoomOut, Maximize } from 'lucide-react'
 import { Button } from '../../ui'
 import { useEditorStore } from '../../../stores/editor-store'
+import { useUIStore } from '../../../stores/ui-store'
 
 const clampGridSize = (value) => Math.min(120, Math.max(5, parseInt(value, 10) || 40))
 
@@ -13,8 +14,9 @@ export default function CanvasControls({ onGridSizeChange }) {
   const setSmartGuidesEnabled = useEditorStore((s) => s.setSmartGuidesEnabled)
   const showRulers = useEditorStore((s) => s.showRulers)
   const setShowRulers = useEditorStore((s) => s.setShowRulers)
-  const zoom = useEditorStore((s) => s.zoom)
-  const setZoom = useEditorStore((s) => s.setZoom)
+  const zoomIn = useUIStore((s) => s.zoomIn)
+  const zoomOut = useUIStore((s) => s.zoomOut)
+  const fitZoom = useUIStore((s) => s.fitZoom)
   const updateGridSize = (value) => {
     const next = clampGridSize(value)
     setGridSize(next)
@@ -72,7 +74,7 @@ export default function CanvasControls({ onGridSizeChange }) {
       <Button
         variant="icon"
         className="h-7 w-7"
-        onClick={() => setZoom(Math.min((zoom || 1) + 0.1, 3))}
+        onClick={zoomIn}
         title="Zoom in"
         aria-label="Zoom in"
       >
@@ -81,7 +83,7 @@ export default function CanvasControls({ onGridSizeChange }) {
       <Button
         variant="icon"
         className="h-7 w-7"
-        onClick={() => setZoom(Math.max((zoom || 1) - 0.1, 0.2))}
+        onClick={zoomOut}
         title="Zoom out"
         aria-label="Zoom out"
       >
@@ -90,9 +92,9 @@ export default function CanvasControls({ onGridSizeChange }) {
       <Button
         variant="icon"
         className="h-7 w-7"
-        onClick={() => setZoom(1)}
-        title="Reset zoom"
-        aria-label="Reset zoom"
+        onClick={fitZoom}
+        title="Fit to window"
+        aria-label="Fit to window"
       >
         <Maximize size={14} />
       </Button>

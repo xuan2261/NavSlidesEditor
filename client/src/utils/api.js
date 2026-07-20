@@ -6,6 +6,8 @@ async function handleResponse(r) {
     const err = new Error(body.error || `Request failed (${r.status})`)
     err.status = r.status
     err.retryAfter = Number(r.headers?.get?.('Retry-After') || 0)
+    err.reason = body.reason
+    err.currentGeneration = body.currentGeneration
     throw err
   }
   return body
@@ -25,7 +27,10 @@ export const api = {
   updatePresentation: (id, data) =>
     fetch(`${BASE}/presentations/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(data?.idempotencyKey ? { 'Idempotency-Key': data.idempotencyKey } : {}),
+      },
       body: JSON.stringify(data),
     }).then(handleResponse),
   deletePresentation: (id) =>
@@ -46,6 +51,25 @@ export const api = {
         const body = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
         const err = new Error(body.error || `Request failed (${r.status})`)
         err.status = r.status
+        throw err
+      }
+      return r.blob()
+    }),
+  getPptxFidelity: (id) =>
+    fetch(`${BASE}/presentations/${id}/pptx-fidelity`).then(handleResponse),
+  downloadValidatedEditedPptx: (id, generation, idempotencyKey) =>
+    fetch(`${BASE}/presentations/${id}/pptx-edited`, {
+      method: 'POST',
+      headers: {
+        'Idempotency-Key': idempotencyKey,
+        'If-Pptx-Generation': String(generation),
+      },
+    }).then(async (r) => {
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
+        const err = new Error(body.error || `Request failed (${r.status})`)
+        err.status = r.status
+        err.code = body.code
         throw err
       }
       return r.blob()

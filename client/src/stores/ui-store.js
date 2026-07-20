@@ -144,7 +144,14 @@ export const useUIStore = create((set, get) => ({
   },
 
   // Zoom actions
-  setZoom: (v) => set((s) => ({ zoom: clampZoom(typeof v === 'function' ? v(s.zoom) : v) })),
+  setZoom: (v) => set((s) => ({
+    zoom: clampZoom(typeof v === 'function' ? v(s.zoom) : v),
+    userZoomMode: true,
+  })),
+  setAutoFitZoom: (v) => set((s) => ({
+    zoom: clampZoom(typeof v === 'function' ? v(s.zoom) : v),
+    userZoomMode: false,
+  })),
   setUserZoomMode: (v) => set({ userZoomMode: !!v }),
   zoomIn: () => set((s) => ({ zoom: clampZoom(s.zoom + 0.1), userZoomMode: true })),
   zoomOut: () => set((s) => ({ zoom: clampZoom(s.zoom - 0.1), userZoomMode: true })),
