@@ -718,12 +718,23 @@ router.delete('/:id/permanent', async (req, res) => {
           })
         }
         try {
-            await quarantinePackageOwnerWithRetry(presId, {
-              compatibilityRemove: true,
-              expectedHead: retainedHead,
-            })
-          } catch (error) {
-            if (error.code === 'STALE_GENERATION') {
+          await quarantinePackageOwnerWithRetry(presId, {
+            compatibilityRemove: true,
+            expectedHead: retainedHead,
+          })
+        } catch (error) {
+          if (error.code === 'STALE_GENERATION') {
+            let successorExists
+            try {
+              successorExists = await packagePresentationExists(presId)
+            } catch {
+              throw Object.assign(new Error('Package lifecycle is temporarily unavailable; retry deletion'), {
+                code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+                status: 503,
+                retryable: true,
+              })
+            }
+            if (successorExists) {
               try {
                 await releasePackageOwnerWithRetry(retainedOwner)
               } catch (cleanupError) {
@@ -738,6 +749,10 @@ router.delete('/:id/permanent', async (req, res) => {
               error.retryable = true
               throw error
             }
+            // A retry can observe a missing H1 after the first attempt published
+            // the quarantine root. Keep the retained owner until JSON cleanup
+            // succeeds so the normal rollback boundary remains recoverable.
+          } else {
             try {
               await restoreQuarantinedPackageHeadWithRetry(
                 retainedOwner,
@@ -762,6 +777,7 @@ router.delete('/:id/permanent', async (req, res) => {
               retryable: true,
             })
           }
+        }
       }
 
       let removed = !presentation

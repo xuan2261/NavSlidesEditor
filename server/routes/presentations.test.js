@@ -767,6 +767,34 @@ describe('Presentations API', () => {
     }
   })
 
+  it('finishes permanent deletion when the quarantine root persisted before retry', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    const originalMutate = fixture.store.mutate.bind(fixture.store)
+    let mutationCount = 0
+    try {
+      fixture.store.mutate = (mutator, options) => {
+        mutationCount += 1
+        return originalMutate(mutator, mutationCount === 2
+          ? { ...(options || {}), faultAfterRoot: true }
+          : options)
+      }
+
+      const deleted = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
+
+      expect(deleted).toMatchObject({ status: 200, body: { success: true } })
+      expect((await storage.readPresentations()).some((item) => item.id === fixture.id)).toBe(false)
+      const state = fixture.store.getState()
+      expect(state.heads.some((head) => head.presentationId === fixture.id)).toBe(false)
+      expect(state.owners.some((owner) =>
+        owner.ownerType === 'presentation' && owner.ownerId === `${fixture.id}:permanent-delete`
+      )).toBe(false)
+      expect(state.compatibilityOutbox).toEqual([])
+    } finally {
+      fixture.store.mutate = originalMutate
+      await fixture.cleanup()
+    }
+  })
+
   it('keeps a concurrent package successor when permanent delete becomes stale', async () => {
     const fixture = await createNativeRouteFixture(app)
     const originalMutate = fixture.store.mutate.bind(fixture.store)
