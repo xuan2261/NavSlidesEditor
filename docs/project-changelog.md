@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Package-backed export, present, live presentation, save-as-template, history restore, public share, GitHub push, cloud sync, and explore/fork workflows resolve projection content from package authority rather than stale compatibility JSON; history restore responses are authority-consistent with their successor generation. Covered snapshot/duplicate/fork paths check the exact source head, duplicate package work runs before presentation-file serialization, missing/malformed package heads fail closed, bulk summary/sync reads reuse one store snapshot, and external fork/GitHub/sync JSON strips package authority metadata. Covered package-backed template PUTs reject projection-changing edits; rclone sync stages manifest/blob bundles with per-request workspaces and same-destination serialization. Pending save-as-template, template rollback/outbox cleanup, final snapshot/duplicate/fork race closure, explore rollback, permanent-delete path validation/retain-quarantine/outbox safety, remote sync-path validation, and complete portable import/authority round-trip remain active hardening work. The sync bundle is not yet a restorable authority archive or native-fidelity qualification.
+- Imported PPTX charts now remain preserve-only/read-only until qualified. Validated edited-package export fails closed instead of falling back, while a verified immutable original remains the separate recovery path.
 - Added durable browser drafts for pending autosaves, including oversized unload receipts, generation/idempotency-preserving retry, and an explicit remote-first recovery dialog. Drafts clean up only after a matching commit or user-selected remote version; storage-disabled/private-browsing limits remain documented.
 
 ## v1.15.1 — 2026-06-30

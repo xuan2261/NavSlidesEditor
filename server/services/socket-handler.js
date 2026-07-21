@@ -1,4 +1,5 @@
-const { findPresentationById } = require('./presentation-finder')
+const { findPresentationById, findServeablePresentation } = require('./presentation-finder')
+const { readAuthoritativePresentation } = require('./package-backed-presentation-read')
 const liveRoomsService = require('./live-rooms')
 const { generateRevealHTML, getSlideNotes, normalizePresentationNotes } = require('revealjs-shared')
 const crypto = require('crypto')
@@ -76,6 +77,15 @@ function buildPresentationMeta(presentation) {
   }
 }
 
+async function findLivePresentationById(id) {
+  const userPresentation = await findServeablePresentation(id, { normalize: false })
+  if (userPresentation) {
+    const resolved = await readAuthoritativePresentation(id)
+    return resolved?.presentation || null
+  }
+  return findPresentationById(id)
+}
+
 async function emitPresentationPayload(socket, presentationId, findById) {
   if (!presentationId) return
   const pres = await findById(presentationId)
@@ -92,7 +102,7 @@ async function emitPresentationPayload(socket, presentationId, findById) {
  */
 function setupSocketHandlers(io, dependencies = {}) {
   const liveRooms = dependencies.liveRoomsService || liveRoomsService
-  const findById = dependencies.findPresentationById || findPresentationById
+  const findById = dependencies.findPresentationById || findLivePresentationById
 
   io.on('connection', (socket) => {
     // Helper: broadcast viewer count for a room

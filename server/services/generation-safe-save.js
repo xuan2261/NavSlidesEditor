@@ -10,6 +10,10 @@ const { rebindSourceMap } = require('./pptx-import/source-map')
 const { queueCompatibilityUpsert } = require('./pptx-import/compatibility-outbox')
 const { validateMatrixAuthoritySubjects } = require('./pptx-import/canonical-feature-matrix')
 const { canonicalReasonCodes, reasonCodeSubject } = require('./pptx-import/reason-code-contract')
+const { isValidIdempotencyKey } = require('./pptx-import/request-limits')
+const { MUTATION_OPERATIONS } = require('./pptx-import/mutation-operation-scope')
+
+const OPERATION = MUTATION_OPERATIONS.PROJECTION_SAVE
 
 function currentHead(state, presentationId) {
   const head = state.heads.find((item) => item.presentationId === presentationId)
@@ -21,6 +25,14 @@ function currentAuthority(state, head) {
     result.sourceMap && result.projection
   ) || null
 }
+
+function isLegacyProjectionSaveResult(result) {
+  return result?.operation === undefined &&
+    result.state === 'pending-edited-export' &&
+    result.projection && result.sourceMap && result.journal &&
+    Array.isArray(result.operationIds)
+}
+
 function compatibilityPresentation(stored, projection, presentationId) {
   return {
     ...stored,
@@ -43,10 +55,11 @@ function denied(status, reasonCode, extra = {}) {
   }
 }
 
-function queueCompatibilityProjection(next, presentation, head) {
+function queueCompatibilityProjection(next, presentation, head, updatedAt) {
   queueCompatibilityUpsert(next, {
     presentationId: head.presentationId,
     generation: head.generation,
+    ...(updatedAt ? { updatedAt } : {}),
     presentation: {
       ...presentation,
       id: head.presentationId,
@@ -68,8 +81,7 @@ async function savePackageProjection({
     if (!Number.isSafeInteger(expectedGeneration) || expectedGeneration < 1) {
       return denied(400, 'INVALID_EXPECTED_GENERATION')
     }
-    if (typeof idempotencyKey !== 'string' || !idempotencyKey.trim() ||
-        idempotencyKey.length > 200) {
+    if (!isValidIdempotencyKey(idempotencyKey)) {
       return denied(400, 'INVALID_IDEMPOTENCY_KEY')
     }
     if (baseRevisionId !== undefined &&
@@ -85,17 +97,24 @@ async function savePackageProjection({
     const sourceMap = authority?.sourceMap
     // A normal save only publishes the canonical projection and pending journal.
     // Only the validated edited-export workflow may materialize a successor package revision.
-    const requestHash = hashRecord({ presentationId, expectedGeneration, baseRevisionId: baseRevisionId || null, after })
-    const prior = state.mutationResults.find((item) => item.presentationId === presentationId && item.idempotencyKey === idempotencyKey)
+    const requestHash = hashRecord({ operation: OPERATION, presentationId, expectedGeneration, baseRevisionId: baseRevisionId || null, after })
+    const prior = state.mutationResults.find((item) =>
+      (item.operation === OPERATION || isLegacyProjectionSaveResult(item)) &&
+      item.presentationId === presentationId && item.idempotencyKey === idempotencyKey)
     if (prior) {
       const replay = prior.requestIdentity
         ? prior.requestIdentity.expectedGeneration === expectedGeneration &&
           prior.requestIdentity.baseRevisionId === (baseRevisionId || null) &&
           prior.requestIdentity.snapshotHash === hashRecord(canonicalAfter)
-        : expectedGeneration === prior.generation - 1 && baseRevisionId === undefined &&
+        : isLegacyProjectionSaveResult(prior) &&
+          expectedGeneration === prior.generation - 1 &&
+          (baseRevisionId === undefined || baseRevisionId === prior.packageRevisionId) &&
+          (!prior.journal?.baseRevisionId || prior.journal.baseRevisionId === prior.packageRevisionId) &&
           hashRecord(canonicalAfter) === hashRecord(prior.projection)
-      if (prior.requestHash !== requestHash && !replay) {
-        return denied(409, 'IDEMPOTENCY_KEY_CONFLICT')
+      const sameRequest = prior.requestHash === requestHash || replay
+      if (!sameRequest) return denied(409, 'IDEMPOTENCY_KEY_CONFLICT')
+      if (prior.packageRevisionId !== head.packageRevisionId || prior.generation !== head.generation) {
+        return denied(409, 'STALE_GENERATION', { currentGeneration: head.generation })
       }
       return { ok: true, packageBacked: true, idempotent: true, generation: prior.generation,
         aggregateHead: currentHead(store.getState(), presentationId),
@@ -126,8 +145,10 @@ async function savePackageProjection({
     const successorSourceMap = rebindSourceMap(sourceMap, {
       presentationId, revisionId: head.packageRevisionId, packageGeneration: generation,
     })
+    const updatedAt = new Date().toISOString()
     const result = {
       schemaVersion: SCHEMA_VERSION,
+      operation: OPERATION,
       presentationId,
       idempotencyKey,
       requestHash,
@@ -156,7 +177,7 @@ async function savePackageProjection({
       nextHead.fencingEpoch = store.fencingEpoch
       nextHead.matrixAuthorityEpoch = next.matrixAuthorityEpoch
       next.mutationResults.push(result)
-      queueCompatibilityProjection(next, compatibility, nextHead)
+      queueCompatibilityProjection(next, compatibility, nextHead, updatedAt)
     })
     return {
       ok: true, packageBacked: true, idempotent: false,

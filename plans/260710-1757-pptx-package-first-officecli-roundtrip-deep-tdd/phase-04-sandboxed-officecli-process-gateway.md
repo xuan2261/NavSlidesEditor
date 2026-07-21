@@ -30,14 +30,13 @@ Other targets reject OfficeCLI work before workspace creation or process launch.
 
 ## Work-in-Progress Evidence
 
-Focused gateway tests prove the fail-closed Node-side contract: direct target
-spawning is rejected; candidate-only state cannot create a workspace; only a typed
-`validate` request may reach a launcher client; and the receipt must bind the
-candidate hash/version to a reverified execution copy, launcher identity, and
-policy digest. Non-Windows execution remains unavailable before a read, workspace,
-or launcher invocation. These are contract tests, not physical containment proof:
-the C++/Win32 launcher, assignment-before-execution, tree-zero, identity/ACL,
-egress, and resource evidence are still required. `G1` remains Open.
+Focused gateway tests cover the direct typed Node boundary: non-Windows and
+candidate/pin failures reject before document work, only `validate` is permitted,
+and direct-child output, timeout, cancellation, cleanup, and redaction paths fail
+closed. They use fakes or mocked process inputs. This workspace has no successful
+real direct OfficeCLI validation and no direct qualified receipt, so `G1` remains
+Open. Prior launcher-oriented reports and non-Windows provider evidence remain
+historical and are not evidence for the active local topology.
 
 ## Context Links
 

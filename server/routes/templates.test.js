@@ -1,5 +1,6 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import request from 'supertest'
+import fs from 'fs-extra'
 import express from 'express'
 import { openPackageStore } from '../services/pptx-import/package-store/index.js'
 import * as storage from '../services/storage.js'
@@ -46,6 +47,14 @@ describe('Templates API', () => {
     expect(updateRes.body.title).toBe('Updated Template')
     expect(updateRes.body).not.toHaveProperty('pptxAggregateHead')
 
+    const contentUpdateRes = await request(app)
+      .put(`/api/templates/${id}`)
+      .send({ slides: [{ id: 's2', elements: [] }] })
+    expect(contentUpdateRes).toMatchObject({
+      status: 422,
+      body: { code: 'PACKAGE_TEMPLATE_PROJECTION_IMMUTABLE' },
+    })
+
     const deleteRes = await request(app).delete(`/api/templates/${id}`)
     expect(deleteRes.status).toBe(200)
     expect(deleteRes.body.success).toBe(true)
@@ -83,6 +92,35 @@ describe('Templates API', () => {
     })
 
     await request(app).delete(`/api/templates/${id}`)
+  })
+
+  it('keeps template JSON when deletion persistence fails', async () => {
+    const created = await request(app)
+      .post('/api/templates')
+      .send({
+        title: `Persistence failure ${Date.now()}`,
+        slides: [{ id: 'persistence-failure-slide', elements: [] }],
+      })
+    expect(created.status).toBe(201)
+    const id = created.body.id
+    try {
+      const writeJson = fs.writeJson.bind(fs)
+      vi.spyOn(fs, 'writeJson').mockImplementation(async (file, ...args) => {
+        if (String(file).includes('templates.json')) {
+          throw new Error('injected template persistence failure')
+        }
+        return writeJson(file, ...args)
+      })
+      const deleted = await request(app).delete(`/api/templates/${id}`)
+      expect(deleted).toMatchObject({
+        status: 500,
+        body: { error: 'injected template persistence failure' },
+      })
+      expect((await storage.readTemplates()).some((template) => template.id === id)).toBe(true)
+    } finally {
+      vi.restoreAllMocks()
+      await request(app).delete(`/api/templates/${id}`)
+    }
   })
 
   it('rejects invalid custom template payloads', async () => {

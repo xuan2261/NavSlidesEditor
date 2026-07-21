@@ -16,6 +16,7 @@ const {
 } = require('../services/pptx-import/create-imported-presentation')
 const defaultJobManager = require('../services/pptx-import-job-manager')
 const { createMediaTransaction } = require('../services/pptx-import/media-dedup')
+const { getDesignTokensForRevealTheme } = require('revealjs-shared')
 const { sweepStaleTempUploads } = require('../services/pptx-import/temp-upload-sweep')
 const {
   getPackageStore,
@@ -156,11 +157,25 @@ async function runImport({
       const presentationId = uuidv4()
       try {
         jobManager.emitProgress(jobId, { stage: 'committing-package', percent: 96, message: 'Publishing package authority' })
+        const packageProjection = {
+          ...result.presentation,
+          id: presentationId,
+          designTokens: result.presentation.designTokens ||
+            getDesignTokensForRevealTheme(result.presentation.theme || 'black'),
+        }
+        const compatibilityUpdatedAt = new Date().toISOString()
+        const compatibilityPresentation = {
+          ...packageProjection,
+          createdAt: compatibilityUpdatedAt,
+          updatedAt: compatibilityUpdatedAt,
+        }
         const packageResult = await withAbort(trackStage(packageCommit(filePath, {
           jobId,
           presentationId,
-          projection: { ...result.presentation, id: presentationId },
+          projection: packageProjection,
           sourceMap: result.sourceMap,
+          compatibilityPresentation,
+          compatibilityUpdatedAt,
         })), abortController.signal, () => packageRollback?.({ jobId, presentationId }),
         (cleanup) => cleanupPromises.push(cleanup))
         if (abortController.signal.aborted) {
@@ -175,6 +190,8 @@ async function runImport({
             originalName,
             id: presentationId,
             packageHead: packageResult.head,
+            createdAt: compatibilityUpdatedAt,
+            updatedAt: compatibilityUpdatedAt,
           })),
           abortController.signal,
           (created) => deletePresentation(created?.id),

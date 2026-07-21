@@ -27,6 +27,19 @@ describe('canonical mutation journal', () => {
     expect(clean).not.toHaveProperty('_pptxEdited')
     expect(clean).not.toHaveProperty('packageRevisionId')
     expect(clean.slides[0].elements[0]).not.toHaveProperty('_pptxSource')
+    const enriched = canonicalEditableSnapshot({
+      ...base,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+      designTokens: { background: '#fff' },
+      pluginData: { createdAt: 'plugin-data', updatedAt: 'plugin-data' },
+    })
+    expect(enriched).not.toMatchObject({
+      createdAt: expect.any(String),
+      updatedAt: expect.any(String),
+    })
+    expect(enriched.designTokens).toEqual({ background: '#fff' })
+    expect(enriched.pluginData).toEqual({ createdAt: 'plugin-data', updatedAt: 'plugin-data' })
     expect(() => canonicalEditableSnapshot(base, { maxSlides: 1 })).toThrow(/budget/i)
   })
 
@@ -110,6 +123,38 @@ describe('canonical mutation journal', () => {
     expect(journal.operations[0].textTransport.document.content[0].content[0].text).toBe('after')
     expect(journal.operations[0].sourceRef.relationshipChain).toEqual(['ppt/_rels/presentation.xml.rels'])
     expect(journal.level4Promoted).toBe(false)
+  })
+
+  it.each([
+    ['deck metadata', (after) => { after.title = 'Unsupported title' }],
+    ['slide metadata', (after) => { after.slides[0].background = { type: 'color', color: '#fff' } }],
+  ])('rejects %s combined with a valid text edit', (_label, mutate) => {
+    const before = {
+      id: 'deck',
+      title: 'Original',
+      slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>before</p>' }] }],
+    }
+    const after = structuredClone(before)
+    after.slides[0].elements[0].content = '<p>after</p>'
+    mutate(after)
+    const authoritative = {
+      ...source,
+      kind: 'text-run',
+      packageGeneration: 1,
+      revisionId: 'r0',
+      matchMethod: 'native-id',
+      confidence: 1,
+      relationshipChain: ['ppt/_rels/presentation.xml.rels'],
+      groupAncestry: [],
+      occurrencePath: [0],
+    }
+
+    expect(() => deriveCanonicalPlainTextJournal(before, after, {
+      baseRevisionId: 'r0',
+      sourceMap: { schemaVersion: 1, presentationId: 'deck', revisionId: 'r0', packageGeneration: 1, entries: { 's1:e1': authoritative } },
+      textTransports: { 's1:e1': { format: 'tiptap-html', schemaVersion: 1, html: '<p>after</p>' } },
+      matrixAuthorityEpoch: 1,
+    })).toThrow(/canonical plain-text journal/i)
   })
 
   it('derives a canonical text operation for a vertical child slide [cap:import.pptx]', () => {

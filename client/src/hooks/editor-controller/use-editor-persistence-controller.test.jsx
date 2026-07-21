@@ -106,6 +106,78 @@ describe('useEditorPersistenceController conflict recovery', () => {
     expect(api.updatePresentation).not.toHaveBeenCalled()
   })
 
+  it('adopts a validated-export successor generation for the next save', async () => {
+    api.updatePresentation.mockResolvedValueOnce({ aggregateGeneration: 4 })
+    const { result } = renderHook(() => useHarness())
+    await flushMicrotasks()
+    expect(result.current.controller.endExport).toBeTypeOf('function')
+
+    act(() => result.current.controller.adoptGeneration(3))
+    act(() => result.current.setPresentation(snapshot('Post-export edit', 1)))
+    await act(async () => vi.advanceTimersByTimeAsync(1500))
+
+    expect(api.updatePresentation).toHaveBeenCalledWith(
+      'deck-1',
+      expect.objectContaining({
+        title: 'Post-export edit',
+        aggregateGeneration: 3,
+      })
+    )
+  })
+
+  it('flushes a queued save before validated export', async () => {
+    api.updatePresentation.mockResolvedValueOnce({ aggregateGeneration: 2 })
+    const { result } = renderHook(() => useHarness())
+    await flushMicrotasks()
+
+    act(() => result.current.setPresentation(snapshot('Local edit', 1)))
+    const saved = await act(async () => result.current.controller.flushPendingSave())
+
+    expect(saved).toBe(true)
+    expect(api.updatePresentation).toHaveBeenCalledWith(
+      'deck-1', expect.objectContaining({ title: 'Local edit' })
+    )
+  })
+
+  it('fences export generation adoption across route changes', async () => {
+    api.getPresentation
+      .mockResolvedValueOnce(snapshot('Remote A', 1, 'deck-1'))
+      .mockResolvedValueOnce(snapshot('Remote B', 2, 'deck-2'))
+    api.updatePresentation.mockResolvedValueOnce({ aggregateGeneration: 3 })
+    const { result, rerender } = renderHook(
+      ({ id }) => useHarness(id),
+      { initialProps: { id: 'deck-1' } }
+    )
+    await flushMicrotasks()
+    const staleAdopt = result.current.controller.adoptGeneration
+
+    rerender({ id: 'deck-2' })
+    await flushMicrotasks()
+    act(() => staleAdopt(9, 'deck-1'))
+    act(() => result.current.setPresentation(snapshot('Local B', 2, 'deck-2')))
+    await act(async () => vi.advanceTimersByTimeAsync(1500))
+
+    expect(api.updatePresentation).toHaveBeenCalledWith(
+      'deck-2', expect.objectContaining({ aggregateGeneration: 2 })
+    )
+  })
+
+  it('fails the export flush barrier when a failed retry blocks a queued successor', async () => {
+    const failedSave = new Error('save failed')
+    api.updatePresentation
+      .mockRejectedValueOnce(failedSave)
+      .mockRejectedValueOnce(failedSave)
+    const { result } = renderHook(() => useHarness())
+    await flushMicrotasks()
+
+    act(() => result.current.setPresentation(snapshot('First edit', 1)))
+    await act(async () => vi.advanceTimersByTimeAsync(1500))
+    act(() => result.current.setPresentation(snapshot('Queued edit', 1)))
+
+    await expect(result.current.controller.flushPendingSave()).resolves.toBe(false)
+    expect(api.updatePresentation).toHaveBeenCalledTimes(2)
+  })
+
   it('requires an explicit recovery choice before applying the local draft', async () => {
     const draft = {
       key: 'presentation:deck-1',

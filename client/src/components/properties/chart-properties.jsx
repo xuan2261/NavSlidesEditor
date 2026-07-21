@@ -5,7 +5,14 @@ import { Button, Input, Select, ColorPicker } from '../../components/ui'
 
 export default function ChartProperties({ element, onUpdate }) {
   const chartData = element.chartData || {}
-  const preserveOnly = element._pptxChartMeta?.preservationTier === 'preserve-only'
+  const chartMeta = element._pptxChartMeta
+  const importedChart = Boolean(chartMeta?.source || chartMeta?.originalType || chartMeta?.rowId)
+  const preserveOnly = importedChart && !(
+    chartMeta?.preservationTier === 'editable' &&
+    chartMeta?.adapterQualified === true &&
+    chartMeta?.transactionEligible === true &&
+    chartMeta?.level4Promoted === true
+  )
   const originalType = String(element._pptxChartMeta?.originalType || 'chart')
   const originalTypeLabel = `${originalType.charAt(0).toUpperCase()}${originalType.slice(1)}`
   const datasets = chartData.datasets?.length

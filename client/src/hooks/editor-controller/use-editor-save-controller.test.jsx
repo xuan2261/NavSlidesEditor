@@ -48,7 +48,106 @@ const settle = () =>
 describe('useEditorSaveController route ownership', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    writeEditorDraft.mockReset().mockResolvedValue(true)
     usePresentationStore.setState({ saveConflict: null })
+  })
+
+  it('defers a queued edit during a slow validated export and rebases it to R1', async () => {
+    let resolveDownload
+    const slowDownload = new Promise((resolve) => {
+      resolveDownload = resolve
+    })
+    api.updatePresentation.mockResolvedValueOnce({ aggregateGeneration: 4 })
+    let resolveRebasedDraft
+    writeEditorDraft.mockImplementation((draft) => {
+      if (draft.snapshot.aggregateGeneration === 3) {
+        return new Promise((resolve) => {
+          resolveRebasedDraft = resolve
+        })
+      }
+      return Promise.resolve(true)
+    })
+
+    const { result } = renderHook(() =>
+      useEditorSaveController({ isTemplate: false })
+    )
+    let exportToken
+    act(() => {
+      exportToken = result.current.beginExport()
+      result.current.scheduleSave({ ...snapshot('Edit during export'), aggregateGeneration: 2 }, 0)
+    })
+    await settle()
+
+    expect(exportToken).toBe(1)
+    expect(api.updatePresentation).not.toHaveBeenCalled()
+    const pendingFlush = result.current.flushAndWait()
+    await settle()
+    expect(api.updatePresentation).not.toHaveBeenCalled()
+
+    const exportPromise = slowDownload.then(() => {
+      act(() => {
+        result.current.adoptGeneration(3)
+        result.current.endExport(exportToken)
+      })
+    })
+    resolveDownload(new Blob(['R1']))
+    await act(async () => {
+      await exportPromise
+      await settle()
+    })
+    expect(api.updatePresentation).not.toHaveBeenCalled()
+    expect(resolveRebasedDraft).toBeTypeOf('function')
+    resolveRebasedDraft(true)
+    await act(async () => {
+      await pendingFlush
+      await settle()
+    })
+
+    expect(api.updatePresentation).toHaveBeenCalledTimes(1)
+    expect(api.updatePresentation.mock.calls[0][1]).toMatchObject({
+      title: 'Edit during export',
+      aggregateGeneration: 3,
+    })
+    expect(writeEditorDraft).toHaveBeenLastCalledWith(expect.objectContaining({
+      snapshot: expect.objectContaining({
+        title: 'Edit during export',
+        aggregateGeneration: 3,
+      }),
+    }))
+  })
+
+  it('rejects a concurrent validated export token without releasing the active barrier', () => {
+    const { result } = renderHook(() =>
+      useEditorSaveController({ isTemplate: false })
+    )
+
+    let firstToken
+    let secondToken
+    act(() => {
+      firstToken = result.current.beginExport()
+      secondToken = result.current.beginExport()
+    })
+
+    expect(firstToken).toBe(1)
+    expect(secondToken).toBeNull()
+    act(() => result.current.endExport(secondToken))
+    act(() => result.current.endExport(firstToken))
+  })
+
+  it('cancels a waiting export flush when the route is reset', async () => {
+    const { result } = renderHook(() =>
+      useEditorSaveController({ isTemplate: false })
+    )
+    act(() => {
+      result.current.beginExport()
+      result.current.scheduleSave(snapshot('Route-bound edit'), 0)
+    })
+    const pendingFlush = result.current.flushAndWait()
+    await settle()
+    act(() => result.current.resetForRoute())
+
+    await expect(pendingFlush).resolves.toBe(false)
+    expect(api.updatePresentation).not.toHaveBeenCalled()
   })
 
   it('does not treat a same-id save from a prior route as the current successor', async () => {

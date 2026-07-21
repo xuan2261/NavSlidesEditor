@@ -15,6 +15,7 @@ describe('production OPC corpus tier audit', () => {
 
     expect(result).toEqual(expect.objectContaining({
       schemaVersion: 1,
+      matrixHash: expect.stringMatching(/^[a-f0-9]{64}$/),
       classified: true,
       decks: expect.any(Array),
     }))
@@ -22,6 +23,11 @@ describe('production OPC corpus tier audit', () => {
     for (const deck of result.decks) {
       expect(deck.classified).toBe(true)
       for (const object of deck.objects) {
+        expect(object).toMatchObject({
+          rowId: expect.stringMatching(/^(complex|presentation)\./),
+          featureTier: expect.stringMatching(/^(native-editable|structured-partial|replace-only-visual|preserved-opaque|unsupported-blocking)$/),
+          matrixHash: result.matrixHash,
+        })
         expect(object.tier).toMatchObject({
           import: expect.any(String),
           editedExport: expect.any(String),

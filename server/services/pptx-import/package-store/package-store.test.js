@@ -53,6 +53,20 @@ afterEach(async () => {
 })
 
 describe('package store lifecycle MVP', () => {
+  it('serializes direct metadata mutations under one owned writer', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    try {
+      await Promise.all([
+        store.mutate((next) => { next.matrixAuthorityEpoch += 1 }),
+        store.mutate((next) => { next.matrixAuthorityEpoch += 1 }),
+      ])
+      expect(store.getState()).toMatchObject({ generation: 2, matrixAuthorityEpoch: 3 })
+    } finally {
+      await store.releaseWriter()
+    }
+  })
+
   it('keeps one writer for the process lifetime and serializes metadata mutations', async () => {
     const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'package-store-runtime-'))
     dirs.push(rootDir)
@@ -370,6 +384,39 @@ describe('package store lifecycle MVP', () => {
     }))
   })
 
+  it('queues compatibility recovery alongside package publication', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const projection = { id: 'deck-import-recovery', title: 'Imported', slides: [] }
+
+    await store.commitImport(await minimalPptx(), {
+      jobId: 'job-import-recovery',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+      compatibilityPresentation: {
+        ...projection,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      },
+      compatibilityUpdatedAt: '2026-01-01T00:00:00.000Z',
+    })
+
+    expect(store.getState().compatibilityOutbox).toEqual([
+      expect.objectContaining({
+        operation: 'upsert',
+        presentationId: projection.id,
+        generation: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        presentation: expect.objectContaining({
+          id: projection.id,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          pptxAggregateHead: expect.objectContaining({ generation: 1 }),
+        }),
+      }),
+    ])
+  })
+
   it.each([
     ['missing', undefined],
     ['malformed', { entries: [] }],
@@ -479,13 +526,24 @@ describe('package store lifecycle MVP', () => {
       projection,
       sourceMap: { entries: {} },
     })
+    await store.mutate((next) => {
+      next.mutationResults.push({
+        schemaVersion: 1,
+        operation: 'projection-save',
+        presentationId: projection.id,
+        idempotencyKey: 'job-import-rollback',
+        requestHash: 'a'.repeat(64),
+      })
+    })
 
     await store.rollbackImport({ jobId: 'job-import-rollback', presentationId: projection.id })
     const state = store.getState()
 
     expect(state.heads).toHaveLength(0)
     expect(state.owners).toHaveLength(0)
-    expect(state.mutationResults).toHaveLength(0)
+    expect(state.mutationResults).toEqual([
+      expect.objectContaining({ operation: 'projection-save', idempotencyKey: 'job-import-rollback' }),
+    ])
     expect(state.jobs).toContainEqual(expect.objectContaining({
       id: 'job-import-rollback', status: 'failed', transactionState: 'rolled-back',
     }))

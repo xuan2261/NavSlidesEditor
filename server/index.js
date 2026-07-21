@@ -16,8 +16,7 @@ const {
 const { errorHandler } = require('./middleware/error-handler')
 const { createLocalMutationIngressPolicy } = require('./middleware/local-mutation-ingress')
 const { generateRevealHTML } = require('revealjs-shared')
-const { normalizePptxImportedPresentationForRead } = require('./services/presentation-normalization')
-const { findServeablePresentation } = require('./services/presentation-finder')
+const { readAuthoritativePresentation } = require('./services/package-backed-presentation-read')
 const { recordView } = require('./routes/analytics')
 const { setupSocketHandlers } = require('./services/socket-handler')
 const { setupGameSocketHandlers } = require('./services/game-socket-handler')
@@ -163,13 +162,13 @@ app.post('/api/presentations/:id/github/push', (req, res, next) => {
 // Helper for presentation viewer HTML payload (with server-side XSS sanitization)
 async function renderShareView(presentationId, res) {
   // Serve-guard (C2): a soft-deleted deck must not render even via a live share
-  // token. findServeablePresentation returns null for missing or trashed decks.
-  const presentation = await findServeablePresentation(presentationId, { normalize: false })
-  if (!presentation) return res.status(404).send('Presentation not found')
+  // token. The authoritative reader returns null for missing or trashed decks.
+  const resolved = await readAuthoritativePresentation(presentationId)
+  if (!resolved) return res.status(404).send('Presentation not found')
 
   // Keep html embeds trusted and programmable in share mode too.
   // We only normalize customCSS risky URL/expression patterns.
-  const sanitized = JSON.parse(JSON.stringify(normalizePptxImportedPresentationForRead(presentation)))
+  const sanitized = JSON.parse(JSON.stringify(resolved.presentation))
   // Sanitize customCSS to prevent expression() / javascript: injection
   if (sanitized.customCSS) {
     sanitized.customCSS = sanitized.customCSS

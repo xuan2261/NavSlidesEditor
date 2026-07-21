@@ -21,12 +21,14 @@ const packageLifecycle = require('../services/package-lifecycle-integration')
 
 let historyRouter
 let packageHead
+let beforeRetainHead
 let presentationLockDepth = 0
 let originalWithPresentations
 const originalLifecycleMethods = {}
 const lifecycleMethods = [
   'getRestorablePackageHead',
   'releasePackageOwner',
+  'releasePackageOwnerWithRetry',
   'retainPackageHead',
   'restorePackageForward',
 ]
@@ -35,6 +37,9 @@ function makeApp() {
   const app = express()
   app.use(express.json())
   app.use('/api/presentations', historyRouter)
+  app.use((error, _req, res, _next) => {
+    res.status(error.status || 500).json({ error: error.message, code: error.code })
+  })
   return app
 }
 
@@ -55,6 +60,11 @@ beforeAll(() => {
     packageLifecycle[method] = async (...args) => {
       if (presentationLockDepth > 0) {
         throw new Error(`Package lifecycle ${method} ran under the presentations lock`)
+      }
+      if (method === 'retainPackageHead' && beforeRetainHead) {
+        const advanceHead = beforeRetainHead
+        beforeRetainHead = null
+        await advanceHead()
       }
       return originalLifecycleMethods[method](...args)
     }
@@ -77,6 +87,8 @@ afterAll(async () => {
 
 describe('package-backed history lock order', () => {
   beforeEach(async () => {
+    beforeRetainHead = null
+    presentationLockDepth = 0
     await packageRuntime.shutdownPackageStore()
     storage.initDataFiles()
     await storage.writePresentations([
@@ -124,6 +136,50 @@ describe('package-backed history lock order', () => {
     expect((await storage.readPresentations())[0]).toMatchObject({
       title: 'Original',
       pptxAggregateHead: { generation: 2 },
+    })
+  })
+
+  it('rejects a snapshot when its authoritative package head becomes stale', async () => {
+    beforeRetainHead = async () => {
+      await packageRuntime.withPackageStore((store) => store.mutate((next) => {
+        next.heads.find((head) => head.presentationId === 'deck-1').generation += 1
+      }))
+    }
+
+    const response = await request(makeApp())
+      .post('/api/presentations/deck-1/snapshot')
+      .send({ name: 'stale' })
+
+    expect(response).toMatchObject({ status: 409, body: { code: 'STALE_GENERATION' } })
+    const files = await fs.readdir(path.join(storage.HISTORY_DIR, 'deck-1'))
+    expect(files.filter((file) => file.endsWith('.json'))).toEqual([])
+    await packageRuntime.withPackageStore((store) => {
+      expect(store.getState().owners.filter((owner) => owner.ownerType === 'history')).toEqual([])
+    })
+  })
+
+  it('rejects restore when its pre-restore snapshot head becomes stale', async () => {
+    const app = makeApp()
+    const snapshot = await request(app)
+      .post('/api/presentations/deck-1/snapshot')
+      .send({ name: 'restore target' })
+    expect(snapshot.status).toBe(200)
+
+    beforeRetainHead = async () => {
+      await packageRuntime.withPackageStore((store) => store.mutate((next) => {
+        next.heads.find((head) => head.presentationId === 'deck-1').generation += 1
+      }))
+    }
+    const response = await request(app)
+      .post(`/api/presentations/deck-1/restore/${snapshot.body.id}`)
+
+    expect(response).toMatchObject({ status: 409, body: { code: 'STALE_GENERATION' } })
+    const files = await fs.readdir(path.join(storage.HISTORY_DIR, 'deck-1'))
+    expect(files.filter((file) => file.endsWith('.json'))).toEqual([
+      `${snapshot.body.id}.json`,
+    ])
+    await packageRuntime.withPackageStore((store) => {
+      expect(store.getState().owners.filter((owner) => owner.ownerType === 'history')).toHaveLength(1)
     })
   })
 })

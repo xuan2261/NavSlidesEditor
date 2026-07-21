@@ -8,6 +8,7 @@ import {
   validateProjectFile,
 } from '../utils/import-project'
 import { api } from '../utils/api'
+import { usePresentationStore } from '../stores/presentation-store'
 import { showError, showNotice } from '../utils/app-feedback'
 
 function pptxContentFingerprint(presentation) {
@@ -45,7 +46,10 @@ function downloadBlob(blob, filename) {
  * @returns {{onExportPDF, onExportPPTX, onExportHTML, onExportOffline,
  *   onExportProject, onOpenProject}}
  */
-export function useExportActions(presentation) {
+export function useExportActions(
+  presentation,
+  { beginExport, endExport, flushPendingSave, onAggregateGeneration } = {}
+) {
   const pptxCleanStateRef = useRef({ presentationId: null, fingerprint: '', locallyEdited: false })
   const cleanState = pptxCleanStateRef.current
   if (cleanState.presentationId !== presentation?.id) {
@@ -122,10 +126,23 @@ export function useExportActions(presentation) {
   }, [presentation])
 
   const onExportValidatedEditedRevision = useCallback(async () => {
+    let exportToken = null
     try {
+      if (typeof flushPendingSave === 'function' && !(await flushPendingSave())) {
+        throw new Error('Unable to save current edits before validated export')
+      }
+      if (typeof beginExport === 'function') {
+        exportToken = beginExport()
+        if (exportToken === null) {
+          throw new Error('Validated edited PPTX export is already in progress')
+        }
+      }
       const fidelity = await api.getPptxFidelity(presentation.id)
       const generation = fidelity.aggregateGeneration
-      if (!fidelity.exports?.validatedEdited?.available || !Number.isSafeInteger(generation)) {
+      const validatedEdited = fidelity.exports?.validatedEdited
+      const canExportOrReconcile = validatedEdited?.available === true ||
+        validatedEdited?.reconciliationAvailable === true
+      if (!canExportOrReconcile || !Number.isSafeInteger(generation)) {
         throw new Error('Validated edited export is not currently available')
       }
       const key = globalThis.crypto?.randomUUID?.() ||
@@ -133,14 +150,25 @@ export function useExportActions(presentation) {
       const bytes = await api.downloadValidatedEditedPptx(
         presentation.id, generation, key
       )
+      if (Number.isSafeInteger(bytes?.aggregateGeneration)) {
+        const store = usePresentationStore.getState()
+        if (!store.presentation || store.presentation.id === presentation.id) {
+          store.adoptAggregateGeneration(bytes.aggregateGeneration)
+        }
+        if (typeof onAggregateGeneration === 'function') {
+          onAggregateGeneration(bytes.aggregateGeneration, presentation.id)
+        }
+      }
       const filename = `${(presentation.title || 'presentation')
         .replace(/[^a-z0-9._-]+/gi, '_')}.pptx`
       downloadBlob(bytes, filename)
     } catch (err) {
       console.error('Validated edited PPTX export failed:', err)
       showError('Validated edited PPTX export failed: ' + err.message)
+    } finally {
+      if (exportToken !== null && typeof endExport === 'function') endExport(exportToken)
     }
-  }, [presentation])
+  }, [beginExport, endExport, flushPendingSave, onAggregateGeneration, presentation])
 
   const onExportHTML = useCallback(async () => {
     try {

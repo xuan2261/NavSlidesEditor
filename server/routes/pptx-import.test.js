@@ -116,6 +116,8 @@ describe('PPTX import route', () => {
             packageRevisionId: 'r0-authoritative',
             generation: 1,
           })
+          expect(options.createdAt).toBe(commitInput.input.compatibilityUpdatedAt)
+          expect(options.updatedAt).toBe(commitInput.input.compatibilityUpdatedAt)
           return { ...presentation, id: options.id }
         },
         deletePresentation: async () => true,

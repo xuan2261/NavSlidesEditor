@@ -22,6 +22,7 @@ class PackageStore {
     this.lock = new WriterLock(rootDir)
     this.metadata = new StateStore(rootDir)
     this.fencingEpoch = 0
+    this.mutationTail = Promise.resolve()
   }
 async init() {
     await this.blobs.init()
@@ -60,26 +61,34 @@ stageBlob(source, options) {
     return this.blobs.stage(source, options)
   }
 async mutate(mutator, options = {}) {
-    await this.assertWriter()
-    if (options.expectedGeneration !== undefined &&
-        options.expectedGeneration !== this.metadata.state.generation) {
-      throw Object.assign(new Error('Package store generation is stale'), {
-        code: 'STALE_GENERATION',
-        currentGeneration: this.metadata.state.generation,
+    const previous = this.mutationTail
+    let release
+    this.mutationTail = new Promise((resolve) => { release = resolve })
+    try {
+      await previous
+      await this.assertWriter()
+      if (options.expectedGeneration !== undefined &&
+          options.expectedGeneration !== this.metadata.state.generation) {
+        throw Object.assign(new Error('Package store generation is stale'), {
+          code: 'STALE_GENERATION',
+          currentGeneration: this.metadata.state.generation,
+        })
+      }
+      const next = this.getState()
+      mutator(next)
+      next.generation += 1
+      next.fencingEpoch = this.fencingEpoch
+      await this.metadata.publish(next, {
+        assertWriter: () => this.assertWriter(),
+        faultAfterIndex: options.faultAfterIndex,
+        faultAfterPrepare: options.faultAfterPrepare,
+        faultAfterRoot: options.faultAfterRoot,
+        faultAfterCompletion: options.faultAfterCompletion,
       })
+      return next
+    } finally {
+      release()
     }
-    const next = this.getState()
-    mutator(next)
-    next.generation += 1
-    next.fencingEpoch = this.fencingEpoch
-    await this.metadata.publish(next, {
-      assertWriter: () => this.assertWriter(),
-      faultAfterIndex: options.faultAfterIndex,
-      faultAfterPrepare: options.faultAfterPrepare,
-      faultAfterRoot: options.faultAfterRoot,
-      faultAfterCompletion: options.faultAfterCompletion,
-    })
-    return next
   }
 async commitOriginal(source, owner, options = {}) {
     return originalCommit.commitOriginal(this, source, owner, options)
@@ -119,17 +128,28 @@ async addOwner(revisionId, owner, options) {
   }
 async releaseOwner(owner) {
     validateOwner(owner)
+    const owned = this.metadata.state.owners.some((item) =>
+      item.ownerType === owner.ownerType && item.ownerId === owner.ownerId
+    )
+    if (!owned) return false
     await this.mutate((next) => {
       next.owners = next.owners.filter(
         (item) => item.ownerType !== owner.ownerType || item.ownerId !== owner.ownerId
       )
     })
+    return true
   }
 async duplicatePresentationOwner(sourceId, destinationId, options = {}) {
     return lifecycle.duplicatePresentationOwner(this, sourceId, destinationId, options)
   }
+async instantiateRetainedHead(retainedOwner, destinationId, options = {}) {
+    return lifecycle.instantiateRetainedHead(this, retainedOwner, destinationId, options)
+  }
 async quarantinePresentation(presentationId, options = {}) {
     return lifecycle.quarantinePresentation(this, presentationId, options)
+  }
+async restoreQuarantinedHead(retainedOwner, presentationId, options = {}) {
+    return lifecycle.restoreQuarantinedHead(this, retainedOwner, presentationId, options)
   }
 async retainHead(owner, presentationId, options = {}) {
     return lifecycle.retainHead(this, owner, presentationId, options)
@@ -140,8 +160,8 @@ getRestorableHead(presentationId, retainedOwner) {
 async restoreForward(presentationId, retainedOwner, options = {}) {
     return lifecycle.restoreForward(this, presentationId, retainedOwner, options)
   }
-exportPresentationPackage(presentationId) {
-    return portable.exportPresentationPackage(this, presentationId)
+exportPresentationPackage(presentationId, options = {}) {
+    return portable.exportPresentationPackage(this, presentationId, options)
   }
 importPresentationPackage(bundle, presentationId, options = {}) {
     return portable.importPresentationPackage(this, bundle, presentationId, options)

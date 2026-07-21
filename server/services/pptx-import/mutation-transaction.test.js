@@ -95,6 +95,37 @@ describe('text OOXML mutation transaction vertical slice', () => {
     expect(store.getState().revisions).toHaveLength(1)
   })
 
+  it('scopes idempotency keys by operation', async () => {
+    const { store, service } = await setup()
+    await store.acquireWriter()
+    try {
+      await store.mutate((next) => {
+        next.mutationResults.push({
+          schemaVersion: 1,
+          presentationId: 'deck',
+          idempotencyKey: 'shared-key',
+          operation: 'projection-save',
+          requestHash: '0'.repeat(64),
+        })
+      })
+    } finally {
+      await store.releaseWriter()
+    }
+
+    const result = await service.execute({
+      presentationId: 'deck', expectedGeneration: 1, idempotencyKey: 'shared-key',
+      after: snapshots('<p>After</p>'),
+      textTransports: {
+        's1:e1': {
+          format: 'tiptap-json', schemaVersion: 1,
+          document: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'After' }] }] },
+        },
+      },
+    })
+
+    expect(result).toMatchObject({ ok: true, idempotent: false, generation: 2 })
+  })
+
   it('publishes R1 from the canonical plain-run journal and reuses it idempotently', async () => {
     const { store, service } = await setup()
     const request = {
@@ -103,7 +134,9 @@ describe('text OOXML mutation transaction vertical slice', () => {
     }
     const result = await service.execute(request)
     expect(result).toMatchObject({ ok: true, generation: 2 })
+    expect(store.getState().mutationResults.at(-1).operation).toBe('validated-edited-export')
     expect(store.getState().revisions).toHaveLength(2)
+    expect(store.getState().candidateBlobs).toHaveLength(0)
     const rebound = store.getState().mutationResults.at(-1).sourceMap.entries['s1:e1']
     expect(rebound).toMatchObject({ packageGeneration: 2, nativeId: '4' })
     const zip = await JSZip.loadAsync(result.bytes)
@@ -139,7 +172,9 @@ describe('text OOXML mutation transaction vertical slice', () => {
     })).rejects.toThrow(/Injected fault after prepare/)
     expect(store.getState().heads[0]).toMatchObject({ generation: 1 })
     expect(store.getState().revisions).toHaveLength(1)
-    expect((await store.auditPhysicalCollection()).candidates).toHaveLength(1)
+    expect((await store.auditPhysicalCollection()).candidates).toHaveLength(0)
+    expect((await store.auditPhysicalCollection()).quarantined).toHaveLength(1)
+    expect(store.getState().candidateBlobs).toHaveLength(1)
   })
 
   it('blocks the current legacy plain-string journal before adapter dispatch', async () => {
@@ -296,5 +331,21 @@ describe('text OOXML mutation transaction vertical slice', () => {
       status: 422,
       reasonCode: 'CANONICAL_TEXT_JOURNAL_INVALID',
     })
+  })
+
+  it('rejects oversized idempotency keys before reading package state', async () => {
+    const { store, service } = await setup()
+    const result = await service.execute({
+      presentationId: 'deck', expectedGeneration: 1, idempotencyKey: 'x'.repeat(201),
+      after: snapshots('<p>After</p>'),
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      status: 400,
+      reasonCode: 'INVALID_IDEMPOTENCY_KEY',
+      reasonCodes: ['INVALID_IDEMPOTENCY_KEY'],
+    })
+    expect(store.getState().revisions).toHaveLength(1)
   })
 })

@@ -1,30 +1,43 @@
+const { featureMatrixHash, getFeatureRow } = require('./canonical-feature-matrix')
+
 const BLOCK = 'unsupported-blocking'
 const PRESERVE = 'preserve-only'
 const NATIVE = 'native-metadata'
+const MATRIX_HASH = featureMatrixHash()
+
+function tier(rowId, importMode, editedExport) {
+  const row = getFeatureRow(rowId)
+  if (!row) throw new Error(`Missing canonical complex-object row: ${rowId}`)
+  return Object.freeze({
+    rowId: row.id,
+    tier: row.tier,
+    claimCeiling: row.claimCeiling,
+    matrixHash: MATRIX_HASH,
+    import: importMode,
+    editedExport,
+    originalRecovery: 'exact',
+  })
+}
 
 const COMPLEX_OBJECT_TIERS = Object.freeze({
-  smartArt: tier(PRESERVE, PRESERVE),
-  equation: tier(PRESERVE, PRESERVE),
-  ole: tier(PRESERVE, BLOCK),
-  activeX: tier(PRESERVE, BLOCK),
-  macro: tier(PRESERVE, BLOCK),
-  signature: tier(PRESERVE, BLOCK),
-  encryption: tier(BLOCK, BLOCK),
-  protection: tier(PRESERVE, BLOCK),
-  externalMedia: tier(NATIVE, PRESERVE),
-  vector: tier(NATIVE, PRESERVE),
-  '3d': tier(PRESERVE, PRESERVE),
-  zoom: tier(PRESERVE, PRESERVE),
-  comments: tier(NATIVE, PRESERVE),
-  ink: tier(PRESERVE, PRESERVE),
-  icons: tier(PRESERVE, PRESERVE),
-  custom: tier(PRESERVE, PRESERVE),
-  unknown: tier(BLOCK, BLOCK),
+  smartArt: tier('complex.smartart.diagram', PRESERVE, PRESERVE),
+  equation: tier('complex.equation.ooxml', PRESERVE, PRESERVE),
+  ole: tier('complex.ole.embedded-object', PRESERVE, BLOCK),
+  activeX: tier('complex.activex.control', PRESERVE, BLOCK),
+  macro: tier('complex.vba.macro', PRESERVE, BLOCK),
+  signature: tier('complex.digital-signature', PRESERVE, BLOCK),
+  encryption: tier('complex.encrypted-protected-package', BLOCK, BLOCK),
+  protection: tier('complex.encrypted-protected-package', PRESERVE, BLOCK),
+  externalMedia: tier('complex.external-media-link', NATIVE, PRESERVE),
+  vector: tier('complex.vector.svg-emf-wmf', NATIVE, PRESERVE),
+  '3d': tier('complex.model-3d', PRESERVE, PRESERVE),
+  zoom: tier('presentation.zoom-navigation', PRESERVE, PRESERVE),
+  comments: tier('presentation.comments', NATIVE, PRESERVE),
+  ink: tier('complex.ink.annotations', PRESERVE, PRESERVE),
+  icons: tier('complex.icons.asset', PRESERVE, PRESERVE),
+  custom: tier('complex.custom-xml.data', PRESERVE, PRESERVE),
+  unknown: tier('complex.unknown-content', BLOCK, BLOCK),
 })
-
-function tier(importMode, editedExport) {
-  return Object.freeze({ import: importMode, editedExport, originalRecovery: 'exact' })
-}
 
 const FLAG_KIND = {
   macro: 'macro',
@@ -115,6 +128,9 @@ function toSafeCapabilitySummary(value) {
     hasUnsupportedObjects: value.objects.length > 0,
     hasUnsafeImpact: value.hasUnsafeImpact,
     kinds: [...new Set(value.objects.map((item) => item.kind))].sort(),
+    rowIds: [...new Set(value.objects.map((item) => item.rowId))].sort(),
+    tiers: [...new Set(value.objects.map((item) => item.tier))].sort(),
+    matrixHash: MATRIX_HASH,
   }
 }
 

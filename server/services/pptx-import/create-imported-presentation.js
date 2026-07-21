@@ -9,6 +9,8 @@ const { toPptxOriginalMeta } = require('./original-package')
  */
 async function createImportedPresentation(mappedPresentation, originalArtifact, options = {}) {
   const now = new Date().toISOString()
+  const createdAt = options.createdAt || options.timestamp || now
+  const updatedAt = options.updatedAt || options.timestamp || createdAt
   const source = mappedPresentation && typeof mappedPresentation === 'object' ? mappedPresentation : {}
   const theme = source.theme || 'black'
   const designTokens = source.designTokens || getDesignTokensForRevealTheme(theme)
@@ -28,8 +30,8 @@ async function createImportedPresentation(mappedPresentation, originalArtifact, 
     })),
     pptxOriginal,
     ...(options.packageHead ? { pptxAggregateHead: options.packageHead } : {}),
-    createdAt: now,
-    updatedAt: now,
+    createdAt,
+    updatedAt,
   })
   delete presentation.isTemplate
   delete presentation.description

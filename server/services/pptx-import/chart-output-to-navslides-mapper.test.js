@@ -115,10 +115,15 @@ describe('mapChart', () => {
     expect(result.chartData.datasets[0].color).toBe('#6366f1') // first default color
   })
 
-  it('maps bar chart type', () => {
+  it('maps bar chart type without claiming an unqualified edit path', () => {
     const chart = makeChart({ chartType: 'clusteredBar' })
     const result = mapChart(chart)
     expect(result.chartType).toBe('bar')
+    expect(result._pptxChartMeta).toMatchObject({
+      rowId: 'chart.bar-column.embedded-workbook.literal-range',
+      tier: 'structured-partial',
+      preservationTier: 'preserve-only',
+    })
   })
 
   it('maps pie chart type', () => {

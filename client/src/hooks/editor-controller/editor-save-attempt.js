@@ -47,13 +47,21 @@ export async function persistEditorSave({
     const successor =
       queueRef.current?.routeEpoch === routeEpoch &&
       queueRef.current?.snapshot?.id === snapshot.id
-    if (!isTemplate && Number.isSafeInteger(saved?.aggregateGeneration) && (current || successor)) {
-      acceptedGenerationRef.current = saved.aggregateGeneration
-      if (current) usePresentationStore.getState().adoptAggregateGeneration(saved.aggregateGeneration)
+    if (!isTemplate && Number.isSafeInteger(saved?.aggregateGeneration) &&
+        saved.aggregateGeneration > 0 && (current || successor)) {
+      const acceptedGeneration = acceptedGenerationRef.current
+      const generation = acceptedGeneration === null
+        ? saved.aggregateGeneration
+        : Math.max(acceptedGeneration, saved.aggregateGeneration)
+      acceptedGenerationRef.current = generation
+      if (current) usePresentationStore.getState().adoptAggregateGeneration(generation)
       if (successor) {
+        const queuedGeneration = queueRef.current.snapshot.aggregateGeneration
         queueRef.current.snapshot = {
           ...queueRef.current.snapshot,
-          aggregateGeneration: saved.aggregateGeneration,
+          aggregateGeneration: Number.isSafeInteger(queuedGeneration)
+            ? Math.max(queuedGeneration, generation)
+            : generation,
         }
       }
     }

@@ -15,6 +15,10 @@ describe('complex object blocking policy', () => {
         import: expect.any(String),
         editedExport: expect.any(String),
         originalRecovery: 'exact',
+        rowId: expect.stringMatching(/^(complex|presentation)\./),
+        tier: expect.stringMatching(/^(native-editable|structured-partial|replace-only-visual|preserved-opaque|unsupported-blocking)$/),
+        claimCeiling: expect.any(String),
+        matrixHash: expect.stringMatching(/^[a-f0-9]{64}$/),
       }))
     }
   })
@@ -67,6 +71,7 @@ describe('complex object blocking policy', () => {
         kind,
         editedExport: 'unsupported-blocking',
         originalRecovery: 'exact',
+        tier: 'unsupported-blocking',
       })
     }
   )

@@ -32,10 +32,11 @@ async function hashFile(filePath) {
 }
 
 class BlobStore {
-  constructor(rootDir) {
+  constructor(rootDir, { syncDirectoryFn = syncDirectory } = {}) {
     this.rootDir = rootDir
     this.blobsDir = path.join(rootDir, 'blobs')
     this.stagingDir = path.join(rootDir, 'staging')
+    this.syncDirectory = syncDirectoryFn
     this.lastDirectorySync = null
   }
 
@@ -87,7 +88,18 @@ class BlobStore {
     } catch (error) {
       if (error.code !== 'ENOENT') throw error
       await fsp.rename(staged.stagePath, target)
-      this.lastDirectorySync = await syncDirectory(this.blobsDir)
+      try {
+        this.lastDirectorySync = await this.syncDirectory(this.blobsDir)
+      } catch (syncError) {
+        // The rename already made the content-addressed target visible. Verify it
+        // below before accepting an OS that cannot fsync the directory reliably.
+        if (syncError?.code !== 'EPERM') throw syncError
+        this.lastDirectorySync = {
+          supported: false,
+          platform: process.platform,
+          reason: 'directory-fsync-denied-after-rename',
+        }
+      }
     }
     const verified = await hashFile(target)
     if (verified.sha256 !== staged.sha256 || verified.byteLength !== staged.byteLength) {

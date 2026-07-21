@@ -137,7 +137,8 @@ async function importPptxFile(filePath, options = {}) {
   const sourceMap = await buildImportSourceMap(
     mapped.presentation,
     sceneGraph && !sceneGraph.error ? sceneGraph : null,
-    packageInfo.zip
+    packageInfo.zip,
+    options.sourceMapIdentity || {}
   )
   if (sceneGraph?.stats) stats.sceneGraph = sceneGraph.stats
   stats.primitivePlaceholderCount = (mapped.presentation?.slides || []).reduce((sum, slide) => {

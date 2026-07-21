@@ -28,11 +28,12 @@ authoritative final-artifact smoke.
 
 ## Work-in-Progress Evidence
 
-Focused candidate tests cover configured absolute-path discovery, exact
-size/hash identity, no PATH fallback, and a reverified content-addressed execution
-copy that remains valid if the administrator source is later replaced. Candidate
-verification does not execute OfficeCLI or enable validation. It is not a
-qualification receipt and does not close `G1`.
+Focused unit tests cover configured absolute-path discovery, exact size/hash
+identity, no PATH fallback, and the direct-local receipt schema. The receipt can
+be issued only after a fresh pinned version probe, but this workspace has no real
+OfficeCLI invocation or direct qualified receipt. Test doubles and prior
+execution-copy/launcher records remain contract or historical evidence only; they
+are not local `G1` evidence.
 
 ## Context Links
 

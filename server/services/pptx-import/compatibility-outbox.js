@@ -20,7 +20,12 @@ function queueCompatibilityWrite(state, input) {
   return record
 }
 
-function queueCompatibilityUpsert(state, { presentationId, generation, presentation }) {
+function queueCompatibilityUpsert(state, {
+  presentationId,
+  generation,
+  presentation,
+  updatedAt,
+}) {
   if (!presentation || presentation.id !== presentationId) {
     throw new TypeError('Compatibility presentation identity is invalid')
   }
@@ -28,6 +33,7 @@ function queueCompatibilityUpsert(state, { presentationId, generation, presentat
     operation: 'upsert',
     presentationId,
     generation,
+    ...(typeof updatedAt === 'string' ? { updatedAt } : {}),
     presentation: clone(presentation),
   })
 }

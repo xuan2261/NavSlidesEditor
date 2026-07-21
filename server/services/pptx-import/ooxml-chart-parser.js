@@ -67,6 +67,21 @@ function seriesValues(serXml) {
   return parsePtValues(val).map((v) => Number(v)).map((n) => (Number.isFinite(n) ? n : 0))
 }
 
+function chartSupportMetadata(row) {
+  return {
+    supportStatus: row.status,
+    rowId: row.rowId,
+    tier: row.tier,
+    claimCeiling: row.claimCeiling,
+    matrixHash: row.matrixHash,
+    adapterId: row.adapterId,
+    adapterQualified: row.adapterQualified,
+    transactionEligible: row.transactionEligible,
+    level4Promoted: row.level4Promoted,
+    preservationTier: row.preservationTier,
+  }
+}
+
 function detectOoxmlChartType(xml) {
   const plotArea = textBetween(
     String(xml || ''),
@@ -102,7 +117,7 @@ function parseOoxmlChart(chartXml, options = {}) {
       ooxmlType,
       navType: row.navType,
       displayType: mapChartType(ooxmlType),
-      supportStatus: row.status,
+      ...chartSupportMetadata(row),
       chartData: { labels: [], datasets: [] },
       title: null,
       empty: true,
@@ -133,7 +148,7 @@ function parseOoxmlChart(chartXml, options = {}) {
     ooxmlType,
     navType: row.navType,
     displayType: mapChartType(ooxmlType),
-    supportStatus: row.status,
+    ...chartSupportMetadata(row),
     chartData: {
       labels: labels.length ? labels : datasets[0]?.data.map((_, i) => String(i + 1)) || [],
       datasets: datasets.map((d, i) => ({
@@ -205,14 +220,22 @@ async function stampClaimedChartMetadata(element, node, zip, slideIndex, strict,
   })
   if (!parsed || parsed.empty) return
 
-  const preserveOnly = parsed.supportStatus === 'preserve-only'
+  const preserveOnly = parsed.preservationTier !== 'editable'
   element._pptxChartMeta = {
     ...(element._pptxChartMeta || {}),
     originalType: parsed.ooxmlType,
     source: 'ooxml-chart-parser',
     chartPath,
     supportStatus: parsed.supportStatus,
-    preservationTier: preserveOnly ? 'preserve-only' : 'editable',
+    rowId: parsed.rowId,
+    tier: parsed.tier,
+    claimCeiling: parsed.claimCeiling,
+    matrixHash: parsed.matrixHash,
+    adapterId: parsed.adapterId,
+    adapterQualified: parsed.adapterQualified,
+    transactionEligible: parsed.transactionEligible,
+    level4Promoted: parsed.level4Promoted,
+    preservationTier: parsed.preservationTier,
     native: parsed.native,
     title: parsed.title,
   }
@@ -341,7 +364,7 @@ async function injectChartsFromSceneGraph({
       })
       continue
     }
-    const preserveOnly = parsed.supportStatus === 'preserve-only'
+    const preserveOnly = parsed.preservationTier !== 'editable'
     if (preserveOnly) {
       warnings.push({
         slideIndex,
@@ -374,7 +397,15 @@ async function injectChartsFromSceneGraph({
         source: 'ooxml-chart-parser',
         chartPath,
         supportStatus: parsed.supportStatus,
-        preservationTier: preserveOnly ? 'preserve-only' : 'editable',
+        rowId: parsed.rowId,
+        tier: parsed.tier,
+        claimCeiling: parsed.claimCeiling,
+        matrixHash: parsed.matrixHash,
+        adapterId: parsed.adapterId,
+        adapterQualified: parsed.adapterQualified,
+        transactionEligible: parsed.transactionEligible,
+        level4Promoted: parsed.level4Promoted,
+        preservationTier: parsed.preservationTier,
         native: parsed.native,
         title: parsed.title,
       },

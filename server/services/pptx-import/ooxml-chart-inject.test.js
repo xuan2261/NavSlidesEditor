@@ -111,7 +111,7 @@ describe('injectChartsFromSceneGraph (T5.2-ish)', () => {
     expect(elements.filter((e) => e.type === 'chart')).toHaveLength(1)
   })
 
-  it('claims unstamped parser chart instead of duplicating', async () => {
+  it('claims unstamped parser chart without exposing an unqualified edit control', async () => {
     const zip = await chartZip()
     const graph = await buildOoxmlSceneGraph(zip)
     const elements = await injectChartsFromSceneGraph({
@@ -135,7 +135,12 @@ describe('injectChartsFromSceneGraph (T5.2-ish)', () => {
       originalType: 'barChart',
       chartPath: 'ppt/charts/chart1.xml',
       supportStatus: 'conditional',
-      preservationTier: 'editable',
+      preservationTier: 'preserve-only',
+      rowId: 'chart.bar-column.embedded-workbook.literal-range',
+      tier: 'structured-partial',
+      adapterQualified: false,
+      transactionEligible: false,
+      level4Promoted: false,
       source: 'ooxml-chart-parser',
     })
   })
@@ -195,8 +200,12 @@ describe('injectChartsFromSceneGraph (T5.2-ish)', () => {
 })
 
 describe('parseOoxmlChart support matrix', () => {
-  it('marks barChart as native bar', () => {
+  it('binds barChart to the canonical candidate row', () => {
     const p = parseOoxmlChart(BAR_XML)
-    expect(p.supportStatus === 'native' || p.navType === 'bar').toBe(true)
+    expect(p.supportStatus).toBe('conditional')
+    expect(p.navType).toBe('bar')
+    expect(p.rowId).toBe('chart.bar-column.embedded-workbook.literal-range')
+    expect(p.preservationTier).toBe('preserve-only')
+    expect(p.matrixHash).toMatch(/^[a-f0-9]{64}$/)
   })
 })

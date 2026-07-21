@@ -20,7 +20,9 @@ export const usePresentationStore = create((set, get) => ({
   setLoading: (loading) => set({ loading }),
   setPresentation: (p) => set({ presentation: p, loading: false, saveConflict: null }),
   adoptAggregateGeneration: (generation) => set((state) => ({
-    presentation: Number.isSafeInteger(generation) && state.presentation
+    presentation: Number.isSafeInteger(generation) && generation > 0 && state.presentation &&
+        (!Number.isSafeInteger(state.presentation.aggregateGeneration) ||
+          generation >= state.presentation.aggregateGeneration)
       ? { ...state.presentation, aggregateGeneration: generation }
       : state.presentation,
   })),

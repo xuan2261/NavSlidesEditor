@@ -45,6 +45,36 @@ function equivalentExceptContent(before, after) {
   delete left.content; delete right.content
   return hashRecord(left) === hashRecord(right)
 }
+function equivalentExcept(before, after, omitted) {
+  const left = { ...before }; const right = { ...after }
+  for (const key of omitted) { delete left[key]; delete right[key] }
+  return hashRecord(left) === hashRecord(right)
+}
+function slideTree(slides) {
+  if (!Array.isArray(slides)) invalid('slide')
+  return slides.map((slide) => {
+    const children = ownData(slide, 'children')
+    return { id: read(slide, 'id'), children: children === INVALID ? [] : slideTree(children) }
+  })
+}
+function elementIds(slide) {
+  return read(slide, 'elements').map((element) => {
+    if (!isPlainRecord(element) || typeof read(element, 'id') !== 'string') invalid('element')
+    return read(element, 'id')
+  })
+}
+function assertPlainTextScope(before, after, beforeSlides, afterSlides) {
+  if (!equivalentExcept(before, after, ['slides']) ||
+      hashRecord(slideTree(beforeSlides)) !== hashRecord(slideTree(afterSlides))) {
+    invalid('presentation structure')
+  }
+  const right = new Map(flattenSlides(afterSlides).map((slide) => [read(slide, 'id'), slide]))
+  for (const previous of flattenSlides(beforeSlides)) {
+    const next = right.get(read(previous, 'id'))
+    if (!next || !equivalentExcept(previous, next, ['elements', 'children']) ||
+        hashRecord(elementIds(previous)) !== hashRecord(elementIds(next))) invalid('non-text mutation')
+  }
+}
 function bindings() {
   const row = getFeatureRow(ROW_ID)
   if (!row || row.level4Promoted !== false) invalid('feature row')
@@ -85,7 +115,7 @@ function deriveCanonicalPlainTextJournal(beforeInput, afterInput, options = {}) 
   const before = safeSnapshot(beforeInput, budgets)
   const after = safeSnapshot(afterInput, budgets)
   const beforeSlides = read(before, 'slides'); const afterSlides = read(after, 'slides')
-  if (hashRecord(beforeSlides.map((slide) => slide.id)) !== hashRecord(afterSlides.map((slide) => slide.id))) invalid('slide structure')
+  assertPlainTextScope(before, after, beforeSlides, afterSlides)
   const left = elementMap(beforeSlides); const right = elementMap(afterSlides)
   if (left.size !== right.size || [...left.keys()].some((key) => !right.has(key))) invalid('element structure')
   const operations = []

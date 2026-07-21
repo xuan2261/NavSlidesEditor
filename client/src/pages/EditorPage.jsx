@@ -199,8 +199,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     settingContent,
   })
   const {
-    clearSaveConflict, deferSaveRecovery, dismissSaveRecovery, firstLoadRef,
-    handleManualSave, keepLocalSaveConflict, recoverLocalDraft,
+    adoptGeneration,
+    beginExport, clearSaveConflict, deferSaveRecovery, dismissSaveRecovery, endExport, firstLoadRef,
+    flushPendingSave, handleManualSave, keepLocalSaveConflict, recoverLocalDraft,
     lastSaveError, loading,
     retryPendingSave,
     saveConflict,
@@ -515,7 +516,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     onDownloadPptxOriginal,
     onExportValidatedEditedRevision,
     onGenerateReconstructedPPTX,
-  } = useExportActions(presentation)
+  } = useExportActions(presentation, { beginExport, endExport, flushPendingSave, onAggregateGeneration: adoptGeneration })
   const {
     contract: pptxFidelity,
     loading: pptxFidelityLoading,

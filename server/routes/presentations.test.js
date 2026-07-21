@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import request from 'supertest'
 import express from 'express'
 import fs from 'fs-extra'
@@ -47,7 +47,20 @@ async function createNativeRouteFixture(app, { sourceMap = true } = {}) {
   }] }] }, { slides: [{ index: 0, path: 'ppt/slides/slide1.xml', nodes: [{
     id: '4', kind: 'shape', sourceXml: shape,
   }] }] }, zip, { packageGeneration: 1, revisionId: 'pending' })
-  if (map) await store.commitImport(bytes, { jobId: `import-${id}`, presentationId: id, projection: { id, slides: created.body.slides }, sourceMap: map })
+  if (map) await store.commitImport(bytes, {
+    jobId: `import-${id}`,
+    presentationId: id,
+    projection: {
+      id,
+      title: created.body.title,
+      theme: created.body.theme,
+      transition: created.body.transition,
+      ...(created.body.designTokens ? { designTokens: created.body.designTokens } : {}),
+      ...(created.body.resolution ? { resolution: created.body.resolution } : {}),
+      slides: created.body.slides,
+    },
+    sourceMap: map,
+  })
   else await store.commitOriginal(bytes, { ownerType: 'presentation', ownerId: id })
   return { id, rootDir, store, async cleanup() {
     await packageRuntime.shutdownPackageStore()
@@ -154,12 +167,53 @@ describe('Presentations API', () => {
     await request(app).delete(`/api/templates/${templateRes.body.id}`)
   })
 
+  it('does not deadlock duplicate against an original-only package save', async () => {
+    const fixture = await createNativeRouteFixture(app, { sourceMap: false })
+    let duplicate
+    let saveRequestResult
+    try {
+      const duplicateRequest = request(app).post(`/api/presentations/${fixture.id}/duplicate`)
+      const saveRequest = nativeSave(app, fixture.id, {
+        aggregateGeneration: 1,
+        slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
+      }, 'duplicate-lock-order')
+      let timeoutId
+      const timeout = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('duplicate/save lock-order timeout')), 2000)
+      })
+      ;[duplicate, saveRequestResult] = await Promise.race([
+        Promise.all([duplicateRequest, saveRequest]),
+        timeout,
+      ])
+      clearTimeout(timeoutId)
+
+      expect(duplicate.status).toBe(201)
+      expect(saveRequestResult.status).toBe(422)
+      expect(saveRequestResult.body.code).toBe('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
+    } finally {
+      if (duplicate?.body?.id) {
+        await request(app).delete(`/api/presentations/${duplicate.body.id}/permanent`)
+      }
+      await fixture.cleanup()
+    }
+  })
+
   it('returns 404 for missing presentation mutations and lookup', async () => {
     expect((await request(app).get('/api/presentations/missing')).status).toBe(404)
     expect((await request(app).put('/api/presentations/missing').send({ title: 'Nope' })).status).toBe(404)
     expect((await request(app).delete('/api/presentations/missing')).status).toBe(404)
     expect((await request(app).post('/api/presentations/missing/duplicate')).status).toBe(404)
     expect((await request(app).get('/api/presentations/missing/export')).status).toBe(404)
+  })
+
+  it('rejects encoded path separators during permanent delete', async () => {
+    const [slash, backslash] = await Promise.all([
+      request(app).delete('/api/presentations/%2F/permanent'),
+      request(app).delete('/api/presentations/%5C/permanent'),
+    ])
+
+    expect(slash).toMatchObject({ status: 400, body: { error: 'Invalid presentation identifier' } })
+    expect(backslash).toMatchObject({ status: 400, body: { error: 'Invalid presentation identifier' } })
   })
 
   it('validates save-as-template title payloads', async () => {
@@ -404,6 +458,512 @@ describe('Presentations API', () => {
     await request(app).delete(`/api/presentations/${id}/permanent`)
   })
 
+  it('serves package-authoritative pending projection with its matching generation', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    try {
+      const saved = await nativeSave(app, fixture.id, {
+        aggregateGeneration: 1,
+        slides: [{ id: 's1', notes: '', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
+      }, 'get-authority')
+      expect(saved).toMatchObject({ status: 200, body: { aggregateGeneration: 2 } })
+
+      await storage.withPresentations((presentations) => {
+        const presentation = presentations.find((item) => item.id === fixture.id)
+        presentation.slides[0].elements[0].content = '<p>Before</p>'
+        presentation.pptxAggregateHead.generation = 1
+      })
+
+      const fetched = await request(app).get(`/api/presentations/${fixture.id}`)
+      expect(fetched).toMatchObject({ status: 200, body: { aggregateGeneration: 2 } })
+      expect(fetched.body.slides[0].elements[0].content).toBe('<p>After</p>')
+    } finally { await fixture.cleanup() }
+  })
+
+  it('uses package authority for export, present, and templates when compatibility JSON is stale', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    let templateId
+    try {
+      const saved = await nativeSave(app, fixture.id, {
+        aggregateGeneration: 1,
+        slides: [{ id: 's1', notes: '', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
+      }, 'authority-sinks')
+      expect(saved.status).toBe(200)
+
+      await storage.withPresentations((presentations) => {
+        const presentation = presentations.find((item) => item.id === fixture.id)
+        presentation.title = 'Stale compatibility title'
+        presentation.slides[0].elements[0].content = '<p>Before</p>'
+      })
+
+      const listed = await request(app).get('/api/presentations')
+      expect(listed.status).toBe(200)
+      expect(listed.body.find((item) => item.id === fixture.id).title).toBe('G2')
+
+      const exported = await request(app).get(`/api/presentations/${fixture.id}/export`)
+      expect(exported.status).toBe(200)
+      expect(exported.text).toContain('After')
+      expect(exported.text).not.toContain('Before')
+
+      const presented = await request(app).get(`/api/presentations/${fixture.id}/present`)
+      expect(presented.status).toBe(200)
+      expect(presented.text).toContain('After')
+      expect(presented.text).not.toContain('Before')
+
+      const template = await request(app)
+        .post(`/api/presentations/${fixture.id}/save-as-template`)
+        .send({ title: 'Authoritative template' })
+      expect(template).toMatchObject({
+        status: 409,
+        body: { code: 'PACKAGE_PENDING_PROJECTION' },
+      })
+    } finally {
+      if (templateId) await request(app).delete(`/api/templates/${templateId}`)
+      await fixture.cleanup()
+    }
+  })
+
+  it('retains a package-backed template when response serialization fails after publication', async () => {
+    const serializationApp = express()
+    serializationApp.use(express.json())
+    serializationApp.use('/api/presentations', (req, res, next) => {
+      if (req.method === 'POST' && req.path.endsWith('/save-as-template')) {
+        const originalJson = res.json.bind(res)
+        let failFirstResponse = true
+        res.json = (payload) => {
+          if (failFirstResponse) {
+            failFirstResponse = false
+            throw new Error('injected response serialization failure')
+          }
+          return originalJson(payload)
+        }
+      }
+      next()
+    })
+    serializationApp.use('/api/presentations', presentationsRouter)
+    serializationApp.use('/api/templates', templatesRouter)
+    const fixture = await createNativeRouteFixture(serializationApp)
+    let templateId
+    try {
+      const response = await request(serializationApp)
+        .post(`/api/presentations/${fixture.id}/save-as-template`)
+        .send({ title: 'Serialization boundary' })
+      expect(response.status).toBe(500)
+
+      const template = (await storage.readTemplates())
+        .find((item) => item.title === 'Serialization boundary (template)')
+      expect(template).toBeDefined()
+      templateId = template.id
+      expect(fixture.store.getState().owners).toEqual(expect.arrayContaining([
+        expect.objectContaining({ ownerType: 'template', ownerId: templateId }),
+      ]))
+    } finally {
+      if (templateId) await request(serializationApp).delete(`/api/templates/${templateId}`)
+      await fixture.cleanup()
+    }
+  })
+
+  it('instantiates package-backed templates with rebound source identity', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    let templateId
+    let createdId
+    try {
+      const template = await request(app)
+        .post(`/api/presentations/${fixture.id}/save-as-template`)
+        .send({ title: 'Package template' })
+      expect(template.status).toBe(201)
+      templateId = template.body.id
+
+      const created = await request(app)
+        .post('/api/presentations')
+        .send({ templateId, title: 'Instantiated package deck' })
+      expect(created.status).toBe(201)
+      createdId = created.body.id
+      expect(created.body.slides[0].id).toBe('s1')
+      expect(created.body.slides[0].elements[0].id).toBe('e1')
+
+      const state = fixture.store.getState()
+      expect(state.heads).toEqual(expect.arrayContaining([
+        expect.objectContaining({ presentationId: createdId, generation: 1 }),
+      ]))
+      expect(state.owners).toEqual(expect.arrayContaining([
+        expect.objectContaining({ ownerType: 'presentation', ownerId: createdId }),
+      ]))
+    } finally {
+      if (createdId) await request(app).delete(`/api/presentations/${createdId}/permanent`)
+      if (templateId) await request(app).delete(`/api/templates/${templateId}`)
+      await fixture.cleanup()
+    }
+  })
+
+  it('rejects package-backed template content edits instead of rebinding stale source maps', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    let templateId
+    try {
+      const template = await request(app)
+        .post(`/api/presentations/${fixture.id}/save-as-template`)
+        .send({ title: 'Immutable package template' })
+      expect(template.status).toBe(201)
+      templateId = template.body.id
+      const updated = await request(app)
+        .put(`/api/templates/${templateId}`)
+        .send({ slides: [{ id: 'new-slide', elements: [] }] })
+      expect(updated).toMatchObject({
+        status: 422,
+        body: { code: 'PACKAGE_TEMPLATE_PROJECTION_IMMUTABLE' },
+      })
+    } finally {
+      if (templateId) await request(app).delete(`/api/templates/${templateId}`)
+      await fixture.cleanup()
+    }
+  })
+
+  it('retries retained template-owner cleanup after template JSON deletion succeeds', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    let templateId
+    const originalReleaseOwner = fixture.store.releaseOwner.bind(fixture.store)
+    try {
+      const template = await request(app)
+        .post(`/api/presentations/${fixture.id}/save-as-template`)
+        .send({ title: 'Template cleanup retry' })
+      expect(template.status).toBe(201)
+      templateId = template.body.id
+      fixture.store.releaseOwner = async () => {
+        throw new Error('injected template owner release failure')
+      }
+
+      const firstDelete = await request(app).delete(`/api/templates/${templateId}`)
+      expect(firstDelete).toMatchObject({
+        status: 503,
+        body: { code: 'PACKAGE_LIFECYCLE_UNAVAILABLE', retryable: true },
+      })
+      expect((await storage.readTemplates()).some((item) => item.id === templateId)).toBe(false)
+      expect(fixture.store.getState().owners).toEqual(expect.arrayContaining([
+        expect.objectContaining({ ownerType: 'template', ownerId: templateId }),
+      ]))
+
+      fixture.store.releaseOwner = originalReleaseOwner
+      const retry = await request(app).delete(`/api/templates/${templateId}`)
+      expect(retry).toMatchObject({ status: 200, body: { success: true } })
+      expect(fixture.store.getState().owners.some((owner) =>
+        owner.ownerType === 'template' && owner.ownerId === templateId)).toBe(false)
+    } finally {
+      fixture.store.releaseOwner = originalReleaseOwner
+      vi.restoreAllMocks()
+      if (templateId) await request(app).delete(`/api/templates/${templateId}`)
+      await fixture.cleanup()
+    }
+  })
+
+  it('keeps retained package ownership when template JSON deletion fails', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    let templateId
+    try {
+      const template = await request(app)
+        .post(`/api/presentations/${fixture.id}/save-as-template`)
+        .send({ title: 'Template delete boundary' })
+      expect(template.status).toBe(201)
+      templateId = template.body.id
+
+      const writeJson = fs.writeJson.bind(fs)
+      vi.spyOn(fs, 'writeJson').mockImplementation(async (file, ...args) => {
+        if (String(file).includes('templates.json')) {
+          throw new Error('injected template deletion failure')
+        }
+        return writeJson(file, ...args)
+      })
+      const deleted = await request(app).delete(`/api/templates/${templateId}`)
+      expect(deleted).toMatchObject({ status: 500 })
+      vi.restoreAllMocks()
+
+      expect((await storage.readTemplates()).some((item) => item.id === templateId)).toBe(true)
+      expect(fixture.store.getState().owners).toEqual(expect.arrayContaining([
+        expect.objectContaining({ ownerType: 'template', ownerId: templateId }),
+      ]))
+    } finally {
+      vi.restoreAllMocks()
+      if (templateId) await request(app).delete(`/api/templates/${templateId}`)
+      await fixture.cleanup()
+    }
+  })
+
+  it('quarantines an instantiated package head when presentation publication fails', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    let templateId
+    const beforePresentationIds = new Set((await storage.readPresentations()).map((item) => item.id))
+    const beforeHeadIds = new Set(fixture.store.getState().heads.map((head) => head.presentationId))
+    const beforePresentationOwnerKeys = new Set(fixture.store.getState().owners
+      .filter((owner) => owner.ownerType === 'presentation')
+      .map((owner) => `${owner.ownerId}:${owner.revisionId}`))
+    try {
+      const template = await request(app)
+        .post(`/api/presentations/${fixture.id}/save-as-template`)
+        .send({ title: 'Publication rollback template' })
+      expect(template.status).toBe(201)
+      templateId = template.body.id
+
+      const writeJson = fs.writeJson.bind(fs)
+      vi.spyOn(fs, 'writeJson').mockImplementation(async (file, ...args) => {
+        if (String(file).includes('presentations.json')) {
+          throw new Error('injected presentation publication failure')
+        }
+        return writeJson(file, ...args)
+      })
+      const created = await request(app)
+        .post('/api/presentations')
+        .send({ templateId, title: 'Should not publish' })
+      expect(created).toMatchObject({ status: 500 })
+      vi.restoreAllMocks()
+
+      const persisted = await storage.readPresentations()
+      expect(persisted.every((presentation) => beforePresentationIds.has(presentation.id))).toBe(true)
+      const state = fixture.store.getState()
+      expect(state.heads.every((head) => beforeHeadIds.has(head.presentationId))).toBe(true)
+      expect(state.owners
+        .filter((owner) => owner.ownerType === 'presentation')
+        .every((owner) => beforePresentationOwnerKeys.has(`${owner.ownerId}:${owner.revisionId}`)))
+        .toBe(true)
+      expect(state.compatibilityOutbox).not.toEqual(expect.arrayContaining([
+        expect.objectContaining({ operation: 'upsert', presentationId: expect.any(String) }),
+      ]))
+      await packageRuntime.drainPackageCompatibilityOutbox()
+      expect((await storage.readPresentations())
+        .every((presentation) => beforePresentationIds.has(presentation.id))).toBe(true)
+    } finally {
+      vi.restoreAllMocks()
+      if (templateId) await request(app).delete(`/api/templates/${templateId}`)
+      await fixture.cleanup()
+    }
+  })
+
+  it('reconciles permanent deletion after package quarantine before JSON cleanup', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    const retainedOwner = {
+      ownerType: 'presentation',
+      ownerId: `${fixture.id}:permanent-delete`,
+    }
+    try {
+      const head = fixture.store.getState().heads.find((item) => item.presentationId === fixture.id)
+      await fixture.store.retainHead(retainedOwner, fixture.id, { expectedHead: head })
+      await fixture.store.quarantinePresentation(fixture.id, {
+        compatibilityRemove: true,
+        expectedHead: head,
+      })
+
+      expect((await storage.readPresentations()).some((item) => item.id === fixture.id)).toBe(true)
+      expect(fixture.store.getState().heads.some((item) => item.presentationId === fixture.id)).toBe(false)
+      expect(fixture.store.getState().owners).toEqual(expect.arrayContaining([
+        expect.objectContaining(retainedOwner),
+      ]))
+
+      const deleted = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
+      expect(deleted).toMatchObject({ status: 200, body: { success: true } })
+      expect((await storage.readPresentations()).some((item) => item.id === fixture.id)).toBe(false)
+      expect(fixture.store.getState().owners.some((owner) =>
+        owner.ownerType === retainedOwner.ownerType && owner.ownerId === retainedOwner.ownerId
+      )).toBe(false)
+      expect(fixture.store.getState().compatibilityOutbox).toEqual([])
+    } finally {
+      await fixture.cleanup()
+    }
+  })
+
+  it('keeps a concurrent package successor when permanent delete becomes stale', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    const originalMutate = fixture.store.mutate.bind(fixture.store)
+    let mutationCount = 0
+    let injected = false
+    try {
+      fixture.store.mutate = async (mutator, options) => {
+        mutationCount += 1
+        if (!injected && mutationCount === 2) {
+          injected = true
+          // This represents a save that committed H2 after retention and before
+          // the delete's fenced quarantine mutation.
+          await originalMutate((next) => {
+            next.heads.find((head) => head.presentationId === fixture.id).generation += 1
+          })
+        }
+        return originalMutate(mutator, options)
+      }
+
+      const deleted = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
+
+      expect(deleted).toMatchObject({
+        status: 409,
+        body: { code: 'STALE_GENERATION', retryable: true },
+      })
+      const persisted = (await storage.readPresentations()).find((item) => item.id === fixture.id)
+      expect(persisted).toBeDefined()
+      const state = fixture.store.getState()
+      expect(state.heads).toEqual(expect.arrayContaining([
+        expect.objectContaining({ presentationId: fixture.id, generation: 2 }),
+      ]))
+      expect(state.owners).toEqual(expect.arrayContaining([
+        expect.objectContaining({ ownerType: 'presentation', ownerId: fixture.id }),
+      ]))
+      expect(state.owners.some((owner) =>
+        owner.ownerType === 'presentation' && owner.ownerId === `${fixture.id}:permanent-delete`
+      )).toBe(false)
+    } finally {
+      fixture.store.mutate = originalMutate
+      if (injected) {
+        await originalMutate((next) => {
+          next.heads.find((head) => head.presentationId === fixture.id).generation = 1
+        })
+      }
+      await fixture.cleanup()
+    }
+  })
+
+  it('reconciles permanent-delete package cleanup after JSON deletion succeeds', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    const originalReleaseOwner = fixture.store.releaseOwner.bind(fixture.store)
+    try {
+      fixture.store.releaseOwner = async () => {
+        throw new Error('injected permanent-delete owner release failure')
+      }
+      const firstDelete = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
+      expect(firstDelete).toMatchObject({
+        status: 503,
+        body: { code: 'PACKAGE_LIFECYCLE_UNAVAILABLE' },
+      })
+      expect((await storage.readPresentations()).some((item) => item.id === fixture.id)).toBe(false)
+      expect(fixture.store.getState().owners).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          ownerType: 'presentation',
+          ownerId: `${fixture.id}:permanent-delete`,
+        }),
+      ]))
+
+      fixture.store.releaseOwner = originalReleaseOwner
+      const retry = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
+      expect(retry).toMatchObject({ status: 200, body: { success: true } })
+      expect(fixture.store.getState().owners.some((owner) =>
+        owner.ownerType === 'presentation' && owner.ownerId === `${fixture.id}:permanent-delete`))
+        .toBe(false)
+      expect(fixture.store.getState().compatibilityOutbox).toEqual([])
+    } finally {
+      fixture.store.releaseOwner = originalReleaseOwner
+      await fixture.cleanup()
+    }
+  })
+
+  it('reconciles history-owner cleanup after permanent JSON deletion succeeds', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    const head = fixture.store.getState().heads.find((item) => item.presentationId === fixture.id)
+    const snapshotId = `retained-${Date.now()}`
+    const snapshotFile = path.join(storage.HISTORY_DIR, fixture.id, `${snapshotId}.json`)
+    const historyOwner = { ownerType: 'history', ownerId: `${fixture.id}:${snapshotId}` }
+    const originalReleaseOwner = fixture.store.releaseOwner.bind(fixture.store)
+    try {
+      await fs.ensureDir(path.dirname(snapshotFile))
+      await fs.writeJson(snapshotFile, {
+        id: snapshotId,
+        name: 'Retained history',
+        createdAt: new Date().toISOString(),
+        data: { id: fixture.id, title: 'Retained history', slides: [] },
+        packageBacked: true,
+      })
+      await fixture.store.addOwner(head.packageRevisionId, historyOwner)
+      fixture.store.releaseOwner = async (owner) => {
+        if (owner.ownerType === 'history') {
+          throw new Error('injected history owner release failure')
+        }
+        return originalReleaseOwner(owner)
+      }
+
+      const firstDelete = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
+      expect(firstDelete).toMatchObject({
+        status: 503,
+        body: { code: 'PACKAGE_LIFECYCLE_UNAVAILABLE' },
+      })
+      expect((await storage.readPresentations()).some((item) => item.id === fixture.id)).toBe(false)
+      expect(await fs.pathExists(snapshotFile)).toBe(true)
+
+      fixture.store.releaseOwner = originalReleaseOwner
+      const retry = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
+      expect(retry).toMatchObject({ status: 200, body: { success: true } })
+      expect(await fs.pathExists(snapshotFile)).toBe(false)
+      expect(fixture.store.getState().owners.some((owner) =>
+        owner.ownerType === 'history' && owner.ownerId === historyOwner.ownerId)).toBe(false)
+      expect(fixture.store.getState().compatibilityOutbox).toEqual([])
+    } finally {
+      fixture.store.releaseOwner = originalReleaseOwner
+      await fixture.cleanup()
+    }
+  })
+
+  it('restores package authority when permanent deletion cannot publish JSON removal', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    const writeJson = fs.writeJson.bind(fs)
+    let presentationWriteAttempts = 0
+    try {
+      vi.spyOn(fs, 'writeJson').mockImplementation(async (file, ...args) => {
+        if (String(file).includes('presentations.json') && presentationWriteAttempts++ === 0) {
+          throw new Error('injected presentation deletion failure')
+        }
+        return writeJson(file, ...args)
+      })
+      const deleted = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
+      expect(deleted).toMatchObject({ status: 500 })
+      vi.restoreAllMocks()
+
+      expect((await storage.readPresentations()).some((presentation) => presentation.id === fixture.id)).toBe(true)
+      const state = fixture.store.getState()
+      expect(state.heads).toEqual(expect.arrayContaining([
+        expect.objectContaining({ presentationId: fixture.id }),
+      ]))
+      expect(state.owners).toEqual(expect.arrayContaining([
+        expect.objectContaining({ ownerType: 'presentation', ownerId: fixture.id }),
+      ]))
+      expect(state.owners.some((owner) => owner.ownerType === 'presentation' &&
+        owner.ownerId === `${fixture.id}:permanent-delete`)).toBe(false)
+      expect(state.compatibilityOutbox).toEqual([])
+    } finally {
+      vi.restoreAllMocks()
+      await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
+      await fixture.cleanup()
+    }
+  })
+
+  it('rejects duplicate while package projection is pending', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    try {
+      const saved = await nativeSave(app, fixture.id, {
+        aggregateGeneration: 1,
+        slides: [{ id: 's1', notes: '', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
+      }, 'duplicate-pending')
+      expect(saved.status).toBe(200)
+      const duplicate = await request(app).post(`/api/presentations/${fixture.id}/duplicate`)
+      expect(duplicate).toMatchObject({
+        status: 409,
+        body: { code: 'PACKAGE_PENDING_PROJECTION' },
+      })
+      expect((await storage.readPresentations()).filter((item) => item.title?.includes('(copy)'))).toHaveLength(0)
+    } finally { await fixture.cleanup() }
+  })
+
+  it('rejects save-as-template while package projection is pending', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    try {
+      const saved = await nativeSave(app, fixture.id, {
+        aggregateGeneration: 1,
+        slides: [{ id: 's1', notes: '', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
+      }, 'template-pending')
+      expect(saved.status).toBe(200)
+      const response = await request(app)
+        .post(`/api/presentations/${fixture.id}/save-as-template`)
+        .send({ title: 'Pending template' })
+      expect(response).toMatchObject({
+        status: 409,
+        body: { code: 'PACKAGE_PENDING_PROJECTION' },
+      })
+      expect((await storage.readTemplates()).some((template) =>
+        template.title === 'Pending template (template)'
+      )).toBe(false)
+    } finally { await fixture.cleanup() }
+  })
+
   it('rejects a package head without current source authority without changing JSON', async () => {
     const fixture = await createNativeRouteFixture(app, { sourceMap: false })
     try {
@@ -444,6 +1004,9 @@ describe('Presentations API', () => {
   it('records a pending journal without publishing R1 when a normal package-backed save lacks qualified validators', async () => {
     const fixture = await createNativeRouteFixture(app)
     try {
+      const initialPresentation = (await storage.readPresentations())
+        .find((item) => item.id === fixture.id)
+      const initialUpdatedAt = initialPresentation.updatedAt
       const initialHead = fixture.store.getState().heads.find((head) => head.presentationId === fixture.id)
       const initialRevision = fixture.store.getState().revisions.find(
         (item) => item.id === initialHead.packageRevisionId
@@ -451,6 +1014,7 @@ describe('Presentations API', () => {
       const initialBytes = await fixture.store.readBlob(initialRevision.blobSha256)
       const initialRevisionCount = fixture.store.getState().revisions.length
       const body = {
+        ...initialPresentation,
         aggregateGeneration: 1,
         baseRevisionId: initialHead.packageRevisionId,
         slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
@@ -508,6 +1072,8 @@ describe('Presentations API', () => {
       })
       const persisted = (await storage.readPresentations()).find((item) => item.id === fixture.id)
       expect(persisted.slides[0].elements[0].content).toBe('<p>After</p>')
+      expect(Date.parse(persisted.updatedAt)).toBeGreaterThanOrEqual(Date.parse(initialUpdatedAt))
+      expect(persisted.updatedAt).not.toBe(initialUpdatedAt)
       expect(persisted.pptxAggregateHead).toMatchObject({
         packageRevisionId: initialHead.packageRevisionId,
         generation: 2,
@@ -547,6 +1113,13 @@ describe('Presentations API', () => {
         baseRevisionId: fixture.store.getState().heads.find((head) => head.presentationId === fixture.id).packageRevisionId,
         slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }] }
       const first = await nativeSave(app, fixture.id, body, 'replay-key')
+      await fixture.store.mutate((next) => {
+        const result = next.mutationResults.find((item) =>
+          item.idempotencyKey === 'replay-key' && item.state === 'pending-edited-export'
+        )
+        delete result.operation
+        delete result.requestIdentity
+      })
       const replay = await nativeSave(app, fixture.id, body, 'replay-key')
       const conflict = await nativeSave(app, fixture.id, { ...body, slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: 'Changed' }] }] }, 'replay-key')
       expect(first.body.aggregateGeneration).toBe(2)
@@ -554,6 +1127,55 @@ describe('Presentations API', () => {
       expect(conflict).toMatchObject({ status: 409, body: { code: 'IDEMPOTENCY_KEY_CONFLICT' } })
       expect((await storage.readPresentations()).find((item) => item.id === fixture.id).slides[0].elements[0].content).toBe('<p>After</p>')
       expect(fixture.store.getState().heads.find((head) => head.presentationId === fixture.id).generation).toBe(2)
+    } finally { await fixture.cleanup() }
+  })
+
+  it('does not replay a normal save after a newer package head exists', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    try {
+      const firstBody = {
+        aggregateGeneration: 1,
+        slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>First</p>' }] }],
+      }
+      const first = await nativeSave(app, fixture.id, firstBody, 'stale-replay-key')
+      const second = await nativeSave(app, fixture.id, {
+        aggregateGeneration: 2,
+        slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>Second</p>' }] }],
+      }, 'newer-save-key')
+      const retry = await nativeSave(app, fixture.id, firstBody, 'stale-replay-key')
+
+      expect(first.body.aggregateGeneration).toBe(2)
+      expect(second.body.aggregateGeneration).toBe(3)
+      expect(retry).toMatchObject({
+        status: 409,
+        body: { code: 'STALE_GENERATION', currentGeneration: 3 },
+      })
+    } finally { await fixture.cleanup() }
+  })
+
+  it('maps an inner package head race to a current-generation conflict', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    try {
+      const originalMutate = fixture.store.mutate.bind(fixture.store)
+      let injected = false
+      fixture.store.mutate = async (mutator, options) => {
+        if (!injected) {
+          injected = true
+          await originalMutate((next) => {
+            next.heads.find((head) => head.presentationId === fixture.id).generation += 1
+          })
+        }
+        return originalMutate(mutator, options)
+      }
+
+      const response = await nativeSave(app, fixture.id, {
+        aggregateGeneration: 1,
+        slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
+      }, 'inner-race')
+      expect(response).toMatchObject({
+        status: 409,
+        body: { code: 'STALE_GENERATION', currentGeneration: 2 },
+      })
     } finally { await fixture.cleanup() }
   })
 

@@ -1,40 +1,171 @@
 # PPTX Import Fidelity Report
 
-**Phase:** Ongoing PPTX Import Fidelity Hardening
-**Generated:** 2026-04-27; updated 2026-06-17
-**Test Suite:** `server/services/pptx-import/`
+> **Scope:** This is a stateful engineering record, not release proof. The
+> product-facing policy is [Export Fidelity and Known Limitations](export-fidelity-and-limits.md).
+> Historical counts and phase labels below do not supersede the current evidence
+> boundary.
 
-## Test Suite Summary
+## Current package-first evidence boundary (2026-07-20)
 
-| Test File | Tests | Status |
-|-----------|-------|--------|
-| `mapper-golden-master.test.js` | 8 | ✅ Pass |
-| `corpus-baseline.test.js` | 2 | ✅ Pass |
-| `mapper.test.js` | 127 | ✅ Pass |
-| `geometry.test.js` | 7 | ✅ Pass |
-| `geometry-drift.test.js` | 5 | ✅ Pass |
-| `property-mapping.test.js` | 5 | ✅ Pass |
-| `group-transform.test.js` | 3 | ✅ Pass |
-| `generated-fixtures.test.js` | 3 | ✅ Pass |
-| `pptx-import-e2e-flow.test.js` | 5 | ✅ Pass |
-| `pptx-import.test.js` (route) | 2 | ✅ Pass |
-| `pptx-export.test.js` | 1 | ✅ Pass |
-| `chart-output-to-navslides-mapper.test.js` | 2 | ✅ Pass |
-| `import-fidelity-properties.test.jsx` | 2 | ✅ Pass |
-| **Total** | **172** | **✅ All Pass** |
+The immutable original package remains the recovery authority when its bytes can
+be verified. A projection save does not make a PPTX a validated edited package:
+that outcome can only come from the guarded transaction, which rejects missing
+or stale authority instead of creating a fallback package. The executable
+boundaries are
+[`package-store/import-commit.js`](../server/services/pptx-import/package-store/import-commit.js),
+[`generation-safe-save.js`](../server/services/generation-safe-save.js), and
+[`mutation-transaction-execution.js`](../server/services/pptx-import/mutation-transaction-execution.js).
+
+Imported-chart metadata is canonical policy, not a rendering hint. An imported
+chart stays preserve-only/read-only unless its adapter qualification,
+transaction eligibility, and level-4 promotion are all present. The current
+matrix has no level-4 promotion; its chart rows and the UI enforcement live in
+[`canonical-feature-matrix.js`](../server/services/pptx-import/canonical-feature-matrix.js),
+[`chart-support-matrix.js`](../server/services/pptx-import/chart-support-matrix.js),
+and
+[`chart-properties.jsx`](../client/src/components/properties/chart-properties.jsx).
+
+Package-backed projection saves and returned validated edited-export transaction
+outcomes scope idempotency keys to the named mutation operation. Those returned
+fail-closed outcomes use the canonical reason-code authority rather than
+unversioned message text. HTTP request-validation and thrown execution errors
+remain generic, so reason-code authority is not yet a universal public error
+contract. The owners and focused assertions are
+[`mutation-operation-scope.js`](../server/services/pptx-import/mutation-operation-scope.js),
+[`reason-code-contract.js`](../server/services/pptx-import/reason-code-contract.js),
+and
+[`mutation-transaction.test.js`](../server/services/pptx-import/mutation-transaction.test.js).
+
+### Current application contract
+
+A normal package-backed save records a **server-owned** pending projection and
+journal; it does not publish `R1`. An eligible constrained transaction can
+materialize exactly one successor `R1` from that pending state. Same-key replay
+returns that successor, while mixed or non-text pending edits fail closed. The
+owners and focused software-contract tests are
+[`generation-safe-save.js`](../server/services/generation-safe-save.js),
+[`validated-edited-export-context.js`](../server/services/pptx-import/validated-edited-export-context.js),
+[`mutation-transaction-execution.js`](../server/services/pptx-import/mutation-transaction-execution.js),
+and
+[`validated-edited-export-materialization.test.js`](../server/services/validated-edited-export-materialization.test.js).
+
+Validator unavailability is not universal unavailability. A server-proven true
+no-op may reconcile to its current package head without external validators; it
+clears only its matching pending marker and does not create or validate an edited
+package. The public fidelity response marks this as reconciliation availability,
+not as validated editing. See
+[`validated-edited-export.js`](../server/services/validated-edited-export.js),
+[`fidelity-contract.js`](../server/services/pptx-import/fidelity-contract.js),
+and their focused tests.
+
+For package-backed decks, the fidelity route takes the current aggregate
+generation from the package-store head rather than a compatibility JSON
+projection. The normal presentation GET follows the same rule for both
+projection and generation, so delayed compatibility writes cannot produce a
+mixed-generation response. Export, present, save-as-template, history,
+live presentation, snapshot/restore, public-share, GitHub, cloud sync, and
+explore/fork sinks use the same package-backed reader; summary and sync bulk
+reads reuse one store snapshot. This list excludes `/pptx-original`, whose
+package-versus-legacy selection remains compatibility-driven pending repair and
+whose degraded-head recovery can reject an intact original when a successor revision
+is missing. Restore returns the restored package projection before its successor
+generation is handed to the editor. Missing package heads
+and malformed original-only state fail closed rather than falling back to stale
+compatibility JSON. External fork/GitHub/sync JSON crosses the editor DTO
+boundary and excludes package authority fields. That JSON is a
+nonauthoritative outbox projection: its merge retains server-owned metadata and
+tombstones, preserves creation/deletion timestamps, and applies the package
+write's server-generated `updatedAt` timestamp. When committed authority exists,
+lifecycle duplicate/restore operations rebind its projection/source-map
+authority to the new identity and generation, align duplicate title/projection
+changes, and reject pending package projections rather than dropping them.
+Covered package-backed template PUTs reject projection-changing edits. Retained
+ownership is used for creation and instantiation, but template create/delete
+rollback, outbox acknowledgement, and destination cleanup still need lifecycle
+hardening. A pending package projection can still be retained by save-as-template
+while later template instantiation rejects it; that mismatch remains open.
+Cloud sync stages a manifest/blob bundle for package-backed decks, but it is not a
+restorable package-authority archive: projected bundle authority data is incomplete.
+Per-request staging and same-destination serialization are covered; focused sync
+coverage also covers same-title destinations and destination-lock aliases. Remote-
+path traversal rejection, DTO/package-generation alignment, projection-to-bundle
+expected-head fencing, bounded resource use, and complete referenced-media traversal
+remain open. Portable import must reject missing revisions/blobs and reconcile
+stale destination outbox records; it does not yet prove those guarantees. Snapshot
+and duplicate/fork paths have source-head checks and keep duplicate package work
+before presentation-file serialization, but final snapshot fencing, explore/fork
+rollback races, permanent-delete authorization/path validation, retain/quarantine
+fencing, stale-retry cleanup, and outbox interleavings remain open. An empty source
+map still retains an explicit supplied or rebound generation. The owners and tests are
+[`presentations.js`](../server/routes/presentations.js),
+[`compatibility-view.js`](../server/services/pptx-import/compatibility-view.js),
+[`compatibility-outbox.test.js`](../server/services/pptx-import/compatibility-outbox.test.js),
+[`lifecycle.js`](../server/services/pptx-import/package-store/lifecycle.js),
+[`lifecycle.test.js`](../server/services/pptx-import/package-store/lifecycle.test.js),
+and
+[`source-map.test.js`](../server/services/pptx-import/source-map.test.js). The
+shared sink reader is
+[`package-backed-presentation-read.js`](../server/services/package-backed-presentation-read.js),
+with route coverage in
+[`history-package-integrity.test.js`](../server/routes/history-package-integrity.test.js),
+[`presentations.test.js`](../server/routes/presentations.test.js), and
+[`package-backed-presentation-read.test.js`](../server/services/package-backed-presentation-read.test.js).
+
+The application-side native re-import path has focused identity checks, but it is
+not yet strict provenance or collateral-preservation proof: verified gaps still
+allow forged source identity or collateral package changes in cases that must fail
+closed. The mutable post-edit source hash is not treated as immutable. Candidate
+quarantine metadata and the physical-GC-disabled policy also do not yet prove that
+every failed publication or concurrent/shutdown loser remains durably owned and
+recoverable; cleanup isolation, quarantine/sweeper behavior, and loser compensation
+remain open.
+
+These are application software-contract tests. They are not evidence of successful
+OfficeCLI or PowerPoint validation, Electron or Docker runtime behavior,
+non-Windows support, or real-package native re-import.
+
+No release evidence records a successful OfficeCLI qualification, PowerPoint
+oracle result, or real-package strict native re-import of a validated edited
+package. The application-side validator uses the NavSlides importer; it is not
+Office or PowerPoint evidence. The G0–G5 gates, including G1, remain open in the
+[OfficeCLI containment journal](journals/260715-0215-officecli-containment-contract-open-native-gates.md).
+The fidelity API does not promote any row to verified editable status and keeps
+level 5 unavailable; see
+[`fidelity-contract.js`](../server/services/pptx-import/fidelity-contract.js)
+and its
+[`fidelity-contract.test.js`](../server/services/pptx-import/fidelity-contract.test.js).
+
+## Historical test-suite snapshot
+
+| Test File                                  | Tests   | Status          |
+| ------------------------------------------ | ------- | --------------- |
+| `mapper-golden-master.test.js`             | 8       | ✅ Pass         |
+| `corpus-baseline.test.js`                  | 2       | ✅ Pass         |
+| `mapper.test.js`                           | 127     | ✅ Pass         |
+| `geometry.test.js`                         | 7       | ✅ Pass         |
+| `geometry-drift.test.js`                   | 5       | ✅ Pass         |
+| `property-mapping.test.js`                 | 5       | ✅ Pass         |
+| `group-transform.test.js`                  | 3       | ✅ Pass         |
+| `generated-fixtures.test.js`               | 3       | ✅ Pass         |
+| `pptx-import-e2e-flow.test.js`             | 5       | ✅ Pass         |
+| `pptx-import.test.js` (route)              | 2       | ✅ Pass         |
+| `pptx-export.test.js`                      | 1       | ✅ Pass         |
+| `chart-output-to-navslides-mapper.test.js` | 2       | ✅ Pass         |
+| `import-fidelity-properties.test.jsx`      | 2       | ✅ Pass         |
+| **Total**                                  | **172** | **✅ All Pass** |
 
 ## 2026-07-09 Cook progress (Phases 01–08)
 
-| Phase | Status |
-|-------|--------|
-| 01 | **Done** — zero-loss original + atomic create |
-| 02 | **Done (machinery)** — goldens compare + **present capture** (`test:pptx:oracle:capture` via Playwright + reveal HTML) |
-| 03 | **Advanced** — scene graph leaves stamped as `_pptxSource.nodeId`; node-level unmapped warnings; `PPTX_SLA_STRICT_NODES` |
-| 04 | **Advanced** — layout placeholder injection when slide text empty; theme/color sanitize; primitive ban list |
-| 05 | **Advanced** — corpus `chart-*.pptx` E2 gap 0 via OOXML inject; editable chartData |
-| 06 | **Advanced** — `ooxml-diagram-parser` + `_pptxDiagram` editable node model (corpus has no SmartArt OOXML) |
-| 07 | **Advanced** — EMF/WMF → PNG via sandboxed convert (`PPTX_EMF_CONVERT=1`); strict throws if unavailable |
-| 08 | **Advanced** — theme/layout XML resolve; animation inventory; original-bytes export + PUT dirty flag; `test:pptx:sla-1to1` module gate (not numeric 0.99) |
+| Phase | Status                                                                                                                                                    |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 01    | **Done** — zero-loss original + atomic create                                                                                                             |
+| 02    | **Done (machinery)** — goldens compare + **present capture** (`test:pptx:oracle:capture` via Playwright + reveal HTML)                                    |
+| 03    | **Advanced** — scene graph leaves stamped as `_pptxSource.nodeId`; node-level unmapped warnings; `PPTX_SLA_STRICT_NODES`                                  |
+| 04    | **Advanced** — layout placeholder injection when slide text empty; theme/color sanitize; primitive ban list                                               |
+| 05    | **Advanced** — corpus `chart-*.pptx` E2 gap 0 via OOXML inject; editable chartData                                                                        |
+| 06    | **Advanced** — `ooxml-diagram-parser` + `_pptxDiagram` editable node model (corpus has no SmartArt OOXML)                                                 |
+| 07    | **Advanced** — EMF/WMF → PNG via sandboxed convert (`PPTX_EMF_CONVERT=1`); strict throws if unavailable                                                   |
+| 08    | **Advanced** — theme/layout XML resolve; animation inventory; original-bytes export + PUT dirty flag; `test:pptx:sla-1to1` module gate (not numeric 0.99) |
 
 **Oracle debt:** placeholder goldens self-compare to SSIM 1 until LO/PP goldens + Nav present actuals land.  
 **Not claimed:** product 1:1 visual/editable SLA.
@@ -46,8 +177,10 @@
   server-side with `pptxOriginal.{id,sha256,byteLength,uploadedAt}`.
 - Job done payload includes `presentationId` (client opens that id; no
   client path bind of originals).
-- `GET /api/presentations/:id/pptx-original` streams bytes; permanent delete
-  unlinks the original. Engineering milestone contract lives in
+- `GET /api/presentations/:id/pptx-original` streams bytes. The historical Phase
+  01 milestone expected permanent delete to unlink original bytes, but the current
+  permanent-delete route does not call `deleteOriginalPptx`; package physical GC
+  also remains disabled. Engineering milestone contract lives in
   `server/services/pptx-import/sla-contract.js` (Phase 01 requires **P1** only).
 - This does **not** claim visual 1:1; later phases own SSIM/oracle and editable
   parity. Plan: `plans/260709-1306-pptx-import-native-ooxml-1to1-fidelity-deep-tdd/`.
@@ -336,16 +469,16 @@ This table is the historical coverage taxonomy from the earlier PPTX import
 review work; the 2026-05-25 unit-conversion plan uses its own Phase 1-8 index
 in `plans/260525-1450-pptx-import-unit-conversion-and-scale-fixes/`.
 
-| Phase | Feature | Test Count | Status |
-|-------|---------|-----------|--------|
-| Phase 0 | Sanitizer hardening | 17 | ✅ |
-| Phase 1 | Rich HTML/text preservation | 37 | ✅ |
-| Phase 2 | Shape, line, image fidelity | 21 | ✅ |
-| Phase 3 | Table full support | 9 | ✅ |
-| Phase 4 | Chart import | 9 | ✅ |
-| Phase 5 | Slide metadata | 6 | ✅ |
-| Phase 6 | Group/SmartArt flattening | 11 | ✅ |
-| Phase 7 | Fidelity harness + e2e | 5 | ✅ |
+| Phase   | Feature                     | Test Count | Status |
+| ------- | --------------------------- | ---------- | ------ |
+| Phase 0 | Sanitizer hardening         | 17         | ✅     |
+| Phase 1 | Rich HTML/text preservation | 37         | ✅     |
+| Phase 2 | Shape, line, image fidelity | 21         | ✅     |
+| Phase 3 | Table full support          | 9          | ✅     |
+| Phase 4 | Chart import                | 9          | ✅     |
+| Phase 5 | Slide metadata              | 6          | ✅     |
+| Phase 6 | Group/SmartArt flattening   | 11         | ✅     |
+| Phase 7 | Fidelity harness + e2e      | 5          | ✅     |
 
 ## Fidelity Tester
 
@@ -384,18 +517,19 @@ node server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tes
 
 `npm run test:corpus` on 2026-05-25 used the checked-in `server/data/test-corpus/` corpus:
 
-| Corpus | Files | Passed | Avg Semantic Fidelity |
-|--------|-------|--------|-----------------------|
-| `server/data/test-corpus/` | 11 | 11 | 100.0% |
+| Corpus                     | Files | Passed | Avg Semantic Fidelity |
+| -------------------------- | ----- | ------ | --------------------- |
+| `server/data/test-corpus/` | 11    | 11     | 100.0%                |
 
 Round-trip validation status (2026-05-25):
 
-| Mode | Export Method | Avg Round-trip Stability |
-|------|---------------|--------------------------|
-| `--roundtrip --allow-fallback` | production (fallback available) | 99.0% |
-| `--roundtrip --strict` | production only | 100.0% |
+| Mode                           | Export Method                   | Avg Round-trip Stability |
+| ------------------------------ | ------------------------------- | ------------------------ |
+| `--roundtrip --allow-fallback` | production (fallback available) | 99.0%                    |
+| `--roundtrip --strict`         | production only                 | 100.0%                   |
 
 Strict run guarantees:
+
 - `--strict` always runs round-trip validation (even if `--roundtrip` is omitted)
 - Export method is `production` for every deck
 - Only exact/proximity matches count as stable; `type-only` remains diagnostic
@@ -424,17 +558,17 @@ server/data/test-corpus/
 
 ### Fidelity Targets
 
-| Category | Semantic Target | Round-trip Target |
-|----------|----------------|-------------------|
-| Overall | ≥ 95% | ≥ 98% |
-| Text | ≥ 95% | ≥ 99% |
-| Shape | ≥ 95% | ≥ 99% |
-| Line | ≥ 95% | ≥ 99% |
-| Image | ≥ 90% | ≥ 99% |
-| Table | ≥ 90% | ≥ 95% |
-| Chart | ≥ 85% | ≥ 90% |
-| Group | ≥ 90% | ≥ 95% |
-| SmartArt/Diagram | ≥ 80% | ≥ 90% |
+| Category         | Semantic Target | Round-trip Target |
+| ---------------- | --------------- | ----------------- |
+| Overall          | ≥ 95%           | ≥ 98%             |
+| Text             | ≥ 95%           | ≥ 99%             |
+| Shape            | ≥ 95%           | ≥ 99%             |
+| Line             | ≥ 95%           | ≥ 99%             |
+| Image            | ≥ 90%           | ≥ 99%             |
+| Table            | ≥ 90%           | ≥ 95%             |
+| Chart            | ≥ 85%           | ≥ 90%             |
+| Group            | ≥ 90%           | ≥ 95%             |
+| SmartArt/Diagram | ≥ 80%           | ≥ 90%             |
 
 ## Known Gaps
 
@@ -460,33 +594,39 @@ server/data/test-corpus/
 ## Phase 0–6 Implementation Summary
 
 ### Phase 0: Sanitizer Hardening
+
 - Added `SAFE_STYLE_PROPS`: `text-decoration`, `vertical-align`, `letter-spacing`, `text-shadow`, `background`
 - Added `ALLOWED_TAGS`: `a`, `s`, `strike`, `del`, `sub`, `sup`
 - Added `ALLOWED_ATTR`: `href` with protocol whitelist (`https:`, `http:`, `mailto:`, `tel:`)
 - `validateHref()` strips invalid protocol hrefs
 
 ### Phase 1: Rich HTML Preservation
+
 - `export-pptx-html-parser.js`: Added `strike`, `sub`, `sup`, `charSpacing` parsing
 - `export-pptx-text-runs.js`: Built `buildRunOptions()` supporting all 8 text run properties
 - Hyperlinks preserved via `<a href>` tags with safe protocol validation
 
 ### Phase 2: Shape/Line/Image Enhancement
+
 - `colorValue()`: handles `{type:'color'}/{type:'gradient'}/{type:'none'}/{type:'pattern'}` discriminated union
 - `mapImage()`: `objectFit`, `flipH`, `flipV`, `borderColor`, `borderWidth`, `cropData`
 - `mapShape()`: real `x1/y1/x2/y2` coords from pptxtojson, improved arrow detection
 - `shapeName()`: 15+ shape types, `arrow` checked before `line` to avoid misclassification
 
 ### Phase 3: Table Full Support
+
 - `mapTable()`: full rewrite with `mergedCells`, `cellStyles` (textColors, bgColors, isBold, aligns, vAligns), `colWidths`, `rowHeights`
 - `vMerge`/`hMerge` continuation cells (rowSpan=0) properly skipped
 - Per-cell text color, background, bold, alignment, vertical alignment preserved
 
 ### Phase 4: Chart Import
+
 - `chart-output-to-navslides-mapper.js`: `mapChartType()`, `mapCommonChart()`, `mapScatterChart()`
 - Handles both pptxtojson native `[x,y]` parallel arrays and CommonChart format
 - `_pptxChartMeta` sidecar stores original type, barDir, holeSize, marker, grouping
 
 ### Phase 5: Slide Metadata
+
 - Background: `color`/`gradient`/`image` type preserved
 - Transition: `fade`/`slide`/`none` with duration and direction
 - Speaker notes: sanitized HTML preserved
@@ -494,6 +634,7 @@ server/data/test-corpus/
 - Presentation `resolution` field preserved
 
 ### Phase 6: Group/SmartArt Flattening
+
 - `flattenGroupElement()`: recursive with `MAX_GROUP_DEPTH=10`, absolute coordinate transform, rotation matrix, flip transform
 - `flattenDiagramElement()`: converts up to 50 diagram nodes to individual shapes
 - Depth exceeding `MAX_GROUP_DEPTH` produces a placeholder with `importPlaceholderType: 'grouped-complex'`

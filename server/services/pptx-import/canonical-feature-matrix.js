@@ -125,6 +125,45 @@ const CANONICAL_FEATURE_MATRIX_ENVELOPE = parseCanonicalFeatureMatrix({
       ['content-type-or-relationship'], ['block-unsafe-edit'], {
         reason: 'Unknown content blocks unsafe edited-package mutation.',
       }),
+    row('complex.ink.annotations', 'complex', 'ink', 'preserved-opaque', ['ink-data'], ['preserve'], {
+      reason: 'Ink annotations remain source-backed without semantic mutation.',
+    }),
+    row('complex.icons.asset', 'complex', 'icon-asset', 'preserved-opaque', ['icon-data'], ['preserve'], {
+      reason: 'Icon assets remain source-backed without semantic mutation.',
+    }),
+    row('complex.custom-xml.data', 'complex', 'custom-xml', 'preserved-opaque', ['custom-xml'], ['preserve'], {
+      reason: 'Custom XML remains source-backed without semantic mutation.',
+    }),
+    row('presentation.comments', 'presentation', 'comments', 'preserved-opaque', ['comment-thread'], ['preserve'], {
+      reason: 'Comments and authors remain source-backed without editing.',
+    }),
+    row('presentation.zoom-navigation', 'presentation', 'zoom-navigation', 'preserved-opaque', ['zoom-settings'], ['preserve'], {
+      reason: 'Zoom navigation remains source-backed without semantic mutation.',
+    }),
+    row('chart.line.preserved', 'chart', 'line-chart', 'preserved-opaque', ['chart-data'], ['preserve'], {
+      reason: 'Line charts remain source-backed until a complete editable row is qualified.',
+    }),
+    row('chart.combo.preserved', 'chart', 'combo-chart', 'preserved-opaque', ['chart-data'], ['preserve'], {
+      reason: 'Combo charts remain source-backed without semantic mutation.',
+    }),
+    row('chart.bar-3d.preserved', 'chart', 'bar-3d-chart', 'preserved-opaque', ['chart-data'], ['preserve'], {
+      reason: 'Three-dimensional bar charts remain source-backed without semantic mutation.',
+    }),
+    row('chart.scatter.preserved', 'chart', 'scatter-chart', 'preserved-opaque', ['chart-data'], ['preserve'], {
+      reason: 'Scatter charts remain source-backed without semantic mutation.',
+    }),
+    row('chart.polar.preserved', 'chart', 'polar-chart', 'preserved-opaque', ['chart-data'], ['preserve'], {
+      reason: 'Polar charts remain source-backed without semantic mutation.',
+    }),
+    row('chart.pie.preserved', 'chart', 'pie-chart', 'preserved-opaque', ['chart-data'], ['preserve'], {
+      reason: 'Pie charts remain source-backed without semantic mutation.',
+    }),
+    row('chart.area.preserved', 'chart', 'area-chart', 'preserved-opaque', ['chart-data'], ['preserve'], {
+      reason: 'Area charts remain source-backed without semantic mutation.',
+    }),
+    row('chart.unknown.preserved', 'chart', 'unknown-chart', 'preserved-opaque', ['chart-data'], ['preserve'], {
+      reason: 'Unknown chart types remain source-backed without semantic mutation.',
+    }),
     row('presentation.slide.add', 'presentation', 'slide-structure', 'structured-partial', ['slide'], ['add'], {
       adapterId: 'native-slide-structure', claimCeiling: 'feature-editability',
       reason: 'Candidate requires authoritative structural transaction evidence.',
@@ -146,9 +185,6 @@ const CANONICAL_FEATURE_MATRIX_ENVELOPE = parseCanonicalFeatureMatrix({
     }),
     row('presentation.notes.rich', 'presentation', 'speaker-notes', 'preserved-opaque', ['rich-notes'], ['preserve'], {
       reason: 'Rich notes are source-backed and uneditable in the first milestone.',
-    }),
-    row('presentation.comments', 'presentation', 'comments', 'preserved-opaque', ['comment-thread'], ['preserve'], {
-      reason: 'Comments and authors remain source-backed without editing.',
     }),
     row('presentation.hyperlinks-actions', 'presentation', 'actions', 'preserved-opaque', ['hyperlink-action'], ['preserve'], {
       reason: 'Actions are preserved without execution or mutation.',

@@ -1,6 +1,8 @@
 const { canonicalEditableSnapshot } = require('../canonical-snapshot')
 const { rebindSourceMap } = require('../source-map')
 const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
+const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
+const { queueCompatibilityUpsert } = require('../compatibility-outbox')
 const { buildOpcInventory } = require('./opc-inventory')
 const {
   SCHEMA_VERSION,
@@ -72,7 +74,13 @@ function validateInput(input) {
 
 async function prepareImport(store, source, input, options = {}) {
   validateInput(input)
-  const { jobId, presentationId, projection } = input
+  const {
+    jobId,
+    presentationId,
+    projection,
+    compatibilityPresentation,
+    compatibilityUpdatedAt,
+  } = input
   const canonicalProjection = canonicalEditableSnapshot(projection, options.snapshotLimits)
   const inventory = await buildOpcInventory(source, options.inventoryLimits)
   const revision = validateRevision({
@@ -95,6 +103,7 @@ async function prepareImport(store, source, input, options = {}) {
   })
   const authority = {
     schemaVersion: SCHEMA_VERSION,
+    operation: MUTATION_OPERATIONS.PACKAGE_IMPORT,
     presentationId,
     idempotencyKey: jobId,
     generation: 1,
@@ -104,13 +113,31 @@ async function prepareImport(store, source, input, options = {}) {
     opcManifest: inventory,
     state: 'committed',
   }
-  return { authority, blob, capabilityHash, jobId, presentationId, revision, sourceMap }
+  return {
+    authority,
+    blob,
+    capabilityHash,
+    compatibilityPresentation,
+    compatibilityUpdatedAt,
+    jobId,
+    presentationId,
+    revision,
+    sourceMap,
+  }
 }
 
 async function publishImport(store, prepared, options = {}) {
   await store.assertWriter()
   const {
-    authority, blob, capabilityHash, jobId, presentationId, revision, sourceMap,
+    authority,
+    blob,
+    capabilityHash,
+    compatibilityPresentation,
+    compatibilityUpdatedAt,
+    jobId,
+    presentationId,
+    revision,
+    sourceMap,
   } = prepared
   await store.mutate((next) => {
     if (next.heads.some((head) => head.presentationId === presentationId)) {
@@ -141,6 +168,18 @@ async function publishImport(store, prepared, options = {}) {
     }
     next.heads.push(head)
     next.mutationResults.push(authority)
+    if (compatibilityPresentation) {
+      queueCompatibilityUpsert(next, {
+        presentationId,
+        generation: head.generation,
+        ...(compatibilityUpdatedAt ? { updatedAt: compatibilityUpdatedAt } : {}),
+        presentation: {
+          ...compatibilityPresentation,
+          id: presentationId,
+          pptxAggregateHead: structuredClone(head),
+        },
+      })
+    }
     next.jobs = next.jobs.filter((job) => job.id !== jobId)
     next.jobs.push({
       schemaVersion: SCHEMA_VERSION,
@@ -179,8 +218,12 @@ async function rollbackImport(store, { jobId, presentationId }) {
       (owner) => owner.ownerType !== 'presentation' || owner.ownerId !== presentationId
     )
     next.heads = next.heads.filter((head) => head.presentationId !== presentationId)
-    next.mutationResults = next.mutationResults.filter(
-      (result) => result.presentationId !== presentationId || result.idempotencyKey !== jobId
+    next.compatibilityOutbox = (next.compatibilityOutbox || []).filter(
+      (record) => record.presentationId !== presentationId
+    )
+    next.mutationResults = next.mutationResults.filter((result) =>
+      result.presentationId !== presentationId || result.idempotencyKey !== jobId ||
+      (result.operation !== undefined && result.operation !== MUTATION_OPERATIONS.PACKAGE_IMPORT)
     )
     const job = next.jobs.find((item) => item.id === jobId)
     if (job) {

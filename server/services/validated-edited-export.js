@@ -7,20 +7,52 @@ const { createNativeTextAdapter } = require('./pptx-import/text-ooxml-adapter')
 const { createPrimitiveAdapters } = require('./pptx-import/primitive-ooxml-adapters')
 const os = require('node:os')
 const path = require('node:path')
-const { verifyNativePlainRunPostcondition } = require('./pptx-import/native-plain-run-postcondition')
+const { createNativeReimportValidator } = require('./pptx-import/native-reimport-validator')
 const { createOfficeCliGateway } = require('./pptx-import/officecli/gateway')
 const { createNativeLauncherClient } = require('./pptx-import/officecli/launcher-client')
 const { qualifyOfficeCli } = require('./pptx-import/officecli/qualification')
 const { createStagedOfficeCliValidator } = require('./pptx-import/officecli/staged-validator')
 const { canonicalMatrixSubject } = require('./pptx-import/evidence/matrix-subject')
+const { replayRequest, resolveEditedExportContext } = require('./pptx-import/validated-edited-export-context')
+const { canonicalReasonCodes, reasonCodeSubject } = require('./pptx-import/reason-code-contract')
 
-function currentAuthority(state, presentationId) {
-  const head = state.heads.find((item) => item.presentationId === presentationId)
-  const result = [...state.mutationResults].reverse().find((item) =>
-    item.presentationId === presentationId &&
-    item.packageRevisionId === head?.packageRevisionId &&
-    item.sourceMap && item.projection)
-  return { head, result }
+function unavailable(reasonCode) {
+  const reasonCodes = canonicalReasonCodes([reasonCode])
+  return {
+    available: false,
+    officeCliAvailable: false,
+    reasonCode: reasonCodes[0],
+    reasonCodes,
+    reasonCodeSubject: reasonCodeSubject(),
+  }
+}
+
+function blocked(reasonCode) {
+  const reasonCodes = canonicalReasonCodes([reasonCode])
+  return Object.freeze({
+    ok: false,
+    status: 422,
+    blockReason: reasonCodes[0],
+    reasonCode: reasonCodes[0],
+    reasonCodes,
+    reasonCodeSubject: reasonCodeSubject(),
+  })
+}
+
+function serverRequest(request, context) {
+  return Object.freeze({
+    presentationId: request.presentationId,
+    expectedGeneration: request.expectedGeneration,
+    idempotencyKey: request.idempotencyKey,
+    cancelled: request.cancelled === true,
+    requireOfficeCli: true,
+    baseRevisionId: context.head.packageRevisionId,
+    after: context.after,
+    textTransports: context.textTransports,
+    pendingEdit: context.pendingEdit,
+    pendingJournalHash: context.pendingJournalHash,
+    compatibilityPresentation: context.after,
+  })
 }
 
 function configuredLauncherClient({ env = process.env, createClient = createNativeLauncherClient } = {}) {
@@ -41,11 +73,18 @@ function configuredLauncherClient({ env = process.env, createClient = createNati
   }
 }
 
-function productionComposition({ env = process.env, createLauncherClient = createNativeLauncherClient } = {}) {
+function productionComposition({
+  env = process.env,
+  createLauncherClient = createNativeLauncherClient,
+  importer,
+} = {}) {
   const workspaceRoot = path.join(os.tmpdir(), 'navslides-officecli')
   void createLauncherClient
   return Object.freeze({
-    nativeReimport: verifyNativePlainRunPostcondition,
+    nativeReimport: createNativeReimportValidator({
+      importer,
+      workspaceRoot: path.join(workspaceRoot, 'native-reimport'),
+    }),
     officeCliGatewayFactory: ({ readRevision }) => createOfficeCliGateway({
       workspaceRoot,
       qualification: () => qualifyOfficeCli({ env, matrixSubject: canonicalMatrixSubject() }),
@@ -64,31 +103,61 @@ function createQualifiedValidators({ nativeReimport, officeCliGatewayFactory } =
 }
 
 async function editedExportAvailability(presentation, options = productionComposition()) {
-  const store = options.store || await getReadablePackageStore()
-  const { head, result } = currentAuthority(store.getState(), presentation.id)
-  if (!head) return { available: false, reasonCode: 'PACKAGE_HEAD_UNAVAILABLE' }
-  if (!result) return { available: false, reasonCode: 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE' }
-  const validators = createQualifiedValidators(options)
-  if (typeof validators.nativeReimport !== 'function') return { available: false, reasonCode: 'QUALIFIED_VALIDATORS_UNAVAILABLE' }
-  if (typeof validators.officeCli !== 'function') return { available: false, reasonCode: 'OFFICECLI_VALIDATOR_UNAVAILABLE' }
-  const gateway = options.officeCliGatewayFactory({ readRevision: async () => null })
-  const capability = await gateway.probeCapability()
-  if (!capability.available || !capability.validation) return { available: false, reasonCode: 'OFFICECLI_VALIDATOR_UNAVAILABLE' }
-  return { available: true, reasonCode: 'QUALIFIED_VALIDATORS_AVAILABLE' }
+  try {
+    const store = options.store || await getReadablePackageStore()
+    const context = resolveEditedExportContext(store.getState(), presentation.id)
+    if (!context.ok) return unavailable(context.reasonCode)
+    if (context.pendingJournalHash && context.pendingEdit === false) {
+      return {
+        available: true,
+        noOp: true,
+        requiresValidators: false,
+        officeCliAvailable: false,
+        reasonCode: 'no-op-reconciliation-available',
+      }
+    }
+    const validators = createQualifiedValidators(options)
+    if (typeof validators.nativeReimport !== 'function') return unavailable('QUALIFIED_VALIDATORS_UNAVAILABLE')
+    if (typeof validators.officeCli !== 'function') return unavailable('OFFICECLI_VALIDATOR_UNAVAILABLE')
+    const gateway = options.officeCliGatewayFactory({ readRevision: async () => null })
+    const capability = await gateway.probeCapability()
+    if (!capability.available || !capability.validation) {
+      return unavailable('OFFICECLI_VALIDATOR_UNAVAILABLE')
+    }
+    return { available: true, officeCliAvailable: true, reasonCode: 'QUALIFIED_VALIDATORS_AVAILABLE' }
+  } catch {
+    return unavailable('validated-edited-export-unavailable')
+  }
+}
+
+async function hasValidatedEditedReplay(request, options = {}) {
+  const store = options.store || getPackageStore()
+  return Boolean(replayRequest(store.getState(), request))
 }
 
 async function executeValidatedEditedExport(request, options = productionComposition()) {
   const store = options.store || getPackageStore()
+  const state = store.getState()
+  const replay = replayRequest(state, request)
+  const context = replay ? null : resolveEditedExportContext(state, request.presentationId)
+  if (!replay && !context.ok) return blocked(context.reasonCode)
   const validators = createQualifiedValidators(options)
   const service = createMutationTransactionService({
     store,
     nativeTextAdapter: options.nativeTextAdapter || createNativeTextAdapter(),
     nativePrimitiveAdapter: options.nativePrimitiveAdapter || createPrimitiveAdapters(),
-    loadSourceMap: async ({ presentationId }) => currentAuthority(store.getState(), presentationId).result?.sourceMap,
-    loadCanonicalProjection: async ({ presentationId }) => currentAuthority(store.getState(), presentationId).result?.projection,
+    loadSourceMap: async () => context?.sourceMap,
+    loadCanonicalProjection: async () => context?.before,
     validators,
   })
-  return service.execute({ ...request, requireOfficeCli: true })
+  return service.execute(replay || serverRequest(request, context))
 }
 
-module.exports = { configuredLauncherClient, createQualifiedValidators, editedExportAvailability, executeValidatedEditedExport, productionComposition }
+module.exports = {
+  configuredLauncherClient,
+  createQualifiedValidators,
+  editedExportAvailability,
+  executeValidatedEditedExport,
+  hasValidatedEditedReplay,
+  productionComposition,
+}

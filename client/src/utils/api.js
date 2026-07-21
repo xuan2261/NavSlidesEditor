@@ -72,7 +72,22 @@ export const api = {
         err.code = body.code
         throw err
       }
-      return r.blob()
+      const blob = await r.blob()
+      const generationHeader = r.headers?.get?.('X-Pptx-Generation')
+      const successorGeneration = /^[1-9]\d*$/u.test(generationHeader || '')
+        ? Number(generationHeader)
+        : null
+      if (!Number.isSafeInteger(successorGeneration)) {
+        const err = new Error('Validated edited export did not return a successor generation')
+        err.code = 'MISSING_PPTX_GENERATION'
+        throw err
+      }
+      Object.defineProperty(blob, 'aggregateGeneration', {
+        configurable: true,
+        enumerable: false,
+        value: successorGeneration,
+      })
+      return blob
     }),
 
   uploadFile: (file) => {

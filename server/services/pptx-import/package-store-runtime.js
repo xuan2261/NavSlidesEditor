@@ -11,6 +11,7 @@ let activeStore = null
 let activeRoot = null
 let initialization = null
 let mutationTail = Promise.resolve()
+let compatibilityDrainTail = Promise.resolve()
 let shuttingDown = false
 
 function unavailableError() {
@@ -91,21 +92,36 @@ async function withPackageStore(action) {
   await previous
   try {
     return await action(store)
+  } catch (error) {
+    try {
+      await store.metadata.reload()
+    } catch (reloadError) {
+      error.packageStoreReloadError = reloadError
+    }
+    throw error
   } finally {
     release()
   }
 }
 
 async function drainPackageCompatibilityOutbox() {
-  const writes = await withPackageStore((store) => snapshotCompatibilityOutbox(store))
-  if (!writes.length) return 0
+  const previous = compatibilityDrainTail
+  let release
+  compatibilityDrainTail = new Promise((resolve) => { release = resolve })
+  await previous
+  try {
+    const writes = await withPackageStore((store) => snapshotCompatibilityOutbox(store))
+    if (!writes.length) return 0
 
-  await withPresentations((presentations) => {
-    applyCompatibilityWrites(presentations, writes)
-  })
+    await withPresentations((presentations) => {
+      applyCompatibilityWrites(presentations, writes)
+    })
 
-  await withPackageStore((store) => acknowledgeCompatibilityOutbox(store, writes))
-  return writes.length
+    await withPackageStore((store) => acknowledgeCompatibilityOutbox(store, writes))
+    return writes.length
+  } finally {
+    release()
+  }
 }
 
 async function shutdownPackageStore() {
@@ -113,15 +129,18 @@ async function shutdownPackageStore() {
   try {
     if (initialization) await initialization
     await mutationTail
+    await compatibilityDrainTail
     const store = activeStore
     activeStore = null
     activeRoot = null
     mutationTail = Promise.resolve()
+    compatibilityDrainTail = Promise.resolve()
     if (store) await store.releaseWriter()
   } finally {
     activeStore = null
     activeRoot = null
     mutationTail = Promise.resolve()
+    compatibilityDrainTail = Promise.resolve()
     shuttingDown = false
   }
 }

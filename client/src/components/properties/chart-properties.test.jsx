@@ -68,6 +68,28 @@ describe('ChartProperties', () => {
     expect(screen.getByTestId('prop-chart-add-series').disabled).toBe(true)
   })
 
+  it('[cap:element.chart depth:behavior] keeps unqualified canonical candidates read-only', () => {
+    render(<ChartProperties
+      element={{
+        ...chart,
+        _pptxChartMeta: {
+          originalType: 'barChart',
+          rowId: 'chart.bar-column.embedded-workbook.literal-range',
+          tier: 'structured-partial',
+          preservationTier: 'preserve-only',
+          adapterQualified: false,
+          transactionEligible: false,
+          level4Promoted: false,
+        },
+      }}
+      onUpdate={vi.fn()}
+    />)
+
+    expect(screen.getByTestId('prop-chart-preserve-only-notice')).toBeTruthy()
+    expect(screen.getByTestId('prop-chart-type').disabled).toBe(true)
+    expect(screen.getByTestId('prop-chart-add-series').disabled).toBe(true)
+  })
+
   it('[cap:element.chart depth:behavior] writes area fill, stacked, add series, and remove series', () => {
     const onUpdate = vi.fn()
     const multiSeriesChart = {

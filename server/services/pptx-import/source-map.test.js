@@ -32,6 +32,25 @@ describe('server-only source map', () => {
       .toMatchObject({ schemaVersion: SOURCE_MAP_VERSION })
   })
 
+  it('retains an explicit package generation for empty source maps', async () => {
+    const map = createSourceMap({
+      presentationId: 'empty-deck', revisionId: 'r0', packageGeneration: 7, entries: {},
+    })
+    expect(map.packageGeneration).toBe(7)
+
+    const built = await buildImportSourceMap({
+      id: 'empty-deck', slides: [{ id: 's1', elements: [] }],
+    }, null, null, { packageGeneration: 7, revisionId: 'r0' })
+    expect(built).toMatchObject({ packageGeneration: 7, entries: {} })
+
+    const rebound = rebindSourceMap({ entries: {} }, {
+      presentationId: 'empty-deck', revisionId: 'r1', packageGeneration: 8,
+    })
+    expect(rebound).toMatchObject({
+      presentationId: 'empty-deck', revisionId: 'r1', packageGeneration: 8, entries: {},
+    })
+  })
+
   it('rejects duplicate authoritative native aliases before and after rebind', () => {
     const ref = {
       packageGeneration: 1, revisionId: 'r0', partUri: 'ppt/slides/slide1.xml', kind: 'text-run', nativeId: '7',

@@ -9,6 +9,7 @@ const {
   queueCompatibilityUpsert,
   snapshotCompatibilityOutbox,
 } = require('./compatibility-outbox')
+const { applyCompatibilityWrites } = require('./compatibility-view')
 
 const roots = []
 
@@ -96,5 +97,94 @@ describe('package compatibility outbox', () => {
       expect.objectContaining({ operation: 'remove', presentationId: 'deck-2' }),
     ])
     await store.releaseWriter()
+  })
+
+  it('preserves server-owned metadata when applying a canonical package projection', () => {
+    const presentations = [{
+      id: 'deck-1',
+      title: 'Before',
+      slides: [{
+        id: 'slide-1',
+        elements: [{
+          id: 'element-1',
+          type: 'text',
+          content: '<p>Before</p>',
+          _pptxImportMeta: { inset: { left: 4, right: 8 } },
+          _pptxChartMeta: { preservationTier: 'preserve-only' },
+          _pptxSource: { partUri: 'ppt/slides/slide1.xml' },
+          _pptxDiagram: { unsupported: true },
+        }],
+      }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+      deletedAt: '2026-01-03T00:00:00.000Z',
+      pptxOriginal: { id: 'original-1', sha256: 'a'.repeat(64) },
+      _pptxMeta: { originalSize: { width: 720, height: 540 } },
+      pptxAggregateHead: { generation: 2 },
+    }]
+
+    applyCompatibilityWrites(presentations, [{
+      operation: 'upsert',
+      presentationId: 'deck-1',
+      generation: 3,
+      updatedAt: '2026-01-04T00:00:00.000Z',
+      presentation: {
+        id: 'deck-1',
+        title: 'After',
+        slides: [{
+          id: 'slide-1',
+          elements: [{
+            id: 'element-1',
+            type: 'text',
+            content: '<p>After</p>',
+          }],
+        }],
+        pptxAggregateHead: { generation: 3 },
+      },
+    }])
+
+    expect(presentations[0]).toMatchObject({
+      title: 'After',
+      slides: [{
+        id: 'slide-1',
+        elements: [{
+          id: 'element-1',
+          content: '<p>After</p>',
+          _pptxImportMeta: { inset: { left: 4, right: 8 } },
+          _pptxChartMeta: { preservationTier: 'preserve-only' },
+        }],
+      }],
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-04T00:00:00.000Z',
+      deletedAt: '2026-01-03T00:00:00.000Z',
+      pptxOriginal: { id: 'original-1', sha256: 'a'.repeat(64) },
+      _pptxMeta: { originalSize: { width: 720, height: 540 } },
+      pptxAggregateHead: { generation: 3 },
+    })
+    expect(presentations[0].slides[0].elements[0]).not.toHaveProperty('_pptxSource')
+    expect(presentations[0].slides[0].elements[0]).not.toHaveProperty('_pptxDiagram')
+  })
+
+  it('ignores compatibility writes older than the stored package generation', () => {
+    const presentations = [{
+      id: 'deck-1',
+      title: 'Generation 4',
+      slides: [],
+      pptxAggregateHead: { generation: 4 },
+    }]
+
+    applyCompatibilityWrites(presentations, [{
+      operation: 'upsert',
+      presentationId: 'deck-1',
+      generation: 3,
+      presentation: {
+        id: 'deck-1',
+        title: 'Generation 3',
+        slides: [],
+        pptxAggregateHead: { generation: 3 },
+      },
+    }])
+
+    expect(presentations[0].title).toBe('Generation 4')
   })
 })

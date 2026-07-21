@@ -2,6 +2,9 @@ const fs = require('node:fs/promises')
 const os = require('node:os')
 const path = require('node:path')
 const { openPackageStore } = require('./index')
+const { hashRecord } = require('./schemas')
+const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
+const { resolveEditedExportContext } = require('../validated-edited-export-context')
 
 const roots = []
 async function storeFor(name) {
@@ -36,6 +39,125 @@ describe('portable package boundary', () => {
     expect(await destination.readBlob(bundle.blobs[0].sha256)).toEqual(Buffer.from('portable'))
     await source.releaseWriter()
     await destination.releaseWriter()
+  })
+
+  it('round-trips committed projection authority with destination rebinding', async () => {
+    const source = await storeFor('portable-authority-source')
+    const revision = await source.commitOriginal(Buffer.from('portable-authority'), {
+      ownerType: 'presentation',
+      ownerId: 'source',
+    })
+    const projection = { id: 'source', title: 'Portable authority', slides: [] }
+    const sourceMap = {
+      schemaVersion: 1,
+      presentationId: 'source',
+      revisionId: revision.revision.id,
+      packageGeneration: 1,
+      entries: {},
+    }
+    await source.mutate((next) => {
+      const head = next.heads.find((item) => item.presentationId === 'source')
+      head.projectionRevisionId = hashRecord(projection)
+      head.sourceMapRevisionId = hashRecord(sourceMap)
+      next.mutationResults.push({
+        schemaVersion: 1,
+        operation: MUTATION_OPERATIONS.PACKAGE_IMPORT,
+        presentationId: 'source',
+        idempotencyKey: 'portable-authority-import',
+        generation: 1,
+        packageRevisionId: revision.revision.id,
+        projection,
+        sourceMap,
+        state: 'committed',
+      })
+    })
+    const bundle = await source.exportPresentationPackage('source')
+    const destination = await storeFor('portable-authority-destination')
+    await destination.importPresentationPackage(bundle, 'imported')
+
+    const context = resolveEditedExportContext(destination.getState(), 'imported')
+    expect(context.ok).toBe(true)
+    expect(context.after).toMatchObject({ id: 'imported', title: 'Portable authority' })
+    expect(context.sourceMap).toMatchObject({
+      presentationId: 'imported',
+      revisionId: revision.revision.id,
+      packageGeneration: 1,
+    })
+    expect(destination.getState().mutationResults).toEqual([
+      expect.objectContaining({ presentationId: 'imported' }),
+    ])
+    await source.releaseWriter()
+    await destination.releaseWriter()
+  })
+
+  it('fails closed when a head-referenced binary revision is missing', async () => {
+    const source = await storeFor('portable-incomplete-source')
+    await source.commitOriginal(Buffer.from('portable'), {
+      ownerType: 'presentation',
+      ownerId: 'source',
+    })
+    await source.mutate((next) => {
+      next.heads.find((item) => item.presentationId === 'source').packageRevisionId =
+        'missing-package-revision'
+    })
+
+    await expect(source.exportPresentationPackage('source'))
+      .rejects.toMatchObject({ code: 'PACKAGE_INCOMPLETE' })
+    await source.releaseWriter()
+  })
+
+  it('rejects incomplete or ambiguous descriptors before publishing metadata', async () => {
+    const source = await storeFor('portable-descriptor-source')
+    await source.commitOriginal(Buffer.from('portable'), {
+      ownerType: 'presentation',
+      ownerId: 'source',
+    })
+    const bundle = await source.exportPresentationPackage('source')
+    const copyBundle = () => ({
+      manifest: structuredClone(bundle.manifest),
+      blobs: bundle.blobs.map((blob) => ({ ...blob, bytes: Buffer.from(blob.bytes) })),
+    })
+    const invalidBundles = [
+      () => {
+        const invalid = copyBundle()
+        invalid.manifest.revisions = []
+        invalid.manifest.blobs = []
+        invalid.blobs = []
+        return invalid
+      },
+      () => {
+        const invalid = copyBundle()
+        const sha256 = '0'.repeat(64)
+        invalid.manifest.revisions.push({
+          schemaVersion: 1,
+          id: 'r99-extra',
+          ordinal: 99,
+          blobSha256: sha256,
+        })
+        invalid.manifest.blobs.push({ schemaVersion: 1, sha256, byteLength: 0 })
+        invalid.blobs.push({ sha256, byteLength: 0, bytes: Buffer.alloc(0) })
+        return invalid
+      },
+      () => {
+        const invalid = copyBundle()
+        invalid.manifest.revisions.push(structuredClone(invalid.manifest.revisions[0]))
+        return invalid
+      },
+    ]
+
+    for (const createInvalidBundle of invalidBundles) {
+      const destination = await storeFor('portable-descriptor-destination')
+      await expect(destination.importPresentationPackage(createInvalidBundle(), 'imported'))
+        .rejects.toMatchObject({ code: 'PACKAGE_MANIFEST_INVALID' })
+      expect(destination.getState()).toMatchObject({
+        heads: [],
+        owners: [],
+        revisions: [],
+        blobs: [],
+      })
+      await destination.releaseWriter()
+    }
+    await source.releaseWriter()
   })
 
   it('blocks corrupt bytes before publishing metadata', async () => {

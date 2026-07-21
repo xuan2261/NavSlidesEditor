@@ -25,9 +25,13 @@ describe('rclone routes contract', () => {
     expect(src).not.toMatch(/router\.(get|post|put|delete|patch)\s*\(\s*['"]\/pull['"]/)
   })
 
-  it('normalizes pptx-imported presentations before sync serialization', () => {
-    expect(src).toContain('normalizePptxImportedPresentationForRead')
-    expect(src).toMatch(/generateRevealHTML\s*\(\s*normalized\s*\)/)
-    expect(src).toMatch(/JSON\.stringify\s*\(\s*normalized\s*,\s*null,\s*2\s*\)/)
+  it('serializes authoritative normalized DTOs with a generation-fenced package bundle', () => {
+    expect(src).toMatch(/await\s+readAuthoritativePresentations\s*\(\s*presentations\s*\)/)
+    expect(src).toMatch(/readAuthoritativePresentations\s*\(\s*\[\s*storedPresentation\s*\]\s*\)/)
+    expect(src).toMatch(/toExternalPresentationDto\s*\(\s*normalizePptxImportedPresentationForRead\s*\(\s*resolved\.presentation\s*\)\s*\)/)
+    expect(src).toMatch(/JSON\.stringify\s*\(\s*presentation\s*,\s*null,\s*2\s*\)/)
+    expect(src).toMatch(/const\s+expectedHead\s*=\s*resolved\.presentation\.pptxAggregateHead/)
+    expect(src).toMatch(/store\.exportPresentationPackage\s*\(\s*resolved\.presentation\.id\s*,\s*\{\s*expectedHead\s*\}\s*\)/)
+    expect(src).toMatch(/hashRecord\s*\(\s*bundle\.manifest\.head\s*\)\s*!==\s*hashRecord\s*\(\s*expectedHead\s*\)/)
   })
 })

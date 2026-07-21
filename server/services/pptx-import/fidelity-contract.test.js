@@ -70,6 +70,35 @@ describe('PPTX fidelity API contract', () => {
     expect(dto.aggregateGeneration).toBe(2)
   })
 
+  it('advertises no-op reconciliation separately from validated editing', () => {
+    const dto = buildFidelityDto({
+      id: 'deck',
+      pptxAggregateHead: { packageRevisionId: 'r1', generation: 2 },
+    }, {
+      aggregateGeneration: 2,
+      validatedEditedNoOpAvailable: true,
+    })
+
+    expect(dto.aggregateGeneration).toBe(2)
+    expect(dto.exports.validatedEdited).toMatchObject({
+      available: false,
+      reconciliationAvailable: true,
+      reasonCode: 'no-op-reconciliation-available',
+    })
+  })
+
+  it('prefers the package-store generation over stale compatibility data', () => {
+    const dto = buildFidelityDto({
+      id: 'deck',
+      pptxAggregateHead: { packageRevisionId: 'r1', generation: 2 },
+    }, {
+      aggregateGeneration: 3,
+      validatedEditedAvailable: true,
+    })
+
+    expect(dto.aggregateGeneration).toBe(3)
+  })
+
   it('describes the transaction-eligible seed without promoting it to level four', () => {
     const dto = buildFidelityDto({ id: 'deck', pptxOriginal: { id: 'source' } }, {
       verifiedOriginalAvailable: true,
@@ -119,6 +148,81 @@ describe('PPTX fidelity API contract', () => {
     ]))
     expect(JSON.stringify(dto)).not.toMatch(/secret-original-hash|secret\.pptx|journal-secret|slide1\.xml/i)
   })
+  it('accepts canonical capability evidence fields from the package inventory', () => {
+    const dto = buildFidelityDto({
+      id: 'deck',
+      pptxOriginal: {
+        id: 'source',
+        capabilitySummary: {
+          editedExport: 'preserve-only',
+          originalRecovery: 'exact',
+          hasUnsupportedObjects: true,
+          hasUnsafeImpact: false,
+          kinds: ['custom'],
+          rowIds: ['complex.custom-xml.data'],
+          tiers: ['preserved-opaque'],
+          matrixHash: expectedMatrix.hash,
+        },
+      },
+    }, {
+      verifiedOriginalAvailable: true,
+      validatedEditedAvailable: true,
+    })
+
+    expect(dto.fidelity.status).toBe('source-backed')
+    expect(dto.exports.validatedEdited).toMatchObject({ available: true, reasonCode: null })
+  })
+
+  it.each([
+    ['kind-to-row forgery', {
+      kinds: ['custom'], rowIds: ['complex.vba.macro'], tiers: ['unsupported-blocking'],
+      editedExport: 'preserve-only', hasUnsafeImpact: false,
+    }],
+    ['duplicate kind', {
+      kinds: ['custom', 'custom'], rowIds: ['complex.custom-xml.data'], tiers: ['preserved-opaque'],
+      editedExport: 'preserve-only', hasUnsafeImpact: false,
+    }],
+    ['extra row binding', {
+      kinds: ['custom'], rowIds: ['complex.custom-xml.data', 'complex.vba.macro'],
+      tiers: ['preserved-opaque', 'unsupported-blocking'], editedExport: 'preserve-only', hasUnsafeImpact: false,
+    }],
+  ])('fails closed for %s canonical capability forgery', (_, patch) => {
+    const dto = buildFidelityDto({
+      id: 'deck',
+      pptxOriginal: {
+        id: 'source',
+        capabilitySummary: {
+          editedExport: 'preserve-only', originalRecovery: 'exact', hasUnsupportedObjects: true,
+          hasUnsafeImpact: false, kinds: ['custom'], rowIds: ['complex.custom-xml.data'],
+          tiers: ['preserved-opaque'], matrixHash: expectedMatrix.hash, ...patch,
+        },
+      },
+    }, { verifiedOriginalAvailable: true, validatedEditedAvailable: true })
+
+    expect(dto.fidelity.status).toBe('original-only')
+    expect(dto.exports.validatedEdited).toMatchObject({
+      available: false, reasonCode: 'original-only-package',
+    })
+  })
+
+  it.each([
+    ['empty', {}],
+    ['unknown kind', { kinds: ['not-a-complex-kind'] }],
+  ])('fails closed for %s capability summaries', (_, capabilitySummary) => {
+    const dto = buildFidelityDto({
+      id: 'deck',
+      pptxOriginal: { id: 'source', capabilitySummary },
+    }, {
+      verifiedOriginalAvailable: true,
+      validatedEditedAvailable: true,
+    })
+
+    expect(dto.fidelity.status).toBe('original-only')
+    expect(dto.exports.validatedEdited).toMatchObject({
+      available: false, reasonCode: 'original-only-package',
+    })
+  })
+
   it('fails closed when either capability summary requires original-only recovery', () => {
     const dto = buildFidelityDto({
       id: 'deck',

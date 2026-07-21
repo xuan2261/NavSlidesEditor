@@ -45,11 +45,14 @@ export function useEditorPersistenceController({
     clearSaveConflict()
   }, [clearSaveConflict])
   const {
-    adoptGeneration,
+    adoptGeneration: adoptGenerationInternal,
+    beginExport,
     clearFailedSave,
     clearResetTimer,
     discardPendingSave,
+    endExport,
     flush,
+    flushAndWait,
     lastSaveError,
     resetForRoute,
     retrySave,
@@ -66,7 +69,7 @@ export function useEditorPersistenceController({
     saveRecovery,
     setSaveRecovery,
   } = useEditorRecoveryController({
-    adoptGeneration,
+    adoptGeneration: adoptGenerationInternal,
     isTemplate,
     presentationId,
     resetEditorInteraction,
@@ -76,6 +79,12 @@ export function useEditorPersistenceController({
     setGridSize,
     setPresentation,
   })
+
+  const adoptGeneration = useCallback((generation, sourcePresentationId = presentationId,
+    sourceRouteKey = routeKey) => {
+    if (sourcePresentationId !== presentationId || sourceRouteKey !== routeKeyRef.current) return
+    adoptGenerationInternal(generation)
+  }, [adoptGenerationInternal, presentationId, routeKey])
 
   useEffect(() => {
     if (!presentationId) return
@@ -270,10 +279,14 @@ export function useEditorPersistenceController({
   ])
 
   return {
+    adoptGeneration,
+    beginExport,
     clearSaveConflict: clearConflict,
+    endExport,
     deferSaveRecovery,
     dismissSaveRecovery,
     firstLoadRef,
+    flushPendingSave: flushAndWait,
     handleManualSave,
     keepLocalSaveConflict,
     recoverLocalDraft,

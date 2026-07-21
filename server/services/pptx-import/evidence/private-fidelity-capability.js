@@ -35,9 +35,13 @@ function capabilityRows(rows) {
 }
 
 function buildPrivateFidelityCapability(presentation, fidelityDto, {
+  aggregateGeneration,
   officeCliAvailable = false,
   originalAvailable = false,
 } = {}) {
+  const generation = Number.isSafeInteger(aggregateGeneration)
+    ? aggregateGeneration
+    : presentation?.pptxAggregateHead?.generation
   const authorities = validateMatrixAuthoritySubjects(
     presentation?.pptxAggregateHead?.matrixAuthoritySubjects,
     undefined,
@@ -52,7 +56,7 @@ function buildPrivateFidelityCapability(presentation, fidelityDto, {
       packageRevisionHash: digest(packageRevision),
       originalSha256: digest(original),
       exportSha256: digest(packageRevision || original),
-      projectionRevisionHash: digest(presentation?.pptxAggregateHead?.generation),
+      projectionRevisionHash: digest(generation),
       sourceMapVersion: 'unavailable',
       compactedJournalHash: digest(presentation?.pptxAggregateHead?.journalRevisionId),
       matrix,
@@ -73,7 +77,7 @@ function buildPrivateFidelityCapability(presentation, fidelityDto, {
   })
   return buildPrivateCapabilityDto({
     manifest,
-    generation: presentation?.pptxAggregateHead?.generation,
+    generation,
     rows: capabilityRows(fidelityDto.fidelity?.rows).map((row) => authorities.authorized && reasonAuthority.authorized
       ? row
       : {

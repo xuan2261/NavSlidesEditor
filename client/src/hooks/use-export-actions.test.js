@@ -11,6 +11,10 @@ const h = vi.hoisted(() => ({
   downloadPptxOriginal: vi.fn(),
   getPptxFidelity: vi.fn(),
   downloadValidatedEditedPptx: vi.fn(),
+  flushPendingSave: vi.fn(),
+  beginExport: vi.fn(),
+  endExport: vi.fn(),
+  adoptAggregateGeneration: vi.fn(),
   showNotice: vi.fn(),
   showError: vi.fn(),
 }))
@@ -29,6 +33,11 @@ vi.mock('../utils/api', () => ({ api: {
   getPptxFidelity: h.getPptxFidelity,
   downloadValidatedEditedPptx: h.downloadValidatedEditedPptx,
 } }))
+vi.mock('../stores/presentation-store', () => ({
+  usePresentationStore: {
+    getState: () => ({ adoptAggregateGeneration: h.adoptAggregateGeneration }),
+  },
+}))
 vi.mock('../utils/app-feedback', () => ({ showNotice: h.showNotice, showError: h.showError }))
 
 import { useExportActions } from './use-export-actions'
@@ -48,7 +57,11 @@ beforeEach(() => {
   h.getPptxFidelity.mockResolvedValue({
     aggregateGeneration: 2, exports: { validatedEdited: { available: true } },
   })
-  h.downloadValidatedEditedPptx.mockResolvedValue(new Blob(['edited']))
+  h.flushPendingSave.mockResolvedValue(true)
+  h.beginExport.mockReturnValue(1)
+  const edited = new Blob(['edited'])
+  Object.defineProperty(edited, 'aggregateGeneration', { value: 3 })
+  h.downloadValidatedEditedPptx.mockResolvedValue(edited)
   h.showNotice.mockClear()
   h.showError.mockClear()
   delete globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__
@@ -218,11 +231,140 @@ describe('useExportActions', () => {
       if (tag === 'a') element.click = click
       return element
     })
-    const { result } = renderHook(() => useExportActions(presentation))
+    const onAggregateGeneration = vi.fn()
+    const { result } = renderHook(() => useExportActions(presentation, {
+      flushPendingSave: h.flushPendingSave,
+      onAggregateGeneration,
+    }))
     await act(async () => result.current.onExportValidatedEditedRevision())
+    expect(h.flushPendingSave).toHaveBeenCalledTimes(1)
     expect(h.getPptxFidelity).toHaveBeenCalledWith('p1')
     expect(h.downloadValidatedEditedPptx).toHaveBeenCalledWith('p1', 2, expect.any(String))
+    expect(h.adoptAggregateGeneration).toHaveBeenCalledWith(3)
+    expect(onAggregateGeneration).toHaveBeenCalledWith(3, 'p1')
     expect(click).toHaveBeenCalled()
+  })
+
+  it('allows no-op reconciliation when validated editing is unavailable', async () => {
+    h.getPptxFidelity.mockResolvedValueOnce({
+      aggregateGeneration: 2,
+      exports: { validatedEdited: { available: false, reconciliationAvailable: true } },
+    })
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:no-op')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const click = vi.fn()
+    const original = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+      const element = original(tag)
+      if (tag === 'a') element.click = click
+      return element
+    })
+
+    const { result } = renderHook(() => useExportActions(presentation, {
+      flushPendingSave: h.flushPendingSave,
+    }))
+    await act(async () => result.current.onExportValidatedEditedRevision())
+
+    expect(h.downloadValidatedEditedPptx).toHaveBeenCalledWith('p1', 2, expect.any(String))
+    expect(click).toHaveBeenCalled()
+  })
+
+  it('brackets a slow validated export with the save barrier token', async () => {
+    const events = []
+    h.flushPendingSave.mockImplementationOnce(async () => {
+      events.push('flush')
+      return true
+    })
+    h.beginExport.mockImplementationOnce(() => {
+      events.push('begin')
+      return 7
+    })
+    h.getPptxFidelity.mockImplementationOnce(async () => {
+      events.push('fidelity')
+      return { aggregateGeneration: 2, exports: { validatedEdited: { available: true } } }
+    })
+    h.downloadValidatedEditedPptx.mockImplementationOnce(async () => {
+      events.push('download')
+      return Object.assign(new Blob(['edited']), { aggregateGeneration: 3 })
+    })
+    h.endExport.mockImplementationOnce((token) => events.push(`end:${token}`))
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:edited')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const click = vi.fn()
+    const original = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+      const element = original(tag)
+      if (tag === 'a') element.click = click
+      return element
+    })
+
+    const { result } = renderHook(() => useExportActions(presentation, {
+      beginExport: h.beginExport,
+      endExport: h.endExport,
+      flushPendingSave: h.flushPendingSave,
+    }))
+    await act(async () => result.current.onExportValidatedEditedRevision())
+
+    expect(events).toEqual(['flush', 'begin', 'fidelity', 'download', 'end:7'])
+    expect(click).toHaveBeenCalled()
+  })
+
+  it('releases the validated export token when capability validation fails', async () => {
+    h.getPptxFidelity.mockRejectedValueOnce(new Error('validator unavailable'))
+    h.beginExport.mockReturnValueOnce(8)
+    const { result } = renderHook(() => useExportActions(presentation, {
+      beginExport: h.beginExport,
+      endExport: h.endExport,
+      flushPendingSave: h.flushPendingSave,
+    }))
+
+    await act(async () => result.current.onExportValidatedEditedRevision())
+
+    expect(h.endExport).toHaveBeenCalledWith(8)
+    expect(h.showError).toHaveBeenCalledWith(
+      'Validated edited PPTX export failed: validator unavailable'
+    )
+  })
+
+  it('does not start a second validated export while the first is slow', async () => {
+    let resolveFidelity
+    h.beginExport
+      .mockReturnValueOnce(1)
+      .mockReturnValueOnce(null)
+    h.getPptxFidelity.mockImplementationOnce(() => new Promise((resolve) => {
+      resolveFidelity = resolve
+    }))
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:edited')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const original = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+      const element = original(tag)
+      if (tag === 'a') element.click = vi.fn()
+      return element
+    })
+
+    const { result } = renderHook(() => useExportActions(presentation, {
+      beginExport: h.beginExport,
+      endExport: h.endExport,
+      flushPendingSave: h.flushPendingSave,
+    }))
+    let firstExport
+    await act(async () => {
+      firstExport = result.current.onExportValidatedEditedRevision()
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+    expect(h.beginExport).toHaveBeenCalledTimes(1)
+    expect(h.getPptxFidelity).toHaveBeenCalledTimes(1)
+
+    await act(async () => result.current.onExportValidatedEditedRevision())
+    expect(h.beginExport).toHaveBeenCalledTimes(2)
+    expect(h.getPptxFidelity).toHaveBeenCalledTimes(1)
+    expect(h.downloadValidatedEditedPptx).not.toHaveBeenCalled()
+
+    resolveFidelity({ aggregateGeneration: 2, exports: { validatedEdited: { available: true } } })
+    await act(async () => firstExport)
+    expect(h.endExport).toHaveBeenCalledWith(1)
   })
 
   it('onExportOffline builds offline HTML and triggers a download', async () => {

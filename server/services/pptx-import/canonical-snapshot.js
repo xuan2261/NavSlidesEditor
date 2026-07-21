@@ -58,14 +58,16 @@ function sanitize(value) {
   if (!value || typeof value !== 'object') return value
   return Object.fromEntries(
     Object.entries(value)
-      .filter(([key]) => !isInternal(key))
+      .filter(([key, child]) => child !== undefined && !isInternal(key))
       .map(([key, child]) => [key, sanitize(child)])
   )
 }
 
 function canonicalEditableSnapshot(snapshot, limits) {
   assertSnapshotBudget(snapshot, limits)
-  return sanitize(snapshot)
+  const root = structuredClone(snapshot)
+  for (const key of ['createdAt', 'updatedAt', 'deletedAt']) delete root[key]
+  return sanitize(root)
 }
 
 module.exports = { assertSnapshotBudget, canonicalEditableSnapshot }

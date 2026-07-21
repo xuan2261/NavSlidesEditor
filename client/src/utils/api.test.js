@@ -92,4 +92,41 @@ describe('PPTX import API', () => {
     })
     expect(fetch).toHaveBeenNthCalledWith(1, '/api/presentations/deck-1/pptx-original')
   })
+
+  it('preserves the validated edited successor generation on the returned blob', async () => {
+    const blob = new Blob(['edited'])
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      headers: { get: (name) => name === 'X-Pptx-Generation' ? '3' : null },
+      blob: async () => blob,
+    })))
+
+    const result = await api.downloadValidatedEditedPptx('deck-1', 2, 'export-key')
+
+    expect(result).toBe(blob)
+    expect(result.aggregateGeneration).toBe(3)
+    expect(fetch).toHaveBeenCalledWith('/api/presentations/deck-1/pptx-edited', expect.objectContaining({
+      method: 'POST',
+      headers: expect.objectContaining({
+        'Idempotency-Key': 'export-key',
+        'If-Pptx-Generation': '2',
+      }),
+    }))
+  })
+
+  it('fails closed when the validated successor generation header is missing', async () => {
+    const blob = new Blob(['edited'])
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      headers: { get: () => null },
+      blob: async () => blob,
+    })))
+
+    await expect(
+      api.downloadValidatedEditedPptx('deck-1', 2, 'export-key')
+    ).rejects.toMatchObject({
+      code: 'MISSING_PPTX_GENERATION',
+    })
+    expect(blob.aggregateGeneration).toBeUndefined()
+  })
 })

@@ -16,4 +16,23 @@ describe('sanitizeClientEditableData', () => {
       _pptxChartMeta: { originalType: 'scatterChart' },
     })
   })
+
+  it('strips timestamps only at the presentation root', () => {
+    expect(sanitizeClientEditableData({
+      createdAt: 'root-created',
+      updatedAt: 'root-updated',
+      deletedAt: 'root-deleted',
+      pluginData: {
+        createdAt: 'plugin-created',
+        updatedAt: 'plugin-updated',
+        deletedAt: 'plugin-deleted',
+      },
+    })).toEqual({
+      pluginData: {
+        createdAt: 'plugin-created',
+        updatedAt: 'plugin-updated',
+        deletedAt: 'plugin-deleted',
+      },
+    })
+  })
 })

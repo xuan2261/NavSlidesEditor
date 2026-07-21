@@ -157,7 +157,7 @@ my-repo/
 
 Sync via in-app Sync button. Configure Proton Drive (or any rclone provider) credentials, then use **Sync This Presentation** or **Sync All**. Docker includes rclone; for the desktop app, install rclone separately.
 
-Files are exported as HTML + JSON and uploaded via rclone. The Docker image includes rclone pre-installed. For the desktop app, install rclone separately on your system.
+Legacy presentations are exported as HTML + JSON and uploaded via rclone. Package-backed presentations additionally include `package/manifest.json` and verified content-addressed PPTX blobs, so the native package can be recovered from the sync output. Each request uses an isolated staging directory and syncs to a serialized destination. The Docker image includes rclone pre-installed. For the desktop app, install rclone separately on your system.
 
 ---
 

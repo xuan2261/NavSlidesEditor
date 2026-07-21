@@ -1,4 +1,5 @@
 const crypto = require('node:crypto')
+const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
 
 const SCHEMA_VERSION = 1
 const SHA256_RE = /^[a-f0-9]{64}$/
@@ -29,6 +30,17 @@ function validateRevision(revision) {
   assert(Number.isSafeInteger(revision.ordinal) && revision.ordinal >= 0, 'Invalid revision ordinal')
   assert(SHA256_RE.test(revision.blobSha256), 'Invalid revision blob SHA-256')
   return revision
+}
+
+function validateCandidateBlob(candidate) {
+  assert(candidate?.schemaVersion === SCHEMA_VERSION, 'Invalid candidate blob schema version')
+  assert(typeof candidate.id === 'string' && candidate.id.length > 0, 'Invalid candidate blob id')
+  assert(SHA256_RE.test(candidate.sha256), 'Invalid candidate blob SHA-256')
+  assert(Number.isSafeInteger(candidate.byteLength) && candidate.byteLength >= 0,
+    'Invalid candidate blob byte length')
+  assert(typeof candidate.createdAt === 'string' && candidate.createdAt.length > 0,
+    'Invalid candidate blob timestamp')
+  return candidate
 }
 
 function validateJob(job) {
@@ -86,10 +98,12 @@ function validateState(state) {
     'Invalid matrix authority epoch')
   if (state.mutationResults === undefined) state.mutationResults = []
   if (state.compatibilityOutbox === undefined) state.compatibilityOutbox = []
-  for (const key of ['blobs', 'revisions', 'heads', 'owners', 'leases', 'jobs', 'mutationResults', 'compatibilityOutbox']) {
+  if (state.candidateBlobs === undefined) state.candidateBlobs = []
+  for (const key of ['blobs', 'revisions', 'heads', 'owners', 'leases', 'jobs', 'mutationResults', 'compatibilityOutbox', 'candidateBlobs']) {
     assert(Array.isArray(state[key]), `Invalid state ${key} index`)
   }
   state.blobs.forEach(validateBlob)
+  state.candidateBlobs.forEach(validateCandidateBlob)
   state.revisions.forEach(validateRevision)
   state.heads.forEach(validateHead)
   state.owners.forEach(validateOwner)
@@ -98,6 +112,9 @@ function validateState(state) {
   state.mutationResults.forEach((result) => {
     assert(result?.schemaVersion === SCHEMA_VERSION, 'Invalid mutation result schema version')
     assert(typeof result.idempotencyKey === 'string' && result.idempotencyKey, 'Invalid idempotency key')
+    if (result.operation !== undefined) {
+      assert(Object.values(MUTATION_OPERATIONS).includes(result.operation), 'Invalid mutation operation')
+    }
     assert(typeof result.presentationId === 'string' && result.presentationId, 'Invalid result presentation')
     assert(result.requestHash === undefined || SHA256_RE.test(result.requestHash), 'Invalid mutation request hash')
   })
@@ -128,6 +145,7 @@ function createEmptyState(fencingEpoch = 0) {
     jobs: [],
     mutationResults: [],
     compatibilityOutbox: [],
+    candidateBlobs: [],
   }
 }
 

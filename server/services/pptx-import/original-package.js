@@ -34,6 +34,16 @@ async function resolveOriginalPath(id, { baseDir = DATA_DIR, ensureDir = false }
   return candidate
 }
 
+async function pathExistsStrict(filePath) {
+  try {
+    await fs.access(filePath)
+    return true
+  } catch (error) {
+    if (error.code === 'ENOENT') return false
+    throw error
+  }
+}
+
 function sha256Buffer(buf) {
   return crypto.createHash('sha256').update(buf).digest('hex')
 }
@@ -89,22 +99,29 @@ async function persistOriginalPptx(source, options = {}) {
   }
 }
 
-async function deleteOriginalPptx(id, { baseDir = DATA_DIR } = {}) {
+async function deleteOriginalPptx(id, { baseDir = DATA_DIR, strict = false } = {}) {
   if (!id) return false
   try {
     assertSafeOriginalId(id)
-  } catch {
+  } catch (error) {
+    if (strict) throw error
     return false
   }
   const filePath = await resolveOriginalPath(id, { baseDir })
-  const existed = await fs.pathExists(filePath)
-  if (existed) await fs.unlink(filePath).catch(() => {})
+  const existed = await pathExistsStrict(filePath)
+  if (existed) {
+    try {
+      await fs.unlink(filePath)
+    } catch (error) {
+      if (strict) throw error
+    }
+  }
   return existed
 }
 
 async function readOriginalPptx(id, { baseDir = DATA_DIR } = {}) {
   const filePath = await resolveOriginalPath(id, { baseDir })
-  if (!(await fs.pathExists(filePath))) return null
+  if (!(await pathExistsStrict(filePath))) return null
   return fs.readFile(filePath)
 }
 

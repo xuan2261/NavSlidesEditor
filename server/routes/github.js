@@ -2,7 +2,8 @@ const express = require('express')
 const { z } = require('zod')
 const { generateRevealHTML } = require('revealjs-shared')
 const { readGithubConfig, writeGithubConfig } = require('../services/storage')
-const { findServeablePresentation } = require('../services/presentation-finder')
+const { readAuthoritativePresentation } = require('../services/package-backed-presentation-read')
+const { toExternalPresentationDto } = require('../services/pptx-import/package-store/dto')
 const { validate } = require('../middleware/validate')
 
 const router = express.Router()
@@ -64,8 +65,9 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
         .json({ error: 'GitHub not configured. Set token, owner, and repo first.' })
     }
 
-    const presentation = await findServeablePresentation(req.params.presId)
-    if (!presentation) return res.status(404).json({ error: 'Presentation not found' })
+    const resolved = await readAuthoritativePresentation(req.params.presId)
+    if (!resolved) return res.status(404).json({ error: 'Presentation not found' })
+    const presentation = resolved.presentation
 
     const { token, owner, repo } = config
     // owner/repo come from user-supplied config and are interpolated into
@@ -92,7 +94,7 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
       .replace(/[^a-z0-9_-]/gi, '_')
       .toLowerCase()
     const htmlContent = generateRevealHTML(presentation)
-    const jsonContent = JSON.stringify(presentation, null, 2)
+    const jsonContent = JSON.stringify(toExternalPresentationDto(presentation), null, 2)
 
     // Get default branch
     const repoInfo = await gh(`/repos/${ownerSeg}/${repoSeg}`)

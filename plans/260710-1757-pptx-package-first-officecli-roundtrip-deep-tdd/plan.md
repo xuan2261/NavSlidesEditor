@@ -2,7 +2,7 @@
 title: 'PPTX Package-First OfficeCLI Roundtrip Deep TDD'
 description: 'Package-first PPTX import, edit, and export with immutable originals, content-addressed revisions, stable OOXML identity, server-derived mutation journals, contained validation, and provider-rendered fidelity evidence.'
 status: in-progress
-progress: '76/244 phase checklist items closed; 0/6 claim gates closed; all 13 phases remain in-progress'
+progress: '76/244 phase checklist items closed (31.1%); 0/6 claim gates closed; all 13 phases remain in-progress'
 priority: P1
 branch: 'master'
 tags: [deep, tdd, pptx, package-first, officecli, ooxml, roundtrip, fidelity]
@@ -73,11 +73,24 @@ requirements and cannot be reinterpreted as local evidence.
 
 ## Implementation Status Sync
 
-- **Overall:** In progress. Existing focused tests demonstrate substantial scaffolding, but no claim gate above level 2 is closed. Prior `87/130` checkbox coverage is retained only as historical implementation evidence and no longer represents release readiness.
-- **OfficeCLI containment slice (work in progress):** focused tests now prove a fail-closed contract: a Windows candidate is only identity-checked before containment; the gateway accepts only `validate` through a typed launcher client when a qualified receipt binds the candidate hash/version to a reverified protected execution copy, launcher identity, and policy digest. Candidate-only state, direct target spawning, receipt/copy mismatch, and non-Windows execution are rejected. This is contract coverage only: no repository-owned Win32 launcher or physical Windows containment evidence exists, so `G1` remains Open.
-- **Newly demonstrated software coverage:** lifecycle ownership across duplicate/history/template/delete/restart, portable/sync fail-closed publication and package inclusion, generation-safe queued saves and forward history restore, durable terminal fidelity state after refresh, responsive keyboard-accessible fidelity UX, complex-object corpus tier audit, and fail-closed edited-export endpoint behavior.
-- **Unavailable or deferred blockers:** validated edited-package qualification and the full primitive/chart/complex-object/behavior matrices, proven Windows Job Object/restricted-identity/app-data/egress containment, protected PowerPoint provider and trust root, Docker/Electron packaging smoke, and physical OfficeCLI/PowerPoint integration evidence.
+- **Overall:** In progress. `76/244` phase checklist items are closed; all 13 phases and `G0-G5` remain open. Checkbox coverage records scoped implementation evidence, not release readiness.
+- **Direct OfficeCLI contract:** the current Node gateway is typed, pinned, shell-free, bounded, and fail-closed in code/test contracts. No direct qualified OfficeCLI receipt or successful real direct validation exists. Earlier launcher, protected-copy, provider, and non-Windows records remain historical; none is relabeled as current local evidence.
+- **Demonstrated software scope:** canonical matrix and reason-code contracts, package-state lifecycle controls, server-derived journal/seed transaction scaffolding, preservation tiers, safe fidelity DTO/UX, and fail-closed export behavior have focused source/test coverage. Their remaining unchecked criteria still control phase completion.
+- **Post-fix contract status:** fidelity capability-summary bindings and chart fixes are confirmed fail-closed. Returned unavailable edited-export results and returned transaction outcomes carry canonical reason-code authority. HTTP request-validation and thrown execution errors remain generic, so no universal public reason-authority contract is claimed. Those prior findings are historical pre-fix findings, not current blockers.
+- **Current correctness blockers:** native re-import still needs collateral-scope validation, production-media isolation, cleanup-failure quarantine, and a sweeper; same-presentation-ID lifecycle incarnation binding remains incomplete for durable replay and compatibility records; shutdown-safe blob publication and loser-blob reclamation remain open; availability still needs exact-current matrix/source-map/capability authority checks; durable cancellation/jobs/retention, idempotency quota/admission, and matrix migration/reissue remain absent. The active direct Gateway policy and historical launcher-required containment journal conflict; direct-run resource limits and tree-drain enforcement are inert, and fidelity availability can start unbounded per-request version probes. These are G1 policy/runtime release blockers, not automatically inferred source defects for the active direct policy. The package-backed PUT-to-POST materialization, no-op reconciliation, package-store fidelity generation, compatibility metadata/timestamps, lifecycle authority rebinding, replay fencing, compatibility recovery queueing, and client successor-generation adoption are now covered by focused tests and are no longer listed as open blockers.
+- **Latest focused validation (2026-07-21):** the package-authority blocker follow-up passed `35` route/package-store test files and `223/223` tests, including the new reader pointer/malformed-state, duplicate lock-order, lifecycle source-head, and DTO regressions; repository ESLint passed with 0 errors and 25 existing warnings; production build passed with 2,297 transformed modules; and `git diff --check` exited clean (Windows line-ending warnings only). Earlier full-unit/corpus evidence remains historical and is not upgraded by this run.
+- **Release blockers:** full canonical matrix-byte propagation to every required record; durable idempotency retention/quota/admission; a real strict-default native re-import; direct qualified OfficeCLI validation; Windows Electron artifact smoke; complete row/mutation-surface evidence; and the local PowerPoint oracle.
 - **Completion rule:** gates `G0-G5`, not raw checkbox count, control claim readiness. No phase is complete until its scoped success criteria and regression gate pass; unavailable provider, platform, route, expansion, and physical-integration criteria remain open.
+
+### Continuation hardening status
+
+- Package-backed GET and downstream presentation sinks now resolve projection and generation from one package-store snapshot through the shared package-backed reader. Export, present, save-as-template, live presentation, history snapshot/restore, public-share, GitHub, cloud sync, and explore/fork paths no longer publish stale compatibility content after a delayed outbox write; restore responses are resolved from the restored package authority before returning to the editor. Summary and full-sync paths reuse one package-store snapshot for all active decks; trashed decks are skipped rather than falling back to raw compatibility records.
+- Duplicate and restore fail closed with `PACKAGE_PENDING_PROJECTION` when a pending package projection is present. Duplicate authority receives the destination projection, including its title; lifecycle publication checks the live source/retained head before committing. History snapshot retention compares the exact read head before and after retention, duplicate/fork package work precedes presentation-file serialization, and rollback failures surface as lifecycle errors instead of being swallowed.
+- Compatibility records claiming missing package heads or malformed original-only state no longer fall back to stale JSON. Public fork, GitHub JSON, and cloud-sync JSON cross the editor DTO boundary so package authority fields are not published.
+- Native re-import now binds the expected presentation/revision/generation and checks stable source provenance, exact projection key, and ambiguity. Mutable post-edit source hashes remain intentionally excluded from the stable-identity comparison.
+- Import presentation creation receives the same server timestamp used by package compatibility publication. Inner package-head races map to HTTP 409 with the current generation.
+- Export candidate blobs are registered in durable `candidateBlobs` quarantine metadata before blob exposure and removed only after successful successor publication. Failed publication remains auditable as quarantined rather than unowned; physical collection remains disabled by the existing policy.
+- These are focused software-contract hardening results. Native real-package re-import, direct qualified OfficeCLI, PowerPoint, Electron, matrix propagation, durable idempotency retention, and `G0-G5` remain open.
 
 ## Approved Decision Source
 
@@ -866,3 +879,224 @@ lane, and LibreOffice is not claim authority.
   compatibility and fidelity wording.
 - The applicable focused tests and milestone validators pass under strict TDD,
   with expected fail-closed rejection asserted by a passing harness.
+
+## Session 5 Final Evidence Synchronization — 2026-07-20
+
+### Checklist Reconciliation
+
+All 13 phase files were reviewed for frontmatter status, success criteria, Session 4
+local-scope contract, and checklist state. Their frontmatter stays `in-progress`; no
+unchecked criterion was changed to complete in this synchronization. The durable total is
+`76/244` (`31.1%`), and completed rows remain implementation-level evidence only.
+Runtime tasks `#1-4` and `#7` are cross-phase evidence/review work, not a
+one-to-one completed phase criterion; they therefore do not change a checkbox.
+Task `#6` is mapped to the final regression evidence below. Task `#8` completed
+final contract review; its confirmed findings appear in Current Review Blockers.
+Neither cross-phase task changes a checkbox without the required gate evidence.
+
+| Phase | Closed / total | Current evidence boundary |
+| ----- | -------------- | ------------------------- |
+| 1 | 7 / 21 | Canonical contract subset; full matrix-subject propagation, migration/reissue, and exact-current availability authority remain open. Reason authority is deliberately scoped to returned availability/transaction outcomes, not universal public errors. |
+| 2 | 4 / 15 | Pinned direct-contract coverage; active direct policy conflicts with the historical launcher-required journal, direct version probes have no cache/shared admission, and no reconciled policy or real qualified receipt exists. |
+| 3 | 11 / 28 | Lifecycle subcontrols; lifecycle-bound replay isolation, invalid-key admission ordering, matrix reissue, production media-dedupe corruption isolation, shutdown-safe publication/unowned loser-blob recovery, and complete production R0 ownership remain open. |
+| 4 | 6 / 23 | Direct gateway contract; the active direct lane conflicts with the historical launcher-required journal, forwards unenforced memory/process limits to the runner, lacks Windows tree-drain proof, and has no successful real validation or reconciled G1 policy. |
+| 5 | 7 / 18 | Journal/generation controls; P0 PUT-to-export R1 handoff, client successor adoption, target-head publication fencing, per-presentation export serialization, and joined same-key requests are locally verified. Net-zero/pending-state reconciliation, lifecycle-safe idempotency, and durable admission remain open. |
+| 6 | 4 / 12 | Native reconciliation subset; forged identity/collateral scope remains accepted, cleanup failure has no quarantine/sweeper regression, and no qualified real OfficeCLI shadow evidence exists. |
+| 7 | 3 / 14 | Candidate/preservation controls; no real G2 seed pipeline. |
+| 8 | 8 / 16 | Chart policy controls; post-fix chart contract is resolved, but no promoted-row transaction evidence exists. |
+| 9 | 5 / 14 | Tier/non-execution controls; full recursive and adjacent-edit proof remains open. |
+| 10 | 5 / 13 | Preservation/structure controls; no promoted structural transaction proof. |
+| 11 | 4 / 24 | Fail-closed transaction controls; P0 route materialization, same-key joining, target-head publication fencing, per-presentation validation serialization, compatibility draining, and client R1 handoff are locally verified. Shutdown can still race publication after blob commit, native strict-default proof is absent, and durable retention/quota/admission evidence remains open. |
+| 12 | 6 / 20 | Honest fidelity UX subset; post-fix fidelity binding and positive successor-generation adoption are fail-closed, but availability lacks exact-current matrix/source-map/capability checks, authoritative macro state can be omitted from compatibility/fidelity, and complete mutation-surface/durable-job proof remains open. |
+| 13 | 6 / 26 | Claim-policy controls; no Windows artifact smoke or local PowerPoint evidence. |
+
+### Gate Ledger
+
+| Gate | Status | Evidence-backed reason |
+| ---- | ------ | ---------------------- |
+| `G0` | Open | Canonical matrix code exists, but full `{schemaVersion,matrixVersion,hash}` propagation and matrix migration/reissue are not proven for every live persisted capability/corpus/evidence/claim record. Availability can return affirmative without validating current `matrixAuthoritySubjects`/epoch, the head source-map revision hash, or authoritative capability state; execution can then reject stale matrix authority. Canonical reason authority applies to returned availability denials and transaction outcomes only; generic HTTP request-validation and thrown execution errors are disclosed as outside that contract, not evidence of a universal public error guarantee. |
+| `G1` | Open | Session 4 and active Phase 11 select a direct local typed gateway, while the historical OfficeCLI containment journal requires a launcher and prohibits direct spawn. Production composition uses the direct gateway and leaves launcher-client wiring unused. This is an unresolved critical policy/journal contradiction, not proof of containment bypass under the active direct policy. Separately, gateway `maxMemoryBytes`/`maxProcesses` are not enforced by the bounded runner, `child.kill()` has no Windows process-tree drain proof, and fidelity availability can launch fresh OfficeCLI version probes per request without qualification cache or shared admission. No reconciled policy, direct qualified receipt, successful real validation, or enforced direct-runtime limits exist. |
+| `G2` | Open | Package/journal/validator scaffolding exists and the P0 route-equivalent R1 composition is locally verified for one successor, immutable R0, server-owned text transport, replay, compatibility drain, target-head fencing, and client generation handoff. Shutdown can still race export after blob commit and leave unowned loser blobs; native re-import accepts forged identity/collateral scope, can corrupt global production media-dedupe entries, and has no cleanup-failure quarantine/sweeper for candidate PPTX or media; replay is not lifecycle-bound; net-zero/pending-state reconciliation is incomplete; and no real strict-default native re-import or fully qualified edited publication exists. |
+| `G3` | Open | No built, hashed, inspected, started, capability-probed Windows NSIS and portable artifact evidence exists. |
+| `G4` | Open | No complete exact-row evidence set or centrally gated UI/store/hook/API mutation-surface audit exists. Post-fix fidelity binding and chart contract fixes are resolved; they do not establish row promotion or availability correctness. |
+| `G5` | Open | No local Microsoft PowerPoint oracle run binds an exact published package and environment subject. |
+
+### Post-Fix Contract Disposition
+
+- **Resolved current behavior:** `fidelity-contract.js` now requires the complete
+  capability tuple, rejects unknown and duplicate evidence, derives exact row/tier/
+  safety bindings from canonical kinds, and requires the current matrix hash.
+  Focused fidelity coverage reported `21/21` passing tests. The former
+  capability-summary finding is historical pre-fix evidence only.
+- **Resolved current behavior:** final review confirms the chart contract fix.
+  It is not current evidence of row promotion, transaction eligibility, or `G4`
+  closure.
+- **Resolved current behavior:** legacy mutation records with an omitted operation
+  remain accepted by the current edited-export authority selector. The prior
+  schema-versus-selector mismatch is not retained as a current blocker.
+- **Reason-authority scope:** returned unavailable edited-export availability
+  results and returned transaction outcomes canonicalize their reason code and
+  attach `reasonCodes` plus `reasonCodeSubject`; focused availability coverage
+  reported `4/4` passing tests. HTTP request-validation and thrown execution
+  errors remain generic. The public API therefore makes no universal
+  reason-authority claim; stale affirmative availability and missing macro
+  propagation remain separate blockers.
+
+### OfficeCLI Policy Disposition
+
+- Active Session 4 and Phase 11 select a direct local typed gateway, exact pinned
+  binary qualification, bounded execution, and a receipt that makes no containment
+  claim. `productionComposition()` follows that direct lane; unused launcher-client
+  wiring is not proof that the active direct lane bypasses its own policy.
+- The ongoing historical journal
+  [`260715-0215-officecli-containment-contract-open-native-gates.md`](../../docs/journals/260715-0215-officecli-containment-contract-open-native-gates.md)
+  instead prohibits direct spawn and requires a native launcher. This plan-only
+  synchronization does not rewrite that journal. The contradiction is explicitly a
+  critical G1 policy/release blocker until an owner records which policy supersedes
+  the other and aligns the journal, source wiring, receipt criteria, and release
+  wording.
+- **Direct-runtime enforcement gap:** the Gateway passes `maxMemoryBytes` and
+  `maxProcesses`, but `runBoundedProcess()` does not accept or enforce them;
+  its cleanup uses `child.kill()` without Windows process-tree drain proof.
+  `editedExportAvailability()` probes capability on fidelity reads, which calls
+  fresh qualification/version probing without a qualification cache or shared host
+  admission. These are separate High G1 runtime/admission blockers even if the
+  direct policy is selected.
+- Until reconciliation, bounded resource/tree-drain enforcement, probe admission,
+  and a real direct qualified receipt, direct Gateway tests establish neither
+  containment nor G1 closure.
+
+Historical launcher, protected-provider, and non-Windows records retain only their
+recorded historical authority. They neither satisfy these local gates nor become
+local evidence by this synchronization.
+
+### Regression Evidence
+
+Final tester and final-review results are recorded separately below. Passing tests
+confirm current implementation behavior; they do not close a claim gate.
+
+| Validation | Result |
+| ---------- | ------ |
+| `npm run lint` (final tester) | Exit 0; 0 errors, 25 warnings. |
+| `npm run test -- --exclude client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx` (final tester) | Exit 0 after background continuation; 473 files passed, 1 skipped; 3,720 tests passed, 3 skipped; 1,082.54 s. |
+| Same excluded full-unit command (separate task `#6` baseline run) | Exit 0; 473 files passed, 1 skipped; 3,720 tests passed, 3 skipped; 1,095.52 s. It is a separate clean run, not a corrected count. |
+| `npm run test` (separate final-review run) | Exit 0; 474 files passed, 1 skipped; 3,722 tests passed, 3 skipped; 1,107.48 s. This result is not attributed to the final tester's focused suite. |
+| Focused PPTX suite (final tester) | Exit 0; 37 files, 313 tests; 86.69 s. |
+| Focused R1 review suite (final reviewer) | 4 files, 26 tests passed. This is slice evidence only; it does not establish P0/R1 readiness or physical gate evidence. |
+| `npm run test:corpus` (final tester) | Exit 0; 11/11 decks passed; semantic fidelity 100.0%; production round-trip stability 63.0%. This is corpus evidence, not validated edited-export or OfficeCLI qualification evidence. |
+| `npx vitest run server/services/pptx-import/sla-failclosed.test.js` (final tester) | Exit 0; 1 file, 7/7 tests passed; 1.55 s. Expected missing-evidence rejection remains a passing fail-closed assertion. |
+| `npm run build` (final tester) | Exit 0; 2,297 modules; 3.28 s. |
+| `npx vitest run server/routes/presentations.test.js server/services/pptx-import/mutation-transaction.test.js server/services/pptx-import/chart-output-to-navslides-mapper.test.js server/services/pptx-import/ooxml-chart-inject.test.js` (separate review command) | Exit 0; 4 files, 73/73 tests passed. It is separate review evidence, not the final tester's 37-file focused suite. |
+| `git diff --check` | Exit 0; CRLF notices only. |
+| Read-only contract review | 14 focused files, 141 tests passed. Review found the blockers in the gate ledger. |
+
+The full-run PPTX oracle self-tests skipped with `PPTX_ORACLE=off`. No physical
+OfficeCLI, PowerPoint, protected-provider, production native strict re-import,
+Electron packaging, or release-artifact lane ran or is available. The green unit,
+corpus, and build results are regression evidence only and do not satisfy those
+physical or claim-specific gates.
+
+### Current Review Blockers
+
+| Priority | Verified blocker | Required closure before claim promotion |
+| -------- | ---------------- | --------------------------------------- |
+| Resolved 2026-07-20 | **PUT-to-POST materialization:** the prior route-equivalent path returned R0/no-op while a pending projection-save journal remained. The server now resolves package-store authority, derives transports, patches one R1, preserves immutable R0, records committed journal/projection/source-map state, and exposes the successor generation. Focused materialization, XML, replay, mixed-edit, no-op, legacy-authority, route, and outbox assertions pass. | Retain this as regression coverage; release gates still require physical native/OfficeCLI/PowerPoint evidence. |
+| Resolved for the local route 2026-07-20 | **R1 compatibility-outbox delivery:** the POST path now drains after commit, returns `X-Pptx-Generation` even when draining is temporarily unavailable, preserves the durable pending write for retry, serializes drain operations, ignores stale compatibility generations, preserves server-owned compatibility metadata/tombstones, and uses the outbox as the sole package-backed JSON writer. | Keep startup/next-request retry and monotonic-write tests; cross-process durability, lifecycle identity, and operational retry telemetry remain outside this slice. |
+| Resolved locally 2026-07-20 | **Durable replay ordering:** an identical committed export replay is now recognized before a fresh validator-availability probe, so a temporary validator outage does not block recovery of already committed bytes. Lifecycle-bound replay identity remains unresolved. | Keep the route replay regression; bind replay to immutable lifecycle identity before any cross-lifecycle claim. |
+| High | **Native re-import proof and cleanup isolation:** forged source identity and collateral package changes can be accepted. Matching part URI/native ID and expected text is not sufficient semantic or untouched-part proof. A failing `fs.rm()` in `finally` can override the validator outcome and leave candidate PPTX/media in OS temp; no quarantine or sweeper exists. | Bind re-import to full authoritative source identity, expected projection, impact closure, and untouched/collateral checks; catch cleanup failure, quarantine or sweep residual state, and add a forced-cleanup-failure regression before proving a real strict-default package result. |
+| High | **Native media corruption:** the validator's private `uploadsDir` still allows importer media dedupe to delete or replace a valid production `upload-hashes.json` entry with a temporary path; validator cleanup then removes that path. This is active production dedupe corruption, not merely dangling metadata. | Isolate importer media state or transactionally restore every global hash entry before staging cleanup. |
+| Resolved locally 2026-07-20 (partial) | **Export concurrency:** same-key concurrent exports are joined, distinct keys are serialized per presentation before expensive validation, target-head publication is fenced independently of unrelated store mutations, and stale publication losers return typed conflict responses. Shutdown-safe unowned-blob compensation remains unresolved. | Keep per-presentation serialization and target-head regressions; complete shutdown-safe loser reclamation. |
+| Resolved locally 2026-07-20 | **Package PUT compatibility ordering:** package-backed PUT no longer performs a second direct `presentations.json` write after package publication; it drains and reads the serialized compatibility outbox result, preventing delayed lower-generation JSON writes from bypassing the stale-write guard. | Retain delayed PUT/drain ordering coverage; lifecycle identity remains outside this fix. |
+| Resolved locally 2026-07-20 (partial) | **Content-addressed commit uncertainty:** a directory `EPERM` after a successful staged-to-target rename is now treated as an uncertain-but-verified commit rather than retrying a consumed stage and surfacing `ENOENT`. | Retain the blob-store regression; this does not close the broader shutdown/publication race or unowned-loser compensation. |
+| High | **Shutdown/publication blob race:** export validation and blob commit occur outside the runtime mutation tail; shutdown can release the writer after waiting only that tail, then publication fails after blob commit. Concurrent losers can leave unowned blobs indefinitely. | Enroll the full export lifecycle in a shutdown-safe runtime lease/tail, atomically own or compensate committed blobs, and add shutdown-after-blob-commit plus concurrent-loser reclamation regressions. |
+| Critical | **Cross-lifecycle replay disclosure:** delete/quarantine then recreate with the same presentation ID permits same-key/hash replay to return predecessor bytes. | Bind replay to immutable lifecycle/aggregate identity or atomically purge/tombstone predecessor outcomes. |
+| Resolved at edited-export admission 2026-07-20 | **Invalid-key admission ordering:** the public edited-export route now rejects missing, non-printable, overlong, and non-positive-generation envelopes before presentation lookup, availability probing, execution, or replay. Lower-level save/state entry points retain their own validation contracts and are not claimed by this route fix. | Keep the route admission regression; audit every other mutation boundary before universal admission is claimed. |
+| High | **Exact-current availability and compatibility:** availability still does not fully validate current `matrixAuthoritySubjects`/epoch, head source-map revision/hash, or authoritative capability state; macro capability propagation remains incomplete. The validated-export context now always supplies server-owned compatibility projection for the tested package-backed route. | Fail closed unless every current head, matrix subject/epoch, source-map revision/hash, and capability predicate matches; propagate security capability state and atomically publish compatible presentation/fidelity state with R1. |
+| Resolved for the validated-export flow 2026-07-20 | **Client R1 generation adoption:** the API validates a positive `X-Pptx-Generation` response header and fails closed when it is missing or malformed; the export action adopts it through the persistence controller, waits for queued saves before export, rejects concurrent exports, rebases deferred edits (including recovery drafts), and route-fences late completions. Focused export, save-barrier, route-fence, header, and API tests pass. | Retain the generation-adoption and save-fence regressions; unrelated save-controller lifecycle and durable job gates remain open. |
+| High (partial) | **Net-zero and pending-state semantics:** the tested true no-op pending save clears its matching marker without creating R1, and text/mixed pending materialization has explicit dispositions. Broader net-zero, cancellation, and recovery semantics remain incomplete. | Define and test net-zero, pending, cancellation, retry, and recovery outcomes against the authoritative head. |
+| High | **Durable lifecycle controls absent:** cancellation, durable job lifecycle, retention, quotas, and admission/compaction policy remain incomplete. | Implement durable bounded outcomes, cancellation/recovery, retention/expiry, quota, and safe compaction controls. |
+| High | **Matrix evolution:** migration/reissue across every live head and dependent record is unproven. | Atomically reissue or invalidate all dependent authority on matrix change and prove recovery behavior. |
+| Critical policy | **OfficeCLI containment/journal contradiction:** active Session 4 and Phase 11 authorize a direct local typed Gateway, and production composition wires that direct Gateway while launcher-client configuration is unused. The historical containment journal says direct spawn is disabled and a launcher is mandatory. | Make and record one release-policy decision: explicitly supersede/qualify the historical journal for the direct local lane, or restore the launcher-required lane. Until then, no containment claim, qualified receipt, or G1 promotion is allowed. |
+| High G1 | **Direct Gateway enforcement and admission:** gateway `maxMemoryBytes`/`maxProcesses` are passed but ignored by `runBoundedProcess()`; cleanup calls `child.kill()` without Windows process-tree drain proof. Fidelity availability invokes fresh OfficeCLI `--version` qualification per request without cache or shared host admission, so concurrent reads can amplify unbounded probes. | Enforce memory/process limits and tree-drain attestation; use a signed short-lived qualification receipt/cache plus shared bounded admission; prove concurrent fidelity reads cannot amplify probes. |
+| Gate | **Physical/claim evidence absent:** no real strict native re-import success, direct qualified OfficeCLI validation, Windows artifact smoke, complete mutation-surface audit, or local PowerPoint oracle exists. | Produce exact-subject evidence for the requested claim; passing unit/corpus/build tests are insufficient. |
+
+### Scope and Docs Impact
+
+- **Scope change:** none. The active Windows-local contract remains unchanged.
+  The current defects reduce readiness; they do not broaden scope.
+- **Workspace state:** this ledger correction modifies only this plan. It does not
+  stage, commit, reset, clean, delete, or modify application source or evergreen
+  docs; generated `.tmp` and root scratch artifacts remain excluded.
+- **Evergreen docs:** task `#9` final scope updated only
+  `docs/export-fidelity-and-limits.md`, `docs/pptx-import-fidelity-report.md`, and
+  `docs/project-changelog.md` with fail-closed limitations.
+  `docs/system-architecture.md` was reverted and is not in the final docs scope.
+  Focused docs evidence: 10 files / 102 tests passed; Markdown links and
+  `git diff --check` passed. Prettier remains nonzero at the same-files HEAD
+  baseline, so no unrelated reformatting was made.
+- **Next gate actions:** App/Storage retains the focused R1 materialization,
+  compatibility-drain, admission, concurrency, and client save-fence regressions;
+  the next software gates are native re-import identity/collateral/media isolation,
+  cleanup quarantine/sweeping, immutable-lifecycle replay binding, target-head
+  concurrency, shutdown-safe export leases/blob reclamation, exact-current
+  availability predicates, and durable net-zero/cancellation/job/retention/
+  matrix-reissue controls. Security and Release must make and record the direct-
+  gateway versus launcher-required G1 policy decision; a docs owner then aligns
+  the historical journal without relabeling old evidence. Under the reconciled
+  policy, Security must enforce direct memory/process limits and Windows tree
+  drain, introduce signed short-lived qualification receipts/cache with shared
+  bounded admission for fidelity probes, then run pinned direct OfficeCLI
+  qualification. Release must smoke both Windows Electron artifacts, complete the
+  mutation-surface audit, then run the local PowerPoint oracle.
+
+## Session 6 Package-Authority Edge Reconciliation — 2026-07-21
+
+- **Progress:** remains `76/244` checklist items closed (`31.1%`); all 13 phases
+  and `G0`–`G5` remain in progress/open. No checkbox or claim gate changed.
+- **Verified gaps:** save-as-template can retain a pending package head that later
+  instantiation rejects; template-create rollback/outbox acknowledgement can orphan
+  or resurrect destination authority; snapshot/duplicate/fork fencing and Explore
+  rollback remain incomplete; permanent-delete/outbox interleavings can split JSON,
+  head, and history ownership. A reviewer reproduced alternate-separator permanent-
+  delete traversal before filesystem access, making delete-path validation a critical
+  release blocker. Retain→quarantine has a TOCTOU/stale-owner rollback that can
+  restore predecessor authority over a newer head; stale-head retry can leak retained
+  owners. `/pptx-original` still selects package versus legacy from compatibility
+  JSON and degraded R0 recovery can reject an intact original when a successor
+  revision is missing. Sync is only a staged manifest/blob bundle: remote-path
+  traversal rejection, DTO/package-generation mismatch, projection-to-bundle
+  expected-head fencing, bounded resources, full media traversal, and authority
+  round-trip remain open. Portable import accepts missing revisions/blobs and can
+  leave stale destination outbox records. Native re-import still lacks sufficient
+  provenance/collateral and cleanup/loser-blob proof for a publication-safety or
+  native-fidelity claim.
+- **Provisional focused evidence:** lifecycle routes reported `55/55`, sync `9/9`,
+  portable `3/3` after a fixture correction, and authority-reader/presentations
+  `43/43` passing. Same-title and destination-lock-alias sync checks are therefore
+  resolved only in that focused snapshot; none of these runs covers the blockers
+  above or closes a gate.
+- **Non-final software evidence:** a focused authority suite reported `9 files / 84
+  tests` passing. A related expanded run reported `165` passed and `2` failed
+  fixture cases, then source changed; earlier focused lint/build/static scans are
+  likewise not final certification. The final documentation contract rerun passed
+  `1 file / 3 tests` in `2.66s` with no warnings or failures; it validates
+  documentation only. No result changes a claim gate.
+- **Documentation correction:** the package-fidelity report, export-limit policy,
+  and unreleased changelog scope covered authority behavior and explicitly retain
+  those gaps. They continue to state that application tests are not OfficeCLI,
+  PowerPoint, Electron, Docker, non-Windows, or real-package native re-import
+  evidence.
+- **Scope change:** none. This reconciliation changed only plan/docs wording; no
+  source or test was modified, staged, or committed.
+- **Blocker:** final reconciliation is blocked by in-progress task `#60`, which
+  must repair the verified authority defects and provide exact post-repair
+  regression results. Related active implementation/review streams `#42`, `#44`,
+  `#45`, `#52`–`#54`, `#58`, `#61`, and `#62` must also close or be dispositioned
+  before delivery.
+- **Next actions:** implementation owner completes task `#60`, including delete-
+  path validation before filesystem access, retain/quarantine fencing, degraded R0
+  recovery, remote-path rejection, portable-import completeness, and lifecycle
+  cleanup compensation; review/test owners provide exact post-repair focused command
+  results for delete, template, snapshot/fork, sync, and portable-bundle
+  regressions; plan owner remaps only fully evidenced criteria and keeps every
+  physical claim gate open absent its required evidence.

@@ -4,7 +4,10 @@ const { readTemplates, withTemplates } = require('../services/storage')
 const { normalizePresentationNotes } = require('revealjs-shared')
 const { validate } = require('../middleware/validate')
 const { createTemplateSchema, updateTemplateSchema } = require('../middleware/schemas')
-const { releasePackageOwner } = require('../services/package-lifecycle-integration')
+const {
+  getPackageOwnerRecords,
+  releasePackageOwnerWithRetry,
+} = require('../services/package-lifecycle-integration')
 const { sanitizeClientEditableData } = require('../services/pptx-import/authority-sanitizer')
 const { toPresentationEditorDto } = require('../services/pptx-import/package-store/dto')
 
@@ -65,12 +68,28 @@ router.get('/:id', async (req, res) => {
 // PUT /api/templates/:id
 router.put('/:id', validate(updateTemplateSchema), async (req, res) => {
   try {
+    const current = (await readTemplates()).find((template) => template.id === req.params.id)
+    if (!current) return res.status(404).json({ error: 'Not found' })
+    const patch = sanitizeClientEditableData(req.body)
+    if (current.pptxAggregateHead) {
+      const unsupportedKeys = Object.keys(patch).filter((key) =>
+        !['title', 'description'].includes(key)
+      )
+      if (unsupportedKeys.length) {
+        throw Object.assign(new Error(
+          'Package-backed template projection is immutable; save a new template for content edits'
+        ), {
+          code: 'PACKAGE_TEMPLATE_PROJECTION_IMMUTABLE',
+          status: 422,
+        })
+      }
+    }
     const updated = await withTemplates((templates) => {
       const index = templates.findIndex((t) => t.id === req.params.id)
       if (index === -1) return null
       templates[index] = normalizePresentationNotes({
         ...templates[index],
-        ...sanitizeClientEditableData(req.body),
+        ...patch,
         id: req.params.id,
         updatedAt: new Date().toISOString(),
       })
@@ -79,7 +98,11 @@ router.put('/:id', validate(updateTemplateSchema), async (req, res) => {
     if (!updated) return res.status(404).json({ error: 'Not found' })
     res.json(toPresentationEditorDto(normalizePresentationNotes(updated)))
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(err.status || 500).json({
+      error: err.message,
+      code: err.code,
+      ...(err.retryable ? { retryable: true } : {}),
+    })
   }
 })
 
@@ -87,16 +110,29 @@ router.put('/:id', validate(updateTemplateSchema), async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const template = (await readTemplates()).find((item) => item.id === req.params.id)
-    if (!template) return res.status(404).json({ error: 'Not found' })
-
+    const owner = { ownerType: 'template', ownerId: req.params.id }
+    let ownerRecords
     try {
-      await releasePackageOwner({ ownerType: 'template', ownerId: req.params.id })
+      ownerRecords = await getPackageOwnerRecords(owner)
     } catch {
       return res.status(503).json({
         error: 'Package lifecycle is temporarily unavailable; retry deletion',
         code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
         retryable: true,
       })
+    }
+    if (!template) {
+      if (!ownerRecords.length) return res.status(404).json({ error: 'Not found' })
+      try {
+        await releasePackageOwnerWithRetry(owner)
+      } catch {
+        return res.status(503).json({
+          error: 'Package lifecycle is temporarily unavailable; retry cleanup',
+          code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+          retryable: true,
+        })
+      }
+      return res.json({ success: true })
     }
 
     const deleted = await withTemplates((templates) => {
@@ -105,10 +141,26 @@ router.delete('/:id', async (req, res) => {
       templates.splice(index, 1)
       return true
     })
-    if (!deleted) return res.status(404).json({ error: 'Not found' })
+    if (!deleted) {
+      try { await releasePackageOwnerWithRetry(owner) } catch {}
+      return res.status(404).json({ error: 'Not found' })
+    }
+    try {
+      await releasePackageOwnerWithRetry(owner)
+    } catch {
+      return res.status(503).json({
+        error: 'Package lifecycle is temporarily unavailable; retry cleanup',
+        code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+        retryable: true,
+      })
+    }
     res.json({ success: true })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(err.status || 500).json({
+      error: err.message,
+      code: err.code,
+      ...(err.retryable ? { retryable: true } : {}),
+    })
   }
 })
 

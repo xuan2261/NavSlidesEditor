@@ -17,6 +17,8 @@ const _dataDir = vi.hoisted(() => {
 
 const storage = await import('../services/storage.js')
 const { openPackageStore } = await import('../services/pptx-import/package-store/index.js')
+const { createSourceMap } = await import('../services/pptx-import/source-map.js')
+const { hashRecord } = await import('../services/pptx-import/package-store/schemas.js')
 const historyRouter = (await import('./history.js')).default
 
 function makeApp() {
@@ -49,8 +51,39 @@ describe('package-backed history integrity', () => {
       ownerType: 'presentation',
       ownerId: presId,
     }))
+    const revisionId = head.revision.id
+    const projection = {
+      id: presId,
+      title: 'Current',
+      slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>Before</p>' }] }],
+    }
+    const sourceMap = createSourceMap({
+      presentationId: presId,
+      revisionId,
+      packageGeneration: 1,
+      entries: {},
+    })
+    await withStore((store) => store.mutate((next) => {
+      const liveHead = next.heads.find((item) => item.presentationId === presId)
+      liveHead.projectionRevisionId = hashRecord(projection)
+      liveHead.sourceMapRevisionId = hashRecord(sourceMap)
+      next.mutationResults.push({
+        schemaVersion: 1,
+        operation: 'package-import',
+        presentationId: presId,
+        idempotencyKey: 'fixture-import',
+        generation: 1,
+        packageRevisionId: revisionId,
+        projection,
+        sourceMap,
+        state: 'committed',
+      })
+    }))
+    const aggregateHead = await withStore((store) =>
+      store.getState().heads.find((item) => item.presentationId === presId)
+    )
     await storage.withPresentations((presentations) => {
-      presentations[0].pptxAggregateHead = head
+      presentations[0].pptxAggregateHead = aggregateHead
     })
   })
 
@@ -136,6 +169,43 @@ describe('package-backed history integrity', () => {
     })
   })
 
+  it('restores the retained package authority instead of stale compatibility JSON', async () => {
+    const app = makeApp()
+    const snapshot = await request(app)
+      .post(`/api/presentations/${presId}/snapshot`)
+      .send({ name: 'package-backed' })
+    expect(snapshot.status).toBe(200)
+
+    await storage.writePresentations([
+      { id: presId, title: 'Stale compatibility', slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>Before</p>' }] }] },
+    ])
+    await withStore((store) => store.mutate((next) => {
+      const result = next.mutationResults.find((item) =>
+        item.presentationId === presId && item.idempotencyKey === 'fixture-import'
+      )
+      const newerProjection = {
+        ...result.projection,
+        title: 'Newer package authority',
+        slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
+      }
+      next.mutationResults.push({
+        ...structuredClone(result),
+        idempotencyKey: 'newer-authority',
+        projection: newerProjection,
+      })
+      const head = next.heads.find((item) => item.presentationId === presId)
+      head.projectionRevisionId = hashRecord(newerProjection)
+    }))
+
+    const restored = await request(app)
+      .post(`/api/presentations/${presId}/restore/${snapshot.body.id}`)
+
+    expect(restored.status).toBe(200)
+    expect(restored.body.aggregateGeneration).toBe(2)
+    expect(restored.body.title).toBe('Current')
+    expect(restored.body.slides[0].elements[0].content).toBe('<p>Before</p>')
+  })
+
   it('does not create a legacy snapshot when the package head is unavailable', async () => {
     await withStore((store) => store.quarantinePresentation(presId))
 
@@ -168,4 +238,32 @@ describe('package-backed history integrity', () => {
       expect(store.getState().owners.filter((owner) => owner.ownerType === 'history')).toEqual([])
     })
   })
+
+  it('preserves the oldest restore target when the snapshot cap is full', async () => {
+    const app = makeApp()
+    const snapshotIds = []
+    for (let index = 0; index < 50; index += 1) {
+      const response = await request(app)
+        .post(`/api/presentations/${presId}/snapshot`)
+        .send({ name: `snapshot-${index}` })
+      expect(response.status).toBe(200)
+      snapshotIds.push(response.body.id)
+    }
+
+    const restore = await request(app)
+      .post(`/api/presentations/${presId}/restore/${snapshotIds[0]}`)
+
+    expect(restore.status).toBe(200)
+    expect(await fs.pathExists(
+      path.join(storage.HISTORY_DIR, presId, `${snapshotIds[0]}.json`)
+    )).toBe(true)
+    await withStore((store) => {
+      expect(store.getState().owners).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          ownerType: 'history',
+          ownerId: `${presId}:${snapshotIds[0]}`,
+        }),
+      ]))
+    })
+  }, 10_000)
 })

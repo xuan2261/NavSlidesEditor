@@ -1,7 +1,10 @@
 const fs = require('node:fs/promises')
 const path = require('node:path')
+const { featureMatrixHash } = require('../canonical-feature-matrix')
 const { COMPLEX_OBJECT_TIERS } = require('../complex-object-policy')
 const { buildOpcInventory } = require('./opc-inventory')
+
+const MATRIX_HASH = featureMatrixHash()
 
 function relsPath(part) {
   const dir = path.posix.dirname(part)
@@ -44,6 +47,9 @@ function auditInventory(deck, inventory) {
     return {
       id: `${deck}#${index}`,
       kind: object.kind,
+      rowId: tier.rowId,
+      featureTier: tier.tier,
+      matrixHash: MATRIX_HASH,
       source: object.source,
       tier,
       preservation: {
@@ -65,6 +71,7 @@ function auditInventory(deck, inventory) {
   return {
     deck,
     packageSha256: inventory.packageSha256,
+    matrixHash: MATRIX_HASH,
     objects,
     classified: true,
   }
@@ -76,7 +83,7 @@ async function auditCorpus(corpusDir) {
   for (const deck of decks) {
     results.push(auditInventory(deck, await buildOpcInventory(path.join(corpusDir, deck))))
   }
-  return { schemaVersion: 1, classified: true, decks: results }
+  return { schemaVersion: 1, matrixHash: MATRIX_HASH, classified: true, decks: results }
 }
 
 module.exports = { auditCorpus, auditInventory, relationshipClosure }

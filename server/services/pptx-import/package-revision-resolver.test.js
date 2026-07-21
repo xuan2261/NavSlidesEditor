@@ -28,6 +28,10 @@ describe('package-revision-resolver', () => {
           { id: 'r0', blobSha256: r0Hash },
           { id: 'r1', blobSha256: r1Hash },
         ],
+        owners: [
+          { ownerType: 'presentation', ownerId: 'deck', revisionId: 'r0' },
+          { ownerType: 'presentation', ownerId: 'deck', revisionId: 'r1' },
+        ],
       }),
       readBlob: async (hash) => (hash === r0Hash ? r0 : r1),
     }
