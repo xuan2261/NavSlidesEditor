@@ -61,6 +61,44 @@ describe('package compatibility replay lock order', () => {
     await fs.rm(dataDir, { force: true, recursive: true })
   })
 
+  it('serializes recovery reload behind direct package mutations', async () => {
+    const store = packageRuntime.getPackageStore()
+    const originalReadValidatedRoot = store.metadata.readValidatedRoot.bind(store.metadata)
+    const rootRead = deferred()
+    const allowRead = deferred()
+    const owner = store.getState().owners.find((item) => item.ownerId === 'history-deck')
+    const recoveryOwner = { ...owner, ownerId: 'history-deck:reload-race' }
+    let failure
+    let directMutation
+
+    store.metadata.readValidatedRoot = async (root) => {
+      rootRead.resolve()
+      await allowRead.promise
+      return originalReadValidatedRoot(root)
+    }
+
+    try {
+      failure = packageRuntime.withPackageStore(async () => {
+        throw new Error('action failed')
+      }).catch((error) => error)
+      await rootRead.promise
+
+      directMutation = store.mutate((next) => {
+        next.owners.push(recoveryOwner)
+      })
+      allowRead.resolve()
+
+      expect(await failure).toMatchObject({ message: 'action failed' })
+      await directMutation
+      expect(store.getState().owners).toEqual(expect.arrayContaining([recoveryOwner]))
+    } finally {
+      allowRead.resolve()
+      if (failure) await failure
+      if (directMutation) await directMutation.catch(() => {})
+      store.metadata.readValidatedRoot = originalReadValidatedRoot
+    }
+  })
+
   it('releases package serialization before replaying against a history-style lock', async () => {
     const presentationsLocked = deferred()
     const allowHistoryPackageWork = deferred()

@@ -9,7 +9,10 @@ const {
 const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
 const { rebindSourceMap } = require('../source-map')
 const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
-const { resolveEditedExportContext } = require('../validated-edited-export-context')
+const {
+  resolveEditedExportContext,
+  serverTextTransports,
+} = require('../validated-edited-export-context')
 
 const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex')
 const clone = (value) => structuredClone(value)
@@ -65,7 +68,7 @@ function referencedRecords(records, ids, key, validate, errorCode, label) {
 }
 
 function validatePortableBlobDescriptor(blob) {
-  return validateBlob({ ...blob, schemaVersion: SCHEMA_VERSION })
+  return validateBlob(blob)
 }
 
 function exactDescriptors(records, expectedIds, key, validate, label) {
@@ -129,6 +132,16 @@ function exportClosure(state, head) {
     'PACKAGE_INCOMPLETE',
     'binary revision'
   )
+  if (revisions.some((revision) => !state.owners?.some((owner) =>
+    owner.ownerType === 'presentation' &&
+    owner.ownerId === head.presentationId &&
+    owner.revisionId === revision.id
+  ))) {
+    throw portableError(
+      'PACKAGE_INCOMPLETE',
+      'Portable export revision is not owned by the presentation'
+    )
+  }
   const blobShas = [...new Set(revisions.map((revision) => revision.blobSha256))]
   const blobs = referencedRecords(
     state.blobs,
@@ -141,8 +154,15 @@ function exportClosure(state, head) {
   return { revisions, blobs }
 }
 
-function assertDestinationClosure(store, revisions, blobs) {
-  const state = store.getState()
+function hasCompatibleRevision(existing, revision) {
+  return existing.schemaVersion === revision.schemaVersion &&
+    existing.id === revision.id &&
+    existing.ordinal === revision.ordinal &&
+    existing.blobSha256 === revision.blobSha256 &&
+    existing.manifestHash === revision.manifestHash
+}
+
+function assertDestinationClosure(state, revisions, blobs) {
   for (const revision of revisions) {
     const matches = (state.revisions || []).filter((item) => item?.id === revision.id)
     if (matches.length > 1) {
@@ -154,7 +174,7 @@ function assertDestinationClosure(store, revisions, blobs) {
       } catch {
         throw portableError('PACKAGE_IMPORT_CONFLICT', 'Destination package revision is malformed')
       }
-      if (matches[0].blobSha256 !== revision.blobSha256) {
+      if (!hasCompatibleRevision(matches[0], revision)) {
         throw portableError('PACKAGE_IMPORT_CONFLICT', 'Destination package revision conflicts with bundle')
       }
     }
@@ -204,7 +224,17 @@ function validatePortableBundle(bundle, presentationId) {
   )
   const supplied = exactSuppliedBlobs(bundle.blobs, blobShas)
   for (const blob of blobs) assertBlobBytes(blob, supplied.get(blob.sha256))
-  return { manifest, revisions, blobs, supplied }
+  const snapshotBlobs = blobs.map(clone)
+  return {
+    manifest: clone(manifest),
+    revisions: revisions.map(clone),
+    blobs: snapshotBlobs,
+    supplied: new Map(snapshotBlobs.map((blob) => [blob.sha256, {
+      sha256: blob.sha256,
+      byteLength: blob.byteLength,
+      bytes: Buffer.from(supplied.get(blob.sha256).bytes),
+    }])),
+  }
 }
 
 function authorityResultsFor(state, head) {
@@ -224,15 +254,41 @@ function requiresAuthority(head) {
   )
 }
 
-function assertExportAuthority(state, head) {
-  if (!requiresAuthority(head)) return
+function currentAuthorityResult(state, head) {
+  if (!requiresAuthority(head)) return null
   const context = resolveEditedExportContext(state, head.presentationId)
-  if (!context.ok) {
-    throw portableError(
-      'PACKAGE_AUTHORITY_UNAVAILABLE',
-      'Portable export requires restorable package authority'
-    )
+  if (!context.ok ||
+      head.projectionRevisionId !== hashRecord(context.after) ||
+      head.sourceMapRevisionId !== hashRecord(context.sourceMap)) return null
+  const pending = context.pendingJournalHash !== undefined
+  const candidates = authorityResultsFor(state, head).filter((result) => {
+    if (hashRecord(result.projection) !== head.projectionRevisionId ||
+        hashRecord(result.sourceMap) !== head.sourceMapRevisionId) return false
+    if (pending) {
+      return result.state === 'pending-edited-export' &&
+        (result.operation === undefined || result.operation === MUTATION_OPERATIONS.PROJECTION_SAVE) &&
+        result.generation === head.generation &&
+        result.journal?.journalHash === context.pendingJournalHash
+    }
+    return result.state === 'committed' &&
+      (result.operation === undefined ||
+        result.operation === MUTATION_OPERATIONS.PACKAGE_IMPORT ||
+        result.operation === MUTATION_OPERATIONS.VALIDATED_EDITED_EXPORT)
+  })
+  return pending ? candidates.length === 1 ? candidates[0] : null : candidates.at(-1) || null
+}
+
+function assertExportAuthority(state, head) {
+  const results = authorityResultsFor(state, head)
+  if (!requiresAuthority(head)) {
+    if (!results.length) return
+  } else if (currentAuthorityResult(state, head)) {
+    return
   }
+  throw portableError(
+    'PACKAGE_AUTHORITY_UNAVAILABLE',
+    'Portable export requires restorable package authority'
+  )
 }
 
 function rebindProjection(projection, presentationId) {
@@ -271,10 +327,7 @@ function rebindAuthorityResult(result, presentationId) {
     })
   }
   if (rebound.operation === MUTATION_OPERATIONS.VALIDATED_EDITED_EXPORT && rebound.projection) {
-    const textTransports = Object.fromEntries((rebound.journal?.operations || []).map((operation) => [
-      `${operation.slideId}:${operation.elementId}`,
-      operation.textTransport,
-    ]))
+    const textTransports = serverTextTransports(rebound.projection)
     rebound.requestHash = hashRecord({
       operation: rebound.operation,
       presentationId,
@@ -304,37 +357,21 @@ function rebindImportedAuthority(manifest, presentationId) {
       'Portable package contains an invalid authority record'
     )
   }
-  if (requiresAuthority(sourceHead)) {
-    const context = resolveEditedExportContext({
-      heads: [sourceHead],
-      mutationResults: sourceResults,
-    }, sourceHead.presentationId)
-    if (!context.ok) {
-      throw portableError(
-        'PACKAGE_AUTHORITY_UNAVAILABLE',
-        'Portable package authority does not match its head'
-      )
-    }
-  }
-  const results = sourceResults.map((result) => rebindAuthorityResult(result, presentationId))
-  const pending = sourceHead.pendingJournalHash !== undefined
-  const sourceCurrent = pending
-    ? sourceResults.find((result) => result.packageRevisionId === sourceHead.packageRevisionId &&
-        result.state === 'pending-edited-export' &&
-        result.journal?.journalHash === sourceHead.pendingJournalHash)
-    : sourceResults.find((result) => result.packageRevisionId === sourceHead.packageRevisionId &&
-        result.projection && result.sourceMap &&
-        hashRecord(result.projection) === sourceHead.projectionRevisionId &&
-        hashRecord(result.sourceMap) === sourceHead.sourceMapRevisionId)
-  const reboundCurrent = sourceCurrent
-    ? results[sourceResults.indexOf(sourceCurrent)]
-    : null
-  if (requiresAuthority(sourceHead) && !reboundCurrent) {
+  const sourceCurrent = currentAuthorityResult({
+    heads: [sourceHead],
+    mutationResults: sourceResults,
+  }, sourceHead)
+  if ((requiresAuthority(sourceHead) && !sourceCurrent) ||
+      (!requiresAuthority(sourceHead) && sourceResults.length)) {
     throw portableError(
       'PACKAGE_AUTHORITY_UNAVAILABLE',
       'Portable package authority does not match its head'
     )
   }
+  const results = sourceResults.map((result) => rebindAuthorityResult(result, presentationId))
+  const reboundCurrent = sourceCurrent
+    ? results[sourceResults.indexOf(sourceCurrent)]
+    : null
 
   const head = {
     ...clone(sourceHead),
@@ -385,7 +422,10 @@ async function exportPresentationPackage(store, presentationId, options = {}) {
       presentationId,
       head: clone(head),
       revisions: clone(closure.revisions),
-      blobs: blobs.map(({ bytes: _bytes, ...blob }) => blob),
+      blobs: blobs.map(({ bytes: _bytes, ...blob }) => ({
+        schemaVersion: SCHEMA_VERSION,
+        ...blob,
+      })),
       mutationResults: clone(authorityResultsFor(state, head)),
     },
     blobs,
@@ -396,8 +436,8 @@ async function importPresentationPackage(store, bundle, presentationId, options 
   const validated = validatePortableBundle(bundle, presentationId)
   const { manifest, revisions, blobs, supplied } = validated
   const importedAuthority = rebindImportedAuthority(manifest, presentationId)
-  if (options.admissionPreflight) await options.admissionPreflight(manifest)
-  assertDestinationClosure(store, revisions, blobs)
+  if (options.admissionPreflight) await options.admissionPreflight(clone(manifest))
+  assertDestinationClosure(store.getState(), revisions, blobs)
   const committed = []
   for (const descriptor of blobs) {
     const staged = await store.stageBlob(supplied.get(descriptor.sha256).bytes, {
@@ -406,12 +446,16 @@ async function importPresentationPackage(store, bundle, presentationId, options 
     committed.push(await store.blobs.commit(staged))
   }
   await store.mutate((next) => {
+    assertDestinationClosure(next, revisions, blobs)
     for (const blob of committed) {
       if (!next.blobs.some((item) => item.sha256 === blob.sha256)) next.blobs.push(blob)
     }
     for (const revision of revisions) {
       if (!next.revisions.some((item) => item.id === revision.id)) next.revisions.push(revision)
     }
+    next.compatibilityOutbox = (next.compatibilityOutbox || []).filter((item) =>
+      item.presentationId !== presentationId
+    )
     next.heads = next.heads.filter((item) => item.presentationId !== presentationId)
     next.owners = next.owners.filter((item) =>
       item.ownerType !== 'presentation' || item.ownerId !== presentationId

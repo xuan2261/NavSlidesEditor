@@ -65,11 +65,12 @@ projection and generation, so delayed compatibility writes cannot produce a
 mixed-generation response. Export, present, save-as-template, history,
 live presentation, snapshot/restore, public-share, GitHub, cloud sync, and
 explore/fork sinks use the same package-backed reader; summary and sync bulk
-reads reuse one store snapshot. This list excludes `/pptx-original`, whose
-package-versus-legacy selection remains compatibility-driven pending repair and
-whose degraded-head recovery can reject an intact original when a successor revision
-is missing. Restore returns the restored package projection before its successor
-generation is handed to the editor. Missing package heads
+reads reuse one store snapshot. `/pptx-original` now resolves the immutable original directly from the package
+head, including recovery when an intact R0 outlives a missing successor revision.
+Restore returns the restored package projection before its successor generation is
+handed to the editor on covered paths; restore/delete share the history lock and
+legacy restore checks a source fingerprint, while broader package/JSON interleavings
+still require validation. Missing package heads
 and malformed original-only state fail closed rather than falling back to stale
 compatibility JSON. External fork/GitHub/sync JSON crosses the editor DTO
 boundary and excludes package authority fields. That JSON is a
@@ -80,23 +81,27 @@ lifecycle duplicate/restore operations rebind its projection/source-map
 authority to the new identity and generation, align duplicate title/projection
 changes, and reject pending package projections rather than dropping them.
 Covered package-backed template PUTs reject projection-changing edits. Retained
-ownership is used for creation and instantiation, but template create/delete
-rollback, outbox acknowledgement, and destination cleanup still need lifecycle
-hardening. A pending package projection can still be retained by save-as-template
-while later template instantiation rejects it; that mismatch remains open.
+ownership is used for creation and instantiation; pending package projections are
+rejected by save-as-template and package-backed template projection edits remain
+immutable. Template create/delete rollback, outbox acknowledgement, and destination
+cleanup still need lifecycle hardening.
 Cloud sync stages a manifest/blob bundle for package-backed decks, but it is not a
 restorable package-authority archive: projected bundle authority data is incomplete.
-Per-request staging and same-destination serialization are covered; focused sync
-coverage also covers same-title destinations and destination-lock aliases. Remote-
-path traversal rejection, DTO/package-generation alignment, projection-to-bundle
-expected-head fencing, bounded resource use, and complete referenced-media traversal
-remain open. Portable import must reject missing revisions/blobs and reconcile
-stale destination outbox records; it does not yet prove those guarantees. Snapshot
-and duplicate/fork paths have source-head checks and keep duplicate package work
-before presentation-file serialization, but final snapshot fencing, explore/fork
-rollback races, permanent-delete authorization/path validation, retain/quarantine
-fencing, stale-retry cleanup, and outbox interleavings remain open. An empty source
-map still retains an explicit supplied or rebound generation. The owners and tests are
+Per-request staging and remote-wide destination serialization are implemented;
+focused sync coverage also covers same-title destinations and destination-lock
+aliases, with the suite rerun still intentionally skipped. Remote-path traversal
+rejection, DTO/package-generation alignment, projection-to-bundle expected-head
+fencing, bounded resource use, and complete referenced-media traversal remain open.
+Portable import now rejects missing/conflicting revisions/blobs, clears stale
+destination outbox records, and prevents cross-presentation revision-byte export
+without an owner record; focused portable coverage passes. Snapshot and
+duplicate/fork paths have source-head checks and keep duplicate package work before
+presentation-file serialization, but final snapshot fencing, explore/fork rollback
+races, retain/quarantine fencing, stale-retry cleanup, and broader outbox
+interleavings remain open. Permanent-delete path/owner isolation, trashed stale-head
+reconciliation, and absent-snapshot history-owner cleanup have focused regression
+coverage. An empty source map still retains an explicit
+supplied or rebound generation. The owners and tests are
 [`presentations.js`](../server/routes/presentations.js),
 [`compatibility-view.js`](../server/services/pptx-import/compatibility-view.js),
 [`compatibility-outbox.test.js`](../server/services/pptx-import/compatibility-outbox.test.js),

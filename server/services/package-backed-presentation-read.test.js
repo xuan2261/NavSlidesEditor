@@ -75,6 +75,27 @@ describe('package-backed presentation reader authority boundary', () => {
       })
   })
 
+  it('recovers immutable original authority when the successor revision is missing', async () => {
+    await seedOriginal({
+      mutateHead: (next) => {
+        const head = next.heads[0]
+        next.revisions = next.revisions.filter((revision) => revision.id === head.originalRevisionId)
+        next.heads[0].packageRevisionId = 'missing-successor'
+        next.heads[0].projectionRevisionId = null
+        next.heads[0].sourceMapRevisionId = null
+        next.heads[0].journalRevisionId = null
+      },
+    })
+
+    const resolved = await readAuthoritativePresentation('deck-reader', {
+      normalize: false,
+      allowIncompleteAuthority: true,
+    })
+    expect(resolved.generation).toBe(1)
+    expect(resolved.presentation.pptxAggregateHead.packageRevisionId).toBe('missing-successor')
+    expect(resolved.presentation.title).toBe('Compatibility title')
+  })
+
   it('does not use compatibility fallback for an original-only head with a stale journal pointer', async () => {
     await seedOriginal({
       mutateHead: (next) => {

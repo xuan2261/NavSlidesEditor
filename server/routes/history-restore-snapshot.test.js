@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import request from 'supertest'
 import express from 'express'
+import fs from 'fs-extra'
 
 const _dataDir = vi.hoisted(() => {
   const os = require('os')
@@ -21,6 +22,12 @@ function makeApp() {
   app.use(express.json())
   app.use('/api/presentations', historyRouter)
   return app
+}
+
+function deferred() {
+  let resolve
+  const promise = new Promise((promiseResolve) => { resolve = promiseResolve })
+  return { promise, resolve }
 }
 
 describe('POST /:id/restore/:snapshotId reversibility', () => {
@@ -67,6 +74,49 @@ describe('POST /:id/restore/:snapshotId reversibility', () => {
     const beforeRestore = listRes.body.find((s) => /before restore/i.test(s.name || ''))
     expect(beforeRestore).toBeTruthy()
     expect(beforeRestore.slideCount).toBe(2)
+  })
+
+  it('rejects a legacy restore when a concurrent save changes the source', async () => {
+    const app = makeApp()
+    const snapRes = await request(app)
+      .post(`/api/presentations/${presId}/snapshot`)
+      .send({ name: 'v1' })
+    expect(snapRes.status).toBe(200)
+    const snapshotId = snapRes.body.id
+    await storage.writePresentations([
+      { id: presId, title: 'Mutated', slides: [{ id: 's1', n: 2 }] },
+    ])
+
+    const snapshotWriteStarted = deferred()
+    const allowSnapshotWrite = deferred()
+    const writeJson = fs.writeJson.bind(fs)
+    let paused = false
+    vi.spyOn(fs, 'writeJson').mockImplementation(async (file, ...args) => {
+      if (!paused && String(file).includes('history')) {
+        paused = true
+        snapshotWriteStarted.resolve()
+        await allowSnapshotWrite.promise
+      }
+      return writeJson(file, ...args)
+    })
+
+    try {
+      const restore = request(app)
+        .post(`/api/presentations/${presId}/restore/${snapshotId}`)
+        .then((response) => response)
+      await snapshotWriteStarted.promise
+      await storage.writePresentations([
+        { id: presId, title: 'Concurrent save', slides: [{ id: 's1', n: 3 }] },
+      ])
+      allowSnapshotWrite.resolve()
+
+      const response = await restore
+      expect(response.status).toBe(409)
+      expect((await storage.readPresentations())[0].title).toBe('Concurrent save')
+    } finally {
+      allowSnapshotWrite.resolve()
+      vi.restoreAllMocks()
+    }
   })
 
   it('caps stored snapshots to the newest 50', async () => {

@@ -1057,13 +1057,17 @@ physical or claim-specific gates.
   instantiation rejects; template-create rollback/outbox acknowledgement can orphan
   or resurrect destination authority; snapshot/duplicate/fork fencing and Explore
   rollback remain incomplete; permanent-delete/outbox interleavings can split JSON,
-  head, and history ownership. A reviewer reproduced alternate-separator permanent-
-  delete traversal before filesystem access, making delete-path validation a critical
-  release blocker. Retain→quarantine has a TOCTOU/stale-owner rollback that can
-  restore predecessor authority over a newer head; stale-head retry can leak retained
-  owners. `/pptx-original` still selects package versus legacy from compatibility
-  JSON and degraded R0 recovery can reject an intact original when a successor
-  revision is missing. Sync is only a staged manifest/blob bundle: remote-path
+  head, and history ownership. A trashed deck with stale compatibility head and live
+  package head can return `409` indefinitely on permanent delete, and an absent
+  snapshot file can leave a retained history owner after delete. A reviewer reproduced
+  alternate-separator permanent-delete traversal before filesystem access, making
+  delete-path validation a critical release blocker. Retain→quarantine has a
+  TOCTOU/stale-owner rollback that can restore predecessor authority over a newer
+  head; stale-head retry can leak retained owners. Legacy restore can overwrite a
+  concurrent successful save, while package restore can return success after a
+  concurrent soft delete. `/pptx-original` still selects package versus legacy from
+  compatibility JSON and degraded R0 recovery can reject an intact original when a
+  successor revision is missing. Sync is only a staged manifest/blob bundle: remote-path
   traversal rejection, DTO/package-generation mismatch, projection-to-bundle
   expected-head fencing, bounded resources, full media traversal, and authority
   round-trip remain open. Portable import accepts missing revisions/blobs and can
@@ -1100,3 +1104,32 @@ physical or claim-specific gates.
   results for delete, template, snapshot/fork, sync, and portable-bundle
   regressions; plan owner remaps only fully evidenced criteria and keeps every
   physical claim gate open absent its required evidence.
+
+## Session 7 Package-Authority Repair Continuation — 2026-07-22
+
+- **Progress:** remains `76/244` checklist items closed; all 13 phases and `G0`–`G5`
+  remain in progress/open. No physical qualification gate is closed.
+- **Implemented in the working tree:** package-runtime recovery reload now queues
+  behind direct package mutations; immutable R0 reads allow an intact original when
+  a successor revision is missing; permanent-delete uses a dedicated owner type,
+  raw live package heads, and owner-record enumeration for absent history snapshots;
+  trashed stale compatibility heads are reconciled against live package heads;
+  legacy restore has a source fingerprint CAS and soft-delete shares the history
+  lock; sync destination locking is remote-wide; portable export/import validates
+  presentation ownership, detached bundle data, exact destination descriptors, and
+  stale compatibility outbox removal.
+- **Focused evidence:** runtime lock-order `2/2`; portable `7/7`; package-backed
+  reader, lifecycle, and portable combined `33/33`; presentations lifecycle `46/46`;
+  history restore/package suites `14/14` plus the concurrent legacy-restore test
+  `3/3`; modified server modules pass `node --check`. Sync tests were intentionally
+  not rerun per the user request, so the new parent/child lock regression remains
+  unverified.
+- **Open blockers:** retain/quarantine and broader restore/delete/JSON outbox
+  interleavings still need adversarial review; template rollback/outbox cleanup,
+  explore/fork rollback, full sync resource/media/remote-publication behavior, and
+  portable authority archive completeness remain open. Remote temporary revision/
+  pointer publication is not implemented. OfficeCLI, PowerPoint, Electron, Docker,
+  provider, launcher/containment, and non-Windows evidence remains unavailable; all
+  `G0`–`G5` gates stay open.
+- **Workspace state:** changes remain uncommitted and unpushed; excluded `.tmp/`,
+  native probe, and scratch files remain preserved.

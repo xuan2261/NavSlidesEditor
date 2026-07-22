@@ -3,7 +3,14 @@ const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
 
 const SCHEMA_VERSION = 1
 const SHA256_RE = /^[a-f0-9]{64}$/
-const OWNER_TYPES = new Set(['presentation', 'history', 'template', 'job', 'portable'])
+const OWNER_TYPES = new Set([
+  'presentation',
+  'history',
+  'template',
+  'job',
+  'portable',
+  'permanent-delete',
+])
 const JOB_KINDS = new Set(['import', 'export', 'provider'])
 const JOB_STATUSES = new Set(['queued', 'running', 'completed', 'failed', 'cancelled'])
 

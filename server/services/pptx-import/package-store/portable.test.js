@@ -2,9 +2,13 @@ const fs = require('node:fs/promises')
 const os = require('node:os')
 const path = require('node:path')
 const { openPackageStore } = require('./index')
-const { hashRecord } = require('./schemas')
+const { SCHEMA_VERSION, hashRecord } = require('./schemas')
 const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
 const { resolveEditedExportContext } = require('../validated-edited-export-context')
+const {
+  queueCompatibilityRemoval,
+  queueCompatibilityUpsert,
+} = require('../compatibility-outbox')
 
 const roots = []
 async function storeFor(name) {
@@ -37,6 +41,30 @@ describe('portable package boundary', () => {
       ownerId: 'imported',
     }))
     expect(await destination.readBlob(bundle.blobs[0].sha256)).toEqual(Buffer.from('portable'))
+    await source.releaseWriter()
+    await destination.releaseWriter()
+  })
+
+  it('clears stale destination compatibility writes during import', async () => {
+    const source = await storeFor('portable-outbox-source')
+    await source.commitOriginal(Buffer.from('portable-outbox'), {
+      ownerType: 'presentation',
+      ownerId: 'source',
+    })
+    const bundle = await source.exportPresentationPackage('source')
+    const destination = await storeFor('portable-outbox-destination')
+    await destination.mutate((next) => {
+      queueCompatibilityRemoval(next, { presentationId: 'imported', generation: 7 })
+      queueCompatibilityUpsert(next, {
+        presentationId: 'imported',
+        generation: 8,
+        presentation: { id: 'imported', title: 'stale', slides: [] },
+      })
+    })
+
+    await destination.importPresentationPackage(bundle, 'imported')
+
+    expect(destination.getState().compatibilityOutbox).toEqual([])
     await source.releaseWriter()
     await destination.releaseWriter()
   })
@@ -90,6 +118,25 @@ describe('portable package boundary', () => {
     await destination.releaseWriter()
   })
 
+  it('fails closed when a head references another presentation revision', async () => {
+    const source = await storeFor('portable-cross-owner-source')
+    await source.commitOriginal(Buffer.from('source'), {
+      ownerType: 'presentation',
+      ownerId: 'source',
+    })
+    const foreign = await source.commitOriginal(Buffer.from('foreign'), {
+      ownerType: 'presentation',
+      ownerId: 'foreign',
+    })
+    await source.mutate((next) => {
+      next.heads.find((item) => item.presentationId === 'source').packageRevisionId = foreign.revision.id
+    })
+
+    await expect(source.exportPresentationPackage('source'))
+      .rejects.toMatchObject({ code: 'PACKAGE_INCOMPLETE' })
+    await source.releaseWriter()
+  })
+
   it('fails closed when a head-referenced binary revision is missing', async () => {
     const source = await storeFor('portable-incomplete-source')
     await source.commitOriginal(Buffer.from('portable'), {
@@ -141,6 +188,11 @@ describe('portable package boundary', () => {
       () => {
         const invalid = copyBundle()
         invalid.manifest.revisions.push(structuredClone(invalid.manifest.revisions[0]))
+        return invalid
+      },
+      () => {
+        const invalid = copyBundle()
+        invalid.manifest.blobs[0].schemaVersion = SCHEMA_VERSION + 1
         return invalid
       },
     ]

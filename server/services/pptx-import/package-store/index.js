@@ -49,6 +49,19 @@ async acquireWriter() {
 releaseWriter() {
     return this.lock.release()
   }
+async reload() {
+    const previous = this.mutationTail
+    let release
+    this.mutationTail = new Promise((resolve) => { release = resolve })
+    try {
+      await previous
+      await this.assertWriter()
+      await this.metadata.reload()
+      this.recoveryActions = this.metadata.recoveryActions
+    } finally {
+      release()
+    }
+  }
 assertWriter() {
     return this.lock.assertOwned(this.fencingEpoch)
   }

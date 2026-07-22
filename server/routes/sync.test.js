@@ -388,6 +388,35 @@ describe('rclone sync authority boundaries', () => {
     expect(calls[1].args[2]).toBe('remote:/backup')
   })
 
+  it('serializes parent and child destinations on the same remote', async () => {
+    await seedLegacyPresentations()
+    const calls = []
+    execFileMock.mockImplementation((_command, args, _options, callback) => {
+      if (args[0] !== 'sync') return callback(null, '', '')
+      calls.push({ args, callback })
+      if (calls.length > 1) callback(null, '', '')
+    })
+
+    const parent = request(makeApp())
+      .post('/api/rclone/sync')
+      .send({ remote: 'remote', remotePath: '/backup' })
+      .then((response) => response)
+    await waitFor(() => calls.length === 1, 'parent sync did not start')
+    const child = request(makeApp())
+      .post('/api/rclone/sync-single')
+      .send({ remote: 'remote', remotePath: '/backup/sub', presentationId: 'deck-a' })
+      .then((response) => response)
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(calls).toHaveLength(1)
+
+    calls[0].callback(null, '', '')
+    const [parentResponse, childResponse] = await Promise.all([parent, child])
+    expect(parentResponse.status).toBe(200)
+    expect(childResponse.status).toBe(200)
+    expect(calls).toHaveLength(2)
+    expect(calls[1].args[2]).toMatch(/^remote:\/backup\/sub\//)
+  })
+
   it.each([
     '../',
     '/backup/../',

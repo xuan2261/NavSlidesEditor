@@ -2,7 +2,7 @@ const express = require('express')
 const uuidv4 = () => require('node:crypto').randomUUID()
 const fs = require('fs-extra')
 const path = require('path')
-const { withPresentations, HISTORY_DIR } = require('../services/storage')
+const { readPresentations, withPresentations, HISTORY_DIR } = require('../services/storage')
 const {
   getRestorablePackageHead,
   packageOwnerExists,
@@ -256,7 +256,10 @@ router.post('/:id/restore/:snapshotId', async (req, res, next) => {
 
       const currentResolved = await readAuthoritativePresentation(req.params.id)
       if (!currentResolved) return { status: 404, body: { error: 'Presentation not found' } }
+      const currentStored = (await readPresentations()).find((item) => item.id === req.params.id)
+      if (!currentStored) return { status: 404, body: { error: 'Presentation not found' } }
       const current = currentResolved.presentation
+      const currentStoredHash = hashRecord(currentStored)
       if (current.pptxAggregateHead && !snapshot.packageBacked) {
         throw Object.assign(new Error('Legacy snapshots cannot replace a package-backed presentation'), {
           code: 'SNAPSHOT_PACKAGE_HEAD_REQUIRED',
@@ -312,6 +315,13 @@ router.post('/:id/restore/:snapshotId', async (req, res, next) => {
         const applied = await withPresentations((presentations) => {
           const index = presentations.findIndex((item) => item.id === req.params.id)
           if (index === -1) return false
+          if (hashRecord(presentations[index]) !== currentStoredHash) {
+            throw Object.assign(new Error('Presentation changed during restore'), {
+              code: 'STALE_GENERATION',
+              status: 409,
+              retryable: true,
+            })
+          }
           presentations[index] = restored
           return true
         })

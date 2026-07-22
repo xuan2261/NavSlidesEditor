@@ -33,6 +33,8 @@ const { toPresentationEditorDto } = require('../services/pptx-import/package-sto
 const { hashRecord } = require('../services/pptx-import/package-store/schemas')
 const {
   duplicatePackageOwner,
+  getPackageHead,
+  getPackageHistoryOwners,
   instantiateRetainedPackageHead,
   packageOwnerExists,
   packagePresentationExists,
@@ -598,13 +600,13 @@ router.delete('/:id', async (req, res) => {
 router.post('/:id/restore', async (req, res) => {
   try {
     const presId = req.params.id
-    const result = await withPresentations((presentations) => {
+    const result = await withHistoryLock(presId, () => withPresentations((presentations) => {
       const pres = presentations.find((p) => p.id === presId)
       if (!pres || !pres.deletedAt) return null
       delete pres.deletedAt
       pres.updatedAt = new Date().toISOString()
       return pres
-    })
+    }))
     if (!result) return res.status(404).json({ error: 'Not found or not in trash' })
     res.json({ success: true })
   } catch (err) {
@@ -626,13 +628,15 @@ router.delete('/:id/permanent', async (req, res) => {
         ? (await fs.readdir(presHistDir)).filter((file) => file.endsWith('.json'))
         : []
       const retainedOwner = {
-        ownerType: 'presentation',
-        ownerId: `${presId}:permanent-delete`,
+        ownerType: 'permanent-delete',
+        ownerId: presId,
       }
       let retainedOwnerExists = false
       let compatibilityPending = false
+      let historyOwners = []
       try {
         retainedOwnerExists = await packageOwnerExists(retainedOwner)
+        historyOwners = await getPackageHistoryOwners(presId)
         if (!presentation) compatibilityPending = await packageCompatibilityPending(presId)
       } catch {
         throw Object.assign(new Error('Package lifecycle is temporarily unavailable; retry deletion'), {
@@ -659,8 +663,18 @@ router.delete('/:id/permanent', async (req, res) => {
       let packageAuthorityPresentation = presentation
       if (livePackageBacked) {
         try {
-          const authoritative = await readAuthoritativePresentation(presId, { normalize: false })
-          packageAuthorityPresentation = authoritative?.presentation || presentation
+          const packageHead = await getPackageHead(presId)
+          if (!packageHead) {
+            throw Object.assign(new Error('Package lifecycle source head changed'), {
+              code: 'STALE_GENERATION',
+              status: 409,
+              retryable: true,
+            })
+          }
+          packageAuthorityPresentation = {
+            ...(presentation || { id: presId, slides: [] }),
+            pptxAggregateHead: packageHead,
+          }
         } catch (error) {
           if (error.status) throw error
           throw Object.assign(new Error('Package lifecycle is temporarily unavailable; retry deletion'), {
@@ -672,27 +686,10 @@ router.delete('/:id/permanent', async (req, res) => {
         }
       }
       if (!presentation && !packageBacked && !retainedOwnerExists &&
-          !compatibilityPending && !historyFiles.length) {
+          !compatibilityPending && !historyFiles.length && !historyOwners.length) {
         return { status: 404, body: { error: 'Not found' } }
       }
-      let historyOwnersKnownAbsent = historyFiles.length === 0
-      if (!packageBacked && historyFiles.length) {
-        try {
-          const ownerStates = await Promise.all(historyFiles.map((file) =>
-            packageOwnerExists({
-              ownerType: 'history',
-              ownerId: `${presId}:${path.basename(file, '.json')}`,
-            })
-          ))
-          historyOwnersKnownAbsent = ownerStates.every((exists) => !exists)
-        } catch {
-          throw Object.assign(new Error('Package lifecycle is temporarily unavailable; retry deletion'), {
-            code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
-            status: 503,
-            retryable: true,
-          })
-        }
-      }
+      const historyOwnersKnownAbsent = historyOwners.length === 0
 
       if (livePackageBacked) {
         try {
@@ -847,12 +844,9 @@ router.delete('/:id/permanent', async (req, res) => {
 
       const cleanupErrors = []
       if (!historyOwnersKnownAbsent) {
-        for (const file of historyFiles) {
+        for (const owner of historyOwners) {
           try {
-            await releasePackageOwnerWithRetry({
-              ownerType: 'history',
-              ownerId: `${presId}:${path.basename(file, '.json')}`,
-            })
+            await releasePackageOwnerWithRetry(owner)
           } catch (error) {
             cleanupErrors.push(error)
           }

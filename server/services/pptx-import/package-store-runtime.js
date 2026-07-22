@@ -94,7 +94,7 @@ async function withPackageStore(action) {
     return await action(store)
   } catch (error) {
     try {
-      await store.metadata.reload()
+      await store.reload()
     } catch (reloadError) {
       error.packageStoreReloadError = reloadError
     }

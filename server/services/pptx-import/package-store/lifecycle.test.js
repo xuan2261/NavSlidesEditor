@@ -173,7 +173,7 @@ describe('package lifecycle ownership', () => {
 
   it('fences quarantine to a retained head when admission publishes a successor', async () => {
     const store = await createStore()
-    const owner = { ownerType: 'presentation', ownerId: 'deck-a:permanent-delete' }
+    const owner = { ownerType: 'permanent-delete', ownerId: 'deck-a' }
     const retained = await store.retainHead(owner, 'deck-a')
 
     await expect(store.quarantinePresentation('deck-a', {
@@ -200,7 +200,7 @@ describe('package lifecycle ownership', () => {
 
   it('replaces an older retained head when the same owner retains a successor', async () => {
     const store = await createStore()
-    const owner = { ownerType: 'presentation', ownerId: 'deck-a:permanent-delete' }
+    const owner = { ownerType: 'permanent-delete', ownerId: 'deck-a' }
     const first = await store.retainHead(owner, 'deck-a')
     await store.mutate((next) => {
       next.heads.find((head) => head.presentationId === 'deck-a').generation += 1

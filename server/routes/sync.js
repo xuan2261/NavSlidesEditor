@@ -19,23 +19,24 @@ const { toExternalPresentationDto } = require('../services/pptx-import/package-s
 const { hashRecord } = require('../services/pptx-import/package-store/schemas')
 
 const router = express.Router()
-const syncDestinationTails = new Map()
+const syncRemoteTails = new Map()
 const MAX_SYNC_FOLDER_NAME_LENGTH = 96
 const MAX_VISIBLE_PRESENTATION_ID_LENGTH = 24
 const PRESENTATION_ID_FINGERPRINT_LENGTH = 16
 
 async function withSyncDestinationLock(destination, action) {
-  const previous = syncDestinationTails.get(destination) || Promise.resolve()
+  const remoteName = destination.slice(0, destination.indexOf(':')) || destination
+  const previous = syncRemoteTails.get(remoteName) || Promise.resolve()
   let release
   const current = new Promise((resolve) => { release = resolve })
-  syncDestinationTails.set(destination, current)
+  syncRemoteTails.set(remoteName, current)
   await previous
   try {
     return await action()
   } finally {
     release()
-    if (syncDestinationTails.get(destination) === current) {
-      syncDestinationTails.delete(destination)
+    if (syncRemoteTails.get(remoteName) === current) {
+      syncRemoteTails.delete(remoteName)
     }
   }
 }

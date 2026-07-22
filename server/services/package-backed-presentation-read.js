@@ -66,9 +66,24 @@ function resolvePackageBackedReadFromState(
     }
   }
 
-  if (!hasPresentationOwnedRevision(state, presentationId, head.originalRevisionId) ||
-      !hasPresentationOwnedRevision(state, presentationId, head.packageRevisionId)) {
+  const originalAvailable = hasPresentationOwnedRevision(
+    state,
+    presentationId,
+    head.originalRevisionId
+  )
+  const packageAvailable = hasPresentationOwnedRevision(
+    state,
+    presentationId,
+    head.packageRevisionId
+  )
+  if (!originalAvailable || (!packageAvailable && !allowIncompleteAuthority)) {
     throw authorityError('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
+  }
+  if (!packageAvailable) {
+    const presentation = structuredClone(compatibilityPresentation)
+    presentation.id = presentationId
+    presentation.pptxAggregateHead = structuredClone(head)
+    return { presentation, generation: head.generation }
   }
 
   const context = resolveEditedExportContext(state, presentationId)

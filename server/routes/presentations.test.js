@@ -735,11 +735,67 @@ describe('Presentations API', () => {
     }
   })
 
+  it('does not release a presentation whose id collides with a delete owner marker', async () => {
+    const previousPresentations = await storage.readPresentations()
+    const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'route-delete-owner-collision-'))
+    const collidingId = 'missing:permanent-delete'
+    try {
+      await packageRuntime.shutdownPackageStore()
+      await storage.writePresentations([{
+        id: collidingId,
+        title: 'Survivor',
+        slides: [],
+      }])
+      const store = await packageRuntime.initializePackageStore({ rootDir })
+      await store.commitOriginal(Buffer.from('survivor'), {
+        ownerType: 'presentation',
+        ownerId: collidingId,
+      })
+
+      const deleted = await request(app).delete('/api/presentations/missing/permanent')
+
+      expect(deleted).toMatchObject({ status: 404, body: { error: 'Not found' } })
+      expect(store.getState().owners).toEqual(expect.arrayContaining([
+        expect.objectContaining({ ownerType: 'presentation', ownerId: collidingId }),
+      ]))
+    } finally {
+      await packageRuntime.shutdownPackageStore()
+      await fs.remove(rootDir)
+      await storage.writePresentations(previousPresentations)
+    }
+  })
+
+  it('reconciles a trashed stale compatibility head against the live package head', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    const staleHead = structuredClone(fixture.store.getState().heads.find((item) =>
+      item.presentationId === fixture.id
+    ))
+    try {
+      const saved = await nativeSave(app, fixture.id, {
+        aggregateGeneration: 1,
+        slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
+      }, 'trashed-stale-head')
+      expect(saved).toMatchObject({ status: 200, body: { aggregateGeneration: 2 } })
+      await storage.withPresentations((presentations) => {
+        const presentation = presentations.find((item) => item.id === fixture.id)
+        presentation.deletedAt = new Date().toISOString()
+        presentation.pptxAggregateHead = staleHead
+      })
+
+      const deleted = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
+
+      expect(deleted).toMatchObject({ status: 200, body: { success: true } })
+      expect(fixture.store.getState().heads.some((item) => item.presentationId === fixture.id)).toBe(false)
+    } finally {
+      await fixture.cleanup()
+    }
+  })
+
   it('reconciles permanent deletion after package quarantine before JSON cleanup', async () => {
     const fixture = await createNativeRouteFixture(app)
     const retainedOwner = {
-      ownerType: 'presentation',
-      ownerId: `${fixture.id}:permanent-delete`,
+      ownerType: 'permanent-delete',
+      ownerId: fixture.id,
     }
     try {
       const head = fixture.store.getState().heads.find((item) => item.presentationId === fixture.id)
@@ -786,7 +842,7 @@ describe('Presentations API', () => {
       const state = fixture.store.getState()
       expect(state.heads.some((head) => head.presentationId === fixture.id)).toBe(false)
       expect(state.owners.some((owner) =>
-        owner.ownerType === 'presentation' && owner.ownerId === `${fixture.id}:permanent-delete`
+        owner.ownerType === 'permanent-delete' && owner.ownerId === fixture.id
       )).toBe(false)
       expect(state.compatibilityOutbox).toEqual([])
     } finally {
@@ -795,33 +851,91 @@ describe('Presentations API', () => {
     }
   })
 
-  it('keeps a concurrent package successor when permanent delete becomes stale', async () => {
+  it('restores a persisted quarantine root when JSON cleanup fails', async () => {
     const fixture = await createNativeRouteFixture(app)
     const originalMutate = fixture.store.mutate.bind(fixture.store)
+    const writeJson = fs.writeJson.bind(fs)
     let mutationCount = 0
-    let injected = false
+    let presentationWriteAttempts = 0
     try {
-      fixture.store.mutate = async (mutator, options) => {
+      fixture.store.mutate = (mutator, options) => {
         mutationCount += 1
-        if (!injected && mutationCount === 2) {
-          injected = true
-          // This represents a save that committed H2 after retention and before
-          // the delete's fenced quarantine mutation.
-          await originalMutate((next) => {
-            next.heads.find((head) => head.presentationId === fixture.id).generation += 1
-          })
-        }
-        return originalMutate(mutator, options)
+        return originalMutate(mutator, mutationCount === 2
+          ? { ...(options || {}), faultAfterRoot: true }
+          : options)
       }
+      vi.spyOn(fs, 'writeJson').mockImplementation(async (file, ...args) => {
+        if (String(file).includes('presentations.json') && presentationWriteAttempts++ === 0) {
+          throw new Error('injected presentation deletion failure')
+        }
+        return writeJson(file, ...args)
+      })
 
       const deleted = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
 
+      expect(deleted.status).toBe(500)
+      vi.restoreAllMocks()
+      expect((await storage.readPresentations()).some((item) => item.id === fixture.id)).toBe(true)
+      const state = fixture.store.getState()
+      expect(state.heads).toEqual(expect.arrayContaining([
+        expect.objectContaining({ presentationId: fixture.id }),
+      ]))
+      expect(state.owners).toEqual(expect.arrayContaining([
+        expect.objectContaining({ ownerType: 'presentation', ownerId: fixture.id }),
+      ]))
+      expect(state.owners.some((owner) =>
+        owner.ownerType === 'permanent-delete' && owner.ownerId === fixture.id
+      )).toBe(false)
+      expect(state.compatibilityOutbox).toEqual([])
+    } finally {
+      vi.restoreAllMocks()
+      fixture.store.mutate = originalMutate
+      await fixture.cleanup()
+    }
+  })
+
+  it('keeps a concurrent package successor when permanent delete becomes stale', async () => {
+    const packageLifecycle = require('../services/package-lifecycle-integration')
+    const originalQuarantine = packageLifecycle.quarantinePackageOwnerWithRetry
+    let enteredResolve
+    let releaseQuarantine
+    const quarantineEntered = new Promise((resolve) => { enteredResolve = resolve })
+    const quarantineGate = new Promise((resolve) => { releaseQuarantine = resolve })
+    let fixture
+    let deletion
+    try {
+      packageLifecycle.quarantinePackageOwnerWithRetry = async (...args) => {
+        enteredResolve()
+        await quarantineGate
+        return originalQuarantine(...args)
+      }
+      delete require.cache[require.resolve('./presentations')]
+      const raceRouter = require('./presentations')
+      const raceApp = express()
+      raceApp.use(express.json({ limit: '5mb' }))
+      raceApp.use('/api/presentations', raceRouter)
+      fixture = await createNativeRouteFixture(raceApp)
+
+      deletion = request(raceApp)
+        .delete(`/api/presentations/${fixture.id}/permanent`)
+        .then((response) => response)
+      await quarantineEntered
+      const saved = await nativeSave(raceApp, fixture.id, {
+        aggregateGeneration: 1,
+        slides: [{ id: 's1', elements: [{
+          id: 'e1', type: 'text', content: '<p>After</p>',
+        }] }],
+      }, 'permanent-delete-successor')
+      releaseQuarantine()
+      const deleted = await deletion
+
+      expect(saved).toMatchObject({ status: 200, body: { aggregateGeneration: 2 } })
       expect(deleted).toMatchObject({
         status: 409,
         body: { code: 'STALE_GENERATION', retryable: true },
       })
       const persisted = (await storage.readPresentations()).find((item) => item.id === fixture.id)
-      expect(persisted).toBeDefined()
+      expect(persisted.slides[0].elements[0].content).toBe('<p>After</p>')
       const state = fixture.store.getState()
       expect(state.heads).toEqual(expect.arrayContaining([
         expect.objectContaining({ presentationId: fixture.id, generation: 2 }),
@@ -830,16 +944,14 @@ describe('Presentations API', () => {
         expect.objectContaining({ ownerType: 'presentation', ownerId: fixture.id }),
       ]))
       expect(state.owners.some((owner) =>
-        owner.ownerType === 'presentation' && owner.ownerId === `${fixture.id}:permanent-delete`
+        owner.ownerType === 'permanent-delete' && owner.ownerId === fixture.id
       )).toBe(false)
     } finally {
-      fixture.store.mutate = originalMutate
-      if (injected) {
-        await originalMutate((next) => {
-          next.heads.find((head) => head.presentationId === fixture.id).generation = 1
-        })
-      }
-      await fixture.cleanup()
+      releaseQuarantine()
+      if (deletion) await deletion.catch(() => {})
+      packageLifecycle.quarantinePackageOwnerWithRetry = originalQuarantine
+      delete require.cache[require.resolve('./presentations')]
+      if (fixture) await fixture.cleanup()
     }
   })
 
@@ -858,8 +970,8 @@ describe('Presentations API', () => {
       expect((await storage.readPresentations()).some((item) => item.id === fixture.id)).toBe(false)
       expect(fixture.store.getState().owners).toEqual(expect.arrayContaining([
         expect.objectContaining({
-          ownerType: 'presentation',
-          ownerId: `${fixture.id}:permanent-delete`,
+          ownerType: 'permanent-delete',
+          ownerId: fixture.id,
         }),
       ]))
 
@@ -867,7 +979,7 @@ describe('Presentations API', () => {
       const retry = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
       expect(retry).toMatchObject({ status: 200, body: { success: true } })
       expect(fixture.store.getState().owners.some((owner) =>
-        owner.ownerType === 'presentation' && owner.ownerId === `${fixture.id}:permanent-delete`))
+        owner.ownerType === 'permanent-delete' && owner.ownerId === fixture.id))
         .toBe(false)
       expect(fixture.store.getState().compatibilityOutbox).toEqual([])
     } finally {
@@ -921,6 +1033,25 @@ describe('Presentations API', () => {
     }
   })
 
+  it('releases orphaned history owners when snapshot files are missing', async () => {
+    const fixture = await createNativeRouteFixture(app)
+    const head = fixture.store.getState().heads.find((item) => item.presentationId === fixture.id)
+    const historyOwner = { ownerType: 'history', ownerId: `${fixture.id}:missing-snapshot` }
+    try {
+      await fixture.store.addOwner(head.packageRevisionId, historyOwner)
+      await fs.remove(path.join(storage.HISTORY_DIR, fixture.id))
+
+      const deleted = await request(app).delete(`/api/presentations/${fixture.id}/permanent`)
+
+      expect(deleted).toMatchObject({ status: 200, body: { success: true } })
+      expect(fixture.store.getState().owners).not.toEqual(expect.arrayContaining([
+        expect.objectContaining(historyOwner),
+      ]))
+    } finally {
+      await fixture.cleanup()
+    }
+  })
+
   it('restores package authority when permanent deletion cannot publish JSON removal', async () => {
     const fixture = await createNativeRouteFixture(app)
     const writeJson = fs.writeJson.bind(fs)
@@ -944,8 +1075,8 @@ describe('Presentations API', () => {
       expect(state.owners).toEqual(expect.arrayContaining([
         expect.objectContaining({ ownerType: 'presentation', ownerId: fixture.id }),
       ]))
-      expect(state.owners.some((owner) => owner.ownerType === 'presentation' &&
-        owner.ownerId === `${fixture.id}:permanent-delete`)).toBe(false)
+      expect(state.owners.some((owner) => owner.ownerType === 'permanent-delete' &&
+        owner.ownerId === fixture.id)).toBe(false)
       expect(state.compatibilityOutbox).toEqual([])
     } finally {
       vi.restoreAllMocks()

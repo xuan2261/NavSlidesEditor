@@ -57,10 +57,10 @@ created directly in NavSlides.
   verified by its authoritative package head, **Download Original** returns those
   original bytes. It is the recovery path for source-backed and original-only
   content, not evidence of native editing or visual parity. The current
-  `/pptx-original` package-versus-legacy selection still reads compatibility JSON,
-  so it is excluded from the shared package-reader authority claim until that path
-  is repaired. Its degraded-head recovery also remains incomplete: an intact
-  original can be rejected when a successor package revision is missing. The route
+  `/pptx-original` resolves the immutable original revision from the authoritative
+  package head and allows recovery when an intact R0 outlives a missing successor;
+  its route-specific resolver remains separate from the shared editable projection
+  reader. The route
   is owned by [`server/routes/presentations.js`](../server/routes/presentations.js), and the
   immutable-revision resolver is
   [`server/services/pptx-import/package-revision-resolver.js`](../server/services/pptx-import/package-revision-resolver.js).
@@ -146,22 +146,26 @@ created directly in NavSlides.
   resolver. Missing package heads and malformed original-only state fail closed
   instead of falling back to stale compatibility JSON. External fork/GitHub/sync
   JSON crosses the editor DTO boundary without package authority fields, and
-  history restore responds from restored package authority. This shared-reader
-  statement excludes `/pptx-original`, whose package-versus-legacy selection
-  remains compatibility-driven pending repair. A pending package projection can
+  history restore responds from restored package authority on covered paths. Restore
+  and delete now share the per-presentation history lock, while legacy restore checks
+  a source fingerprint before replacement; broader package/JSON interleavings still
+  require validation. `/pptx-original` uses the package head's immutable original
+  revision resolver, including degraded recovery when an intact R0 outlives a missing
+  successor. A pending package projection can
   currently be retained by save-as-template while later template instantiation
   rejects it; template create/delete rollback, outbox acknowledgement, and
   destination cleanup also remain open. These are not completed fail-closed
   lifecycle contracts. Snapshot/duplicate/fork race closure, explore rollback,
-  permanent-delete authorization/path validation, retain/quarantine fencing,
-  stale-retry cleanup, and outbox interleavings remain open. Sync produces a staged
-  manifest/blob bundle, not a restorable package-authority archive. Focused coverage
-  exists for same-title destinations and destination-lock aliases, but remote-path
-  traversal rejection, DTO/package-generation alignment, expected-head fencing
-  between projection and bundle export, bounded resource use, and complete
-  referenced-media traversal remain unfinished. Portable import must also reject
-  missing revisions/blobs and reconcile destination outbox state; it does not yet
-  prove those guarantees. None of these edges is qualification evidence. The shared reader is
+  retain/quarantine fencing, stale-retry cleanup, and broader outbox interleavings
+  remain open. Sync produces a staged manifest/blob bundle, not a restorable
+  package-authority archive; its remote-wide destination serialization and path checks
+  have focused coverage pending the skipped sync-suite rerun. DTO/package-generation
+  alignment, expected-head fencing between projection and bundle export, bounded
+  resource use, and complete referenced-media traversal remain unfinished. Portable
+  import now rejects missing/conflicting revisions/blobs, clears stale destination
+  outbox records, and rejects cross-presentation revision bytes without an owner
+  record; focused portable coverage passes, but the full authority archive contract
+  remains open. None of these edges is qualification evidence. The shared reader is
   [`package-backed-presentation-read.js`](../server/services/package-backed-presentation-read.js).
 - **Native re-import is not yet provenance or collateral proof.** The application
   path has focused identity checks, but verified gaps still allow forged source

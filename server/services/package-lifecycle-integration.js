@@ -77,6 +77,13 @@ function getPackageOwnerRecords(owner) {
   ))
 }
 
+function getPackageHistoryOwners(presentationId) {
+  const prefix = `${presentationId}:`
+  return withStore((store) => store.getState().owners.filter((item) =>
+    item.ownerType === 'history' && item.ownerId.startsWith(prefix)
+  ))
+}
+
 function packageOwnerExists(owner) {
   return withStore((store) => store.getState().owners.some((item) =>
     item.ownerType === owner.ownerType && item.ownerId === owner.ownerId
@@ -87,6 +94,12 @@ function packagePresentationExists(presentationId) {
   return withStore((store) => store.getState().heads.some((head) =>
     head.presentationId === presentationId
   ))
+}
+
+function getPackageHead(presentationId) {
+  return withStore((store) => store.getState().heads.find((head) =>
+    head.presentationId === presentationId
+  ) || null)
 }
 
 function packageCompatibilityPending(presentationId) {
@@ -105,6 +118,8 @@ function restorePackageForward(presentationId, owner, options) {
 
 module.exports = {
   duplicatePackageOwner,
+  getPackageHead,
+  getPackageHistoryOwners,
   getPackageOwnerRecords,
   getRestorablePackageHead,
   instantiateRetainedPackageHead,
