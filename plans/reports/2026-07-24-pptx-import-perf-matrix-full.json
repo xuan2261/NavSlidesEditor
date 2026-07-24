@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "skipped": true,
+  "reason": "SKIPPED_ENV",
+  "mode": "full",
+  "detail": "Heavy ladder requires PPTX_PERF=1 (avoids CI OOM)",
+  "generatedAt": "2026-07-24T08:36:58.443Z"
+}
