@@ -11,6 +11,12 @@ import { api } from '../utils/api'
 import { usePresentationStore } from '../stores/presentation-store'
 import { showError, showNotice } from '../utils/app-feedback'
 
+function hasAdvancedPackageGeneration(presentation) {
+  return presentation?.pptxSourceAvailable === true &&
+    Number.isSafeInteger(presentation.aggregateGeneration) &&
+    presentation.aggregateGeneration > 1
+}
+
 function pptxContentFingerprint(presentation) {
   if (!presentation) return ''
   const content = { ...presentation }
@@ -69,16 +75,23 @@ export function useExportActions(
 
   const onExportPPTX = useCallback(async () => {
     try {
+      const expectedOriginalGeneration = presentation?.pptxSourceAvailable === true &&
+        Number.isSafeInteger(presentation.aggregateGeneration)
+        ? presentation.aggregateGeneration
+        : undefined
       const canDownloadOriginal = Boolean(
         presentation?.id &&
           (presentation?.pptxSourceAvailable ||
             (presentation?.pptxOriginal?.id && presentation?.pptxOriginal?.sha256)) &&
           !presentation?._pptxEdited &&
+          !hasAdvancedPackageGeneration(presentation) &&
           !cleanState.locallyEdited
       )
       if (canDownloadOriginal) {
         try {
-          const original = await api.downloadPptxOriginal(presentation.id)
+          const original = expectedOriginalGeneration === undefined
+            ? await api.downloadPptxOriginal(presentation.id)
+            : await api.downloadPptxOriginal(presentation.id, expectedOriginalGeneration)
           const filename = `${(presentation.title || 'presentation').replace(/[^a-z0-9._-]+/gi, '_')}.pptx`
           downloadBlob(original, filename)
           globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = {

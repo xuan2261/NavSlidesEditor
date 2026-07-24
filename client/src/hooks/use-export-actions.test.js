@@ -132,8 +132,12 @@ describe('useExportActions', () => {
     URL.revokeObjectURL.mockRestore()
   })
 
-  it('downloads authoritative source bytes for a package-backed presentation', async () => {
-    const packageBacked = { ...presentation, pptxSourceAvailable: true }
+  it('downloads authoritative source bytes for a current package-backed presentation', async () => {
+    const packageBacked = {
+      ...presentation,
+      pptxSourceAvailable: true,
+      aggregateGeneration: 1,
+    }
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:package')
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
     const clickSpy = vi.fn()
@@ -147,13 +151,45 @@ describe('useExportActions', () => {
     const { result } = renderHook(() => useExportActions(packageBacked))
     await act(async () => result.current.onExportPPTX())
 
-    expect(h.downloadPptxOriginal).toHaveBeenCalledWith('p1')
+    expect(h.downloadPptxOriginal).toHaveBeenCalledWith('p1', 1)
     expect(h.exportToPptx).not.toHaveBeenCalled()
     expect(clickSpy).toHaveBeenCalled()
 
     document.createElement.mockRestore()
     URL.createObjectURL.mockRestore()
     URL.revokeObjectURL.mockRestore()
+  })
+
+  it('fails closed when an original download generation fence is stale', async () => {
+    const packageBacked = {
+      ...presentation,
+      pptxSourceAvailable: true,
+      aggregateGeneration: 1,
+    }
+    h.downloadPptxOriginal.mockRejectedValueOnce(
+      Object.assign(new Error('Package generation is stale'), { status: 409, code: 'STALE_GENERATION' })
+    )
+    const { result } = renderHook(() => useExportActions(packageBacked))
+
+    await act(async () => result.current.onExportPPTX())
+
+    expect(h.downloadPptxOriginal).toHaveBeenCalledWith('p1', 1)
+    expect(h.exportToPptx).not.toHaveBeenCalled()
+    expect(h.showError).toHaveBeenCalledWith('PPTX export failed: Package generation is stale')
+  })
+
+  it('does not download original bytes after package-backed generation advances', async () => {
+    const packageBacked = {
+      ...presentation,
+      pptxSourceAvailable: true,
+      aggregateGeneration: 2,
+    }
+    const { result } = renderHook(() => useExportActions(packageBacked))
+
+    await act(async () => result.current.onExportPPTX())
+
+    expect(h.downloadPptxOriginal).not.toHaveBeenCalled()
+    expect(h.exportToPptx).toHaveBeenCalledWith(packageBacked)
   })
 
   it('falls back to reconstructed export when original bytes return 404', async () => {
