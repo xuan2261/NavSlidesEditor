@@ -4,10 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const MATRIX_JSON = resolve(
-  HERE,
-  '../../plans/260530-0854-feature-coverage-traceability-matrix-system-tdd/reports/feature-coverage-matrix.json'
-)
+const MATRIX_JSON = resolve(HERE, 'reports/feature-coverage-matrix.json')
 
 // Curated subset that MUST be PASS after retrofit. Anchored on unit tests with
 // genuine deep assertions (clipboard fidelity, snapping geometry, multiselect)

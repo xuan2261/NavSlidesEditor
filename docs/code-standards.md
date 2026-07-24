@@ -45,11 +45,17 @@ E2E structure conventions:
   `npm run test:pptx:browser-audit` for strict smoke and
   `npm run test:pptx:browser-audit:full` for release signoff. Use
   `npm run test:pptx:browser-audit:headed` when manual visual inspection is
-  needed. `npm run test:pptx:strict` is intentionally corpus plus strict smoke,
-  not the full release audit. The strict corpus gate documents average semantic >= 98%
-  and average production round-trip floor >= 50% as the active global thresholds.
-  Audit artifacts stay under ignored
+  needed. Audit artifacts stay under ignored
   `plans/reports/pptx-import-real-browser-audit-runs/`.
+- PPTX evidence lanes are distinct: `npm run test:pptx:corpus-metrics` is the
+  parser-relative semantic / production-round-trip regression lane (average
+  semantic >= 98%, average round-trip >= 50%); `npm run test:corpus` is its
+  compatibility alias. `npm run test:pptx:best-effort` combines
+  non-importer-strict corpus/round-trip metrics with the strict browser smoke,
+  but does not qualify the importer. `npm run test:pptx:importer-qualification`
+  is the separate fail-closed, manifest-bound native-evidence truth gate.
+  `npm run test:pptx:strict` is its deprecated alias and can correctly exit
+  non-zero for known native blockers.
 
 Canvas selector IDs are stable and must not be renamed:
 
@@ -428,7 +434,7 @@ The feature-coverage traceability matrix is maintained by a pipeline in `scripts
 | `build-inventory.mjs` | Builds capability inventory from `feature-manifest.json` |
 | `extract-tags.mjs` | Scans test files for `[cap:<id>]` annotations |
 | `join-run-status.mjs` | Joins coverage tags with Vitest/Playwright run results |
-| `build-matrix.mjs` | Produces `docs/feature-coverage-matrix.md` + JSON report |
+| `build-matrix.mjs` | Produces `docs/feature-coverage-matrix.md` + `scripts/feature-inventory/reports/feature-coverage-matrix.json` |
 | `check-coverage-gate.mjs` | Fails if uncovered capabilities exceed the allowlist |
 | `check-manifest-completeness.mjs` | Checks manifest vs. codebase drift |
 

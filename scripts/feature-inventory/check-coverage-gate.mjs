@@ -3,10 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const MATRIX_JSON = resolve(
-  HERE,
-  '../../plans/260530-0854-feature-coverage-traceability-matrix-system-tdd/reports/feature-coverage-matrix.json'
-)
+const MATRIX_JSON = resolve(HERE, 'reports/feature-coverage-matrix.json')
 const ALLOWLIST_PATH = resolve(HERE, 'coverage-gate-allowlist.json')
 
 const STALE_DAYS = 30

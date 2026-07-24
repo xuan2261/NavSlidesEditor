@@ -4,10 +4,7 @@ import { dirname, resolve } from 'node:path'
 import { checkGate } from './check-coverage-gate.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const MATRIX_JSON = resolve(
-  HERE,
-  '../../plans/260530-0854-feature-coverage-traceability-matrix-system-tdd/reports/feature-coverage-matrix.json'
-)
+const MATRIX_JSON = resolve(HERE, 'reports/feature-coverage-matrix.json')
 const ALLOWLIST_PATH = resolve(HERE, 'coverage-gate-allowlist.json')
 const REPORTS_DIR = resolve(
   HERE,
@@ -83,7 +80,7 @@ export function buildBaselineGapReport({ matrix, allowlist, generatedAt }) {
   gaps.sort((a, b) => a.capId.localeCompare(b.capId))
   return {
     generatedAt,
-    sourceMatrix: 'plans/260530-0854-feature-coverage-traceability-matrix-system-tdd/reports/feature-coverage-matrix.json',
+    sourceMatrix: 'scripts/feature-inventory/reports/feature-coverage-matrix.json',
     editorCoreBaselineTotal: matrix.summary?.total ?? rows.length,
     summary: matrix.summary || {},
     staleRunResults: Boolean(matrix.meta?.stale),

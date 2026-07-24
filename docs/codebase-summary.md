@@ -164,8 +164,10 @@ navslides-editor/
 - Offline HTML inlines runtime assets.
 - PPTX export is hybrid: stable primitives stay editable, while complex DOM-backed
   content and unsupported cases fall back to raster assets.
-- PPTX import uses `pptxtojson` as the primary parser with `pptx2json` fallback
-  inspection and a checked-in fidelity corpus.
+- PPTX import uses `pptxtojson` as its only runtime parser; `pptx2json` is
+  benchmark-sandbox-only, never a runtime fallback. A checked-in 11-deck corpus
+  supports parser-relative metrics and separately hash-bound, two-pass importer
+  qualification.
 
 ## Electron Wrapper
 
@@ -209,8 +211,11 @@ navslides-editor/
 - Playwright covers editor flows, live flows, game flows, import/export, and
   visual regression.
 - `k6` load tests target REST and WebSocket paths.
-- The PPTX corpus harness validates semantic fidelity and round-trip stability.
-- **Feature-coverage traceability matrix** (`scripts/feature-inventory/`): a pipeline of scripts (`build-inventory.mjs` → `extract-tags.mjs` → `join-run-status.mjs` → `build-matrix.mjs` → `check-coverage-gate.mjs`) scans `[cap:<id>]` annotations in test files and joins them against `feature-manifest.json` (100 capabilities across canvas/command/control/element/flow/shortcut domains). Produces `docs/feature-coverage-matrix.md` (auto-generated — do not hand-edit) and a JSON report. Run via `npm run matrix` / `npm run matrix:gate`. Editor-core matrix is currently 100/100 PASS with an empty `coverage-gate-allowlist.json`; CI job `feature-coverage-gate` runs the gate as a non-required warn-first check.
+- The PPTX corpus metrics harness validates parser-relative semantic fidelity and
+  round-trip stability. The separate importer qualification gate fails closed
+  against the exact checked-in 11-deck manifest and source hashes, then evaluates
+  finite native scene/chart/SmartArt/placeholder evidence across both importer passes.
+- **Feature-coverage traceability matrix** (`scripts/feature-inventory/`): a pipeline of scripts (`build-inventory.mjs` → `extract-tags.mjs` → `join-run-status.mjs` → `build-matrix.mjs` → `check-coverage-gate.mjs`) scans `[cap:<id>]` annotations in test files and joins them against `feature-manifest.json` (100 capabilities across canvas/command/control/element/flow/shortcut domains). Produces `docs/feature-coverage-matrix.md` (auto-generated — do not hand-edit) and machine JSON at `scripts/feature-inventory/reports/feature-coverage-matrix.json` (not under archived plan paths). Run via `npm run matrix` / `npm run matrix:gate`. Editor-core matrix is currently 100/100 PASS with an empty `coverage-gate-allowlist.json`; CI job `feature-coverage-gate` runs the gate as a non-required warn-first check.
 - **Element-control audit matrix** (`scripts/feature-inventory/element-control-*`): a separate detailed harness layered on top of the feature-coverage matrix. `element-control-expected-controls.json` defines the expected control inventory for all 19 canonical element types; `element-control-audit-matrix.json` stores one row per `element/control/surface`; `validate-element-control-audit-matrix.mjs` enforces allowed statuses, evidence/testCoverage, and security fields for content-bearing controls. Run via `npm run matrix:element-control`; `npm run matrix:gate` includes it. The generated report is `plans/260617-0739-element-control-audit-matrix-tdd/reports/element-control-audit-matrix-current.md`.
 
 ## Behavior Notes

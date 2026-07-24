@@ -20,7 +20,7 @@ NavSlides Editor uses three testing layers: Vitest (unit/integration JS), Playwr
 | `npm run test:corpus` | PPTX import fidelity tester |
 | `npm run test:deep` | Run only the `tier:deep` behavior tests (`*.deep.test.*`) |
 | `npm run inventory` | Regenerate the capability inventory (`scripts/feature-inventory/inventory.json`) |
-| `npm run matrix` | Regenerate the feature-coverage matrix → `docs/feature-coverage-matrix.md` (+ plan reports) |
+| `npm run matrix` | Regenerate the feature-coverage matrix → `docs/feature-coverage-matrix.md` + `scripts/feature-inventory/reports/feature-coverage-matrix.json` |
 | `npm run matrix:baseline-report` | Regenerate matrix and Phase 1 baseline gap reports |
 | `npm run matrix:gate` | Regenerate matrix, then run the coverage gate + manifest-completeness drift guard |
 

@@ -91,7 +91,7 @@ describe("default 'auto' colors resolve to the historical hex (no out-of-box cha
 describe('feature-coverage drift guard', () => {
   const MATRIX_JSON = resolve(
     THIS_DIR,
-    '../../../plans/260530-0854-feature-coverage-traceability-matrix-system-tdd/reports/feature-coverage-matrix.json'
+    '../../../scripts/feature-inventory/reports/feature-coverage-matrix.json'
   )
   const hasMatrix = existsSync(MATRIX_JSON)
   const statusById = hasMatrix

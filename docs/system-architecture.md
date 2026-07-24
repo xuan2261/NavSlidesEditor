@@ -425,13 +425,15 @@ diverge:
   dropping elements. Element-level render failures degrade to labelled
   placeholders and warnings instead of failing the whole export.
 - `server/routes/pptx-import.js` exposes `POST /api/pptx/import`, which
-  parses `.pptx` files via `pptxtojson` 2.0.2 (primary) with `pptx2json` fallback,
-  applies ZIP/package budget guards with measured inflated-byte caps and worker
-  heap limits, inspects OOXML slide relationships for native chart/SmartArt
-  evidence, and maps text/images/shapes/tables to NavSlides element types via shared
-  geometry normalization. Unsupported chart/equation content degrades to labelled
-  placeholders; SmartArt is flattened when parser data is available and native
-  package gaps are surfaced through import warnings.
+  parses `.pptx` files through `pptxtojson` 2.0.2 only. `pptx2json` remains
+  isolated to the parser benchmark sandbox, never a runtime fallback. The route
+  applies ZIP/package budget guards with measured inflated-byte caps and worker heap
+  limits, inspects OOXML slide relationships for native chart/SmartArt evidence,
+  and maps text/images/shapes/tables to NavSlides element types via shared geometry
+  normalization. Public stats preserve finite scene reconciliation counts without
+  inferring missing evidence as zero. Unsupported chart/equation content degrades to
+  labelled placeholders; SmartArt is flattened when parser data is available and
+  native package gaps are surfaced through import warnings.
 - Import unit convention: the canvas is 960×540 at 72 DPI, so 1pt = 1px before
   box scale. All length-bearing fields (font sizes, text insets, border/shadow
   widths) convert as `pt × scale` — not `pt × 96/72`. The shared helper
@@ -451,13 +453,23 @@ diverge:
   with print export: embed content is wrapped as a full document, common CDN
   dependencies are resolved through local `/vendor` assets, and LaTeX/TikZ
   output is captured at higher pixel density before insertion into PowerPoint.
-- Corpus strict validation now includes by-type geometry drift and property
-  coverage metrics from the PPTX fidelity harness, with generated-fixture
-  per-type hard gates layered on top of existing global strict thresholds.
+- `npm run test:pptx:corpus-metrics` (and compatibility alias
+  `npm run test:corpus`) is the parser-relative regression lane. It retains
+  semantic/round-trip scoring without importer strict options. `npm run test:pptx:best-effort`
+  pairs a non-importer-strict corpus/round-trip run with the strict browser smoke;
+  neither command qualifies the importer.
+- `npm run test:pptx:importer-qualification` binds to the checked-in 11-deck
+  `server/data/test-corpus/importer-qualification-manifest.json`, including its
+  exact names, SHA-256 values, and manifest digest. It copies each verified
+  source into one read-only, hash-checked temporary snapshot for both the
+  best-effort evidence pass and `{ strict: true }` decision pass; each pass is
+  rechecked afterward and the gate fails closed on invalid inventory or
+  missing/invalid or non-zero native gaps.
+  `npm run test:pptx:strict` is its deprecated alias, not a metrics or browser
+  command; known EMF/native-node blockers can make it non-zero.
 - PPTX layout regression protection has two browser gates: PR/runtime-sensitive
   strict smoke (`npm run test:pptx:browser-audit`) and release-blocking full
-  strict audit (`npm run test:pptx:browser-audit:full`). The combined
-  `npm run test:pptx:strict` command runs corpus plus strict smoke audit.
+  strict audit (`npm run test:pptx:browser-audit:full`).
 - `exportPptx.js` reuses `getSlideNotes()` so speaker notes stay aligned across
   HTML and PPTX exports, and it preserves slide z-order by exporting sorted
   element stacks.
@@ -537,4 +549,4 @@ diverge:
 
 ### Feature-Coverage Matrix
 
-The feature-coverage traceability matrix is maintained by `scripts/feature-inventory/`. The pipeline scans `[cap:<id>]` annotations in test files, joins them against `feature-manifest.json` (100 editor-core capabilities), and produces `docs/feature-coverage-matrix.md` (auto-generated — do not hand-edit) plus a JSON report. Run via `npm run matrix` / `npm run matrix:gate`. CI job `feature-coverage-gate` runs the gate as a non-required warn-first check. Editor-core gaps are currently closed: `coverage-gate-allowlist.json` is empty and the matrix reports 100/100 PASS. Extended export/import/live/share/AI/game/sync/history coverage is reported separately by `npm run matrix:extended-report` with executable, mocked-e2e, and contract-only modes. Required CI jobs (blocking): lint, unit-coverage, build, e2e-chromium (4 shards), e2e-live, e2e-mobile, e2e-visual, pptx-corpus, load-smoke, required-checks fan-in.
+The feature-coverage traceability matrix is maintained by `scripts/feature-inventory/`. The pipeline scans `[cap:<id>]` annotations in test files, joins them against `feature-manifest.json` (100 editor-core capabilities), and produces `docs/feature-coverage-matrix.md` (auto-generated — do not hand-edit) plus machine JSON at `scripts/feature-inventory/reports/feature-coverage-matrix.json`. Run via `npm run matrix` / `npm run matrix:gate`. CI job `feature-coverage-gate` runs the gate as a non-required warn-first check. Editor-core gaps are currently closed: `coverage-gate-allowlist.json` is empty and the matrix reports 100/100 PASS. Extended export/import/live/share/AI/game/sync/history coverage is reported separately by `npm run matrix:extended-report` with executable, mocked-e2e, and contract-only modes. Required CI jobs (blocking): lint, unit-coverage, build, e2e-chromium (4 shards), e2e-live, e2e-mobile, e2e-visual, pptx-corpus, load-smoke, required-checks fan-in.

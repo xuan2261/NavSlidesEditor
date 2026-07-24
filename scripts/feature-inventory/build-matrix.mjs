@@ -5,8 +5,9 @@ import { resolveStatus } from './join-run-status.mjs'
 import { renderMatrixMarkdown } from './matrix-format.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const PLAN_DIR = resolve(HERE, '../../plans/260530-0854-feature-coverage-traceability-matrix-system-tdd')
-const REPORTS_DIR = resolve(PLAN_DIR, 'reports')
+// Stable machine-readable home (not under archived plans/). Markdown is also
+// promoted to docs/feature-coverage-matrix.md for the committed human map.
+const REPORTS_DIR = resolve(HERE, 'reports')
 const DOCS_MD = resolve(HERE, '../../docs/feature-coverage-matrix.md')
 
 const ALLOWED_BASES = new Set(['GAP', 'DEEP-GAP', 'SKIP', 'TAGGED'])
