@@ -9,11 +9,34 @@ const {
   hashRecord,
   validateRevision,
 } = require('./schemas')
+const { hashCanonical } = require('../evidence/canonical-hash')
 
-function importCommitError(message) {
+function importCommitError(message, code = 'PACKAGE_IMPORT_COMMIT_FAILED') {
   const error = new Error(message)
-  error.code = 'PACKAGE_IMPORT_COMMIT_FAILED'
+  error.code = code
   return error
+}
+
+function hasImportOutcomeAuthority(job) {
+  return typeof job?.outcomeRevisionId === 'string' &&
+    Number.isSafeInteger(job?.outcomeGeneration) && job.outcomeGeneration > 0 &&
+    typeof job?.outcomeHeadHash === 'string'
+}
+
+function isLegacyImportReceipt(job) {
+  return ['outcomeRevisionId', 'outcomeGeneration', 'outcomeHeadHash']
+    .every((field) => job?.[field] === undefined)
+}
+
+function requireImportOutcomeAuthority(job) {
+  if (hasImportOutcomeAuthority(job)) return
+  const legacy = isLegacyImportReceipt(job)
+  throw importCommitError(
+    legacy
+      ? 'Import rollback cannot verify a legacy durable receipt'
+      : 'Import rollback requires a complete durable receipt',
+    legacy ? 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' : 'PACKAGE_IMPORT_COMMIT_FAILED'
+  )
 }
 
 function projectionElementKeys(projection) {
@@ -192,6 +215,8 @@ async function publishImport(store, prepared, options = {}) {
       updatedAt: new Date().toISOString(),
       presentationId,
       outcomeRevisionId: revision.id,
+      outcomeGeneration: head.generation,
+      outcomeHeadHash: hashCanonical(head),
     })
   }, options.faults)
 
@@ -214,10 +239,42 @@ async function rollbackImport(store, { jobId, presentationId }) {
   }
   await store.assertWriter()
   await store.mutate((next) => {
+    const head = next.heads.find((item) => item.presentationId === presentationId)
+    const importResult = next.mutationResults.find((result) =>
+      result.presentationId === presentationId &&
+      result.idempotencyKey === jobId &&
+      result.operation === MUTATION_OPERATIONS.PACKAGE_IMPORT
+    )
+    const job = next.jobs.find((item) => item.id === jobId)
+    if (!head && job?.transactionState === 'rolled-back') {
+      const completedRollback = job.kind === 'import' &&
+        job.presentationId === presentationId &&
+        job.status === 'failed' &&
+        job.cancellationPoint === 'rolled-back'
+      if (!completedRollback) {
+        throw importCommitError('Import rollback authority no longer matches the recorded job')
+      }
+      requireImportOutcomeAuthority(job)
+      return false
+    }
+    if (!head || !job || !importResult) {
+      throw importCommitError('Import rollback authority no longer matches the recorded job')
+    }
+    requireImportOutcomeAuthority(job)
+    const receiptMatchesHead = job.kind === 'import' &&
+      job.presentationId === presentationId &&
+      job.outcomeRevisionId === head.packageRevisionId &&
+      job.outcomeGeneration === head.generation &&
+      job.outcomeHeadHash === hashCanonical(head)
+    if (!head || !job || !importResult || !receiptMatchesHead ||
+        head.packageRevisionId !== importResult.packageRevisionId ||
+        head.originalRevisionId !== importResult.packageRevisionId) {
+      throw importCommitError('Import rollback authority no longer matches the recorded job')
+    }
     next.owners = next.owners.filter(
       (owner) => owner.ownerType !== 'presentation' || owner.ownerId !== presentationId
     )
-    next.heads = next.heads.filter((head) => head.presentationId !== presentationId)
+    next.heads = next.heads.filter((item) => item.presentationId !== presentationId)
     next.compatibilityOutbox = (next.compatibilityOutbox || []).filter(
       (record) => record.presentationId !== presentationId
     )
@@ -225,7 +282,6 @@ async function rollbackImport(store, { jobId, presentationId }) {
       result.presentationId !== presentationId || result.idempotencyKey !== jobId ||
       (result.operation !== undefined && result.operation !== MUTATION_OPERATIONS.PACKAGE_IMPORT)
     )
-    const job = next.jobs.find((item) => item.id === jobId)
     if (job) {
       job.status = 'failed'
       job.transactionState = 'rolled-back'

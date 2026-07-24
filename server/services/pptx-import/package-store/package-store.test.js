@@ -2,14 +2,20 @@ import fs from 'node:fs/promises'
 import crypto from 'node:crypto'
 import os from 'node:os'
 import path from 'node:path'
+import { createRequire } from 'node:module'
 import JSZip from 'jszip'
 import { afterEach, describe, expect, it } from 'vitest'
 import storeModule from './index.js'
 import resolverModule from '../package-revision-resolver.js'
-import runtimeModule from '../package-store-runtime.js'
+import canonicalHashModule from '../evidence/canonical-hash.js'
 
+const require = createRequire(import.meta.url)
+const runtimeModule = require('../package-store-runtime.js')
+const generationSafeSave = require('../../generation-safe-save.js')
 const { openPackageStore } = storeModule
 const { resolvePackageRevisionBytes } = resolverModule
+const { hashCanonical } = canonicalHashModule
+const { savePackageProjection } = generationSafeSave
 const {
   initializePackageStore,
   shutdownPackageStore,
@@ -380,7 +386,10 @@ describe('package store lifecycle MVP', () => {
     }))
     expect(state.jobs).toContainEqual(expect.objectContaining({
       id: 'job-import-1', kind: 'import', status: 'completed',
+      presentationId: projection.id,
       outcomeRevisionId: committed.revision.id,
+      outcomeGeneration: head.generation,
+      outcomeHeadHash: hashCanonical(head),
     }))
   })
 
@@ -547,5 +556,341 @@ describe('package store lifecycle MVP', () => {
     expect(state.jobs).toContainEqual(expect.objectContaining({
       id: 'job-import-rollback', status: 'failed', transactionState: 'rolled-back',
     }))
+  })
+
+  it('keeps repeated rollback of a completed cleanup as a durable no-op', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const projection = { id: 'deck-rollback-retry', title: 'Rollback retry', slides: [] }
+    await store.commitImport(await minimalPptx(), {
+      jobId: 'job-rollback-retry',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+    })
+
+    await store.rollbackImport({ jobId: 'job-rollback-retry', presentationId: projection.id })
+    const firstState = store.getState()
+    const firstRoot = structuredClone(store.metadata.root)
+
+    await store.rollbackImport({ jobId: 'job-rollback-retry', presentationId: projection.id })
+
+    expect(store.getState()).toEqual(firstState)
+    expect(store.metadata.root).toEqual(firstRoot)
+    expect(store.getState().generation).toBe(firstState.generation)
+  })
+
+  it('rejects a repeated rollback that supplies another presentation identity', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const projection = { id: 'deck-rollback-bound', title: 'Rollback bound', slides: [] }
+    await store.commitImport(await minimalPptx(), {
+      jobId: 'job-rollback-bound',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+    })
+
+    await store.rollbackImport({ jobId: 'job-rollback-bound', presentationId: projection.id })
+    const rolledBackState = store.getState()
+    const rolledBackRoot = structuredClone(store.metadata.root)
+
+    await expect(store.rollbackImport({
+      jobId: 'job-rollback-bound',
+      presentationId: 'unrelated-presentation',
+    })).rejects.toMatchObject({ code: 'PACKAGE_IMPORT_COMMIT_FAILED' })
+
+    expect(store.getState()).toEqual(rolledBackState)
+    expect(store.metadata.root).toEqual(rolledBackRoot)
+  })
+
+  it('rejects a missing-head no-op when the supplied job identity does not match', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const projection = { id: 'deck-rollback-job-bound', title: 'Rollback job bound', slides: [] }
+    await store.commitImport(await minimalPptx(), {
+      jobId: 'job-rollback-job-bound',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+    })
+
+    await store.rollbackImport({ jobId: 'job-rollback-job-bound', presentationId: projection.id })
+    const rolledBackState = store.getState()
+    const rolledBackRoot = structuredClone(store.metadata.root)
+
+    await expect(store.rollbackImport({
+      jobId: 'unrelated-job-id',
+      presentationId: projection.id,
+    })).rejects.toMatchObject({ code: 'PACKAGE_IMPORT_COMMIT_FAILED' })
+
+    expect(store.getState()).toEqual(rolledBackState)
+    expect(store.metadata.root).toEqual(rolledBackRoot)
+    expect(store.getState().jobs).toContainEqual(expect.objectContaining({
+      id: 'job-rollback-job-bound',
+      presentationId: projection.id,
+      transactionState: 'rolled-back',
+    }))
+  })
+
+  it('fails closed for a legacy durable receipt on a repeated rollback', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const projection = { id: 'deck-rollback-legacy', title: 'Rollback legacy', slides: [] }
+    await store.commitImport(await minimalPptx(), {
+      jobId: 'job-rollback-legacy',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+    })
+    await store.rollbackImport({ jobId: 'job-rollback-legacy', presentationId: projection.id })
+    await store.mutate((next) => {
+      const job = next.jobs.find((item) => item.id === 'job-rollback-legacy')
+      delete job.outcomeRevisionId
+      delete job.outcomeGeneration
+      delete job.outcomeHeadHash
+    })
+
+    await expect(store.rollbackImport({
+      jobId: 'job-rollback-legacy',
+      presentationId: projection.id,
+    })).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
+  })
+
+  it('retains a legacy receipt after restart without immutable outcome authority', async () => {
+    const { rootDir, store } = await tempStore()
+    await store.acquireWriter()
+    const projection = { id: 'deck-legacy-receipt', title: 'Legacy receipt', slides: [] }
+    await store.commitImport(await minimalPptx(), {
+      jobId: 'job-legacy-receipt',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+    })
+    await store.mutate((next) => {
+      const job = next.jobs.find((item) => item.id === 'job-legacy-receipt')
+      delete job.outcomeRevisionId
+      delete job.outcomeGeneration
+      delete job.outcomeHeadHash
+    })
+    await store.releaseWriter()
+
+    const restarted = await openPackageStore({ rootDir })
+    await restarted.acquireWriter()
+    try {
+      await expect(restarted.rollbackImport({
+        jobId: 'job-legacy-receipt', presentationId: projection.id,
+      })).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
+      expect(restarted.getState().heads).toContainEqual(expect.objectContaining({
+        presentationId: projection.id,
+      }))
+      expect(restarted.getJob('job-legacy-receipt')).toMatchObject({
+        status: 'completed', transactionState: 'committed',
+      })
+    } finally {
+      await restarted.releaseWriter()
+    }
+  })
+
+  it('blocks a legacy receipt after matrix authority advances without a generation change', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const projection = { id: 'deck-legacy-matrix', title: 'Legacy matrix', slides: [] }
+    await store.commitImport(await minimalPptx(), {
+      jobId: 'job-legacy-matrix',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+    })
+    await store.mutate((next) => {
+      const job = next.jobs.find((item) => item.id === 'job-legacy-matrix')
+      delete job.outcomeRevisionId
+      delete job.outcomeGeneration
+      delete job.outcomeHeadHash
+    })
+    await store.advanceMatrixAuthorityEpoch()
+
+    await expect(store.rollbackImport({
+      jobId: 'job-legacy-matrix', presentationId: projection.id,
+    })).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
+    expect(store.getState().heads).toContainEqual(expect.objectContaining({
+      presentationId: projection.id,
+      matrixAuthorityEpoch: 2,
+    }))
+  })
+
+  it('blocks a legacy receipt after the package head advances', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const projection = { id: 'deck-legacy-successor', title: 'Legacy successor', slides: [] }
+    await store.commitImport(await minimalPptx(), {
+      jobId: 'job-legacy-successor',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+    })
+    await store.mutate((next) => {
+      const job = next.jobs.find((item) => item.id === 'job-legacy-successor')
+      delete job.outcomeRevisionId
+      delete job.outcomeGeneration
+      delete job.outcomeHeadHash
+      next.heads.find((head) => head.presentationId === projection.id).generation = 2
+    })
+
+    await expect(store.rollbackImport({
+      jobId: 'job-legacy-successor', presentationId: projection.id,
+    })).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
+    expect(store.getState().heads).toContainEqual(expect.objectContaining({
+      presentationId: projection.id, generation: 2,
+    }))
+  })
+
+  it('refuses a late reconciliation that names a presentation with a newer package head', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const projection = { id: 'deck-mixed-authority', title: 'Mixed Authority', slides: [] }
+    const committed = await store.commitImport(await minimalPptx(), {
+      jobId: 'job-mixed-authority',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+    })
+
+    await store.mutate((next) => {
+      const original = next.revisions.find((revision) => revision.id === committed.revision.id)
+      const successor = { ...original, id: 'r1-successor', ordinal: 1 }
+      next.revisions.push(successor)
+      next.owners.push({
+        schemaVersion: 1,
+        ownerType: 'presentation',
+        ownerId: projection.id,
+        revisionId: successor.id,
+      })
+      next.heads.find((head) => head.presentationId === projection.id).packageRevisionId = successor.id
+    })
+
+    await expect(store.rollbackImport({
+      jobId: 'job-mixed-authority',
+      presentationId: projection.id,
+    })).rejects.toThrow('Import rollback authority no longer matches the recorded job')
+
+    const state = store.getState()
+    expect(state.heads).toContainEqual(expect.objectContaining({
+      presentationId: projection.id,
+      packageRevisionId: 'r1-successor',
+    }))
+    expect(state.jobs).toContainEqual(expect.objectContaining({
+      id: 'job-mixed-authority', status: 'completed', transactionState: 'committed',
+    }))
+  })
+
+  it('refuses rollback after a normal same-R0 projection successor', async () => {
+    const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'package-store-same-r0-'))
+    dirs.push(rootDir)
+    const activeStore = await initializePackageStore({ rootDir })
+    const projection = { id: 'deck-same-r0', title: 'Original', slides: [] }
+    try {
+      const committed = await activeStore.commitImport(await minimalPptx(), {
+        jobId: 'job-same-r0',
+        presentationId: projection.id,
+        projection,
+        sourceMap: { entries: {} },
+      })
+      const initialHead = committed.head
+      expect(activeStore.getState().heads).toMatchObject([
+        expect.objectContaining({ presentationId: projection.id }),
+      ])
+      const saved = await savePackageProjection({
+        presentationId: projection.id,
+        expectedGeneration: initialHead.generation,
+        baseRevisionId: initialHead.packageRevisionId,
+        idempotencyKey: 'save-after-import',
+        after: { title: 'Edited after import' },
+        loadStored: async () => projection,
+      })
+      expect(saved).toMatchObject({ ok: true, generation: 2 })
+      expect(saved.aggregateHead.packageRevisionId).toBe(initialHead.packageRevisionId)
+      expect(initialHead.packageRevisionId).toBe(committed.revision.id)
+      const durable = activeStore.getJob('job-same-r0')
+      expect(durable).toMatchObject({
+        outcomeGeneration: initialHead.generation,
+        outcomeHeadHash: hashCanonical(initialHead),
+      })
+
+      await expect(activeStore.rollbackImport({
+        jobId: 'job-same-r0', presentationId: projection.id,
+      })).rejects.toThrow('Import rollback authority no longer matches the recorded job')
+      const current = activeStore.getState().heads.find(
+        (head) => head.presentationId === projection.id
+      )
+      expect(current).toMatchObject({ generation: 2, packageRevisionId: initialHead.packageRevisionId })
+    } finally {
+      await shutdownPackageStore()
+    }
+  })
+
+  it('refuses a rollback when the durable receipt head hash no longer matches', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const projection = { id: 'deck-receipt-fence', title: 'Receipt Fence', slides: [] }
+    await store.commitImport(await minimalPptx(), {
+      jobId: 'job-receipt-fence',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+    })
+    await store.mutate((next) => {
+      next.jobs.find((job) => job.id === 'job-receipt-fence').outcomeHeadHash = 'f'.repeat(64)
+    })
+
+    await expect(store.rollbackImport({
+      jobId: 'job-receipt-fence',
+      presentationId: projection.id,
+    })).rejects.toThrow('Import rollback authority no longer matches the recorded job')
+    expect(store.getState().heads).toContainEqual(expect.objectContaining({ presentationId: projection.id }))
+  })
+
+  it('blocks a legacy receipt when an import-head field changes without generation advance', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const projection = { id: 'deck-legacy-drift', title: 'Legacy drift', slides: [] }
+    await store.commitImport(await minimalPptx(), {
+      jobId: 'job-legacy-drift',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+    })
+    await store.mutate((next) => {
+      const job = next.jobs.find((item) => item.id === 'job-legacy-drift')
+      delete job.outcomeRevisionId
+      delete job.outcomeGeneration
+      delete job.outcomeHeadHash
+      next.heads.find((head) => head.presentationId === projection.id).evidenceByClaim = {
+        edited: { status: 'recorded' },
+      }
+    })
+
+    await expect(store.rollbackImport({
+      jobId: 'job-legacy-drift', presentationId: projection.id,
+    })).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
+    expect(store.getState().heads).toContainEqual(expect.objectContaining({
+      presentationId: projection.id,
+      evidenceByClaim: { edited: { status: 'recorded' } },
+    }))
+  })
+
+  it('rejects partial import outcome identity fields while retaining legacy receipts', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    const base = {
+      id: 'job-partial-outcome',
+      kind: 'import',
+      status: 'completed',
+      capabilityHash: 'a'.repeat(64),
+      presentationId: 'deck-partial-outcome',
+    }
+    await expect(store.putJob({ ...base, outcomeRevisionId: 'r0-partial' }))
+      .rejects.toThrow('Import outcome identity must be complete')
+    await expect(store.putJob(base)).resolves.toMatchObject({ id: base.id })
   })
 })
