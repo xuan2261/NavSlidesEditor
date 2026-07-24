@@ -12,10 +12,27 @@ const { PptxImportError } = require('./diagnostics')
 const { parseRawEntries } = require('./package-store/raw-zip')
 const { PackageSafetyError, createXmlSafetyBudget, isXmlPart, readLimit } = require('./xml-safety')
 
+/**
+ * Import CRC integrity policy (fail-closed).
+ * Declared ZIP CRC must match inflated payload for non-encrypted entries.
+ * Enforced via JSZip checkCRC32 on package load; corpus probe 2026-07-24: 0/11 false positives.
+ * Do not default to silent warn-only success for CRC failures.
+ */
+const IMPORT_CRC_POLICY = Object.freeze({
+  mode: 'fail-closed',
+  checkCRC32: true,
+  errorCode: 'zip-crc-mismatch',
+})
+
 function assertPptxExtension(fileName) {
   if (path.extname(fileName || '').toLowerCase() !== '.pptx') {
     throw new PptxImportError('Only .pptx files are supported', { status: 400 })
   }
+}
+
+function isCrcMismatchError(error) {
+  const message = String(error?.message || error || '')
+  return /crc32\s*mismatch/i.test(message) || /corrupted zip\s*:\s*crc/i.test(message)
 }
 
 async function readBoundedZipEntry(entry, { perEntryCap, remainingBudget, signal, overflowError }) {
@@ -98,10 +115,17 @@ async function validatePptxPackage(filePath, originalName = filePath, limits = {
   try {
     bytes = await fs.readFile(filePath)
     signal?.throwIfAborted?.()
-    zip = await JSZip.loadAsync(bytes, { checkCRC32: false })
+    zip = await JSZip.loadAsync(bytes, { checkCRC32: IMPORT_CRC_POLICY.checkCRC32 })
     signal?.throwIfAborted?.()
   } catch (error) {
     if (signal?.aborted) throw error
+    if (isCrcMismatchError(error)) {
+      throw new PackageSafetyError(
+        IMPORT_CRC_POLICY.errorCode,
+        'PPTX package entry CRC32 mismatch',
+        400,
+      )
+    }
     throw new PptxImportError('Uploaded file is not a readable ZIP package', {
       status: 400, type: FAILURE_TYPES.parseFailed,
     })
@@ -143,7 +167,9 @@ async function loadPptxArchive(filePath, limits = {}) {
 }
 
 module.exports = {
+  IMPORT_CRC_POLICY,
   assertPptxExtension,
+  isCrcMismatchError,
   loadPptxArchive,
   readBoundedZipEntry,
   validatePptxPackage,

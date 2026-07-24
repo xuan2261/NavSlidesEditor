@@ -50,6 +50,28 @@ describe('pptx parser worker runner', () => {
     expect(env.ELECTRON_RUN_AS_NODE).toBe('1')
   })
 
+  it('does not inherit parent secrets into the parser worker env', () => {
+    const env = buildParserWorkerEnv({
+      baseEnv: {
+        PATH: '/usr/bin',
+        NODE_PATH: '/custom/modules',
+        API_KEY: 'should-not-leak',
+        GITHUB_TOKEN: 'ghp_secret',
+        AWS_SECRET_ACCESS_KEY: 'aws-secret',
+        NODE_OPTIONS: '--require ./evil.js',
+        TEMP: '/tmp',
+      },
+      repoRoot: path.join(os.tmpdir(), 'navslides-parser-env'),
+      isElectron: false,
+    })
+    expect(env.API_KEY).toBeUndefined()
+    expect(env.GITHUB_TOKEN).toBeUndefined()
+    expect(env.AWS_SECRET_ACCESS_KEY).toBeUndefined()
+    expect(env.NODE_OPTIONS).toBeUndefined()
+    expect(env.TEMP).toBe('/tmp')
+    expect(env.NODE_PATH).toContain('node_modules')
+  })
+
   it('does not pass inherited watch flags to the parser worker process', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-worker-argv-'))
     const workerPath = path.join(dir, 'argv-worker.js')
@@ -98,6 +120,7 @@ describe('pptx parser worker runner', () => {
       expect(result.ok).toBe(false)
       expect(result.error.type).toBe('parse-failed')
       expect(result.error.message).toContain('timed out')
+      expect(result.error.message).toMatch(/after 1s/)
       expect(result.error.diagnostics || '').not.toContain('<slide>')
       await new Promise((resolve) => setTimeout(resolve, 80))
       expect(result.ok).toBe(false)

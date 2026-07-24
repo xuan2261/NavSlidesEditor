@@ -41,6 +41,7 @@ describe('durable PPTX import job authority', () => {
     const response = await request(createApp({
       jobManager: manager(),
       readDurableJob: vi.fn(async () => durable),
+      checkPresentationListable: vi.fn(async () => true),
     })).get(`/api/pptx/jobs/${jobId}`)
 
     expect(response.status).toBe(200)
@@ -51,6 +52,33 @@ describe('durable PPTX import job authority', () => {
       result: { presentationId: 'presentation-late' },
       transactionState: 'committed',
     })
+  })
+
+  it('withholds openable done while listable presentation is missing (contract B)', async () => {
+    const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
+    const durable = {
+      id: jobId,
+      kind: 'import',
+      status: 'completed',
+      transactionState: 'committed',
+      cancellationPoint: 'committed',
+      capabilityHash: 'a'.repeat(64),
+      presentationId: 'presentation-pending',
+    }
+    const response = await request(createApp({
+      jobManager: manager(),
+      readDurableJob: vi.fn(async () => durable),
+      checkPresentationListable: vi.fn(async () => false),
+    })).get(`/api/pptx/jobs/${jobId}`)
+
+    expect(response.status).toBe(200)
+    expect(response.body).toMatchObject({
+      jobId,
+      status: 'pending-visibility',
+      durable: true,
+      transactionState: 'committed',
+    })
+    expect(response.body.result).toBeUndefined()
   })
 
   it('reads a persisted receipt after the in-memory job is unavailable', async () => {
@@ -88,6 +116,7 @@ describe('durable PPTX import job authority', () => {
     const response = await request(createApp({
       jobManager: manager(),
       readDurableJob: vi.fn(async () => durable),
+      checkPresentationListable: vi.fn(async () => true),
     })).delete(`/api/pptx/jobs/${jobId}`)
 
     expect(response.status).toBe(409)
@@ -167,6 +196,92 @@ describe('durable PPTX import job authority', () => {
     })
   })
 
+  it('includes reportSummary on durable done result without unbounded warnings (R4)', () => {
+    const reportSummary = {
+      schemaVersion: 1,
+      warningCount: 12,
+      byType: { 'media-missing': 5, other: 7 },
+      unsupportedFeatureCount: 0,
+      omittedCount: 2,
+    }
+    expect(serializeDurableImportJob({
+      id: 'job-report',
+      kind: 'import',
+      status: 'completed',
+      presentationId: 'pres-1',
+      reportSummary,
+      capabilityHash: 'e'.repeat(64),
+    }, { listable: true })).toMatchObject({
+      jobId: 'job-report',
+      status: 'done',
+      durable: true,
+      result: {
+        presentationId: 'pres-1',
+        reportSummary,
+      },
+    })
+    expect(serializeDurableImportJob({
+      id: 'job-report',
+      kind: 'import',
+      status: 'completed',
+      presentationId: 'pres-1',
+      capabilityHash: 'e'.repeat(64),
+      warnings: Array.from({ length: 500 }, () => ({ type: 'x', message: 'y' })),
+    }, { listable: true, reportSummary })).toEqual(expect.objectContaining({
+      result: {
+        presentationId: 'pres-1',
+        reportSummary,
+      },
+    }))
+    const serialized = serializeDurableImportJob({
+      id: 'job-report',
+      kind: 'import',
+      status: 'completed',
+      presentationId: 'pres-1',
+      capabilityHash: 'e'.repeat(64),
+    }, { listable: true, reportSummary })
+    expect(serialized.result).not.toHaveProperty('warnings')
+  })
+
+  it('returns reportSummary on durable GET after Map miss when presentation exists (R4/Clear Map)', async () => {
+    const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
+    const reportSummary = {
+      schemaVersion: 1,
+      warningCount: 3,
+      byType: { 'grouped-complex': 3 },
+      unsupportedFeatureCount: 0,
+      omittedCount: 0,
+    }
+    const durable = {
+      id: jobId,
+      kind: 'import',
+      status: 'completed',
+      transactionState: 'committed',
+      cancellationPoint: 'committed',
+      capabilityHash: 'a'.repeat(64),
+      presentationId: 'presentation-with-report',
+      reportSummary,
+    }
+    const response = await request(createApp({
+      jobManager: manager(),
+      readDurableJob: vi.fn(async () => durable),
+      checkPresentationListable: vi.fn(async () => true),
+      loadReportSummary: vi.fn(async () => reportSummary),
+    })).get(`/api/pptx/jobs/${jobId}`)
+
+    expect(response.status).toBe(200)
+    expect(response.body).toMatchObject({
+      jobId,
+      status: 'done',
+      durable: true,
+      result: {
+        presentationId: 'presentation-with-report',
+        reportSummary,
+      },
+    })
+    expect(response.body.result.warnings).toBeUndefined()
+  })
+
   it('refuses to reconcile a non-terminal durable receipt with a presentation identity', async () => {
     const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
     const packageRollback = vi.fn()
@@ -190,5 +305,57 @@ describe('durable PPTX import job authority', () => {
     })
     expect(packageRollback).not.toHaveBeenCalled()
     expect(deletePresentation).not.toHaveBeenCalled()
+  })
+
+  it('restart interleave: concurrent GETs stay visibility-safe until listable flips', async () => {
+    const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
+    const reportSummary = {
+      schemaVersion: 1,
+      warningCount: 1,
+      byType: { 'media-missing': 1 },
+      unsupportedFeatureCount: 0,
+      omittedCount: 0,
+    }
+    const durable = {
+      id: jobId,
+      kind: 'import',
+      status: 'completed',
+      transactionState: 'committed',
+      cancellationPoint: 'committed',
+      capabilityHash: 'a'.repeat(64),
+      presentationId: 'presentation-interleave',
+      reportSummary,
+    }
+    let listable = false
+    const app = createApp({
+      jobManager: manager(),
+      readDurableJob: vi.fn(async () => durable),
+      checkPresentationListable: vi.fn(async () => listable),
+      loadReportSummary: vi.fn(async () => reportSummary),
+    })
+
+    const [pendingA, pendingB] = await Promise.all([
+      request(app).get(`/api/pptx/jobs/${jobId}`),
+      request(app).get(`/api/pptx/jobs/${jobId}`),
+    ])
+    for (const response of [pendingA, pendingB]) {
+      expect(response.status).toBe(200)
+      expect(response.body).toMatchObject({ status: 'pending-visibility', durable: true })
+      expect(response.body.result).toBeUndefined()
+    }
+
+    listable = true
+    const [openA, openB] = await Promise.all([
+      request(app).get(`/api/pptx/jobs/${jobId}`),
+      request(app).get(`/api/pptx/jobs/${jobId}`),
+    ])
+    for (const response of [openA, openB]) {
+      expect(response.body).toMatchObject({
+        status: 'done',
+        durable: true,
+        result: { presentationId: 'presentation-interleave', reportSummary },
+      })
+      expect(response.body.result.warnings).toBeUndefined()
+    }
   })
 })

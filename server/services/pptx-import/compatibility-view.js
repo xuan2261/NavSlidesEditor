@@ -24,6 +24,8 @@ const SERVER_OWNED_METADATA_KEYS = Object.freeze([
   '_pptxMeta',
   '_pptxImportMeta',
   '_pptxChartMeta',
+  // Presentation-owned import diagnostics; never overwritten by client/canonical projection.
+  '_pptxImportReport',
 ])
 
 function sameNodeIdentity(existing, incoming) {

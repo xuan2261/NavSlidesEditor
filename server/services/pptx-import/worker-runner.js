@@ -14,6 +14,32 @@ function uniquePathEntries(entries) {
   return entries.filter(Boolean).filter((entry, index, all) => all.indexOf(entry) === index)
 }
 
+/** Allowlisted keys for parser worker children (deny secrets by omission). */
+const PARSER_WORKER_ENV_ALLOWLIST = new Set([
+  'PATH',
+  'Path',
+  'SystemRoot',
+  'WINDIR',
+  'TEMP',
+  'TMP',
+  'TMPDIR',
+  'TEMPDIR',
+  'LOCALAPPDATA',
+  'HOME',
+  'USERPROFILE',
+  'HOMEDRIVE',
+  'HOMEPATH',
+  'LANG',
+  'LC_ALL',
+  'LC_CTYPE',
+  'ComSpec',
+  'PATHEXT',
+  'NUMBER_OF_PROCESSORS',
+  'PROCESSOR_ARCHITECTURE',
+  'OS',
+  // NODE_PATH is rebuilt below; NODE_OPTIONS intentionally omitted.
+])
+
 function buildParserWorkerEnv({ baseEnv = process.env, repoRoot, isElectron } = {}) {
   const root = repoRoot || path.resolve(__dirname, '../../..')
   const nodePath = uniquePathEntries([
@@ -21,10 +47,14 @@ function buildParserWorkerEnv({ baseEnv = process.env, repoRoot, isElectron } = 
     path.join(root, 'node_modules'),
     ...(baseEnv.NODE_PATH ? baseEnv.NODE_PATH.split(path.delimiter) : []),
   ]).join(path.delimiter)
-  const env = {
-    ...baseEnv,
-    NODE_PATH: nodePath,
+
+  const env = {}
+  for (const [key, value] of Object.entries(baseEnv || {})) {
+    if (!PARSER_WORKER_ENV_ALLOWLIST.has(key)) continue
+    if (typeof value !== 'string') continue
+    env[key] = value
   }
+  env.NODE_PATH = nodePath
 
   if (isElectron ?? Boolean(process.versions.electron)) {
     env.ELECTRON_RUN_AS_NODE = '1'
@@ -108,11 +138,12 @@ function runParserWorker(filePath, options = {}) {
     }
 
     const timer = setTimeout(() => {
+      const timeoutSeconds = Math.max(1, Math.round(timeoutMs / 1000))
       finish({
         ok: false,
         error: {
           type: FAILURE_TYPES.parseFailed,
-          message: 'PPTX parser timed out after 60s',
+          message: `PPTX parser timed out after ${timeoutSeconds}s`,
           diagnostics: sanitizeDiagnostic(stderr || stdout || ignoredMessages),
         },
       })
@@ -203,5 +234,6 @@ module.exports = {
   isProgressMessage,
   isParserWorkerResult,
   isReadyMessage,
+  PARSER_WORKER_ENV_ALLOWLIST,
   runParserWorker,
 }

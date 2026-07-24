@@ -31,4 +31,43 @@ describe('summarizePptxImportWarnings', () => {
 
     expect(summary).toContain('Warning groups: approximated 0, placeholder 0, failed 0, other 1.')
   })
+
+  it('prefers durable reportSummary with caps and omittedCount', () => {
+    const summary = summarizePptxImportWarnings({
+      presentationId: 'pres-1',
+      reportSummary: {
+        schemaVersion: 1,
+        warningCount: 120,
+        byType: { 'media-missing': 100, 'geometry-clamped': 20 },
+        unsupportedFeatureCount: 0,
+        omittedCount: 20,
+        statsDigest: { slideCount: 4, shapeCount: 12 },
+      },
+    })
+    expect(summary).toContain('Import stats: slides 4, shapes 12.')
+    expect(summary).toContain('warnings 120')
+    expect(summary).toContain('omitted 20')
+    expect(summary).toContain('media-missing (100)')
+    expect(summary).toContain('geometry-clamped (20)')
+  })
+
+  it('falls back to presentation _pptxImportReport after job result is lost', () => {
+    const summary = summarizePptxImportWarnings({
+      _pptxImportReport: {
+        schemaVersion: 1,
+        jobId: 'job-1',
+        summary: {
+          warningCount: 5,
+          byType: { 'grouped-complex': 5 },
+          unsupportedFeatureCount: 0,
+          omittedCount: 0,
+        },
+        diagnostics: [],
+        statsDigest: { slideCount: 1 },
+      },
+    })
+    expect(summary).toContain('warnings 5')
+    expect(summary).toContain('grouped-complex (5)')
+    expect(summary).toContain('omitted 0')
+  })
 })

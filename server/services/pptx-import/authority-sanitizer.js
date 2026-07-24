@@ -8,6 +8,8 @@ const SAFE_PPTX_METADATA_KEYS = new Set([
   '_pptxMeta',
   '_pptxImportMeta',
   '_pptxChartMeta',
+  // Allowlisted only so DTO/GET can expose it; client PUT always strips (server-owned).
+  '_pptxImportReport',
 ])
 const AUTHORITY_KEY = /^(?:_?pptx.*|.*(?:aggregateHead|capability|validatedRevision|packageRevision|journal|authority).*|.*source(?:Map|Ref|Authority).*|(?:aggregateGeneration|baseRevisionId|idempotencyKey|blobSha256|sha256|generation|ordinal|fencingEpoch|predecessorId|originalRevisionId|projectionRevisionId|revisionId|manifestHash|originalPath|packagePath|serverPath|filePath|complexObjects|relationships|securityFlags|unknownParts|createdAt|updatedAt|deletedAt))$/i
 
@@ -23,6 +25,8 @@ function sanitizeClientEditableData(value, isRoot = true) {
   if (!value || typeof value !== 'object') return value
   const entries = []
   for (const [key, child] of Object.entries(value)) {
+    // Server-owned import report: never accept client injection/enlargement.
+    if (key === '_pptxImportReport') continue
     if (key === '_pptxMeta') {
       const metadata = sanitizePptxMetadata(child)
       if (Object.keys(metadata).length) entries.push([key, metadata])

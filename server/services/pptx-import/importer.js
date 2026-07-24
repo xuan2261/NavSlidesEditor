@@ -10,6 +10,7 @@ const { assertPresentationAcceptance } = require('./acceptance-criteria')
 const { createMediaBudget } = require('./resource-budgets')
 const { runShadowReconciliation } = require('./reconciliation')
 const { buildImportSourceMap } = require('./source-map')
+const { createBoundedWarnings } = require('./warning-budget')
 
 function finiteSceneStats(mappedStats) {
   return Object.fromEntries(
@@ -156,6 +157,12 @@ async function importPptxFile(filePath, options = {}) {
     )
   }, 0)
 
+  const mapOmitted = Number(mapped.warnings?.omittedCount) || 0
+  const combinedWarnings = createBoundedWarnings()
+  for (const warning of mapped.warnings || []) combinedWarnings.push(warning)
+  for (const warning of sceneWarnings || []) combinedWarnings.push(warning)
+  const accumulateOmittedCount = mapOmitted + (Number(combinedWarnings.omittedCount) || 0)
+
   return {
     ...mapped,
     sourceMap,
@@ -164,7 +171,8 @@ async function importPptxFile(filePath, options = {}) {
       ? { stats: sceneGraph.stats, slideCount: sceneGraph.slides?.length }
       : sceneGraph,
     shadowReconciliation,
-    warnings: [...mapped.warnings, ...sceneWarnings],
+    warnings: combinedWarnings,
+    accumulateOmittedCount,
   }
 }
 

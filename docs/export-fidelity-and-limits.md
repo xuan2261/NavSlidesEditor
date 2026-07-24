@@ -53,6 +53,21 @@ than worked around.
 This section applies to decks imported from `.pptx`; it does not limit charts
 created directly in NavSlides.
 
+- **Import ZIP CRC is fail-closed.** `validatePptxPackage` /
+  `loadPptxArchive` load archives with JSZip `checkCRC32: true`. When a
+  non-encrypted entry’s declared CRC does not match its inflated payload, import
+  rejects with stable code `zip-crc-mismatch` (`PackageSafetyError`). There is
+  **no** default silent warn-only success path for CRC failures. Policy constant:
+  `IMPORT_CRC_POLICY` in
+  [`pptx-guards.js`](../server/services/pptx-import/pptx-guards.js). Regression:
+  intentional CRC-mismatch fixture in `pptx-guards.test.js` and the isolated
+  adversarial lane (`npm run test:pptx:adversarial`). Corpus probe (11 metrics
+  decks, 2026-07-24): **0 false positives** under CRC-on load.
+- **Adversarial fixtures are a separate lane.** Synthetic edge packages live under
+  `server/data/test-corpus/adversarial/` and are **not** included in
+  `test:pptx:corpus-metrics` averages. Use `npm run test:pptx:adversarial` for
+  expected reject/map outcomes (bad CRC, nested depth, malformed XML, external
+  rel no-fetch, EMF/SmartArt/macro stubs, RTL/CJK smoke).
 - **Recovery is separate from editing.** When an immutable original package is
   verified by its authoritative package head, **Download Original** returns those
   original bytes. It is the recovery path for source-backed and original-only
@@ -116,13 +131,32 @@ created directly in NavSlides.
   head rather than trusting the compatibility JSON projection. See
   [`presentations.js`](../server/routes/presentations.js) and
   [`fidelity-contract.test.js`](../server/services/pptx-import/fidelity-contract.test.js).
-- **Compatibility JSON is a projection, not package authority.** The package
-  outbox is its sole package-backed writer. Its merge retains server-owned
-  metadata and tombstones, keeps creation/deletion timestamps, and applies the
-  package write's server-generated `updatedAt` timestamp. See
-  [`compatibility-view.js`](../server/services/pptx-import/compatibility-view.js)
+- **Compatibility JSON is a projection, not package authority.** On the
+  package-backed import path, the compatibility outbox is the **sole** writer to
+  `presentations.json` (no direct `presentations.push` after package publish).
+  Import stamps the projection (`stampImportedPresentationFields`), queues it on
+  publish, then **awaits** outbox drain before the client-openable job terminal.
+  Durable job GET uses contract B: a completed package receipt is not openable
+  (`pending-visibility`, no `presentationId`) until the presentation row is
+  listable. Outbox merge retains server-owned metadata and tombstones, keeps
+  creation/deletion timestamps, and applies the package write's server-generated
+  `updatedAt` timestamp. See
+  [`pptx-import.js`](../server/routes/pptx-import.js),
+  [`create-imported-presentation.js`](../server/services/pptx-import/create-imported-presentation.js),
+  [`compatibility-view.js`](../server/services/pptx-import/compatibility-view.js),
   and
   [`compatibility-outbox.test.js`](../server/services/pptx-import/compatibility-outbox.test.js).
+- **Bounded import report is server-owned projection metadata.** Import attaches
+  `_pptxImportReport` (schemaVersion 1) on the stamped compatibility projection:
+  full `byType` counts, capped diagnostics (≤100 entries, ≤64 KiB JSON), and
+  `omittedCount`. The report is allowlisted through the editor DTO and preserved
+  on package-backed merge; client PUT cannot inject or enlarge it. Durable job
+  GET returns `result.presentationId` + thin `result.reportSummary` (not unbounded
+  warnings); after Map TTL the summary is recovered from the presentation when
+  listable. Owners:
+  [`import-report.js`](../server/services/pptx-import/import-report.js),
+  [`authority-sanitizer.js`](../server/services/pptx-import/authority-sanitizer.js),
+  [`dto.js`](../server/services/pptx-import/package-store/dto.js).
 - **Lifecycle moves rebind authority.** When committed authority exists,
   duplicate and restore operations rebind its projection/source-map authority to
   the destination identity and current generation; they do not promote

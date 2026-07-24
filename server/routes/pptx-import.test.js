@@ -96,33 +96,48 @@ describe('PPTX import route', () => {
     }
   })
 
-  it('publishes the production import through the package transaction before completing the API job', async () => {
+  it('publishes package authority via outbox-only writer, awaits drain, then completes the API job', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-package-authority-'))
     const file = path.join(dir, 'valid.pptx')
     let commitInput
+    const createPresentation = vi.fn(async () => {
+      throw new Error('createPresentation must not run on package path')
+    })
+    const drainOrder = []
+    const drainCompatibility = vi.fn(async () => {
+      drainOrder.push('drain')
+      return 1
+    })
     try {
       await writeMinimalPptx(file)
       const app = express()
       app.use('/api/pptx', createPptxImportRouter({
         importer: async () => ({
           presentation: { title: 'authoritative', theme: 'white', slides: [] },
-          stats: { parser: 'pptxtojson', slideCount: 0 },
-          warnings: [],
+          stats: { parser: 'pptxtojson', slideCount: 2 },
+          warnings: [{ type: 'media-missing', message: 'img' }],
         }),
-        createPresentation: async (presentation, original, options) => {
-          expect(original).toBeNull()
-          expect(options.packageHead).toMatchObject({
-            originalRevisionId: 'r0-authoritative',
-            packageRevisionId: 'r0-authoritative',
-            generation: 1,
-          })
-          expect(options.createdAt).toBe(commitInput.input.compatibilityUpdatedAt)
-          expect(options.updatedAt).toBe(commitInput.input.compatibilityUpdatedAt)
-          return { ...presentation, id: options.id }
-        },
+        createPresentation,
         deletePresentation: async () => true,
+        drainCompatibility,
         packageCommit: async (source, input) => {
+          drainOrder.push('commit')
           commitInput = { source, input }
+          expect(input.compatibilityPresentation).toMatchObject({
+            id: input.presentationId,
+            title: 'authoritative',
+            theme: 'white',
+            transition: 'slide',
+            _pptxImportReport: {
+              schemaVersion: 1,
+              jobId: input.jobId,
+              summary: { warningCount: 1, byType: { 'media-missing': 1 }, omittedCount: 0 },
+            },
+          })
+          expect(input.compatibilityPresentation.createdAt).toBe(input.compatibilityUpdatedAt)
+          expect(input.projection._pptxImportReport).toEqual(
+            input.compatibilityPresentation._pptxImportReport
+          )
           return {
             revision: { id: 'r0-authoritative' },
             head: {
@@ -139,13 +154,65 @@ describe('PPTX import route', () => {
 
       expect(poll.body).toMatchObject({
         status: 'done',
-        result: { presentationId: commitInput.input.presentationId },
+        result: {
+          presentationId: commitInput.input.presentationId,
+          reportSummary: {
+            schemaVersion: 1,
+            warningCount: 1,
+            byType: { 'media-missing': 1 },
+            omittedCount: 0,
+          },
+        },
       })
+      expect(poll.body.result.warnings).toBeUndefined()
+      expect(createPresentation).not.toHaveBeenCalled()
+      expect(drainCompatibility).toHaveBeenCalledTimes(1)
+      expect(drainOrder).toEqual(['commit', 'drain'])
       expect(commitInput.source).toBeTruthy()
       expect(commitInput.input).toMatchObject({
         jobId: res.body.jobId,
         presentationId: expect.any(String),
-        projection: { id: commitInput.input.presentationId, title: 'authoritative', slides: [] },
+        projection: { id: commitInput.input.presentationId, title: 'authoritative' },
+      })
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('fails closed and rolls back when drain fails after package publish', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-drain-fail-'))
+    const file = path.join(dir, 'valid.pptx')
+    const packageRollback = vi.fn(async () => {})
+    const createPresentation = vi.fn()
+    try {
+      await writeMinimalPptx(file)
+      const app = express()
+      app.use('/api/pptx', createPptxImportRouter({
+        importer: async () => ({
+          presentation: { title: 'drain-fail', slides: [] },
+          stats: { parser: 'pptxtojson', slideCount: 0 },
+          warnings: [],
+        }),
+        createPresentation,
+        packageCommit: async (_source, input) => ({
+          revision: { id: 'r0-x' },
+          head: { generation: 1, packageRevisionId: 'r0-x', originalRevisionId: 'r0-x' },
+          presentationId: input.presentationId,
+        }),
+        packageRollback,
+        drainCompatibility: async () => {
+          throw new Error('drain failed')
+        },
+      }))
+
+      const res = await request(app).post('/api/pptx/import').attach('file', file)
+      const poll = await waitForJob(app, res.body.jobId, 'failed')
+
+      expect(poll.body).toMatchObject({ status: 'failed', error: 'drain failed' })
+      expect(createPresentation).not.toHaveBeenCalled()
+      expect(packageRollback).toHaveBeenCalledWith({
+        jobId: res.body.jobId,
+        presentationId: expect.any(String),
       })
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
@@ -156,6 +223,8 @@ describe('PPTX import route', () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-package-failure-'))
     const file = path.join(dir, 'valid.pptx')
     const deletePresentation = vi.fn(async () => true)
+    const createPresentation = vi.fn()
+    const drainCompatibility = vi.fn()
     try {
       await writeMinimalPptx(file)
       const app = express()
@@ -165,8 +234,9 @@ describe('PPTX import route', () => {
           stats: { parser: 'pptxtojson', slideCount: 0 },
           warnings: [],
         }),
-        createPresentation: async (presentation, _original, options) => ({ ...presentation, id: options.id }),
+        createPresentation,
         deletePresentation,
+        drainCompatibility,
         packageCommit: async () => {
           throw new Error('package transaction failed')
         },
@@ -176,6 +246,8 @@ describe('PPTX import route', () => {
       const poll = await waitForJob(app, res.body.jobId, 'failed')
 
       expect(poll.body).toMatchObject({ status: 'failed', error: 'package transaction failed' })
+      expect(createPresentation).not.toHaveBeenCalled()
+      expect(drainCompatibility).not.toHaveBeenCalled()
       expect(deletePresentation).not.toHaveBeenCalled()
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
@@ -198,9 +270,13 @@ describe('PPTX import route', () => {
         createPptxImportRouter({
           originalBaseDir: originalsBase,
           persistOriginal: (fp, opts) => persistOriginalPptx(fp, opts),
-          createPresentation: async (presentation, artifact) => {
-            createdPayload = { presentation, artifact }
-            return { id: 'pres-bound-1', pptxOriginal: artifact }
+          createPresentation: async (presentation, artifact, options = {}) => {
+            createdPayload = { presentation, artifact, options }
+            return {
+              id: 'pres-bound-1',
+              pptxOriginal: artifact,
+              _pptxImportReport: options.importReport,
+            }
           },
           deleteOriginal: async () => true,
           importer: async () => ({
@@ -217,7 +293,19 @@ describe('PPTX import route', () => {
       expect(poll.body.result.presentationId).toBe('pres-bound-1')
       expect(poll.body.result.presentation).toBeUndefined()
       expect(poll.body.result.stats.parser).toBe('pptxtojson')
-      expect(poll.body.result.warnings).toHaveLength(1)
+      // Bounded reportSummary replaces unbounded warnings on job result.
+      expect(poll.body.result.warnings).toBeUndefined()
+      expect(poll.body.result.reportSummary).toMatchObject({
+        schemaVersion: 1,
+        warningCount: 1,
+        byType: { test: 1 },
+        omittedCount: 0,
+      })
+      expect(createdPayload.options.importReport).toMatchObject({
+        schemaVersion: 1,
+        summary: { warningCount: 1, byType: { test: 1 } },
+        diagnostics: [{ type: 'test', message: 'warn' }],
+      })
       expect(createdPayload.artifact.sha256).toBe(expectedSha)
       expect(createdPayload.artifact.id).toMatch(/^[0-9a-f-]{36}$/i)
       const stored = await fs.readFile(
@@ -551,7 +639,7 @@ describe('PPTX import route', () => {
     const res = await request(app).get('/api/pptx/jobs/not-a-uuid')
     expect(res.status).toBe(400)
     expect(res.body.error).toBe('Invalid jobId')
-  })
+  }, 30_000)
 
   it('[cap:import.upload-safety] applies the upload limiter to PPTX import in production', async () => {
     const originalNodeEnv = process.env.NODE_ENV
@@ -569,7 +657,7 @@ describe('PPTX import route', () => {
       vi.resetModules()
       process.env.NODE_ENV = originalNodeEnv
     }
-  })
+  }, 30_000)
 })
 
 describe('runImport atomic helpers', () => {

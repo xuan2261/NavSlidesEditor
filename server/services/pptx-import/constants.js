@@ -13,6 +13,9 @@ const PARSER_KILL_GRACE_MS = 2000
 // Heap ceiling (MB) handed to the forked parser worker via --max-old-space-size
 // so a parser-side OOM kills the worker process, not the host.
 const PARSER_MAX_OLD_SPACE_MB = 1024
+/** Accumulate-time hard caps for import warning peak RSS. */
+const MAX_IMPORT_WARNINGS = 500
+const MAX_IMPORT_WARNING_BYTES = 256 * 1024
 
 const CANVAS_SIZE = Object.freeze({ width: 960, height: 540 })
 const TEMP_UPLOAD_DIR = path.join(DATA_DIR, 'tmp-pptx-imports')
@@ -65,6 +68,8 @@ module.exports = {
   MAX_DECOMPRESSED_BYTES,
   MAX_AGGREGATE_MEDIA_BYTES,
   MAX_FILE_BYTES,
+  MAX_IMPORT_WARNING_BYTES,
+  MAX_IMPORT_WARNINGS,
   MAX_PARSED_OUTPUT_BYTES,
   MAX_ZIP_ENTRIES,
   PARSER_KILL_GRACE_MS,

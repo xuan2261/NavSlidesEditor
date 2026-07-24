@@ -5,12 +5,26 @@ import JSZip from 'jszip'
 import { describe, expect, it } from 'vitest'
 import guards from './pptx-guards.js'
 
-const { validatePptxPackage } = guards
+const { IMPORT_CRC_POLICY, validatePptxPackage } = guards
 
-async function writeZip(filePath, entries) {
+async function writeZip(filePath, entries, options = {}) {
   const zip = new JSZip()
   for (const [name, content] of Object.entries(entries)) zip.file(name, content)
-  await fs.writeFile(filePath, await zip.generateAsync({ type: 'nodebuffer' }))
+  await fs.writeFile(filePath, await zip.generateAsync({ type: 'nodebuffer', ...options }))
+}
+
+/** Flip declared CRC fields so payload and CRC disagree (fail-closed regression fixture). */
+function corruptZipCrc(bytes) {
+  const corrupted = Buffer.from(bytes)
+  for (let offset = 0; offset < corrupted.length - 4; offset += 1) {
+    if (corrupted.readUInt32LE(offset) === 0x02014b50) {
+      corrupted.writeUInt32LE((corrupted.readUInt32LE(offset + 16) + 1) >>> 0, offset + 16)
+    }
+    if (corrupted.readUInt32LE(offset) === 0x04034b50) {
+      corrupted.writeUInt32LE((corrupted.readUInt32LE(offset + 14) + 1) >>> 0, offset + 14)
+    }
+  }
+  return corrupted
 }
 
 describe('pptx package guards', () => {
@@ -57,6 +71,50 @@ describe('pptx package guards', () => {
       await expect(
         validatePptxPackage(file, 'large.pptx', { maxDecompressedBytes: 5 })
       ).rejects.toThrow(/decompression budget/)
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('CRC policy is fail-closed with a stable error code (C1)', () => {
+    expect(IMPORT_CRC_POLICY).toMatchObject({
+      mode: 'fail-closed',
+      checkCRC32: true,
+      errorCode: 'zip-crc-mismatch',
+    })
+  })
+
+  it('[cap:import.upload-safety tier:deep] rejects intentional CRC mismatch with zip-crc-mismatch (C1)', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-guards-crc-'))
+    const file = path.join(dir, 'bad-crc.pptx')
+    try {
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types />')
+      zip.file('ppt/presentation.xml', '<p:presentation />')
+      const good = await zip.generateAsync({ type: 'nodebuffer', compression: 'STORE' })
+      await fs.writeFile(file, corruptZipCrc(good))
+
+      await expect(validatePptxPackage(file, 'bad-crc.pptx')).rejects.toMatchObject({
+        code: 'zip-crc-mismatch',
+        reason: 'zip-crc-mismatch',
+        status: 400,
+      })
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('[cap:import.upload-safety tier:deep] accepts good-CRC packages after CRC gate (C2)', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-guards-good-crc-'))
+    const file = path.join(dir, 'good-crc.pptx')
+    try {
+      await writeZip(file, {
+        '[Content_Types].xml': '<Types />',
+        'ppt/presentation.xml': '<p:presentation />',
+      })
+      const result = await validatePptxPackage(file, 'good-crc.pptx')
+      expect(result.entryCount).toBeGreaterThanOrEqual(2)
+      expect(result.decompressedBytes).toBeGreaterThan(0)
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
     }

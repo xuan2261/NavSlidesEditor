@@ -4,16 +4,17 @@ const { withPresentations } = require('../storage')
 const { toPptxOriginalMeta } = require('./original-package')
 
 /**
- * Server-side atomic presentation create after PPTX import.
- * Never accepts client filesystem paths for pptxOriginal.
+ * Normalize mapped import output into a presentation projection without pushing
+ * to presentations.json. Package-backed imports feed this into the outbox only.
  */
-async function createImportedPresentation(mappedPresentation, originalArtifact, options = {}) {
+function stampImportedPresentationFields(mappedPresentation, options = {}) {
   const now = new Date().toISOString()
   const createdAt = options.createdAt || options.timestamp || now
   const updatedAt = options.updatedAt || options.timestamp || createdAt
   const source = mappedPresentation && typeof mappedPresentation === 'object' ? mappedPresentation : {}
   const theme = source.theme || 'black'
   const designTokens = source.designTokens || getDesignTokensForRevealTheme(theme)
+  const originalArtifact = options.originalArtifact
   const pptxOriginal = originalArtifact ? toPptxOriginalMeta(originalArtifact) : undefined
 
   const presentation = normalizePresentationNotes({
@@ -30,6 +31,7 @@ async function createImportedPresentation(mappedPresentation, originalArtifact, 
     })),
     pptxOriginal,
     ...(options.packageHead ? { pptxAggregateHead: options.packageHead } : {}),
+    ...(options.importReport ? { _pptxImportReport: options.importReport } : {}),
     createdAt,
     updatedAt,
   })
@@ -42,6 +44,21 @@ async function createImportedPresentation(mappedPresentation, originalArtifact, 
     delete presentation.pptxOriginal.path
     delete presentation.pptxOriginal.filePath
   }
+  // Server-owned report wins over any leaked client/mapper field when options omit it.
+  if (options.importReport) presentation._pptxImportReport = options.importReport
+  return presentation
+}
+
+/**
+ * Server-side atomic presentation create after PPTX import (legacy / non-package path).
+ * Never accepts client filesystem paths for pptxOriginal.
+ */
+async function createImportedPresentation(mappedPresentation, originalArtifact, options = {}) {
+  const presentation = stampImportedPresentationFields(mappedPresentation, {
+    ...options,
+    originalArtifact,
+    // importReport from options is applied by stamp (server-owned).
+  })
 
   return withPresentations((presentations) => {
     presentations.push(presentation)
@@ -73,5 +90,6 @@ function stripClientPptxOriginalPaths(body) {
 module.exports = {
   createImportedPresentation,
   deleteImportedPresentation,
+  stampImportedPresentationFields,
   stripClientPptxOriginalPaths,
 }

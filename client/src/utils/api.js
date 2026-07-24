@@ -176,9 +176,14 @@ export const api = {
       }
     }
   },
-  pollPptxJob: (jobId) => fetch(`${BASE}/pptx/jobs/${jobId}`).then(handleResponse),
-  cancelPptxJob: (jobId) =>
-    fetch(`${BASE}/pptx/jobs/${jobId}`, { method: 'DELETE' }).then(handleResponse),
+  pollPptxJob: (jobId, opts = {}) => {
+    const init = opts.signal ? { signal: opts.signal } : {}
+    return fetch(`${BASE}/pptx/jobs/${jobId}`, init).then(handleResponse)
+  },
+  cancelPptxJob: (jobId, opts = {}) => {
+    const init = { method: 'DELETE', ...(opts.signal ? { signal: opts.signal } : {}) }
+    return fetch(`${BASE}/pptx/jobs/${jobId}`, init).then(handleResponse)
+  },
   getGithubConfig: () => fetch(`${BASE}/github/config`).then(handleResponse),
   saveGithubConfig: (data) =>
     fetch(`${BASE}/github/config`, {

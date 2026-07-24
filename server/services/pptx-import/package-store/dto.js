@@ -47,10 +47,13 @@ function toProviderDto(record) {
   return pick(record, ['id', 'sha256', 'byteLength'])
 }
 
+const { sanitizeImportReport } = require('../import-report')
+
 const SAFE_PPTX_METADATA_KEYS = new Set([
   '_pptxMeta',
   '_pptxImportMeta',
   '_pptxChartMeta',
+  '_pptxImportReport',
 ])
 const SAFE_CHART_METADATA_KEYS = new Set([
   'originalType',
@@ -143,6 +146,11 @@ function stripAuthority(value, { retainGeneration = false } = {}) {
     if (key === '_pptxChartMeta') {
       const chartMetadata = sanitizeChartMetadata(child)
       if (Object.keys(chartMetadata).length) entries.push([key, chartMetadata])
+      continue
+    }
+    if (key === '_pptxImportReport') {
+      const report = sanitizeImportReport(child)
+      if (report) entries.push([key, report])
       continue
     }
     if (isAuthorityKey(key) || key === 'aggregateGeneration') continue

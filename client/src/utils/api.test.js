@@ -312,8 +312,30 @@ describe('PPTX import API', () => {
     await api.pollPptxJob('job-1')
     await api.cancelPptxJob('job-1')
 
-    expect(fetch).toHaveBeenNthCalledWith(1, '/api/pptx/jobs/job-1')
+    expect(fetch).toHaveBeenNthCalledWith(1, '/api/pptx/jobs/job-1', {})
     expect(fetch).toHaveBeenNthCalledWith(2, '/api/pptx/jobs/job-1', { method: 'DELETE' })
+  })
+
+  it('forwards AbortSignal to PPTX job poll and cancel fetches', async () => {
+    const controller = new AbortController()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ jobId: 'job-sig', status: 'running' }),
+      }))
+    )
+
+    await api.pollPptxJob('job-sig', { signal: controller.signal })
+    await api.cancelPptxJob('job-sig', { signal: controller.signal })
+
+    expect(fetch).toHaveBeenNthCalledWith(1, '/api/pptx/jobs/job-sig', {
+      signal: controller.signal,
+    })
+    expect(fetch).toHaveBeenNthCalledWith(2, '/api/pptx/jobs/job-sig', {
+      method: 'DELETE',
+      signal: controller.signal,
+    })
   })
 
   it('downloads original PPTX bytes as a blob and preserves 404 for hybrid fallback', async () => {

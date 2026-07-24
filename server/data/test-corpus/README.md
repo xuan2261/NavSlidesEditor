@@ -43,3 +43,39 @@ The Phase 9 acceptance gate expects:
 
 Keep each new fixture under 5MB unless a plan explicitly needs a large-file
 performance fixture.
+
+## Lanes
+
+| Lane | Command | Purpose |
+|---|---|---|
+| **Metrics** | `npm run test:pptx:corpus-metrics` | Semantic / round-trip averages over the 11 decks above |
+| **Importer qualification** | `npm run test:pptx:importer-qualification` | Strict gate via `importer-qualification-manifest.json` |
+| **Adversarial** | `npm run test:pptx:adversarial` | Expected reject/map table; **isolated** from metrics averages |
+
+## Adversarial fixtures (`adversarial/`)
+
+Project-owned synthetic packages for guard regression. Intentional failures must
+**not** enter the metrics lane.
+
+| File | Class | Expected |
+|---|---|---|
+| `bad-crc.pptx` | CRC mismatch | reject `zip-crc-mismatch` |
+| `good-package.pptx` | Minimal valid | map |
+| `nested-package.pptx` | Nested ZIP depth | reject `zip-recursion-depth-exceeded` |
+| `malformed-xml.pptx` | DTD in slide XML | reject `xml-dtd-prohibited` |
+| `external-rel.pptx` | External media URL | map; **no network fetch** |
+| `emf-stub.pptx` | EMF vector stub | map (classification / warn paths) |
+| `smartart-stub.pptx` | Diagram parts | map |
+| `macro-ole-stub.pptx` | VBA / OLE stubs | map (fail-closed edit; preserve import) |
+| `rtl-cjk-smoke.pptx` | RTL + CJK text | map best-effort |
+| `notes-comments.pptx` | Notes + comments | map; inventory must not crash |
+
+Builders: `server/services/pptx-import/pptx-import-adversarial-fixtures.js`.
+Re-materialize with:
+`node server/services/pptx-import/pptx-import-adversarial-suite.js --materialize`.
+
+### Import CRC policy
+
+Default **fail-closed** when declared ZIP CRC ≠ inflated payload
+(`IMPORT_CRC_POLICY` in `pptx-guards.js`, code `zip-crc-mismatch`). Metrics
+corpus probe with CRC-on: 0/11 false positives (2026-07-24).

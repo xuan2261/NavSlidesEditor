@@ -675,6 +675,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       const imported = await waitForPptxJob({
         jobId,
         api,
+        signal: activeImport.admissionController.signal,
         onProgress: (progress) => {
           if (pptxImportRef.current === activeImport) setImportProgress(progress)
         },
@@ -682,6 +683,8 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           if (pptxImportRef.current === activeImport) activeImport.connection = connection
         },
       })
+      // Ownership abandon (leave/unmount): never open or toast after user left.
+      if (pptxImportRef.current !== activeImport) return
       activeImport.jobId = null
       // Server creates presentation + binds original.pptx atomically (Phase 01).
       // Prefer presentationId from job result; fall back to client create only for legacy servers.
@@ -691,6 +694,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         const pres = await api.createPresentation(imported.presentation)
         presentationId = pres.id
       }
+      if (pptxImportRef.current !== activeImport) return
       if (!presentationId) {
         throw new Error('PPTX import completed without presentationId')
       }
@@ -699,9 +703,14 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         setImportWarningSummary(warningSummary)
         showNotice(warningSummary, { title: 'PPTX import completed with warnings' })
       }
+      if (pptxImportRef.current !== activeImport) return
       onOpen(presentationId)
     } catch (err) {
-      if (err?.name !== 'AbortError' && pptxImportRef.current === activeImport) {
+      const intentionalAbandon =
+        err?.name === 'AbortError' ||
+        err?.status === 'cancelled' ||
+        pptxImportRef.current !== activeImport
+      if (!intentionalAbandon && pptxImportRef.current === activeImport) {
         console.error('PPTX import failed:', err)
         showError('Failed to import PPTX: ' + err.message)
       }

@@ -23,6 +23,7 @@ const { parseThemeFromZip } = require('../ooxml-theme-parse')
 const { resolveLayoutFromZip } = require('../ooxml-layout-resolve')
 const { parseSlideAnimations, classifyUnsupportedPackageFeatures } = require('../ooxml-animation')
 const { resolveSchemeColor } = require('./theme-resolve')
+const { createBoundedWarnings } = require('../warning-budget')
 
 async function mapElement(element, context) {
   if (element.type === 'group') return flattenGroupElement(element, context, mapElement)
@@ -244,7 +245,7 @@ async function mapPptxOutput({
   const sourceSize = normalizeSourceSize(output.size)
   const scale = sourceSize.scale
   const mediaIndex = createMediaIndex(zip)
-  const warnings = []
+  const warnings = createBoundedWarnings()
   const ooxml = await inspectOoxmlCoverage(zip)
   const isStrict = strict === true || process.env.PPTX_SLA_STRICT === '1'
   const stats = {

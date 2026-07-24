@@ -35,4 +35,16 @@ describe('sanitizeClientEditableData', () => {
       },
     })
   })
+
+  it('strips client-injected _pptxImportReport (server-owned)', () => {
+    expect(sanitizeClientEditableData({
+      title: 'Edited',
+      _pptxImportReport: {
+        schemaVersion: 1,
+        jobId: 'client-forged',
+        summary: { warningCount: 999, byType: { flood: 999 }, omittedCount: 0 },
+        diagnostics: Array.from({ length: 200 }, (_, i) => ({ type: `t${i}`, message: 'x' })),
+      },
+    })).toEqual({ title: 'Edited' })
+  })
 })
