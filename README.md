@@ -278,21 +278,29 @@ Verification typically runs in this order:
    ```bash
    npm run test:e2e
    ```
-4. PPTX corpus check:
+4. Parser-relative PPTX corpus metrics:
    ```bash
-   npm run test:corpus
+   npm run test:pptx:corpus-metrics  # `npm run test:corpus` is the compatibility alias
+   npm run test:pptx:best-effort     # non-importer-strict metrics plus strict browser smoke
    ```
-5. PPTX real-browser layout audit:
+   This best-effort regression lane measures semantic fidelity and production
+   round-trip stability. It does not qualify native importer coverage.
+5. Manifest-bound PPTX importer qualification:
+   ```bash
+   npm run test:pptx:importer-qualification
+   npm run test:pptx:strict  # deprecated alias for importer qualification
+   ```
+   This fail-closed two-pass gate verifies the checked-in 11-deck manifest and
+   every source SHA-256, then uses one hash-checked temporary snapshot for
+   best-effort native evidence and `{ strict: true }`. Known EMF/native-node
+   blockers can make it exit non-zero; that result is truthful, not a release pass.
+6. PPTX real-browser layout audit:
    ```bash
    npm run test:pptx:browser-audit        # strict smoke subset for PR/runtime-sensitive checks
    npm run test:pptx:browser-audit:full   # strict full 5-deck release gate
    npm run test:pptx:browser-audit:headed # headed full audit for manual inspection
-   npm run test:pptx:strict               # corpus + strict smoke browser audit
    ```
-   The strict corpus gate currently requires average semantic >= 98% and an
-   average production round-trip floor >= 50%; the full browser audit remains a
-   separate release signoff command.
-6. Load tests with `k6`:
+7. Load tests with `k6`:
    ```bash
    npm run test:load:api
    npm run test:load:ws
@@ -325,7 +333,7 @@ PPTX browser audit artifacts are written under `plans/reports/pptx-import-real-b
 | Markdown             | Built-in converter + marked.js (export)       |
 | Icons                | Lucide (editor UI) + inline SVG (slide icons) |
 | PowerPoint export    | pptxgenjs + Playwright raster fallback        |
-| PowerPoint import    | pptxtojson with pptx2json fallback            |
+| PowerPoint import    | pptxtojson runtime parser; pptx2json benchmark-sandbox-only |
 | Backend              | Node.js 20+, Express 4                        |
 | Real-time transport  | Socket.IO                                     |
 | Desktop app          | Electron 33                                   |

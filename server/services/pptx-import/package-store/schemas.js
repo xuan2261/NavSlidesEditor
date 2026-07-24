@@ -50,12 +50,28 @@ function validateCandidateBlob(candidate) {
   return candidate
 }
 
+function validateImportOutcome(job) {
+  const fields = ['outcomeRevisionId', 'outcomeGeneration', 'outcomeHeadHash']
+  const supplied = fields.filter((field) => job[field] !== undefined)
+  if (!supplied.length) return
+  assert(job.kind === 'import', 'Invalid import outcome identity')
+  assert(supplied.length === fields.length, 'Import outcome identity must be complete')
+  assert(typeof job.presentationId === 'string' && job.presentationId,
+    'Invalid import outcome presentation id')
+  assert(typeof job.outcomeRevisionId === 'string' && job.outcomeRevisionId,
+    'Invalid import outcome revision id')
+  assert(Number.isSafeInteger(job.outcomeGeneration) && job.outcomeGeneration > 0,
+    'Invalid import outcome generation')
+  assert(SHA256_RE.test(job.outcomeHeadHash), 'Invalid import outcome head hash')
+}
+
 function validateJob(job) {
   assert(job?.schemaVersion === SCHEMA_VERSION, 'Invalid job schema version')
   assert(typeof job.id === 'string' && job.id.length > 0, 'Invalid job id')
   assert(JOB_KINDS.has(job.kind), 'Invalid job kind')
   assert(JOB_STATUSES.has(job.status), 'Invalid job status')
   assert(SHA256_RE.test(job.capabilityHash), 'Invalid capability hash')
+  validateImportOutcome(job)
   if (job.provisionalOwner) validateOwner(job.provisionalOwner)
   return job
 }

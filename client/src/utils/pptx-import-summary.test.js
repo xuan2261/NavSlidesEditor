@@ -12,16 +12,23 @@ describe('summarizePptxImportWarnings', () => {
         { type: 'grouped-complex' },
         { type: 'media-missing' },
         { type: 'media-ref-missing' },
-        { type: 'fallback-inspector' },
         { type: 'future-warning' },
         { type: 'future-warning' },
       ],
       stats: { slideCount: 2, textCount: 5, shapeCount: 3, placeholderCount: 3 },
     })
     expect(summary).toContain('Import stats: slides 2, text 5, shapes 3, placeholders 3.')
-    expect(summary).toContain('Warning groups: approximated 1, placeholder 1, failed 2, other 2.')
+    expect(summary).toContain('Warning groups: approximated 0, placeholder 1, failed 2, other 2.')
     expect(summary).toContain('future-warning (2)')
     expect(summary).not.toContain('exact')
-    expect(summary).not.toContain('approximated 3')
+  })
+
+  it('does not reserve an approximated warning category for removed fallback inspection', () => {
+    const summary = summarizePptxImportWarnings({
+      warnings: [{ type: 'fallback-inspector' }],
+      stats: {},
+    })
+
+    expect(summary).toContain('Warning groups: approximated 0, placeholder 0, failed 0, other 1.')
   })
 })

@@ -23,6 +23,7 @@ describe('package-revision-resolver', () => {
           presentationId: 'deck',
           originalRevisionId: 'r0',
           packageRevisionId: 'r1',
+          generation: 2,
         }],
         revisions: [
           { id: 'r0', blobSha256: r0Hash },
@@ -49,5 +50,12 @@ describe('package-revision-resolver', () => {
     await expect(resolveImmutableOriginalRevisionBytes({
       presentationId: 'deck',
     }, { store })).resolves.toMatchObject({ revisionId: 'r0', bytes: r0, sha256: r0Hash })
+
+    await expect(resolveImmutableOriginalRevisionBytes({
+      presentationId: 'deck',
+    }, {
+      store,
+      expectedGeneration: 1,
+    })).rejects.toMatchObject({ code: 'STALE_GENERATION', status: 409 })
   })
 })

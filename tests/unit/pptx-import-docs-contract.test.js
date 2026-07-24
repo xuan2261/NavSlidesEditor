@@ -10,21 +10,29 @@ const readJson = (...parts) => JSON.parse(readText(...parts))
 const { STRICT_CORPUS_GATES } = require('../../server/services/pptx-import/pptx-import-semantic-and-roundtrip-fidelity-tester.js')
 
 describe('pptx import docs contract', () => {
-  it('keeps strict script docs aligned with package commands and gate constants', () => {
+  it('keeps metrics, importer qualification, and browser scripts distinct', () => {
     const pkg = readJson('package.json')
     const readme = readText('README.md')
     const codeStandards = readText('docs', 'code-standards.md')
     const fidelityReport = readText('docs', 'pptx-import-fidelity-report.md')
     const corpusReadme = readText('server', 'data', 'test-corpus', 'README.md')
 
-    expect(pkg.scripts['test:pptx:strict']).toBe('npm run test:corpus && npm run test:pptx:browser-audit')
+    expect(pkg.scripts['test:pptx:corpus-metrics']).toContain('--strict-metrics')
+    expect(pkg.scripts['test:corpus']).toBe('npm run test:pptx:corpus-metrics')
+    expect(pkg.scripts['test:pptx:best-effort']).toContain('npm run test:pptx:browser-audit')
+    expect(pkg.scripts['test:pptx:importer-qualification']).toContain('--importer-strict')
+    expect(pkg.scripts['test:pptx:strict']).toBe('npm run test:pptx:importer-qualification')
     expect(pkg.scripts['test:pptx:browser-audit']).toContain('--scope=smoke')
     expect(pkg.scripts['test:pptx:browser-audit:full']).toContain('--scope=full')
 
-    expect(readme).toContain('corpus + strict smoke browser audit')
-    expect(readme).not.toContain('test:pptx:strict               # corpus + full browser audit')
+    expect(readme).toContain('Parser-relative PPTX corpus metrics')
+    expect(readme).toContain('Manifest-bound PPTX importer qualification')
+    expect(readme).toContain('deprecated alias for importer qualification')
+    expect(codeStandards).toContain('PPTX evidence lanes are distinct')
 
-    for (const doc of [readme, codeStandards, fidelityReport, corpusReadme]) {
+    expect(codeStandards).toContain(`semantic >= ${STRICT_CORPUS_GATES.avgSemanticFidelity.label}`)
+    expect(codeStandards).toContain(`round-trip >= ${STRICT_CORPUS_GATES.avgRoundTripStability.label}`)
+    for (const doc of [fidelityReport, corpusReadme]) {
       expect(doc).toContain(`semantic >= ${STRICT_CORPUS_GATES.avgSemanticFidelity.label}`)
       expect(doc).toContain(`round-trip floor >= ${STRICT_CORPUS_GATES.avgRoundTripStability.label}`)
     }
@@ -47,14 +55,14 @@ describe('pptx import docs contract', () => {
     const vietnamese = readText('website', 'vi', 'features', 'pptx-import-export.md')
 
     expect(english).toContain('Home dashboard')
-    expect(english).toContain('original uploaded bytes')
-    expect(english).toContain('client-side reconstructed export')
+    expect(english).toContain('verified immutable source package')
+    expect(english).toContain('new file from the editor model')
     expect(english).toContain('editable shapes')
     expect(english).not.toContain('SmartArt is rasterized')
 
     expect(vietnamese).toContain('trang chủ')
-    expect(vietnamese).toContain('byte gốc')
-    expect(vietnamese).toContain('xuất dựng lại ở phía máy khách')
+    expect(vietnamese).toContain('gói nguồn bất biến đã được xác minh')
+    expect(vietnamese).toContain('tạo tệp mới từ mô hình của trình biên tập')
     expect(vietnamese).toContain('hình khối có thể chỉnh sửa')
     expect(vietnamese).not.toContain('SmartArt được kết xuất thành hình ảnh')
   })

@@ -23,7 +23,7 @@ features:
   - title: Chế độ trò chơi
     details: Tổ chức các bài đố tương tác với khán giả, vận hành bởi cùng một bộ máy slide.
   - title: Nhập / Xuất PPTX
-    details: Nhập bài trình chiếu từ PowerPoint và xuất ngược trở lại với độ trung thực cao khi chuyển đổi qua lại.
+    details: Nhập bộ slide PowerPoint, khôi phục tệp gốc đã xác minh và chọn rõ giữa xuất phiên bản chỉnh sửa đã xác thực hoặc tạo PPTX dựng lại.
   - title: Soạn thảo có hỗ trợ AI
     details: Tạo nội dung slide, tinh chỉnh câu chữ và khám phá các bố cục với nhà cung cấp AI có thể thay thế linh hoạt.
 ---

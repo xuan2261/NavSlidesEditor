@@ -216,6 +216,18 @@ User review was not re-prompted because the continuation directive explicitly re
 - Phase 3 recorded complete. Phase 4 and plan remain blocked solely on trusted PowerPoint evidence.
 - Wider authority-related gate 8 files / 128 tests pass (package-store, package-backed actuals, HTTP boundary, durable-job, pptx-original, presentations, package-authority-snapshot, package-revision-resolver).
 
+### Cook re-verify — 2026-07-24 (`/ak:cook --auto --tdd`)
+
+- **Intent:** execute remaining plan work under auto+TDD.
+- **Finding:** all software phases already complete; no remaining implementable application code under this plan.
+- **Software gates re-verified (tester independent re-run):** 22 files / 224 Vitest pass; lint 0 errors / 25 pre-existing warnings.
+- **Truth gates (intentional non-zero):**
+  - `test:pptx:importer-qualification` exit 1 — structured native unmapped/placeholder/EMF blockers (not a software failure).
+  - `test:pptx:oracle:integrity` exit 1 — `missing-evidence-manifest` (no trusted PowerPoint envelope).
+- **Code review:** 8.5/10, 0 critical; auto-approved software completion. Warning fixed: runbook no longer documents forbidden `--actual-manifest-out`.
+- **Plan status:** remains `blocked` — only external controlled Microsoft PowerPoint goldens + local evidence envelope + three role receipts remain.
+- **No false-green visual or 1:1 claim recorded.**
+
 ## Unresolved Questions
 
 None. Missing physical PowerPoint evidence and the known strict-importer blocker are explicit execution results, not unresolved design choices.

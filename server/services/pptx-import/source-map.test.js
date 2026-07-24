@@ -51,6 +51,55 @@ describe('server-only source map', () => {
     })
   })
 
+  it('uses supplied presentation identity for importer-bound maps', async () => {
+    const built = await buildImportSourceMap(
+      {
+        title: 'edited-export',
+        slides: [{ id: 's1', elements: [] }],
+      },
+      null,
+      null,
+      {
+        presentationId: 'deck',
+        revisionId: 'r0',
+        packageGeneration: 1,
+      }
+    )
+
+    expect(built.presentationId).toBe('deck')
+  })
+
+  it('prefers supplied presentation identity when projection identity also exists', async () => {
+    const built = await buildImportSourceMap(
+      {
+        id: 'mapper-deck',
+        slides: [{ id: 's1', elements: [] }],
+      },
+      null,
+      null,
+      {
+        presentationId: 'authoritative-deck',
+        revisionId: 'r0',
+        packageGeneration: 1,
+      }
+    )
+
+    expect(built.presentationId).toBe('authoritative-deck')
+  })
+
+  it('uses the mapped projection identity for ordinary imports without supplied identity', async () => {
+    const built = await buildImportSourceMap(
+      {
+        id: 'ordinary-deck',
+        slides: [{ id: 's1', elements: [] }],
+      },
+      null,
+      null
+    )
+
+    expect(built.presentationId).toBe('ordinary-deck')
+  })
+
   it('rejects duplicate authoritative native aliases before and after rebind', () => {
     const ref = {
       packageGeneration: 1, revisionId: 'r0', partUri: 'ppt/slides/slide1.xml', kind: 'text-run', nativeId: '7',
@@ -202,6 +251,115 @@ describe('server-only source map', () => {
       relationshipChain: ['_rels/.rels', 'ppt/_rels/presentation.xml.rels'],
     })
     expect(Object.isFrozen(map.entries['slide-1:text-1'].relationshipChain)).toBe(true)
+  })
+
+  it('accepts formatter-only imported HTML after native single-run proof', async () => {
+    const zip = new JSZip()
+    const shape =
+      '<p:sp><p:nvSpPr><p:cNvPr id="7" name="Title"/></p:nvSpPr><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US"/><a:t>Before</a:t></a:r></a:p></p:txBody></p:sp>'
+    zip.file(
+      'ppt/slides/slide1.xml',
+      `<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">${shape}</p:sld>`
+    )
+    zip.file(
+      '_rels/.rels',
+      '<Relationships><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/></Relationships>'
+    )
+    zip.file(
+      'ppt/_rels/presentation.xml.rels',
+      '<Relationships><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>'
+    )
+
+    const map = await buildImportSourceMap(
+      {
+        id: 'deck',
+        slides: [
+          {
+            id: 'slide-1',
+            elements: [
+              {
+                id: 'text-1',
+                type: 'text',
+                content:
+                  '<p style="text-align: justify"><span style="color: #000000; font-family: Times New Roman">Before</span></p>',
+                _pptxSource: { nodeId: '7', matchedBy: 'name' },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        slides: [
+          {
+            index: 0,
+            path: 'ppt/slides/slide1.xml',
+            nodes: [{ id: '7', kind: 'shape', sourceXml: shape }],
+          },
+        ],
+      },
+      zip
+    )
+
+    expect(map.entries['slide-1:text-1']).toMatchObject({
+      status: 'authoritative',
+      kind: 'text-run',
+      nativeId: '7',
+      matchMethod: 'native-id',
+      confidence: 1,
+    })
+  })
+
+  it('keeps formatter-wrapped dynamic date fields diagnostic', async () => {
+    const zip = new JSZip()
+    const shape =
+      '<p:sp><p:nvSpPr><p:cNvPr id="7" name="Date Placeholder 1"/></p:nvSpPr><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:fld id="{date}" type="datetime1"><a:rPr/><a:t>31/03/2026</a:t></a:fld></a:p></p:txBody></p:sp>'
+    zip.file(
+      'ppt/slides/slide1.xml',
+      `<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">${shape}</p:sld>`
+    )
+    zip.file(
+      '_rels/.rels',
+      '<Relationships><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/></Relationships>'
+    )
+    zip.file(
+      'ppt/_rels/presentation.xml.rels',
+      '<Relationships><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>'
+    )
+
+    const map = await buildImportSourceMap(
+      {
+        id: 'deck',
+        slides: [
+          {
+            id: 'slide-1',
+            elements: [
+              {
+                id: 'text-1',
+                type: 'text',
+                content:
+                  '<p style="text-align: left"><span style="font-family: Arial">31/03/2026</span></p>',
+                _pptxSource: { nodeId: '7', matchedBy: 'name' },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        slides: [
+          {
+            index: 0,
+            path: 'ppt/slides/slide1.xml',
+            nodes: [{ id: '7', kind: 'shape', sourceXml: shape }],
+          },
+        ],
+      },
+      zip
+    )
+
+    expect(map.entries['slide-1:text-1']).toMatchObject({
+      status: 'diagnostic',
+      kind: 'shape',
+    })
   })
 
   it.each(['<p><strong>Before</strong></p>', '<p>Before</p><p>Again</p>', '<p>Before<br></p>', 'Before'])(

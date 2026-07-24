@@ -120,7 +120,7 @@ app.use('/api/presentations', historyRouter) // /:id/snapshot(s), /:id/restore
 app.use('/api/presentations', presentationsRouter) // CRUD + export + present + duplicate + save-as-template
 app.use('/api/templates', templatesRouter)
 app.use('/api/upload', uploadRouter)
-app.use('/api/pptx', uploadLimiter)
+app.post('/api/pptx/import', uploadLimiter)
 app.use('/api/pptx', pptxImportRouter)
 app.use('/api/github', githubRouter)
 app.use('/api/rclone', syncRouter)
@@ -327,7 +327,7 @@ app.use(errorHandler)
 
 // ── Server start ─────────────────────────────────────────────────────────────
 async function startServer(port) {
-  const p = port || PORT
+  const p = port ?? PORT
   await initializePackageStore({ rootDir: path.resolve(DATA_DIR) })
   return new Promise((resolve, reject) => {
     const server = http.createServer(app)

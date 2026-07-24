@@ -36,16 +36,40 @@ describe('playwright config testIgnore', () => {
     const live = config.projects.find((project) => project.name === 'chromium-live')
 
     expect(live.testMatch.test('tests/e2e/live.spec.js')).toBe(true)
-    expect(live.testMatch.test('tests/e2e/live/annotation-sync-and-persistence.spec.js')).toBe(
-      true
-    )
+    expect(live.testMatch.test('tests/e2e/live/annotation-sync-and-persistence.spec.js')).toBe(true)
   })
 
   it('routes visual specs to the dedicated chromium-visual project', () => {
     const visual = config.projects.find((project) => project.name === 'chromium-visual')
 
-    expect(visual.testMatch.some((pattern) => pattern.test('tests/e2e/visual/editor-canvas-states.spec.js'))).toBe(true)
-    expect(visual.testMatch.some((pattern) => pattern.test('tests/e2e/visual-regression.spec.js'))).toBe(true)
+    expect(
+      visual.testMatch.some((pattern) =>
+        pattern.test('tests/e2e/visual/editor-canvas-states.spec.js')
+      )
+    ).toBe(true)
+    expect(
+      visual.testMatch.some((pattern) => pattern.test('tests/e2e/visual-regression.spec.js'))
+    ).toBe(true)
+  })
+
+  it('routes all PPTX imports through one serialized project', () => {
+    const pptxImport = config.projects.find((project) => project.name === 'chromium-pptx-import')
+    const visual = config.projects.find((project) => project.name === 'chromium-visual')
+    const importSpecs = [
+      'tests/e2e/critical-pptx-journey.spec.js',
+      'tests/e2e/pptx-import-async.spec.js',
+      'tests/e2e/pptx-import-fidelity.spec.js',
+      'tests/e2e/pptx-import-real-browser-audit.spec.js',
+      'tests/e2e/pptx-import-editor-visual-regression.spec.js',
+      'tests/e2e/export/pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js',
+    ]
+
+    expect(pptxImport.workers).toBe(1)
+    expect(pptxImport.snapshotPathTemplate).toBe(visual.snapshotPathTemplate)
+    for (const spec of importSpecs) {
+      expect(pptxImport.testMatch.some((pattern) => pattern.test(spec))).toBe(true)
+      expect(isIgnored(chromium, spec)).toBe(true)
+    }
   })
 
   it('constrains mobile-chromium to the mobile/touch suite when enabled', async () => {
@@ -55,8 +79,16 @@ describe('playwright config testIgnore', () => {
     delete process.env.PLAYWRIGHT_MOBILE_CHROMIUM
 
     const mobile = mobileConfig.projects.find((project) => project.name === 'mobile-chromium')
-    expect(mobile.testMatch.test('tests/e2e/a11y/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js')).toBe(true)
-    expect(mobile.testMatch.test('tests/e2e/a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js')).toBe(false)
+    expect(
+      mobile.testMatch.test(
+        'tests/e2e/a11y/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js'
+      )
+    ).toBe(true)
+    expect(
+      mobile.testMatch.test(
+        'tests/e2e/a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js'
+      )
+    ).toBe(false)
   })
 
   it('publishes the isolated API endpoint to test workers', () => {

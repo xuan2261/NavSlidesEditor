@@ -105,10 +105,18 @@ function exactServerProvenance(element) {
   const source = element?._pptxSource
   return source && (source.matchedBy === 'sourceId' || source.matchedBy === 'name') ? source.nodeId : null
 }
+const MAPPER_STYLE_PARAGRAPH = /^<p style="[^"]*">([^<]*)<\/p>$/u
+const MAPPER_STYLE_SPAN = /^<p style="[^"]*"><span style="[^"]*">([^<]*)<\/span><\/p>$/u
+function normalizeMapperTextForSourceProof(content) {
+  const strict = normalizeTipTapSinglePlainRun(transportFromTipTapContent(content))
+  if (strict.ok || typeof content !== 'string') return strict
+  const match = MAPPER_STYLE_PARAGRAPH.exec(content) || MAPPER_STYLE_SPAN.exec(content)
+  return match ? normalizeTipTapSinglePlainRun(transportFromTipTapContent(`<p>${match[1]}</p>`)) : strict
+}
 function textRef(element, node, slideXml, partUri, chain, identity, nodes, occurrencePath) {
   const id = nativeId(node?.id); const sourceXml = typeof node?.sourceXml === 'string' ? node.sourceXml : null
-  const transport = transportFromTipTapContent(element?.content)
-  const verdict = normalizeTipTapSinglePlainRun(transport)
+  // Mapper-owned style wrappers do not alter the text value. Native patch simulation still proves it.
+  const verdict = normalizeMapperTextForSourceProof(element?.content)
   if (!id || !sourceXml || !verdict.ok || !slideXml.includes(sourceXml) || chain.length === 0) return null
   try { patchPlainRun(slideXml, id, verdict.normalizedText, verdict.normalizedText) } catch { return null }
   return { packageGeneration: identity.packageGeneration, revisionId: identity.revisionId, partUri, kind: 'text-run', nativeId: id, relationshipChain: chain, groupAncestry: ancestry(node, nodes), occurrencePath, sourceHash: sha256(sourceXml), status: 'authoritative', matchMethod: 'native-id', confidence: 1 }
@@ -153,7 +161,9 @@ async function buildImportSourceMap(projection, sceneGraph, zip, supplied = {}) 
     visit(slide.elements)
   }
   return createSourceMap({
-    presentationId: projection?.id || 'import-pending',
+    presentationId: supplied.presentationId === undefined
+      ? projection?.id || 'import-pending'
+      : supplied.presentationId,
     revisionId: identity.revisionId,
     packageGeneration: identity.packageGeneration,
     entries,

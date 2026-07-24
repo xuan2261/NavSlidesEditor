@@ -22,6 +22,13 @@ describe('pptx mapper base utilities', () => {
     expect(element.id).toMatch(/[0-9a-f-]{36}/)
   })
 
+  it('preserves a source shape name for authoritative scene-graph matching', () => {
+    expect(baseElement({ left: 0, top: 0, width: 1, height: 1, name: 'Title 1' }, { x: 1, y: 1 }, 1))
+      .toMatchObject({ name: 'Title 1' })
+    expect(baseElement({ left: 0, top: 0, width: 1, height: 1 }, { x: 1, y: 1 }, 1))
+      .not.toHaveProperty('name')
+  })
+
   it('normalizes common PPTX shape names', () => {
     expect(shapeName('ellipse')).toBe('circle')
     expect(shapeName('rightTriangle')).toBe('triangle')

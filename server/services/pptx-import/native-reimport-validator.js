@@ -2,6 +2,8 @@ const fs = require('node:fs/promises')
 const os = require('node:os')
 const path = require('node:path')
 const { importPptxFile } = require('./importer')
+const { createMediaTransaction } = require('./media-dedup')
+const { cleanupJobRoot, prepareWorkspace } = require('./native-reimport-workspace')
 const {
   normalizeTipTapSinglePlainRun,
   transportFromTipTapContent,
@@ -128,10 +130,12 @@ function validateOperation(imported, operation) {
 function createNativeReimportValidator({
   importer = importPptxFile,
   workspaceRoot = path.join(os.tmpdir(), 'navslides-native-reimport'),
+  quarantineRoot,
   maxBytes = DEFAULT_MAX_BYTES,
 } = {}) {
   if (typeof importer !== 'function') throw new TypeError('Native re-import importer is required')
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 1) throw new TypeError('Native re-import byte limit is invalid')
+  const configuredQuarantineRoot = quarantineRoot
 
   return async function nativeReimport(context = {}) {
     if (!Buffer.isBuffer(context.afterBytes) || context.afterBytes.length > maxBytes) {
@@ -140,8 +144,10 @@ function createNativeReimportValidator({
     if (!Array.isArray(context.journal?.operations) || context.journal.operations.length === 0) {
       throw failure('NATIVE_REIMPORT_JOURNAL_INVALID', 'Native re-import journal is empty or invalid')
     }
-    await fs.mkdir(workspaceRoot, { recursive: true })
-    const jobRoot = await fs.mkdtemp(path.join(workspaceRoot, 'job-'))
+    const workspace = await prepareWorkspace(workspaceRoot, configuredQuarantineRoot)
+    const jobRoot = await fs.mkdtemp(path.join(workspace.workspaceRoot, 'job-'))
+    const mediaTransaction = createMediaTransaction({ hashScope: {} })
+    let resultError = null
     try {
       const packagePath = path.join(jobRoot, 'edited-export.pptx')
       const uploadsDir = path.join(jobRoot, 'uploads')
@@ -153,6 +159,7 @@ function createNativeReimportValidator({
         strict: true,
         strictCountGate: true,
         strictNodeGate: true,
+        mediaTransaction,
         sourceMapIdentity: {
           presentationId: context.presentationId,
           revisionId: context.revisionId,
@@ -165,13 +172,27 @@ function createNativeReimportValidator({
       }
       assertSourceMapIdentity(imported, context)
       for (const operation of context.journal.operations) validateOperation(imported, operation)
-      return true
+      await mediaTransaction.commit()
     } catch (error) {
-      if (error?.code) throw error
-      throw failure('NATIVE_REIMPORT_FAILED', error?.message || 'Native re-import failed')
-    } finally {
-      await fs.rm(jobRoot, { recursive: true, force: true })
+      resultError = error?.code
+        ? error
+        : failure('NATIVE_REIMPORT_FAILED', error?.message || 'Native re-import failed')
+      await mediaTransaction.rollback().catch((rollbackError) => {
+        resultError.mediaRollbackCode = 'NATIVE_REIMPORT_MEDIA_ROLLBACK_FAILED'
+        resultError.mediaRollbackCause = rollbackError
+      })
     }
+    const cleanupError = await cleanupJobRoot(jobRoot, workspace)
+    if (cleanupError) {
+      if (resultError) {
+        resultError.cleanupCode = cleanupError.code
+        resultError.cleanupCause = cleanupError
+      } else {
+        resultError = cleanupError
+      }
+    }
+    if (resultError) throw resultError
+    return true
   }
 }
 

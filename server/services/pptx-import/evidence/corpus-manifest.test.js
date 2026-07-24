@@ -10,7 +10,12 @@ import { hashCanonical } from './claim-evaluator.js'
 
 const { CANONICAL_FEATURE_MATRIX } = matrix
 const { canonicalMatrixSubject } = matrixSubject
-const { buildCorpusManifest } = corpusManifest
+const {
+  buildCorpusInventory,
+  buildCorpusManifest,
+  buildQualificationManifest,
+  verifyCorpusManifest,
+} = corpusManifest
 
 function completeFixtureMap(deckId) {
   return Object.fromEntries(
@@ -62,6 +67,62 @@ describe('corpus manifest', () => {
       )
       const invalidMap = completeFixtureMap('missing.pptx')
       await expect(buildCorpusManifest(dir, invalidMap)).rejects.toThrow('unknown corpus deck')
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('fails closed when a qualification corpus differs from its exact inventory', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-corpus-manifest-'))
+    try {
+      await fs.writeFile(path.join(dir, 'a.pptx'), 'deck-a')
+      const manifest = buildQualificationManifest(await buildCorpusInventory(dir))
+      await fs.rename(path.join(dir, 'a.pptx'), path.join(dir, 'renamed.pptx'))
+
+      const verification = verifyCorpusManifest(manifest, await buildCorpusInventory(dir))
+      expect(verification.ok).toBe(false)
+      expect(verification.errors).toContain('corpus-deck-set-mismatch')
+      expect(verification.manifestDigest).toBe(manifest.manifestDigest)
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('detects missing decks, hash drift, and a stale matrix subject', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-corpus-manifest-'))
+    try {
+      await fs.writeFile(path.join(dir, 'a.pptx'), 'deck-a')
+      await fs.writeFile(path.join(dir, 'b.pptx'), 'deck-b')
+      const inventory = await buildCorpusInventory(dir)
+      const manifest = buildQualificationManifest(inventory)
+
+      expect(verifyCorpusManifest(manifest, { decks: [inventory.decks[0]] }).errors).toContain(
+        'corpus-deck-set-mismatch'
+      )
+      await fs.writeFile(path.join(dir, 'a.pptx'), 'changed-bytes')
+      expect(verifyCorpusManifest(manifest, await buildCorpusInventory(dir)).errors).toContain(
+        'corpus-deck-hash-mismatch'
+      )
+      const staleMatrix = { ...manifest, matrix: { ...manifest.matrix, hash: '0'.repeat(64) } }
+      expect(verifyCorpusManifest(staleMatrix, inventory).errors).toContain('stale-matrix-subject')
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects duplicate corpus content and pins the checked-in eleven-deck corpus', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-corpus-manifest-'))
+    try {
+      await fs.writeFile(path.join(dir, 'a.pptx'), 'same-deck')
+      await fs.writeFile(path.join(dir, 'b.pptx'), 'same-deck')
+      await expect(buildCorpusInventory(dir)).rejects.toThrow('duplicate corpus content hash')
+
+      const corpusDir = path.resolve('server/data/test-corpus')
+      const manifestPath = path.join(corpusDir, 'importer-qualification-manifest.json')
+      const manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'))
+      const verification = verifyCorpusManifest(manifest, await buildCorpusInventory(corpusDir))
+      expect(manifest.decks).toHaveLength(11)
+      expect(verification).toMatchObject({ ok: true, manifestDigest: manifest.manifestDigest })
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
     }

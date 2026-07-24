@@ -1,6 +1,7 @@
 const crypto = require('node:crypto')
 const { openPackageStore } = require('./package-store')
 const { getReadablePackageStore } = require('./package-store-runtime')
+const { hashCanonical } = require('./evidence/canonical-hash')
 
 function resolutionError(code, message) {
   return Object.assign(new Error(message), { code, status: 422 })
@@ -66,6 +67,30 @@ async function resolveImmutableOriginalRevisionBytes({ presentationId }, options
       'IMMUTABLE_ORIGINAL_UNAVAILABLE',
       'Immutable original package revision is unavailable'
     )
+  }
+  if (options.expectedGeneration !== undefined &&
+      head.generation !== options.expectedGeneration) {
+    throw Object.assign(new Error('Package generation is stale'), {
+      code: 'STALE_GENERATION',
+      status: 409,
+      currentGeneration: head.generation,
+    })
+  }
+  if (options.expectedPackageRevisionId !== undefined &&
+      head.packageRevisionId !== options.expectedPackageRevisionId) {
+    throw Object.assign(new Error('Package authority is stale'), {
+      code: 'STALE_PACKAGE_AUTHORITY',
+      status: 409,
+      currentRevisionId: head.packageRevisionId,
+    })
+  }
+  if (options.expectedPackageHeadHash !== undefined &&
+      hashCanonical(head) !== options.expectedPackageHeadHash) {
+    throw Object.assign(new Error('Package authority is stale'), {
+      code: 'STALE_PACKAGE_AUTHORITY',
+      status: 409,
+      currentHeadHash: hashCanonical(head),
+    })
   }
   return readRevisionBytes(store, head.originalRevisionId, {
     revision: 'IMMUTABLE_ORIGINAL_REVISION_UNAVAILABLE',

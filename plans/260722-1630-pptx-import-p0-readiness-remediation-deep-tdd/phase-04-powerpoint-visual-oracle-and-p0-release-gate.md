@@ -17,6 +17,8 @@ Replace placeholders and first-slide self-snapshots with exact-corpus, package-b
 
 The oracle's software contracts are implemented, including Phase 3 authority repairs with focused regression evidence (2026-07-24): sanitized server `409` reconciliation `reasonCode` propagates through job-lifecycle timeout errors and package-backed capture cleanup reports; missing-head rollback no-ops require matching job/presentation identity. Earlier focused authority/oracle suite: 21 files / 142 passed / 1 skipped, plus isolated Node loopback capture. Remaining gate is physical evidence only: no trusted controlled Microsoft PowerPoint golden bundle, matching local evidence envelope, three matching role receipts, package-backed actual manifest, or signed numeric comparison result is available. Integrity and qualification therefore remain blocked and no numerical visual-fidelity or 1:1 claim is recorded.
 
+**Cook re-verify 2026-07-24:** independent tester re-ran Phase 4 oracle software contracts green; integrity without evidence stays structured-blocked (`missing-evidence-manifest`). Runbook capture command corrected to drop forbidden `--actual-manifest-out` (published run dir writes `actual-manifest.json`). Still no physical PowerPoint evidence — phase remains blocked.
+
 <!-- Updated: Red Team Review 1 + Validation Session 1 - local evidence authority, package-backed actuals, slide identity and finite policy -->
 
 ## Context Links

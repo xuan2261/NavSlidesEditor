@@ -8,34 +8,6 @@ function toArrayBuffer(buffer) {
   return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
 }
 
-function needsFallbackInspector(output) {
-  const slides = Array.isArray(output?.slides) ? output.slides : []
-  return slides.length === 0 || slides.every((slide) => (slide.elements || []).length === 0)
-}
-
-async function inspectWithPptx2Json(filePath, reason) {
-  try {
-    const PPTX2Json = require('pptx2json')
-    const pkg = require('pptx2json/package.json')
-    const raw = await new PPTX2Json({ jszipBinary: 'nodebuffer' }).toJson(filePath)
-    const keys = Object.keys(raw || {})
-    return {
-      parser: 'pptx2json',
-      reason,
-      packageVersion: pkg.version,
-      slideXmlCount: keys.filter((key) => /^ppt\/slides\/slide\d+\.xml$/.test(key)).length,
-      mediaCount: keys.filter((key) => key.startsWith('ppt/media/')).length,
-      chartCount: keys.filter((key) => key.startsWith('ppt/charts/')).length,
-    }
-  } catch (err) {
-    return {
-      parser: 'pptx2json',
-      reason,
-      error: { type: classifyError(err), message: sanitizeDiagnostic(err) },
-    }
-  }
-}
-
 async function parseFile(filePath, originalName) {
   const validated = await validatePptxPackage(filePath, originalName)
   const { parse } = require('pptxtojson/dist/index.cjs')
@@ -58,23 +30,18 @@ async function parseFile(filePath, originalName) {
     clearInterval(heartbeat)
   }
   sendProgress('parsing', 80, 'PPTX parsed')
-  const fallback = needsFallbackInspector(output)
-    ? await inspectWithPptx2Json(filePath, 'primary-output-missing-object-evidence')
-    : null
 
-  const parsedOutputBytes = assertParsedOutputBudget(output)
   return {
     ok: true,
     parser: 'pptxtojson',
     packageVersion: pkg.version,
     output,
-    parsedOutputBytes,
+    parsedOutputBytes: assertParsedOutputBudget(output),
     packageInfo: {
       entryCount: validated.entryCount,
       decompressedBytes: validated.decompressedBytes,
       fileSize: validated.fileSize,
     },
-    fallback,
   }
 }
 
@@ -82,13 +49,13 @@ function sendProgress(stage, percent, message) {
   process.send?.({ type: 'progress', stage, percent, message })
 }
 
-process.on('message', async ({ filePath, originalName }) => {
+async function handleMessage({ filePath, originalName }) {
   try {
     const result = await parseFile(filePath, originalName || filePath)
     assertUsableParserOutput(result.output)
-    process.send(result)
+    process.send?.(result)
   } catch (err) {
-    process.send({
+    process.send?.({
       ok: false,
       error: {
         type: classifyError(err),
@@ -97,6 +64,11 @@ process.on('message', async ({ filePath, originalName }) => {
       },
     })
   }
-})
+}
 
-process.send?.({ type: 'ready' })
+if (require.main === module) {
+  process.on('message', handleMessage)
+  process.send?.({ type: 'ready' })
+}
+
+module.exports = { parseFile }

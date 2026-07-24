@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
@@ -5,98 +6,91 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { encodePngRgba } from './png-rgba.js'
 import { compareCorpusToGoldens, compareDeck } from './compare-goldens.js'
 
-function solid(w, h, v) {
-  const buf = Buffer.alloc(w * h * 4)
-  for (let i = 0; i < w * h; i += 1) {
-    buf[i * 4] = v
-    buf[i * 4 + 1] = v
-    buf[i * 4 + 2] = v
-    buf[i * 4 + 3] = 255
+const sha = (value) => createHash('sha256').update(value).digest('hex')
+
+function solid(width, height, value) {
+  const rgba = Buffer.alloc(width * height * 4)
+  for (let i = 0; i < rgba.length; i += 4) {
+    rgba[i] = value; rgba[i + 1] = value; rgba[i + 2] = value; rgba[i + 3] = 255
   }
-  return buf
+  return encodePngRgba(width, height, rgba)
 }
 
 describe('compare-goldens', () => {
-  /** @type {string[]} */
-  const temps = []
-  afterEach(async () => {
-    await Promise.all(temps.splice(0).map((d) => fs.rm(d, { recursive: true, force: true })))
-  })
+  const dirs = []
+  afterEach(async () => Promise.all(dirs.splice(0).map((dir) => fs.rm(dir, { recursive: true, force: true }))))
 
-  async function temp() {
-    const d = await fs.mkdtemp(path.join(os.tmpdir(), 'goldens-'))
-    temps.push(d)
-    return d
+  async function root() {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'golden-compare-'))
+    dirs.push(dir)
+    return dir
   }
 
-  it('fails when corpus deck has no goldens', async () => {
-    const root = await temp()
-    const corpus = path.join(root, 'corpus')
-    const goldens = path.join(root, 'goldens')
+  async function pair(dir, count = 1) {
+    const golden = path.join(dir, 'goldens', 'deck-a')
+    const actual = path.join(dir, 'actuals', 'deck-a')
+    await fs.mkdir(golden, { recursive: true })
+    await fs.mkdir(actual, { recursive: true })
+    for (let index = 0; index < count; index += 1) {
+      await fs.writeFile(path.join(golden, `slide-${index}.png`), solid(16, 16, index * 20))
+      await fs.writeFile(path.join(actual, `slide-${index}.png`), solid(16, 16, index * 20))
+    }
+    return { golden, actual }
+  }
+
+  it('compares every exact actual against every exact golden', async () => {
+    const dir = await root()
+    await pair(dir, 2)
+    const result = await compareDeck({
+      deckFile: 'deck-a.pptx', goldensDir: path.join(dir, 'goldens'), actualsDir: path.join(dir, 'actuals'), expectedSlideCount: 2,
+    })
+    expect(result).toMatchObject({ ok: true, meanSsim: 1, goldenCount: 2, actualCount: 2 })
+    expect(result.slides.map((slide) => slide.index)).toEqual([0, 1])
+  })
+
+  it.each([
+    ['missing actuals', async () => {}, 'missing-actuals'],
+    ['gapped actual indexes', async (actual) => { await fs.rename(path.join(actual, 'slide-1.png'), path.join(actual, 'slide-2.png')) }, 'actual-slide-inventory-invalid'],
+    ['extra actual image', async (actual) => fs.writeFile(path.join(actual, 'slide-2.png'), solid(16, 16, 1)), 'actual-slide-inventory-invalid'],
+    ['wrong source slide count', async () => {}, 'slide-count-mismatch'],
+  ])('fails closed for %s', async (_name, mutate, error) => {
+    const dir = await root()
+    const { actual } = await pair(dir, 2)
+    if (error === 'missing-actuals') await fs.rm(actual, { recursive: true })
+    else await mutate(actual)
+    const expectedSlideCount = _name === 'wrong source slide count' ? 3 : 2
+    const result = await compareDeck({
+      deckFile: 'deck-a.pptx', goldensDir: path.join(dir, 'goldens'), actualsDir: path.join(dir, 'actuals'), expectedSlideCount,
+    })
+    expect(result).toMatchObject({ ok: false, error, meanSsim: null })
+  })
+
+  it('rejects placeholder goldens and declared image hash drift before SSIM', async () => {
+    const dir = await root()
+    const { golden, actual } = await pair(dir)
+    await fs.writeFile(path.join(golden, 'slide-0.png'), solid(8, 8, 1))
+    let result = await compareDeck({
+      deckFile: 'deck-a.pptx', goldensDir: path.join(dir, 'goldens'), actualsDir: path.join(dir, 'actuals'), expectedSlideCount: 1,
+    })
+    expect(result).toMatchObject({ ok: false, error: 'placeholder-goldens' })
+
+    const image = solid(16, 16, 1)
+    await fs.writeFile(path.join(golden, 'slide-0.png'), image)
+    await fs.writeFile(path.join(actual, 'slide-0.png'), image)
+    result = await compareDeck({
+      deckFile: 'deck-a.pptx', goldensDir: path.join(dir, 'goldens'), actualsDir: path.join(dir, 'actuals'), expectedSlideCount: 1,
+      expectedGoldenSlides: [{ sha256: sha(image), byteLength: image.length }],
+      expectedActualSlides: [{ sha256: sha('different'), byteLength: image.length }],
+    })
+    expect(result).toMatchObject({ ok: false, error: 'actual-image-hash-mismatch' })
+  })
+
+  it('fails corpus runs with a missing golden deck rather than skipping it', async () => {
+    const dir = await root()
+    const corpus = path.join(dir, 'corpus')
     await fs.mkdir(corpus)
-    await fs.writeFile(path.join(corpus, 'deck-a.pptx'), 'x')
-    const result = await compareCorpusToGoldens({ corpusDir: corpus, goldensDir: goldens })
-    expect(result.failed).toBe(true)
-    expect(result.missingGoldens).toContain('deck-a.pptx')
-  })
-
-  it('compares actual vs golden when both present', async () => {
-    const root = await temp()
-    const goldens = path.join(root, 'goldens', 'deck-a')
-    const actuals = path.join(root, 'actuals', 'deck-a')
-    await fs.mkdir(goldens, { recursive: true })
-    await fs.mkdir(actuals, { recursive: true })
-    const g = encodePngRgba(16, 16, solid(16, 16, 0))
-    const a = encodePngRgba(16, 16, solid(16, 16, 255))
-    await fs.writeFile(path.join(goldens, 'slide-0.png'), g)
-    await fs.writeFile(path.join(actuals, 'slide-0.png'), a)
-    const deck = await compareDeck({
-      deckFile: 'deck-a.pptx',
-      goldensDir: path.join(root, 'goldens'),
-      actualsDir: path.join(root, 'actuals'),
-    })
-    expect(deck.ok).toBe(true)
-    expect(deck.slides[0].ssim).toBeLessThan(0.2)
-  })
-
-  it('fails missing actuals by default', async () => {
-    const root = await temp()
-    const goldens = path.join(root, 'goldens', 'deck-a')
-    await fs.mkdir(goldens, { recursive: true })
-    await fs.writeFile(path.join(goldens, 'slide-0.png'), encodePngRgba(16, 16, solid(16, 16, 50)))
-    const deck = await compareDeck({
-      deckFile: 'deck-a.pptx',
-      goldensDir: path.join(root, 'goldens'),
-      actualsDir: null,
-    })
-    expect(deck).toMatchObject({ ok: false, error: 'missing-actuals', meanSsim: null })
-  })
-
-  it('self-compares only in explicit debt-record mode', async () => {
-    const root = await temp()
-    const goldens = path.join(root, 'goldens', 'deck-a')
-    await fs.mkdir(goldens, { recursive: true })
-    await fs.writeFile(path.join(goldens, 'slide-0.png'), encodePngRgba(16, 16, solid(16, 16, 50)))
-    const deck = await compareDeck({
-      deckFile: 'deck-a.pptx',
-      goldensDir: path.join(root, 'goldens'),
-      actualsDir: null,
-      debtRecord: true,
-    })
-    expect(deck.meanSsim).toBe(1)
-    expect(deck.slides[0].note).toContain('golden-self')
-  })
-
-  it('rejects placeholder 8x8 goldens even in debt-record mode', async () => {
-    const root = await temp()
-    const goldens = path.join(root, 'goldens', 'deck-a')
-    await fs.mkdir(goldens, { recursive: true })
-    await fs.writeFile(path.join(goldens, 'slide-0.png'), encodePngRgba(8, 8, solid(8, 8, 50)))
-    const deck = await compareDeck({
-      deckFile: 'deck-a.pptx',
-      goldensDir: path.join(root, 'goldens'),
-      debtRecord: true,
-    })
-    expect(deck).toMatchObject({ ok: false, error: 'placeholder-goldens', meanSsim: null })
+    await fs.writeFile(path.join(corpus, 'deck-a.pptx'), 'source')
+    const result = await compareCorpusToGoldens({ corpusDir: corpus, goldensDir: path.join(dir, 'goldens'), actualsDir: path.join(dir, 'actuals') })
+    expect(result).toMatchObject({ failed: true, missingGoldens: ['deck-a.pptx'], meanSsim: null })
   })
 })

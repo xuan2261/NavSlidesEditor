@@ -2,11 +2,11 @@
 title: 'PPTX Package-First OfficeCLI Roundtrip Deep TDD'
 description: 'Package-first PPTX import, edit, and export with immutable originals, content-addressed revisions, stable OOXML identity, server-derived mutation journals, contained validation, and provider-rendered fidelity evidence.'
 status: in-progress
-progress: '76/244 phase checklist items closed (31.1%); 0/6 claim gates closed; all 13 phases remain in-progress'
+progress: '77/244 phase checklist items closed (31.6%); 0/6 claim gates closed; all 13 phases remain in-progress'
 priority: P1
 branch: 'master'
 tags: [deep, tdd, pptx, package-first, officecli, ooxml, roundtrip, fidelity]
-blockedBy: []
+blockedBy: [260722-1630-pptx-import-p0-readiness-remediation-deep-tdd]
 blocks: []
 supersedes:
   - '../260709-1306-pptx-import-native-ooxml-1to1-fidelity-deep-tdd/plan.md'
@@ -73,11 +73,11 @@ requirements and cannot be reinterpreted as local evidence.
 
 ## Implementation Status Sync
 
-- **Overall:** In progress. `76/244` phase checklist items are closed; all 13 phases and `G0-G5` remain open. Checkbox coverage records scoped implementation evidence, not release readiness.
+- **Overall:** In progress. `77/244` phase checklist items are closed; all 13 phases and `G0-G5` remain open. Checkbox coverage records scoped implementation evidence, not release readiness.
 - **Direct OfficeCLI contract:** the current Node gateway is typed, pinned, shell-free, bounded, and fail-closed in code/test contracts. No direct qualified OfficeCLI receipt or successful real direct validation exists. Earlier launcher, protected-copy, provider, and non-Windows records remain historical; none is relabeled as current local evidence.
-- **Demonstrated software scope:** canonical matrix and reason-code contracts, package-state lifecycle controls, server-derived journal/seed transaction scaffolding, preservation tiers, safe fidelity DTO/UX, and fail-closed export behavior have focused source/test coverage. Their remaining unchecked criteria still control phase completion.
+- **Demonstrated software scope:** canonical matrix and reason-code contracts, package-state lifecycle controls, server-derived journal/seed transaction scaffolding, preservation tiers, safe fidelity DTO/UX, fail-closed export behavior, and local native-re-import workspace cleanup have focused source/test coverage. Their remaining unchecked criteria still control phase completion.
 - **Post-fix contract status:** fidelity capability-summary bindings and chart fixes are confirmed fail-closed. Returned unavailable edited-export results and returned transaction outcomes carry canonical reason-code authority. HTTP request-validation and thrown execution errors remain generic, so no universal public reason-authority contract is claimed. Those prior findings are historical pre-fix findings, not current blockers.
-- **Current correctness blockers:** native re-import still needs collateral-scope validation, production-media isolation, cleanup-failure quarantine, and a sweeper; same-presentation-ID lifecycle incarnation binding remains incomplete for durable replay and compatibility records; shutdown-safe blob publication and loser-blob reclamation remain open; availability still needs exact-current matrix/source-map/capability authority checks; durable cancellation/jobs/retention, idempotency quota/admission, and matrix migration/reissue remain absent. The active direct Gateway policy and historical launcher-required containment journal conflict; direct-run resource limits and tree-drain enforcement are inert, and fidelity availability can start unbounded per-request version probes. These are G1 policy/runtime release blockers, not automatically inferred source defects for the active direct policy. The package-backed PUT-to-POST materialization, no-op reconciliation, package-store fidelity generation, compatibility metadata/timestamps, lifecycle authority rebinding, replay fencing, compatibility recovery queueing, and client successor-generation adoption are now covered by focused tests and are no longer listed as open blockers.
+- **Current correctness blockers:** native re-import still needs strict provenance/collateral-scope validation, a durable residual record/sweeper when both job-root removal and UUID-quarantine rename fail, and a race-resistant boundary against rename-swap TOCTOU. The private media hash scope now isolates validator media writes while ordinary imports retain the serialized global transaction; this is a local partial corruption-path closure, not real package importer-to-mapper evidence. Normal removal is covered; a removal failure attempts a UUID-named configured quarantine target; a validation failure remains primary with cleanup details attached; and a removal-plus-rename failure fails closed. Same-presentation-ID lifecycle incarnation binding remains incomplete for durable replay and compatibility records; shutdown-safe blob publication and loser-blob reclamation remain open; availability still needs exact-current matrix/source-map/capability authority checks; durable cancellation/jobs/retention, idempotency quota/admission, and matrix migration/reissue remain absent. The active direct Gateway policy and historical launcher-required containment journal conflict; direct-run resource limits and tree-drain enforcement are inert, and fidelity availability can start unbounded per-request version probes. These are G1 policy/runtime release blockers, not automatically inferred source defects for the active direct policy. The package-backed PUT-to-POST materialization, no-op reconciliation, package-store fidelity generation, compatibility metadata/timestamps, lifecycle authority rebinding, replay fencing, compatibility recovery queueing, and client successor-generation adoption are now covered by focused tests and are no longer listed as open blockers.
 - **Latest focused validation (2026-07-21):** the package-authority blocker follow-up passed `35` route/package-store test files and `223/223` tests, including the new reader pointer/malformed-state, duplicate lock-order, lifecycle source-head, and DTO regressions; repository ESLint passed with 0 errors and 25 existing warnings; production build passed with 2,297 transformed modules; and `git diff --check` exited clean (Windows line-ending warnings only). Earlier full-unit/corpus evidence remains historical and is not upgraded by this run.
 - **Release blockers:** full canonical matrix-byte propagation to every required record; durable idempotency retention/quota/admission; a real strict-default native re-import; direct qualified OfficeCLI validation; Windows Electron artifact smoke; complete row/mutation-surface evidence; and the local PowerPoint oracle.
 - **Completion rule:** gates `G0-G5`, not raw checkbox count, control claim readiness. No phase is complete until its scoped success criteria and regression gate pass; unavailable provider, platform, route, expansion, and physical-integration criteria remain open.
@@ -88,6 +88,7 @@ requirements and cannot be reinterpreted as local evidence.
 - Duplicate and restore fail closed with `PACKAGE_PENDING_PROJECTION` when a pending package projection is present. Duplicate authority receives the destination projection, including its title; lifecycle publication checks the live source/retained head before committing. History snapshot retention compares the exact read head before and after retention, duplicate/fork package work precedes presentation-file serialization, and rollback failures surface as lifecycle errors instead of being swallowed.
 - Compatibility records claiming missing package heads or malformed original-only state no longer fall back to stale JSON. Public fork, GitHub JSON, and cloud-sync JSON cross the editor DTO boundary so package authority fields are not published.
 - Native re-import now binds the expected presentation/revision/generation and checks stable source provenance, exact projection key, and ambiguity. Mutable post-edit source hashes remain intentionally excluded from the stable-identity comparison.
+- Native staging now canonicalizes its workspace, rejects external quarantine roots and final/intermediate symbolic-link or junction components, accepts ordinary Windows 8.3 aliases, and rechecks the local quarantine boundary around rename. This is application path validation, not durable residual recovery or race-proof OS-handle containment.
 - Import presentation creation receives the same server timestamp used by package compatibility publication. Inner package-head races map to HTTP 409 with the current generation.
 - Export candidate blobs are registered in durable `candidateBlobs` quarantine metadata before blob exposure and removed only after successful successor publication. Failed publication remains auditable as quarantined rather than unowned; physical collection remains disabled by the existing policy.
 - These are focused software-contract hardening results. Native real-package re-import, direct qualified OfficeCLI, PowerPoint, Electron, matrix propagation, durable idempotency retention, and `G0-G5` remain open.
@@ -898,7 +899,7 @@ Neither cross-phase task changes a checkbox without the required gate evidence.
 | ----- | -------------- | ------------------------- |
 | 1 | 7 / 21 | Canonical contract subset; full matrix-subject propagation, migration/reissue, and exact-current availability authority remain open. Reason authority is deliberately scoped to returned availability/transaction outcomes, not universal public errors. |
 | 2 | 4 / 15 | Pinned direct-contract coverage; active direct policy conflicts with the historical launcher-required journal, direct version probes have no cache/shared admission, and no reconciled policy or real qualified receipt exists. |
-| 3 | 11 / 28 | Lifecycle subcontrols; lifecycle-bound replay isolation, invalid-key admission ordering, matrix reissue, production media-dedupe corruption isolation, shutdown-safe publication/unowned loser-blob recovery, and complete production R0 ownership remain open. |
+| 3 | 11 / 28 | Lifecycle subcontrols; lifecycle-bound replay isolation, invalid-key admission ordering, matrix reissue, real package importer-to-mapper media ownership evidence, shutdown-safe publication/unowned loser-blob recovery, and complete production R0 ownership remain open. The later local media-isolation repair preserves ordinary global media behavior but does not close this physical path. |
 | 4 | 6 / 23 | Direct gateway contract; the active direct lane conflicts with the historical launcher-required journal, forwards unenforced memory/process limits to the runner, lacks Windows tree-drain proof, and has no successful real validation or reconciled G1 policy. |
 | 5 | 7 / 18 | Journal/generation controls; P0 PUT-to-export R1 handoff, client successor adoption, target-head publication fencing, per-presentation export serialization, and joined same-key requests are locally verified. Net-zero/pending-state reconciliation, lifecycle-safe idempotency, and durable admission remain open. |
 | 6 | 4 / 12 | Native reconciliation subset; forged identity/collateral scope remains accepted, cleanup failure has no quarantine/sweeper regression, and no qualified real OfficeCLI shadow evidence exists. |
@@ -916,7 +917,7 @@ Neither cross-phase task changes a checkbox without the required gate evidence.
 | ---- | ------ | ---------------------- |
 | `G0` | Open | Canonical matrix code exists, but full `{schemaVersion,matrixVersion,hash}` propagation and matrix migration/reissue are not proven for every live persisted capability/corpus/evidence/claim record. Availability can return affirmative without validating current `matrixAuthoritySubjects`/epoch, the head source-map revision hash, or authoritative capability state; execution can then reject stale matrix authority. Canonical reason authority applies to returned availability denials and transaction outcomes only; generic HTTP request-validation and thrown execution errors are disclosed as outside that contract, not evidence of a universal public error guarantee. |
 | `G1` | Open | Session 4 and active Phase 11 select a direct local typed gateway, while the historical OfficeCLI containment journal requires a launcher and prohibits direct spawn. Production composition uses the direct gateway and leaves launcher-client wiring unused. This is an unresolved critical policy/journal contradiction, not proof of containment bypass under the active direct policy. Separately, gateway `maxMemoryBytes`/`maxProcesses` are not enforced by the bounded runner, `child.kill()` has no Windows process-tree drain proof, and fidelity availability can launch fresh OfficeCLI version probes per request without qualification cache or shared admission. No reconciled policy, direct qualified receipt, successful real validation, or enforced direct-runtime limits exist. |
-| `G2` | Open | Package/journal/validator scaffolding exists and the P0 route-equivalent R1 composition is locally verified for one successor, immutable R0, server-owned text transport, replay, compatibility drain, target-head fencing, and client generation handoff. Shutdown can still race export after blob commit and leave unowned loser blobs; native re-import accepts forged identity/collateral scope, can corrupt global production media-dedupe entries, and has no cleanup-failure quarantine/sweeper for candidate PPTX or media; replay is not lifecycle-bound; net-zero/pending-state reconciliation is incomplete; and no real strict-default native re-import or fully qualified edited publication exists. |
+| `G2` | Open | Package/journal/validator scaffolding exists and the P0 route-equivalent R1 composition is locally verified for one successor, immutable R0, server-owned text transport, replay, compatibility drain, target-head fencing, and client generation handoff. Native re-import cleanup now removes the ordinary job root or, after removal failure, attempts a UUID-named configured quarantine rename; it preserves a validation error as primary with cleanup detail attached and fails closed if removal and rename both fail. That local code/test slice does not establish durable residual ownership or a sweeper after double failure. Native validator media writes now use a private in-memory hash scope and preserve ordinary global dedupe behavior, but this local repair does not prove a real package importer-to-mapper run. Shutdown can still race export after blob commit and leave unowned loser blobs; native re-import accepts forged identity/collateral scope, replay is not lifecycle-bound; net-zero/pending-state reconciliation is incomplete; and no real strict-default native re-import or fully qualified edited publication exists. |
 | `G3` | Open | No built, hashed, inspected, started, capability-probed Windows NSIS and portable artifact evidence exists. |
 | `G4` | Open | No complete exact-row evidence set or centrally gated UI/store/hook/API mutation-surface audit exists. Post-fix fidelity binding and chart contract fixes are resolved; they do not establish row promotion or availability correctness. |
 | `G5` | Open | No local Microsoft PowerPoint oracle run binds an exact published package and environment subject. |
@@ -1003,8 +1004,8 @@ physical or claim-specific gates.
 | Resolved 2026-07-20 | **PUT-to-POST materialization:** the prior route-equivalent path returned R0/no-op while a pending projection-save journal remained. The server now resolves package-store authority, derives transports, patches one R1, preserves immutable R0, records committed journal/projection/source-map state, and exposes the successor generation. Focused materialization, XML, replay, mixed-edit, no-op, legacy-authority, route, and outbox assertions pass. | Retain this as regression coverage; release gates still require physical native/OfficeCLI/PowerPoint evidence. |
 | Resolved for the local route 2026-07-20 | **R1 compatibility-outbox delivery:** the POST path now drains after commit, returns `X-Pptx-Generation` even when draining is temporarily unavailable, preserves the durable pending write for retry, serializes drain operations, ignores stale compatibility generations, preserves server-owned compatibility metadata/tombstones, and uses the outbox as the sole package-backed JSON writer. | Keep startup/next-request retry and monotonic-write tests; cross-process durability, lifecycle identity, and operational retry telemetry remain outside this slice. |
 | Resolved locally 2026-07-20 | **Durable replay ordering:** an identical committed export replay is now recognized before a fresh validator-availability probe, so a temporary validator outage does not block recovery of already committed bytes. Lifecycle-bound replay identity remains unresolved. | Keep the route replay regression; bind replay to immutable lifecycle identity before any cross-lifecycle claim. |
-| High | **Native re-import proof and cleanup isolation:** forged source identity and collateral package changes can be accepted. Matching part URI/native ID and expected text is not sufficient semantic or untouched-part proof. A failing `fs.rm()` in `finally` can override the validator outcome and leave candidate PPTX/media in OS temp; no quarantine or sweeper exists. | Bind re-import to full authoritative source identity, expected projection, impact closure, and untouched/collateral checks; catch cleanup failure, quarantine or sweep residual state, and add a forced-cleanup-failure regression before proving a real strict-default package result. |
-| High | **Native media corruption:** the validator's private `uploadsDir` still allows importer media dedupe to delete or replace a valid production `upload-hashes.json` entry with a temporary path; validator cleanup then removes that path. This is active production dedupe corruption, not merely dangling metadata. | Isolate importer media state or transactionally restore every global hash entry before staging cleanup. |
+| High (partial) | **Native re-import proof and cleanup handling:** forged source identity and collateral package changes can be accepted. Matching part URI/native ID and expected text is not sufficient semantic or untouched-part proof. The validator now removes the normal job root; on `fs.rm()` failure it attempts a UUID-named configured quarantine rename, preserves a validation failure as primary with cleanup metadata, fails closed when removal and rename both fail, and closes the private media transaction on validation failure before cleanup. The supplied presentation identity is now consumed by production source-map construction when the mapper projection has no `id`. The double-failure residual has no durable record or sweeper. | Bind re-import to full authoritative source identity, expected projection, impact closure, and untouched/collateral checks; add durable residual ownership/recovery or a sweeper for cleanup-and-quarantine double failure; then run a real strict-default package result. |
+| Resolved locally 2026-07-22 (partial) | **Native media corruption:** the validator's private `uploadsDir` previously allowed importer media dedupe to delete or replace a valid production `upload-hashes.json` entry with a temporary path; validator cleanup then removed that path. Native validation now uses an explicit in-memory hash scope, leaves the persisted global index to ordinary imports, and rolls back the private transaction on failure. Focused software tests pass; a real package importer-to-mapper media run and strict native result remain unproven. | Retain the isolated transaction and failure-exit regressions; prove the real strict-default package path before any native/G2 claim. |
 | Resolved locally 2026-07-20 (partial) | **Export concurrency:** same-key concurrent exports are joined, distinct keys are serialized per presentation before expensive validation, target-head publication is fenced independently of unrelated store mutations, and stale publication losers return typed conflict responses. Shutdown-safe unowned-blob compensation remains unresolved. | Keep per-presentation serialization and target-head regressions; complete shutdown-safe loser reclamation. |
 | Resolved locally 2026-07-20 | **Package PUT compatibility ordering:** package-backed PUT no longer performs a second direct `presentations.json` write after package publication; it drains and reads the serialized compatibility outbox result, preventing delayed lower-generation JSON writes from bypassing the stale-write guard. | Retain delayed PUT/drain ordering coverage; lifecycle identity remains outside this fix. |
 | Resolved locally 2026-07-20 (partial) | **Content-addressed commit uncertainty:** a directory `EPERM` after a successful staged-to-target rename is now treated as an uncertain-but-verified commit rather than retrying a consumed stage and surfacing `ENOENT`. | Retain the blob-store regression; this does not close the broader shutdown/publication race or unowned-loser compensation. |
@@ -1036,7 +1037,7 @@ physical or claim-specific gates.
   baseline, so no unrelated reformatting was made.
 - **Next gate actions:** App/Storage retains the focused R1 materialization,
   compatibility-drain, admission, concurrency, and client save-fence regressions;
-  the next software gates are native re-import identity/collateral/media isolation,
+  the next software gates are native re-import identity/collateral validation,
   cleanup quarantine/sweeping, immutable-lifecycle replay binding, target-head
   concurrency, shutdown-safe export leases/blob reclamation, exact-current
   availability predicates, and durable net-zero/cancellation/job/retention/
@@ -1133,3 +1134,189 @@ physical or claim-specific gates.
   `G0`–`G5` gates stay open.
 - **Workspace state:** changes remain uncommitted and unpushed; excluded `.tmp/`,
   native probe, and scratch files remain preserved.
+
+## Session 8 Native Re-import Cleanup Evidence Sync — 2026-07-22
+
+### Verified local cleanup slice
+
+- [`native-reimport-workspace.js`](../../server/services/pptx-import/native-reimport-workspace.js)
+  removes a normal job root. On removal failure, it creates a UUID-named configured
+  quarantine target and renames the whole job root there. If removal and rename
+  both fail, it returns `NATIVE_REIMPORT_CLEANUP_FAILED`.
+- [`native-reimport-validator.js`](../../server/services/pptx-import/native-reimport-validator.js)
+  treats cleanup as a post-validation result: an existing validation error remains
+  primary and receives `cleanupCode`/`cleanupCause`; otherwise the cleanup error is
+  returned. The focused assertions in
+  [`native-reimport-validator.test.js`](../../server/services/pptx-import/native-reimport-validator.test.js)
+  cover normal removal, configured-root quarantine, primary-error preservation on
+  successful quarantine, and the removal-plus-rename fail-closed path.
+- **Focused validation (2026-07-22):** the nine-file focused validation command
+  exited `0`; `85/85` tests passed in `23.26s`. Touched-file ESLint exited `0` with no
+  output; repository ESLint recorded `0` errors and `25` existing warnings.
+- **Completed excluded full-unit validation (2026-07-22):** `npm run test --
+  --exclude client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx`
+  exited `0`; `481` files passed, `1` skipped; `3,849` tests passed, `3` skipped;
+  `1107.50s`. The exclusion remains the documented unrelated baseline failure and
+  is not fixed or validated by this PPTX slice. `PPTX_ORACLE=off`; only synthetic
+  oracle tests ran, so this result supplies no physical/native-oracle evidence.
+- **Historical defense-in-depth source-review risk at Session 8, not a verified
+  production defect or HTTP-controlled threat:** the only production composition
+  supplied an internally derived `os.tmpdir()` workspace root and no
+  `quarantineRoot`; the factory's optional root was otherwise used by tests. At
+  that point the cleanup helper had no canonical-root or reparse-path checks. The
+  Session 9 follow-up below records the bounded path-check repair; neither
+  observation is runtime/physical evidence or gate-closing evidence.
+- **Residual gate gaps:** a cleanup-and-quarantine double failure has no durable
+  residual record or sweeper. At this Session 8 point, the cleanup slice also did not
+  resolve forged source identity, collateral-part validation, or production-media
+  isolation; Session 10 below records the later local media-isolation repair.
+- **Evidence boundary:** application source/test evidence only. It is not OfficeCLI,
+  PowerPoint, Electron, Docker, non-Windows, provider, or real-package native
+  re-import evidence.
+
+### Full 13-phase sync-back
+
+All phase files were reconciled against the cleanup slice. Only Phase 11's directly
+implemented `nativeReimport(context)` checklist item changed; all other checklist
+counts are unchanged.
+
+| Phase | Closed / total | Sync disposition |
+| ----- | -------------- | ---------------- |
+| 1 | 7 / 21 | Unchanged; G0 matrix-subject propagation, migration/reissue, and availability authority remain open. |
+| 2 | 4 / 15 | Unchanged; no direct OfficeCLI qualification receipt or real validation. |
+| 3 | 11 / 28 | Unchanged; local workspace quarantine is not durable package-store residual ownership or recovery. |
+| 4 | 6 / 23 | Unchanged; no containment, tree-drain, or direct OfficeCLI qualification evidence. |
+| 5 | 7 / 18 | Unchanged; source/journal lifecycle and durable admission gaps remain open. |
+| 6 | 4 / 12 | Unchanged; cleanup handling does not establish strict provenance, collateral preservation, or shadow evidence. |
+| 7 | 3 / 14 | Unchanged; no real G2 seed-row pipeline evidence. |
+| 8 | 8 / 16 | Unchanged; no promoted chart transaction evidence. |
+| 9 | 5 / 14 | Unchanged; no recursive/adjacent-edit completion evidence. |
+| 10 | 5 / 13 | Unchanged; no promoted structural transaction evidence. |
+| 11 | 5 / 24 | Closed only `nativeReimport(context)` implementation; strict-default real-package validation, layered publication, and G2 remain open. |
+| 12 | 6 / 20 | Unchanged; no durable residual recovery UX, complete mutation-surface, or job proof. |
+| 13 | 6 / 26 | Unchanged; no Windows artifact, local PowerPoint, or release-claim evidence. |
+
+- **Plan status:** `77/244` checklist items closed (`31.6%`); all 13 phases are
+  in progress; `G0` through `G5` remain open.
+- **Scope change:** none. This records a completed local cleanup hardening slice;
+  it does not broaden supported targets, validators, claims, or release evidence.
+- **Next actions:** App/Storage owns durable residual recording/sweeping and
+  provenance/collateral validation; retain the local media-isolation regressions and
+  obtain real package importer-to-mapper evidence. Security owns direct OfficeCLI
+  qualification and its unresolved G1 policy/runtime gaps; Release owns Windows
+  artifact, row/mutation-surface, and local PowerPoint evidence.
+
+## Session 9 Native Workspace Containment — 2026-07-22
+
+### Verified local containment slice
+
+- `prepareWorkspace()` now canonicalizes the workspace root, rejects a final or
+  intermediate symbolic-link/junction component before staging, and requires an
+  explicitly configured quarantine root to remain below that canonical workspace.
+  Normal Windows 8.3 aliases are accepted because per-component checks compare the
+  canonical entry's parent rather than its raw basename; true reparse redirects
+  therefore remain rejectable without rejecting the host's ordinary `%TEMP%` alias.
+- `cleanupJobRoot()` rechecks workspace and quarantine containment before creating
+  the lazy quarantine directory, before renaming the staged job, and after the
+  rename. A successful local rename is still only local damage containment, not a
+  durable residual record or sweeper. These path checks are not an OS-handle-based
+  proof against a concurrent rename swap.
+- **Focused validation (2026-07-22):** the two-file native validator/containment
+  command exited `0`; `14/14` tests passed in `5.71s`. The suite includes the
+  missing nested workspace under the Windows temp root, external quarantine
+  rejection, final and existing-leaf intermediate junction rejection, primary
+  validation-error preservation, and double-cleanup failure.
+- **Adjacent integration validation (2026-07-22):** the six-file native export
+  regression command exited `0`; `57/57` tests passed in `17.18s`. Touched-file
+  ESLint, production `node --check`, and `git diff --check` exited `0` (only
+  expected Windows line-ending warnings were printed).
+- **Fresh excluded full-unit validation (2026-07-22):** `npm run test --
+  --exclude client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx`
+  exited `0`; `482` files passed, `1` skipped; `3,854` tests passed, `3` skipped;
+  `1126.38s`. `PPTX_ORACLE=off`; the oracle subprocesses were synthetic and this
+  remains application regression evidence, not physical PPTX, OfficeCLI, or
+  PowerPoint evidence.
+- **Evidence boundary:** this is application source/test evidence only. It does not
+  establish OfficeCLI, PowerPoint, Electron, Docker, non-Windows, provider, or
+  real-package native re-import evidence, and `G0`–`G5` remain open.
+
+### Full 13-phase sync-back
+
+The containment helper and regression file are implementation-level additions to
+Phase 11. No checklist item is promoted from the containment tests alone; strict
+native identity/collateral/media proof, durable cleanup recovery, and all physical
+claim gates remain open. Phase counts therefore remain unchanged at `77/244`.
+
+## Session 10 Native Media-State Isolation and Failure Rollback — 2026-07-22
+
+### Verified local media slice
+
+- Native re-import now creates an explicit private media transaction backed by an
+  in-memory hash scope and passes it through the existing production importer and
+  mapper propagation path. `persistDedupedBuffer()` uses that scope when present;
+  ordinary imports without the scope continue using the serialized global
+  `withUploadHashes()` path.
+- Native validation commits the private transaction only after source-map and
+  journal postconditions pass. Any importer, semantic, provenance, or other
+  validation failure rolls the private transaction back before `cleanupJobRoot()`;
+  cleanup failures still remain separate from the primary validation result. This
+  closes the late-write-after-failure window identified during review.
+- The isolated media regression confirms a pre-existing global hash entry remains
+  byte-equivalent, a matching private write is not treated as global deduplication,
+  and rollback removes only the private media file. The validator regression
+  confirms the failure transaction is closed and its private hash scope is empty
+  before the job root is removed.
+- **Focused validation:** the media/native validator/containment command passed
+  `3 files / 37 tests`; neighboring importer/mapper/resource-budget coverage passed
+  `4 files / 134 tests`; native validation/transaction integrations passed `4 files /
+  55 tests`. Touched-file ESLint and production `node --check` passed.
+- **Fresh excluded full-unit validation (2026-07-22):** `npm run test --
+  --exclude client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx`
+  exited `0`; `482` files passed, `1` skipped; `3,855` tests passed, `3` skipped;
+  `1120.65s`. `PPTX_ORACLE=off`; the oracle subprocesses were synthetic and this
+  remains application regression evidence, not physical PPTX, OfficeCLI, or
+  PowerPoint evidence.
+- **Evidence boundary:** this is application source/test evidence only. It does not
+  establish a real package importer-to-mapper media run, strict-default native
+  re-import success, OfficeCLI, PowerPoint, Electron, Docker, non-Windows, provider,
+  or any other physical evidence. `G0`–`G5` remain open.
+
+### Full 13-phase sync-back
+
+The media transaction and failure-exit regression are implementation-level additions
+within Phase 11. No checklist item is promoted from these software tests alone;
+strict source identity/collateral proof, durable cleanup recovery, and all physical
+claim gates remain open. Phase counts remain unchanged at `77/244`.
+
+## Session 11 Native Source-Map Presentation Binding — 2026-07-22
+
+### Verified local source-map slice
+
+- `buildImportSourceMap()` now gives an explicitly supplied `presentationId`
+  precedence over the mapped projection's `id`. This repairs the production shape
+  where the native mapper returns a projection without a persisted `id` and the
+  validator supplies the authoritative presentation identity.
+- When no presentation identity is supplied, the existing projection-id fallback
+  remains unchanged. Revision and package-generation propagation remain unchanged.
+- **TDD evidence:** the new source-map regression was red before the one-line
+  production fix (`import-pending` instead of the supplied `deck`) and green after
+  it. Source-map/native validator/containment coverage passed `3 files / 40 tests`;
+  importer/mapper/route/validated-export transaction neighbors passed `5 files /
+  210 tests`; touched-file ESLint and production `node --check` passed.
+- **Coverage closure:** focused regressions now cover supplied-ID precedence,
+  ordinary projection-ID fallback, and the production importer forwarding boundary.
+  The exact current source-map command is
+  `npx vitest run server/services/pptx-import/source-map.test.js server/services/pptx-import/native-reimport-validator.test.js server/services/pptx-import/native-reimport-containment.test.js --maxWorkers=1 --no-file-parallelism`; the exact neighbor command is
+  `npx vitest run server/services/pptx-import/importer.test.js server/services/pptx-import/mapper.test.js server/routes/presentations.test.js server/services/validated-edited-export-materialization.test.js server/services/pptx-import/transactional-patch.test.js --maxWorkers=1 --no-file-parallelism`.
+- **Evidence boundary:** this fixes one production source-map binding blocker in
+  application code only. It does not prove strict real-package native re-import,
+  full provenance or collateral preservation, durable cleanup recovery, TOCTOU
+  resistance, OfficeCLI, PowerPoint, Electron, Docker, non-Windows, provider, or
+  any other physical claim. `G0`–`G5` remain open.
+
+### Full 13-phase sync-back
+
+The source-map identity binding is an implementation-level Phase 11 repair. No
+checklist item is promoted from the focused source-map tests; native provenance/
+collateral validation, durable cleanup recovery, and all physical claim gates remain
+open. Phase counts remain unchanged at `77/244`.

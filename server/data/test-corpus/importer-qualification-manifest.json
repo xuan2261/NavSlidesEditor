@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "matrix": {
+    "schemaVersion": 1,
+    "matrixVersion": "1.0.0",
+    "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114"
+  },
+  "decks": [
+    {
+      "id": "background-image-notes-footer.pptx",
+      "sha256": "1e80dba1ca8f7411858147ade13d206b8253a2ccc72bec1898fca1d77910c74e"
+    },
+    {
+      "id": "Bai_2_1.pptx",
+      "sha256": "c883745a73a3a75dbbac0aabf1f3b052543c8cbb12cb0302955d84532c957150"
+    },
+    {
+      "id": "Bai_2_2.pptx",
+      "sha256": "e433a1780b7e7b0b69d98cb7e2d7e99b487c47736b89b1649bd311360352d044"
+    },
+    {
+      "id": "Bai_2_5.pptx",
+      "sha256": "053c0a0cbf3fe47f3f86bfc284acdc47f8ecff87eee05fe7b4bb8e4d1730f8e8"
+    },
+    {
+      "id": "chart-bars-lines.pptx",
+      "sha256": "fe9f5f6daf514a5d8c711a9a0247b75e05a7a45eae7f44435d83e0831682af29"
+    },
+    {
+      "id": "chart-pie-scatter.pptx",
+      "sha256": "bcd9db44be9ba0f36102427a4832a47c416a605eeea9a564c7a26376be7d8046"
+    },
+    {
+      "id": "diagram-process-flow.pptx",
+      "sha256": "4689835f096ee63c45c7fbfde89705d10538898ad69c5e6ff735496be30ef0e1"
+    },
+    {
+      "id": "math-rich-text.pptx",
+      "sha256": "29bf9f07c6075a5db495fc471fd76a5bd88dddd5852a35b3f99a860c4a37ed39"
+    },
+    {
+      "id": "non-default-4x3-resolution.pptx",
+      "sha256": "4b29747595b94191b82328fba01ad092f9d69727df461d130532fe565d6a916e"
+    },
+    {
+      "id": "STTre_Duc.pptx",
+      "sha256": "a68431f7d42ad92c410b5db67d06ce548c581312ea3b57ae83767c9650afc2c6"
+    },
+    {
+      "id": "table-shapes-media.pptx",
+      "sha256": "10d5a673e94cb9d27cfe44a740bd5fd971728021553682551e094f1bf379a1f2"
+    }
+  ],
+  "manifestDigest": "b33ce28e3a867b77758eb0ce90716ae5443d0914a5d91a56e2f91ea432b760ed"
+}

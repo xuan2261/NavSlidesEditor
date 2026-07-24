@@ -31,6 +31,7 @@ const { stripClientPptxOriginalPaths } = require('../services/pptx-import/create
 const { sanitizeClientEditableData } = require('../services/pptx-import/authority-sanitizer')
 const { toPresentationEditorDto } = require('../services/pptx-import/package-store/dto')
 const { hashRecord } = require('../services/pptx-import/package-store/schemas')
+const { hashCanonical } = require('../services/pptx-import/evidence/canonical-hash')
 const {
   duplicatePackageOwner,
   getPackageHead,
@@ -57,6 +58,10 @@ const {
 const { withHistoryLock } = require('../services/history-lock')
 const { createEditedExportHandler } = require('./pptx-edited-export')
 const {
+  readPackageAuthoritySnapshot,
+  publicPackageAuthoritySnapshot,
+} = require('../services/pptx-import/package-authority-snapshot')
+const {
   editedExportAvailability,
   executeValidatedEditedExport,
   hasValidatedEditedReplay,
@@ -69,6 +74,12 @@ function isSafePresentationId(value) {
   return typeof value === 'string' && value.length > 0 && value !== '.' && value !== '..' &&
     !value.includes('/') && !value.includes('\\') &&
     !value.includes(String.fromCharCode(0))
+}
+
+function packageIdentityForFidelity(presentation) {
+  const head = presentation?.pptxAggregateHead
+  if (typeof head?.packageRevisionId !== 'string' || !head.packageRevisionId) return undefined
+  return { revisionId: head.packageRevisionId, headHash: hashCanonical(head) }
 }
 
 function getUploadMimeType(filename) {
@@ -412,8 +423,10 @@ router.get('/:id/pptx-fidelity', async (req, res) => {
     const {
       buildPrivateFidelityCapability,
     } = require('../services/pptx-import/evidence/private-fidelity-capability')
+    const packageAuthority = packageIdentityForFidelity(presentation)
     res.json({
       ...fidelity,
+      ...(packageAuthority ? { packageAuthority } : {}),
       localEvidence: buildPrivateFidelityCapability(presentation, fidelity, {
         aggregateGeneration,
         officeCliAvailable: editedAvailability.officeCliAvailable === true,
@@ -425,21 +438,82 @@ router.get('/:id/pptx-fidelity', async (req, res) => {
   }
 })
 
+// GET /api/presentations/:id/pptx-package-snapshot — return one safe package/R0 identity.
+router.get('/:id/pptx-package-snapshot', async (req, res) => {
+  try {
+    const resolved = await readAuthoritativePresentation(req.params.id, { normalize: false })
+    if (!resolved) return res.status(404).json({ error: 'Not found' })
+    const snapshot = await readPackageAuthoritySnapshot(req.params.id)
+    const head = resolved.presentation?.pptxAggregateHead
+    if (!head || resolved.generation !== snapshot.aggregateGeneration ||
+        hashCanonical(head) !== snapshot.packageHeadHash ||
+        head.packageRevisionId !== snapshot.packageRevisionId) {
+      return res.status(409).json({
+        error: 'Package authority changed while reading the snapshot',
+        code: 'PACKAGE_AUTHORITY_CHANGED',
+      })
+    }
+    res.json(publicPackageAuthoritySnapshot(snapshot))
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message, code: err.code })
+  }
+})
+
 // GET /api/presentations/:id/pptx-original — stream immutable upload/R0 bytes only.
 router.get('/:id/pptx-original', async (req, res) => {
   try {
+    const generationHeader = req.get('If-Pptx-Generation')
+    const generationRequested = generationHeader !== undefined
+    if (generationRequested && (!/^[1-9]\d*$/u.test(generationHeader) ||
+      !Number.isSafeInteger(Number(generationHeader)))) {
+      return res.status(400).json({
+        error: 'If-Pptx-Generation must be a positive safe integer',
+        code: 'INVALID_EXPECTED_GENERATION',
+      })
+    }
+    const packageRevisionHeader = req.get('If-Pptx-Package-Revision')
+    const packageHeadHashHeader = req.get('If-Pptx-Package-Head-Hash')
+    const packageAuthorityRequested = packageRevisionHeader !== undefined ||
+      packageHeadHashHeader !== undefined
+    if (packageAuthorityRequested &&
+        (typeof packageRevisionHeader !== 'string' ||
+          !/^[A-Za-z0-9._:-]+$/u.test(packageRevisionHeader) ||
+          typeof packageHeadHashHeader !== 'string' ||
+          !/^[a-f0-9]{64}$/u.test(packageHeadHashHeader))) {
+      return res.status(400).json({
+        error: 'If-Pptx-Package-Revision and If-Pptx-Package-Head-Hash are required',
+        code: 'INVALID_EXPECTED_PACKAGE_AUTHORITY',
+      })
+    }
     const resolved = await readAuthoritativePresentation(req.params.id, {
       normalize: false,
       allowIncompleteAuthority: true,
     })
     const presentation = resolved?.presentation
     if (!presentation) return res.status(404).json({ error: 'Not found' })
+    if (packageAuthorityRequested && !presentation.pptxAggregateHead) {
+      return res.status(409).json({
+        error: 'Package authority is unavailable for this presentation',
+        code: 'PACKAGE_AUTHORITY_UNAVAILABLE',
+      })
+    }
+    if (generationRequested && resolved.generation !== Number(generationHeader)) {
+      return res.status(409).json({
+        error: 'Package generation is stale',
+        code: 'STALE_GENERATION',
+        currentGeneration: Number.isSafeInteger(resolved.generation) ? resolved.generation : null,
+      })
+    }
     const { resolvePptxOriginalPayload } = require('../services/pptx-import/roundtrip-original-parts')
     const {
       resolveImmutableOriginalRevisionBytes,
     } = require('../services/pptx-import/package-revision-resolver')
     const payload = await resolvePptxOriginalPayload(presentation, {
-      resolveImmutableOriginalRevision: resolveImmutableOriginalRevisionBytes,
+      resolveImmutableOriginalRevision: (input) => resolveImmutableOriginalRevisionBytes(input, {
+        expectedGeneration: generationRequested ? Number(generationHeader) : undefined,
+        expectedPackageRevisionId: packageAuthorityRequested ? packageRevisionHeader : undefined,
+        expectedPackageHeadHash: packageAuthorityRequested ? packageHeadHashHeader : undefined,
+      }),
     })
     if (!payload.buffer) {
       return res.status(payload.status || 404).json({

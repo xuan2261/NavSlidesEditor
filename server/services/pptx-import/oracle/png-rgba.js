@@ -32,17 +32,41 @@ function chunk(type, data) {
   return Buffer.concat([len, typeBuf, data, crc])
 }
 
+function paeth(left, up, upLeft) {
+  const p = left + up - upLeft
+  const leftDistance = Math.abs(p - left)
+  const upDistance = Math.abs(p - up)
+  const upLeftDistance = Math.abs(p - upLeft)
+  return leftDistance <= upDistance && leftDistance <= upLeftDistance ? left : upDistance <= upLeftDistance ? up : upLeft
+}
+
+function filterRow(row, previous, bytesPerPixel, filterType) {
+  const filtered = Buffer.alloc(row.length)
+  for (let index = 0; index < row.length; index += 1) {
+    const left = index >= bytesPerPixel ? row[index - bytesPerPixel] : 0
+    const up = previous?.[index] || 0
+    const upLeft = index >= bytesPerPixel ? previous?.[index - bytesPerPixel] || 0 : 0
+    const predictor = [0, left, up, Math.floor((left + up) / 2), paeth(left, up, upLeft)][filterType]
+    filtered[index] = (row[index] - predictor + 256) & 0xff
+  }
+  return filtered
+}
+
 /**
  * Encode raw RGBA (width*height*4) to PNG buffer.
  */
-function encodePngRgba(width, height, rgba) {
+function encodePngRgba(width, height, rgba, { filterType = 0 } = {}) {
   if (rgba.length !== width * height * 4) throw new Error('RGBA length mismatch')
+  if (!Number.isInteger(filterType) || filterType < 0 || filterType > 4) throw new Error('Unsupported PNG filter type')
   const stride = width * 4 + 1
   const raw = Buffer.alloc(stride * height)
+  let previous = null
   for (let y = 0; y < height; y += 1) {
     const rowStart = y * stride
-    raw[rowStart] = 0 // filter none
-    rgba.copy(raw, rowStart + 1, y * width * 4, (y + 1) * width * 4)
+    const pixels = rgba.subarray(y * width * 4, (y + 1) * width * 4)
+    raw[rowStart] = filterType
+    filterRow(pixels, previous, 4, filterType).copy(raw, rowStart + 1)
+    previous = pixels
   }
   const compressed = zlib.deflateSync(raw)
   const ihdr = Buffer.alloc(13)
@@ -73,21 +97,28 @@ function decodePng(pngBuffer, options = {}) {
   let height = 0
   let colorType = 0
   let bitDepth = 0
+  let ended = false
   const idat = []
   while (offset + 8 <= buf.length) {
     const len = buf.readUInt32BE(offset)
+    if (len > buf.length - offset - 12) throw new Error('PNG chunk truncated')
     const type = buf.toString('ascii', offset + 4, offset + 8)
     const data = buf.subarray(offset + 8, offset + 8 + len)
     offset += 12 + len
     if (type === 'IHDR') {
+      if (data.length !== 13) throw new Error('Invalid PNG IHDR')
       width = data.readUInt32BE(0)
       height = data.readUInt32BE(4)
       bitDepth = data[8]
       colorType = data[9]
     } else if (type === 'IDAT') {
       idat.push(data)
-    } else if (type === 'IEND') break
+    } else if (type === 'IEND') {
+      ended = true
+      break
+    }
   }
+  if (!ended) throw new Error('PNG missing IEND')
   if (!width || !height) throw new Error('PNG missing IHDR')
   if (width > maxDim || height > maxDim) {
     throw new Error(`PNG dimensions ${width}x${height} exceed max ${maxDim}`)
@@ -98,19 +129,30 @@ function decodePng(pngBuffer, options = {}) {
   const inflated = zlib.inflateSync(Buffer.concat(idat), { maxOutputLength: maxInflate })
   const channels = colorType === 6 ? 4 : 3
   const stride = width * channels + 1
-  if (inflated.length < stride * height) throw new Error('PNG data truncated')
+  if (inflated.length !== stride * height) throw new Error('PNG data length mismatch')
   const rgba = Buffer.alloc(width * height * 4)
+  let previous = null
   for (let y = 0; y < height; y += 1) {
     const row = y * stride
-    if (inflated[row] !== 0) throw new Error('Only filter type 0 supported')
-    for (let x = 0; x < width; x += 1) {
-      const src = row + 1 + x * channels
-      const dst = (y * width + x) * 4
-      rgba[dst] = inflated[src]
-      rgba[dst + 1] = inflated[src + 1]
-      rgba[dst + 2] = inflated[src + 2]
-      rgba[dst + 3] = channels === 4 ? inflated[src + 3] : 255
+    const filterType = inflated[row]
+    if (filterType > 4) throw new Error('Unsupported PNG filter type')
+    const pixels = Buffer.alloc(width * channels)
+    for (let index = 0; index < pixels.length; index += 1) {
+      const left = index >= channels ? pixels[index - channels] : 0
+      const up = previous?.[index] || 0
+      const upLeft = index >= channels ? previous?.[index - channels] || 0 : 0
+      const predictor = [0, left, up, Math.floor((left + up) / 2), paeth(left, up, upLeft)][filterType]
+      pixels[index] = (inflated[row + 1 + index] + predictor) & 0xff
     }
+    for (let x = 0; x < width; x += 1) {
+      const src = x * channels
+      const dst = (y * width + x) * 4
+      rgba[dst] = pixels[src]
+      rgba[dst + 1] = pixels[src + 1]
+      rgba[dst + 2] = pixels[src + 2]
+      rgba[dst + 3] = channels === 4 ? pixels[src + 3] : 255
+    }
+    previous = pixels
   }
   return { width, height, data: rgba }
 }

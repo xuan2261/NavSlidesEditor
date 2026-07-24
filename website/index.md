@@ -23,7 +23,7 @@ features:
   - title: Game Mode
     details: Run audience-interaction quizzes powered by the same slide engine.
   - title: PPTX Import / Export
-    details: Bring decks in from PowerPoint and ship them back out with high-fidelity round-tripping.
+    details: Import PowerPoint decks, recover verified originals, and choose clearly between validated edited export and reconstructed PPTX generation.
   - title: AI-Assisted Authoring
     details: Generate slide content, refine copy, and explore layouts with a pluggable AI provider.
 ---

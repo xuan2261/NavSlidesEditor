@@ -11,6 +11,13 @@ const runId =
 const runRoot = path.join(__dirname, '.playwright', 'runs', runId)
 const dataDir = path.join(runRoot, 'data')
 const uploadsDir = path.join(runRoot, 'uploads')
+const pptxImportSpecs = [
+  /tests\/e2e\/critical-pptx-journey\.spec\.js$/,
+  /tests\/e2e\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\.spec\.js$/,
+  /tests\/e2e\/export\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\.spec\.js$/,
+]
+const chromiumSnapshotPathTemplate =
+  '{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}-chromium{-snapshotSuffix}{ext}'
 
 process.env.PLAYWRIGHT_TEST_BASE_URL = baseURL
 // webServer.env only reaches child processes; test workers need the direct API URL too.
@@ -46,6 +53,7 @@ module.exports = defineConfig({
         /tests\/e2e\/visual(?:\/.*\.spec\.js$)/,
         /tests\/e2e\/visual-regression\.spec\.js$/,
         /tests\/e2e\/a11y\/tablet-touch-editor-interactions\.spec\.js$/,
+        ...pptxImportSpecs,
       ],
       use: { ...devices['Desktop Chrome'] },
     },
@@ -69,21 +77,30 @@ module.exports = defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
     {
+      name: 'chromium-pptx-import',
+      testMatch: pptxImportSpecs,
+      workers: 1,
+      snapshotPathTemplate: chromiumSnapshotPathTemplate,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
       name: 'chromium-visual',
       testMatch: [
         /tests\/e2e\/visual(?:\/.*\.spec\.js$)/,
         /tests\/e2e\/visual-regression\.spec\.js$/,
       ],
-      snapshotPathTemplate:
-        '{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}-chromium{-snapshotSuffix}{ext}',
+      snapshotPathTemplate: chromiumSnapshotPathTemplate,
       use: { ...devices['Desktop Chrome'] },
     },
     ...(process.env.PLAYWRIGHT_MOBILE_CHROMIUM
-      ? [{
-          name: 'mobile-chromium',
-          testMatch: /tests\/e2e\/a11y\/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport\.spec\.js$/,
-          use: { ...devices['Pixel 7'] },
-        }]
+      ? [
+          {
+            name: 'mobile-chromium',
+            testMatch:
+              /tests\/e2e\/a11y\/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport\.spec\.js$/,
+            use: { ...devices['Pixel 7'] },
+          },
+        ]
       : []),
   ],
   webServer: {

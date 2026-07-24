@@ -228,8 +228,25 @@ describe('PPTX original package routes (T1.5 T1.6 T1.9)', () => {
       presentations.find((presentation) => presentation.id === id).pptxAggregateHead = head
     })
 
+    const invalidGeneration = await request(app)
+      .get(`/api/presentations/${id}/pptx-original`)
+      .set('If-Pptx-Generation', '0')
+    expect(invalidGeneration).toMatchObject({
+      status: 400,
+      body: { code: 'INVALID_EXPECTED_GENERATION' },
+    })
+
+    const staleGeneration = await request(app)
+      .get(`/api/presentations/${id}/pptx-original`)
+      .set('If-Pptx-Generation', String(head.generation + 1))
+    expect(staleGeneration).toMatchObject({
+      status: 409,
+      body: { code: 'STALE_GENERATION', currentGeneration: head.generation },
+    })
+
     const download = await request(app)
       .get(`/api/presentations/${id}/pptx-original`)
+      .set('If-Pptx-Generation', String(head.generation))
       .buffer(true)
       .parse((res, cb) => {
         const chunks = []

@@ -167,28 +167,36 @@ created directly in NavSlides.
   record; focused portable coverage passes, but the full authority archive contract
   remains open. None of these edges is qualification evidence. The shared reader is
   [`package-backed-presentation-read.js`](../server/services/package-backed-presentation-read.js).
-- **Native re-import is not yet provenance or collateral proof.** The application
-  path has focused identity checks, but verified gaps still allow forged source
-  identity or collateral package changes in cases that must fail closed. A strict
-  native re-import claim therefore remains open; the mutable post-edit source hash
-  is not treated as an immutable field.
-- **Candidate cleanup is not yet complete.** Candidate quarantine metadata and
-  physical-GC-disabled policy do not yet prove that every failed publication or
-  concurrent/shutdown loser is durably owned and recoverable. Cleanup isolation,
-  quarantine/sweeper behavior, and loser compensation remain required before any
+- **Native re-import remains an application validator, not provenance or
+  collateral proof.** It now binds the requested package identity and isolates
+  validation media state from the ordinary-import upload index. Those focused
+  software contracts do not establish strict real-package re-import or rule out
+  forged source identity and collateral package changes. The executable owners are
+  [`native-reimport-validator.js`](../server/services/pptx-import/native-reimport-validator.js),
+  [`source-map.js`](../server/services/pptx-import/source-map.js), and
+  [`media-dedup.js`](../server/services/pptx-import/media-dedup.js).
+- **Staging cleanup fails closed but is not durable remediation.** Cleanup
+  uncertainty blocks edited publication, while an earlier validation failure stays
+  primary. Local quarantine and containment cover the bounded software path, but a
+  cleanup-and-quarantine double failure still has no durable owner or sweeper. The
+  path checks are not race-proof OS-handle isolation or OfficeCLI containment. See
+  [`native-reimport-workspace.js`](../server/services/pptx-import/native-reimport-workspace.js)
+  and
+  [`native-reimport-containment.test.js`](../server/services/pptx-import/native-reimport-containment.test.js).
+  Candidate cleanup ownership and loser compensation remain required before any
   publication-safety claim.
 
 These are application software-contract assertions only. They are not evidence of
-OfficeCLI or PowerPoint validation, Electron or Docker runtime behavior,
+OfficeCLI or PowerPoint validation, Electron or Docker or provider runtime behavior,
 non-Windows support, or real-package native re-import.
 
 #### Evidence boundary
 
 The application-side strict importer used by the transaction is not an
 Office/PowerPoint oracle. There is no recorded successful OfficeCLI
-qualification, PowerPoint oracle result, or real-package strict native
-re-import of a validated edited package. The G0–G5 gates remain open, including
-G1, as recorded in the
+qualification, PowerPoint oracle result, provider validation, or real-package
+strict native re-import of a validated edited package. The G0–G5 gates remain open,
+including G1, as recorded in the
 [OfficeCLI evidence journal](journals/260715-0215-officecli-containment-contract-open-native-gates.md).
 The canonical matrix has no promoted level-4 row, and the fidelity DTO holds
 level 5 unavailable. Therefore this document does not claim editable

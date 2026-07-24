@@ -16,10 +16,20 @@ function findHashEntry(hashes, hash) {
   return null
 }
 
-function createMediaTransaction() {
+function createMediaTransaction({ hashScope = null } = {}) {
   const records = []
   let closed = false
+  const rollbackHashes = async (hashes) => {
+    for (const record of records) {
+      const entry = hashes[record.bucket]?.[record.hash]
+      if (entry?.filename === record.filename) delete hashes[record.bucket][record.hash]
+      if (hashes[record.bucket] && Object.keys(hashes[record.bucket]).length === 0) {
+        delete hashes[record.bucket]
+      }
+    }
+  }
   return {
+    hashScope,
     record(record) {
       if (closed) throw new Error('PPTX media transaction is already closed')
       records.push(record)
@@ -31,15 +41,8 @@ function createMediaTransaction() {
     async rollback() {
       if (closed) return
       closed = true
-      await withUploadHashes(async (hashes) => {
-        for (const record of records) {
-          const entry = hashes[record.bucket]?.[record.hash]
-          if (entry?.filename === record.filename) delete hashes[record.bucket][record.hash]
-          if (hashes[record.bucket] && Object.keys(hashes[record.bucket]).length === 0) {
-            delete hashes[record.bucket]
-          }
-        }
-      })
+      if (hashScope) await rollbackHashes(hashScope)
+      else await withUploadHashes(rollbackHashes)
       await Promise.all(records.map((record) => fs.unlink(record.filePath).catch(() => {})))
       records.length = 0
     },
@@ -51,7 +54,10 @@ async function persistDedupedBuffer(buffer, ext, uploadsDir, metadata = {}) {
   const hash = hashBuffer(buffer)
   let createdFilePath = null
   try {
-    return await withUploadHashes(async (hashes) => {
+    const withHashes = metadata.transaction?.hashScope
+      ? (callback) => callback(metadata.transaction.hashScope)
+      : withUploadHashes
+    return await withHashes(async (hashes) => {
       metadata.signal?.throwIfAborted?.()
       const existing = findHashEntry(hashes, hash)
       if (existing) {

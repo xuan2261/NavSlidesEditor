@@ -18,7 +18,6 @@ export function summarizePptxImportWarnings(result) {
     'diagram-empty',
   ])
   const approximatedTypes = new Set([
-    'fallback-inspector',
     'geometry-clamped',
     'crop-converted',
     'line-endpoint-normalized',

@@ -87,6 +87,22 @@ describe('PPTX fidelity API contract', () => {
     })
   })
 
+  it('exposes package generation when a source-backed edit is fail-closed', () => {
+    const dto = buildFidelityDto({
+      id: 'deck',
+      pptxAggregateHead: { packageRevisionId: 'r1', generation: 2 },
+    }, {
+      aggregateGeneration: 3,
+      validatedEditedReasonCode: 'CANONICAL_TEXT_JOURNAL_INVALID',
+    })
+
+    expect(dto.aggregateGeneration).toBe(3)
+    expect(dto.exports.validatedEdited).toMatchObject({
+      available: false,
+      reasonCode: 'CANONICAL_TEXT_JOURNAL_INVALID',
+    })
+  })
+
   it('prefers the package-store generation over stale compatibility data', () => {
     const dto = buildFidelityDto({
       id: 'deck',
@@ -275,6 +291,38 @@ describe('PPTX fidelity API contract', () => {
       reason: 'A validated edited revision is not available.',
     })
   })
+  it.each([
+    'OFFICECLI_VALIDATOR_UNAVAILABLE',
+    'QUALIFIED_VALIDATORS_UNAVAILABLE',
+    'PRESENTATION_PACKAGE_HEAD_MISSING',
+  ])('preserves canonical unavailable code %s with a safe generic reason', (reasonCode) => {
+    const dto = buildFidelityDto({ id: 'deck', pptxOriginal: { id: 'source' } }, {
+      verifiedOriginalAvailable: true,
+      validatedEditedReasonCode: reasonCode,
+    })
+
+    expect(dto.exports.validatedEdited).toEqual({
+      available: false,
+      label: 'Export Validated Edited Revision',
+      reasonCode,
+      reason: 'A validated edited revision is not available.',
+    })
+  })
+
+  it('preserves canonical journal ineligibility as a typed export condition', () => {
+    const dto = buildFidelityDto({ id: 'deck', pptxOriginal: { id: 'source' } }, {
+      verifiedOriginalAvailable: true,
+      validatedEditedReasonCode: 'CANONICAL_TEXT_JOURNAL_INVALID',
+    })
+
+    expect(dto.exports.validatedEdited).toEqual({
+      available: false,
+      label: 'Export Validated Edited Revision',
+      reasonCode: 'CANONICAL_TEXT_JOURNAL_INVALID',
+      reason: 'The current edit is not eligible for validated package export.',
+    })
+  })
+
   it.each(['top-level', 'original'])('fails closed on malformed %s capability kinds', (location) => {
     const presentation = { id: 'malformed', pptxOriginal: { id: 'source' } }
     const owner = location === 'top-level' ? presentation : presentation.pptxOriginal

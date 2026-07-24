@@ -5,7 +5,7 @@
 > Historical counts and phase labels below do not supersede the current evidence
 > boundary.
 
-## Current package-first evidence boundary (2026-07-20)
+## Current package-first evidence boundary (2026-07-22)
 
 The immutable original package remains the recovery authority when its bytes can
 be verified. A projection save does not make a PPTX a validated edited package:
@@ -116,23 +116,35 @@ with route coverage in
 [`presentations.test.js`](../server/routes/presentations.test.js), and
 [`package-backed-presentation-read.test.js`](../server/services/package-backed-presentation-read.test.js).
 
-The application-side native re-import path has focused identity checks, but it is
-not yet strict provenance or collateral-preservation proof: verified gaps still
-allow forged source identity or collateral package changes in cases that must fail
-closed. The mutable post-edit source hash is not treated as immutable. Candidate
-quarantine metadata and the physical-GC-disabled policy also do not yet prove that
-every failed publication or concurrent/shutdown loser remains durably owned and
-recoverable; cleanup isolation, quarantine/sweeper behavior, and loser compensation
-remain open.
+The application-side native re-import path now has focused software-contract
+coverage for explicit package identity, validation-private media state, and
+fail-closed workspace cleanup. The owners are
+[`native-reimport-validator.js`](../server/services/pptx-import/native-reimport-validator.js),
+[`source-map.js`](../server/services/pptx-import/source-map.js),
+[`media-dedup.js`](../server/services/pptx-import/media-dedup.js), and
+[`native-reimport-workspace.js`](../server/services/pptx-import/native-reimport-workspace.js).
+Focused regressions are
+[`native-reimport-validator.test.js`](../server/services/pptx-import/native-reimport-validator.test.js),
+[`native-reimport-containment.test.js`](../server/services/pptx-import/native-reimport-containment.test.js),
+[`source-map.test.js`](../server/services/pptx-import/source-map.test.js), and
+[`media.test.js`](../server/services/pptx-import/media.test.js).
+
+These checks close the observed local identity, media-index, and cleanup
+false-success paths; they do not establish strict real-package re-import,
+provenance or collateral-preservation proof, or race-proof filesystem isolation. A
+cleanup-and-quarantine double failure still has no durable owner or sweeper, and
+loser compensation remains open. The mutable post-edit source hash is not treated
+as immutable.
 
 These are application software-contract tests. They are not evidence of successful
-OfficeCLI or PowerPoint validation, Electron or Docker runtime behavior,
+OfficeCLI or PowerPoint validation, Electron or Docker or provider runtime behavior,
 non-Windows support, or real-package native re-import.
 
 No release evidence records a successful OfficeCLI qualification, PowerPoint
-oracle result, or real-package strict native re-import of a validated edited
-package. The application-side validator uses the NavSlides importer; it is not
-Office or PowerPoint evidence. The G0–G5 gates, including G1, remain open in the
+oracle result, provider validation, or real-package strict native re-import of a
+validated edited package. The application-side validator uses the NavSlides
+importer; it is not Office or PowerPoint evidence. The G0–G5 gates, including G1,
+remain open in the
 [OfficeCLI containment journal](journals/260715-0215-officecli-containment-contract-open-native-gates.md).
 The fidelity API does not promote any row to verified editable status and keeps
 level 5 unavailable; see
@@ -188,7 +200,7 @@ and its
   also remains disabled. Engineering milestone contract lives in
   `server/services/pptx-import/sla-contract.js` (Phase 01 requires **P1** only).
 - This does **not** claim visual 1:1; later phases own SSIM/oracle and editable
-  parity. Plan: `plans/260709-1306-pptx-import-native-ooxml-1to1-fidelity-deep-tdd/`.
+  parity. Plan: `plans/archive/260709-1306-pptx-import-native-ooxml-1to1-fidelity-deep-tdd/`.
 
 ## 2026-06-17 Strict Gate And OOXML Visibility Update
 
@@ -460,11 +472,11 @@ and its
   alongside `font-size` and `letter-spacing`.
 - Added rollout checklist documentation for staging verification, rollback
   behavior, and the manual visual-baseline review gate.
-- Added `tests/e2e/pptx-import-visual-fidelity.spec.js` as the guarded
-  visual-regression harness. It uses the async PPTX import job flow and
+- Added `tests/e2e/pptx-import-editor-visual-regression.spec.js` as the guarded
+  editor-canvas regression harness. It uses the async PPTX import job flow and
   `.slide-canvas` screenshots with `maxDiffPixelRatio: 0.002`; it intentionally
-  skips unless `PPTX_VISUAL_BASELINES_REVIEWED=1` is set after reference
-  baselines are reviewed.
+  skips unless `PPTX_EDITOR_BASELINES_REVIEWED=1` is set after editor baselines
+  are reviewed. These snapshots are not PowerPoint visual-fidelity evidence.
 - Verification passed: acceptance criteria/unit slices, strict corpus `11/11`
   at `100.0%` semantic fidelity and `100.0%` round-trip stability.
 

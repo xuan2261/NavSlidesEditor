@@ -3,10 +3,20 @@ import { describe, expect, it } from 'vitest'
 import tester from './pptx-import-semantic-and-roundtrip-fidelity-tester.js'
 import baseline from './corpus-baseline.json'
 
-const { applyStrictPerTypeGates, evaluateCapture, runCorpusTests } = tester
+const { appendResultError, applyStrictPerTypeGates, evaluateCapture, runCorpusTests } = tester
 const STRICT_CLASS_DROP_TYPES = ['image', 'shape', 'table', 'text', 'chart', 'group', 'diagram', 'line', 'other']
 
 describe('pptx corpus baseline', () => {
+  it('keeps string errors compatible while adding sanitized typed details', () => {
+    const result = { errors: [], errorDetails: [] }
+    appendResultError(result, new Error('<slide>private</slide> import failed'), 'import-failed')
+
+    expect(result.errors).toEqual(['[xml]private[xml] import failed'])
+    expect(result.errorDetails).toEqual([
+      { type: 'import-failed', message: '[xml]private[xml] import failed' },
+    ])
+  })
+
   it('scores math-to-latex capture with math-specific criteria', () => {
     const capture = evaluateCapture(
       { type: 'math', left: 10, top: 20, width: 100, height: 50, latex: '\\frac{a}{b}' },

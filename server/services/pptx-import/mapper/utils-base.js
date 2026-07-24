@@ -7,6 +7,7 @@ function baseElement(element, scale, zIndex, box = null) {
     ...(box || mapBox(element, scale)),
     rotation: readNumber(element?.rotate, 0),
     opacity: typeof element.opacity === 'number' ? element.opacity : 1,
+    ...(typeof element?.name === 'string' && element.name ? { name: element.name } : {}),
     zIndex,
   }
 }

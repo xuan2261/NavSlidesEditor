@@ -1,8 +1,30 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { api } from './api'
 
+function busyImportResponse(retryAfter) {
+  return {
+    ok: false,
+    status: 429,
+    headers: { get: (name) => name === 'Retry-After' ? retryAfter : null },
+    json: async () => ({ error: 'import-in-progress' }),
+  }
+}
+
+function acceptedImportResponse() {
+  return { ok: true, json: async () => ({ jobId: 'job-2' }) }
+}
+
+function mockBusyThenAccepted(retryAfter) {
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(busyImportResponse(retryAfter))
+    .mockResolvedValueOnce(acceptedImportResponse())
+  vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
+}
+
 describe('PPTX import API', () => {
   afterEach(() => {
+    vi.useRealTimers()
     vi.unstubAllGlobals()
   })
 
@@ -33,7 +55,7 @@ describe('PPTX import API', () => {
         .mockResolvedValueOnce({
           ok: false,
           status: 429,
-          headers: { get: () => '60' },
+          headers: { get: () => null },
           json: async () => ({ error: 'import-in-progress' }),
         })
         .mockResolvedValueOnce({
@@ -53,6 +75,229 @@ describe('PPTX import API', () => {
 
     expect(onBusyRetry).toHaveBeenCalledWith(1)
     expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('keeps numeric retry metadata and exposes the raw Retry-After header', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => busyImportResponse('60')))
+
+    await expect(api.importPptxAsync(new File(['pptx'], 'deck.pptx'))).rejects.toMatchObject({
+      retryAfter: 60,
+      retryAfterRaw: '60',
+      status: 429,
+    })
+  })
+
+  it('waits for the canonical server Retry-After delay before retrying', async () => {
+    vi.useFakeTimers()
+    const fetchMock = mockBusyThenAccepted('60')
+    const promise = api.importPptxAsync(new File(['pptx'], 'deck.pptx'), {
+      retryOnBusy: true,
+      maxBusyRetries: 1,
+      busyRetryDelayMs: 1,
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(59_999)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(1)
+    await expect(promise).resolves.toEqual({ jobId: 'job-2' })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it.each([
+    ['missing', undefined],
+    ['zero', '0'],
+    ['decimal', '1.5'],
+    ['exponent', '1e2'],
+    ['hexadecimal', '0x10'],
+    ['positive sign', '+60'],
+    ['negative sign', '-60'],
+    ['leading whitespace', ' 60'],
+    ['trailing whitespace', '60 '],
+    ['unsafe integer', '9007199254740992'],
+  ])('uses the configured fallback for %s Retry-After values', async (_label, retryAfter) => {
+    vi.useFakeTimers()
+    const fetchMock = mockBusyThenAccepted(retryAfter)
+    const promise = api.importPptxAsync(new File(['pptx'], 'deck.pptx'), {
+      retryOnBusy: true,
+      maxBusyRetries: 1,
+      busyRetryDelayMs: 17,
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(16)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(1)
+    await expect(promise).resolves.toEqual({ jobId: 'job-2' })
+  })
+
+  it('uses the default fallback when Retry-After is absent', async () => {
+    vi.useFakeTimers()
+    const fetchMock = mockBusyThenAccepted(undefined)
+    const promise = api.importPptxAsync(new File(['pptx'], 'deck.pptx'), {
+      retryOnBusy: true,
+      maxBusyRetries: 1,
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(4_999)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1)
+    await expect(promise).resolves.toEqual({ jobId: 'job-2' })
+  })
+
+  it.each([
+    ['caps configured fallback at five minutes', undefined, 400_000, 300_000],
+    ['keeps explicit zero fallback immediate', '0', 0, 0],
+  ])('%s', async (_label, retryAfter, busyRetryDelayMs, expectedDelayMs) => {
+    vi.useFakeTimers()
+    const fetchMock = mockBusyThenAccepted(retryAfter)
+    const promise = api.importPptxAsync(new File(['pptx'], 'deck.pptx'), {
+      retryOnBusy: true,
+      maxBusyRetries: 1,
+      busyRetryDelayMs,
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+    if (expectedDelayMs > 0) {
+      await vi.advanceTimersByTimeAsync(expectedDelayMs - 1)
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(1)
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    await expect(promise).resolves.toEqual({ jobId: 'job-2' })
+  })
+
+  it('caps huge canonical Retry-After values at five minutes', async () => {
+    vi.useFakeTimers()
+    const fetchMock = mockBusyThenAccepted('9007199254740991')
+    const promise = api.importPptxAsync(new File(['pptx'], 'deck.pptx'), {
+      retryOnBusy: true,
+      maxBusyRetries: 1,
+      busyRetryDelayMs: 1,
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(299_999)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    await expect(promise).resolves.toEqual({ jobId: 'job-2' })
+  })
+
+  it('does not retry unrelated 429 responses', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: false,
+      status: 429,
+      headers: { get: () => '60' },
+      json: async () => ({ error: 'too-many-requests' }),
+    })))
+
+    await expect(api.importPptxAsync(new File(['pptx'], 'deck.pptx'), {
+      retryOnBusy: true,
+      maxBusyRetries: 1,
+    })).rejects.toMatchObject({ message: 'too-many-requests' })
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('passes the admission signal to the import fetch', async () => {
+    const controller = new AbortController()
+    let receivedSignal
+    const fetchMock = vi.fn((_url, { signal }) => new Promise((_resolve, reject) => {
+      receivedSignal = signal
+      signal?.addEventListener('abort', () => {
+        const error = new Error('aborted')
+        error.name = 'AbortError'
+        reject(error)
+      }, { once: true })
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const promise = api.importPptxAsync(new File(['pptx'], 'deck.pptx'), { signal: controller.signal })
+    expect(receivedSignal).toBe(controller.signal)
+
+    controller.abort()
+    await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+  })
+
+  it('propagates an abort while reading an admitted job response', async () => {
+    const controller = new AbortController()
+    let beginJson
+    const jsonStarted = new Promise((resolve) => {
+      beginJson = resolve
+    })
+    vi.stubGlobal('fetch', vi.fn((_url, { signal }) => Promise.resolve({
+      ok: true,
+      status: 202,
+      json: () => {
+        beginJson()
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener('abort', () => {
+            const error = new Error('aborted')
+            error.name = 'AbortError'
+            reject(error)
+          }, { once: true })
+        })
+      },
+    })))
+
+    const promise = api.importPptxAsync(new File(['pptx'], 'deck.pptx'), { signal: controller.signal })
+    await jsonStarted
+    controller.abort()
+
+    await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+  })
+
+  it('removes admission abort listeners after a retry sleep resolves', async () => {
+    vi.useFakeTimers()
+    const signal = {
+      aborted: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }
+    const fetchMock = mockBusyThenAccepted('invalid')
+    const promise = api.importPptxAsync(new File(['pptx'], 'deck.pptx'), {
+      retryOnBusy: true,
+      maxBusyRetries: 1,
+      busyRetryDelayMs: 10,
+      signal,
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(10)
+    await expect(promise).resolves.toEqual({ jobId: 'job-2' })
+    expect(signal.removeEventListener).toHaveBeenCalledWith('abort', expect.any(Function))
+    expect(vi.getTimerCount()).toBe(0)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('aborts a busy retry sleep without a delayed import POST', async () => {
+    vi.useFakeTimers()
+    const controller = new AbortController()
+    const removeEventListener = vi.spyOn(controller.signal, 'removeEventListener')
+    const fetchMock = mockBusyThenAccepted('60')
+    const promise = api.importPptxAsync(new File(['pptx'], 'deck.pptx'), {
+      retryOnBusy: true,
+      maxBusyRetries: 1,
+      busyRetryDelayMs: 60_000,
+      signal: controller.signal,
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const outcome = promise.then(
+      () => ({ name: 'resolved' }),
+      (error) => error
+    )
+    controller.abort()
+    await vi.advanceTimersByTimeAsync(60_000)
+    await expect(outcome).resolves.toMatchObject({ name: 'AbortError' })
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(removeEventListener).toHaveBeenCalledWith('abort', expect.any(Function))
+    expect(vi.getTimerCount()).toBe(0)
   })
 
   it('polls and cancels PPTX import jobs', async () => {
@@ -91,6 +336,16 @@ describe('PPTX import API', () => {
       status: 404,
     })
     expect(fetch).toHaveBeenNthCalledWith(1, '/api/presentations/deck-1/pptx-original')
+  })
+
+  it('fences original PPTX downloads to a supplied package generation', async () => {
+    const blob = new Blob(['pptx'])
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, blob: async () => blob })))
+
+    await expect(api.downloadPptxOriginal('deck-1', 2)).resolves.toBe(blob)
+    expect(fetch).toHaveBeenCalledWith('/api/presentations/deck-1/pptx-original', {
+      headers: { 'If-Pptx-Generation': '2' },
+    })
   })
 
   it('preserves the validated edited successor generation on the returned blob', async () => {

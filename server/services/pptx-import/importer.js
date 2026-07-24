@@ -11,10 +11,17 @@ const { createMediaBudget } = require('./resource-budgets')
 const { runShadowReconciliation } = require('./reconciliation')
 const { buildImportSourceMap } = require('./source-map')
 
+function finiteSceneStats(mappedStats) {
+  return Object.fromEntries(
+    ['sceneGraphMappedNodes', 'sceneGraphUnmapped']
+      .filter((key) => Number.isFinite(mappedStats[key]))
+      .map((key) => [key, mappedStats[key]])
+  )
+}
+
 function buildImportStats({ mappedStats = {}, parsed = {}, startedAt = Date.now(), now = Date.now() }) {
   return {
     parser: 'pptxtojson',
-    fallbackParserUsed: Boolean(parsed.fallback),
     packageVersion: parsed.packageVersion,
     slideCount: mappedStats.slideCount,
     textCount: mappedStats.textCount,
@@ -30,6 +37,7 @@ function buildImportStats({ mappedStats = {}, parsed = {}, startedAt = Date.now(
     nativeObjectCoverage: mappedStats.nativeObjectCoverage,
     ooxml: mappedStats.ooxml,
     placeholderCount: mappedStats.placeholderCount,
+    ...finiteSceneStats(mappedStats),
     durationMs: now - startedAt,
   }
 }
@@ -156,13 +164,7 @@ async function importPptxFile(filePath, options = {}) {
       ? { stats: sceneGraph.stats, slideCount: sceneGraph.slides?.length }
       : sceneGraph,
     shadowReconciliation,
-    warnings: [
-      ...mapped.warnings,
-      ...sceneWarnings,
-      ...(parsed.fallback
-        ? [{ slideIndex: null, type: 'fallback-inspector', message: sanitizeDiagnostic(parsed.fallback.reason || 'pptx2json fallback inspector used') }]
-        : []),
-    ],
+    warnings: [...mapped.warnings, ...sceneWarnings],
   }
 }
 

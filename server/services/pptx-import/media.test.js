@@ -343,6 +343,33 @@ describe('pptx media persistence', () => {
     })
   })
 
+  it('isolates native-import media hashes from the global upload index', async () => {
+    await withHashFileRestored(async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-isolated-'))
+      const transaction = dedup.createMediaTransaction({ hashScope: {} })
+      const globalHashes = {
+        existing: { [sha256(validPng)]: { filename: 'existing.png' } },
+      }
+      try {
+        await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
+        await fs.writeFile(HASHES_FILE, JSON.stringify(globalHashes))
+
+        const result = await persistDedupedBuffer(validPng, 'png', dir, { transaction })
+
+        expect(result.deduped).toBe(false)
+        expect(JSON.parse(await fs.readFile(HASHES_FILE, 'utf-8'))).toEqual(globalHashes)
+        expect(await fs.readdir(dir)).toHaveLength(1)
+
+        await transaction.rollback()
+
+        expect(JSON.parse(await fs.readFile(HASHES_FILE, 'utf-8'))).toEqual(globalHashes)
+        expect(await fs.readdir(dir)).toHaveLength(0)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
   it('rejects late media writes after transaction rollback without leaving files or hashes', async () => {
     await withHashFileRestored(async () => {
       const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-closed-transaction-'))

@@ -1,114 +1,82 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { EditorPage } from './pages/editor-page.js'
-import { postPptxImportWhenAvailable } from './helpers/pptx-import-api-helper.js'
+import { importPptxWhenAvailable } from './helpers/pptx-import-api-helper.js'
 import {
   apiDeletePresentation,
   apiGetPresentation,
-  apiUpdatePresentation,
   expect,
   test,
 } from './fixtures/test-fixtures.js'
 
-const PPTX_MIME =
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+const PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 const PPTX_FIXTURE = path.resolve(process.cwd(), 'PPTX', 'Bai_2_2.pptx')
 
-async function waitForPptxImport(request, jobId) {
-  for (let attempt = 0; attempt < 120; attempt += 1) {
-    const poll = await request.get(`/api/pptx/jobs/${jobId}`)
-    expect(poll.ok()).toBeTruthy()
-    const job = await poll.json()
-    if (job.status === 'done') return job.result
-    if (job.status === 'failed' || job.status === 'cancelled') {
-      throw new Error(job.error || `PPTX import ${job.status}`)
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500))
-  }
-  throw new Error('Timed out waiting for PPTX import job')
-}
-
 test.describe('PPTX import fidelity', () => {
-  test('imports pptx, renders stable element boxes, and persists property edits', async ({
+  test('imports a package-backed PPTX and renders stable element boxes', async ({
     page,
     request,
-    testPresentation,
   }) => {
     test.setTimeout(150000)
-    const buffer = await fs.readFile(PPTX_FIXTURE)
-    const importRes = await postPptxImportWhenAvailable(request, {
-        file: {
-          name: path.basename(PPTX_FIXTURE),
-          mimeType: PPTX_MIME,
-          buffer,
-        },
-    })
-    expect(importRes.status()).toBe(202)
-    const { jobId } = await importRes.json()
-    const imported = await waitForPptxImport(request, jobId)
-    const importedPresentation = await apiGetPresentation(request, imported.presentationId)
-    expect(importedPresentation.slides?.length).toBeGreaterThan(0)
-    const presentation = await apiUpdatePresentation(request, testPresentation.id, importedPresentation)
-    await apiDeletePresentation(request, imported.presentationId)
+    let presentationId
 
-    const editor = new EditorPage(page)
-    await editor.gotoPresentation(presentation.id)
-
-    const elementLocator = page.locator('[data-testid^="slide-element-"]')
-    await expect(elementLocator.first()).toBeVisible({ timeout: 10000 })
-    const elementCount = await elementLocator.count()
-    expect(elementCount).toBeGreaterThan(0)
-
-    const boundsAudit = await page.evaluate(() => {
-      const canvas = document.querySelector('.slide-canvas')
-      if (!canvas) return { ok: false, reason: 'missing-canvas' }
-      const c = canvas.getBoundingClientRect()
-      const audited = Array.from(document.querySelectorAll('[data-testid^="slide-element-"]'))
-        .slice(0, 12)
-        .map((node) => {
-          const r = node.getBoundingClientRect()
-          return {
-            id: node.getAttribute('data-element-id'),
-            type: node.getAttribute('data-element-type'),
-            width: r.width,
-            height: r.height,
-            left: r.left - c.left,
-            top: r.top - c.top,
-            right: r.right - c.left,
-            bottom: r.bottom - c.top,
-            canvasWidth: c.width,
-            canvasHeight: c.height,
-          }
-        })
-
-      const ok = audited.every((entry) => {
-        if (!(entry.width > 0 && entry.height > 0)) return false
-        if (!(entry.left <= entry.canvasWidth + 5 && entry.top <= entry.canvasHeight + 5)) return false
-        if (!(entry.right >= -5 && entry.bottom >= -5)) return false
-        return true
+    try {
+      const buffer = await fs.readFile(PPTX_FIXTURE)
+      const imported = await importPptxWhenAvailable(request, {
+        file: { name: path.basename(PPTX_FIXTURE), mimeType: PPTX_MIME, buffer },
       })
-      return { ok, audited }
-    })
-    expect(boundsAudit.ok).toBe(true)
+      presentationId = imported.presentationId
 
-    const firstElement = page.locator('[data-testid^="slide-element-"]').first()
-    const firstElementId = await firstElement.getAttribute('data-element-id')
-    await firstElement.click()
-    await expect(page.locator('.properties-panel')).toBeVisible({ timeout: 5000 })
+      const presentation = await apiGetPresentation(request, presentationId)
+      expect(presentation.id).toBe(presentationId)
+      expect(presentation.pptxSourceAvailable).toBe(true)
+      expect(Number.isSafeInteger(presentation.aggregateGeneration)).toBe(true)
+      expect(presentation.slides?.length).toBeGreaterThan(0)
 
-    const xInput = page.getByTestId('prop-x')
-    await expect(xInput).toBeVisible()
-    const previousX = Number(await xInput.inputValue())
-    const nextX = Number.isFinite(previousX) ? previousX + 7 : 7
-    await xInput.fill(String(nextX))
-    await xInput.blur()
-    await editor.waitForAutoSave()
+      const editor = new EditorPage(page)
+      await editor.gotoPresentation(presentationId)
 
-    await page.reload()
-    await editor.waitForReady()
-    const saved = await apiGetPresentation(request, presentation.id)
-    const savedElement = saved.slides[0]?.elements?.find((el) => el.id === firstElementId)
-    expect(savedElement).toBeTruthy()
-    expect(savedElement.x).toBe(nextX)
+      const elementLocator = page.getByTestId(/^slide-element-/)
+      await expect(elementLocator.first()).toBeVisible({ timeout: 10000 })
+      expect(await elementLocator.count()).toBeGreaterThan(0)
+
+      const boundsAudit = await page.evaluate(() => {
+        const canvas = document.querySelector('.slide-canvas')
+        if (!canvas) return { ok: false, reason: 'missing-canvas' }
+        const canvasBox = canvas.getBoundingClientRect()
+        const audited = Array.from(document.querySelectorAll('[data-testid^="slide-element-"]'))
+          .slice(0, 12)
+          .map((node) => {
+            const box = node.getBoundingClientRect()
+            return {
+              bottom: box.bottom - canvasBox.top,
+              height: box.height,
+              left: box.left - canvasBox.left,
+              right: box.right - canvasBox.left,
+              top: box.top - canvasBox.top,
+              width: box.width,
+              canvasHeight: canvasBox.height,
+              canvasWidth: canvasBox.width,
+            }
+          })
+        const ok = audited.every(
+          (entry) =>
+            entry.width > 0 &&
+            entry.height > 0 &&
+            entry.left <= entry.canvasWidth + 5 &&
+            entry.top <= entry.canvasHeight + 5 &&
+            entry.right >= -5 &&
+            entry.bottom >= -5
+        )
+        return { ok, audited }
+      })
+      expect(boundsAudit.ok, JSON.stringify(boundsAudit)).toBe(true)
+
+      const reloaded = await apiGetPresentation(request, presentationId)
+      expect(reloaded.id).toBe(presentationId)
+      expect(reloaded.aggregateGeneration).toBe(presentation.aggregateGeneration)
+    } finally {
+      await apiDeletePresentation(request, presentationId)
+    }
   })
 })

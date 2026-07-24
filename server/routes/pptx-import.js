@@ -19,7 +19,9 @@ const { createMediaTransaction } = require('../services/pptx-import/media-dedup'
 const { getDesignTokensForRevealTheme } = require('revealjs-shared')
 const { sweepStaleTempUploads } = require('../services/pptx-import/temp-upload-sweep')
 const {
+  drainPackageCompatibilityOutbox,
   getPackageStore,
+  getReadablePackageStore,
   withPackageStore,
 } = require('../services/pptx-import/package-store-runtime')
 
@@ -53,6 +55,71 @@ function uploadSingle(req, res, next) {
 
 function isValidJobId(jobId) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(jobId)
+}
+
+async function getDurableImportJob(jobId) {
+  try {
+    const store = await getReadablePackageStore()
+    const job = store.getJob(jobId)
+    return job?.kind === 'import' ? job : null
+  } catch (error) {
+    if (error?.code === 'PACKAGE_STORE_UNAVAILABLE') return null
+    throw error
+  }
+}
+
+function serializeDurableImportJob(job) {
+  if (!job) return null
+  const status = job.status === 'completed' ? 'done' : job.status
+  const presentationId = typeof job.presentationId === 'string' && job.presentationId
+    ? job.presentationId
+    : null
+  return {
+    jobId: job.id,
+    status,
+    stage: status === 'done' ? 'complete' : status,
+    percent: status === 'done' || status === 'failed' || status === 'cancelled' ? 100 : 0,
+    message: status === 'done' ? 'Import complete' : `Import ${status}`,
+    ...(presentationId ? { result: { presentationId } } : {}),
+    durable: true,
+    transactionState: job.transactionState,
+    cancellationPoint: job.cancellationPoint,
+  }
+}
+
+function reconciliationReasonCode(error) {
+  return typeof error?.code === 'string' && /^[A-Z][A-Z0-9_]{1,63}$/.test(error.code)
+    ? error.code
+    : 'PACKAGE_IMPORT_RECONCILIATION_FAILED'
+}
+
+async function reconcileDurableImportJob(job, {
+  deletePresentation,
+  packageRollback,
+  drainCompatibility = drainPackageCompatibilityOutbox,
+}) {
+  const presentationId = job?.presentationId
+  if (typeof presentationId !== 'string' || !presentationId) {
+    return { success: true, jobId: job?.id, status: 'nothing-to-reconcile' }
+  }
+  const identity = { jobId: job.id, presentationId }
+  try {
+    if (packageRollback) {
+      await packageRollback(identity)
+      await drainCompatibility?.()
+    }
+    await deletePresentation(presentationId)
+    return { success: true, status: 'reconciled', ...identity }
+  } catch (error) {
+    return {
+      success: false,
+      status: 'reconciliation-failed',
+      error: 'package-import-reconciliation-failed',
+      reasonCode: reconciliationReasonCode(error),
+      ...identity,
+      detail: sanitizeDiagnostic(error),
+    }
+  }
 }
 
 function withAbort(promise, signal, cleanupLateResult, trackCleanup) {
@@ -292,6 +359,8 @@ function createPptxImportRouter({
   deleteOriginal = deleteOriginalPptx,
   packageCommit = process.env.NODE_ENV === 'test' ? null : commitImportedPackage,
   packageRollback = process.env.NODE_ENV === 'test' ? null : rollbackImportedPackage,
+  drainCompatibility = drainPackageCompatibilityOutbox,
+  readDurableJob = getDurableImportJob,
   originalBaseDir,
   importTimeoutMs = IMPORT_TIMEOUT_MS,
 } = {}) {
@@ -364,10 +433,16 @@ function createPptxImportRouter({
     }
   })
 
-  router.get('/jobs/:jobId', (req, res) => {
+  router.get('/jobs/:jobId', async (req, res) => {
     const job = jobManager.getJob(req.params.jobId)
-    if (!job) return res.status(404).json({ error: 'job-not-found' })
-    res.json(jobManager.serializeJob(job))
+    if (job) return res.json(jobManager.serializeJob(job))
+    try {
+      const durableJob = await readDurableJob(req.params.jobId)
+      if (!durableJob) return res.status(404).json({ error: 'job-not-found' })
+      return res.json(serializeDurableImportJob(durableJob))
+    } catch (error) {
+      return res.status(503).json({ error: 'durable-job-authority-unavailable', code: error.code })
+    }
   })
 
   router.get('/jobs/:jobId/stream', (req, res) => {
@@ -384,11 +459,52 @@ function createPptxImportRouter({
     req.on('close', () => jobManager.detachSseClient(req.params.jobId, res))
   })
 
-  router.delete('/jobs/:jobId', (req, res) => {
+  router.delete('/jobs/:jobId', async (req, res) => {
     const status = jobManager.cancelJob(req.params.jobId)
-    if (status === 'unknown') return res.status(404).json({ error: 'job-not-found' })
+    if (status === 'unknown') {
+      try {
+        const durableJob = await readDurableJob(req.params.jobId)
+        if (durableJob) {
+          return res.status(409).json({
+            error: 'job-already-finished',
+            code: 'JOB_ALREADY_FINISHED',
+            job: serializeDurableImportJob(durableJob),
+          })
+        }
+      } catch (error) {
+        return res.status(503).json({ error: 'durable-job-authority-unavailable', code: error.code })
+      }
+      return res.status(404).json({ error: 'job-not-found' })
+    }
     if (status === 'conflict') return res.status(409).json({ error: 'job-already-finished' })
     res.status(204).end()
+  })
+
+  router.post('/jobs/:jobId/reconcile', async (req, res) => {
+    const jobId = req.params.jobId
+    const current = jobManager.getJob(jobId)
+    if (current && !current.terminalState) {
+      return res.status(409).json({ error: 'job-not-terminal', code: 'JOB_NOT_TERMINAL' })
+    }
+    let durableJob
+    try {
+      durableJob = await readDurableJob(jobId)
+    } catch (error) {
+      return res.status(503).json({ error: 'durable-job-authority-unavailable', code: error.code })
+    }
+    if (durableJob && ['queued', 'running'].includes(durableJob.status)) {
+      return res.status(409).json({ error: 'job-not-terminal', code: 'JOB_NOT_TERMINAL' })
+    }
+    const job = durableJob || (current?.status === 'done'
+      ? { id: jobId, status: 'completed', presentationId: current.result?.presentationId }
+      : null)
+    if (!job) return res.status(404).json({ error: 'job-not-found' })
+    const result = await reconcileDurableImportJob(job, {
+      deletePresentation,
+      packageRollback,
+      drainCompatibility,
+    })
+    res.status(result.success ? 200 : 409).json(result)
   })
 
   return router
@@ -396,5 +512,8 @@ function createPptxImportRouter({
 
 module.exports = createPptxImportRouter()
 module.exports.createPptxImportRouter = createPptxImportRouter
+module.exports.getDurableImportJob = getDurableImportJob
 module.exports.isValidJobId = isValidJobId
+module.exports.reconcileDurableImportJob = reconcileDurableImportJob
 module.exports.runImport = runImport
+module.exports.serializeDurableImportJob = serializeDurableImportJob

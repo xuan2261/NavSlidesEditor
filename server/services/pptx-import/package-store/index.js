@@ -88,7 +88,8 @@ async mutate(mutator, options = {}) {
         })
       }
       const next = this.getState()
-      mutator(next)
+      const changed = mutator(next)
+      if (changed === false) return this.getState()
       next.generation += 1
       next.fencingEpoch = this.fencingEpoch
       await this.metadata.publish(next, {

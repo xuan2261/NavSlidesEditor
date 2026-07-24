@@ -23,7 +23,7 @@ describe('e2e suite is sleep-free', () => {
     const POLL_ALLOWLIST = new Set([
       'tests/e2e/global-setup.js',
       'tests/e2e/pptx-import-fidelity.spec.js',
-      'tests/e2e/pptx-import-visual-fidelity.spec.js',
+      'tests/e2e/pptx-import-editor-visual-regression.spec.js',
       'tests/e2e/export/pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js',
       'tests/e2e/fixtures/test-fixtures.js',
       'tests/e2e/helpers/pptx-import-api-helper.js',

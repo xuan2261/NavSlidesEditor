@@ -11,9 +11,11 @@ const fs = require('fs-extra')
 const pptxgen = require('pptxgenjs')
 const { sanitizeHtml } = require('./mapper')
 const { importPptxFile } = require('./importer')
+const { sanitizeDiagnostic } = require('./diagnostics')
 const { assertPresentationAcceptance } = require('./acceptance-criteria')
 const { fitBoxWithinBounds, identityMatrix, mapBoxByMatrix, multiply, readCoord, readNumber, rotateAround, scaleAround, translate } = require('./geometry')
 const { UPLOADS_DIR } = require('../storage')
+const { hashFile } = require('./evidence/corpus-manifest')
 
 const DEFAULT_CORPUS = path.join(__dirname, '..', '..', 'data', 'test-corpus')
 const FALLBACK_CORPUS = path.resolve(__dirname, '..', '..', '..', 'PPTX')
@@ -1124,6 +1126,15 @@ async function computeRoundTripStability(navslidesJSON, reimportedJSON) {
 // Test a single corpus file
 // ---------------------------------------------------------------------------
 
+function appendResultError(result, error, type = 'import-failed') {
+  const message = sanitizeDiagnostic(error)
+  result.errors.push(message)
+  result.errorDetails.push({
+    type: typeof error?.type === 'string' ? error.type : type,
+    message,
+  })
+}
+
 async function testCorpusFile(filePath, options = {}) {
   const {
     skipRoundTrip = true,
@@ -1138,6 +1149,10 @@ async function testCorpusFile(filePath, options = {}) {
   const result = {
     file: fileName,
     path: filePath,
+    mode: 'corpus-metrics',
+    manifestDigest: options.manifestDigest || null,
+    sourceSha256: null,
+    importerOptions: productionImportOptions(options.importOptions),
     durationMs: 0,
     semantic: null,
     geometryDrift: null,
@@ -1145,6 +1160,7 @@ async function testCorpusFile(filePath, options = {}) {
     elementCount: null,
     roundTrip: null,
     errors: [],
+    errorDetails: [],
     warnings: [],
     stats: null,
     semanticFidelity: null,
@@ -1154,7 +1170,7 @@ async function testCorpusFile(filePath, options = {}) {
   try {
     const parsed = await parsePptxWithPptxtojson(filePath)
     if (!parsed.ok) {
-      result.errors.push(`parse failed: ${parsed.error?.message}`)
+      appendResultError(result, `parse failed: ${parsed.error?.message}`, parsed.error?.type || 'parse-failed')
       return result
     }
 
@@ -1166,7 +1182,7 @@ async function testCorpusFile(filePath, options = {}) {
     try {
       assertPresentationAcceptance(imported.presentation, undefined, parsed.output)
     } catch (error) {
-      result.errors.push(error.message)
+      appendResultError(result, error, 'acceptance-failed')
     }
 
     result.semantic = computeSemanticFidelity(parsed.output, imported.presentation)
@@ -1212,7 +1228,7 @@ async function testCorpusFile(filePath, options = {}) {
       }
     }
   } catch (err) {
-    result.errors.push(String(err.message))
+    appendResultError(result, String(err.message), err?.type || 'import-failed')
   }
 
   result.durationMs = Date.now() - started
@@ -1257,19 +1273,22 @@ async function runCorpusTests(corpusDir = DEFAULT_CORPUS, options = {}) {
       importOptions: options.importOptions,
     }, effectiveSkipRoundTrip))
     testResult.fileSizeBytes = stat.size
+    testResult.sourceSha256 = await hashFile(filePath)
 
     if (!effectiveSkipRoundTrip && !testResult.roundTrip?.available) {
-      testResult.errors.push(`Round-trip unavailable: ${testResult.roundTrip?.reason || 'missing'}`)
+      appendResultError(testResult, `Round-trip unavailable: ${testResult.roundTrip?.reason || 'missing'}`, 'roundtrip-unavailable')
     }
 
     if (strict) {
       if (testResult.roundTripExportMethod !== 'production') {
-        testResult.errors.push('Strict mode requires production export method')
+        appendResultError(testResult, 'Strict mode requires production export method', 'strict-export-method')
       }
       if (!testResult.roundTrip?.available) {
-        testResult.errors.push(`Strict mode requires round-trip result: ${testResult.roundTrip?.reason || 'missing'}`)
+        appendResultError(testResult, `Strict mode requires round-trip result: ${testResult.roundTrip?.reason || 'missing'}`, 'strict-roundtrip-unavailable')
       }
-      testResult.errors.push(...applyStrictPerTypeGates(testResult, { perDeckMin, maxClassDrop, excludeClassDrop }))
+      for (const message of applyStrictPerTypeGates(testResult, { perDeckMin, maxClassDrop, excludeClassDrop })) {
+        appendResultError(testResult, message, 'strict-metrics-gate')
+      }
     }
 
     results.push(testResult)
@@ -1289,6 +1308,9 @@ async function runCorpusTests(corpusDir = DEFAULT_CORPUS, options = {}) {
   const avgRoundTrip = roundTripCount > 0 ? Math.round((roundTripTotal / roundTripCount) * 100) / 100 : null
 
   const summary = {
+    mode: 'corpus-metrics',
+    manifestDigest: options.manifestDigest || null,
+    importerOptions: productionImportOptions(options.importOptions),
     corpusDir: effectiveCorpusDir,
     totalFiles,
     passedFiles,
@@ -1334,7 +1356,10 @@ function parsePercentFlag(value, fallback) {
 function reportResults({ results, summary }) {
   const lines = []
   lines.push(`\n=== PPTX Fidelity Test Report ===`)
+  lines.push(`Mode: ${summary.mode || 'corpus-metrics'}`)
   lines.push(`Corpus: ${summary.corpusDir}`)
+  lines.push(`Manifest digest: ${summary.manifestDigest || 'not-bound'}`)
+  lines.push(`Importer options: ${JSON.stringify(summary.importerOptions || {})}`)
   lines.push(`Run: ${summary.runAt}`)
   lines.push(`Files: ${summary.totalFiles} total, ${summary.passedFiles} passed, ${summary.failedFiles} failed`)
   lines.push(`Avg Semantic Fidelity: ${summary.avgSemanticFidelity != null ? (summary.avgSemanticFidelity * 100).toFixed(1) + '%' : 'N/A'}`)
@@ -1343,6 +1368,7 @@ function reportResults({ results, summary }) {
 
   for (const r of results) {
     lines.push(`--- ${r.file} (${r.fileSizeBytes} bytes, ${r.durationMs}ms) ---`)
+    lines.push(`  Source hash: ${r.sourceSha256 || 'unavailable'}`)
     if (r.errors.length > 0) {
       lines.push(`  ERROR: ${r.errors.join('; ')}`)
     } else {
@@ -1435,6 +1461,7 @@ module.exports = {
   computeRoundTripStability,
   evaluateCapture,
   applyStrictPerTypeGates,
+  appendResultError,
   testCorpusFile,
   productionImportOptions,
   corpusFileOptions,

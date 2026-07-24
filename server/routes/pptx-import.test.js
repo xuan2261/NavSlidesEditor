@@ -74,7 +74,7 @@ describe('PPTX import route', () => {
           ...mockAtomicDeps(),
           importer: async () => ({
             presentation: { title: 'valid', theme: 'white', transition: 'slide', slides: [] },
-            stats: { parser: 'pptxtojson', fallbackParserUsed: false, slideCount: 0 },
+            stats: { parser: 'pptxtojson', slideCount: 0 },
             warnings: [],
           }),
         })

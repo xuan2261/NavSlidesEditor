@@ -15,7 +15,7 @@ const playwrightArgs = [
   'playwright',
   'test',
   'tests/e2e/pptx-import-real-browser-audit.spec.js',
-  '--project=chromium',
+  '--project=chromium-pptx-import',
   '--workers=1',
   '--retries=0',
   '--reporter=line',

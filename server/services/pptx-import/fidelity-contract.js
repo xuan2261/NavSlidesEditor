@@ -6,7 +6,7 @@ const {
   featureMatrixHash,
 } = require('./canonical-feature-matrix')
 const { COMPLEX_OBJECT_TIERS } = require('./complex-object-policy')
-const { reasonCodeSubject } = require('./reason-code-contract')
+const { canonicalReasonCodes, reasonCodeSubject } = require('./reason-code-contract')
 
 const ORIGINAL_ONLY_KINDS = new Set([
   'activex', 'encryption', 'macro', 'ole', 'protection', 'signature', 'unknown',
@@ -36,6 +36,7 @@ const CLAIM_CEILING_LEVELS = Object.freeze({
 const SAFE_REASONS = Object.freeze({
   'original-package-unverified': 'The original package is not verified for download.',
   'validated-edited-export-unavailable': 'A validated edited revision is not available.',
+  'CANONICAL_TEXT_JOURNAL_INVALID': 'The current edit is not eligible for validated package export.',
   'no-op-reconciliation-available': 'Only a no-op package reconciliation is available.',
   'transaction-eligible-not-verified-editable': 'Eligible for validated edited-package processing, not verified feature editing.',
   'original-only-package': 'This package can only be recovered as its original file.',
@@ -99,8 +100,25 @@ function isMalformedCapabilitySummary(summary) {
 }
 
 function safeReason(reasonCode, fallbackCode) {
-  const code = SAFE_REASONS[reasonCode] ? reasonCode : fallbackCode
-  return Object.freeze({ reasonCode: code, reason: SAFE_REASONS[code] })
+  const requested = canonicalReasonCodes([reasonCode])[0]
+  const fallback = canonicalReasonCodes([fallbackCode])[0]
+  const directReason = typeof reasonCode === 'string' && Object.hasOwn(SAFE_REASONS, reasonCode)
+  const directFallback = typeof fallbackCode === 'string' && Object.hasOwn(SAFE_REASONS, fallbackCode)
+  const code = directReason
+    ? reasonCode
+    : requested !== 'unknown-reason-code'
+      ? requested
+      : directFallback
+        ? fallbackCode
+        : fallback !== 'unknown-reason-code'
+          ? fallback
+          : 'validated-edited-export-unavailable'
+  return Object.freeze({
+    reasonCode: code,
+    reason: Object.hasOwn(SAFE_REASONS, code)
+      ? SAFE_REASONS[code]
+      : SAFE_REASONS['validated-edited-export-unavailable'],
+  })
 }
 
 function rowSummary(row, originalOnly) {
@@ -201,8 +219,8 @@ function buildFidelityDto(
     schemaVersion: 1,
     reasonCodeSubject: reasonCodeSubject(),
     presentationId: presentation?.id,
-    ...(validatedEdited || validatedEditedNoOpAvailable
-      ? (Number.isSafeInteger(aggregateGeneration) ? { aggregateGeneration } : {})
+    ...(sourceBacked && !originalOnly && Number.isSafeInteger(aggregateGeneration)
+      ? { aggregateGeneration }
       : {}),
     matrix: MATRIX,
     fidelity: Object.freeze({

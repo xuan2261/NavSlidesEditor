@@ -299,7 +299,8 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
 
   useEffect(() => () => {
     const activeImport = pptxImportRef.current
-    activeImport?.es?.close()
+    activeImport?.admissionController?.abort()
+    activeImport?.connection?.es?.close()
     if (activeImport?.jobId) api.cancelPptxJob(activeImport.jobId).catch(() => {})
     pptxImportRef.current = null
   }, [])
@@ -644,24 +645,44 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       showError('Only .pptx files are supported')
       return
     }
+    if (pptxImportRef.current) return
 
     setImportWarningSummary(null)
     setImportProgress('Uploading PPTX...')
+    const activeImport = {
+      admissionController: new AbortController(),
+      connection: null,
+      jobId: null,
+    }
+    pptxImportRef.current = activeImport
     try {
       const { jobId } = await api.importPptxAsync(file, {
         retryOnBusy: true,
         maxBusyRetries: 72,
         busyRetryDelayMs: 5000,
-        onBusyRetry: () => setImportProgress('Another PPTX import is running. Waiting to retry...'),
+        signal: activeImport.admissionController.signal,
+        onBusyRetry: () => {
+          if (pptxImportRef.current === activeImport) {
+            setImportProgress('Another PPTX import is running. Waiting to retry...')
+          }
+        },
       })
+      activeImport.jobId = jobId
+      if (pptxImportRef.current !== activeImport) {
+        if (jobId) api.cancelPptxJob(jobId).catch(() => {})
+        return
+      }
       const imported = await waitForPptxJob({
         jobId,
         api,
-        onProgress: setImportProgress,
+        onProgress: (progress) => {
+          if (pptxImportRef.current === activeImport) setImportProgress(progress)
+        },
         onConnection: (connection) => {
-          pptxImportRef.current = connection
+          if (pptxImportRef.current === activeImport) activeImport.connection = connection
         },
       })
+      activeImport.jobId = null
       // Server creates presentation + binds original.pptx atomically (Phase 01).
       // Prefer presentationId from job result; fall back to client create only for legacy servers.
       let presentationId = imported?.presentationId
@@ -680,12 +701,17 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       }
       onOpen(presentationId)
     } catch (err) {
-      console.error('PPTX import failed:', err)
-      showError('Failed to import PPTX: ' + err.message)
+      if (err?.name !== 'AbortError' && pptxImportRef.current === activeImport) {
+        console.error('PPTX import failed:', err)
+        showError('Failed to import PPTX: ' + err.message)
+      }
     } finally {
-      pptxImportRef.current?.es?.close()
-      pptxImportRef.current = null
-      setImportProgress(null)
+      if (pptxImportRef.current === activeImport) {
+        activeImport.admissionController.abort()
+        activeImport.connection?.es?.close()
+        pptxImportRef.current = null
+        setImportProgress(null)
+      }
     }
   }
 

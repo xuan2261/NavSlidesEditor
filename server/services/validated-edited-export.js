@@ -13,6 +13,7 @@ const { createNativeLauncherClient } = require('./pptx-import/officecli/launcher
 const { qualifyOfficeCli } = require('./pptx-import/officecli/qualification')
 const { createStagedOfficeCliValidator } = require('./pptx-import/officecli/staged-validator')
 const { canonicalMatrixSubject } = require('./pptx-import/evidence/matrix-subject')
+const { deriveCanonicalPlainTextJournal } = require('./pptx-import/canonical-plain-text-journal')
 const { replayRequest, resolveEditedExportContext } = require('./pptx-import/validated-edited-export-context')
 const { canonicalReasonCodes, reasonCodeSubject } = require('./pptx-import/reason-code-contract')
 
@@ -102,10 +103,25 @@ function createQualifiedValidators({ nativeReimport, officeCliGatewayFactory } =
   return Object.freeze(validators)
 }
 
+function hasCanonicalTextJournal(context, matrixAuthorityEpoch) {
+  try {
+    deriveCanonicalPlainTextJournal(context.before, context.after, {
+      baseRevisionId: context.head.packageRevisionId,
+      sourceMap: context.sourceMap,
+      textTransports: context.textTransports,
+      matrixAuthorityEpoch,
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
 async function editedExportAvailability(presentation, options = productionComposition()) {
   try {
     const store = options.store || await getReadablePackageStore()
-    const context = resolveEditedExportContext(store.getState(), presentation.id)
+    const state = store.getState()
+    const context = resolveEditedExportContext(state, presentation.id)
     if (!context.ok) return unavailable(context.reasonCode)
     if (context.pendingJournalHash && context.pendingEdit === false) {
       return {
@@ -115,6 +131,9 @@ async function editedExportAvailability(presentation, options = productionCompos
         officeCliAvailable: false,
         reasonCode: 'no-op-reconciliation-available',
       }
+    }
+    if (!hasCanonicalTextJournal(context, state.matrixAuthorityEpoch)) {
+      return unavailable('CANONICAL_TEXT_JOURNAL_INVALID')
     }
     const validators = createQualifiedValidators(options)
     if (typeof validators.nativeReimport !== 'function') return unavailable('QUALIFIED_VALIDATORS_UNAVAILABLE')

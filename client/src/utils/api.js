@@ -1,11 +1,16 @@
 const BASE = '/api'
 
 async function handleResponse(r) {
-  const body = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
+  const body = await r.json().catch((err) => {
+    if (err?.name === 'AbortError') throw err
+    return { error: `HTTP ${r.status}` }
+  })
   if (!r.ok) {
     const err = new Error(body.error || `Request failed (${r.status})`)
+    const retryAfterRaw = r.headers?.get?.('Retry-After') ?? null
     err.status = r.status
-    err.retryAfter = Number(r.headers?.get?.('Retry-After') || 0)
+    err.retryAfter = Number(retryAfterRaw || 0)
+    err.retryAfterRaw = retryAfterRaw
     err.reason = body.reason
     err.currentGeneration = body.currentGeneration
     throw err
@@ -13,7 +18,51 @@ async function handleResponse(r) {
   return body
 }
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const MAX_BUSY_RETRY_DELAY_MS = 300_000
+
+function clampBusyRetryDelay(value) {
+  if (!Number.isFinite(value)) return 5000
+  return Math.min(Math.max(value, 0), MAX_BUSY_RETRY_DELAY_MS)
+}
+
+function getBusyRetryDelayMs(retryAfterRaw, fallbackMs) {
+  if (/^[0-9]+$/u.test(retryAfterRaw || '')) {
+    const seconds = Number(retryAfterRaw)
+    if (Number.isSafeInteger(seconds) && seconds > 0) {
+      return Math.min(seconds * 1000, MAX_BUSY_RETRY_DELAY_MS)
+    }
+  }
+  return clampBusyRetryDelay(fallbackMs)
+}
+
+function createAbortError() {
+  const error = new Error('The operation was aborted')
+  error.name = 'AbortError'
+  return error
+}
+
+function sleepWithSignal(ms, signal) {
+  if (signal?.aborted) return Promise.reject(createAbortError())
+  return new Promise((resolve, reject) => {
+    let settled = false
+    let timer
+    let onAbort
+    const cleanup = () => {
+      clearTimeout(timer)
+      signal?.removeEventListener?.('abort', onAbort)
+    }
+    const finish = (callback, value) => {
+      if (settled) return
+      settled = true
+      cleanup()
+      callback(value)
+    }
+    onAbort = () => finish(reject, createAbortError())
+    timer = setTimeout(() => finish(resolve), ms)
+    signal?.addEventListener?.('abort', onAbort, { once: true })
+    if (signal?.aborted) onAbort()
+  })
+}
 
 export const api = {
   getPresentations: () => fetch(`${BASE}/presentations`).then(handleResponse),
@@ -44,17 +93,23 @@ export const api = {
     fetch(`${BASE}/presentations/${id}/restore`, { method: 'POST' }).then(handleResponse),
   permanentDeletePresentation: (id) =>
     fetch(`${BASE}/presentations/${id}/permanent`, { method: 'DELETE' }).then(handleResponse),
-  /** Download original imported .pptx bytes (server maps presentation id → stored uuid only). */
-  downloadPptxOriginal: (id) =>
-    fetch(`${BASE}/presentations/${id}/pptx-original`).then(async (r) => {
+  /** Download immutable original PPTX bytes, optionally fenced to a package generation. */
+  downloadPptxOriginal: (id, expectedGeneration) => {
+    const url = `${BASE}/presentations/${id}/pptx-original`
+    const request = Number.isSafeInteger(expectedGeneration)
+      ? fetch(url, { headers: { 'If-Pptx-Generation': String(expectedGeneration) } })
+      : fetch(url)
+    return request.then(async (r) => {
       if (!r.ok) {
         const body = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
         const err = new Error(body.error || `Request failed (${r.status})`)
         err.status = r.status
+        err.code = body.code
         throw err
       }
       return r.blob()
-    }),
+    })
+  },
   getPptxFidelity: (id) =>
     fetch(`${BASE}/presentations/${id}/pptx-fidelity`).then(handleResponse),
   downloadValidatedEditedPptx: (id, generation, idempotencyKey) =>
@@ -101,18 +156,23 @@ export const api = {
       maxBusyRetries = 0,
       busyRetryDelayMs = 5000,
       onBusyRetry,
+      signal,
     } = opts
     const fd = new FormData()
     fd.append('file', file)
     for (let attempt = 0; ; attempt += 1) {
       try {
-        return await fetch(`${BASE}/pptx/import`, { method: 'POST', body: fd }).then(handleResponse)
+        return await fetch(`${BASE}/pptx/import`, {
+          method: 'POST',
+          body: fd,
+          signal,
+        }).then(handleResponse)
       } catch (err) {
         if (!retryOnBusy || err.status !== 429 || err.message !== 'import-in-progress' || attempt >= maxBusyRetries) {
           throw err
         }
         onBusyRetry?.(attempt + 1)
-        await sleep(busyRetryDelayMs)
+        await sleepWithSignal(getBusyRetryDelayMs(err.retryAfterRaw, busyRetryDelayMs), signal)
       }
     }
   },

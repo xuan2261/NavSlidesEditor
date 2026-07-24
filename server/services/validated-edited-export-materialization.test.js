@@ -190,6 +190,27 @@ describe('validated edited export pending materialization', () => {
     expect(store.getState().revisions).toHaveLength(2)
   })
 
+  it('does not advertise formatter-wrapped text as a validated export', async () => {
+    const { store } = await setupPendingSave(
+      snapshot('<p style="text-align: left"><span style="font-family: Arial">After</span></p>')
+    )
+    const nativeReimport = vi.fn(async () => true)
+    const officeCliGatewayFactory = vi.fn(() => ({
+      probeCapability: vi.fn(async () => ({ available: true, validation: true })),
+    }))
+
+    await expect(editedExportAvailability({ id: 'deck' }, {
+      store,
+      nativeReimport,
+      officeCliGatewayFactory,
+    })).resolves.toMatchObject({
+      available: false,
+      reasonCode: 'CANONICAL_TEXT_JOURNAL_INVALID',
+    })
+    expect(nativeReimport).not.toHaveBeenCalled()
+    expect(officeCliGatewayFactory).not.toHaveBeenCalled()
+  })
+
   it('publishes against the target head after unrelated store state changes during validation', async () => {
     const { store, after } = await setupPendingSave()
     const nativeReimport = vi.fn(async () => {
