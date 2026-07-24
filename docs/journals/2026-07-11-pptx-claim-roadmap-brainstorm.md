@@ -37,8 +37,8 @@ or PowerPoint-provider infrastructure is unavailable.
 
 ## Artifact
 
-- `plans/260710-1757-pptx-package-first-officecli-roundtrip-deep-tdd/reports/260711-1705-pptx-claim-roadmap-brainstorm.md`
-- `plans/260710-1757-pptx-package-first-officecli-roundtrip-deep-tdd/plan.md`
+- `plans/archive/260710-1757-pptx-package-first-officecli-roundtrip-deep-tdd/reports/260711-1705-pptx-claim-roadmap-brainstorm.md`
+- `plans/archive/260710-1757-pptx-package-first-officecli-roundtrip-deep-tdd/plan.md`
 
 ## Plan Outcome
 

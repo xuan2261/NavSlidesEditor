@@ -7,7 +7,7 @@
 
 ## What Happened
 
-A prior read-only audit (plans/260609-0830-element-control-functional-fixes-tdd/) catalogued element/control defects across rendering, property controls, and export — each backed by a file:line evidence reference. A 6-phase TDD plan fixed them failing-test-first. Four commits landed, the last being a mandatory post-implementation code review that caught two defects the green unit suite had missed.
+A prior read-only audit (plans/archive/260609-0830-element-control-functional-fixes-tdd/) catalogued element/control defects across rendering, property controls, and export — each backed by a file:line evidence reference. A 6-phase TDD plan fixed them failing-test-first. Four commits landed, the last being a mandatory post-implementation code review that caught two defects the green unit suite had missed.
 
 Key commit surface:
 - `6cbf5924` — opacity content-layer + single-apply, code border-radius, image flip, pptx image transparency, markdown reveal color/size, reveal image border, table colspan/rowspan via shared `resolveMergedCells`, SVG override-color allowlist

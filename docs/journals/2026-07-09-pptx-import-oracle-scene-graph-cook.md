@@ -1,7 +1,7 @@
 # Journal: PPTX import cook resume — Phase 02–04
 
 **Date:** 2026-07-09  
-**Plan:** `plans/260709-1306-pptx-import-native-ooxml-1to1-fidelity-deep-tdd`  
+**Plan:** `plans/archive/260709-1306-pptx-import-native-ooxml-1to1-fidelity-deep-tdd`
 **Mode:** `/ck:cook --auto --tdd` (resume)
 
 ## Landed

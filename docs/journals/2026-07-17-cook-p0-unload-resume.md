@@ -12,7 +12,7 @@ Resumed `/ak-cook --auto --tdd` from `tieptucNgay17th7n2026.txt`. Prior session 
 4. **Code review** — score 8.8, 0 critical/high. Follow-ups:
    - M1: notice wording → “will still be attempted” (`editor-save-attempt.js`) — **fixed**
    - M2: proposed clear of `failedEntryRef` on scheduleSave **reverted** — it broke intentional retry-before-successor; unit test now documents that contract
-5. Plan/validation docs updated under `plans/260716-1125-p0-unload-persistence-reconciliation/` and Phase 9 record.
+5. Plan/validation docs updated under `plans/archive/260716-1125-p0-unload-persistence-reconciliation/` and Phase 9 record.
 6. Full coverage run: corpus green; 465/1/1 files; sole fail was the temporary M2 regression, fixed and re-verified in isolation (lifecycle + save controller 17/17).
 
 ## Still open for hard Phase 9 close

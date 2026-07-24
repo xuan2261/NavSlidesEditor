@@ -97,7 +97,6 @@ const critical = [
   'fs-extra',
   'jszip',
   'multer',
-  'pptx2json',
   'pptxtojson',
   'revealjs-shared',
 ]

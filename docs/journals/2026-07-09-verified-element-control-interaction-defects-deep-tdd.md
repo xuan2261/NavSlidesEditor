@@ -1,7 +1,7 @@
 # Verified Element Control Interaction Defects — Cook Complete
 
 **Date:** 2026-07-09  
-**Plan:** `plans/260709-0917-verified-element-control-interaction-defects-deep-tdd`  
+**Plan:** `plans/archive/260709-0917-verified-element-control-interaction-defects-deep-tdd`
 **Status:** Implemented (unit gate 107/107 on phase suites)
 
 ## What shipped

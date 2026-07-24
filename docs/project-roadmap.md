@@ -22,7 +22,7 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
 | Export PDF                                         | Done                                                                                                      |
 | Export PPTX                                        | Done (hybrid native + high-res raster fallback, structured export-gap warnings/report)                    |
 | Project export/import (.navslides)                 | Done (manifest v1.1, partial media skip warnings)                                                         |
-| Import PPTX                                        | Done (editable objects plus fidelity/media hardening; strict corpus 11/11 and 5-deck real-browser audit at 0 strict failures) |
+| Import PPTX                                        | Done (editable best-effort projection through the pptxtojson-only runtime; parser metrics and browser audit are separate from currently blocked native importer qualification) |
 | Offline HTML export                                | Done (self-contained)                                                                                     |
 | Shareable links (with password option)             | Done                                                                                                      |
 | GitHub push integration                            | Done                                                                                                      |
@@ -76,21 +76,20 @@ Core editing, export, live presentation, game presenter/player, and PPTX import 
   possible to avoid placeholder-only output.
 - Present mode and standard HTML export still depend on CDN resources at
   runtime.
-- PPTX harness `--roundtrip` uses the production export pipeline; strict mode
-  keeps aggregate semantic >=98%, per-deck semantic >=95%, element-class
-  retention, corpus-size, production-export, and aggregate round-trip >=50%
-  regression-floor gates. Imported PPTX media now
-  uses SHA256 dedup, extension allowlist, magic-byte checks, external media URL
-  gating, worker startup ACK handling, `/api/pptx` upload rate limiting, a
-  split mapper module tree under `server/services/pptx-import/mapper/`, and
-  async import jobs with SSE progress/cancel support. Phase 8 reviewer concerns
-  for concurrency reservation, abort propagation, SSE fallback, and lifecycle
-  coverage are fixed. The Phase 9 acceptance corpus now has `n=10` decks in
-  `server/data/test-corpus/` and enforces aggregate, per-deck, and element-class
-  retention gates. Final reviewer-fix validation also covers table border CSS
-  sanitization, cancel active-slot lifecycle, package-validation abort handling,
-  LaTeX tag cleanup, and media abort cleanup. The 2026-05-25 import review run
-  passes at 100.0% semantic fidelity and 99.0% round-trip stability.
+- `pptxtojson` is the only runtime parser; `pptx2json` remains in the isolated
+  parser benchmark sandbox, not as a runtime fallback. `npm run test:pptx:corpus-metrics`
+  keeps parser-relative semantic, per-deck, element-class, and production round-trip
+  regression floors; `npm run test:corpus` is its compatibility alias. `npm run test:pptx:best-effort`
+  adds the browser smoke without qualifying the importer. The separate, fail-closed
+  11-deck importer qualification binds exact manifest names and SHA-256 values,
+  captures best-effort native evidence, then requests a strict importer decision.
+  `npm run test:pptx:strict` is its deprecated alias. Known EMF and native-node
+  gaps can keep that truth gate blocked rather than presenting a false green result.
+  Imported PPTX media uses SHA256 dedup, extension allowlisting, magic-byte
+  checks, external media URL gating, worker startup ACK handling, `/api/pptx`
+  upload rate limiting, a split mapper module tree under
+  `server/services/pptx-import/mapper/`, and async import jobs with SSE
+  progress/cancel support.
 
 ### Future Backlog
 

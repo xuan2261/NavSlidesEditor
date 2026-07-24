@@ -1,7 +1,7 @@
 # Journal: PPTX Import Zero-Loss Package (Phase 01)
 
 **Date:** 2026-07-09  
-**Plan:** `plans/260709-1306-pptx-import-native-ooxml-1to1-fidelity-deep-tdd`  
+**Plan:** `plans/archive/260709-1306-pptx-import-native-ooxml-1to1-fidelity-deep-tdd`
 **Mode:** `/ck:cook --auto --tdd`  
 **Slice:** Phase 01 only (MVP-A)
 
