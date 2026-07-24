@@ -289,4 +289,4 @@ Examples: `canvas-element-wrapper.jsx:186` (katex), `exportPptx.js:74`, many `ca
 
 ### Plan status
 - No given plan file → no TODO checklist update.
-- Related existing plan (not updated): `plans/260716-1125-p0-unload-persistence-reconciliation/plan.md` may touch finding #7.
+- Related existing plan (not updated): `plans/archive/260716-1125-p0-unload-persistence-reconciliation/plan.md` may touch finding #7.

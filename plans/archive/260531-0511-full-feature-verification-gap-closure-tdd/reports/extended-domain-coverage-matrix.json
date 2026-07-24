@@ -1,7 +1,11 @@
 {
   "meta": {
     "generated": "local run",
-    "stale": true,
+    "stale": false,
+    "staleSources": {
+      "vitest": false,
+      "playwright": false
+    },
     "title": "Extended Domain Coverage Matrix"
   },
   "rows": [
@@ -15,7 +19,15 @@
         "server/services/ai-endpoint-guard.test.js",
         "server/services/ai-provider.test.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "ai.failure",
@@ -26,7 +38,15 @@
       "tests": [
         "server/routes/ai.test.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "ai.generate",
@@ -37,7 +57,15 @@
       "tests": [
         "tests/e2e/ai.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "ai.rewrite",
@@ -48,7 +76,15 @@
       "tests": [
         "tests/e2e/ai.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "ai.translate",
@@ -59,7 +95,15 @@
       "tests": [
         "tests/e2e/ai.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "element.game",
@@ -70,7 +114,15 @@
       "tests": [
         "tests/e2e/games/game-elements.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "export.html",
@@ -79,9 +131,20 @@
       "tier": "smoke",
       "layer": "e2e",
       "tests": [
-        "tests/e2e/critical-user-journeys.spec.js"
+        "tests/e2e/coverage-depth/editor-control-persistence.spec.js",
+        "tests/e2e/critical-user-journeys.spec.js",
+        "tests/e2e/import/markdown-import.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "export"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "export.pptx",
@@ -92,7 +155,15 @@
       "tests": [
         "tests/e2e/critical-pptx-journey.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "game.score",
@@ -103,7 +174,16 @@
       "tests": [
         "tests/e2e/games/game-scoring-and-leaderboard.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "sync"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "history.snapshot",
@@ -114,7 +194,15 @@
       "tests": [
         "server/routes/api-surface.test.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "import.markdown",
@@ -125,7 +213,16 @@
       "tests": [
         "tests/e2e/import/markdown-import.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "persistence"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "import.pptx",
@@ -136,7 +233,15 @@
       "tests": [
         "tests/e2e/critical-pptx-journey.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "import.upload-safety",
@@ -145,10 +250,20 @@
       "tier": "deep",
       "layer": "unit",
       "tests": [
+        "server/routes/api-surface.test.js",
         "server/routes/pptx-import.test.js",
-        "server/services/pptx-import/pptx-guards.test.js"
+        "server/services/pptx-import/pptx-guards.test.js",
+        "server/services/pptx-import/zip-bomb-guard.test.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "live.presenter-authz",
@@ -160,7 +275,16 @@
         "tests/e2e/critical-live-reconnect.spec.js",
         "tests/e2e/security/presenter-token-validation-rejects-invalid-and-cross-room-reuse.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "live.reconnect",
@@ -171,7 +295,16 @@
       "tests": [
         "tests/e2e/critical-live-reconnect.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "sync"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "share.password",
@@ -182,7 +315,15 @@
       "tests": [
         "tests/e2e/critical-user-journeys.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "share.revoke",
@@ -193,7 +334,15 @@
       "tests": [
         "tests/e2e/critical-user-journeys.spec.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "sync.rclone-status",
@@ -204,14 +353,23 @@
       "tests": [
         "server/routes/api-surface.test.js"
       ],
-      "status": "TAGGED"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     }
   ],
   "orphans": [],
   "summary": {
     "total": 18,
-    "verified": 0,
-    "TAGGED": 18
+    "verified": 18,
+    "PASS": 18,
+    "DEPTH-WARN": 0
   },
   "policy": [
     {

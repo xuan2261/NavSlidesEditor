@@ -66,7 +66,7 @@ Out of scope:
 ## Cross-Plan Dependencies
 
 - This plan should run before `plans/260708-1900-verified-ui-accessibility-ux-remediation-deep-tdd/` and `plans/260705-0000-frontend-ui-hygiene-ux-consistency-deep-tdd/` where scopes overlap. It is narrower and based on the latest verified findings.
-- Related completed context: `plans/260619-ux-polish-teaching-docs-tdd/` Phase 4 already covered earlier accessibility polish, but did not address these current defects.
+- Related completed context: `plans/archive/260619-ux-polish-teaching-docs-tdd/` Phase 4 already covered earlier accessibility polish, but did not address these current defects.
 
 ## Architecture Direction
 

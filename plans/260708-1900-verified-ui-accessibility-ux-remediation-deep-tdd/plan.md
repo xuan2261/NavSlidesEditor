@@ -73,7 +73,7 @@ Out of scope:
 
 - This plan **blocks** `plans/260705-0000-frontend-ui-hygiene-ux-consistency-deep-tdd/` for overlapping frontend accessibility/token work. Implement this narrower verified plan first to avoid duplicate fixes.
 - Related but not blocking: `plans/260705-0001-template-gallery-polish-deep-tdd/`, because TemplateGallery modal accessibility overlaps only at the dialog shell level.
-- Completed predecessor context: `plans/260703-0000-element-interaction-controls-fixes-deep-tdd/` and `plans/260704-0000-element-control-defect-regression-deep-tdd/` define prior element interaction/export guardrails.
+- Completed predecessor context: `plans/archive/260703-0000-element-interaction-controls-fixes-deep-tdd/` and `plans/archive/260704-0000-element-control-defect-regression-deep-tdd/` define prior element interaction/export guardrails.
 
 ## Phases
 

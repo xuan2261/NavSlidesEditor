@@ -121,13 +121,24 @@ containment tuple all match. Executable presence is never qualification.
 ### Native Re-Import Validator
 
 - Materialize candidate bytes in a private validation workspace.
-- Invoke production `importPptxFile()` with isolated temp/media storage.
-- Canonicalize the re-imported projection.
+- Invoke production `importPptxFile()` with isolated temp/media storage. Native
+  media persistence receives a private in-memory hash scope rather than the
+  persisted upload-hash index; failed validation rolls that transaction back before
+  staging cleanup, while ordinary imports retain their global transaction path. This
+  is a local partial closure of the native media-index corruption blocker, not proof
+  of a real package importer-to-mapper media run.
+- Canonicalize the re-imported projection. `buildImportSourceMap()` now consumes an
+  explicit `sourceMapIdentity.presentationId` when the mapped projection has no
+  persisted `id`; focused source-map/importer regressions cover this local Phase 11
+  repair. Strict real-package native re-import and broader provenance/collateral
+  checks remain open.
 - Compare only the exact G0-defined transaction-eligible rows in the request
   claim scope against `expectedProjection`. For G2 this is the seed row, even
   though it is not yet level-4 promoted.
 - Return row/property/source-ref diffs without paths or slide content.
-- Quarantine uncertain cleanup; never publish on missing/skipped validation.
+- Remove a normal validation job root after validation. If removal fails, attempt a UUID-named configured quarantine target by renaming the whole job root. Preserve a validation failure as the primary error with cleanup detail attached; fail closed when both removal and rename fail. A double failure has no durable residual record or sweeper.
+- Before staging, canonicalize the workspace root, reject final and intermediate symbolic-link/junction components, and require the configured quarantine root to remain below that workspace. Recheck the path boundary before quarantine creation, rename, and after rename. These are application path checks, not OS-handle-based protection against a concurrent rename swap.
+- Never publish on missing, skipped, or cleanup-uncertain validation.
 
 ## TDD Matrix
 
@@ -231,7 +242,7 @@ Run the edited-roundtrip rows currently promoted, transaction fault matrix, expo
 
 - [ ] Preserve `createMutationTransactionService().execute()`.
 - [ ] Preserve `compilePatchPlan()` and `runLayeredValidators()`.
-- [ ] Implement isolated production `nativeReimport(context)`.
+- [x] Implement isolated production `nativeReimport(context)`.
 - [ ] Implement contained `officeCli(context)` via `validatePackage()`.
 - [ ] Replace availability hardcode with explicit qualification predicates.
 - [ ] Bind idempotency key to canonical request hash.
@@ -359,9 +370,11 @@ provider requirements above.
    preserve the immutable Original and previous valid head.
 
 OfficeCLI runs through the Phase 4 direct local typed gateway. Native re-import
-uses bounded isolated local staging but makes no independent containment claim.
-Local PowerPoint is an optional post-publication oracle for `G5`; it never
-authorizes package bytes or overwrites the published revision.
+uses bounded isolated local staging with application-level workspace/quarantine
+boundary checks, but those checks make no independent OfficeCLI containment claim
+and are not race-proof OS-handle isolation. Local PowerPoint is an optional
+post-publication oracle for `G5`; it never authorizes package bytes or overwrites
+the published revision.
 
 Matrix evolution or restore-forward authority changes must atomically reissue
 current authority to every live presentation head or invalidate unreissued heads

@@ -1,7 +1,11 @@
 {
   "meta": {
     "generated": "local run",
-    "stale": true
+    "stale": true,
+    "staleSources": {
+      "vitest": true,
+      "playwright": false
+    }
   },
   "rows": [
     {
@@ -13,7 +17,15 @@
       "tests": [
         "client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "canvas.distribute",
@@ -24,7 +36,15 @@
       "tests": [
         "client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "canvas.group",
@@ -35,25 +55,54 @@
       "tests": [
         "client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "canvas.lock",
       "category": "canvas",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/canvas-geometry-ops.smoke.test.js",
+        "client/src/components/canvas/use-canvas-pointer-interaction.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "canvas.move",
       "category": "canvas",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/components/canvas/canvas-geometry-ops.smoke.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "canvas.resize",
@@ -64,7 +113,15 @@
       "tests": [
         "client/src/components/canvas/canvas-geometry-ops.smoke.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "canvas.resize-aspect",
@@ -75,7 +132,15 @@
       "tests": [
         "client/src/components/canvas/use-canvas-resize-rotate.deep.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "canvas.rotate-snap",
@@ -86,7 +151,15 @@
       "tests": [
         "client/src/components/canvas/use-canvas-resize-rotate.deep.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "canvas.smart-guides",
@@ -97,7 +170,15 @@
       "tests": [
         "client/src/utils/smartGuides.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "canvas.zorder",
@@ -108,7 +189,15 @@
       "tests": [
         "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "command.commandPalette",
@@ -119,7 +208,15 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "command.group",
@@ -130,25 +227,53 @@
       "tests": [
         "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "command.insertLink",
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "command.insertSlide",
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "command.resetZoom",
@@ -159,16 +284,34 @@
       "tests": [
         "client/src/stores/editor-store.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "command.startSlideshow",
       "category": "command",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "command.ungroup",
@@ -179,7 +322,15 @@
       "tests": [
         "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "command.zoomIn",
@@ -190,7 +341,15 @@
       "tests": [
         "client/src/stores/editor-store.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "command.zoomOut",
@@ -201,16 +360,36 @@
       "tests": [
         "client/src/stores/editor-store.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.file.menu",
       "category": "control",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit,e2e",
+      "tests": [
+        "client/src/components/ribbon/ribbon-file-dropdown-menu.test.jsx",
+        "tests/e2e/a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "a11y"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.format.align",
@@ -221,7 +400,15 @@
       "tests": [
         "client/src/components/ribbon/controls/paragraph-formatting-and-alignment-controls.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.format.bold",
@@ -232,7 +419,15 @@
       "tests": [
         "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.format.fontFamily",
@@ -243,7 +438,15 @@
       "tests": [
         "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.format.fontSize",
@@ -254,7 +457,15 @@
       "tests": [
         "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.format.fontWeight",
@@ -265,7 +476,15 @@
       "tests": [
         "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.format.italic",
@@ -276,7 +495,15 @@
       "tests": [
         "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.format.lineHeight",
@@ -287,18 +514,41 @@
       "tests": [
         "client/src/components/ribbon/controls/paragraph-formatting-and-alignment-controls.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.format.position",
       "category": "control",
       "risk": "low",
       "tier": "smoke",
-      "layer": "unit",
+      "layer": "unit,e2e",
       "tests": [
-        "client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.test.jsx"
+        "client/src/components/properties/apply-to-selection.test.jsx",
+        "client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.test.jsx",
+        "tests/e2e/coverage-depth/editor-control-persistence.spec.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "persistence"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "persistence"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "control.format.underline",
@@ -309,7 +559,15 @@
       "tests": [
         "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.insert.shape",
@@ -320,7 +578,15 @@
       "tests": [
         "client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.insert.text",
@@ -331,7 +597,262 @@
       "tests": [
         "client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.properties.panel",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/PropertiesPanel.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.animations",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.contextual-format",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.design",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.home",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.insert",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.transitions",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.view",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.selection-pane",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/SelectionPane.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.slide-panel",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/SlidePanel.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.status.view-mode",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/layout/StatusBar.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.status.zoom",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/layout/StatusBar.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.timeline-animation",
+      "category": "control",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/AnimationTimeline.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.view.selectionPane",
@@ -342,7 +863,15 @@
       "tests": [
         "client/src/components/ribbon/ribbon-view-tab-mode-controls-and-window-panel-toggles.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "control.view.smartGuides",
@@ -353,7 +882,15 @@
       "tests": [
         "client/src/components/ribbon/ribbon-view-tab-mode-controls-and-window-panel-toggles.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "element.audio",
@@ -362,9 +899,24 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.callout",
@@ -373,9 +925,24 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.chart",
@@ -385,9 +952,25 @@
       "layer": "unit",
       "tests": [
         "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/chart-properties.test.jsx",
+        "client/src/components/properties/missing-controls.test.jsx",
+        "client/src/components/ribbon/ribbon-format-tab-contextual-controls.test.jsx",
         "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.code",
@@ -396,20 +979,54 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/canvas-element-wrapper.test.jsx",
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/content-editor-modals.test.jsx",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx",
+        "client/src/utils/exportPptx.test.js",
+        "shared/tests/element-renderers.test.js",
+        "shared/tests/htmlGenerator.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.drawing",
       "category": "element",
       "risk": "low",
-      "tier": "smoke",
+      "tier": "deep",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.html",
@@ -418,9 +1035,27 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/content-editor-modals.test.jsx",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx",
+        "client/src/components/ribbon/ribbon-plugin-insert.test.jsx",
+        "client/src/utils/exportPptx.test.js",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.icon",
@@ -429,9 +1064,24 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.image",
@@ -440,9 +1090,24 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.latex",
@@ -451,20 +1116,52 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/canvas/element-renderers/latex-element-renderer.test.jsx",
+        "client/src/components/content-editor-modals.test.jsx",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.line",
       "category": "element",
       "risk": "low",
-      "tier": "smoke",
+      "tier": "deep",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.markdown",
@@ -473,9 +1170,22 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/markdown-controls.test.jsx",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior"
+      ],
+      "requiredDepths": [
+        "behavior"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.qrcode",
@@ -484,31 +1194,79 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.shape",
       "category": "element",
       "risk": "low",
-      "tier": "smoke",
+      "tier": "deep",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/indeterminate-multi-select.test.jsx",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.svg",
       "category": "element",
       "risk": "low",
-      "tier": "smoke",
+      "tier": "deep",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/missing-controls.test.jsx",
+        "client/src/components/properties/shape-line-misc-properties-depth.test.jsx",
+        "client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.test.jsx",
+        "client/src/utils/export-pptx-raster.test.js",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.table",
@@ -517,9 +1275,25 @@
       "tier": "deep",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx"
+        "client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx",
+        "client/src/components/properties/missing-controls.test.jsx",
+        "client/src/components/properties/table-properties.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.text",
@@ -528,9 +1302,24 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.timeline",
@@ -540,9 +1329,24 @@
       "layer": "unit",
       "tests": [
         "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/missing-controls.test.jsx",
+        "client/src/components/properties/timeline-properties.test.jsx",
         "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "element.video",
@@ -551,9 +1355,24 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js"
+        "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx",
+        "shared/tests/element-renderers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior",
+        "export"
+      ],
+      "requiredDepths": [
+        "behavior",
+        "export"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "flow.autosave",
@@ -564,7 +1383,15 @@
       "tests": [
         "client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "flow.clipboard",
@@ -575,7 +1402,15 @@
       "tests": [
         "client/src/hooks/use-clipboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "flow.find-replace",
@@ -586,7 +1421,15 @@
       "tests": [
         "client/src/components/find-replace-helpers.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "flow.multiselect",
@@ -595,10 +1438,22 @@
       "tier": "deep",
       "layer": "unit",
       "tests": [
+        "client/src/components/properties/indeterminate-multi-select.test.jsx",
         "client/src/stores/editor-store-multiselect.deep.test.js",
         "client/src/stores/editor-store.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "behavior"
+      ],
+      "requiredDepths": [
+        "behavior"
+      ],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": "qa",
+      "depthResolutionPhase": 3
     },
     {
       "id": "flow.undo-redo",
@@ -609,7 +1464,15 @@
       "tests": [
         "client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.blackScreen",
@@ -620,7 +1483,15 @@
       "tests": [
         "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.bringForward",
@@ -631,7 +1502,15 @@
       "tests": [
         "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.commandPalette",
@@ -642,7 +1521,15 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.copy",
@@ -653,7 +1540,15 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.cut",
@@ -664,7 +1559,15 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.delete",
@@ -675,7 +1578,15 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.duplicate",
@@ -686,7 +1597,15 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.endSlideshow",
@@ -697,16 +1616,34 @@
       "tests": [
         "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.eraseAnnotations",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.escape",
@@ -717,7 +1654,15 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.gameHud",
@@ -728,7 +1673,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.gameLeaderboard",
@@ -739,7 +1692,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.gameNext",
@@ -750,7 +1711,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.gamePause",
@@ -761,7 +1730,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.gameReveal",
@@ -772,7 +1749,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.gameTimer",
@@ -783,7 +1768,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.group",
@@ -794,16 +1787,34 @@
       "tests": [
         "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.highlighterTool",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.insertSlide",
@@ -814,16 +1825,34 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.laserPointer",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.paste",
@@ -834,16 +1863,34 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.penTool",
       "category": "shortcut",
       "risk": "low",
       "tier": "smoke",
-      "layer": null,
-      "tests": [],
-      "status": "ALLOWED"
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.redo",
@@ -854,7 +1901,15 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.resetZoom",
@@ -865,7 +1920,34 @@
       "tests": [
         "client/src/stores/editor-store.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "shortcut.save",
+      "category": "shortcut",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/hooks/use-keyboard.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.selectAll",
@@ -876,7 +1958,15 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.sendBackward",
@@ -887,7 +1977,15 @@
       "tests": [
         "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.slideFirst",
@@ -898,7 +1996,15 @@
       "tests": [
         "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.slideLast",
@@ -909,7 +2015,15 @@
       "tests": [
         "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.slideNext",
@@ -920,7 +2034,15 @@
       "tests": [
         "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.slidePrev",
@@ -931,7 +2053,15 @@
       "tests": [
         "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.startSlideshow",
@@ -942,7 +2072,15 @@
       "tests": [
         "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.startSlideshowCurrent",
@@ -953,7 +2091,15 @@
       "tests": [
         "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.teamSelect1",
@@ -964,7 +2110,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.teamSelect2",
@@ -975,7 +2129,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.teamSelect3",
@@ -986,7 +2148,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.teamSelect4",
@@ -997,7 +2167,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.timerAdd",
@@ -1008,7 +2186,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.timerSub",
@@ -1019,7 +2205,15 @@
       "tests": [
         "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.toggleFindReplace",
@@ -1030,7 +2224,15 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.undo",
@@ -1041,7 +2243,15 @@
       "tests": [
         "client/src/hooks/use-keyboard.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.ungroup",
@@ -1052,7 +2262,15 @@
       "tests": [
         "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.whiteScreen",
@@ -1063,7 +2281,15 @@
       "tests": [
         "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.zoomIn",
@@ -1074,7 +2300,15 @@
       "tests": [
         "client/src/stores/editor-store.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     },
     {
       "id": "shortcut.zoomOut",
@@ -1085,14 +2319,42 @@
       "tests": [
         "client/src/stores/editor-store.test.js"
       ],
-      "status": "PASS"
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "teaching.discovery",
+      "category": "teaching",
+      "risk": "low",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace",
+        "a11y"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
     }
   ],
   "orphans": [],
   "summary": {
-    "total": 100,
-    "verified": 90,
-    "PASS": 90,
-    "ALLOWED": 10
+    "total": 115,
+    "verified": 115,
+    "PASS": 115,
+    "DEPTH-WARN": 0
   }
 }
