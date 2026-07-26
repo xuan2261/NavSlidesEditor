@@ -49,12 +49,81 @@ const upload = multer({
   },
 })
 
+/** Multipart admission bounds (idle between chunks + total wall clock). */
+const UPLOAD_IDLE_MS = Number(process.env.PPTX_UPLOAD_IDLE_MS) > 0
+  ? Number(process.env.PPTX_UPLOAD_IDLE_MS)
+  : 30_000
+const UPLOAD_TOTAL_MS = Number(process.env.PPTX_UPLOAD_TOTAL_MS) > 0
+  ? Number(process.env.PPTX_UPLOAD_TOTAL_MS)
+  : 120_000
+
+function releaseAdmissionSlot(req) {
+  if (req.pptxJobId && req.pptxJobManager) {
+    req.pptxJobManager.cleanup(req.pptxJobId)
+    req.pptxJobId = null
+  }
+  if (req.file?.path) {
+    fs.unlink(req.file.path).catch(() => {})
+    req.file = null
+  }
+}
+
 function uploadSingle(req, res, next) {
+  let settled = false
+  let idleTimer
+  let totalTimer
+  const clearTimers = () => {
+    if (idleTimer) clearTimeout(idleTimer)
+    if (totalTimer) clearTimeout(totalTimer)
+    idleTimer = null
+    totalTimer = null
+  }
+  const failAdmission = (status, error, type = 'parse-failed') => {
+    if (settled) return
+    settled = true
+    clearTimers()
+    try {
+      req.unpipe?.()
+      req.destroy?.(new Error(error))
+    } catch {
+      // ignore stream destroy races
+    }
+    releaseAdmissionSlot(req)
+    if (!res.headersSent) {
+      res.status(status).json({ error: sanitizeDiagnostic(error), type })
+    }
+  }
+  const armIdle = () => {
+    if (idleTimer) clearTimeout(idleTimer)
+    idleTimer = setTimeout(() => {
+      failAdmission(408, 'PPTX upload idle timeout', 'upload-timeout')
+    }, UPLOAD_IDLE_MS)
+    idleTimer.unref?.()
+  }
+
+  totalTimer = setTimeout(() => {
+    failAdmission(408, 'PPTX upload total timeout', 'upload-timeout')
+  }, UPLOAD_TOTAL_MS)
+  totalTimer.unref?.()
+  armIdle()
+  req.on('data', armIdle)
+  req.on('aborted', () => failAdmission(499, 'PPTX upload aborted', 'upload-aborted'))
+  req.on('close', () => {
+    if (!settled && !req.complete && !req.readableEnded) {
+      failAdmission(499, 'PPTX upload connection closed', 'upload-aborted')
+    }
+  })
+
   upload.single('file')(req, res, (err) => {
+    if (settled) return
+    settled = true
+    clearTimers()
     if (!err) return next()
-    if (req.pptxJobId) req.pptxJobManager?.cleanup(req.pptxJobId)
+    releaseAdmissionSlot(req)
     const status = err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE' ? 413 : 400
-    res.status(status).json({ error: sanitizeDiagnostic(err), type: 'parse-failed' })
+    if (!res.headersSent) {
+      res.status(status).json({ error: sanitizeDiagnostic(err), type: 'parse-failed' })
+    }
   })
 }
 

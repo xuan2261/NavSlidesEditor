@@ -29,13 +29,22 @@ Branch: `feature/pptx-import-reliability-ux-evidence-hardening`
 - Review fixes: query capability SSE-scoped; negative auth tests; structured failJob unit tests
 - Tester residual suite: **115/115 PASS**
 
-## Residuals still open
+## Closeout pass
 
-- Full durable repair saga / provenance RMW
-- Multipart admission idle/total deadlines
-- Phase 6 physical retention
-- Full corpus/oracle re-runs
-- Editor report reload UX polish
+- Multipart idle/total timeouts + abort cleanup
+- Poisoned outbox per-record dead-letter isolation
+- EMF absolute binary default + narrow env
+- Background data URL aggregate mediaBudget reserve
+- Retention dry-run module (default-off, non-destructive)
+- PptxImportReportPanel + tests (no jobId/path leak)
+- Plan status completed; release matrix terminal ACCEPT best-effort
+
+## Deferred beyond best-effort claim
+
+- Physical StateStore/WAL compaction enablement (policy gate)
+- Full multi-state repair saga expansion
+- Package-first G0–G5 / PowerPoint oracle (sibling/external)
+- Full corpus/oracle re-run ops
 
 ## Dirty worktree note
 

@@ -42,4 +42,12 @@ describe('emf-wmf-sandbox (Phase 07 policy)', () => {
     expect(denied.ok).toBe(false)
     expect(denied.code).toBe('POLICY')
   })
+
+  it('rejects bare PATH binary names by default when conversion is forced', () => {
+    process.env.PPTX_EMF_CONVERT = '1'
+    delete process.env.PPTX_EMF_ALLOW_BARE_NAME
+    const result = convertVectorImage('in.emf', 'out.png', { force: true, binary: 'magick' })
+    expect(result.ok).toBe(false)
+    expect(result.error).toBe('emf-binary-must-be-absolute')
+  })
 })

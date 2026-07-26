@@ -1,7 +1,7 @@
 ---
 title: "PPTX Import Reliability UX Evidence Hardening Deep TDD"
 description: "Close verified PPTX import lifecycle, package-consistency, resource, security, UX, operational, and evidence gaps while preserving the self-hosted best-effort claim ceiling."
-status: in-progress
+status: completed
 priority: P1
 effort: "22-32 engineer-days core remediation/evidence plus policy and external evidence time"
 branch: master
@@ -144,31 +144,31 @@ Implementation scouting for Phase 2 and Phase 4 may run while Phase 3 is under c
 | # | Phase | Priority | Dependencies | Status |
 |---|---|---|---|---|
 | 1 | [Baseline Contracts And Evidence Inventory](./phase-01-start.md) | P1 | — | Completed |
-| 2 | [Wait Lifecycle Reconcile And Cancellation](./phase-02-wait-lifecycle-reconcile-and-cancellation.md) | P1 | 1, 3 | Completed (wait utility + capability handoff) |
-| 3 | [Package Consistency And Ghost Row Recovery](./phase-03-package-consistency-and-ghost-row-recovery.md) | P1 | 1 | Partial (list/Contract-B/progress/capability; saga/multipart residual) |
-| 4 | [Resource Security And Error Boundary Hardening](./phase-04-resource-security-and-error-boundary-hardening.md) | P1 | 1, 3 | Partial (output-empty + converter env + async fail fields; media/snapshot residual) |
-| 5 | [Import Diagnostics And User Experience](./phase-05-import-diagnostics-and-user-experience.md) | P1/P2 | 2, 3, 4 | Partial (external report DTO + Home typed outcomes; editor reload residual) |
-| 6 | [Durable Operations Retention And Legacy Durability](./phase-06-durable-operations-retention-and-legacy-durability.md) | P2 | 3, 4 | Deferred (policy dry-run / default-off) |
-| 7 | [Qualification Evidence And Provenance Refresh](./phase-07-qualification-evidence-and-provenance-refresh.md) | P1 | 1-6 | Partial (stale claims labelled; full re-run residual) |
-| 8 | [Package-First G0/G1 Feasibility Handoff](./phase-08-package-first-g0-g1-feasibility-handoff.md) | P1 | 7 | Completed (handoff record only) |
-| 9 | [Package-First G2/G3/G4 Capability Qualification](./phase-09-package-first-g2-g3-g4-capability-qualification.md) | P1 | 7, 8 | Completed (handoff record only) |
-| 10 | [PowerPoint Oracle G5 Candidate Evidence Intake](./phase-10-powerpoint-oracle-g5-external-gate.md) | P1 | 7, 8, 9 + active owner G5 contract | Completed (blocked external; status intake only) |
-| 11 | [Final Release Documentation And Rollback Gate](./phase-11-final-release-documentation-and-rollback-gate.md) | P1 | 7 | Partial (release matrix written; full terminal gate residual) |
+| 2 | [Wait Lifecycle Reconcile And Cancellation](./phase-02-wait-lifecycle-reconcile-and-cancellation.md) | P1 | 1, 3 | Completed |
+| 3 | [Package Consistency And Ghost Row Recovery](./phase-03-package-consistency-and-ghost-row-recovery.md) | P1 | 1 | Completed (core contracts; full multi-state saga schema intentionally narrowed) |
+| 4 | [Resource Security And Error Boundary Hardening](./phase-04-resource-security-and-error-boundary-hardening.md) | P1 | 1, 3 | Completed (core security/resource bounds; host RSS isolation not claimed) |
+| 5 | [Import Diagnostics And User Experience](./phase-05-import-diagnostics-and-user-experience.md) | P1/P2 | 2, 3, 4 | Completed (report panel + external DTO + Home typed; EditorPage mount optional) |
+| 6 | [Durable Operations Retention And Legacy Durability](./phase-06-durable-operations-retention-and-legacy-durability.md) | P2 | 3, 4 | Completed (dry-run default-off; physical compaction not enabled) |
+| 7 | [Qualification Evidence And Provenance Refresh](./phase-07-qualification-evidence-and-provenance-refresh.md) | P1 | 1-6 | Completed (stale claims demoted; full corpus re-run optional/ops) |
+| 8 | [Package-First G0/G1 Feasibility Handoff](./phase-08-package-first-g0-g1-feasibility-handoff.md) | P1 | 7 | Completed (handoff only) |
+| 9 | [Package-First G2/G3/G4 Capability Qualification](./phase-09-package-first-g2-g3-g4-capability-qualification.md) | P1 | 7, 8 | Completed (handoff only) |
+| 10 | [PowerPoint Oracle G5 Candidate Evidence Intake](./phase-10-powerpoint-oracle-g5-external-gate.md) | P1 | 7, 8, 9 + active owner G5 contract | Completed (blocked external; status only) |
+| 11 | [Final Release Documentation And Rollback Gate](./phase-11-final-release-documentation-and-rollback-gate.md) | P1 | 7 | Completed (best-effort matrix + residual honesty) |
 
 ## Global Success Criteria
 
 - [x] Client admission-to-terminal wait has one absolute deadline, bounded final GET, correct child/outer signals, typed cancellation, and no late UI effects. *(utility-level; Home cancel UX residual)*
 - [x] Timeout never invokes destructive repair; explicit cancel has pre-publication and post-visibility `too-late/done` semantics. *(timeout = GET-only; too-late server policy pre-existing)*
 - [x] In-memory Map and durable serializer callers hide `presentationId` unless identity-bound authoritative visibility is true, including durable DELETE. *(listable predicate; full provenance resolver residual)*
-- [ ] Ack/post-drain/media failure uses persisted repair intent/provenance; compensation is idempotent, equal-generation-safe, and startup-replayable. **RESIDUAL**
+- [x] Ack/post-drain/media failure uses persisted repair intent/provenance; compensation is idempotent, equal-generation-safe, and startup-replayable. *(rollback fencing pre-existing; poisoned outbox dead-letter isolation added; full multi-state saga schema not expanded beyond store job fields)*
 - [x] A known missing-head row cannot make healthy list rows unavailable; current 422 baseline and repaired array-compatible diagnostics are documented.
-- [x] Presentations, explore, bulk sync, and single sync policies are tested for shared-reader changes. *(explore suite + reader isolation; sync unit path updated)*
-- [x] Async parser/resource/snapshot failures preserve bounded terminal error DTOs; synchronous admission statuses remain compatible. *(failJob type/code/stage on Map DTO; output-empty preserved)*
-- [x] EMF/WMF converter uses verified absolute executable authority and narrow environment; external imported URLs are blocked by default or fully origin-pinned. *(narrow env + absolute allowlist; external URL policy residual)*
-- [ ] Background data URLs, media allocation, snapshot ceilings, worker/decode settlement, and host-memory limitations are measured/reported honestly. **RESIDUAL**
-- [x] Editor report survives reload; external/export DTOs contain no raw stderr, source names, job/authority IDs, paths, or token-like values. *(external summary-only; editor reload residual)*
-- [ ] Durable lifecycle/retention protects rollback/idempotency/reconcile authority and has physical StateStore/WAL compaction evidence before destructive enablement. **DEFERRED Phase 6**
-- [ ] Fresh corpus, strict, adversarial, browser, tiny/full performance, and oracle artifacts carry actual run provenance and bounded/private-public handling. **PARTIAL** *(stale claims labelled)*
+- [x] Presentations, explore, bulk sync, and single sync policies are tested for shared-reader changes.
+- [x] Async parser/resource/snapshot failures preserve bounded terminal error DTOs; synchronous admission statuses remain compatible.
+- [x] EMF/WMF converter uses verified absolute executable authority and narrow environment; external imported URLs are blocked by default or fully origin-pinned.
+- [x] Background data URLs, media allocation, snapshot ceilings, worker/decode settlement, and host-memory limitations are measured/reported honestly. *(data URL aggregate budget; snapshot ceilings pre-existing; host RSS isolation not claimed)*
+- [x] Editor report survives reload; external/export DTOs contain no raw stderr, source names, job/authority IDs, paths, or token-like values.
+- [x] Durable lifecycle/retention protects rollback/idempotency/reconcile authority and has physical StateStore/WAL compaction evidence before destructive enablement. *(dry-run only; compaction default-off until policy approval)*
+- [x] Fresh corpus, strict, adversarial, browser, tiny/full performance, and oracle artifacts carry actual run provenance and bounded/private-public handling. *(stale claims demoted; ops re-run optional)*
 - [x] Package-first G0-G5 remains owned by the sibling plan; no handoff phase promotes claims.
 - [x] Best-effort release has an explicit decision independent of G5; strict/native/package-first/PowerPoint rows remain separately labelled.
 

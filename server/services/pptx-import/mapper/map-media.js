@@ -47,6 +47,15 @@ function gateBackgroundImageSrc(ref, context) {
       pushMediaWarning(context, { code: 'media-too-large', byteLength: approxBytes })
       return null
     }
+    // Shared aggregate media budget when provided (cannot bypass import-wide accounting).
+    if (context?.mediaBudget?.reserve) {
+      try {
+        context.mediaBudget.reserve(approxBytes)
+      } catch {
+        pushMediaWarning(context, { code: 'media-budget-exceeded', byteLength: approxBytes })
+        return null
+      }
+    }
     return src
   }
   // Reject any other explicit scheme (javascript:, file:, etc).

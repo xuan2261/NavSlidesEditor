@@ -125,8 +125,9 @@ function validateState(state) {
     'Invalid matrix authority epoch')
   if (state.mutationResults === undefined) state.mutationResults = []
   if (state.compatibilityOutbox === undefined) state.compatibilityOutbox = []
+  if (state.compatibilityDeadLetter === undefined) state.compatibilityDeadLetter = []
   if (state.candidateBlobs === undefined) state.candidateBlobs = []
-  for (const key of ['blobs', 'revisions', 'heads', 'owners', 'leases', 'jobs', 'mutationResults', 'compatibilityOutbox', 'candidateBlobs']) {
+  for (const key of ['blobs', 'revisions', 'heads', 'owners', 'leases', 'jobs', 'mutationResults', 'compatibilityOutbox', 'compatibilityDeadLetter', 'candidateBlobs']) {
     assert(Array.isArray(state[key]), `Invalid state ${key} index`)
   }
   state.blobs.forEach(validateBlob)
@@ -172,6 +173,7 @@ function createEmptyState(fencingEpoch = 0) {
     jobs: [],
     mutationResults: [],
     compatibilityOutbox: [],
+    compatibilityDeadLetter: [],
     candidateBlobs: [],
   }
 }

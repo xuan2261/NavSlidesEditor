@@ -50,6 +50,18 @@ describe('I-R6.1 — slide background src must pass the media gate for all schem
     expect(bg.src || bg.image || '').toContain('data:image/png')
   })
 
+  it('charges data:image backgrounds against shared mediaBudget when provided', async () => {
+    const { gateBackgroundImageSrc } = await import('./mapper/map-media.js')
+    const { createMediaBudget } = await import('./resource-budgets.js')
+    const pixel =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/I2BAAAAAElFTkSuQmCC'
+    const mediaBudget = createMediaBudget(10)
+    const warnings = []
+    const blocked = gateBackgroundImageSrc(pixel, { mediaBudget, warnings })
+    expect(blocked).toBeNull()
+    expect(warnings.some((w) => w.code === 'media-budget-exceeded')).toBe(true)
+  })
+
   it('allows an allowlisted localhost background host', async () => {
     const result = await runWithBackgroundFill({
       type: 'image',

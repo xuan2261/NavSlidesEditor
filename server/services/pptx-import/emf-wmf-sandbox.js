@@ -16,6 +16,8 @@ function assertSafeInputPath(filePath) {
 
 function resolveConverterBinary(options = {}) {
   const binary = options.binary || process.env.PPTX_EMF_BINARY || 'magick'
+  // Default: require absolute path (no PATH lookup). Tests may pass options.allowBareName.
+  const allowBareName = options.allowBareName === true || process.env.PPTX_EMF_ALLOW_BARE_NAME === '1'
   if (path.isAbsolute(binary)) {
     const base = path.basename(binary).replace(/\.exe$/i, '')
     if (!ALLOWED_BINARIES.has(base)) {
@@ -25,6 +27,13 @@ function resolveConverterBinary(options = {}) {
   }
   if (!ALLOWED_BINARIES.has(binary)) {
     return { ok: false, error: 'binary-not-allowlisted', code: 'POLICY' }
+  }
+  if (!allowBareName) {
+    return {
+      ok: false,
+      error: 'emf-binary-must-be-absolute',
+      code: 'POLICY',
+    }
   }
   return { ok: true, binary }
 }
