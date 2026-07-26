@@ -126,11 +126,14 @@ async function drainPackageCompatibilityOutbox() {
         })
         applied.push(write)
       } catch (error) {
+        // Preserve full write for repair/replay; only attach bounded error metadata.
         poisoned.push({
+          write: structuredClone(write),
           id: write?.id,
           presentationId: write?.presentationId,
           code: error?.code || 'COMPATIBILITY_APPLY_FAILED',
           message: String(error?.message || error).slice(0, 240),
+          deadLetteredAt: new Date().toISOString(),
         })
       }
     }
@@ -144,12 +147,9 @@ async function drainPackageCompatibilityOutbox() {
           if (!Array.isArray(next.compatibilityDeadLetter)) next.compatibilityDeadLetter = []
           for (const item of poisoned) {
             if (next.compatibilityDeadLetter.some((entry) => entry.id === item.id)) continue
-            next.compatibilityDeadLetter.push({
-              ...item,
-              deadLetteredAt: new Date().toISOString(),
-            })
+            next.compatibilityDeadLetter.push(item)
           }
-          // Remove poisoned writes from outbox so startup is not permanently blocked.
+          // Remove poisoned writes from active outbox so startup is not permanently blocked.
           const poisonedIds = new Set(poisoned.map((item) => item.id).filter(Boolean))
           next.compatibilityOutbox = (next.compatibilityOutbox || []).filter(
             (record) => !poisonedIds.has(record.id)

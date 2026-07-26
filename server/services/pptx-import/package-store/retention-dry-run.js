@@ -27,6 +27,13 @@ function isProtectedJob(job, state, policy = DEFAULT_POLICY) {
       return true
     }
   }
+  if (policy.protectDeadLetter && Array.isArray(state.compatibilityDeadLetter)) {
+    if (state.compatibilityDeadLetter.some((item) =>
+      item.presentationId === job.presentationId || item.write?.presentationId === job.presentationId
+    )) {
+      return true
+    }
+  }
   if (job.reconcileRequired === true) return true
   if (job.transactionState === 'apply-pending' || job.transactionState === 'applied-unacked') {
     return true
