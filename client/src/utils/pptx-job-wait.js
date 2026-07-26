@@ -3,6 +3,8 @@ export const PPTX_IMPORT_TIMEOUT_MS = 2 * 60 * 1000
 /** Client wait slack past server import deadline (proxy / final poll). */
 export const PPTX_JOB_WAIT_SLACK_MS = 30_000
 export const DEFAULT_PPTX_JOB_MAX_WAIT_MS = PPTX_IMPORT_TIMEOUT_MS + PPTX_JOB_WAIT_SLACK_MS
+/** Reserved window at the end of the absolute budget for a bounded final durable GET. */
+export const PPTX_FINAL_STATUS_BUDGET_MS = 5_000
 
 function createAbortError() {
   const error = new Error('The operation was aborted')
@@ -38,6 +40,18 @@ function sleepWithSignal(ms, signal) {
   })
 }
 
+function remainingUntil(deadlineAt) {
+  if (deadlineAt == null) return null
+  return Math.max(0, deadlineAt - Date.now())
+}
+
+function transportBudgetMs(maxWaitMs) {
+  if (maxWaitMs == null) return null
+  // Always reserve a slice for final GET, even when the total budget is small.
+  const reserve = Math.min(PPTX_FINAL_STATUS_BUDGET_MS, Math.max(1, Math.floor(maxWaitMs / 2)))
+  return Math.max(0, maxWaitMs - reserve)
+}
+
 export class PptxJobOutcomeError extends Error {
   constructor(message, { jobId, code = 'PPTX_JOB_FAILED', status, cause } = {}) {
     super(message, cause ? { cause } : undefined)
@@ -50,26 +64,45 @@ export class PptxJobOutcomeError extends Error {
 
 function terminalResult(job, jobId) {
   if (job?.status === 'done') return { done: true, result: job.result }
+  if (job?.status === 'pending-visibility') {
+    throw new PptxJobOutcomeError(
+      job.message || 'PPTX import published; awaiting list visibility',
+      {
+        jobId,
+        code: 'PPTX_JOB_PENDING_VISIBILITY',
+        status: 'pending-visibility',
+      }
+    )
+  }
   if (job?.status === 'failed' || job?.status === 'cancelled') {
     throw new PptxJobOutcomeError(job.error || `PPTX import ${job.status}`, {
       jobId,
       status: job.status,
+      code: job.status === 'cancelled' ? 'PPTX_JOB_CANCELLED' : 'PPTX_JOB_FAILED',
     })
+  }
+  if (job?.status === 'reconcile-required') {
+    throw new PptxJobOutcomeError(
+      job.message || 'PPTX import requires manual reconciliation',
+      {
+        jobId,
+        code: 'PPTX_JOB_RECONCILE_REQUIRED',
+        status: 'reconcile-required',
+      }
+    )
   }
   return { done: false }
 }
 
-async function reconcileAfterDeadline({ jobId, api, onProgress, cancelError, signal }) {
+/**
+ * Timeout recovery: GET-only final status. Never calls destructive POST reconcile.
+ */
+async function reconcileAfterDeadline({ jobId, api, onProgress, cancelError, signal, capability }) {
   try {
-    const finalJob = await api.pollPptxJob(jobId, { signal })
+    const finalJob = await api.pollPptxJob(jobId, { signal, capability })
     if (finalJob?.message) onProgress?.(finalJob.message)
-    if (finalJob?.status === 'done') return finalJob.result
-    if (finalJob?.status === 'failed') {
-      throw new PptxJobOutcomeError(finalJob.error || 'PPTX import failed', {
-        jobId,
-        status: 'failed',
-      })
-    }
+    const terminal = terminalResult(finalJob, jobId)
+    if (terminal.done) return terminal.result
     throw new PptxJobOutcomeError(
       `PPTX import job ${jobId} reached the waiting deadline. Cancellation was requested, but its final outcome is not confirmed. Check existing presentations before retrying.`,
       {
@@ -94,6 +127,45 @@ async function reconcileAfterDeadline({ jobId, api, onProgress, cancelError, sig
   }
 }
 
+async function cancelThenFinalGet({ jobId, api, onProgress, signal, finalGetMs, capability }) {
+  let cancelError
+  try {
+    // Control-plane cancel must not use an already-aborted transport signal.
+    await api.cancelPptxJob(jobId, { capability })
+  } catch (err) {
+    cancelError = err
+  }
+
+  const finalController = new AbortController()
+  const onOuterAbort = () => finalController.abort()
+  if (signal) {
+    if (signal.aborted) {
+      throw createAbortError()
+    }
+    signal.addEventListener('abort', onOuterAbort, { once: true })
+  }
+  const budget = finalGetMs == null ? PPTX_FINAL_STATUS_BUDGET_MS : Math.max(0, finalGetMs)
+  let budgetTimer
+  if (budget > 0) {
+    budgetTimer = setTimeout(() => finalController.abort(), budget)
+  } else {
+    finalController.abort()
+  }
+  try {
+    return await reconcileAfterDeadline({
+      jobId,
+      api,
+      onProgress,
+      cancelError,
+      signal: finalController.signal,
+      capability,
+    })
+  } finally {
+    if (budgetTimer != null) clearTimeout(budgetTimer)
+    signal?.removeEventListener?.('abort', onOuterAbort)
+  }
+}
+
 export async function pollPptxJobUntilTerminal({
   jobId,
   api,
@@ -102,27 +174,37 @@ export async function pollPptxJobUntilTerminal({
   pollIntervalMs = 1000,
   signal,
   maxWaitMs,
+  deadlineAt: deadlineAtOption = null,
+  capability,
 }) {
   throwIfAborted(signal)
-  const useDeadline = maxWaitMs != null
-  const deadlineAt = useDeadline ? Date.now() + maxWaitMs : null
+  const deadlineAt =
+    deadlineAtOption != null
+      ? deadlineAtOption
+      : maxWaitMs != null
+        ? Date.now() + maxWaitMs
+        : null
+  const useDeadline = deadlineAt != null
+  const transportUntil = useDeadline
+    ? deadlineAt - Math.min(PPTX_FINAL_STATUS_BUDGET_MS, Math.max(0, deadlineAt - Date.now()))
+    : null
   let attempt = 0
 
   while (true) {
     throwIfAborted(signal)
-    if (useDeadline && Date.now() >= deadlineAt) break
+    if (useDeadline && Date.now() >= transportUntil) break
     if (!useDeadline && attempt >= maxPollAttempts) break
 
-    const job = await api.pollPptxJob(jobId, { signal })
+    const job = await api.pollPptxJob(jobId, { signal, capability })
     if (job?.message) onProgress?.(job.message)
     const terminal = terminalResult(job, jobId)
     if (terminal.done) return terminal.result
 
     attempt += 1
     if (useDeadline) {
-      const remaining = deadlineAt - Date.now()
-      if (remaining <= 0) break
-      await sleepWithSignal(Math.min(pollIntervalMs, remaining), signal)
+      const remainingTransport = transportUntil - Date.now()
+      if (remainingTransport <= 0) break
+      await sleepWithSignal(Math.min(pollIntervalMs, remainingTransport), signal)
     } else if (attempt < maxPollAttempts) {
       await sleepWithSignal(pollIntervalMs, signal)
     } else {
@@ -130,15 +212,16 @@ export async function pollPptxJobUntilTerminal({
     }
   }
 
-  let cancelError
-  try {
-    // Do not pass aborted signal — cancel must still reach the server.
-    await api.cancelPptxJob(jobId)
-  } catch (err) {
-    cancelError = err
-  }
+  const finalGetMs = useDeadline
+    ? remainingUntil(deadlineAt)
+    : PPTX_FINAL_STATUS_BUDGET_MS
+  return cancelThenFinalGet({ jobId, api, onProgress, signal, finalGetMs, capability })
+}
 
-  return reconcileAfterDeadline({ jobId, api, onProgress, cancelError, signal })
+function streamUrlForJob(jobId, capability) {
+  const base = `/api/pptx/jobs/${jobId}/stream`
+  if (!capability) return base
+  return `${base}?capability=${encodeURIComponent(capability)}`
 }
 
 export function waitForPptxJob({
@@ -151,7 +234,16 @@ export function waitForPptxJob({
   pollIntervalMs = 1000,
   signal,
   maxWaitMs = DEFAULT_PPTX_JOB_MAX_WAIT_MS,
+  deadlineAt: deadlineAtOption = null,
+  capability,
 }) {
+  const deadlineAt =
+    deadlineAtOption != null
+      ? deadlineAtOption
+      : maxWaitMs != null
+        ? Date.now() + maxWaitMs
+        : null
+
   if (!EventSourceImpl) {
     onConnection?.({ jobId })
     return pollPptxJobUntilTerminal({
@@ -161,14 +253,16 @@ export function waitForPptxJob({
       maxPollAttempts,
       pollIntervalMs,
       signal,
-      maxWaitMs,
+      deadlineAt,
+      maxWaitMs: deadlineAt != null ? remainingUntil(deadlineAt) : maxWaitMs,
+      capability,
     }).finally(() => {
       onConnection?.(null)
     })
   }
 
   return new Promise((resolve, reject) => {
-    const eventSource = new EventSourceImpl(`/api/pptx/jobs/${jobId}/stream`)
+    const eventSource = new EventSourceImpl(streamUrlForJob(jobId, capability))
     let settled = false
     let polling = false
     let budgetTimer
@@ -189,26 +283,26 @@ export function waitForPptxJob({
       callback(value)
     }
 
-    const rejectBudgetUnknown = () => {
+    const runFinalStatusRecovery = () => {
       if (settled) return
-      // Best-effort cancel; do not await — budget reject must be synchronous for settle.
-      api.cancelPptxJob(jobId).catch(() => {})
-      finish(
-        reject,
-        new PptxJobOutcomeError(
-          `PPTX import job ${jobId} reached the waiting deadline. Cancellation was requested, but its final outcome is not confirmed. Check existing presentations before retrying.`,
-          {
-            jobId,
-            code: 'PPTX_JOB_OUTCOME_UNKNOWN',
-            status: 'unknown',
-          }
-        )
+      const finalGetMs = remainingUntil(deadlineAt) ?? PPTX_FINAL_STATUS_BUDGET_MS
+      cancelThenFinalGet({
+        jobId,
+        api,
+        onProgress,
+        signal,
+        finalGetMs,
+        capability,
+      }).then(
+        (result) => finish(resolve, result),
+        (err) => finish(reject, err)
       )
     }
 
     onAbort = () => {
       if (settled) return
-      api.cancelPptxJob(jobId).catch(() => {})
+      // Best-effort cancel on ownership loss; do not await for settle latency.
+      api.cancelPptxJob(jobId, { capability }).catch(() => {})
       finish(reject, createAbortError())
     }
 
@@ -220,8 +314,9 @@ export function waitForPptxJob({
       signal.addEventListener('abort', onAbort, { once: true })
     }
 
-    if (maxWaitMs != null && maxWaitMs >= 0) {
-      budgetTimer = setTimeout(rejectBudgetUnknown, maxWaitMs)
+    if (deadlineAt != null) {
+      const transportMs = Math.max(0, transportBudgetMs(remainingUntil(deadlineAt) ?? 0) ?? 0)
+      budgetTimer = setTimeout(runFinalStatusRecovery, transportMs)
     }
 
     const parse = (event) => JSON.parse(event.data)
@@ -251,7 +346,11 @@ export function waitForPptxJob({
         }
         finish(
           reject,
-          new PptxJobOutcomeError(payload.error || `PPTX import ${status}`, { jobId, status })
+          new PptxJobOutcomeError(payload.error || `PPTX import ${status}`, {
+            jobId,
+            status,
+            code: status === 'cancelled' ? 'PPTX_JOB_CANCELLED' : 'PPTX_JOB_FAILED',
+          })
         )
       })
     }
@@ -259,6 +358,7 @@ export function waitForPptxJob({
       if (settled || polling) return
       polling = true
       eventSource.close()
+      const remaining = remainingUntil(deadlineAt)
       pollPptxJobUntilTerminal({
         jobId,
         api,
@@ -266,7 +366,9 @@ export function waitForPptxJob({
         maxPollAttempts,
         pollIntervalMs,
         signal,
-        maxWaitMs,
+        deadlineAt,
+        maxWaitMs: remaining,
+        capability,
       }).then(
         (result) => finish(resolve, result),
         (err) => finish(reject, err)

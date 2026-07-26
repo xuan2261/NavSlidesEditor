@@ -120,6 +120,12 @@ describe('package compatibility outbox', () => {
       deletedAt: '2026-01-03T00:00:00.000Z',
       pptxOriginal: { id: 'original-1', sha256: 'a'.repeat(64) },
       _pptxMeta: { originalSize: { width: 720, height: 540 } },
+      _pptxImportReport: {
+        schemaVersion: 1,
+        jobId: 'job-import-1',
+        summary: { warningCount: 1, byType: { 'media-missing': 1 }, omittedCount: 0 },
+        diagnostics: [{ type: 'media-missing', message: 'gone' }],
+      },
       pptxAggregateHead: { generation: 2 },
     }]
 
@@ -139,6 +145,12 @@ describe('package compatibility outbox', () => {
             content: '<p>After</p>',
           }],
         }],
+        _pptxImportReport: {
+          schemaVersion: 1,
+          jobId: 'client-forged',
+          summary: { warningCount: 999, byType: { flood: 999 }, omittedCount: 0 },
+          diagnostics: [],
+        },
         pptxAggregateHead: { generation: 3 },
       },
     }])
@@ -159,6 +171,11 @@ describe('package compatibility outbox', () => {
       deletedAt: '2026-01-03T00:00:00.000Z',
       pptxOriginal: { id: 'original-1', sha256: 'a'.repeat(64) },
       _pptxMeta: { originalSize: { width: 720, height: 540 } },
+      _pptxImportReport: {
+        schemaVersion: 1,
+        jobId: 'job-import-1',
+        summary: { warningCount: 1, byType: { 'media-missing': 1 }, omittedCount: 0 },
+      },
       pptxAggregateHead: { generation: 3 },
     })
     expect(presentations[0].slides[0].elements[0]).not.toHaveProperty('_pptxSource')

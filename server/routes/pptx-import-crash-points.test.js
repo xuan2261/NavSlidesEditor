@@ -441,6 +441,7 @@ describe('PPTX import crash points (real store + outbox)', () => {
 
   it('CP8: restart clear Map then GET — visibility-safe durable payload (not presentationId-only phantom)', async () => {
     const jobId = jobManager.createJob()
+    const capability = jobManager.takeJobCapability(jobId)
     let presentationId
 
     await runImport({
@@ -468,7 +469,9 @@ describe('PPTX import crash points (real store + outbox)', () => {
       // Default readDurableJob/checkPresentationListable/loadReportSummary hit real storage.
     }))
 
-    const response = await request(app).get(`/api/pptx/jobs/${jobId}`)
+    const response = await request(app)
+      .get(`/api/pptx/jobs/${jobId}`)
+      .set('X-Pptx-Job-Capability', capability)
     expect(response.status).toBe(200)
     expect(response.body).toMatchObject({
       jobId,
@@ -485,12 +488,14 @@ describe('PPTX import crash points (real store + outbox)', () => {
     })
     expect(response.body.result.warnings).toBeUndefined()
     // Residual: SSE is Map-only — after restart stream is 404; poll recovers above.
-    const sse = await request(app).get(`/api/pptx/jobs/${jobId}/stream`)
+    const sse = await request(app)
+      .get(`/api/pptx/jobs/${jobId}/stream?capability=${encodeURIComponent(capability)}`)
     expect(sse.status).toBe(404)
   })
 
   it('CP9: DELETE after durable terminal returns 409 finished', async () => {
     const jobId = jobManager.createJob()
+    const capability = jobManager.takeJobCapability(jobId)
     let presentationId
 
     await runImport({
@@ -511,7 +516,9 @@ describe('PPTX import crash points (real store + outbox)', () => {
 
     const app = express()
     app.use('/api/pptx', createPptxImportRouter({ jobManager }))
-    const response = await request(app).delete(`/api/pptx/jobs/${jobId}`)
+    const response = await request(app)
+      .delete(`/api/pptx/jobs/${jobId}`)
+      .set('X-Pptx-Job-Capability', capability)
     expect(response.status).toBe(409)
     expect(response.body).toMatchObject({
       code: 'JOB_ALREADY_FINISHED',
@@ -525,6 +532,7 @@ describe('PPTX import crash points (real store + outbox)', () => {
 
   it('CP10: reconcile after success is identity-bound; fencing rejects mismatched identity', async () => {
     const jobId = jobManager.createJob()
+    const capability = jobManager.takeJobCapability(jobId)
     let presentationId
 
     await runImport({
@@ -555,7 +563,9 @@ describe('PPTX import crash points (real store + outbox)', () => {
     }))
 
     // Happy identity-bound reconcile.
-    const ok = await request(app).post(`/api/pptx/jobs/${jobId}/reconcile`)
+    const ok = await request(app)
+      .post(`/api/pptx/jobs/${jobId}/reconcile`)
+      .set('X-Pptx-Job-Capability', capability)
     expect(ok.status).toBe(200)
     expect(ok.body).toMatchObject({
       success: true,
@@ -567,7 +577,9 @@ describe('PPTX import crash points (real store + outbox)', () => {
     expect((await packageSnapshot()).heads.some((h) => h.presentationId === presentationId)).toBe(false)
 
     // P0 fencing: second reconcile is no-op / safe (already rolled back).
-    const again = await request(app).post(`/api/pptx/jobs/${jobId}/reconcile`)
+    const again = await request(app)
+      .post(`/api/pptx/jobs/${jobId}/reconcile`)
+      .set('X-Pptx-Job-Capability', capability)
     expect([200, 409]).toContain(again.status)
     if (again.status === 200) {
       expect(again.body.success).toBe(true)

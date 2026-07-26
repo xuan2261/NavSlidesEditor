@@ -36,7 +36,15 @@ function toPresentationEditorDto(record, { aggregateGeneration } = {}) {
 }
 
 function toExternalPresentationDto(record) {
-  return stripAuthority(record)
+  // External/export DTOs must not carry job IDs, raw diagnostics, or authority.
+  const external = stripAuthority(record)
+  if (external?._pptxImportReport) {
+    const { toReportSummary } = require('../import-report')
+    const summary = toReportSummary(external._pptxImportReport)
+    if (summary) external._pptxImportReport = summary
+    else delete external._pptxImportReport
+  }
+  return external
 }
 
 function toPublicDto(record) {

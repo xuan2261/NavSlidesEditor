@@ -20,13 +20,17 @@ async function writeMinimalPptx(filePath) {
   await fs.writeFile(filePath, await zip.generateAsync({ type: 'nodebuffer' }))
 }
 
-async function waitForJob(app, jobId, status = 'done') {
+function withCapability(req, capability) {
+  return capability ? req.set('X-Pptx-Job-Capability', capability) : req
+}
+
+async function waitForJob(app, jobId, status = 'done', capability = null) {
   for (let attempt = 0; attempt < 40; attempt += 1) {
-    const res = await request(app).get(`/api/pptx/jobs/${jobId}`)
+    const res = await withCapability(request(app).get(`/api/pptx/jobs/${jobId}`), capability)
     if (res.body.status === status) return res
     await new Promise((resolve) => setTimeout(resolve, 15))
   }
-  return request(app).get(`/api/pptx/jobs/${jobId}`)
+  return withCapability(request(app).get(`/api/pptx/jobs/${jobId}`), capability)
 }
 
 function mockAtomicDeps(overrides = {}) {
@@ -84,7 +88,7 @@ describe('PPTX import route', () => {
       expect(res.status).toBe(202)
       expect(res.body.jobId).toMatch(/^[0-9a-f-]{36}$/i)
 
-      const poll = await waitForJob(app, res.body.jobId)
+      const poll = await waitForJob(app, res.body.jobId, 'done', res.body.capability)
       expect(poll.status).toBe(200)
       expect(poll.body).toMatchObject({
         jobId: res.body.jobId,
@@ -150,7 +154,7 @@ describe('PPTX import route', () => {
       }))
 
       const res = await request(app).post('/api/pptx/import').attach('file', file)
-      const poll = await waitForJob(app, res.body.jobId)
+      const poll = await waitForJob(app, res.body.jobId, 'done', res.body.capability)
 
       expect(poll.body).toMatchObject({
         status: 'done',
@@ -206,7 +210,7 @@ describe('PPTX import route', () => {
       }))
 
       const res = await request(app).post('/api/pptx/import').attach('file', file)
-      const poll = await waitForJob(app, res.body.jobId, 'failed')
+      const poll = await waitForJob(app, res.body.jobId, 'failed', res.body.capability)
 
       expect(poll.body).toMatchObject({ status: 'failed', error: 'drain failed' })
       expect(createPresentation).not.toHaveBeenCalled()
@@ -243,7 +247,7 @@ describe('PPTX import route', () => {
       }))
 
       const res = await request(app).post('/api/pptx/import').attach('file', file)
-      const poll = await waitForJob(app, res.body.jobId, 'failed')
+      const poll = await waitForJob(app, res.body.jobId, 'failed', res.body.capability)
 
       expect(poll.body).toMatchObject({ status: 'failed', error: 'package transaction failed' })
       expect(createPresentation).not.toHaveBeenCalled()
@@ -288,7 +292,7 @@ describe('PPTX import route', () => {
       )
 
       const res = await request(app).post('/api/pptx/import').attach('file', file)
-      const poll = await waitForJob(app, res.body.jobId)
+      const poll = await waitForJob(app, res.body.jobId, 'done', res.body.capability)
       expect(poll.body.status).toBe('done')
       expect(poll.body.result.presentationId).toBe('pres-bound-1')
       expect(poll.body.result.presentation).toBeUndefined()
@@ -344,9 +348,9 @@ describe('PPTX import route', () => {
 
       const first = await request(app).post('/api/pptx/import').attach('file', file)
       expect(first.status).toBe(202)
-      expect(await request(app).delete(`/api/pptx/jobs/${first.body.jobId}`)).toMatchObject({ status: 204 })
+      expect(await withCapability(request(app).delete(`/api/pptx/jobs/${first.body.jobId}`), first.body.capability)).toMatchObject({ status: 204 })
       finishImport()
-      const cancelled = await waitForJob(app, first.body.jobId, 'cancelled')
+      const cancelled = await waitForJob(app, first.body.jobId, 'cancelled', first.body.capability)
       expect(cancelled.body.status).toBe('cancelled')
 
       const originalsDir = getOriginalsDir(originalsBase)
@@ -384,7 +388,7 @@ describe('PPTX import route', () => {
       )
 
       const res = await request(app).post('/api/pptx/import').attach('file', file)
-      const poll = await waitForJob(app, res.body.jobId, 'failed')
+      const poll = await waitForJob(app, res.body.jobId, 'failed', res.body.capability)
       expect(poll.body.status).toBe('failed')
       const names = await fs.readdir(getOriginalsDir(originalsBase)).catch(() => [])
       expect(names.filter((n) => n.endsWith('.pptx'))).toHaveLength(0)
@@ -442,7 +446,7 @@ describe('PPTX import route', () => {
       }))
 
       const res = await request(app).post('/api/pptx/import').attach('file', file)
-      const poll = await waitForJob(app, res.body.jobId, 'failed')
+      const poll = await waitForJob(app, res.body.jobId, 'failed', res.body.capability)
       expect(poll.body).toMatchObject({
         status: 'failed',
         error: 'PPTX import deadline exceeded',
@@ -479,7 +483,7 @@ describe('PPTX import route', () => {
       }))
 
       const res = await request(app).post('/api/pptx/import').attach('file', file)
-      const poll = await waitForJob(app, res.body.jobId, 'failed')
+      const poll = await waitForJob(app, res.body.jobId, 'failed', res.body.capability)
       expect(poll.body.error).toBe('PPTX import deadline exceeded')
 
       finishPersist()
@@ -519,7 +523,7 @@ describe('PPTX import route', () => {
       }))
 
       const res = await request(app).post('/api/pptx/import').attach('file', file)
-      const poll = await waitForJob(app, res.body.jobId, 'failed')
+      const poll = await waitForJob(app, res.body.jobId, 'failed', res.body.capability)
       expect(poll.body.error).toBe('PPTX import deadline exceeded')
       expect(deleteOriginal).toHaveBeenCalled()
 
@@ -548,20 +552,36 @@ describe('PPTX import route', () => {
   it('returns job lifecycle statuses for GET and DELETE', async () => {
     const app = express()
     const jobId = jobManager.createJob()
+    const capability = jobManager.takeJobCapability(jobId)
     app.use('/api/pptx', createPptxImportRouter({ jobManager, importer: async () => ({ ok: true }), ...mockAtomicDeps() }))
 
-    const poll = await request(app).get(`/api/pptx/jobs/${jobId}`)
+    const poll = await withCapability(request(app).get(`/api/pptx/jobs/${jobId}`), capability)
     expect(poll.status).toBe(200)
     expect(poll.body.status).toBe('running')
 
-    const cancel = await request(app).delete(`/api/pptx/jobs/${jobId}`)
+    const cancel = await withCapability(request(app).delete(`/api/pptx/jobs/${jobId}`), capability)
     expect(cancel.status).toBe(204)
 
-    const cancelAgain = await request(app).delete(`/api/pptx/jobs/${jobId}`)
+    const cancelAgain = await withCapability(request(app).delete(`/api/pptx/jobs/${jobId}`), capability)
     expect(cancelAgain.status).toBe(409)
 
     const missing = await request(app).get('/api/pptx/jobs/00000000-0000-4000-8000-000000000000')
     expect(missing.status).toBe(404)
+
+    jobManager.completeCancellation(jobId)
+    jobManager.cleanup(jobId)
+    const deniedJobId = jobManager.createJob()
+    const denied = await request(app).get(`/api/pptx/jobs/${deniedJobId}`)
+    expect(denied.status).toBe(401)
+    expect(denied.body.code).toBe('JOB_CAPABILITY_REQUIRED')
+    const wrong = await withCapability(request(app).get(`/api/pptx/jobs/${deniedJobId}`), '0'.repeat(64))
+    expect(wrong.status).toBe(401)
+    // Query capability is SSE-only; GET must ignore it.
+    const queryDenied = await request(app).get(
+      `/api/pptx/jobs/${deniedJobId}?capability=${jobManager.takeJobCapability(deniedJobId)}`
+    )
+    expect(queryDenied.status).toBe(401)
+    jobManager.cleanup(deniedJobId)
   })
 
   it('keeps a cancelled import slot reserved until the background import settles', async () => {
@@ -586,13 +606,13 @@ describe('PPTX import route', () => {
 
       const first = await request(app).post('/api/pptx/import').attach('file', file)
       expect(first.status).toBe(202)
-      expect(await request(app).delete(`/api/pptx/jobs/${first.body.jobId}`)).toMatchObject({ status: 204 })
+      expect(await withCapability(request(app).delete(`/api/pptx/jobs/${first.body.jobId}`), first.body.capability)).toMatchObject({ status: 204 })
 
       const secondWhileCancelling = await request(app).post('/api/pptx/import')
       expect(secondWhileCancelling.status).toBe(429)
 
       finishImport()
-      const cancelled = await waitForJob(app, first.body.jobId, 'cancelled')
+      const cancelled = await waitForJob(app, first.body.jobId, 'cancelled', first.body.capability)
       expect(cancelled.body.status).toBe('cancelled')
       await vi.waitFor(() => expect(jobManager.getJob(first.body.jobId)?.operationPending).toBe(false))
 
@@ -608,13 +628,14 @@ describe('PPTX import route', () => {
   it('streams SSE progress and detaches clients on close', async () => {
     const app = express()
     const jobId = jobManager.createJob()
+    const capability = jobManager.takeJobCapability(jobId)
     app.use('/api/pptx', createPptxImportRouter({ jobManager, importer: async () => ({ ok: true }), ...mockAtomicDeps() }))
     const server = app.listen(0)
     const port = server.address().port
 
     try {
       const chunk = await new Promise((resolve, reject) => {
-        const req = http.get(`http://127.0.0.1:${port}/api/pptx/jobs/${jobId}/stream`, (res) => {
+        const req = http.get(`http://127.0.0.1:${port}/api/pptx/jobs/${jobId}/stream?capability=${encodeURIComponent(capability)}`, (res) => {
           expect(res.headers['content-type']).toContain('text/event-stream')
           res.on('data', (data) => {
             req.destroy()

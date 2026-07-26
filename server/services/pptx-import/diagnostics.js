@@ -25,6 +25,11 @@ function sanitizeDiagnostic(value, maxLength = 500) {
 }
 
 function classifyError(err) {
+  // Preserve explicit failure types set by upstream guards (e.g. output-empty).
+  const explicit = err?.type
+  if (typeof explicit === 'string' && Object.values(FAILURE_TYPES).includes(explicit)) {
+    return explicit
+  }
   const message = `${err?.message || err || ''}`.toLowerCase()
   if (message.includes('cannot find module') || message.includes('module not found')) {
     return FAILURE_TYPES.installFailed

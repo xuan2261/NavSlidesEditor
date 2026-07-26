@@ -71,6 +71,10 @@ function validateJob(job) {
   assert(JOB_KINDS.has(job.kind), 'Invalid job kind')
   assert(JOB_STATUSES.has(job.status), 'Invalid job status')
   assert(SHA256_RE.test(job.capabilityHash), 'Invalid capability hash')
+  // Optional control-plane bearer hash (job status/SSE/DELETE). Distinct from package capabilityHash.
+  if (job.controlCapabilityHash !== undefined && job.controlCapabilityHash !== null) {
+    assert(SHA256_RE.test(job.controlCapabilityHash), 'Invalid control capability hash')
+  }
   validateImportOutcome(job)
   if (job.provisionalOwner) validateOwner(job.provisionalOwner)
   return job

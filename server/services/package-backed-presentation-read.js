@@ -139,26 +139,60 @@ async function readAuthoritativePresentation(
   )
 }
 
-async function readAuthoritativePresentations(storedPresentations, { normalize = true } = {}) {
+const BULK_QUARANTINE_CODES = new Set([
+  'PRESENTATION_PACKAGE_HEAD_MISSING',
+  'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
+  'CANONICAL_TEXT_JOURNAL_INVALID',
+  'STALE_MATRIX_AUTHORITY',
+])
+
+/**
+ * Bulk authoritative read with list isolation.
+ * Known missing-head / authority failures are quarantined (optional collectQuarantine)
+ * so healthy rows remain readable. Single-read paths stay fail-closed.
+ */
+async function readAuthoritativePresentations(
+  storedPresentations,
+  { normalize = true, collectQuarantine = null } = {}
+) {
   const serveable = (storedPresentations || []).filter((presentation) =>
     presentation && !presentation.deletedAt
   )
   if (!serveable.length) return []
   const store = await getReadablePackageStore()
   const state = store.getState()
-  return serveable.map((storedPresentation) => {
+  const results = []
+  for (const storedPresentation of serveable) {
     const compatibilityPresentation = normalize
       ? normalizePptxImportedPresentationForRead(storedPresentation)
       : storedPresentation
-    return resolvePackageBackedReadFromState(
-      state,
-      storedPresentation.id,
-      compatibilityPresentation
-    )
-  })
+    try {
+      results.push(
+        resolvePackageBackedReadFromState(
+          state,
+          storedPresentation.id,
+          compatibilityPresentation
+        )
+      )
+    } catch (err) {
+      if (BULK_QUARANTINE_CODES.has(err?.code)) {
+        if (Array.isArray(collectQuarantine)) {
+          collectQuarantine.push({
+            id: storedPresentation.id,
+            code: err.code,
+            status: err.status || 422,
+          })
+        }
+        continue
+      }
+      throw err
+    }
+  }
+  return results
 }
 
 module.exports = {
+  BULK_QUARANTINE_CODES,
   readAuthoritativePresentation,
   readAuthoritativePresentations,
   resolvePackageBackedRead,

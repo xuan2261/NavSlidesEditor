@@ -126,6 +126,37 @@ describe('durable PPTX import job authority', () => {
     })
   })
 
+  it('durable DELETE withholds presentationId when projection is not listable (Contract B)', async () => {
+    const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cd'
+    const checkPresentationListable = vi.fn(async () => false)
+    const durable = {
+      id: jobId,
+      kind: 'import',
+      status: 'completed',
+      transactionState: 'committed',
+      cancellationPoint: 'committed',
+      capabilityHash: 'c'.repeat(64),
+      presentationId: 'presentation-not-listable',
+    }
+    const response = await request(createApp({
+      jobManager: manager(),
+      readDurableJob: vi.fn(async () => durable),
+      checkPresentationListable,
+    })).delete(`/api/pptx/jobs/${jobId}`)
+
+    expect(response.status).toBe(409)
+    expect(checkPresentationListable).toHaveBeenCalledWith('presentation-not-listable')
+    expect(response.body).toMatchObject({
+      code: 'JOB_ALREADY_FINISHED',
+      job: {
+        jobId,
+        status: 'pending-visibility',
+        durable: true,
+      },
+    })
+    expect(response.body.job.result).toBeUndefined()
+  })
+
   it('reconciles a late package-backed completion by durable job identity', async () => {
     const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
     const durable = {

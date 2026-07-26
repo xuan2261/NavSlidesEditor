@@ -44,7 +44,11 @@ router.get('/', async (req, res) => {
     const publicCandidates = storedPresentations.filter((presentation) =>
       presentation && !presentation.deletedAt && publicIdSet.has(presentation.id)
     )
-    const authoritative = await readAuthoritativePresentations(publicCandidates)
+    // Explore policy: omit quarantined/missing-head decks from public list (no list-wide 500).
+    const quarantine = []
+    const authoritative = await readAuthoritativePresentations(publicCandidates, {
+      collectQuarantine: quarantine,
+    })
     const authoritativeById = new Map(authoritative.map(({ presentation }) => [
       presentation.id,
       presentation,
@@ -60,6 +64,9 @@ router.get('/', async (req, res) => {
       }
     }).filter(Boolean)
 
+    if (quarantine.length > 0) {
+      res.set('X-Explore-Quarantined-Count', String(quarantine.length))
+    }
     res.json({ presentations: publicDecks })
   } catch (err) {
     res.status(500).json({ error: err.message })

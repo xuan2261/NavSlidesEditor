@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   DEFAULT_PPTX_JOB_MAX_WAIT_MS,
+  PPTX_FINAL_STATUS_BUDGET_MS,
   pollPptxJobUntilTerminal,
   waitForPptxJob,
   PptxJobOutcomeError,
@@ -71,11 +72,11 @@ describe('PPTX job waiting', () => {
         pollIntervalMs: 0,
       })
     ).resolves.toEqual({ presentationId: 'deck-7' })
-    expect(api.cancelPptxJob).toHaveBeenCalledWith('job-7')
+    expect(api.cancelPptxJob).toHaveBeenCalledWith('job-7', expect.objectContaining({}))
     expect(api.pollPptxJob).toHaveBeenCalledTimes(2)
   })
 
-  it('returns an identity-bearing outcome-unknown error after deadline cancellation', async () => {
+  it('surfaces durable cancelled after deadline as cancelled, not outcome-unknown', async () => {
     const api = {
       pollPptxJob: vi
         .fn()
@@ -93,7 +94,8 @@ describe('PPTX job waiting', () => {
       })
     ).rejects.toMatchObject({
       name: 'PptxJobOutcomeError',
-      code: 'PPTX_JOB_OUTCOME_UNKNOWN',
+      code: 'PPTX_JOB_CANCELLED',
+      status: 'cancelled',
       jobId: 'job-9',
     })
   })
@@ -122,7 +124,7 @@ describe('PPTX job waiting', () => {
     expect(api.pollPptxJob).toHaveBeenCalledTimes(pollsAtAbort)
   })
 
-  it('SSE maxWaitMs cancels once, closes EventSource, and rejects with outcome-unknown', async () => {
+  it('SSE budget path cancels and performs a bounded final GET (no destructive reconcile)', async () => {
     class HangEventSource {
       constructor() {
         this.listeners = new Map()
@@ -133,8 +135,13 @@ describe('PPTX job waiting', () => {
       close = vi.fn()
     }
     const api = {
-      pollPptxJob: vi.fn(),
+      pollPptxJob: vi.fn().mockResolvedValue({
+        jobId: 'job-budget',
+        status: 'running',
+      }),
       cancelPptxJob: vi.fn().mockResolvedValue({ status: 'cancelling' }),
+      // Guard: timeout recovery must never call destructive repair.
+      reconcilePptxJob: vi.fn(),
     }
 
     const waitPromise = waitForPptxJob({
@@ -144,7 +151,6 @@ describe('PPTX job waiting', () => {
       maxWaitMs: 5_000,
       pollIntervalMs: 1000,
     })
-    // Attach rejection handler before timers fire to avoid unhandled rejection races.
     const assertion = expect(waitPromise).rejects.toMatchObject({
       name: 'PptxJobOutcomeError',
       code: 'PPTX_JOB_OUTCOME_UNKNOWN',
@@ -153,8 +159,41 @@ describe('PPTX job waiting', () => {
 
     await vi.advanceTimersByTimeAsync(5_000)
     await assertion
-    expect(api.cancelPptxJob).toHaveBeenCalledTimes(1)
-    expect(api.cancelPptxJob).toHaveBeenCalledWith('job-budget')
+    expect(api.cancelPptxJob).toHaveBeenCalledWith('job-budget', expect.objectContaining({}))
+    expect(api.pollPptxJob).toHaveBeenCalled()
+    expect(api.reconcilePptxJob).not.toHaveBeenCalled()
+  })
+
+  it('SSE onerror poll fallback uses remaining absolute budget (not a fresh full maxWaitMs)', async () => {
+    class FailThenHang {
+      constructor() {
+        this.listeners = new Map()
+        queueMicrotask(() => this.onerror?.())
+      }
+      addEventListener() {}
+      close = vi.fn()
+    }
+    const api = {
+      pollPptxJob: vi.fn().mockResolvedValue({ jobId: 'job-reuse', status: 'running' }),
+      cancelPptxJob: vi.fn().mockResolvedValue({ status: 'cancelling' }),
+    }
+    const waitPromise = waitForPptxJob({
+      jobId: 'job-reuse',
+      api,
+      EventSourceImpl: FailThenHang,
+      maxWaitMs: 5_000,
+      pollIntervalMs: 1_000,
+    })
+    const assertion = expect(waitPromise).rejects.toMatchObject({
+      name: 'PptxJobOutcomeError',
+      code: 'PPTX_JOB_OUTCOME_UNKNOWN',
+      jobId: 'job-reuse',
+    })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(api.pollPptxJob).toHaveBeenCalled()
+    // Absolute budget ends within maxWaitMs; do not require a second full 5s after fallback.
+    await vi.advanceTimersByTimeAsync(5_000)
+    await assertion
   })
 
   it('poll-only path emits onConnection with jobId then clears on settle', async () => {
@@ -185,6 +224,7 @@ describe('PPTX job waiting', () => {
 
   it('exports a default wait budget of server import timeout plus 30s slack', () => {
     expect(DEFAULT_PPTX_JOB_MAX_WAIT_MS).toBe(150_000)
+    expect(PPTX_FINAL_STATUS_BUDGET_MS).toBe(5_000)
   })
 
   it('SSE abort signal closes EventSource, cancels job, and rejects AbortError', async () => {
@@ -213,7 +253,30 @@ describe('PPTX job waiting', () => {
 
     controller.abort()
     await expect(waitPromise).rejects.toMatchObject({ name: 'AbortError' })
-    expect(api.cancelPptxJob).toHaveBeenCalledWith('job-sse-abort')
+    expect(api.cancelPptxJob).toHaveBeenCalledWith('job-sse-abort', expect.objectContaining({}))
+  })
+
+  it('surfaces pending-visibility without opening a presentation id', async () => {
+    const api = {
+      pollPptxJob: vi.fn().mockResolvedValue({
+        jobId: 'job-pv',
+        status: 'pending-visibility',
+        message: 'awaiting list visibility',
+      }),
+      cancelPptxJob: vi.fn(),
+    }
+    await expect(
+      pollPptxJobUntilTerminal({
+        jobId: 'job-pv',
+        api,
+        maxPollAttempts: 1,
+        pollIntervalMs: 0,
+      })
+    ).rejects.toMatchObject({
+      code: 'PPTX_JOB_PENDING_VISIBILITY',
+      status: 'pending-visibility',
+      jobId: 'job-pv',
+    })
   })
 })
 

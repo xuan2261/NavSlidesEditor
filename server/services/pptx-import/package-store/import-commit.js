@@ -11,6 +11,8 @@ const {
 } = require('./schemas')
 const { hashCanonical } = require('../evidence/canonical-hash')
 
+const SHA256_RE_LOCAL = /^[a-f0-9]{64}$/i
+
 function importCommitError(message, code = 'PACKAGE_IMPORT_COMMIT_FAILED') {
   const error = new Error(message)
   error.code = code
@@ -140,6 +142,10 @@ async function prepareImport(store, source, input, options = {}) {
     authority,
     blob,
     capabilityHash,
+    controlCapabilityHash:
+      typeof input.controlCapabilityHash === 'string' && SHA256_RE_LOCAL.test(input.controlCapabilityHash)
+        ? input.controlCapabilityHash
+        : undefined,
     compatibilityPresentation,
     compatibilityUpdatedAt,
     jobId,
@@ -155,6 +161,7 @@ async function publishImport(store, prepared, options = {}) {
     authority,
     blob,
     capabilityHash,
+    controlCapabilityHash,
     compatibilityPresentation,
     compatibilityUpdatedAt,
     jobId,
@@ -212,6 +219,7 @@ async function publishImport(store, prepared, options = {}) {
       transactionState: 'committed',
       cancellationPoint: 'committed',
       capabilityHash,
+      ...(controlCapabilityHash ? { controlCapabilityHash } : {}),
       updatedAt: new Date().toISOString(),
       presentationId,
       outcomeRevisionId: revision.id,

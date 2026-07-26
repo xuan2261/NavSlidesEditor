@@ -177,11 +177,22 @@ export const api = {
     }
   },
   pollPptxJob: (jobId, opts = {}) => {
-    const init = opts.signal ? { signal: opts.signal } : {}
+    const headers = {}
+    if (opts.capability) headers['X-Pptx-Job-Capability'] = opts.capability
+    const init = {
+      ...(opts.signal ? { signal: opts.signal } : {}),
+      ...(Object.keys(headers).length ? { headers } : {}),
+    }
     return fetch(`${BASE}/pptx/jobs/${jobId}`, init).then(handleResponse)
   },
   cancelPptxJob: (jobId, opts = {}) => {
-    const init = { method: 'DELETE', ...(opts.signal ? { signal: opts.signal } : {}) }
+    const headers = {}
+    if (opts.capability) headers['X-Pptx-Job-Capability'] = opts.capability
+    const init = {
+      method: 'DELETE',
+      ...(opts.signal ? { signal: opts.signal } : {}),
+      ...(Object.keys(headers).length ? { headers } : {}),
+    }
     return fetch(`${BASE}/pptx/jobs/${jobId}`, init).then(handleResponse)
   },
   getGithubConfig: () => fetch(`${BASE}/github/config`).then(handleResponse),

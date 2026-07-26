@@ -301,7 +301,9 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     const activeImport = pptxImportRef.current
     activeImport?.admissionController?.abort()
     activeImport?.connection?.es?.close()
-    if (activeImport?.jobId) api.cancelPptxJob(activeImport.jobId).catch(() => {})
+    if (activeImport?.jobId) {
+      api.cancelPptxJob(activeImport.jobId, { capability: activeImport.capability }).catch(() => {})
+    }
     pptxImportRef.current = null
   }, [])
 
@@ -656,7 +658,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     }
     pptxImportRef.current = activeImport
     try {
-      const { jobId } = await api.importPptxAsync(file, {
+      const admission = await api.importPptxAsync(file, {
         retryOnBusy: true,
         maxBusyRetries: 72,
         busyRetryDelayMs: 5000,
@@ -667,14 +669,18 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
           }
         },
       })
+      const jobId = admission?.jobId
+      const capability = admission?.capability || null
       activeImport.jobId = jobId
+      activeImport.capability = capability
       if (pptxImportRef.current !== activeImport) {
-        if (jobId) api.cancelPptxJob(jobId).catch(() => {})
+        if (jobId) api.cancelPptxJob(jobId, { capability }).catch(() => {})
         return
       }
       const imported = await waitForPptxJob({
         jobId,
         api,
+        capability,
         signal: activeImport.admissionController.signal,
         onProgress: (progress) => {
           if (pptxImportRef.current === activeImport) setImportProgress(progress)
@@ -709,10 +715,28 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       const intentionalAbandon =
         err?.name === 'AbortError' ||
         err?.status === 'cancelled' ||
+        err?.code === 'PPTX_JOB_CANCELLED' ||
         pptxImportRef.current !== activeImport
       if (!intentionalAbandon && pptxImportRef.current === activeImport) {
         console.error('PPTX import failed:', err)
-        showError('Failed to import PPTX: ' + err.message)
+        if (err?.code === 'PPTX_JOB_PENDING_VISIBILITY') {
+          showError(
+            'PPTX import finished on the server but is not listable yet. Wait a moment and refresh the home list before retrying.',
+            { title: 'Import pending visibility' }
+          )
+        } else if (err?.code === 'PPTX_JOB_OUTCOME_UNKNOWN') {
+          showError(
+            'PPTX import timed out before a final outcome was confirmed. Check existing presentations before importing again.',
+            { title: 'Import outcome unknown' }
+          )
+        } else if (err?.code === 'PPTX_JOB_RECONCILE_REQUIRED') {
+          showError(
+            'PPTX import needs manual repair. Do not re-upload until the existing job is reconciled.',
+            { title: 'Import reconcile required' }
+          )
+        } else {
+          showError('Failed to import PPTX: ' + err.message)
+        }
       }
     } finally {
       if (pptxImportRef.current === activeImport) {

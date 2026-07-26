@@ -299,6 +299,7 @@ async function runImport({
           sourceMap: result.sourceMap,
           compatibilityPresentation: stamped,
           compatibilityUpdatedAt,
+          controlCapabilityHash: jobManager.getControlCapabilityHash?.(jobId) || undefined,
         })), abortController.signal, () => packageRollback?.({ jobId, presentationId }),
         (cleanup) => cleanupPromises.push(cleanup))
         if (typeof afterPackagePublish === 'function') {
@@ -396,7 +397,14 @@ async function runImport({
     }
     await mediaTransaction.rollback().catch(() => {})
     if (aborted) finishAbortedJob()
-    else jobManager.failJob(jobId, sanitizeDiagnostic(err))
+    else {
+      jobManager.failJob(jobId, {
+        message: sanitizeDiagnostic(err),
+        type: err?.type || (err instanceof PptxImportError ? err.type : undefined),
+        code: typeof err?.code === 'string' ? err.code : undefined,
+        stage: typeof err?.stage === 'string' ? err.stage : 'failed',
+      })
+    }
   } finally {
     clearTimeout(deadlineTimer)
     Promise.allSettled(stagePromises).then(() => Promise.allSettled(cleanupPromises)).then(async () => {
@@ -439,12 +447,51 @@ function createPptxImportRouter({
     next()
   })
 
-  // Job status/result routes are not bound to an in-app identity: this service
-  // runs behind a trusted reverse proxy that provides any required auth (there
-  // is no app-level user model). Job ids are unguessable UUIDv4 and only one
-  // import runs at a time (MAX_CONCURRENT_RUNNING=1), so the practical IDOR
-  // surface is minimal. If this is ever exposed to mutually-untrusted tenants,
-  // bind each job to a per-job secret returned at creation and require it here.
+  // Per-job control capability: POST /import returns a one-time capability secret.
+  // Sensitive job routes require header X-Pptx-Job-Capability (never logged/persisted).
+  // UUID secrecy alone is not authorization for Map jobs or durable jobs that carry
+  // controlCapabilityHash. Legacy durable receipts without controlCapabilityHash remain readable.
+
+  const CAPABILITY_HEADER = 'x-pptx-job-capability'
+
+  function readProvidedCapability(req, { allowQuery = false } = {}) {
+    const header = req.get?.('X-Pptx-Job-Capability') || req.headers?.[CAPABILITY_HEADER]
+    if (typeof header === 'string' && header) return header
+    // EventSource cannot set custom headers; query is SSE-only.
+    if (!allowQuery) return null
+    const query = req.query?.capability
+    return typeof query === 'string' && query ? query : null
+  }
+
+  function denyCapability(res) {
+    return res.status(401).json({
+      error: 'job-capability-required',
+      code: 'JOB_CAPABILITY_REQUIRED',
+    })
+  }
+
+  function assertJobCapability(req, res, next) {
+    const jobId = req.params.jobId
+    const isStream = String(req.path || '').endsWith('/stream') || req.route?.path === '/jobs/:jobId/stream'
+    const provided = readProvidedCapability(req, { allowQuery: isStream })
+    const live = jobManager.getJob?.(jobId)
+    if (live) {
+      const verify = jobManager.verifyControlCapability || defaultJobManager.verifyControlCapability
+      if (!verify(live, provided)) return denyCapability(res)
+      return next()
+    }
+    // Durable path: load is async — attach provided for handlers and re-check there.
+    req.pptxJobCapability = provided
+    return next()
+  }
+
+  async function assertDurableCapability(durableJob, provided, res) {
+    if (!durableJob?.controlCapabilityHash) return true
+    const verify = jobManager.verifyControlCapability || defaultJobManager.verifyControlCapability
+    if (verify(durableJob.controlCapabilityHash, provided)) return true
+    denyCapability(res)
+    return false
+  }
 
   function reserveImportJob(req, res, next) {
     try {
@@ -469,6 +516,8 @@ function createPptxImportRouter({
 
     try {
       const jobId = req.pptxJobId
+      const capability =
+        jobManager.takeJobCapability?.(jobId) || defaultJobManager.takeJobCapability?.(jobId) || null
       // Fire-and-forget: runImport owns its own try/catch/finally (marks the
       // job failed and unlinks the temp file). The trailing catch guards
       // against an unexpected synchronous throw escaping as an unhandled
@@ -489,10 +538,18 @@ function createPptxImportRouter({
         originalBaseDir,
         timeoutMs: importTimeoutMs,
       }).catch((err) => {
-        jobManager.failJob(jobId, sanitizeDiagnostic(err))
+        jobManager.failJob(jobId, {
+          message: sanitizeDiagnostic(err),
+          type: err?.type,
+          code: typeof err?.code === 'string' ? err.code : undefined,
+          stage: 'failed',
+        })
         fs.unlink(req.file.path).catch(() => {})
       })
-      res.status(202).json({ jobId })
+      res.status(202).json({
+        jobId,
+        ...(capability ? { capability } : {}),
+      })
     } catch (err) {
       jobManager.cleanup(req.pptxJobId)
       await fs.unlink(req.file.path).catch(() => {})
@@ -502,12 +559,15 @@ function createPptxImportRouter({
     }
   })
 
-  router.get('/jobs/:jobId', async (req, res) => {
+  router.get('/jobs/:jobId', assertJobCapability, async (req, res) => {
     const job = jobManager.getJob(req.params.jobId)
+    // Map `done` is only set after package drain or legacy create (already listable).
+    // Contract B re-check applies to durable fallback below (restart / Map miss).
     if (job) return res.json(jobManager.serializeJob(job))
     try {
       const durableJob = await readDurableJob(req.params.jobId)
       if (!durableJob) return res.status(404).json({ error: 'job-not-found' })
+      if (!(await assertDurableCapability(durableJob, req.pptxJobCapability, res))) return
       let listable
       let reportSummary = durableJob.reportSummary || null
       if (durableJob.status === 'completed' && durableJob.presentationId) {
@@ -527,7 +587,7 @@ function createPptxImportRouter({
     }
   })
 
-  router.get('/jobs/:jobId/stream', (req, res) => {
+  router.get('/jobs/:jobId/stream', assertJobCapability, (req, res) => {
     const job = jobManager.getJob(req.params.jobId)
     if (!job) return res.status(404).json({ error: 'job-not-found' })
     res.set({
@@ -541,16 +601,29 @@ function createPptxImportRouter({
     req.on('close', () => jobManager.detachSseClient(req.params.jobId, res))
   })
 
-  router.delete('/jobs/:jobId', async (req, res) => {
+  router.delete('/jobs/:jobId', assertJobCapability, async (req, res) => {
     const status = jobManager.cancelJob(req.params.jobId)
     if (status === 'unknown') {
       try {
         const durableJob = await readDurableJob(req.params.jobId)
         if (durableJob) {
+          if (!(await assertDurableCapability(durableJob, req.pptxJobCapability, res))) return
+          let listable
+          let reportSummary = durableJob.reportSummary || null
+          if (durableJob.status === 'completed' && durableJob.presentationId) {
+            listable = await checkPresentationListable(durableJob.presentationId)
+            if (listable && !reportSummary) {
+              try {
+                reportSummary = await loadReportSummary(durableJob.presentationId)
+              } catch {
+                reportSummary = null
+              }
+            }
+          }
           return res.status(409).json({
             error: 'job-already-finished',
             code: 'JOB_ALREADY_FINISHED',
-            job: serializeDurableImportJob(durableJob),
+            job: serializeDurableImportJob(durableJob, { listable, reportSummary }),
           })
         }
       } catch (error) {
@@ -562,7 +635,7 @@ function createPptxImportRouter({
     res.status(204).end()
   })
 
-  router.post('/jobs/:jobId/reconcile', async (req, res) => {
+  router.post('/jobs/:jobId/reconcile', assertJobCapability, async (req, res) => {
     const jobId = req.params.jobId
     const current = jobManager.getJob(jobId)
     if (current && !current.terminalState) {
@@ -577,6 +650,7 @@ function createPptxImportRouter({
     if (durableJob && ['queued', 'running'].includes(durableJob.status)) {
       return res.status(409).json({ error: 'job-not-terminal', code: 'JOB_NOT_TERMINAL' })
     }
+    if (durableJob && !(await assertDurableCapability(durableJob, req.pptxJobCapability, res))) return
     const job = durableJob || (current?.status === 'done'
       ? { id: jobId, status: 'completed', presentationId: current.result?.presentationId }
       : null)
