@@ -193,4 +193,56 @@ describe('package-backed presentation reader authority boundary', () => {
         status: 422,
       })
   })
+
+  it('isolates a missing-head row in bulk reads so healthy rows remain available', async () => {
+    const { readAuthoritativePresentations } = await import('./package-backed-presentation-read.js')
+    await storage.writePresentations([
+      {
+        id: 'healthy-plain',
+        title: 'Healthy',
+        slides: [{ id: 's1', elements: [] }],
+      },
+      {
+        id: 'ghost-missing-head',
+        title: 'Ghost',
+        slides: [],
+        pptxAggregateHead: {
+          presentationId: 'ghost-missing-head',
+          packageRevisionId: 'r0-missing',
+          generation: 1,
+        },
+      },
+    ])
+
+    const quarantine = []
+    const resolved = await readAuthoritativePresentations(await storage.readPresentations(), {
+      collectQuarantine: quarantine,
+    })
+    expect(resolved.map((item) => item.presentation.id)).toEqual(['healthy-plain'])
+    expect(quarantine).toEqual([
+      expect.objectContaining({
+        id: 'ghost-missing-head',
+        code: 'PRESENTATION_PACKAGE_HEAD_MISSING',
+        status: 422,
+      }),
+    ])
+  })
+
+  it('keeps single-read fail-closed when package head is missing', async () => {
+    await storage.writePresentations([{
+      id: 'missing-head-single',
+      title: 'Stale',
+      slides: [],
+      pptxAggregateHead: {
+        presentationId: 'missing-head-single',
+        packageRevisionId: 'r0-missing',
+        generation: 1,
+      },
+    }])
+    await expect(readAuthoritativePresentation('missing-head-single'))
+      .rejects.toMatchObject({
+        code: 'PRESENTATION_PACKAGE_HEAD_MISSING',
+        status: 422,
+      })
+  })
 })

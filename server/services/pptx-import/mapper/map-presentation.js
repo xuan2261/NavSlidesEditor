@@ -409,7 +409,7 @@ async function mapPptxOutput({
     }
     slides.push({
       id: uuidv4(),
-      background: mapSlideBackground(slide, { slideIndex, warnings }),
+      background: mapSlideBackground(slide, { slideIndex, warnings, mediaBudget }),
       elements,
       notes: slide.note ? sanitizeHtml(slide.note) : '',
       ...mapSlideTransition(slide, warnings, slideIndex),

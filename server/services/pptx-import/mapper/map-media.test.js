@@ -25,11 +25,16 @@ describe('pptx media mappers', () => {
     ]))
   })
 
-  it('passes localhost audio URLs through unchanged', async () => {
+  it('blocks localhost audio URLs by default', async () => {
     const ctx = context()
     const result = await mapAudio({ type: 'audio', ref: 'http://127.0.0.1/a.mp3' }, ctx)
-    expect(result[0]).toMatchObject({ type: 'audio', src: 'http://127.0.0.1/a.mp3' })
-    expect(ctx.stats.audioCount).toBe(1)
+    expect(result[0]).toMatchObject({
+      importPlaceholderType: 'audio-missing',
+    })
+    expect(ctx.stats.audioCount).toBe(0)
+    expect(ctx.warnings).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'media-external-url-blocked', host: '127.0.0.1' }),
+    ]))
   })
 
   it('maps LaTeX content and placeholders missing formulas', () => {

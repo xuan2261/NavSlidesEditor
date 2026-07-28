@@ -122,4 +122,79 @@ describe('package authority DTO boundary', () => {
       title: 'Export',
     })
   })
+
+  it('reduces _pptxImportReport to summary-only on external DTO (no jobId/diagnostics)', () => {
+    const record = {
+      id: 'deck',
+      title: 'Export',
+      _pptxImportReport: {
+        schemaVersion: 1,
+        jobId: 'job-secret',
+        createdAt: '2026-07-24T00:00:00.000Z',
+        summary: {
+          warningCount: 1,
+          byType: { 'media-missing': 1 },
+          unsupportedFeatureCount: 0,
+          omittedCount: 0,
+        },
+        diagnostics: [{ type: 'media-missing', message: 'img gone' }],
+      },
+    }
+    const external = toExternalPresentationDto(record)
+    expect(external._pptxImportReport).toEqual({
+      schemaVersion: 1,
+      warningCount: 1,
+      byType: { 'media-missing': 1 },
+      unsupportedFeatureCount: 0,
+      omittedCount: 0,
+    })
+    expect(external._pptxImportReport.jobId).toBeUndefined()
+    expect(external._pptxImportReport.diagnostics).toBeUndefined()
+  })
+
+  it('preserves bounded _pptxImportReport on editor DTO (not authority-stripped)', () => {
+    const report = {
+      schemaVersion: 1,
+      jobId: 'job-1',
+      createdAt: '2026-07-24T00:00:00.000Z',
+      summary: {
+        warningCount: 2,
+        byType: { 'media-missing': 1, 'geometry-clamped': 1 },
+        unsupportedFeatureCount: 0,
+        omittedCount: 0,
+      },
+      diagnostics: [
+        { type: 'media-missing', message: 'img gone' },
+        { type: 'geometry-clamped', message: 'clamped' },
+      ],
+      statsDigest: { slideCount: 3 },
+    }
+    const dto = toPresentationEditorDto({
+      id: 'deck',
+      title: 'Imported',
+      _pptxImportReport: report,
+      pptxAggregateHead: { packageRevisionId: 'r0', generation: 1 },
+    }, { aggregateGeneration: 1 })
+
+    expect(dto).toMatchObject({
+      id: 'deck',
+      title: 'Imported',
+      aggregateGeneration: 1,
+      pptxSourceAvailable: true,
+      _pptxImportReport: {
+        schemaVersion: 1,
+        summary: {
+          warningCount: 2,
+          byType: { 'media-missing': 1, 'geometry-clamped': 1 },
+          omittedCount: 0,
+        },
+      },
+    })
+    expect(dto._pptxImportReport).not.toHaveProperty('jobId')
+    expect(dto._pptxImportReport).not.toHaveProperty('createdAt')
+    expect(dto._pptxImportReport.diagnostics).toEqual([
+      { type: 'media-missing' },
+      { type: 'geometry-clamped' },
+    ])
+  })
 })

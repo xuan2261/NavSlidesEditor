@@ -71,6 +71,10 @@ function validateJob(job) {
   assert(JOB_KINDS.has(job.kind), 'Invalid job kind')
   assert(JOB_STATUSES.has(job.status), 'Invalid job status')
   assert(SHA256_RE.test(job.capabilityHash), 'Invalid capability hash')
+  // Optional control-plane bearer hash (job status/SSE/DELETE). Distinct from package capabilityHash.
+  if (job.controlCapabilityHash !== undefined && job.controlCapabilityHash !== null) {
+    assert(SHA256_RE.test(job.controlCapabilityHash), 'Invalid control capability hash')
+  }
   validateImportOutcome(job)
   if (job.provisionalOwner) validateOwner(job.provisionalOwner)
   return job
@@ -121,8 +125,9 @@ function validateState(state) {
     'Invalid matrix authority epoch')
   if (state.mutationResults === undefined) state.mutationResults = []
   if (state.compatibilityOutbox === undefined) state.compatibilityOutbox = []
+  if (state.compatibilityDeadLetter === undefined) state.compatibilityDeadLetter = []
   if (state.candidateBlobs === undefined) state.candidateBlobs = []
-  for (const key of ['blobs', 'revisions', 'heads', 'owners', 'leases', 'jobs', 'mutationResults', 'compatibilityOutbox', 'candidateBlobs']) {
+  for (const key of ['blobs', 'revisions', 'heads', 'owners', 'leases', 'jobs', 'mutationResults', 'compatibilityOutbox', 'compatibilityDeadLetter', 'candidateBlobs']) {
     assert(Array.isArray(state[key]), `Invalid state ${key} index`)
   }
   state.blobs.forEach(validateBlob)
@@ -168,6 +173,7 @@ function createEmptyState(fencingEpoch = 0) {
     jobs: [],
     mutationResults: [],
     compatibilityOutbox: [],
+    compatibilityDeadLetter: [],
     candidateBlobs: [],
   }
 }

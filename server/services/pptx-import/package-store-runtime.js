@@ -104,6 +104,10 @@ async function withPackageStore(action) {
   }
 }
 
+/**
+ * Drain outbox with per-record isolation: a poisoned write is dead-lettered and
+ * does not prevent acknowledging healthy writes or taking the store offline.
+ */
 async function drainPackageCompatibilityOutbox() {
   const previous = compatibilityDrainTail
   let release
@@ -113,12 +117,47 @@ async function drainPackageCompatibilityOutbox() {
     const writes = await withPackageStore((store) => snapshotCompatibilityOutbox(store))
     if (!writes.length) return 0
 
-    await withPresentations((presentations) => {
-      applyCompatibilityWrites(presentations, writes)
-    })
+    const applied = []
+    const poisoned = []
+    for (const write of writes) {
+      try {
+        await withPresentations((presentations) => {
+          applyCompatibilityWrites(presentations, [write])
+        })
+        applied.push(write)
+      } catch (error) {
+        // Preserve full write for repair/replay; only attach bounded error metadata.
+        poisoned.push({
+          write: structuredClone(write),
+          id: write?.id,
+          presentationId: write?.presentationId,
+          code: error?.code || 'COMPATIBILITY_APPLY_FAILED',
+          message: String(error?.message || error).slice(0, 240),
+          deadLetteredAt: new Date().toISOString(),
+        })
+      }
+    }
 
-    await withPackageStore((store) => acknowledgeCompatibilityOutbox(store, writes))
-    return writes.length
+    if (applied.length) {
+      await withPackageStore((store) => acknowledgeCompatibilityOutbox(store, applied))
+    }
+    if (poisoned.length) {
+      await withPackageStore(async (store) => {
+        await store.mutate((next) => {
+          if (!Array.isArray(next.compatibilityDeadLetter)) next.compatibilityDeadLetter = []
+          for (const item of poisoned) {
+            if (next.compatibilityDeadLetter.some((entry) => entry.id === item.id)) continue
+            next.compatibilityDeadLetter.push(item)
+          }
+          // Remove poisoned writes from active outbox so startup is not permanently blocked.
+          const poisonedIds = new Set(poisoned.map((item) => item.id).filter(Boolean))
+          next.compatibilityOutbox = (next.compatibilityOutbox || []).filter(
+            (record) => !poisonedIds.has(record.id)
+          )
+        })
+      })
+    }
+    return applied.length
   } finally {
     release()
   }

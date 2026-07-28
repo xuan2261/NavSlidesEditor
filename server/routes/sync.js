@@ -198,7 +198,11 @@ function addUploadRefs(target, presentation) {
 async function prepareBulkWorkspace(workspace) {
   const prepared = await withPackageStore(async (store) => {
     const presentations = await readPresentations()
-    const authoritativePresentations = await readAuthoritativePresentations(presentations)
+    // Bulk sync policy: skip quarantined/missing-head rows; sync healthy only.
+    const quarantine = []
+    const authoritativePresentations = await readAuthoritativePresentations(presentations, {
+      collectQuarantine: quarantine,
+    })
     const occupiedFolders = new Set()
     const uploadRefs = new Set()
 
@@ -216,7 +220,11 @@ async function prepareBulkWorkspace(workspace) {
       addUploadRefs(uploadRefs, presentation)
     }
 
-    return { synced: authoritativePresentations.length, uploadRefs }
+    return {
+      synced: authoritativePresentations.length,
+      uploadRefs,
+      quarantined: quarantine.length,
+    }
   })
 
   if (fs.existsSync(UPLOADS_DIR)) {
@@ -231,8 +239,20 @@ async function prepareSingleWorkspace(workspace, presentationId) {
     const storedPresentation = presentations.find((presentation) => presentation.id === presentationId)
     if (!storedPresentation) throw presentationNotFoundError()
 
-    const [resolved] = await readAuthoritativePresentations([storedPresentation])
-    if (!resolved) throw presentationNotFoundError()
+    // Single sync stays fail-closed on package-authority quarantine.
+    const quarantine = []
+    const [resolved] = await readAuthoritativePresentations([storedPresentation], {
+      collectQuarantine: quarantine,
+    })
+    if (!resolved) {
+      if (quarantine[0]) {
+        throw Object.assign(new Error(quarantine[0].code), {
+          status: quarantine[0].status || 422,
+          code: quarantine[0].code,
+        })
+      }
+      throw presentationNotFoundError()
+    }
 
     const presentation = toExternalPresentationDto(
       normalizePptxImportedPresentationForRead(resolved.presentation)

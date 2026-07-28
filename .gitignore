@@ -43,6 +43,10 @@ server/data/github.json
 Thumbs.db
 *.swp
 *.swo
+.vs/
+
+# Scratch space for audit screenshots and throwaway test-run stores
+.tmp/
 
 # Temp reports
 brainstorm-report.md

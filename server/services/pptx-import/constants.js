@@ -32,7 +32,6 @@ const ALLOWED_MEDIA_EXTENSIONS = new Set([
   'ogg',
   'webm',
 ])
-const MEDIA_URL_ALLOWLIST = buildMediaUrlAllowlist()
 
 const FAILURE_TYPES = Object.freeze({
   installFailed: 'install-failed',
@@ -43,19 +42,32 @@ const FAILURE_TYPES = Object.freeze({
   browserOnly: 'browser-only',
 })
 
-function addHost(list, value) {
-  if (!value) return
+function addOrigin(list, value) {
+  const raw = String(value || '').trim()
+  if (!raw) return
   try {
-    list.add(new URL(value).hostname.toLowerCase())
+    const parsed = new URL(raw)
+    if (!['http:', 'https:'].includes(parsed.protocol)) return
+    if (parsed.username || parsed.password || parsed.pathname !== '/' || parsed.search || parsed.hash) return
+    list.add(parsed.origin)
   } catch {
-    list.add(String(value).replace(/:\d+$/, '').toLowerCase())
+    // Invalid administrator configuration fails closed.
   }
 }
 
+/**
+ * Explicit administrator opt-in for imported external media. Matching the
+ * complete origin prevents a hostname allowlist from silently allowing an
+ * alternate scheme or port. No local/default origins are trusted.
+ *
+ * Rebuilt per call rather than memoized so a configuration change takes effect
+ * without a restart, and so no caller can hold a stale snapshot of the gate.
+ */
 function buildMediaUrlAllowlist() {
-  const list = new Set(['localhost', '127.0.0.1'])
-  addHost(list, process.env.PUBLIC_HOST)
-  addHost(list, process.env.HOST)
+  const list = new Set()
+  for (const value of String(process.env.PPTX_IMPORT_MEDIA_ORIGINS || '').split(',')) {
+    addOrigin(list, value)
+  }
   return list
 }
 
@@ -64,7 +76,6 @@ module.exports = {
   buildMediaUrlAllowlist,
   CANVAS_SIZE,
   FAILURE_TYPES,
-  MEDIA_URL_ALLOWLIST,
   MAX_DECOMPRESSED_BYTES,
   MAX_AGGREGATE_MEDIA_BYTES,
   MAX_FILE_BYTES,

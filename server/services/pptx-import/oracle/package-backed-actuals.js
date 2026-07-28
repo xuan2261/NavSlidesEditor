@@ -57,6 +57,7 @@ async function capturePackageBackedActuals({
 } = {}) {
   let presentationId = null
   let jobId = null
+  let capability = null
   let reservedDeckDir = null
   let operationDeadline = null
   let result
@@ -88,8 +89,17 @@ async function capturePackageBackedActuals({
     const submitted = await requestJson(fetchImpl, endpoint(origin, '/api/pptx/import'), withSignal({ method: 'POST', body: form }, operationDeadline.signal))
     if (typeof submitted?.jobId !== 'string' || !submitted.jobId) throw coded('invalid-import-job')
     jobId = submitted.jobId
+    capability = typeof submitted.capability === 'string' && submitted.capability
+      ? submitted.capability
+      : null
     presentationId = await waitForCompletedJob(fetchImpl, origin, jobId, {
-      pollIntervalMs, timeoutMs, reconciliationAttempts, reconciliationTimeoutMs, signal: operationDeadline.signal, sleep,
+      pollIntervalMs,
+      timeoutMs,
+      reconciliationAttempts,
+      reconciliationTimeoutMs,
+      signal: operationDeadline.signal,
+      sleep,
+      capability,
     })
 
     const presentation = await requestJson(fetchImpl, endpoint(origin, `/api/presentations/${encodeURIComponent(presentationId)}`), withSignal(null, operationDeadline.signal))

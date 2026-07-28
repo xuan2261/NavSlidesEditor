@@ -46,6 +46,43 @@ describe('pptx import job manager', () => {
     expect(b.chunks.join('')).toContain('event: done')
   })
 
+  it('keeps running progress monotonic (80 → 70 stays 80)', () => {
+    const jobId = manager.createJob()
+    manager.emitProgress(jobId, { stage: 'mapping', percent: 80, message: 'Almost' })
+    expect(manager.getJob(jobId).percent).toBe(80)
+    manager.emitProgress(jobId, { stage: 'mapping', percent: 70, message: 'Rewind' })
+    expect(manager.getJob(jobId).percent).toBe(80)
+    manager.emitProgress(jobId, { stage: 'mapping', percent: 90, message: 'Forward' })
+    expect(manager.getJob(jobId).percent).toBe(90)
+  })
+
+  it('issues a one-time control capability and verifies only the correct secret', () => {
+    const jobId = manager.createJob()
+    const capability = manager.takeJobCapability(jobId)
+    expect(capability).toMatch(/^[0-9a-f]{64}$/i)
+    expect(manager.takeJobCapability(jobId)).toBeNull()
+    expect(manager.verifyControlCapability(manager.getJob(jobId), capability)).toBe(true)
+    expect(manager.verifyControlCapability(manager.getJob(jobId), '0'.repeat(64))).toBe(false)
+    expect(manager.verifyControlCapability(manager.getJob(jobId), null)).toBe(false)
+  })
+
+  it('serializes structured failJob type/code/stage fields', () => {
+    const jobId = manager.createJob()
+    manager.failJob(jobId, {
+      message: 'empty output',
+      type: 'output-empty',
+      code: 'all-slides-empty',
+      stage: 'parsing',
+    })
+    expect(manager.serializeJob(manager.getJob(jobId))).toMatchObject({
+      status: 'failed',
+      error: 'empty output',
+      type: 'output-empty',
+      code: 'all-slides-empty',
+      failureStage: 'parsing',
+    })
+  })
+
   it('closes terminal SSE clients so they cannot pin jobs indefinitely', () => {
     const jobId = manager.createJob()
     const res = responseSink()

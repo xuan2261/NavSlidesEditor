@@ -1338,7 +1338,7 @@ describe('Presentations API', () => {
     } finally { await fixture.cleanup() }
   })
 
-  it('replays a package-backed save after compatibility persistence fails', async () => {
+  it('dead-letters a package-backed compatibility failure without hiding package authority', async () => {
     const fixture = await createNativeRouteFixture(app)
     try {
       const writeJson = fs.writeJson.bind(fs)
@@ -1352,25 +1352,34 @@ describe('Presentations API', () => {
         aggregateGeneration: 1,
         slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
       }
-      const failed = await nativeSave(app, fixture.id, body, 'compatibility-recovery')
-      expect(failed.status).toBe(500)
+      const committed = await nativeSave(app, fixture.id, body, 'compatibility-recovery')
+      expect(committed.status).toBe(200)
+      expect(committed.body).toMatchObject({
+        id: fixture.id,
+        saveOutcome: 'committed',
+      })
       expect(fixture.store.getState().heads.find((head) => head.presentationId === fixture.id))
         .toMatchObject({ generation: 2 })
-      expect(fixture.store.getState().compatibilityOutbox).toEqual([
-        expect.objectContaining({ presentationId: fixture.id, generation: 2, operation: 'upsert' }),
+      expect(fixture.store.getState().compatibilityOutbox).toEqual([])
+      expect(fixture.store.getState().compatibilityDeadLetter).toEqual([
+        expect.objectContaining({
+          presentationId: fixture.id,
+          write: expect.objectContaining({ generation: 2, operation: 'upsert' }),
+        }),
       ])
 
-      vi.restoreAllMocks()
       await packageRuntime.shutdownPackageStore()
       await packageRuntime.initializePackageStore({ rootDir: fixture.rootDir })
 
-      const recovered = (await storage.readPresentations()).find((item) => item.id === fixture.id)
-      expect(recovered).toMatchObject({
-        pptxAggregateHead: { generation: 2 },
-        slides: [{ elements: [{ content: '<p>After</p>' }] }],
-      })
+      const recovered = await request(app).get(`/api/presentations/${fixture.id}`)
+      expect(recovered.status).toBe(422)
+      expect(recovered.body.code).toBeTruthy()
+      expect(recovered.body).not.toHaveProperty('slides')
       expect(packageRuntime.getPackageStore().getState().compatibilityOutbox).toEqual([])
-    } finally { await fixture.cleanup() }
+    } finally {
+      vi.restoreAllMocks()
+      await fixture.cleanup()
+    }
   })
 
   it('preserves durable-root semantics across normal PUT publication faults', async () => {

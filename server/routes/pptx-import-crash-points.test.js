@@ -76,7 +76,17 @@ async function packageSnapshot() {
 
 async function durableView(jobId, presentationId) {
   const durable = await getDurableImportJob(jobId)
-  const listable = presentationId ? await isPresentationListable(presentationId) : false
+  const expected = durable?.status === 'completed' &&
+    durable.outcomeRevisionId &&
+    durable.outcomeGeneration !== undefined &&
+    durable.outcomeHeadHash
+    ? {
+      revisionId: durable.outcomeRevisionId,
+      generation: durable.outcomeGeneration,
+      headHash: durable.outcomeHeadHash,
+    }
+    : null
+  const listable = presentationId ? await isPresentationListable(presentationId, expected) : false
   let reportSummary = null
   if (listable && presentationId) {
     reportSummary = await loadPresentationReportSummary(presentationId)
@@ -167,7 +177,7 @@ describe('PPTX import crash points (real store + outbox)', () => {
     const settled = await settleJob(jobId, ['done'])
     expect(settled?.status).toBe('done')
     expect((await packageSnapshot()).outbox).toHaveLength(0)
-    expect(await isPresentationListable(presentationId)).toBe(true)
+    expect((await durableView(jobId, presentationId)).listable).toBe(true)
   })
 
   it('CP2: drain throws — packageRollback, failed job, no openable done, head rolled back', async () => {
@@ -422,7 +432,7 @@ describe('PPTX import crash points (real store + outbox)', () => {
       drainCompatibility: realDrain,
       // Cancel only after drain withAbort settles — post-visibility policy seam.
       afterPackageVisibility: async () => {
-        expect(await isPresentationListable(presentationId)).toBe(true)
+        expect((await durableView(jobId, presentationId)).listable).toBe(true)
         expect(jobManager.cancelJob(jobId)).toBe('ok')
       },
     })
@@ -431,7 +441,7 @@ describe('PPTX import crash points (real store + outbox)', () => {
     // Chosen policy (AD7): post-visibility cancel does not delete; complete as done.
     expect(job?.status).toBe('done')
     expect(job?.result?.presentationId).toBe(presentationId)
-    expect(await isPresentationListable(presentationId)).toBe(true)
+    expect((await durableView(jobId, presentationId)).listable).toBe(true)
     const view = await durableView(jobId, presentationId)
     expect(view.serialized).toMatchObject({
       status: 'done',
@@ -441,6 +451,7 @@ describe('PPTX import crash points (real store + outbox)', () => {
 
   it('CP8: restart clear Map then GET — visibility-safe durable payload (not presentationId-only phantom)', async () => {
     const jobId = jobManager.createJob()
+    const capability = jobManager.takeJobCapability(jobId)
     let presentationId
 
     await runImport({
@@ -468,7 +479,9 @@ describe('PPTX import crash points (real store + outbox)', () => {
       // Default readDurableJob/checkPresentationListable/loadReportSummary hit real storage.
     }))
 
-    const response = await request(app).get(`/api/pptx/jobs/${jobId}`)
+    const response = await request(app)
+      .get(`/api/pptx/jobs/${jobId}`)
+      .set('X-Pptx-Job-Capability', capability)
     expect(response.status).toBe(200)
     expect(response.body).toMatchObject({
       jobId,
@@ -485,12 +498,33 @@ describe('PPTX import crash points (real store + outbox)', () => {
     })
     expect(response.body.result.warnings).toBeUndefined()
     // Residual: SSE is Map-only — after restart stream is 404; poll recovers above.
-    const sse = await request(app).get(`/api/pptx/jobs/${jobId}/stream`)
+    const sse = await request(app)
+      .get(`/api/pptx/jobs/${jobId}/stream?capability=${encodeURIComponent(capability)}`)
     expect(sse.status).toBe(404)
+
+    const mismatchApp = express()
+    mismatchApp.use('/api/pptx', createPptxImportRouter({
+      jobManager,
+      readDurableJob: async (id) => ({
+        ...(await getDurableImportJob(id)),
+        outcomeHeadHash: '0'.repeat(64),
+      }),
+    }))
+    const mismatch = await request(mismatchApp)
+      .get(`/api/pptx/jobs/${jobId}`)
+      .set('X-Pptx-Job-Capability', capability)
+    expect(mismatch.status).toBe(200)
+    expect(mismatch.body).toMatchObject({
+      jobId,
+      status: 'pending-visibility',
+      durable: true,
+    })
+    expect(mismatch.body.result).toBeUndefined()
   })
 
   it('CP9: DELETE after durable terminal returns 409 finished', async () => {
     const jobId = jobManager.createJob()
+    const capability = jobManager.takeJobCapability(jobId)
     let presentationId
 
     await runImport({
@@ -511,10 +545,14 @@ describe('PPTX import crash points (real store + outbox)', () => {
 
     const app = express()
     app.use('/api/pptx', createPptxImportRouter({ jobManager }))
-    const response = await request(app).delete(`/api/pptx/jobs/${jobId}`)
+    const response = await request(app)
+      .delete(`/api/pptx/jobs/${jobId}`)
+      .set('X-Pptx-Job-Capability', capability)
     expect(response.status).toBe(409)
     expect(response.body).toMatchObject({
-      code: 'JOB_ALREADY_FINISHED',
+      error: 'job-too-late',
+      code: 'JOB_CANCEL_TOO_LATE',
+      status: 'done',
       job: {
         jobId,
         status: 'done',
@@ -525,6 +563,7 @@ describe('PPTX import crash points (real store + outbox)', () => {
 
   it('CP10: reconcile after success is identity-bound; fencing rejects mismatched identity', async () => {
     const jobId = jobManager.createJob()
+    const capability = jobManager.takeJobCapability(jobId)
     let presentationId
 
     await runImport({
@@ -555,7 +594,9 @@ describe('PPTX import crash points (real store + outbox)', () => {
     }))
 
     // Happy identity-bound reconcile.
-    const ok = await request(app).post(`/api/pptx/jobs/${jobId}/reconcile`)
+    const ok = await request(app)
+      .post(`/api/pptx/jobs/${jobId}/reconcile`)
+      .set('X-Pptx-Job-Capability', capability)
     expect(ok.status).toBe(200)
     expect(ok.body).toMatchObject({
       success: true,
@@ -567,7 +608,9 @@ describe('PPTX import crash points (real store + outbox)', () => {
     expect((await packageSnapshot()).heads.some((h) => h.presentationId === presentationId)).toBe(false)
 
     // P0 fencing: second reconcile is no-op / safe (already rolled back).
-    const again = await request(app).post(`/api/pptx/jobs/${jobId}/reconcile`)
+    const again = await request(app)
+      .post(`/api/pptx/jobs/${jobId}/reconcile`)
+      .set('X-Pptx-Job-Capability', capability)
     expect([200, 409]).toContain(again.status)
     if (again.status === 200) {
       expect(again.body.success).toBe(true)

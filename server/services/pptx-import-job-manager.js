@@ -1,8 +1,11 @@
-const uuidv4 = () => require('node:crypto').randomUUID()
+const crypto = require('node:crypto')
+const uuidv4 = () => crypto.randomUUID()
 
 const JOB_TTL_MS = 10 * 60 * 1000
 const MAX_CONCURRENT_RUNNING = 1
 const jobs = new Map()
+/** One-time handoff secrets: jobId -> capability plaintext. Cleared after take or cleanup. */
+const jobCapabilities = new Map()
 
 class PptxImportJobLimitError extends Error {
   constructor() {
@@ -11,9 +14,15 @@ class PptxImportJobLimitError extends Error {
   }
 }
 
+function hashCapability(secret) {
+  return crypto.createHash('sha256').update(String(secret || ''), 'utf8').digest('hex')
+}
+
 function createJob() {
   if (runningCount() >= MAX_CONCURRENT_RUNNING) throw new PptxImportJobLimitError()
   const jobId = uuidv4()
+  const capability = crypto.randomBytes(32).toString('hex')
+  const controlCapabilityHash = hashCapability(capability)
   const now = Date.now()
   jobs.set(jobId, {
     jobId,
@@ -23,6 +32,10 @@ function createJob() {
     message: 'Queued',
     result: null,
     error: null,
+    failureType: null,
+    failureCode: null,
+    failureStage: null,
+    controlCapabilityHash,
     createdAt: now,
     updatedAt: now,
     terminalState: false,
@@ -31,7 +44,36 @@ function createJob() {
     cancel: null,
     sseClients: new Set(),
   })
+  jobCapabilities.set(jobId, capability)
   return jobId
+}
+
+/** Returns the one-time capability secret for admission response; does not log it. */
+function takeJobCapability(jobId) {
+  const capability = jobCapabilities.get(jobId)
+  if (capability) jobCapabilities.delete(jobId)
+  return capability || null
+}
+
+function getControlCapabilityHash(jobId) {
+  return getJob(jobId)?.controlCapabilityHash || null
+}
+
+function verifyControlCapability(jobOrHash, providedSecret) {
+  const expected = typeof jobOrHash === 'string'
+    ? jobOrHash
+    : jobOrHash?.controlCapabilityHash
+  if (!expected) return false
+  if (typeof providedSecret !== 'string' || !providedSecret) return false
+  const actual = hashCapability(providedSecret)
+  try {
+    const a = Buffer.from(actual, 'hex')
+    const b = Buffer.from(expected, 'hex')
+    if (a.length !== b.length) return false
+    return crypto.timingSafeEqual(a, b)
+  } catch {
+    return false
+  }
 }
 
 function runningCount() {
@@ -56,6 +98,9 @@ function serializeJob(job) {
     message: job.message,
     ...(job.result && { result: job.result }),
     ...(job.error && { error: job.error }),
+    ...(job.failureType && { type: job.failureType }),
+    ...(job.failureCode && { code: job.failureCode }),
+    ...(job.failureStage && { failureStage: job.failureStage }),
   }
 }
 
@@ -101,8 +146,27 @@ function completeJob(jobId, result) {
 }
 
 function failJob(jobId, error) {
-  const message = error?.message || String(error || 'Import failed')
-  return finishJob(jobId, 'failed', { error: message, stage: 'failed', message, percent: 100 })
+  const message =
+    typeof error === 'string'
+      ? error
+      : error?.message || String(error || 'Import failed')
+  const failureType =
+    typeof error === 'object' && error && typeof error.type === 'string' ? error.type : null
+  const failureCode =
+    typeof error === 'object' && error && typeof error.code === 'string' ? error.code : null
+  const failureStage =
+    typeof error === 'object' && error && typeof error.stage === 'string'
+      ? error.stage
+      : 'failed'
+  return finishJob(jobId, 'failed', {
+    error: message,
+    message,
+    stage: failureStage,
+    percent: 100,
+    failureType,
+    failureCode,
+    failureStage,
+  })
 }
 
 function cancelJob(jobId) {
@@ -158,7 +222,9 @@ function updateJob(job, fields) {
 function normalizePercent(value, fallback) {
   const number = Number(value)
   if (!Number.isFinite(number)) return fallback
-  return Math.max(0, Math.min(100, Math.round(number)))
+  const clamped = Math.max(0, Math.min(100, Math.round(number)))
+  const previous = Number.isFinite(Number(fallback)) ? Number(fallback) : 0
+  return Math.max(previous, clamped)
 }
 
 function terminalEvent(status) {
@@ -193,6 +259,7 @@ function cleanup(jobId) {
   const job = getJob(jobId)
   if (job?.cleanupTimer) clearTimeout(job.cleanupTimer)
   jobs.delete(jobId)
+  jobCapabilities.delete(jobId)
 }
 
 function _reset() {
@@ -200,6 +267,30 @@ function _reset() {
     if (job.cleanupTimer) clearTimeout(job.cleanupTimer)
   }
   jobs.clear()
+  jobCapabilities.clear()
 }
 
-module.exports = { JOB_TTL_MS, MAX_CONCURRENT_RUNNING, PptxImportJobLimitError, attachSseClient, cancelJob, cleanup, completeCancellation, completeJob, createJob, detachSseClient, emitProgress, failJob, getJob, holdOperation, registerCancelHandler, serializeJob, settleOperation, _reset }
+module.exports = {
+  JOB_TTL_MS,
+  MAX_CONCURRENT_RUNNING,
+  PptxImportJobLimitError,
+  attachSseClient,
+  cancelJob,
+  cleanup,
+  completeCancellation,
+  completeJob,
+  createJob,
+  detachSseClient,
+  emitProgress,
+  failJob,
+  getControlCapabilityHash,
+  getJob,
+  hashCapability,
+  holdOperation,
+  registerCancelHandler,
+  serializeJob,
+  settleOperation,
+  takeJobCapability,
+  verifyControlCapability,
+  _reset,
+}

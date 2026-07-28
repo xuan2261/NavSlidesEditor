@@ -1,6 +1,11 @@
 /** Bounded, server-owned PPTX import report (presentation projection metadata). */
 
+const { stripControlChars } = require('../../utils/strip-control-chars')
+
 const MAX_DIAGNOSTICS = 100
+const MAX_BY_TYPE_KEYS = 100
+const MAX_BY_TYPE_KEY_BYTES = 8 * 1024
+const MAX_TYPE_LENGTH = 96
 const MAX_SERIALIZED_BYTES = 64 * 1024
 const MAX_MESSAGE_LENGTH = 240
 const STAT_DIGEST_KEYS = Object.freeze([
@@ -22,14 +27,44 @@ function finiteCount(value) {
 }
 
 function sanitizeMessage(value) {
-  return String(value ?? '')
+  return stripControlChars(value)
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, MAX_MESSAGE_LENGTH)
 }
 
+function safeType(value) {
+  return stripControlChars(value || 'unknown')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_TYPE_LENGTH) || 'unknown'
+}
+
+function capByTypeEntries(entries) {
+  const byType = {}
+  let keyBytes = 2
+  let omitted = 0
+  for (const [rawType, rawCount] of entries) {
+    const type = safeType(rawType)
+    const count = finiteCount(rawCount)
+    if (Object.prototype.hasOwnProperty.call(byType, type)) {
+      byType[type] += count
+      continue
+    }
+    const typeBytes = Buffer.byteLength(JSON.stringify(type), 'utf8')
+    if (Object.keys(byType).length >= MAX_BY_TYPE_KEYS - 1 || keyBytes + typeBytes > MAX_BY_TYPE_KEY_BYTES) {
+      omitted += count
+      continue
+    }
+    byType[type] = count
+    keyBytes += typeBytes
+  }
+  if (omitted > 0) byType.other = (byType.other || 0) + omitted
+  return byType
+}
+
 function toDiagnostic(warning) {
-  const type = String(warning?.type || 'unknown') || 'unknown'
+  const type = safeType(warning?.type)
   const diagnostic = { type, message: sanitizeMessage(warning?.message || warning?.error || type) }
   if (Number.isFinite(Number(warning?.slideIndex))) {
     diagnostic.slideIndex = Math.floor(Number(warning.slideIndex))
@@ -38,12 +73,12 @@ function toDiagnostic(warning) {
 }
 
 function buildByType(warnings) {
-  const byType = {}
+  const counts = new Map()
   for (const warning of warnings) {
-    const type = String(warning?.type || 'unknown') || 'unknown'
-    byType[type] = (byType[type] || 0) + 1
+    const type = safeType(warning?.type)
+    counts.set(type, (counts.get(type) || 0) + 1)
   }
-  return byType
+  return capByTypeEntries([...counts.entries()])
 }
 
 function buildStatsDigest(stats) {
@@ -103,8 +138,8 @@ function buildBoundedImportReport(warnings, stats, { jobId, createdAt, accumulat
   const fullCount = list.length + accumulateOmitted
   const report = {
     schemaVersion: 1,
-    ...(typeof jobId === 'string' && jobId ? { jobId } : {}),
-    createdAt: typeof createdAt === 'string' && createdAt ? createdAt : new Date().toISOString(),
+    ...(typeof jobId === 'string' && jobId ? { jobId: jobId.slice(0, 64) } : {}),
+    createdAt: typeof createdAt === 'string' && createdAt ? createdAt.slice(0, 64) : new Date().toISOString(),
     summary: {
       warningCount: fullCount,
       byType,
@@ -130,10 +165,9 @@ function toReportSummary(report) {
   const summary = report.summary && typeof report.summary === 'object' ? report.summary : null
   if (!summary) return null
   const byType = summary.byType && typeof summary.byType === 'object' && !Array.isArray(summary.byType)
-    ? Object.fromEntries(
+    ? capByTypeEntries(
       Object.entries(summary.byType)
         .filter(([, count]) => Number.isFinite(Number(count)))
-        .map(([type, count]) => [String(type), finiteCount(count)])
     )
     : {}
   const result = {
@@ -157,10 +191,9 @@ function sanitizeImportReport(value) {
   const diagnosticsInput = Array.isArray(value.diagnostics) ? value.diagnostics : []
   const summaryInput = value.summary && typeof value.summary === 'object' ? value.summary : {}
   const byType = summaryInput.byType && typeof summaryInput.byType === 'object' && !Array.isArray(summaryInput.byType)
-    ? Object.fromEntries(
+    ? capByTypeEntries(
       Object.entries(summaryInput.byType)
         .filter(([, count]) => Number.isFinite(Number(count)))
-        .map(([type, count]) => [String(type), finiteCount(count)])
     )
     : buildByType(diagnosticsInput)
   const warningCount = finiteCount(
@@ -169,9 +202,9 @@ function sanitizeImportReport(value) {
   const diagnostics = diagnosticsInput.slice(0, MAX_DIAGNOSTICS).map(toDiagnostic)
   const report = {
     schemaVersion: 1,
-    ...(typeof value.jobId === 'string' && value.jobId ? { jobId: value.jobId } : {}),
+    ...(typeof value.jobId === 'string' && value.jobId ? { jobId: value.jobId.slice(0, 64) } : {}),
     createdAt: typeof value.createdAt === 'string' && value.createdAt
-      ? value.createdAt
+      ? value.createdAt.slice(0, 64)
       : new Date().toISOString(),
     summary: {
       warningCount,
@@ -198,10 +231,31 @@ function sanitizeImportReport(value) {
   return fitted
 }
 
+/**
+ * Editor-only projection. Keep stable warning categories and slide locations,
+ * but never expose operational identifiers, timestamps, or raw messages.
+ */
+function toEditorImportReport(value) {
+  const sanitized = sanitizeImportReport(value)
+  if (!sanitized) return null
+  return {
+    schemaVersion: 1,
+    summary: sanitized.summary,
+    diagnostics: sanitized.diagnostics.map(({ type, slideIndex }) => ({
+      type,
+      ...(Number.isSafeInteger(slideIndex) ? { slideIndex } : {}),
+    })),
+    ...(sanitized.statsDigest ? { statsDigest: sanitized.statsDigest } : {}),
+  }
+}
+
 module.exports = {
+  MAX_BY_TYPE_KEY_BYTES,
+  MAX_BY_TYPE_KEYS,
   MAX_DIAGNOSTICS,
   MAX_SERIALIZED_BYTES,
   buildBoundedImportReport,
   sanitizeImportReport,
+  toEditorImportReport,
   toReportSummary,
 }

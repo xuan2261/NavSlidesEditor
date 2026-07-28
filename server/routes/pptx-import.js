@@ -23,6 +23,8 @@ const defaultJobManager = require('../services/pptx-import-job-manager')
 const { createMediaTransaction } = require('../services/pptx-import/media-dedup')
 const { sweepStaleTempUploads } = require('../services/pptx-import/temp-upload-sweep')
 const { withPresentations } = require('../services/storage')
+const { readAuthoritativePresentation } = require('../services/package-backed-presentation-read')
+const { hashCanonical } = require('../services/pptx-import/evidence/canonical-hash')
 const {
   drainPackageCompatibilityOutbox,
   getPackageStore,
@@ -49,12 +51,81 @@ const upload = multer({
   },
 })
 
+/** Multipart admission bounds (idle between chunks + total wall clock). */
+const UPLOAD_IDLE_MS = Number(process.env.PPTX_UPLOAD_IDLE_MS) > 0
+  ? Number(process.env.PPTX_UPLOAD_IDLE_MS)
+  : 30_000
+const UPLOAD_TOTAL_MS = Number(process.env.PPTX_UPLOAD_TOTAL_MS) > 0
+  ? Number(process.env.PPTX_UPLOAD_TOTAL_MS)
+  : 120_000
+
+function releaseAdmissionSlot(req) {
+  if (req.pptxJobId && req.pptxJobManager) {
+    req.pptxJobManager.cleanup(req.pptxJobId)
+    req.pptxJobId = null
+  }
+  if (req.file?.path) {
+    fs.unlink(req.file.path).catch(() => {})
+    req.file = null
+  }
+}
+
 function uploadSingle(req, res, next) {
+  let settled = false
+  let idleTimer
+  let totalTimer
+  const clearTimers = () => {
+    if (idleTimer) clearTimeout(idleTimer)
+    if (totalTimer) clearTimeout(totalTimer)
+    idleTimer = null
+    totalTimer = null
+  }
+  const failAdmission = (status, error, type = 'parse-failed') => {
+    if (settled) return
+    settled = true
+    clearTimers()
+    try {
+      req.unpipe?.()
+      req.destroy?.(new Error(error))
+    } catch {
+      // ignore stream destroy races
+    }
+    releaseAdmissionSlot(req)
+    if (!res.headersSent) {
+      res.status(status).json({ error: sanitizeDiagnostic(error), type })
+    }
+  }
+  const armIdle = () => {
+    if (idleTimer) clearTimeout(idleTimer)
+    idleTimer = setTimeout(() => {
+      failAdmission(408, 'PPTX upload idle timeout', 'upload-timeout')
+    }, UPLOAD_IDLE_MS)
+    idleTimer.unref?.()
+  }
+
+  totalTimer = setTimeout(() => {
+    failAdmission(408, 'PPTX upload total timeout', 'upload-timeout')
+  }, UPLOAD_TOTAL_MS)
+  totalTimer.unref?.()
+  armIdle()
+  req.on('data', armIdle)
+  req.on('aborted', () => failAdmission(499, 'PPTX upload aborted', 'upload-aborted'))
+  req.on('close', () => {
+    if (!settled && !req.complete && !req.readableEnded) {
+      failAdmission(499, 'PPTX upload connection closed', 'upload-aborted')
+    }
+  })
+
   upload.single('file')(req, res, (err) => {
+    if (settled) return
+    settled = true
+    clearTimers()
     if (!err) return next()
-    if (req.pptxJobId) req.pptxJobManager?.cleanup(req.pptxJobId)
+    releaseAdmissionSlot(req)
     const status = err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE' ? 413 : 400
-    res.status(status).json({ error: sanitizeDiagnostic(err), type: 'parse-failed' })
+    if (!res.headersSent) {
+      res.status(status).json({ error: sanitizeDiagnostic(err), type: 'parse-failed' })
+    }
   })
 }
 
@@ -73,11 +144,64 @@ async function getDurableImportJob(jobId) {
   }
 }
 
-async function isPresentationListable(presentationId) {
+const DURABLE_OUTCOME_FIELDS = [
+  'outcomeRevisionId',
+  'outcomeGeneration',
+  'outcomeHeadHash',
+]
+const AUTHORITY_VISIBILITY_ERRORS = new Set([
+  'PRESENTATION_PACKAGE_HEAD_MISSING',
+  'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
+  'CANONICAL_TEXT_JOURNAL_INVALID',
+  'STALE_MATRIX_AUTHORITY',
+])
+
+function durableOutcomeExpectation(job) {
+  if (job?.status !== 'completed' || typeof job.presentationId !== 'string') return null
+  if (!DURABLE_OUTCOME_FIELDS.every((field) => job[field] !== undefined)) return null
+  return {
+    revisionId: job.outcomeRevisionId,
+    generation: job.outcomeGeneration,
+    headHash: job.outcomeHeadHash,
+  }
+}
+
+/**
+ * Contract B visibility: legacy rows may be read through the compatibility
+ * store, but package-backed rows require an identity-bound expected outcome.
+ */
+async function isPresentationListable(presentationId, expected = null) {
   if (typeof presentationId !== 'string' || !presentationId) return false
-  return withPresentations((presentations) =>
-    presentations.some((presentation) => presentation?.id === presentationId)
-  )
+  try {
+    const resolved = await readAuthoritativePresentation(presentationId)
+    if (!resolved) return false
+    if (resolved.generation === null) return expected == null
+    if (!expected) return false
+    const head = resolved.presentation?.pptxAggregateHead
+    return resolved.generation === expected.generation &&
+      head?.packageRevisionId === expected.revisionId &&
+      hashCanonical(head) === expected.headHash
+  } catch (error) {
+    if (AUTHORITY_VISIBILITY_ERRORS.has(error?.code)) return false
+    throw error
+  }
+}
+
+/**
+ * A durable receipt records no failure reason, only whether the transaction was
+ * undone. That distinction is the one thing a failed import can still tell the
+ * user: rolled back means nothing was persisted and a retry is safe, while any
+ * other state means partial data may survive and needs checking.
+ */
+function durableJobMessage(job, status) {
+  if (status === 'done') return 'Import complete'
+  if (
+    (status === 'failed' || status === 'cancelled') &&
+    job.transactionState === 'rolled-back'
+  ) {
+    return `Import ${status}; partial import rolled back`
+  }
+  return `Import ${status}`
 }
 
 /**
@@ -117,7 +241,7 @@ function serializeDurableImportJob(job, { listable, reportSummary } = {}) {
     status,
     stage: status === 'done' ? 'complete' : status,
     percent: status === 'done' || status === 'failed' || status === 'cancelled' ? 100 : 0,
-    message: status === 'done' ? 'Import complete' : `Import ${status}`,
+    message: durableJobMessage(job, status),
     ...(result ? { result } : {}),
     durable: true,
     transactionState: job.transactionState,
@@ -299,6 +423,7 @@ async function runImport({
           sourceMap: result.sourceMap,
           compatibilityPresentation: stamped,
           compatibilityUpdatedAt,
+          controlCapabilityHash: jobManager.getControlCapabilityHash?.(jobId) || undefined,
         })), abortController.signal, () => packageRollback?.({ jobId, presentationId }),
         (cleanup) => cleanupPromises.push(cleanup))
         if (typeof afterPackagePublish === 'function') {
@@ -396,7 +521,14 @@ async function runImport({
     }
     await mediaTransaction.rollback().catch(() => {})
     if (aborted) finishAbortedJob()
-    else jobManager.failJob(jobId, sanitizeDiagnostic(err))
+    else {
+      jobManager.failJob(jobId, {
+        message: sanitizeDiagnostic(err),
+        type: err?.type || (err instanceof PptxImportError ? err.type : undefined),
+        code: typeof err?.code === 'string' ? err.code : undefined,
+        stage: typeof err?.stage === 'string' ? err.stage : 'failed',
+      })
+    }
   } finally {
     clearTimeout(deadlineTimer)
     Promise.allSettled(stagePromises).then(() => Promise.allSettled(cleanupPromises)).then(async () => {
@@ -423,8 +555,8 @@ function createPptxImportRouter({
   createPresentation = createImportedPresentation,
   deletePresentation = deleteImportedPresentation,
   deleteOriginal = deleteOriginalPptx,
-  packageCommit = process.env.NODE_ENV === 'test' ? null : commitImportedPackage,
-  packageRollback = process.env.NODE_ENV === 'test' ? null : rollbackImportedPackage,
+  packageCommit = commitImportedPackage,
+  packageRollback = rollbackImportedPackage,
   drainCompatibility = drainPackageCompatibilityOutbox,
   readDurableJob = getDurableImportJob,
   checkPresentationListable = isPresentationListable,
@@ -439,12 +571,64 @@ function createPptxImportRouter({
     next()
   })
 
-  // Job status/result routes are not bound to an in-app identity: this service
-  // runs behind a trusted reverse proxy that provides any required auth (there
-  // is no app-level user model). Job ids are unguessable UUIDv4 and only one
-  // import runs at a time (MAX_CONCURRENT_RUNNING=1), so the practical IDOR
-  // surface is minimal. If this is ever exposed to mutually-untrusted tenants,
-  // bind each job to a per-job secret returned at creation and require it here.
+  // Per-job control capability: POST /import returns a one-time capability secret.
+  // Sensitive job routes require header X-Pptx-Job-Capability; UUID secrecy alone is
+  // not authorization for Map or durable jobs.
+  //
+  // This process never logs or persists the secret, but EventSource cannot set
+  // headers, so the stream route carries it in the query string and a reverse proxy
+  // will record it in access logs by default. The disclosure is bounded: a capability
+  // only reads, cancels, or reconciles one import job that expires in minutes, which
+  // is less than the unauthenticated presentations API on the same origin allows.
+
+  const CAPABILITY_HEADER = 'x-pptx-job-capability'
+
+  function readProvidedCapability(req, { allowQuery = false } = {}) {
+    const header = req.get?.('X-Pptx-Job-Capability') || req.headers?.[CAPABILITY_HEADER]
+    if (typeof header === 'string' && header) return header
+    // EventSource cannot set custom headers; query is SSE-only.
+    if (!allowQuery) return null
+    const query = req.query?.capability
+    return typeof query === 'string' && query ? query : null
+  }
+
+  function denyCapability(res) {
+    return res.status(401).json({
+      error: 'job-capability-required',
+      code: 'JOB_CAPABILITY_REQUIRED',
+    })
+  }
+
+  function assertJobCapability(req, res, next) {
+    const jobId = req.params.jobId
+    const isStream = String(req.path || '').endsWith('/stream') || req.route?.path === '/jobs/:jobId/stream'
+    const provided = readProvidedCapability(req, { allowQuery: isStream })
+    const live = jobManager.getJob?.(jobId)
+    if (live) {
+      const verify = jobManager.verifyControlCapability || defaultJobManager.verifyControlCapability
+      if (!verify(live, provided)) return denyCapability(res)
+      return next()
+    }
+    // Durable path: load is async — attach provided for handlers and re-check there.
+    req.pptxJobCapability = provided
+    return next()
+  }
+
+  async function assertDurableCapability(durableJob, provided, res) {
+    // Fail closed. A receipt with no hash predates capability enforcement, and
+    // treating that as "allow" let anyone holding a job UUID read, cancel, or
+    // reconcile it. The cost is that such a receipt is no longer reachable —
+    // acceptable, because it describes an import that already finished and whose
+    // presentation is served by the presentations API regardless.
+    if (!durableJob?.controlCapabilityHash) {
+      denyCapability(res)
+      return false
+    }
+    const verify = jobManager.verifyControlCapability || defaultJobManager.verifyControlCapability
+    if (verify(durableJob.controlCapabilityHash, provided)) return true
+    denyCapability(res)
+    return false
+  }
 
   function reserveImportJob(req, res, next) {
     try {
@@ -469,6 +653,8 @@ function createPptxImportRouter({
 
     try {
       const jobId = req.pptxJobId
+      const capability =
+        jobManager.takeJobCapability?.(jobId) || defaultJobManager.takeJobCapability?.(jobId) || null
       // Fire-and-forget: runImport owns its own try/catch/finally (marks the
       // job failed and unlinks the temp file). The trailing catch guards
       // against an unexpected synchronous throw escaping as an unhandled
@@ -489,10 +675,18 @@ function createPptxImportRouter({
         originalBaseDir,
         timeoutMs: importTimeoutMs,
       }).catch((err) => {
-        jobManager.failJob(jobId, sanitizeDiagnostic(err))
+        jobManager.failJob(jobId, {
+          message: sanitizeDiagnostic(err),
+          type: err?.type,
+          code: typeof err?.code === 'string' ? err.code : undefined,
+          stage: 'failed',
+        })
         fs.unlink(req.file.path).catch(() => {})
       })
-      res.status(202).json({ jobId })
+      res.status(202).json({
+        jobId,
+        ...(capability ? { capability } : {}),
+      })
     } catch (err) {
       jobManager.cleanup(req.pptxJobId)
       await fs.unlink(req.file.path).catch(() => {})
@@ -502,16 +696,22 @@ function createPptxImportRouter({
     }
   })
 
-  router.get('/jobs/:jobId', async (req, res) => {
+  router.get('/jobs/:jobId', assertJobCapability, async (req, res) => {
     const job = jobManager.getJob(req.params.jobId)
+    // Map `done` is only set after package drain or legacy create (already listable).
+    // Contract B re-check applies to durable fallback below (restart / Map miss).
     if (job) return res.json(jobManager.serializeJob(job))
     try {
       const durableJob = await readDurableJob(req.params.jobId)
       if (!durableJob) return res.status(404).json({ error: 'job-not-found' })
+      if (!(await assertDurableCapability(durableJob, req.pptxJobCapability, res))) return
       let listable
       let reportSummary = durableJob.reportSummary || null
       if (durableJob.status === 'completed' && durableJob.presentationId) {
-        listable = await checkPresentationListable(durableJob.presentationId)
+        const expected = durableOutcomeExpectation(durableJob)
+        listable = expected
+          ? await checkPresentationListable(durableJob.presentationId, expected)
+          : false
         if (listable && !reportSummary) {
           try {
             reportSummary = await loadReportSummary(durableJob.presentationId)
@@ -527,7 +727,7 @@ function createPptxImportRouter({
     }
   })
 
-  router.get('/jobs/:jobId/stream', (req, res) => {
+  router.get('/jobs/:jobId/stream', assertJobCapability, (req, res) => {
     const job = jobManager.getJob(req.params.jobId)
     if (!job) return res.status(404).json({ error: 'job-not-found' })
     res.set({
@@ -541,16 +741,34 @@ function createPptxImportRouter({
     req.on('close', () => jobManager.detachSseClient(req.params.jobId, res))
   })
 
-  router.delete('/jobs/:jobId', async (req, res) => {
+  router.delete('/jobs/:jobId', assertJobCapability, async (req, res) => {
     const status = jobManager.cancelJob(req.params.jobId)
     if (status === 'unknown') {
       try {
         const durableJob = await readDurableJob(req.params.jobId)
         if (durableJob) {
+          if (!(await assertDurableCapability(durableJob, req.pptxJobCapability, res))) return
+          let listable
+          let reportSummary = durableJob.reportSummary || null
+          if (durableJob.status === 'completed' && durableJob.presentationId) {
+            const expected = durableOutcomeExpectation(durableJob)
+            listable = expected
+              ? await checkPresentationListable(durableJob.presentationId, expected)
+              : false
+            if (listable && !reportSummary) {
+              try {
+                reportSummary = await loadReportSummary(durableJob.presentationId)
+              } catch {
+                reportSummary = null
+              }
+            }
+          }
+          const serialized = serializeDurableImportJob(durableJob, { listable, reportSummary })
           return res.status(409).json({
-            error: 'job-already-finished',
-            code: 'JOB_ALREADY_FINISHED',
-            job: serializeDurableImportJob(durableJob),
+            error: 'job-too-late',
+            code: 'JOB_CANCEL_TOO_LATE',
+            status: serialized?.status || 'done',
+            job: serialized,
           })
         }
       } catch (error) {
@@ -558,11 +776,33 @@ function createPptxImportRouter({
       }
       return res.status(404).json({ error: 'job-not-found' })
     }
-    if (status === 'conflict') return res.status(409).json({ error: 'job-already-finished' })
+    if (status === 'conflict') {
+      const current = jobManager.getJob?.(req.params.jobId)
+      if (current?.status === 'cancelling') {
+        return res.status(409).json({
+          error: 'job-cancellation-in-progress',
+          code: 'JOB_CANCEL_IN_PROGRESS',
+          status: current.status,
+        })
+      }
+      if (current?.status === 'done' || current?.result?.presentationId) {
+        return res.status(409).json({
+          error: 'job-too-late',
+          code: 'JOB_CANCEL_TOO_LATE',
+          status: 'done',
+          job: jobManager.serializeJob?.(current),
+        })
+      }
+      return res.status(409).json({
+        error: 'job-already-finished',
+        code: 'JOB_ALREADY_FINISHED',
+        status: current?.status,
+      })
+    }
     res.status(204).end()
   })
 
-  router.post('/jobs/:jobId/reconcile', async (req, res) => {
+  router.post('/jobs/:jobId/reconcile', assertJobCapability, async (req, res) => {
     const jobId = req.params.jobId
     const current = jobManager.getJob(jobId)
     if (current && !current.terminalState) {
@@ -577,6 +817,7 @@ function createPptxImportRouter({
     if (durableJob && ['queued', 'running'].includes(durableJob.status)) {
       return res.status(409).json({ error: 'job-not-terminal', code: 'JOB_NOT_TERMINAL' })
     }
+    if (durableJob && !(await assertDurableCapability(durableJob, req.pptxJobCapability, res))) return
     const job = durableJob || (current?.status === 'done'
       ? { id: jobId, status: 'completed', presentationId: current.result?.presentationId }
       : null)

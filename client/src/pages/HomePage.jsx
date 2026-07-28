@@ -29,7 +29,13 @@ import { api } from '../utils/api'
 import { markdownToSlidesWithWarnings } from '../utils/markdown-import'
 import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../utils/import-project'
 import { summarizePptxImportWarnings } from '../utils/pptx-import-summary'
-import { waitForPptxJob } from '../utils/pptx-job-wait'
+import {
+  DEFAULT_PPTX_JOB_MAX_WAIT_MS,
+  PPTX_ADMISSION_MAX_RETRIES,
+  PPTX_ADMISSION_MAX_WAIT_MS,
+  PPTX_ADMISSION_RETRY_DELAY_MS,
+  waitForPptxJob,
+} from '../utils/pptx-job-wait'
 import { filterMarketplaceTemplates } from '../utils/template-filters'
 import { showError, showNotice } from '../utils/app-feedback'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
@@ -301,7 +307,9 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     const activeImport = pptxImportRef.current
     activeImport?.admissionController?.abort()
     activeImport?.connection?.es?.close()
-    if (activeImport?.jobId) api.cancelPptxJob(activeImport.jobId).catch(() => {})
+    if (activeImport?.jobId) {
+      api.cancelPptxJob(activeImport.jobId, { capability: activeImport.capability }).catch(() => {})
+    }
     pptxImportRef.current = null
   }, [])
 
@@ -653,29 +661,39 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       admissionController: new AbortController(),
       connection: null,
       jobId: null,
+      deadlineAt: null,
     }
     pptxImportRef.current = activeImport
     try {
-      const { jobId } = await api.importPptxAsync(file, {
+      const admission = await api.importPptxAsync(file, {
         retryOnBusy: true,
-        maxBusyRetries: 72,
-        busyRetryDelayMs: 5000,
+        maxBusyRetries: PPTX_ADMISSION_MAX_RETRIES,
+        busyRetryDelayMs: PPTX_ADMISSION_RETRY_DELAY_MS,
         signal: activeImport.admissionController.signal,
+        deadlineAt: Date.now() + PPTX_ADMISSION_MAX_WAIT_MS,
         onBusyRetry: () => {
           if (pptxImportRef.current === activeImport) {
             setImportProgress('Another PPTX import is running. Waiting to retry...')
           }
         },
       })
+      const jobId = admission?.jobId
+      const capability = admission?.capability || null
       activeImport.jobId = jobId
+      activeImport.capability = capability
+      // The import only starts once the server admits it, so the wait budget
+      // starts here — not when the user picked the file.
+      activeImport.deadlineAt = Date.now() + DEFAULT_PPTX_JOB_MAX_WAIT_MS
       if (pptxImportRef.current !== activeImport) {
-        if (jobId) api.cancelPptxJob(jobId).catch(() => {})
+        if (jobId) api.cancelPptxJob(jobId, { capability }).catch(() => {})
         return
       }
       const imported = await waitForPptxJob({
         jobId,
         api,
+        capability,
         signal: activeImport.admissionController.signal,
+        deadlineAt: activeImport.deadlineAt,
         onProgress: (progress) => {
           if (pptxImportRef.current === activeImport) setImportProgress(progress)
         },
@@ -686,15 +704,8 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       // Ownership abandon (leave/unmount): never open or toast after user left.
       if (pptxImportRef.current !== activeImport) return
       activeImport.jobId = null
-      // Server creates presentation + binds original.pptx atomically (Phase 01).
-      // Prefer presentationId from job result; fall back to client create only for legacy servers.
-      let presentationId = imported?.presentationId
-      if (!presentationId && imported?.presentation) {
-        setImportProgress('Creating presentation...')
-        const pres = await api.createPresentation(imported.presentation)
-        presentationId = pres.id
-      }
-      if (pptxImportRef.current !== activeImport) return
+      // The server creates the presentation and binds original.pptx atomically.
+      const presentationId = imported?.presentationId
       if (!presentationId) {
         throw new Error('PPTX import completed without presentationId')
       }
@@ -709,10 +720,33 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       const intentionalAbandon =
         err?.name === 'AbortError' ||
         err?.status === 'cancelled' ||
+        err?.code === 'PPTX_JOB_CANCELLED' ||
         pptxImportRef.current !== activeImport
       if (!intentionalAbandon && pptxImportRef.current === activeImport) {
         console.error('PPTX import failed:', err)
-        showError('Failed to import PPTX: ' + err.message)
+        if (err?.code === 'PPTX_JOB_ADMISSION_TIMEOUT') {
+          showError(
+            'PPTX import admission timed out before acceptance was confirmed. Check existing presentations before importing again.',
+            { title: 'Import admission outcome unknown' }
+          )
+        } else if (err?.code === 'PPTX_JOB_PENDING_VISIBILITY') {
+          showError(
+            'PPTX import finished on the server but is not listable yet. Wait a moment and refresh the home list before retrying.',
+            { title: 'Import pending visibility' }
+          )
+        } else if (err?.code === 'PPTX_JOB_OUTCOME_UNKNOWN') {
+          showError(
+            'PPTX import timed out before a final outcome was confirmed. Check existing presentations before importing again.',
+            { title: 'Import outcome unknown' }
+          )
+        } else if (err?.code === 'PPTX_JOB_RECONCILE_REQUIRED') {
+          showError(
+            'PPTX import needs manual repair. Do not re-upload until the existing job is reconciled.',
+            { title: 'Import reconcile required' }
+          )
+        } else {
+          showError('Failed to import PPTX: ' + err.message)
+        }
       }
     } finally {
       if (pptxImportRef.current === activeImport) {

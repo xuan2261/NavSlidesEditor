@@ -1,5 +1,15 @@
 const BASE = '/api'
 
+function applyTypedErrorFields(error, body) {
+  error.code = body.code
+  error.type = body.type
+  error.failureType = body.failureType
+  error.failureCode = body.failureCode
+  error.failureStage = body.failureStage
+  error.reasonCode = body.reasonCode
+  return error
+}
+
 async function handleResponse(r) {
   const body = await r.json().catch((err) => {
     if (err?.name === 'AbortError') throw err
@@ -13,6 +23,7 @@ async function handleResponse(r) {
     err.retryAfterRaw = retryAfterRaw
     err.reason = body.reason
     err.currentGeneration = body.currentGeneration
+    applyTypedErrorFields(err, body)
     throw err
   }
   return body
@@ -64,6 +75,59 @@ function sleepWithSignal(ms, signal) {
   })
 }
 
+function createAdmissionDeadlineError() {
+  const error = new Error('PPTX import admission deadline exceeded')
+  error.code = 'PPTX_JOB_ADMISSION_TIMEOUT'
+  error.status = 'timeout'
+  return error
+}
+
+function assertAdmissionDeadline(deadlineAt, signal) {
+  if (signal?.aborted) throw createAbortError()
+  if (deadlineAt != null && Date.now() >= deadlineAt) throw createAdmissionDeadlineError()
+}
+
+async function fetchWithDeadline(url, init, deadlineAt, consume = (response) => response) {
+  if (deadlineAt == null) return consume(await fetch(url, init))
+  const controller = new AbortController()
+  let timer
+  let onAbort
+  let rejectAbort
+  let rejectDeadline
+  const outerSignal = init?.signal
+  const abortPromise = new Promise((_resolve, reject) => {
+    rejectAbort = reject
+  })
+  const deadlinePromise = new Promise((_resolve, reject) => {
+    rejectDeadline = reject
+  })
+  const cleanup = () => {
+    if (timer != null) clearTimeout(timer)
+    outerSignal?.removeEventListener?.('abort', onAbort)
+  }
+  const abortForCaller = () => {
+    controller.abort()
+    rejectAbort(createAbortError())
+  }
+  const abortForDeadline = () => {
+    controller.abort()
+    rejectDeadline(createAdmissionDeadlineError())
+  }
+  onAbort = abortForCaller
+  if (outerSignal?.aborted) abortForCaller()
+  else outerSignal?.addEventListener?.('abort', onAbort, { once: true })
+  const remaining = Math.max(0, deadlineAt - Date.now())
+  if (remaining <= 0) abortForDeadline()
+  else timer = setTimeout(abortForDeadline, remaining)
+  const bounded = (promise) => Promise.race([promise, abortPromise, deadlinePromise])
+  try {
+    const response = await bounded(fetch(url, { ...init, signal: controller.signal }))
+    return await bounded(Promise.resolve().then(() => consume(response)))
+  } finally {
+    cleanup()
+  }
+}
+
 export const api = {
   getPresentations: () => fetch(`${BASE}/presentations`).then(handleResponse),
   getPresentation: (id) => fetch(`${BASE}/presentations/${id}`).then(handleResponse),
@@ -104,7 +168,7 @@ export const api = {
         const body = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
         const err = new Error(body.error || `Request failed (${r.status})`)
         err.status = r.status
-        err.code = body.code
+        applyTypedErrorFields(err, body)
         throw err
       }
       return r.blob()
@@ -124,7 +188,7 @@ export const api = {
         const body = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
         const err = new Error(body.error || `Request failed (${r.status})`)
         err.status = r.status
-        err.code = body.code
+        applyTypedErrorFields(err, body)
         throw err
       }
       const blob = await r.blob()
@@ -157,31 +221,51 @@ export const api = {
       busyRetryDelayMs = 5000,
       onBusyRetry,
       signal,
+      deadlineAt = null,
     } = opts
     const fd = new FormData()
     fd.append('file', file)
     for (let attempt = 0; ; attempt += 1) {
+      assertAdmissionDeadline(deadlineAt, signal)
       try {
-        return await fetch(`${BASE}/pptx/import`, {
+        return await fetchWithDeadline(`${BASE}/pptx/import`, {
           method: 'POST',
           body: fd,
           signal,
-        }).then(handleResponse)
+        }, deadlineAt, handleResponse)
       } catch (err) {
+        if (deadlineAt != null && Date.now() >= deadlineAt && !signal?.aborted) {
+          throw createAdmissionDeadlineError()
+        }
         if (!retryOnBusy || err.status !== 429 || err.message !== 'import-in-progress' || attempt >= maxBusyRetries) {
           throw err
         }
         onBusyRetry?.(attempt + 1)
-        await sleepWithSignal(getBusyRetryDelayMs(err.retryAfterRaw, busyRetryDelayMs), signal)
+        const retryDelay = getBusyRetryDelayMs(err.retryAfterRaw, busyRetryDelayMs)
+        const remaining = deadlineAt == null ? null : Math.max(0, deadlineAt - Date.now())
+        if (remaining != null && remaining <= 0) throw createAdmissionDeadlineError()
+        await sleepWithSignal(remaining == null ? retryDelay : Math.min(retryDelay, remaining), signal)
+        assertAdmissionDeadline(deadlineAt, signal)
       }
     }
   },
   pollPptxJob: (jobId, opts = {}) => {
-    const init = opts.signal ? { signal: opts.signal } : {}
+    const headers = {}
+    if (opts.capability) headers['X-Pptx-Job-Capability'] = opts.capability
+    const init = {
+      ...(opts.signal ? { signal: opts.signal } : {}),
+      ...(Object.keys(headers).length ? { headers } : {}),
+    }
     return fetch(`${BASE}/pptx/jobs/${jobId}`, init).then(handleResponse)
   },
   cancelPptxJob: (jobId, opts = {}) => {
-    const init = { method: 'DELETE', ...(opts.signal ? { signal: opts.signal } : {}) }
+    const headers = {}
+    if (opts.capability) headers['X-Pptx-Job-Capability'] = opts.capability
+    const init = {
+      method: 'DELETE',
+      ...(opts.signal ? { signal: opts.signal } : {}),
+      ...(Object.keys(headers).length ? { headers } : {}),
+    }
     return fetch(`${BASE}/pptx/jobs/${jobId}`, init).then(handleResponse)
   },
   getGithubConfig: () => fetch(`${BASE}/github/config`).then(handleResponse),

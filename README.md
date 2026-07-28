@@ -63,6 +63,12 @@ AI copywriter (rewrite slide text), AI generator (full presentation drafts from 
 
 Present mode (reveal.js, press `S` for speaker notes), export HTML (CDN-backed), export offline HTML (inlined runtime assets), export PDF (one page per slide with expanded fragments), export PPTX (hybrid: editable primitives + Playwright-rasterized fallback for unsupported elements), shareable links with optional password, GitHub push with auto-generated README, Markdown import, project export/import (`.navslides` archive with manifest v1.1).
 
+### PPTX Import
+
+Dashboard imports wait for a shared import slot separately from the admitted job's bounded wait. If the final outcome cannot be confirmed, the editor asks you to check existing presentations before retrying rather than making destructive recovery. A completed package job can remain pending visibility until it is safe to open. Imported external media is blocked unless a server administrator explicitly allows its origin; EMF/WMF conversion remains off until that administrator configures its guarded policy.
+
+The import is parser-backed application behavior, not a native PowerPoint/OfficeCLI or pixel-perfect fidelity claim. See [PPTX import lifecycle and evidence](docs/pptx-import-fidelity-report.md#current-import-lifecycle-and-evidence) and [deployment policy](docs/deployment-guide.md#pptx-import-policy).
+
 ### Cloud Sync
 
 rclone-based sync to Proton Drive or any rclone-supported provider (Google Drive, S3, etc.). Configure credentials in-app; sync a single presentation or all at once. Docker image ships with rclone preinstalled.

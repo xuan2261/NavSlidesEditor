@@ -76,6 +76,30 @@ describe('pptx package guards', () => {
     }
   })
 
+  it('charges a large non-XML part in full without applying the XML byte cap', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-guards-media-'))
+    const file = path.join(dir, 'media.pptx')
+    const contentTypes = '<Types />'
+    const presentation = '<p:presentation />'
+    const media = 'm'.repeat(64 * 1024)
+    try {
+      await writeZip(file, {
+        '[Content_Types].xml': contentTypes,
+        'ppt/presentation.xml': presentation,
+        'ppt/media/image1.bin': media,
+      })
+      // Only XML parts are held and inspected, so the XML cap must not reach a
+      // media part far larger than it, and that part's bytes must still be
+      // charged in full against the decompression budget.
+      const result = await validatePptxPackage(file, 'media.pptx', { maxXmlBytes: 1024 })
+      expect(result.decompressedBytes).toBe(
+        contentTypes.length + presentation.length + media.length,
+      )
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
   it('CRC policy is fail-closed with a stable error code (C1)', () => {
     expect(IMPORT_CRC_POLICY).toMatchObject({
       mode: 'fail-closed',

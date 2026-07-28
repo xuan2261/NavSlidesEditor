@@ -8,6 +8,7 @@ branch: master
 tags: [bugfix, pptx, import, api, frontend, testing, fidelity, critical, tdd]
 blockedBy: []
 blocks: [260710-1757-pptx-package-first-officecli-roundtrip-deep-tdd]
+related: [260724-1444-pptx-import-p1-p3-readiness-remediation-deep-tdd]
 created: 2026-07-22
 mode: "--deep --tdd"
 scopeDecision: hold

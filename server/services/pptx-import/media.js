@@ -105,13 +105,16 @@ async function persistImageBuffer(buffer, hintedMime, uploadsDir = UPLOADS_DIR, 
   if (!detected) {
     return { url: null, warning: { code: 'image-detect-failed', byteLength: buffer.length } }
   }
-  options.mediaBudget?.reserve(buffer.length)
   const media = await persistDedupedBuffer(buffer, detected.ext, uploadsDir, {
     mimeType: detected.mime,
     originalName: `pptx-image.${detected.ext}`,
     signal: options.signal,
     transaction: options.mediaTransaction,
+    mediaBudget: options.mediaBudget,
   })
+  if (media.budgetExceeded) {
+    return { url: null, warning: { code: 'media-budget-exceeded', byteLength: buffer.length } }
+  }
   const warning = detected.unsupportedBrowserImage
     ? { code: 'image-format-preserved-with-limited-browser-support', detected: detected.mime }
     : detected.hintMismatch
@@ -138,7 +141,6 @@ async function persistMediaBlob(mediaIndex, ref, uploadsDir = UPLOADS_DIR, optio
   if (buffer.length > MAX_MEDIA_SIZE) {
     return { url: null, warning: { code: 'media-too-large', byteLength: buffer.length } }
   }
-  options.mediaBudget?.reserve(buffer.length)
   const ext = path.posix.extname(normalized).toLowerCase().slice(1)
   if (!ext || !ALLOWED_MEDIA_EXTENSIONS.has(ext)) {
     return { url: null, warning: { code: 'media-extension-rejected', ext } }
@@ -166,7 +168,11 @@ async function persistMediaBlob(mediaIndex, ref, uploadsDir = UPLOADS_DIR, optio
     originalName: path.posix.basename(normalized),
     signal: options.signal,
     transaction: options.mediaTransaction,
+    mediaBudget: options.mediaBudget,
   })
+  if (media.budgetExceeded) {
+    return { url: null, warning: { code: 'media-budget-exceeded', byteLength: buffer.length } }
+  }
   return { url: media.url }
 }
 

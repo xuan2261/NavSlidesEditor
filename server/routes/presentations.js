@@ -125,11 +125,15 @@ async function readUploadHashes() {
 }
 
 // GET /api/presentations - list summaries (excludes trashed)
+// Known package-authority failures are quarantined; healthy rows remain a bare array.
+// Quarantine counts are additive response headers (array shape unchanged).
 router.get('/', async (req, res) => {
   try {
     const presentations = await readPresentations()
-    const authoritative = (await readAuthoritativePresentations(presentations))
-      .map((resolved) => resolved.presentation)
+    const quarantine = []
+    const authoritative = (await readAuthoritativePresentations(presentations, {
+      collectQuarantine: quarantine,
+    })).map((resolved) => resolved.presentation)
     const summaries = authoritative.map((p) => ({
       id: p.id,
       title: p.title,
@@ -140,6 +144,11 @@ router.get('/', async (req, res) => {
       createdAt: p.createdAt,
       thumbnail: p.slides && p.slides[0] ? p.slides[0].background : null,
     }))
+    if (quarantine.length > 0) {
+      res.set('X-Presentations-Quarantined-Count', String(quarantine.length))
+      const codes = [...new Set(quarantine.map((item) => item.code).filter(Boolean))]
+      if (codes.length) res.set('X-Presentations-Quarantined-Codes', codes.join(','))
+    }
     res.json(summaries)
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message, code: err.code })

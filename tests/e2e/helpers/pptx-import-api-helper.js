@@ -65,14 +65,19 @@ export async function postPptxImportWhenAvailable(request, multipart, options = 
 }
 
 export async function waitForPptxImport(request, jobId, options = {}) {
-  const { timeout = 120000 } = options
+  const { timeout = 120000, capability } = options
   if (typeof jobId !== 'string' || !jobId) throw new Error('PPTX import jobId is required')
+  if (typeof capability !== 'string' || !capability) {
+    throw new Error('PPTX import job capability is required')
+  }
 
   let result
   await expect
     .poll(
       async () => {
-        const response = await request.get(`/api/pptx/jobs/${jobId}`)
+        const response = await request.get(`/api/pptx/jobs/${jobId}`, {
+          headers: { 'X-Pptx-Job-Capability': capability },
+        })
         if (!response.ok()) {
           throw new Error(
             `PPTX import job ${jobId} read failed: ${await describeResponse(response)}`
@@ -104,10 +109,13 @@ export async function importPptxWhenAvailable(request, multipart, options = {}) 
     throw new Error(`PPTX import admission failed: ${await describeResponse(response)}`)
   }
 
-  const { jobId } = await response.json()
+  const { jobId, capability } = await response.json()
   if (typeof jobId !== 'string' || !jobId) {
     throw new Error('PPTX import admission did not return a jobId')
   }
-  const result = await waitForPptxImport(request, jobId, options)
-  return { jobId, presentationId: result.presentationId, result }
+  if (typeof capability !== 'string' || !capability) {
+    throw new Error('PPTX import admission did not return a capability')
+  }
+  const result = await waitForPptxImport(request, jobId, { ...options, capability })
+  return { jobId, capability, presentationId: result.presentationId, result }
 }

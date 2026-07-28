@@ -2,6 +2,17 @@ const uuidv4 = () => require('node:crypto').randomUUID()
 const { getDesignTokensForRevealTheme, normalizePresentationNotes } = require('revealjs-shared')
 const { withPresentations } = require('../storage')
 const { toPptxOriginalMeta } = require('./original-package')
+const { stripControlChars } = require('../../utils/strip-control-chars')
+
+/**
+ * A title originates in the uploaded filename (multer `originalname`) or in the
+ * deck's own OOXML, so it carries attacker-influenced bytes into operator-facing
+ * sinks — notably the GitHub push commit message. Clean it at the one place every
+ * import path stamps a title rather than at each sink.
+ */
+function sanitizeImportedTitle(value) {
+  return stripControlChars(value).replace(/\s+/g, ' ').trim()
+}
 
 /**
  * Normalize mapped import output into a presentation projection without pushing
@@ -20,7 +31,10 @@ function stampImportedPresentationFields(mappedPresentation, options = {}) {
   const presentation = normalizePresentationNotes({
     ...source,
     id: options.id || uuidv4(),
-    title: source.title || options.originalName || 'Imported Presentation',
+    title:
+      sanitizeImportedTitle(source.title) ||
+      sanitizeImportedTitle(options.originalName) ||
+      'Imported Presentation',
     theme,
     transition: source.transition || 'slide',
     designTokens,

@@ -35,9 +35,7 @@ function isCrcMismatchError(error) {
   return /crc32\s*mismatch/i.test(message) || /corrupted zip\s*:\s*crc/i.test(message)
 }
 
-async function readBoundedZipEntry(entry, { perEntryCap, remainingBudget, signal, overflowError }) {
-  if (entry.dir) return Buffer.alloc(0)
-  signal?.throwIfAborted?.()
+function streamBoundedZipEntry(entry, { perEntryCap, remainingBudget, signal, overflowError }, collect) {
   return new Promise((resolve, reject) => {
     let count = 0
     let settled = false
@@ -64,15 +62,32 @@ async function readBoundedZipEntry(entry, { perEntryCap, remainingBudget, signal
       } else if (count > remainingBudget) {
         stream.destroy?.()
         finish(new PptxImportError('PPTX package exceeds decompression budget', { status: 413 }))
-      } else {
+      } else if (collect) {
         chunks.push(Buffer.from(chunk))
       }
     })
-    stream.on('end', () => finish(null, Buffer.concat(chunks, count)))
+    stream.on('end', () => finish(null, collect ? Buffer.concat(chunks, count) : count))
     stream.on('error', (error) => finish(new PptxImportError('Uploaded file is not a readable ZIP package', {
       status: 400, type: FAILURE_TYPES.parseFailed, cause: error,
     })))
   })
+}
+
+async function readBoundedZipEntry(entry, options) {
+  if (entry.dir) return Buffer.alloc(0)
+  options.signal?.throwIfAborted?.()
+  return streamBoundedZipEntry(entry, options, true)
+}
+
+/**
+ * Byte count under the same caps, without holding the entry in memory. A part
+ * that is only charged against the decompression budget never needs its bytes,
+ * and copying a 100MB media part just to read `.length` is pure waste.
+ */
+async function measureBoundedZipEntry(entry, options) {
+  if (entry.dir) return 0
+  options.signal?.throwIfAborted?.()
+  return streamBoundedZipEntry(entry, options, false)
 }
 
 function parseSafeRawEntries(bytes) {
@@ -144,17 +159,24 @@ async function validatePptxPackage(filePath, originalName = filePath, limits = {
     const entry = zip.file(raw.name)
     if (!entry || entry.dir) continue
     signal?.throwIfAborted?.()
-    const xmlPart = isXmlPart(raw.name)
-    const partBytes = await readBoundedZipEntry(entry, {
-      perEntryCap: xmlPart ? Math.min(maxDecompressedBytes, xmlBudget.limits.maxXmlBytes) : maxDecompressedBytes,
-      remainingBudget: maxDecompressedBytes - measuredBytes,
-      signal,
-      overflowError: xmlPart
-        ? () => new PackageSafetyError('xml-byte-budget-exceeded', `XML byte budget exceeded in ${raw.name}`, 413)
-        : undefined,
-    })
-    measuredBytes += partBytes.length
-    if (xmlPart) xmlBudget.inspect(partBytes, raw.name)
+    const remainingBudget = maxDecompressedBytes - measuredBytes
+    if (isXmlPart(raw.name)) {
+      const partBytes = await readBoundedZipEntry(entry, {
+        perEntryCap: Math.min(maxDecompressedBytes, xmlBudget.limits.maxXmlBytes),
+        remainingBudget,
+        signal,
+        overflowError: () =>
+          new PackageSafetyError('xml-byte-budget-exceeded', `XML byte budget exceeded in ${raw.name}`, 413),
+      })
+      measuredBytes += partBytes.length
+      xmlBudget.inspect(partBytes, raw.name)
+    } else {
+      measuredBytes += await measureBoundedZipEntry(entry, {
+        perEntryCap: maxDecompressedBytes,
+        remainingBudget,
+        signal,
+      })
+    }
   }
   if (!zip.file('[Content_Types].xml') || !zip.file('ppt/presentation.xml')) {
     throw new PptxImportError('ZIP package is missing required PPTX entries', { status: 400 })
