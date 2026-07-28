@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Durable Operations Retention And Legacy Durability"
-status: pending
+status: completed
 priority: P2
 effort: "5-8d plus policy/compaction rehearsal"
 dependencies: [3, 4]
@@ -11,7 +11,9 @@ dependencies: [3, 4]
 
 ## Overview
 
-Consume Phase 3's durable import lifecycle and define a retention policy that does not destroy rollback, idempotency, reconcile, mutation-result, or live-head authority. Start with audit/dry-run metrics; enable destructive history and physical StateStore/WAL compaction only after policy approval and crash-safe implementation.
+Complete the non-destructive retention safety scope: consume durable lifecycle information, preserve recovery authority, and keep retention audit/dry-run default-off. Physical StateStore/WAL compaction, destructive history expiry, and any production enablement remain deferred pending explicit policy and restore evidence.
+
+> **Reconciliation note — 2026-07-28:** The original detailed matrices remain execution context. The completion checklist and residuals below are the authoritative closeout record.
 
 ## Requirements
 
@@ -87,18 +89,14 @@ Use `PackageStore.mutate` and the existing StateStore WAL/root machinery. Do not
 - Durable error/report summary remains bounded after restart; raw diagnostics remain private.
 - Legacy path reports actual weak/strong durability; BlobStore tests remain green.
 
-## Function / Interface Checklist
+## Completion Checklist — reconciled 2026-07-28
 
-- [ ] Phase 3 writes the durable lifecycle at the earliest required admission/recovery point; this phase only retains and compacts it safely.
-- [ ] Retention classes and protected-reference proof are explicit.
-- [ ] `mutationResults` are protected or safely rehomed before compaction.
-- [ ] Tombstones preserve rollback/idempotency/reconcile authority.
-- [ ] Dry-run is default before destructive enablement.
-- [ ] StateStore root/index/WAL compaction uses one serialized writer and crash-safe replacement.
-- [ ] Restart can resume/rollback maintenance.
-- [ ] Expired API behavior is documented/tested.
-- [ ] Legacy and package-backed original durability are separately reported.
-- [ ] Blob GC remains separate.
+- [x] Retention consumes existing durable lifecycle/repair authority and keeps rollback, idempotency, reconcile, live-head, and related protected references outside destructive selection.
+- [x] Retention reporting is dry-run/default-off; blob collection remains separate from job/receipt history.
+- [x] The rollback runbook requires a dry-run and isolated restore rehearsal before any policy change.
+- [ ] No approved age/count/byte expiry policy is enabled.
+- [ ] No physical StateStore root/index/WAL compaction or destructive cleanup is enabled or claimed.
+- [ ] No production restart/restore qualification for destructive retention exists; legacy durability is not promoted beyond its documented contract.
 
 ## Test Scenario Matrix
 
@@ -124,13 +122,12 @@ npx vitest run server/services/pptx-import/package-store-runtime-lock-order.test
 
 Add a retention-specific suite under this phase. Do not cite nonexistent `server/services/pptx-import/package-store-runtime.test.js`.
 
-## Success Criteria
+## Success Criteria — reconciled 2026-07-28
 
-- [ ] Phase 3 durable lifecycle and bounded failure summary remain recoverable after retention/restart.
-- [ ] Retention policy is recorded and dry-run proves protected references are not selected.
-- [ ] Tombstone/authority retention preserves rollback/idempotency/reconcile behavior.
-- [ ] Physical StateStore/index/WAL compaction is atomic, serialized, crash-safe and tested.
-- [ ] Legacy durability is honest; BlobStore remains strong and separate.
+- [x] Recovery authority is retained and retention remains a non-destructive dry-run/default-off operation.
+- [x] The release record and rollback procedure keep blob/media collection separate from retention of authority records.
+- [ ] Destructive expiry policy, physical compaction, restart-safe replacement, and restore qualification are deferred; no storage-bounding claim is issued.
+- [ ] Legacy durability is reported only at its existing documented level and is not promoted by this phase.
 
 ## Risk Assessment
 

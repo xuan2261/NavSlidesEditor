@@ -5,10 +5,36 @@ import request from 'supertest'
 import { describe, expect, it, vi } from 'vitest'
 import * as storage from '../services/storage.js'
 import packageStoreModule from '../services/pptx-import/package-store/index.js'
+import jobManagerModule from '../services/pptx-import-job-manager.js'
 import importRouterModule from './pptx-import.js'
 
 const { openPackageStore } = packageStoreModule
+const { hashCapability } = jobManagerModule
 const { createPptxImportRouter, getDurableImportJob, serializeDurableImportJob } = importRouterModule
+const DURABLE_CONTROL_CAPABILITY = 'durable-control-capability'
+const DURABLE_CONTROL_HASH = hashCapability(DURABLE_CONTROL_CAPABILITY)
+const OUTCOME_IDENTITY = {
+  outcomeRevisionId: 'revision-1',
+  outcomeGeneration: 1,
+  outcomeHeadHash: 'f'.repeat(64),
+}
+const OUTCOME_EXPECTATION = {
+  revisionId: OUTCOME_IDENTITY.outcomeRevisionId,
+  generation: OUTCOME_IDENTITY.outcomeGeneration,
+  headHash: OUTCOME_IDENTITY.outcomeHeadHash,
+}
+
+function authorize(requestBuilder) {
+  return requestBuilder.set('X-Pptx-Job-Capability', DURABLE_CONTROL_CAPABILITY)
+}
+
+function packageReceipt(fields) {
+  return {
+    ...fields,
+    controlCapabilityHash: DURABLE_CONTROL_HASH,
+    ...OUTCOME_IDENTITY,
+  }
+}
 
 function createApp(options) {
   const app = express()
@@ -29,7 +55,7 @@ function manager() {
 describe('durable PPTX import job authority', () => {
   it('serves a durable completed receipt after the in-memory TTL', async () => {
     const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
-    const durable = {
+    const durable = packageReceipt({
       id: jobId,
       kind: 'import',
       status: 'completed',
@@ -37,12 +63,12 @@ describe('durable PPTX import job authority', () => {
       cancellationPoint: 'committed',
       capabilityHash: 'a'.repeat(64),
       presentationId: 'presentation-late',
-    }
-    const response = await request(createApp({
+    })
+    const response = await authorize(request(createApp({
       jobManager: manager(),
       readDurableJob: vi.fn(async () => durable),
       checkPresentationListable: vi.fn(async () => true),
-    })).get(`/api/pptx/jobs/${jobId}`)
+    })).get(`/api/pptx/jobs/${jobId}`))
 
     expect(response.status).toBe(200)
     expect(response.body).toMatchObject({
@@ -56,7 +82,7 @@ describe('durable PPTX import job authority', () => {
 
   it('withholds openable done while listable presentation is missing (contract B)', async () => {
     const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
-    const durable = {
+    const durable = packageReceipt({
       id: jobId,
       kind: 'import',
       status: 'completed',
@@ -64,12 +90,12 @@ describe('durable PPTX import job authority', () => {
       cancellationPoint: 'committed',
       capabilityHash: 'a'.repeat(64),
       presentationId: 'presentation-pending',
-    }
-    const response = await request(createApp({
+    })
+    const response = await authorize(request(createApp({
       jobManager: manager(),
       readDurableJob: vi.fn(async () => durable),
       checkPresentationListable: vi.fn(async () => false),
-    })).get(`/api/pptx/jobs/${jobId}`)
+    })).get(`/api/pptx/jobs/${jobId}`))
 
     expect(response.status).toBe(200)
     expect(response.body).toMatchObject({
@@ -102,9 +128,29 @@ describe('durable PPTX import job authority', () => {
     }
   })
 
+  it('denies legacy durable receipts without a control capability hash', async () => {
+    const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541ce'
+    const response = await request(createApp({
+      jobManager: manager(),
+      readDurableJob: vi.fn(async () => ({
+        id: jobId,
+        kind: 'import',
+        status: 'completed',
+        capabilityHash: 'a'.repeat(64),
+        presentationId: 'presentation-legacy',
+      })),
+    })).get(`/api/pptx/jobs/${jobId}`)
+
+    expect(response.status).toBe(401)
+    expect(response.body).toMatchObject({
+      error: 'job-capability-required',
+      code: 'JOB_CAPABILITY_REQUIRED',
+    })
+  })
+
   it('does not report a durable completed receipt as an unknown cancellation target', async () => {
     const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
-    const durable = {
+    const durable = packageReceipt({
       id: jobId,
       kind: 'import',
       status: 'completed',
@@ -112,16 +158,18 @@ describe('durable PPTX import job authority', () => {
       cancellationPoint: 'committed',
       capabilityHash: 'a'.repeat(64),
       presentationId: 'presentation-late',
-    }
-    const response = await request(createApp({
+    })
+    const response = await authorize(request(createApp({
       jobManager: manager(),
       readDurableJob: vi.fn(async () => durable),
       checkPresentationListable: vi.fn(async () => true),
-    })).delete(`/api/pptx/jobs/${jobId}`)
+    })).delete(`/api/pptx/jobs/${jobId}`))
 
     expect(response.status).toBe(409)
     expect(response.body).toMatchObject({
-      code: 'JOB_ALREADY_FINISHED',
+      error: 'job-too-late',
+      code: 'JOB_CANCEL_TOO_LATE',
+      status: 'done',
       job: { jobId, status: 'done', result: { presentationId: 'presentation-late' } },
     })
   })
@@ -129,7 +177,7 @@ describe('durable PPTX import job authority', () => {
   it('durable DELETE withholds presentationId when projection is not listable (Contract B)', async () => {
     const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cd'
     const checkPresentationListable = vi.fn(async () => false)
-    const durable = {
+    const durable = packageReceipt({
       id: jobId,
       kind: 'import',
       status: 'completed',
@@ -137,17 +185,22 @@ describe('durable PPTX import job authority', () => {
       cancellationPoint: 'committed',
       capabilityHash: 'c'.repeat(64),
       presentationId: 'presentation-not-listable',
-    }
-    const response = await request(createApp({
+    })
+    const response = await authorize(request(createApp({
       jobManager: manager(),
       readDurableJob: vi.fn(async () => durable),
       checkPresentationListable,
-    })).delete(`/api/pptx/jobs/${jobId}`)
+    })).delete(`/api/pptx/jobs/${jobId}`))
 
     expect(response.status).toBe(409)
-    expect(checkPresentationListable).toHaveBeenCalledWith('presentation-not-listable')
+    expect(checkPresentationListable).toHaveBeenCalledWith(
+      'presentation-not-listable',
+      OUTCOME_EXPECTATION,
+    )
     expect(response.body).toMatchObject({
-      code: 'JOB_ALREADY_FINISHED',
+      error: 'job-too-late',
+      code: 'JOB_CANCEL_TOO_LATE',
+      status: 'pending-visibility',
       job: {
         jobId,
         status: 'pending-visibility',
@@ -159,7 +212,7 @@ describe('durable PPTX import job authority', () => {
 
   it('reconciles a late package-backed completion by durable job identity', async () => {
     const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
-    const durable = {
+    const durable = packageReceipt({
       id: jobId,
       kind: 'import',
       status: 'completed',
@@ -167,17 +220,17 @@ describe('durable PPTX import job authority', () => {
       cancellationPoint: 'committed',
       capabilityHash: 'b'.repeat(64),
       presentationId: 'presentation-late',
-    }
+    })
     const deletePresentation = vi.fn(async () => true)
     const packageRollback = vi.fn(async () => {})
     const drainCompatibility = vi.fn(async () => 1)
-    const response = await request(createApp({
+    const response = await authorize(request(createApp({
       jobManager: manager(),
       readDurableJob: vi.fn(async () => durable),
       deletePresentation,
       packageRollback,
       drainCompatibility,
-    })).post(`/api/pptx/jobs/${jobId}/reconcile`)
+    })).post(`/api/pptx/jobs/${jobId}/reconcile`))
 
     expect(response.status).toBe(200)
     expect(response.body).toEqual({
@@ -193,21 +246,21 @@ describe('durable PPTX import job authority', () => {
 
   it('returns cleanup identity when package rollback fails', async () => {
     const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
-    const durable = {
+    const durable = packageReceipt({
       id: jobId,
       kind: 'import',
       status: 'completed',
       capabilityHash: 'c'.repeat(64),
       presentationId: 'presentation-late',
-    }
-    const response = await request(createApp({
+    })
+    const response = await authorize(request(createApp({
       jobManager: manager(),
       readDurableJob: vi.fn(async () => durable),
       packageRollback: vi.fn(async () => {
         throw Object.assign(new Error('writer unavailable'), { code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
       }),
       deletePresentation: vi.fn(),
-    })).post(`/api/pptx/jobs/${jobId}/reconcile`)
+    })).post(`/api/pptx/jobs/${jobId}/reconcile`))
 
     expect(response.status).toBe(409)
     expect(response.body).toMatchObject({
@@ -225,6 +278,39 @@ describe('durable PPTX import job authority', () => {
     })).toMatchObject({
       jobId: 'job', status: 'running', durable: true, percent: 0,
     })
+  })
+
+  it('tells a failed durable receipt apart by whether its partial import was cleaned up', () => {
+    expect(serializeDurableImportJob({
+      id: 'job-rolled-back',
+      kind: 'import',
+      status: 'failed',
+      transactionState: 'rolled-back',
+      cancellationPoint: 'rolled-back',
+      capabilityHash: 'f'.repeat(64),
+    })).toMatchObject({
+      status: 'failed',
+      message: 'Import failed; partial import rolled back',
+    })
+    expect(serializeDurableImportJob({
+      id: 'job-cancelled-clean',
+      kind: 'import',
+      status: 'cancelled',
+      transactionState: 'rolled-back',
+      cancellationPoint: 'rolled-back',
+      capabilityHash: 'f'.repeat(64),
+    })).toMatchObject({
+      status: 'cancelled',
+      message: 'Import cancelled; partial import rolled back',
+    })
+    expect(serializeDurableImportJob({
+      id: 'job-failed-before-commit',
+      kind: 'import',
+      status: 'failed',
+      transactionState: 'requested',
+      cancellationPoint: 'cancellable',
+      capabilityHash: 'f'.repeat(64),
+    })).toMatchObject({ status: 'failed', message: 'Import failed' })
   })
 
   it('includes reportSummary on durable done result without unbounded warnings (R4)', () => {
@@ -283,7 +369,7 @@ describe('durable PPTX import job authority', () => {
       unsupportedFeatureCount: 0,
       omittedCount: 0,
     }
-    const durable = {
+    const durable = packageReceipt({
       id: jobId,
       kind: 'import',
       status: 'completed',
@@ -292,13 +378,13 @@ describe('durable PPTX import job authority', () => {
       capabilityHash: 'a'.repeat(64),
       presentationId: 'presentation-with-report',
       reportSummary,
-    }
-    const response = await request(createApp({
+    })
+    const response = await authorize(request(createApp({
       jobManager: manager(),
       readDurableJob: vi.fn(async () => durable),
       checkPresentationListable: vi.fn(async () => true),
       loadReportSummary: vi.fn(async () => reportSummary),
-    })).get(`/api/pptx/jobs/${jobId}`)
+    })).get(`/api/pptx/jobs/${jobId}`))
 
     expect(response.status).toBe(200)
     expect(response.body).toMatchObject({
@@ -317,18 +403,19 @@ describe('durable PPTX import job authority', () => {
     const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
     const packageRollback = vi.fn()
     const deletePresentation = vi.fn()
-    const response = await request(createApp({
+    const response = await authorize(request(createApp({
       jobManager: manager(),
       readDurableJob: vi.fn(async () => ({
         id: jobId,
         kind: 'import',
         status: 'running',
         capabilityHash: 'd'.repeat(64),
+        controlCapabilityHash: DURABLE_CONTROL_HASH,
         presentationId: 'presentation-mixed-state',
       })),
       packageRollback,
       deletePresentation,
-    })).post(`/api/pptx/jobs/${jobId}/reconcile`)
+    })).post(`/api/pptx/jobs/${jobId}/reconcile`))
 
     expect(response).toMatchObject({
       status: 409,
@@ -347,7 +434,7 @@ describe('durable PPTX import job authority', () => {
       unsupportedFeatureCount: 0,
       omittedCount: 0,
     }
-    const durable = {
+    const durable = packageReceipt({
       id: jobId,
       kind: 'import',
       status: 'completed',
@@ -356,7 +443,7 @@ describe('durable PPTX import job authority', () => {
       capabilityHash: 'a'.repeat(64),
       presentationId: 'presentation-interleave',
       reportSummary,
-    }
+    })
     let listable = false
     const app = createApp({
       jobManager: manager(),
@@ -366,8 +453,8 @@ describe('durable PPTX import job authority', () => {
     })
 
     const [pendingA, pendingB] = await Promise.all([
-      request(app).get(`/api/pptx/jobs/${jobId}`),
-      request(app).get(`/api/pptx/jobs/${jobId}`),
+      authorize(request(app).get(`/api/pptx/jobs/${jobId}`)),
+      authorize(request(app).get(`/api/pptx/jobs/${jobId}`)),
     ])
     for (const response of [pendingA, pendingB]) {
       expect(response.status).toBe(200)
@@ -377,8 +464,8 @@ describe('durable PPTX import job authority', () => {
 
     listable = true
     const [openA, openB] = await Promise.all([
-      request(app).get(`/api/pptx/jobs/${jobId}`),
-      request(app).get(`/api/pptx/jobs/${jobId}`),
+      authorize(request(app).get(`/api/pptx/jobs/${jobId}`)),
+      authorize(request(app).get(`/api/pptx/jobs/${jobId}`)),
     ])
     for (const response of [openA, openB]) {
       expect(response.body).toMatchObject({

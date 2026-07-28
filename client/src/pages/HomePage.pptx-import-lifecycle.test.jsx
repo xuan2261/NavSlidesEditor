@@ -24,7 +24,13 @@ vi.mock('../utils/api', () => ({
     cancelPptxJob: mocks.cancelPptxJob,
   },
 }))
-vi.mock('../utils/pptx-job-wait', () => ({ waitForPptxJob: mocks.waitForPptxJob }))
+vi.mock('../utils/pptx-job-wait', () => ({
+  DEFAULT_PPTX_JOB_MAX_WAIT_MS: 150_000,
+  PPTX_ADMISSION_RETRY_DELAY_MS: 5_000,
+  PPTX_ADMISSION_MAX_RETRIES: 72,
+  PPTX_ADMISSION_MAX_WAIT_MS: 360_000,
+  waitForPptxJob: mocks.waitForPptxJob,
+}))
 vi.mock('../utils/app-feedback', () => ({
   showError: mocks.showError,
   showNotice: mocks.showNotice,
@@ -110,6 +116,26 @@ describe('HomePage PPTX import admission lifecycle', () => {
     expect(mocks.showError).not.toHaveBeenCalled()
   })
 
+  it('treats an admission timeout as an unconfirmed outcome', async () => {
+    mocks.importPptxAsync.mockRejectedValue(
+      Object.assign(new Error('PPTX import admission deadline exceeded'), {
+        code: 'PPTX_JOB_ADMISSION_TIMEOUT',
+        status: 'timeout',
+      })
+    )
+
+    renderHome()
+    const input = await screen.findByTestId('home-import-pptx-input')
+    fireEvent.change(input, { target: { files: [new File(['pptx'], 'deck.pptx')] } })
+
+    await waitFor(() =>
+      expect(mocks.showError).toHaveBeenCalledWith(
+        'PPTX import admission timed out before acceptance was confirmed. Check existing presentations before importing again.',
+        { title: 'Import admission outcome unknown' }
+      )
+    )
+  })
+
   it('passes the same AbortController signal from admission into waitForPptxJob', async () => {
     let admissionSignal
     mocks.importPptxAsync.mockImplementation((_file, { signal }) => {
@@ -151,6 +177,50 @@ describe('HomePage PPTX import admission lifecycle', () => {
 
     expect(onOpen).not.toHaveBeenCalled()
     expect(mocks.showError).not.toHaveBeenCalled()
+  })
+
+  // Queueing behind another import must not shorten the window the import
+  // itself gets, or a job that succeeds is reported as an unknown outcome.
+  it('starts the import wait budget only once admission succeeds', async () => {
+    const start = 1_000_000
+    let now = start
+    vi.spyOn(Date, 'now').mockImplementation(() => now)
+    try {
+      mocks.importPptxAsync.mockImplementation(async () => {
+        now += 100_000
+        return { jobId: 'job-slow-admission' }
+      })
+      mocks.waitForPptxJob.mockResolvedValue({ presentationId: 'deck-1' })
+
+      renderHome()
+      const input = await screen.findByTestId('home-import-pptx-input')
+      fireEvent.change(input, { target: { files: [new File(['pptx'], 'deck.pptx')] } })
+
+      await waitFor(() => expect(mocks.waitForPptxJob).toHaveBeenCalledTimes(1))
+      expect(mocks.waitForPptxJob.mock.calls[0][0].deadlineAt).toBe(now + 150_000)
+    } finally {
+      vi.mocked(Date.now).mockRestore()
+    }
+  })
+
+  it('bounds admission by the retry window rather than the import wait budget', async () => {
+    const start = 1_000_000
+    vi.spyOn(Date, 'now').mockImplementation(() => start)
+    try {
+      mocks.importPptxAsync.mockResolvedValue({ jobId: 'job-admission-budget' })
+      mocks.waitForPptxJob.mockResolvedValue({ presentationId: 'deck-1' })
+
+      renderHome()
+      const input = await screen.findByTestId('home-import-pptx-input')
+      fireEvent.change(input, { target: { files: [new File(['pptx'], 'deck.pptx')] } })
+
+      await waitFor(() => expect(mocks.importPptxAsync).toHaveBeenCalledTimes(1))
+      const admissionArgs = mocks.importPptxAsync.mock.calls[0][1]
+      expect(admissionArgs.deadlineAt).toBe(start + 360_000)
+      expect(admissionArgs.maxBusyRetries * admissionArgs.busyRetryDelayMs).toBe(360_000)
+    } finally {
+      vi.mocked(Date.now).mockRestore()
+    }
   })
 
   it('does not toast intentional cancelled wait outcomes as import failures', async () => {

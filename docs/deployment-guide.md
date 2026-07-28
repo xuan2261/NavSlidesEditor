@@ -174,16 +174,35 @@ Electron sets `SLIDES_DATA_DIR` and `SLIDES_UPLOADS_DIR` to subdirectories of `a
 
 ## Environment Variables
 
-| Variable             | Default           | Purpose                                                            |
-| -------------------- | ----------------- | ------------------------------------------------------------------ |
-| `PORT`               | `3002`            | HTTP listen port                                                   |
-| `SLIDES_DATA_DIR`    | `server/data/`    | Directory for JSON data files                                      |
-| `SLIDES_UPLOADS_DIR` | `server/uploads/` | Directory for uploaded files                                       |
-| `NODE_ENV`           | `development`     | Set to `production` to disable Vite proxy and serve `client/dist/` |
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `3002` | HTTP listen port |
+| `SLIDES_DATA_DIR` | `server/data/` | Directory for JSON data files |
+| `SLIDES_UPLOADS_DIR` | `server/uploads/` | Directory for uploaded files |
+| `NODE_ENV` | `development` | Set to `production` to disable Vite proxy and serve `client/dist/` |
 | `NAVSLIDES_CHROMIUM_PATH` | bundled Playwright Chromium | Optional custom Chromium executable for server-side PPTX element rasterization |
 | `NAVSLIDES_PPTX_SCALE` | `2` | Screenshot scale used for PPTX HTML/LaTeX raster elements |
+| `PPTX_IMPORT_MEDIA_ORIGINS` | unset | Comma-separated exact `http(s)` origins permitted for external media referenced by PPTX imports; default policy blocks them |
+| `PPTX_EMF_CONVERT` | unset | Set to `1` to request EMF/WMF conversion; conversion remains disabled otherwise |
+| `PPTX_EMF_BINARY` | no policy-valid default | Absolute converter path, validated by the EMF/WMF policy |
+| `PPTX_EMF_BINARY_ROOT` | unset | Absolute trusted root required by the EMF/WMF policy |
+| `PPTX_EMF_BINARY_SHA256` | unset | SHA-256 pin required by the EMF/WMF policy |
 
 Set via shell, `.env` file (manually), or Docker environment config.
+
+## PPTX Import Policy
+
+### External media
+
+External `http(s)` media references in an imported PPTX are blocked by default. To allow a controlled source, set `PPTX_IMPORT_MEDIA_ORIGINS` to comma-separated full origins (scheme, hostname, and optional port), not URLs with paths or credentials. Invalid entries and local/private URL forms are rejected by the importer. Use only origins you trust to serve presentation media. The policy owner is [`constants.js`](../server/services/pptx-import/constants.js); URL enforcement is in [`map-media.js`](../server/services/pptx-import/mapper/map-media.js).
+
+### EMF/WMF conversion
+
+EMF/WMF conversion is disabled unless `PPTX_EMF_CONVERT=1` and the remaining EMF policy settings validate. A policy-valid converter has an absolute path, sits below the configured absolute trusted root, and matches the configured SHA-256 pin; the accepted executable set is owned by [`emf-wmf-sandbox.js`](../server/services/pptx-import/emf-wmf-sandbox.js). The child runs without a shell and with a narrow environment, but these checks are not an OS or network sandbox.
+
+### Job stream logging
+
+PPTX admission returns a one-time per-job capability. Its plaintext handoff is memory-only; job state retains a verifier hash. Status and cancellation use a request header, but browser `EventSource` cannot set one, so the SSE route carries the capability in `?capability=`. Configure any reverse proxy to scrub or drop query strings from access logs for `/api/pptx/jobs/*/stream`. The route owner is [`pptx-import.js`](../server/routes/pptx-import.js).
 
 ---
 
@@ -325,3 +344,4 @@ Current baseline file:
 - GitHub tokens are stored in plaintext in `github-config.json`. Restrict filesystem access accordingly.
 - File-backed settings may contain sensitive values such as API keys or sync credentials. Do not commit or deploy those files publicly.
 - CORS is open (all origins). In a restricted environment, add a CORS origin list to `server/index.js`.
+- PPTX import job capabilities and stream-log handling are documented in [PPTX Import Policy](#pptx-import-policy). Scrub or drop the SSE stream query string in proxy access logs.

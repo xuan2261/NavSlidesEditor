@@ -84,7 +84,7 @@ async function mapImage(element, context) {
   pushMediaWarning(context, media.warning)
   let src = media.url
   if (media.unsupportedBrowserImage) {
-    // Phase 07: convert EMF/WMF → PNG via sandboxed converter when enabled.
+    // Convert EMF/WMF through the verified, shell-free policy when enabled.
     const converted = await tryConvertUnsupportedVector(element, context)
     if (converted?.url) {
       pushMediaWarning(context, converted.warning)

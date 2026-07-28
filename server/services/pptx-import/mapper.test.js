@@ -3,17 +3,23 @@ import os from 'node:os'
 import path from 'node:path'
 import { Buffer } from 'node:buffer'
 import JSZip from 'jszip'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import mapper from './mapper'
+import budgets from './resource-budgets.js'
 import schemas from '../../middleware/schemas.js'
 
 const { mapPptxOutput, sanitizeHtml, mapVideo, mapAudio, extractShadow, mapMath } = mapper
 const { createPresentationSchema } = schemas
+const { createMediaBudget } = budgets
 
 const PNG_DATA_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII='
 const VALID_MP4 = Buffer.from([0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 2, 0, 0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32])
 const VALID_MP3 = Buffer.from([0x49, 0x44, 0x33, 3, 0, 0, 0, 0, 0, 0, 0xff, 0xfb, 0x90, 0x64])
+
+afterEach(() => {
+  delete process.env.PPTX_IMPORT_MEDIA_ORIGINS
+})
 
 describe('pptx mapper', () => {
   it('sanitizes script tags and event handlers in text', () => {
@@ -1208,8 +1214,35 @@ describe('pptx mapper', () => {
       expect(results[0].importPlaceholderType).toBe('video-missing')
     })
 
-    it('increments videoCount in stats', async () => {
-      const element = { type: 'video', left: 10, top: 20, width: 100, height: 80, ref: 'http://localhost/v.mp4' }
+    // Hitting the aggregate cap on a zip-internal ref must degrade the same way
+    // an over-cap external ref does, rather than unwinding the whole import.
+    it('degrades a zip video ref that exhausts the aggregate budget to a placeholder', async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-video-budget-'))
+      try {
+        const element = { type: 'video', left: 10, top: 20, width: 100, height: 80, ref: 'ppt/media/video1.mp4' }
+        const context = {
+          mediaIndex: { files: new Map([['ppt/media/video1.mp4', { async: () => Promise.resolve(VALID_MP4) }]]) },
+          scale: { x: 1, y: 1 },
+          zIndex: 1,
+          slideIndex: 0,
+          warnings: [],
+          stats: { videoCount: 0, placeholderCount: 0 },
+          uploadsDir: dir,
+          mediaBudget: createMediaBudget(VALID_MP4.length - 1),
+        }
+        const results = await mapVideo(element, context)
+        expect(results[0].importPlaceholderType).toBe('video-missing')
+        expect(context.warnings).toEqual(expect.arrayContaining([
+          expect.objectContaining({ type: 'media-budget-exceeded' }),
+        ]))
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+
+    it('increments videoCount for an explicitly configured full origin', async () => {
+      process.env.PPTX_IMPORT_MEDIA_ORIGINS = 'https://cdn.example.com:8443'
+      const element = { type: 'video', left: 10, top: 20, width: 100, height: 80, ref: 'https://cdn.example.com:8443/v.mp4' }
       const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { videoCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
       await mapVideo(element, context)
       expect(context.stats.videoCount).toBe(1)
@@ -1229,31 +1262,37 @@ describe('pptx mapper', () => {
       expect(results[0].src).toMatch(/\.mp3$/)
     })
 
-    it('passes localhost audio URL refs through unchanged', async () => {
+    it('blocks localhost audio URL refs by default', async () => {
       const element = { type: 'audio', left: 10, top: 20, width: 100, height: 80, ref: 'http://127.0.0.1/audio.mp3' }
       const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { audioCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
       const results = await mapAudio(element, context)
-      expect(results[0].src).toBe('http://127.0.0.1/audio.mp3')
-      expect(results[0].type).toBe('audio')
+      expect(results[0].importPlaceholderType).toBe('audio-missing')
+      expect(context.warnings).toEqual(expect.arrayContaining([
+        expect.objectContaining({ type: 'media-external-url-blocked', host: '127.0.0.1' }),
+      ]))
     })
 
-    it('passes PUBLIC_HOST same-origin URL refs through unchanged', async () => {
-      const originalPublicHost = process.env.PUBLIC_HOST
-      const originalHost = process.env.HOST
-      try {
-        process.env.PUBLIC_HOST = 'https://slides.example.test:3002'
-        delete process.env.HOST
-        const element = { type: 'audio', left: 10, top: 20, width: 100, height: 80, ref: 'https://slides.example.test/audio.mp3' }
-        const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { audioCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
-        const results = await mapAudio(element, context)
-        expect(results[0].src).toBe('https://slides.example.test/audio.mp3')
-        expect(context.warnings).toHaveLength(0)
-      } finally {
-        if (originalPublicHost === undefined) delete process.env.PUBLIC_HOST
-        else process.env.PUBLIC_HOST = originalPublicHost
-        if (originalHost === undefined) delete process.env.HOST
-        else process.env.HOST = originalHost
-      }
+    // An IPv6 literal carrying an IPv4 address in its low bits reaches the same
+    // host as the bare address, so the loopback gate must outrank an operator
+    // who allowlists that origin by mistake.
+    it('blocks an IPv4-mapped IPv6 loopback audio ref even when its origin is allowlisted', async () => {
+      process.env.PPTX_IMPORT_MEDIA_ORIGINS = 'http://[::ffff:127.0.0.1]'
+      const element = { type: 'audio', left: 10, top: 20, width: 100, height: 80, ref: 'http://[::ffff:127.0.0.1]/audio.mp3' }
+      const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { audioCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
+      const results = await mapAudio(element, context)
+      expect(results[0].importPlaceholderType).toBe('audio-missing')
+      expect(context.warnings).toEqual(expect.arrayContaining([
+        expect.objectContaining({ type: 'media-external-url-blocked', host: '[::ffff:7f00:1]' }),
+      ]))
+    })
+
+    it('passes an explicitly configured full-origin audio URL through unchanged', async () => {
+      process.env.PPTX_IMPORT_MEDIA_ORIGINS = 'https://slides.example.test:3002'
+      const element = { type: 'audio', left: 10, top: 20, width: 100, height: 80, ref: 'https://slides.example.test:3002/audio.mp3' }
+      const context = { mediaIndex: { files: new Map() }, scale: { x: 1, y: 1 }, zIndex: 1, slideIndex: 0, warnings: [], stats: { audioCount: 0, placeholderCount: 0 }, uploadsDir: '/tmp' }
+      const results = await mapAudio(element, context)
+      expect(results[0].src).toBe('https://slides.example.test:3002/audio.mp3')
+      expect(context.warnings).toHaveLength(0)
     })
   })
 

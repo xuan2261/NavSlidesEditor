@@ -4,6 +4,19 @@ const path = require('node:path')
 const { replaceDurable, writeDurable } = require('./durable-fs')
 const { createEmptyState, hashRecord, validateState, validateStateRoot } = require('./schemas')
 
+/**
+ * Each root embeds its predecessor, so an unbounded chain makes state-root.json
+ * grow by one full root per publish and rewrites the whole thing every time.
+ * Keeping a few generations is what recovery can actually use; older roots only
+ * reference index files that retention is free to collect.
+ */
+const MAX_PREDECESSOR_DEPTH = 3
+
+function boundPredecessors(root, depth = MAX_PREDECESSOR_DEPTH) {
+  if (!root || depth <= 0) return null
+  return { ...root, predecessor: boundPredecessors(root.predecessor, depth - 1) }
+}
+
 class StateStore {
   constructor(rootDir) {
     this.rootDir = rootDir
@@ -43,6 +56,22 @@ class StateStore {
     return validateState(state)
   }
 
+  /**
+   * Fall back through the retained roots until one validates. The chain is
+   * bounded at publish time, so the walk terminates.
+   */
+  async restoreFromPredecessor(root) {
+    let candidate = root?.predecessor
+    while (candidate) {
+      try {
+        return { root: candidate, state: await this.readValidatedRoot(candidate) }
+      } catch {
+        candidate = candidate.predecessor
+      }
+    }
+    return null
+  }
+
   async recover() {
     let serialized
     try {
@@ -58,9 +87,10 @@ class StateStore {
     try {
       this.state = await this.readValidatedRoot(this.root)
     } catch (error) {
-      if (!this.root.predecessor) throw error
-      this.state = await this.readValidatedRoot(this.root.predecessor)
-      this.root = this.root.predecessor
+      const restored = await this.restoreFromPredecessor(this.root)
+      if (!restored) throw error
+      this.state = restored.state
+      this.root = restored.root
       await writeDurable(this.rootPath, JSON.stringify(this.root))
       this.recoveryActions.push('restored-verified-predecessor')
     }
@@ -149,7 +179,7 @@ class StateStore {
       stateFile: relativeStateFile,
       storeGeneration: nextState.generation,
       fencingEpoch: nextState.fencingEpoch,
-      predecessor: this.root,
+      predecessor: boundPredecessors(this.root),
     }
     validateStateRoot(nextRoot)
     const prepared = path.join(this.walDir, `${transactionId}.prepared.json`)

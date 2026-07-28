@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: "Qualification Evidence And Provenance Refresh"
-status: pending
+status: completed
 priority: P1
 effort: "4-7d plus test-run time"
 dependencies: [1, 2, 3, 4, 5, 6]
@@ -11,7 +11,9 @@ dependencies: [1, 2, 3, 4, 5, 6]
 
 ## Overview
 
-Rerun each evidence lane after software remediation, preserve historical artifacts, and publish a corrected readiness record with actual run provenance. Separate best-effort regression health from strict/native, browser, performance, package-first, and PowerPoint claim readiness.
+Complete the evidence reconciliation and preserve lane separation after software remediation. The closeout records current focused evidence and explicit truth-gate blockers; it does not turn a strict/native failure, browser journey, performance skip, package-first status, or oracle blocker into best-effort qualification.
+
+> **Reconciliation note — 2026-07-28:** The original detailed matrices remain execution context. The completion checklist and residuals below are the authoritative closeout record.
 
 ## Requirements
 
@@ -47,7 +49,7 @@ No result is promoted across lanes. A red truth gate is a valid blocked result o
 
 | Action | File/area | Change |
 |---|---|---|
-| Create | `plans/reports/pptx-import-readiness-remediation-<actual-run-id>.md` | Corrected dated report; actual run ID, not plan date |
+| Read/link | `plans/reports/pptx-import-release-readiness-260728-1756.md` | Aggregate closeout status with actual run ID and separate claim lanes |
 | Create/consume | `EVIDENCE_PRIVATE_DIR/<run-scope>/<actual-run-id>/` | Operator-controlled private manifests and bounded run outputs outside tracked reports |
 | Read/modify narrowly | `server/services/pptx-import/oracle/job-lifecycle.js`, `server/services/pptx-import/oracle/package-backed-actuals.js` | Propagate Phase-3 capability/principal authority to every request; classify POST reconcile as fixture teardown only |
 | Test/create | Oracle lifecycle/actuals adapter tests and direct-caller fixtures | Missing/invalid authority fails closed; no product timeout-recovery interpretation |
@@ -93,18 +95,18 @@ No result is promoted across lanes. A red truth gate is a valid blocked result o
 - Private reports retain necessary identifiers only in `EVIDENCE_PRIVATE_DIR`; public reports use aliases/aggregates and a non-authoritative observation envelope.
 - Forbidden-field scan passes before report publication.
 
-## Function / Interface Checklist
+## Completion Checklist — reconciled 2026-07-28
 
-- [ ] Corpus selection is manifest-bound with no fallback/substitution.
-- [ ] Metric labels are parser-relative and stable.
-- [ ] Strict output retains finite best-effort evidence while strict blocks.
-- [ ] Browser report records version/provenance.
-- [ ] Tiny/full performance paths and structured skip are recorded.
-- [ ] Oracle distinguishes missing candidate bundle/owner envelope, invalid evidence, and visual comparison failure.
-- [ ] Oracle wait timeout is GET-only; destructive reconcile is explicit teardown with authority propagation.
-- [ ] Evidence ingestion rejects reparse/symlink paths and oversized manifests/artifacts.
-- [ ] Publishable summary omits job/presentation/revision/head IDs and secrets.
-- [ ] Dated report links exact commands, actual run ID, and plan gates.
+- [x] Current aggregate corpus evidence is manifest-bound and parser-relative: 11 of 11 decks, semantic metric 100%, reconstructed round-trip stability 63%.
+- [x] Adversarial coverage completed 10 of 10 cases; focused client, consumer, server-authority, and reliability groups are recorded separately in the readiness record.
+- [x] Strict/native, browser heuristic, performance, oracle, package-first, and G5 remain independent claim lanes with bounded/public-safe status wording.
+- [x] Publishable closeout records use aggregates only and exclude private operational material.
+- [x] Oracle timeout observation remains GET-only; destructive repair is not a product timeout-recovery action.
+- [x] Fresh final-source full-unit result is recorded separately: 518 test files passed, 1 skipped; 4196 tests passed, 3 skipped; exit 0; duration 1227.75s; the critical browser journey passed 1/1 in 38.7s and full lint passed with 0 errors / 27 existing warnings.
+- [ ] Strict importer qualification is intentionally non-zero for six decks; strict/native remains blocked.
+- [ ] Only a critical browser journey is currently recorded as passed; no full browser-heuristic or visual qualification is claimed.
+- [ ] Full performance is explicitly skipped without the required opt-in; no performance qualification is claimed.
+- [ ] Oracle integrity is blocked by missing evidence-manifest and visual-comparison prerequisites; G5 remains blocked.
 
 ## Test Scenario Matrix
 
@@ -134,14 +136,13 @@ npm run test:pptx:oracle:integrity
 
 Add the Phase-7 oracle adapter/authority suite before closing this gate; it is a planned new test surface, not a current command. Expected non-zero strict/oracle gates and structured performance skips are retained with reason codes. Run `npm run lint` and `npm run build` after script/report contract changes.
 
-## Success Criteria
+## Success Criteria — reconciled 2026-07-28
 
-- [ ] Corrected actual-run readiness report exists under `plans/reports`.
-- [ ] Historical claims are labelled, not silently rewritten.
-- [ ] Current metric/evidence wording is claim-safe.
-- [ ] Tiny/full performance provenance and skip state are visible.
-- [ ] Private/public evidence boundary and forbidden-field scan are enforced.
-- [ ] Cross-plan status/dependency text has no stale contradiction.
+- [x] A corrected actual-run readiness record exists and labels historical claims instead of silently promoting them.
+- [x] Current corpus, adversarial, lint/build, focused, and critical browser-journey wording is claim-safe and lane-separated.
+- [x] Public/private evidence boundaries are reflected in the closeout artifacts.
+- [x] Cross-plan status names the sibling owner for package-first and G5.
+- [ ] Full browser heuristic qualification, full performance qualification, strict/native qualification, and oracle/G5 evidence remain incomplete or blocked as explicitly recorded.
 
 ## Risk Assessment
 

@@ -26,8 +26,8 @@ describe('rclone routes contract', () => {
   })
 
   it('serializes authoritative normalized DTOs with a generation-fenced package bundle', () => {
-    expect(src).toMatch(/await\s+readAuthoritativePresentations\s*\(\s*presentations\s*\)/)
-    expect(src).toMatch(/readAuthoritativePresentations\s*\(\s*\[\s*storedPresentation\s*\]\s*\)/)
+    expect(src).toMatch(/await\s+readAuthoritativePresentations\s*\(\s*presentations\b/)
+    expect(src).toMatch(/readAuthoritativePresentations\s*\(\s*\[\s*storedPresentation\s*\]\s*,/)
     expect(src).toMatch(/toExternalPresentationDto\s*\(\s*normalizePptxImportedPresentationForRead\s*\(\s*resolved\.presentation\s*\)\s*\)/)
     expect(src).toMatch(/JSON\.stringify\s*\(\s*presentation\s*,\s*null,\s*2\s*\)/)
     expect(src).toMatch(/const\s+expectedHead\s*=\s*resolved\.presentation\.pptxAggregateHead/)

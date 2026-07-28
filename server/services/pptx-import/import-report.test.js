@@ -4,6 +4,7 @@ import {
   MAX_SERIALIZED_BYTES,
   buildBoundedImportReport,
   sanitizeImportReport,
+  toEditorImportReport,
   toReportSummary,
 } from './import-report.js'
 
@@ -95,6 +96,18 @@ describe('buildBoundedImportReport', () => {
     expect(summary).not.toHaveProperty('diagnostics')
     expect(summary.statsDigest).toMatchObject({ slideCount: 1 })
   })
+
+  it('caps high-cardinality byType summaries while preserving total counts', () => {
+    const warnings = Array.from({ length: 500 }, (_, index) => ({
+      type: `type-${index}-${'x'.repeat(300)}`,
+      message: 'warning',
+    }))
+    const report = buildBoundedImportReport(warnings, {}, { jobId: 'j' })
+    const summary = toReportSummary(report)
+    expect(Object.keys(summary.byType).length).toBeLessThanOrEqual(100)
+    expect(Buffer.byteLength(JSON.stringify(summary), 'utf8')).toBeLessThanOrEqual(64 * 1024)
+    expect(Object.values(summary.byType).reduce((total, count) => total + count, 0)).toBe(500)
+  })
 })
 
 describe('sanitizeImportReport', () => {
@@ -109,6 +122,18 @@ describe('sanitizeImportReport', () => {
       summary: { warningCount: 3, omittedCount: 0 },
     })
     expect(sanitized.diagnostics).toHaveLength(3)
+  })
+
+  it('editor projection removes operational and raw diagnostic fields', () => {
+    const editor = toEditorImportReport({
+      jobId: 'job-secret',
+      createdAt: 'private-time',
+      summary: { warningCount: 1, byType: { 'media-missing': 1 }, omittedCount: 0 },
+      diagnostics: [{ type: 'media-missing', message: 'C:\\private\\deck.pptx' }],
+    })
+    expect(editor).not.toHaveProperty('jobId')
+    expect(editor).not.toHaveProperty('createdAt')
+    expect(editor.diagnostics).toEqual([{ type: 'media-missing' }])
   })
 
   it('caps injected oversized diagnostics arrays', () => {

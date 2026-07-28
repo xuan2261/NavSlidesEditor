@@ -1,7 +1,7 @@
 ---
 phase: 9
 title: "Package-First G2/G3/G4 Capability Status Handoff"
-status: pending
+status: completed
 priority: P1
 effort: "1-2d status review"
 dependencies: [7, 8]
@@ -11,7 +11,9 @@ dependencies: [7, 8]
 
 ## Overview
 
-Record the existing package-first plan's G2 edited-package, G3 artifact, and G4 exact-row qualification status without duplicating implementation or gate ownership. This phase is a read/link-only status handoff; all mutation, native re-import, OfficeCLI, artifact, and row-promotion work belongs to the existing package-first plan.
+Complete the read/link-only status handoff for the sibling package-first plan's G2 edited-package, G3 artifact, and G4 exact-row work. All mutation, native re-import, artifact, and row-promotion decisions remain with that owner; this phase records no G2/G3/G4 closure.
+
+> **Reconciliation note — 2026-07-28:** The original detailed matrices remain execution context. The completion checklist and residuals below are the authoritative closeout record.
 
 ## Requirements
 
@@ -68,15 +70,13 @@ This phase never changes capability DTOs, package transactions, edited-export ro
 - Chart/SmartArt/unsupported rows remain preserve-only absent exact owner-plan evidence.
 - HTTP contract wording is compatible with current route behavior.
 
-## Function / Interface Checklist
+## Completion Checklist — reconciled 2026-07-28
 
-- [ ] Existing package-first plan is named sole owner.
-- [ ] G0/G1 status is consumed, not reimplemented.
-- [ ] Observation envelope contains owner gate/subject/as-of/freshness and `doesNotCloseGates`.
-- [ ] G2/G3/G4 statuses are exact-row and evidence-bound.
-- [ ] Current 400/blocked HTTP semantics are not rewritten accidentally.
-- [ ] No source/gate/DTO/package transaction is modified by this phase.
-- [ ] Raw artifacts stay in `EVIDENCE_PRIVATE_DIR`; tracked handoff is bounded/redacted.
+- [x] The sibling package-first plan remains sole G0-G5 owner; this phase consumes status only.
+- [x] No package transaction, DTO, source, route contract, or owner gate state is modified here.
+- [x] Publishable handoff wording remains bounded and non-authoritative.
+- [ ] No fresh exact-row evidence supports G2/G3/G4 promotion in this plan.
+- [ ] Preserve-only rows remain preserve-only; no native or artifact claim is inferred from this handoff.
 
 ## Test Scenario Matrix
 
@@ -101,13 +101,10 @@ npm run test:pptx:package:no-officecli
 
 Record unavailable OfficeCLI/native evidence as structured blocked status; do not suppress the owner-plan truth gate.
 
-## Success Criteria
+## Success Criteria — reconciled 2026-07-28
 
-- [ ] G2/G3/G4 status is linked to the owner plan and exact subject.
-- [ ] No duplicate qualification implementation or gate state exists.
-- [ ] HTTP status wording matches current edited-export route.
-- [ ] Preserve-only rows remain fail-closed.
-- [ ] Best-effort release status is unaffected by optional package-first status.
+- [x] No duplicate qualification implementation or gate state exists, preserve-only rows remain fail-closed, and best-effort release status is unaffected by package-first status.
+- [ ] G2/G3/G4 exact-row closure remains solely contingent on the sibling owner plan's evidence and decision.
 
 ## Risk Assessment
 

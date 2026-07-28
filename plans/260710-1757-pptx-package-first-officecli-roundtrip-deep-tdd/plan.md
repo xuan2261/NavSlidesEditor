@@ -8,6 +8,9 @@ branch: 'master'
 tags: [deep, tdd, pptx, package-first, officecli, ooxml, roundtrip, fidelity]
 blockedBy: [260722-1630-pptx-import-p0-readiness-remediation-deep-tdd]
 blocks: []
+related: [260724-1444-pptx-import-p1-p3-readiness-remediation-deep-tdd]
+# Note: P1+ plan owns sole-writer outbox, durable import report, job lifecycle abort, crash suite.
+# Do not claim those contracts closed until that plan's phases 1-4 land. L4/charts/OfficeCLI/oracle remain owned here.
 supersedes:
   - '../260709-1306-pptx-import-native-ooxml-1to1-fidelity-deep-tdd/plan.md'
 created: '2026-07-10T10:59:09.788Z'

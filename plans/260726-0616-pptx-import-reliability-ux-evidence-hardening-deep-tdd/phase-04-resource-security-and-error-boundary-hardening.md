@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Resource Security And Error Boundary Hardening"
-status: pending
+status: completed
 priority: P1
 effort: "6-9d"
 dependencies: [1, 3]
@@ -11,7 +11,9 @@ dependencies: [1, 3]
 
 ## Overview
 
-Harden parser/host resource boundaries, converter execution, imported external media, cancellation settlement, bounded reports, and typed error propagation. This phase owns resource/error producers and security tests; Phase 3 owns package publication and route/job DTO integration.
+Complete the delivered parser/resource safety boundaries: typed terminal errors, converter execution policy, default-denied imported external media, shared media budgeting, bounded reports, and cleanup settlement. This phase does not claim an OS/network sandbox, TOCTOU-free host execution, or whole-server RSS isolation; Phase 3 retains package-publication ownership.
+
+> **Reconciliation note — 2026-07-28:** The original detailed matrices remain execution context. The completion checklist and residuals below are the authoritative closeout record.
 
 ## Requirements
 
@@ -95,19 +97,15 @@ Resource controls remain layered. Reserve or estimate before allocation where po
 - Final reports are bounded and contain no raw stderr, paths, source entry names, authority IDs, capabilities, secrets, or token-shaped values.
 - CRC tests reflect actual top-level/nested policy.
 
-## Function / Interface Checklist
+## Completion Checklist — reconciled 2026-07-28
 
-- [ ] Parser and converter env builders are separate.
-- [ ] Converter uses verified absolute executable authority, not PATH lookup.
-- [ ] Explicit error type survives message classification.
-- [ ] Async error DTO is separate from HTTP admission status.
-- [ ] External URL policy validates full origin and private-network safety.
-- [ ] Background URLs use shared or explicitly bounded budget.
-- [ ] `workerClosed` and host cleanup settlement are observable to Phase 3.
-- [ ] Snapshot limits have typed stage/count errors.
-- [ ] Report sanitizer is circular-safe, bounded, and fixed-code based.
-- [ ] Raw diagnostics cannot enter editor/external DTOs.
-- [ ] CRC scope and host-memory limitation are documented honestly.
+- [x] Parser and optional converter environments are separated; converter execution is absolute-path-pinned, policy-gated, shell-free, and narrow-environment.
+- [x] Typed parser/output/resource error information survives to bounded terminal status data; asynchronous failures are not misrepresented as later admission HTTP errors.
+- [x] Imported external media is default-denied; any configured origin policy is exact-origin and private-network-safe.
+- [x] Background data uses shared media accounting, snapshot limits remain bounded, and cleanup settlement has focused coverage.
+- [x] Editor/external report forms are bounded and exclude raw operational diagnostics.
+- [x] CRC scope and host-memory limitations are documented without overclaiming isolation.
+- [ ] No OS/network sandbox, whole-server RSS cap, reparse-proof execution, or TOCTOU-free execution is claimed.
 
 ## Test Scenario Matrix
 
@@ -135,15 +133,12 @@ npm run test:pptx:adversarial
 
 If a named focused suite is not present, add it under this phase's ownership before implementation; do not cite nonexistent tests as a current gate.
 
-## Success Criteria
+## Success Criteria — reconciled 2026-07-28
 
-- [ ] Converter executable/env boundary is least privilege and path-pinned.
-- [ ] External imported URLs are blocked or fully origin-pinned by explicit policy.
-- [ ] Async error/status contract is compatible and typed.
-- [ ] Background/media/snapshot budgets are bounded before publication.
-- [ ] Worker/decode/converter settlement is represented honestly.
-- [ ] Reports are bounded, fixed-code, and safe for editor/external DTO separation.
-- [ ] No OS/network/RSS isolation claim exceeds evidence.
+- [x] Converter and imported-media policy boundaries are least-privilege within the delivered process-level scope.
+- [x] Asynchronous error/status, media/snapshot budget, cleanup settlement, and report-redaction contracts are bounded and covered by the core reliability evidence.
+- [x] Documentation explicitly limits the claim to process hygiene and application controls.
+- [ ] OS/network/RSS isolation, reparse-proof execution, and a broad host sandbox remain outside scope and are not release claims.
 
 ## Risk Assessment
 

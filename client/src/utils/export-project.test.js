@@ -101,14 +101,56 @@ describe('exportProject', () => {
     vi.unstubAllGlobals()
   })
 
+  it('exports a JSON projection without editor diagnostics when there is no local media', async () => {
+    await exportProject({
+      id: 'deck-json',
+      title: 'JSON Export',
+      _pptxImportReport: {
+        jobId: 'job-json-secret',
+        createdAt: '2026-07-26T00:00:00.000Z',
+        diagnostics: [{ type: 'source-name', message: 'raw detail' }],
+      },
+      pptxOriginal: { id: 'original-secret', sha256: 'a'.repeat(64) },
+      slides: [{
+        id: 'slide-json',
+        elements: [{ id: 'element-json', type: 'text', content: '<p>Safe</p>' }],
+      }],
+    })
+
+    const data = JSON.parse(
+      new TextDecoder().decode(await downloadedBlob.arrayBuffer())
+    )
+    expect(data.presentation).toMatchObject({
+      id: 'deck-json',
+      slides: [{ id: 'slide-json', elements: [{ id: 'element-json' }] }],
+    })
+    expect(data.presentation).not.toHaveProperty('_pptxImportReport')
+    expect(data.presentation).not.toHaveProperty('pptxOriginal')
+    expect(JSON.stringify(data)).not.toContain('job-json-secret')
+    expect(JSON.stringify(data)).not.toContain('original-secret')
+  })
+
   it('exports a ZIP when one local media file is missing', async () => {
     await exportProject({
+      id: 'deck-1',
       title: 'Mixed Media',
+      pptxSourceAvailable: true,
+      aggregateGeneration: 3,
+      pptxAggregateHead: { packageRevisionId: 'secret-head', generation: 3 },
+      _pptxImportReport: {
+        jobId: 'job-secret',
+        diagnostics: [{ type: 'media-missing', message: 'private diagnostic' }],
+      },
       slides: [
         {
           id: 'slide-1',
           background: { type: 'image', image: '/uploads/good.png' },
-          elements: [{ id: 'missing-image', type: 'image', src: '/uploads/missing.png' }],
+          elements: [{
+            id: 'missing-image',
+            type: 'image',
+            src: '/uploads/missing.png',
+            _pptxSource: { packagePath: 'ppt/media/image1.png' },
+          }],
         },
       ],
     })
@@ -123,6 +165,19 @@ describe('exportProject', () => {
     expect(manifest.skippedMedia[0].originalUrl).toBe('/uploads/missing.png')
     expect(zip.file(manifest.media[0].archivePath)).toBeTruthy()
     expect(zip.file('presentation.json')).toBeTruthy()
+    const exportedPresentation = JSON.parse(await zip.file('presentation.json').async('text'))
+    expect(exportedPresentation).toMatchObject({
+      id: 'deck-1',
+      slides: [{
+        id: 'slide-1',
+        elements: [{ id: 'missing-image', type: 'image' }],
+      }],
+    })
+    expect(exportedPresentation).not.toHaveProperty('_pptxImportReport')
+    expect(exportedPresentation).not.toHaveProperty('pptxAggregateHead')
+    expect(exportedPresentation.slides[0].elements[0]).not.toHaveProperty('_pptxSource')
+    expect(JSON.stringify(exportedPresentation)).not.toContain('job-secret')
+    expect(JSON.stringify(exportedPresentation)).not.toContain('secret-head')
     expect(console.warn).toHaveBeenCalledWith(
       'Project export skipped media files:',
       expect.arrayContaining([expect.objectContaining({ originalUrl: '/uploads/missing.png' })])

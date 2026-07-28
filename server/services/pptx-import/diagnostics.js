@@ -1,4 +1,5 @@
 const { FAILURE_TYPES } = require('./constants')
+const { stripControlChars } = require('../../utils/strip-control-chars')
 
 class PptxImportError extends Error {
   constructor(message, { status = 400, type = FAILURE_TYPES.parseFailed } = {}) {
@@ -15,7 +16,7 @@ function sanitizeDiagnostic(value, maxLength = 500) {
       ? value
       : value?.message || value?.error || JSON.stringify(value || 'PPTX import failed')
 
-  return String(raw)
+  return stripControlChars(raw)
     .replace(/<[^>]{1,200}>/g, '[xml]')
     .replace(/[A-Za-z0-9+/]{80,}={0,2}/g, '[data]')
     .replace(/\b[\w.-]+@[\w.-]+\.\w+\b/g, '[email]')

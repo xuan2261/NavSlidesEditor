@@ -183,7 +183,6 @@ describe('package authority DTO boundary', () => {
       pptxSourceAvailable: true,
       _pptxImportReport: {
         schemaVersion: 1,
-        jobId: 'job-1',
         summary: {
           warningCount: 2,
           byType: { 'media-missing': 1, 'geometry-clamped': 1 },
@@ -191,6 +190,11 @@ describe('package authority DTO boundary', () => {
         },
       },
     })
-    expect(dto._pptxImportReport.diagnostics).toHaveLength(2)
+    expect(dto._pptxImportReport).not.toHaveProperty('jobId')
+    expect(dto._pptxImportReport).not.toHaveProperty('createdAt')
+    expect(dto._pptxImportReport.diagnostics).toEqual([
+      { type: 'media-missing' },
+      { type: 'geometry-clamped' },
+    ])
   })
 })

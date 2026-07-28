@@ -29,7 +29,13 @@ import { api } from '../utils/api'
 import { markdownToSlidesWithWarnings } from '../utils/markdown-import'
 import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../utils/import-project'
 import { summarizePptxImportWarnings } from '../utils/pptx-import-summary'
-import { waitForPptxJob } from '../utils/pptx-job-wait'
+import {
+  DEFAULT_PPTX_JOB_MAX_WAIT_MS,
+  PPTX_ADMISSION_MAX_RETRIES,
+  PPTX_ADMISSION_MAX_WAIT_MS,
+  PPTX_ADMISSION_RETRY_DELAY_MS,
+  waitForPptxJob,
+} from '../utils/pptx-job-wait'
 import { filterMarketplaceTemplates } from '../utils/template-filters'
 import { showError, showNotice } from '../utils/app-feedback'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
@@ -655,14 +661,16 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       admissionController: new AbortController(),
       connection: null,
       jobId: null,
+      deadlineAt: null,
     }
     pptxImportRef.current = activeImport
     try {
       const admission = await api.importPptxAsync(file, {
         retryOnBusy: true,
-        maxBusyRetries: 72,
-        busyRetryDelayMs: 5000,
+        maxBusyRetries: PPTX_ADMISSION_MAX_RETRIES,
+        busyRetryDelayMs: PPTX_ADMISSION_RETRY_DELAY_MS,
         signal: activeImport.admissionController.signal,
+        deadlineAt: Date.now() + PPTX_ADMISSION_MAX_WAIT_MS,
         onBusyRetry: () => {
           if (pptxImportRef.current === activeImport) {
             setImportProgress('Another PPTX import is running. Waiting to retry...')
@@ -673,6 +681,9 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       const capability = admission?.capability || null
       activeImport.jobId = jobId
       activeImport.capability = capability
+      // The import only starts once the server admits it, so the wait budget
+      // starts here — not when the user picked the file.
+      activeImport.deadlineAt = Date.now() + DEFAULT_PPTX_JOB_MAX_WAIT_MS
       if (pptxImportRef.current !== activeImport) {
         if (jobId) api.cancelPptxJob(jobId, { capability }).catch(() => {})
         return
@@ -682,6 +693,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         api,
         capability,
         signal: activeImport.admissionController.signal,
+        deadlineAt: activeImport.deadlineAt,
         onProgress: (progress) => {
           if (pptxImportRef.current === activeImport) setImportProgress(progress)
         },
@@ -692,15 +704,8 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       // Ownership abandon (leave/unmount): never open or toast after user left.
       if (pptxImportRef.current !== activeImport) return
       activeImport.jobId = null
-      // Server creates presentation + binds original.pptx atomically (Phase 01).
-      // Prefer presentationId from job result; fall back to client create only for legacy servers.
-      let presentationId = imported?.presentationId
-      if (!presentationId && imported?.presentation) {
-        setImportProgress('Creating presentation...')
-        const pres = await api.createPresentation(imported.presentation)
-        presentationId = pres.id
-      }
-      if (pptxImportRef.current !== activeImport) return
+      // The server creates the presentation and binds original.pptx atomically.
+      const presentationId = imported?.presentationId
       if (!presentationId) {
         throw new Error('PPTX import completed without presentationId')
       }
@@ -719,7 +724,12 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
         pptxImportRef.current !== activeImport
       if (!intentionalAbandon && pptxImportRef.current === activeImport) {
         console.error('PPTX import failed:', err)
-        if (err?.code === 'PPTX_JOB_PENDING_VISIBILITY') {
+        if (err?.code === 'PPTX_JOB_ADMISSION_TIMEOUT') {
+          showError(
+            'PPTX import admission timed out before acceptance was confirmed. Check existing presentations before importing again.',
+            { title: 'Import admission outcome unknown' }
+          )
+        } else if (err?.code === 'PPTX_JOB_PENDING_VISIBILITY') {
           showError(
             'PPTX import finished on the server but is not listable yet. Wait a moment and refresh the home list before retrying.',
             { title: 'Import pending visibility' }

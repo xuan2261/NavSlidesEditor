@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Import Diagnostics And User Experience"
-status: pending
+status: completed
 priority: P1/P2
 effort: "4-7d"
 dependencies: [2, 3, 4]
@@ -11,7 +11,9 @@ dependencies: [2, 3, 4]
 
 ## Overview
 
-Make import status useful after the HomePage flow ends while respecting server authority and export trust boundaries. Preserve a bounded editor-only report through navigation/reload, render typed wait/cancel/visibility states, and keep external presentation DTOs free of operational identifiers and raw diagnostics.
+Complete the bounded import-report and status surface while respecting server authority and export trust boundaries. The delivered core preserves an editor-only report, typed wait/visibility outcomes, and external DTO redaction without a broad editor redesign. Explicit dashboard Cancel/countdown controls remain residual work and are not represented as delivered UX.
+
+> **Reconciliation note — 2026-07-28:** The original detailed matrices remain execution context. The completion checklist and residuals below are the authoritative closeout record.
 
 ## Requirements
 
@@ -81,16 +83,14 @@ The report is metadata, not editable presentation content. It is server-owned, s
 - Progress/status sequence is monotonic and terminal states are truthful.
 - Cancel/countdown/unknown/pending/reconcile states are keyboard accessible and do not navigate late.
 
-## Function / Interface Checklist
+## Completion Checklist — reconciled 2026-07-28
 
-- [ ] Authoritative GET exposes bounded report only for eligible imported presentations.
-- [ ] Editor has one report source and no duplicate fetch loop.
-- [ ] External/export DTO is separate from editor-only report DTO.
-- [ ] Client maps all stable warning families and sanitizes unknown labels.
-- [ ] Omitted counts and bounded detail are visible.
-- [ ] Pending-visibility/reconcile-required/failed/cancelled states are not success.
-- [ ] No client save path can inject report metadata.
-- [ ] GitHub/sync/export negative tests cover report redaction.
+- [x] Eligible imported presentations expose a bounded server-owned report for the editor surface; legacy/no-report states remain neutral.
+- [x] Editor diagnostics and external/export projections are separate, with raw operational detail excluded from the latter.
+- [x] Stable warning categories, bounded detail, omitted counts, and safe fallback categorization are part of the report model.
+- [x] Pending visibility, repair-required, failure, cancellation, and unknown outcomes do not render as success.
+- [x] Client ownership guards prevent late report/open effects and client saves do not author server import-report metadata.
+- [ ] Explicit dashboard Cancel/countdown controls remain deferred and no broad editor-page redesign is claimed.
 
 ## Test Scenario Matrix
 
@@ -117,14 +117,12 @@ npx playwright test --workers=1 tests/e2e/pptx-import-async.spec.js tests/e2e/cr
 
 If a named UI/report suite does not yet exist, create it in this phase before implementation; do not call an absent file a current gate.
 
-## Success Criteria
+## Success Criteria — reconciled 2026-07-28
 
-- [ ] Import report remains available after navigation/reload in editor only.
-- [ ] Native degradation is not hidden under generic `other` when a stable type exists.
-- [ ] External/export DTOs omit operational/raw diagnostic content.
-- [ ] Report is bounded, server-owned, and safe for legacy presentations.
-- [ ] Progress and terminal status are monotonic/truthful.
-- [ ] Cancel, countdown, recovery and report surfaces are accessible.
+- [x] The bounded editor-only report survives its supported navigation/reload path and keeps stable degradation categories visible.
+- [x] External/export forms omit operational/raw diagnostic content; legacy presentations do not fabricate a clean report.
+- [x] Progress and terminal status remain truthful within the delivered status surface.
+- [ ] Explicit Cancel/countdown accessibility work remains deferred; recovery/report controls do not imply that omitted interaction is present.
 
 ## Risk Assessment
 

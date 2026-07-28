@@ -1,7 +1,7 @@
 ---
 phase: 11
 title: "Final Release Documentation And Rollback Gate"
-status: pending
+status: completed
 priority: P1
 effort: "3-5d"
 dependencies: [7]
@@ -11,7 +11,9 @@ dependencies: [7]
 
 ## Overview
 
-Consolidate implementation and evidence into an executable release decision with independent best-effort, strict/native, package-first, and PowerPoint rows. This phase can close the bounded best-effort lane while G0-G5 remain optional open/blocked inputs. It also verifies rollback, redaction, physical-retention safety, and documentation accuracy.
+Consolidate implementation and evidence into an executable release decision with independent best-effort, strict/native, browser heuristic, performance, package-first, and G5 rows. This phase is complete at the bounded best-effort software claim ceiling: 69 focused client tests, full lint (0 errors / 27 existing warnings), production build, adversarial, corpus, a critical browser journey (1/1 in 38.7s), and the fresh final-source full-unit gate are recorded. Optional lanes remain blocked, owner-open, skipped, or separately residual; none is promoted into a best-effort pass.
+
+> **Reconciliation note — 2026-07-28:** The original detailed matrices remain execution context. The completion checklist and residuals below are the authoritative closeout record.
 
 ## Requirements
 
@@ -69,26 +71,24 @@ Machine-owned manifests/test artifacts remain evidence authority. The human-read
 
 ## Tests After
 
-- Best-effort decision is explicit and independent of G5.
-- Focused tests/full unit/build/lint/serial E2E results are current.
-- Tiny/full performance result is measured or structured-skipped.
-- Release matrix has no contradictory status or claim promotion.
-- README/docs match actual wait/cancel/report/visibility/recovery/security behavior.
-- Rollback runbook covers durable saga, outbox, missing-head, startup, retention and media boundaries.
-- Publishable reports pass forbidden-field scan.
-- Dirty-worktree review proves unrelated user changes were preserved.
+- Best-effort software-lane decision is explicit and independent of G5; the fresh full-unit gate passes with the residuals recorded below.
+- Focused tests, lint, build, adversarial, corpus, critical browser journey, and full-unit evidence are current; optional lanes remain separately labelled.
+- Full performance is structured-skipped without its opt-in; strict/native and oracle are recorded as blockers rather than passes.
+- Release matrix has no cross-lane promotion or contradictory status.
+- Evergreen documentation and user-facing unknown-outcome copy match separate-clock wait, non-destructive recovery, report, visibility, and media/security behavior.
+- Rollback runbook covers durable saga, outbox, missing-head, startup, retention, media, and client race boundaries.
+- Publishable reports contain only aggregate, non-sensitive information.
+- Dirty-worktree review preserves unrelated user changes.
 
-## Function / Interface Checklist
+## Completion Checklist — reconciled 2026-07-28
 
-- [ ] Every core phase checklist maps to evidence or a named blocker.
-- [ ] Public API/client wording matches GET-only timeout recovery and Contract B.
-- [ ] Resource/status/report/security claims match actual source/tests.
-- [ ] Best-effort and strict/native labels are separate.
-- [ ] Package-first owner plan remains authoritative for G0-G5.
-- [ ] G5 is accepted by the active owner contract or explicitly blocked; Phase 11 does not create a new trust authority.
-- [ ] Rollback/repair actions are identity-safe and tested.
-- [ ] Retention is policy-approved and physically safe, or remains dry-run.
-- [ ] Publishable artifacts contain no forbidden identifiers/secrets.
+- [x] Every core phase maps to evidence or an explicit residual/blocker.
+- [x] Evergreen documentation and runtime unknown-outcome copy reflect separate bounded admission and terminal-wait clocks, admission ambiguity, non-timeout poll recovery, GET-only timeout recovery, current visibility behavior, and report/media boundaries.
+- [x] Best-effort, strict/native, browser heuristic, performance, oracle, package-first G0-G4, and G5 have separate readiness rows.
+- [x] The sibling package-first plan remains authoritative for G0-G5; G5 is explicitly blocked and no new trust authority is created.
+- [x] The rollback runbook covers durable repair, outbox acknowledgement failure, missing-head isolation, poisoned startup records, media policy, retention dry-run/restore, and client unknown/cancel races.
+- [x] Retention remains dry-run/default-off and publishable closeout artifacts are aggregate-only.
+- [x] Fresh final-source full-unit result passed: 518 test files passed, 1 skipped; 4196 tests passed, 3 skipped; exit 0; duration 1227.75s.
 
 ## Test Scenario Matrix
 
@@ -123,16 +123,15 @@ npm run test:pptx:oracle:integrity
 git diff --check
 ```
 
-The full-unit command excludes only the documented unrelated baseline failure at `client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx`; retain that failure as a separate baseline and do not call the exclusion a fix. Expected truth-gate failures and structured skips must be listed, not suppressed. Full best-effort closure requires no unresolved core implementation contradiction, not closure of optional G5.
+The full-unit command excludes only the documented unrelated baseline failure; retain that failure separately and do not call the exclusion a fix. The fresh final-source full-unit result is **PASS**: 518 test files passed, 1 skipped; 4196 tests passed, 3 skipped; exit 0; duration 1227.75s. Focused client lifecycle evidence is 69 passed tests, lint is 0 errors / 27 existing warnings, the production build passed, and the critical browser journey passed 1/1 in 38.7s. Expected truth-gate failures and structured skips remain listed, not suppressed. The bounded best-effort software lane is therefore closed with explicit residuals; optional G5 and other qualification lanes remain independent.
 
-## Success Criteria
+## Success Criteria — reconciled 2026-07-28
 
-- [ ] Final matrix is evidence-backed and claim-separated.
-- [ ] Best-effort release has an executable independent decision.
-- [ ] User-visible docs match actual behavior and security boundaries.
-- [ ] Rollback/runbook covers all high-risk seams and policy-limited claims.
-- [ ] Private/public evidence handling is safe.
-- [ ] No unrelated dirty files or secrets are changed/committed.
+- [x] The final matrix is evidence-backed, claim-separated, and names all known blockers/residuals.
+- [x] User-visible docs and rollback instructions match the delivered behavior and policy limits.
+- [x] Publishable closeout artifacts are aggregate-only; unrelated dirty files, source, and configuration are outside this closeout edit.
+- [x] Final independent best-effort software-lane decision is PASS WITH RESIDUALS after the fresh full-unit completion; this is not a release authorization.
+- [x] Strict/native, full browser heuristic, performance, package-first, and G5 readiness remain separate and unresolved as recorded; they are not release passes.
 
 ## Risk Assessment
 
@@ -147,4 +146,4 @@ Do not publish private PowerPoint evidence, credentials, environment values, cap
 
 ## Next Steps
 
-After this phase and plan validation, implementation may begin with the cook command in `plan.md`. Commit, push, and release are separate user-authorized actions.
+This phase closes the documented best-effort software lane. Deferred residuals and optional qualification lanes remain tracked in the readiness record; commit, push, and release are separate user-authorized actions.

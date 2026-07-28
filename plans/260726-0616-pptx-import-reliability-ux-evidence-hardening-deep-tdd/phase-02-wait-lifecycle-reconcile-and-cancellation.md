@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Wait Lifecycle Reconcile And Cancellation"
-status: pending
+status: completed
 priority: P1
 effort: "4-6d"
 dependencies: [1, 3]
@@ -11,35 +11,39 @@ dependencies: [1, 3]
 
 ## Overview
 
-Make client import waiting deterministic across admission, busy retry, SSE, polling, timeout, unmount, explicit cancel, and unknown outcome. This phase consumes Phase 3's authoritative visibility contract; it never treats the existing destructive repair endpoint as automatic status recovery.
+Complete the core client wait safety contract across admission, busy retry, SSE, polling, timeout, unmount, and unknown outcome. Admission has its own bounded clock; once admitted, the job has a separate bounded terminal-wait clock. This phase never treats destructive repair as automatic status recovery. Explicit Cancel UI/control remains a documented residual rather than a completed claim.
+
+> **Reconciliation note — 2026-07-28:** The original detailed matrices remain execution context. The completion checklist and residuals below are the authoritative closeout record.
 
 ## Requirements
 
-- Functional: one `deadlineAt` starts before POST admission and governs busy retry, SSE, poll fallback, cancel control, and final status read.
-- Functional: outer ownership, child transport, and cancel control signals have distinct responsibilities and cleanup.
+- Functional: an admission `deadlineAt` starts before POST and bounds busy retry plus `Retry-After` delay.
+- Functional: after admission succeeds, a distinct terminal-wait `deadlineAt` governs SSE, poll fallback, and the reserved final status read; queued admission time cannot consume it.
+- Functional: outer ownership and child transport signals have distinct responsibilities and cleanup. A future explicit cancel control must use its own bounded signal.
 - Functional: timeout/final-poll failure performs one bounded durable status GET only; it never invokes POST `/jobs/:jobId/reconcile` automatically.
-- Functional: explicit Cancel uses a separate bounded DELETE control request and distinguishes pre-publication cancellation from post-visibility `too-late/done`.
+- Functional: typed server cancellation responses distinguish pre-publication cancellation from post-visibility `too-late/done`; an explicit dashboard Cancel action using a separate bounded DELETE control request remains deferred.
 - Functional: final `cancelled`, `done`, `failed`, `pending-visibility`, and `reconcile-required` results are not collapsed into `outcome-unknown`.
-- Functional: busy retry honors `Retry-After`, shows a countdown, and cannot outlive the admission deadline.
+- Functional: busy retry honors `Retry-After` and cannot outlive the admission deadline; a visible countdown remains deferred.
 - Functional: no `onOpen`, warning toast, report update, or navigation occurs after ownership loss.
 - Non-functional: preserve existing 202 admission and 150s-class wait compatibility unless an additive timeout field is introduced.
 
 ## Architecture
 
 ```text
-create deadlineAt before POST
+create admissionDeadlineAt before POST
   -> admission/busy retry (outer ownership signal)
   -> job ID
+     -> create terminalWaitDeadlineAt
      -> SSE child controller OR poll child controller
      -> terminal event/status
      -> bounded final GET child controller
-  -> done / cancelled / too-late-done / pending-visibility / unknown / failed
+  -> done / cancelled / pending-visibility / unknown / failed
 
-explicit Cancel: separate bounded DELETE control-plane request
 automatic timeout: GET-only status inspection; no destructive repair
+future explicit Cancel: dedicated bounded DELETE control-plane request
 ```
 
-The utility owns timers and child controllers. HomePage owns user-visible ownership guards. A cancel request is not made with a signal that was already aborted by the wait promise. The current POST reconcile endpoint remains an explicit authority-repair action for a later classified state, not a client timeout primitive.
+The utility owns timers and child controllers. HomePage owns user-visible ownership guards. Admission and terminal waiting deliberately have separate clocks so queueing does not starve an admitted job. Current ownership-loss cleanup may make a best-effort cancellation request, but no automatic timeout path does so. The destructive repair endpoint remains an explicit authority-repair action for a later classified state, not a client timeout primitive.
 
 ## Related Code Files
 
@@ -47,7 +51,7 @@ The utility owns timers and child controllers. HomePage owns user-visible owners
 |---|---|---|
 | Modify | `client/src/utils/pptx-job-wait.js` | Admission deadline, child transport controllers, bounded final GET, typed outcomes, cleanup |
 | Modify | `client/src/utils/api.js` | Deadline/retry metadata, status DTO, separate cancel control signal; no automatic destructive reconcile |
-| Modify | `client/src/pages/HomePage.jsx` | Explicit cancel/countdown/status UI and ownership guards |
+| Modify | `client/src/pages/HomePage.jsx` | Import status, admission ambiguity, and ownership guards; explicit Cancel/countdown UI remains deferred |
 | Modify | `client/src/utils/pptx-job-wait.test.js` | Timing, exact-boundary, hanging-final-GET, child-abort and outcome tests |
 | Modify | `client/src/pages/HomePage.pptx-import-lifecycle.test.jsx` | Admission/unmount/cancel/late-open tests |
 | Modify | `client/src/utils/api.test.js` | Retry-After/deadline/status/cancel signal tests |
@@ -56,12 +60,12 @@ The utility owns timers and child controllers. HomePage owns user-visible owners
 ## Implementation Steps
 
 1. Write green characterization tests for current destructive reconcile and shared-signal behavior; add desired cases as phase-owned activation tests.
-2. Create `deadlineAt` before admission and compute remaining time for every retry/transport operation.
-3. Use an outer ownership signal, child SSE/poll controllers, and a separate cancel controller. Abort transport children on settle or ownership loss.
-4. Give the final status GET a bounded remaining-time window. Do not call the destructive POST reconcile endpoint from timeout or final-poll failure.
-5. Define typed state transitions for `done`, `cancelled`, `too-late-done`, `pending-visibility`, `reconcile-required`, `outcome-unknown`, and `failed`.
-6. Send DELETE cancel through a separate control-plane signal, await its typed result, then settle local wait state. A late server completion must be surfaced as `too-late/done`, not rolled back after visibility.
-7. Add Cancel UI, busy countdown, accessible labels/disabled states, and manual recovery link/action for unknown or pending-visibility states.
+2. Create an admission `deadlineAt` before admission and compute remaining time for each busy retry.
+3. Create a distinct terminal-wait `deadlineAt` only after admission; use outer ownership and child SSE/poll/final-GET controllers, aborting transport children on settle or ownership loss.
+4. Give the final status GET its reserved bounded remaining-time window. Do not call the destructive POST reconcile endpoint from timeout or final-poll failure.
+5. Define typed state transitions for `done`, `cancelled`, `pending-visibility`, `reconcile-required`, `outcome-unknown`, and `failed`.
+6. Preserve typed server cancellation responses. Defer dashboard explicit Cancel UI/control wiring until it can use a separate bounded request without reusing an aborted ownership signal.
+7. Keep concise recovery copy for unknown or pending-visibility states; defer busy countdown and explicit Cancel controls rather than claiming them complete.
 8. Re-check ownership immediately before every warning/report/open callback; clear timers/listeners on every terminal path.
 9. Verify direct utility callers cannot leave fallback work alive after rejection, even if they do not abort the outer signal.
 
@@ -75,24 +79,28 @@ The utility owns timers and child controllers. HomePage owns user-visible owners
 
 ## Tests After
 
-- Admission, SSE, poll, and final GET obey one absolute deadline.
-- Final GET remains possible within its own bounded window after transport child cancellation.
-- Hanging final GET times out deterministically and yields `outcome-unknown` without destructive repair.
-- Explicit Cancel sends exactly one bounded DELETE and distinguishes pre-publication `cancelled` from post-visibility `too-late/done`.
+- Admission busy retry obeys its own bounded deadline; once admitted, SSE, poll, and final GET obey the distinct terminal-wait deadline.
+- Final GET remains possible within its reserved bounded window after transport child cancellation.
+- Hanging final GET times out deterministically and yields `outcome-unknown` without destructive repair or late progress.
 - Final durable `cancelled` receipt remains `cancelled`, not unknown.
-- Pending visibility never opens an ID before Phase 3's authoritative resolver says openable.
-- Unmount/ownership loss produces no late open, toast, or report update.
-- Retry-After countdown stops at admission deadline and responds to cancel/unmount.
+- Pending visibility never opens an ID before the current server visibility result says openable.
+- Unmount/ownership loss produces no late open, toast, report update, or transport continuation.
+- Explicit Cancel UI/control and a visible Retry-After countdown remain deferred; their server response contract is not claimed as a completed dashboard interaction.
 
-## Function / Interface Checklist
+## Completion Checklist — reconciled 2026-07-28
 
-- [ ] `deadlineAt` is created before POST and passed through admission/wait APIs.
-- [ ] `waitForPptxJob` owns child transport cleanup without aborting the caller's outer ownership signal.
-- [ ] Final status recovery is GET-only and has a bounded child controller.
-- [ ] `api.cancelPptxJob` accepts a separate control signal and returns typed too-late/cancelled status.
-- [ ] No client path automatically calls destructive POST `/reconcile`.
-- [ ] HomePage distinguishes explicit cancel, unmount, timeout, pending visibility, reconcile-required, and server failure.
-- [ ] `onOpen` requires the Phase 3 authoritative visibility result and current ownership.
+- [x] Admission creates a bounded deadline before POST and applies it only to admission/busy retry.
+- [x] A separate post-admission terminal-wait deadline governs transport and the reserved final status GET.
+- [x] Wait transport owns its child cleanup while preserving the outer ownership signal.
+- [x] Final status recovery is bounded, GET-only, and cannot emit late progress after settlement.
+- [x] No automatic timeout path calls destructive repair.
+- [x] Unknown-outcome copy matches GET-only timeout behavior and directs users to check existing presentations before retrying.
+- [x] An admission response-body timeout is treated as unconfirmed and directs users to check existing presentations before retrying.
+- [x] A non-timeout poll transport failure uses the bounded final status read; caller abort and typed terminal outcomes remain distinct.
+- [x] Queued SSE progress is fenced after handoff; retained terminal outcomes remain deliverable and settlement aborts wait-owned recovery transport before public completion.
+- [x] Home ownership guards prevent late open, warning, or report effects after abandonment.
+- [ ] Dashboard explicit Cancel control and a visible Retry-After countdown are not implemented in this scoped closeout.
+- [ ] A stronger identity/provenance visibility resolver remains outside this client phase; the client honors the current server visibility result.
 
 ## Test Scenario Matrix
 
@@ -107,7 +115,7 @@ The utility owns timers and child controllers. HomePage owns user-visible owners
 | Explicit cancel before publication | Cancelled state; server cleanup result shown |
 | Cancel after visibility | `too-late/done`; preserve deck and finish server finalization |
 | Unmount/admission expiry | No late navigation/toast/report |
-| Busy admission | Countdown follows Retry-After but cannot exceed deadline |
+| Busy admission | Retry-After delay cannot exceed deadline; visible countdown remains deferred |
 
 ## Regression Gate
 
@@ -118,18 +126,18 @@ npx playwright test --workers=1 tests/e2e/pptx-import-async.spec.js
 
 All targeted tests must pass. Timeout tests may produce structured unknown only when the bounded GET cannot establish status; unknown is not reported as success.
 
-## Success Criteria
+## Success Criteria — reconciled 2026-07-28
 
-- [ ] One admission-to-terminal budget governs all client wait work.
-- [ ] No fallback or final GET survives settlement/ownership loss.
-- [ ] Timeout recovery is non-destructive GET-only.
-- [ ] Cancel semantics match server publication boundaries.
-- [ ] Home UI exposes Cancel, countdown, pending/unknown/reconcile states.
-- [ ] No late open or success indication occurs after ownership loss or pending visibility.
+- [x] Separate bounded admission and post-admission terminal-wait budgets prevent queueing from starving admitted jobs.
+- [x] No fallback or final GET survives settlement/ownership loss, including queued-SSE progress fencing and retained-terminal handoff handling.
+- [x] Admission ambiguity and non-timeout poll failure preserve the bounded typed recovery contract.
+- [x] Timeout recovery is non-destructive GET-only.
+- [x] Pending visibility and unknown results do not open a presentation or fabricate success.
+- [ ] Explicit Cancel UI/control and a visible retry countdown remain deferred; server-side cancellation semantics are not promoted to a completed UI claim.
 
 ## Risk Assessment
 
-- Risk: final-read budget is starved by transport work. Mitigation: reserve it from the absolute deadline and test exact boundaries.
+- Risk: final-read budget is starved by transport work. Mitigation: reserve it from the post-admission terminal-wait deadline and test exact boundaries.
 - Risk: explicit cancel races late publication. Mitigation: separate control signal and server-owned pre/post-visibility terminal policy.
 - Risk: user interprets unknown as failure. Mitigation: bounded recovery action and typed copy; never fabricate success.
 

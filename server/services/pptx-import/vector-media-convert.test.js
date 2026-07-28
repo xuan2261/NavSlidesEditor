@@ -2,7 +2,8 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { convertEmfWmfBuffer, convertAndPersistVectorImage } from './vector-media-convert.js'
+import { convertEmfWmfBuffer } from './vector-media-convert.js'
+import { persistImageBuffer } from './media.js'
 import { encodePngRgba } from './oracle/png-rgba.js'
 
 const EMF = Buffer.from([0x01, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00])
@@ -42,8 +43,15 @@ describe('vector-media-convert (T7.1 T7.5 T7.6)', () => {
       require('fs').writeFileSync(output, png)
       return { ok: true, outPath: output }
     }
-    const a = await convertAndPersistVectorImage(EMF, dir, { force: true, convertFn })
-    const b = await convertAndPersistVectorImage(EMF, dir, { force: true, convertFn })
+    // Mirrors the mapper's convert-then-persist composition, so the dedup
+    // guarantee is checked on the path the import pipeline actually runs.
+    const persistConverted = async () => {
+      const converted = await convertEmfWmfBuffer(EMF, { force: true, convertFn })
+      expect(converted.ok).toBe(true)
+      return persistImageBuffer(converted.buffer, 'image/png', dir)
+    }
+    const a = await persistConverted()
+    const b = await persistConverted()
     expect(a.url).toBeTruthy()
     expect(a.url).toBe(b.url)
   })

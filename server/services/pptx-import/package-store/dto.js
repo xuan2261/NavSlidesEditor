@@ -26,6 +26,11 @@ function toEditorDto(record) {
 
 function toPresentationEditorDto(record, { aggregateGeneration } = {}) {
   const dto = stripAuthority(record)
+  if (dto._pptxImportReport) {
+    const report = toEditorImportReport(dto._pptxImportReport)
+    if (report) dto._pptxImportReport = report
+    else delete dto._pptxImportReport
+  }
   const original = toEditorDto(record.pptxOriginal || {})
   if (Object.keys(original).length) dto.pptxOriginal = original
   if (record.pptxAggregateHead?.packageRevisionId || Object.keys(original).length) {
@@ -55,7 +60,7 @@ function toProviderDto(record) {
   return pick(record, ['id', 'sha256', 'byteLength'])
 }
 
-const { sanitizeImportReport } = require('../import-report')
+const { sanitizeImportReport, toEditorImportReport } = require('../import-report')
 
 const SAFE_PPTX_METADATA_KEYS = new Set([
   '_pptxMeta',

@@ -5,6 +5,35 @@
 > Historical counts and phase labels below do not supersede the current evidence
 > boundary.
 
+## Current import lifecycle and evidence
+
+### Admission, wait, and cancellation
+
+The dashboard treats admission to the shared import slot and the admitted job as separate bounded phases. It retries a busy slot only within its admission clock; the separately bounded absolute wait begins after admission. Streaming progress falls back to status polling, and the wait reserves a bounded final status `GET` rather than allowing an unbounded final request. After a transport handoff, queued progress is ignored, while terminal SSE outcomes remain eligible to settle the job; settlement aborts the wait-owned recovery transport before public completion. The owners are [`HomePage.jsx`](../client/src/pages/HomePage.jsx), [`api.js`](../client/src/utils/api.js), and [`pptx-job-wait.js`](../client/src/utils/pptx-job-wait.js).
+
+Automatic deadline recovery only reads the job status. It does not reconcile, cancel, or treat an unconfirmed outcome as cancelled; the editor directs the user to check existing presentations before retrying. Explicit `DELETE /api/pptx/jobs/:jobId` cancellation is separate and can be accepted, still in progress, or too late after a job is committed or finished. The HTTP contract is owned by [`pptx-import.js`](../server/routes/pptx-import.js).
+
+### Visibility, capabilities, and reports
+
+A completed durable package job remains `pending-visibility` and deliberately withholds `presentationId` until its compatibility projection is listable (contract B). The per-job capability secret has a one-time, in-memory plaintext handoff; job state retains a verifier hash. Status, cancellation, and reconciliation use the capability header, while SSE must carry it in the stream query because `EventSource` cannot set headers. Proxy access logs must scrub the query string for `/api/pptx/jobs/*/stream`; deployment guidance is in the [deployment guide](deployment-guide.md#pptx-import-policy). The owners are [`pptx-import-job-manager.js`](../server/services/pptx-import-job-manager.js) and [`pptx-import.js`](../server/routes/pptx-import.js).
+
+The server owns a bounded import report. Its editor form retains only bounded categories, locations, and summary data; it removes job identifiers, timestamps, and raw diagnostic messages. External DTOs reduce the report to a summary, and portable project exports omit it. See [`import-report.js`](../server/services/pptx-import/import-report.js), [`dto.js`](../server/services/pptx-import/package-store/dto.js), and [`export-project.js`](../client/src/utils/export-project.js).
+
+### Media and claim boundary
+
+Imported external media is blocked by default and can only use administrator-configured exact origins. EMF/WMF conversion remains default-off; when enabled, the converter policy requires an allowed absolute executable below an absolute trusted root and a matching SHA-256 before spawning it. Those checks are not an OS or network sandbox. The configuration and operational boundary is in the [deployment guide](deployment-guide.md#pptx-import-policy); executable owners are [`constants.js`](../server/services/pptx-import/constants.js), [`map-media.js`](../server/services/pptx-import/mapper/map-media.js), and [`emf-wmf-sandbox.js`](../server/services/pptx-import/emf-wmf-sandbox.js).
+
+This evidence supports the application parser and its software contracts only. It does not claim native PowerPoint or OfficeCLI validation, or pixel-perfect/1:1 fidelity; see [Export Fidelity and Known Limitations](export-fidelity-and-limits.md#evidence-boundary).
+
+## Current EMF/WMF converter boundary (2026-07-26)
+
+EMF/WMF conversion remains default-off. Explicit opt-in requires an absolute
+allowlisted executable, an absolute trusted root, and a matching SHA-256 pin
+before the child is spawned. The child uses `shell:false` and a narrow
+administrator-process environment. These are executable-authority and process
+hygiene checks, not a full OS/network sandbox: Windows reparse-point proof,
+TOCTOU-free execution, and whole-server RSS isolation remain outside the claim.
+
 ## Current package-first evidence boundary (2026-07-22)
 
 The immutable original package remains the recovery authority when its bytes can
@@ -181,7 +210,7 @@ and its
 | 04    | **Advanced** — layout placeholder injection when slide text empty; theme/color sanitize; primitive ban list                                               |
 | 05    | **Advanced** — corpus `chart-*.pptx` E2 gap 0 via OOXML inject; editable chartData                                                                        |
 | 06    | **Advanced** — `ooxml-diagram-parser` + `_pptxDiagram` editable node model (corpus has no SmartArt OOXML)                                                 |
-| 07    | **Advanced** — EMF/WMF → PNG via sandboxed convert (`PPTX_EMF_CONVERT=1`); strict throws if unavailable                                                   |
+| 07    | **Advanced** — EMF/WMF → PNG via policy-guarded, hash-pinned convert (`PPTX_EMF_CONVERT=1`); strict throws if unavailable; no OS sandbox claim            |
 | 08    | **Advanced** — theme/layout XML resolve; animation inventory; original-bytes export + PUT dirty flag; `test:pptx:sla-1to1` module gate (not numeric 0.99) |
 
 **Oracle debt:** placeholder goldens self-compare to SSIM 1 until LO/PP goldens + Nav present actuals land.  

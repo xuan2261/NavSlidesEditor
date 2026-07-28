@@ -11,6 +11,17 @@ function endpoint(baseUrl, pathname) {
   return new URL(pathname, `${baseUrl}/`).href
 }
 
+function withCapability(init, capability) {
+  if (typeof capability !== 'string' || !capability) return init || {}
+  return {
+    ...(init || {}),
+    headers: {
+      ...(init?.headers || {}),
+      'X-Pptx-Job-Capability': capability,
+    },
+  }
+}
+
 function completedPresentationId(job) {
   return job?.status === 'done' && typeof job.result?.presentationId === 'string' && job.result.presentationId
     ? job.result.presentationId
@@ -29,11 +40,11 @@ function reconciledTimeout(jobId, presentationId) {
   return timeoutOutcome('import-job-timeout-reconciled', jobId, presentationId)
 }
 
-async function reconcileCompletedJob(fetchImpl, baseUrl, jobId, presentationId, signal) {
+async function reconcileCompletedJob(fetchImpl, baseUrl, jobId, presentationId, signal, capability) {
   const result = await requestJson(
     fetchImpl,
     endpoint(baseUrl, `/api/pptx/jobs/${encodeURIComponent(jobId)}/reconcile`),
-    withSignal({ method: 'POST' }, signal)
+    withCapability(withSignal({ method: 'POST' }, signal), capability)
   )
   if (result?.success !== true || result.status !== 'reconciled' || result.jobId !== jobId || result.presentationId !== presentationId) {
     throw timeoutOutcome('import-job-timeout-unreconciled', jobId, presentationId)
@@ -41,17 +52,33 @@ async function reconcileCompletedJob(fetchImpl, baseUrl, jobId, presentationId, 
   throw reconciledTimeout(jobId, presentationId)
 }
 
-async function cancelAndReconcileJob(fetchImpl, baseUrl, jobId, { pollIntervalMs, reconciliationAttempts, sleep, signal = null }) {
+async function cancelAndReconcileJob(fetchImpl, baseUrl, jobId, {
+  pollIntervalMs,
+  reconciliationAttempts,
+  sleep,
+  signal = null,
+  capability = null,
+}) {
   let observedPresentationId = null
   let observedReasonCode = null
   try {
-    await requestJson(fetchImpl, endpoint(baseUrl, `/api/pptx/jobs/${encodeURIComponent(jobId)}`), withSignal({ method: 'DELETE' }, signal))
+    await requestJson(
+      fetchImpl,
+      endpoint(baseUrl, `/api/pptx/jobs/${encodeURIComponent(jobId)}`),
+      withCapability(withSignal({ method: 'DELETE' }, signal), capability)
+    )
   } catch {
     // A completed or in-memory-expired job can reject cancellation; inspect its durable receipt below.
   }
   for (let attempt = 0; attempt < reconciliationAttempts; attempt += 1) {
     let job
-    try { job = await requestJson(fetchImpl, endpoint(baseUrl, `/api/pptx/jobs/${encodeURIComponent(jobId)}`), withSignal(null, signal)) } catch {
+    try {
+      job = await requestJson(
+        fetchImpl,
+        endpoint(baseUrl, `/api/pptx/jobs/${encodeURIComponent(jobId)}`),
+        withCapability(withSignal(null, signal), capability)
+      )
+    } catch {
       if (signal?.aborted) break
       if (attempt + 1 < reconciliationAttempts) {
         await waitWithSignal(sleep, pollIntervalMs, signal)
@@ -62,7 +89,9 @@ async function cancelAndReconcileJob(fetchImpl, baseUrl, jobId, { pollIntervalMs
     const presentationId = completedPresentationId(job)
     if (presentationId) {
       observedPresentationId = presentationId
-      try { await reconcileCompletedJob(fetchImpl, baseUrl, jobId, presentationId, signal) } catch (error) {
+      try {
+        await reconcileCompletedJob(fetchImpl, baseUrl, jobId, presentationId, signal, capability)
+      } catch (error) {
         if (error?.code === 'import-job-timeout-reconciled') throw error
         observedReasonCode = safeServerReasonCode(error?.reasonCode) || observedReasonCode
       }
@@ -85,7 +114,13 @@ async function reconcileTimedOutJob(fetchImpl, baseUrl, jobId, options) {
 }
 
 async function waitForCompletedJob(fetchImpl, baseUrl, jobId, {
-  pollIntervalMs, timeoutMs, reconciliationAttempts = 40, reconciliationTimeoutMs = 30_000, signal = null, sleep,
+  pollIntervalMs,
+  timeoutMs,
+  reconciliationAttempts = 40,
+  reconciliationTimeoutMs = 30_000,
+  signal = null,
+  sleep,
+  capability = null,
 }) {
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 0) throw coded('invalid-job-timeout')
   const ownedDeadline = signal ? null : createDeadline(timeoutMs)
@@ -94,17 +129,41 @@ async function waitForCompletedJob(fetchImpl, baseUrl, jobId, {
   try {
     while (!activeSignal.aborted && Date.now() <= deadline) {
       let job
-      try { job = await requestJson(fetchImpl, endpoint(baseUrl, `/api/pptx/jobs/${encodeURIComponent(jobId)}`), withSignal(null, activeSignal)) } catch {
-        return reconcileTimedOutJob(fetchImpl, baseUrl, jobId, { pollIntervalMs, reconciliationAttempts, reconciliationTimeoutMs, sleep })
+      try {
+        job = await requestJson(
+          fetchImpl,
+          endpoint(baseUrl, `/api/pptx/jobs/${encodeURIComponent(jobId)}`),
+          withCapability(withSignal(null, activeSignal), capability)
+        )
+      } catch {
+        return reconcileTimedOutJob(fetchImpl, baseUrl, jobId, {
+      pollIntervalMs,
+      reconciliationAttempts,
+      reconciliationTimeoutMs,
+      sleep,
+      capability,
+    })
       }
       const presentationId = completedPresentationId(job)
       if (presentationId) return presentationId
       if (['failed', 'cancelled'].includes(job?.status)) throw coded('import-job-failed')
       try { await waitWithSignal(sleep, pollIntervalMs, activeSignal) } catch {
-        return reconcileTimedOutJob(fetchImpl, baseUrl, jobId, { pollIntervalMs, reconciliationAttempts, reconciliationTimeoutMs, sleep })
+        return reconcileTimedOutJob(fetchImpl, baseUrl, jobId, {
+      pollIntervalMs,
+      reconciliationAttempts,
+      reconciliationTimeoutMs,
+      sleep,
+      capability,
+    })
       }
     }
-    return reconcileTimedOutJob(fetchImpl, baseUrl, jobId, { pollIntervalMs, reconciliationAttempts, reconciliationTimeoutMs, sleep })
+    return reconcileTimedOutJob(fetchImpl, baseUrl, jobId, {
+      pollIntervalMs,
+      reconciliationAttempts,
+      reconciliationTimeoutMs,
+      sleep,
+      capability,
+    })
   } finally {
     ownedDeadline?.clear()
   }

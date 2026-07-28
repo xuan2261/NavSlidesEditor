@@ -13,6 +13,7 @@ Menu.setApplicationMenu(null)
 const PORT = 3002
 let mainWindow
 let serverInstance
+let stopBackend
 
 // ─── Secure Credential Storage ──────────────────────────────────────────────
 const credentialsPath = () => path.join(app.getPath('userData'), 'credentials.enc.json')
@@ -99,8 +100,9 @@ async function startBackend() {
   process.env.PORT = String(PORT)
 
   const serverPath = getResourcePath('server', 'index.js')
-  const { startServer } = require(serverPath)
+  const { startServer, stopServer } = require(serverPath)
   serverInstance = await startServer(PORT)
+  stopBackend = () => stopServer(serverInstance)
 
   console.log(`Backend started on port ${PORT}`)
   console.log(`Data: ${dataDir}`)
@@ -172,8 +174,12 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-app.on('before-quit', () => {
-  if (serverInstance) {
-    serverInstance.close()
-  }
+// Quitting must wait for the backend to release the package store writer lock,
+// otherwise the next launch finds the store locked by a process that is gone.
+let quitting = false
+app.on('before-quit', (event) => {
+  if (quitting || !stopBackend) return
+  quitting = true
+  event.preventDefault()
+  stopBackend().catch(() => {}).then(() => app.quit())
 })

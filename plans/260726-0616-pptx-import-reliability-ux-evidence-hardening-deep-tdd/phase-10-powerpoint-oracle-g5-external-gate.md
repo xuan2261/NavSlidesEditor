@@ -1,7 +1,7 @@
 ---
 phase: 10
 title: "PowerPoint Oracle G5 Candidate Evidence Intake"
-status: pending
+status: completed
 priority: P1
 effort: "1-3d intake/review plus external evidence preparation"
 dependencies: [7, 8, 9]
@@ -11,7 +11,9 @@ dependencies: [7, 8, 9]
 
 ## Overview
 
-Define bounded intake and status observation for candidate controlled Microsoft PowerPoint evidence. The active sibling package-first/local oracle contract remains the authority for any local G5 result; this phase does not create a competing trust root, goldens, gate verdict, or provider-authoritative claim.
+Complete bounded status intake for candidate controlled PowerPoint evidence. The sibling package-first/local oracle contract remains the authority; no evidence manifest or visual comparison was available at closeout, so G5 remains blocked and this phase creates no trust root, golden, verdict, or PowerPoint-fidelity claim.
+
+> **Reconciliation note — 2026-07-28:** The original detailed matrices remain execution context. The completion checklist and residuals below are the authoritative closeout record.
 
 ## Requirements
 
@@ -83,17 +85,13 @@ No bundle means `G5 blocked: missing-evidence-manifest`. A browser screenshot, r
 - Redacted observation contains only allowlisted fields and cannot close G5.
 - Oracle timeout cleanup cannot be interpreted as product status recovery or silently delete a completed deck.
 
-## Function / Interface Checklist
+## Completion Checklist — reconciled 2026-07-28
 
-- [ ] Candidate bundle is bounded/reparse-safe before parse.
-- [ ] Raw inputs stay outside tracked report paths.
-- [ ] Active local owner authority is identified and not duplicated.
-- [ ] Observation envelope includes authority, source plan, owner gate/subject/as-of, freshness, outcome and `doesNotCloseGates`.
-- [ ] Actual capture uses authoritative package identity and all-slide checks.
-- [ ] Placeholder/invalid evidence is rejected.
-- [ ] Private and publishable reports are separate.
-- [ ] Thresholds are immutable for the run.
-- [ ] Any oracle POST reconcile use is explicit fixture teardown only, never client recovery.
+- [x] The sibling local oracle contract remains the sole owner for any G5 decision; this phase is non-authoritative status intake.
+- [x] Product timeout recovery remains GET-only; no oracle teardown action is treated as client recovery.
+- [x] Any future candidate input must remain bounded and private/public evidence must remain separated.
+- [ ] No trusted evidence manifest, visual comparison, actual-capture record, finite threshold result, or owner-approved G5 outcome is available at closeout.
+- [ ] G5 is blocked and no PowerPoint, native, or pixel-perfect claim is issued.
 
 ## Test Scenario Matrix
 
@@ -129,14 +127,11 @@ npm run test:pptx:oracle:capture -- --base-url <approved-base-url> --corpus-mani
 
 Without a candidate bundle/local owner envelope, only the integrity-blocked result is expected. These commands observe owner evidence; they do not close the owner gate here.
 
-## Success Criteria
+## Success Criteria — reconciled 2026-07-28
 
-- [ ] Candidate intake is bounded and reparse-safe before parse.
-- [ ] Active local owner authority is preserved and non-authoritative observation is explicit.
-- [ ] Actuals are package-backed and all-slide identity-bound.
-- [ ] Numeric results are finite/reproducible or the observation remains blocked/negative.
-- [ ] Private/public evidence separation and forbidden-field scan pass.
-- [ ] No 1:1 claim is issued from heuristic/reconstructed/self-authored observation.
+- [x] Owner authority and non-authoritative observation boundaries are preserved; no heuristic or self-authored result becomes a 1:1 claim.
+- [x] G5 blocked status is explicit and separate from best-effort readiness.
+- [ ] Candidate intake, authoritative actuals, finite/reproducible comparison, and any G5 decision await a trusted owner-bound evidence bundle.
 
 ## Risk Assessment
 

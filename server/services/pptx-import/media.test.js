@@ -68,14 +68,118 @@ describe('pptx media persistence', () => {
     }
   })
 
-  it('shares an aggregate byte budget across persisted images', async () => {
+  // Overflow degrades to a warning, matching every other media rejection here,
+  // and the over-budget bytes never reach disk.
+  it('shares an aggregate byte budget across distinct persisted images', async () => {
     await withHashFileRestored(async () => {
       const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-aggregate-'))
+      await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
+      await fs.writeFile(HASHES_FILE, '{}')
+      const other = Buffer.from(validPng)
+      other[other.length - 1] ^= 1
       const mediaBudget = budgets.createMediaBudget(validPng.length * 2 - 1)
       try {
         await persistImageBuffer(validPng, 'image/png', dir, { mediaBudget })
-        await expect(persistImageBuffer(validPng, 'image/png', dir, { mediaBudget }))
-          .rejects.toThrow(/aggregate media budget/i)
+        const overflow = await persistImageBuffer(other, 'image/png', dir, { mediaBudget })
+        expect(overflow.url).toBeNull()
+        expect(overflow.warning).toMatchObject({
+          code: 'media-budget-exceeded',
+          byteLength: other.length,
+        })
+        expect(mediaBudget.usedBytes).toBe(validPng.length)
+        expect(await fs.readdir(dir)).toHaveLength(1)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  // A picture reused on many slides is one stored file. Charging the aggregate
+  // budget per placement would abort ordinary decks that never exceed the cap.
+  it('charges the aggregate budget once for repeated identical images', async () => {
+    await withHashFileRestored(async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-dedup-budget-'))
+      await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
+      await fs.writeFile(HASHES_FILE, '{}')
+      const mediaBudget = budgets.createMediaBudget(validPng.length * 2 - 1)
+      try {
+        const first = await persistImageBuffer(validPng, 'image/png', dir, { mediaBudget })
+        const second = await persistImageBuffer(validPng, 'image/png', dir, { mediaBudget })
+        const third = await persistImageBuffer(validPng, 'image/png', dir, { mediaBudget })
+        expect(second.url).toBe(first.url)
+        expect(third.url).toBe(first.url)
+        expect(mediaBudget.usedBytes).toBe(validPng.length)
+        expect(await fs.readdir(dir)).toHaveLength(1)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  it('charges the aggregate budget once for repeated identical media blobs', async () => {
+    await withHashFileRestored(async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-blob-dedup-budget-'))
+      await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
+      await fs.writeFile(HASHES_FILE, '{}')
+      const mediaBudget = budgets.createMediaBudget(validMp4.length * 2 - 1)
+      const mediaIndex = {
+        files: new Map([
+          ['ppt/media/video1.mp4', mockEntry(validMp4)],
+          ['ppt/media/video2.mp4', mockEntry(validMp4)],
+        ]),
+      }
+      try {
+        const first = await persistMediaBlob(mediaIndex, 'ppt/media/video1.mp4', dir, { mediaBudget })
+        const second = await persistMediaBlob(mediaIndex, 'ppt/media/video2.mp4', dir, { mediaBudget })
+        expect(second.url).toBe(first.url)
+        expect(mediaBudget.usedBytes).toBe(validMp4.length)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  it('degrades an over-budget media blob to a warning instead of failing the import', async () => {
+    await withHashFileRestored(async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-blob-overflow-'))
+      await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
+      await fs.writeFile(HASHES_FILE, '{}')
+      const mediaBudget = budgets.createMediaBudget(validMp4.length - 1)
+      const mediaIndex = { files: new Map([['ppt/media/video1.mp4', mockEntry(validMp4)]]) }
+      try {
+        const result = await persistMediaBlob(mediaIndex, 'ppt/media/video1.mp4', dir, { mediaBudget })
+        expect(result.url).toBeNull()
+        expect(result.warning).toMatchObject({
+          code: 'media-budget-exceeded',
+          byteLength: validMp4.length,
+        })
+        expect(mediaBudget.usedBytes).toBe(0)
+        expect(await fs.readdir(dir).catch(() => [])).toHaveLength(0)
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  // Bytes that never reach disk must not starve media mapped later in the deck.
+  it('leaves the aggregate budget untouched for rejected media blobs', async () => {
+    await withHashFileRestored(async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-reject-budget-'))
+      await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
+      await fs.writeFile(HASHES_FILE, '{}')
+      const mediaBudget = budgets.createMediaBudget(10 * 1024 * 1024)
+      const mediaIndex = {
+        files: new Map([
+          ['ppt/media/page.html', mockEntry(Buffer.from('<script>x</script>'))],
+          ['ppt/media/video1.mp4', mockEntry(Buffer.from('not an mp4'))],
+        ]),
+      }
+      try {
+        const rejectedExt = await persistMediaBlob(mediaIndex, 'ppt/media/page.html', dir, { mediaBudget })
+        const rejectedMagic = await persistMediaBlob(mediaIndex, 'ppt/media/video1.mp4', dir, { mediaBudget })
+        expect(rejectedExt.warning).toMatchObject({ code: 'media-extension-rejected' })
+        expect(rejectedMagic.warning).toMatchObject({ code: 'media-magic-mismatch' })
+        expect(mediaBudget.usedBytes).toBe(0)
       } finally {
         await fs.rm(dir, { recursive: true, force: true })
       }

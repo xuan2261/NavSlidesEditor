@@ -19,11 +19,16 @@ export function selectAuditDecks(allDecks) {
   return allDecks
 }
 
-async function waitForPptxImport(request, jobId) {
+async function waitForPptxImport(request, jobId, capability) {
+  if (typeof capability !== 'string' || !capability) {
+    throw new Error('PPTX import job capability is required')
+  }
   let result
   await expect
     .poll(async () => {
-      const poll = await request.get(`/api/pptx/jobs/${jobId}`)
+      const poll = await request.get(`/api/pptx/jobs/${jobId}`, {
+        headers: { 'X-Pptx-Job-Capability': capability },
+      })
       expect(poll.ok()).toBeTruthy()
       const job = await poll.json()
       if (job.status === 'done') {
@@ -51,8 +56,8 @@ export async function importDeckForAudit(page, request, pptxDir, deckName) {
   )
   expect(importRes.status()).toBe(202)
 
-  const { jobId } = await importRes.json()
-  const imported = await waitForPptxImport(request, jobId)
+  const { jobId, capability } = await importRes.json()
+  const imported = await waitForPptxImport(request, jobId, capability)
   const presentation = await apiGetPresentation(request, imported.presentationId)
   expect(presentation.slides?.length).toBeGreaterThan(0)
 

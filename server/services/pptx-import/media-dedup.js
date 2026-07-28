@@ -70,6 +70,13 @@ async function persistDedupedBuffer(buffer, ext, uploadsDir, metadata = {}) {
         }
       }
 
+      // Charge the aggregate budget here, at the one point that knows this
+      // content is not already stored: deduplicated placements cost nothing,
+      // and refusing before the write keeps over-budget bytes off disk.
+      if (metadata.mediaBudget && !metadata.mediaBudget.tryReserve(buffer.length)) {
+        return { url: null, budgetExceeded: true }
+      }
+
       await fs.ensureDir(uploadsDir)
       const filename = `${uuidv4()}.${ext}`
       const filePath = path.join(uploadsDir, filename)

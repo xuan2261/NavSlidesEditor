@@ -76,7 +76,17 @@ async function packageSnapshot() {
 
 async function durableView(jobId, presentationId) {
   const durable = await getDurableImportJob(jobId)
-  const listable = presentationId ? await isPresentationListable(presentationId) : false
+  const expected = durable?.status === 'completed' &&
+    durable.outcomeRevisionId &&
+    durable.outcomeGeneration !== undefined &&
+    durable.outcomeHeadHash
+    ? {
+      revisionId: durable.outcomeRevisionId,
+      generation: durable.outcomeGeneration,
+      headHash: durable.outcomeHeadHash,
+    }
+    : null
+  const listable = presentationId ? await isPresentationListable(presentationId, expected) : false
   let reportSummary = null
   if (listable && presentationId) {
     reportSummary = await loadPresentationReportSummary(presentationId)
@@ -167,7 +177,7 @@ describe('PPTX import crash points (real store + outbox)', () => {
     const settled = await settleJob(jobId, ['done'])
     expect(settled?.status).toBe('done')
     expect((await packageSnapshot()).outbox).toHaveLength(0)
-    expect(await isPresentationListable(presentationId)).toBe(true)
+    expect((await durableView(jobId, presentationId)).listable).toBe(true)
   })
 
   it('CP2: drain throws — packageRollback, failed job, no openable done, head rolled back', async () => {
@@ -422,7 +432,7 @@ describe('PPTX import crash points (real store + outbox)', () => {
       drainCompatibility: realDrain,
       // Cancel only after drain withAbort settles — post-visibility policy seam.
       afterPackageVisibility: async () => {
-        expect(await isPresentationListable(presentationId)).toBe(true)
+        expect((await durableView(jobId, presentationId)).listable).toBe(true)
         expect(jobManager.cancelJob(jobId)).toBe('ok')
       },
     })
@@ -431,7 +441,7 @@ describe('PPTX import crash points (real store + outbox)', () => {
     // Chosen policy (AD7): post-visibility cancel does not delete; complete as done.
     expect(job?.status).toBe('done')
     expect(job?.result?.presentationId).toBe(presentationId)
-    expect(await isPresentationListable(presentationId)).toBe(true)
+    expect((await durableView(jobId, presentationId)).listable).toBe(true)
     const view = await durableView(jobId, presentationId)
     expect(view.serialized).toMatchObject({
       status: 'done',
@@ -491,6 +501,25 @@ describe('PPTX import crash points (real store + outbox)', () => {
     const sse = await request(app)
       .get(`/api/pptx/jobs/${jobId}/stream?capability=${encodeURIComponent(capability)}`)
     expect(sse.status).toBe(404)
+
+    const mismatchApp = express()
+    mismatchApp.use('/api/pptx', createPptxImportRouter({
+      jobManager,
+      readDurableJob: async (id) => ({
+        ...(await getDurableImportJob(id)),
+        outcomeHeadHash: '0'.repeat(64),
+      }),
+    }))
+    const mismatch = await request(mismatchApp)
+      .get(`/api/pptx/jobs/${jobId}`)
+      .set('X-Pptx-Job-Capability', capability)
+    expect(mismatch.status).toBe(200)
+    expect(mismatch.body).toMatchObject({
+      jobId,
+      status: 'pending-visibility',
+      durable: true,
+    })
+    expect(mismatch.body.result).toBeUndefined()
   })
 
   it('CP9: DELETE after durable terminal returns 409 finished', async () => {
@@ -521,7 +550,9 @@ describe('PPTX import crash points (real store + outbox)', () => {
       .set('X-Pptx-Job-Capability', capability)
     expect(response.status).toBe(409)
     expect(response.body).toMatchObject({
-      code: 'JOB_ALREADY_FINISHED',
+      error: 'job-too-late',
+      code: 'JOB_CANCEL_TOO_LATE',
+      status: 'done',
       job: {
         jobId,
         status: 'done',

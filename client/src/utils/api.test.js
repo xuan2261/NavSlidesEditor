@@ -87,6 +87,33 @@ describe('PPTX import API', () => {
     })
   })
 
+  it('preserves typed HTTP failure fields from cancellation responses', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: false,
+      status: 409,
+      headers: { get: () => null },
+      json: async () => ({
+        error: 'job-too-late',
+        code: 'JOB_CANCEL_TOO_LATE',
+        type: 'cancel-too-late',
+        failureType: 'job-terminal',
+        failureCode: 'JOB_CANCEL_TOO_LATE',
+        failureStage: 'cancel',
+        reasonCode: 'PACKAGE_VISIBLE',
+      }),
+    })))
+
+    await expect(api.importPptxAsync(new File(['pptx'], 'deck.pptx'))).rejects.toMatchObject({
+      status: 409,
+      code: 'JOB_CANCEL_TOO_LATE',
+      type: 'cancel-too-late',
+      failureType: 'job-terminal',
+      failureCode: 'JOB_CANCEL_TOO_LATE',
+      failureStage: 'cancel',
+      reasonCode: 'PACKAGE_VISIBLE',
+    })
+  })
+
   it('waits for the canonical server Retry-After delay before retrying', async () => {
     vi.useFakeTimers()
     const fetchMock = mockBusyThenAccepted('60')
@@ -250,6 +277,68 @@ describe('PPTX import API', () => {
     await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
   })
 
+  it('enforces the admission deadline while response JSON is pending', async () => {
+    vi.useFakeTimers()
+    let markBodyStarted
+    const bodyStarted = new Promise((resolve) => {
+      markBodyStarted = resolve
+    })
+    let bodyAborted = false
+    vi.stubGlobal('fetch', vi.fn(async (_url, { signal }) => ({
+      ok: true,
+      json: () => {
+        markBodyStarted()
+        signal?.addEventListener?.('abort', () => {
+          bodyAborted = true
+        }, { once: true })
+        return new Promise(() => {})
+      },
+    })))
+
+    const promise = api.importPptxAsync(new File(['pptx'], 'deck.pptx'), {
+      deadlineAt: Date.now() + 250,
+    })
+    const assertion = expect(promise).rejects.toMatchObject({
+      code: 'PPTX_JOB_ADMISSION_TIMEOUT',
+      status: 'timeout',
+    })
+    await bodyStarted
+    await vi.advanceTimersByTimeAsync(250)
+
+    await assertion
+    expect(bodyAborted).toBe(true)
+  })
+
+  it('preserves caller abort while deadline-wrapped response JSON is pending', async () => {
+    const controller = new AbortController()
+    let markBodyStarted
+    const bodyStarted = new Promise((resolve) => {
+      markBodyStarted = resolve
+    })
+    let bodyAborted = false
+    vi.stubGlobal('fetch', vi.fn(async (_url, { signal }) => ({
+      ok: true,
+      json: () => {
+        markBodyStarted()
+        signal?.addEventListener?.('abort', () => {
+          bodyAborted = true
+        }, { once: true })
+        return new Promise(() => {})
+      },
+    })))
+
+    const promise = api.importPptxAsync(new File(['pptx'], 'deck.pptx'), {
+      deadlineAt: Date.now() + 60_000,
+      signal: controller.signal,
+    })
+    const assertion = expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+    await bodyStarted
+    controller.abort()
+
+    await assertion
+    expect(bodyAborted).toBe(true)
+  })
+
   it('removes admission abort listeners after a retry sleep resolves', async () => {
     vi.useFakeTimers()
     const signal = {
@@ -316,6 +405,39 @@ describe('PPTX import API', () => {
     expect(fetch).toHaveBeenNthCalledWith(2, '/api/pptx/jobs/job-1', { method: 'DELETE' })
   })
 
+  it.each([
+    ['too-late', {
+      error: 'job-too-late',
+      code: 'JOB_CANCEL_TOO_LATE',
+      type: 'job-terminal',
+      reasonCode: 'PACKAGE_VISIBLE',
+    }],
+    ['in-progress', {
+      error: 'job-cancellation-in-progress',
+      code: 'JOB_CANCEL_IN_PROGRESS',
+      type: 'job-cancelling',
+      reasonCode: 'CANCELLATION_IN_PROGRESS',
+    }],
+  ])('preserves typed cancel response fields for %s responses', async (_label, body) => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: false,
+      status: 409,
+      headers: { get: () => null },
+      json: async () => body,
+    })))
+
+    await expect(api.cancelPptxJob('job-cancel', { capability: 'cancel-capability' })).rejects.toMatchObject({
+      status: 409,
+      code: body.code,
+      type: body.type,
+      reasonCode: body.reasonCode,
+    })
+    expect(fetch).toHaveBeenCalledWith('/api/pptx/jobs/job-cancel', {
+      method: 'DELETE',
+      headers: { 'X-Pptx-Job-Capability': 'cancel-capability' },
+    })
+  })
+
   it('forwards AbortSignal to PPTX job poll and cancel fetches', async () => {
     const controller = new AbortController()
     vi.stubGlobal(
@@ -348,7 +470,12 @@ describe('PPTX import API', () => {
         .mockResolvedValueOnce({
           ok: false,
           status: 404,
-          json: async () => ({ error: 'No original', mode: 'hybrid-export' }),
+          json: async () => ({
+            error: 'No original',
+            mode: 'hybrid-export',
+            code: 'PPTX_ORIGINAL_UNAVAILABLE',
+            reasonCode: 'ORIGINAL_MISSING',
+          }),
         })
     )
 
@@ -356,6 +483,8 @@ describe('PPTX import API', () => {
     await expect(api.downloadPptxOriginal('deck-1')).rejects.toMatchObject({
       message: 'No original',
       status: 404,
+      code: 'PPTX_ORIGINAL_UNAVAILABLE',
+      reasonCode: 'ORIGINAL_MISSING',
     })
     expect(fetch).toHaveBeenNthCalledWith(1, '/api/presentations/deck-1/pptx-original')
   })
@@ -389,6 +518,28 @@ describe('PPTX import API', () => {
         'If-Pptx-Generation': '2',
       }),
     }))
+  })
+
+  it('preserves typed failures from validated edited export responses', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: false,
+      status: 409,
+      json: async () => ({
+        error: 'Package generation is stale',
+        code: 'STALE_PACKAGE_GENERATION',
+        reasonCode: 'GENERATION_CONFLICT',
+        failureStage: 'export',
+      }),
+    })))
+
+    await expect(
+      api.downloadValidatedEditedPptx('deck-1', 2, 'export-key')
+    ).rejects.toMatchObject({
+      status: 409,
+      code: 'STALE_PACKAGE_GENERATION',
+      reasonCode: 'GENERATION_CONFLICT',
+      failureStage: 'export',
+    })
   })
 
   it('fails closed when the validated successor generation header is missing', async () => {

@@ -23,6 +23,8 @@ const defaultJobManager = require('../services/pptx-import-job-manager')
 const { createMediaTransaction } = require('../services/pptx-import/media-dedup')
 const { sweepStaleTempUploads } = require('../services/pptx-import/temp-upload-sweep')
 const { withPresentations } = require('../services/storage')
+const { readAuthoritativePresentation } = require('../services/package-backed-presentation-read')
+const { hashCanonical } = require('../services/pptx-import/evidence/canonical-hash')
 const {
   drainPackageCompatibilityOutbox,
   getPackageStore,
@@ -142,11 +144,64 @@ async function getDurableImportJob(jobId) {
   }
 }
 
-async function isPresentationListable(presentationId) {
+const DURABLE_OUTCOME_FIELDS = [
+  'outcomeRevisionId',
+  'outcomeGeneration',
+  'outcomeHeadHash',
+]
+const AUTHORITY_VISIBILITY_ERRORS = new Set([
+  'PRESENTATION_PACKAGE_HEAD_MISSING',
+  'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
+  'CANONICAL_TEXT_JOURNAL_INVALID',
+  'STALE_MATRIX_AUTHORITY',
+])
+
+function durableOutcomeExpectation(job) {
+  if (job?.status !== 'completed' || typeof job.presentationId !== 'string') return null
+  if (!DURABLE_OUTCOME_FIELDS.every((field) => job[field] !== undefined)) return null
+  return {
+    revisionId: job.outcomeRevisionId,
+    generation: job.outcomeGeneration,
+    headHash: job.outcomeHeadHash,
+  }
+}
+
+/**
+ * Contract B visibility: legacy rows may be read through the compatibility
+ * store, but package-backed rows require an identity-bound expected outcome.
+ */
+async function isPresentationListable(presentationId, expected = null) {
   if (typeof presentationId !== 'string' || !presentationId) return false
-  return withPresentations((presentations) =>
-    presentations.some((presentation) => presentation?.id === presentationId)
-  )
+  try {
+    const resolved = await readAuthoritativePresentation(presentationId)
+    if (!resolved) return false
+    if (resolved.generation === null) return expected == null
+    if (!expected) return false
+    const head = resolved.presentation?.pptxAggregateHead
+    return resolved.generation === expected.generation &&
+      head?.packageRevisionId === expected.revisionId &&
+      hashCanonical(head) === expected.headHash
+  } catch (error) {
+    if (AUTHORITY_VISIBILITY_ERRORS.has(error?.code)) return false
+    throw error
+  }
+}
+
+/**
+ * A durable receipt records no failure reason, only whether the transaction was
+ * undone. That distinction is the one thing a failed import can still tell the
+ * user: rolled back means nothing was persisted and a retry is safe, while any
+ * other state means partial data may survive and needs checking.
+ */
+function durableJobMessage(job, status) {
+  if (status === 'done') return 'Import complete'
+  if (
+    (status === 'failed' || status === 'cancelled') &&
+    job.transactionState === 'rolled-back'
+  ) {
+    return `Import ${status}; partial import rolled back`
+  }
+  return `Import ${status}`
 }
 
 /**
@@ -186,7 +241,7 @@ function serializeDurableImportJob(job, { listable, reportSummary } = {}) {
     status,
     stage: status === 'done' ? 'complete' : status,
     percent: status === 'done' || status === 'failed' || status === 'cancelled' ? 100 : 0,
-    message: status === 'done' ? 'Import complete' : `Import ${status}`,
+    message: durableJobMessage(job, status),
     ...(result ? { result } : {}),
     durable: true,
     transactionState: job.transactionState,
@@ -500,8 +555,8 @@ function createPptxImportRouter({
   createPresentation = createImportedPresentation,
   deletePresentation = deleteImportedPresentation,
   deleteOriginal = deleteOriginalPptx,
-  packageCommit = process.env.NODE_ENV === 'test' ? null : commitImportedPackage,
-  packageRollback = process.env.NODE_ENV === 'test' ? null : rollbackImportedPackage,
+  packageCommit = commitImportedPackage,
+  packageRollback = rollbackImportedPackage,
   drainCompatibility = drainPackageCompatibilityOutbox,
   readDurableJob = getDurableImportJob,
   checkPresentationListable = isPresentationListable,
@@ -517,9 +572,14 @@ function createPptxImportRouter({
   })
 
   // Per-job control capability: POST /import returns a one-time capability secret.
-  // Sensitive job routes require header X-Pptx-Job-Capability (never logged/persisted).
-  // UUID secrecy alone is not authorization for Map jobs or durable jobs that carry
-  // controlCapabilityHash. Legacy durable receipts without controlCapabilityHash remain readable.
+  // Sensitive job routes require header X-Pptx-Job-Capability; UUID secrecy alone is
+  // not authorization for Map or durable jobs.
+  //
+  // This process never logs or persists the secret, but EventSource cannot set
+  // headers, so the stream route carries it in the query string and a reverse proxy
+  // will record it in access logs by default. The disclosure is bounded: a capability
+  // only reads, cancels, or reconciles one import job that expires in minutes, which
+  // is less than the unauthenticated presentations API on the same origin allows.
 
   const CAPABILITY_HEADER = 'x-pptx-job-capability'
 
@@ -555,7 +615,15 @@ function createPptxImportRouter({
   }
 
   async function assertDurableCapability(durableJob, provided, res) {
-    if (!durableJob?.controlCapabilityHash) return true
+    // Fail closed. A receipt with no hash predates capability enforcement, and
+    // treating that as "allow" let anyone holding a job UUID read, cancel, or
+    // reconcile it. The cost is that such a receipt is no longer reachable —
+    // acceptable, because it describes an import that already finished and whose
+    // presentation is served by the presentations API regardless.
+    if (!durableJob?.controlCapabilityHash) {
+      denyCapability(res)
+      return false
+    }
     const verify = jobManager.verifyControlCapability || defaultJobManager.verifyControlCapability
     if (verify(durableJob.controlCapabilityHash, provided)) return true
     denyCapability(res)
@@ -640,7 +708,10 @@ function createPptxImportRouter({
       let listable
       let reportSummary = durableJob.reportSummary || null
       if (durableJob.status === 'completed' && durableJob.presentationId) {
-        listable = await checkPresentationListable(durableJob.presentationId)
+        const expected = durableOutcomeExpectation(durableJob)
+        listable = expected
+          ? await checkPresentationListable(durableJob.presentationId, expected)
+          : false
         if (listable && !reportSummary) {
           try {
             reportSummary = await loadReportSummary(durableJob.presentationId)
@@ -680,7 +751,10 @@ function createPptxImportRouter({
           let listable
           let reportSummary = durableJob.reportSummary || null
           if (durableJob.status === 'completed' && durableJob.presentationId) {
-            listable = await checkPresentationListable(durableJob.presentationId)
+            const expected = durableOutcomeExpectation(durableJob)
+            listable = expected
+              ? await checkPresentationListable(durableJob.presentationId, expected)
+              : false
             if (listable && !reportSummary) {
               try {
                 reportSummary = await loadReportSummary(durableJob.presentationId)
@@ -689,10 +763,12 @@ function createPptxImportRouter({
               }
             }
           }
+          const serialized = serializeDurableImportJob(durableJob, { listable, reportSummary })
           return res.status(409).json({
-            error: 'job-already-finished',
-            code: 'JOB_ALREADY_FINISHED',
-            job: serializeDurableImportJob(durableJob, { listable, reportSummary }),
+            error: 'job-too-late',
+            code: 'JOB_CANCEL_TOO_LATE',
+            status: serialized?.status || 'done',
+            job: serialized,
           })
         }
       } catch (error) {
@@ -700,7 +776,29 @@ function createPptxImportRouter({
       }
       return res.status(404).json({ error: 'job-not-found' })
     }
-    if (status === 'conflict') return res.status(409).json({ error: 'job-already-finished' })
+    if (status === 'conflict') {
+      const current = jobManager.getJob?.(req.params.jobId)
+      if (current?.status === 'cancelling') {
+        return res.status(409).json({
+          error: 'job-cancellation-in-progress',
+          code: 'JOB_CANCEL_IN_PROGRESS',
+          status: current.status,
+        })
+      }
+      if (current?.status === 'done' || current?.result?.presentationId) {
+        return res.status(409).json({
+          error: 'job-too-late',
+          code: 'JOB_CANCEL_TOO_LATE',
+          status: 'done',
+          job: jobManager.serializeJob?.(current),
+        })
+      }
+      return res.status(409).json({
+        error: 'job-already-finished',
+        code: 'JOB_ALREADY_FINISHED',
+        status: current?.status,
+      })
+    }
     res.status(204).end()
   })
 

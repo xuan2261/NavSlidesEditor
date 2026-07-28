@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Package Consistency And Ghost Row Recovery"
-status: pending
+status: completed
 priority: P1
 effort: "7-10d"
 dependencies: [1]
@@ -11,7 +11,9 @@ dependencies: [1]
 
 ## Overview
 
-Own the server-side import lifecycle, Contract B, compatibility consistency, durable repair authority, shared-reader isolation, multipart admission, and monotonic job progress. Close the apply/ack/post-visibility failure window without holding package and presentation locks simultaneously or allowing stale compensation to delete a newer incarnation.
+Complete the core server-side import lifecycle, visibility, shared-reader isolation, multipart admission, and monotonic-progress contracts. The delivered scope preserves existing rollback fencing and adds poisoned-outbox isolation, but it does not claim a fully expanded persisted multi-state repair saga or crash-safe media manifest. Healthy rows remain available without holding package and presentation locks simultaneously.
+
+> **Reconciliation note — 2026-07-28:** The original detailed matrices remain execution context. The completion checklist and residuals below are the authoritative closeout record.
 
 ## Requirements
 
@@ -112,21 +114,18 @@ The package writer and presentation writer are serialized independently in the e
 - Startup isolates/retries a poisoned outbox record without taking down unrelated imports.
 - Durable media manifest/replay passes, or release evidence explicitly records the narrower best-effort media claim.
 
-## Function / Interface Checklist
+## Completion Checklist — reconciled 2026-07-28
 
-- [ ] Durable import/repair record is written before cross-store side effects.
-- [ ] Schema/index persist `terminalAt`, retention class, failure stage/code, `reconcileRequired`, and bounded `reportSummary`.
-- [ ] Projection provenance is persisted server-side and stripped from external DTOs.
-- [ ] In-memory Map and durable fallback DTOs use the same authoritative visibility resolver.
-- [ ] Drain reports exact per-record applied/ack identities or an explicitly fenced batch identity.
-- [ ] `rollbackImport` and compensation cannot remove a newer head/projection.
-- [ ] One authoritative visibility resolver is reused by GET, DELETE and repair.
-- [ ] Bulk reader result and caller-specific policies, including Explore, are covered.
-- [ ] Array response shape remains compatible; repair health is additive.
-- [ ] Job control has capability/principal binding or an explicit deployment block.
-- [ ] The selected authority is propagated to Home/E2E/direct/oracle callers and never persisted or logged.
-- [ ] Multipart cleanup and progress normalization have one source owner.
-- [ ] Media finalization policy is explicit and tested.
+- [x] Job-control authorization is required on sensitive operations and is not retained in durable/job-report output.
+- [x] GET and durable DELETE withhold an openable identifier until the current visibility result is listable; non-listable terminal states remain pending or require repair.
+- [x] Bulk presentation reading isolates known missing-head rows, preserves healthy rows, and keeps the public list shape compatible.
+- [x] Presentation, explore, and sync consumers have explicit isolation behavior.
+- [x] Multipart admission cleanup, progress normalization, and post-visibility cancellation safety have focused coverage.
+- [x] Startup isolates a poisoned outbox record rather than making unrelated imports unavailable.
+- [x] Existing rollback fencing and dead-letter handling protect the delivered failure paths.
+- [ ] A complete persisted `apply-pending` through `resolved` repair-state schema with all proposed provenance fields was intentionally not expanded.
+- [ ] The current visibility predicate is not promoted to the planned full identity/provenance resolver.
+- [ ] Durable job-owned media manifest/replay is absent; media crash-safe consistency is not claimed.
 
 ## Test Scenario Matrix
 
@@ -154,16 +153,14 @@ npx vitest run server/services/pptx-import/compatibility-outbox.test.js server/s
 
 Add new focused reader/interleave/retention tests only under the owning phase. Keep lock-order tests serial where required.
 
-## Success Criteria
+## Success Criteria — reconciled 2026-07-28
 
-- [ ] Durable repair saga is crash-replayable and identity-fenced.
-- [ ] No known ghost can make the whole presentation list unavailable; current 422 baseline is corrected without changing array shape.
-- [ ] GET/DELETE/repair share authoritative openability and Contract-B semantics.
-- [ ] Shared reader callers have explicit policies and regressions.
-- [ ] Multipart admission has bounded lifecycle and exactly-once cleanup.
-- [ ] Progress is monotonic at the job-manager source.
-- [ ] Post-visibility cancel preserves visible authority.
-- [ ] No second compatibility writer or lock inversion exists.
+- [x] No known missing-head row makes the whole presentation list unavailable; healthy rows remain readable with compatible array output.
+- [x] GET/DELETE honor the current visibility policy and do not expose an openable identifier prematurely.
+- [x] Shared readers, multipart cleanup, monotonic progress, post-visibility cancellation, and poisoned-startup isolation are covered by the delivered core contract.
+- [x] Existing rollback fencing remains in place and no second compatibility writer or lock inversion is introduced.
+- [ ] A full durable repair saga and a full identity/provenance openability resolver are not claimed.
+- [ ] Crash-safe media consistency is excluded without a durable media manifest/replay gate.
 
 ## Risk Assessment
 

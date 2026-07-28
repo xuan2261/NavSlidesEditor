@@ -36,12 +36,21 @@ describe('package-backed actual capture', () => {
     const sourcePath = path.join(root, 'deck-a.pptx')
     await fs.writeFile(sourcePath, source)
     const calls = []
+    const capabilityHeaders = []
     let originalHeaders
     const fetchImpl = async (url, init = {}) => {
       const request = { path: new URL(url).pathname, method: init.method || 'GET' }
       calls.push(request)
-      if (request.path === '/api/pptx/import') return response({ jobId: '4e9f231d-9e63-4c59-904f-3a5e1b1ac001' }, 202)
-      if (request.path.includes('/api/pptx/jobs/')) return response({ status: 'done', result: { presentationId: 'deck-1' } })
+      if (request.path === '/api/pptx/import') {
+        return response({
+          jobId: '4e9f231d-9e63-4c59-904f-3a5e1b1ac001',
+          capability: 'capability-1',
+        }, 202)
+      }
+      if (request.path.includes('/api/pptx/jobs/')) {
+        capabilityHeaders.push(init.headers)
+        return response({ status: 'done', result: { presentationId: 'deck-1' } })
+      }
       if (request.path === '/api/presentations/deck-1') return response({
         id: 'deck-1', aggregateGeneration: 4, slides: [{ id: 's1' }],
       })
@@ -84,6 +93,7 @@ describe('package-backed actual capture', () => {
       { path: '/api/presentations/deck-1/pptx-package-snapshot', method: 'GET' },
       { path: '/api/presentations/deck-1/permanent', method: 'DELETE' },
     ])
+    expect(capabilityHeaders).toEqual([{ 'X-Pptx-Job-Capability': 'capability-1' }])
     expect(originalHeaders).toEqual({
       'If-Pptx-Generation': '4', 'If-Pptx-Package-Revision': 'r0', 'If-Pptx-Package-Head-Hash': sha('head'),
     })

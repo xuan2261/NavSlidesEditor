@@ -26,6 +26,58 @@ async function fetchProjectMediaBlob(url) {
   return await response.blob()
 }
 
+const PROJECT_EXPORT_OMITTED_KEYS = new Set([
+  '_pptxImportReport',
+  '_pptxSource',
+  '_pptxEdited',
+  '_pptxEditedAt',
+  'pptxOriginal',
+  'pptxAggregateHead',
+  'pptxSourceAvailable',
+  'aggregateGeneration',
+  'createdAt',
+  'updatedAt',
+  'deletedAt',
+  'jobId',
+  'controlCapabilityHash',
+  'capabilityHash',
+  'sha256',
+  'byteLength',
+  'revisionId',
+  'packageRevisionId',
+  'sourceMapRevisionId',
+  'projectionRevisionId',
+  'originalRevisionId',
+  'manifestHash',
+  'blobSha256',
+  'fencingEpoch',
+  'predecessorId',
+  'originalPath',
+  'packagePath',
+  'sourceMap',
+  'sourceAuthority',
+  'sourceRef',
+  'relationships',
+  'complexObjects',
+  'unknownParts',
+  'securityFlags',
+])
+
+function projectExportValue(value) {
+  if (Array.isArray(value)) return value.map(projectExportValue)
+  if (!value || typeof value !== 'object') return value
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => !PROJECT_EXPORT_OMITTED_KEYS.has(key))
+      .map(([key, child]) => [key, projectExportValue(child)])
+  )
+}
+
+/** Remove editor/package authority before writing a portable project archive. */
+export function toProjectExportPresentation(presentation) {
+  return projectExportValue(presentation)
+}
+
 function getExportWarningMessage(reason) {
   if (reason instanceof Error) return reason.message
   return reason ? String(reason) : 'Failed to fetch media'
@@ -61,17 +113,18 @@ async function collectProjectMediaFiles(mediaEntries) {
  * @param {object} presentation
  */
 export async function exportProject(presentation) {
-  const mediaEntries = buildArchiveMediaManifestEntries(presentation)
-  const title = slugify(presentation?.title)
+  const exportPresentation = toProjectExportPresentation(presentation)
+  const mediaEntries = buildArchiveMediaManifestEntries(exportPresentation)
+  const title = slugify(exportPresentation?.title)
   const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
 
   if (!mediaEntries.length) {
     const data = {
       version: '1.1',
-      title: presentation?.title || 'Presentation',
+      title: exportPresentation?.title || 'Presentation',
       exportedAt: new Date().toISOString(),
       hasLocalMedia: false,
-      presentation,
+      presentation: exportPresentation,
     }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     downloadBlob(blob, `${title}-backup-${timestamp}.navslides.json`)
@@ -79,7 +132,7 @@ export async function exportProject(presentation) {
   }
 
   const zip = new JSZip()
-  zip.file('presentation.json', JSON.stringify(presentation, null, 2))
+  zip.file('presentation.json', JSON.stringify(exportPresentation, null, 2))
 
   const { included, skipped } = await collectProjectMediaFiles(mediaEntries)
   included.forEach(({ blob, ...entry }) => {
@@ -93,7 +146,7 @@ export async function exportProject(presentation) {
   const manifestMedia = included.map(({ blob: _blob, ...entry }) => entry)
   const manifest = {
     version: '1.1',
-    title: presentation?.title || 'Presentation',
+    title: exportPresentation?.title || 'Presentation',
     exportedAt: new Date().toISOString(),
     hasLocalMedia: manifestMedia.length > 0,
     mediaCount: manifestMedia.length,
@@ -104,7 +157,7 @@ export async function exportProject(presentation) {
   zip.file('manifest.json', JSON.stringify(manifest, null, 2))
 
   try {
-    const html = generateRevealHTML(presentation)
+    const html = generateRevealHTML(exportPresentation)
     const offline = await generateOfflineHTML(html)
     zip.file('presentation.html', offline)
   } catch {

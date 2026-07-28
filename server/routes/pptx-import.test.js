@@ -44,6 +44,7 @@ function mockAtomicDeps(overrides = {}) {
     createPresentation: async () => ({ id: 'pres-test-1' }),
     deleteOriginal: async () => true,
     packageCommit: null,
+    packageRollback: null,
     ...overrides,
   }
 }
@@ -95,7 +96,64 @@ describe('PPTX import route', () => {
         status: 'done',
         result: { stats: { parser: 'pptxtojson' }, presentationId: 'pres-test-1' },
       })
+
+      const tooLate = await withCapability(
+        request(app).delete(`/api/pptx/jobs/${res.body.jobId}`),
+        res.body.capability
+      )
+      expect(tooLate.status).toBe(409)
+      expect(tooLate.body).toMatchObject({
+        error: 'job-too-late',
+        code: 'JOB_CANCEL_TOO_LATE',
+        status: 'done',
+        job: { result: { presentationId: 'pres-test-1' } },
+      })
     } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('returns a typed in-progress response for repeated cancellation', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-cancel-'))
+    const file = path.join(dir, 'valid.pptx')
+    let releaseImport
+    const importGate = new Promise((resolve) => {
+      releaseImport = resolve
+    })
+    try {
+      await writeMinimalPptx(file)
+      const app = express()
+      app.use('/api/pptx', createPptxImportRouter({
+        ...mockAtomicDeps(),
+        importer: async () => {
+          await importGate
+          throw new Error('cancelled test import')
+        },
+      }))
+
+      const admitted = await request(app).post('/api/pptx/import').attach('file', file)
+      expect(admitted.status).toBe(202)
+      await waitForJob(app, admitted.body.jobId, 'running', admitted.body.capability)
+
+      const firstCancel = await withCapability(
+        request(app).delete(`/api/pptx/jobs/${admitted.body.jobId}`),
+        admitted.body.capability
+      )
+      expect(firstCancel.status).toBe(204)
+
+      const secondCancel = await withCapability(
+        request(app).delete(`/api/pptx/jobs/${admitted.body.jobId}`),
+        admitted.body.capability
+      )
+      expect(secondCancel.status).toBe(409)
+      expect(secondCancel.body).toMatchObject({
+        error: 'job-cancellation-in-progress',
+        code: 'JOB_CANCEL_IN_PROGRESS',
+        status: 'cancelling',
+      })
+    } finally {
+      releaseImport?.()
+      await new Promise((resolve) => setTimeout(resolve, 0))
       await fs.rm(dir, { recursive: true, force: true })
     }
   })
@@ -273,6 +331,9 @@ describe('PPTX import route', () => {
         '/api/pptx',
         createPptxImportRouter({
           originalBaseDir: originalsBase,
+          // Legacy path: createPresentation is the sole writer, no package store.
+          packageCommit: null,
+          packageRollback: null,
           persistOriginal: (fp, opts) => persistOriginalPptx(fp, opts),
           createPresentation: async (presentation, artifact, options = {}) => {
             createdPayload = { presentation, artifact, options }

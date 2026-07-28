@@ -1,7 +1,7 @@
 ---
 phase: 8
 title: "Package-First G0/G1 Feasibility Handoff"
-status: pending
+status: completed
 priority: P1
 effort: "1-2d handoff/evidence review"
 dependencies: [7]
@@ -11,7 +11,9 @@ dependencies: [7]
 
 ## Overview
 
-Prepare claim-safe prerequisite status for the existing package-first plan's G0 canonical-contract and G1 OfficeCLI feasibility work. This phase is read/link/status intake only; it is not a second package-first implementation or gate-state authority.
+Complete the read/link/status handoff for the sibling package-first plan's G0 canonical-contract and G1 feasibility work. This phase is not a second implementation or gate-state authority; it records no G0/G1 closure and contributes no native or OfficeCLI claim.
+
+> **Reconciliation note — 2026-07-28:** The original detailed matrices remain execution context. The completion checklist and residuals below are the authoritative closeout record.
 
 ## Requirements
 
@@ -67,14 +69,13 @@ The sibling `260710-1757-pptx-package-first-officecli-roundtrip-deep-tdd` plan o
 - Direct-vs-launcher and resource-limit contradictions are visible to the owner plan.
 - Handoff cannot be mistaken for G2-G5 qualification.
 
-## Function / Interface Checklist
+## Completion Checklist — reconciled 2026-07-28
 
-- [ ] Existing owner plan is named as sole authority.
-- [ ] Owner-produced matrix schema/version/digest and as-of are linked.
-- [ ] Envelope includes `authority: observation`, `nonAuthoritative: true`, owner gate/subject, freshness, outcome, and `doesNotCloseGates`.
-- [ ] OfficeCLI prerequisite reason codes distinguish missing, mismatch, unsafe path, and execution failure.
-- [ ] Private inputs stay in `EVIDENCE_PRIVATE_DIR`; redacted report contains no private path, token, credential, or environment dump.
-- [ ] Handoff report does not mutate package-first status.
+- [x] The sibling package-first plan remains the sole G0-G5 authority.
+- [x] This phase records only non-authoritative handoff/status observations and does not alter package-first source, receipts, or gate state.
+- [x] Any private qualification material remains outside publishable closeout artifacts.
+- [ ] No fresh owner-provided G0 subject/digest receipt is promoted by this plan.
+- [ ] No G1 feasibility, containment, native validation, or OfficeCLI qualification is claimed.
 
 ## Test Scenario Matrix
 
@@ -98,13 +99,11 @@ npm run test:pptx:package:no-officecli
 
 Do not invent a second gateway or claim G0/G1 closed from this command alone. Record any owner-plan command skip and its reason.
 
-## Success Criteria
+## Success Criteria — reconciled 2026-07-28
 
-- [ ] One canonical G0 subject/digest is reported.
-- [ ] G1 prerequisite status has exact bounded reason codes.
-- [ ] Direct-vs-launcher and resource-enforcement contradictions are handed off.
-- [ ] No package-first source or gate state is edited here.
-- [ ] No G2-G5 claim is promoted.
+- [x] No package-first source or gate state is edited by this plan, and no G2-G5 claim is promoted.
+- [x] The handoff boundary remains explicit in the release readiness record.
+- [ ] Canonical G0 subject/digest and G1 prerequisite qualification remain owner-plan inputs, not outcomes of this phase.
 
 ## Risk Assessment
 

@@ -24,6 +24,19 @@ const {
   initializePackageStore,
   shutdownPackageStore,
 } = require('./services/pptx-import/package-store-runtime')
+const { stripControlChars } = require('./utils/strip-control-chars')
+
+/**
+ * A store that fails to release is exactly what leaves the writer lock held and
+ * blocks the next boot, so it must never fail silently. Log and continue: a noisy
+ * shutdown must not turn an otherwise healthy stop into a non-zero exit.
+ */
+function logStoreReleaseFailure(error) {
+  console.error(
+    '[shutdown] package store release failed:',
+    stripControlChars(error?.message || error).trim()
+  )
+}
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const presentationsRouter = require('./routes/presentations')
@@ -332,10 +345,10 @@ async function startServer(port) {
   return new Promise((resolve, reject) => {
     const server = http.createServer(app)
     server.once('close', () => {
-      shutdownPackageStore().catch(() => {})
+      shutdownPackageStore().catch(logStoreReleaseFailure)
     })
     server.once('error', async (error) => {
-      await shutdownPackageStore().catch(() => {})
+      await shutdownPackageStore().catch(logStoreReleaseFailure)
       reject(error)
     })
 
@@ -354,11 +367,39 @@ async function startServer(port) {
   })
 }
 
-if (require.main === module) {
-  startServer().catch((error) => {
-    console.error('Server failed to start', error)
-    process.exitCode = 1
-  })
+/**
+ * The package store writer lock outlives the process that took it, so an exit
+ * that skips this leaves the store locked and the next boot refusing to start.
+ */
+async function stopServer(server) {
+  if (server) server.close()
+  await shutdownPackageStore().catch(logStoreReleaseFailure)
 }
 
-module.exports = { app, startServer }
+/**
+ * Live sockets keep server.close() from ever completing, so exit explicitly
+ * once the store is released rather than waiting for the connections to drain.
+ */
+function installShutdownHandlers(server) {
+  let stopping = false
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.once(signal, () => {
+      if (stopping) return
+      stopping = true
+      console.log(`Received ${signal}, shutting down`)
+      stopServer(server).finally(() => process.exit(0))
+    })
+  }
+  return server
+}
+
+if (require.main === module) {
+  startServer()
+    .then(installShutdownHandlers)
+    .catch((error) => {
+      console.error('Server failed to start', error)
+      process.exitCode = 1
+    })
+}
+
+module.exports = { app, startServer, stopServer }

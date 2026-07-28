@@ -4,7 +4,7 @@ Phase 1 places **desired** behavior here so ordinary Vitest stays green. Owner p
 
 | ID | Desired invariant | Activation phase | Suggested path |
 |---|---|---|---|
-| D2-1 | One absolute `deadlineAt` from admission through busy-retry, SSE, poll, cancel, final GET | 2 | `client/src/utils/pptx-job-wait.test.js`, `api.test.js`, Home lifecycle |
+| D2-1 | Separate bounded admission deadline for busy retry and post-admission terminal-wait deadline for SSE, poll, and final GET | 2 | `client/src/utils/pptx-job-wait.test.js`, `api.test.js`, Home lifecycle |
 | D2-2 | SSE budget path performs bounded final GET (or hands remaining budget to poll) | 2 | `pptx-job-wait.test.js` |
 | D2-3 | Timeout/unknown recovery never calls POST `/reconcile` | 2 | Home + wait integration |
 | D2-4 | Separate outer / transport / control-plane AbortControllers; no child request after settle | 2 | wait + Home |

@@ -1,10 +1,10 @@
 ---
 title: "PPTX Import Reliability UX Evidence Hardening Deep TDD"
-description: "Close verified PPTX import lifecycle, package-consistency, resource, security, UX, operational, and evidence gaps while preserving the self-hosted best-effort claim ceiling."
+description: "Close core PPTX import reliability gaps while preserving the self-hosted best-effort claim ceiling; release closeout records a bounded best-effort software-lane decision with optional evidence lanes kept separate."
 status: completed
 priority: P1
 effort: "22-32 engineer-days core remediation/evidence plus policy and external evidence time"
-branch: master
+branch: feature/pptx-import-reliability-ux-evidence-hardening
 tags: [bugfix, pptx, import, reliability, security, frontend, testing, docs, package-first, tdd]
 blockedBy: []
 blocks: []
@@ -20,19 +20,25 @@ scopeDecision: hold
 
 This plan converts the completed read-only audit and red-team review into a staged, test-first remediation program. It makes the self-hosted best-effort importer truthful at client lifecycle, package-consistency, authority, resource/security, diagnostics, retention, and evidence boundaries. It does not become a second owner of the existing package-first G0-G5 plan and does not infer PowerPoint 1:1 or universal native capability.
 
+## Closeout Status — 2026-07-28
+
+Core remediation phases and the final release closeout are complete at the documented best-effort claim ceiling. The fresh final-source full-unit gate passed: 518 test files passed, 1 skipped; 4196 tests passed, 3 skipped; exit 0; duration 1227.75s. The best-effort software-lane decision is PASS WITH RESIDUALS, not a release authorization. Strict/native, full browser heuristic, performance, package-first G0-G4, and G5 evidence remain separate blocked/open/skipped lanes. The current decision record and rollback procedure are [release readiness](../reports/pptx-import-release-readiness-260728-1756.md) and [rollback runbook](../reports/pptx-import-rollback-runbook-260728-1756.md).
+
+The current focused client lifecycle evidence is 69 passed tests across the wait/API/HomePage suites; full lint has 0 errors and 27 existing warnings; production build passed; and the critical browser journey passed 1/1 in 38.7s. Strict/native qualification, full browser heuristic qualification, performance qualification, package-first G0-G4, and G5 oracle evidence remain separate rows; none is promoted by this plan.
+
 ## Product and Delivery Contract
 
 ### Outcome
 
 - Best-effort PPTX import remains usable and clearly bounded.
-- Admission, wait, SSE, polling, timeout, cancellation, visibility, and repair behavior are deterministic.
+- Admission and admitted-job terminal waiting use separate bounded clocks; SSE, polling, timeout, visibility, and repair behavior retain their explicit safety boundaries. Queued progress is fenced after handoff, terminal SSE outcomes remain deliverable, and settlement aborts the wait-owned recovery transport.
 - Automatic timeout recovery is non-destructive: it performs bounded durable status GET only; the existing destructive repair endpoint is never called automatically.
-- Durable completion is openable only after an identity-bound authoritative read proves package head, generation/revision, and compatibility projection provenance are consistent.
+- Durable completion remains pending visibility until the current server listability result permits opening; a fuller identity/provenance resolver remains an explicit residual.
 - A known orphan/missing-head row cannot make healthy `/api/presentations` rows unavailable. Current missing-head behavior is a list-wide HTTP 422, not a proven literal 500; the repaired contract is list isolation plus observable repair metadata.
-- Cross-store repair is a durable stepwise saga with persisted provenance and no stale deletion of a newer incarnation.
+- Core rollback fencing and poisoned-outbox isolation protect delivered repair paths; a fully expanded persisted multi-state repair saga is not claimed.
 - Resource, converter, external-media, report, and terminal-error boundaries are explicit. Parser heap limits are not presented as whole-server RSS isolation.
 - Import reports survive navigation/reload in an editor-only bounded DTO and do not leak raw diagnostics, source names, job IDs, authority IDs, or child stderr through GitHub/sync/export DTOs.
-- Durable lifecycle and retention protect rollback/idempotency/reconcile authority and physically compact StateStore history only after an approved policy and crash-safe implementation.
+- Durable lifecycle and retention preserve rollback/idempotency/reconcile authority while retention remains dry-run/default-off; physical StateStore history compaction is not enabled or claimed.
 - Corpus, strict, browser, performance, package-first, and PowerPoint evidence remain separate claim lanes with run provenance.
 - Best-effort release has an executable terminal gate even if package-first or external PowerPoint evidence remains unavailable.
 
@@ -85,12 +91,12 @@ This plan converts the completed read-only audit and red-team review into a stag
 
 ## Architecture Decisions
 
-1. **One absolute deadline from admission:** create `deadlineAt` before POST admission and carry it through busy retry, SSE, poll, cancel, and final status read. Admission expiry is not allowed to wait indefinitely on `Retry-After`.
-2. **Separate signal responsibilities:** an outer ownership signal controls unmount/ownership; child controllers own SSE/poll transport; a bounded control-plane controller owns DELETE cancel; final GET has its own remaining-time budget. No child request survives settlement or outer ownership loss.
+1. **Separate bounded admission and terminal-wait clocks:** an admission deadline begins before POST and bounds busy retry plus `Retry-After`. Once the server admits a job, a distinct terminal-wait deadline begins for SSE/poll transport and its reserved bounded final status GET. Queue time cannot consume the admitted job's terminal-wait budget, and neither phase can wait indefinitely.
+2. **Separate signal responsibilities:** the outer ownership signal controls unmount/ownership; child controllers own SSE/poll and bounded final-status transport. Automatic deadline recovery is read-only. Current ownership-loss cleanup may request best-effort cancellation; the explicit Cancel UI/control-plane interaction remains a residual and must use a dedicated bounded controller if added. No transport child survives settlement or ownership loss.
 3. **Status is not repair:** timeout/unknown recovery performs GET-only status/visibility inspection. The current POST `/jobs/:jobId/reconcile` is destructive authority repair and requires classified state plus authority binding; it is never automatic.
-4. **Contract B remains explicit:** durable package publication may precede compatibility visibility, but `done` is openable only when a single identity-bound authoritative resolver proves the package head, expected generation/revision/hash, and projection provenance.
-5. **Consistency is a durable saga:** persist repair intent before the first cross-store side effect; advance `apply-pending`, `applied-unacked`, `compensating`, `reconcile-required`, and `resolved` states durably. Never collapse rollback failure into ordinary `failed`.
-6. **Compatibility provenance is server-owned:** projection metadata or a sidecar index retains job/incarnation/write/head identity. Conditional removal is an atomic locked RMW under documented lock order and cannot stale-delete equal-generation replacements. The selected capability/principal authority is propagated to every direct status/SSE/DELETE/repair caller, including E2E and oracle fixtures, without persistence/logging.
+4. **Contract B remains explicit:** durable package publication may precede compatibility visibility, and the current server listability result withholds openable identity until visibility is ready. The planned full identity/provenance resolver remains residual.
+5. **Delivered repair scope is bounded:** existing rollback fencing and poisoned-outbox isolation protect current repair paths. The proposed persisted `apply-pending` through `resolved` saga is not implemented or claimed.
+6. **Compatibility provenance remains server-owned where delivered:** the selected job-control authority is propagated to direct status/SSE/DELETE/repair callers without persistence/logging. Full projection-provenance fencing and equal-generation compensation coverage remain residual.
 7. **List isolation is backward-compatible:** bulk readers classify known missing-head rows and return healthy rows. `/api/presentations` remains a bare array; bounded quarantine metadata uses headers or a separate health/repair surface. Explore and sync callers receive explicit policies/tests.
 8. **Async errors are terminal DTO data:** POST admission statuses cover synchronous upload/admission failures. Parser/resource/snapshot failures after 202 preserve bounded `failureStatus`, `code`, `type`, `reasonCode`, and `stage` in GET/SSE job DTOs; the plan does not promise later HTTP 413/422 responses without an intentional API redesign.
 9. **Layered resource security:** converter path/env, external URL policy, archive/OOXML/media allocation, background data URLs, snapshots, and host-memory telemetry are separate controls. No OS/network sandbox or whole-server RSS claim is made without implementation evidence.
@@ -144,33 +150,36 @@ Implementation scouting for Phase 2 and Phase 4 may run while Phase 3 is under c
 | # | Phase | Priority | Dependencies | Status |
 |---|---|---|---|---|
 | 1 | [Baseline Contracts And Evidence Inventory](./phase-01-start.md) | P1 | — | Completed |
-| 2 | [Wait Lifecycle Reconcile And Cancellation](./phase-02-wait-lifecycle-reconcile-and-cancellation.md) | P1 | 1, 3 | Completed |
-| 3 | [Package Consistency And Ghost Row Recovery](./phase-03-package-consistency-and-ghost-row-recovery.md) | P1 | 1 | Completed (core contracts; full multi-state saga schema intentionally narrowed) |
-| 4 | [Resource Security And Error Boundary Hardening](./phase-04-resource-security-and-error-boundary-hardening.md) | P1 | 1, 3 | Completed (core security/resource bounds; host RSS isolation not claimed) |
-| 5 | [Import Diagnostics And User Experience](./phase-05-import-diagnostics-and-user-experience.md) | P1/P2 | 2, 3, 4 | Completed (report panel + external DTO + Home typed; EditorPage mount optional) |
-| 6 | [Durable Operations Retention And Legacy Durability](./phase-06-durable-operations-retention-and-legacy-durability.md) | P2 | 3, 4 | Completed (dry-run default-off; physical compaction not enabled) |
-| 7 | [Qualification Evidence And Provenance Refresh](./phase-07-qualification-evidence-and-provenance-refresh.md) | P1 | 1-6 | Completed (stale claims demoted; full corpus re-run optional/ops) |
-| 8 | [Package-First G0/G1 Feasibility Handoff](./phase-08-package-first-g0-g1-feasibility-handoff.md) | P1 | 7 | Completed (handoff only) |
-| 9 | [Package-First G2/G3/G4 Capability Qualification](./phase-09-package-first-g2-g3-g4-capability-qualification.md) | P1 | 7, 8 | Completed (handoff only) |
-| 10 | [PowerPoint Oracle G5 Candidate Evidence Intake](./phase-10-powerpoint-oracle-g5-external-gate.md) | P1 | 7, 8, 9 + active owner G5 contract | Completed (blocked external; status only) |
-| 11 | [Final Release Documentation And Rollback Gate](./phase-11-final-release-documentation-and-rollback-gate.md) | P1 | 7 | Completed (best-effort matrix + residual honesty) |
+| 2 | [Wait Lifecycle Reconcile And Cancellation](./phase-02-wait-lifecycle-reconcile-and-cancellation.md) | P1 | 1, 3 | Completed core contract (separate admission and terminal-wait clocks; explicit Cancel UI residual) |
+| 3 | [Package Consistency And Ghost Row Recovery](./phase-03-package-consistency-and-ghost-row-recovery.md) | P1 | 1 | Completed core contracts (full multi-state durable saga and media manifest intentionally not claimed) |
+| 4 | [Resource Security And Error Boundary Hardening](./phase-04-resource-security-and-error-boundary-hardening.md) | P1 | 1, 3 | Completed core bounds (host RSS, OS, and network isolation not claimed) |
+| 5 | [Import Diagnostics And User Experience](./phase-05-import-diagnostics-and-user-experience.md) | P1/P2 | 2, 3, 4 | Completed core report/status surface (no broad editor redesign) |
+| 6 | [Durable Operations Retention And Legacy Durability](./phase-06-durable-operations-retention-and-legacy-durability.md) | P2 | 3, 4 | Completed dry-run safety scope (physical compaction remains disabled) |
+| 7 | [Qualification Evidence And Provenance Refresh](./phase-07-qualification-evidence-and-provenance-refresh.md) | P1 | 1-6 | Completed evidence reconciliation (strict/native, full performance, and oracle remain separate blockers) |
+| 8 | [Package-First G0/G1 Feasibility Handoff](./phase-08-package-first-g0-g1-feasibility-handoff.md) | P1 | 7 | Completed handoff only (no G0/G1 promotion) |
+| 9 | [Package-First G2/G3/G4 Capability Qualification](./phase-09-package-first-g2-g3-g4-capability-qualification.md) | P1 | 7, 8 | Completed handoff only (no G2/G3/G4 promotion) |
+| 10 | [PowerPoint Oracle G5 Candidate Evidence Intake](./phase-10-powerpoint-oracle-g5-external-gate.md) | P1 | 7, 8, 9 + active owner G5 contract | Completed blocked-status intake only (G5 remains blocked) |
+| 11 | [Final Release Documentation And Rollback Gate](./phase-11-final-release-documentation-and-rollback-gate.md) | P1 | 7 | Completed bounded best-effort closeout; optional lanes remain blocked/open/skipped |
 
-## Global Success Criteria
+## Global Completion and Release Criteria — reconciled 2026-07-28
 
-- [x] Client admission-to-terminal wait has one absolute deadline, bounded final GET, correct child/outer signals, typed cancellation, and no late UI effects. *(utility-level; Home cancel UX residual)*
-- [x] Timeout never invokes destructive repair; explicit cancel has pre-publication and post-visibility `too-late/done` semantics. *(timeout = GET-only; too-late server policy pre-existing)*
-- [x] In-memory Map and durable serializer callers hide `presentationId` unless identity-bound authoritative visibility is true, including durable DELETE. *(listable predicate; full provenance resolver residual)*
-- [x] Ack/post-drain/media failure uses persisted repair intent/provenance; compensation is idempotent, equal-generation-safe, and startup-replayable. *(rollback fencing pre-existing; poisoned outbox dead-letter isolation added; full multi-state saga schema not expanded beyond store job fields)*
-- [x] A known missing-head row cannot make healthy list rows unavailable; current 422 baseline and repaired array-compatible diagnostics are documented.
-- [x] Presentations, explore, bulk sync, and single sync policies are tested for shared-reader changes.
-- [x] Async parser/resource/snapshot failures preserve bounded terminal error DTOs; synchronous admission statuses remain compatible.
-- [x] EMF/WMF converter uses verified absolute executable authority and narrow environment; external imported URLs are blocked by default or fully origin-pinned.
-- [x] Background data URLs, media allocation, snapshot ceilings, worker/decode settlement, and host-memory limitations are measured/reported honestly. *(data URL aggregate budget; snapshot ceilings pre-existing; host RSS isolation not claimed)*
-- [x] Editor report survives reload; external/export DTOs contain no raw stderr, source names, job/authority IDs, paths, or token-like values.
-- [x] Durable lifecycle/retention protects rollback/idempotency/reconcile authority and has physical StateStore/WAL compaction evidence before destructive enablement. *(dry-run only; compaction default-off until policy approval)*
-- [x] Fresh corpus, strict, adversarial, browser, tiny/full performance, and oracle artifacts carry actual run provenance and bounded/private-public handling. *(stale claims demoted; ops re-run optional)*
-- [x] Package-first G0-G5 remains owned by the sibling plan; no handoff phase promotes claims.
-- [x] Best-effort release has an explicit decision independent of G5; strict/native/package-first/PowerPoint rows remain separately labelled.
+- [x] Admission retry uses its own bounded deadline; post-admission SSE/poll terminal wait uses a separate bounded deadline with a reserved final status GET.
+- [x] Automatic timeout recovery is GET-only and never invokes destructive repair. Ownership loss can request best-effort cancellation; explicit Cancel UI/control remains a residual.
+- [x] Unknown-outcome copy now matches GET-only timeout recovery and directs the user to check existing presentations before retrying; admission body-timeout ambiguity receives the same check-existing guidance.
+- [x] Non-timeout poll failures use the bounded final status read before exposing a typed unknown outcome.
+- [x] In-memory and durable job responses withhold an openable presentation identifier until the current server visibility result is listable. A fuller identity/provenance resolver remains a residual.
+- [x] Core rollback fencing and poisoned-outbox isolation protect known failure paths. A fully expanded persisted multi-state repair saga is not implemented or claimed.
+- [x] Known missing-head rows are isolated so healthy list rows remain available, without changing the list response shape.
+- [x] Shared presentation, explore, and sync reader policies have focused coverage.
+- [x] Asynchronous parser/resource/snapshot failures retain bounded terminal error information while synchronous admission responses remain compatible.
+- [x] External imported media is blocked by default; the converter remains opt-in and path-pinned with a narrow child environment. No OS, network, or host-wide RSS isolation claim is made.
+- [x] Background-data media budgeting, snapshot limits, cleanup settlement, and bounded report handling are in the software contract. Crash-safe media consistency remains unclaimed.
+- [x] Editor-only import reporting and external/export redaction retain the documented trust boundary.
+- [x] Retention remains dry-run/default-off; physical StateStore/WAL compaction is not enabled or claimed.
+- [x] Current focused client, adversarial, corpus, lint, build, and critical browser-journey evidence is recorded without cross-lane promotion; the critical journey passed 1/1 in 38.7s and lint has 0 errors with 27 existing warnings.
+- [x] Package-first G0-G5 remains owned by the sibling plan; this plan's handoffs do not close any of those gates.
+- [x] Fresh final-source full-unit verification passed: 518 test files passed, 1 skipped; 4196 tests passed, 3 skipped; exit 0; duration 1227.75s. Strict/native is intentionally non-zero, full performance is explicitly skipped without its opt-in, and oracle integrity is blocked; none is promoted by this result.
+- [x] Final best-effort software-lane decision is PASS WITH RESIDUALS, not a release authorization. Strict/native, browser heuristic, performance, package-first, and G5 rows remain separately labelled in the readiness record.
 
 ## Validation Commands
 
@@ -193,11 +202,11 @@ npm run build
 npm run test -- --exclude client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx
 ```
 
-The full-unit command excludes only the documented unrelated baseline failure at `client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx`; record that baseline separately and do not call the exclusion a fix. Use existing path-specific tests where a named route suite does not exist; create a new focused test only when the revised phase explicitly owns that seam. Heavy/performance/oracle truth gates may intentionally be non-zero or structured-skipped; retain the exact reason and never report a skip as qualification success.
+The full-unit command excludes only the documented unrelated baseline failure; record that baseline separately and do not call the exclusion a fix. The fresh final-source full-unit outcome is **PASS**: 518 test files passed, 1 skipped; 4196 tests passed, 3 skipped; exit 0; duration 1227.75s. The focused client lifecycle command passed 69 tests, full lint passed with 0 errors and 27 existing warnings, production build passed, and the critical browser journey passed 1/1 in 38.7s. Use existing focused suites where a named route suite does not exist. Heavy/performance/oracle truth gates may intentionally be non-zero or structured-skipped; retain the exact reason and never report a skip as qualification success.
 
 ## Rollback and Safety
 
-- This plan revision modifies only plan documents. Do not touch application source, tests, configuration, secrets, commits, or user-owned `.tmp` files.
+- This closeout task modifies only plan artifacts and redacted reports. It does not authorize application-source, test, configuration, secret, commit, or user-owned temporary-file changes.
 - Implementation phases begin from a clean checkpoint that preserves unrelated dirty work.
 - Server consistency changes require persisted identity/provenance fences, durable repair states, injected crash/interleave tests, and no package/presentation lock inversion.
 - Media crash-consistency claim is enabled only if its durable manifest/replay gate passes; otherwise release wording narrows explicitly.
@@ -225,13 +234,7 @@ The full-unit command excludes only the documented unrelated baseline failure at
 
 ## Plan Handoff Boundary
 
-This document is a plan only. It does not modify product code, tests, evidence, or existing sibling plans. After validation and human acceptance of the open decisions, implementation may start with:
-
-```text
-/ak:cook C:\Work\NavSlidesEditor\plans\260726-0616-pptx-import-reliability-ux-evidence-hardening-deep-tdd\plan.md --tdd
-```
-
-Before cooking, create an implementation branch from the current master state and re-check the dirty-worktree boundary.
+This document is the implementation and closeout record for the scoped best-effort lane. It does not authorize commits, pushes, releases, destructive retention, or changes to the sibling package-first/G5 authority. Remaining residual implementation and policy decisions require separate scope, evidence, and user authorization.
 
 ## Unresolved Questions
 
