@@ -162,6 +162,19 @@
     "coverageMode": "executable"
   },
   {
+    "id": "canvas.resize-boundary",
+    "category": "canvas",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke",
+      "deep"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
     "id": "canvas.rotate-snap",
     "category": "canvas",
     "source": "manifest",

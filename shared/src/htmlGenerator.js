@@ -15,6 +15,7 @@ const {
   presentationUsesTokens,
 } = require('./design-tokens.js')
 const { getFxModule, buildFxRuntimeScript } = require('./fx/index.js')
+const { resolveChartBackground } = require('./chart-colors.js')
 const { buildLivePresenterRuntime } = require('./live-presenter-runtime.js')
 const {
   normalizeTransition,
@@ -86,6 +87,23 @@ function presentationUsesTransitionMetadata(presentation) {
 
 function getSectionBackgroundStyle(background, usesTokens) {
   return usesTokens && (!background || background.type === 'none') ? 'background:var(--ns-bg);' : ''
+}
+
+function getPresentChartBackground(slide, deckTokens, usesTokens) {
+  const slideTokens = mergeTokens(deckTokens, slide?.designTokens)
+  const fallbackColor = slide?.background?.type === 'fx'
+    ? '#0d0221'
+    : usesTokens
+      ? slideTokens.colors?.bg
+      : '#000000'
+  return resolveChartBackground(slide?.background, fallbackColor)
+}
+
+function getPrintChartBackground(slide, deckTokens) {
+  const slideTokens = mergeTokens(deckTokens, slide?.designTokens)
+  return resolveChartBackground(slide?.background, slideTokens.colors?.bg || '#1e1e2e', {
+    preferFallback: true,
+  })
 }
 
 /**
@@ -179,6 +197,7 @@ function generateRevealHTML(presentation) {
   let pageCounter = 0
 
   const usesTokens = presentationUsesTokens(presentation)
+  const deckTokens = mergeTokens(DEFAULT_TOKENS, presentation.designTokens)
   const tokenInfo = usesTokens ? buildTokenStyleBlock(presentation) : null
   const slideOverrideIdx = tokenInfo ? tokenInfo.slideOverrideIdx : null
   const fxRuntimeScript = presentationUsesFx(presentation) ? buildFxRuntimeScript() : ''
@@ -199,7 +218,10 @@ function generateRevealHTML(presentation) {
       const slideNotes = getSlideNotes(slide)
       const notes = slideNotes ? `<aside class="notes">${escapeHtml(slideNotes)}</aside>` : ''
 
-      const elementsHtml = renderSlideElements(slide, { forPrint: false })
+      const elementsHtml = renderSlideElements(slide, {
+        forPrint: false,
+        slideBackground: getPresentChartBackground(slide, deckTokens, usesTokens),
+      })
 
       // Page numbering: increment counter only for slides with showPageNumber !== false
       const slideHasPageNum = slide.showPageNumber !== false
@@ -258,7 +280,10 @@ function generateRevealHTML(presentation) {
             const childNotes = childNotesText
               ? `<aside class="notes">${escapeHtml(childNotesText)}</aside>`
               : ''
-            const childElements = renderSlideElements(child, { forPrint: false })
+            const childElements = renderSlideElements(child, {
+              forPrint: false,
+              slideBackground: getPresentChartBackground(child, deckTokens, usesTokens),
+            })
             const childBgStyle = getSectionBackgroundStyle(child.background, usesTokens)
             return `    <section${childAutoAnimate}${childTransitionAttrs}${childBg}${childIdxAttr} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${getSlideTransitionStyle(child)}${childBgStyle}">\n${childFxCanvas}${childElements}\n      ${childNotes}\n    </section>`
           })
@@ -492,12 +517,14 @@ function generatePrintHTML(presentation, options = {}) {
   const pagesHtml = pages
     // eslint-disable-next-line unused-imports/no-unused-vars
     .map(({ slide, maxIdx, countPageNumber }, pageIndex) => {
-      const bgStyle = getBgPrintStyle(slide.background, printDeckTokens)
+      const slidePrintTokens = mergeTokens(printDeckTokens, slide?.designTokens)
+      const bgStyle = getBgPrintStyle(slide.background, slidePrintTokens)
 
       const elementsHtml = renderSlideElements(slide, {
         forPrint: true,
         maxFragIdx: maxIdx,
         exportElementIds: options.exportElementIds,
+        slideBackground: getPrintChartBackground(slide, printDeckTokens),
       })
 
       // Per-slide page numbering

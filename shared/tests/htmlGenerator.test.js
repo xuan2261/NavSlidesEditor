@@ -361,4 +361,62 @@ describe('htmlGenerator', () => {
     expect(html).toContain('99%')
     expect(html).not.toContain('/api/plugins/')
   })
+
+  it('uses the rendered default background for charts in present and print HTML', () => {
+    const chart = {
+      id: 'chart-1',
+      type: 'chart',
+      chartType: 'bar',
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 240,
+      chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
+    }
+    const presentation = {
+      title: 'Chart defaults',
+      theme: 'black',
+      slides: [{ id: 's1', background: { type: 'none' }, elements: [chart] }],
+    }
+
+    const present = generateRevealHTML(presentation)
+    expect(present).toContain("ticks:{color:'#f8fafc'}")
+    expect(present).toContain("grid:{color:'rgba(248,250,252,0.28)'}")
+
+    const print = generatePrintHTML(presentation, { autoPrint: false, includePrintBar: false })
+    expect(print).toContain('background-color:#1e1e2e;')
+    expect(print).toContain('"color":"#f8fafc"')
+    expect(print).toContain('"color":"rgba(248,250,252,0.28)"')
+  })
+
+  it('uses merged token backgrounds and nested FX fallbacks for chart palette resolution', () => {
+    const chart = {
+      id: 'chart-1',
+      type: 'chart',
+      chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
+    }
+    const lightTokenPresent = generateRevealHTML({
+      designTokens: { colors: { bg: '#f8fafc' } },
+      slides: [{ background: { type: 'none' }, elements: [chart] }],
+    })
+    expect(lightTokenPresent).toContain("ticks:{color:'#141413'}")
+
+    const darkFxPresent = generateRevealHTML({
+      slides: [{
+        background: { type: 'fx', fx: { params: { bg: '#1e1e2e' } } },
+        elements: [chart],
+      }],
+    })
+    expect(darkFxPresent).toContain("ticks:{color:'#f8fafc'}")
+
+    const lightFxPrint = generatePrintHTML({
+      designTokens: { colors: { bg: '#1e1e2e' } },
+      slides: [{
+        background: { type: 'fx', fx: { fallbackColor: '#f8fafc' } },
+        elements: [chart],
+      }],
+    }, { autoPrint: false, includePrintBar: false })
+    expect(lightFxPrint).toContain('background-color:#f8fafc;')
+    expect(lightFxPrint).toContain('"color":"#141413"')
+  })
 })

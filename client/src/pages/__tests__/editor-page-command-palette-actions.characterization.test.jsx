@@ -94,7 +94,7 @@ beforeEach(() => {
   h.updatePresentation.mockClear()
   h.presentInWindow.mockClear()
   useEditorStore.setState({ selectedElementIds: [], editingElementId: null, clipboard: null })
-  useUIStore.setState({ showCommandPalette: false })
+  useUIStore.setState({ showCommandPalette: false, zoom: 1, userZoomMode: false })
   globalThis.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) }))
 })
 
@@ -146,6 +146,36 @@ describe('EditorPage command palette element actions', () => {
     fireEvent.click(screen.getByText('Start Slideshow'))
 
     expect(h.presentInWindow).toHaveBeenCalledWith(expect.objectContaining({ id: 'command-deck' }))
+  })
+
+  it('[cap:command.zoomIn] dispatches Zoom In through the command palette', async () => {
+    useUIStore.setState({ zoom: 1, userZoomMode: true })
+    renderPage()
+    await screen.findByDisplayValue('Command Deck')
+
+    await runCommandAndFlushSave('Zoom In')
+
+    expect(useUIStore.getState()).toMatchObject({ zoom: 1.1, userZoomMode: true })
+  })
+
+  it('[cap:command.zoomOut] dispatches Zoom Out through the command palette', async () => {
+    useUIStore.setState({ zoom: 1, userZoomMode: true })
+    renderPage()
+    await screen.findByDisplayValue('Command Deck')
+
+    await runCommandAndFlushSave('Zoom Out')
+
+    expect(useUIStore.getState()).toMatchObject({ zoom: 0.9, userZoomMode: true })
+  })
+
+  it('[cap:command.resetZoom] dispatches Fit to Window through the command palette', async () => {
+    useUIStore.setState({ zoom: 1.35, userZoomMode: true })
+    renderPage()
+    await screen.findByDisplayValue('Command Deck')
+
+    await runCommandAndFlushSave('Fit to Window')
+
+    expect(useUIStore.getState().userZoomMode).toBe(false)
   })
 
   it('[cap:command.insertSlide] opens the slide template picker through the command palette', async () => {

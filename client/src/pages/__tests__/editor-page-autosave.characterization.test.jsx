@@ -110,7 +110,7 @@ describe('EditorPage autosave characterization', () => {
     })
   })
 
-  it('shows failure state and retry persists the failed snapshot', async () => {
+  it('[cap:flow.autosave tier:deep] shows failure state and retry persists the failed snapshot', async () => {
     renderPage()
     const title = await loadAndGetTitle()
     h.updatePresentation

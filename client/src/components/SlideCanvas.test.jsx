@@ -26,6 +26,56 @@ function renderCanvas(props = {}) {
 }
 
 describe('SlideCanvas media drop', () => {
+  it('passes the active slide background to chart rendering', () => {
+    renderCanvas({
+      slide: {
+        id: 's1',
+        background: { type: 'color', color: '#1e1e2e' },
+        elements: [
+          {
+            id: 'chart-1',
+            type: 'chart',
+            x: 0,
+            y: 0,
+            width: 400,
+            height: 240,
+            chartType: 'bar',
+            chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
+          },
+        ],
+      },
+    })
+
+    const srcDoc = screen.getByTitle('Chart').getAttribute('srcdoc')
+    expect(srcDoc).toContain("ticks:{color:'#f8fafc'}")
+    expect(srcDoc).toContain("grid:{color:'rgba(248,250,252,0.28)'}")
+  })
+
+  it('uses merged token background when a slide has no explicit background', () => {
+    renderCanvas({
+      designTokens: { colors: { bg: '#f8fafc' } },
+      slide: {
+        id: 's1',
+        background: { type: 'none' },
+        elements: [
+          {
+            id: 'chart-1',
+            type: 'chart',
+            x: 0,
+            y: 0,
+            width: 400,
+            height: 240,
+            chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
+          },
+        ],
+      },
+    })
+
+    const srcDoc = screen.getByTitle('Chart').getAttribute('srcdoc')
+    expect(srcDoc).toContain("ticks:{color:'#141413'}")
+    expect(srcDoc).toContain("grid:{color:'rgba(20,20,19,0.16)'}")
+  })
+
   it('routes image, video, and audio drops through the media handler with slide coordinates', async () => {
     const onAddMedia = vi.fn(() => Promise.resolve())
     useUIStore.setState({ zoom: 1 })
