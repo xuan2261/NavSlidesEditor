@@ -1,108 +1,179 @@
-import { useState, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { X, RotateCcw } from 'lucide-react'
 import { Button } from '../components/ui'
-import { sanitizeRichTextHtml } from '../utils/content-safety'
+import { generateOfflineHTML } from '../utils/offlineExport'
+import { resolveEffectiveTransition } from 'revealjs-shared'
+import { useRevealPreviewFrame } from '../hooks/use-reveal-preview-frame'
+import { useTransitionPreviewDialog } from '../hooks/use-transition-preview-dialog'
+import {
+  buildTransitionPreviewHtml,
+  resolveTransitionPreviewSlides,
+} from './transition-preview-helpers'
 
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
+const DIALOG_TITLE_ID = 'transition-preview-title'
+const DIALOG_DESCRIPTION_ID = 'transition-preview-description'
 
-export default function TransitionPreview({ presentation, fromIndex, onClose }) {
-  const [transition, setTransition] = useState(presentation.transition || 'slide')
+export default function TransitionPreview({
+  presentation,
+  fromIndex,
+  verticalEdit = null,
+  onClose,
+}) {
   const [key, setKey] = useState(0)
-  const iframeRef = useRef(null)
+  const [previewHtml, setPreviewHtml] = useState('')
+  const [previewError, setPreviewError] = useState(null)
+  const dialogRef = useRef(null)
+  const closeButtonRef = useRef(null)
+  const previewSlides = useMemo(
+    () => resolveTransitionPreviewSlides({
+      presentation,
+      currentSlideIndex: fromIndex,
+      verticalEdit,
+    }),
+    [presentation, fromIndex, verticalEdit]
+  )
+  const slide1 = previewSlides.currentSlide
+  const slide2 = previewSlides.nextSlide
+  const hasNextSlide = Boolean(slide1 && slide2)
+  const effective = useMemo(
+    () => resolveEffectiveTransition({
+      presentation,
+      currentSlide: slide1,
+      nextSlide: slide2,
+    }),
+    [presentation, slide1, slide2]
+  )
+  const [transitionOverride, setTransitionOverride] = useState(null)
+  const selectedTransition = transitionOverride || effective.transition
+  const previewSource = useMemo(() => {
+    if (!slide1 || !slide2) return null
+    return buildTransitionPreviewHtml({
+      presentation,
+      currentSlide: slide1,
+      nextSlide: slide2,
+      transitionOverride: selectedTransition,
+    })
+  }, [presentation, slide1, slide2, selectedTransition])
+  const resolution = previewSource?.resolution || { width: 960, height: 540 }
+  const { iframeRef } = useRevealPreviewFrame(previewHtml, null, key)
 
-  const toIndex = Math.min(fromIndex + 1, (presentation.slides || []).length - 1)
-  if (fromIndex === toIndex) return null // only one slide
-
-  const slide1 = presentation.slides[fromIndex]
-  const slide2 = presentation.slides[toIndex]
-
-  function getBgAttrs(bg) {
-    if (!bg) return ''
-    if (bg.type === 'color' && bg.color) return ` data-background-color="${bg.color}"`
-    if (bg.type === 'gradient' && bg.gradient) return ` data-background-gradient="${bg.gradient}"`
-    return ''
-  }
-
-  function renderElements(elements) {
-    return (elements || [])
-      .map((el) => {
-        const style = `position:absolute;left:${el.x}px;top:${el.y}px;width:${el.width}px;height:${el.height}px;z-index:${el.zIndex || 1};overflow:hidden;box-sizing:border-box;`
-        if (el.type === 'text')
-          return `<div style="${style}padding:8px 12px;color:white;">${sanitizeRichTextHtml(el.content || '')}</div>`
-        if (el.type === 'shape')
-          return `<div style="${style}background:${el.fill || '#6366f1'};border-radius:${el.shape === 'circle' ? '50%' : '0'};"></div>`
-        return `<div style="${style}background:rgba(99,102,241,0.2);"></div>`
+  useEffect(() => {
+    if (!previewSource) return undefined
+    let active = true
+    generateOfflineHTML(previewSource.html, { strictRequiredAssets: true })
+      .then((offlineHtml) => {
+        if (active) {
+          setPreviewError(null)
+          setPreviewHtml(offlineHtml)
+        }
       })
-      .join('\n')
+      .catch(() => {
+        if (!active) return
+        setPreviewError('Offline assets could not be fully inlined; using local assets.')
+        setPreviewHtml(previewSource.html)
+      })
+    return () => {
+      active = false
+    }
+  }, [previewSource])
+
+  useTransitionPreviewDialog({ dialogRef, closeButtonRef, onClose })
+
+  if (!slide1 || !hasNextSlide) {
+    return (
+      <div
+        className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) onClose()
+        }}
+      >
+        <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={DIALOG_TITLE_ID}
+          aria-describedby={DIALOG_DESCRIPTION_ID}
+          className="bg-card rounded-xl border border-border shadow-2xl w-[620px] max-w-[90vw] overflow-hidden"
+        >
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+            <div className="min-w-0 flex-1">
+              <h2 id={DIALOG_TITLE_ID} className="font-semibold text-sm">Transition Preview</h2>
+              <p id={DIALOG_DESCRIPTION_ID} className="text-xs text-text-muted">
+                There is no next slide to preview.
+              </p>
+            </div>
+            <Button
+              ref={closeButtonRef}
+              variant="icon"
+              onClick={onClose}
+              title="Close preview"
+              aria-label="Close preview"
+            >
+              <X size={16} />
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  const html = `<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/${presentation.theme || 'black'}.css">
-<style>
-  html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;background:#000;}
-  .reveal .slides section{padding:0!important;text-align:left!important;font-family:-apple-system,sans-serif;}
-  .reveal .slides section *{text-transform:none!important;letter-spacing:normal!important;}
-  .reveal .slides section h1{font-size:2.5em;font-weight:bold;line-height:1.2;margin:0 0 .4em;}
-  .reveal .slides section h2{font-size:1.6em;font-weight:bold;line-height:1.2;margin:0 0 .4em;}
-  .reveal .slides section p{margin:0 0 .4em;line-height:1.5;}
-</style>
-</head>
-<body>
-<div class="reveal">
-<div class="slides">
-  <section${getBgAttrs(slide1.background)} style="padding:0;width:960px;height:540px;overflow:hidden;font-size:42px;">${renderElements(slide1.elements)}</section>
-  <section${getBgAttrs(slide2.background)} style="padding:0;width:960px;height:540px;overflow:hidden;font-size:42px;">${renderElements(slide2.elements)}</section>
-</div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
-<script>
-Reveal.initialize({
-  hash:false,width:960,height:540,margin:0,minScale:0,maxScale:10,center:false,
-  transition:'${transition}',controls:false,progress:false,
-  keyboard:true,overview:false
-});
-setTimeout(()=>Reveal.next(),800);
-</script>
-</body>
-</html>`
-
+  const previewScale = Math.min(560 / resolution.width, 320 / resolution.height)
   return (
     <div
       className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose()
       }}
     >
-      <div className="bg-card rounded-xl border border-border shadow-2xl w-[620px] max-w-[90vw] overflow-hidden">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={DIALOG_TITLE_ID}
+        aria-describedby={DIALOG_DESCRIPTION_ID}
+        className="bg-card rounded-xl border border-border shadow-2xl w-[620px] max-w-[90vw] overflow-hidden"
+      >
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-          <span className="font-semibold text-sm">Transition Preview</span>
-          <span className="text-xs text-text-muted">
-            Slide {fromIndex + 1} → {toIndex + 1}
-          </span>
+          <div className="min-w-0 flex-1">
+            <h2 id={DIALOG_TITLE_ID} className="font-semibold text-sm">Transition Preview</h2>
+            <p id={DIALOG_DESCRIPTION_ID} className="text-xs text-text-muted">
+              Slide {previewSlides.currentAddress} → {previewSlides.nextAddress}
+              {effective.direction !== 'default' ? ` · ${effective.direction}` : ''}
+              {effective.duration !== null ? ` · ${effective.duration}ms` : ''}
+            </p>
+          </div>
           <div className="flex items-center gap-2 ml-auto">
             <select
-              value={transition}
-              onChange={(e) => {
-                setTransition(e.target.value)
-                setKey((k) => k + 1)
+              aria-label="Transition"
+              value={selectedTransition}
+              onChange={(event) => {
+                setTransitionOverride(event.target.value)
+                setKey((value) => value + 1)
               }}
               className="bg-hover border border-border text-text-primary px-2 py-1 rounded text-xs cursor-pointer"
             >
-              {TRANSITIONS.map((t) => (
-                <option key={t} value={t}>
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
+              {TRANSITIONS.map((value) => (
+                <option key={value} value={value}>
+                  {value.charAt(0).toUpperCase() + value.slice(1)}
                 </option>
               ))}
             </select>
-            <Button variant="icon" onClick={() => setKey((k) => k + 1)} title="Replay">
+            <Button
+              variant="icon"
+              onClick={() => setKey((value) => value + 1)}
+              title="Replay preview"
+              aria-label="Replay preview"
+            >
               <RotateCcw size={14} />
             </Button>
-            <Button variant="icon" onClick={onClose} title="Close">
+            <Button
+              ref={closeButtonRef}
+              variant="icon"
+              onClick={onClose}
+              title="Close preview"
+              aria-label="Close preview"
+            >
               <X size={16} />
             </Button>
           </div>
@@ -111,17 +182,24 @@ setTimeout(()=>Reveal.next(),800);
           <iframe
             key={key}
             ref={iframeRef}
-            srcDoc={html}
+            srcDoc={previewHtml}
             style={{
-              width: 960,
-              height: 540,
+              width: resolution.width,
+              height: resolution.height,
               border: 'none',
-              transform: 'scale(0.6)',
-              transformOrigin: 'top left',
+              transform: `scale(${previewScale})`,
+              transformOrigin: 'center center',
             }}
             title="Transition Preview"
+            sandbox="allow-scripts"
+            aria-busy={!previewHtml}
           />
         </div>
+        {previewError && (
+          <p className="px-4 pb-3 text-[11px] text-text-muted" role="status">
+            {previewError}
+          </p>
+        )}
       </div>
     </div>
   )

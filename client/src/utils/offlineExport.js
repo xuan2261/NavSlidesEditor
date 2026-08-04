@@ -1,15 +1,16 @@
 // Offline export: fetch vendor resources from local server and inline them into the HTML.
 // Uses a safe inlining technique to avoid </script> breakage inside inlined JS.
 
-async function fetchText(url) {
+async function fetchText(url, { required = false } = {}) {
   try {
     // Ensure absolute URL for fetch
     const fetchUrl = url.startsWith('/') ? `${window.location.origin}${url}` : url
     const resp = await fetch(fetchUrl)
-    if (!resp.ok) return `/* Failed to fetch: ${url} */`
+    if (!resp.ok) throw new Error(`offline-asset-fetch-failed:${url}`)
     return await resp.text()
-  } catch {
-    return `/* Failed to fetch: ${url} */`
+  } catch (error) {
+    if (required) throw error
+    return null
   }
 }
 
@@ -59,13 +60,13 @@ async function fetchExternalAsDataUri(url, timeoutMs = 8000) {
   }
 }
 
-// Cache fetched resources to avoid duplicate requests for same URL
+// Cache successful resources only; failed required assets must be retried.
 const fetchCache = new Map()
-async function cachedFetchText(url) {
+async function cachedFetchText(url, options = {}) {
   if (fetchCache.has(url)) return fetchCache.get(url)
-  const text = await fetchText(url)
-  fetchCache.set(url, text)
-  return text
+  const text = await fetchText(url, options)
+  if (text !== null) fetchCache.set(url, text)
+  return text ?? `/* Failed to fetch: ${url} */`
 }
 
 /**
@@ -118,6 +119,14 @@ function resolveToVendor(url) {
     if (mapping.pattern.test(url)) return mapping.vendor
   }
   return null
+}
+
+function isRequiredOfflineAsset(url) {
+  return url === '/reveal-overrides.css' ||
+    /\/vendor\/reveal\.js\/dist\/(?:reset|reveal|theme\/[^/]+)\.css$/i.test(url) ||
+    /\/vendor\/reveal\.js\/dist\/reveal\.js$/i.test(url) ||
+    /\/vendor\/reveal\.js\/plugin\/(?:notes|highlight)\/[^/]+\.js$/i.test(url) ||
+    /\/vendor\/(?:katex|highlight\.js)\//i.test(url)
 }
 
 /**
@@ -214,7 +223,8 @@ async function inlineSrcdocDeps(inner) {
   return { html: inner, changed }
 }
 
-export async function generateOfflineHTML(html) {
+export async function generateOfflineHTML(html, options = {}) {
+  const strictRequiredAssets = options.strictRequiredAssets === true
   let result = html
   try {
     // ── 1. Inline all <link> vendor CSS ──────────────────────────────────────
@@ -226,7 +236,9 @@ export async function generateOfflineHTML(html) {
     for (const match of cssMatches) {
       const rawUrl = match[1]
       const vendorPath = toVendorPath(rawUrl)
-      let css = await cachedFetchText(vendorPath)
+      let css = await cachedFetchText(vendorPath, {
+        required: strictRequiredAssets && isRequiredOfflineAsset(vendorPath),
+      })
       const origin = window.location.origin
 
       // Resolve KaTeX font relative paths to absolute URLs
@@ -255,7 +267,9 @@ export async function generateOfflineHTML(html) {
     ]
     for (const match of publicCssMatches) {
       const publicPath = match[1]
-      const css = await cachedFetchText(publicPath)
+      const css = await cachedFetchText(publicPath, {
+        required: strictRequiredAssets && isRequiredOfflineAsset(publicPath),
+      })
       result = result.split(match[0]).join(`<style>/* ${publicPath} */\n${css}\n</style>`)
     }
 
@@ -268,7 +282,9 @@ export async function generateOfflineHTML(html) {
     for (const match of jsMatches) {
       const rawUrl = match[1]
       const vendorPath = toVendorPath(rawUrl)
-      let js = await cachedFetchText(vendorPath)
+      let js = await cachedFetchText(vendorPath, {
+        required: strictRequiredAssets && isRequiredOfflineAsset(vendorPath),
+      })
       let safe = safeInlineJS(js)
 
       // Patch plugin scriptPath() after inlining — plugins use

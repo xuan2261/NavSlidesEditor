@@ -994,6 +994,42 @@ describe('element-renderers safety behavior', () => {
     expect(print).toContain('"fill":true')
   })
 
+  it('uses background-aware chart fallbacks in present and print output', () => {
+    const element = {
+      ...base,
+      type: 'chart',
+      chartType: 'bar',
+      chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1] }] },
+    }
+    const darkSlide = { background: { type: 'color', color: '#1e1e2e' } }
+
+    const iframe = renderSlideElements({ ...darkSlide, elements: [element] })
+    expect(iframe).toContain("ticks:{color:'#f8fafc'}")
+    expect(iframe).toContain("grid:{color:'rgba(248,250,252,0.28)'}")
+    expect(iframe).toContain("legend:{labels:{color:'#f8fafc'")
+
+    const print = renderSlideElements({ ...darkSlide, elements: [element] }, { forPrint: true })
+    expect(print).toContain('"color":"#f8fafc"')
+    expect(print).toContain('"color":"rgba(248,250,252,0.28)"')
+  })
+
+  it('keeps explicit chart colors in front of background fallbacks', () => {
+    const element = {
+      ...base,
+      type: 'chart',
+      chartType: 'bar',
+      axisTextColor: '#facc15',
+      gridColor: 'rgba(250,204,21,0.4)',
+      legendTextColor: '#22c55e',
+      chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1] }] },
+    }
+    const html = renderElement(element, { background: { type: 'color', color: '#1e1e2e' } }, {})
+
+    expect(html).toContain("ticks:{color:'#facc15'}")
+    expect(html).toContain("grid:{color:'rgba(250,204,21,0.4)'}")
+    expect(html).toContain("legend:{labels:{color:'#22c55e'")
+  })
+
   it('does not stack a plain bar chart or fill a plain line chart', () => {
     const bar = renderElement(
       {

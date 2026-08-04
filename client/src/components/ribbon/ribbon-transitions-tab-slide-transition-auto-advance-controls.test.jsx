@@ -103,6 +103,15 @@ describe('TransitionsTabContent', () => {
     expect(onUpdateSlide).toHaveBeenCalledWith({ transitionDuration: 1200 })
   })
 
+  it('activates speed with Enter', () => {
+    const onUpdatePresentation = vi.fn()
+    render(<TransitionsTabContent presentation={mockPresentation} onUpdatePresentation={onUpdatePresentation} />)
+
+    fireEvent.keyDown(screen.getByLabelText('Set speed Fast'), { key: 'Enter' })
+
+    expect(onUpdatePresentation).toHaveBeenCalledWith({ transitionSpeed: 'fast' })
+  })
+
   it('calls onUpdatePresentation for speed change', () => {
     const onUpdatePresentation = vi.fn()
     render(<TransitionsTabContent presentation={mockPresentation} onUpdatePresentation={onUpdatePresentation} />)
@@ -126,5 +135,19 @@ describe('TransitionsTabContent', () => {
   it('renders preview button', () => {
     render(<TransitionsTabContent presentation={mockPresentation} />)
     expect(screen.getByLabelText('Preview transition')).toBeTruthy()
+  })
+
+  it('calls onPreviewTransition when preview is activated', () => {
+    const onPreviewTransition = vi.fn()
+    render(
+      <TransitionsTabContent
+        presentation={mockPresentation}
+        onPreviewTransition={onPreviewTransition}
+      />,
+    )
+
+    fireEvent.click(screen.getByLabelText('Preview transition'))
+
+    expect(onPreviewTransition).toHaveBeenCalledTimes(1)
   })
 })

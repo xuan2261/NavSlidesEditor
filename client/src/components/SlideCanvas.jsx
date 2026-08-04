@@ -19,7 +19,12 @@ import useCanvasPointerInteraction from './canvas/use-canvas-pointer-interaction
 import useCanvasRubberBandSelection from './canvas/use-canvas-rubber-band-drag-selection'
 import CanvasElement from './canvas/canvas-element-wrapper'
 import { cn } from '../lib/utils'
-import { DEFAULT_TOKENS, mergeTokens, tokensToStyleObject } from 'revealjs-shared'
+import {
+  DEFAULT_TOKENS,
+  mergeTokens,
+  resolveChartBackground,
+  tokensToStyleObject,
+} from 'revealjs-shared'
 import { Lock } from 'lucide-react'
 import SlideBackgroundFxCanvas from './canvas/slide-background-fx-canvas'
 import {
@@ -412,6 +417,7 @@ export default function SlideCanvas({
     )
     const addMedia = onAddMedia || onAddImage
     if (!files.length || !addMedia) return
+    const targetSlideId = slide?.id
     // Get drop position in slide coordinates
     let dropX = 130,
       dropY = 100
@@ -421,7 +427,7 @@ export default function SlideCanvas({
       dropY = Math.round((e.clientY - rect.top) / scale)
     }
     for (const file of files) {
-      await addMedia(file, dropX, dropY)
+      await addMedia(file, dropX, dropY, targetSlideId)
     }
   }
 
@@ -429,6 +435,8 @@ export default function SlideCanvas({
   // 'auto' elements resolve to the historical hex out-of-box; frozen-hex
   // content ignores them harmlessly.
   const resolvedTokens = mergeTokens(mergeTokens(DEFAULT_TOKENS, designTokens), slide?.designTokens)
+  const chartFallbackColor = slide?.background?.type === 'fx' ? '#0d0221' : resolvedTokens.colors?.bg
+  const chartBackground = resolveChartBackground(slide?.background, chartFallbackColor)
 
   const canvasStyle = {
     width: SLIDE_W,
@@ -569,6 +577,7 @@ export default function SlideCanvas({
               isDragging={draggingRef.current?.elementId === element.id}
               editor={editor}
               iconPaths={iconPaths}
+              slideBackground={chartBackground}
               onPointerDown={(e, type, handle) => {
                 if (cropMode || editingElementId === element.id || pinchActiveRef.current) return
                 if (element.locked && type === 'move') return

@@ -1,5 +1,6 @@
 import SlideCanvas from '../SlideCanvas'
 import { api } from '../../utils/api'
+import { showError } from '../../utils/app-feedback'
 
 export default function EditorCanvasWorkspace({ overlayOpen, c }) {
   return (
@@ -50,12 +51,22 @@ export default function EditorCanvasWorkspace({ overlayOpen, c }) {
           onOpenHtmlEditor={c.openHtmlEditor}
           onOpenCodeEditor={c.openCodeEditor}
           onOpenLatexEditor={c.openLatexEditor}
-          onAddMedia={async (file, dropX, dropY) => {
-            const result = await api.uploadFile(file)
-            if (!result.url) return
-            if (file.type.startsWith('video/')) c.addVideoElement(result.url, dropX, dropY)
-            else if (file.type.startsWith('audio/')) c.addAudioElement(result.url, dropX, dropY)
-            else c.addImageElement(result.url, dropX, dropY)
+          onAddMedia={async (file, dropX, dropY, targetSlideId) => {
+            const targetId = targetSlideId ?? c.activeSlideRef?.current?.id ?? c.activeSlide?.id
+            try {
+              const result = await api.uploadFile(file)
+              if (!result?.url) throw new Error(result?.error || 'Upload failed')
+              const currentSlideId = c.activeSlideRef?.current?.id ?? c.activeSlide?.id
+              if (targetId && targetId !== currentSlideId) {
+                throw new Error('Upload canceled because the active slide changed')
+              }
+              if (file.type.startsWith('video/')) c.addVideoElement(result.url, dropX, dropY)
+              else if (file.type.startsWith('audio/')) c.addAudioElement(result.url, dropX, dropY)
+              else c.addImageElement(result.url, dropX, dropY)
+            } catch (err) {
+              console.error('Canvas upload failed:', err)
+              showError(err.message || 'Upload failed. Check your connection.')
+            }
           }}
         />
       </div>

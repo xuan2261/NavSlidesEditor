@@ -34,11 +34,14 @@ export function GameLeaderboardOverlay({ visible, scores = [], onClose }) {
           <p style={{ color: 'rgba(255,255,255,0.5)' }}>No scores yet</p>
         ) : (
           <ol style={{ paddingLeft: '24px', lineHeight: '2' }}>
-            {sorted.map((entry, i) => (
-              <li key={entry.team || entry.player || i}>
-                {entry.team || entry.player}: <strong>{entry.score}</strong>
-              </li>
-            ))}
+            {sorted.map((entry, i) => {
+              const label = entry.team || entry.player || entry.name || entry.playerId || 'Player'
+              return (
+                <li key={entry.playerId || entry.teamId || entry.team || entry.player || entry.name || i}>
+                  {label}: <strong>{entry.score}</strong>
+                </li>
+              )
+            })}
           </ol>
         )}
         <p style={{ marginTop: '20px', fontSize: '12px', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>

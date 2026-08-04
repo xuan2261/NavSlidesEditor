@@ -45,11 +45,12 @@ Current release: **v1.15.6** — hardened PPTX import fidelity, editor workflows
 
 ### Live Presentation
 
-Broadcast to viewers via Socket.IO with a server-issued presenter token. Includes a separate **speaker view** (notes, next-slide preview, timer), **remote control** from a phone or second device, **annotation tools** (pen, laser pointer, highlighter, eraser) that sync to viewers in real time and persist per slide on rejoin, **black/white screen overlays** (`B` / `W`), shared **live timer**, and PowerPoint-style navigation (`F5`, `Home`, `End`, arrows).
+Broadcast to viewers via Socket.IO with a server-issued presenter token. Includes a separate **speaker view** (notes, next-slide preview, timer), **remote control** from a phone or second device, **annotation tools** (pen, laser pointer, highlighter, eraser) that sync to viewers in real time and persist per slide on rejoin, **black/white screen overlays** (`B` / `W`), shared **live timer**, and PowerPoint-style navigation (`F5`, `Home`, `End`, arrows`). Remote and speaker URLs are bearer-style room links; for multi-user or internet-facing deployments, place them behind the external authentication layer described in the security model below.
 
 ### Game Mode
 
 10 interactive game element types with a dedicated player join page (`/player/:slideId/:elementId`), game-specific socket handler, leaderboard, scoring, and presenter shortcuts (HUD, timer, reveal, leaderboard, pause, team select).
+The generic `POST /api/games` endpoint is intentionally an unauthenticated local bootstrap boundary; host and player joins or mutations still require server-issued capability and session checks, and multi-user or internet-facing deployments require external authentication.
 
 ### AI Tools
 

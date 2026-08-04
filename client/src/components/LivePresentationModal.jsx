@@ -75,15 +75,14 @@ export default function LivePresentationModal({ presentationId, roomCode, presen
         <Button
           variant="primary"
           onClick={() => {
-            const presenterWindow = window.open(
-              `/api/presentations/${presentationId}/present?live=${roomCode}`,
-              '_blank'
-            )
+            const presenterWindow = window.open('', '_blank')
             if (presenterWindow) {
               presenterWindow.name = JSON.stringify({
                 roomCode,
                 presenterToken: presenterToken || '',
               })
+              presenterWindow.location.href =
+                `/api/presentations/${presentationId}/present?live=${roomCode}`
             }
             handleClose()
           }}

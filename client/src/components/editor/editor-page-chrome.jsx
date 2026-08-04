@@ -94,6 +94,7 @@ export function EditorPageOverlays({ c }) {
         presentation={c.presentation}
         currentSlide={c.currentSlide}
         currentSlideIndex={c.currentSlideIndex}
+        verticalEdit={c.verticalEdit}
         viewMode={c.viewMode}
         setViewMode={c.setViewMode}
         setCurrentSlideIndex={c.setCurrentSlideIndex}
@@ -117,6 +118,7 @@ export function EditorPageOverlays({ c }) {
         setShowGameHud={c.setShowGameHud}
         showGameLeaderboard={c.showGameLeaderboard}
         setShowGameLeaderboard={c.setShowGameLeaderboard}
+        gameLeaderboardScores={c.gameLeaderboardScores}
         selectedElementId={c.selectedElementId}
         commands={c.commands}
         liveRoomCode={c.liveRoomCode}

@@ -77,6 +77,28 @@ describe('useAnnotationSync', () => {
     expect(onAdd).not.toHaveBeenCalled()
   })
 
+  it('keeps annotations on vertical child slides separate', () => {
+    const onAdd = vi.fn()
+    renderHook(() =>
+      useAnnotationSync({
+        socket: mockSocket,
+        slideIndex: 0,
+        verticalIndex: 1,
+        onAnnotationAdd: onAdd,
+        onAnnotationRemove: vi.fn(),
+        onAnnotationsClear: vi.fn(),
+      })
+    )
+
+    const rootAnnotation = { id: 'root-stroke' }
+    const childAnnotation = { id: 'child-stroke' }
+    mockSocket._trigger('annotation:add', { slideIndex: 0, verticalIndex: 0, annotation: rootAnnotation })
+    mockSocket._trigger('annotation:add', { slideIndex: 0, verticalIndex: 1, annotation: childAnnotation })
+
+    expect(onAdd).toHaveBeenCalledTimes(1)
+    expect(onAdd).toHaveBeenCalledWith(childAnnotation, 0, 1)
+  })
+
   it('calls onAnnotationRemove when annotation:removed matches current slide', () => {
     const onRemove = vi.fn()
     renderHook(() =>
@@ -142,6 +164,25 @@ describe('useAnnotationSync', () => {
     expect(onClear).not.toHaveBeenCalled()
   })
 
+  it('clears the active annotation bucket for a global clear event', () => {
+    const onClear = vi.fn()
+    renderHook(() =>
+      useAnnotationSync({
+        socket: mockSocket,
+        slideIndex: 2,
+        verticalIndex: 1,
+        includeVerticalIndex: true,
+        onAnnotationAdd: vi.fn(),
+        onAnnotationRemove: vi.fn(),
+        onAnnotationsClear: onClear,
+      })
+    )
+
+    mockSocket._trigger('annotation:cleared', { global: true })
+
+    expect(onClear).toHaveBeenCalledWith(2, 1)
+  })
+
   it('loads annotations from annotations:sync for current slide only', () => {
     const onAdd = vi.fn()
     renderHook(() =>
@@ -169,6 +210,53 @@ describe('useAnnotationSync', () => {
     expect(onAdd).toHaveBeenCalledTimes(2)
     expect(onAdd).toHaveBeenNthCalledWith(1, { id: 'a1', d: 'M0 0', color: '#FF0000' }, 0)
     expect(onAdd).toHaveBeenNthCalledWith(2, { id: 'a2', d: 'M1 1 L2 2', color: '#00FF00' }, 0)
+  })
+
+  it('replaces an optimistic stroke when a rejoin snapshot is empty', () => {
+    const onAdd = vi.fn()
+    const onClear = vi.fn()
+    const { result } = renderHook(() =>
+      useAnnotationSync({
+        socket: mockSocket,
+        slideIndex: 0,
+        onAnnotationAdd: onAdd,
+        onAnnotationRemove: vi.fn(),
+        onAnnotationsClear: onClear,
+      })
+    )
+
+    // Register a local optimistic stroke before the server echo/snapshot.
+    result.current.registerAnnotationId('optimistic')
+    mockSocket._trigger('annotations:sync', { slideAnnotations: { '0': [] } })
+
+    expect(onClear).toHaveBeenCalledWith(0)
+  })
+
+  it('replaces stale local strokes when a rejoin snapshot differs', () => {
+    const onAdd = vi.fn()
+    const onClear = vi.fn()
+    renderHook(() =>
+      useAnnotationSync({
+        socket: mockSocket,
+        slideIndex: 0,
+        onAnnotationAdd: onAdd,
+        onAnnotationRemove: vi.fn(),
+        onAnnotationsClear: onClear,
+      })
+    )
+
+    mockSocket._trigger('annotation:add', {
+      slideIndex: 0,
+      annotation: { id: 'stale', d: 'M0 0' },
+    })
+    mockSocket._trigger('annotations:sync', {
+      slideAnnotations: {
+        '0': [{ id: 'current', d: 'M1 1' }],
+      },
+    })
+
+    expect(onClear).toHaveBeenCalledWith(0)
+    expect(onAdd).toHaveBeenLastCalledWith({ id: 'current', d: 'M1 1' }, 0)
   })
 
   it('replaces strokes from a slide-scoped annotations:sync on navigate (I-R4.1)', () => {
@@ -240,6 +328,30 @@ describe('useAnnotationSync', () => {
     expect(onClear).toHaveBeenCalledTimes(1)
     expect(onClear).toHaveBeenCalledWith(1)
     expect(onAdd).toHaveBeenCalledWith({ id: 'target-slide', d: 'M1 1' }, 1)
+  })
+
+  it('passes an explicit root vertical index across a child-to-root navigation race', () => {
+    const onAdd = vi.fn()
+    renderHook(() =>
+      useAnnotationSync({
+        socket: mockSocket,
+        slideIndex: 0,
+        verticalIndex: 1,
+        includeVerticalIndex: true,
+        onAnnotationAdd: onAdd,
+        onAnnotationRemove: vi.fn(),
+        onAnnotationsClear: vi.fn(),
+      })
+    )
+
+    mockSocket._trigger('navigate', { slideIndex: 0, verticalIndex: 0 })
+    mockSocket._trigger('annotations:sync', {
+      slideIndex: 0,
+      verticalIndex: 0,
+      annotations: [{ id: 'root-after-child', d: 'M0 0' }],
+    })
+
+    expect(onAdd).toHaveBeenCalledWith({ id: 'root-after-child', d: 'M0 0' }, 0, 0)
   })
 
   it('does not display a scoped sync for a slide that is no longer current', () => {

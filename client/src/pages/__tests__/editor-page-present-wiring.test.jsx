@@ -7,6 +7,7 @@ import { render, fireEvent, screen, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { LiveSocketContext } from '../../contexts/live-socket-context-provider.jsx'
 import { useEditorStore } from '../../stores/editor-store'
+import { useUIStore } from '../../stores/ui-store'
 
 function seedNoGame() {
   return {
@@ -85,6 +86,7 @@ beforeEach(() => {
   h.updatePresentation.mockClear()
   h.presentInWindow.mockClear()
   useEditorStore.setState({ selectedElementIds: [], editingElementId: null, clipboard: null })
+  useUIStore.setState({ activeTab: 'home', formatContext: { hasSelection: false, elementType: null }, showTransitionPreview: false })
   globalThis.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) }))
 })
 

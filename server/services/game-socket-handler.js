@@ -4,68 +4,158 @@
  * events to the '/games' namespace of the given Socket.IO io instance.
  *
  * Players are identified by a stable client-supplied playerId (falls back to
- * socket.id). Presenter-only events (game-next, game-end, game-random) are
- * authorized against the room host.
+ * socket.id), but joins and mutations are bound to a server-issued session
+ * token. Presenter-only events (game-next, game-end, game-random) are
+ * authorized against the room host and active socket session.
  */
 const GameEngine = require('./game-room-manager-singleton-service')
 
 function setupGameSocketHandlers(io) {
   const gameNamespace = io.of('/games')
+  const roomMembers = new Map()
+  GameEngine.subscribeRoomCleanup?.((gameId, room) => {
+    const members = roomMembers.get(room.socketRoomId)
+    if (!members) return
+    for (const invalidate of [...members]) invalidate(gameId)
+    roomMembers.delete(room.socketRoomId)
+  })
+
+  const broadcastGame = (gid, event, payload) => {
+    const room = GameEngine.getRoom(gid)
+    if (room?.socketRoomId) gameNamespace.to(room.socketRoomId).emit(event, payload)
+  }
 
   gameNamespace.on('connection', (socket) => {
     let currentGameId = null
     let currentPlayerId = null
+    let currentSessionToken = null
+    let currentHostCapability = null
+    let membership = null
+
+    const leaveGameChannel = () => {
+      if (!membership) return
+      const { channel, invalidate } = membership
+      const members = roomMembers.get(channel)
+      members?.delete(invalidate)
+      if (members && members.size === 0) roomMembers.delete(channel)
+      socket.leave(channel)
+      membership = null
+    }
+
+    const invalidateMembership = (expiredGameId) => {
+      const gameId = currentGameId || expiredGameId
+      leaveGameChannel()
+      currentGameId = null
+      currentPlayerId = null
+      currentSessionToken = null
+      currentHostCapability = null
+      socket.emit('game-room-expired', { gameId })
+    }
+
+    const joinGameChannel = (room) => {
+      leaveGameChannel()
+      if (!room?.socketRoomId) return false
+      const channel = room.socketRoomId
+      const members = roomMembers.get(channel) || new Set()
+      const invalidate = (expiredGameId) => invalidateMembership(expiredGameId)
+      members.add(invalidate)
+      roomMembers.set(channel, members)
+      membership = { channel, invalidate }
+      socket.join(channel)
+      return true
+    }
 
     const broadcastPlayers = (gid) => {
       const room = GameEngine.getRoom(gid)
       if (!room) return
-      gameNamespace.to(gid).emit('game-player-joined', {
+      broadcastGame(gid, 'game-player-joined', {
         players: Array.from(room.players.values()).map((p) => ({ name: p.name, score: p.score })),
       })
     }
 
     const emitPollAggregate = (gid) => {
       const aggregate = GameEngine.getPollAggregate(gid)
-      if (aggregate) gameNamespace.to(gid).emit('game-poll-results', aggregate)
+      if (aggregate) broadcastGame(gid, 'game-poll-results', aggregate)
     }
 
     const emitWordCloudAggregate = (gid) => {
       const aggregate = GameEngine.getWordCloudAggregate(gid)
-      if (aggregate) gameNamespace.to(gid).emit('game-word-cloud-results', aggregate)
+      if (aggregate) broadcastGame(gid, 'game-word-cloud-results', aggregate)
     }
 
     const emitMatchingState = (gid, options = {}) => {
       const state = GameEngine.getMatchingState(gid, options)
-      if (state) gameNamespace.to(gid).emit('game-matching-results', state)
+      if (state) broadcastGame(gid, 'game-matching-results', state)
     }
 
     // Reject events from a socket that is not the room host.
     const requireHost = (gid) => {
-      if (GameEngine.isHost(gid, currentPlayerId)) return true
+      if (gid !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return false
+      }
+      if (GameEngine.isHost(
+        gid,
+        currentPlayerId,
+        socket.id,
+        currentSessionToken,
+        currentHostCapability
+      )) return true
       socket.emit('game-error', { message: 'Not authorized: host only' })
       return false
     }
 
     // Player joins a game room
-    socket.on('game-join', ({ gameId, playerName, playerId, role, gameType, options }) => {
+    socket.on('game-join', ({
+      gameId,
+      playerName,
+      playerId,
+      role,
+      sessionToken,
+      hostCapability,
+    } = {}) => {
       if (!gameId || !playerName) {
         socket.emit('game-error', { message: 'gameId and playerName are required' })
         return
       }
-      if (!GameEngine.getRoom(gameId) && role === 'host' && gameType) {
-        GameEngine.createRoom(gameId, gameType, options || {})
+      if (currentGameId && currentGameId !== gameId) {
+        socket.emit('game-error', { message: 'already-joined-room' })
+        return
       }
+      const observing = role === 'observer'
       const pid = playerId || socket.id
-      const result = GameEngine.joinRoom(gameId, pid, playerName, { socketId: socket.id, role })
+      const result = observing
+        ? GameEngine.observeRoom(gameId)
+        : GameEngine.joinRoom(gameId, pid, playerName, {
+            socketId: socket.id,
+            role,
+            requireSession: true,
+            sessionToken,
+            hostCapability,
+          })
       if (!result.ok) {
         socket.emit('game-error', { message: result.error })
         return
       }
       currentGameId = gameId
-      currentPlayerId = pid
-      socket.join(gameId)
+      currentPlayerId = observing ? null : pid
+      currentSessionToken = observing ? null : result.sessionToken || sessionToken || null
+      currentHostCapability = observing || role !== 'host' ? null : hostCapability
+      if (!joinGameChannel(GameEngine.getRoom(gameId))) {
+        currentGameId = null
+        currentPlayerId = null
+        currentSessionToken = null
+        currentHostCapability = null
+        socket.emit('game-error', { message: 'room-not-found' })
+        return
+      }
 
-      broadcastPlayers(gameId)
+      if (!observing) {
+        broadcastPlayers(gameId)
+        if (currentSessionToken) {
+          socket.emit('game-session', { playerId: pid, sessionToken: currentSessionToken })
+        }
+      }
       socket.emit('game-leaderboard', { scores: result.leaderboard })
     })
 
@@ -76,9 +166,23 @@ function setupGameSocketHandlers(io) {
         return
       }
       const gid = gameId || currentGameId
-      const result = GameEngine.submitAnswer(gid, currentPlayerId, answerIndex, timeSpentMs || 0)
+      if (gid !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      const result = GameEngine.submitAnswer(
+        gid,
+        currentPlayerId,
+        answerIndex,
+        timeSpentMs || 0,
+        { socketId: socket.id, sessionToken: currentSessionToken, requireSession: true }
+      )
       if (result === null) {
         socket.emit('game-error', { message: 'Room not found or no active question' })
+        return
+      }
+      if (result.error) {
+        socket.emit('game-error', { message: result.error })
         return
       }
       if (result.duplicate) {
@@ -93,7 +197,7 @@ function setupGameSocketHandlers(io) {
       })
 
       const lb = GameEngine.getLeaderboard(gid)
-      if (lb) gameNamespace.to(gid).emit('game-leaderboard', { scores: lb })
+      if (lb) broadcastGame(gid,'game-leaderboard', { scores: lb })
     })
 
     socket.on('game-poll-submit', ({ gameId, optionId }) => {
@@ -105,13 +209,17 @@ function setupGameSocketHandlers(io) {
         socket.emit('game-error', { message: 'Invalid game room for this socket' })
         return
       }
-      const result = GameEngine.submitPollVote(gameId, currentPlayerId, optionId, { socketId: socket.id })
+      const result = GameEngine.submitPollVote(gameId, currentPlayerId, optionId, {
+        socketId: socket.id,
+        sessionToken: currentSessionToken,
+        requireSession: true,
+      })
       if (!result || !result.ok) {
         socket.emit('game-error', { message: result?.error || 'Room not found or invalid poll' })
         return
       }
       socket.emit('game-poll-vote-accepted', { optionId })
-      gameNamespace.to(gameId).emit('game-poll-results', result.aggregate)
+      broadcastGame(gameId,'game-poll-results', result.aggregate)
     })
 
     socket.on('game-poll-start', ({ gameId }) => {
@@ -131,7 +239,7 @@ function setupGameSocketHandlers(io) {
         return
       }
       room.status = 'active'
-      gameNamespace.to(gid).emit('game-poll-started', GameEngine.getPollAggregate(gid))
+      broadcastGame(gid,'game-poll-started', GameEngine.getPollAggregate(gid))
     })
 
     socket.on('game-poll-reveal', ({ gameId }) => {
@@ -157,13 +265,17 @@ function setupGameSocketHandlers(io) {
         socket.emit('game-error', { message: 'Invalid game room for this socket' })
         return
       }
-      const result = GameEngine.submitWordCloudText(gameId, currentPlayerId, text, { socketId: socket.id })
+      const result = GameEngine.submitWordCloudText(gameId, currentPlayerId, text, {
+        socketId: socket.id,
+        sessionToken: currentSessionToken,
+        requireSession: true,
+      })
       if (!result || !result.ok) {
         socket.emit('game-error', { message: result?.error || 'Room not found or invalid word cloud' })
         return
       }
       socket.emit('game-word-cloud-submit-accepted', { text: result.text })
-      gameNamespace.to(gameId).emit('game-word-cloud-results', result.aggregate)
+      broadcastGame(gameId,'game-word-cloud-results', result.aggregate)
     })
 
     socket.on('game-word-cloud-start', ({ gameId }) => {
@@ -183,7 +295,7 @@ function setupGameSocketHandlers(io) {
         return
       }
       room.status = 'active'
-      gameNamespace.to(gid).emit('game-word-cloud-started', GameEngine.getWordCloudAggregate(gid))
+      broadcastGame(gid,'game-word-cloud-started', GameEngine.getWordCloudAggregate(gid))
     })
 
     socket.on('game-word-cloud-reveal', ({ gameId }) => {
@@ -216,7 +328,7 @@ function setupGameSocketHandlers(io) {
         socket.emit('game-error', { message: 'Room not found or invalid word cloud' })
         return
       }
-      gameNamespace.to(gid).emit('game-word-cloud-results', aggregate)
+      broadcastGame(gid,'game-word-cloud-results', aggregate)
     })
 
     socket.on('game-matching-submit', ({ gameId, pairs }) => {
@@ -228,7 +340,11 @@ function setupGameSocketHandlers(io) {
         socket.emit('game-error', { message: 'Invalid game room for this socket' })
         return
       }
-      const result = GameEngine.submitMatchingPairs(gameId, currentPlayerId, pairs, { socketId: socket.id })
+      const result = GameEngine.submitMatchingPairs(gameId, currentPlayerId, pairs, {
+        socketId: socket.id,
+        sessionToken: currentSessionToken,
+        requireSession: true,
+      })
       if (!result || !result.ok) {
         socket.emit('game-error', { message: result?.error || 'Room not found or invalid matching game' })
         return
@@ -238,7 +354,7 @@ function setupGameSocketHandlers(io) {
         total: result.total,
         correct: result.correct,
       })
-      gameNamespace.to(gameId).emit('game-matching-results', result.summary)
+      broadcastGame(gameId,'game-matching-results', result.summary)
     })
 
     socket.on('game-matching-start', ({ gameId }) => {
@@ -258,7 +374,7 @@ function setupGameSocketHandlers(io) {
         return
       }
       room.status = 'active'
-      gameNamespace.to(gid).emit('game-matching-started', GameEngine.getMatchingState(gid))
+      broadcastGame(gid,'game-matching-started', GameEngine.getMatchingState(gid))
     })
 
     socket.on('game-matching-reveal', ({ gameId }) => {
@@ -288,7 +404,7 @@ function setupGameSocketHandlers(io) {
         socket.emit('game-error', { message: 'Room not found' })
         return
       }
-      gameNamespace.to(gid).emit('game-random-result', { winnerIndex })
+      broadcastGame(gid,'game-random-result', { winnerIndex })
     })
 
     // Presenter advances to next question (host only)
@@ -305,7 +421,7 @@ function setupGameSocketHandlers(io) {
         return
       }
       const question = room.questions[room.currentQuestion] || null
-      gameNamespace.to(gid).emit('game-question', {
+      broadcastGame(gid,'game-question', {
         question,
         questionNumber: room.currentQuestion + 1,
         totalQuestions: room.questions.length,
@@ -326,17 +442,33 @@ function setupGameSocketHandlers(io) {
         return
       }
       const lb = GameEngine.getLeaderboard(gid)
-      gameNamespace.to(gid).emit('game-ended', { finalScores: lb || [] })
+      broadcastGame(gid,'game-ended', { finalScores: lb || [] })
     })
 
     // Player leaves the game
     socket.on('game-leave', ({ gameId }) => {
       if (!currentGameId) return
       const gid = gameId || currentGameId
-      GameEngine.leaveRoom(gid, currentPlayerId)
-      socket.leave(gid)
+      if (gid !== currentGameId) {
+        socket.emit('game-error', { message: 'Invalid game room for this socket' })
+        return
+      }
+      const result = currentPlayerId
+        ? GameEngine.leaveRoom(gid, currentPlayerId, {
+            socketId: socket.id,
+            sessionToken: currentSessionToken,
+            requireSession: true,
+          })
+        : { ok: true }
+      if (!result.ok) {
+        socket.emit('game-error', { message: result.error })
+        return
+      }
+      leaveGameChannel()
       currentGameId = null
       currentPlayerId = null
+      currentSessionToken = null
+      currentHostCapability = null
 
       const room = GameEngine.getRoom(gid)
       if (room && room.players.size > 0) {
@@ -360,6 +492,11 @@ function setupGameSocketHandlers(io) {
       } else {
         GameEngine.scheduleEmptyCleanup(gid)
       }
+      leaveGameChannel()
+      currentGameId = null
+      currentPlayerId = null
+      currentSessionToken = null
+      currentHostCapability = null
     })
   })
 }

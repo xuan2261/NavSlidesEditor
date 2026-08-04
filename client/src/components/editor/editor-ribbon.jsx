@@ -2,10 +2,18 @@ import RibbonPanel from '../ribbon/ribbon-panel'
 import { api } from '../../utils/api'
 
 export default function EditorRibbon({ c }) {
+  const assertUploadTarget = (targetSlideId) => {
+    const currentSlideId = c.activeSlideRef?.current?.id ?? c.activeSlide?.id
+    if (targetSlideId && targetSlideId !== currentSlideId) {
+      throw new Error('Upload canceled because the active slide changed')
+    }
+  }
+
   return (
     <RibbonPanel
       editor={c.editingElementId ? c.editor : null}
       presentation={c.presentation}
+      activeSlideId={c.activeSlide?.id}
       slide={c.currentSlide}
       onUpdateSlide={c.updateCurrentSlide}
       onUpdatePresentation={(updates) =>
@@ -31,9 +39,11 @@ export default function EditorRibbon({ c }) {
       onSendToBack={() => c.moveSelectedToStackEdge('back')}
       onAddText={c.addTextElement}
       onAddImage={() => c.setShowImageUrlPrompt(true)}
-      onAddImageUpload={async (file) => {
+      onAddImageUpload={async (file, targetSlideId) => {
         const result = await api.uploadFile(file)
-        if (result.url) c.addImageElement(result.url)
+        if (!result?.url) throw new Error(result?.error || 'Upload failed')
+        assertUploadTarget(targetSlideId)
+        c.addImageElement(result.url)
       }}
       onAddShape={c.addShapeElement}
       onAddLine={c.addLineElement}
@@ -45,14 +55,23 @@ export default function EditorRibbon({ c }) {
       onAddMarkdown={c.addMarkdownElement}
       onAddLatex={c.addLatexElement}
       onAddQrCode={c.addQrCodeElement}
-      onAddVideo={c.addVideoElement}
-      onAddAudio={c.addAudioElement}
+      onAddVideo={(url, targetSlideId) => {
+        assertUploadTarget(targetSlideId)
+        c.addVideoElement(url)
+      }}
+      onAddAudio={(url, targetSlideId) => {
+        assertUploadTarget(targetSlideId)
+        c.addAudioElement(url)
+      }}
       onOpenMediaLibrary={() => c.setShowMediaLibrary(true)}
       onOpenFileBrowser={() => c.setShowFileBrowser(true)}
       onAddHtml={c.addHtmlElement}
       onAddMermaid={c.addMermaidElement}
       onAddStemSimulation={c.addStemSimulationElement}
-      onAddSvg={c.addSvgElement}
+      onAddSvg={(svg, targetSlideId) => {
+        assertUploadTarget(targetSlideId)
+        c.addSvgElement(svg)
+      }}
       onAddDrawing={c.addDrawingElement}
       onAddDivider={c.addDividerElement}
       onAddTechnicalSymbol={c.addTechnicalSymbolElement}
@@ -75,6 +94,7 @@ export default function EditorRibbon({ c }) {
       }}
       onToggleSlideSorter={() => c.setViewMode((value) => (value === 'sorter' ? 'normal' : 'sorter'))}
       onPreviewAnimation={() => c.setShowAnimationPreview(true)}
+      onPreviewTransition={() => c.setShowTransitionPreview(true)}
     />
   )
 }

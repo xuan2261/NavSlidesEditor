@@ -167,6 +167,7 @@ export default function CanvasElement({
   onDeleteElement,
   onStartEdit,
   iconPaths,
+  slideBackground,
 }) {
   const contentRef = useRef(null)
   const videoRef = useRef(null)
@@ -649,10 +650,17 @@ export default function CanvasElement({
                     onUpdateElement={onUpdateElement}
                   />
                 )
-              if (element.type === 'chart' || element.type === 'latex')
+              if (element.type === 'chart')
                 return (
-                  <Renderer element={element} isSelected={isSelected} isDragging={isDragging} />
+                  <Renderer
+                    element={element}
+                    isSelected={isSelected}
+                    isDragging={isDragging}
+                    slideBackground={slideBackground}
+                  />
                 )
+              if (element.type === 'latex')
+                return <Renderer element={element} isSelected={isSelected} isDragging={isDragging} />
               if (element.type === 'icon')
                 return <Renderer element={element} iconPaths={iconPaths} />
               return <Renderer element={element} />

@@ -2,9 +2,7 @@
 
 _Generated: local run_
 
-> ⚠️ **Run results stale or missing** — statuses derived without a fresh test run. PASS counts may be optimistic; regenerate with a fresh `--reporter=json` run.
-
-Verified (PASS only): 115/115 (100%)  |  PASS: 115
+Verified (PASS only): 116/116 (100%)  |  PASS: 116
 
 ## canvas
 
@@ -17,6 +15,7 @@ Verified (PASS only): 115/115 (100%)  |  PASS: 115
 | canvas.move | low | smoke | unit | trace | client/src/components/canvas/canvas-geometry-ops.smoke.test.js | PASS |
 | canvas.resize | low | smoke | unit | trace | client/src/components/canvas/canvas-geometry-ops.smoke.test.js | PASS |
 | canvas.resize-aspect | high | deep | unit | trace | client/src/components/canvas/use-canvas-resize-rotate.deep.test.js | PASS |
+| canvas.resize-boundary | high | deep | unit | trace | client/src/components/canvas/use-canvas-resize-rotate.deep.test.js | PASS |
 | canvas.rotate-snap | high | deep | unit | trace | client/src/components/canvas/use-canvas-resize-rotate.deep.test.js | PASS |
 | canvas.smart-guides | low | deep | unit | trace | client/src/utils/smartGuides.test.js | PASS |
 | canvas.zorder | high | deep | unit | trace | client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx | PASS |
@@ -29,11 +28,11 @@ Verified (PASS only): 115/115 (100%)  |  PASS: 115
 | command.group | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 | command.insertLink | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 | command.insertSlide | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
-| command.resetZoom | low | smoke | unit | trace | client/src/stores/editor-store.test.js | PASS |
+| command.resetZoom | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 | command.startSlideshow | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 | command.ungroup | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
-| command.zoomIn | low | smoke | unit | trace | client/src/stores/editor-store.test.js | PASS |
-| command.zoomOut | low | smoke | unit | trace | client/src/stores/editor-store.test.js | PASS |
+| command.zoomIn | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
+| command.zoomOut | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 
 ## control
 
@@ -73,10 +72,10 @@ Verified (PASS only): 115/115 (100%)  |  PASS: 115
 |---|---|---|---|---|---|---|
 | element.audio | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.callout | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
-| element.chart | high | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/chart-properties.test.jsx<br>client/src/components/properties/missing-controls.test.jsx<br>client/src/components/ribbon/ribbon-format-tab-contextual-controls.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
+| element.chart | high | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/chart-element-renderer.test.jsx<br>client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/chart-properties.test.jsx<br>client/src/components/properties/missing-controls.test.jsx<br>client/src/components/ribbon/ribbon-format-tab-contextual-controls.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.code | low | smoke | unit | trace, behavior, export | client/src/components/canvas/canvas-element-wrapper.test.jsx<br>client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/content-editor-modals.test.jsx<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>client/src/utils/exportPptx.test.js<br>shared/tests/element-renderers.test.js<br>shared/tests/htmlGenerator.test.js | PASS |
 | element.drawing | low | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
-| element.html | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/content-editor-modals.test.jsx<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>client/src/components/ribbon/ribbon-plugin-insert.test.jsx<br>client/src/utils/exportPptx.test.js<br>shared/tests/element-renderers.test.js | PASS |
+| element.html | low | smoke | unit | trace, behavior, export | client/src/components/canvas/canvas-element-wrapper.test.jsx<br>client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/content-editor-modals.test.jsx<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>client/src/components/ribbon/ribbon-plugin-insert.test.jsx<br>client/src/utils/exportPptx.test.js<br>shared/tests/element-renderers.test.js | PASS |
 | element.icon | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.image | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.latex | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/canvas/element-renderers/latex-element-renderer.test.jsx<br>client/src/components/content-editor-modals.test.jsx<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
@@ -94,7 +93,7 @@ Verified (PASS only): 115/115 (100%)  |  PASS: 115
 
 | Capability | Risk | Tier | Layer | Depth | Test(s) | Status |
 |---|---|---|---|---|---|---|
-| flow.autosave | high | deep | unit | trace | client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx | PASS |
+| flow.autosave | high | deep | unit | trace | client/src/pages/__tests__/editor-page-autosave.characterization.test.jsx | PASS |
 | flow.clipboard | high | deep | unit | trace | client/src/hooks/use-clipboard.test.js | PASS |
 | flow.find-replace | low | smoke | unit | trace | client/src/components/find-replace-helpers.test.js | PASS |
 | flow.multiselect | high | deep | unit | trace, behavior | client/src/components/properties/indeterminate-multi-select.test.jsx<br>client/src/stores/editor-store-multiselect.deep.test.js<br>client/src/stores/editor-store.test.js | PASS |
@@ -127,7 +126,7 @@ Verified (PASS only): 115/115 (100%)  |  PASS: 115
 | shortcut.paste | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.penTool | low | smoke | unit | trace | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
 | shortcut.redo | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
-| shortcut.resetZoom | low | smoke | unit | trace | client/src/stores/editor-store.test.js | PASS |
+| shortcut.resetZoom | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.save | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.selectAll | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.sendBackward | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx | PASS |
@@ -147,8 +146,8 @@ Verified (PASS only): 115/115 (100%)  |  PASS: 115
 | shortcut.undo | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
 | shortcut.ungroup | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx | PASS |
 | shortcut.whiteScreen | low | smoke | unit | trace | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
-| shortcut.zoomIn | low | smoke | unit | trace | client/src/stores/editor-store.test.js | PASS |
-| shortcut.zoomOut | low | smoke | unit | trace | client/src/stores/editor-store.test.js | PASS |
+| shortcut.zoomIn | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
+| shortcut.zoomOut | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
 
 ## teaching
 

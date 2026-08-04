@@ -7,6 +7,7 @@
  * - Verify socket event listeners are registered
  * - Pure state-machine tests: player states transition correctly
  */
+import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockOn = vi.fn()
@@ -85,6 +86,45 @@ describe('useGamePlayer module', () => {
     // After teacher ends game
     state = transitions[state]
     expect(state).toBe('finished')
+  })
+
+  it('returns to joining when the room generation expires', async () => {
+    const { useGamePlayer } = await import('./use-game-player')
+    const { result, unmount } = renderHook(() => useGamePlayer({
+      gameId: 'expired-player-game',
+      playerName: 'Player',
+    }))
+    const expired = mockOn.mock.calls.find(([event]) => event === 'game-room-expired')?.[1]
+
+    act(() => expired())
+
+    expect(result.current.status).toBe('joining')
+    expect(result.current.error).toBe('Game room expired. Reload to rejoin.')
+    expect(result.current.isConnected).toBe(false)
+    expect(mockDisconnect).toHaveBeenCalled()
+    unmount()
+  })
+
+  it('matches leaderboard rank by stable player identity when names repeat', async () => {
+    const { useGamePlayer } = await import('./use-game-player')
+    localStorage.setItem('navslides-game-player-id', 'p-me')
+    const { result, unmount } = renderHook(() => useGamePlayer({
+      gameId: 'game-1',
+      playerName: 'Same Name',
+    }))
+    const leaderboard = mockOn.mock.calls.find(([event]) => event === 'game-leaderboard')?.[1]
+
+    act(() => leaderboard({
+      scores: [
+        { playerId: 'p-other', name: 'Same Name', score: 100 },
+        { playerId: 'p-me', name: 'Same Name', score: 50 },
+      ],
+    }))
+
+    expect(result.current.myRank).toBe(2)
+    expect(result.current.playerId).toBe('p-me')
+    unmount()
+    localStorage.removeItem('navslides-game-player-id')
   })
 
   it('player answer submission includes roomId, answer, timeSpent', () => {

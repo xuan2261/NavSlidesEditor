@@ -134,6 +134,31 @@ describe('createKeyboardHandler', () => {
     expect(event.preventDefault).toHaveBeenCalledTimes(1)
   })
 
+  it('[cap:shortcut.zoomIn] [cap:shortcut.zoomOut] [cap:shortcut.resetZoom] routes zoom chords to their callbacks and prevents browser defaults', () => {
+    const shortcuts = getShortcuts({})
+    const callbacks = {
+      onZoomIn: vi.fn(),
+      onZoomOut: vi.fn(),
+      onResetZoom: vi.fn(),
+      getActiveElement: () => null,
+    }
+    const handler = createKeyboardHandler({ ...callbacks, shortcuts })
+    const zoomIn = createEvent('=', { ctrlKey: true })
+    const zoomOut = createEvent('-', { ctrlKey: true })
+    const resetZoom = createEvent('0', { ctrlKey: true })
+
+    handler(zoomIn)
+    handler(zoomOut)
+    handler(resetZoom)
+
+    expect(callbacks.onZoomIn).toHaveBeenCalledTimes(1)
+    expect(callbacks.onZoomOut).toHaveBeenCalledTimes(1)
+    expect(callbacks.onResetZoom).toHaveBeenCalledTimes(1)
+    expect(zoomIn.preventDefault).toHaveBeenCalledTimes(1)
+    expect(zoomOut.preventDefault).toHaveBeenCalledTimes(1)
+    expect(resetZoom.preventDefault).toHaveBeenCalledTimes(1)
+  })
+
   it('honors a customized Save shortcut from the registry in editable controls', () => {
     const shortcuts = getShortcuts({}).map((shortcut) =>
       shortcut.id === 'save' ? { ...shortcut, activeKey: 'Ctrl+Shift+S' } : shortcut

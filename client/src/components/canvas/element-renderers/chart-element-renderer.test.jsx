@@ -69,4 +69,41 @@ describe('chart element renderer', () => {
     expect(srcDoc).toContain("grid:{color:'rgba(20,20,19,0.16)'}")
     expect(srcDoc).toContain("legend:{labels:{color:'#141413'")
   })
+
+  it('[red defect:renderer.contrast] uses light chart defaults on dark slide backgrounds', () => {
+    const { container } = render(
+      <ChartRenderer
+        element={{
+          chartType: 'bar',
+          chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
+        }}
+        slideBackground={{ type: 'color', color: '#1e1e2e' }}
+      />
+    )
+
+    const srcDoc = container.querySelector('iframe').getAttribute('srcdoc')
+    expect(srcDoc).toContain("ticks:{color:'#f8fafc'}")
+    expect(srcDoc).toContain("grid:{color:'rgba(248,250,252,0.28)'}")
+    expect(srcDoc).toContain("legend:{labels:{color:'#f8fafc'")
+  })
+
+  it('keeps explicit chart colors ahead of background-derived fallbacks', () => {
+    const { container } = render(
+      <ChartRenderer
+        element={{
+          chartType: 'bar',
+          axisTextColor: '#facc15',
+          gridColor: 'rgba(250,204,21,0.4)',
+          legendTextColor: '#22c55e',
+          chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
+        }}
+        slideBackground={{ type: 'color', color: '#1e1e2e' }}
+      />
+    )
+
+    const srcDoc = container.querySelector('iframe').getAttribute('srcdoc')
+    expect(srcDoc).toContain("ticks:{color:'#facc15'}")
+    expect(srcDoc).toContain("grid:{color:'rgba(250,204,21,0.4)'}")
+    expect(srcDoc).toContain("legend:{labels:{color:'#22c55e'")
+  })
 })

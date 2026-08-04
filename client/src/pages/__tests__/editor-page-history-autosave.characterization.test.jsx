@@ -54,7 +54,7 @@ afterEach(() => {
 })
 
 describe('EditorPage history characterization', () => {
-  it('undo restores the prior snapshot after an edit', async () => {
+  it('[cap:flow.undo-redo tier:deep] undo restores the prior snapshot after an edit', async () => {
     renderPage()
     const title = await screen.findByDisplayValue('Char Deck')
     vi.useFakeTimers()
@@ -70,7 +70,7 @@ describe('EditorPage history characterization', () => {
     })
   })
 
-  it('redo restores an undone edit and keeps the save affordance dirty', async () => {
+  it('[cap:flow.undo-redo tier:deep] redo restores an undone edit and keeps the save affordance dirty', async () => {
     renderPage()
     const title = await screen.findByDisplayValue('Char Deck')
     vi.useFakeTimers()

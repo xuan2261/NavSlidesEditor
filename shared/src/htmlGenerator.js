@@ -15,6 +15,14 @@ const {
   presentationUsesTokens,
 } = require('./design-tokens.js')
 const { getFxModule, buildFxRuntimeScript } = require('./fx/index.js')
+const { resolveChartBackground } = require('./chart-colors.js')
+const { buildLivePresenterRuntime } = require('./live-presenter-runtime.js')
+const {
+  normalizeTransition,
+  normalizeTransitionDirection,
+  normalizeTransitionDuration,
+  normalizeTransitionSpeed,
+} = require('./transition-settings.js')
 
 function formatGradientCss(bg) {
   if (!bg || bg.type !== 'gradient') return ''
@@ -37,14 +45,65 @@ function formatGradientCss(bg) {
 function getSlideTransitionAttrs(slide) {
   if (!slide) return ''
   const attrs = []
-  if (slide.transition) attrs.push(`data-transition="${escapeHtml(slide.transition)}"`)
-  if (slide.transitionDirection) attrs.push(`data-transition-direction="${escapeHtml(slide.transitionDirection)}"`)
-  if (slide.transitionDuration != null) attrs.push(`data-transition-duration="${escapeHtml(slide.transitionDuration)}"`)
+  const transition = normalizeTransition(slide.transition, null)
+  const direction = normalizeTransitionDirection(slide.transitionDirection)
+  const duration = normalizeTransitionDuration(slide.transitionDuration)
+  if (transition) attrs.push(`data-transition="${escapeHtml(transition)}"`)
+  if (slide.transitionDirection && direction !== 'default') {
+    attrs.push(`data-transition-direction="${escapeHtml(direction)}"`)
+  }
+  if (duration !== null) attrs.push(`data-transition-duration="${duration}"`)
   return attrs.length ? ` ${attrs.join(' ')}` : ''
+}
+
+function getSlideTransitionStyle(slide) {
+  const duration = normalizeTransitionDuration(slide?.transitionDuration)
+  return duration === null ? '' : `transition-duration:${duration}ms;`
+}
+
+const TRANSITION_METADATA_CSS = `    /* Reveal does not consume NavSlides direction/duration metadata. These
+       selectors make the application-level settings operative for slide moves. */
+    .reveal .slides section[data-transition-direction="left"].future { transform: translate3d(100%, 0, 0) !important; }
+    .reveal .slides section[data-transition-direction="left"].past { transform: translate3d(-100%, 0, 0) !important; }
+    .reveal .slides section[data-transition-direction="right"].future { transform: translate3d(-100%, 0, 0) !important; }
+    .reveal .slides section[data-transition-direction="right"].past { transform: translate3d(100%, 0, 0) !important; }
+    .reveal .slides section[data-transition-direction="up"].future { transform: translate3d(0, 100%, 0) !important; }
+    .reveal .slides section[data-transition-direction="up"].past { transform: translate3d(0, -100%, 0) !important; }
+    .reveal .slides section[data-transition-direction="down"].future { transform: translate3d(0, -100%, 0) !important; }
+    .reveal .slides section[data-transition-direction="down"].past { transform: translate3d(0, 100%, 0) !important; }
+    /* Duration is emitted inline on each section so Reveal's transition
+       shorthand cannot replace the configured millisecond value. */
+    .reveal .slides section[data-transition-duration] { transition-property: transform, opacity !important; }
+`
+
+function presentationUsesTransitionMetadata(presentation) {
+  return (presentation?.slides || []).some((slide) =>
+    [slide, ...(slide?.children || [])].some((section) =>
+      normalizeTransitionDirection(section?.transitionDirection) !== 'default' ||
+      normalizeTransitionDuration(section?.transitionDuration) !== null
+    )
+  )
 }
 
 function getSectionBackgroundStyle(background, usesTokens) {
   return usesTokens && (!background || background.type === 'none') ? 'background:var(--ns-bg);' : ''
+}
+
+function getPresentChartBackground(slide, deckTokens, usesTokens) {
+  const slideTokens = mergeTokens(deckTokens, slide?.designTokens)
+  const fallbackColor = slide?.background?.type === 'fx'
+    ? '#0d0221'
+    : usesTokens
+      ? slideTokens.colors?.bg
+      : '#000000'
+  return resolveChartBackground(slide?.background, fallbackColor)
+}
+
+function getPrintChartBackground(slide, deckTokens) {
+  const slideTokens = mergeTokens(deckTokens, slide?.designTokens)
+  return resolveChartBackground(slide?.background, slideTokens.colors?.bg || '#1e1e2e', {
+    preferFallback: true,
+  })
 }
 
 /**
@@ -106,6 +165,12 @@ function getPluginRuntimeInitScript() {
 }
 
 function generateRevealHTML(presentation) {
+  const presentationTransition = normalizeTransition(presentation.transition, 'slide')
+  const transitionSpeed = normalizeTransitionSpeed(presentation.transitionSpeed)
+  const transitionSpeedConfig =
+    presentation.transitionSpeed == null
+      ? ''
+      : `\n      transitionSpeed: '${transitionSpeed}',`
   const showFooter = presentation.showFooter || false
   const showPageNumbers = presentation.showPageNumbers || false
   const pageNumberFormat = presentation.pageNumberFormat || 'c/t'
@@ -132,9 +197,14 @@ function generateRevealHTML(presentation) {
   let pageCounter = 0
 
   const usesTokens = presentationUsesTokens(presentation)
+  const deckTokens = mergeTokens(DEFAULT_TOKENS, presentation.designTokens)
   const tokenInfo = usesTokens ? buildTokenStyleBlock(presentation) : null
   const slideOverrideIdx = tokenInfo ? tokenInfo.slideOverrideIdx : null
   const fxRuntimeScript = presentationUsesFx(presentation) ? buildFxRuntimeScript() : ''
+  const hasGameElements = presentationUsesGameElements(presentation)
+  const transitionMetadataCss = presentationUsesTransitionMetadata(presentation)
+    ? TRANSITION_METADATA_CSS
+    : ''
 
   const slidesHtml = presentation.slides
     .map((slide, slideIndex) => {
@@ -148,7 +218,10 @@ function generateRevealHTML(presentation) {
       const slideNotes = getSlideNotes(slide)
       const notes = slideNotes ? `<aside class="notes">${escapeHtml(slideNotes)}</aside>` : ''
 
-      const elementsHtml = renderSlideElements(slide, { forPrint: false })
+      const elementsHtml = renderSlideElements(slide, {
+        forPrint: false,
+        slideBackground: getPresentChartBackground(slide, deckTokens, usesTokens),
+      })
 
       // Page numbering: increment counter only for slides with showPageNumber !== false
       const slideHasPageNum = slide.showPageNumber !== false
@@ -188,7 +261,7 @@ function generateRevealHTML(presentation) {
 
       const fxCanvas = getFxCanvasHtml(slide.background)
       const bgStyle = getSectionBackgroundStyle(slide.background, usesTokens)
-      const sectionHtml = `    <section${autoAnimateAttr}${transitionAttrs}${bgAttrs}${slideIdxAttr} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${bgStyle}">\n${fxCanvas}${elementsHtml}\n${footerHtml}\n${gridHtml}\n      ${notes}\n    </section>`
+      const sectionHtml = `    <section${autoAnimateAttr}${transitionAttrs}${bgAttrs}${slideIdxAttr} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${getSlideTransitionStyle(slide)}${bgStyle}">\n${fxCanvas}${elementsHtml}\n${footerHtml}\n${gridHtml}\n      ${notes}\n    </section>`
 
       // Vertical slides support: if slide has children, wrap in a vertical section stack
       if (slide.children && slide.children.length > 0) {
@@ -207,9 +280,12 @@ function generateRevealHTML(presentation) {
             const childNotes = childNotesText
               ? `<aside class="notes">${escapeHtml(childNotesText)}</aside>`
               : ''
-            const childElements = renderSlideElements(child, { forPrint: false })
+            const childElements = renderSlideElements(child, {
+              forPrint: false,
+              slideBackground: getPresentChartBackground(child, deckTokens, usesTokens),
+            })
             const childBgStyle = getSectionBackgroundStyle(child.background, usesTokens)
-            return `    <section${childAutoAnimate}${childTransitionAttrs}${childBg}${childIdxAttr} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${childBgStyle}">\n${childFxCanvas}${childElements}\n      ${childNotes}\n    </section>`
+            return `    <section${childAutoAnimate}${childTransitionAttrs}${childBg}${childIdxAttr} style="padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${getSlideTransitionStyle(child)}${childBgStyle}">\n${childFxCanvas}${childElements}\n      ${childNotes}\n    </section>`
           })
           .join('\n')
         return `  <section>\n${sectionHtml}\n${childSections}\n  </section>`
@@ -236,7 +312,7 @@ function generateRevealHTML(presentation) {
     html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; background: #000; }
     /* Reset reveal.js section padding/alignment so absolute positions match the 960x540 editor canvas exactly */
     .reveal .slides section { padding: 0 !important; text-align: left !important; line-height: normal !important; overflow: hidden; }
-    /* Neutralise theme typography overrides so presentation matches editor exactly */
+${transitionMetadataCss}    /* Neutralise theme typography overrides so presentation matches editor exactly */
     /* font-family only on section (inherited) so KaTeX's explicit rules take precedence */
     .reveal .slides section { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     .reveal .slides section * { text-transform: none !important; letter-spacing: normal !important; }
@@ -280,7 +356,7 @@ ${slidesHtml}
       minScale: 0,
       maxScale: 10,
       center: false,
-      transition: '${presentation.transition || 'slide'}',
+      transition: '${presentationTransition}',${transitionSpeedConfig}
       plugins: [ RevealNotes, RevealHighlight${getPresenterToolsPlugins(presenterTools)} ]${getPresenterToolsConfig(presenterTools) ? ',\n' + getPresenterToolsConfig(presenterTools) : ''}
     };
     ${presentation.autoSlide ? `revealConfig.autoSlide = ${presentation.autoSlide};` : ''}
@@ -299,115 +375,7 @@ ${slidesHtml}
         } catch(e) {}
       });
 ${getPluginRuntimeInitScript()}
-
-      // Live presenter: connect Socket.IO and broadcast navigation
-      var liveRoom = params.get('live');
-      if (liveRoom) {
-        var presenterToken = '';
-        try {
-          var launchCtx = JSON.parse(window.name || '{}');
-          if (launchCtx && launchCtx.roomCode === liveRoom && launchCtx.presenterToken) {
-            presenterToken = launchCtx.presenterToken;
-          }
-        } catch (e) {}
-        var script = document.createElement('script');
-        script.src = '/vendor/socket.io/socket.io.min.js';
-        script.onload = function() {
-          var sock = io({ path: '/ws' });
-          sock.on('connect', function() {
-            sock.emit('join-room', {
-              roomId: liveRoom,
-              role: 'presenter',
-              presentationId: '${presentation.id || ''}',
-              presenterToken: presenterToken
-            });
-            if (!document.getElementById('navslides-live-indicator')) {
-              var badge = document.createElement('div');
-              badge.id = 'navslides-live-indicator';
-              badge.style.cssText = 'position:fixed;top:12px;left:12px;z-index:9999;background:rgba(239,68,68,0.9);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;font-family:system-ui,sans-serif;';
-              badge.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#fff;animation:livePulse 1.5s ease-in-out infinite;display:inline-block;"></span> LIVE';
-              var style = document.createElement('style');
-              style.id = 'navslides-live-indicator-style';
-              style.textContent = '@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.3}}';
-              document.head.appendChild(style);
-              document.body.appendChild(badge);
-            }
-            emitLiveNavigate(true);
-          });
-          sock.on('join-error', function(payload) {
-            alert((payload && payload.message) || 'Presenter access denied');
-          });
-          var lastLiveIndices = null;
-          function getLiveRevealIndices() {
-            var indices = Reveal.getIndices() || {};
-            var liveIndices = {
-              slideIndex: indices.h || 0,
-              verticalIndex: indices.v || 0,
-              fragmentIndex: indices.f || 0
-            };
-            var currentSlide = Reveal.getCurrentSlide && Reveal.getCurrentSlide();
-            var horizontalSlides = document.querySelectorAll('.reveal .slides > section');
-            for (var h = 0; h < horizontalSlides.length; h += 1) {
-              var horizontal = horizontalSlides[h];
-              if (horizontal === currentSlide) {
-                liveIndices.slideIndex = h;
-                liveIndices.verticalIndex = 0;
-                return liveIndices;
-              }
-              var verticalSlides = horizontal.querySelectorAll('section');
-              for (var v = 0; v < verticalSlides.length; v += 1) {
-                if (verticalSlides[v] === currentSlide) {
-                  liveIndices.slideIndex = h;
-                  liveIndices.verticalIndex = v;
-                  return liveIndices;
-                }
-              }
-            }
-            return liveIndices;
-          }
-          function emitLiveNavigate(force) {
-            var indices = getLiveRevealIndices();
-            var state = {
-              slideIndex: indices.slideIndex || 0,
-              verticalIndex: indices.verticalIndex || 0,
-              fragmentIndex: indices.fragmentIndex || 0
-            };
-            var key = state.slideIndex + ':' + state.verticalIndex + ':' + state.fragmentIndex;
-            if (force !== true && key === lastLiveIndices) return;
-            lastLiveIndices = key;
-            sock.emit('navigate', {
-              slideIndex: state.slideIndex,
-              verticalIndex: state.verticalIndex,
-              fragmentIndex: state.fragmentIndex
-            });
-          }
-          function emitLiveNavigateAfterInput() {
-            setTimeout(function() { emitLiveNavigate(true); }, 0);
-            setTimeout(function() { emitLiveNavigate(true); }, 120);
-            setTimeout(function() { emitLiveNavigate(true); }, 400);
-          }
-          // Broadcast slide changes. The polling fallback covers headless CI
-          // cases where keyboard navigation updates Reveal before events flush.
-          Reveal.on('slidechanged', emitLiveNavigate);
-          Reveal.on('fragmentshown', emitLiveNavigate);
-          Reveal.on('fragmenthidden', emitLiveNavigate);
-          setInterval(emitLiveNavigate, 250);
-          document.addEventListener('keydown', emitLiveNavigateAfterInput, true);
-          document.addEventListener('keyup', emitLiveNavigateAfterInput, true);
-          window.addEventListener('hashchange', emitLiveNavigateAfterInput);
-          sock.on('control-navigate', function(state) {
-            Reveal.slide(state.slideIndex || 0, state.verticalIndex || 0, state.fragmentIndex || 0);
-          });
-          // Track cursor for viewers
-          document.addEventListener('mousemove', function(e) {
-            sock.emit('cursor-move', {
-              x: e.clientX / window.innerWidth,
-              y: e.clientY / window.innerHeight
-            });
-          });
-        };
-        document.head.appendChild(script);
-      }
+${buildLivePresenterRuntime({ presentationId: presentation.id, hasGames: hasGameElements })}
     });
   </script>${getPresenterToolsInlineJS(presenterTools)}${fxRuntimeScript ? `\n${fxRuntimeScript}` : ''}
 </body>
@@ -426,6 +394,24 @@ function getBackgroundAttrs(bg) {
   const gradient = formatGradientCss(bg)
   if (gradient) return ` data-background-gradient="${gradient}"`
   return ''
+}
+
+const PRESENTATION_GAME_TYPES = new Set([
+  'name-picker', 'hot-potato', 'jeopardy', 'four-corners', 'relay-race',
+  'trivia-champ', 'scattergories', 'poll', 'word-cloud', 'matching',
+])
+
+function presentationUsesGameElements(presentation) {
+  for (const slide of presentation?.slides || []) {
+    for (const group of [slide, ...(slide?.children || [])]) {
+      if ((group?.elements || []).some((element) => (
+        element?.type === 'game' &&
+        typeof element.id === 'string' &&
+        PRESENTATION_GAME_TYPES.has(element.gameType)
+      ))) return true
+    }
+  }
+  return false
 }
 
 /** True if any slide (or vertical child) uses an `'fx'` background with a known module. */
@@ -531,12 +517,14 @@ function generatePrintHTML(presentation, options = {}) {
   const pagesHtml = pages
     // eslint-disable-next-line unused-imports/no-unused-vars
     .map(({ slide, maxIdx, countPageNumber }, pageIndex) => {
-      const bgStyle = getBgPrintStyle(slide.background, printDeckTokens)
+      const slidePrintTokens = mergeTokens(printDeckTokens, slide?.designTokens)
+      const bgStyle = getBgPrintStyle(slide.background, slidePrintTokens)
 
       const elementsHtml = renderSlideElements(slide, {
         forPrint: true,
         maxFragIdx: maxIdx,
         exportElementIds: options.exportElementIds,
+        slideBackground: getPrintChartBackground(slide, printDeckTokens),
       })
 
       // Per-slide page numbering

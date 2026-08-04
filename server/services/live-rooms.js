@@ -6,10 +6,12 @@ const rooms = new Map() // roomId -> { presenterId, presenterTokenHash, controll
 const socketToRoom = new Map() // socketId -> roomId
 const socketRoles = new Map() // socketId -> role
 
-// Grace window before an orphaned room (presenter gone, no viewers) is reaped.
+// Grace window before an orphaned room (presenter gone, no viewers or controllers) is reaped.
 // Mirrors the game-room TTL pattern. Overridable for fast tests.
 const DEFAULT_LIVE_ROOM_TTL_MS = 60 * 1000
+const DEFAULT_PRESENTER_GRACE_MS = 5 * 1000
 let liveRoomTtlMs = DEFAULT_LIVE_ROOM_TTL_MS
+let presenterGraceMs = DEFAULT_PRESENTER_GRACE_MS
 
 function hashToken(token) {
   return crypto.createHash('sha256').update(String(token || '')).digest('hex')
@@ -22,15 +24,19 @@ function createPresenterToken() {
 function createRoom(presenterToken, presenterId = null) {
   return {
     presenterId,
+    presenterConnected: false,
     presenterTokenHash: hashToken(presenterToken),
     controllers: [],
     viewers: [],
     presentationId: null,
+    presentationGeneration: 0,
     state: { slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 },
     annotations: {},    // slideIndex -> Annotation[]
     timers: {},         // elementId -> TimerState
     timerTimeouts: {},  // elementId -> setTimeout ID
     cleanupTimer: null, // pending orphaned-room reap handle
+    presenterTerminationTimer: null,
+    presenterTerminationHandler: null,
   }
 }
 
@@ -47,6 +53,10 @@ function computeTimerRemaining(timer) {
   return Math.max(0, Math.ceil((timer.endedAt - Date.now()) / 1000))
 }
 
+function getAnnotationKey(slideIndex, verticalIndex = 0) {
+  return Number(verticalIndex) ? `${slideIndex}:${verticalIndex}` : String(slideIndex)
+}
+
 function isValidPresenterToken(room, presenterToken) {
   if (!room || !presenterToken) return false
   return room.presenterTokenHash === hashToken(presenterToken)
@@ -55,13 +65,19 @@ function isValidPresenterToken(room, presenterToken) {
 // Pre-register a room (before presenter connects via Socket.IO)
 function registerRoom(roomId, presenterToken) {
   if (!rooms.has(roomId)) {
-    rooms.set(roomId, createRoom(presenterToken))
+    const room = createRoom(presenterToken)
+    rooms.set(roomId, room)
+    maybeScheduleRoomCleanup(roomId, room)
   }
 }
 
 function joinRoom(roomId, socketId, role, options = {}) {
   const { presenterToken } = options
   const room = rooms.get(roomId)
+  const previousRoomId = socketToRoom.get(socketId)
+  if (previousRoomId && previousRoomId !== roomId) {
+    return { ok: false, error: 'already-joined-room' }
+  }
 
   if (role === 'presenter') {
     if (!room) {
@@ -70,7 +86,10 @@ function joinRoom(roomId, socketId, role, options = {}) {
     if (!isValidPresenterToken(room, presenterToken)) {
       return { ok: false, error: 'invalid-presenter-token' }
     }
+    cancelPresenterTermination(room)
+    room.presentationGeneration += 1
     room.presenterId = socketId
+    room.presenterConnected = true
   } else if (role === 'controller') {
     if (!room) {
       return { ok: false, error: 'room-not-found' }
@@ -85,14 +104,15 @@ function joinRoom(roomId, socketId, role, options = {}) {
       room.viewers.push(socketId)
     }
   }
-  // Any (re)join inside the grace window cancels a pending orphaned-room reap.
+  // Joins cancel only orphan cleanup. Presenter joins also cancel terminal
+  // disconnect handling; viewer/controller joins cannot extend presenter grace.
   cancelRoomCleanup(room)
   socketToRoom.set(socketId, roomId)
   socketRoles.set(socketId, role)
   return { ok: true }
 }
 
-function leaveRoom(socketId) {
+function leaveRoom(socketId, options = {}) {
   const roomId = socketToRoom.get(socketId)
   if (!roomId) return null
 
@@ -103,7 +123,7 @@ function leaveRoom(socketId) {
   if (!room) return null
 
   if (room.presenterId === socketId) {
-    room.presenterId = null  // Keep room alive; annotations survive presenter disconnect
+    room.presenterId = null  // Keep room alive during bounded reconnect grace
     // Clear orphaned timer timeouts — they were scheduled for the disconnected presenter.
     // When the presenter reconnects, new timers can be created from scratch.
     if (room.timerTimeouts) {
@@ -112,8 +132,12 @@ function leaveRoom(socketId) {
       }
       room.timerTimeouts = {}
     }
-    maybeScheduleRoomCleanup(roomId, room)
+    schedulePresenterTermination(roomId, options.onPresenterLeft)
     return { roomId, role: 'presenter' }
+  }
+
+  if (role === 'presenter') {
+    return { roomId, role: 'stale-presenter' }
   }
 
   room.viewers = room.viewers.filter((id) => id !== socketId)
@@ -122,12 +146,13 @@ function leaveRoom(socketId) {
   return { roomId, role: role || 'viewer' }
 }
 
-// Arm a grace-window reap when a room is orphaned (no presenter AND no viewers).
+// Arm a grace-window reap when a room is orphaned (no presenter, viewers, or controllers).
 // A (re)join within the window cancels it via cancelRoomCleanup. In-memory only —
 // annotations are NOT flushed to storage on cleanup.
 function maybeScheduleRoomCleanup(roomId, room) {
   if (!room) return
-  if (room.presenterId || room.viewers.length > 0) return
+  if (room.presenterTerminationTimer) return
+  if (room.presenterId || room.viewers.length > 0 || room.controllers.length > 0) return
   if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
   room.cleanupTimer = setTimeout(() => removeRoom(roomId), liveRoomTtlMs)
 }
@@ -139,6 +164,35 @@ function cancelRoomCleanup(room) {
   }
 }
 
+function cancelPresenterTermination(room) {
+  if (room?.presenterTerminationTimer) {
+    clearTimeout(room.presenterTerminationTimer)
+    room.presenterTerminationTimer = null
+  }
+  if (room) room.presenterTerminationHandler = null
+}
+
+function schedulePresenterTermination(roomId, onExpire) {
+  const room = rooms.get(roomId)
+  if (!room || room.presenterId) return false
+  cancelPresenterTermination(room)
+  room.presenterTerminationHandler = typeof onExpire === 'function' ? onExpire : null
+  room.presenterTerminationTimer = setTimeout(() => {
+    const current = rooms.get(roomId)
+    if (!current || current.presenterId) return
+    current.presenterTerminationTimer = null
+    const handler = current.presenterTerminationHandler
+    current.presenterTerminationHandler = null
+    current.presenterConnected = false
+    try {
+      if (handler) handler(roomId)
+    } finally {
+      removeRoom(roomId)
+    }
+  }, presenterGraceMs)
+  return true
+}
+
 function getRoomState(roomId) {
   return rooms.get(roomId)
 }
@@ -147,6 +201,7 @@ function removeRoom(roomId) {
   const room = rooms.get(roomId)
   if (!room) return false
   if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
+  cancelPresenterTermination(room)
   for (const timeoutId of Object.values(room.timerTimeouts || {})) {
     clearTimeout(timeoutId)
   }
@@ -173,7 +228,9 @@ function updateRoomState(roomId, socketId, newState) {
 
 function canControlRoom(roomId, socketId) {
   const room = rooms.get(roomId)
-  return !!room && (room.presenterId === socketId || room.controllers.includes(socketId))
+  if (!room) return false
+  if (room.presenterId === socketId) return true
+  return Boolean(room.presenterId && room.controllers.includes(socketId))
 }
 
 function getViewerCount(roomId) {
@@ -183,17 +240,24 @@ function getViewerCount(roomId) {
 function _resetRooms() {
   for (const room of rooms.values()) {
     if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
+    cancelPresenterTermination(room)
     for (const id of Object.values(room.timerTimeouts || {})) clearTimeout(id)
   }
   rooms.clear()
   socketToRoom.clear()
   socketRoles.clear()
   liveRoomTtlMs = DEFAULT_LIVE_ROOM_TTL_MS
+  presenterGraceMs = DEFAULT_PRESENTER_GRACE_MS
 }
 
 // Test seam: shrink the orphaned-room grace window so cleanup tests run fast.
 function _setLiveRoomTtl(ms) {
   liveRoomTtlMs = ms
+}
+
+// Test seam: control presenter reconnect grace independently from orphan cleanup.
+function _setPresenterGraceMs(ms) {
+  presenterGraceMs = Math.max(0, Number(ms) || 0)
 }
 
 module.exports = {
@@ -211,5 +275,7 @@ module.exports = {
   isValidPresenterToken,
   _resetRooms,
   _setLiveRoomTtl,
+  _setPresenterGraceMs,
   computeTimerRemaining,
+  getAnnotationKey,
 }

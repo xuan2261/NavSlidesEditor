@@ -2,6 +2,7 @@
   "canvas": [
     { "id": "canvas.move",         "risk": "low",  "tiers": ["smoke"] },
     { "id": "canvas.resize",       "risk": "low",  "tiers": ["smoke"] },
+    { "id": "canvas.resize-boundary", "risk": "high", "tiers": ["smoke", "deep"] },
     { "id": "canvas.resize-aspect","risk": "high", "tiers": ["smoke", "deep"] },
     { "id": "canvas.rotate-snap",  "risk": "high", "tiers": ["smoke", "deep"] },
     { "id": "canvas.zorder",       "risk": "high", "tiers": ["smoke", "deep"] },

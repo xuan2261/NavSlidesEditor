@@ -52,8 +52,18 @@ function once(sock, event) {
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 async function joinAndWait(sock, payload) {
+  let hostCapability = payload.hostCapability
+  if (payload.role === 'host' && !GameEngine.getRoom(payload.gameId) && payload.gameType) {
+    GameEngine.createRoom(payload.gameId, payload.gameType, payload.options || {})
+  }
+  if (payload.role === 'host' && !hostCapability) {
+    hostCapability = GameEngine.takeHostCapability(payload.gameId)
+  }
   const joined = once(sock, 'game-player-joined')
-  sock.emit('game-join', payload)
+  sock.emit('game-join', {
+    ...payload,
+    ...(hostCapability ? { hostCapability } : {}),
+  })
   return joined
 }
 
@@ -88,6 +98,201 @@ describe('game socket end-to-end', () => {
     })
 
     expect(data.players.some((p) => p.name === 'Alice')).toBe(true)
+  })
+
+  it('rejects player-id impersonation without the server-issued session', async () => {
+    GameEngine.createRoom('session-host-room', 'hot-potato', {
+      questions: [{ id: 'q1', correctIndex: 0, points: 10 }, { id: 'q2', correctIndex: 1, points: 10 }],
+    })
+    const host = connectClient()
+    await waitConnect(host)
+    const hostSession = once(host, 'game-session')
+    await joinAndWait(host, {
+      gameId: 'session-host-room',
+      playerName: 'Host',
+      playerId: 'p-host',
+      role: 'host',
+    })
+    const session = await hostSession
+    expect(session).toMatchObject({ playerId: 'p-host' })
+    expect(typeof session.sessionToken).toBe('string')
+
+    const attacker = connectClient()
+    await waitConnect(attacker)
+    const impersonationError = once(attacker, 'game-error')
+    attacker.emit('game-join', {
+      gameId: 'session-host-room',
+      playerName: 'Attacker',
+      playerId: 'p-host',
+      role: 'player',
+    })
+
+    expect((await impersonationError).message).toBe('invalid-player-session')
+    expect(GameEngine.getRoom('session-host-room').players.get('p-host').socketId).toBe(host.id)
+
+    const hostQuestion = once(host, 'game-question')
+    host.emit('game-next', { gameId: 'session-host-room' })
+    expect((await hostQuestion).question.id).toBe('q2')
+  })
+
+  it('reissues a host session when a reconnect loses the initial session event', async () => {
+    GameEngine.createRoom('host-session-recovery-room', 'name-picker', { items: ['A', 'B'] })
+    const hostCapability = GameEngine.peekHostCapability('host-session-recovery-room')
+    const first = connectClient()
+    await waitConnect(first)
+    const firstSessionEvent = once(first, 'game-session')
+    await joinAndWait(first, {
+      gameId: 'host-session-recovery-room',
+      playerName: 'Host',
+      playerId: 'p-host',
+      role: 'host',
+      hostCapability,
+    })
+    const firstSession = await firstSessionEvent
+    first.disconnect()
+
+    const second = connectClient()
+    await waitConnect(second)
+    const recoveredSessionEvent = once(second, 'game-session')
+    await joinAndWait(second, {
+      gameId: 'host-session-recovery-room',
+      playerName: 'Host',
+      playerId: 'p-host',
+      role: 'host',
+      hostCapability,
+    })
+    const recoveredSession = await recoveredSessionEvent
+
+    expect(recoveredSession.playerId).toBe('p-host')
+    expect(recoveredSession.sessionToken).toEqual(expect.any(String))
+    expect(recoveredSession.sessionToken).not.toBe(firstSession.sessionToken)
+  })
+
+  it('evicts stale socket membership before an expired game ID is recreated', async () => {
+    GameEngine._setUnclaimedRoomTtl(1000)
+    GameEngine.createRoom('expired-generation-room', 'name-picker', { items: ['A'] })
+    const player = connectClient()
+    await waitConnect(player)
+    const expired = once(player, 'game-room-expired')
+    await joinAndWait(player, {
+      gameId: 'expired-generation-room',
+      playerName: 'Waiting Player',
+      playerId: 'p-waiting',
+      role: 'player',
+    })
+
+    // The manager timer is covered separately; call cleanup after membership
+    // is established so this socket-generation regression is deterministic.
+    GameEngine.cleanup('expired-generation-room')
+    expect((await expired).gameId).toBe('expired-generation-room')
+    expect(GameEngine.getRoom('expired-generation-room')).toBeUndefined()
+
+    let staleBroadcast = false
+    const onStaleBroadcast = () => { staleBroadcast = true }
+    player.on('game-player-joined', onStaleBroadcast)
+
+    GameEngine.createRoom('expired-generation-room', 'name-picker', { items: ['B'] })
+    const host = connectClient()
+    await waitConnect(host)
+    const hostCapability = GameEngine.peekHostCapability('expired-generation-room')
+    await joinAndWait(host, {
+      gameId: 'expired-generation-room',
+      playerName: 'New Host',
+      playerId: 'p-new-host',
+      role: 'host',
+      hostCapability,
+    })
+    await delay(10)
+    player.off('game-player-joined', onStaleBroadcast)
+
+    expect(staleBroadcast).toBe(false)
+  })
+
+  it('rejects answers from a stale socket after a valid player reconnects', async () => {
+    GameEngine.createRoom('session-player-room', 'hot-potato', {
+      questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
+    })
+    const first = connectClient()
+    await waitConnect(first)
+    const firstSession = once(first, 'game-session')
+    await joinAndWait(first, {
+      gameId: 'session-player-room',
+      playerName: 'Alice',
+      playerId: 'p-alice',
+      role: 'player',
+    })
+    const { sessionToken } = await firstSession
+
+    const second = connectClient()
+    await waitConnect(second)
+    await joinAndWait(second, {
+      gameId: 'session-player-room',
+      playerName: 'Alice',
+      playerId: 'p-alice',
+      role: 'player',
+      sessionToken,
+    })
+
+    const staleError = once(first, 'game-error')
+    first.emit('game-answer', { gameId: 'session-player-room', answerIndex: 0, timeSpentMs: 1000 })
+    expect((await staleError).message).toBe('stale-player-session')
+    expect(GameEngine.getRoom('session-player-room').players.get('p-alice').score).toBe(0)
+
+    const answerResult = once(second, 'game-answer-result')
+    second.emit('game-answer', { gameId: 'session-player-room', answerIndex: 0, timeSpentMs: 1000 })
+    expect((await answerResult).totalScore).toBe(10)
+  })
+
+  it('lets an editor observe a game without claiming host authority', async () => {
+    const host = connectClient()
+    await waitConnect(host)
+    await joinAndWait(host, {
+      gameId: 'observer-room',
+      playerName: 'Host',
+      playerId: 'p-host',
+      role: 'host',
+      gameType: 'hot-potato',
+      options: { questions: [{ id: 'q1', correctIndex: 0, points: 10 }] },
+    })
+    expect(GameEngine.getRoom('observer-room')).toMatchObject({
+      hostPlayerId: 'p-host',
+      hostSocketId: host.id,
+    })
+
+    const observer = connectClient()
+    await waitConnect(observer)
+    const initialLeaderboard = once(observer, 'game-leaderboard')
+    observer.emit('game-join', {
+      gameId: 'observer-room',
+      playerName: 'editor-observer',
+      playerId: 'editor-observer',
+      role: 'observer',
+    })
+
+    expect((await initialLeaderboard).scores).toEqual([
+      { playerId: 'p-host', name: 'Host', score: 0 },
+    ])
+    expect(GameEngine.getRoom('observer-room').players.size).toBe(1)
+    expect(GameEngine.getRoom('observer-room')).toMatchObject({
+      hostPlayerId: 'p-host',
+      hostSocketId: host.id,
+    })
+
+    const player = connectClient()
+    await waitConnect(player)
+    await joinAndWait(player, {
+      gameId: 'observer-room',
+      playerName: 'Alice',
+      playerId: 'p-alice',
+      role: 'player',
+    })
+    expect(GameEngine.isHost('observer-room', 'p-alice')).toBe(false)
+
+    const observerLeaderboard = once(observer, 'game-leaderboard')
+    player.emit('game-answer', { gameId: 'observer-room', answerIndex: 0, timeSpentMs: 1000 })
+    const updatedScores = await observerLeaderboard
+    expect(updatedScores.scores).toHaveLength(2)
+    expect(updatedScores.scores[0]).toMatchObject({ playerId: 'p-alice', score: 10 })
   })
 
   // 2. Anti-cheat: answering the same question twice scores only once.
@@ -134,6 +339,47 @@ describe('game socket end-to-end', () => {
 
     expect(err.message).toBeDefined()
     expect(GameEngine.getRoom('room3').currentQuestion).toBe(0)
+
+    GameEngine.createRoom('room3-other', 'name-picker', { items: ['A'] })
+    const otherHostCapability = GameEngine.takeHostCapability('room3-other')
+    GameEngine.joinRoom('room3-other', 'p-host', 'Host', {
+      socketId: host.id,
+      role: 'host',
+      hostCapability: otherHostCapability,
+    })
+    const crossRoomErr = once(host, 'game-error')
+    host.emit('game-random', { gameId: 'room3-other' })
+    expect((await crossRoomErr).message).toBe('Invalid game room for this socket')
+  })
+
+  it('rejects a second room join without leaking the original membership', async () => {
+    GameEngine._setEmptyRoomTtl(10)
+    GameEngine.createRoom('room-switch-a', 'name-picker', { items: ['A'] })
+    GameEngine.createRoom('room-switch-b', 'name-picker', { items: ['B'] })
+
+    const sock = connectClient()
+    await waitConnect(sock)
+    await joinAndWait(sock, {
+      gameId: 'room-switch-a',
+      playerName: 'Alice',
+      playerId: 'p-alice',
+    })
+
+    const crossRoomErr = once(sock, 'game-error')
+    sock.emit('game-join', {
+      gameId: 'room-switch-b',
+      playerName: 'Alice',
+      playerId: 'p-alice',
+    })
+
+    expect((await crossRoomErr).message).toBe('already-joined-room')
+    expect(GameEngine.getRoom('room-switch-a').players.get('p-alice').socketId).toBe(sock.id)
+    expect(GameEngine.getRoom('room-switch-b').players.size).toBe(0)
+
+    sock.disconnect()
+    await delay(30)
+    expect(GameEngine.getRoom('room-switch-a')).toBeUndefined()
+    expect(GameEngine.getRoom('room-switch-b')).toBeDefined()
   })
 
   // 4. Room cleanup with reconnect grace.

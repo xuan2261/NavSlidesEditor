@@ -1,3 +1,5 @@
+import { resolveChartPalette } from 'revealjs-shared'
+
 function safeChartColor(value, fallback) {
   const color = typeof value === 'string' ? value.trim() : ''
   if (/^#[0-9a-f]{3,8}$/i.test(color)) return color
@@ -6,15 +8,16 @@ function safeChartColor(value, fallback) {
   return fallback
 }
 
-export function ChartRenderer({ element, isSelected, isDragging }) {
+export function ChartRenderer({ element, isSelected, isDragging, slideBackground }) {
   const { chartType = 'bar', chartData = {} } = element
   const labels = chartData.labels || []
   const datasets = chartData.datasets || []
   const areaFill = chartType === 'line' && element.areaFill === true
   const stacked = element.stacked === true
   const stackedAxis = stacked ? 'stacked:true,' : ''
-  const axisTextColor = safeChartColor(element.axisTextColor, '#141413')
-  const gridColor = safeChartColor(element.gridColor, 'rgba(20,20,19,0.16)')
+  const chartPalette = resolveChartPalette(slideBackground)
+  const axisTextColor = safeChartColor(element.axisTextColor, chartPalette.text)
+  const gridColor = safeChartColor(element.gridColor, chartPalette.grid)
   const legendTextColor = safeChartColor(element.legendTextColor, axisTextColor)
   const scales =
     chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'

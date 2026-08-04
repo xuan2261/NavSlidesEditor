@@ -2,9 +2,10 @@
 // keeps Pencil. Embed row must have no two adjacent buttons sharing an icon.
 
 import React from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import InsertTabContent from './ribbon-insert-tab-element-galleries-panel.jsx'
+import { api } from '../../utils/api'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -266,5 +267,102 @@ describe('Table size picker ergonomics', () => {
     fireEvent.keyDown(grid, { key: 'ArrowDown' })
     fireEvent.keyDown(grid, { key: 'Enter' })
     expect(onAddTable).toHaveBeenCalledWith(4, 4)
+  })
+})
+
+describe('Insert upload error handling', () => {
+  it('shows a recoverable error when picture upload rejects', async () => {
+    let openedInput
+    const inputClick = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function () {
+      openedInput = this
+    })
+    const onAddImageUpload = vi.fn().mockRejectedValue(new Error('network down'))
+    render(<InsertTabContent pluginTypes={[]} onAddImageUpload={onAddImageUpload} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Picture' }))
+    const input = openedInput
+    expect(input).toBeTruthy()
+    fireEvent.change(input, { target: { files: [new File(['image'], 'slide.png', { type: 'image/png' })] } })
+
+    await waitFor(() => expect(screen.getByText('Upload failed. Check your connection.')).toBeTruthy())
+    expect(onAddImageUpload).toHaveBeenCalledTimes(1)
+    inputClick.mockRestore()
+  })
+
+  it('preserves picture cancellation feedback when the target slide changes', async () => {
+    let openedInput
+    const inputClick = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function () {
+      openedInput = this
+    })
+    const onAddImageUpload = vi.fn().mockRejectedValue(
+      new Error('Upload canceled because the active slide changed')
+    )
+    render(<InsertTabContent pluginTypes={[]} activeSlideId="slide-a" onAddImageUpload={onAddImageUpload} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Picture' }))
+    fireEvent.change(openedInput, {
+      target: { files: [new File(['image'], 'slide.png', { type: 'image/png' })] },
+    })
+
+    await waitFor(() => expect(screen.getByText('Upload canceled because the active slide changed')).toBeTruthy())
+    inputClick.mockRestore()
+  })
+
+  it('does not insert media after the active slide changes during upload', async () => {
+    let openedInput
+    let resolveUpload
+    const uploadPromise = new Promise((resolve) => {
+      resolveUpload = resolve
+    })
+    const inputClick = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function () {
+      openedInput = this
+    })
+    const uploadSpy = vi.spyOn(api, 'uploadFile').mockReturnValue(uploadPromise)
+    const onAddAudio = vi.fn()
+    const props = { pluginTypes: [], activeSlideId: 'slide-a', onAddAudio }
+    const { rerender } = render(<InsertTabContent {...props} />)
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Audio / Upload' }))
+    fireEvent.change(openedInput, {
+      target: { files: [new File(['audio'], 'track.mp3', { type: 'audio/mpeg' })] },
+    })
+    rerender(<InsertTabContent {...props} activeSlideId="slide-b" />)
+
+    await act(async () => {
+      resolveUpload({ url: '/track.mp3' })
+    })
+
+    await waitFor(() => expect(screen.getByText('Upload canceled because the active slide changed')).toBeTruthy())
+    expect(onAddAudio).not.toHaveBeenCalled()
+    uploadSpy.mockRestore()
+    inputClick.mockRestore()
+  })
+
+  it('does not insert SVG after the active slide changes while reading', async () => {
+    let openedInput
+    let resolveText
+    const textPromise = new Promise((resolve) => {
+      resolveText = resolve
+    })
+    const inputClick = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function () {
+      openedInput = this
+    })
+    const onAddSvg = vi.fn()
+    const props = { pluginTypes: [], activeSlideId: 'slide-a', onAddSvg }
+    const { rerender } = render(<InsertTabContent {...props} />)
+    const svgFile = new File(['<svg />'], 'drawing.svg', { type: 'image/svg+xml' })
+    Object.defineProperty(svgFile, 'text', { value: () => textPromise })
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Add SVG' }))
+    fireEvent.change(openedInput, { target: { files: [svgFile] } })
+    rerender(<InsertTabContent {...props} activeSlideId="slide-b" />)
+
+    await act(async () => {
+      resolveText('<svg />')
+    })
+
+    await waitFor(() => expect(screen.getByText('Upload canceled because the active slide changed')).toBeTruthy())
+    expect(onAddSvg).not.toHaveBeenCalled()
+    inputClick.mockRestore()
   })
 })

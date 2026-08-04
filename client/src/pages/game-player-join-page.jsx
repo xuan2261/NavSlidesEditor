@@ -339,7 +339,7 @@ function AnsweredState({ answerResult, question }) {
 }
 
 // ── Final Results ───────────────────────────────────────────────────────────────
-function FinalResults({ leaderboard, myScore, myRank, playerName }) {
+function FinalResults({ leaderboard, myScore, myRank, playerId }) {
   return (
     <div className="min-h-screen bg-workspace flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -365,7 +365,7 @@ function FinalResults({ leaderboard, myScore, myRank, playerName }) {
             </div>
             <div className="divide-y divide-border">
               {leaderboard.slice(0, 10).map((entry, i) => {
-                const isMe = entry.name === playerName
+                const isMe = entry.playerId === playerId
                 const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`
                 return (
                   <div key={i} className={`px-4 py-3 flex items-center justify-between ${isMe ? 'bg-accent/5' : ''}`}>
@@ -418,6 +418,7 @@ export default function GamePlayerPage() {
     myScore,
     myRank,
     leaderboard,
+    playerId,
     _isConnected,
     error,
   } = useGamePlayer({ gameId, playerName: resolvedName || undefined })
@@ -522,7 +523,7 @@ export default function GamePlayerPage() {
         leaderboard={leaderboard}
         myScore={myScore}
         myRank={myRank}
-        playerName={resolvedName}
+        playerId={playerId}
       />
     )
   }

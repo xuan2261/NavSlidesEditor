@@ -8,14 +8,20 @@ import { TimerContext } from '../contexts/timer-context-state-provider.jsx'
 import { BlackScreenOverlay } from '../components/black-screen-overlay.jsx'
 import { getShortcuts } from '../utils/default-keyboard-shortcut-definitions-registry.js'
 
+function getAnnotationBucketKey(slideIndex, verticalIndex = 0) {
+  return verticalIndex ? `${slideIndex}:${verticalIndex}` : String(slideIndex)
+}
+
 export default function LiveViewPage() {
   const { roomCode } = useParams()
 
   // Socket reference shared across callbacks
   const socketRef = useRef(null)
+  const presenterLeftRef = useRef(false)
 
-  // Annotation strokes keyed by slide index so strokes never bleed across
-  // slides. The displayed set is derived from the current slide.
+  // Annotation strokes keyed by horizontal and vertical slide indices so
+  // strokes never bleed across nested slides. The displayed set is derived
+  // from the current slide.
   const [strokesBySlide, setStrokesBySlide] = useState({})
 
   // Slideshow overlay
@@ -23,6 +29,8 @@ export default function LiveViewPage() {
 
   const [isConnected, setIsConnected] = useState(false)
   const [presenterLeft, setPresenterLeft] = useState(false)
+  const [presenterReconnecting, setPresenterReconnecting] = useState(false)
+  const [roomEnded, setRoomEnded] = useState(false)
   const [htmlContent, setHtmlContent] = useState('')
   const [liveState, setLiveState] = useState({ slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 })
   const [cursorPos, setCursorPos] = useState(null)
@@ -128,8 +136,28 @@ export default function LiveViewPage() {
     })
 
     // Presenter disconnected (room survives, may reconnect) or left (room ended)
-    socket.on('presenter-disconnected', () => setPresenterLeft(true))
-    socket.on('presenter-left', () => setPresenterLeft(true))
+    socket.on('presenter-status', ({ hasPresenter, presenterConnected }) => {
+      if (presenterLeftRef.current) return
+      setPresenterReconnecting(presenterConnected === true && hasPresenter === false)
+    })
+    socket.on('presenter-disconnected', () => {
+      if (!presenterLeftRef.current) setPresenterReconnecting(true)
+    })
+    socket.on('presenter-reconnected', () => {
+      if (!presenterLeftRef.current) setPresenterReconnecting(false)
+    })
+    socket.on('presenter-left', () => {
+      presenterLeftRef.current = true
+      setPresenterLeft(true)
+      setRoomEnded(false)
+      setRoomNotFound(false)
+      setPresenterReconnecting(false)
+    })
+    socket.on('room-ended', () => {
+      if (presenterLeftRef.current) return
+      setRoomEnded(true)
+      setPresenterReconnecting(false)
+    })
 
     socket.on('viewer-count', ({ count }) => setViewerCount(count))
     socket.on('room-not-found', () => setRoomNotFound(true))
@@ -165,7 +193,7 @@ export default function LiveViewPage() {
   }, [roomCode])
 
   useEffect(() => {
-    if (!isConnected || !htmlContent || presenterLeft) return undefined
+    if (!isConnected || !htmlContent || presenterLeft || roomEnded) return undefined
     let cancelled = false
 
     const checkPresenter = async () => {
@@ -173,8 +201,14 @@ export default function LiveViewPage() {
         const res = await fetch(`/api/live/room/${roomCode}`)
         if (!res.ok) return
         const room = await res.json()
-        if (!cancelled && room.exists && room.hasPresenter === false) {
-          setPresenterLeft(true)
+        if (cancelled) return
+        if (!room.exists) {
+          if (!presenterLeftRef.current) setRoomEnded(true)
+          setPresenterReconnecting(false)
+          return
+        }
+        if (!presenterLeftRef.current) {
+          setPresenterReconnecting(room.presenterConnected === true && room.hasPresenter === false)
         }
       } catch {
         // Socket events remain primary; this poll is only a missed-event fallback.
@@ -187,39 +221,45 @@ export default function LiveViewPage() {
       cancelled = true
       clearInterval(interval)
     }
-  }, [htmlContent, isConnected, presenterLeft, roomCode])
+  }, [htmlContent, isConnected, presenterLeft, roomCode, roomEnded])
 
 
   // Annotation sync — handlers operate on the current slide's stroke bucket.
   const slideIndex = liveState.slideIndex
+  const verticalIndex = liveState.verticalIndex
 
-  const handleAnnotationAdd = useCallback((annotation, targetSlideIndex = slideIndex) => {
+  const handleAnnotationAdd = useCallback((annotation, targetSlideIndex = slideIndex, targetVerticalIndex = verticalIndex) => {
+    const bucketKey = getAnnotationBucketKey(targetSlideIndex, targetVerticalIndex)
     setStrokesBySlide((prev) => ({
       ...prev,
-      [targetSlideIndex]: [...(prev[targetSlideIndex] || []), annotation],
+      [bucketKey]: [...(prev[bucketKey] || []), annotation],
     }))
-  }, [slideIndex])
+  }, [slideIndex, verticalIndex])
 
-  const handleAnnotationRemove = useCallback((annotationId, targetSlideIndex = slideIndex) => {
+  const handleAnnotationRemove = useCallback((annotationId, targetSlideIndex = slideIndex, targetVerticalIndex = verticalIndex) => {
+    const bucketKey = getAnnotationBucketKey(targetSlideIndex, targetVerticalIndex)
     setStrokesBySlide((prev) => ({
       ...prev,
-      [targetSlideIndex]: (prev[targetSlideIndex] || []).filter((a) => a.id !== annotationId),
+      [bucketKey]: (prev[bucketKey] || []).filter((a) => a.id !== annotationId),
     }))
-  }, [slideIndex])
+  }, [slideIndex, verticalIndex])
 
-  const handleAnnotationsClear = useCallback((targetSlideIndex = slideIndex) => {
-    setStrokesBySlide((prev) => ({ ...prev, [targetSlideIndex]: [] }))
-  }, [slideIndex])
+  const handleAnnotationsClear = useCallback((targetSlideIndex = slideIndex, targetVerticalIndex = verticalIndex) => {
+    const bucketKey = getAnnotationBucketKey(targetSlideIndex, targetVerticalIndex)
+    setStrokesBySlide((prev) => ({ ...prev, [bucketKey]: [] }))
+  }, [slideIndex, verticalIndex])
 
   useAnnotationSync({
     socket: socketRef.current,
     slideIndex,
+    verticalIndex,
+    includeVerticalIndex: true,
     onAnnotationAdd: handleAnnotationAdd,
     onAnnotationRemove: handleAnnotationRemove,
     onAnnotationsClear: handleAnnotationsClear,
   })
 
-  const annotationStrokes = strokesBySlide[slideIndex] || []
+  const annotationStrokes = strokesBySlide[getAnnotationBucketKey(slideIndex, verticalIndex)] || []
   const normalizedAnnotationStrokes = annotationStrokes.filter(
     (annotation) => annotation.coordinateSpace === 'normalized'
   )
@@ -275,7 +315,7 @@ export default function LiveViewPage() {
     return () => { delete window.__emitTimerEvent }
   }, [])
 
-  if (roomNotFound && !htmlContent) {
+  if (roomNotFound && !htmlContent && !roomEnded && !presenterLeft) {
     return (
       <div className="w-screen h-screen flex items-center justify-center bg-black text-white font-sans">
         <div className="text-center">
@@ -301,8 +341,14 @@ export default function LiveViewPage() {
         </div>
       )}
 
+      {presenterReconnecting && !presenterLeft && !roomEnded && (
+        <div className="absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-md bg-warning/90 px-3.5 py-1.5 text-[13px] font-medium text-white">
+          Presenter reconnecting...
+        </div>
+      )}
+
       {/* Waiting for presenter */}
-      {isConnected && !htmlContent && !presenterLeft && (
+      {isConnected && !htmlContent && !presenterLeft && !presenterReconnecting && !roomEnded && (
         <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black">
           <div className="text-center text-white font-sans">
             <div className="w-12 h-12 rounded-full border-[3px] border-primary-light border-t-primary animate-spin mx-auto mb-4" />
@@ -319,11 +365,13 @@ export default function LiveViewPage() {
         </div>
       )}
 
-      {presenterLeft && (
+      {(presenterLeft || roomEnded) && (
         <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/80">
           <div className="text-center text-white font-sans">
-            <h2 className="text-2xl mb-2">Presenter has left</h2>
-            <p className="text-text-secondary">The live session has ended.</p>
+            <h2 className="text-2xl mb-2">{presenterLeft ? 'Presenter has left' : 'Session ended'}</h2>
+            <p className="text-text-secondary">
+              {presenterLeft ? 'The presenter has left this session.' : 'The live session has ended.'}
+            </p>
             <a href="/" className="text-primary text-sm">
               ← Back to Home
             </a>

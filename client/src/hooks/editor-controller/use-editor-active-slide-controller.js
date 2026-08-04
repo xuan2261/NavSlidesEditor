@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { mapActiveSlide, resolveActiveSlide } from '../../utils/active-slide-mapper'
 
 export function useEditorActiveSlideController({
@@ -10,11 +10,11 @@ export function useEditorActiveSlideController({
   const currentSlideIndexRef = useRef(currentSlideIndex)
   const verticalEditRef = useRef(verticalEdit)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     currentSlideIndexRef.current = currentSlideIndex
   }, [currentSlideIndex])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     verticalEditRef.current = verticalEdit
   }, [verticalEdit])
 
@@ -30,7 +30,7 @@ export function useEditorActiveSlideController({
     verticalEdit
   )
   const activeSlideRef = useRef(activeSlide)
-  useEffect(() => {
+  useLayoutEffect(() => {
     activeSlideRef.current = activeSlide
   }, [activeSlide])
 

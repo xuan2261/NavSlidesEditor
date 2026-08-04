@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-export function useRevealPreviewFrame(htmlContent, state = null) {
+export function useRevealPreviewFrame(htmlContent, state = null, frameKey = 0) {
   const iframeRef = useRef(null)
   const deckRef = useRef(null)
   const revealCheckRef = useRef(null)
@@ -67,7 +67,7 @@ export function useRevealPreviewFrame(htmlContent, state = null) {
         revealCheckRef.current = null
       }
     }
-  }, [htmlContent])
+  }, [htmlContent, frameKey])
 
   useEffect(() => {
     if (!deckRef.current || !state) return

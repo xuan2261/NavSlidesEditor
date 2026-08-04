@@ -23,13 +23,16 @@ export default function RemoteControlPage() {
   const socketRef = useRef(null)
 
   const [isConnected, setIsConnected] = useState(false)
+  const [hasPresenter, setHasPresenter] = useState(false)
   const [liveState, setLiveState] = useState(initialState)
   const [meta, setMeta] = useState({ slideCount: 0, slides: [] })
   const [elapsedTime, setElapsedTime] = useState(0)
   const [laserActive, setLaserActive] = useState(false)
   const [viewersCount, setViewersCount] = useState(0)
   const [presenterLeft, setPresenterLeft] = useState(false)
+  const [presenterReconnecting, setPresenterReconnecting] = useState(false)
   const [roomNotFound, setRoomNotFound] = useState(false)
+  const [roomEnded, setRoomEnded] = useState(false)
   const flatSlides = useMemo(() => meta.slides || [], [meta.slides])
   const currentFlatIndex = useMemo(
     () => findFlatSlideIndex(flatSlides, liveState),
@@ -60,9 +63,33 @@ export default function RemoteControlPage() {
       socket.emit('join-room', { roomId: roomCode, role: 'controller' })
     })
 
-    socket.on('disconnect', () => setIsConnected(false))
+    socket.on('disconnect', () => {
+      setIsConnected(false)
+      setHasPresenter(false)
+    })
     socket.on('room-not-found', () => setRoomNotFound(true))
-    socket.on('presenter-left', () => setPresenterLeft(true))
+    socket.on('presenter-status', ({ hasPresenter: nextHasPresenter, presenterConnected }) => {
+      setHasPresenter(nextHasPresenter === true)
+      setPresenterReconnecting(presenterConnected === true && nextHasPresenter === false)
+    })
+    socket.on('presenter-disconnected', () => {
+      setHasPresenter(false)
+      setPresenterReconnecting(true)
+    })
+    socket.on('presenter-reconnected', () => {
+      setHasPresenter(true)
+      setPresenterReconnecting(false)
+    })
+    socket.on('presenter-left', () => {
+      setHasPresenter(false)
+      setPresenterLeft(true)
+      setPresenterReconnecting(false)
+    })
+    socket.on('room-ended', () => {
+      setHasPresenter(false)
+      setRoomEnded(true)
+      setPresenterReconnecting(false)
+    })
     socket.on('viewer-count', ({ count }) => setViewersCount(count))
     socket.on('presentation-meta', setMeta)
 
@@ -81,6 +108,7 @@ export default function RemoteControlPage() {
   }, [roomCode])
 
   const sendNavigation = (nextState) => {
+    if (!hasPresenter) return
     socketRef.current?.emit('control-navigate', {
       slideIndex: nextState.slideIndex,
       verticalIndex: nextState.verticalIndex || 0,
@@ -123,6 +151,8 @@ export default function RemoteControlPage() {
     socketRef.current?.emit('laser', { x: 0.5, y: 0.5, active: next })
   }
 
+  const controlsDisabled = !isConnected || !hasPresenter || presenterReconnecting || presenterLeft || roomEnded
+
   return (
     <div className="min-h-screen bg-workspace text-text-primary flex flex-col font-[Inter,system-ui,sans-serif]">
       <div className="px-4 py-3 flex justify-between items-center border-b border-border">
@@ -143,6 +173,17 @@ export default function RemoteControlPage() {
         </div>
       </div>
 
+      {presenterReconnecting && !presenterLeft && !roomEnded && (
+        <div className="mx-4 mt-3 rounded-md bg-warning/90 px-3 py-2 text-center text-sm font-medium text-white">
+          Presenter reconnecting...
+        </div>
+      )}
+      {isConnected && !hasPresenter && !presenterReconnecting && !presenterLeft && !roomEnded && (
+        <div className="mx-4 mt-3 rounded-md bg-card px-3 py-2 text-center text-sm text-text-muted">
+          Waiting for presenter...
+        </div>
+      )}
+
       <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3">
         <div className="bg-card rounded-lg p-4 flex-1 min-h-[160px] border border-border">
           <h4 className="mb-2 text-[13px] text-text-muted font-medium">Speaker Notes</h4>
@@ -161,13 +202,15 @@ export default function RemoteControlPage() {
         <div className="flex gap-3">
           <button
             onClick={goPrev}
-            className="flex-1 px-8 py-5 rounded-lg text-lg font-semibold border-2 border-border cursor-pointer flex items-center justify-center gap-2 bg-card text-text-primary touch-manipulation select-none hover:bg-hover transition-colors"
+            disabled={controlsDisabled}
+            className="flex-1 px-8 py-5 rounded-lg text-lg font-semibold border-2 border-border cursor-pointer flex items-center justify-center gap-2 bg-card text-text-primary touch-manipulation select-none hover:bg-hover transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ChevronLeft size={24} /> Prev
           </button>
           <button
             onClick={goNext}
-            className="flex-1 px-8 py-5 rounded-lg text-lg font-semibold border-none cursor-pointer flex items-center justify-center gap-2 bg-accent text-white touch-manipulation select-none hover:bg-accent-hover transition-colors"
+            disabled={controlsDisabled}
+            className="flex-1 px-8 py-5 rounded-lg text-lg font-semibold border-none cursor-pointer flex items-center justify-center gap-2 bg-accent text-white touch-manipulation select-none hover:bg-accent-hover transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next <ChevronRight size={24} />
           </button>
@@ -176,7 +219,8 @@ export default function RemoteControlPage() {
         <div className="flex gap-3">
           <button
             onClick={toggleLaser}
-            className={`flex-1 px-4 py-3 rounded-lg text-sm font-semibold border-2 cursor-pointer flex items-center justify-center gap-2 touch-manipulation select-none transition-colors ${laserActive ? 'bg-danger/20 border-danger text-danger' : 'bg-card border-border text-text-primary hover:bg-hover'}`}
+            disabled={controlsDisabled}
+            className={`flex-1 px-4 py-3 rounded-lg text-sm font-semibold border-2 cursor-pointer flex items-center justify-center gap-2 touch-manipulation select-none transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${laserActive ? 'bg-danger/20 border-danger text-danger' : 'bg-card border-border text-text-primary hover:bg-hover'}`}
           >
             <Pointer size={16} /> Laser
           </button>
@@ -186,10 +230,10 @@ export default function RemoteControlPage() {
         </div>
       </div>
 
-      {(presenterLeft || roomNotFound) && (
+      {(presenterLeft || roomNotFound || roomEnded) && (
         <div className="fixed inset-0 bg-black/80 z-[1000] flex items-center justify-center">
           <div className="text-center text-white">
-            <h2>{roomNotFound ? 'Room not found' : 'Session Ended'}</h2>
+            <h2>{presenterLeft ? 'Presenter has left' : roomEnded ? 'Session ended' : roomNotFound ? 'Room not found' : 'Session Ended'}</h2>
             <button
               onClick={() => navigate('/')}
               className="bg-accent text-white px-4 py-2 rounded font-medium hover:bg-accent/90 transition-colors border-none mt-3"

@@ -106,4 +106,27 @@ describe('generateOfflineHTML', () => {
     expect(offline).toContain('data-offline-id="__offline_iframe_0"')
     expect(fetch).toHaveBeenCalledWith('http://localhost:4173/vendor/mermaid/mermaid.min.js')
   })
+
+  it('rejects when strict mode cannot inline a required Reveal asset', async () => {
+    const html = '<link rel="stylesheet" href="/vendor/katex/dist/strict-missing.css">'
+
+    await expect(generateOfflineHTML(html, { strictRequiredAssets: true }))
+      .rejects.toThrow('offline-asset-fetch-failed')
+  })
+
+  it('does not cache failed required assets and retries after recovery', async () => {
+    const html = '<link rel="stylesheet" href="/vendor/reveal.js/dist/theme/strict-recovery.css">'
+    const fetchMock = globalThis.fetch
+    fetchMock
+      .mockImplementationOnce(async () => ({ ok: false, text: async () => '' }))
+      .mockImplementationOnce(async () => ({ ok: true, text: async () => '.reveal{}' }))
+
+    await expect(generateOfflineHTML(html, { strictRequiredAssets: true }))
+      .rejects.toThrow('offline-asset-fetch-failed')
+    const offline = await generateOfflineHTML(html, { strictRequiredAssets: true })
+
+    expect(offline).toContain('/* /vendor/reveal.js/dist/theme/strict-recovery.css */')
+    expect(offline).toContain('.reveal{}')
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
 })

@@ -12,6 +12,7 @@ const {
 const { resolveColorField, svgPaint, isTokenVar } = require('./design-tokens.js')
 const { resolveMergedCells } = require('./table-merge-resolver.js')
 const { normalizeLatexForRender } = require('./latex-utils.js')
+const { resolveChartPalette } = require('./chart-colors.js')
 
 /**
  * Inline SVG paint that preserves the exact `name="value"` token shape for
@@ -369,8 +370,9 @@ function renderChart(el, style, wrap, vis, opts) {
   const { chartType = 'bar', chartData = {} } = el
   const areaFill = chartType === 'line' && el.areaFill === true
   const stacked = el.stacked === true
-  const axisTextColor = safeCssColor(el.axisTextColor, '#141413')
-  const gridColor = safeCssColor(el.gridColor, 'rgba(20,20,19,0.16)')
+  const chartPalette = resolveChartPalette(opts.slideBackground)
+  const axisTextColor = safeCssColor(el.axisTextColor, chartPalette.text)
+  const gridColor = safeCssColor(el.gridColor, chartPalette.grid)
   const legendTextColor = safeCssColor(el.legendTextColor, axisTextColor)
   const datasetsArr = (chartData.datasets || []).map((ds) => ({
     label: ds.label || '',
@@ -955,18 +957,20 @@ const RENDERERS = {
  * @param {Object} opts - { forPrint: boolean, isHidden: boolean }
  */
 function renderElement(el, slide, opts = {}) {
-  const style = buildBaseStyle(el, opts)
-  const { dataIdAttr, fragClass, fragIdx } = opts.forPrint
+  const renderOpts =
+    opts.slideBackground === undefined ? { ...opts, slideBackground: slide?.background } : opts
+  const style = buildBaseStyle(el, renderOpts)
+  const { dataIdAttr, fragClass, fragIdx } = renderOpts.forPrint
     ? { dataIdAttr: '', fragClass: '', fragIdx: '' }
     : buildWrapperAttrs(el, slide)
   const exportIdAttr =
-    opts.exportElementIds && el.id ? ` data-export-element-id="${escapeHtml(el.id)}"` : ''
+    renderOpts.exportElementIds && el.id ? ` data-export-element-id="${escapeHtml(el.id)}"` : ''
   const wrap = `${exportIdAttr}${dataIdAttr}${fragClass}${fragIdx}`
-  const vis = opts.isHidden ? 'visibility:hidden;' : ''
+  const vis = renderOpts.isHidden ? 'visibility:hidden;' : ''
 
   const renderer = isPluginType(el.type) ? renderPlugin : RENDERERS[el.type]
   if (!renderer) return ''
-  return renderer(el, style, wrap, vis, opts)
+  return renderer(el, style, wrap, vis, renderOpts)
 }
 
 /**
@@ -978,7 +982,10 @@ function renderSlideElements(slide, opts = {}) {
     .slice()
     .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
     .map((el) => {
-      const elementOpts = { ...opts }
+      const elementOpts = {
+        ...opts,
+        slideBackground: opts.slideBackground === undefined ? slide.background : opts.slideBackground,
+      }
       if (opts.forPrint && el.fragment) {
         elementOpts.isHidden = (el.fragmentIndex || 1) > (opts.maxFragIdx ?? Infinity)
       }

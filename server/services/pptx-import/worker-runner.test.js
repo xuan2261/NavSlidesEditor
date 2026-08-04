@@ -245,17 +245,23 @@ describe('pptx parser worker runner', () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-worker-stubborn-'))
     const workerPath = path.join(dir, 'stubborn-worker.js')
     const controller = new AbortController()
+    let handlerReadyResolve
+    const handlerReady = new Promise((resolve) => { handlerReadyResolve = resolve })
     try {
       await fs.writeFile(
         workerPath,
-        "process.on('SIGTERM',()=>{});process.on('message',()=>{});process.send({type:'ready'})"
+        "process.on('SIGTERM',()=>{});process.on('message',()=>{});process.send({type:'ready'});process.send({type:'progress',stage:'handler-installed',percent:0})"
       )
       const pending = runParserWorker('deck.pptx', {
         workerPath,
         timeoutMs: 1000,
         killGraceMs: 20,
         signal: controller.signal,
+        onProgress: (message) => {
+          if (message.stage === 'handler-installed') handlerReadyResolve()
+        },
       })
+      await handlerReady
       controller.abort()
       const result = await pending
       expect(result.ok).toBe(false)

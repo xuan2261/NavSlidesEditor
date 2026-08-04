@@ -25,9 +25,9 @@ vi.mock('../hooks/use-reveal-preview-frame', () => ({
   useRevealPreviewFrame: () => ({ iframeRef: { current: null } }),
 }))
 vi.mock('../components/annotation-toolbar.jsx', () => ({
-  AnnotationToolbar: ({ onToolChange }) => (
+  AnnotationToolbar: ({ onToolChange }) => onToolChange ? (
     <button type="button" onClick={() => onToolChange('pen')}>Pen</button>
-  ),
+  ) : null,
 }))
 
 class MockPointerEvent extends Event {
@@ -92,6 +92,10 @@ describe('SpeakerViewPage annotations', () => {
 
   it('keeps one local stroke when the server echoes the same annotation', async () => {
     const { container, getByRole } = await renderConnectedSpeaker()
+    act(() => mocks.socket.handlers['presenter-status']({
+      hasPresenter: true,
+      presenterConnected: true,
+    }))
     fireEvent.click(getByRole('button', { name: 'Pen' }))
     const canvas = container.querySelector('.annotation-canvas')
 
@@ -116,5 +120,74 @@ describe('SpeakerViewPage annotations', () => {
       })
     })
     expect(container.querySelector('.annotation-canvas').querySelectorAll('path')).toHaveLength(2)
+  })
+
+  it('shows a reconnecting state without ending the session on presenter disconnect', async () => {
+    const view = await renderConnectedSpeaker()
+
+    act(() => mocks.socket.handlers['presenter-status']({
+      hasPresenter: false,
+      presenterConnected: true,
+    }))
+    expect(view.getByText('Presenter reconnecting...')).toBeTruthy()
+
+    act(() => mocks.socket.handlers['presenter-status']({
+      hasPresenter: true,
+      presenterConnected: true,
+    }))
+    expect(view.queryByText('Presenter reconnecting...')).toBeNull()
+
+    act(() => mocks.socket.handlers['presenter-disconnected']())
+    expect(view.getByText('Presenter reconnecting...')).toBeTruthy()
+
+    act(() => mocks.socket.handlers['presenter-reconnected']())
+    expect(view.queryByText('Presenter reconnecting...')).toBeNull()
+  })
+
+  it('disables slide navigation until a presenter is available', async () => {
+    const view = await renderConnectedSpeaker()
+
+    act(() => mocks.socket.handlers['presentation-meta']({
+      slideCount: 1,
+      slides: [{ slideIndex: 0, verticalIndex: 0, label: '1', title: 'Slide 1' }],
+    }))
+
+    const slideButton = await view.findByRole('button', { name: '1' })
+    expect(slideButton.disabled).toBe(true)
+    fireEvent.click(slideButton)
+    expect(mocks.socket.emit.mock.calls.some(([event]) => event === 'control-navigate')).toBe(false)
+
+    act(() => mocks.socket.handlers['presenter-status']({
+      hasPresenter: true,
+      presenterConnected: true,
+    }))
+    expect(slideButton.disabled).toBe(false)
+
+    fireEvent.click(slideButton)
+    expect(mocks.socket.emit.mock.calls.some(([event]) => event === 'control-navigate')).toBe(true)
+  })
+
+  it('does not emit annotations after the presenter disappears', async () => {
+    const { container, getByRole } = await renderConnectedSpeaker()
+    act(() => mocks.socket.handlers['presenter-status']({
+      hasPresenter: true,
+      presenterConnected: true,
+    }))
+    fireEvent.click(getByRole('button', { name: 'Pen' }))
+    act(() => mocks.socket.handlers['presenter-disconnected']())
+
+    const canvas = container.querySelector('.annotation-canvas')
+    fireEvent.pointerDown(canvas, { clientX: 100, clientY: 50, pointerId: 1 })
+    fireEvent.pointerMove(canvas, { clientX: 300, clientY: 150, pointerId: 1 })
+    fireEvent.pointerUp(canvas, { clientX: 300, clientY: 150, pointerId: 1 })
+
+    expect(mocks.socket.emit.mock.calls.some(([event]) => event === 'annotation:add')).toBe(false)
+  })
+
+  it('shows a terminal state when the room ends', async () => {
+    const view = await renderConnectedSpeaker()
+
+    act(() => mocks.socket.handlers['room-ended']())
+    expect(view.getByText('Session ended')).toBeTruthy()
   })
 })

@@ -82,6 +82,17 @@ describe('FormatTabContent', () => {
     expect(onUpdateElement).toHaveBeenCalledWith({ rotation: 90 })
   })
 
+  it('activates rotate and lock controls with keyboard', () => {
+    const onUpdateElement = vi.fn()
+    render(<FormatTabContent selectedElement={mockElement} onUpdateElement={onUpdateElement} />)
+
+    fireEvent.keyDown(screen.getByLabelText('Rotate 90 degrees'), { key: 'Enter' })
+    fireEvent.keyDown(screen.getByLabelText('Toggle lock'), { key: ' ' })
+
+    expect(onUpdateElement).toHaveBeenCalledWith({ rotation: 90 })
+    expect(onUpdateElement).toHaveBeenCalledWith({ locked: true })
+  })
+
   it('calls onUpdateElement for lock toggle', () => {
     const onUpdateElement = vi.fn()
     render(<FormatTabContent selectedElement={mockElement} onUpdateElement={onUpdateElement} />)
