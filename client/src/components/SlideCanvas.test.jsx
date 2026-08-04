@@ -65,5 +65,10 @@ describe('SlideCanvas media drop', () => {
     ])
     expect(Number.isFinite(onAddMedia.mock.calls[0][1])).toBe(true)
     expect(Number.isFinite(onAddMedia.mock.calls[0][2])).toBe(true)
+    expect(onAddMedia.mock.calls.map(([, , , targetSlideId]) => targetSlideId)).toEqual([
+      's1',
+      's1',
+      's1',
+    ])
   })
 })

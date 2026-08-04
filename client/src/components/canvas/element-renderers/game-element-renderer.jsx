@@ -39,6 +39,11 @@ const getScattergoriesInteractiveP = () => {
 const LoadingFallback = () => (
   <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'rgba(255,255,255,0.5)',fontSize:12 }}>Loading game…</div>
 )
+const ConnectionError = ({ message }) => message ? (
+  <div role="alert" style={{ color: '#fecaca', fontSize: 10, textAlign: 'center' }}>
+    Game connection failed: {message}
+  </div>
+) : null
 
 // ---------------------------------------------------------------------------
 // Game type labels
@@ -234,7 +239,7 @@ function PollRenderer({ element, isPresenting }) {
     'host',
     socketOptions
   )
-  const { emit, gameState, isConnected } = socketResult
+  const { emit, gameState, isConnected, joinError } = socketResult
   const aggregateOptions = gameState?.options || options.map(option => ({ ...option, votes: 0 }))
   const totalVotes = gameState?.totalVotes || 0
 
@@ -243,6 +248,7 @@ function PollRenderer({ element, isPresenting }) {
       <div style={{ fontSize: 15, fontWeight: 'bold', color: 'white', textAlign: 'center' }}>
         {pollConfig.prompt || 'Live Poll'}
       </div>
+      <ConnectionError message={joinError} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {aggregateOptions.map((option) => {
           const pct = totalVotes > 0 ? Math.round(((option.votes || 0) / totalVotes) * 100) : 0
@@ -263,12 +269,14 @@ function PollRenderer({ element, isPresenting }) {
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 4 }}>
           <button
             onClick={() => emit?.('game-poll-start', { gameId: element.id || 'poll' })}
+            disabled={!isConnected}
             style={{ background: element.accentColor || '#6366f1', color: 'white', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
           >
             {isConnected ? 'Start poll' : 'Connecting…'}
           </button>
           <button
             onClick={() => emit?.('game-poll-reveal', { gameId: element.id || 'poll' })}
+            disabled={!isConnected}
             style={{ background: 'rgba(255,255,255,0.16)', color: 'white', border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
           >
             Refresh
@@ -304,7 +312,7 @@ function WordCloudRenderer({ element, isPresenting }) {
     'host',
     socketOptions
   )
-  const { emit, gameState, isConnected } = socketResult
+  const { emit, gameState, isConnected, joinError } = socketResult
   const entries = gameState?.entries || []
   const maxCount = Math.max(1, ...entries.map((entry) => entry.count || 0))
 
@@ -313,6 +321,7 @@ function WordCloudRenderer({ element, isPresenting }) {
       <div style={{ fontSize: 15, fontWeight: 'bold', color: 'white', textAlign: 'center' }}>
         {cloudConfig.prompt || 'Word Cloud'}
       </div>
+      <ConnectionError message={joinError} />
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', alignItems: 'center', minHeight: 120 }}>
         {entries.length === 0 && (
           <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>Waiting for submissions…</span>
@@ -339,18 +348,21 @@ function WordCloudRenderer({ element, isPresenting }) {
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 4 }}>
           <button
             onClick={() => emit?.('game-word-cloud-start', { gameId: element.id || 'word-cloud' })}
+            disabled={!isConnected}
             style={{ background: element.accentColor || '#6366f1', color: 'white', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
           >
             {isConnected ? 'Start cloud' : 'Connecting…'}
           </button>
           <button
             onClick={() => emit?.('game-word-cloud-reveal', { gameId: element.id || 'word-cloud' })}
+            disabled={!isConnected}
             style={{ background: 'rgba(255,255,255,0.16)', color: 'white', border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
           >
             Refresh
           </button>
           <button
             onClick={() => emit?.('game-word-cloud-clear', { gameId: element.id || 'word-cloud' })}
+            disabled={!isConnected}
             style={{ background: 'rgba(239,68,68,0.2)', color: 'white', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
           >
             Clear
@@ -383,7 +395,7 @@ function MatchingRenderer({ element, isPresenting }) {
     'host',
     socketOptions
   )
-  const { emit, gameState, isConnected } = socketResult
+  const { emit, gameState, isConnected, joinError } = socketResult
   const prompts = gameState?.prompts || pairs.map(pair => ({ id: pair.promptId, text: pair.prompt }))
   const targets = gameState?.targets || pairs.map(pair => ({ id: pair.targetId, text: pair.target }))
   const promptsById = React.useMemo(() => new Map(prompts.map(prompt => [prompt.id, prompt.text])), [prompts])
@@ -398,6 +410,7 @@ function MatchingRenderer({ element, isPresenting }) {
       <div style={{ fontSize: 15, fontWeight: 'bold', color: 'white', textAlign: 'center' }}>
         {matchingConfig.prompt || 'Matching'}
       </div>
+      <ConnectionError message={joinError} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%' }}>
         {[prompts, targets].map((items, columnIndex) => (
           <div key={columnIndex} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -423,12 +436,14 @@ function MatchingRenderer({ element, isPresenting }) {
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 4 }}>
           <button
             onClick={() => emit?.('game-matching-start', { gameId: element.id || 'matching' })}
+            disabled={!isConnected}
             style={{ background: element.accentColor || '#6366f1', color: 'white', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
           >
             {isConnected ? 'Start matching' : 'Connecting…'}
           </button>
           <button
             onClick={() => emit?.('game-matching-reveal', { gameId: element.id || 'matching' })}
+            disabled={!isConnected}
             style={{ background: 'rgba(255,255,255,0.16)', color: 'white', border: '1px solid rgba(255,255,255,0.24)', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 'bold' }}
           >
             Reveal

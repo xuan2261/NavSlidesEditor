@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   Type,
   Image as ImageIcon,
@@ -354,6 +354,7 @@ function AdvancedActionButton({ label, title, icon: Icon, onAction }) {
 }
 
 export default function InsertTabContent({
+  activeSlideId,
   onAddText,
   onAddImage,
   onAddImageUpload,
@@ -395,11 +396,16 @@ export default function InsertTabContent({
   const [showStemPreset, setShowStemPreset] = useState(false)
   const [showTechnicalSymbols, setShowTechnicalSymbols] = useState(false)
   const [uploadError, setUploadError] = useState(null)
+  const activeSlideIdRef = useRef(activeSlideId)
   const shapeTriggerRef = useRef(null)
   const iconTriggerRef = useRef(null)
   const tableTriggerRef = useRef(null)
   const technicalSymbolTriggerRef = useRef(null)
   const advancedLauncherRef = useRef(null)
+
+  useLayoutEffect(() => {
+    activeSlideIdRef.current = activeSlideId
+  }, [activeSlideId])
 
   const handleFileUpload = (accept, handler) => {
     const input = document.createElement('input')
@@ -407,12 +413,23 @@ export default function InsertTabContent({
     input.accept = accept
     input.onchange = async (e) => {
       const file = e.target.files[0]
-      if (file) handler(file)
+      if (!file) return
+      setUploadError(null)
+      try {
+        await handler(file, activeSlideIdRef.current)
+      } catch (err) {
+        console.error('Upload failed:', err)
+        setUploadError(
+          err?.message === 'Upload canceled because the active slide changed'
+            ? err.message
+            : 'Upload failed. Check your connection.'
+        )
+      }
     }
     input.click()
   }
 
-  const handleMediaUpload = async (file) => {
+  const handleMediaUpload = async (file, targetSlideId) => {
     try {
       setUploadError(null)
       const result = await api.uploadFile(file)
@@ -420,8 +437,12 @@ export default function InsertTabContent({
         setUploadError(result?.error || 'Upload failed')
         return
       }
-      if (file.type.startsWith('video/')) onAddVideo?.(result.url)
-      else onAddAudio?.(result.url)
+      if (targetSlideId && targetSlideId !== activeSlideIdRef.current) {
+        setUploadError('Upload canceled because the active slide changed')
+        return
+      }
+      if (file.type.startsWith('video/')) onAddVideo?.(result.url, targetSlideId)
+      else onAddAudio?.(result.url, targetSlideId)
     } catch (err) {
       console.error('Upload failed:', err)
       setUploadError('Upload failed. Check your connection.')
@@ -435,8 +456,21 @@ export default function InsertTabContent({
     input.onchange = async (ev) => {
       const file = ev.target.files[0]
       if (!file) return
-      const text = await file.text()
-      onAddSvg?.(text)
+      const targetSlideId = activeSlideIdRef.current
+      try {
+        const text = await file.text()
+        if (targetSlideId && targetSlideId !== activeSlideIdRef.current) {
+          throw new Error('Upload canceled because the active slide changed')
+        }
+        onAddSvg?.(text, targetSlideId)
+      } catch (err) {
+        console.error('SVG upload failed:', err)
+        setUploadError(
+          err?.message === 'Upload canceled because the active slide changed'
+            ? err.message
+            : 'Upload failed. Check your connection.'
+        )
+      }
     }
     input.click()
   }
@@ -466,25 +500,17 @@ export default function InsertTabContent({
             title="Add text"
             aria-label="Add text"
             data-testid="ribbon-insert-text"
-            onMouseDown={(e) => {
-              e.preventDefault()
-              onAddText?.()
-            }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddText)}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={onAddText}
           />
           <RibbonBigButton
             icon={ImageIcon}
             label="Picture"
             title="Insert picture"
             aria-label="Picture"
-            onMouseDown={(e) => {
-              e.preventDefault()
-              handleFileUpload('image/*', (f) => onAddImageUpload?.(f))
-            }}
-            onKeyDown={(e) =>
-              handleKeyboardActivation(e, () =>
-                handleFileUpload('image/*', (f) => onAddImageUpload?.(f))
-              )
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() =>
+              handleFileUpload('image/*', (f, targetSlideId) => onAddImageUpload?.(f, targetSlideId))
             }
           />
           <Button

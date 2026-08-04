@@ -7,14 +7,18 @@ import { useEffect, useCallback, useRef } from 'react'
  *
  * @param {object} params
  * @param {object|null} params.socket - Socket.IO socket instance
- * @param {number} params.slideIndex - Current slide index for filtering
- * @param {Function} params.onAnnotationAdd - Called with an Annotation and target slide index
- * @param {Function} params.onAnnotationRemove - Called with annotationId and target slide index
- * @param {Function} params.onAnnotationsClear - Called with the target slide index
+ * @param {number} params.slideIndex - Current horizontal slide index for filtering
+ * @param {number} params.verticalIndex - Current vertical slide index for filtering
+ * @param {boolean} params.includeVerticalIndex - Pass the target vertical index for root callbacks too
+ * @param {Function} params.onAnnotationAdd - Called with an Annotation and target indices
+ * @param {Function} params.onAnnotationRemove - Called with annotationId and target indices
+ * @param {Function} params.onAnnotationsClear - Called with the target indices
  */
 export function useAnnotationSync({
   socket,
   slideIndex,
+  verticalIndex = 0,
+  includeVerticalIndex = false,
   onAnnotationAdd,
   onAnnotationRemove,
   onAnnotationsClear,
@@ -23,66 +27,111 @@ export function useAnnotationSync({
   // Race: annotation:add can arrive before annotations:sync, causing the same
   // annotation to be added twice (once from the event, once from sync).
   const seenIds = useRef(new Set())
-  const activeSlideIndexRef = useRef(slideIndex)
+  const activeSlideRef = useRef({ slideIndex, verticalIndex: verticalIndex || 0 })
+  const registerAnnotationId = useCallback((annotationId) => {
+    if (annotationId) seenIds.current.add(annotationId)
+  }, [])
 
   useEffect(() => {
-    activeSlideIndexRef.current = slideIndex
-  }, [slideIndex])
+    activeSlideRef.current = { slideIndex, verticalIndex: verticalIndex || 0 }
+  }, [slideIndex, verticalIndex])
 
   const handleSlideState = useCallback(
-    ({ slideIndex: nextSlideIndex }) => {
-      if (Number.isInteger(nextSlideIndex)) activeSlideIndexRef.current = nextSlideIndex
+    ({ slideIndex: nextSlideIndex, verticalIndex: nextVerticalIndex = 0 }) => {
+      if (Number.isInteger(nextSlideIndex)) {
+        activeSlideRef.current = {
+          slideIndex: nextSlideIndex,
+          verticalIndex: Number.isInteger(nextVerticalIndex) ? nextVerticalIndex : 0,
+        }
+      }
     },
-    [activeSlideIndexRef]
+    []
   )
 
+  const isCurrentSlide = useCallback((nextSlideIndex, nextVerticalIndex = 0) => (
+    nextSlideIndex === activeSlideRef.current.slideIndex &&
+    (nextVerticalIndex || 0) === activeSlideRef.current.verticalIndex
+  ), [])
+
+  const callWithTarget = useCallback((callback, args, targetSlideIndex, targetVerticalIndex = 0) => {
+    if (includeVerticalIndex || (targetVerticalIndex || 0) !== 0) {
+      callback(...args, targetSlideIndex, targetVerticalIndex || 0)
+    } else {
+      callback(...args, targetSlideIndex)
+    }
+  }, [includeVerticalIndex])
+
   const handleAnnotationAdd = useCallback(
-    ({ slideIndex: sIdx, annotation }) => {
-      if (sIdx === activeSlideIndexRef.current && annotation?.id) {
+    ({ slideIndex: sIdx, verticalIndex: vIdx = 0, annotation }) => {
+      if (isCurrentSlide(sIdx, vIdx) && annotation?.id) {
         // Skip if already seen (deduplicate against annotations:sync arriving after add)
         if (seenIds.current.has(annotation.id)) return
         seenIds.current.add(annotation.id)
-        onAnnotationAdd(annotation, sIdx)
+        callWithTarget(onAnnotationAdd, [annotation], sIdx, vIdx)
       }
     },
-    [activeSlideIndexRef, onAnnotationAdd]
+    [callWithTarget, isCurrentSlide, onAnnotationAdd]
   )
 
   const handleAnnotationRemove = useCallback(
-    ({ slideIndex: sIdx, annotationId }) => {
-      if (sIdx === activeSlideIndexRef.current) {
+    ({ slideIndex: sIdx, verticalIndex: vIdx = 0, annotationId }) => {
+      if (isCurrentSlide(sIdx, vIdx)) {
         seenIds.current.delete(annotationId)
-        onAnnotationRemove(annotationId, sIdx)
+        callWithTarget(onAnnotationRemove, [annotationId], sIdx, vIdx)
       }
     },
-    [activeSlideIndexRef, onAnnotationRemove]
+    [callWithTarget, isCurrentSlide, onAnnotationRemove]
   )
 
   const handleAnnotationClear = useCallback(
-    ({ slideIndex: sIdx }) => {
-      if (sIdx === activeSlideIndexRef.current) {
+    (payload = {}) => {
+      const isGlobalClear = payload?.global === true || payload?.slideIndex == null
+      const currentTarget = activeSlideRef.current
+      const targetSlideIndex = isGlobalClear ? currentTarget.slideIndex : payload.slideIndex
+      const targetVerticalIndex = isGlobalClear
+        ? currentTarget.verticalIndex
+        : payload.verticalIndex || 0
+      if (isGlobalClear || isCurrentSlide(targetSlideIndex, targetVerticalIndex)) {
         // Clear seen IDs for this slide — next annotations:sync can re-add them
         seenIds.current = new Set()
-        onAnnotationsClear(sIdx)
+        callWithTarget(onAnnotationsClear, [], targetSlideIndex, targetVerticalIndex)
       }
     },
-    [activeSlideIndexRef, onAnnotationsClear]
+    [callWithTarget, isCurrentSlide, onAnnotationsClear]
   )
 
   const handleAnnotationsSync = useCallback(
     (payload) => {
       // Two payload shapes are supported:
       //  - join/rejoin: { slideAnnotations: { [slideIndex]: Annotation[] } }
-      //  - navigate (slide-scoped): { slideIndex, annotations: Annotation[] }
+      //  - navigate (slide-scoped): { slideIndex, verticalIndex, annotations: Annotation[] }
       let annotations
-      const currentSlideIndex = activeSlideIndexRef.current
-      if (payload?.slideAnnotations) {
-        annotations = payload.slideAnnotations[currentSlideIndex]
-      } else if (payload?.slideIndex === currentSlideIndex) {
+      const isFullSync = Boolean(payload?.slideAnnotations)
+      const { slideIndex: currentSlideIndex, verticalIndex: currentVerticalIndex } = activeSlideRef.current
+      const annotationKey = currentVerticalIndex
+        ? `${currentSlideIndex}:${currentVerticalIndex}`
+        : String(currentSlideIndex)
+      if (isFullSync) {
+        annotations = Array.isArray(payload.slideAnnotations[annotationKey])
+          ? payload.slideAnnotations[annotationKey]
+          : []
+        const snapshotIds = new Set(annotations.map((ann) => ann?.id).filter(Boolean))
+        const seenIdsMatch = snapshotIds.size === seenIds.current.size &&
+          [...snapshotIds].every((id) => seenIds.current.has(id))
+        if (!seenIdsMatch) {
+          // A join/rejoin snapshot is authoritative for the current slide. Replace
+          // local strokes when the server snapshot differs from the live event set.
+          seenIds.current = new Set()
+          callWithTarget(onAnnotationsClear, [], currentSlideIndex, currentVerticalIndex)
+        }
+      } else if (
+        payload?.slideIndex === currentSlideIndex &&
+        (payload?.verticalIndex || 0) === currentVerticalIndex
+      ) {
         // Scoped sync for the slide we just navigated to: reset and replace so
         // the previous slide's strokes do not bleed onto this one.
         seenIds.current = new Set()
-        onAnnotationsClear(currentSlideIndex)
+        callWithTarget(onAnnotationsClear, [], currentSlideIndex, currentVerticalIndex)
         annotations = payload.annotations
       } else {
         return
@@ -91,12 +140,12 @@ export function useAnnotationSync({
         annotations.forEach((ann) => {
           if (ann?.id && !seenIds.current.has(ann.id)) {
             seenIds.current.add(ann.id)
-            onAnnotationAdd(ann, currentSlideIndex)
+            callWithTarget(onAnnotationAdd, [ann], currentSlideIndex, currentVerticalIndex)
           }
         })
       }
     },
-    [activeSlideIndexRef, onAnnotationAdd, onAnnotationsClear]
+    [activeSlideRef, callWithTarget, onAnnotationAdd, onAnnotationsClear]
   )
 
   useEffect(() => {
@@ -126,4 +175,6 @@ export function useAnnotationSync({
     handleAnnotationsSync,
     handleSlideState,
   ])
+
+  return { registerAnnotationId }
 }

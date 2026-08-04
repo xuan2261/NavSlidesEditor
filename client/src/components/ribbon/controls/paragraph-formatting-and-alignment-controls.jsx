@@ -1,8 +1,15 @@
 import { AlignLeft, AlignCenter, AlignRight, List, ListOrdered, RemoveFormatting } from 'lucide-react'
 import { Button } from '../../ui'
+import { handleRibbonKeyboardActivation } from '../ribbon-keyboard-activation'
 
 export default function ParagraphControls({ editor, rememberSelection, runTextCommand, handleTextCommandMouseDown }) {
   if (!editor) return null
+
+  const handleKeyboardCommand = (event, command) =>
+    handleRibbonKeyboardActivation(event, () => {
+      rememberSelection()
+      runTextCommand(command)
+    })
 
   return (
     <div className="flex items-center gap-0.5">
@@ -10,6 +17,7 @@ export default function ParagraphControls({ editor, rememberSelection, runTextCo
         variant="icon"
         className={`h-7 w-7 ${editor.isActive({ textAlign: 'left' }) ? 'bg-primary-light text-accent' : ''}`}
         onMouseDown={handleTextCommandMouseDown((chain) => chain.setTextAlign('left'))}
+        onKeyDown={(event) => handleKeyboardCommand(event, (chain) => chain.setTextAlign('left'))}
         title="Align left"
         aria-label="Align left"
         aria-pressed={editor.isActive({ textAlign: 'left' })}
@@ -20,6 +28,7 @@ export default function ParagraphControls({ editor, rememberSelection, runTextCo
         variant="icon"
         className={`h-7 w-7 ${editor.isActive({ textAlign: 'center' }) ? 'bg-primary-light text-accent' : ''}`}
         onMouseDown={handleTextCommandMouseDown((chain) => chain.setTextAlign('center'))}
+        onKeyDown={(event) => handleKeyboardCommand(event, (chain) => chain.setTextAlign('center'))}
         title="Align center"
         aria-label="Align center"
         aria-pressed={editor.isActive({ textAlign: 'center' })}
@@ -30,6 +39,7 @@ export default function ParagraphControls({ editor, rememberSelection, runTextCo
         variant="icon"
         className={`h-7 w-7 ${editor.isActive({ textAlign: 'right' }) ? 'bg-primary-light text-accent' : ''}`}
         onMouseDown={handleTextCommandMouseDown((chain) => chain.setTextAlign('right'))}
+        onKeyDown={(event) => handleKeyboardCommand(event, (chain) => chain.setTextAlign('right'))}
         title="Align right"
         aria-label="Align right"
         aria-pressed={editor.isActive({ textAlign: 'right' })}
@@ -43,6 +53,7 @@ export default function ParagraphControls({ editor, rememberSelection, runTextCo
         variant="icon"
         className={`h-7 w-7 ${editor.isActive('bulletList') ? 'bg-primary-light text-accent' : ''}`}
         onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleBulletList())}
+        onKeyDown={(event) => handleKeyboardCommand(event, (chain) => chain.toggleBulletList())}
         title="Bullet list"
         aria-label="Bullet list"
         aria-pressed={editor.isActive('bulletList')}
@@ -53,6 +64,7 @@ export default function ParagraphControls({ editor, rememberSelection, runTextCo
         variant="icon"
         className={`h-7 w-7 ${editor.isActive('orderedList') ? 'bg-primary-light text-accent' : ''}`}
         onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleOrderedList())}
+        onKeyDown={(event) => handleKeyboardCommand(event, (chain) => chain.toggleOrderedList())}
         title="Ordered list"
         aria-label="Ordered list"
         aria-pressed={editor.isActive('orderedList')}
@@ -88,6 +100,10 @@ export default function ParagraphControls({ editor, rememberSelection, runTextCo
           rememberSelection()
           runTextCommand((chain) => chain.clearNodes().unsetAllMarks())
         }}
+        onKeyDown={(event) => handleRibbonKeyboardActivation(event, () => {
+          rememberSelection()
+          runTextCommand((chain) => chain.clearNodes().unsetAllMarks())
+        })}
         title="Clear formatting"
         aria-label="Clear formatting"
       >

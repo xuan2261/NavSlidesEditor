@@ -32,11 +32,17 @@ class FakeIO {
     this.handlers = {}
     this.emitted = []
     this.broadcasts = []
+    this.socketRoomLeaves = []
   }
   on(event, handler) { this.handlers[event] = handler }
   to(target) {
     return {
       emit: (event, payload) => { this.emitted.push({ target, event, payload }) },
+    }
+  }
+  in(target) {
+    return {
+      socketsLeave: (room) => this.socketRoomLeaves.push({ target, room }),
     }
   }
   connect(id) {
@@ -54,6 +60,7 @@ describe('live room cleanup + timer re-arm', () => {
     storage.initDataFiles()
     liveRooms._resetRooms()
     liveRooms._setLiveRoomTtl(GRACE_MS)
+    liveRooms._setPresenterGraceMs(GRACE_MS)
     await storage.writePresentations([
       { id: 'live-deck', title: 'Live Deck', slides: [{ id: 's1', elements: [] }, { id: 's2', elements: [] }] },
     ])
@@ -83,7 +90,7 @@ describe('live room cleanup + timer re-arm', () => {
     expect(liveRooms.getRoomState('ROOMAA')).toBeUndefined()
   })
 
-  it('cancels pending cleanup when a viewer rejoins inside the grace window', async () => {
+  it('does not let a viewer cancel presenter termination during grace', async () => {
     const io = new FakeIO()
     setupSocketHandlers(io, { liveRoomsService: liveRooms })
     const token = liveRooms.createPresenterToken()
@@ -93,12 +100,14 @@ describe('live room cleanup + timer re-arm', () => {
     await presenter.trigger('join-room', { roomId: 'ROOMBB', role: 'presenter', presenterToken: token })
     await presenter.trigger('disconnect')
 
-    // Viewer joins before grace fires → cancels cleanup
     const viewer = io.connect('v-1')
     await viewer.trigger('join-room', { roomId: 'ROOMBB', role: 'viewer' })
+    expect(liveRooms.getRoomState('ROOMBB')).toBeDefined()
 
     vi.advanceTimersByTime(GRACE_MS + 10)
-    expect(liveRooms.getRoomState('ROOMBB')).toBeDefined()
+    expect(io.emitted).toContainEqual({ target: 'ROOMBB', event: 'presenter-left', payload: undefined })
+    expect(io.socketRoomLeaves).toContainEqual({ target: 'ROOMBB', room: 'ROOMBB' })
+    expect(liveRooms.getRoomState('ROOMBB')).toBeUndefined()
   })
 
   it('cancels pending cleanup when the presenter reconnects inside the grace window', async () => {
@@ -139,5 +148,69 @@ describe('live room cleanup + timer re-arm', () => {
     vi.advanceTimersByTime(5000 + 10)
 
     expect(io.emitted.some((e) => e.event === 'timer:ended' && e.payload.elementId === 'g1')).toBe(true)
+  })
+
+  it('finalizes a timer that expires while the presenter is disconnected', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const token = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOMDE', token)
+
+    const presenter = io.connect('p-1')
+    await presenter.trigger('join-room', { roomId: 'ROOMDE', role: 'presenter', presenterToken: token })
+    await presenter.trigger('game-timer-start', { elementId: 'g1', duration: 1 })
+    const viewer = io.connect('v-1')
+    await viewer.trigger('join-room', { roomId: 'ROOMDE', role: 'viewer' })
+    liveRooms._setPresenterGraceMs(GRACE_MS * 2)
+    await presenter.trigger('disconnect')
+
+    vi.advanceTimersByTime(1000 + 10)
+    expect(liveRooms.getRoomState('ROOMDE').timers.g1.running).toBe(true)
+
+    const reconnectingPresenter = io.connect('p-2')
+    await reconnectingPresenter.trigger('join-room', { roomId: 'ROOMDE', role: 'presenter', presenterToken: token })
+
+    const timer = liveRooms.getRoomState('ROOMDE').timers.g1
+    expect(timer).toMatchObject({ running: false, pausedRemaining: 0, endedAt: null })
+    expect(io.emitted).toContainEqual({ target: 'ROOMDE', event: 'timer:ended', payload: { elementId: 'g1' } })
+    expect(reconnectingPresenter.emitted).toContainEqual({
+      event: 'timer:sync',
+      payload: { elementId: 'g1', remaining: 0, duration: 1, running: false, endedAt: null },
+    })
+  })
+
+  it('does not lose timer re-arm when expiry crosses between prior checks', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const token = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOMDF', token)
+
+    const presenter = io.connect('p-1')
+    await presenter.trigger('join-room', { roomId: 'ROOMDF', role: 'presenter', presenterToken: token })
+    await presenter.trigger('game-timer-start', { elementId: 'g1', duration: 1 })
+    const viewer = io.connect('v-1')
+    await viewer.trigger('join-room', { roomId: 'ROOMDF', role: 'viewer' })
+    await presenter.trigger('disconnect')
+
+    const timer = liveRooms.getRoomState('ROOMDF').timers.g1
+    let nowCalls = 0
+    const nowSpy = vi.spyOn(Date, 'now').mockImplementation(() => {
+      nowCalls += 1
+      return nowCalls === 2 ? timer.endedAt + 1 : timer.endedAt - 1
+    })
+    try {
+      const reconnectingPresenter = io.connect('p-2')
+      await reconnectingPresenter.trigger('join-room', {
+        roomId: 'ROOMDF', role: 'presenter', presenterToken: token,
+      })
+
+      expect(liveRooms.getRoomState('ROOMDF').timerTimeouts.g1).toBeDefined()
+      vi.advanceTimersByTime(1)
+      expect(io.emitted).toContainEqual({
+        target: 'ROOMDF', event: 'timer:ended', payload: { elementId: 'g1' },
+      })
+    } finally {
+      nowSpy.mockRestore()
+    }
   })
 })

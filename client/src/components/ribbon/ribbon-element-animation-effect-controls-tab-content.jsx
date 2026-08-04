@@ -7,6 +7,7 @@ import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 import { FRAGMENT_ANIMATION_TYPES } from '../../constants/fragment-animation-types'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
+import { handleRibbonKeyboardActivation } from './ribbon-keyboard-activation'
 
 const ANIMATION_TYPES = FRAGMENT_ANIMATION_TYPES
 
@@ -27,6 +28,7 @@ function AnimationPicker({ open, anchorRef, current, onSelect, onClose }) {
             className={`px-2 py-1 rounded text-[11px] text-left cursor-pointer transition-colors
               ${current === value ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary text-text-primary'}`}
             onMouseDown={(e) => { e.preventDefault(); onSelect(value); onClose() }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => { onSelect(value); onClose() })}
           >
             {label}
           </button>
@@ -63,11 +65,16 @@ export default function AnimationsTabContent({ selectedElement, slideElements = 
             title={hasAnimation ? 'Remove animation' : 'Add animation'}
             aria-label="Toggle animation"
             aria-pressed={hasAnimation}
+            disabled={!selectedElement}
             onMouseDown={(e) => {
               e.preventDefault()
               if (!selectedElement) return
               onUpdateElement?.({ fragment: !hasAnimation, fragmentAnimation: currentAnimation, fragmentIndex })
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => {
+              if (!selectedElement) return
+              onUpdateElement?.({ fragment: !hasAnimation, fragmentAnimation: currentAnimation, fragmentIndex })
+            })}>
             {hasAnimation ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
             <span className="text-[11px] hidden lg:inline">{hasAnimation ? 'On' : 'Off'}</span>
           </Button>
@@ -76,7 +83,8 @@ export default function AnimationsTabContent({ selectedElement, slideElements = 
               <Button variant="ribbon" className="h-7"
                 ref={animationTriggerRef}
                 title="Animation type" aria-label="Change animation type"
-                onMouseDown={(e) => { e.preventDefault(); setShowPicker((v) => !v) }}>
+                onMouseDown={(e) => { e.preventDefault(); setShowPicker((v) => !v) }}
+                onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => setShowPicker((v) => !v))}>
                 <Wand2 size={14} />
                 <span className="text-[11px] hidden lg:inline">{currentLabel}</span>
                 <ChevronDown size={10} />
@@ -117,7 +125,7 @@ export default function AnimationsTabContent({ selectedElement, slideElements = 
       <RibbonSection label="Preview">
         <Button variant="ribbon" className="h-7"
           title="Preview animation" aria-label="Preview animation"
-          onMouseDown={(e) => { e.preventDefault(); onPreviewAnimation?.() }}>
+          onClick={() => onPreviewAnimation?.()}>
           <Play size={14} />
           <span className="text-[11px] hidden lg:inline">Preview</span>
         </Button>

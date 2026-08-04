@@ -43,6 +43,12 @@ describe('font formatting controls smoke floor', () => {
     expect(chain.toggleBold).toHaveBeenCalled()
   })
 
+  it('[cap:control.format.bold] Bold button activates with Enter', () => {
+    const chain = setup()
+    fireEvent.keyDown(screen.getByLabelText('Bold'), { key: 'Enter' })
+    expect(chain.toggleBold).toHaveBeenCalled()
+  })
+
   it('[cap:control.format.italic] Italic button dispatches toggleItalic', () => {
     const chain = setup()
     fireEvent.mouseDown(screen.getByLabelText('Italic'))

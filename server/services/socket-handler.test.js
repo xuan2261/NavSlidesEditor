@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as storage from './storage.js'
 import liveRooms from './live-rooms.js'
 import { setupSocketHandlers } from './socket-handler.js'
@@ -140,6 +140,10 @@ describe('socket-handler', () => {
       event: 'sync-state',
       payload: { slideIndex: 0, verticalIndex: 1, fragmentIndex: 2 },
     })
+    expect(viewer.emitted).toContainEqual({
+      event: 'presenter-status',
+      payload: { hasPresenter: true, presenterConnected: true },
+    })
     expect(viewer.emitted.some((item) => item.event === 'presentation-data')).toBe(true)
 
     const controller = io.connect('controller-1')
@@ -150,6 +154,34 @@ describe('socket-handler', () => {
       event: 'control-navigate',
       payload: { slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 },
     })
+  })
+
+  it('rejects a cross-room join without losing the original live membership', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const firstToken = liveRooms.createPresenterToken()
+    const secondToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM-A', firstToken)
+    liveRooms.registerRoom('ROOM-B', secondToken)
+
+    const viewer = io.connect('viewer-switch')
+    await viewer.trigger('join-room', { roomId: 'ROOM-A', role: 'viewer' })
+    await viewer.trigger('join-room', { roomId: 'ROOM-B', role: 'viewer' })
+
+    expect(viewer.emitted).toContainEqual({
+      event: 'join-error',
+      payload: {
+        roomId: 'ROOM-B',
+        reason: 'already-joined-room',
+        message: 'Socket is already joined to another live room',
+      },
+    })
+    expect(viewer.rooms).toEqual(['ROOM-A'])
+    expect(liveRooms.getRoomForSocket('viewer-switch')).toBe('ROOM-A')
+
+    await viewer.trigger('disconnect')
+    expect(liveRooms.getRoomForSocket('viewer-switch')).toBeUndefined()
+    expect(liveRooms.getRoomState('ROOM-A').viewers).not.toContain('viewer-switch')
   })
 
   it('does not emit live presentation payloads for trashed decks', async () => {
@@ -192,6 +224,391 @@ describe('socket-handler', () => {
     })
     presenter.trigger('disconnect')
     expect(io.emitted).toContainEqual({ target: 'ROOM34', event: 'presenter-disconnected', payload: undefined })
+  })
+
+  it('announces presenter reconnection after a temporary disconnect', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM35', presenterToken)
+
+    const presenter = io.connect('presenter-3')
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM35',
+      role: 'presenter',
+      presentationId: 'live-deck',
+      presenterToken,
+    })
+    await presenter.trigger('disconnect')
+    io.emitted.length = 0
+
+    const reconnectingPresenter = io.connect('presenter-4')
+    await reconnectingPresenter.trigger('join-room', {
+      roomId: 'ROOM35',
+      role: 'presenter',
+      presentationId: 'live-deck',
+      presenterToken,
+    })
+
+    expect(io.emitted).toContainEqual({
+      target: 'ROOM35',
+      event: 'presenter-reconnected',
+      payload: undefined,
+    })
+  })
+
+  it('reports presenter absence to late controller joins', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM36', presenterToken)
+
+    const presenter = io.connect('presenter-6')
+    await presenter.trigger('join-room', { roomId: 'ROOM36', role: 'presenter', presenterToken })
+    await presenter.trigger('disconnect')
+
+    const controller = io.connect('controller-6')
+    await controller.trigger('join-room', { roomId: 'ROOM36', role: 'controller' })
+
+    expect(controller.emitted).toContainEqual({
+      event: 'presenter-status',
+      payload: { hasPresenter: false, presenterConnected: true },
+    })
+    await controller.trigger('control-navigate', { slideIndex: 1 })
+    expect(controller.emitted.filter((item) => item.event === 'presenter-status')).toHaveLength(2)
+  })
+
+  it('announces presenter availability to controllers that joined first', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM39', presenterToken)
+
+    const controller = io.connect('controller-39')
+    await controller.trigger('join-room', { roomId: 'ROOM39', role: 'controller' })
+    expect(controller.emitted).toContainEqual({
+      event: 'presenter-status',
+      payload: { hasPresenter: false, presenterConnected: false },
+    })
+
+    const presenter = io.connect('presenter-39')
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM39',
+      role: 'presenter',
+      presenterToken,
+    })
+
+    expect(io.broadcasts).toContainEqual({
+      from: 'presenter-39',
+      room: 'ROOM39',
+      event: 'presenter-status',
+      payload: { hasPresenter: true, presenterConnected: true },
+    })
+  })
+
+  it('ignores a stale presenter disconnect after a replacement joins', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM37', presenterToken)
+
+    const firstPresenter = io.connect('presenter-7')
+    await firstPresenter.trigger('join-room', { roomId: 'ROOM37', role: 'presenter', presenterToken })
+    const replacementPresenter = io.connect('presenter-8')
+    await replacementPresenter.trigger('join-room', { roomId: 'ROOM37', role: 'presenter', presenterToken })
+    io.emitted.length = 0
+
+    await firstPresenter.trigger('disconnect')
+
+    expect(io.emitted).not.toContainEqual({
+      target: 'ROOM37',
+      event: 'presenter-disconnected',
+      payload: undefined,
+    })
+    expect(liveRooms.getRoomState('ROOM37').presenterId).toBe('presenter-8')
+  })
+
+  it('does not let a stale presenter load replace the active deck', async () => {
+    const io = new FakeIO()
+    let resolveFirstLoad
+    const firstLoad = new Promise((resolve) => {
+      resolveFirstLoad = resolve
+    })
+    const deckA = { id: 'deck-a', title: 'Deck A', slides: [{ id: 'a', elements: [] }] }
+    const deckB = { id: 'deck-b', title: 'Deck B', slides: [{ id: 'b', elements: [] }] }
+    setupSocketHandlers(io, {
+      liveRoomsService: liveRooms,
+      findPresentationById: async (id) => {
+        if (id === 'deck-a') return firstLoad
+        if (id === 'deck-b') return deckB
+        return null
+      },
+    })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM40', presenterToken)
+
+    const firstPresenter = io.connect('presenter-a')
+    const firstJoin = firstPresenter.trigger('join-room', {
+      roomId: 'ROOM40',
+      role: 'presenter',
+      presentationId: 'deck-a',
+      presenterToken,
+    })
+    const replacementPresenter = io.connect('presenter-b')
+    await replacementPresenter.trigger('join-room', {
+      roomId: 'ROOM40',
+      role: 'presenter',
+      presentationId: 'deck-b',
+      presenterToken,
+    })
+
+    resolveFirstLoad(deckA)
+    await firstJoin
+
+    expect(liveRooms.getRoomState('ROOM40').presenterId).toBe('presenter-b')
+    expect(liveRooms.getRoomState('ROOM40').presentationId).toBe('deck-b')
+    expect(io.emitted.filter((event) => event.event === 'presentation-meta')).toHaveLength(1)
+  })
+
+  it('drops a stale viewer payload after the presenter switches decks', async () => {
+    const io = new FakeIO()
+    let resolveDeckA
+    const deckALoad = new Promise((resolve) => { resolveDeckA = resolve })
+    const deckA = { id: 'deck-a', title: 'Deck A', slides: [{ id: 'a', elements: [] }] }
+    const deckB = { id: 'deck-b', title: 'Deck B', slides: [{ id: 'b', elements: [] }] }
+    setupSocketHandlers(io, {
+      liveRoomsService: liveRooms,
+      findPresentationById: async (id) => id === 'deck-a' ? deckALoad : deckB,
+    })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM41', presenterToken)
+    const presenter = io.connect('presenter-41')
+    await presenter.trigger('join-room', { roomId: 'ROOM41', role: 'presenter', presenterToken })
+    liveRooms.getRoomState('ROOM41').presentationId = 'deck-a'
+
+    const viewer = io.connect('viewer-41')
+    const viewerJoin = viewer.trigger('join-room', { roomId: 'ROOM41', role: 'viewer' })
+    const replacement = io.connect('presenter-42')
+    await replacement.trigger('join-room', {
+      roomId: 'ROOM41',
+      role: 'presenter',
+      presentationId: 'deck-b',
+      presenterToken,
+    })
+
+    resolveDeckA(deckA)
+    await viewerJoin
+
+    expect(viewer.emitted.filter((event) => event.event === 'presentation-data')).toHaveLength(0)
+    expect(viewer.emitted.filter((event) => event.event === 'presentation-meta')).toHaveLength(0)
+    expect(liveRooms.getRoomState('ROOM41')).toMatchObject({ presentationId: 'deck-b' })
+  })
+
+  it('does not expose the previous deck while a replacement presenter load is pending or fails', async () => {
+    const io = new FakeIO()
+    let resolveDeckB
+    const deckBLoad = new Promise((resolve) => { resolveDeckB = resolve })
+    const deckA = { id: 'deck-a', title: 'Deck A', slides: [{ id: 'a', elements: [] }] }
+    setupSocketHandlers(io, {
+      liveRoomsService: liveRooms,
+      findPresentationById: async (id) => id === 'deck-b' ? deckBLoad : deckA,
+    })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM41B', presenterToken)
+    const presenter = io.connect('presenter-41b')
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM41B', role: 'presenter', presentationId: 'deck-a', presenterToken,
+    })
+
+    const replacement = presenter.trigger('join-room', {
+      roomId: 'ROOM41B', role: 'presenter', presentationId: 'deck-b', presenterToken,
+    })
+    expect(liveRooms.getRoomState('ROOM41B').presentationId).toBeNull()
+
+    const viewer = io.connect('viewer-41b')
+    await viewer.trigger('join-room', { roomId: 'ROOM41B', role: 'viewer' })
+    expect(viewer.emitted.filter((event) => event.event === 'presentation-data')).toHaveLength(0)
+    expect(viewer.emitted.filter((event) => event.event === 'presentation-meta')).toHaveLength(0)
+
+    resolveDeckB(null)
+    await replacement
+    expect(liveRooms.getRoomState('ROOM41B').presentationId).toBeNull()
+    expect(liveRooms.getRoomState('ROOM41B').presenterId).toBe('presenter-41b')
+  })
+
+  it('fences duplicate presenter loads with a generation, including A-to-B-to-A', async () => {
+    const io = new FakeIO()
+    let resolveFirstA
+    let resolveSecondA
+    const firstA = new Promise((resolve) => { resolveFirstA = resolve })
+    const secondA = new Promise((resolve) => { resolveSecondA = resolve })
+    const deckA = { id: 'deck-a', title: 'Deck A', slides: [{ id: 'a', elements: [] }] }
+    const deckB = { id: 'deck-b', title: 'Deck B', slides: [{ id: 'b', elements: [] }] }
+    let deckACalls = 0
+    setupSocketHandlers(io, {
+      liveRoomsService: liveRooms,
+      findPresentationById: async (id) => {
+        if (id === 'deck-b') return deckB
+        deckACalls += 1
+        return deckACalls === 1 ? firstA : secondA
+      },
+    })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM42', presenterToken)
+    const presenter = io.connect('presenter-42')
+
+    const firstJoin = presenter.trigger('join-room', {
+      roomId: 'ROOM42',
+      role: 'presenter',
+      presentationId: 'deck-a',
+      presenterToken,
+    })
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM42',
+      role: 'presenter',
+      presentationId: 'deck-b',
+      presenterToken,
+    })
+    const lastJoin = presenter.trigger('join-room', {
+      roomId: 'ROOM42',
+      role: 'presenter',
+      presentationId: 'deck-a',
+      presenterToken,
+    })
+
+    resolveFirstA(deckA)
+    await firstJoin
+    expect(io.emitted.filter((event) => event.event === 'presentation-meta')).toHaveLength(1)
+
+    resolveSecondA(deckA)
+    await lastJoin
+
+    const metas = io.emitted.filter((event) => event.event === 'presentation-meta')
+    expect(metas).toHaveLength(2)
+    expect(metas.at(-1).payload.presentationId).toBe('deck-a')
+    expect(liveRooms.getRoomState('ROOM42')).toMatchObject({ presentationId: 'deck-a' })
+  })
+
+  it('drops a pending payload when the room is removed and recreated', async () => {
+    const io = new FakeIO()
+    let resolveDeckA
+    const deckALoad = new Promise((resolve) => { resolveDeckA = resolve })
+    const deckA = { id: 'deck-a', title: 'Deck A', slides: [{ id: 'a', elements: [] }] }
+    setupSocketHandlers(io, {
+      liveRoomsService: liveRooms,
+      findPresentationById: async () => deckALoad,
+    })
+    const oldToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM43', oldToken)
+    const presenter = io.connect('presenter-43')
+    await presenter.trigger('join-room', { roomId: 'ROOM43', role: 'presenter', presenterToken: oldToken })
+    const oldRoom = liveRooms.getRoomState('ROOM43')
+    oldRoom.presentationId = 'deck-a'
+    oldRoom.annotations = { '0': [{ id: 'old-annotation' }] }
+    oldRoom.timers = {
+      timer: { duration: 30, endedAt: null, pausedRemaining: 30, running: false },
+    }
+
+    const viewer = io.connect('viewer-43')
+    const viewerJoin = viewer.trigger('join-room', { roomId: 'ROOM43', role: 'viewer' })
+    liveRooms.removeRoom('ROOM43')
+    liveRooms.registerRoom('ROOM43', liveRooms.createPresenterToken())
+    const recreatedRoom = liveRooms.getRoomState('ROOM43')
+    recreatedRoom.annotations = { '0': [{ id: 'new-annotation' }] }
+    recreatedRoom.timers = {
+      timer: { duration: 60, endedAt: null, pausedRemaining: 60, running: false },
+    }
+
+    resolveDeckA(deckA)
+    await viewerJoin
+
+    expect(viewer.emitted.filter((event) => event.event === 'presentation-data')).toHaveLength(0)
+    expect(viewer.emitted.filter((event) => event.event === 'presentation-meta')).toHaveLength(0)
+    expect(viewer.emitted.filter((event) => event.event === 'annotations:sync')).toHaveLength(0)
+    expect(viewer.emitted.filter((event) => event.event === 'timer:sync')).toHaveLength(0)
+  })
+
+  it('does not re-arm timers for a stale presenter join after room recreation', async () => {
+    vi.useFakeTimers()
+    try {
+      const io = new FakeIO()
+      let resolveOld
+      let resolveNew
+      const oldLoad = new Promise((resolve) => { resolveOld = resolve })
+      const newLoad = new Promise((resolve) => { resolveNew = resolve })
+      const oldDeck = { id: 'old-deck', title: 'Old', slides: [{ id: 'old', elements: [] }] }
+      const newDeck = { id: 'new-deck', title: 'New', slides: [{ id: 'new', elements: [] }] }
+      setupSocketHandlers(io, {
+        liveRoomsService: liveRooms,
+        findPresentationById: async (id) => id === 'old-deck' ? oldLoad : newLoad,
+      })
+
+      const oldToken = liveRooms.createPresenterToken()
+      liveRooms.registerRoom('ROOM43B', oldToken)
+      const presenter = io.connect('presenter-43b')
+      const oldJoin = presenter.trigger('join-room', {
+        roomId: 'ROOM43B', role: 'presenter', presentationId: 'old-deck', presenterToken: oldToken,
+      })
+
+      liveRooms.removeRoom('ROOM43B')
+      const newToken = liveRooms.createPresenterToken()
+      liveRooms.registerRoom('ROOM43B', newToken)
+      const recreatedRoom = liveRooms.getRoomState('ROOM43B')
+      recreatedRoom.timers = {
+        timer: {
+          duration: 30,
+          endedAt: Date.now() + 10_000,
+          pausedRemaining: 30,
+          running: true,
+        },
+      }
+      const newJoin = presenter.trigger('join-room', {
+        roomId: 'ROOM43B', role: 'presenter', presentationId: 'new-deck', presenterToken: newToken,
+      })
+
+      resolveOld(oldDeck)
+      await oldJoin
+      expect(Object.keys(recreatedRoom.timerTimeouts)).toHaveLength(0)
+
+      resolveNew(newDeck)
+      await newJoin
+      expect(Object.keys(recreatedRoom.timerTimeouts)).toHaveLength(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('announces reconnect after an initial presentation load failure', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, {
+      liveRoomsService: liveRooms,
+      findPresentationById: async () => null,
+    })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM38', presenterToken)
+
+    const presenter = io.connect('presenter-9')
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM38',
+      role: 'presenter',
+      presentationId: 'missing-deck',
+      presenterToken,
+    })
+    await presenter.trigger('disconnect')
+    io.emitted.length = 0
+
+    const reconnectingPresenter = io.connect('presenter-10')
+    await reconnectingPresenter.trigger('join-room', {
+      roomId: 'ROOM38',
+      presenterToken,
+      role: 'presenter',
+    })
+
+    expect(io.emitted).toContainEqual({
+      target: 'ROOM38',
+      event: 'presenter-reconnected',
+      payload: undefined,
+    })
   })
 
   it('sends annotations:sync to presenter on join-room', async () => {
@@ -274,6 +691,94 @@ describe('socket-handler', () => {
     expect(io.emitted.some(e => e.event === 'annotation:add')).toBe(true)
   })
 
+  it('ignores malformed annotation payloads without mutating room state', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM12', presenterToken)
+
+    const presenter = io.connect('presenter-1')
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM12',
+      role: 'presenter',
+      presenterToken,
+    })
+
+    await presenter.trigger('annotation:add', {
+      slideIndex: '__proto__',
+      annotation: { id: 'invalid-index' },
+    })
+    await presenter.trigger('annotation:add', {
+      slideIndex: 0,
+      annotation: null,
+    })
+
+    expect(liveRooms.getRoomState('ROOM12').annotations).toEqual({})
+    expect(io.emitted.some((event) => event.event === 'annotation:add')).toBe(false)
+  })
+
+  it('normalizes non-string annotation IDs so annotations remain removable', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM12', presenterToken)
+
+    const presenter = io.connect('presenter-1')
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM12',
+      role: 'presenter',
+      presenterToken,
+    })
+
+    await presenter.trigger('annotation:add', {
+      slideIndex: 0,
+      annotation: { id: 42, d: 'M0 0' },
+    })
+
+    const room = liveRooms.getRoomState('ROOM12')
+    const storedId = room.annotations['0'][0].id
+    expect(typeof storedId).toBe('string')
+    expect(storedId).not.toBe('42')
+
+    await presenter.trigger('annotation:remove', { slideIndex: 0, annotationId: storedId })
+
+    expect(room.annotations['0']).toHaveLength(0)
+  })
+
+  it('keeps annotations for vertical child slides separate from their parent', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM12', presenterToken)
+
+    const presenter = io.connect('presenter-1')
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM12',
+      role: 'presenter',
+      presenterToken,
+    })
+
+    await presenter.trigger('annotation:add', {
+      slideIndex: 0,
+      verticalIndex: 0,
+      annotation: { id: 'root-stroke', d: 'M0 0' },
+    })
+    await presenter.trigger('annotation:add', {
+      slideIndex: 0,
+      verticalIndex: 1,
+      annotation: { id: 'child-stroke', d: 'M1 1' },
+    })
+
+    const room = liveRooms.getRoomState('ROOM12')
+    expect(room.annotations['0'].map(({ id }) => id)).toEqual(['root-stroke'])
+    expect(room.annotations['0:1'].map(({ id }) => id)).toEqual(['child-stroke'])
+    expect(io.emitted).toContainEqual({
+      target: 'ROOM12',
+      event: 'annotation:add',
+      payload: { slideIndex: 0, verticalIndex: 1, annotation: expect.objectContaining({ id: 'child-stroke' }) },
+    })
+  })
+
   it('annotation:remove deletes annotation from room and broadcasts', async () => {
     const io = new FakeIO()
     setupSocketHandlers(io, { liveRoomsService: liveRooms })
@@ -319,6 +824,32 @@ describe('socket-handler', () => {
     expect(room.annotations['0']).toHaveLength(0)
     expect(room.annotations['1']).toHaveLength(1) // Other slides untouched
     expect(io.emitted.some(e => e.event === 'annotation:cleared')).toBe(true)
+  })
+
+  it('broadcasts an explicit global annotation clear', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM12', presenterToken)
+
+    const presenter = io.connect('presenter-1')
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM12',
+      role: 'presenter',
+      presenterToken,
+    })
+    const room = liveRooms.getRoomState('ROOM12')
+    room.annotations['0'] = [{ id: 'a1' }]
+    room.annotations['1'] = [{ id: 'a2' }]
+
+    await presenter.trigger('annotation:clear', {})
+
+    expect(room.annotations).toEqual({})
+    expect(io.emitted).toContainEqual({
+      target: 'ROOM12',
+      event: 'annotation:cleared',
+      payload: { global: true },
+    })
   })
 
   it('viewer cannot emit annotation:add', async () => {
@@ -371,6 +902,61 @@ describe('socket-handler', () => {
     const room = liveRooms.getRoomState('ROOM12')
     expect(room.annotations['0']).toHaveLength(1)
     expect(room.annotations['0'][0].d).toBe('M5 5 L15 15')
+  })
+
+  it('blocks controller mutations while the presenter is disconnected', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM12', presenterToken)
+
+    const presenter = io.connect('presenter-1')
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM12',
+      role: 'presenter',
+      presenterToken,
+    })
+    const controller = io.connect('controller-1')
+    await controller.trigger('join-room', { roomId: 'ROOM12', role: 'controller' })
+
+    await presenter.trigger('annotation:add', {
+      slideIndex: 0,
+      annotation: { id: 'existing', d: 'M0 0' },
+    })
+    await presenter.trigger('game-timer-start', { elementId: 'timer-1', duration: 30 })
+    const room = liveRooms.getRoomState('ROOM12')
+    room.timers['paused-timer'] = {
+      duration: 20,
+      endedAt: null,
+      pausedAt: Date.now(),
+      pausedRemaining: 10,
+      running: false,
+    }
+
+    await presenter.trigger('disconnect')
+    expect(room.presenterId).toBeNull()
+    const emittedBefore = io.emitted.length
+    const broadcastsBefore = io.broadcasts.length
+
+    await controller.trigger('laser', { x: 10, y: 20, active: true })
+    await controller.trigger('annotation:add', {
+      slideIndex: 0,
+      annotation: { id: 'blocked-add', d: 'M1 1' },
+    })
+    await controller.trigger('annotation:remove', { slideIndex: 0, annotationId: 'existing' })
+    await controller.trigger('annotation:clear', { slideIndex: 0 })
+    await controller.trigger('game-timer-start', { elementId: 'blocked-timer', duration: 30 })
+    await controller.trigger('game-timer-pause', { elementId: 'timer-1' })
+    await controller.trigger('game-timer-resume', { elementId: 'paused-timer' })
+    await controller.trigger('game-timer-adjust', { elementId: 'timer-1', delta: 10 })
+    await controller.trigger('game-timer-stop', { elementId: 'timer-1' })
+
+    expect(room.annotations['0']).toEqual([expect.objectContaining({ id: 'existing' })])
+    expect(room.timers['timer-1'].running).toBe(true)
+    expect(room.timers['paused-timer'].running).toBe(false)
+    expect(room.timers['blocked-timer']).toBeUndefined()
+    expect(io.emitted).toHaveLength(emittedBefore)
+    expect(io.broadcasts).toHaveLength(broadcastsBefore)
   })
 
   it('old annotation event handler is removed', () => {

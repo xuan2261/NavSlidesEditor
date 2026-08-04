@@ -62,6 +62,11 @@ describe('htmlGenerator', () => {
     expect(html).toContain('data-transition="fade"')
     expect(html).toContain('data-transition-direction="left"')
     expect(html).toContain('data-transition-duration="800"')
+    expect(html).toContain('transition-duration:800ms;')
+    expect(html).toContain('section[data-transition-direction="left"].future')
+
+    const plainHtml = generateRevealHTML({ slides: [{ elements: [] }] })
+    expect(plainHtml).not.toContain('section[data-transition-direction="left"].future')
   })
 
   it('should not contain the old hardcoded fs-btn in body, but inject it in presenter-toolbar', () => {

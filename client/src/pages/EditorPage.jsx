@@ -29,7 +29,7 @@ import { useEditorKeyboardController } from '../hooks/editor-controller/use-edit
 import { useEditorElementController } from '../hooks/editor-controller/use-editor-element-controller'
 import { useEditorSelectionController } from '../hooks/editor-controller/use-editor-selection-controller'
 import { useEditorPreviewStylesController } from '../hooks/editor-controller/use-editor-preview-styles-controller'
-
+import { useEditorGameLeaderboard } from '../hooks/use-editor-game-leaderboard'
 export function getElementForActiveSlideEdit(activeSlide, fallbackSlide, elementId) {
   const slide = activeSlide || fallbackSlide
   const element = slide?.elements?.find((el) => el.id === elementId)
@@ -100,6 +100,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const setShowMediaLibrary = useUIStore((s) => s.setShowMediaLibrary)
   const setShowGithubModal = useUIStore((s) => s.setShowGithubModal)
   const setShowAnimationPreview = useUIStore((s) => s.setShowAnimationPreview)
+  const setShowTransitionPreview = useUIStore((s) => s.setShowTransitionPreview)
   const setShowShareModal = useUIStore((s) => s.setShowShareModal)
   const setShowSyncModal = useUIStore((s) => s.setShowSyncModal)
   const setShowHistoryModal = useUIStore((s) => s.setShowHistoryModal)
@@ -480,7 +481,6 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     fitZoom,
     startSlideshow,
   })
-
   // Detect active game type from the actual editable slide, including vertical children.
   const activeGameElement = getGameElementForActiveSlide(
     activeSlide,
@@ -488,6 +488,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   )
   const currentGameType = activeGameElement?.gameType || null
 
+  const gameLeaderboardScores = useEditorGameLeaderboard(activeGameElement)
   const emitGameShortcutAction = useCallback(
     (action, payload = {}) => {
       if (!activeGameElement || typeof window === 'undefined') return
@@ -504,7 +505,6 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     },
     [activeGameElement, currentGameType]
   )
-
   // Export/import + AI action handlers (extracted to hooks)
   const {
     onExportPDF,
@@ -619,7 +619,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
           smartGuidesEnabled, showRulers, guides, setGuides, viewMode, setViewMode,
           setShowFindReplace, setShowImageUrlPrompt, setShowMediaLibrary, setShowFileBrowser,
           setShowKineticTextModal, setShowMathGridModal, setShowAnimeModal, setShowThreeModal,
-          setShowCssEditor, setShowAnimationPreview, pluginTypes, addTextElement, addImageElement,
+          setShowCssEditor, setShowAnimationPreview, setShowTransitionPreview, pluginTypes, addTextElement, addImageElement,
           addQrCodeElement, addTimelineElement, addDividerElement, addGameElement, addPluginElement,
           addHtmlElement, addMermaidElement, addStemSimulationElement, addCodeElement,
           addLatexElement, addMarkdownElement, addChartElement, addCalloutElement, addIconElement,
@@ -633,12 +633,12 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         }}
       />
       <EditorPageOverlays c={{
-        presentationId, presentation, currentSlide, currentSlideIndex, viewMode, setViewMode,
+        presentationId, presentation, currentSlide, currentSlideIndex, verticalEdit, viewMode, setViewMode,
         setCurrentSlideIndex, setPresentation, htmlEditorState, setHtmlEditorState, commitHtmlEdit,
         codeEditorState, setCodeEditorState, commitCodeEdit, latexEditorState, setLatexEditorState,
         commitLatexEdit, showFindReplace, setShowFindReplace, showTimeline, setShowTimeline,
         updateElement, currentGameType, showGameHud, setShowGameHud, showGameLeaderboard,
-        setShowGameLeaderboard, selectedElementId, commands, liveRoomCode, livePresenterToken,
+        setShowGameLeaderboard, gameLeaderboardScores, selectedElementId, commands, liveRoomCode, livePresenterToken,
         galleryPreviewTemplate, setGalleryPreviewTemplate, addSlide, addImageElement,
         insertEmbedHtml, handleInsertFromFileBrowser, onCreatePresentation, onAICopywriterApply,
         onApplyTranslations, insertMediaElement, saveConflict, clearSaveConflict,

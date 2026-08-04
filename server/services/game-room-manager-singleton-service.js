@@ -4,13 +4,120 @@
  * scoring, leaderboard, host identity/authorization, and TTL-based cleanup.
  *
  * Players are keyed by a stable playerId (client-supplied, persisted in
- * localStorage; falls back to socket.id). This survives reconnects so the
- * host designation and the reconnect grace window remain valid.
+ * localStorage; falls back to socket.id). This survives reconnects so player
+ * scores and the reconnect grace window remain valid. Host authority is a
+ * separate server-issued room capability.
  */
-const rooms = new Map() // gameId -> room object
+const crypto = require('crypto')
+
+const rooms = new Map() // stable public gameId -> room object
+const pendingHostCapabilities = new Map() // gameId -> raw capability until trusted create returns it
+const roomCleanupListeners = new Set()
 
 const ROOM_TTL_MS = 5 * 60 * 1000 // 5 minutes after game ends
 let emptyRoomTtlMs = 30 * 1000 // grace window before an emptied room is reaped
+let unclaimedRoomTtlMs = ROOM_TTL_MS // abandoned create responses must not pin IDs forever
+
+function normalizeRoomOwner(owner) {
+  if (!owner || typeof owner !== 'object') return null
+  const presentationId = typeof owner.presentationId === 'string'
+    ? owner.presentationId.trim()
+    : ''
+  const liveRoomCode = typeof owner.liveRoomCode === 'string'
+    ? owner.liveRoomCode.trim()
+    : ''
+  const presentationGeneration = Number(owner.presentationGeneration)
+  if (!presentationId || !liveRoomCode || !Number.isInteger(presentationGeneration)) {
+    return null
+  }
+  return { presentationId, liveRoomCode, presentationGeneration }
+}
+
+function roomOwnerMatches(room, owner) {
+  const expected = normalizeRoomOwner(owner)
+  return Boolean(
+    expected &&
+    room?.owner?.presentationId === expected.presentationId &&
+    room.owner.liveRoomCode === expected.liveRoomCode
+  )
+}
+
+function updateRoomOwner(gameId, owner) {
+  const room = rooms.get(gameId)
+  const normalized = normalizeRoomOwner(owner)
+  if (!room || !normalized || !roomOwnerMatches(room, normalized)) return false
+  room.owner = normalized
+  return true
+}
+
+function isRoomUnoccupied(room) {
+  return Boolean(
+    room &&
+    !Array.from(room.players.values()).some((player) => player.socketId)
+  )
+}
+
+function canReplaceUnoccupiedRoom(gameId, owner) {
+  const room = rooms.get(gameId)
+  const normalized = normalizeRoomOwner(owner)
+  return Boolean(
+    room &&
+    room.owner &&
+    normalized &&
+    room.owner.presentationId === normalized.presentationId &&
+    !roomOwnerMatches(room, normalized) &&
+    !pendingHostCapabilities.has(gameId) &&
+    isRoomUnoccupied(room)
+  )
+}
+
+function replaceUnoccupiedRoom(gameId, owner) {
+  if (!canReplaceUnoccupiedRoom(gameId, owner)) return false
+  cleanup(gameId)
+  return true
+}
+
+function createSessionToken() {
+  return crypto.randomBytes(32).toString('base64url')
+}
+
+function hashSessionToken(token) {
+  return crypto.createHash('sha256').update(String(token || '')).digest('hex')
+}
+
+function createRoomChannel(gameId) {
+  return `game:${gameId}:${crypto.randomBytes(16).toString('hex')}`
+}
+
+function subscribeRoomCleanup(listener) {
+  if (typeof listener !== 'function') return () => {}
+  roomCleanupListeners.add(listener)
+  return () => roomCleanupListeners.delete(listener)
+}
+
+function hasValidSession(player, sessionToken) {
+  return Boolean(
+    player?.sessionTokenHash &&
+    typeof sessionToken === 'string' &&
+    sessionToken.length > 0 &&
+    player.sessionTokenHash === hashSessionToken(sessionToken)
+  )
+}
+
+function hasValidHostCapability(room, hostCapability) {
+  return Boolean(
+    room?.hostCapabilityHash &&
+    typeof hostCapability === 'string' &&
+    hostCapability.length > 0 &&
+    room.hostCapabilityHash === hashSessionToken(hostCapability)
+  )
+}
+
+function hasValidPlayerSession(player, options = {}) {
+  if (options.socketId && player?.socketId !== options.socketId) return false
+  if (options.requireSession && !hasValidSession(player, options.sessionToken)) return false
+  return true
+}
 
 function clampInteger(value, min, max, fallback) {
   const parsed = Number(value)
@@ -32,16 +139,20 @@ function normalizeQuestions(questions) {
     }))
 }
 
-function createRoom(gameId, gameType, options = {}) {
+function createRoom(gameId, gameType, options = {}, owner = null) {
   if (rooms.has(gameId)) return null
 
+  const hostCapability = createSessionToken()
   const room = {
     gameId,
     gameType,
+    owner: normalizeRoomOwner(owner),
+    socketRoomId: createRoomChannel(gameId),
     status: 'waiting', // 'waiting' | 'active' | 'finished'
     players: new Map(), // playerId -> { playerId, socketId, name, score, answers[], role }
+    hostCapabilityHash: hashSessionToken(hostCapability),
     hostPlayerId: null,
-    hostExplicit: false, // true once a role==='host' joiner claimed it
+    hostSocketId: null,
     currentQuestion: 0,
     questions: normalizeQuestions(options.questions),
     poll: normalizePollOptions(options.poll || options),
@@ -57,11 +168,36 @@ function createRoom(gameId, gameType, options = {}) {
     excludeAfterPick: options.excludeAfterPick !== undefined ? options.excludeAfterPick : true,
     createdAt: Date.now(),
     cleanupTimer: null,
+    cleanupKind: null,
+    unclaimedCleanupTimer: null,
   }
 
   room.matchingTargetOrder = orderMatchingTargets(room.matching.pairs)
   rooms.set(gameId, room)
+  pendingHostCapabilities.set(gameId, hostCapability)
+  scheduleUnclaimedRoomCleanup(gameId)
   return room
+}
+
+// The capability remains recoverable while the unclaimed room is inside its
+// empty-room grace window. It is removed when a host successfully joins or the
+// room is cleaned up, which makes create requests safe to retry after a lost
+// response without retaining authority indefinitely.
+function peekHostCapability(gameId) {
+  return pendingHostCapabilities.get(gameId) || null
+}
+
+function claimHostCapability(gameId) {
+  pendingHostCapabilities.delete(gameId)
+}
+
+// Test/integration seam for callers that need to consume a pending capability
+// before joining directly. Normal REST creation uses peekHostCapability so a
+// concurrent or retried create can recover the same pending value.
+function takeHostCapability(gameId) {
+  const capability = peekHostCapability(gameId)
+  pendingHostCapabilities.delete(gameId)
+  return capability
 }
 
 function normalizePollOptions(options = {}) {
@@ -101,7 +237,7 @@ function submitPollVote(gameId, playerId, optionId, options = {}) {
 
   const player = room.players.get(playerId)
   if (!player) return { ok: false, error: 'player-not-found' }
-  if (options.socketId && player.socketId !== options.socketId) {
+  if (!hasValidPlayerSession(player, options)) {
     return { ok: false, error: 'stale-player-session' }
   }
   if (!room.poll.options.some((option) => option.id === optionId)) {
@@ -156,7 +292,7 @@ function submitWordCloudText(gameId, playerId, text, options = {}) {
 
   const player = room.players.get(playerId)
   if (!player) return { ok: false, error: 'player-not-found' }
-  if (options.socketId && player.socketId !== options.socketId) {
+  if (!hasValidPlayerSession(player, options)) {
     return { ok: false, error: 'stale-player-session' }
   }
 
@@ -247,7 +383,7 @@ function submitMatchingPairs(gameId, playerId, submittedPairs, options = {}) {
 
   const player = room.players.get(playerId)
   if (!player) return { ok: false, error: 'player-not-found' }
-  if (options.socketId && player.socketId !== options.socketId) {
+  if (!hasValidPlayerSession(player, options)) {
     return { ok: false, error: 'stale-player-session' }
   }
   if (!Array.isArray(submittedPairs)) return { ok: false, error: 'invalid-matching-pairs' }
@@ -301,30 +437,96 @@ function getRoom(gameId) {
   return rooms.get(gameId)
 }
 
+function hasHostCapability(gameId, hostCapability) {
+  return hasValidHostCapability(rooms.get(gameId), hostCapability)
+}
+
+function observeRoom(gameId) {
+  const room = rooms.get(gameId)
+  if (!room) return { ok: false, error: 'room-not-found' }
+  return {
+    ok: true,
+    players: room.players,
+    leaderboard: buildLeaderboard(room),
+    isHost: false,
+  }
+}
+
 function joinRoom(gameId, playerId, playerName, options = {}) {
   const room = rooms.get(gameId)
   if (!room) return { ok: false, error: 'room-not-found' }
+  if (typeof playerId !== 'string' || !playerId || typeof playerName !== 'string' || !playerName) {
+    return { ok: false, error: 'invalid-player' }
+  }
 
-  // Rejoin within the grace window cancels a pending empty-room cleanup.
-  if (room.cleanupTimer) {
-    clearTimeout(room.cleanupTimer)
-    room.cleanupTimer = null
+  const hasHostCapability = hasValidHostCapability(room, options.hostCapability)
+  if (options.role === 'host' && !hasHostCapability) {
+    return { ok: false, error: 'invalid-host-capability' }
   }
 
   const existing = room.players.get(playerId)
-  const player = existing || { playerId, name: playerName, score: 0, answers: [] }
+  const isKnownHost = existing && room.hostPlayerId === playerId
+  const canRecoverHostSession = Boolean(
+    existing &&
+    options.role === 'host' &&
+    hasHostCapability &&
+    isKnownHost
+  )
+  if (
+    options.role === 'host' &&
+    existing &&
+    room.hostPlayerId &&
+    room.hostPlayerId !== playerId
+  ) {
+    return { ok: false, error: 'invalid-host-session' }
+  }
+  if (
+    existing &&
+    options.requireSession &&
+    !hasValidSession(existing, options.sessionToken) &&
+    !canRecoverHostSession
+  ) {
+    return { ok: false, error: 'invalid-player-session' }
+  }
+
+  // Any player rejoin cancels only the short empty-room reconnect grace.
+  // The independent unclaimed timer remains until the host successfully
+  // claims the room, so ordinary players cannot pin an unowned room.
+  if (room.cleanupTimer) {
+    clearTimeout(room.cleanupTimer)
+    room.cleanupTimer = null
+    room.cleanupKind = null
+  }
+  if (options.role === 'host' && room.unclaimedCleanupTimer) {
+    clearTimeout(room.unclaimedCleanupTimer)
+    room.unclaimedCleanupTimer = null
+  }
+
+  const sessionToken = existing
+    ? (canRecoverHostSession ? createSessionToken() : null)
+    : createSessionToken()
+  const player = existing || {
+    playerId,
+    name: playerName,
+    score: 0,
+    answers: [],
+    sessionTokenHash: hashSessionToken(sessionToken),
+  }
   player.name = playerName
+  if (sessionToken) player.sessionTokenHash = hashSessionToken(sessionToken)
   player.socketId = options.socketId || playerId
   if (options.role) player.role = options.role
   room.players.set(playerId, player)
 
-  // Host designation: an explicit role==='host' always wins; otherwise the
-  // first joiner overall becomes the fallback host until a real host claims it.
-  if (options.role === 'host' && !room.hostExplicit) {
+  if (options.role === 'host') {
+    if (room.hostPlayerId && room.hostPlayerId !== playerId) {
+      const previousHost = room.players.get(room.hostPlayerId)
+      if (previousHost) previousHost.role = 'player'
+    }
     room.hostPlayerId = playerId
-    room.hostExplicit = true
-  } else if (!room.hostPlayerId) {
-    room.hostPlayerId = playerId
+    room.hostSocketId = options.socketId || playerId
+    player.role = 'host'
+    claimHostCapability(gameId)
   }
 
   return {
@@ -332,10 +534,11 @@ function joinRoom(gameId, playerId, playerName, options = {}) {
     players: room.players,
     leaderboard: buildLeaderboard(room),
     isHost: room.hostPlayerId === playerId,
+    sessionToken: sessionToken || (options.requireSession ? options.sessionToken : undefined),
   }
 }
 
-function submitAnswer(gameId, playerId, answerIndex, timeSpentMs) {
+function submitAnswer(gameId, playerId, answerIndex, timeSpentMs, options = {}) {
   const room = rooms.get(gameId)
   if (!room) return null
 
@@ -344,6 +547,9 @@ function submitAnswer(gameId, playerId, answerIndex, timeSpentMs) {
 
   const player = room.players.get(playerId)
   if (!player) return null
+  if (!hasValidPlayerSession(player, options)) {
+    return { ok: false, error: 'stale-player-session' }
+  }
 
   // Anti-cheat: a player may answer each question only once. A repeat for the
   // same question id is ignored — no score change, signalled to the caller.
@@ -396,8 +602,13 @@ function endGame(gameId) {
 
   room.status = 'finished'
 
+  if (room.unclaimedCleanupTimer) {
+    clearTimeout(room.unclaimedCleanupTimer)
+    room.unclaimedCleanupTimer = null
+  }
   // Schedule cleanup after TTL
   if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
+  room.cleanupKind = 'finished'
   room.cleanupTimer = setTimeout(() => {
     cleanup(gameId)
   }, ROOM_TTL_MS)
@@ -417,16 +628,35 @@ function buildLeaderboard(room) {
     .sort((a, b) => b.score - a.score)
 }
 
-function isHost(gameId, playerId) {
+function isHost(gameId, playerId, socketId, sessionToken, hostCapability) {
   const room = rooms.get(gameId)
-  return !!room && room.hostPlayerId === playerId
+  const player = room?.players.get(playerId)
+  return Boolean(
+    room &&
+    player &&
+    room.hostPlayerId === playerId &&
+    room.hostSocketId === socketId &&
+    player.socketId === socketId &&
+    hasValidSession(player, sessionToken) &&
+    hasValidHostCapability(room, hostCapability)
+  )
 }
 
-function leaveRoom(gameId, playerId) {
+function leaveRoom(gameId, playerId, options = {}) {
   const room = rooms.get(gameId)
   if (!room) return { ok: false, error: 'room-not-found' }
 
+  const player = room.players.get(playerId)
+  if (!player) return { ok: false, error: 'player-not-found' }
+  if (options.requireSession && !hasValidPlayerSession(player, options)) {
+    return { ok: false, error: 'stale-player-session' }
+  }
+
   room.players.delete(playerId)
+  if (room.hostPlayerId === playerId && (!options.socketId || room.hostSocketId === options.socketId)) {
+    room.hostPlayerId = null
+    room.hostSocketId = null
+  }
   if (room.pollVotes) room.pollVotes.delete(playerId)
   if (room.matchingSubmissions) room.matchingSubmissions.delete(playerId)
   return { ok: true, players: room.players }
@@ -438,34 +668,64 @@ function disconnectRoom(gameId, playerId, socketId) {
   const player = room.players.get(playerId)
   if (player && (!socketId || player.socketId === socketId)) {
     player.socketId = null
+    if (room.hostSocketId === socketId) room.hostSocketId = null
   }
   return { ok: true, players: room.players }
 }
 
+// Arm a longer cleanup for a room that was created but never claimed by a
+// host. This timer is independent from empty-room reconnect grace and is
+// canceled only after a host successfully claims the room.
+function scheduleUnclaimedRoomCleanup(gameId) {
+  const room = rooms.get(gameId)
+  if (!room || room.players.size > 0) return
+  if (room.unclaimedCleanupTimer) clearTimeout(room.unclaimedCleanupTimer)
+  room.unclaimedCleanupTimer = setTimeout(() => cleanup(gameId), unclaimedRoomTtlMs)
+}
+
 // Arm a grace-window cleanup for a room that just became empty. A rejoin
-// (joinRoom) within the window clears this timer.
+// (joinRoom) within the window clears this timer, but not an unclaimed timer.
 function scheduleEmptyCleanup(gameId) {
   const room = rooms.get(gameId)
   if (!room || Array.from(room.players.values()).some((player) => player.socketId)) return
   if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
+  room.cleanupKind = 'empty'
   room.cleanupTimer = setTimeout(() => cleanup(gameId), emptyRoomTtlMs)
 }
 
 function cleanup(gameId) {
   const room = rooms.get(gameId)
-  if (room && room.cleanupTimer) {
+  if (!room) return
+  if (room.cleanupTimer) {
     clearTimeout(room.cleanupTimer)
     room.cleanupTimer = null
+    room.cleanupKind = null
+  }
+  if (room.unclaimedCleanupTimer) {
+    clearTimeout(room.unclaimedCleanupTimer)
+    room.unclaimedCleanupTimer = null
   }
   rooms.delete(gameId)
+  pendingHostCapabilities.delete(gameId)
+  for (const listener of roomCleanupListeners) {
+    try {
+      listener(gameId, room)
+    } catch {
+      // Cleanup notification must not prevent room state from being removed.
+    }
+  }
 }
 
 function _reset() {
   for (const room of rooms.values()) {
     if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
+    if (room.unclaimedCleanupTimer) clearTimeout(room.unclaimedCleanupTimer)
   }
   rooms.clear()
+  pendingHostCapabilities.clear()
+  roomCleanupListeners.clear()
   emptyRoomTtlMs = 30 * 1000
+  unclaimedRoomTtlMs = ROOM_TTL_MS
 }
 
 // Test seam: shrink the empty-room grace window so cleanup tests run fast.
@@ -473,9 +733,24 @@ function _setEmptyRoomTtl(ms) {
   emptyRoomTtlMs = ms
 }
 
+// Test seam: shrink the unclaimed-room TTL without changing reconnect grace.
+function _setUnclaimedRoomTtl(ms) {
+  unclaimedRoomTtlMs = ms
+}
+
 module.exports = {
   createRoom,
+  subscribeRoomCleanup,
+  peekHostCapability,
+  claimHostCapability,
+  takeHostCapability,
   getRoom,
+  hasHostCapability,
+  roomOwnerMatches,
+  updateRoomOwner,
+  canReplaceUnoccupiedRoom,
+  replaceUnoccupiedRoom,
+  observeRoom,
   joinRoom,
   submitAnswer,
   submitPollVote,
@@ -496,4 +771,5 @@ module.exports = {
   cleanup,
   _reset,
   _setEmptyRoomTtl,
+  _setUnclaimedRoomTtl,
 }

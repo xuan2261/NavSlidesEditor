@@ -8,6 +8,7 @@ import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
+import { handleRibbonKeyboardActivation } from './ribbon-keyboard-activation'
 
 const {
   BG_COLORS = [],
@@ -39,6 +40,7 @@ function ThemeSwatch({ preset, active, onSelect }) {
       className={`flex items-center gap-1.5 rounded px-1.5 py-1 text-left cursor-pointer transition-colors w-full
         ${active ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary text-text-primary'}`}
       onMouseDown={(e) => { e.preventDefault(); onSelect(preset) }}
+      onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => onSelect(preset))}
     >
       <span
         className="flex h-5 w-7 shrink-0 items-center justify-center rounded-sm border border-border/60 text-[9px] font-bold"
@@ -77,6 +79,7 @@ function ThemeGallery({ open, anchorRef, current, currentTokens, onSelect, onSel
           title="Apply the current theme to every slide (clears per-slide overrides)"
           aria-label="Apply theme to all slides"
           onMouseDown={(e) => { e.preventDefault(); onApplyToAll() }}
+          onKeyDown={(e) => handleRibbonKeyboardActivation(e, onApplyToAll)}
         >
           <Layers size={11} /> Apply to all
         </button>
@@ -105,6 +108,7 @@ function ThemeGallery({ open, anchorRef, current, currentTokens, onSelect, onSel
               className={`px-1.5 py-1 rounded text-[10px] capitalize cursor-pointer transition-colors
                 ${current === t ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary text-text-primary'}`}
               onMouseDown={(e) => { e.preventDefault(); onSelect(t) }}
+              onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => onSelect(t))}
             >
               {t}
             </button>
@@ -152,6 +156,7 @@ function BackgroundControls({ open, anchorRef, slide, onUpdateSlide, onClose }) 
             className={`px-1.5 py-0.5 rounded text-[10px] capitalize cursor-pointer transition-colors
               ${bgType === type ? 'bg-primary text-primary-foreground' : 'bg-secondary text-text-primary hover:bg-border'}`}
             onMouseDown={(e) => { e.preventDefault(); setBgType(type) }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => setBgType(type))}
           >
             {type}
           </button>
@@ -169,6 +174,7 @@ function BackgroundControls({ open, anchorRef, slide, onUpdateSlide, onClose }) 
                 ${bg.color === color ? 'border-2 border-white' : 'border border-border'}`}
               style={{ backgroundColor: color }}
               onMouseDown={(e) => { e.preventDefault(); setBgColor(color) }}
+              onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => setBgColor(color))}
             />
           ))}
         </div>
@@ -185,6 +191,7 @@ function BackgroundControls({ open, anchorRef, slide, onUpdateSlide, onClose }) 
                 ${bg.gradient === preset ? 'border-2 border-white' : 'border border-border'}`}
               style={{ background: preset }}
               onMouseDown={(e) => { e.preventDefault(); setBgGradient(preset) }}
+              onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => setBgGradient(preset))}
             />
           ))}
         </div>
@@ -278,7 +285,8 @@ export default function DesignTabContent({
           <Button variant="ribbon" className="h-7"
             ref={themeTriggerRef}
             title="Presentation theme" aria-label="Change theme"
-            onMouseDown={(e) => { e.preventDefault(); setShowThemes((v) => !v) }}>
+            onMouseDown={(e) => { e.preventDefault(); setShowThemes((v) => !v) }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => setShowThemes((v) => !v))}>
             <Palette size={14} />
             <span className="text-[11px] capitalize hidden lg:inline">{currentTheme}</span>
           </Button>
@@ -320,7 +328,8 @@ export default function DesignTabContent({
           <Button variant="ribbon" className="h-7"
             ref={bgTriggerRef}
             title="Slide background" aria-label="Change slide background"
-            onMouseDown={(e) => { e.preventDefault(); setShowBg((v) => !v) }}>
+            onMouseDown={(e) => { e.preventDefault(); setShowBg((v) => !v) }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => setShowBg((v) => !v))}>
             <div
               className="w-3.5 h-3.5 rounded-sm shrink-0 border border-border"
               style={
@@ -357,7 +366,10 @@ export default function DesignTabContent({
               onMouseDown={(e) => {
                 e.preventDefault()
                 onUpdatePresentation?.({ resolution: { width: preset.w, height: preset.h } })
-              }}>
+              }}
+              onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+                onUpdatePresentation?.({ resolution: { width: preset.w, height: preset.h } })
+              )}>
               <preset.icon size={12} />
               <span className="hidden xl:inline">{preset.label}</span>
             </Button>
@@ -372,7 +384,10 @@ export default function DesignTabContent({
             onMouseDown={(e) => {
               e.preventDefault()
               onUpdatePresentation?.({ showFooter: !presentation?.showFooter })
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+              onUpdatePresentation?.({ showFooter: !presentation?.showFooter })
+            )}>
             <PanelBottom size={14} />
             <span className="text-[11px] hidden lg:inline">
               {presentation?.showFooter ? 'Footer On' : 'Footer Off'}
@@ -383,7 +398,10 @@ export default function DesignTabContent({
             onMouseDown={(e) => {
               e.preventDefault()
               onUpdatePresentation?.({ showPageNumbers: !presentation?.showPageNumbers })
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+              onUpdatePresentation?.({ showPageNumbers: !presentation?.showPageNumbers })
+            )}>
             <Hash size={14} />
             <span className="text-[11px] hidden lg:inline">
               {presentation?.showPageNumbers ? 'Numbers On' : 'Numbers Off'}
@@ -410,7 +428,10 @@ export default function DesignTabContent({
             onMouseDown={(e) => {
               e.preventDefault()
               onUpdatePresentation?.({ autoSlide: presentation?.autoSlide ? 0 : 5000 })
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+              onUpdatePresentation?.({ autoSlide: presentation?.autoSlide ? 0 : 5000 })
+            )}>
             <Timer size={14} />
           </Button>
           <Button variant="icon"
@@ -419,7 +440,10 @@ export default function DesignTabContent({
             onMouseDown={(e) => {
               e.preventDefault()
               onUpdatePresentation?.({ autoSlideLoop: !presentation?.autoSlideLoop })
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+              onUpdatePresentation?.({ autoSlideLoop: !presentation?.autoSlideLoop })
+            )}>
             <Repeat size={14} />
           </Button>
           <Button variant="icon"
@@ -428,7 +452,10 @@ export default function DesignTabContent({
             onMouseDown={(e) => {
               e.preventDefault()
               onUpdatePresentation?.({ showPresentGrid: !presentation?.showPresentGrid })
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+              onUpdatePresentation?.({ showPresentGrid: !presentation?.showPresentGrid })
+            )}>
             <Grid3x3 size={14} />
           </Button>
           <Button variant="icon"
@@ -437,7 +464,10 @@ export default function DesignTabContent({
             onMouseDown={(e) => {
               e.preventDefault()
               onUpdatePresentation?.({ kioskMode: !presentation?.kioskMode })
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+              onUpdatePresentation?.({ kioskMode: !presentation?.kioskMode })
+            )}>
             <MonitorSmartphone size={14} />
           </Button>
           <Button variant="icon"
@@ -446,7 +476,10 @@ export default function DesignTabContent({
             onMouseDown={(e) => {
               e.preventDefault()
               updatePresenterTool('slideMenu', !presenterTools.slideMenu)
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+              updatePresenterTool('slideMenu', !presenterTools.slideMenu)
+            )}>
             <Menu size={14} />
           </Button>
         </div>

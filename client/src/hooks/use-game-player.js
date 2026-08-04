@@ -22,6 +22,20 @@ function getPlayerId() {
   return id
 }
 
+function getSessionStorageKey(gameId, playerId) {
+  return `navslides-game-session:${gameId}:${playerId}`
+}
+
+function getStoredSessionToken(gameId, playerId) {
+  if (typeof localStorage === 'undefined') return null
+  return localStorage.getItem(getSessionStorageKey(gameId, playerId))
+}
+
+function storeSessionToken(gameId, playerId, sessionToken) {
+  if (typeof localStorage === 'undefined' || !sessionToken) return
+  localStorage.setItem(getSessionStorageKey(gameId, playerId), sessionToken)
+}
+
 export function useGamePlayer({ gameId, playerName }) {
   const [status, setStatus] = useState('joining') // joining | waiting | question | answered | result | finished
   const [players, setPlayers] = useState([])
@@ -37,11 +51,13 @@ export function useGamePlayer({ gameId, playerName }) {
   const [myScore, setMyScore] = useState(0)
   const [myRank, setMyRank] = useState(null)
   const [leaderboard, setLeaderboard] = useState([])
+  const [playerIdentity] = useState(() => getPlayerId())
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState(null)
   const [timeLeft, setTimeLeft] = useState(null)
 
   const socketRef = useRef(null)
+  const playerIdRef = useRef(playerIdentity)
   const timerRef = useRef(null)
   const questionStartRef = useRef(null)
 
@@ -102,6 +118,8 @@ export function useGamePlayer({ gameId, playerName }) {
 
     // Player-game traffic lives on the '/games' namespace (the live default
     // namespace is reserved for EditorPage game-timer events).
+    const playerId = playerIdRef.current
+    let sessionToken = getStoredSessionToken(gameId, playerId)
     const sock = io('/games', { path: '/ws', reconnection: true })
 
     sock.on('connect', () => {
@@ -111,8 +129,9 @@ export function useGamePlayer({ gameId, playerName }) {
       sock.emit('game-join', {
         gameId,
         playerName,
-        playerId: getPlayerId(),
+        playerId,
         role: 'player',
+        ...(sessionToken ? { sessionToken } : {}),
       })
       setStatus('waiting')
     })
@@ -127,6 +146,23 @@ export function useGamePlayer({ gameId, playerName }) {
       if (cancelled) return
       setIsConnected(false)
       stopTimer()
+    })
+
+    sock.on('game-room-expired', () => {
+      if (cancelled) return
+      setIsConnected(false)
+      setError('Game room expired. Reload to rejoin.')
+      setStatus('joining')
+      stopTimer()
+      sock.disconnect()
+    })
+
+    sock.on('game-session', (data = {}) => {
+      if (cancelled) return
+      const { playerId: issuedPlayerId, sessionToken: issuedSessionToken } = data
+      if (issuedPlayerId !== playerId || typeof issuedSessionToken !== 'string') return
+      sessionToken = issuedSessionToken
+      storeSessionToken(gameId, playerId, issuedSessionToken)
     })
 
     sock.on('game-player-joined', ({ players: p }) => {
@@ -209,10 +245,8 @@ export function useGamePlayer({ gameId, playerName }) {
     sock.on('game-leaderboard', ({ scores }) => {
       if (cancelled) return
       setLeaderboard(scores || [])
-      if (playerName) {
-        const me = (scores || []).find(p => p.name === playerName)
-        if (me) setMyRank(scores.indexOf(me) + 1)
-      }
+      const me = (scores || []).find((entry) => entry.playerId === playerIdRef.current)
+      if (me) setMyRank(scores.indexOf(me) + 1)
     })
 
     sock.on('game-ended', ({ finalScores }) => {
@@ -261,5 +295,6 @@ export function useGamePlayer({ gameId, playerName }) {
     myScore,
     myRank,
     leaderboard,
+    playerId: playerIdentity,
   }
 }

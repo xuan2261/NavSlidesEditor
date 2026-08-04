@@ -73,7 +73,7 @@ async function addTextViaRibbon() {
   })
   const btn = await screen.findByTestId('ribbon-insert-text')
   await act(async () => {
-    fireEvent.mouseDown(btn)
+    fireEvent.click(btn)
   })
 }
 

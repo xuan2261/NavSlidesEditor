@@ -8,6 +8,7 @@ import { CANVAS_WIDTH } from '../../data/slide-constants'
 import { normalizeTableShape } from '../properties/table-properties-utils'
 import { normalizeRotation } from '../../utils/element-update-fanout'
 import { computeMixedValues } from '../../utils/selection-mixed-values'
+import { handleRibbonKeyboardActivation } from './ribbon-keyboard-activation'
 
 const OBJECT_FIT_OPTIONS = ['cover', 'contain', 'fill', 'none']
 const CHART_TYPES = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea']
@@ -309,7 +310,10 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
             onMouseDown={(e) => {
               e.preventDefault()
               onUpdateElement?.({ rotation: ((selectedElement.rotation || 0) + 90) % 360 })
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+              onUpdateElement?.({ rotation: ((selectedElement.rotation || 0) + 90) % 360 })
+            )}>
             <RotateCw size={14} />
           </Button>
         </div>
@@ -338,7 +342,8 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
         <div className="flex items-center gap-0.5">
           <Button variant="icon" className="h-7 w-7"
             title="Align left" aria-label="Align left"
-            onMouseDown={(e) => { e.preventDefault(); onUpdateElement?.({ x: 0 }) }}>
+            onMouseDown={(e) => { e.preventDefault(); onUpdateElement?.({ x: 0 }) }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => onUpdateElement?.({ x: 0 }))}>
             <AlignStartVertical size={14} />
           </Button>
           <Button variant="icon" className="h-7 w-7"
@@ -346,7 +351,10 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
             onMouseDown={(e) => {
               e.preventDefault()
               onUpdateElement?.({ x: Math.round((alignWidth - (selectedElement.width || 0)) / 2) })
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+              onUpdateElement?.({ x: Math.round((alignWidth - (selectedElement.width || 0)) / 2) })
+            )}>
             <AlignHorizontalJustifyCenter size={14} />
           </Button>
           <Button variant="icon" className="h-7 w-7"
@@ -354,7 +362,10 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
             onMouseDown={(e) => {
               e.preventDefault()
               onUpdateElement?.({ x: Math.round(alignWidth - (selectedElement.width || 0)) })
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+              onUpdateElement?.({ x: Math.round(alignWidth - (selectedElement.width || 0)) })
+            )}>
             <AlignEndVertical size={14} />
           </Button>
         </div>
@@ -369,7 +380,10 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
           onMouseDown={(e) => {
             e.preventDefault()
             onUpdateElement?.({ locked: !selectedElement.locked })
-          }}>
+          }}
+          onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+            onUpdateElement?.({ locked: !selectedElement.locked })
+          )}>
           {selectedElement.locked ? <Lock size={14} /> : <Unlock size={14} />}
           <span className="hidden lg:inline">{selectedElement.locked ? 'Locked' : 'Lock'}</span>
         </Button>

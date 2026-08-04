@@ -30,6 +30,7 @@ export default function EditorModals(props) {
     presentation,
     currentSlide,
     currentSlideIndex,
+    verticalEdit,
     viewMode,
     setViewMode,
     setCurrentSlideIndex,
@@ -53,6 +54,7 @@ export default function EditorModals(props) {
     setShowGameHud,
     showGameLeaderboard,
     setShowGameLeaderboard,
+    gameLeaderboardScores = [],
   } = props
 
   const showGithubModal = useUIStore((s) => s.showGithubModal)
@@ -192,6 +194,7 @@ export default function EditorModals(props) {
         <TransitionPreview
           presentation={presentation}
           fromIndex={currentSlideIndex}
+          verticalEdit={verticalEdit}
           onClose={() => setShowTransitionPreview(false)}
         />
       )}
@@ -221,7 +224,7 @@ export default function EditorModals(props) {
 
       <GameLeaderboardOverlay
         visible={showGameLeaderboard}
-        scores={[]}
+        scores={gameLeaderboardScores}
         onClose={() => setShowGameLeaderboard(false)}
       />
 

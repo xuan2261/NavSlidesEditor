@@ -7,7 +7,7 @@
  * Exported as NamePickerRenderer to match the lazy-loading interface used
  * by game-element-renderer.jsx.
  */
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useGameSocket } from '../../../../hooks/use-game-socket'
 
 // ---------------------------------------------------------------------------
@@ -394,7 +394,19 @@ export function NamePickerRenderer({ element, isPresenting }) {
 
   useEffect(() => { injectCSS() }, [])
 
-  const { emit, isConnected, lastEvent } = useGameSocket(element.id, 'presenter', 'presenter')
+  const gameOptions = useMemo(() => ({
+    gameType: 'name-picker',
+    options: {
+      items: element.items || [],
+      excludeAfterPick: element.excludeAfterPick !== false,
+    },
+  }), [element.excludeAfterPick, element.items])
+  const { emit, isConnected, joinError, lastEvent } = useGameSocket(
+    isPresenting ? element.id : null,
+    isPresenting ? 'presenter' : null,
+    'host',
+    gameOptions
+  )
 
   const effectiveItems = (element.items || []).filter((_, i) => !excludedSet.has(i))
 
@@ -403,13 +415,14 @@ export function NamePickerRenderer({ element, isPresenting }) {
     // game-random-result event (below) decide the announced winner so every
     // client renders the SAME index. Offline (no game room) we fall back to
     // the local animation result so the picker still works in the editor.
+    if (isPresenting && !isConnected) return
     if (emit && isConnected) {
       emit('game-random', { gameId: element.id, gameType: 'name-picker', mode })
       return
     }
     setLastWinner({ name, idx })
     fireConfetti(element)
-  }, [element, emit, isConnected, mode])
+  }, [element, emit, isConnected, isPresenting, mode])
 
   // Render the SERVER-chosen winner so it matches every other client.
   useEffect(() => {
@@ -430,16 +443,21 @@ export function NamePickerRenderer({ element, isPresenting }) {
 
   let content
   if (mode === 'wheel') {
-    content = <InteractiveWheel element={element} onWinner={handleWinner} disabled={!isPresenting || effectiveItems.length === 0} />
+    content = <InteractiveWheel element={element} onWinner={handleWinner} disabled={!isPresenting || !isConnected || effectiveItems.length === 0} />
   } else if (mode === 'dice') {
-    content = <InteractiveDice element={element} onWinner={handleWinner} disabled={!isPresenting || effectiveItems.length === 0} />
+    content = <InteractiveDice element={element} onWinner={handleWinner} disabled={!isPresenting || !isConnected || effectiveItems.length === 0} />
   } else {
-    content = <InteractiveButtonPicker element={element} onWinner={handleWinner} disabled={!isPresenting || effectiveItems.length === 0} />
+    content = <InteractiveButtonPicker element={element} onWinner={handleWinner} disabled={!isPresenting || !isConnected || effectiveItems.length === 0} />
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', height: '100%' }}>
       {content}
+      {joinError && (
+        <div role="alert" style={{ color: '#fecaca', fontSize: 10, textAlign: 'center' }}>
+          Game connection failed: {joinError}
+        </div>
+      )}
       {isPresenting && lastWinner && element.excludeAfterPick && effectiveItems.length > 1 && (
         <button onClick={handleExclude} style={{
           background: 'transparent', border: `1px solid ${element.accentColor || '#6366f1'}66`,

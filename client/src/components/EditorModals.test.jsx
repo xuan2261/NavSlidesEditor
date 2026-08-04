@@ -22,7 +22,9 @@ vi.mock('./game-hud-overlay', () => ({
   GameHudOverlay: ({ visible }) => (visible ? <div data-testid="m-gamehud" /> : null),
 }))
 vi.mock('./game-leaderboard-overlay', () => ({
-  GameLeaderboardOverlay: ({ visible }) => (visible ? <div data-testid="m-gamelb" /> : null),
+  GameLeaderboardOverlay: ({ visible, scores }) => (
+    visible ? <div data-testid="m-gamelb" data-scores={JSON.stringify(scores)} /> : null
+  ),
 }))
 vi.mock('./editor-modals-secondary', () => ({ default: () => <div data-testid="m-secondary" /> }))
 
@@ -134,10 +136,17 @@ describe('EditorModals conditional render', () => {
 
   it('renders game overlays and indicator when active', () => {
     render(
-      <EditorModals {...baseProps} currentGameType="jeopardy" showGameHud showGameLeaderboard />
+      <EditorModals
+        {...baseProps}
+        currentGameType="jeopardy"
+        showGameHud
+        showGameLeaderboard
+        gameLeaderboardScores={[{ team: 'Blue', score: 42 }]}
+      />
     )
     expect(screen.getByTestId('game-active-indicator')).toBeTruthy()
     expect(screen.getByTestId('m-gamehud')).toBeTruthy()
     expect(screen.getByTestId('m-gamelb')).toBeTruthy()
+    expect(screen.getByTestId('m-gamelb').dataset.scores).toContain('Blue')
   })
 })

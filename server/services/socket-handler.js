@@ -13,30 +13,70 @@ function isValidElementId(id) {
   return typeof id === 'string' && /^[a-zA-Z0-9-]+$/.test(id) && id.length <= 64
 }
 
+function withVerticalIndex(payload, verticalIndex) {
+  return Number(verticalIndex) ? { ...payload, verticalIndex } : payload
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function normalizeSlideTarget(slideIndex, verticalIndex = 0) {
+  const normalizedSlideIndex = Number(slideIndex)
+  const normalizedVerticalIndex = Number(verticalIndex)
+  if (!Number.isInteger(normalizedSlideIndex) || normalizedSlideIndex < 0) return null
+  if (!Number.isInteger(normalizedVerticalIndex) || normalizedVerticalIndex < 0) return null
+  return {
+    slideIndex: normalizedSlideIndex,
+    verticalIndex: normalizedVerticalIndex,
+  }
+}
+
 // Helper: schedule timer-end notification
-function scheduleTimerEnd(roomId, elementId, timers, timerTimeouts, io) {
+function emitTimerEnded(roomId, elementId, timer, io) {
+  timer.running = false
+  timer.pausedRemaining = 0
+  timer.endedAt = null
+  io.to(roomId).emit('timer:sync', {
+    elementId,
+    remaining: 0,
+    duration: timer.duration,
+    running: false,
+    endedAt: null,
+  })
+  io.to(roomId).emit('timer:ended', { elementId })
+}
+
+function finalizeExpiredTimer(roomId, elementId, timer, timerTimeouts, io, now = Date.now()) {
+  if (!timer?.running || timer.endedAt == null || timer.endedAt > now) return false
+  if (timerTimeouts?.[elementId]) clearTimeout(timerTimeouts[elementId])
+  delete timerTimeouts[elementId]
+  emitTimerEnded(roomId, elementId, timer, io)
+  return true
+}
+
+// Helper: schedule timer-end notification
+function scheduleTimerEnd(roomId, elementId, timers, timerTimeouts, io, now = Date.now()) {
   const timer = timers[elementId]
-  if (!timer || !timer.running) return null
-  const remainingMs = timer.endedAt - Date.now()
-  if (remainingMs <= 0) return null
+  if (!timer || !timer.running || timer.endedAt == null) return null
+  const remainingMs = timer.endedAt - now
+  if (remainingMs <= 0) {
+    finalizeExpiredTimer(roomId, elementId, timer, timerTimeouts, io, now)
+    return null
+  }
   const timeoutId = setTimeout(() => {
     const t = timers[elementId]
-    if (t && t.running && t.endedAt === timer.endedAt) {
-      t.running = false
-      t.pausedRemaining = 0
-      t.endedAt = null
-      io.to(roomId).emit('timer:sync', {
-        elementId,
-        remaining: 0,
-        duration: t.duration,
-        running: false,
-        endedAt: null,
-      })
-      io.to(roomId).emit('timer:ended', { elementId })
-    }
+    if (t && t.running && t.endedAt === timer.endedAt) emitTimerEnded(roomId, elementId, t, io)
     delete timerTimeouts[elementId]
   }, remainingMs)
   return timeoutId
+}
+
+function armTimerEnd(roomId, elementId, timers, timerTimeouts, io) {
+  const timer = timers[elementId]
+  const now = Date.now()
+  if (!timer?.running || timer.endedAt == null) return null
+  return scheduleTimerEnd(roomId, elementId, timers, timerTimeouts, io, now)
 }
 
 function getSlideTitle(slide, fallback) {
@@ -86,14 +126,15 @@ async function findLivePresentationById(id) {
   return findPresentationById(id)
 }
 
-async function emitPresentationPayload(socket, presentationId, findById) {
-  if (!presentationId) return
+async function emitPresentationPayload(socket, presentationId, findById, canEmit = () => true) {
+  if (!presentationId) return false
   const pres = await findById(presentationId)
-  if (!pres) return
+  if (!pres || !canEmit()) return false
   const normalized = normalizePresentationNotes(pres)
   const html = generateRevealHTML(normalized)
   socket.emit('presentation-data', { html })
   socket.emit('presentation-meta', buildPresentationMeta(normalized))
+  return true
 }
 
 /**
@@ -113,6 +154,10 @@ function setupSocketHandlers(io, dependencies = {}) {
 
     // Join presentation room
     socket.on('join-room', async ({ roomId, role, presentationId, presenterToken }) => {
+      const roomBeforeJoin = liveRooms.getRoomState(roomId)
+      const presenterWasDisconnected = role === 'presenter' &&
+        roomBeforeJoin?.presenterId == null &&
+        roomBeforeJoin?.presenterConnected === true
       const joinResult = liveRooms.joinRoom(roomId, socket.id, role, { presenterToken })
       if (!joinResult.ok) {
         if (joinResult.error === 'invalid-presenter-token') {
@@ -120,6 +165,12 @@ function setupSocketHandlers(io, dependencies = {}) {
             roomId,
             reason: 'invalid-presenter-token',
             message: 'Presenter access denied',
+          })
+        } else if (joinResult.error === 'already-joined-room') {
+          socket.emit('join-error', {
+            roomId,
+            reason: 'already-joined-room',
+            message: 'Socket is already joined to another live room',
           })
         } else {
           socket.emit('room-not-found', { roomId })
@@ -131,14 +182,41 @@ function setupSocketHandlers(io, dependencies = {}) {
       socket.data.roomId = roomId
       socket.data.role = role
 
+      if (presenterWasDisconnected) {
+        io.to(roomId).emit('presenter-reconnected')
+      }
+      const joinedRoom = liveRooms.getRoomState(roomId)
+      const joinedGeneration = joinedRoom?.presentationGeneration
+      // A presenter-supplied deck is a new intent. Hide the previously
+      // committed deck until this generation finishes loading so a viewer who
+      // joins during the await cannot receive stale content.
+      if (role === 'presenter' && presentationId && joinedRoom) {
+        joinedRoom.presentationId = null
+      }
+      const presenterStatus = {
+        hasPresenter: Boolean(joinedRoom?.presenterId),
+        presenterConnected: joinedRoom?.presenterConnected === true,
+      }
+      socket.emit('presenter-status', presenterStatus)
+      if (role === 'presenter') {
+        socket.to(roomId).emit('presenter-status', presenterStatus)
+      }
+
       if (role === 'presenter' && presentationId) {
+        const presenterLoadRoom = joinedRoom
+        const presenterLoadGeneration = joinedGeneration
         try {
           const pres = await findById(presentationId)
-          if (pres) {
+          const roomState = liveRooms.getRoomState(roomId)
+          if (
+            pres &&
+            roomState === presenterLoadRoom &&
+            roomState.presenterId === socket.id &&
+            roomState.presentationGeneration === presenterLoadGeneration
+          ) {
             const normalized = normalizePresentationNotes(pres)
             const html = generateRevealHTML(normalized)
-            const roomState = liveRooms.getRoomState(roomId)
-            if (roomState) roomState.presentationId = presentationId
+            roomState.presentationId = presentationId
             io.to(roomId).emit('presentation-data', { html })
             io.to(roomId).emit('presentation-meta', buildPresentationMeta(normalized))
             io.to(roomId).emit('sync-state', roomState.state)
@@ -153,10 +231,16 @@ function setupSocketHandlers(io, dependencies = {}) {
       // a mid-countdown reconnect must reschedule timer:ended at the remaining time.
       if (role === 'presenter') {
         const roomState = liveRooms.getRoomState(roomId)
-        if (roomState) {
+        const stillJoined = typeof liveRooms.getRoomForSocket !== 'function' ||
+          liveRooms.getRoomForSocket(socket.id) === roomId
+        const presenterJoinIsCurrent = roomState === joinedRoom &&
+          roomState?.presentationGeneration === joinedGeneration &&
+          roomState?.presenterId === socket.id &&
+          stillJoined
+        if (presenterJoinIsCurrent) {
           for (const [elementId, timer] of Object.entries(roomState.timers || {})) {
             if (timer.running && !roomState.timerTimeouts[elementId]) {
-              roomState.timerTimeouts[elementId] = scheduleTimerEnd(
+              roomState.timerTimeouts[elementId] = armTimerEnd(
                 roomId,
                 elementId,
                 roomState.timers,
@@ -169,12 +253,21 @@ function setupSocketHandlers(io, dependencies = {}) {
       }
 
       if (role === 'viewer' || role === 'controller') {
-        const state = liveRooms.getRoomState(roomId)
+        const state = joinedRoom
         if (state) {
+          const expectedPresentationId = state.presentationId
+          const expectedGeneration = joinedGeneration
+          const expectedPresenterId = state.presenterId
           socket.emit('sync-state', state.state)
-          if (state.presentationId) {
+          if (expectedPresentationId) {
             try {
-              await emitPresentationPayload(socket, state.presentationId, findById)
+              await emitPresentationPayload(socket, expectedPresentationId, findById, () => {
+                const current = liveRooms.getRoomState(roomId)
+                return current === state &&
+                  current.presentationGeneration === expectedGeneration &&
+                  current.presentationId === expectedPresentationId &&
+                  current.presenterId === expectedPresenterId
+              })
             } catch {
               /* ignore */
             }
@@ -182,14 +275,26 @@ function setupSocketHandlers(io, dependencies = {}) {
         }
       }
 
+      // Do not finish a stale async join against a removed/recreated room, a
+      // disconnected socket, or a presenter that has since been replaced.
+      const room = liveRooms.getRoomState(roomId)
+      const stillJoined = typeof liveRooms.getRoomForSocket !== 'function' ||
+        liveRooms.getRoomForSocket(socket.id) === roomId
+      const stillAuthoritative = role !== 'presenter' || room?.presenterId === socket.id
+      if (
+        room !== joinedRoom ||
+        room?.presentationGeneration !== joinedGeneration ||
+        !stillJoined ||
+        !stillAuthoritative
+      ) return
+
       broadcastViewerCount(roomId)
 
       // Send annotations:sync to all joining clients (presenter and viewers)
-      const room = liveRooms.getRoomState(roomId)
-      socket.emit('annotations:sync', { slideAnnotations: room?.annotations || {} })
+      socket.emit('annotations:sync', { slideAnnotations: room.annotations || {} })
 
       // Send timer state to joining clients (for Phase 2)
-      for (const [elementId, timer] of Object.entries(room?.timers || {})) {
+      for (const [elementId, timer] of Object.entries(room.timers || {})) {
         const computeTimerRemaining = (t) => {
           if (!t.running || t.endedAt === null) return t.pausedRemaining ?? t.duration
           return Math.max(0, Math.ceil((t.endedAt - Date.now()) / 1000))
@@ -216,17 +321,28 @@ function setupSocketHandlers(io, dependencies = {}) {
         // Re-sync annotations scoped to the target slide so viewers swap to that
         // slide's strokes (empty if none) instead of bleeding the previous slide.
         const room = liveRooms.getRoomState(socket.data.roomId)
-        socket.to(socket.data.roomId).emit('annotations:sync', {
+        const annotationKey = liveRooms.getAnnotationKey
+          ? liveRooms.getAnnotationKey(slideIndex, verticalIndex)
+          : (Number(verticalIndex) ? `${slideIndex}:${verticalIndex}` : String(slideIndex))
+        socket.to(socket.data.roomId).emit('annotations:sync', withVerticalIndex({
           slideIndex,
-          annotations: room?.annotations?.[slideIndex] || [],
-        })
+          annotations: room?.annotations?.[annotationKey] || [],
+        }, verticalIndex))
       }
     })
 
     socket.on('control-navigate', ({ slideIndex, verticalIndex = 0, fragmentIndex = 0 }) => {
       const roomState = liveRooms.getRoomState(socket.data.roomId)
-      if (!roomState || !liveRooms.canControlRoom(socket.data.roomId, socket.id)) return
-      if (!roomState.presenterId) return
+      const isListedController = roomState?.controllers?.includes(socket.id)
+      const isPresenter = roomState?.presenterId === socket.id
+      if (!roomState || (!isPresenter && !isListedController)) return
+      if (!roomState.presenterId) {
+        socket.emit('presenter-status', {
+          hasPresenter: false,
+          presenterConnected: roomState.presenterConnected === true,
+        })
+        return
+      }
       io.to(roomState.presenterId).emit('control-navigate', {
         slideIndex,
         verticalIndex,
@@ -251,44 +367,74 @@ function setupSocketHandlers(io, dependencies = {}) {
     })
 
     // Annotation events — only presenter/controller can emit
-    socket.on('annotation:add', ({ slideIndex, annotation }) => {
+    socket.on('annotation:add', (payload = {}) => {
+      const { slideIndex, verticalIndex = 0, annotation } = payload || {}
+      const target = normalizeSlideTarget(slideIndex, verticalIndex)
       const roomId = liveRooms.getRoomForSocket(socket.id)
-      if (!roomId) return
-      if (!liveRooms.canControlRoom(roomId, socket.id)) return
+      if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
+      if (!target || !isRecord(annotation)) return
 
       const fullAnnotation = {
         ...annotation,
-        id: annotation.id || crypto.randomUUID(),
+        id: typeof annotation.id === 'string' && annotation.id.length > 0
+          ? annotation.id
+          : crypto.randomUUID(),
         createdAt: annotation.createdAt || new Date().toISOString(),
         createdBy: 'presenter',
       }
 
       const room = liveRooms.getRoomState(roomId)
-      if (!room.annotations[slideIndex]) room.annotations[slideIndex] = []
-      room.annotations[slideIndex].push(fullAnnotation)
+      const annotationKey = liveRooms.getAnnotationKey
+        ? liveRooms.getAnnotationKey(target.slideIndex, target.verticalIndex)
+        : (target.verticalIndex ? `${target.slideIndex}:${target.verticalIndex}` : String(target.slideIndex))
+      if (!room.annotations[annotationKey]) room.annotations[annotationKey] = []
+      room.annotations[annotationKey].push(fullAnnotation)
 
-      io.to(roomId).emit('annotation:add', { slideIndex, annotation: fullAnnotation })
+      io.to(roomId).emit(
+        'annotation:add',
+        withVerticalIndex({ slideIndex: target.slideIndex, annotation: fullAnnotation }, target.verticalIndex)
+      )
     })
 
-    socket.on('annotation:remove', ({ slideIndex, annotationId }) => {
+    socket.on('annotation:remove', (payload = {}) => {
+      const { slideIndex, verticalIndex = 0, annotationId } = payload || {}
+      const target = normalizeSlideTarget(slideIndex, verticalIndex)
+      const roomId = liveRooms.getRoomForSocket(socket.id)
+      if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
+      if (!target || typeof annotationId !== 'string' || !annotationId) return
+      const room = liveRooms.getRoomState(roomId)
+      const annotationKey = liveRooms.getAnnotationKey
+        ? liveRooms.getAnnotationKey(target.slideIndex, target.verticalIndex)
+        : (target.verticalIndex ? `${target.slideIndex}:${target.verticalIndex}` : String(target.slideIndex))
+      if (!room.annotations[annotationKey]) return
+      room.annotations[annotationKey] = room.annotations[annotationKey].filter(a => a.id !== annotationId)
+      io.to(roomId).emit(
+        'annotation:removed',
+        withVerticalIndex({ slideIndex: target.slideIndex, annotationId }, target.verticalIndex)
+      )
+    })
+
+    socket.on('annotation:clear', (payload = {}) => {
+      const { slideIndex, verticalIndex = 0 } = payload || {}
       const roomId = liveRooms.getRoomForSocket(socket.id)
       if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
       const room = liveRooms.getRoomState(roomId)
-      if (!room.annotations[slideIndex]) return
-      room.annotations[slideIndex] = room.annotations[slideIndex].filter(a => a.id !== annotationId)
-      io.to(roomId).emit('annotation:removed', { slideIndex, annotationId })
-    })
-
-    socket.on('annotation:clear', ({ slideIndex }) => {
-      const roomId = liveRooms.getRoomForSocket(socket.id)
-      if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
-      const room = liveRooms.getRoomState(roomId)
-      if (slideIndex !== undefined) {
-        room.annotations[slideIndex] = []
-      } else {
+      if (slideIndex === undefined || slideIndex === null) {
         room.annotations = {}
+        io.to(roomId).emit('annotation:cleared', { global: true })
+        return
       }
-      io.to(roomId).emit('annotation:cleared', { slideIndex })
+
+      const target = normalizeSlideTarget(slideIndex, verticalIndex)
+      if (!target) return
+      const annotationKey = liveRooms.getAnnotationKey
+        ? liveRooms.getAnnotationKey(target.slideIndex, target.verticalIndex)
+        : (target.verticalIndex ? `${target.slideIndex}:${target.verticalIndex}` : String(target.slideIndex))
+      room.annotations[annotationKey] = []
+      io.to(roomId).emit(
+        'annotation:cleared',
+        withVerticalIndex({ slideIndex: target.slideIndex }, target.verticalIndex)
+      )
     })
 
     // Timer event handlers (Phase 2 — server-authoritative timer sync)
@@ -308,7 +454,7 @@ function setupSocketHandlers(io, dependencies = {}) {
         running: true,
       }
       if (room.timerTimeouts?.[elementId]) clearTimeout(room.timerTimeouts[elementId])
-      room.timerTimeouts[elementId] = scheduleTimerEnd(roomId, elementId, room.timers, room.timerTimeouts, io)
+      room.timerTimeouts[elementId] = armTimerEnd(roomId, elementId, room.timers, room.timerTimeouts, io)
       io.to(roomId).emit('timer:sync', {
         elementId,
         remaining: d,
@@ -352,7 +498,8 @@ function setupSocketHandlers(io, dependencies = {}) {
       timer.pausedRemaining = null
       timer.pausedAt = null
       timer.running = true
-      room.timerTimeouts[elementId] = scheduleTimerEnd(roomId, elementId, room.timers, room.timerTimeouts, io)
+      room.timerTimeouts[elementId] = armTimerEnd(roomId, elementId, room.timers, room.timerTimeouts, io)
+      if (!timer.running) return
       const remaining = Math.max(0, Math.ceil((timer.endedAt - Date.now()) / 1000))
       io.to(roomId).emit('timer:sync', {
         elementId,
@@ -381,7 +528,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       timer.duration = Math.max(1, timer.duration + adj)
       if (timer.running && room.timerTimeouts?.[elementId]) {
         clearTimeout(room.timerTimeouts[elementId])
-        room.timerTimeouts[elementId] = scheduleTimerEnd(roomId, elementId, room.timers, room.timerTimeouts, io)
+        room.timerTimeouts[elementId] = armTimerEnd(roomId, elementId, room.timers, room.timerTimeouts, io)
       }
       const remaining = timer.running
         ? Math.max(0, Math.ceil((timer.endedAt - Date.now()) / 1000))
@@ -413,10 +560,16 @@ function setupSocketHandlers(io, dependencies = {}) {
     })
 
     socket.on('disconnect', () => {
-      const result = liveRooms.leaveRoom(socket.id)
+      const result = liveRooms.leaveRoom(socket.id, {
+        onPresenterLeft: (roomId) => {
+          io.to(roomId).emit('presenter-left')
+          const room = typeof io.in === 'function' ? io.in(roomId) : null
+          room?.socketsLeave?.(roomId)
+        },
+      })
       if (result) {
         if (result.role === 'presenter') {
-          // Room survives — presenter may reconnect. Emit 'presenter-disconnected'.
+          // Keep a short reconnect window, then terminate the live session.
           io.to(result.roomId).emit('presenter-disconnected')
         }
         broadcastViewerCount(result.roomId)

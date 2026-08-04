@@ -26,6 +26,17 @@ describe('live-rooms service', () => {
     expect(state.state.fragmentIndex).toBe(0)
   })
 
+  it('increments presentation generation for every presenter intent', () => {
+    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
+    expect(liveRooms.getRoomState('ROOM12').presentationGeneration).toBe(1)
+
+    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
+    expect(liveRooms.getRoomState('ROOM12').presentationGeneration).toBe(2)
+
+    liveRooms.joinRoom('ROOM12', 'socket-2', 'presenter', { presenterToken })
+    expect(liveRooms.getRoomState('ROOM12').presentationGeneration).toBe(3)
+  })
+
   it('should allow viewer to join and get current state', () => {
     liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
     liveRooms.updateRoomState('ROOM12', 'socket-1', {
@@ -43,6 +54,19 @@ describe('live-rooms service', () => {
     expect(state.viewers.includes('socket-2')).toBe(true)
   })
 
+  it('rejects moving one socket into a different live room', () => {
+    const secondToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('ROOM13', secondToken)
+
+    expect(liveRooms.joinRoom('ROOM12', 'socket-1', 'viewer').ok).toBe(true)
+    expect(liveRooms.joinRoom('ROOM13', 'socket-1', 'viewer')).toEqual({
+      ok: false,
+      error: 'already-joined-room',
+    })
+    expect(liveRooms.getRoomState('ROOM12').viewers).toContain('socket-1')
+    expect(liveRooms.getRoomState('ROOM13').viewers).not.toContain('socket-1')
+  })
+
   it('should allow controller to join without taking presenter ownership', () => {
     liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
     liveRooms.joinRoom('ROOM12', 'socket-2', 'controller')
@@ -53,6 +77,14 @@ describe('live-rooms service', () => {
     expect(state.viewers).not.toContain('socket-2')
     expect(liveRooms.getViewerCount('ROOM12')).toBe(0)
     expect(liveRooms.canControlRoom('ROOM12', 'socket-2')).toBe(true)
+  })
+
+  it('does not treat a stale presenter disconnect as the active presenter leaving', () => {
+    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
+    liveRooms.joinRoom('ROOM12', 'socket-2', 'presenter', { presenterToken })
+
+    expect(liveRooms.leaveRoom('socket-1')).toEqual({ roomId: 'ROOM12', role: 'stale-presenter' })
+    expect(liveRooms.getRoomState('ROOM12').presenterId).toBe('socket-2')
   })
 
   it('should handle presenter updates only if requested by presenter', () => {
@@ -88,6 +120,21 @@ describe('live-rooms service', () => {
     expect(state.presenterId).toBeNull()
   })
 
+  it('terminates a controller-only room after presenter grace', async () => {
+    liveRooms._setPresenterGraceMs(10)
+    liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter', { presenterToken })
+    liveRooms.joinRoom('ROOM12', 'socket-2', 'controller')
+
+    liveRooms.leaveRoom('socket-1')
+    await new Promise((resolve) => setTimeout(resolve, 2))
+    expect(liveRooms.getRoomState('ROOM12')).not.toBeUndefined()
+    expect(liveRooms.getRoomForSocket('socket-2')).toBe('ROOM12')
+
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(liveRooms.getRoomState('ROOM12')).toBeUndefined()
+    expect(liveRooms.getRoomForSocket('socket-2')).toBeUndefined()
+  })
+
   it('rejects presenter join without valid presenter token', () => {
     const withoutToken = liveRooms.joinRoom('ROOM12', 'socket-1', 'presenter')
     expect(withoutToken).toEqual({ ok: false, error: 'invalid-presenter-token' })
@@ -114,6 +161,15 @@ describe('live-rooms service', () => {
     expect(liveRooms.getRoomForSocket('socket-1')).toBeUndefined()
     expect(liveRooms.getRoomForSocket('socket-2')).toBeUndefined()
     expect(liveRooms.removeRoom('ROOM12')).toBe(false)
+  })
+
+  it('expires an unused pre-registered room', async () => {
+    liveRooms._resetRooms()
+    liveRooms._setLiveRoomTtl(10)
+    liveRooms.registerRoom('UNUSED', presenterToken)
+
+    await new Promise((resolve) => setTimeout(resolve, 25))
+    expect(liveRooms.getRoomState('UNUSED')).toBeUndefined()
   })
 
   it('should compute timer remaining correctly', () => {

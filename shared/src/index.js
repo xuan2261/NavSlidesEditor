@@ -16,6 +16,7 @@ const fxRegistry = require('./fx/index.js')
 const tableMergeResolver = require('./table-merge-resolver.js')
 const latexUtils = require('./latex-utils.js')
 const pptxExportPolicy = require('./pptx-export-policy.js')
+const transitionSettings = require('./transition-settings.js')
 
 const TEXT_COLORS = [
   '#ffffff', '#e2e8f0', '#94a3b8', '#64748b', '#334155', '#1e293b', '#0f172a', '#000000',
@@ -72,6 +73,7 @@ module.exports = {
   ...tableMergeResolver,
   ...latexUtils,
   ...pptxExportPolicy,
+  ...transitionSettings,
   TEXT_COLORS,
   BG_COLORS,
   GRADIENT_PRESETS,

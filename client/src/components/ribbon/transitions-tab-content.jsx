@@ -6,6 +6,7 @@ import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
+import { handleRibbonKeyboardActivation } from './ribbon-keyboard-activation'
 
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
 
@@ -36,6 +37,7 @@ function TransitionPicker({ open, anchorRef, current, onSelect, onClose }) {
             className={`px-2 py-1 rounded text-[11px] capitalize text-left cursor-pointer transition-colors
               ${current === t ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary text-text-primary'}`}
             onMouseDown={(e) => { e.preventDefault(); onSelect(t) }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => onSelect(t))}
           >
             {t}
           </button>
@@ -50,6 +52,7 @@ export default function TransitionsTabContent({
   slide,
   onUpdatePresentation,
   onUpdateSlide,
+  onPreviewTransition,
 }) {
   const [showPicker, setShowPicker] = useState(false)
   const transitionTriggerRef = useRef(null)
@@ -79,7 +82,8 @@ export default function TransitionsTabContent({
           <Button variant="ribbon" className="h-7"
             ref={transitionTriggerRef}
             title="Slide transition" aria-label="Change transition"
-            onMouseDown={(e) => { e.preventDefault(); setShowPicker((v) => !v) }}>
+            onMouseDown={(e) => { e.preventDefault(); setShowPicker((v) => !v) }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => setShowPicker((v) => !v))}>
             <Zap size={14} />
             <span className="text-[11px] capitalize hidden lg:inline">{currentTransition}</span>
             <ChevronDown size={10} />
@@ -101,7 +105,8 @@ export default function TransitionsTabContent({
             onMouseDown={(e) => {
               e.preventDefault()
               clearSlideOverride()
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, clearSlideOverride)}>
             <RotateCcw size={14} />
           </Button>
         )}
@@ -145,7 +150,10 @@ export default function TransitionsTabContent({
               onMouseDown={(e) => {
                 e.preventDefault()
                 onUpdatePresentation?.({ transitionSpeed: value })
-              }}>
+              }}
+              onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+                onUpdatePresentation?.({ transitionSpeed: value })
+              )}>
               {label}
             </Button>
           ))}
@@ -160,7 +168,10 @@ export default function TransitionsTabContent({
             onMouseDown={(e) => {
               e.preventDefault()
               onUpdatePresentation?.({ autoSlide: autoSlide ? 0 : 5000 })
-            }}>
+            }}
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
+              onUpdatePresentation?.({ autoSlide: autoSlide ? 0 : 5000 })
+            )}>
             <Timer size={14} />
             <span className="text-[11px] hidden lg:inline">{autoSlide ? 'On' : 'Off'}</span>
           </Button>
@@ -186,7 +197,7 @@ export default function TransitionsTabContent({
       <RibbonSection label="Preview">
         <Button variant="ribbon" className="h-7"
           title="Preview transition" aria-label="Preview transition"
-          onMouseDown={(e) => { e.preventDefault() }}>
+          onClick={() => onPreviewTransition?.()}>
           <Play size={14} />
           <span className="text-[11px] hidden lg:inline">Preview</span>
         </Button>

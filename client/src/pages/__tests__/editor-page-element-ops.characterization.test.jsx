@@ -357,7 +357,7 @@ describe('EditorPage element-ops characterization', () => {
     })
     const addTextBtn = await screen.findByTestId('ribbon-insert-text')
     await act(async () => {
-      fireEvent.mouseDown(addTextBtn)
+      fireEvent.click(addTextBtn)
     })
 
     await waitFor(() => {

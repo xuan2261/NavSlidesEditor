@@ -85,6 +85,7 @@ export default function SpeakerViewPage() {
   const [socket, setSocket] = useState(null)
 
   const [isConnected, setIsConnected] = useState(false)
+  const [hasPresenter, setHasPresenter] = useState(false)
   const [htmlContent, setHtmlContent] = useState('')
   const [meta, setMeta] = useState({ slideCount: 0, slides: [] })
   const [liveState, setLiveState] = useState(initialState)
@@ -92,7 +93,9 @@ export default function SpeakerViewPage() {
   const [elapsedTime, setElapsedTime] = useState(0)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [presenterLeft, setPresenterLeft] = useState(false)
+  const [presenterReconnecting, setPresenterReconnecting] = useState(false)
   const [roomNotFound, setRoomNotFound] = useState(false)
+  const [roomEnded, setRoomEnded] = useState(false)
 
   // Annotation state
   const [annotationTool, setAnnotationTool] = useState('none') // 'none'|'pen'|'laser'|'highlighter'|'eraser'
@@ -139,9 +142,33 @@ export default function SpeakerViewPage() {
       socket.emit('join-room', { roomId: roomCode, role: 'controller' })
     })
 
-    socket.on('disconnect', () => setIsConnected(false))
+    socket.on('disconnect', () => {
+      setIsConnected(false)
+      setHasPresenter(false)
+    })
     socket.on('room-not-found', () => setRoomNotFound(true))
-    socket.on('presenter-left', () => setPresenterLeft(true))
+    socket.on('presenter-status', ({ hasPresenter: nextHasPresenter, presenterConnected }) => {
+      setHasPresenter(nextHasPresenter === true)
+      setPresenterReconnecting(presenterConnected === true && nextHasPresenter === false)
+    })
+    socket.on('presenter-disconnected', () => {
+      setHasPresenter(false)
+      setPresenterReconnecting(true)
+    })
+    socket.on('presenter-reconnected', () => {
+      setHasPresenter(true)
+      setPresenterReconnecting(false)
+    })
+    socket.on('presenter-left', () => {
+      setHasPresenter(false)
+      setPresenterLeft(true)
+      setPresenterReconnecting(false)
+    })
+    socket.on('room-ended', () => {
+      setHasPresenter(false)
+      setRoomEnded(true)
+      setPresenterReconnecting(false)
+    })
     socket.on('viewer-count', ({ count }) => setViewersCount(count))
     socket.on('presentation-meta', setMeta)
     socket.on('presentation-data', (data) => {
@@ -162,6 +189,10 @@ export default function SpeakerViewPage() {
     return () => socket.disconnect()
   }, [roomCode])
 
+  const controlsDisabled =
+    !isConnected || !hasPresenter || presenterReconnecting || presenterLeft || roomEnded
+  const canControl = !controlsDisabled
+
   // Annotation event handlers
   const handleAnnotationAdd = useCallback((annotation) => {
     setAnnotationStrokes((prev) => (
@@ -177,9 +208,18 @@ export default function SpeakerViewPage() {
     setAnnotationStrokes([])
   }, [])
 
+  const { registerAnnotationId } = useAnnotationSync({
+    socket,
+    slideIndex: liveState.slideIndex,
+    verticalIndex: liveState.verticalIndex,
+    onAnnotationAdd: handleAnnotationAdd,
+    onAnnotationRemove: handleAnnotationRemove,
+    onAnnotationsClear: handleAnnotationsClear,
+  })
+
   // Emit annotation:add on stroke complete
   const handleStrokeComplete = useCallback((stroke) => {
-    if (!socket) return
+    if (!socket || !canControl) return
     const d = stroke.points.reduce((acc, p, i) =>
       acc + (i === 0 ? `M ${p.x} ${p.y}` : ` L ${p.x} ${p.y}`), '')
     const annotation = {
@@ -192,24 +232,22 @@ export default function SpeakerViewPage() {
       createdAt: new Date().toISOString(),
       createdBy: 'presenter',
     }
-    socket.emit('annotation:add', { slideIndex: liveState.slideIndex, annotation })
+    registerAnnotationId(annotation.id)
+    socket.emit('annotation:add', {
+      slideIndex: liveState.slideIndex,
+      verticalIndex: liveState.verticalIndex,
+      annotation,
+    })
     setAnnotationStrokes((prev) => [...prev, annotation])
-  }, [liveState.slideIndex, socket])
+  }, [canControl, liveState.slideIndex, liveState.verticalIndex, registerAnnotationId, socket])
 
   const handleLaserChange = useCallback((position) => {
+    if (!canControl) return
     socketRef.current?.emit('laser', position)
-  }, [])
-
-  useAnnotationSync({
-    socket,
-    slideIndex: liveState.slideIndex,
-    onAnnotationAdd: handleAnnotationAdd,
-    onAnnotationRemove: handleAnnotationRemove,
-    onAnnotationsClear: handleAnnotationsClear,
-  })
+  }, [canControl])
 
   useKeyboard({
-    isPresenting: true,
+    isPresenting: canControl,
     onPenTool: () => setAnnotationTool('pen'),
     onLaserPointer: () => setAnnotationTool('laser'),
     onHighlighterTool: () => setAnnotationTool('highlighter'),
@@ -217,6 +255,7 @@ export default function SpeakerViewPage() {
   })
 
   const navigateToSlide = (slide) => {
+    if (!hasPresenter) return
     socketRef.current?.emit('control-navigate', {
       slideIndex: slide.slideIndex,
       verticalIndex: slide.verticalIndex || 0,
@@ -230,6 +269,7 @@ export default function SpeakerViewPage() {
   const legacyAnnotationStrokes = annotationStrokes.filter(
     (annotation) => annotation.coordinateSpace !== 'normalized'
   )
+  const slideControlsDisabled = controlsDisabled
 
   return (
     <LiveSocketContext.Provider value={socket}>
@@ -261,6 +301,17 @@ export default function SpeakerViewPage() {
         </div>
       </div>
 
+      {presenterReconnecting && !presenterLeft && !roomEnded && (
+        <div className="absolute top-14 left-1/2 z-[900] -translate-x-1/2 rounded-md bg-warning/90 px-3 py-1.5 text-sm font-medium text-white">
+          Presenter reconnecting...
+        </div>
+      )}
+      {isConnected && !hasPresenter && !presenterReconnecting && !presenterLeft && !roomEnded && (
+        <div className="absolute top-14 left-1/2 z-[900] -translate-x-1/2 rounded-md bg-card px-3 py-1.5 text-sm text-text-muted">
+          Waiting for presenter...
+        </div>
+      )}
+
       <div
         data-testid="speaker-main"
         className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-px overflow-y-auto lg:overflow-hidden min-h-0"
@@ -272,15 +323,17 @@ export default function SpeakerViewPage() {
           <PreviewFrame htmlContent={htmlContent} state={liveState} title="Current Slide">
             <LegacyAnnotationOverlay strokes={legacyAnnotationStrokes} />
             <AnnotationCanvas
-              tool={annotationTool}
+              tool={canControl ? annotationTool : 'none'}
               color={annotationColor}
               strokeWidth={3}
               strokes={normalizedAnnotationStrokes}
               onStrokeComplete={handleStrokeComplete}
               onLaserChange={handleLaserChange}
               onErase={(strokeId) => {
+                if (!canControl) return
                 socketRef.current?.emit('annotation:remove', {
                   slideIndex: liveState.slideIndex,
+                  verticalIndex: liveState.verticalIndex,
                   annotationId: strokeId,
                 })
               }}
@@ -304,13 +357,19 @@ export default function SpeakerViewPage() {
       <AnnotationToolbar
         tool={annotationTool}
         color={annotationColor}
-        onToolChange={setAnnotationTool}
-        onColorChange={setAnnotationColor}
+        onToolChange={canControl ? setAnnotationTool : undefined}
+        onColorChange={canControl ? setAnnotationColor : undefined}
         onClear={() => {
-          if (socketRef.current) socketRef.current.emit('annotation:clear', { slideIndex: liveState.slideIndex })
+          if (!canControl) return
+          if (socketRef.current) {
+            socketRef.current.emit('annotation:clear', {
+              slideIndex: liveState.slideIndex,
+              verticalIndex: liveState.verticalIndex,
+            })
+          }
           setAnnotationStrokes([])
         }}
-        visible={annotationTool !== 'none'}
+        visible={canControl && annotationTool !== 'none'}
       />
 
       <div className="px-4 py-2 border-t border-border-strong bg-surface-1 flex gap-1 overflow-x-auto">
@@ -321,7 +380,8 @@ export default function SpeakerViewPage() {
             <button
               key={`${slide.slideIndex}-${slide.verticalIndex}`}
               onClick={() => navigateToSlide(slide)}
-              className={`min-w-12 h-8 rounded shrink-0 text-[11px] cursor-pointer px-2 ${
+              disabled={slideControlsDisabled}
+              className={`min-w-12 h-8 rounded shrink-0 text-[11px] cursor-pointer px-2 disabled:cursor-not-allowed disabled:opacity-50 ${
                 active
                   ? 'border-2 border-primary bg-primary-light text-primary font-bold'
                   : 'border border-border-strong bg-card text-text-muted hover:text-text-primary'
@@ -334,10 +394,10 @@ export default function SpeakerViewPage() {
         })}
       </div>
 
-      {(presenterLeft || roomNotFound) && (
+      {(presenterLeft || roomNotFound || roomEnded) && (
         <div className="fixed inset-0 bg-black/80 z-[1000] flex items-center justify-center">
           <div className="text-center text-white">
-            <h2>{roomNotFound ? 'Room not found' : 'Presenter has left'}</h2>
+            <h2>{presenterLeft ? 'Presenter has left' : roomEnded ? 'Session ended' : roomNotFound ? 'Room not found' : 'Presenter has left'}</h2>
             <button
               onClick={() => navigate('/')}
               className="bg-accent text-white px-4 py-2 rounded font-medium hover:bg-accent/90 transition-colors border-none mt-3"

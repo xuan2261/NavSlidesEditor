@@ -3,7 +3,7 @@
  * Tests: GameEngine singleton — room management, player join/leave, answer scoring,
  * random picker, leaderboard, cleanup.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import GameEngine from './game-room-manager-singleton-service.js'
 
 describe('GameEngine', () => {
@@ -36,6 +36,42 @@ describe('GameEngine', () => {
       GameEngine.createRoom('slide1-el1', 'name-picker', {})
       const duplicate = GameEngine.createRoom('slide1-el1', 'hot-potato', {})
       expect(duplicate).toBeNull()
+    })
+
+    it('reaps an unclaimed room and capability after the unclaimed TTL', () => {
+      vi.useFakeTimers()
+      try {
+        GameEngine._setUnclaimedRoomTtl(100)
+        GameEngine.createRoom('unclaimed-room', 'name-picker', {})
+        const pendingCapability = GameEngine.peekHostCapability('unclaimed-room')
+        GameEngine.joinRoom('unclaimed-room', 'player-1', 'Player', { socketId: 'player-socket' })
+        expect(GameEngine.getRoom('unclaimed-room')).toBeDefined()
+        expect(GameEngine.peekHostCapability('unclaimed-room')).toBe(pendingCapability)
+        vi.advanceTimersByTime(100)
+        expect(GameEngine.getRoom('unclaimed-room')).toBeUndefined()
+        expect(GameEngine.peekHostCapability('unclaimed-room')).toBeNull()
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('keeps unclaimed expiry independent from empty-room cleanup', () => {
+      vi.useFakeTimers()
+      try {
+        GameEngine._setUnclaimedRoomTtl(100)
+        GameEngine._setEmptyRoomTtl(1000)
+        GameEngine.createRoom('unclaimed-disconnect', 'name-picker', {})
+        GameEngine.joinRoom('unclaimed-disconnect', 'player-1', 'Player', {
+          socketId: 'player-socket',
+        })
+        GameEngine.disconnectRoom('unclaimed-disconnect', 'player-1', 'player-socket')
+        GameEngine.scheduleEmptyCleanup('unclaimed-disconnect')
+
+        vi.advanceTimersByTime(100)
+        expect(GameEngine.getRoom('unclaimed-disconnect')).toBeUndefined()
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it('normalizes untrusted question timing and scoring bounds', () => {

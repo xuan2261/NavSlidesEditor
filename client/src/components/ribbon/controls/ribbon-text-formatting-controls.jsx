@@ -1,5 +1,6 @@
 import { Bold, Italic, Underline, Strikethrough, Type, Highlighter } from 'lucide-react'
 import { Button } from '../../ui'
+import { handleRibbonKeyboardActivation } from '../ribbon-keyboard-activation'
 
 const FONT_FAMILIES = [
   { group: 'Sans-serif', fonts: [
@@ -42,6 +43,11 @@ export default function FontControls({ editor, element, rememberSelection, runTe
   const currentFontFamily = textStyle.fontFamily || element?.fontFamily || ''
   const currentFontSize = textStyle.fontSize || (element?.fontSize ? `${element.fontSize}px` : '')
   const currentColor = textStyle.color || element?.textColor || '#ffffff'
+  const handleKeyboardCommand = (event, command) =>
+    handleRibbonKeyboardActivation(event, () => {
+      rememberSelection()
+      runTextCommand(command)
+    })
 
   return (
     <div className="flex items-center gap-0.5">
@@ -55,6 +61,7 @@ export default function FontControls({ editor, element, rememberSelection, runTe
             : runTextCommand((chain) => chain.unsetFontFamily())
         }
         title="Font family"
+        aria-label="Font family"
       >
         <option value="">Default</option>
         {FONT_FAMILIES.map((group) => (
@@ -76,6 +83,7 @@ export default function FontControls({ editor, element, rememberSelection, runTe
             : runTextCommand((chain) => chain.unsetFontSize())
         }
         title="Font size"
+        aria-label="Font size"
       >
         <option value="">Auto</option>
         {FONT_SIZES.map((s) => (
@@ -94,6 +102,7 @@ export default function FontControls({ editor, element, rememberSelection, runTe
             : runTextCommand((chain) => chain.unsetFontWeight())
         }
         title="Font weight"
+        aria-label="Font weight"
       >
         <option value="">Weight</option>
         {FONT_WEIGHTS.map((w) => (
@@ -107,6 +116,7 @@ export default function FontControls({ editor, element, rememberSelection, runTe
         variant="icon"
         className={`h-7 w-7 ${editor.isActive('bold') ? 'bg-primary-light text-accent' : ''}`}
         onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleBold())}
+        onKeyDown={(e) => handleKeyboardCommand(e, (chain) => chain.toggleBold())}
         title="Bold (Ctrl+B)"
         aria-label="Bold"
         aria-pressed={editor.isActive('bold')}
@@ -117,6 +127,7 @@ export default function FontControls({ editor, element, rememberSelection, runTe
         variant="icon"
         className={`h-7 w-7 ${editor.isActive('italic') ? 'bg-primary-light text-accent' : ''}`}
         onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleItalic())}
+        onKeyDown={(e) => handleKeyboardCommand(e, (chain) => chain.toggleItalic())}
         title="Italic (Ctrl+I)"
         aria-label="Italic"
         aria-pressed={editor.isActive('italic')}
@@ -127,6 +138,7 @@ export default function FontControls({ editor, element, rememberSelection, runTe
         variant="icon"
         className={`h-7 w-7 ${editor.isActive('underline') ? 'bg-primary-light text-accent' : ''}`}
         onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleUnderline())}
+        onKeyDown={(e) => handleKeyboardCommand(e, (chain) => chain.toggleUnderline())}
         title="Underline (Ctrl+U)"
         aria-label="Underline"
         aria-pressed={editor.isActive('underline')}
@@ -137,6 +149,7 @@ export default function FontControls({ editor, element, rememberSelection, runTe
         variant="icon"
         className={`h-7 w-7 ${editor.isActive('strike') ? 'bg-primary-light text-accent' : ''}`}
         onMouseDown={handleTextCommandMouseDown((chain) => chain.toggleStrike())}
+        onKeyDown={(e) => handleKeyboardCommand(e, (chain) => chain.toggleStrike())}
         title="Strikethrough"
         aria-label="Strikethrough"
         aria-pressed={editor.isActive('strike')}
@@ -173,6 +186,7 @@ export default function FontControls({ editor, element, rememberSelection, runTe
         variant="icon"
         className="h-7 w-7"
         onMouseDown={handleTextCommandMouseDown((chain) => chain.setHighlight({ color: '#fef08a' }))}
+        onKeyDown={(e) => handleKeyboardCommand(e, (chain) => chain.setHighlight({ color: '#fef08a' }))}
         title="Highlight"
         aria-label="Highlight"
       >

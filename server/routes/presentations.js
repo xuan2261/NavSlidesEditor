@@ -7,6 +7,7 @@ const {
 } = require('revealjs-shared')
 const {
   readPresentations,
+  readTemplates,
   withPresentations,
   withTemplates,
   withShareTokens,
@@ -27,6 +28,8 @@ const { rasterizeComplexElements } = require('../services/pptx-exporter')
 const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
 const { findServeablePresentation } = require('../services/presentation-finder')
 const { normalizeBuiltInTemplates } = require('../services/template-normalization')
+const liveRooms = require('../services/live-rooms')
+const { bootstrapPresenterGames } = require('../services/presenter-game-bootstrap')
 const { stripClientPptxOriginalPaths } = require('../services/pptx-import/create-imported-presentation')
 const { sanitizeClientEditableData } = require('../services/pptx-import/authority-sanitizer')
 const { toPresentationEditorDto } = require('../services/pptx-import/package-store/dto')
@@ -74,6 +77,35 @@ function isSafePresentationId(value) {
   return typeof value === 'string' && value.length > 0 && value !== '.' && value !== '..' &&
     !value.includes('/') && !value.includes('\\') &&
     !value.includes(String.fromCharCode(0))
+}
+
+async function readPresentablePresentation(id) {
+  const resolved = await readAuthoritativePresentation(id)
+  if (resolved?.presentation) return resolved.presentation
+
+  const templates = await readTemplates()
+  const template = templates.find((item) => item.id === id)
+  if (template) return template
+
+  try {
+    const builtIn = await fs.readJson(path.join(__dirname, '..', 'data', 'built-in-templates.json'))
+    return normalizeBuiltInTemplates(builtIn).find((item) => item.id === id) || null
+  } catch {
+    return null
+  }
+}
+
+function isCurrentPresenterBootstrap(expected, currentRoom) {
+  return Boolean(
+    currentRoom &&
+    expected &&
+    currentRoom === expected.room &&
+    currentRoom.presenterId === expected.presenterId &&
+    currentRoom.presenterConnected === true &&
+    currentRoom.presentationId === expected.presentationId &&
+    currentRoom.presentationGeneration === expected.presentationGeneration &&
+    liveRooms.isValidPresenterToken(currentRoom, expected.presenterToken)
+  )
 }
 
 function packageIdentityForFidelity(presentation) {
@@ -1122,29 +1154,71 @@ router.get('/:id/export', async (req, res) => {
   }
 })
 
+// POST /api/presentations/:id/present/game-bootstrap
+router.post('/:id/present/game-bootstrap', async (req, res) => {
+  res.set('Cache-Control', 'no-store')
+  try {
+    const { roomCode, presenterToken, hostCapabilities } = req.body || {}
+    if (!roomCode || !presenterToken) {
+      return res.status(400).json({ error: 'roomCode and presenterToken are required' })
+    }
+
+    const room = liveRooms.getRoomState(roomCode)
+    if (!room) return res.status(404).json({ error: 'live-room-not-found' })
+    if (!liveRooms.isValidPresenterToken(room, presenterToken)) {
+      return res.status(403).json({ error: 'invalid-presenter-token' })
+    }
+    if (
+      !room.presenterId ||
+      room.presenterConnected !== true ||
+      room.presentationId !== req.params.id
+    ) {
+      return res.status(409).json({ error: 'presenter-deck-not-ready' })
+    }
+
+    const expectedBootstrap = {
+      room,
+      presenterId: room.presenterId,
+      presenterToken,
+      presentationId: req.params.id,
+      presentationGeneration: room.presentationGeneration,
+    }
+    const presentation = await readPresentablePresentation(req.params.id)
+    const currentRoom = liveRooms.getRoomState(roomCode)
+    if (!isCurrentPresenterBootstrap(expectedBootstrap, currentRoom)) {
+      return res.status(409).json({ error: 'presenter-deck-not-ready' })
+    }
+    if (!presentation) return res.status(404).json({ error: 'presentation-not-found' })
+    const normalized = normalizePptxImportedPresentationForRead(
+      normalizePresentationNotes(presentation)
+    )
+    const bootstrap = bootstrapPresenterGames(normalized, hostCapabilities, {
+      presentationId: req.params.id,
+      liveRoomCode: roomCode,
+      presentationGeneration: expectedBootstrap.presentationGeneration,
+    })
+    if (!bootstrap.ok) {
+      const status = ['game-room-conflict', 'host-capability-required'].includes(bootstrap.error)
+        ? 409
+        : 503
+      return res.status(status).json({
+        error: bootstrap.error,
+        ...(bootstrap.gameId ? { gameId: bootstrap.gameId } : {}),
+        ...(bootstrap.gameIds ? { gameIds: bootstrap.gameIds } : {}),
+      })
+    }
+    return res.json({ presentationId: req.params.id, games: bootstrap.games })
+  } catch (err) {
+    return res.status(500).json({ error: err.message })
+  }
+})
+
 // GET /api/presentations/:id/present
 router.get('/:id/present', async (req, res) => {
   try {
     // Serve-guard for user decks (trashed decks must not present); templates and
     // built-ins are never trashed, so they stay as a fallback.
-    const resolved = await readAuthoritativePresentation(req.params.id)
-    let presentation = resolved?.presentation
-    if (!presentation) {
-      const { readTemplates } = require('../services/storage')
-      const templates = await readTemplates()
-      presentation = templates.find((t) => t.id === req.params.id)
-      if (!presentation) {
-        try {
-          const fs = require('fs-extra')
-          const path = require('path')
-          const builtIn = await fs.readJson(
-            path.join(__dirname, '..', 'data', 'built-in-templates.json')
-          )
-          presentation = normalizeBuiltInTemplates(builtIn).find((t) => t.id === req.params.id)
-          // eslint-disable-next-line unused-imports/no-unused-vars
-        } catch (e) {}
-      }
-    }
+    let presentation = await readPresentablePresentation(req.params.id)
     if (!presentation) return res.status(404).json({ error: 'Not found' })
     presentation = normalizePptxImportedPresentationForRead(presentation)
     let html = generateRevealHTML(normalizePresentationNotes(presentation))
@@ -1307,5 +1381,7 @@ router.delete('/:id/uploads/:filename', async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 })
+
+router.isCurrentPresenterBootstrap = isCurrentPresenterBootstrap
 
 module.exports = router

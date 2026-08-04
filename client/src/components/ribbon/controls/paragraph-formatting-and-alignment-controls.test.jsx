@@ -31,6 +31,26 @@ describe('ParagraphCompactControls', () => {
 })
 
 describe('ParagraphControls', () => {
+  it('activates paragraph commands from the keyboard', () => {
+    const rememberSelection = vi.fn()
+    const runTextCommand = vi.fn()
+    render(
+      <ParagraphControls
+        editor={createEditor()}
+        rememberSelection={rememberSelection}
+        runTextCommand={runTextCommand}
+        handleTextCommandMouseDown={() => vi.fn()}
+      />,
+    )
+
+    for (const label of ['Align left', 'Align center', 'Align right', 'Bullet list', 'Ordered list', 'Clear formatting']) {
+      fireEvent.keyDown(screen.getByLabelText(label), { key: 'Enter' })
+    }
+
+    expect(rememberSelection).toHaveBeenCalledTimes(6)
+    expect(runTextCommand).toHaveBeenCalledTimes(6)
+  })
+
   it('[cap:control.format.lineHeight] uses preserved selection command for line height changes', () => {
     const rememberSelection = vi.fn()
     const runTextCommand = vi.fn()

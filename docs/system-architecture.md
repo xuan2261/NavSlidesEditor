@@ -237,7 +237,53 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 - `presentation-meta` carries slide labels, slide count, and notes for the
   controller UI.
 - Viewer count excludes controllers.
+- Asynchronous presentation payloads are fenced by room object identity, a
+  monotonic presentation generation, the expected deck ID, and the active
+  presenter before they are emitted. A delayed lookup cannot overwrite a newer
+  deck intent or a recreated room with the same code.
 - Room annotations and timers live in memory; a restart clears live room state even though presentation JSON persists. Orphaned rooms are cleaned up after presenter teardown so idle live sessions do not grow without bound.
+
+### Game Authority
+
+- Game rooms are created through `POST /api/games`; a newly created room returns
+  a private room-scoped host capability. The server stores only its hash; the
+  raw capability is not part of room state, socket broadcasts, or leaderboard
+  rows. Retries can recover a pending capability while the unclaimed room is
+  inside its bounded TTL; that TTL is independent of empty-room reconnect
+  grace, and ordinary player joins cannot cancel it. Joining as host claims the
+  room and removes the pending raw value. A capability-authorized host
+  reconnect can rotate a lost player session without exposing the capability.
+- Host mutations require the capability plus the active player session and
+  socket binding. Player mutations, including answers and leave, require the
+  server-issued player session and active socket; stale sockets are rejected.
+  Socket memberships use a room-generation-specific internal channel; cleanup
+  emits an expiry event and evicts old members before a reused game ID can
+  receive new broadcasts.
+  The generic `POST /api/games` create route intentionally remains a local
+  single-user bootstrap boundary, not user authentication. Multi-user or
+  internet-facing deployments must put it behind the external authentication
+  layer described in the security model; host and player mutations remain
+  capability/session guarded after creation.
+- Observers join read-only and remain outside the player map. Public leaderboard
+  rows intentionally contain only `{ playerId, name, score }` for stable rank
+  matching; they never contain session or host authority values.
+- The generated Present page waits for the authenticated presenter room to commit
+  its deck identity, then calls `POST /api/presentations/:id/present/game-bootstrap`.
+  The server reloads the authoritative presentation, extracts supported game
+  elements, creates or reuses rooms, and returns private host capabilities with
+  `Cache-Control: no-store`. Browser-supplied game options are not authoritative.
+  Presenter-created rooms are scoped to the presentation and live-room identity;
+  an occupied or unclaimed room from another live scope is rejected instead of
+  reusing the wrong room. A disconnected claimed room with no connected players
+  may be reclaimed only when the new bootstrap belongs to the same presentation
+  (a restarted live-room scope); a different presentation remains isolated. A
+  reconnect may advance the generation within the same scope. The generated
+  runtime uses a random per-session host player identity and rotates persisted
+  legacy deterministic identities before reconnecting, joins each returned room through
+  `/games` as a host, retains only session-scoped reconnect state, retries
+  bounded room-readiness failures, reboots a host room after cleanup expiry or
+  `room-not-found`, and disconnects game sockets on unload. Static share, export,
+  and print paths do not execute this live bootstrap branch.
 
 ### Socket.IO Events
 
@@ -253,9 +299,10 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 | `annotation:removed` | server → room | `{ id, slideIndex }` |
 | `annotation:cleared` | server → room | `{ slideIndex }` |
 | `annotations:sync` | server → client | `{ slideIndex, annotations[] }` |
-| `presenter-disconnected` | server → room | — (room survives, presenterId = null) |
+| `presenter-disconnected` | server → room | — (bounded reconnect grace, presenterId = null) |
+| `presenter-left` | server → room | — (terminal presenter departure after grace) |
 
-Annotations are stored per `slideIndex` in room state and re-synced for the active slide on navigation/rejoin. `presenter-disconnected` replaces the previous `presenter-left` event; the room is preserved briefly for reconnect, then cleanup removes orphaned state.
+Annotations are stored per `slideIndex` in room state and re-synced for the active slide on navigation/rejoin. `presenter-disconnected` marks the bounded reconnect window; only a presenter rejoin cancels it. If the presenter does not return before grace expires, the server emits `presenter-left` and removes the live room and socket mappings.
 
 **Timer events:**
 | Event | Direction | Payload |
@@ -338,6 +385,9 @@ billing, and offline sandbox inlining are not part of Phase 1.
 | Module | Purpose |
 | --- | --- |
 | `htmlGenerator.js` | Reveal.js HTML and print HTML generation |
+| `live-presenter-runtime.js` | Generated live presenter navigation and live-room runtime |
+| `live-presenter-game-runtime.js` | Generated presenter game bootstrap, host sockets, and bounded cleanup |
+| `transition-settings.js` | Validated presentation/slide transition resolution shared by generation and preview |
 | `element-renderers.js` | Shared element rendering helpers |
 | `design-tokens.js` | `'auto'` → `var(--ns-*)` resolver shared by both render paths (`DEFAULT_TOKENS`, `AUTO_FIELD_MAP`, `resolveAutoColor`, `isTokenVar`) |
 | `theme-presets.js` | 39 token presets (`THEME_PRESETS`), 7 categories |
@@ -416,6 +466,14 @@ diverge:
 
 - `generateRevealHTML()` renders the live/present HTML deck.
 - `generatePrintHTML()` expands fragments into print pages.
+- `transition-settings.js` normalizes transition type, direction, duration, and
+  speed. Destination-slide settings override presentation settings, with
+  validated defaults shared by production generation and `TransitionPreview`.
+- `TransitionPreview` builds a two-slide deck through `generateRevealHTML()`,
+  uses the configured presentation resolution, local `/vendor/reveal.js` assets,
+  and `generateOfflineHTML()` before loading the sandboxed iframe. Its replay
+  hook disables automatic advancement while preserving the effective transition
+  metadata.
 - `downloadHTML()` produces the standard CDN-backed HTML export, while
   `generateOfflineHTML(generateRevealHTML(...))` produces the fully inlined
   offline HTML export.

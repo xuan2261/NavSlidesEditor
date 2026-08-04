@@ -412,6 +412,7 @@ export default function SlideCanvas({
     )
     const addMedia = onAddMedia || onAddImage
     if (!files.length || !addMedia) return
+    const targetSlideId = slide?.id
     // Get drop position in slide coordinates
     let dropX = 130,
       dropY = 100
@@ -421,7 +422,7 @@ export default function SlideCanvas({
       dropY = Math.round((e.clientY - rect.top) / scale)
     }
     for (const file of files) {
-      await addMedia(file, dropX, dropY)
+      await addMedia(file, dropX, dropY, targetSlideId)
     }
   }
 

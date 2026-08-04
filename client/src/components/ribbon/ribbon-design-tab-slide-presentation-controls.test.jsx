@@ -68,6 +68,38 @@ describe('DesignTabContent', () => {
     )
   })
 
+  it('activates a theme swatch with Enter', () => {
+    const onUpdatePresentation = vi.fn()
+    render(
+      <DesignTabContent
+        presentation={mockPresentation}
+        slide={mockSlide}
+        onUpdatePresentation={onUpdatePresentation}
+      />,
+    )
+    fireEvent.mouseDown(screen.getByLabelText('Change theme'))
+    fireEvent.keyDown(screen.getByRole('button', { name: /Apply theme Minimal White/i }), { key: 'Enter' })
+
+    expect(onUpdatePresentation).toHaveBeenCalledWith(
+      expect.objectContaining({ theme: 'white' }),
+    )
+  })
+
+  it('activates footer toggle with Space', () => {
+    const onUpdatePresentation = vi.fn()
+    render(
+      <DesignTabContent
+        presentation={mockPresentation}
+        slide={mockSlide}
+        onUpdatePresentation={onUpdatePresentation}
+      />,
+    )
+
+    fireEvent.keyDown(screen.getByLabelText('Toggle footer'), { key: ' ' })
+
+    expect(onUpdatePresentation).toHaveBeenCalledWith({ showFooter: true })
+  })
+
   it('calls onUpdatePresentation for page numbers toggle', () => {
     const onUpdatePresentation = vi.fn()
     render(

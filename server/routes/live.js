@@ -27,6 +27,7 @@ router.get('/room/:code', (req, res) => {
       exists: true,
       viewersCount: liveRooms.getViewerCount(code),
       hasPresenter: !!state.presenterId,
+      presenterConnected: state.presenterConnected === true,
     })
   } else {
     res.json({ exists: false })

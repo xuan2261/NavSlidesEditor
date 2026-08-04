@@ -51,6 +51,21 @@ describe('AnimationsTabContent', () => {
     expect(onUpdateElement).toHaveBeenCalledWith(expect.objectContaining({ fragment: false }))
   })
 
+  it('activates the animation toggle with Space', () => {
+    const onUpdateElement = vi.fn()
+    render(
+      <AnimationsTabContent selectedElement={mockElement} onUpdateElement={onUpdateElement} />,
+    )
+    fireEvent.keyDown(screen.getByLabelText('Toggle animation'), { key: ' ' })
+
+    expect(onUpdateElement).toHaveBeenCalledWith(expect.objectContaining({ fragment: false }))
+  })
+
+  it('disables animation toggle without a selected element', () => {
+    render(<AnimationsTabContent />)
+    expect(screen.getByLabelText('Toggle animation').disabled).toBe(true)
+  })
+
   it('shows animation type picker when animation is on', () => {
     render(<AnimationsTabContent selectedElement={mockElement} />)
     expect(screen.getByLabelText('Change animation type')).toBeTruthy()
@@ -123,7 +138,7 @@ describe('AnimationsTabContent', () => {
         onPreviewAnimation={onPreviewAnimation}
       />,
     )
-    fireEvent.mouseDown(screen.getByLabelText('Preview animation'))
+    fireEvent.click(screen.getByLabelText('Preview animation'))
     expect(onPreviewAnimation).toHaveBeenCalled()
   })
 
