@@ -1,10 +1,10 @@
 {
   "meta": {
     "generated": "local run",
-    "stale": true,
+    "stale": false,
     "staleSources": {
-      "vitest": true,
-      "playwright": true
+      "vitest": false,
+      "playwright": false
     }
   },
   "rows": [
@@ -265,8 +265,10 @@
       "tests": [
         "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx"
       ],
-      "status": "TAGGED",
-      "depths": [],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
       "requiredDepths": [],
       "missingDepths": [],
       "depthStatus": "OK",
@@ -2372,9 +2374,8 @@
   "orphans": [],
   "summary": {
     "total": 116,
-    "verified": 115,
-    "PASS": 115,
-    "TAGGED": 1,
+    "verified": 116,
+    "PASS": 116,
     "DEPTH-WARN": 0
   }
 }

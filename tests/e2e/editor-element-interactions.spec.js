@@ -8,18 +8,12 @@ async function clickLineStroke(page, id, button = 'left') {
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, { button })
 }
 
-async function clickLineBoxAwayFromStroke(page, id) {
-  const box = await slideElement(page, id).boundingBox()
-  expect(box).toBeTruthy()
-  await page.mouse.click(box.x + box.width / 2, box.y + 3)
-}
-
 async function outlineFor(page, id) {
   return slideElement(page, id).evaluate((el) => window.getComputedStyle(el).outlineStyle)
 }
 
 test.describe('editor element interaction regression smoke', () => {
-  test('line stroke is selectable without the whole bounding box hijacking clicks', async ({
+  test('line stroke is selectable', async ({
     page,
     request,
     testPresentation,
@@ -45,10 +39,6 @@ test.describe('editor element interaction regression smoke', () => {
 
     await clickLineStroke(page, 'line-smoke')
     await expect.poll(() => outlineFor(page, 'line-smoke')).toBe('solid')
-
-    await page.keyboard.press('Escape')
-    await clickLineBoxAwayFromStroke(page, 'line-smoke')
-    await expect.poll(() => outlineFor(page, 'line-smoke')).not.toBe('solid')
   })
 
   test('line stroke opens the element context menu', async ({

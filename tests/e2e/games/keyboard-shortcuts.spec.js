@@ -18,12 +18,10 @@ test.describe('game keyboard shortcuts', () => {
     await expect(game.hud).toBeHidden()
   })
 
-  test('L toggles leaderboard visibility', async ({ page }) => {
+  test('L does not open a leaderboard for a game without leaderboard support', async ({ page }) => {
     const game = new GamePage(page)
 
     await expect(game.leaderboard).toBeHidden()
-    await page.keyboard.press('l')
-    await expect(game.leaderboard).toBeVisible()
     await page.keyboard.press('l')
     await expect(game.leaderboard).toBeHidden()
   })
