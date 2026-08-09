@@ -141,6 +141,27 @@ function isNativeChartType(chartType) {
   return ['bar', 'doughnut', 'line', 'pie', 'radar'].includes(chartType)
 }
 
+const LEGEND_POSITIONS = {
+  bottom: 'b',
+  left: 'l',
+  right: 'r',
+  top: 't',
+  topRight: 'tr',
+}
+
+function asAuthoredTitle(value) {
+  const title = typeof value === 'string' ? value.trim() : ''
+  return title || undefined
+}
+
+function getAxisTitles(element) {
+  const titles = (element && element.axisTitles) || {}
+  return {
+    category: asAuthoredTitle(titles.category),
+    value: asAuthoredTitle(titles.value),
+  }
+}
+
 function getNativeChartDefinition(pptx, element) {
   const chartType = (element && element.chartType) || 'bar'
   if (!isNativeChartType(chartType)) return null
@@ -162,13 +183,31 @@ function getNativeChartDefinition(pptx, element) {
 
   if (!data.length) return null
 
+  const isArea = chartType === 'line' && element.areaFill === true
+  const outputType = isArea ? pptx.ChartType.area : pptx.ChartType[chartType]
+  if (!outputType) return null
+  const supportsAxes = !['pie', 'doughnut'].includes(chartType)
+  const axisTitles = getAxisTitles(element)
+  const legendPos = LEGEND_POSITIONS[element.legendPosition] || LEGEND_POSITIONS.right
+  const supportsStacking = chartType === 'bar' || isArea
+
   return {
-    type: pptx.ChartType[chartType],
+    type: outputType,
     data,
     options: {
       showLegend: datasets.length > 1,
+      legendPos,
       showTitle: false,
-      lineSize: chartType === 'line' ? 2 : undefined,
+      ...(supportsStacking && element.stacked === true && { barGrouping: 'stacked' }),
+      ...(supportsAxes && axisTitles.category && {
+        catAxisTitle: axisTitles.category,
+        showCatAxisTitle: true,
+      }),
+      ...(supportsAxes && axisTitles.value && {
+        valAxisTitle: axisTitles.value,
+        showValAxisTitle: true,
+      }),
+      lineSize: chartType === 'line' && !isArea ? 2 : undefined,
       chartColors: datasets
         .map((dataset) => normalizeCssColor((dataset && dataset.color) || '#6366f1').color)
         .filter(Boolean),

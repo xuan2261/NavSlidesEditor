@@ -1,7 +1,7 @@
-import { normalizeImageSource, recordPptxExportWarning } from './export-pptx-core'
+import { recordPptxExportWarning } from './export-pptx-core'
+import { resolveClientPptxPoster } from './export-pptx-media'
 import {
   buildPptxPlaceholderLabel,
-  getMediaCoverSource,
   getPlaceholderTheme,
   renderElementFallbackDataUri,
 } from './export-pptx-raster'
@@ -28,10 +28,10 @@ function addPlaceholder(slide, bounds, element, warning) {
 }
 
 export async function addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens) {
-  const coverSource = getMediaCoverSource(element)
-  const normalizedCover = normalizeImageSource(coverSource)
-  if (normalizedCover) {
-    slide.addImage({ ...normalizedCover, ...bounds, rotate: element.rotation || 0 })
+  const coverData =
+    element.type === 'video' ? await resolveClientPptxPoster(element.poster) : null
+  if (coverData) {
+    slide.addImage({ data: coverData, ...bounds, rotate: element.rotation || 0 })
     recordPptxExportWarning(warnings, {
       element,
       slideNumber,

@@ -10,22 +10,37 @@ export function GameHudOverlay({ visible, gameType, onClose }) {
 
   return (
     <div
-      data-testid="game-hud"
-      className="game-hud-overlay"
+      data-testid="game-hud-backdrop"
+      role="presentation"
+      onMouseDown={onClose}
       style={{
         position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        backgroundColor: 'rgba(0,0,0,0.85)',
-        color: '#fff',
-        padding: '24px',
-        borderRadius: '12px',
-        zIndex: 99998,
-        minWidth: '300px',
-        maxWidth: '500px',
+        inset: 0,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        zIndex: 99997,
       }}
     >
+      <div
+        data-testid="game-hud"
+        className="game-hud-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${gameType} game controls`}
+        onMouseDown={(event) => event.stopPropagation()}
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          color: '#fff',
+          padding: '24px',
+          borderRadius: '12px',
+          zIndex: 99998,
+          minWidth: '300px',
+          maxWidth: '500px',
+        }}
+      >
       <div
         style={{
           display: 'flex',
@@ -91,6 +106,7 @@ export function GameHudOverlay({ visible, gameType, onClose }) {
       >
         Press G or click outside to close
       </p>
+      </div>
     </div>
   )
 }

@@ -15,7 +15,7 @@ describe('Parallax features integration', () => {
   describe('Video enhancements', () => {
     it('renders video from videoUrl property', () => {
       const html = renderElement(
-        { ...base, type: 'video', videoUrl: 'https://example.com/v.mp4', src: '' },
+        { ...base, type: 'video', videoUrl: 'https://example.com/v.mp4' },
         {},
         {}
       )

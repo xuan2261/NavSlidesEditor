@@ -36,8 +36,31 @@ function storeSessionToken(gameId, playerId, sessionToken) {
   localStorage.setItem(getSessionStorageKey(gameId, playerId), sessionToken)
 }
 
+export function normalizeQuestionEvent(data) {
+  if (!data || typeof data !== 'object') return null
+  if (!data.question || typeof data.question !== 'object') return data
+  const publicQuestion = { ...data.question }
+  for (const key of [
+    'correctIndex',
+    'correctAnswer',
+    'answer',
+    'answerIndex',
+    'answerKey',
+    'solution',
+    'explanation',
+  ]) delete publicQuestion[key]
+  return {
+    ...publicQuestion,
+    questionNumber: data.questionNumber ?? data.question.questionNumber,
+    totalQuestions: data.totalQuestions ?? data.question.totalQuestions,
+    questionStartedAt: data.questionStartedAt ?? data.question.questionStartedAt,
+    timeRemainingMs: data.timeRemainingMs ?? data.question.timeRemainingMs,
+    allowLate: data.allowLate ?? data.question.allowLate,
+  }
+}
+
 export function useGamePlayer({ gameId, playerName }) {
-  const [status, setStatus] = useState('joining') // joining | waiting | question | answered | result | finished
+  const [status, setStatus] = useState('joining') // joining | waiting | question | answered | expired | result | finished
   const [players, setPlayers] = useState([])
   const [currentQuestion, setCurrentQuestion] = useState(null)
   const [pollState, setPollState] = useState(null)
@@ -60,18 +83,25 @@ export function useGamePlayer({ gameId, playerName }) {
   const playerIdRef = useRef(playerIdentity)
   const timerRef = useRef(null)
   const questionStartRef = useRef(null)
+  const questionIdRef = useRef(null)
 
-  const startTimer = useCallback((timeLimit) => {
+  const startTimer = useCallback((timeLimit, allowLate = false) => {
     if (timerRef.current) clearInterval(timerRef.current)
+    const duration = Number.isFinite(Number(timeLimit)) ? Math.max(0, Number(timeLimit)) : 0
     questionStartRef.current = Date.now()
-    setTimeLeft(timeLimit)
+    setTimeLeft(duration)
+    if (duration <= 0) {
+      if (!allowLate) setStatus('expired')
+      return
+    }
     timerRef.current = setInterval(() => {
       const elapsed = (Date.now() - questionStartRef.current) / 1000
-      const left = Math.max(0, Math.ceil(timeLimit - elapsed))
+      const left = Math.max(0, Math.ceil(duration - elapsed))
       setTimeLeft(left)
       if (left <= 0) {
         clearInterval(timerRef.current)
         timerRef.current = null
+        if (!allowLate) setStatus('expired')
       }
     }, 500)
   }, [])
@@ -84,10 +114,11 @@ export function useGamePlayer({ gameId, playerName }) {
   }, [])
 
   const submitAnswer = useCallback((answerIndex) => {
-    if (!socketRef.current || status !== 'question') return
+    if (!socketRef.current || status !== 'question' || !questionIdRef.current) return
     const timeSpent = questionStartRef.current ? (Date.now() - questionStartRef.current) / 1000 : 0
     socketRef.current.emit('game-answer', {
       gameId,
+      questionId: questionIdRef.current,
       answerIndex,
       timeSpentMs: Math.round(timeSpent * 1000),
     })
@@ -114,6 +145,26 @@ export function useGamePlayer({ gameId, playerName }) {
 
   useEffect(() => {
     if (!gameId || !playerName) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset player state before subscribing to a new room
+    setStatus('joining')
+    setPlayers([])
+    setCurrentQuestion(null)
+    setPollState(null)
+    setSelectedPollOption(null)
+    setWordCloudState(null)
+    setWordCloudSubmissionCount(0)
+    setMatchingState(null)
+    setMatchingResult(null)
+    setSelectedAnswer(null)
+    setAnswerResult(null)
+    setMyScore(0)
+    setMyRank(null)
+    setLeaderboard([])
+    setError(null)
+    setTimeLeft(null)
+    setIsConnected(false)
+    questionIdRef.current = null
+    stopTimer()
     let cancelled = false
 
     // Player-game traffic lives on the '/games' namespace (the live default
@@ -172,11 +223,22 @@ export function useGamePlayer({ gameId, playerName }) {
 
     sock.on('game-question', (data) => {
       if (cancelled) return
-      setCurrentQuestion(data)
+      const question = normalizeQuestionEvent(data)
+      if (!Array.isArray(question?.options) || typeof question.question !== 'string') {
+        setError('Received an invalid game question.')
+        return
+      }
+      questionIdRef.current = question.id
+      setCurrentQuestion(question)
       setSelectedAnswer(null)
       setAnswerResult(null)
       setStatus('question')
-      startTimer(data.timeLimit || 30)
+      const remainingSeconds = Number.isFinite(Number(question.timeRemainingMs))
+        ? Math.max(0, Number(question.timeRemainingMs) / 1000)
+        : Number.isFinite(Number(question.questionStartedAt)) && Number.isFinite(Number(question.timeLimit))
+          ? Math.max(0, (Number(question.timeLimit) * 1000 - (Date.now() - Number(question.questionStartedAt))) / 1000)
+          : question.timeLimit || 30
+      startTimer(remainingSeconds, question.allowLate === true)
     })
 
     sock.on('game-poll-started', (data) => {
@@ -233,12 +295,14 @@ export function useGamePlayer({ gameId, playerName }) {
       setMatchingResult(data)
     })
 
-    sock.on('game-answer-result', (data) => {
+    sock.on('game-answer-result', (data = {}) => {
       if (cancelled) return
-      const { correct, points, totalScore, rank } = data
-      setAnswerResult({ correct, points })
+      const { correct, correctIndex, answerIndex, points, totalScore, rank } = data
+      stopTimer()
+      setSelectedAnswer(Number.isInteger(answerIndex) ? answerIndex : null)
+      setAnswerResult({ correct, correctIndex, points })
       setMyScore(totalScore ?? 0)
-      setMyRank(rank ?? null)
+      if (rank !== undefined) setMyRank(rank)
       setStatus('result')
     })
 
@@ -251,14 +315,30 @@ export function useGamePlayer({ gameId, playerName }) {
 
     sock.on('game-ended', ({ finalScores }) => {
       if (cancelled) return
-      setLeaderboard(finalScores || [])
+      const scores = finalScores || []
+      setLeaderboard(scores)
+      const me = scores.find((entry) => entry.playerId === playerIdRef.current)
+      setMyRank(me ? scores.indexOf(me) + 1 : null)
       setStatus('finished')
       setCurrentQuestion(null)
+      questionIdRef.current = null
       stopTimer()
     })
 
-    sock.on('game-error', ({ message }) => {
+    sock.on('game-error', ({ message } = {}) => {
       if (cancelled) return
+      if (message === 'question-expired') {
+        stopTimer()
+        setAnswerResult(null)
+        setStatus('expired')
+        setError(null)
+        return
+      }
+      if (message === 'stale-question') {
+        setSelectedAnswer(null)
+        setAnswerResult(null)
+        setStatus('question')
+      }
       setError(message)
     })
 
@@ -266,6 +346,7 @@ export function useGamePlayer({ gameId, playerName }) {
 
     return () => {
       cancelled = true
+      questionIdRef.current = null
       stopTimer()
       sock.disconnect()
       socketRef.current = null

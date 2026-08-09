@@ -16,17 +16,18 @@ describe('canonical media/code/image/latex/html property depth', () => {
     expect(onUpdate).toHaveBeenCalledWith({ objectFit: 'cover' })
   })
 
-  it('[cap:element.image depth:behavior] exposes round corners but not image border width/color authoring', () => {
+  it('[cap:element.image depth:behavior] exposes round corners and image border width/color authoring', () => {
+    const onUpdate = vi.fn()
     render(
       <ImageProperties
         element={{ id: 'img-1', type: 'image', borderRadius: 12, borderColor: '#ff0000', borderWidth: 3 }}
-        onUpdate={vi.fn()}
+        onUpdate={onUpdate}
       />
     )
 
     expect(screen.getByTestId('prop-image-border-radius')).toBeTruthy()
-    expect(screen.queryByTestId('prop-image-border-color')).toBeNull()
-    expect(screen.queryByTestId('prop-image-border-width')).toBeNull()
+    expect(screen.getByTestId('prop-image-border-color')).toBeTruthy()
+    expect(screen.getByTestId('prop-image-border-width').value).toBe('3')
   })
 
   it('[cap:element.code depth:behavior] writes language from the code properties select', () => {

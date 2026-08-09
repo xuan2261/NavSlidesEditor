@@ -146,6 +146,11 @@ function setupSocketHandlers(io, dependencies = {}) {
   const findById = dependencies.findPresentationById || findLivePresentationById
 
   io.on('connection', (socket) => {
+    const onPayload = (event, handler) => socket.on(event, (payload) => {
+      const normalized = payload && typeof payload === 'object' ? payload : {}
+      return handler(normalized)
+    })
+
     // Helper: broadcast viewer count for a room
     function broadcastViewerCount(roomId) {
       const count = liveRooms.getViewerCount(roomId)
@@ -153,7 +158,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     }
 
     // Join presentation room
-    socket.on('join-room', async ({ roomId, role, presentationId, presenterToken }) => {
+    onPayload('join-room', async ({ roomId, role, presentationId, presenterToken } = {}) => {
       const roomBeforeJoin = liveRooms.getRoomState(roomId)
       const presenterWasDisconnected = role === 'presenter' &&
         roomBeforeJoin?.presenterId == null &&
@@ -310,7 +315,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     })
 
     // Presenter navigates
-    socket.on('navigate', ({ slideIndex, verticalIndex = 0, fragmentIndex = 0 }) => {
+    onPayload('navigate', ({ slideIndex, verticalIndex = 0, fragmentIndex = 0 } = {}) => {
       const state = { slideIndex, verticalIndex, fragmentIndex }
       const success = liveRooms.updateRoomState(socket.data.roomId, socket.id, {
         ...state,
@@ -331,7 +336,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       }
     })
 
-    socket.on('control-navigate', ({ slideIndex, verticalIndex = 0, fragmentIndex = 0 }) => {
+    onPayload('control-navigate', ({ slideIndex, verticalIndex = 0, fragmentIndex = 0 } = {}) => {
       const roomState = liveRooms.getRoomState(socket.data.roomId)
       const isListedController = roomState?.controllers?.includes(socket.id)
       const isPresenter = roomState?.presenterId === socket.id
@@ -351,7 +356,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     })
 
     // Presenter moves cursor
-    socket.on('cursor-move', ({ x, y }) => {
+    onPayload('cursor-move', ({ x, y } = {}) => {
       const roomState = liveRooms.getRoomState(socket.data.roomId)
       if (roomState && roomState.presenterId === socket.id) {
         socket.to(socket.data.roomId).emit('cursor-move', { x, y })
@@ -359,7 +364,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     })
 
     // Presenter sends laser pointer
-    socket.on('laser', ({ x, y, active }) => {
+    onPayload('laser', ({ x, y, active } = {}) => {
       const roomState = liveRooms.getRoomState(socket.data.roomId)
       if (roomState && liveRooms.canControlRoom(socket.data.roomId, socket.id)) {
         socket.to(socket.data.roomId).emit('laser', { x, y, active })
@@ -367,7 +372,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     })
 
     // Annotation events — only presenter/controller can emit
-    socket.on('annotation:add', (payload = {}) => {
+    onPayload('annotation:add', (payload = {}) => {
       const { slideIndex, verticalIndex = 0, annotation } = payload || {}
       const target = normalizeSlideTarget(slideIndex, verticalIndex)
       const roomId = liveRooms.getRoomForSocket(socket.id)
@@ -396,7 +401,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       )
     })
 
-    socket.on('annotation:remove', (payload = {}) => {
+    onPayload('annotation:remove', (payload = {}) => {
       const { slideIndex, verticalIndex = 0, annotationId } = payload || {}
       const target = normalizeSlideTarget(slideIndex, verticalIndex)
       const roomId = liveRooms.getRoomForSocket(socket.id)
@@ -414,7 +419,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       )
     })
 
-    socket.on('annotation:clear', (payload = {}) => {
+    onPayload('annotation:clear', (payload = {}) => {
       const { slideIndex, verticalIndex = 0 } = payload || {}
       const roomId = liveRooms.getRoomForSocket(socket.id)
       if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
@@ -438,7 +443,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     })
 
     // Timer event handlers (Phase 2 — server-authoritative timer sync)
-    socket.on('game-timer-start', ({ elementId, duration }) => {
+    onPayload('game-timer-start', ({ elementId, duration } = {}) => {
       if (!isValidElementId(elementId)) return
       const d = Number(duration)
       if (!Number.isFinite(d) || d < 1 || d > 7200) return
@@ -464,7 +469,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       })
     })
 
-    socket.on('game-timer-pause', ({ elementId }) => {
+    onPayload('game-timer-pause', ({ elementId } = {}) => {
       if (!isValidElementId(elementId)) return
       const roomId = liveRooms.getRoomForSocket(socket.id)
       if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
@@ -486,7 +491,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       })
     })
 
-    socket.on('game-timer-resume', ({ elementId }) => {
+    onPayload('game-timer-resume', ({ elementId } = {}) => {
       if (!isValidElementId(elementId)) return
       const roomId = liveRooms.getRoomForSocket(socket.id)
       if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
@@ -510,7 +515,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       })
     })
 
-    socket.on('game-timer-adjust', ({ elementId, delta }) => {
+    onPayload('game-timer-adjust', ({ elementId, delta } = {}) => {
       if (!isValidElementId(elementId)) return
       const adj = Number(delta)
       if (!Number.isFinite(adj) || Math.abs(adj) > 3600) return
@@ -542,7 +547,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       })
     })
 
-    socket.on('game-timer-stop', ({ elementId }) => {
+    onPayload('game-timer-stop', ({ elementId } = {}) => {
       if (!isValidElementId(elementId)) return
       const roomId = liveRooms.getRoomForSocket(socket.id)
       if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
@@ -559,7 +564,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       })
     })
 
-    socket.on('disconnect', () => {
+    onPayload('disconnect', () => {
       const result = liveRooms.leaveRoom(socket.id, {
         onPresenterLeft: (roomId) => {
           io.to(roomId).emit('presenter-left')

@@ -9,30 +9,60 @@ import {
 import { addElementToPptxSlide } from './export-pptx-renderers'
 import { clearPptxRasterAssetCaches } from './export-pptx-raster'
 import { getSlideNotes } from './slide-notes'
-import { DEFAULT_TOKENS, mergeTokens } from 'revealjs-shared'
+import { DEFAULT_TOKENS, getPptxElementExportStrategy, mergeTokens } from 'revealjs-shared'
 
 function getSafeFilename(title) {
   return `${String(title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.pptx`
 }
 
-function hasElementType(slides, types) {
+function requiresServerRaster(element) {
+  return getPptxElementExportStrategy(element).mode === 'server-prefetch-raster'
+}
+
+function hasServerRasterElements(slides) {
   return (slides || []).some((slide) => {
     const elements = (slide.elements || []).filter((element) => !(element.hidden || false))
-    return elements.some((element) => types.has(element.type))
+    return elements.some(requiresServerRaster)
   })
 }
 
 function hasServerOnlyElements(presentation) {
-  return hasElementType(presentation?.slides || [], new Set(['html', 'latex']))
+  return hasServerRasterElements(presentation?.slides || [])
+}
+
+function validateServerRasterElementIds(slides) {
+  const seen = new Map()
+
+  for (const [slideIndex, slide] of (slides || []).entries()) {
+    for (const element of slide.elements || []) {
+      if (element.hidden || false) continue
+      const id = typeof element.id === 'string' ? element.id.trim() : ''
+      if (requiresServerRaster(element) && !id) {
+        throw new Error(
+          `PPTX export requires a stable id for ${element.type} on slide ${slideIndex + 1}`
+        )
+      }
+      if (!id) continue
+      const previous = seen.get(id)
+      if (
+        previous &&
+        (requiresServerRaster(previous.element) || requiresServerRaster(element))
+      ) {
+        throw new Error(
+          `PPTX export found duplicate element id "${id}" on slides ${previous.slideIndex + 1} and ${slideIndex + 1}`
+        )
+      }
+      seen.set(id, { slideIndex, type: element.type, element })
+    }
+  }
+
 }
 
 function getServerOnlyElementIds(slides) {
   return (slides || []).flatMap((slide) =>
     (slide.elements || [])
-      .filter(
-        (element) => !(element.hidden || false) && ['html', 'latex'].includes(element.type) && element.id
-      )
-      .map((element) => element.id)
+      .filter((element) => !(element.hidden || false) && requiresServerRaster(element))
+      .map((element) => element.id.trim())
   )
 }
 
@@ -56,6 +86,7 @@ function canUseServerRaster() {
 
 async function fetchComplexElementRasters(presentation) {
   if (!hasServerOnlyElements(presentation)) return {}
+  validateServerRasterElementIds(presentation?.slides || [])
   if (!canUseServerRaster()) {
     throw new Error('PPTX export with HTML or LaTeX requires the NavSlides server renderer')
   }
@@ -79,7 +110,7 @@ async function fetchComplexElementRasters(presentation) {
   const rasters = payload?.rasters || {}
   const missing = getServerOnlyElementIds(presentation?.slides || []).filter((id) => !rasters[id])
   if (missing.length) {
-    throw new Error(`Server PPTX rasterization missed ${missing.length} HTML/LaTeX element(s)`)
+    throw new Error(`Server PPTX rasterization missed ${missing.length} required element(s)`)
   }
   return rasters
 }

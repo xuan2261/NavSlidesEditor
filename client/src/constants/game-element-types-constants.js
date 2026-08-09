@@ -52,6 +52,7 @@ export const GAME_TYPE_DEFAULTS = {
     weighted: false,
     excludeAfterPick: true,
     animationDuration: 2500,
+    showConfetti: true,
   },
   'hot-potato': {
     title: 'Hot Potato Quiz',
@@ -67,6 +68,7 @@ export const GAME_TYPE_DEFAULTS = {
     categories: [],
     questions: {},
     dailyDouble: [],
+    showTimer: true,
   },
   'four-corners': {
     cornerCount: 4,
@@ -123,6 +125,21 @@ export function cloneGameDefaults(value) {
   return structuredClone(value)
 }
 
+export function resolveGameConfig(element = {}, gameType = element.gameType || 'name-picker') {
+  const defaults = GAME_TYPE_DEFAULTS[gameType] || {}
+  const flat = Object.fromEntries(
+    Object.keys(defaults)
+      .filter((key) => element[key] !== undefined)
+      .map((key) => [key, element[key]])
+  )
+  const nested = element[gameType]
+  return {
+    ...cloneGameDefaults(defaults),
+    ...flat,
+    ...(nested && typeof nested === 'object' ? nested : {}),
+  }
+}
+
 export function buildGameElementDefaults() {
   const defaults = cloneGameDefaults(GAME_BASE_DEFAULTS)
   for (const gameType of GAME_TYPES.all) {
@@ -163,12 +180,30 @@ export function createTeam(overrides = {}) {
 // Reset counter for testing
 export function resetTeamCounter() { _teamCounter = 0 }
 
-// Factory: create a game element with defaults merged
+// Factory: create a game element with a canonical nested subtype config.
 export function createGameElement(gameType = 'name-picker', overrides = {}) {
+  const typeDefaults = GAME_TYPE_DEFAULTS[gameType] || GAME_TYPE_DEFAULTS['name-picker']
+  const {
+    [gameType]: nestedOverrides,
+    ...remainingOverrides
+  } = overrides || {}
+  const subtypeKeys = new Set(Object.keys(typeDefaults))
+  const legacySubtypeOverrides = {}
+  const baseOverrides = {}
+
+  Object.entries(remainingOverrides).forEach(([key, value]) => {
+    if (subtypeKeys.has(key)) legacySubtypeOverrides[key] = value
+    else baseOverrides[key] = value
+  })
+
   return {
     ...cloneGameDefaults(GAME_BASE_DEFAULTS),
+    ...baseOverrides,
     gameType,
-    ...cloneGameDefaults(GAME_TYPE_DEFAULTS[gameType] || GAME_TYPE_DEFAULTS['name-picker']),
-    ...overrides,
+    [gameType]: {
+      ...cloneGameDefaults(typeDefaults),
+      ...legacySubtypeOverrides,
+      ...(nestedOverrides && typeof nestedOverrides === 'object' ? nestedOverrides : {}),
+    },
   }
 }

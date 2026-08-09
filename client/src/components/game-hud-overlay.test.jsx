@@ -1,5 +1,5 @@
 import React from 'react'
-import { render } from '@testing-library/react'
+import { fireEvent, render } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { GameHudOverlay } from './game-hud-overlay'
 
@@ -24,6 +24,18 @@ describe('GameHudOverlay', () => {
       <GameHudOverlay visible={true} gameType="NamePicker" onClose={vi.fn()} />
     )
     expect(container.querySelector('.game-hud-overlay')).not.toBeNull()
+  })
+
+  it('closes when the backdrop is activated but not when the dialog surface is clicked', () => {
+    const onClose = vi.fn()
+    const { container } = render(
+      <GameHudOverlay visible={true} gameType="jeopardy" onClose={onClose} />
+    )
+
+    fireEvent.mouseDown(container.querySelector('[data-testid="game-hud"]'))
+    expect(onClose).not.toHaveBeenCalled()
+    fireEvent.mouseDown(container.querySelector('[data-testid="game-hud-backdrop"]'))
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 
   it('renders nothing for unknown gameType', () => {

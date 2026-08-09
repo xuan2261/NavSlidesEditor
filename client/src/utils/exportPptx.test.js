@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import QRCode from 'qrcode'
 
 const writeFileMock = vi.fn()
 const slides = []
@@ -8,6 +9,7 @@ vi.mock('pptxgenjs', () => ({
     constructor() {
       this.ShapeType = { rect: 'rect', ellipse: 'ellipse', line: 'line' }
       this.ChartType = {
+        area: 'area',
         bar: 'bar',
         line: 'line',
         pie: 'pie',
@@ -88,6 +90,95 @@ describe('exportPptx', () => {
     }
     globalThis.fetch = originalFetch
     globalThis.window = originalWindow
+    vi.restoreAllMocks()
+  })
+
+  it('rejects server-raster HTML elements without stable ids', async () => {
+    await expect(
+      exportToPptx({
+        title: 'Missing raster id',
+        slides: [{ elements: [{ type: 'html', content: '<p>Missing id</p>' }] }],
+      })
+    ).rejects.toThrow(/requires a stable id/)
+    expect(writeFileMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects duplicate ids before server-raster mapping can cross-wire elements', async () => {
+    await expect(
+      exportToPptx({
+        title: 'Duplicate raster ids',
+        slides: [
+          { elements: [{ id: 'duplicate', type: 'html', content: '<p>A</p>' }] },
+          { elements: [{ id: 'duplicate', type: 'latex', content: 'x' }] },
+        ],
+      })
+    ).rejects.toThrow(/duplicate element id/)
+    expect(writeFileMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects native ids that collide with a server-raster target', async () => {
+    await expect(
+      exportToPptx({
+        title: 'Native raster collision',
+        slides: [
+          { elements: [{ id: 'shared-id', type: 'text', content: '<p>Native</p>' }] },
+          { elements: [{ id: 'shared-id', type: 'html', content: '<p>Raster</p>' }] },
+        ],
+      })
+    ).rejects.toThrow(/duplicate element id/)
+    expect(writeFileMock).not.toHaveBeenCalled()
+  })
+
+  it('allows duplicate native ids when server-raster targets remain unique', async () => {
+    globalThis.window = {}
+    globalThis.document = {}
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ rasters: { 'html-target': 'data:image/png;base64,html' } }),
+    })
+
+    const warnings = await exportToPptx({
+      title: 'Legacy native duplicate ids',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'legacy-duplicate',
+              type: 'text',
+              content: '<p>Legacy text</p>',
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 80,
+            },
+            {
+              id: 'html-target',
+              type: 'html',
+              content: '<div>Raster target</div>',
+              x: 220,
+              y: 0,
+              width: 200,
+              height: 80,
+            },
+          ],
+        },
+        {
+          elements: [{
+            id: 'legacy-duplicate',
+            type: 'image',
+            src: 'data:image/png;base64,legacy',
+            x: 0,
+            y: 100,
+            width: 200,
+            height: 80,
+          }],
+        },
+      ],
+    })
+
+    expect(warnings).toEqual(['Slide 1: rasterized html with server renderer'])
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+    expect(writeFileMock).toHaveBeenCalledTimes(1)
   })
 
   it('exports native shapes without relying on static ShapeType enums', async () => {
@@ -304,6 +395,41 @@ describe('exportPptx', () => {
     const svg = globalThis.atob(imageArg.data.split(',')[1])
     expect(svg).toContain('stroke="#111827"')
     expect(svg).not.toContain('stroke="auto"')
+  })
+
+  it('inserts one visible placeholder warning when QR rasterization rejects', async () => {
+    vi.spyOn(QRCode, 'toDataURL').mockRejectedValueOnce(new Error('QR payload is too large'))
+
+    const warnings = await exportToPptx({
+      title: 'QR fallback export',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'qr-1',
+              type: 'qrcode',
+              qrData: 'too-large',
+              x: 10,
+              y: 20,
+              width: 160,
+              height: 160,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(warnings).toEqual(['Slide 1: inserted placeholder for qrcode'])
+    expect(warnings.exportReport.warningCount).toBe(1)
+    expect(warnings.exportReport.warnings[0]).toEqual(
+      expect.objectContaining({
+        elementId: 'qr-1',
+        elementType: 'qrcode',
+        fallback: 'placeholder',
+        severity: 'warning',
+      })
+    )
+    expect(slides[0].addShape).toHaveBeenCalledWith('rect', expect.any(Object))
   })
 
   it('inserts a placeholder when an unsupported element cannot be rasterized', async () => {
@@ -542,7 +668,7 @@ describe('exportPptx', () => {
     expect(slides[0].background).toEqual({ color: '1E1E2E' })
   })
 
-  it('reports unsupported chart variants with the matrix chart row id', async () => {
+  it('intentionally rasterizes polar area charts with the matrix chart row id', async () => {
     const warnings = await exportToPptx({
       title: 'Unsupported chart fallback',
       slides: [
@@ -566,7 +692,6 @@ describe('exportPptx', () => {
       ],
     })
 
-    expect(warnings).toContain('Slide 1: chart export failed (Unsupported chart type: polarArea)')
     expect(warnings.exportReport.warnings).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -574,18 +699,45 @@ describe('exportPptx', () => {
           elementType: 'chart',
           control: 'chart-data-options',
           matrixRowId: 'chart.chart-data-options.pptx-export',
-          fallback: 'export-error',
-          severity: 'error',
-        }),
-        expect.objectContaining({
-          elementId: 'chart-polar',
-          elementType: 'chart',
-          control: 'chart-data-options',
-          matrixRowId: 'chart.chart-data-options.pptx-export',
           fallback: expect.stringMatching(/^(client-raster|placeholder)$/),
+          severity: 'warning',
         }),
       ])
     )
+    expect(warnings).not.toEqual(
+      expect.arrayContaining([expect.stringContaining('chart export failed')])
+    )
+  })
+
+  it('keeps rotated tables native and reports the accepted rotation limit', async () => {
+    const warnings = await exportToPptx({
+      title: 'Rotated table',
+      slides: [{
+        elements: [{
+          id: 'table-rotation',
+          type: 'table',
+          rotation: 15,
+          x: 20,
+          y: 20,
+          width: 300,
+          height: 120,
+          data: [['Native table']],
+        }],
+      }],
+    })
+
+    expect(slides[0].addTable).toHaveBeenCalledTimes(1)
+    expect(slides[0].addImage).not.toHaveBeenCalled()
+    expect(warnings.exportReport.warnings).toEqual([
+      expect.objectContaining({
+        elementId: 'table-rotation',
+        elementType: 'table',
+        control: 'table-layout-rotation',
+        matrixRowId: 'table.table-layout-rotation.pptx-export',
+        fallback: 'native-table-unrotated',
+        severity: 'warning',
+      }),
+    ])
   })
 
   it('keeps native elements editable while using server rasters for HTML and LaTeX', async () => {
@@ -653,6 +805,116 @@ describe('exportPptx', () => {
       'Slide 1: rasterized html with server renderer',
       'Slide 1: rasterized latex with server renderer',
     ])
+  })
+
+  it('keeps ordinary images editable and rasterizes safe filtered images with their frame metadata', async () => {
+    globalThis.window = {}
+    globalThis.document = {}
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        rasters: { 'filtered-image': 'data:image/png;base64,filtered' },
+      }),
+    })
+
+    const warnings = await exportToPptx({
+      title: 'Image visual fallback',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'native-image',
+              type: 'image',
+              src: 'data:image/png;base64,native',
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 100,
+              alt: 'Editable image',
+            },
+            {
+              id: 'filtered-image',
+              type: 'image',
+              src: 'data:image/png;base64,source',
+              x: 240,
+              y: 20,
+              width: 300,
+              height: 180,
+              rotation: 27,
+              opacity: 0.65,
+              alt: 'Filtered image',
+              filterBrightness: 120,
+            },
+          ],
+        },
+      ],
+    })
+
+    const requestBody = JSON.parse(globalThis.fetch.mock.calls[0][1].body)
+    expect(requestBody.presentation.slides[0].elements.map((element) => element.id)).toEqual([
+      'native-image',
+      'filtered-image',
+    ])
+    expect(slides[0].addImage).toHaveBeenCalledWith(
+      expect.objectContaining({ data: 'data:image/png;base64,native', altText: 'Editable image' })
+    )
+    expect(slides[0].addImage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: 'data:image/png;base64,filtered',
+        rotate: 27,
+        transparency: 35,
+        altText: 'Filtered image',
+      })
+    )
+    expect(warnings).toEqual([
+      'Slide 1: rasterized image to preserve CSS filters or rounded corners',
+    ])
+    expect(warnings.exportReport.warnings).toEqual([
+      expect.objectContaining({
+        elementId: 'filtered-image',
+        elementType: 'image',
+        control: 'media-source-and-fit',
+        fallback: 'server-raster',
+      }),
+    ])
+  })
+
+  it('does not request a server raster for external image URLs', async () => {
+    globalThis.window = {}
+    globalThis.document = {}
+    globalThis.fetch = vi.fn()
+
+    const warnings = await exportToPptx({
+      title: 'External image policy',
+      slides: [
+        {
+          elements: [
+            {
+              id: 'remote-image',
+              type: 'image',
+              src: 'https://example.com/image.png',
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 100,
+              borderRadius: 16,
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+    expect(slides[0].addImage).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'https://example.com/image.png' })
+    )
+    expect(warnings).toEqual([
+      'Slide 1: image CSS filters or rounded corners could not be rasterized; exported as a native image',
+    ])
+    expect(warnings.exportReport.warnings[0]).toMatchObject({
+      elementId: 'remote-image',
+      fallback: 'native-image-effect-limit',
+    })
   })
 
   it('omits hidden elements from client PPTX export output', async () => {

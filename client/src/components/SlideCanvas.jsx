@@ -578,6 +578,8 @@ export default function SlideCanvas({
               editor={editor}
               iconPaths={iconPaths}
               slideBackground={chartBackground}
+              slideWidth={SLIDE_W}
+              slideHeight={SLIDE_H}
               onPointerDown={(e, type, handle) => {
                 if (cropMode || editingElementId === element.id || pinchActiveRef.current) return
                 if (element.locked && type === 'move') return

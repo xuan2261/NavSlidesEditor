@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LiveSocketContext } from '../../contexts/live-socket-context-provider.jsx'
 import { useEditorStore } from '../../stores/editor-store'
 import { useUIStore } from '../../stores/ui-store'
+import { APP_FEEDBACK_EVENT } from '../../utils/app-feedback'
 
 function makeSeed(grouped = false) {
   return {
@@ -190,12 +191,9 @@ describe('EditorPage command palette element actions', () => {
     expect(screen.getByRole('heading', { name: 'Add Slide' })).toBeTruthy()
   })
 
-  it('[cap:command.insertLink] delegates to the rich-text link control through the command palette', async () => {
-    const linkControl = document.createElement('button')
-    linkControl.title = 'Add link'
-    const clickLinkControl = vi.fn()
-    linkControl.addEventListener('click', clickLinkControl)
-    document.body.appendChild(linkControl)
+  it('[cap:command.insertLink depth:trace] uses the typed rich-text link action through the command palette', async () => {
+    const feedback = vi.fn()
+    window.addEventListener(APP_FEEDBACK_EVENT, feedback)
 
     renderPage()
     await screen.findByDisplayValue('Command Deck')
@@ -205,9 +203,17 @@ describe('EditorPage command palette element actions', () => {
     })
     fireEvent.click(screen.getByText('Insert Link'))
 
-    expect(clickLinkControl).toHaveBeenCalledTimes(1)
+    expect(feedback).toHaveBeenCalledWith(
+      expect.objectContaining({
+        detail: expect.objectContaining({
+          type: 'notice',
+          message: 'Enter text edit mode and select a text element before inserting a link.',
+        }),
+      })
+    )
+    expect(document.querySelector('[title="Add link"]')).toBeNull()
     expect(useUIStore.getState().showCommandPalette).toBe(false)
 
-    linkControl.remove()
+    window.removeEventListener(APP_FEEDBACK_EVENT, feedback)
   })
 })

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link2, Copy, Trash2, Plus, Lock, Clock, Eye, Loader2, Check } from 'lucide-react'
 import { Button, ModalShell } from '../components/ui'
 import { confirmUser } from '../utils/app-feedback'
+import { copyTextToClipboard } from '../utils/copy-to-clipboard'
 
 export default function ShareModal({ presentationId, onClose }) {
   const [isOpen, setIsOpen] = useState(true)
@@ -87,8 +88,14 @@ export default function ShareModal({ presentationId, onClose }) {
     )
   }
 
-  const copyToClipboard = (text, id) => {
-    navigator.clipboard.writeText(text)
+  const copyToClipboard = async (text, id) => {
+    setError('')
+    const copiedSuccessfully = await copyTextToClipboard(text)
+    if (!copiedSuccessfully) {
+      setCopied('')
+      setError('Copy failed. Check browser clipboard permissions and try again.')
+      return
+    }
     setCopied(id)
     setTimeout(() => setCopied(''), 2000)
   }

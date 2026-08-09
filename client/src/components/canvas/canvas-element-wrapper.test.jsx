@@ -40,6 +40,8 @@ function renderCanvasElement(element, props = {}) {
       isCropping={props.isCropping ?? false}
       cropState={null}
       isDragging={props.isDragging ?? false}
+      slideWidth={props.slideWidth}
+      slideHeight={props.slideHeight}
       editor={null}
       onPointerDown={handlers.onPointerDown}
       onClick={handlers.onClick}
@@ -159,6 +161,28 @@ describe('CanvasElement video playback', () => {
     expect(handlers.onDeleteElement).not.toHaveBeenCalled()
   })
 
+  it('exposes a visible focus ring for keyboard navigation', () => {
+    renderCanvasElement(baseElement)
+    const wrapper = screen.getByTestId('slide-element-video-1')
+
+    expect(wrapper.className).toContain('focus-visible:ring-2')
+    expect(wrapper.className).toContain('focus-visible:ring-focus')
+  })
+
+  it('clamps focused keyboard nudges to the slide right and bottom edges', () => {
+    const { handlers } = renderCanvasElement(
+      { ...baseElement, x: 90, y: 70, width: 20, height: 30 },
+      { isSelected: true, slideWidth: 100, slideHeight: 100 }
+    )
+    const wrapper = screen.getByTestId('slide-element-video-1')
+
+    fireEvent.keyDown(wrapper, { key: 'ArrowRight', shiftKey: true })
+    fireEvent.keyDown(wrapper, { key: 'ArrowDown', shiftKey: true })
+
+    expect(handlers.onUpdateElement).toHaveBeenNthCalledWith(1, 'video-1', { x: 80, y: 70 })
+    expect(handlers.onUpdateElement).toHaveBeenNthCalledWith(2, 'video-1', { x: 80, y: 70 })
+  })
+
   it('keeps unselected line wrappers clickable', () => {
     renderCanvasElement({
       id: 'line-1',
@@ -207,11 +231,22 @@ describe('CanvasElement video playback', () => {
     expect(video.playbackRate).toBe(1.25)
   })
 
-  it('uses legacy videoUrl only when src is empty', () => {
+  it('applies video autoplay in the canvas preview', () => {
+    renderCanvasElement({ ...baseElement, autoplay: true })
+    expect(screen.getByTestId('slide-element-video-1').querySelector('video').autoplay).toBe(true)
+  })
+
+  it('does not start canvas dragging from native video controls', () => {
+    const { handlers } = renderCanvasElement(baseElement)
+    fireEvent.pointerDown(screen.getByTestId('slide-element-video-1').querySelector('video'), { button: 0 })
+    expect(handlers.onPointerDown).not.toHaveBeenCalled()
+  })
+
+  it('uses legacy videoUrl only when src is absent', () => {
+    const legacyVideo = { ...baseElement, videoUrl: 'https://example.com/from-url.mp4' }
+    delete legacyVideo.src
     renderCanvasElement({
-      ...baseElement,
-      src: '',
-      videoUrl: 'https://example.com/from-url.mp4',
+      ...legacyVideo,
       startTime: 5,
       endTime: 12,
     })
@@ -219,6 +254,18 @@ describe('CanvasElement video playback', () => {
     const video = wrapper.querySelector('video')
 
     expect(video.getAttribute('src')).toBe('https://example.com/from-url.mp4#t=5,12')
+  })
+
+  it('does not resurrect videoUrl when the persisted src is explicitly blank', () => {
+    renderCanvasElement({
+      ...baseElement,
+      src: '',
+      videoUrl: 'https://example.com/legacy.mp4',
+    })
+    const wrapper = screen.getByTestId('slide-element-video-1')
+    const video = wrapper.querySelector('video')
+
+    expect(video.getAttribute('src')).toBe('')
   })
 
   it('uses canonical src before stale legacy videoUrl', () => {
@@ -372,6 +419,12 @@ describe('CanvasElement image crop diagnostics', () => {
     src: '/uploads/image.png',
     objectFit: 'contain',
   }
+
+  it('renders persisted image borders in the editor canvas', () => {
+    renderCanvasElement({ ...imageElement, borderWidth: 2, borderColor: '#336699' })
+    const image = screen.getByTestId('slide-element-image-1').querySelector('[data-element-content] > div')
+    expect(image.style.border).toBe('2px solid #336699')
+  })
 
   it('does not mark regular images as source-cropped', () => {
     renderCanvasElement(imageElement)

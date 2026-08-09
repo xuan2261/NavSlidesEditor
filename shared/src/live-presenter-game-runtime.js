@@ -13,10 +13,12 @@ function safeScriptLiteral(value) {
 function buildGameBootstrapRuntime(presentationId) {
   const presentationIdLiteral = safeScriptLiteral(presentationId)
   return `
-          var gameHostStates = {};
+          var gameHostStates = Object.create(null);
+          var pendingGameShortcutActions = Object.create(null);
           var gameBootstrapTimer = null;
           var gameBootstrapInFlight = false;
           var GAME_BOOTSTRAP_MAX_ATTEMPTS = 5;
+          var GAME_SHORTCUT_QUEUE_LIMIT = 20;
           function gameStateKey(gameId) {
             return 'navslides-game-host-state:' + ${presentationIdLiteral} + ':' + gameId;
           }
@@ -65,10 +67,15 @@ function buildGameBootstrapRuntime(presentationId) {
             } catch (e) {}
           }
           function getKnownGameCapabilities() {
-            var known = {};
+            var known = Object.create(null);
             try {
               var stored = sessionStorage.getItem(capabilityMapKey());
-              if (stored) known = JSON.parse(stored) || {};
+              var parsed = stored && JSON.parse(stored);
+              if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                Object.keys(parsed).forEach(function(gameId) {
+                  known[gameId] = parsed[gameId];
+                });
+              }
             } catch (e) {}
             Object.keys(gameHostStates).forEach(function(gameId) {
               var capability = gameHostStates[gameId].hostCapability;
@@ -102,6 +109,8 @@ function buildGameBootstrapRuntime(presentationId) {
             state.gameId = game.gameId;
             state.gameType = game.gameType;
             state.hostCapability = game.hostCapability || state.hostCapability;
+            state.pendingShortcutActions = state.pendingShortcutActions || pendingGameShortcutActions[game.gameId] || [];
+            delete pendingGameShortcutActions[game.gameId];
             gameHostStates[game.gameId] = state;
             saveGameHostState(state);
             if (!state.socket || state.socket.disconnected) {
@@ -118,6 +127,7 @@ function buildGameBootstrapRuntime(presentationId) {
               });
               gameSocket.on('game-player-joined', function() {
                 state.joined = true;
+                drainGameShortcutActions(state);
                 window.__navslidesGameHostReady = Object.keys(gameHostStates)
                   .filter(function(id) { return gameHostStates[id].joined; }).length;
               });
@@ -138,6 +148,117 @@ function buildGameBootstrapRuntime(presentationId) {
           function connectGameHosts(games) {
             (games || []).forEach(connectGameHost);
           }
+          function queueGameShortcut(queue, detail) {
+            if (!queue || queue.length >= GAME_SHORTCUT_QUEUE_LIMIT) return false;
+            queue.push(Object.assign({}, detail));
+            return true;
+          }
+          function socketEventForGameShortcut(state, action) {
+            if ((action === 'startSpin' || action === 'random') && state.gameType === 'name-picker') {
+              return 'game-random';
+            }
+            if (
+              ['next', 'nextQuestion', 'nextPhase', 'nextTeam'].indexOf(action) >= 0 &&
+              ['hot-potato', 'relay-race', 'trivia-champ'].indexOf(state.gameType) >= 0
+            ) {
+              return 'game-next';
+            }
+            if (action === 'end') return 'game-end';
+            if (action === 'startPoll' && state.gameType === 'poll') return 'game-poll-start';
+            if (
+              ['reveal', 'refreshResults'].indexOf(action) >= 0 &&
+              state.gameType === 'poll'
+            ) {
+              return 'game-poll-reveal';
+            }
+            if (action === 'startWordCloud' && state.gameType === 'word-cloud') {
+              return 'game-word-cloud-start';
+            }
+            if (
+              ['reveal', 'refreshWordCloud'].indexOf(action) >= 0 &&
+              state.gameType === 'word-cloud'
+            ) {
+              return 'game-word-cloud-reveal';
+            }
+            if (action === 'startMatching' && state.gameType === 'matching') {
+              return 'game-matching-start';
+            }
+            if (
+              ['reveal', 'revealMatching'].indexOf(action) >= 0 &&
+              state.gameType === 'matching'
+            ) {
+              return 'game-matching-reveal';
+            }
+            return null;
+          }
+          function dispatchGameShortcut(state, detail) {
+            if (!state || !state.socket || !state.socket.connected || !state.joined) return false;
+            if (!detail || detail.gameType !== state.gameType) return true;
+            var socketEvent = socketEventForGameShortcut(state, detail.action);
+            if (socketEvent) state.socket.emit(socketEvent, { gameId: state.gameId });
+            return true;
+          }
+          function drainGameShortcutActions(state) {
+            if (!state || !state.pendingShortcutActions || !state.pendingShortcutActions.length) return;
+            var queued = state.pendingShortcutActions;
+            state.pendingShortcutActions = [];
+            for (var index = 0; index < queued.length; index += 1) {
+              if (dispatchGameShortcut(state, queued[index])) continue;
+              state.pendingShortcutActions = queued.slice(index);
+              return;
+            }
+          }
+          function notifyPresenterReady() {
+            if (!window.opener || window.opener.closed) return;
+            try {
+              window.opener.postMessage({
+                type: 'navslides:presenter-ready',
+                presentationId: ${presentationIdLiteral},
+                roomCode: liveRoom
+              }, window.location.origin);
+            } catch (e) {}
+          }
+          function notifyPresenterUnready() {
+            if (!window.opener || window.opener.closed) return;
+            try {
+              window.opener.postMessage({
+                type: 'navslides:presenter-unready',
+                presentationId: ${presentationIdLiteral},
+                roomCode: liveRoom
+              }, window.location.origin);
+            } catch (e) {}
+          }
+          window.addEventListener('message', function(event) {
+            if (event.origin !== window.location.origin || event.source !== window.opener) return;
+            var message = event.data || {};
+            if (
+              message.type !== 'navslides:game-shortcut' ||
+              message.presentationId !== ${presentationIdLiteral} ||
+              message.roomCode !== liveRoom
+            ) {
+              return;
+            }
+            var detail = message.detail || {};
+            if (
+              typeof detail.elementId !== 'string' ||
+              typeof detail.action !== 'string' ||
+              typeof detail.gameType !== 'string'
+            ) {
+              return;
+            }
+            var state = gameHostStates[detail.elementId];
+            if (!state) {
+              var pending = pendingGameShortcutActions[detail.elementId] || [];
+              pendingGameShortcutActions[detail.elementId] = pending;
+              queueGameShortcut(pending, detail);
+              return;
+            }
+            if (detail.gameType !== state.gameType) return;
+            if (dispatchGameShortcut(state, detail)) return;
+            state.pendingShortcutActions = state.pendingShortcutActions || [];
+            queueGameShortcut(state.pendingShortcutActions, detail);
+          });
+          notifyPresenterReady();
           function bootstrapGameHosts() {
             if (gameBootstrapInFlight || typeof fetch !== 'function') return;
             gameBootstrapInFlight = true;
@@ -180,6 +301,7 @@ function buildGameBootstrapRuntime(presentationId) {
             request();
           }
           window.addEventListener('beforeunload', function() {
+            notifyPresenterUnready();
             if (gameBootstrapTimer) clearTimeout(gameBootstrapTimer);
             Object.keys(gameHostStates).forEach(function(gameId) {
               var state = gameHostStates[gameId];

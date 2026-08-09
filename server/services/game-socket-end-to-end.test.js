@@ -7,7 +7,7 @@
  * Calling GameEngine directly is what hid the namespace/field-name dead-end
  * (defect C1), so every assertion here is driven through emit/receive.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createServer } from 'node:http'
 import { createRequire } from 'node:module'
 import { Server } from 'socket.io'
@@ -85,7 +85,211 @@ afterEach(async () => {
 })
 
 describe('game socket end-to-end', () => {
-  // 1. C1 tripwire: namespace + field names line up across the wire.
+  it('rejects malformed unauthenticated payloads without disconnecting the socket', async () => {
+    const sock = connectClient()
+    await waitConnect(sock)
+
+    const nextError = once(sock, 'game-error')
+    sock.emit('game-next')
+    expect(await nextError).toMatchObject({ message: 'Not in a game room' })
+    expect(sock.connected).toBe(true)
+
+    const answerError = once(sock, 'game-error')
+    sock.emit('game-answer')
+    expect(await answerError).toMatchObject({ message: 'Not in a game room' })
+    expect(sock.connected).toBe(true)
+
+    const nullNextError = once(sock, 'game-error')
+    sock.emit('game-next', null)
+    expect(await nullNextError).toMatchObject({ message: 'Not in a game room' })
+    const nullAnswerError = once(sock, 'game-error')
+    sock.emit('game-answer', null)
+    expect(await nullAnswerError).toMatchObject({ message: 'Not in a game room' })
+    expect(sock.connected).toBe(true)
+  })
+
+  it('redacts answer keys from public question events and rejects missing timing', async () => {
+    GameEngine.createRoom('redaction-room', 'hot-potato', {
+      questions: [{
+        id: 'q-secret',
+        question: 'Which option is correct?',
+        options: ['A', 'B'],
+        correctIndex: 1,
+        explanation: 'Private explanation',
+        timeLimit: 30,
+        points: 10,
+      }],
+    })
+    const host = connectClient()
+    const player = connectClient()
+    await Promise.all([waitConnect(host), waitConnect(player)])
+    await joinAndWait(host, {
+      gameId: 'redaction-room',
+      gameType: 'hot-potato',
+      role: 'host',
+      playerName: 'Presenter',
+      playerId: 'host-player',
+    })
+    await joinAndWait(player, {
+      gameId: 'redaction-room',
+      gameType: 'hot-potato',
+      role: 'player',
+      playerName: 'Learner',
+      playerId: 'learner-player',
+    })
+
+    const questionEvent = once(player, 'game-question')
+    host.emit('game-next', { gameId: 'redaction-room' })
+    const question = await questionEvent
+    expect(question.question).toMatchObject({
+      id: 'q-secret',
+      question: 'Which option is correct?',
+      options: ['A', 'B'],
+    })
+    expect(question.question).not.toHaveProperty('correctIndex')
+    expect(question.question).not.toHaveProperty('explanation')
+    expect(question.allowLate).toBe(false)
+    expect(question.questionStartedAt).toEqual(expect.any(Number))
+    expect(question.timeRemainingMs).toBeGreaterThan(0)
+
+    GameEngine.getRoom('redaction-room').questionStartedAt = Date.now() - 15000
+    const answerResult = once(player, 'game-answer-result')
+    player.emit('game-answer', { gameId: 'redaction-room', questionId: 'q-secret', answerIndex: 1 })
+    const result = await answerResult
+    expect(result.correct).toBe(true)
+    expect(result.points).toBeGreaterThan(10)
+    expect(result.points).toBeLessThan(20)
+  })
+
+  it('redacts answer markers from object options and scores by correctIndex', async () => {
+    GameEngine.createRoom('object-option-redaction-room', 'hot-potato', {
+      questions: [{
+        id: 'q-object-options',
+        question: 'Choose the canonical answer',
+        options: [
+          { text: 'A', correct: true },
+          { text: 'B', correct: false },
+        ],
+        correctIndex: 1,
+        timeLimit: 30,
+        points: 10,
+      }],
+    })
+    const host = connectClient()
+    const player = connectClient()
+    await Promise.all([waitConnect(host), waitConnect(player)])
+    await joinAndWait(host, {
+      gameId: 'object-option-redaction-room',
+      gameType: 'hot-potato',
+      role: 'host',
+      playerName: 'Presenter',
+      playerId: 'object-option-host',
+    })
+    await joinAndWait(player, {
+      gameId: 'object-option-redaction-room',
+      gameType: 'hot-potato',
+      role: 'player',
+      playerName: 'Learner',
+      playerId: 'object-option-player',
+    })
+
+    const questionEvent = once(player, 'game-question')
+    host.emit('game-next', { gameId: 'object-option-redaction-room' })
+    const question = await questionEvent
+
+    expect(question.question.options).toEqual(['A', 'B'])
+    expect(question.question.options.some((option) => option && typeof option === 'object')).toBe(false)
+
+    const answerResult = once(player, 'game-answer-result')
+    player.emit('game-answer', {
+      gameId: 'object-option-redaction-room',
+      questionId: 'q-object-options',
+      answerIndex: 1,
+      timeSpentMs: 100,
+    })
+    expect(await answerResult).toMatchObject({ correct: true, answerIndex: 1 })
+  })
+
+  it('rejects an answer bound to a previous question after the host advances', async () => {
+    GameEngine.createRoom('stale-question-room', 'hot-potato', {
+      questions: [
+        { id: 'q1', correctIndex: 0, points: 10 },
+        { id: 'q2', correctIndex: 1, points: 10 },
+      ],
+    })
+    const host = connectClient()
+    const player = connectClient()
+    await Promise.all([waitConnect(host), waitConnect(player)])
+    await joinAndWait(host, {
+      gameId: 'stale-question-room',
+      gameType: 'hot-potato',
+      role: 'host',
+      playerName: 'Presenter',
+      playerId: 'p-host',
+    })
+    await joinAndWait(player, {
+      gameId: 'stale-question-room',
+      gameType: 'hot-potato',
+      role: 'player',
+      playerName: 'Learner',
+      playerId: 'p-learner',
+    })
+
+    const firstQuestion = once(player, 'game-question')
+    host.emit('game-next', { gameId: 'stale-question-room' })
+    expect((await firstQuestion).question.id).toBe('q1')
+
+    const secondQuestion = once(player, 'game-question')
+    host.emit('game-next', { gameId: 'stale-question-room' })
+    expect((await secondQuestion).question.id).toBe('q2')
+
+    const stale = once(player, 'game-error')
+    player.emit('game-answer', {
+      gameId: 'stale-question-room',
+      questionId: 'q1',
+      answerIndex: 0,
+      timeSpentMs: 100,
+    })
+    expect(await stale).toMatchObject({ message: 'stale-question' })
+    const playerState = GameEngine.getRoom('stale-question-room').players.get('p-learner')
+    expect(playerState.score).toBe(0)
+    expect(playerState.answers).toHaveLength(0)
+
+    const valid = once(player, 'game-answer-result')
+    player.emit('game-answer', {
+      gameId: 'stale-question-room',
+      questionId: 'q2',
+      answerIndex: 1,
+      timeSpentMs: 100,
+    })
+    expect(await valid).toMatchObject({ correct: true, totalScore: 10 })
+    expect(playerState.answers).toHaveLength(1)
+  })
+
+  it('emits game-ended instead of replaying the final question', async () => {
+    GameEngine.createRoom('final-question-room', 'hot-potato', {
+      questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
+    })
+    const host = connectClient()
+    await waitConnect(host)
+    await joinAndWait(host, {
+      gameId: 'final-question-room',
+      gameType: 'hot-potato',
+      role: 'host',
+      playerName: 'Presenter',
+      playerId: 'p-host',
+    })
+
+    const firstQuestion = once(host, 'game-question')
+    host.emit('game-next', { gameId: 'final-question-room' })
+    expect((await firstQuestion).question.id).toBe('q1')
+
+    const ended = once(host, 'game-ended')
+    host.emit('game-next', { gameId: 'final-question-room' })
+    expect(await ended).toMatchObject({ finalScores: [{ playerId: 'p-host', score: 0 }] })
+  })
+
+  // C1 tripwire: namespace + field names line up across the wire.
   it('join flow: client receives game-player-joined with itself listed', async () => {
     GameEngine.createRoom('room1', 'name-picker', { items: ['A'] })
     const sock = connectClient()
@@ -132,7 +336,7 @@ describe('game socket end-to-end', () => {
 
     const hostQuestion = once(host, 'game-question')
     host.emit('game-next', { gameId: 'session-host-room' })
-    expect((await hostQuestion).question.id).toBe('q2')
+    expect((await hostQuestion).question.id).toBe('q1')
   })
 
   it('reissues a host session when a reconnect loses the initial session event', async () => {
@@ -212,6 +416,7 @@ describe('game socket end-to-end', () => {
     GameEngine.createRoom('session-player-room', 'hot-potato', {
       questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
     })
+    GameEngine.nextQuestion('session-player-room')
     const first = connectClient()
     await waitConnect(first)
     const firstSession = once(first, 'game-session')
@@ -234,13 +439,92 @@ describe('game socket end-to-end', () => {
     })
 
     const staleError = once(first, 'game-error')
-    first.emit('game-answer', { gameId: 'session-player-room', answerIndex: 0, timeSpentMs: 1000 })
+    first.emit('game-answer', { gameId: 'session-player-room', questionId: 'q1', answerIndex: 0, timeSpentMs: 1000 })
     expect((await staleError).message).toBe('stale-player-session')
     expect(GameEngine.getRoom('session-player-room').players.get('p-alice').score).toBe(0)
 
     const answerResult = once(second, 'game-answer-result')
-    second.emit('game-answer', { gameId: 'session-player-room', answerIndex: 0, timeSpentMs: 1000 })
+    second.emit('game-answer', { gameId: 'session-player-room', questionId: 'q1', answerIndex: 0, timeSpentMs: 1000 })
     expect((await answerResult).totalScore).toBe(10)
+  })
+
+  it('hydrates an answered question after the player reconnects', async () => {
+    GameEngine.createRoom('reconnect-answer-room', 'hot-potato', {
+      questions: [{ id: 'q1', correctIndex: 1, points: 10, timeLimit: 30 }],
+    })
+    GameEngine.nextQuestion('reconnect-answer-room')
+
+    const first = connectClient()
+    await waitConnect(first)
+    const firstSession = once(first, 'game-session')
+    const firstQuestion = once(first, 'game-question')
+    await joinAndWait(first, {
+      gameId: 'reconnect-answer-room',
+      playerName: 'Alice',
+      playerId: 'p-alice',
+      role: 'player',
+    })
+    const { sessionToken } = await firstSession
+    await firstQuestion
+
+    const firstResult = once(first, 'game-answer-result')
+    first.emit('game-answer', {
+      gameId: 'reconnect-answer-room',
+      questionId: 'q1',
+      answerIndex: 0,
+      timeSpentMs: 1000,
+    })
+    await expect(firstResult).resolves.toMatchObject({
+      correct: false,
+      correctIndex: 1,
+      answerIndex: 0,
+      points: 0,
+    })
+    first.disconnect()
+
+    const second = connectClient()
+    await waitConnect(second)
+    const hydratedQuestion = once(second, 'game-question')
+    const hydratedResult = once(second, 'game-answer-result')
+    await joinAndWait(second, {
+      gameId: 'reconnect-answer-room',
+      playerName: 'Alice',
+      playerId: 'p-alice',
+      role: 'player',
+      sessionToken,
+    })
+
+    const [question, result] = await Promise.all([hydratedQuestion, hydratedResult])
+    expect(question.question).not.toHaveProperty('correctIndex')
+    expect(result).toMatchObject({
+      correct: false,
+      correctIndex: 1,
+      answerIndex: 0,
+      points: 0,
+      totalScore: 0,
+    })
+  })
+
+  it('rejects an expired answer when late answers are disabled', async () => {
+    GameEngine.createRoom('expired-answer-room', 'hot-potato', {
+      allowLate: false,
+      questions: [{ id: 'q1', correctIndex: 0, points: 10, timeLimit: 5 }],
+    })
+    GameEngine.nextQuestion('expired-answer-room')
+    GameEngine.getRoom('expired-answer-room').questionStartedAt = Date.now() - 6000
+
+    const sock = connectClient()
+    await waitConnect(sock)
+    await joinAndWait(sock, {
+      gameId: 'expired-answer-room',
+      playerName: 'Alice',
+      playerId: 'p-alice',
+    })
+
+    const expired = once(sock, 'game-error')
+    sock.emit('game-answer', { gameId: 'expired-answer-room', questionId: 'q1', answerIndex: 0, timeSpentMs: 0 })
+    expect(await expired).toMatchObject({ message: 'question-expired' })
+    expect(GameEngine.getRoom('expired-answer-room').players.get('p-alice').score).toBe(0)
   })
 
   it('lets an editor observe a game without claiming host authority', async () => {
@@ -258,6 +542,7 @@ describe('game socket end-to-end', () => {
       hostPlayerId: 'p-host',
       hostSocketId: host.id,
     })
+    GameEngine.nextQuestion('observer-room')
 
     const observer = connectClient()
     await waitConnect(observer)
@@ -289,7 +574,7 @@ describe('game socket end-to-end', () => {
     expect(GameEngine.isHost('observer-room', 'p-alice')).toBe(false)
 
     const observerLeaderboard = once(observer, 'game-leaderboard')
-    player.emit('game-answer', { gameId: 'observer-room', answerIndex: 0, timeSpentMs: 1000 })
+    player.emit('game-answer', { gameId: 'observer-room', questionId: 'q1', answerIndex: 0, timeSpentMs: 1000 })
     const updatedScores = await observerLeaderboard
     expect(updatedScores.scores).toHaveLength(2)
     expect(updatedScores.scores[0]).toMatchObject({ playerId: 'p-alice', score: 10 })
@@ -300,18 +585,19 @@ describe('game socket end-to-end', () => {
     GameEngine.createRoom('room2', 'hot-potato', {
       questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
     })
+    GameEngine.nextQuestion('room2')
     const sock = connectClient()
     await waitConnect(sock)
     await joinAndWait(sock, { gameId: 'room2', playerName: 'Bob', playerId: 'p-bob' })
 
     const r1 = once(sock, 'game-answer-result')
-    sock.emit('game-answer', { gameId: 'room2', answerIndex: 0, timeSpentMs: 1000 })
+    sock.emit('game-answer', { gameId: 'room2', questionId: 'q1', answerIndex: 0, timeSpentMs: 1000 })
     await r1
 
-    // The repeat for the same question is rejected with game-error, not scored.
-    const dup = once(sock, 'game-error')
-    sock.emit('game-answer', { gameId: 'room2', answerIndex: 0, timeSpentMs: 1000 })
-    await dup
+    // The repeat returns the persisted result, not a misleading pending error.
+    const dup = once(sock, 'game-answer-result')
+    sock.emit('game-answer', { gameId: 'room2', questionId: 'q1', answerIndex: 0, timeSpentMs: 1000 })
+    expect((await dup)).toMatchObject({ correct: true, answerIndex: 0, points: 10, totalScore: 10 })
 
     const room = GameEngine.getRoom('room2')
     const player = [...room.players.values()][0]
@@ -338,7 +624,7 @@ describe('game socket end-to-end', () => {
     const err = await errP
 
     expect(err.message).toBeDefined()
-    expect(GameEngine.getRoom('room3').currentQuestion).toBe(0)
+    expect(GameEngine.getRoom('room3').currentQuestion).toBe(-1)
 
     GameEngine.createRoom('room3-other', 'name-picker', { items: ['A'] })
     const otherHostCapability = GameEngine.takeHostCapability('room3-other')
@@ -406,6 +692,36 @@ describe('game socket end-to-end', () => {
     expect(GameEngine.getRoom('room4')).toBeDefined()
   })
 
+  it('schedules cleanup after the last connected player leaves', async () => {
+    GameEngine._setEmptyRoomTtl(300)
+    GameEngine.createRoom('room4-stale-player', 'name-picker', { items: ['A'] })
+
+    const host = connectClient()
+    const player = connectClient()
+    await Promise.all([waitConnect(host), waitConnect(player)])
+    await joinAndWait(host, {
+      gameId: 'room4-stale-player',
+      gameType: 'name-picker',
+      playerName: 'Presenter',
+      playerId: 'p-host',
+      role: 'host',
+    })
+    await joinAndWait(player, {
+      gameId: 'room4-stale-player',
+      playerName: 'Alice',
+      playerId: 'p-player',
+      role: 'player',
+    })
+
+    player.disconnect()
+    await delay(50)
+    expect(GameEngine.getRoom('room4-stale-player').players.get('p-player').socketId).toBeNull()
+
+    host.emit('game-leave', { gameId: 'room4-stale-player' })
+    await delay(50)
+    expect(GameEngine.getRoom('room4-stale-player').cleanupKind).toBe('empty')
+  })
+
   // 5. Random determinism: every client sees the SAME server-chosen index.
   it('broadcasts identical winnerIndex to all clients on game-random', async () => {
     GameEngine.createRoom('room5', 'name-picker', { items: ['A', 'B', 'C'], excludeAfterPick: false })
@@ -425,6 +741,37 @@ describe('game socket end-to-end', () => {
     const [hr, vr] = await Promise.all([hostResult, viewerResult])
     expect(typeof hr.winnerIndex).toBe('number')
     expect(hr.winnerIndex).toBe(vr.winnerIndex)
+  })
+
+  it('broadcasts the stable picked value after excluded items shift server indexes', async () => {
+    const random = vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0.5)
+      .mockReturnValueOnce(0.99)
+    try {
+      GameEngine.createRoom('room5-excluded', 'name-picker', {
+        items: ['A', 'B', 'C'],
+        excludeAfterPick: true,
+      })
+
+      const host = connectClient()
+      await waitConnect(host)
+      await joinAndWait(host, {
+        gameId: 'room5-excluded',
+        playerName: 'Host',
+        playerId: 'p-host',
+        role: 'host',
+      })
+
+      const firstResult = once(host, 'game-random-result')
+      host.emit('game-random', { gameId: 'room5-excluded' })
+      expect(await firstResult).toMatchObject({ winnerIndex: 1, winner: 'B' })
+
+      const secondResult = once(host, 'game-random-result')
+      host.emit('game-random', { gameId: 'room5-excluded' })
+      expect(await secondResult).toMatchObject({ winnerIndex: 1, winner: 'C' })
+    } finally {
+      random.mockRestore()
+    }
   })
 
   it('runs poll start, vote update, host authorization, and aggregate broadcast through sockets', async () => {
@@ -564,6 +911,74 @@ describe('game socket end-to-end', () => {
     expect(await cleared).toMatchObject({ totalSubmissions: 0, entries: [] })
   })
 
+  it('hydrates late players with the active state for each game mode', async () => {
+    const hydrate = async ({ gameId, gameType, options, event, startEvent, expected }) => {
+      const host = connectClient()
+      await waitConnect(host)
+      await joinAndWait(host, {
+        gameId,
+        playerName: 'Host',
+        playerId: `${gameId}-host`,
+        role: 'host',
+        gameType,
+        options,
+      })
+
+      if (gameType === 'hot-potato') {
+        const question = once(host, 'game-question')
+        host.emit('game-next', { gameId })
+        await question
+      } else {
+        const started = once(host, event)
+        host.emit(startEvent, { gameId })
+        await started
+      }
+
+      const player = connectClient()
+      await waitConnect(player)
+      const hydrated = once(player, event)
+      await joinAndWait(player, {
+        gameId,
+        playerName: 'Late Player',
+        playerId: `${gameId}-player`,
+        role: 'player',
+      })
+      expect(await hydrated).toMatchObject(expected)
+    }
+
+    await hydrate({
+      gameId: 'hydrate-quiz',
+      gameType: 'hot-potato',
+      options: { questions: [{ id: 'q1', question: 'One?', options: ['Yes'], correctIndex: 0 }] },
+      event: 'game-question',
+      expected: { question: { id: 'q1' }, questionNumber: 1 },
+    })
+    await hydrate({
+      gameId: 'hydrate-poll',
+      gameType: 'poll',
+      options: { prompt: 'Choose one', options: [{ id: 'a', text: 'Alpha' }] },
+      event: 'game-poll-started',
+      startEvent: 'game-poll-start',
+      expected: { prompt: 'Choose one' },
+    })
+    await hydrate({
+      gameId: 'hydrate-cloud',
+      gameType: 'word-cloud',
+      options: { prompt: 'One word' },
+      event: 'game-word-cloud-started',
+      startEvent: 'game-word-cloud-start',
+      expected: { prompt: 'One word' },
+    })
+    await hydrate({
+      gameId: 'hydrate-matching',
+      gameType: 'matching',
+      options: { prompt: 'Match terms', pairs: [{ promptId: 'p1', prompt: 'A', targetId: 't1', target: 'B' }] },
+      event: 'game-matching-started',
+      startEvent: 'game-matching-start',
+      expected: { prompt: 'Match terms' },
+    })
+  })
+
   it('runs matching start, submit, reveal, and room binding through sockets', async () => {
     const host = connectClient()
     await waitConnect(host)
@@ -633,5 +1048,32 @@ describe('game socket end-to-end', () => {
         { promptId: 'p-tls', targetId: 't-security' },
       ],
     })
+
+    const latePlayer = connectClient()
+    await waitConnect(latePlayer)
+    const lateState = once(latePlayer, 'game-matching-started')
+    await joinAndWait(latePlayer, {
+      gameId: 'match-room',
+      playerName: 'Late Player',
+      playerId: 'p-late',
+      role: 'player',
+    })
+    expect(await lateState).toMatchObject({
+      answerKey: [
+        { promptId: 'p-http', targetId: 't-protocol' },
+        { promptId: 'p-tls', targetId: 't-security' },
+      ],
+    })
+
+    const ended = once(host, 'game-ended')
+    host.emit('game-end', { gameId: 'match-room' })
+    await ended
+    expect(GameEngine.getRoom('match-room').cleanupKind).toBe('finished')
+
+    const restarted = once(host, 'game-matching-started')
+    host.emit('game-matching-start', { gameId: 'match-room' })
+    expect(await restarted).toMatchObject({ submissions: 0 })
+    expect(await restarted).not.toHaveProperty('answerKey')
+    expect(GameEngine.getRoom('match-room')).toMatchObject({ status: 'active', cleanupKind: null })
   })
 })

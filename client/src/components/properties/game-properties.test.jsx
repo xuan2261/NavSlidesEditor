@@ -147,7 +147,7 @@ describe('GameProperties game subtype persistence', () => {
     expect(screen.getByRole('radio', { name: 'Mark option A as correct' })).toBeTruthy()
   })
 
-  it('reads flat factory data and writes both canonical flat and legacy nested fields', () => {
+  it('reads nested factory data and writes canonical nested fields', () => {
     const onUpdate = vi.fn()
     render(
       <GameProperties
@@ -160,10 +160,81 @@ describe('GameProperties game subtype persistence', () => {
     expect(screen.getByRole('textbox').value).toContain('Học sinh 1')
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Ada, Grace' } })
 
-    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
-      items: ['Ada', 'Grace'],
+    expect(onUpdate).toHaveBeenLastCalledWith({
       'name-picker': expect.objectContaining({ items: ['Ada', 'Grace'] }),
-    }))
+    })
+  })
+
+  it('does not copy flat legacy fields from the previous subtype when switching', () => {
+    const onUpdate = vi.fn()
+    render(
+      <GameProperties
+        element={{
+          ...createGameElement('hot-potato'),
+          title: 'Legacy hot potato title',
+          questions: [{ id: 'legacy-question' }],
+        }}
+        onUpdate={onUpdate}
+        onDelete={() => {}}
+      />
+    )
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'poll' } })
+
+    expect(onUpdate).toHaveBeenLastCalledWith({
+      gameType: 'poll',
+      poll: expect.objectContaining({
+        title: 'Live Poll',
+        options: expect.any(Array),
+      }),
+    })
+    expect(onUpdate.mock.lastCall[0].poll).not.toHaveProperty('questions')
+  })
+
+  it('reads flat legacy display controls when nested values are absent', () => {
+    const onUpdate = vi.fn()
+    const { unmount } = render(
+      <GameProperties
+        element={{ ...makeElement('name-picker'), showConfetti: false }}
+        onUpdate={onUpdate}
+        onDelete={() => {}}
+      />
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Display' }))
+    expect(screen.getByRole('checkbox', { name: 'Confetti animation' }).checked).toBe(false)
+    unmount()
+
+    render(
+      <GameProperties
+        element={{ ...makeElement('jeopardy'), showTimer: false }}
+        onUpdate={onUpdate}
+        onDelete={() => {}}
+      />
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Display' }))
+    expect(screen.getByRole('checkbox', { name: 'Show timer' }).checked).toBe(false)
+  })
+
+  it('preserves nested confetti state in the display control', () => {
+    const onUpdate = vi.fn()
+    render(
+      <GameProperties
+        element={{
+          ...makeElement('name-picker'),
+          'name-picker': { ...nestedDefaults['name-picker'], showConfetti: false },
+        }}
+        onUpdate={onUpdate}
+        onDelete={() => {}}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Display' }))
+    const confetti = screen.getByRole('checkbox', { name: 'Confetti animation' })
+    expect(confetti.checked).toBe(false)
+    fireEvent.click(confetti)
+    expect(onUpdate).toHaveBeenLastCalledWith({
+      'name-picker': expect.objectContaining({ showConfetti: true }),
+    })
   })
 
   it('preserves existing subtype config when switching game types and fills missing defaults', () => {
@@ -184,16 +255,14 @@ describe('GameProperties game subtype persistence', () => {
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'poll' } })
 
-    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+    expect(onUpdate).toHaveBeenLastCalledWith({
       gameType: 'poll',
-      prompt: 'Keep this poll prompt',
-      showResults: true,
       poll: expect.objectContaining({
         prompt: 'Keep this poll prompt',
         options: [{ id: 'custom-option', text: 'Custom answer' }],
         showResults: true,
       }),
-    }))
+    })
   })
 
   it('[cap:element.game depth:persistence] writes non-default persisted config for supported controls', () => {
@@ -207,17 +276,15 @@ describe('GameProperties game subtype persistence', () => {
         fireEvent.change(screen.getByRole('textbox'), {
           target: { value: 'Ada, Grace, Linus' },
         })
-        expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
-          items: ['Ada', 'Grace', 'Linus'],
+        expect(onUpdate).toHaveBeenLastCalledWith({
           [gameType]: expect.objectContaining({ items: ['Ada', 'Grace', 'Linus'] }),
-        }))
+        })
       } else {
         const timer = container.querySelector('input[type="range"]')
         fireEvent.change(timer, { target: { value: '45' } })
-        expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
-          timerDuration: 45,
+        expect(onUpdate).toHaveBeenLastCalledWith({
           [gameType]: expect.objectContaining({ timerDuration: 45 }),
-        }))
+        })
       }
 
       unmount()
@@ -230,15 +297,14 @@ describe('GameProperties game subtype persistence', () => {
 
     fireEvent.click(screen.getByText('+ Add Team'))
 
-    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({
-      teams: expect.any(Array),
+    expect(onUpdate).toHaveBeenCalledWith({
       jeopardy: expect.objectContaining({
         teams: expect.arrayContaining([
           expect.objectContaining({ name: 'Red' }),
           expect.objectContaining({ name: 'Team 2', color: '#888888', score: 0 }),
         ]),
       }),
-    }))
+    })
   })
 
   it('[cap:element.game depth:behavior] edits poll prompt and option config under the selected subtype', () => {
@@ -248,22 +314,20 @@ describe('GameProperties game subtype persistence', () => {
     fireEvent.change(screen.getByPlaceholderText('Ask a quick class poll...'), {
       target: { value: 'Which theorem should we review?' },
     })
-    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
-      prompt: 'Which theorem should we review?',
+    expect(onUpdate).toHaveBeenLastCalledWith({
       poll: expect.objectContaining({ prompt: 'Which theorem should we review?' }),
-    }))
+    })
 
     fireEvent.change(screen.getByDisplayValue('Option A'), {
       target: { value: 'Pythagorean theorem' },
     })
-    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
-      options: expect.any(Array),
+    expect(onUpdate).toHaveBeenLastCalledWith({
       poll: expect.objectContaining({
         options: expect.arrayContaining([
           expect.objectContaining({ id: 'option-a', text: 'Pythagorean theorem' }),
         ]),
       }),
-    }))
+    })
   })
 
   it('[cap:element.game depth:behavior] edits word cloud prompt under the selected subtype', () => {
@@ -274,10 +338,9 @@ describe('GameProperties game subtype persistence', () => {
       target: { value: 'Describe today in one word' },
     })
 
-    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
-      prompt: 'Describe today in one word',
+    expect(onUpdate).toHaveBeenLastCalledWith({
       'word-cloud': expect.objectContaining({ prompt: 'Describe today in one word' }),
-    }))
+    })
   })
 
   it('[cap:element.game depth:behavior] edits matching prompt and pair config under the selected subtype', () => {
@@ -287,16 +350,14 @@ describe('GameProperties game subtype persistence', () => {
     fireEvent.change(screen.getByPlaceholderText('Ask learners to match items...'), {
       target: { value: 'Match networking terms' },
     })
-    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
-      prompt: 'Match networking terms',
+    expect(onUpdate).toHaveBeenLastCalledWith({
       matching: expect.objectContaining({ prompt: 'Match networking terms' }),
-    }))
+    })
 
     fireEvent.change(screen.getByLabelText('Pair 1 target'), {
       target: { value: 'Application protocol' },
     })
-    expect(onUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
-      pairs: expect.any(Array),
+    expect(onUpdate).toHaveBeenLastCalledWith({
       matching: expect.objectContaining({
         pairs: expect.arrayContaining([
           expect.objectContaining({
@@ -307,7 +368,7 @@ describe('GameProperties game subtype persistence', () => {
           }),
         ]),
       }),
-    }))
+    })
   })
 
   it('[cap:element.game depth:behavior] enforces matching pair authoring bounds', () => {
@@ -333,13 +394,12 @@ describe('GameProperties game subtype persistence', () => {
     expect(onUpdate).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByText('+ Add'))
-    expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({
-      pairs: expect.any(Array),
+    expect(onUpdate).toHaveBeenCalledWith({
       matching: expect.objectContaining({
         pairs: expect.arrayContaining([
           expect.objectContaining({ prompt: 'Term 3', target: 'Definition 3' }),
         ]),
       }),
-    }))
+    })
   })
 })

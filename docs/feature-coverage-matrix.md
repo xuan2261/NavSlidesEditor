@@ -2,7 +2,10 @@
 
 _Generated: local run_
 
-Verified (PASS only): 116/116 (100%)  |  PASS: 116
+> ⚠️ **Run results stale or missing** — statuses derived without a fresh test run. PASS counts may be optimistic; regenerate with a fresh `--reporter=json` run.
+
+Verified (PASS only): 115/115 (100%)  |  PASS: 115
+Other statuses: TAGGED: 1
 
 ## canvas
 
@@ -26,7 +29,7 @@ Verified (PASS only): 116/116 (100%)  |  PASS: 116
 |---|---|---|---|---|---|---|
 | command.commandPalette | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |
 | command.group | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
-| command.insertLink | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
+| command.insertLink | low | smoke | unit | - | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | TAGGED |
 | command.insertSlide | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 | command.resetZoom | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 | command.startSlideshow | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |

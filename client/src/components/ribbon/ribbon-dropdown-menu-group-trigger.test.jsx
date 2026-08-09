@@ -25,6 +25,33 @@ describe('RibbonDropdownMenuGroup', () => {
     expect(screen.getByRole('menuitem', { name: 'Kinetic Text' })).toBeTruthy()
   })
 
+  it('focuses the first item and supports roving arrow, Home, and End navigation', () => {
+    render(
+      <RibbonDropdownMenuGroup
+        icon={Package}
+        label="Advanced"
+        items={[
+          { id: 'kinetic', icon: Sparkles, label: 'Kinetic Text', onAction: vi.fn() },
+          { id: 'anime', icon: Sparkles, label: 'Anime', onAction: vi.fn() },
+          { id: 'three', icon: Sparkles, label: 'Three.js', onAction: vi.fn() },
+        ]}
+      />
+    )
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Advanced' }))
+    const items = screen.getAllByRole('menuitem')
+    expect(document.activeElement).toBe(items[0])
+
+    fireEvent.keyDown(items[0], { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(items[1])
+    fireEvent.keyDown(items[1], { key: 'ArrowRight' })
+    expect(document.activeElement).toBe(items[2])
+    fireEvent.keyDown(items[2], { key: 'Home' })
+    expect(document.activeElement).toBe(items[0])
+    fireEvent.keyDown(items[0], { key: 'End' })
+    expect(document.activeElement).toBe(items[2])
+  })
+
   it('activates menu items with keyboard and closes the menu', () => {
     const onAction = vi.fn()
     render(

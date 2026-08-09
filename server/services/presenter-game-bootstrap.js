@@ -15,7 +15,7 @@ const SUPPORTED_GAME_TYPES = new Set([
 
 const GAME_OPTION_KEYS = {
   'name-picker': ['items', 'excludeAfterPick'],
-  'hot-potato': ['questions'],
+  'hot-potato': ['questions', 'allowLate'],
   jeopardy: ['teams', 'categories', 'questions', 'dailyDouble'],
   'four-corners': ['cornerCount', 'eliminateMode', 'showTimer', 'timerDuration'],
   'relay-race': ['questionsPerRound', 'shuffleTeams', 'passOnWrong', 'questions'],

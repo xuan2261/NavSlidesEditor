@@ -22,4 +22,63 @@ describe('editor presentation migration', () => {
     expect(migrateSlide(slide).elements).toHaveLength(1)
     expect(slide.elements[0]).toEqual({ id: 'video', type: 'video', url: '/old.mp4' })
   })
+
+  it('migrates legacy video sources in child slides without overriding explicit src', () => {
+    const source = {
+      slides: [
+        {
+          id: 'parent',
+          elements: [{ id: 'parent-video', type: 'video', videoUrl: '/parent.mp4' }],
+          children: [
+            {
+              id: 'legacy-child',
+              elements: [{ id: 'child-video', type: 'video', videoUrl: '/child.mp4' }],
+            },
+            {
+              id: 'explicit-child',
+              elements: [{ id: 'child-blank', type: 'video', src: '', videoUrl: '/stale.mp4' }],
+            },
+          ],
+        },
+      ],
+    }
+
+    const migrated = migratePresentation(source)
+
+    expect(migrated.slides[0].elements[0].src).toBe('/parent.mp4')
+    expect(migrated.slides[0].children[0].elements[0].src).toBe('/child.mp4')
+    expect(migrated.slides[0].children[1].elements[0].src).toBe('')
+    expect(migrated.slides[0].children[1].elements[0].videoUrl).toBe('/stale.mp4')
+  })
+
+  it('normalizes child game subtype config while preserving nested precedence', () => {
+    const source = {
+      slides: [
+        {
+          id: 'parent',
+          children: [
+            {
+              id: 'child',
+              elements: [
+                {
+                  id: 'poll',
+                  type: 'game',
+                  gameType: 'poll',
+                  prompt: 'legacy prompt',
+                  poll: { prompt: 'nested prompt' },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+
+    const migrated = migratePresentation(source)
+    const config = migrated.slides[0].children[0].elements[0].poll
+
+    expect(config.prompt).toBe('nested prompt')
+    expect(config.title).toBe('Live Poll')
+    expect(config.options).toHaveLength(2)
+  })
 })

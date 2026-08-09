@@ -90,7 +90,7 @@ describe('ChartProperties', () => {
     expect(screen.getByTestId('prop-chart-add-series').disabled).toBe(true)
   })
 
-  it('[cap:element.chart depth:behavior] writes area fill, stacked, add series, and remove series', () => {
+  it('[cap:element.chart depth:behavior] writes native chart export options and series changes', () => {
     const onUpdate = vi.fn()
     const multiSeriesChart = {
       ...chart,
@@ -106,11 +106,17 @@ describe('ChartProperties', () => {
 
     fireEvent.click(screen.getByTestId('prop-chart-area-fill'))
     fireEvent.click(screen.getByTestId('prop-chart-stacked'))
+    fireEvent.change(screen.getByTestId('prop-chart-legend-position'), { target: { value: 'bottom' } })
+    fireEvent.change(screen.getByTestId('prop-chart-category-axis-title'), { target: { value: 'Month' } })
+    fireEvent.change(screen.getByTestId('prop-chart-value-axis-title'), { target: { value: 'Revenue' } })
     fireEvent.click(screen.getByTestId('prop-chart-add-series'))
     fireEvent.click(screen.getByTestId('prop-chart-remove-series-1'))
 
     expect(onUpdate).toHaveBeenCalledWith({ areaFill: true })
     expect(onUpdate).toHaveBeenCalledWith({ stacked: true })
+    expect(onUpdate).toHaveBeenCalledWith({ legendPosition: 'bottom' })
+    expect(onUpdate).toHaveBeenCalledWith({ axisTitles: { category: 'Month' } })
+    expect(onUpdate).toHaveBeenCalledWith({ axisTitles: { value: 'Revenue' } })
     expect(onUpdate).toHaveBeenCalledWith({
       chartData: {
         ...multiSeriesChart.chartData,

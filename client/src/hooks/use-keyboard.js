@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { normalizeKey } from '../utils/shortcut-normalizer'
 import { getShortcuts } from '../utils/default-keyboard-shortcut-definitions-registry'
 import { loadOverrides } from '../utils/shortcut-local-storage-persistence'
+import { GAME_SHORTCUT_CONFIG } from '../utils/game-shortcut-config'
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
@@ -13,7 +14,27 @@ const ARROW_DIRECTION = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', A
 // (a held Ctrl+K would otherwise strobe the palette, Ctrl+G spam grouping).
 // Continuous actions (arrow nudge, slide walking, timer +/-) are intentionally
 // excluded so holding an arrow keeps moving the selection.
-const REPEAT_SUPPRESSED_IDS = new Set(['commandPalette', 'group', 'insertSlide'])
+const REPEAT_SUPPRESSED_IDS = new Set(['commandPalette', 'group', 'insertSlide', 'gameNext'])
+
+const GAME_SHORTCUT_CONFIG_KEYS = {
+  gameTimer: 'timer',
+  gameNext: 'nextPhase',
+  gameReveal: 'reveal',
+  gameLeaderboard: 'leaderboard',
+  gamePause: 'pause',
+  timerAdd: 'timerAdd',
+  timerSub: 'timerSub',
+  teamSelect1: 'teamSelect',
+  teamSelect2: 'teamSelect',
+  teamSelect3: 'teamSelect',
+  teamSelect4: 'teamSelect',
+}
+
+function isConfiguredGameShortcut(shortcutId, gameType) {
+  const configKey = GAME_SHORTCUT_CONFIG_KEYS[shortcutId]
+  if (!configKey) return true
+  return Boolean(GAME_SHORTCUT_CONFIG[gameType]?.[configKey])
+}
 
 // Bare game keys that hijack canvas typing/selection while authoring. These stay
 // inert in the editor (only live when actually presenting a game). HUD/reveal/
@@ -28,7 +49,8 @@ const EDITOR_SUPPRESSED_GAME_IDS = new Set([
 
 /**
  * Create keyboard event handler that dispatches from shortcut registry.
- * Supports scope filtering via isPresenting flag and activeGameType.
+ * Supports presentation scope plus a separate popup-active gate for the
+ * game controls that otherwise collide with editor interaction.
  *
  * Scope resolution:
  *   - isPresenting && activeGameType  → 'presentation-game'
@@ -40,6 +62,7 @@ export function createKeyboardHandler({
   disabled = false,
   isEditing = false,
   isPresenting = false,
+  isGamePresenterActive = false,
   activeGameType = null,
   getActiveElement = () => document.activeElement,
   ...callbacks
@@ -48,12 +71,15 @@ export function createKeyboardHandler({
     if (e.defaultPrevented) return
 
     const ctrl = e.ctrlKey || e.metaKey
+    const presenting = typeof isPresenting === 'function' ? isPresenting() : isPresenting
+    const gamePresenterActive =
+      typeof isGamePresenterActive === 'function' ? isGamePresenterActive() : isGamePresenterActive
     const activeScope =
-      isPresenting && activeGameType ? 'presentation-game' : isPresenting ? 'presentation' : 'editor'
+      presenting && activeGameType ? 'presentation-game' : presenting ? 'presentation' : 'editor'
     const scopeShortcuts = shortcuts.filter(
       (s) =>
         s.scopes.includes(activeScope) ||
-        (!isPresenting && s.scopes.includes('canvas')) ||
+        (!presenting && s.scopes.includes('canvas')) ||
         (activeGameType && s.scopes.includes('presentation-game'))
     )
     const saveShortcut = ctrl && scopeShortcuts.find(
@@ -79,9 +105,19 @@ export function createKeyboardHandler({
       const normalized = normalizeKey(e)
       const match = scopeShortcuts.find((s) => s.activeKey === normalized)
       if (match) {
-        // Bare game keys that collide with canvas typing/selection are inert
-        // while authoring; they only fire when actually presenting the game.
-        if (!isPresenting && EDITOR_SUPPRESSED_GAME_IDS.has(match.id)) return
+        if (
+          match.scopes.includes('presentation-game') &&
+          !isConfiguredGameShortcut(match.id, activeGameType)
+        ) {
+          return
+        }
+        if (e.repeat && REPEAT_SUPPRESSED_IDS.has(match.id)) {
+          e.preventDefault()
+          return
+        }
+        // Bare game keys that collide with canvas typing/selection stay inert
+        // until their matching presenter popup is live, without changing editor scope.
+        if (!presenting && !gamePresenterActive && EDITOR_SUPPRESSED_GAME_IDS.has(match.id)) return
         // Explicit map for camelCase shortcut IDs (teamSelect1 → onTeamSelect1, not onTeamselect1)
         const explicitMap = {
           teamSelect1: callbacks.onTeamSelect1,
@@ -115,7 +151,7 @@ export function createKeyboardHandler({
 
     // Bare arrow keys (editor only) — caller decides nudge-element vs change-slide.
     // Presentation scope keeps its own ArrowLeft/Right registry shortcuts.
-    if (!ctrl && !isPresenting && ARROW_DIRECTION[e.key]) {
+    if (!ctrl && !presenting && ARROW_DIRECTION[e.key]) {
       callbacks.onArrow?.(ARROW_DIRECTION[e.key], e)
       return
     }
@@ -128,7 +164,7 @@ export function createKeyboardHandler({
     }
 
     // Escape — only in canvas/editor scope (presentation uses endSlideshow shortcut)
-    if (e.key === 'Escape' && !isPresenting) {
+    if (e.key === 'Escape' && !presenting) {
       callbacks.onEscape?.()
     }
   }

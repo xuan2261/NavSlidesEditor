@@ -104,28 +104,43 @@ router.post('/:gameId/join', (req, res) => {
 // POST /api/games/:gameId/answer — submit an answer
 router.post('/:gameId/answer', (req, res) => {
   const { gameId } = req.params
-  const { socketId, playerId, sessionToken, answerIndex, timeSpentMs } = req.body
+  const { socketId, playerId, sessionToken, questionId, answerIndex, timeSpentMs } = req.body
   const effectivePlayerId = playerId || socketId
   if (
     !socketId ||
     !effectivePlayerId ||
     !sessionToken ||
+    typeof questionId !== 'string' ||
+    !questionId.trim() ||
     answerIndex === undefined ||
     timeSpentMs === undefined
   ) {
-    return res.status(400).json({ error: 'socketId, playerId, sessionToken, answerIndex, and timeSpentMs are required' })
+    return res.status(400).json({ error: 'socketId, playerId, sessionToken, questionId, answerIndex, and timeSpentMs are required' })
   }
   const result = GameEngine.submitAnswer(
     gameId,
     effectivePlayerId,
     answerIndex,
     timeSpentMs,
-    { socketId, sessionToken, requireSession: true }
+    {
+      socketId,
+      sessionToken,
+      requireSession: true,
+      questionId,
+      requireQuestionId: true,
+    }
   )
   if (result === null) {
     return res.status(404).json({ error: 'Room not found or no active question' })
   }
-  if (result.error) return res.status(403).json(result)
+  if (result.error) {
+    const status = result.error === 'invalid-time-spent'
+      ? 400
+      : ['question-expired', 'stale-question'].includes(result.error)
+        ? 409
+        : 403
+    return res.status(status).json(result)
+  }
   res.json(result)
 })
 
@@ -146,6 +161,9 @@ router.post('/:gameId/next', (req, res) => {
   const room = GameEngine.nextQuestion(gameId)
   if (room === null) {
     return res.status(404).json({ error: 'room-not-found' })
+  }
+  if (room.status === 'finished') {
+    return res.json({ currentQuestion: null, question: null, status: 'finished' })
   }
   const question = room.questions[room.currentQuestion] || null
   res.json({ currentQuestion: room.currentQuestion, question })

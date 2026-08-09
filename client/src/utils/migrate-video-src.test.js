@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { migrateVideoSrc } from './migrate-video-src'
+import { migrateVideoSrc, resolveVideoSrc } from './migrate-video-src'
 
 describe('Phase 03: migrateVideoSrc canonical src contract', () => {
   it('copies videoUrl to src when src is empty', () => {
@@ -14,6 +14,15 @@ describe('Phase 03: migrateVideoSrc canonical src contract', () => {
     const out = migrateVideoSrc(el)
     expect(out.src).toBe('https://x.com/keep.mp4')
     expect(out.videoUrl).toBe('https://x.com/old.mp4')
+  })
+
+  it('treats an explicit blank src as a source clear', () => {
+    expect(resolveVideoSrc({
+      id: 'v1',
+      type: 'video',
+      src: '',
+      videoUrl: 'https://x.com/legacy.mp4',
+    })).toBe('')
   })
 
   it('is idempotent for migrated legacy video elements', () => {

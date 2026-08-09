@@ -18,6 +18,9 @@ const latexUtils = require('./latex-utils.js')
 const pptxExportPolicy = require('./pptx-export-policy.js')
 const transitionSettings = require('./transition-settings.js')
 const chartColors = require('./chart-colors.js')
+const pptxImageOptions = require('./pptx-image-options.js')
+const pptxTableWarnings = require('./pptx-table-warnings.js')
+const pptxMediaOptions = require('./pptx-media-options.js')
 
 const TEXT_COLORS = [
   '#ffffff', '#e2e8f0', '#94a3b8', '#64748b', '#334155', '#1e293b', '#0f172a', '#000000',
@@ -76,6 +79,9 @@ module.exports = {
   ...pptxExportPolicy,
   ...transitionSettings,
   ...chartColors,
+  ...pptxImageOptions,
+  ...pptxTableWarnings,
+  ...pptxMediaOptions,
   TEXT_COLORS,
   BG_COLORS,
   GRADIENT_PRESETS,

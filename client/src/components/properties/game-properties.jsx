@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { ColorPicker } from '../ui'
 import {
   GAME_TYPES,
-  GAME_TYPE_DEFAULTS,
+  resolveGameConfig,
 } from '../../constants/game-element-types-constants'
 import { GamePropertiesQuestionEditor } from './game-properties-question-editor'
 
@@ -22,15 +22,7 @@ export const GAME_PROPERTY_CAPABILITIES = {
 const CONTROL_INPUT_CLASS =
   'w-full min-h-8 rounded-md border border-border bg-card px-2 py-1 text-xs text-text-primary focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/25'
 
-export function resolveGameConfig(element, gameType) {
-  const defaults = GAME_TYPE_DEFAULTS[gameType] || {}
-  const flat = Object.fromEntries(
-    Object.keys(defaults)
-      .filter((key) => element[key] !== undefined)
-      .map((key) => [key, element[key]])
-  )
-  return { ...defaults, ...flat, ...(element[gameType] || {}) }
-}
+export { resolveGameConfig }
 
 export default function GameProperties({ element, onUpdate, onDelete }) {
   const [activeTab, setActiveTab] = useState('Content')
@@ -43,22 +35,14 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
   const tabs = ['Content', 'Display']
 
   const handleUpdate = (changes) => {
-    const subtypeChanges = changes?.[gt]
-    if (subtypeChanges && typeof subtypeChanges === 'object') {
-      onUpdate({ ...subtypeChanges, [gt]: subtypeChanges })
-      return
-    }
     onUpdate(changes)
   }
 
   const handleGameTypeChange = (e) => {
     const newType = e.target.value
-    const typeDefaults = getGameTypeDefaults(newType)
-    const persistedConfig =
-      element[newType] && typeof element[newType] === 'object' ? element[newType] : {}
-    const nextConfig = { ...typeDefaults, ...persistedConfig }
+    const nextConfig = resolveGameConfig({ [newType]: element[newType] }, newType)
     setActiveTab('Content')
-    onUpdate({ gameType: newType, ...nextConfig, [newType]: nextConfig })
+    onUpdate({ gameType: newType, [newType]: nextConfig })
   }
 
   const handleItemsChange = (e) => {
@@ -77,8 +61,10 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
 
   const handleColorChange = (key) => (e) => handleUpdate({ [key]: e.target.value })
 
-  const handleConfettiToggle = (e) => handleUpdate({ showConfetti: e.target.checked })
-  const handleTimerToggle = (e) => handleUpdate({ showTimer: e.target.checked })
+  const handleConfettiToggle = (e) =>
+    handleUpdate({ [gt]: { ...gameConfig, showConfetti: e.target.checked } })
+  const handleTimerToggle = (e) =>
+    handleUpdate({ [gt]: { ...gameConfig, showTimer: e.target.checked } })
   return (
     <div className="mb-2.5">
       <div className="flex items-center justify-between mb-2">
@@ -133,7 +119,7 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
         )}
         {activeTab === 'Display' && (
           <DisplayTab
-            element={element} onColorChange={handleColorChange}
+            element={element} gameConfig={gameConfig} onColorChange={handleColorChange}
             capabilities={capabilities}
             onConfettiToggle={handleConfettiToggle}
             onTimerToggle={handleTimerToggle}
@@ -459,7 +445,7 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
   )
 }
 
-function DisplayTab({ element, capabilities, onColorChange, onConfettiToggle, onTimerToggle }) {
+function DisplayTab({ element, gameConfig, capabilities, onColorChange, onConfettiToggle, onTimerToggle }) {
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
@@ -482,8 +468,8 @@ function DisplayTab({ element, capabilities, onColorChange, onConfettiToggle, on
       </div>
       {(capabilities.confetti || capabilities.timerVisibility) && <div className="space-y-1">
         {[
-          capabilities.confetti && ['showConfetti', element.showConfetti !== false, onConfettiToggle, 'Confetti animation'],
-          capabilities.timerVisibility && ['showTimer', element.showTimer !== false, onTimerToggle, 'Show timer'],
+          capabilities.confetti && ['showConfetti', gameConfig.showConfetti !== false, onConfettiToggle, 'Confetti animation'],
+          capabilities.timerVisibility && ['showTimer', gameConfig.showTimer !== false, onTimerToggle, 'Show timer'],
         ].filter(Boolean).map(([key, checked, onChange, label]) => (
           <label key={key} className="flex items-center gap-1.5 cursor-pointer">
             <input
@@ -496,45 +482,4 @@ function DisplayTab({ element, capabilities, onColorChange, onConfettiToggle, on
       </div>}
     </div>
   )
-}
-
-function getGameTypeDefaults(type) {
-  const d = {
-    'name-picker': { pickerMode: 'wheel', items: ['Học sinh 1','Học sinh 2','Học sinh 3','Học sinh 4','Học sinh 5','Học sinh 6','Học sinh 7','Học sinh 8'], wheelSegments: 8, excludeAfterPick: true, animationDuration: 2500, timerDuration: 30 },
-    'hot-potato': { title: 'Hot Potato Quiz', questions: [], currentQuestion: 0, allowLate: false, showLeaderboard: true, shuffleQuestions: false, timerDuration: 30 },
-    'jeopardy': { title: 'Jeopardy', teams: [], categories: [], questions: {}, dailyDouble: [], timerDuration: 30 },
-    'four-corners': { cornerCount: 4, eliminateMode: 'wrong', showTimer: true, timerDuration: 30 },
-    'relay-race': { questionsPerRound: 4, shuffleTeams: true, passOnWrong: true, timerDuration: 30 },
-    'trivia-champ': { rounds: [], lightningRound: { enabled: false, timePerQ: 10 }, jackpotRound: { enabled: false, multiplier: 2 }, timerDuration: 30 },
-    'scattergories': { timePerRound: 60, letterMode: 'random', categories: [], scoring: 'unique', timerDuration: 30 },
-    'poll': {
-      title: 'Live Poll',
-      prompt: 'What do you think?',
-      options: [
-        { id: 'option-a', text: 'Option A' },
-        { id: 'option-b', text: 'Option B' },
-      ],
-      showResults: true,
-      allowVoteChange: true,
-      timerDuration: 30,
-    },
-    'word-cloud': {
-      title: 'Word Cloud',
-      prompt: 'Share one word or short phrase',
-      maxPhraseLength: 40,
-      maxSubmissionsPerPlayer: 5,
-      displayLimit: 50,
-      timerDuration: 30,
-    },
-    'matching': {
-      title: 'Matching',
-      prompt: 'Match each item to its answer',
-      pairs: [
-        { promptId: 'prompt-1', prompt: 'Term 1', targetId: 'target-1', target: 'Definition 1' },
-        { promptId: 'prompt-2', prompt: 'Term 2', targetId: 'target-2', target: 'Definition 2' },
-      ],
-      timerDuration: 60,
-    },
-  }
-  return d[type] || d['name-picker']
 }

@@ -268,48 +268,48 @@ describe('createGameElement factory', () => {
 
   it('name-picker element has wheel/dice/button modes', () => {
     const el = createGameElement('name-picker')
-    expect(['wheel', 'dice', 'button']).toContain(el.pickerMode)
+    expect(['wheel', 'dice', 'button']).toContain(el['name-picker'].pickerMode)
   })
 
-  it('name-picker element has items array', () => {
+  it('name-picker element has nested items array', () => {
     const el = createGameElement('name-picker')
-    expect(el.items).toBeInstanceOf(Array)
+    expect(el['name-picker'].items).toBeInstanceOf(Array)
   })
 
-  it('hot-potato element has questions array', () => {
+  it('hot-potato element has nested questions array', () => {
     const el = createGameElement('hot-potato')
-    expect(el.questions).toBeInstanceOf(Array)
+    expect(el['hot-potato'].questions).toBeInstanceOf(Array)
   })
 
-  it('hot-potato element has showLeaderboard', () => {
+  it('hot-potato element has nested showLeaderboard', () => {
     const el = createGameElement('hot-potato')
-    expect(el.showLeaderboard).toBe(true)
+    expect(el['hot-potato'].showLeaderboard).toBe(true)
   })
 
-  it('jeopardy element has teams and categories arrays', () => {
+  it('jeopardy element has nested teams and categories arrays', () => {
     const el = createGameElement('jeopardy')
-    expect(el.teams).toBeInstanceOf(Array)
-    expect(el.categories).toBeInstanceOf(Array)
+    expect(el.jeopardy.teams).toBeInstanceOf(Array)
+    expect(el.jeopardy.categories).toBeInstanceOf(Array)
   })
 
-  it('four-corners element has cornerCount of 4', () => {
+  it('four-corners element has nested cornerCount of 4', () => {
     const el = createGameElement('four-corners')
-    expect(el.cornerCount).toBe(4)
+    expect(el['four-corners'].cornerCount).toBe(4)
   })
 
-  it('relay-race element has passOnWrong', () => {
+  it('relay-race element has nested passOnWrong', () => {
     const el = createGameElement('relay-race')
-    expect(el.passOnWrong).toBe(true)
+    expect(el['relay-race'].passOnWrong).toBe(true)
   })
 
-  it('trivia-champ element has rounds array', () => {
+  it('trivia-champ element has nested rounds array', () => {
     const el = createGameElement('trivia-champ')
-    expect(el.rounds).toBeInstanceOf(Array)
+    expect(el['trivia-champ'].rounds).toBeInstanceOf(Array)
   })
 
-  it('scattergories element has timePerRound of 60', () => {
+  it('scattergories element has nested timePerRound of 60', () => {
     const el = createGameElement('scattergories')
-    expect(el.timePerRound).toBe(60)
+    expect(el.scattergories.timePerRound).toBe(60)
   })
 
   it('gameStatus defaults to "setup"', () => {
@@ -339,7 +339,7 @@ describe('createGameElement factory', () => {
       expect(createGameElement(gameType, overrides)).toEqual({
         ...structuredClone(GAME_BASE_DEFAULTS),
         gameType,
-        ...structuredClone(GAME_TYPE_DEFAULTS[gameType]),
+        [gameType]: structuredClone(GAME_TYPE_DEFAULTS[gameType]),
         ...overrides,
       })
     }
@@ -348,15 +348,15 @@ describe('createGameElement factory', () => {
   it('does not share mutable nested defaults between created elements', () => {
     const firstNamePicker = createGameElement('name-picker')
     const secondNamePicker = createGameElement('name-picker')
-    firstNamePicker.items.push('Mutated')
-    firstNamePicker.wheelColors.push('#000000')
-    expect(secondNamePicker.items).not.toContain('Mutated')
-    expect(secondNamePicker.wheelColors).not.toContain('#000000')
+    firstNamePicker['name-picker'].items.push('Mutated')
+    firstNamePicker['name-picker'].wheelColors.push('#000000')
+    expect(secondNamePicker['name-picker'].items).not.toContain('Mutated')
+    expect(secondNamePicker['name-picker'].wheelColors).not.toContain('#000000')
 
     const firstTrivia = createGameElement('trivia-champ')
     const secondTrivia = createGameElement('trivia-champ')
-    firstTrivia.lightningRound.enabled = true
-    expect(secondTrivia.lightningRound.enabled).toBe(false)
+    firstTrivia['trivia-champ'].lightningRound.enabled = true
+    expect(secondTrivia['trivia-champ'].lightningRound.enabled).toBe(false)
     expect(GAME_TYPE_DEFAULTS['trivia-champ'].lightningRound.enabled).toBe(false)
   })
 })

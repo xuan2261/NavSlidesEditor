@@ -1,12 +1,22 @@
+import { useRef } from 'react'
 import { Button } from '../ui'
+import { useModalFocusTrap } from '../ui/ModalShell'
 
-export default function SaveConflictDialog({
+export default function SaveConflictDialog(props) {
+  if (!props.conflict) return null
+  return <ActiveSaveConflictDialog {...props} />
+}
+
+function ActiveSaveConflictDialog({
   conflict,
   onUseRemote,
   onKeepLocal,
   onClose,
 }) {
-  if (!conflict) return null
+  const cancelButtonRef = useRef(null)
+  const { dialogRef, handleFocusTrapKeyDown } = useModalFocusTrap({
+    initialFocusRef: cancelButtonRef,
+  })
 
   return (
     <div
@@ -20,11 +30,13 @@ export default function SaveConflictDialog({
       }}
     >
       <section
+        ref={dialogRef}
         className="w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-xl"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="save-conflict-title"
         aria-describedby="save-conflict-description"
+        onKeyDown={handleFocusTrapKeyDown}
       >
         <h2 id="save-conflict-title" className="text-base font-semibold text-text-primary">
           Save conflict
@@ -34,7 +46,7 @@ export default function SaveConflictDialog({
           changes and overwrite the latest version.
         </p>
         <div className="mt-5 flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose} autoFocus>
+          <Button ref={cancelButtonRef} type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button type="button" variant="secondary" onClick={onUseRemote}>

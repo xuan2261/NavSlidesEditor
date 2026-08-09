@@ -1,6 +1,6 @@
 const { isNativeChartType, normalizeCssColor } = require('revealjs-shared')
-const { normalizeServerImageSource } = require('./server-image-source')
 const { rasterizeStaticVisualElement } = require('./server-background-raster')
+const { resolveServerPptxPoster } = require('./server-pptx-media')
 
 // timeline and game are static-renderable via the Phase-4 shared HTML renderers
 // (timeline → SVG with event images; game → labeled placeholder badge), so they
@@ -57,9 +57,9 @@ async function addFallbackElement(slide, element, bounds, warnings, slideNumber,
   } = options
 
   if (element.type === 'video' && element.poster) {
-    const source = normalizeServerImageSource(element.poster)
-    if (source) {
-      slide.addImage({ ...source, ...bounds, rotate: element.rotation || 0 })
+    const poster = await resolveServerPptxPoster(element.poster)
+    if (poster) {
+      slide.addImage({ data: poster, ...bounds, rotate: element.rotation || 0 })
       warnings.push(`Slide ${slideNumber}: used video poster fallback`)
       return
     }

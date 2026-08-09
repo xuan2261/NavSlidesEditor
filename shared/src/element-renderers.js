@@ -512,7 +512,9 @@ function renderVideo(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
     return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));">&#9654; Video</div>`
   }
-  const videoSrc = sanitizeMediaSrc(el.src || el.videoUrl)
+  const videoSrc = sanitizeMediaSrc(
+    Object.prototype.hasOwnProperty.call(el, 'src') ? el.src : el.videoUrl
+  )
   const src = getMediaFragmentSrc(absoluteSrc(videoSrc), el.startTime, el.endTime)
   const attrs = []
   if (el.controls !== false) attrs.push('controls')
@@ -543,7 +545,7 @@ function renderAudio(el, style, wrap, vis, opts) {
 }
 
 function renderTable(el, style, wrap, vis) {
-  const data = el.data || [['']]
+  const data = Array.isArray(el.data) && el.data.length ? el.data : [['']]
   const headerBg =
     resolveColorField(el.headerBgColor, 'table', 'headerBgColor') || 'rgba(99,102,241,0.3)'
   const cellBg = resolveColorField(el.cellBgColor, 'table', 'cellBgColor') || 'transparent'
@@ -586,7 +588,7 @@ function renderTable(el, style, wrap, vis) {
   const { spans, covered } = resolveMergedCells(el.mergedCells)
   const rows = data
     .map((row, ri) => {
-      const cells = (row || [])
+      const cells = (Array.isArray(row) ? row : [])
         .map((cell, ci) => {
           if (covered.has(`${ri}:${ci}`)) return ''
           const span = spans.get(`${ri}:${ci}`)
@@ -882,7 +884,11 @@ function renderPlugin(el, style, wrap, vis, opts) {
 // Mirrors renderPluginFallback's contract: never returns '' and never throws.
 function renderGame(el, style, wrap, vis) {
   const gameType = el.gameType || 'game'
-  const gameConfig = el[gameType] || {}
+  const nestedConfig = el[gameType] && typeof el[gameType] === 'object' ? el[gameType] : {}
+  const gameConfig = { ...el }
+  Object.entries(nestedConfig).forEach(([key, value]) => {
+    if (value !== undefined) gameConfig[key] = value
+  })
   const title =
     gameConfig.title ||
     el.title ||

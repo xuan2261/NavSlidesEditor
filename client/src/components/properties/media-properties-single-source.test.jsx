@@ -52,4 +52,37 @@ describe('Phase 2: single video source field', () => {
     expect(onUpdate).toHaveBeenCalledWith({ src: 'https://cdn.example.com/new.mp4' })
     expect(onUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ videoUrl: expect.anything() }))
   })
+
+  it('shows a legacy videoUrl when canonical src is absent without deleting it', () => {
+    const onUpdate = vi.fn()
+    render(
+      <MediaProperties
+        element={{ id: 'v1', type: 'video', videoUrl: 'https://legacy.example.com/old.mp4' }}
+        onUpdate={onUpdate}
+      />
+    )
+
+    const source = screen.getByDisplayValue('https://legacy.example.com/old.mp4')
+    fireEvent.change(source, { target: { value: 'https://cdn.example.com/new.mp4' } })
+
+    expect(onUpdate).toHaveBeenCalledWith({ src: 'https://cdn.example.com/new.mp4' })
+    expect(onUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ videoUrl: expect.anything() }))
+  })
+
+  it('writes an explicit source clear without mutating legacy videoUrl', () => {
+    const onUpdate = vi.fn()
+    render(
+      <MediaProperties
+        element={{ id: 'v1', type: 'video', src: 'https://current.example.com/current.mp4', videoUrl: 'https://legacy.example.com/old.mp4' }}
+        onUpdate={onUpdate}
+      />
+    )
+
+    const source = screen.getAllByRole('textbox')[0]
+    expect(source.value).toBe('https://current.example.com/current.mp4')
+    fireEvent.change(source, { target: { value: '' } })
+
+    expect(onUpdate).toHaveBeenCalledWith({ src: '' })
+    expect(onUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ videoUrl: expect.anything() }))
+  })
 })

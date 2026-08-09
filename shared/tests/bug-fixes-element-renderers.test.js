@@ -114,11 +114,21 @@ describe('Bug fixes in element renderers', () => {
 
     it('uses legacy videoUrl only when src is absent', () => {
       const html = renderElement(
-        { ...base, type: 'video', src: '', videoUrl: '/uploads/legacy.mp4' },
+        { ...base, type: 'video', videoUrl: '/uploads/legacy.mp4' },
         {},
         {}
       )
       expect(html).toContain('/uploads/legacy.mp4')
+    })
+
+    it('does not resurrect videoUrl when the persisted src is explicitly blank', () => {
+      const html = renderElement(
+        { ...base, type: 'video', src: '', videoUrl: '/uploads/legacy.mp4' },
+        {},
+        {}
+      )
+      expect(html).not.toContain('/uploads/legacy.mp4')
+      expect(html).toContain('<video src=""')
     })
 
     it('renders audio flags consistently for viewer export', () => {

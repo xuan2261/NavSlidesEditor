@@ -67,7 +67,7 @@ describe('chart element renderer', () => {
     const srcDoc = container.querySelector('iframe').getAttribute('srcdoc')
     expect(srcDoc).toContain("ticks:{color:'#141413'}")
     expect(srcDoc).toContain("grid:{color:'rgba(20,20,19,0.16)'}")
-    expect(srcDoc).toContain("legend:{labels:{color:'#141413'")
+    expect(srcDoc).toContain("legend:{position:'right',labels:{color:'#141413'")
   })
 
   it('[red defect:renderer.contrast] uses light chart defaults on dark slide backgrounds', () => {
@@ -84,7 +84,7 @@ describe('chart element renderer', () => {
     const srcDoc = container.querySelector('iframe').getAttribute('srcdoc')
     expect(srcDoc).toContain("ticks:{color:'#f8fafc'}")
     expect(srcDoc).toContain("grid:{color:'rgba(248,250,252,0.28)'}")
-    expect(srcDoc).toContain("legend:{labels:{color:'#f8fafc'")
+    expect(srcDoc).toContain("legend:{position:'right',labels:{color:'#f8fafc'")
   })
 
   it('keeps explicit chart colors ahead of background-derived fallbacks', () => {
@@ -104,6 +104,24 @@ describe('chart element renderer', () => {
     const srcDoc = container.querySelector('iframe').getAttribute('srcdoc')
     expect(srcDoc).toContain("ticks:{color:'#facc15'}")
     expect(srcDoc).toContain("grid:{color:'rgba(250,204,21,0.4)'}")
-    expect(srcDoc).toContain("legend:{labels:{color:'#22c55e'")
+    expect(srcDoc).toContain("legend:{position:'right',labels:{color:'#22c55e'")
+  })
+
+  it('renders authored legend placement and cartesian axis titles', () => {
+    const { container } = render(
+      <ChartRenderer
+        element={{
+          chartType: 'bar',
+          legendPosition: 'bottom',
+          axisTitles: { category: 'Month', value: 'Revenue' },
+          chartData: { labels: ['Jan'], datasets: [{ label: 'Series', data: [1] }] },
+        }}
+      />
+    )
+
+    const srcDoc = container.querySelector('iframe').getAttribute('srcdoc')
+    expect(srcDoc).toContain("legend:{position:'bottom'")
+    expect(srcDoc).toContain('title:{display:true,text:"Month"}')
+    expect(srcDoc).toContain('title:{display:true,text:"Revenue"}')
   })
 })

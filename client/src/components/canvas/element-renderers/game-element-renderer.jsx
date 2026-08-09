@@ -12,7 +12,8 @@
  */
 import React from 'react'
 import { useGameSocket } from '../../../hooks/use-game-socket.js'
- 
+import { resolveGameConfig } from '../../../constants/game-element-types-constants.js'
+
 
 // Phase 10: Interactive sub-renderers (lazy-loaded via dynamic import for ESM compatibility)
 let _FourCornersP, _RelayRaceP, _TriviaChampP, _ScattergoriesP, _NamePickerP
@@ -1494,8 +1495,12 @@ function NamePickerInteractiveWrapper({ element, isPresenting }) {
 }
 
 export function GameElementRenderer(props) {
-  // Support flat props or nested element={...} pattern
-  const el = props.element ?? props
+  // Support flat props or nested element={...} pattern. Legacy decks may keep
+  // subtype fields flat; render one resolved view while preserving the source shape.
+  const sourceElement = props.element ?? props
+  const gameType = sourceElement.gameType || 'name-picker'
+  const gameConfig = resolveGameConfig(sourceElement, gameType)
+  const el = { ...sourceElement, ...gameConfig, [gameType]: gameConfig }
   const isPresenting = props.isPresenting === true
   const isRunning = el.gameStatus === 'running'
   const isEnded = el.gameStatus === 'ended'

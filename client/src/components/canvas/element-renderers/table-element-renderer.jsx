@@ -31,7 +31,7 @@ function safeFontFamily(value) {
 }
 
 export function TableRenderer({ element, isEditing, onUpdateElement }) {
-  const data = element.data || [['']]
+  const data = Array.isArray(element.data) && element.data.length ? element.data : [['']]
   const headerBg = resolveColorField(element.headerBgColor, 'table', 'headerBgColor') || 'rgba(99,102,241,0.3)'
   const cellBg = resolveColorField(element.cellBgColor, 'table', 'cellBgColor') || 'transparent'
   const borderColor = resolveColorField(element.borderColor, 'table', 'borderColor') || 'rgba(20,20,19,0.22)'
@@ -63,11 +63,12 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
 
   const [focusCell, setFocusCell] = useState(null)
   const inputRefs = useRef({})
+  const focusRow = focusCell?.ri ?? (isEditing && data.length ? 0 : null)
+  const focusColumn = focusCell?.ci ?? (isEditing && data.length ? 0 : null)
 
   useEffect(() => {
-    if (isEditing && focusCell) {
-      const key = `${focusCell.ri}-${focusCell.ci}`
-      const input = inputRefs.current[key]
+    if (isEditing && focusRow !== null && focusColumn !== null) {
+      const input = inputRefs.current[`${focusRow}-${focusColumn}`]
       if (input) {
         input.focus()
         if (typeof input.setSelectionRange === 'function') {
@@ -75,7 +76,7 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
         }
       }
     }
-  }, [isEditing, focusCell])
+  }, [focusColumn, focusRow, isEditing])
 
   return (
     <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
@@ -103,7 +104,7 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
                 key={ri}
                 style={Number.isFinite(safeRowHeight) && safeRowHeight > 0 ? { height: Math.round(safeRowHeight) } : undefined}
               >
-                {(row || []).map((cell, ci) => {
+                {(Array.isArray(row) ? row : []).map((cell, ci) => {
                 if (coveredCells.has(`${ri}:${ci}`)) return null
                 const merge = mergeByStart.get(`${ri}:${ci}`)
                 const isHeader = element.headerRow && ri === 0
@@ -140,9 +141,9 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
                     {isEditing ? (
                       <textarea
                         ref={(el) => (inputRefs.current[`${ri}-${ci}`] = el)}
-                        value={cell || ''}
+                        value={String(cell ?? '')}
                         onChange={(e) => {
-                          const newData = data.map((r) => [...r])
+                          const newData = data.map((r) => (Array.isArray(r) ? [...r] : []))
                           newData[ri][ci] = e.target.value
                           onUpdateElement(element.id, { data: newData })
                         }}
@@ -165,7 +166,7 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
                       />
                     ) : (
                       <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                        {cell || ''}
+                        {String(cell ?? '')}
                       </div>
                     )}
                   </td>

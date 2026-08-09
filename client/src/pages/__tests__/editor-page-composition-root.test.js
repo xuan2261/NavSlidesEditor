@@ -8,8 +8,10 @@ const productionModules = [
   path.join(clientRoot, 'components/editor/editor-workspace.jsx'),
   path.join(clientRoot, 'components/editor/editor-navigator.jsx'),
   path.join(clientRoot, 'components/editor/editor-inspector.jsx'),
+  path.join(clientRoot, 'pages/editor-page-helpers.js'),
   path.join(clientRoot, 'hooks/editor-controller/use-editor-element-controller.js'),
   path.join(clientRoot, 'hooks/editor-controller/use-editor-keyboard-controller.js'),
+  path.join(clientRoot, 'hooks/editor-controller/use-editor-live-session-controller.js'),
 ]
 
 describe('EditorPage composition root', () => {

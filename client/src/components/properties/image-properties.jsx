@@ -110,6 +110,34 @@ export default function ImageProperties({ element, onUpdate }) {
           }}
         />
       </div>
+      <div className="grid grid-cols-2 gap-2 border-t border-border pt-2 mt-1 mb-2.5">
+        <div>
+          <div className="text-[11px] text-text-muted mb-1">Border Width</div>
+          <Input
+            data-testid="prop-image-border-width"
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent"
+            type="number"
+            min="0"
+            max="20"
+            step="0.5"
+            value={element.borderWidth ?? 0}
+            onChange={(e) => {
+              const value = clampNumber(e.target.value, 0, 20, null)
+              if (value === null) return
+              onUpdate({ borderWidth: value })
+            }}
+          />
+        </div>
+        <div>
+          <div className="text-[11px] text-text-muted mb-1">Border Color</div>
+          <ColorPicker
+            data-testid="prop-image-border-color"
+            value={element.borderColor || '#000000'}
+            onChange={(e) => onUpdate({ borderColor: e.target.value })}
+            className="w-full h-7 border border-border rounded cursor-pointer"
+          />
+        </div>
+      </div>
       <div className="border-t border-border pt-2 mt-1">
         <div className="text-[11px] text-text-muted mb-1.5 font-medium">Citation</div>
         <div className="text-[11px] text-text-muted mb-1">Citation Text</div>

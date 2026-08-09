@@ -10,6 +10,31 @@
  */
 const GameEngine = require('./game-room-manager-singleton-service')
 
+function toPublicQuestion(question) {
+  if (!question || typeof question !== 'object') return null
+  const publicQuestion = { ...question }
+  for (const key of [
+    'correctIndex',
+    'correctAnswer',
+    'answer',
+    'answerIndex',
+    'answerKey',
+    'solution',
+    'explanation',
+  ]) delete publicQuestion[key]
+  return publicQuestion
+}
+
+function getQuestionTiming(room, question) {
+  if (!Number.isFinite(room?.questionStartedAt)) return {}
+  const limitMs = Number(question?.timeLimit) * 1000
+  if (!Number.isFinite(limitMs) || limitMs <= 0) return {}
+  return {
+    questionStartedAt: room.questionStartedAt,
+    timeRemainingMs: Math.max(0, limitMs - (Date.now() - room.questionStartedAt)),
+  }
+}
+
 function setupGameSocketHandlers(io) {
   const gameNamespace = io.of('/games')
   const roomMembers = new Map()
@@ -26,6 +51,11 @@ function setupGameSocketHandlers(io) {
   }
 
   gameNamespace.on('connection', (socket) => {
+    const onPayload = (event, handler) => socket.on(event, (payload) => {
+      const normalized = payload && typeof payload === 'object' ? payload : {}
+      return handler(normalized)
+    })
+
     let currentGameId = null
     let currentPlayerId = null
     let currentSessionToken = null
@@ -88,6 +118,45 @@ function setupGameSocketHandlers(io) {
       if (state) broadcastGame(gid, 'game-matching-results', state)
     }
 
+    const emitCurrentGameState = (gid) => {
+      const room = GameEngine.getRoom(gid)
+      if (!room) return
+      if (room.status === 'finished') {
+        socket.emit('game-ended', { finalScores: GameEngine.getLeaderboard(gid) || [] })
+        return
+      }
+      if (room.currentQuestion >= 0 && room.questions[room.currentQuestion]) {
+        const question = room.questions[room.currentQuestion]
+        socket.emit('game-question', {
+          question: toPublicQuestion(question),
+          questionNumber: room.currentQuestion + 1,
+          totalQuestions: room.questions.length,
+          allowLate: room.allowLate === true,
+          ...getQuestionTiming(room, question),
+        })
+        const player = currentPlayerId ? room.players.get(currentPlayerId) : null
+        const previousAnswer = player?.answers.find((answer) => answer.questionId === question.id)
+        if (previousAnswer) {
+          socket.emit('game-answer-result', {
+            correct: previousAnswer.correct,
+            correctIndex: question.correctIndex,
+            answerIndex: previousAnswer.answerIndex,
+            points: previousAnswer.points || 0,
+            totalScore: player.score,
+          })
+        }
+        return
+      }
+      if (room.status !== 'active') return
+      if (room.gameType === 'poll') {
+        socket.emit('game-poll-started', GameEngine.getPollAggregate(gid))
+      } else if (room.gameType === 'word-cloud') {
+        socket.emit('game-word-cloud-started', GameEngine.getWordCloudAggregate(gid))
+      } else if (room.gameType === 'matching') {
+        socket.emit('game-matching-started', GameEngine.getMatchingState(gid))
+      }
+    }
+
     // Reject events from a socket that is not the room host.
     const requireHost = (gid) => {
       if (gid !== currentGameId) {
@@ -106,7 +175,7 @@ function setupGameSocketHandlers(io) {
     }
 
     // Player joins a game room
-    socket.on('game-join', ({
+    onPayload('game-join', ({
       gameId,
       playerName,
       playerId,
@@ -157,10 +226,11 @@ function setupGameSocketHandlers(io) {
         }
       }
       socket.emit('game-leaderboard', { scores: result.leaderboard })
+      emitCurrentGameState(gameId)
     })
 
     // Player submits an answer
-    socket.on('game-answer', ({ gameId, answerIndex, timeSpentMs }) => {
+    onPayload('game-answer', ({ gameId, questionId, answerIndex, timeSpentMs } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -174,8 +244,14 @@ function setupGameSocketHandlers(io) {
         gid,
         currentPlayerId,
         answerIndex,
-        timeSpentMs || 0,
-        { socketId: socket.id, sessionToken: currentSessionToken, requireSession: true }
+        timeSpentMs,
+        {
+          socketId: socket.id,
+          sessionToken: currentSessionToken,
+          requireSession: true,
+          questionId,
+          requireQuestionId: true,
+        }
       )
       if (result === null) {
         socket.emit('game-error', { message: 'Room not found or no active question' })
@@ -186,12 +262,20 @@ function setupGameSocketHandlers(io) {
         return
       }
       if (result.duplicate) {
-        socket.emit('game-error', { message: 'Already answered this question' })
+        socket.emit('game-answer-result', {
+          correct: result.correct,
+          correctIndex: result.correctIndex,
+          answerIndex: result.answerIndex,
+          points: result.points,
+          totalScore: result.totalScore,
+        })
         return
       }
 
       socket.emit('game-answer-result', {
         correct: result.correct,
+        correctIndex: result.correctIndex,
+        answerIndex: result.answerIndex,
         points: result.points,
         totalScore: result.totalScore,
       })
@@ -200,7 +284,7 @@ function setupGameSocketHandlers(io) {
       if (lb) broadcastGame(gid,'game-leaderboard', { scores: lb })
     })
 
-    socket.on('game-poll-submit', ({ gameId, optionId }) => {
+    onPayload('game-poll-submit', ({ gameId, optionId } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -222,7 +306,7 @@ function setupGameSocketHandlers(io) {
       broadcastGame(gameId,'game-poll-results', result.aggregate)
     })
 
-    socket.on('game-poll-start', ({ gameId }) => {
+    onPayload('game-poll-start', ({ gameId } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -238,11 +322,11 @@ function setupGameSocketHandlers(io) {
         socket.emit('game-error', { message: 'Room not found or invalid poll' })
         return
       }
-      room.status = 'active'
+      GameEngine.activateRoom(gid)
       broadcastGame(gid,'game-poll-started', GameEngine.getPollAggregate(gid))
     })
 
-    socket.on('game-poll-reveal', ({ gameId }) => {
+    onPayload('game-poll-reveal', ({ gameId } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -256,7 +340,7 @@ function setupGameSocketHandlers(io) {
       emitPollAggregate(gid)
     })
 
-    socket.on('game-word-cloud-submit', ({ gameId, text }) => {
+    onPayload('game-word-cloud-submit', ({ gameId, text } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -278,7 +362,7 @@ function setupGameSocketHandlers(io) {
       broadcastGame(gameId,'game-word-cloud-results', result.aggregate)
     })
 
-    socket.on('game-word-cloud-start', ({ gameId }) => {
+    onPayload('game-word-cloud-start', ({ gameId } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -294,11 +378,11 @@ function setupGameSocketHandlers(io) {
         socket.emit('game-error', { message: 'Room not found or invalid word cloud' })
         return
       }
-      room.status = 'active'
+      GameEngine.activateRoom(gid)
       broadcastGame(gid,'game-word-cloud-started', GameEngine.getWordCloudAggregate(gid))
     })
 
-    socket.on('game-word-cloud-reveal', ({ gameId }) => {
+    onPayload('game-word-cloud-reveal', ({ gameId } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -312,7 +396,7 @@ function setupGameSocketHandlers(io) {
       emitWordCloudAggregate(gid)
     })
 
-    socket.on('game-word-cloud-clear', ({ gameId }) => {
+    onPayload('game-word-cloud-clear', ({ gameId } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -331,7 +415,7 @@ function setupGameSocketHandlers(io) {
       broadcastGame(gid,'game-word-cloud-results', aggregate)
     })
 
-    socket.on('game-matching-submit', ({ gameId, pairs }) => {
+    onPayload('game-matching-submit', ({ gameId, pairs } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -357,7 +441,7 @@ function setupGameSocketHandlers(io) {
       broadcastGame(gameId,'game-matching-results', result.summary)
     })
 
-    socket.on('game-matching-start', ({ gameId }) => {
+    onPayload('game-matching-start', ({ gameId } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -373,11 +457,13 @@ function setupGameSocketHandlers(io) {
         socket.emit('game-error', { message: 'Room not found or invalid matching game' })
         return
       }
-      room.status = 'active'
+      GameEngine.activateRoom(gid)
+      room.matchingSubmissions.clear()
+      GameEngine.setMatchingRevealed(gid, false)
       broadcastGame(gid,'game-matching-started', GameEngine.getMatchingState(gid))
     })
 
-    socket.on('game-matching-reveal', ({ gameId }) => {
+    onPayload('game-matching-reveal', ({ gameId } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -388,27 +474,28 @@ function setupGameSocketHandlers(io) {
         return
       }
       if (!requireHost(gid)) return
-      emitMatchingState(gid, { revealed: true })
+      const state = GameEngine.setMatchingRevealed(gid)
+      if (state) broadcastGame(gid, 'game-matching-results', state)
     })
 
     // Presenter triggers random picker (host only)
-    socket.on('game-random', ({ gameId }) => {
+    onPayload('game-random', ({ gameId } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
       }
       const gid = gameId || currentGameId
       if (!requireHost(gid)) return
-      const winnerIndex = GameEngine.triggerRandom(gid)
-      if (winnerIndex === null) {
+      const result = GameEngine.triggerRandomResult(gid)
+      if (result === null) {
         socket.emit('game-error', { message: 'Room not found' })
         return
       }
-      broadcastGame(gid,'game-random-result', { winnerIndex })
+      broadcastGame(gid, 'game-random-result', result)
     })
 
     // Presenter advances to next question (host only)
-    socket.on('game-next', ({ gameId }) => {
+    onPayload('game-next', ({ gameId } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -420,16 +507,30 @@ function setupGameSocketHandlers(io) {
         socket.emit('game-error', { message: 'Room not found' })
         return
       }
+      if (room.status === 'finished') {
+        broadcastGame(gid, 'game-ended', { finalScores: GameEngine.getLeaderboard(gid) || [] })
+        return
+      }
       const question = room.questions[room.currentQuestion] || null
+      if (!question) {
+        if (room.status === 'finished') {
+          broadcastGame(gid, 'game-ended', { finalScores: GameEngine.getLeaderboard(gid) || [] })
+        } else {
+          socket.emit('game-error', { message: 'No active question' })
+        }
+        return
+      }
       broadcastGame(gid,'game-question', {
-        question,
+        question: toPublicQuestion(question),
         questionNumber: room.currentQuestion + 1,
         totalQuestions: room.questions.length,
+        allowLate: room.allowLate === true,
+        ...getQuestionTiming(room, question),
       })
     })
 
     // Presenter ends the game (host only)
-    socket.on('game-end', ({ gameId }) => {
+    onPayload('game-end', ({ gameId } = {}) => {
       if (!currentGameId) {
         socket.emit('game-error', { message: 'Not in a game room' })
         return
@@ -446,7 +547,7 @@ function setupGameSocketHandlers(io) {
     })
 
     // Player leaves the game
-    socket.on('game-leave', ({ gameId }) => {
+    onPayload('game-leave', ({ gameId } = {}) => {
       if (!currentGameId) return
       const gid = gameId || currentGameId
       if (gid !== currentGameId) {
@@ -471,7 +572,7 @@ function setupGameSocketHandlers(io) {
       currentHostCapability = null
 
       const room = GameEngine.getRoom(gid)
-      if (room && room.players.size > 0) {
+      if (room && Array.from(room.players.values()).some((player) => player.socketId)) {
         broadcastPlayers(gid)
         if (room.gameType === 'poll') emitPollAggregate(gid)
         if (room.gameType === 'word-cloud') emitWordCloudAggregate(gid)

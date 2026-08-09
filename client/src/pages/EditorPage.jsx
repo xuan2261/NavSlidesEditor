@@ -30,18 +30,11 @@ import { useEditorElementController } from '../hooks/editor-controller/use-edito
 import { useEditorSelectionController } from '../hooks/editor-controller/use-editor-selection-controller'
 import { useEditorPreviewStylesController } from '../hooks/editor-controller/use-editor-preview-styles-controller'
 import { useEditorGameLeaderboard } from '../hooks/use-editor-game-leaderboard'
-export function getElementForActiveSlideEdit(activeSlide, fallbackSlide, elementId) {
-  const slide = activeSlide || fallbackSlide
-  const element = slide?.elements?.find((el) => el.id === elementId)
-  return element?.type === 'text' ? element : null
-}
+import { useEditorLiveSessionController } from '../hooks/editor-controller/use-editor-live-session-controller'
+import { getElementForActiveSlideEdit, getGameElementForActiveSlide } from './editor-page-helpers'
 
 export { getSelectionIdsForActiveSlideElement }
-
-export function getGameElementForActiveSlide(activeSlide, fallbackSlide) {
-  const slide = activeSlide || fallbackSlide
-  return slide?.elements?.find((element) => element.type === 'game') || null
-}
+export { getElementForActiveSlideEdit, getGameElementForActiveSlide } from './editor-page-helpers'
 
 export default function EditorPage({ presentationId, isTemplate = false, onGoHome }) {
   const [presentation, setPresentation] = useState(null)
@@ -92,9 +85,6 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const [galleryPreviewTemplate, setGalleryPreviewTemplate] = useState(null)
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [shareStatus, setShareStatus] = useState({ shared: false, token: null })
-  const [liveRoomCode, setLiveRoomCode] = useState(null)
-  const [livePresenterToken, setLivePresenterToken] = useState(null)
-
   const setShowTemplateModal = useUIStore((s) => s.setShowTemplateModal)
   const setShowTemplateGallery = useUIStore((s) => s.setShowTemplateGallery)
   const setShowMediaLibrary = useUIStore((s) => s.setShowMediaLibrary)
@@ -180,6 +170,12 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     getElement: getElementForActiveSlideEdit,
     exitEditOnEscape,
   })
+  const insertLink = useCallback(() => {
+    if (!editingElementId || !editor) return showNotice('Enter text edit mode and select a text element before inserting a link.')
+    const href = window.prompt('Link URL')?.trim()
+    if (href) editor.chain().focus().setLink({ href }).run()
+  }, [editor, editingElementId])
+
   const resetEditorInteraction = useEditorInteractionReset({
     clearRichTextContent, editingElementIdRef, setActiveWorkspaceOverlay, setCodeEditorState,
     setCurrentSlideIndex, setEditingElementId, setHtmlEditorState, setLatexEditorState,
@@ -476,6 +472,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     groupElements,
     ungroupElements,
     save: handleManualSave,
+    insertLink,
     zoomIn,
     zoomOut,
     fitZoom,
@@ -484,27 +481,24 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   // Detect active game type from the actual editable slide, including vertical children.
   const activeGameElement = getGameElementForActiveSlide(
     activeSlide,
-    presentation?.slides?.[currentSlideIndex]
+    presentation?.slides?.[currentSlideIndex],
+    selectedElementId
   )
   const currentGameType = activeGameElement?.gameType || null
-
+  const {
+    currentLiveRoomCode,
+    currentLivePresenterToken,
+    emitGameShortcutAction,
+    handlePresenterWindowOpened,
+    handleStartLive,
+    isPresenterPopupActive,
+  } = useEditorLiveSessionController({
+    presentationId,
+    setShowLiveModal,
+    activeGameElement,
+    currentGameType,
+  })
   const gameLeaderboardScores = useEditorGameLeaderboard(activeGameElement)
-  const emitGameShortcutAction = useCallback(
-    (action, payload = {}) => {
-      if (!activeGameElement || typeof window === 'undefined') return
-      window.dispatchEvent(
-        new CustomEvent('navslides:game-shortcut', {
-          detail: {
-            action,
-            elementId: activeGameElement.id,
-            gameType: currentGameType,
-            ...payload,
-          },
-        })
-      )
-    },
-    [activeGameElement, currentGameType]
-  )
   // Export/import + AI action handlers (extracted to hooks)
   const {
     onExportPDF,
@@ -536,7 +530,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     setShowCommandPalette, showGameHud, setShowGameHud, showGameLeaderboard,
     setShowGameLeaderboard, setSelectedElementIds, setEditingElementId, selectedElementIdsRef,
     activeSlideRef, notifyBlockedAction, presentation, updateElements, setCurrentSlideIndex,
-    editingElementId, currentGameType, startSlideshow, activeGameElement, liveSocket,
+    editingElementId, currentGameType, isPresenterPopupActive, startSlideshow, activeGameElement, liveSocket,
     emitGameShortcutAction, setShowTemplateModal, groupElements, ungroupElements,
     selectedElementIds, stepSelectedZOrder, fitZoom, zoomIn, zoomOut,
   })
@@ -588,7 +582,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         saveConflict, saving, hasChanges, saveStatus, lastSaveError, handleUndo, handleRedo,
         onExportPDF, onExportPPTX, onExportHTML, onExportOffline, onExportProject, onOpenProject,
         setShowGithubModal, setShowSyncModal, setShowHistoryModal, setShowShareModal,
-        setLiveRoomCode, setLivePresenterToken, setShowLiveModal, setShowAnalytics,
+        handleStartLive, setShowAnalytics,
         selectedElement, setShowAICopywriter, setShowAIGenerator, setShowAITranslate,
         pptxFidelity, pptxFidelityLoading, reloadPptxFidelity, onDownloadPptxOriginal,
         onExportValidatedEditedRevision, onGenerateReconstructedPPTX,
@@ -638,8 +632,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         codeEditorState, setCodeEditorState, commitCodeEdit, latexEditorState, setLatexEditorState,
         commitLatexEdit, showFindReplace, setShowFindReplace, showTimeline, setShowTimeline,
         updateElement, currentGameType, showGameHud, setShowGameHud, showGameLeaderboard,
-        setShowGameLeaderboard, gameLeaderboardScores, selectedElementId, commands, liveRoomCode, livePresenterToken,
-        galleryPreviewTemplate, setGalleryPreviewTemplate, addSlide, addImageElement,
+        setShowGameLeaderboard, gameLeaderboardScores, selectedElementId, commands,
+        liveRoomCode: currentLiveRoomCode, livePresenterToken: currentLivePresenterToken,
+        onPresenterWindowOpened: handlePresenterWindowOpened, galleryPreviewTemplate, setGalleryPreviewTemplate, addSlide, addImageElement,
         insertEmbedHtml, handleInsertFromFileBrowser, onCreatePresentation, onAICopywriterApply,
         onApplyTranslations, insertMediaElement, saveConflict, clearSaveConflict,
         useRemoteSaveConflict, keepLocalSaveConflict, saveRecovery, recoverLocalDraft,

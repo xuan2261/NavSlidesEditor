@@ -129,53 +129,85 @@ export default function SpeakerViewPage() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset speaker state before subscribing to a new room
+    setIsConnected(false)
+    setHasPresenter(false)
+    setSocket(null)
+    setHtmlContent('')
+    setMeta({ slideCount: 0, slides: [] })
+    setLiveState(initialState)
+    setViewersCount(0)
+    setElapsedTime(0)
+    setPresenterLeft(false)
+    setPresenterReconnecting(false)
+    setRoomNotFound(false)
+    setRoomEnded(false)
+    setAnnotationStrokes([])
+
     const socket = io({ path: '/ws', reconnection: true })
     socketRef.current = socket
+    let cancelled = false
+    const isCurrentSocket = () => !cancelled && socketRef.current === socket
 
     socket.on('connect_error', (err) => {
+      if (!isCurrentSocket()) return
       console.error('Speaker socket connection error:', err.message)
     })
 
     socket.on('connect', () => {
+      if (!isCurrentSocket()) return
       setIsConnected(true)
       setSocket(socket)
       socket.emit('join-room', { roomId: roomCode, role: 'controller' })
     })
 
     socket.on('disconnect', () => {
+      if (!isCurrentSocket()) return
       setIsConnected(false)
       setHasPresenter(false)
     })
-    socket.on('room-not-found', () => setRoomNotFound(true))
+    socket.on('room-not-found', () => {
+      if (isCurrentSocket()) setRoomNotFound(true)
+    })
     socket.on('presenter-status', ({ hasPresenter: nextHasPresenter, presenterConnected }) => {
+      if (!isCurrentSocket()) return
       setHasPresenter(nextHasPresenter === true)
       setPresenterReconnecting(presenterConnected === true && nextHasPresenter === false)
     })
     socket.on('presenter-disconnected', () => {
+      if (!isCurrentSocket()) return
       setHasPresenter(false)
       setPresenterReconnecting(true)
     })
     socket.on('presenter-reconnected', () => {
+      if (!isCurrentSocket()) return
       setHasPresenter(true)
       setPresenterReconnecting(false)
     })
     socket.on('presenter-left', () => {
+      if (!isCurrentSocket()) return
       setHasPresenter(false)
       setPresenterLeft(true)
       setPresenterReconnecting(false)
     })
     socket.on('room-ended', () => {
+      if (!isCurrentSocket()) return
       setHasPresenter(false)
       setRoomEnded(true)
       setPresenterReconnecting(false)
     })
-    socket.on('viewer-count', ({ count }) => setViewersCount(count))
-    socket.on('presentation-meta', setMeta)
+    socket.on('viewer-count', ({ count }) => {
+      if (isCurrentSocket()) setViewersCount(count)
+    })
+    socket.on('presentation-meta', (nextMeta) => {
+      if (isCurrentSocket()) setMeta(nextMeta)
+    })
     socket.on('presentation-data', (data) => {
-      if (data.html) setHtmlContent(data.html)
+      if (isCurrentSocket() && data.html) setHtmlContent(data.html)
     })
 
     const applyState = (state) => {
+      if (!isCurrentSocket()) return
       setLiveState({
         slideIndex: state.slideIndex || 0,
         verticalIndex: state.verticalIndex || 0,
@@ -186,7 +218,10 @@ export default function SpeakerViewPage() {
     socket.on('sync-state', applyState)
     socket.on('navigate', applyState)
 
-    return () => socket.disconnect()
+    return () => {
+      cancelled = true
+      socket.disconnect()
+    }
   }, [roomCode])
 
   const controlsDisabled =

@@ -3,6 +3,7 @@ import {
   getPptxLayout,
   getPptxExportLayout,
   getPresentationResolution,
+  getNativeChartDefinition,
   htmlToPptTextRuns,
   mapArrowType,
   normalizeCssColor,
@@ -67,6 +68,53 @@ describe('export-pptx-core', () => {
     expect(mapArrowType('stealth')).toBe('stealth')
     expect(mapArrowType('triangle')).toBe('triangle')
     expect(mapArrowType('diamond')).toBe('diamond')
+  })
+
+  it('maps supported authored chart options to native PPTX options', () => {
+    const pptx = { ChartType: { area: 'area', bar: 'bar', line: 'line' } }
+    const definition = getNativeChartDefinition(pptx, {
+      chartType: 'line',
+      areaFill: true,
+      stacked: true,
+      legendPosition: 'bottom',
+      axisTitles: { category: 'Month', value: 'Revenue' },
+      chartData: {
+        labels: ['Jan'],
+        datasets: [
+          { label: 'North', data: [2], color: '#ef4444' },
+          { label: 'South', data: [3], color: '#22c55e' },
+        ],
+      },
+    })
+
+    expect(definition).toMatchObject({
+      type: 'area',
+      options: {
+        barGrouping: 'stacked',
+        legendPos: 'b',
+        showLegend: true,
+        catAxisTitle: 'Month',
+        showCatAxisTitle: true,
+        valAxisTitle: 'Revenue',
+        showValAxisTitle: true,
+      },
+    })
+  })
+
+  it('does not map cartesian-only authored options onto pie charts', () => {
+    const definition = getNativeChartDefinition(
+      { ChartType: { pie: 'pie' } },
+      {
+        chartType: 'pie',
+        stacked: true,
+        axisTitles: { category: 'Month', value: 'Revenue' },
+        chartData: { labels: ['Jan'], datasets: [{ data: [2] }] },
+      }
+    )
+
+    expect(definition.options).not.toHaveProperty('barGrouping')
+    expect(definition.options).not.toHaveProperty('catAxisTitle')
+    expect(definition.options).not.toHaveProperty('valAxisTitle')
   })
 
   it('exports image crop, flip, alt text, and border overlay', () => {
@@ -200,6 +248,47 @@ describe('export-pptx-core', () => {
     expect(shapeCall[2].fill.color).toBe('ABCDEF')
   })
 
+  it('keeps malformed persisted table data exportable', () => {
+    const calls = []
+    expect(() => addTableElement(
+      { addTable: (rows, options) => calls.push({ rows, options }) },
+      {
+        data: [{ invalid: true }, [{ value: 'cell' }]],
+        mergedCells: [null, { row: 0, col: 0, rowSpan: 'bad' }],
+      },
+      { x: 0, y: 0, w: 4, h: 2 }
+    )).not.toThrow()
+    expect(calls[0].rows).toHaveLength(2)
+  })
+
+  it('ignores invalid table merges before client PPTX construction', () => {
+    const calls = []
+    addTableElement(
+      { addTable: (rows, options) => calls.push({ rows, options }) },
+      {
+        data: [
+          ['A', 'B'],
+          ['C', 'D'],
+        ],
+        mergedCells: [
+          { row: 0, col: 0, rowSpan: 2, colSpan: 1 },
+          { row: 0, col: 0, rowSpan: 1, colSpan: 1 },
+          { row: 1, col: 0, rowSpan: 1, colSpan: 1 },
+          { row: 0, col: 1, rowSpan: 1, colSpan: 2 },
+          { row: -1, col: 0, rowSpan: 1, colSpan: 1 },
+          { row: 1.5, col: 1, rowSpan: 1, colSpan: 1 },
+          { row: 1, col: 1, rowSpan: 1.5, colSpan: 1 },
+        ],
+      },
+      { x: 0, y: 0, w: 4, h: 2 }
+    )
+
+    const rows = calls[0].rows
+    expect(rows[0][0].options).toMatchObject({ rowspan: 2 })
+    expect(rows[0][1].options).not.toHaveProperty('colspan')
+    expect(rows[1]).toEqual([expect.objectContaining({ text: 'D' })])
+  })
+
   it('exports merged table cells and per-cell styles', () => {
     const calls = []
     const slide = {
@@ -248,6 +337,29 @@ describe('export-pptx-core', () => {
     expect(cell.options.border).toMatchObject({ color: '010203', pt: 3 })
     expect(calls[0].options.colW).toEqual([1.33, 2.67])
     expect(calls[0].options.rowH).toEqual([0.67, 1.33])
+  })
+
+  it('preserves disjoint table merges for native PPTX construction', () => {
+    const calls = []
+    addTableElement(
+      { addTable: (rows) => calls.push(rows) },
+      {
+        data: [
+          ['A', 'B', 'C', 'D'],
+          ['E', 'F', 'G', 'H'],
+          ['I', 'J', 'K', 'L'],
+        ],
+        mergedCells: [
+          { row: 0, col: 0, rowSpan: 1, colSpan: 2 },
+          { row: 1, col: 2, rowSpan: 2, colSpan: 2 },
+        ],
+      },
+      { x: 0, y: 0, w: 4, h: 2 }
+    )
+
+    expect(calls[0][0][0].options).toMatchObject({ colspan: 2 })
+    expect(calls[0][1][2].options).toMatchObject({ colspan: 2, rowspan: 2 })
+    expect(calls[0][2]).toHaveLength(2)
   })
 
   it('drops unsafe table font family during pptx export', () => {

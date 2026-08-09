@@ -26,6 +26,11 @@ describe('GameEngine', () => {
       expect(room.gameType).toBe('hot-potato')
     })
 
+    it('persists the hot-potato allowLate policy', () => {
+      expect(GameEngine.createRoom('late-answers', 'hot-potato', { allowLate: true }).allowLate).toBe(true)
+      expect(GameEngine.createRoom('on-time-only', 'hot-potato', {}).allowLate).toBe(false)
+    })
+
     it('creates a room with empty players map', () => {
       const room = GameEngine.createRoom('slide1-el1', 'jeopardy', {})
       expect(room.players).toBeInstanceOf(Map)
@@ -80,6 +85,7 @@ describe('GameEngine', () => {
           { id: 'high', timeLimit: 9999, points: 100000 },
           { id: 'low', timeLimit: -1, points: -50 },
           { id: 'missing' },
+          { id: 'bad-options', options: 'not-an-array' },
           null,
         ],
       })
@@ -89,6 +95,40 @@ describe('GameEngine', () => {
         expect.objectContaining({ timeLimit: 5, points: 1 }),
         expect.objectContaining({ points: 10 }),
       ])
+    })
+
+    it('assigns stable unique IDs to legacy questions without usable IDs', () => {
+      const room = GameEngine.createRoom('question-ids', 'hot-potato', {
+        questions: [
+          { question: 'First' },
+          { question: 'Second', id: 0 },
+          { question: 'Duplicate', id: 'question-1' },
+        ],
+      })
+
+      expect(room.questions.map((question) => question.id)).toEqual([
+        'question-1',
+        '0',
+        'question-1-2',
+      ])
+    })
+
+    it('does not cancel finished-room cleanup when a player rejoins', () => {
+      vi.useFakeTimers()
+      try {
+        const room = GameEngine.createRoom('finished-rejoin', 'name-picker', { items: ['A'] })
+        GameEngine.joinRoom('finished-rejoin', 'player-1', 'Player', { socketId: 'player-socket' })
+        GameEngine.endGame('finished-rejoin')
+        GameEngine.disconnectRoom('finished-rejoin', 'player-1', 'player-socket')
+        GameEngine.scheduleEmptyCleanup('finished-rejoin')
+        GameEngine.joinRoom('finished-rejoin', 'player-1', 'Player', { socketId: 'player-socket-2' })
+        expect(room.cleanupKind).toBe('finished')
+
+        vi.advanceTimersByTime(5 * 60 * 1000)
+        expect(GameEngine.getRoom('finished-rejoin')).toBeUndefined()
+      } finally {
+        vi.useRealTimers()
+      }
     })
   })
 
@@ -131,10 +171,10 @@ describe('GameEngine', () => {
 
   describe('submitAnswer (hot-potato quiz)', () => {
     it('awards points for correct answer', () => {
-      const room = GameEngine.createRoom('slide1-el1', 'hot-potato', {
+      GameEngine.createRoom('slide1-el1', 'hot-potato', {
         questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
       })
-      room.currentQuestion = 0
+      GameEngine.nextQuestion('slide1-el1')
       GameEngine.joinRoom('slide1-el1', 'socket-1', 'Alice')
       const result = GameEngine.submitAnswer('slide1-el1', 'socket-1', 0, 5000)
       expect(result.correct).toBe(true)
@@ -143,10 +183,10 @@ describe('GameEngine', () => {
     })
 
     it('returns correct=false for wrong answer', () => {
-      const room = GameEngine.createRoom('slide1-el1', 'hot-potato', {
+      GameEngine.createRoom('slide1-el1', 'hot-potato', {
         questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
       })
-      room.currentQuestion = 0
+      GameEngine.nextQuestion('slide1-el1')
       GameEngine.joinRoom('slide1-el1', 'socket-1', 'Alice')
       const result = GameEngine.submitAnswer('slide1-el1', 'socket-1', 1, 5000)
       expect(result.correct).toBe(false)
@@ -154,10 +194,10 @@ describe('GameEngine', () => {
     })
 
     it('awards speed bonus for fast answers', () => {
-      const room = GameEngine.createRoom('slide1-el1', 'hot-potato', {
+      GameEngine.createRoom('slide1-el1', 'hot-potato', {
         questions: [{ id: 'q1', correctIndex: 0, points: 10, timeLimit: 30 }],
       })
-      room.currentQuestion = 0
+      GameEngine.nextQuestion('slide1-el1')
       GameEngine.joinRoom('slide1-el1', 'socket-1', 'Alice')
       const result = GameEngine.submitAnswer('slide1-el1', 'socket-1', 0, 1000)
       expect(result.correct).toBe(true)
@@ -165,17 +205,77 @@ describe('GameEngine', () => {
       expect(result.points).toBeGreaterThan(10)
     })
 
-    it('records answer in player history', () => {
+    it('uses server question timing instead of a client-supplied elapsed value', () => {
       const room = GameEngine.createRoom('slide1-el1', 'hot-potato', {
+        questions: [{ id: 'q1', correctIndex: 0, points: 10, timeLimit: 30 }],
+      })
+      GameEngine.nextQuestion('slide1-el1')
+      room.questionStartedAt = Date.now() - 15000
+      GameEngine.joinRoom('slide1-el1', 'socket-1', 'Alice')
+
+      const result = GameEngine.submitAnswer('slide1-el1', 'socket-1', 0, 0)
+
+      expect(result.points).toBeGreaterThan(10)
+      expect(result.points).toBeLessThan(20)
+    })
+
+    it('rejects an answer after the deadline when late answers are disabled', () => {
+      const room = GameEngine.createRoom('expired-question', 'hot-potato', {
+        allowLate: false,
+        questions: [{ id: 'q1', correctIndex: 0, points: 10, timeLimit: 5 }],
+      })
+      GameEngine.nextQuestion('expired-question')
+      room.questionStartedAt = Date.now() - 6000
+      GameEngine.joinRoom('expired-question', 'socket-1', 'Alice')
+
+      expect(GameEngine.submitAnswer('expired-question', 'socket-1', 0, 0)).toEqual({
+        ok: false,
+        error: 'question-expired',
+      })
+      expect(room.players.get('socket-1').score).toBe(0)
+      expect(room.players.get('socket-1').answers).toEqual([])
+    })
+
+    it('accepts an answer after the deadline when late answers are enabled', () => {
+      const room = GameEngine.createRoom('late-question', 'hot-potato', {
+        allowLate: true,
+        questions: [{ id: 'q1', correctIndex: 0, points: 10, timeLimit: 5 }],
+      })
+      GameEngine.nextQuestion('late-question')
+      room.questionStartedAt = Date.now() - 6000
+      GameEngine.joinRoom('late-question', 'socket-1', 'Alice')
+
+      const result = GameEngine.submitAnswer('late-question', 'socket-1', 0, 0)
+
+      expect(result.correct).toBe(true)
+      expect(result.points).toBe(10)
+    })
+
+    it('records answer in player history', () => {
+      GameEngine.createRoom('slide1-el1', 'hot-potato', {
         questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
       })
-      room.currentQuestion = 0
+      GameEngine.nextQuestion('slide1-el1')
       GameEngine.joinRoom('slide1-el1', 'socket-1', 'Alice')
       GameEngine.submitAnswer('slide1-el1', 'socket-1', 0, 5000)
       const room2 = GameEngine.getRoom('slide1-el1')
       const player = room2.players.get('socket-1')
       expect(player.answers).toHaveLength(1)
       expect(player.answers[0]).toMatchObject({ questionId: 'q1', correct: true })
+    })
+
+    it('rejects negative or non-finite elapsed time without changing score', () => {
+      GameEngine.createRoom('slide1-el1', 'hot-potato', {
+        questions: [{ id: 'q1', correctIndex: 0, points: 10, timeLimit: 30 }],
+      })
+      GameEngine.nextQuestion('slide1-el1')
+      GameEngine.joinRoom('slide1-el1', 'socket-1', 'Alice')
+
+      expect(GameEngine.submitAnswer('slide1-el1', 'socket-1', 0, -1)).toEqual({
+        ok: false,
+        error: 'invalid-time-spent',
+      })
+      expect(GameEngine.getRoom('slide1-el1').players.get('socket-1').score).toBe(0)
     })
 
     it('returns error for non-existent room', () => {
@@ -231,9 +331,30 @@ describe('GameEngine', () => {
         ],
       })
       const r1 = GameEngine.nextQuestion('slide1-el1')
-      expect(r1.currentQuestion).toBe(1)
+      expect(r1.currentQuestion).toBe(0)
       const r2 = GameEngine.nextQuestion('slide1-el1')
-      expect(r2.currentQuestion).toBe(2)
+      expect(r2.currentQuestion).toBe(1)
+    })
+
+    it('does not activate a room with no questions', () => {
+      GameEngine.createRoom('slide1-el1', 'relay-race', {})
+      const result = GameEngine.nextQuestion('slide1-el1')
+      expect(result.currentQuestion).toBe(-1)
+      expect(result.status).toBe('waiting')
+    })
+
+    it('finishes instead of advancing beyond the final question', () => {
+      GameEngine.createRoom('final-question', 'hot-potato', {
+        questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
+      })
+
+      const first = GameEngine.nextQuestion('final-question')
+      expect(first.currentQuestion).toBe(0)
+      expect(first.status).toBe('active')
+
+      const finished = GameEngine.nextQuestion('final-question')
+      expect(finished.currentQuestion).toBe(0)
+      expect(finished.status).toBe('finished')
     })
 
     it('returns null for non-existent room', () => {
@@ -260,6 +381,7 @@ describe('GameEngine', () => {
       GameEngine.createRoom('slide1-el1', 'hot-potato', {
         questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
       })
+      GameEngine.nextQuestion('slide1-el1')
       GameEngine.joinRoom('slide1-el1', 'socket-1', 'Alice')
       GameEngine.joinRoom('slide1-el1', 'socket-2', 'Bob')
       GameEngine.joinRoom('slide1-el1', 'socket-3', 'Carol')

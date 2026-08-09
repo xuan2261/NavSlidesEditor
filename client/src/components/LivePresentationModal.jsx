@@ -1,9 +1,27 @@
 import { useState } from 'react'
 import { Play } from 'lucide-react'
 import { Button, ModalShell } from '../components/ui'
+import { copyTextToClipboard } from '../utils/copy-to-clipboard'
 
-export default function LivePresentationModal({ presentationId, roomCode, presenterToken, onClose }) {
+export default function LivePresentationModal({
+  presentationId,
+  roomCode,
+  presenterToken,
+  onPresenterWindowOpened,
+  onClose,
+}) {
   const [isOpen, setIsOpen] = useState(true)
+  const [copyError, setCopyError] = useState('')
+
+  const handleCopy = async (event) => {
+    event.target.select()
+    const copiedSuccessfully = await copyTextToClipboard(event.target.value)
+    if (!copiedSuccessfully) {
+      setCopyError('Copy failed. Check browser clipboard permissions and try again.')
+      return
+    }
+    setCopyError('')
+  }
 
   const handleClose = () => {
     setIsOpen(false)
@@ -34,10 +52,7 @@ export default function LivePresentationModal({ presentationId, roomCode, presen
               readOnly
               value={`${window.location.origin}/live/${roomCode}`}
               className="flex-1 px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-xs"
-              onClick={(e) => {
-                e.target.select()
-                navigator.clipboard.writeText(e.target.value)
-              }}
+              onClick={handleCopy}
             />
             <span className="text-[11px] text-text-muted flex items-center">
               Viewer
@@ -48,10 +63,7 @@ export default function LivePresentationModal({ presentationId, roomCode, presen
               readOnly
               value={`${window.location.origin}/remote/${roomCode}`}
               className="flex-1 px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-xs"
-              onClick={(e) => {
-                e.target.select()
-                navigator.clipboard.writeText(e.target.value)
-              }}
+              onClick={handleCopy}
             />
             <span className="text-[11px] text-text-muted flex items-center">
               Remote
@@ -62,25 +74,29 @@ export default function LivePresentationModal({ presentationId, roomCode, presen
               readOnly
               value={`${window.location.origin}/speaker/${roomCode}`}
               className="flex-1 px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-xs"
-              onClick={(e) => {
-                e.target.select()
-                navigator.clipboard.writeText(e.target.value)
-              }}
+              onClick={handleCopy}
             />
             <span className="text-[11px] text-text-muted flex items-center">
               Speaker
             </span>
           </div>
         </div>
+        {copyError && (
+          <p className="mt-3 text-xs text-danger" role="alert">
+            {copyError}
+          </p>
+        )}
         <Button
           variant="primary"
           onClick={() => {
             const presenterWindow = window.open('', '_blank')
             if (presenterWindow) {
               presenterWindow.name = JSON.stringify({
+                presentationId,
                 roomCode,
                 presenterToken: presenterToken || '',
               })
+              onPresenterWindowOpened?.({ presenterWindow, presentationId, roomCode })
               presenterWindow.location.href =
                 `/api/presentations/${presentationId}/present?live=${roomCode}`
             }

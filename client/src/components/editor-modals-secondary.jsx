@@ -38,6 +38,7 @@ export default function EditorModalsSecondary({
   commands,
   liveRoomCode,
   livePresenterToken,
+  onPresenterWindowOpened,
   galleryPreviewTemplate,
   setGalleryPreviewTemplate,
   setPresentation,
@@ -117,6 +118,7 @@ export default function EditorModalsSecondary({
           presentationId={presentationId}
           roomCode={liveRoomCode}
           presenterToken={livePresenterToken}
+          onPresenterWindowOpened={onPresenterWindowOpened}
           onClose={() => setShowLiveModal(false)}
         />
       )}

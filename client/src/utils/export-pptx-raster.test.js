@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Buffer } from 'node:buffer'
+import QRCode from 'qrcode'
 import { buildLatexRasterMarkup, renderElementFallbackDataUri } from './export-pptx-raster'
 
 describe('export-pptx-raster', () => {
@@ -110,6 +111,19 @@ describe('export-pptx-raster', () => {
     expect(html).toContain('katex-html')
     expect(html).not.toContain('katex-mathml')
     expect(html).not.toContain('<annotation')
+  })
+
+  it('returns no QR raster when QR generation rejects so the caller can insert a placeholder', async () => {
+    vi.spyOn(QRCode, 'toDataURL').mockRejectedValueOnce(new Error('QR payload is too large'))
+
+    await expect(
+      renderElementFallbackDataUri({
+        type: 'qrcode',
+        qrData: 'too-large',
+        width: 180,
+        height: 180,
+      })
+    ).resolves.toBeNull()
   })
 
   it('[cap:element.svg depth:export] sanitizes SVG fallback data URIs for PPTX', async () => {

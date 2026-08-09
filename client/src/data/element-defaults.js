@@ -18,6 +18,8 @@ export const ELEMENT_DEFAULTS = {
     zIndex: 2,
     src: '',
     objectFit: 'contain',
+    borderWidth: 0,
+    borderColor: '#000000',
     alt: '',
   },
   shape: {

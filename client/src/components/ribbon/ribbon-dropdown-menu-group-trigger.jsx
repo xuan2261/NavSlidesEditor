@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '../ui'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
@@ -18,15 +18,51 @@ export default function RibbonDropdownMenuGroup({
 }) {
   const [open, setOpen] = useState(false)
   const localTriggerRef = useRef(null)
+  const menuRef = useRef(null)
   const triggerRef = externalTriggerRef || localTriggerRef
   const toggleOpen = () => setOpen((v) => !v)
   const closeMenu = () => {
-    triggerRef.current?.focus()
     setOpen(false)
+    triggerRef.current?.focus()
   }
   const runItem = (item) => {
     item.onAction?.()
     closeMenu()
+  }
+
+  useLayoutEffect(() => {
+    if (!open) return
+    menuRef.current?.querySelector('[role="menuitem"]')?.focus()
+  }, [open])
+
+  const handleMenuKeyDown = (event, index) => {
+    const lastIndex = items.length - 1
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      closeMenu()
+      return
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      runItem(items[index])
+      return
+    }
+    const direction = event.key === 'ArrowDown' || event.key === 'ArrowRight'
+      ? 1
+      : event.key === 'ArrowUp' || event.key === 'ArrowLeft'
+        ? -1
+        : 0
+    if (direction) {
+      event.preventDefault()
+      const nextIndex = (index + direction + items.length) % items.length
+      menuRef.current?.querySelectorAll('[role="menuitem"]')[nextIndex]?.focus()
+      return
+    }
+    if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault()
+      const nextIndex = event.key === 'Home' ? 0 : lastIndex
+      menuRef.current?.querySelectorAll('[role="menuitem"]')[nextIndex]?.focus()
+    }
   }
 
   return (
@@ -62,28 +98,25 @@ export default function RibbonDropdownMenuGroup({
         <RibbonFloatingOverlay
           open={open}
           anchorRef={triggerRef}
-          onClose={() => setOpen(false)}
+          onClose={closeMenu}
           role="menu"
           dataRibbonPopup={label}
           className={`bg-card border border-border rounded-lg p-1.5 shadow-xl min-w-[140px] ${menuClassName}`}
         >
-          <div className={itemsClassName}>
-            {items.map((item) => {
+          <div ref={menuRef} className={itemsClassName}>
+            {items.map((item, index) => {
               const ItemIcon = item.icon
               return (
                 <button
                   key={item.id}
                   role="menuitem"
+                  tabIndex={index === 0 ? 0 : -1}
                   className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-[11px] text-left cursor-pointer transition-colors hover:bg-secondary text-text-primary"
                   onMouseDown={(e) => {
                     e.preventDefault()
                     runItem(item)
                   }}
-                  onKeyDown={(e) => {
-                    if (e.key !== 'Enter' && e.key !== ' ') return
-                    e.preventDefault()
-                    runItem(item)
-                  }}
+                  onKeyDown={(e) => handleMenuKeyDown(e, index)}
                 >
                   <ItemIcon size={14} className="shrink-0" />
                   <span>{item.label}</span>

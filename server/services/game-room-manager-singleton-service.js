@@ -125,18 +125,49 @@ function clampInteger(value, min, max, fallback) {
   return Math.min(max, Math.max(min, Math.round(parsed)))
 }
 
+function normalizeQuestionOption(option) {
+  if (typeof option === 'string') return option
+  if (typeof option === 'number' || typeof option === 'boolean') return String(option)
+  if (!option || typeof option !== 'object' || Array.isArray(option)) return ''
+
+  const text = option.text ?? option.label ?? option.value
+  return typeof text === 'string' || typeof text === 'number' ? String(text) : ''
+}
+
 function normalizeQuestions(questions) {
   if (!Array.isArray(questions)) return []
-  return questions
-    .filter((question) => question && typeof question === 'object' && !Array.isArray(question))
-    .map((question) => ({
+  const validQuestions = questions.filter((question) => (
+    question &&
+    typeof question === 'object' &&
+    !Array.isArray(question) &&
+    (!Object.prototype.hasOwnProperty.call(question, 'options') || Array.isArray(question.options))
+  ))
+  const seenIds = new Set()
+  return validQuestions.map((question, index) => {
+    const rawId = question.id
+    const baseId = typeof rawId === 'string' && rawId.trim()
+      ? rawId.trim()
+      : typeof rawId === 'number' && Number.isFinite(rawId)
+        ? String(rawId)
+        : `question-${index + 1}`
+    let id = baseId
+    let suffix = 2
+    while (seenIds.has(id)) id = `${baseId}-${suffix++}`
+    seenIds.add(id)
+    const normalizedQuestion = {
       ...question,
+      id,
       timeLimit:
         question.timeLimit == null
           ? question.timeLimit
           : clampInteger(question.timeLimit, 5, 300, 30),
       points: clampInteger(question.points, 1, 1000, 10),
-    }))
+    }
+    if (Array.isArray(normalizedQuestion.options)) {
+      normalizedQuestion.options = normalizedQuestion.options.map(normalizeQuestionOption)
+    }
+    return normalizedQuestion
+  })
 }
 
 function createRoom(gameId, gameType, options = {}, owner = null) {
@@ -153,7 +184,10 @@ function createRoom(gameId, gameType, options = {}, owner = null) {
     hostCapabilityHash: hashSessionToken(hostCapability),
     hostPlayerId: null,
     hostSocketId: null,
-    currentQuestion: 0,
+    // -1 means the host has not advanced to the first question yet.
+    currentQuestion: -1,
+    questionStartedAt: null,
+    allowLate: options.allowLate === true,
     questions: normalizeQuestions(options.questions),
     poll: normalizePollOptions(options.poll || options),
     pollVotes: new Map(), // playerId -> optionId
@@ -161,6 +195,7 @@ function createRoom(gameId, gameType, options = {}, owner = null) {
     wordCloudCounts: new Map(), // normalized phrase -> count
     wordCloudSubmissions: new Map(), // playerId -> submission count
     matching: normalizeMatchingOptions(options.matching || options),
+    matchingRevealed: false,
     matchingTargetOrder: null,
     matchingSubmissions: new Map(), // playerId -> { pairs, score, total }
     teams: options.teams || [],
@@ -354,7 +389,7 @@ function orderMatchingTargets(pairs) {
   return [...targets.slice(1), targets[0]]
 }
 
-function buildMatchingPublicState(room, revealed = false) {
+function buildMatchingPublicState(room, revealed = room.matchingRevealed) {
   const prompts = room.matching.pairs.map((pair) => ({
     id: pair.promptId,
     text: pair.prompt,
@@ -433,6 +468,17 @@ function getMatchingState(gameId, options = {}) {
   return buildMatchingPublicState(room, options.revealed)
 }
 
+function setMatchingRevealed(gameId, revealed = true) {
+  const room = rooms.get(gameId)
+  if (!room || room.gameType !== 'matching') return null
+  room.matchingRevealed = revealed === true
+  return buildMatchingPublicState(room)
+}
+
+function revealMatching(gameId) {
+  return setMatchingRevealed(gameId, true)
+}
+
 function getRoom(gameId) {
   return rooms.get(gameId)
 }
@@ -492,7 +538,7 @@ function joinRoom(gameId, playerId, playerName, options = {}) {
   // Any player rejoin cancels only the short empty-room reconnect grace.
   // The independent unclaimed timer remains until the host successfully
   // claims the room, so ordinary players cannot pin an unowned room.
-  if (room.cleanupTimer) {
+  if (room.cleanupTimer && room.cleanupKind === 'empty') {
     clearTimeout(room.cleanupTimer)
     room.cleanupTimer = null
     room.cleanupKind = null
@@ -542,57 +588,115 @@ function submitAnswer(gameId, playerId, answerIndex, timeSpentMs, options = {}) 
   const room = rooms.get(gameId)
   if (!room) return null
 
-  const question = room.questions[room.currentQuestion]
-  if (!question) return null
-
   const player = room.players.get(playerId)
   if (!player) return null
   if (!hasValidPlayerSession(player, options)) {
     return { ok: false, error: 'stale-player-session' }
   }
 
+  const question = room.questions[room.currentQuestion]
+  if (!question) return null
+  if (options.requireQuestionId &&
+      (options.questionId === undefined || options.questionId !== question.id)) {
+    return { ok: false, error: 'stale-question' }
+  }
+  if (timeSpentMs !== undefined &&
+      (typeof timeSpentMs !== 'number' || !Number.isFinite(timeSpentMs) || timeSpentMs < 0)) {
+    return { ok: false, error: 'invalid-time-spent' }
+  }
+  if (!Number.isFinite(room.questionStartedAt)) {
+    return { ok: false, error: 'invalid-question-timing' }
+  }
+  const serverElapsedMs = Math.max(0, Date.now() - room.questionStartedAt)
+
   // Anti-cheat: a player may answer each question only once. A repeat for the
   // same question id is ignored — no score change, signalled to the caller.
-  if (player.answers.some((a) => a.questionId === question.id)) {
-    return { duplicate: true, correct: false, points: 0, totalScore: player.score }
+  const previousAnswer = player.answers.find((a) => a.questionId === question.id)
+  if (previousAnswer) {
+    return {
+      duplicate: true,
+      correct: previousAnswer.correct,
+      correctIndex: question.correctIndex,
+      answerIndex: previousAnswer.answerIndex,
+      points: previousAnswer.points || 0,
+      totalScore: player.score,
+    }
   }
 
+  const limitMs = Number(question.timeLimit) * 1000
+  if (!room.allowLate && Number.isFinite(limitMs) && limitMs > 0 && serverElapsedMs > limitMs) {
+    return { ok: false, error: 'question-expired' }
+  }
+
+  const elapsedMs = Number.isFinite(limitMs) && limitMs > 0
+    ? Math.min(serverElapsedMs, limitMs)
+    : serverElapsedMs
   const correct = answerIndex === question.correctIndex
 
   // Speed bonus: extra points for fast correct answers
   let points = correct ? question.points : 0
-  if (correct && question.timeLimit) {
-    const remaining = Math.max(0, question.timeLimit * 1000 - timeSpentMs)
-    const speedBonus = Math.round((remaining / (question.timeLimit * 1000)) * question.points)
+  if (correct && limitMs > 0) {
+    const remaining = Math.max(0, limitMs - elapsedMs)
+    const speedBonus = Math.round((remaining / limitMs) * question.points)
     points += speedBonus
   }
 
   player.score += points
-  player.answers.push({ questionId: question.id, answerIndex, correct, timeSpentMs })
+  player.answers.push({ questionId: question.id, answerIndex, correct, points, timeSpentMs: elapsedMs })
 
-  return { correct, points, totalScore: player.score }
+  return {
+    correct,
+    correctIndex: question.correctIndex,
+    answerIndex,
+    points,
+    totalScore: player.score,
+  }
 }
 
-function triggerRandom(gameId) {
+function triggerRandomResult(gameId) {
   const room = rooms.get(gameId)
   if (!room) return null
 
-  if (room.items.length === 0) return -1
+  if (room.items.length === 0) return { winnerIndex: -1, winner: null }
 
-  const index = Math.floor(Math.random() * room.items.length)
+  const winnerIndex = Math.floor(Math.random() * room.items.length)
+  const winner = room.items[winnerIndex]
 
   if (room.excludeAfterPick) {
-    room.items.splice(index, 1)
+    room.items.splice(winnerIndex, 1)
   }
 
-  return index
+  return { winnerIndex, winner }
+}
+
+function triggerRandom(gameId) {
+  const result = triggerRandomResult(gameId)
+  return result === null ? null : result.winnerIndex
+}
+
+function activateRoom(gameId) {
+  const room = rooms.get(gameId)
+  if (!room) return null
+  if (room.cleanupTimer && ['empty', 'finished'].includes(room.cleanupKind)) {
+    clearTimeout(room.cleanupTimer)
+    room.cleanupTimer = null
+    room.cleanupKind = null
+  }
+  room.status = 'active'
+  return room
 }
 
 function nextQuestion(gameId) {
   const room = rooms.get(gameId)
   if (!room) return null
+  if (!room.questions.length) return room
 
-  room.currentQuestion += 1
+  const nextIndex = room.currentQuestion + 1
+  if (nextIndex >= room.questions.length) return endGame(gameId)
+
+  room.currentQuestion = nextIndex
+  room.questionStartedAt = Date.now()
+  room.status = 'active'
   return room
 }
 
@@ -601,6 +705,7 @@ function endGame(gameId) {
   if (!room) return null
 
   room.status = 'finished'
+  room.questionStartedAt = null
 
   if (room.unclaimedCleanupTimer) {
     clearTimeout(room.unclaimedCleanupTimer)
@@ -687,7 +792,11 @@ function scheduleUnclaimedRoomCleanup(gameId) {
 // (joinRoom) within the window clears this timer, but not an unclaimed timer.
 function scheduleEmptyCleanup(gameId) {
   const room = rooms.get(gameId)
-  if (!room || Array.from(room.players.values()).some((player) => player.socketId)) return
+  if (
+    !room ||
+    room.status === 'finished' ||
+    Array.from(room.players.values()).some((player) => player.socketId)
+  ) return
   if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
   room.cleanupKind = 'empty'
   room.cleanupTimer = setTimeout(() => cleanup(gameId), emptyRoomTtlMs)
@@ -760,7 +869,11 @@ module.exports = {
   clearWordCloud,
   submitMatchingPairs,
   getMatchingState,
+  setMatchingRevealed,
+  revealMatching,
   triggerRandom,
+  triggerRandomResult,
+  activateRoom,
   nextQuestion,
   endGame,
   getLeaderboard,

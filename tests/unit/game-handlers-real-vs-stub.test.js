@@ -13,18 +13,18 @@ describe('game handlers in the editor keyboard controller', () => {
     )
   })
 
-  it('L is a real leaderboard state toggle', () => {
+  it('L is a real leaderboard state toggle when configured for the active game', () => {
     expect(src).toMatch(
-      /onGameLeaderboard:\s*\(\)\s*=>\s*c\.setShowGameLeaderboard\s*\(\s*\(?v\)?\s*=>\s*!v\s*\)/,
+      /onGameLeaderboard:\s*\(\)\s*=>\s*\{\s*if \(getGameShortcut\(c, 'leaderboard'\)\) c\.setShowGameLeaderboard\s*\(\s*\(?v\)?\s*=>\s*!v\s*\)/,
     )
   })
 
-  it('Enter, R, P, and team handlers are not console stubs', () => {
+  it('Enter, R, P, and team handlers dispatch their configured actions', () => {
     expect(src).not.toMatch(/onGameNext:\s*\(\)\s*=>\s*console\.log/)
     expect(src).not.toMatch(/onGameReveal:\s*\(\)\s*=>\s*console\.log/)
     expect(src).not.toMatch(/onGamePause:\s*\(\)\s*=>\s*console\.log/)
     expect(src).not.toMatch(/onTeamSelect[1-4]:\s*\(\)\s*=>\s*console\.log/)
-    expect(src).toContain("c.emitGameShortcutAction('next')")
-    expect(src).toContain("c.emitGameShortcutAction('team-select', { teamIndex: 0 })")
+    expect(src).toContain("emitConfiguredGameShortcut(c, 'nextPhase')")
+    expect(src).toContain("emitConfiguredGameShortcut(c, 'teamSelect', { teamIndex: 0 })")
   })
 })

@@ -27,6 +27,7 @@ export function useAnnotationSync({
   // Race: annotation:add can arrive before annotations:sync, causing the same
   // annotation to be added twice (once from the event, once from sync).
   const seenIds = useRef(new Set())
+  const generationRef = useRef(0)
   const activeSlideRef = useRef({ slideIndex, verticalIndex: verticalIndex || 0 })
   const registerAnnotationId = useCallback((annotationId) => {
     if (annotationId) seenIds.current.add(annotationId)
@@ -149,22 +150,38 @@ export function useAnnotationSync({
   )
 
   useEffect(() => {
-    if (!socket) return
+    const generation = generationRef.current + 1
+    generationRef.current = generation
+    seenIds.current = new Set()
+    const isCurrentGeneration = () => generationRef.current === generation
+    const guard = (handler) => (...args) => {
+      if (isCurrentGeneration()) handler(...args)
+    }
+    const guardedAnnotationAdd = guard(handleAnnotationAdd)
+    const guardedAnnotationRemove = guard(handleAnnotationRemove)
+    const guardedAnnotationClear = guard(handleAnnotationClear)
+    const guardedAnnotationsSync = guard(handleAnnotationsSync)
+    const guardedSlideState = guard(handleSlideState)
 
-    socket.on('annotation:add', handleAnnotationAdd)
-    socket.on('annotation:removed', handleAnnotationRemove)
-    socket.on('annotation:cleared', handleAnnotationClear)
-    socket.on('annotations:sync', handleAnnotationsSync)
-    socket.on('navigate', handleSlideState)
-    socket.on('sync-state', handleSlideState)
+    if (socket) {
+      socket.on('annotation:add', guardedAnnotationAdd)
+      socket.on('annotation:removed', guardedAnnotationRemove)
+      socket.on('annotation:cleared', guardedAnnotationClear)
+      socket.on('annotations:sync', guardedAnnotationsSync)
+      socket.on('navigate', guardedSlideState)
+      socket.on('sync-state', guardedSlideState)
+    }
 
     return () => {
-      socket.off('annotation:add', handleAnnotationAdd)
-      socket.off('annotation:removed', handleAnnotationRemove)
-      socket.off('annotation:cleared', handleAnnotationClear)
-      socket.off('annotations:sync', handleAnnotationsSync)
-      socket.off('navigate', handleSlideState)
-      socket.off('sync-state', handleSlideState)
+      if (isCurrentGeneration()) generationRef.current += 1
+      if (socket) {
+        socket.off('annotation:add', guardedAnnotationAdd)
+        socket.off('annotation:removed', guardedAnnotationRemove)
+        socket.off('annotation:cleared', guardedAnnotationClear)
+        socket.off('annotations:sync', guardedAnnotationsSync)
+        socket.off('navigate', guardedSlideState)
+        socket.off('sync-state', guardedSlideState)
+      }
       seenIds.current = new Set()
     }
   }, [

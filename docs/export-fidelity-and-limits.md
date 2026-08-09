@@ -17,6 +17,10 @@ honored. Now corrected:
 | Image border (color/width)           | reveal HTML                              | Emitted as a CSS border on the wrapper                                                  |
 | Table merged cells (colspan/rowspan) | reveal HTML                              | Emitted via the shared `resolveMergedCells` resolver (canvas + reveal + pptx now agree) |
 
+Imported `mergedCells` metadata is preserved and rendered, but remains read-only in the
+current table properties surface: merge/unmerge authoring controls are intentionally
+out of scope.
+
 ## Inherent format limitations (not fixable)
 
 These are ceilings of the target format, not bugs. They are documented rather
@@ -26,12 +30,16 @@ than worked around.
 
 - **No box-shadow.** OOXML shape effects do not map to the CSS shadow model used
   on canvas/reveal; drop shadows are not exported.
-- **No image corner-radius.** `pptxgenjs` image placement has no corner-radius
-  option; rounded images export square.
-- **No CSS filters.** `brightness`/`contrast`/`grayscale`/`saturate` are CSS
-  filter functions with no pptx equivalent; images export unfiltered.
-- **No table rotation.** Tables are placed as native table frames that pptx
-  cannot rotate.
+- **Image effects are visual-raster only.** Ordinary images remain editable
+  native PPTX images. A data image or validated local `/uploads/` image with a
+  non-default CSS filter or non-zero corner radius is rasterized within its
+  element bounds and emits a fallback warning; frame rotation, opacity, and
+  alt text are retained. External image URLs are not admitted to the server
+  raster path, so they remain native images with an accepted-limit warning
+  rather than a visual-effects claim.
+- **No table rotation.** Tables remain editable native table frames, but pptx
+  cannot rotate them. A non-zero table rotation emits a structured accepted-limit
+  warning and exports the unrotated native table.
 - **No chart rotation.** `pptxgenjs` `IChartOpts` has no `rotate` field — charts
   are placed as graphicFrames, which pptx cannot rotate. Writing a `rotate` opt
   would silently no-op, so it is intentionally not attempted.
@@ -39,9 +47,22 @@ than worked around.
   glyph fill (the text color), not a whole-element background. Whole-element
   opacity is therefore mapped only where the semantic is correct (shape fill,
   image), not for text blocks.
-- **Audio/video are not embedded as playable media.** PPTX export uses poster,
-  raster, or placeholder fallbacks with warnings rather than pretending to
-  preserve browser playback controls.
+- **Validated local audio/video can be embedded.** PPTX export embeds only
+  upload-root sources whose extension and MIME agree with the supported set:
+  MP3/WAV/M4A/AAC for audio and MP4/MOV for video. Server export verifies the
+  bytes inside the configured uploads root (including real-path containment);
+  browser export fetches only a validated same-origin `/uploads/` path and checks
+  its response MIME and file signature. External URLs, arbitrary paths,
+  traversal, MIME mismatches,
+  and unsupported codecs are never passed to `addMedia`; they remain poster or
+  placeholder fallbacks. A validated local PNG may be used as the embedded
+  video cover. Other validated local image posters remain available for static
+  fallback.
+- **Embedded media does not preserve browser playback policy.** Start/end trim,
+  playback speed, autoplay, loop, and muted settings have no qualified OOXML
+  mapping and emit truthful warnings when authored. Package tests prove embedded
+  parts and relationships, but this is not yet a PowerPoint/Office playback
+  compatibility claim.
 - **Editable parity is not promised for DOM-generated elements.** Markdown,
   LaTeX/TikZ, raw HTML, QR code, icons, drawings, SVG, timelines, games, and
   unsupported chart variants may export through raster/placeholder fallbacks.
@@ -112,6 +133,10 @@ created directly in NavSlides.
   [`mutation-operation-scope.js`](../server/services/pptx-import/mutation-operation-scope.js),
   and
   [`reason-code-contract.js`](../server/services/pptx-import/reason-code-contract.js).
+  Package-native whole-image/media replacement remains fail-closed as a non-seed
+  operation. In particular, MIME-changing replacement is rejected until a
+  transaction updates and validates the media part, relationships, and
+  `[Content_Types].xml` atomically.
 
 #### Package-state software contract
 
@@ -261,30 +286,32 @@ machine checks:
 | `matrixRowId` | Audit matrix row, e.g. `game.game-subtype-live-policy.pptx-export`                                                    |
 | `severity`    | `warning` for expected fallback, `error` for failed native path                                                       |
 | `message`     | User-visible warning text                                                                                             |
-| `fallback`    | Fallback class: `server-raster`, `client-raster`, `media-cover`, `placeholder`, `background-color`, or `export-error` |
+| `fallback`    | Fallback class, including `server-raster`, `client-raster`, `media-cover`, `placeholder`, `static-media`, `browser-only-media-semantics`, `default-media-cover`, `static-code`, `background-color`, or `export-error` |
 
 The editor export action stores the most recent report on
-`globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__` and shows warnings through
-the browser export-result modal (`alert`) so fallback gaps are not console-only.
+`globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__` and surfaces warnings through
+the application feedback channel/export-result UI (`showNotice` and the
+`app-feedback` event), so fallback gaps are not console-only.
 
 ## Element-control export-gap classification
 
 | Matrix row                                    | Classification                                                                                                                                       |
 | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `audio.audio-source-playback.pptx-export`     | `fallback-warning`: media cover or placeholder; playable audio is an accepted format limit                                                           |
+| `audio.audio-source-playback.pptx-export`     | `native-with-warning`: validated upload-root audio embeds; external/unsupported sources stay static, and browser-only playback semantics warn          |
 | `chart.chart-data-options.pptx-export`        | `fallback-warning`: native chart types stay editable; unsupported variants such as polarArea use raster/placeholder fallback and structured warnings |
 | `code.code-content-language.pptx-export`      | `accepted-limit`: plain editable monospace text; syntax theme fidelity is not native                                                                 |
 | `drawing.drawing-path-style.pptx-export`      | `fallback-warning`: raster/placeholder for editable path parity                                                                                      |
 | `game.game-subtype-live-policy.pptx-export`   | `fallback-warning`: live-only static placeholder, no private config                                                                                  |
 | `html.trusted-html-content.pptx-export`       | `fallback-warning`: server raster when available; active scripts remain trusted HTML-only                                                            |
 | `icon.icon-name-style.pptx-export`            | `fallback-warning`: raster/placeholder for icon glyph parity                                                                                         |
-| `image.media-source-and-fit.pptx-export`      | `accepted-limit`: source/crop/fit/opacity/flip/border map; CSS filters and rounded corners remain native limits                                      |
+| `image.media-source-and-fit.pptx-export`      | `fallback-warning`: ordinary images remain editable; safe data/local filtered or rounded images rasterize with frame metadata, while external URLs stay native with an accepted-limit warning |
 | `latex.latex-content-style.pptx-export`       | `fallback-warning`: server raster when available; editable equation parity is out of scope                                                           |
 | `markdown.markdown-content-style.pptx-export` | `fallback-warning`: raster/placeholder for authored Markdown structure                                                                               |
 | `qrcode.qr-data-style.pptx-export`            | `fallback-warning`: raster/placeholder for generated QR output                                                                                       |
 | `svg.svg-content-overrides.pptx-export`       | `fallback-warning`: sanitizer-covered HTML/canvas path, PPTX fallback for editable SVG parity                                                        |
+| `table.table-layout-rotation.pptx-export`     | `accepted-limit`: rotated tables remain editable native tables; rotation is omitted with a structured warning                                         |
 | `timeline.timeline-events-style.pptx-export`  | `fallback-warning`: raster/placeholder for timeline geometry                                                                                         |
-| `video.video-source-playback.pptx-export`     | `fallback-warning`: poster or placeholder; playable video is an accepted format limit                                                                |
+| `video.video-source-playback.pptx-export`     | `native-with-warning`: validated upload-root video embeds with an optional validated PNG cover; external/unsupported sources stay poster/placeholder, and browser-only semantics warn |
 
 ## Export security limits
 
@@ -295,6 +322,9 @@ content. Exports must not be treated as untrusted sanitization boundaries:
   Host exported decks behind the same trust boundary as the editor content.
 - PPTX fallbacks may rasterize trusted active content; they do not sandbox or
   rewrite the original project data.
+- PPTX media embedding never resolves external URLs or author-supplied filesystem
+  paths. Only validated upload-root sources are read; traversal, MIME-changing
+  content, unsupported codecs, and non-local posters fail to a static path.
 - External network URLs can still load in HTML exports according to browser and
   hosting policy. Local private paths are not a portability feature and should
   be avoided in shared decks.

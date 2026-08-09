@@ -316,21 +316,26 @@ export function MatchingCard({ matchingState, matchingResult, onSubmit }) {
 }
 
 // ── Answered State ───────────────────────────────────────────────────────────────
-function AnsweredState({ answerResult, question }) {
+function AnsweredState({ answerResult, question, expired = false }) {
+  const pending = !expired && !answerResult
+  const icon = expired ? '⏰' : pending ? '⏳' : answerResult.correct ? '✅' : '❌'
+  const heading = expired ? 'Time expired' : pending ? 'Answer submitted' : answerResult.correct ? 'Correct!' : 'Wrong!'
+
   return (
     <div className="min-h-screen bg-workspace flex items-center justify-center p-4">
       <div className="text-center">
-        <div className="text-5xl mb-4">{answerResult?.correct ? '✅' : '❌'}</div>
-        <h2 className="text-xl font-bold text-text-primary mb-2">
-          {answerResult?.correct ? 'Correct!' : 'Wrong!'}
-        </h2>
-        {answerResult?.points > 0 && (
+        <div className="text-5xl mb-4">{icon}</div>
+        <h2 className="text-xl font-bold text-text-primary mb-2">{heading}</h2>
+        {!pending && !expired && answerResult.points > 0 && (
           <p className="text-2xl font-bold text-accent mb-2">+{answerResult.points} pts</p>
         )}
-        <p className="text-text-muted">Waiting for next question...</p>
-        {question?.options && answerResult?.correct === false && (
+        <p className="text-text-muted">
+          {pending ? 'Waiting for the server result...' : 'Waiting for next question...'}
+        </p>
+        {expired && <p className="text-text-muted mt-2">This question will not accept late answers.</p>}
+        {question?.options && answerResult?.correct === false && Number.isInteger(answerResult.correctIndex) && (
           <p className="text-sm text-text-muted mt-2">
-            Correct answer: {String.fromCharCode(65 + question.correctIndex)} — {question.options[question.correctIndex]}
+            Correct answer: {String.fromCharCode(65 + answerResult.correctIndex)} — {question.options[answerResult.correctIndex]}
           </p>
         )}
       </div>
@@ -432,7 +437,7 @@ export default function GamePlayerPage() {
 
   // If name in URL, it's already joined — go straight to game
   if (urlName && status === 'joining') {
-    return <WaitingRoom playerCount={0} error={null} />
+    return <WaitingRoom playerCount={playerCount} error={error} />
   }
 
   // Join form
@@ -513,8 +518,8 @@ export default function GamePlayerPage() {
     )
   }
 
-  if (status === 'answered' || status === 'result') {
-    return <AnsweredState answerResult={answerResult} question={currentQuestion} />
+  if (status === 'answered' || status === 'result' || status === 'expired') {
+    return <AnsweredState answerResult={answerResult} question={currentQuestion} expired={status === 'expired'} />
   }
 
   if (status === 'finished') {

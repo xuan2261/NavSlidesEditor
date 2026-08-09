@@ -24,6 +24,49 @@ function makeSlide() {
 const resolution = { width: 960, height: 540 }
 const layout = { width: 10, height: 5.63 }
 
+describe('image visual fallback routing', () => {
+  it('preserves bounds, rotation, opacity, and alt text on a rasterized image frame', async () => {
+    const slide = makeSlide()
+    const warnings = []
+    const image = {
+      id: 'rounded-image',
+      type: 'image',
+      x: 96,
+      y: 54,
+      width: 384,
+      height: 216,
+      rotation: 18,
+      opacity: 0.4,
+      altText: 'Rounded image',
+      borderRadius: 16,
+    }
+
+    await addElementToPptxSlide({
+      slide,
+      element: image,
+      resolution,
+      layout,
+      warnings,
+      slideNumber: 1,
+      rasterOverrides: { 'rounded-image': 'data:image/png;base64,rounded' },
+    })
+
+    expect(slide.addImage).toHaveBeenCalledWith({
+      data: 'data:image/png;base64,rounded',
+      x: 1,
+      y: 0.563,
+      w: 4,
+      h: 2.252,
+      rotate: 18,
+      transparency: 60,
+      altText: 'Rounded image',
+    })
+    expect(warnings).toEqual([
+      'Slide 1: rasterized image to preserve CSS filters or rounded corners',
+    ])
+  })
+})
+
 describe('per-element rasterization isolation (I-R3.1)', () => {
   it('one element rasterizer throwing does not abort the whole slide; failing element becomes a placeholder', async () => {
     const slide = makeSlide()
@@ -67,6 +110,115 @@ describe('per-element rasterization isolation (I-R3.1)', () => {
       'html preview unavailable',
       expect.objectContaining({ fit: 'shrink' })
     )
+  })
+})
+
+describe('chart export routing', () => {
+  it('intentionally rasterizes polar area charts without a native export error', async () => {
+    const slide = makeSlide()
+    const warnings = []
+    const rasterize = vi.fn(async () => 'data:image/png;base64,polar')
+    const polarArea = {
+      id: 'polar-1',
+      type: 'chart',
+      chartType: 'polarArea',
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 300,
+      chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
+    }
+
+    await addElementToPptxSlide({
+      slide,
+      element: polarArea,
+      resolution,
+      layout,
+      warnings,
+      slideNumber: 1,
+      rasterizeElement: rasterize,
+    })
+
+    expect(rasterize).toHaveBeenCalledWith(polarArea, expect.any(Object))
+    expect(slide.addImage).toHaveBeenCalledWith(
+      expect.objectContaining({ data: 'data:image/png;base64,polar' })
+    )
+    expect(slide.addChart).not.toHaveBeenCalled()
+    expect(warnings).toEqual(['Slide 1: rasterized chart fallback'])
+  })
+
+  it('keeps radar charts native and editable', async () => {
+    const slide = makeSlide()
+    const warnings = []
+    const rasterize = vi.fn()
+    const radar = {
+      id: 'radar-1',
+      type: 'chart',
+      chartType: 'radar',
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 300,
+      chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
+    }
+
+    await addElementToPptxSlide({
+      slide,
+      element: radar,
+      resolution,
+      layout,
+      pptx: { ChartType: { radar: 'radar' } },
+      warnings,
+      slideNumber: 1,
+      rasterizeElement: rasterize,
+    })
+
+    expect(slide.addChart).toHaveBeenCalledWith(
+      'radar',
+      [{ name: 'Series', labels: ['A'], values: [1] }],
+      expect.objectContaining({ x: 0, y: 0 })
+    )
+    expect(rasterize).not.toHaveBeenCalled()
+    expect(warnings).toEqual([])
+  })
+})
+
+describe('table export routing', () => {
+  it('keeps rotated tables native and reports the accepted rotation limit', async () => {
+    const slide = makeSlide()
+    const warnings = []
+    const table = {
+      id: 'table-rotation',
+      type: 'table',
+      rotation: 15,
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 200,
+      data: [['Native table']],
+    }
+
+    await addElementToPptxSlide({
+      slide,
+      element: table,
+      resolution,
+      layout,
+      warnings,
+      slideNumber: 1,
+    })
+
+    expect(slide.addTable).toHaveBeenCalledTimes(1)
+    expect(slide.addImage).not.toHaveBeenCalled()
+    expect(warnings.exportReport.warnings).toEqual([
+      expect.objectContaining({
+        elementId: 'table-rotation',
+        elementType: 'table',
+        control: 'table-layout-rotation',
+        matrixRowId: 'table.table-layout-rotation.pptx-export',
+        fallback: 'native-table-unrotated',
+        severity: 'warning',
+      }),
+    ])
   })
 })
 

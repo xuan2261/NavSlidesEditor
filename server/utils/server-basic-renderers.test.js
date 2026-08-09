@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import renderersModule from './server-basic-renderers.js'
 
 const {
+  addChartElement,
   addLineElement,
   addShapeElement,
   addTableElement,
@@ -71,6 +72,40 @@ describe('server-basic-renderers', () => {
     )
 
     expect(slide.addShape).toHaveBeenCalledTimes(2)
+  })
+
+  it('maps supported authored chart options for server PPTX export', () => {
+    const slide = { addChart: vi.fn() }
+    addChartElement(
+      slide,
+      {
+        chartType: 'line',
+        areaFill: true,
+        stacked: true,
+        legendPosition: 'bottom',
+        axisTitles: { category: 'Month', value: 'Revenue' },
+        chartData: {
+          labels: ['Jan'],
+          datasets: [
+            { label: 'North', data: [2], color: '#ef4444' },
+            { label: 'South', data: [3], color: '#22c55e' },
+          ],
+        },
+      },
+      { x: 0, y: 0, w: 4, h: 2 },
+      { ChartType: { area: 'area', line: 'line' } }
+    )
+
+    expect(slide.addChart).toHaveBeenCalledWith(
+      'area',
+      expect.any(Array),
+      expect.objectContaining({
+        barGrouping: 'stacked',
+        legendPos: 'b',
+        catAxisTitle: 'Month',
+        valAxisTitle: 'Revenue',
+      })
+    )
   })
 
   it('resolves auto theme colors for server pptx primitives', () => {
@@ -147,6 +182,26 @@ describe('server-basic-renderers', () => {
     })
   })
 
+  it('uses the first imported gradient stop for server pptx shape fallback', () => {
+    const slide = { addShape: vi.fn(), addText: vi.fn() }
+    addShapeElement(
+      slide,
+      {
+        shape: 'rect',
+        fill: 'gradient',
+        fillGradient: {
+          stops: [
+            { color: '#22c55e', offset: 0 },
+            { color: '#2563eb', offset: 1 },
+          ],
+        },
+      },
+      { x: 0, y: 0, w: 2, h: 1 }
+    )
+
+    expect(slide.addShape.mock.calls[0][1].fill.color).toBe('22C55E')
+  })
+
   it('uses rich text runs for imported shape text', () => {
     const slide = { addShape: vi.fn(), addText: vi.fn() }
     addShapeElement(
@@ -219,6 +274,34 @@ describe('server-basic-renderers', () => {
     expect(rows[0][0].options.fontFace).toBe('Arial')
     expect(slide.addTable.mock.calls[0][1].colW).toEqual([1.33, 2.67])
     expect(slide.addTable.mock.calls[0][1].rowH).toEqual([0.67, 1.33])
+  })
+
+  it('ignores invalid table merges before server PPTX construction', () => {
+    const slide = { addTable: vi.fn() }
+    addTableElement(
+      slide,
+      {
+        data: [
+          ['A', 'B'],
+          ['C', 'D'],
+        ],
+        mergedCells: [
+          { row: 0, col: 0, rowSpan: 2, colSpan: 1 },
+          { row: 0, col: 0, rowSpan: 1, colSpan: 1 },
+          { row: 1, col: 0, rowSpan: 1, colSpan: 1 },
+          { row: 0, col: 1, rowSpan: 1, colSpan: 2 },
+          { row: -1, col: 0, rowSpan: 1, colSpan: 1 },
+          { row: 1.5, col: 1, rowSpan: 1, colSpan: 1 },
+          { row: 1, col: 1, rowSpan: 1.5, colSpan: 1 },
+        ],
+      },
+      { x: 0, y: 0, w: 4, h: 2 }
+    )
+
+    const rows = slide.addTable.mock.calls[0][0]
+    expect(rows[0][0].options).toMatchObject({ rowspan: 2 })
+    expect(rows[0][1].options).not.toHaveProperty('colspan')
+    expect(rows[1]).toEqual([expect.objectContaining({ text: 'D' })])
   })
 
   it('drops unsafe table font family during server pptx export', () => {

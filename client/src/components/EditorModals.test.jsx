@@ -1,14 +1,18 @@
 // Conditional-render contract for the lifted EditorModals component: each
 // store flag (or payload prop) true -> its modal mounts; false -> absent.
 // Heavy child modals are stubbed to keep this focused on the mount wiring.
-import { render, screen, cleanup } from '@testing-library/react'
+import { fireEvent, render, screen, cleanup } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { useUIStore } from '../stores/ui-store'
 
 vi.mock('./GitHubPushModal', () => ({ default: () => <div data-testid="m-github" /> }))
 vi.mock('./SyncModal', () => ({ default: () => <div data-testid="m-sync" /> }))
 vi.mock('./HistoryModal', () => ({ default: () => <div data-testid="m-history" /> }))
-vi.mock('./SlideSorterView', () => ({ default: () => <div data-testid="m-sorter" /> }))
+vi.mock('./SlideSorterView', () => ({
+  default: ({ onDuplicate }) => (
+    <button data-testid="m-sorter" onClick={() => onDuplicate?.(0)}>Sorter</button>
+  ),
+}))
 vi.mock('./HtmlEditorModal', () => ({ default: () => <div data-testid="m-html" /> }))
 vi.mock('./CodeEditorModal', () => ({ default: () => <div data-testid="m-code" /> }))
 vi.mock('./LatexEditorModal', () => ({ default: () => <div data-testid="m-latex" /> }))
@@ -126,6 +130,27 @@ describe('EditorModals conditional render', () => {
   it('renders the slide sorter when viewMode is sorter', () => {
     render(<EditorModals {...baseProps} viewMode="sorter" />)
     expect(screen.getByTestId('m-sorter')).toBeTruthy()
+  })
+
+  it('regenerates nested element IDs when duplicating a sorter slide', () => {
+    const presentation = {
+      id: 'p1',
+      slides: [{
+        id: 's1',
+        elements: [{ id: 'game-1', type: 'game', gameType: 'poll' }],
+        children: [{ id: 'v1', elements: [{ id: 'game-2', type: 'game', gameType: 'matching' }] }],
+      }],
+    }
+    const setPresentation = vi.fn()
+    render(<EditorModals {...baseProps} presentation={presentation} setPresentation={setPresentation} viewMode="sorter" />)
+
+    fireEvent.click(screen.getByTestId('m-sorter'))
+
+    const update = setPresentation.mock.calls[0][0]
+    const next = update(presentation)
+    expect(next.slides).toHaveLength(2)
+    expect(next.slides[1].elements[0].id).not.toBe('game-1')
+    expect(next.slides[1].children[0].elements[0].id).not.toBe('game-2')
   })
 
   it('renders find/replace and timeline from props', () => {

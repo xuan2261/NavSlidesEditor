@@ -14,7 +14,7 @@ export default function EditorRibbon({ c }) {
       editor={c.editingElementId ? c.editor : null}
       presentation={c.presentation}
       activeSlideId={c.activeSlide?.id}
-      slide={c.currentSlide}
+      slide={c.activeSlide}
       onUpdateSlide={c.updateCurrentSlide}
       onUpdatePresentation={(updates) =>
         c.setPresentation((prev) =>
@@ -23,7 +23,7 @@ export default function EditorRibbon({ c }) {
       }
       selectedElement={c.selectedElement}
       selectedElementIds={c.selectedElementIds}
-      elements={c.currentSlide?.elements || []}
+      elements={c.activeSlide?.elements || []}
       onUpdateElement={c.updateSelectedElements}
       onPaste={c.handlePaste}
       onCut={c.handleCut}

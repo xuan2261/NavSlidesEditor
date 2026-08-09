@@ -1,4 +1,10 @@
-import { gradientFallbackColor, resolveColorForTokens, resolveMergedCells } from 'revealjs-shared'
+import {
+  buildPptxImageBorderOverlayOptions,
+  buildPptxImageOptions,
+  gradientFallbackColor,
+  resolveColorForTokens,
+  resolveMergedCells,
+} from 'revealjs-shared'
 import {
   DEFAULT_BACKGROUND_COLOR,
   DEFAULT_TEXT_COLOR,
@@ -49,60 +55,10 @@ export function addImageElement(slide, element, bounds, resolution, layout) {
   const source = normalizeImageSource(element.src)
   if (!source) throw new Error('Missing image source')
 
-  const imageOptions = {
-    ...source,
-    ...bounds,
-    rotate: element.rotation || 0,
-  }
-  if (element.opacity != null && element.opacity !== 1) {
-    imageOptions.transparency = Math.round((1 - element.opacity) * 100)
-  }
-  if (element.flipH) imageOptions.flipH = true
-  if (element.flipV) imageOptions.flipV = true
-  if (element.alt || element.altText) imageOptions.altText = element.alt || element.altText
+  slide.addImage(buildPptxImageOptions(source, element, bounds, resolution, layout))
 
-  if (element.cropData) {
-    const crop = element.cropData || {}
-    const left = Number(crop.left) || 0
-    const right = Number(crop.right) || 0
-    const top = Number(crop.top) || 0
-    const bottom = Number(crop.bottom) || 0
-    const visibleW = Math.max(0.01, 1 - left - right)
-    const visibleH = Math.max(0.01, 1 - top - bottom)
-    imageOptions.sizing = {
-      type: 'crop',
-      x: bounds.x - (bounds.w * left) / visibleW,
-      y: bounds.y - (bounds.h * top) / visibleH,
-      w: bounds.w / visibleW,
-      h: bounds.h / visibleH,
-    }
-  } else if (element.imageW != null && element.imageH != null) {
-    imageOptions.sizing = {
-      type: 'crop',
-      x: Math.max(0, (-(element.imageOffsetX || 0) * layout.width) / resolution.width),
-      y: Math.max(0, (-(element.imageOffsetY || 0) * layout.height) / resolution.height),
-      w: Math.max(bounds.w, (element.imageW * layout.width) / resolution.width),
-      h: Math.max(bounds.h, (element.imageH * layout.height) / resolution.height),
-    }
-  } else if (element.objectFit) {
-    imageOptions.sizing = {
-      type: element.objectFit === 'cover' ? 'cover' : 'contain',
-      w: bounds.w,
-      h: bounds.h,
-    }
-  }
-
-  slide.addImage(imageOptions)
-
-  if (element.borderColor && element.borderWidth) {
-    const border = normalizeCssColor(element.borderColor)
-    slide.addShape('rect', {
-      ...bounds,
-      fill: { color: 'FFFFFF', transparency: 100 },
-      line: { color: border.color, transparency: border.transparency, width: element.borderWidth },
-      rotate: element.rotation || 0,
-    })
-  }
+  const borderOverlay = buildPptxImageBorderOverlayOptions(element, bounds)
+  if (borderOverlay) slide.addShape('rect', borderOverlay)
 }
 
 export function addShapeElement(slide, element, bounds, designTokens) {
@@ -234,7 +190,15 @@ export function addCalloutElement(slide, element, bounds, designTokens) {
 }
 
 export function addTableElement(slide, element, bounds, designTokens) {
-  const { spans: mergeByStart, covered } = resolveMergedCells(element.mergedCells)
+  const data = Array.isArray(element.data) && element.data.length ? element.data : [['']]
+  const columnCount = data.reduce(
+    (count, row) => Math.max(count, Array.isArray(row) ? row.length : 0),
+    0
+  )
+  const { spans: mergeByStart, covered } = resolveMergedCells(element.mergedCells, {
+    rowCount: data.length,
+    colCount: columnCount,
+  })
 
   const cellStyles = element.cellStyles || {}
   const getCellStyle = (key, rowIndex, colIndex) => cellStyles[key]?.[rowIndex]?.[colIndex]
@@ -259,8 +223,8 @@ export function addTableElement(slide, element, bounds, designTokens) {
     ? element.rowHeights.reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0)
     : 0
 
-  const rows = (element.data || []).map((row, rowIndex) =>
-    (row || []).reduce((cells, cell, colIndex) => {
+  const rows = data.map((row, rowIndex) =>
+    (Array.isArray(row) ? row : []).reduce((cells, cell, colIndex) => {
       if (covered.has(`${rowIndex}:${colIndex}`)) return cells
       const merge = mergeByStart.get(`${rowIndex}:${colIndex}`)
       const fillColor = normalizeCssColor(
@@ -278,7 +242,7 @@ export function addTableElement(slide, element, bounds, designTokens) {
       const cellFontSize = Number(getCellStyle('fontSizes', rowIndex, colIndex))
       const cellFontFamily = safeFontFamily(getCellStyle('fontFamilies', rowIndex, colIndex))
       cells.push({
-        text: cell || '',
+        text: String(cell ?? ''),
         options: {
           color: textColor.color,
           fontSize: toPptFontSize(Number.isFinite(cellFontSize) && cellFontSize > 0 ? cellFontSize : element.fontSize || 12),

@@ -226,36 +226,6 @@ export function mapArrowType(marker) {
   }
 }
 
-export function isNativeChartType(chartType) {
-  return ['bar', 'doughnut', 'line', 'pie', 'radar'].includes(chartType)
-}
-
-export function getNativeChartDefinition(pptx, element) {
-  const chartType = element?.chartType || 'bar'
-  if (!isNativeChartType(chartType)) return null
-
-  const datasets = Array.isArray(element?.chartData?.datasets) ? element.chartData.datasets : []
-  const labels = Array.isArray(element?.chartData?.labels) ? element.chartData.labels : []
-  const data = datasets.map((dataset, index) => ({
-    name: dataset?.label || `Series ${index + 1}`,
-    labels,
-    values: Array.isArray(dataset?.data) ? dataset.data.map((value) => Number(value) || 0) : [],
-  }))
-
-  if (!data.length) return null
-
-  return {
-    type: pptx.ChartType[chartType],
-    data,
-    options: {
-      showLegend: datasets.length > 1,
-      showTitle: false,
-      lineSize: chartType === 'line' ? 2 : undefined,
-      chartColors: datasets
-        .map((dataset) => normalizeCssColor(dataset?.color || '#6366f1').color)
-        .filter(Boolean),
-    },
-  }
-}
+export { getNativeChartDefinition, isNativeChartType } from 'revealjs-shared'
 
 export { DEFAULT_BACKGROUND_COLOR, DEFAULT_TEXT_COLOR, normalizeCssColor }

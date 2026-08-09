@@ -10,6 +10,7 @@ export function useEditorCommandModel({
   zoomOut,
   fitZoom,
   startSlideshow,
+  insertLink,
 }) {
   return useMemo(
     () => [
@@ -23,10 +24,8 @@ export function useEditorCommandModel({
         id: 'insertLink',
         label: 'Insert Link',
         shortcut: '',
-        action: () => {
-          closeCommandPalette()
-          document.querySelector('[title="Add link"]')?.click()
-        },
+        action: insertLink,
+
       },
       { id: 'group', label: 'Group Elements', shortcut: 'Ctrl+G', action: groupElements },
       {
@@ -59,6 +58,7 @@ export function useEditorCommandModel({
       openTemplateModal,
       save,
       startSlideshow,
+      insertLink,
       ungroupElements,
       zoomIn,
       zoomOut,

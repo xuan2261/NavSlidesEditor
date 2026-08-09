@@ -5,6 +5,7 @@ import { Button, Input, Select, ColorPicker } from '../../components/ui'
 
 export default function ChartProperties({ element, onUpdate }) {
   const chartData = element.chartData || {}
+  const axisTitles = element.axisTitles || {}
   const chartMeta = element._pptxChartMeta
   const importedChart = Boolean(chartMeta?.source || chartMeta?.originalType || chartMeta?.rowId)
   const preserveOnly = importedChart && !(
@@ -82,6 +83,28 @@ export default function ChartProperties({ element, onUpdate }) {
           />
           <span>Stacked</span>
         </label>
+        <Select
+          data-testid="prop-chart-legend-position"
+          value={element.legendPosition || 'right'}
+          disabled={preserveOnly}
+          aria-label="Legend position"
+          onChange={(e) => onUpdate({ legendPosition: e.target.value })}
+        >
+          {['right', 'left', 'top', 'bottom', 'topRight'].map((position) => (
+            <option key={position} value={position}>Legend: {position}</option>
+          ))}
+        </Select>
+        {['category', 'value'].map((axis) => (
+          <Input
+            key={axis}
+            data-testid={`prop-chart-${axis}-axis-title`}
+            type="text"
+            value={axisTitles[axis] || ''}
+            disabled={preserveOnly}
+            placeholder={`${axis[0].toUpperCase()}${axis.slice(1)} axis title`}
+            onChange={(e) => onUpdate({ axisTitles: { ...axisTitles, [axis]: e.target.value } })}
+          />
+        ))}
       </div>
       <div className="text-[11px] text-text-muted mb-1">
         Labels (comma-separated)

@@ -5,6 +5,7 @@ import katex from 'katex'
 import { resolveColorField } from 'revealjs-shared'
 import { sanitizeRichTextHtml } from '../../utils/content-safety'
 import { sanitizeMediaSrc } from '../../utils/url-safety'
+import { resolveVideoSrc } from '../../utils/migrate-video-src'
 import { getElementRenderer, CropOverlay } from './element-renderers/registry'
 import { HANDLE_STYLES } from './use-canvas-resize-rotate'
 import PluginSandbox from '../../plugins/plugin-sandbox'
@@ -168,6 +169,8 @@ export default function CanvasElement({
   onStartEdit,
   iconPaths,
   slideBackground,
+  slideWidth = 960,
+  slideHeight = 540,
 }) {
   const contentRef = useRef(null)
   const videoRef = useRef(null)
@@ -209,7 +212,7 @@ export default function CanvasElement({
         ? '2px solid var(--selection)'
         : isCropping
           ? '2px solid var(--warning, #f59e0b)'
-          : 'none',
+          : undefined,
     cursor: isCropping
       ? 'crosshair'
       : isEditing
@@ -260,11 +263,17 @@ export default function CanvasElement({
     ...textWrapStyles,
     ...textInsetStyles,
   }
+  const imageBorderWidth = Number(element.borderWidth)
   const imageWrapperStyle = {
     position: 'relative',
     width: '100%',
     height: '100%',
     overflow: isCropping ? 'visible' : 'hidden',
+    border:
+      Number.isFinite(imageBorderWidth) && imageBorderWidth > 0
+        ? `${imageBorderWidth}px solid ${element.borderColor || '#000000'}`
+        : undefined,
+    boxSizing: 'border-box',
   }
   const sourceCropData =
     element.type === 'image' && element._pptxImportMeta?.sourceCrop
@@ -320,9 +329,13 @@ export default function CanvasElement({
       if (selectedElementCount > 1) return
       event.preventDefault()
       const step = getKeyboardNudgeStep(event.shiftKey)
+      const width = Math.max(0, Number(element.width) || 0)
+      const height = Math.max(0, Number(element.height) || 0)
+      const maxX = Math.max(0, Number(slideWidth) - width)
+      const maxY = Math.max(0, Number(slideHeight) - height)
       onUpdateElement?.(element.id, {
-        x: Math.max(0, (Number(element.x) || 0) + nudge.x * step),
-        y: Math.max(0, (Number(element.y) || 0) + nudge.y * step),
+        x: Math.min(maxX, Math.max(0, (Number(element.x) || 0) + nudge.x * step)),
+        y: Math.min(maxY, Math.max(0, (Number(element.y) || 0) + nudge.y * step)),
       })
     }
   }
@@ -455,7 +468,7 @@ export default function CanvasElement({
 
   return (
     <div
-      className="element-wrapper"
+      className="element-wrapper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-workspace"
       data-testid={`slide-element-${element.id}`}
       data-element-id={element.id}
       data-element-type={element.type}
@@ -468,6 +481,7 @@ export default function CanvasElement({
       onKeyDown={handleKeyboardAction}
       onPointerDown={(e) => {
         if (e.button !== 0 || !isLinePathEvent(element, e)) return
+        if ((element.type === 'audio' || element.type === 'video') && e.target?.closest?.('audio,video')) return
         if (isEditing) {
           e.stopPropagation()
           return
@@ -610,12 +624,13 @@ export default function CanvasElement({
               )
             if (element.type === 'video') {
               const playbackRate = getPlaybackRate(element.playbackRate)
-              const videoSrc = sanitizeMediaSrc(element.src || element.videoUrl)
+              const videoSrc = sanitizeMediaSrc(resolveVideoSrc(element))
               return (
                 <video
                   ref={videoRef}
                   src={getMediaFragmentSrc(videoSrc, element.startTime, element.endTime)}
                   controls={element.controls !== false}
+                  autoPlay={element.autoplay || false}
                   muted={element.muted || false}
                   loop={element.loop || false}
                   poster={sanitizeMediaSrc(element.poster) || undefined}

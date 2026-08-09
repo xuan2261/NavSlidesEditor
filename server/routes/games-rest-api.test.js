@@ -122,7 +122,7 @@ describe('games REST API authorization', () => {
 
     const attemptedAnswer = await answer(id, {
       socketId: 'observer-socket', playerId: 'observer', sessionToken: 'fake-session',
-      answerIndex: 0, timeSpentMs: 100,
+      questionId: 'q1', answerIndex: 0, timeSpentMs: 100,
     })
     expect(attemptedAnswer.status).toBe(404)
     expect(GameEngine.getRoom(id).players.has('observer')).toBe(false)
@@ -148,10 +148,11 @@ describe('games REST API authorization', () => {
       sessionToken: first.body.sessionToken,
     })
     expect(rejoined.status).toBe(200)
+    GameEngine.nextQuestion(id)
 
     const stale = await answer(id, {
       socketId: 'player-socket-a', playerId: 'player-1', sessionToken: first.body.sessionToken,
-      answerIndex: 0, timeSpentMs: 100,
+      questionId: 'q1', answerIndex: 0, timeSpentMs: 100,
     })
     expect(stale.status).toBe(403)
     expect(stale.body.error).toBe('stale-player-session')
@@ -163,19 +164,86 @@ describe('games REST API authorization', () => {
     const joined = await joinGame(id, {
       socketId: 'answer-socket', playerId: 'answer-player', playerName: 'Player', role: 'player',
     })
+    GameEngine.nextQuestion(id)
     const rejected = await answer(id, {
       socketId: 'answer-socket', playerId: 'answer-player', sessionToken: 'wrong-token',
-      answerIndex: 0, timeSpentMs: 100,
+      questionId: 'q1', answerIndex: 0, timeSpentMs: 100,
     })
     expect(rejected.status).toBe(403)
     expect(rejected.body.error).toBe('stale-player-session')
 
     const accepted = await answer(id, {
       socketId: 'answer-socket', playerId: 'answer-player', sessionToken: joined.body.sessionToken,
-      answerIndex: 0, timeSpentMs: 100,
+      questionId: 'q1', answerIndex: 0, timeSpentMs: 100,
     })
     expect(accepted.status).toBe(200)
     expect(accepted.body.correct).toBe(true)
+  })
+
+  it('requires REST answers to identify the active question', async () => {
+    const id = 'rest-question-binding'
+    const created = await createGame(id, 'quiz', {
+      questions: [
+        { id: 'q1', correctIndex: 0, points: 10 },
+        { id: 'q2', correctIndex: 1, points: 10 },
+      ],
+    })
+    const hostJoin = await joinGame(id, {
+      socketId: 'rest-question-host-socket',
+      playerId: 'rest-question-host',
+      playerName: 'Host',
+      role: 'host',
+      hostCapability: created.body.hostCapability,
+    })
+    const host = {
+      socketId: 'rest-question-host-socket',
+      playerId: 'rest-question-host',
+      sessionToken: hostJoin.body.sessionToken,
+      hostCapability: created.body.hostCapability,
+    }
+    const playerJoin = await joinGame(id, {
+      socketId: 'rest-question-player-socket',
+      playerId: 'rest-question-player',
+      playerName: 'Player',
+      role: 'player',
+    })
+
+    expect((await request(app).post(`/api/games/${id}/next`).send(host)).status).toBe(200)
+    expect((await request(app).post(`/api/games/${id}/next`).send(host)).status).toBe(200)
+
+    const omitted = await answer(id, {
+      socketId: 'rest-question-player-socket',
+      playerId: 'rest-question-player',
+      sessionToken: playerJoin.body.sessionToken,
+      answerIndex: 1,
+      timeSpentMs: 100,
+    })
+    expect(omitted.status).toBe(400)
+    expect(omitted.body.error).toContain('questionId')
+    expect(GameEngine.getRoom(id).players.get('rest-question-player').score).toBe(0)
+
+    const stale = await answer(id, {
+      socketId: 'rest-question-player-socket',
+      playerId: 'rest-question-player',
+      sessionToken: playerJoin.body.sessionToken,
+      questionId: 'q1',
+      answerIndex: 0,
+      timeSpentMs: 100,
+    })
+    expect(stale.status).toBe(409)
+    expect(stale.body.error).toBe('stale-question')
+    expect(GameEngine.getRoom(id).players.get('rest-question-player').score).toBe(0)
+
+    const valid = await answer(id, {
+      socketId: 'rest-question-player-socket',
+      playerId: 'rest-question-player',
+      sessionToken: playerJoin.body.sessionToken,
+      questionId: 'q2',
+      answerIndex: 1,
+      timeSpentMs: 100,
+    })
+    expect(valid.status).toBe(200)
+    expect(valid.body.correct).toBe(true)
   })
 
   it('restricts next, random, end, and delete to the active host context', async () => {
@@ -214,6 +282,34 @@ describe('games REST API authorization', () => {
     const deleted = await request(app).delete(`/api/games/${id}`).send(hostActor(host))
     expect(deleted.status).toBe(200)
     expect(GameEngine.getRoom(id)).toBeUndefined()
+  })
+
+  it('returns a finished state when REST next advances beyond the final question', async () => {
+    const id = 'rest-final-question'
+    const created = await createGame(id, 'quiz', {
+      questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
+    })
+    const joined = await joinGame(id, {
+      socketId: 'rest-final-host-socket',
+      playerId: 'rest-final-host',
+      playerName: 'Host',
+      role: 'host',
+      hostCapability: created.body.hostCapability,
+    })
+    const actor = {
+      socketId: 'rest-final-host-socket',
+      playerId: 'rest-final-host',
+      sessionToken: joined.body.sessionToken,
+      hostCapability: created.body.hostCapability,
+    }
+
+    const first = await request(app).post(`/api/games/${id}/next`).send(actor)
+    expect(first.status).toBe(200)
+    expect(first.body.question.id).toBe('q1')
+
+    const finished = await request(app).post(`/api/games/${id}/next`).send(actor)
+    expect(finished.status).toBe(200)
+    expect(finished.body).toMatchObject({ currentQuestion: null, question: null, status: 'finished' })
   })
 
   it('keeps sessions and host capabilities out of leaderboard rows', async () => {

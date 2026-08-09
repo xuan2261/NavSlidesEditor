@@ -111,9 +111,11 @@ describe('Game Properties — element update pipeline', () => {
 
   it('properties element has all required fields for renderer', () => {
     const el = createGameElement('hot-potato', {
-      questions: [
-        { id: 'q1', question: 'Test Q?', options: ['A', 'B', 'C', 'D'], correctIndex: 0 }
-      ]
+      'hot-potato': {
+        questions: [
+          { id: 'q1', question: 'Test Q?', options: ['A', 'B', 'C', 'D'], correctIndex: 0 }
+        ]
+      },
     })
     // Renderer should display question
     const html = render(el)
@@ -178,40 +180,40 @@ describe('Game Renderer — visual customization', () => {
 describe('Game element — deep element structure', () => {
   it('name-picker has pickerMode, items, wheelColors', () => {
     const el = createGameElement('name-picker')
-    expect(el.pickerMode).toBeDefined()
-    expect(el.items).toBeInstanceOf(Array)
-    expect(el.wheelColors).toBeInstanceOf(Array)
+    expect(el['name-picker'].pickerMode).toBeDefined()
+    expect(el['name-picker'].items).toBeInstanceOf(Array)
+    expect(el['name-picker'].wheelColors).toBeInstanceOf(Array)
   })
 
   it('hot-potato has questions array', () => {
     const el = createGameElement('hot-potato')
-    expect(el.questions).toBeInstanceOf(Array)
+    expect(el['hot-potato'].questions).toBeInstanceOf(Array)
   })
 
   it('jeopardy has teams and categories', () => {
     const el = createGameElement('jeopardy')
-    expect(el.teams).toBeInstanceOf(Array)
-    expect(el.categories).toBeInstanceOf(Array)
+    expect(el.jeopardy.teams).toBeInstanceOf(Array)
+    expect(el.jeopardy.categories).toBeInstanceOf(Array)
   })
 
   it('four-corners has cornerCount=4', () => {
     const el = createGameElement('four-corners')
-    expect(el.cornerCount).toBe(4)
+    expect(el['four-corners'].cornerCount).toBe(4)
   })
 
   it('relay-race has passOnWrong=true', () => {
     const el = createGameElement('relay-race')
-    expect(el.passOnWrong).toBe(true)
+    expect(el['relay-race'].passOnWrong).toBe(true)
   })
 
   it('trivia-champ has rounds array', () => {
     const el = createGameElement('trivia-champ')
-    expect(el.rounds).toBeInstanceOf(Array)
+    expect(el['trivia-champ'].rounds).toBeInstanceOf(Array)
   })
 
   it('scattergories has timePerRound=60', () => {
     const el = createGameElement('scattergories')
-    expect(el.timePerRound).toBe(60)
+    expect(el.scattergories.timePerRound).toBe(60)
   })
 
   it('all game elements have display properties', () => {

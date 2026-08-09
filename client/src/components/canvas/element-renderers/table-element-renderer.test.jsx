@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react'
+import { fireEvent, render } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { TableRenderer } from './table-element-renderer'
 
@@ -29,6 +29,56 @@ describe('TableRenderer', () => {
     expect(row?.style.height).toBe('40px')
     expect(cell?.style.fontSize).toBe('24px')
     expect(cell?.style.fontFamily).toBe('Arial')
+  })
+
+  it('focuses the first cell when keyboard editing starts without a mouse cell', () => {
+    const { container, rerender } = render(
+      <TableRenderer
+        element={{ id: 'table-1', type: 'table', data: [['A', 'B']] }}
+        isEditing={false}
+        onUpdateElement={vi.fn()}
+      />
+    )
+
+    rerender(
+      <TableRenderer
+        element={{ id: 'table-1', type: 'table', data: [['A', 'B']] }}
+        isEditing
+        onUpdateElement={vi.fn()}
+      />
+    )
+
+    expect(document.activeElement).toBe(container.querySelector('textarea'))
+  })
+
+  it('renders malformed persisted table data without crashing', () => {
+    expect(() => render(
+      <TableRenderer
+        element={{
+          id: 'table-invalid',
+          type: 'table',
+          data: [{ invalid: true }, [{ value: 'cell' }]],
+          mergedCells: [null, { row: 0, col: 0, rowSpan: 'bad' }],
+        }}
+        isEditing={false}
+        onUpdateElement={vi.fn()}
+      />
+    )).not.toThrow()
+  })
+
+  it('keeps malformed rows editable without throwing', () => {
+    const onUpdateElement = vi.fn()
+    const { container } = render(
+      <TableRenderer
+        element={{ id: 'table-mixed', type: 'table', data: [['A'], null] }}
+        isEditing
+        onUpdateElement={onUpdateElement}
+      />
+    )
+
+    fireEvent.change(container.querySelector('textarea'), { target: { value: 'B' } })
+
+    expect(onUpdateElement).toHaveBeenCalledWith('table-mixed', { data: [['B'], []] })
   })
 
   it('[red defect:renderer.contrast] uses readable light-background defaults', () => {

@@ -29,7 +29,74 @@ describe('server-raster route isolation', () => {
       new Set(['html', 'latex'])
     )
 
-    expect(targets).toEqual([{ id: 'html-visible', slideIndex: 0 }])
+    expect(targets).toEqual([{ id: 'html-visible', slideIndex: 0, type: 'html' }])
+  })
+
+  it('rejects visible raster elements without stable ids', () => {
+    expect(() =>
+      __private.collectRasterTargets(
+        { slides: [{ elements: [{ type: 'html', content: '<p>Missing id</p>' }] }] },
+        new Set(['html'])
+      )
+    ).toThrow(/requires an id/)
+  })
+
+  it('rejects duplicate visible raster target ids', () => {
+    expect(() =>
+      __private.collectRasterTargets(
+        {
+          slides: [
+            { elements: [{ id: 'duplicate', type: 'html' }] },
+            { elements: [{ id: 'duplicate', type: 'latex' }] },
+          ],
+        },
+        new Set(['html', 'latex'])
+      )
+    ).toThrow(/Duplicate raster target id/)
+  })
+
+  it('collects only safe images with CSS filters or rounded corners', () => {
+    const targets = __private.collectRasterTargets(
+      {
+        slides: [
+          {
+            elements: [
+              { id: 'plain', type: 'image', src: 'data:image/png;base64,AAA' },
+              {
+                id: 'filtered',
+                type: 'image',
+                src: 'data:image/png;base64,AAA',
+                filterBrightness: 120,
+              },
+              {
+                id: 'rounded-upload',
+                type: 'image',
+                src: '/uploads/rounded.png',
+                borderRadius: 12,
+              },
+              {
+                id: 'remote',
+                type: 'image',
+                src: 'https://example.com/remote.png',
+                filterGrayscale: 100,
+              },
+              {
+                id: 'unsafe-upload-path',
+                type: 'image',
+                src: '/uploads/%2e%2e/secret.png',
+                borderRadius: 12,
+              },
+            ],
+          },
+        ],
+      },
+      new Set(['image'])
+    )
+
+    expect(targets).toEqual([
+      { id: 'filtered', slideIndex: 0, type: 'image' },
+      { id: 'rounded-upload', slideIndex: 0, type: 'image' },
+    ])
   })
 
   it('blocks outbound network requests when baseUrl is empty', async () => {

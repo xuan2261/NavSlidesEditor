@@ -15,6 +15,7 @@ import { GameHudOverlay } from './game-hud-overlay'
 import { GameLeaderboardOverlay } from './game-leaderboard-overlay'
 import EditorModalsSecondary from './editor-modals-secondary'
 import { useUIStore } from '../stores/ui-store'
+import { duplicateSlidesAtIndices } from '../hooks/slide-operation-helpers'
 
 /**
  * Presentational mount point for the editor's modal/overlay JSX, lifted out of
@@ -119,14 +120,7 @@ export default function EditorModals(props) {
             }
           }}
           onDuplicate={(idx) => {
-            const slide = presentation.slides[idx]
-            const dup = {
-              ...slide,
-              id: crypto.randomUUID(),
-              elements: JSON.parse(JSON.stringify(slide.elements || [])),
-            }
-            const newSlides = [...presentation.slides]
-            newSlides.splice(idx + 1, 0, dup)
+            const { slides: newSlides } = duplicateSlidesAtIndices(presentation.slides, [idx])
             setPresentation((prev) => ({ ...prev, slides: newSlides }))
           }}
           onClose={() => setViewMode('normal')}
@@ -237,6 +231,7 @@ export default function EditorModals(props) {
         commands={props.commands}
         liveRoomCode={props.liveRoomCode}
         livePresenterToken={props.livePresenterToken}
+        onPresenterWindowOpened={props.onPresenterWindowOpened}
         galleryPreviewTemplate={props.galleryPreviewTemplate}
         setGalleryPreviewTemplate={props.setGalleryPreviewTemplate}
         setPresentation={setPresentation}

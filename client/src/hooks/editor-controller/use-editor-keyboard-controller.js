@@ -71,34 +71,46 @@ export function useEditorKeyboardController(c) {
     },
     isEditing: Boolean(c.editingElementId),
     activeGameType: c.currentGameType,
+    isGamePresenterActive: c.isPresenterPopupActive,
     onStartSlideshow: c.startSlideshow,
     onStartSlideshowCurrent: c.startSlideshow,
     onGameHud: () => c.setShowGameHud((v) => !v),
     onGameTimer: () => {
+      const shortcut = getGameShortcut(c, 'timer')
       const el = c.activeGameElement
-      if (!el || !c.liveSocket?.connected) return
-      const duration = GAME_SHORTCUT_CONFIG[c.currentGameType]?.timer?.duration ?? 30
+      if (!shortcut || !el) return
+      if (shortcut.action !== 'startTimer') {
+        c.emitGameShortcutAction(shortcut.action)
+        return
+      }
+      if (!c.liveSocket?.connected) return
+      const duration = shortcut.duration ?? 30
       c.liveSocket.emit('game-timer-start', { elementId: el.id, duration })
     },
-    onGameNext: () => c.emitGameShortcutAction('next'),
+    onGameNext: () => emitConfiguredGameShortcut(c, 'nextPhase'),
     onGameReveal: () => {
+      if (!getGameShortcut(c, 'reveal')) return
       c.setShowGameHud(true)
-      c.emitGameShortcutAction('reveal')
+      emitConfiguredGameShortcut(c, 'reveal')
     },
-    onGameLeaderboard: () => c.setShowGameLeaderboard((v) => !v),
+    onGameLeaderboard: () => {
+      if (getGameShortcut(c, 'leaderboard')) c.setShowGameLeaderboard((v) => !v)
+    },
     onGamePause: () => {
+      const shortcut = getGameShortcut(c, 'pause')
       const el = c.activeGameElement
-      if (el && c.liveSocket?.connected) {
+      if (!shortcut || !el) return
+      if (c.liveSocket?.connected) {
         c.liveSocket.emit('game-timer-pause', { elementId: el.id })
       }
-      c.emitGameShortcutAction('pause')
+      c.emitGameShortcutAction(shortcut.action)
     },
     onTimerAdd: () => adjustTimer(c, 'timerAdd', 10),
     onTimerSub: () => adjustTimer(c, 'timerSub', -10),
-    onTeamSelect1: () => c.emitGameShortcutAction('team-select', { teamIndex: 0 }),
-    onTeamSelect2: () => c.emitGameShortcutAction('team-select', { teamIndex: 1 }),
-    onTeamSelect3: () => c.emitGameShortcutAction('team-select', { teamIndex: 2 }),
-    onTeamSelect4: () => c.emitGameShortcutAction('team-select', { teamIndex: 3 }),
+    onTeamSelect1: () => emitConfiguredGameShortcut(c, 'teamSelect', { teamIndex: 0 }),
+    onTeamSelect2: () => emitConfiguredGameShortcut(c, 'teamSelect', { teamIndex: 1 }),
+    onTeamSelect3: () => emitConfiguredGameShortcut(c, 'teamSelect', { teamIndex: 2 }),
+    onTeamSelect4: () => emitConfiguredGameShortcut(c, 'teamSelect', { teamIndex: 3 }),
     onCommandPalette: () => c.setShowCommandPalette((v) => !v),
     onInsertSlide: () => c.setShowTemplateModal(true),
     onGroup: c.groupElements,
@@ -111,9 +123,20 @@ export function useEditorKeyboardController(c) {
   })
 }
 
+function getGameShortcut(c, configKey) {
+  return GAME_SHORTCUT_CONFIG[c.currentGameType]?.[configKey] || null
+}
+
+function emitConfiguredGameShortcut(c, configKey, payload = {}) {
+  const shortcut = getGameShortcut(c, configKey)
+  if (!shortcut) return
+  c.emitGameShortcutAction(shortcut.action, payload)
+}
+
 function adjustTimer(c, configKey, fallback) {
+  const shortcut = getGameShortcut(c, configKey)
   const el = c.activeGameElement
-  if (!el || !c.liveSocket?.connected) return
-  const delta = GAME_SHORTCUT_CONFIG[c.currentGameType]?.[configKey]?.delta ?? fallback
+  if (!shortcut || !el || !c.liveSocket?.connected) return
+  const delta = shortcut.delta ?? fallback
   c.liveSocket.emit('game-timer-adjust', { elementId: el.id, delta })
 }

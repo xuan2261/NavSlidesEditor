@@ -1407,15 +1407,18 @@
         "shared renderImage",
         "client/src/utils/export-pptx-basic-renderers.js",
         "client/src/utils/export-pptx-core.js",
-        "server/utils/server-image-source.js"
+        "server/utils/server-image-source.js",
+        "server/utils/server-raster.js"
       ],
       "testCoverage": [
         "image media-source-and-fit pptx-export matrix target",
-        "client/src/utils/export-pptx-image-opacity.test.js image crop/objectFit/native border overlay and filter/radius accepted limits",
+        "client/src/utils/exportPptx.test.js preserves native image editability and visual-raster frame metadata",
+        "server/services/raster-resilience.test.js preserves visual-raster frame metadata",
+        "server/utils/server-raster.test.js allows only safe filtered/rounded image raster targets",
         "client/src/utils/export-pptx-core.test.js rejects unsafe non-image data URIs",
         "server/utils/server-image-source.test.js rejects unsafe non-image data URIs"
       ],
-      "decision": "pptx-export preserves safe image sources, crop, cover/contain sizing, opacity, flip, alt text, and rectangular border overlay; fill/none objectFit, CSS filters, and rounded image corners remain accepted native PPTX fidelity gaps.",
+      "decision": "pptx-export preserves safe image sources, crop, cover/contain sizing, opacity, flip, alt text, and rectangular border overlay. Ordinary images remain editable; data and validated local-upload images with CSS filters or rounded corners rasterize within their frame and warn. External image URLs never enter the server raster path and emit an accepted-limit warning when their visual effects cannot be preserved.",
       "security": {
         "trustBoundary": "trusted author content per NavSlides security model",
         "inputSource": "image authoring controls or imported presentation JSON",

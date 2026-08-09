@@ -61,6 +61,30 @@ describe('useAnnotationSync', () => {
     expect(onAdd).toHaveBeenCalledWith(annotation, 0)
   })
 
+  it('ignores retained callbacks from a previous socket generation', () => {
+    const firstSocket = createMockSocket()
+    const secondSocket = createMockSocket()
+    const onAdd = vi.fn()
+    const { rerender } = renderHook(
+      ({ socket }) => useAnnotationSync({
+        socket,
+        slideIndex: 0,
+        onAnnotationAdd: onAdd,
+        onAnnotationRemove: vi.fn(),
+        onAnnotationsClear: vi.fn(),
+      }),
+      { initialProps: { socket: firstSocket } }
+    )
+    const staleAdd = firstSocket._handlers['annotation:add']
+
+    rerender({ socket: secondSocket })
+    staleAdd({ slideIndex: 0, annotation: { id: 'stale' } })
+    expect(onAdd).not.toHaveBeenCalled()
+
+    secondSocket._trigger('annotation:add', { slideIndex: 0, annotation: { id: 'current' } })
+    expect(onAdd).toHaveBeenCalledWith({ id: 'current' }, 0)
+  })
+
   it('ignores annotation:add for a different slide', () => {
     const onAdd = vi.fn()
     renderHook(() =>

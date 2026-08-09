@@ -101,6 +101,19 @@ describe('socket-handler', () => {
     ])
   })
 
+  it('ignores malformed payloads without throwing from socket dispatch', async () => {
+    const io = new FakeIO()
+    setupSocketHandlers(io, { liveRoomsService: liveRooms })
+    const socket = io.connect('malformed-client')
+
+    await expect(socket.trigger('navigate')).resolves.toBeUndefined()
+    await expect(socket.trigger('control-navigate')).resolves.toBeUndefined()
+    await expect(socket.trigger('game-timer-start')).resolves.toBeUndefined()
+    await expect(socket.trigger('navigate', null)).resolves.toBeUndefined()
+    await expect(socket.trigger('control-navigate', null)).resolves.toBeUndefined()
+    await expect(socket.trigger('game-timer-start', null)).resolves.toBeUndefined()
+  })
+
   it('emits presentation data/meta on presenter join and syncs viewers/controllers', async () => {
     const io = new FakeIO()
     setupSocketHandlers(io, { liveRoomsService: liveRooms })

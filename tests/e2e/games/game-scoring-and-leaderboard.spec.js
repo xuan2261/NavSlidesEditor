@@ -57,26 +57,37 @@ test.describe('Game scoring and leaderboard over sockets', () => {
       },
     })
     expect(created.ok()).toBeTruthy()
+    const createdBody = await created.json()
 
     const alice = await connectGameSocket()
     const bob = await connectGameSocket()
     try {
       const aliceJoined = waitForEvent(alice, 'game-leaderboard')
-      alice.emit('game-join', { gameId, playerName: 'Alice' })
+      alice.emit('game-join', {
+        gameId,
+        playerName: 'Alice',
+        playerId: 'p-alice',
+        role: 'host',
+        hostCapability: createdBody.hostCapability,
+      })
       await aliceJoined
 
       const bobJoined = waitForEvent(bob, 'game-leaderboard')
-      bob.emit('game-join', { gameId, playerName: 'Bob' })
+      bob.emit('game-join', { gameId, playerName: 'Bob', playerId: 'p-bob' })
       await bobJoined
 
+      const question = waitForEvent(alice, 'game-question')
+      alice.emit('game-next', { gameId })
+      await question
+
       const aliceResult = waitForEvent(alice, 'game-answer-result')
-      alice.emit('game-answer', { gameId, answerIndex: 1, timeSpentMs: 500 })
+      alice.emit('game-answer', { gameId, questionId: 'q1', answerIndex: 1, timeSpentMs: 500 })
       const aliceScore = await aliceResult
       expect(aliceScore.correct).toBe(true)
       expect(aliceScore.totalScore).toBe(10)
 
       const bobResult = waitForEvent(bob, 'game-answer-result')
-      bob.emit('game-answer', { gameId, answerIndex: 0, timeSpentMs: 500 })
+      bob.emit('game-answer', { gameId, questionId: 'q1', answerIndex: 0, timeSpentMs: 500 })
       const bobScore = await bobResult
       expect(bobScore.correct).toBe(false)
       expect(bobScore.totalScore).toBe(0)

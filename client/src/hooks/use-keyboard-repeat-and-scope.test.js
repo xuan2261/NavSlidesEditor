@@ -12,11 +12,14 @@ const baseCallbacks = () => ({
   onCommandPalette: vi.fn(),
   onGroup: vi.fn(),
   onInsertSlide: vi.fn(),
+  onSave: vi.fn(),
+  onEscape: vi.fn(),
   onArrow: vi.fn(),
   onGameHud: vi.fn(),
   onGameReveal: vi.fn(),
   onGameLeaderboard: vi.fn(),
   onGameTimer: vi.fn(),
+  onGameNext: vi.fn(),
   onTeamSelect1: vi.fn(),
   getActiveElement: () => null,
 })
@@ -65,6 +68,38 @@ describe('held arrow keys keep dispatching for continuous nudge', () => {
   })
 })
 
+describe('game next shortcut repeat and availability', () => {
+  const shortcuts = getShortcuts({})
+
+  it('does not advance twice when Enter is held', () => {
+    const cb = baseCallbacks()
+    const handler = createKeyboardHandler({
+      ...cb, shortcuts, isPresenting: true, activeGameType: 'hot-potato',
+    })
+    const first = createEvent('Enter')
+    const repeated = createEvent('Enter', { repeat: true })
+
+    handler(first)
+    handler(repeated)
+
+    expect(cb.onGameNext).toHaveBeenCalledTimes(1)
+    expect(repeated.preventDefault).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not reserve Enter for a game type without a next-phase action', () => {
+    const cb = baseCallbacks()
+    const handler = createKeyboardHandler({
+      ...cb, shortcuts, isPresenting: true, activeGameType: 'poll',
+    })
+    const event = createEvent('Enter')
+
+    handler(event)
+
+    expect(cb.onGameNext).not.toHaveBeenCalled()
+    expect(event.preventDefault).not.toHaveBeenCalled()
+  })
+})
+
 // ── Game bare-keys that hijack canvas typing are inert while authoring ───────
 describe('game bare-keys are scoped out of the authoring canvas', () => {
   const shortcuts = getShortcuts({})
@@ -107,6 +142,28 @@ describe('game bare-keys are scoped out of the authoring canvas', () => {
     })
     handler(createEvent(' '))
     expect(cb.onGameTimer).toHaveBeenCalledTimes(1)
+  })
+
+  it('enables guarded game keys for an active popup without leaving editor scope', () => {
+    const cb = baseCallbacks()
+    const handler = createKeyboardHandler({
+      ...cb,
+      shortcuts,
+      activeGameType: 'jeopardy',
+      isGamePresenterActive: () => true,
+    })
+
+    handler(createEvent(' '))
+    handler(createEvent('1'))
+    handler(createEvent('s', { ctrlKey: true }))
+    handler(createEvent('ArrowRight'))
+    handler(createEvent('Escape'))
+
+    expect(cb.onGameTimer).toHaveBeenCalledTimes(1)
+    expect(cb.onTeamSelect1).toHaveBeenCalledTimes(1)
+    expect(cb.onSave).toHaveBeenCalledTimes(1)
+    expect(cb.onArrow).toHaveBeenCalledWith('right', expect.anything())
+    expect(cb.onEscape).toHaveBeenCalledTimes(1)
   })
 })
 

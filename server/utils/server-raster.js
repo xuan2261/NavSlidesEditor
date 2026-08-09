@@ -1,6 +1,12 @@
 const { chromium } = require('playwright')
 const crypto = require('crypto')
-const { generatePrintHTML, normalizePresentationNotes, isNativeChartType } = require('revealjs-shared')
+const {
+  generatePrintHTML,
+  hasPptxImageVisualEffects,
+  isNativeChartType,
+  isPptxRasterSafeImageSource,
+  normalizePresentationNotes,
+} = require('revealjs-shared')
 
 const DEFAULT_WIDTH = 960
 const DEFAULT_HEIGHT = 540
@@ -15,6 +21,7 @@ const DEFAULT_RASTER_TYPES = new Set([
   'svg',
   'timeline',
   'game',
+  'image',
 ])
 
 const CDN_TO_VENDOR = [
@@ -81,18 +88,50 @@ function getLaunchOptions() {
 }
 
 function shouldRasterElement(element, rasterTypes) {
-  if (!element || !element.id) return false
+  if (!element) return false
+  if (element.type === 'image') {
+    return (
+      rasterTypes.has('image') &&
+      hasPptxImageVisualEffects(element) &&
+      isPptxRasterSafeImageSource(element.src)
+    )
+  }
   if (rasterTypes.has(element.type)) return true
   if (element.type === 'chart' && !isNativeChartType((element.chartType || '').toLowerCase())) return true
   return false
 }
 
+function validateRasterTargetIds(presentation, rasterTypes) {
+  const seen = new Map()
+  for (const [slideIndex, slide] of (presentation.slides || []).entries()) {
+    for (const element of slide.elements || []) {
+      if (element.hidden || !shouldRasterElement(element, rasterTypes)) continue
+      const id = typeof element.id === 'string' ? element.id.trim() : ''
+      if (!id) {
+        const error = new Error(`Raster target ${element.type} on slide ${slideIndex + 1} requires an id`)
+        error.code = 'INVALID_RASTER_TARGETS'
+        throw error
+      }
+      const previous = seen.get(id)
+      if (previous) {
+        const error = new Error(
+          `Duplicate raster target id "${id}" on slides ${previous.slideIndex + 1} and ${slideIndex + 1}`
+        )
+        error.code = 'INVALID_RASTER_TARGETS'
+        throw error
+      }
+      seen.set(id, { slideIndex, type: element.type })
+    }
+  }
+}
+
 function collectRasterTargets(presentation, rasterTypes) {
+  validateRasterTargetIds(presentation, rasterTypes)
   return (presentation.slides || []).flatMap((slide, slideIndex) =>
     (slide.elements || [])
       .filter((element) => !(element.hidden || false))
       .filter((element) => shouldRasterElement(element, rasterTypes))
-      .map((element) => ({ id: element.id, slideIndex }))
+      .map((element) => ({ id: element.id.trim(), slideIndex, type: element.type }))
   )
 }
 
@@ -180,6 +219,12 @@ async function captureRasters(html, targets, { resolution, scale, baseUrl }) {
         const slidePage = page.locator('.slide-page').nth(target.slideIndex)
         const element = slidePage.locator(`[data-export-element-id="${target.id}"]`).first()
         await element.waitFor({ state: 'visible', timeout: 4000 })
+        if (target.type === 'image') {
+          await element.evaluate((node) => {
+            node.style.transform = 'none'
+            node.style.opacity = '1'
+          })
+        }
         const buffer = await element.screenshot({
           type: 'png',
           animations: 'disabled',
@@ -239,6 +284,7 @@ module.exports = {
     collectRasterTargets,
     installVendorRoute,
     resolveVendorPath,
+    validateRasterTargetIds,
   },
   getServerRasters,
 }

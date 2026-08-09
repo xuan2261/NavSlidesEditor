@@ -9,7 +9,15 @@ const {
   addTextElement,
 } = require('./server-basic-renderers')
 const { addFallbackElement } = require('./server-fallback')
-const { getPptxElementExportPolicy, scaleElementBounds } = require('revealjs-shared')
+const { resolveServerPptxMedia } = require('./server-pptx-media')
+const {
+  buildPptxRasterImageOptions,
+  getPptxElementExportStrategy,
+  getPptxMediaSemanticWarning,
+  hasPptxImageVisualEffects,
+  recordPptxTableRotationWarning,
+  scaleElementBounds,
+} = require('revealjs-shared')
 
 const NATIVE_RENDERERS = {
   text: (slide, element, bounds, { designTokens }) =>
@@ -22,10 +30,41 @@ const NATIVE_RENDERERS = {
     addLineElement(slide, element, bounds, resolution, layout, designTokens),
   callout: (slide, element, bounds, { designTokens }) =>
     addCalloutElement(slide, element, bounds, designTokens),
-  table: (slide, element, bounds, { designTokens }) =>
-    addTableElement(slide, element, bounds, designTokens),
+  table: (slide, element, bounds, { designTokens, warnings, slideNumber }) => {
+    recordPptxTableRotationWarning(warnings, { element, slideNumber })
+    addTableElement(slide, element, bounds, designTokens)
+  },
   code: (slide, element, bounds) => addCodeElement(slide, element, bounds),
   chart: (slide, element, bounds, { pptx }) => addChartElement(slide, element, bounds, pptx),
+}
+
+async function addLocalMedia(slide, element, bounds, warnings, slideNumber) {
+  const media = await resolveServerPptxMedia(element)
+  const semanticWarning = getPptxMediaSemanticWarning(element, slideNumber)
+  if (semanticWarning) warnings.push(semanticWarning)
+  if (!media.embedded) {
+    if (media.embeddable) {
+      warnings.push(
+        `Slide ${slideNumber}: validated local ${element.type} could not be embedded; used a static fallback`
+      )
+    }
+    return false
+  }
+
+  slide.addMedia({
+    type: media.mediaType,
+    data: media.data,
+    extn: media.extension,
+    ...(media.cover ? { cover: media.cover } : {}),
+    ...bounds,
+  })
+
+  if (element.type === 'video' && element.poster && !media.cover) {
+    warnings.push(
+      `Slide ${slideNumber}: video poster was not a validated local PNG; used the default PowerPoint media cover`
+    )
+  }
+  return true
 }
 
 async function addElementToPptxSlide({
@@ -48,8 +87,16 @@ async function addElementToPptxSlide({
   const rasterData = element && element.id ? rasterOverrides[element.id] : null
 
   if (rasterData) {
-    slide.addImage({ data: rasterData, ...bounds, rotate: element.rotation || 0 })
-    warnings.push(`Slide ${slideNumber}: rasterized ${element.type} with server renderer`)
+    const imageOptions =
+      element.type === 'image'
+        ? buildPptxRasterImageOptions(rasterData, element, bounds)
+        : { data: rasterData, ...bounds, rotate: element.rotation || 0 }
+    slide.addImage(imageOptions)
+    warnings.push(
+      hasPptxImageVisualEffects(element)
+        ? `Slide ${slideNumber}: rasterized image to preserve CSS filters or rounded corners`
+        : `Slide ${slideNumber}: rasterized ${element.type} with server renderer`
+    )
     return
   }
 
@@ -63,7 +110,21 @@ async function addElementToPptxSlide({
   }
 
   try {
-    const policy = getPptxElementExportPolicy(element.type)
+    if (element.type === 'image' && hasPptxImageVisualEffects(element)) {
+      addImageElement(slide, element, bounds, resolution, layout)
+      warnings.push(
+        `Slide ${slideNumber}: image CSS filters or rounded corners could not be rasterized; exported as a native image`
+      )
+      return
+    }
+
+    if (element.type === 'audio' || element.type === 'video') {
+      if (await addLocalMedia(slide, element, bounds, warnings, slideNumber)) return
+      await addFallbackElement(slide, element, bounds, warnings, slideNumber, fallbackOptions)
+      return
+    }
+
+    const policy = getPptxElementExportStrategy(element)
     const nativeRenderer = policy.mode === 'native' ? NATIVE_RENDERERS[element.type] : null
     if (nativeRenderer) {
       nativeRenderer(slide, element, bounds, {
@@ -71,6 +132,8 @@ async function addElementToPptxSlide({
         layout,
         pptx,
         designTokens,
+        warnings,
+        slideNumber,
       })
     } else {
       await addFallbackElement(slide, element, bounds, warnings, slideNumber, fallbackOptions)

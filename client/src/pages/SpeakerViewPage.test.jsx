@@ -4,21 +4,46 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SpeakerViewPage from './SpeakerViewPage.jsx'
 
 const mocks = vi.hoisted(() => {
-  const handlers = {}
-  const socket = {
-    on: vi.fn((event, handler) => { handlers[event] = handler }),
-    off: vi.fn((event) => { delete handlers[event] }),
-    emit: vi.fn(),
-    disconnect: vi.fn(),
-    handlers,
+  const createSocket = () => {
+    const listeners = {}
+    const handlers = {}
+    const reset = () => {
+      Object.keys(listeners).forEach((event) => delete listeners[event])
+      Object.keys(handlers).forEach((event) => delete handlers[event])
+    }
+    return {
+      on: vi.fn((event, handler) => {
+        listeners[event] ||= new Set()
+        listeners[event].add(handler)
+        handlers[event] = (...args) => {
+          listeners[event]?.forEach((listener) => listener(...args))
+        }
+      }),
+      off: vi.fn((event, handler) => {
+        if (!listeners[event]) return
+        if (handler) listeners[event].delete(handler)
+        else listeners[event].clear()
+        if (listeners[event].size === 0) {
+          delete listeners[event]
+          delete handlers[event]
+        }
+      }),
+      emit: vi.fn(),
+      disconnect: vi.fn(),
+      handlers,
+      reset,
+    }
   }
-  return { socket }
+  const socket = createSocket()
+  return { createSocket, socket, socketQueue: [], roomCode: 'ROOM1' }
 })
 
-vi.mock('socket.io-client', () => ({ io: vi.fn(() => mocks.socket) }))
+vi.mock('socket.io-client', () => ({
+  io: vi.fn(() => mocks.socketQueue.shift() || mocks.socket),
+}))
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
-  useParams: () => ({ roomCode: 'ROOM1' }),
+  useParams: () => ({ roomCode: mocks.roomCode }),
 }))
 vi.mock('../hooks/use-keyboard', () => ({ useKeyboard: vi.fn() }))
 vi.mock('../hooks/use-reveal-preview-frame', () => ({
@@ -41,11 +66,13 @@ class MockPointerEvent extends Event {
 
 describe('SpeakerViewPage annotations', () => {
   beforeEach(() => {
-    Object.keys(mocks.socket.handlers).forEach((event) => delete mocks.socket.handlers[event])
+    mocks.roomCode = 'ROOM1'
+    mocks.socket.reset()
     mocks.socket.on.mockClear()
     mocks.socket.off.mockClear()
     mocks.socket.emit.mockClear()
     mocks.socket.disconnect.mockClear()
+    mocks.socketQueue.length = 0
     window.PointerEvent = MockPointerEvent
     SVGElement.prototype.setPointerCapture = vi.fn()
     SVGElement.prototype.getBoundingClientRect = vi.fn(() => ({
@@ -189,5 +216,51 @@ describe('SpeakerViewPage annotations', () => {
 
     act(() => mocks.socket.handlers['room-ended']())
     expect(view.getByText('Session ended')).toBeTruthy()
+  })
+
+  it('clears terminal room state before joining a different room in place', async () => {
+    const view = await renderConnectedSpeaker()
+    act(() => mocks.socket.handlers['room-ended']())
+    expect(view.getByText('Session ended')).toBeTruthy()
+
+    mocks.roomCode = 'ROOM2'
+    view.rerender(<SpeakerViewPage />)
+    expect(view.queryByText('Session ended')).toBeNull()
+    expect(mocks.socket.disconnect).toHaveBeenCalled()
+
+    act(() => mocks.socket.handlers.connect())
+    const joinCall = mocks.socket.emit.mock.calls.filter(([event]) => event === 'join-room').at(-1)
+    expect(joinCall[1]).toMatchObject({ roomId: 'ROOM2', role: 'controller' })
+  })
+
+  it('ignores retained callbacks from a previous room socket', async () => {
+    const firstSocket = mocks.createSocket()
+    const secondSocket = mocks.createSocket()
+    mocks.socketQueue.push(firstSocket, secondSocket)
+
+    const view = render(<SpeakerViewPage />)
+    act(() => firstSocket.handlers.connect())
+    await waitFor(() => expect(view.getByText('Waiting for presenter...')).toBeTruthy())
+
+    mocks.roomCode = 'ROOM2'
+    view.rerender(<SpeakerViewPage />)
+    act(() => secondSocket.handlers.connect())
+    await waitFor(() => expect(view.getByText('Waiting for presenter...')).toBeTruthy())
+
+    act(() => {
+      firstSocket.handlers['presentation-meta']({
+        slideCount: 1,
+        slides: [{ slideIndex: 0, verticalIndex: 0, label: 'stale', title: 'Stale' }],
+      })
+      firstSocket.handlers['presentation-data']({ html: '<section>stale</section>' })
+      firstSocket.handlers['navigate']({ slideIndex: 8 })
+      firstSocket.handlers['presenter-left']()
+      firstSocket.handlers['viewer-count']({ count: 99 })
+    })
+
+    expect(view.queryByRole('button', { name: 'stale' })).toBeNull()
+    expect(view.container.querySelector('iframe')).toBeNull()
+    expect(view.getByText(/^Slide 1$/)).toBeTruthy()
+    expect(view.queryByText('Presenter has left')).toBeNull()
   })
 })

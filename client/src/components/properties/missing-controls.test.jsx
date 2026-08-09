@@ -20,6 +20,19 @@ describe('Phase 4: image saturation slider', () => {
   })
 })
 
+describe('Phase 4: image border authoring', () => {
+  it('writes bounded image border width and color fields', () => {
+    const onUpdate = vi.fn()
+    render(<ImageProperties element={{ id: 'i1', type: 'image', src: '/x.png' }} onUpdate={onUpdate} />)
+
+    fireEvent.change(screen.getByTestId('prop-image-border-width'), { target: { value: '4' } })
+    fireEvent.change(screen.getByTestId('prop-image-border-color'), { target: { value: '#ff0000' } })
+
+    expect(onUpdate).toHaveBeenNthCalledWith(1, { borderWidth: 4 })
+    expect(onUpdate).toHaveBeenNthCalledWith(2, { borderColor: '#ff0000' })
+  })
+})
+
 describe('Phase 4: chart area + stacked', () => {
   const lineChart = { id: 'c1', type: 'chart', chartType: 'line', chartData: { labels: [], datasets: [] } }
   const barChart = { id: 'c2', type: 'chart', chartType: 'bar', chartData: { labels: [], datasets: [] } }

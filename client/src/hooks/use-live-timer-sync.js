@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 /**
  * Subscribes to timer:sync and timer:ended events from the server.
@@ -6,31 +6,46 @@ import { useEffect, useCallback, useRef } from 'react'
  */
 export function useLiveTimerSync(socket, onTimerEnded) {
   const timerStatesRef = useRef({})
-
-  const handleSync = useCallback((data) => {
-    timerStatesRef.current = {
-      ...timerStatesRef.current,
-      [data.elementId]: data,
-    }
-  }, [])
-
-  const handleEnded = useCallback(
-    (data) => {
-      delete timerStatesRef.current[data.elementId]
-      onTimerEnded?.(data.elementId)
-    },
-    [onTimerEnded]
-  )
+  const generationRef = useRef(0)
+  const onTimerEndedRef = useRef(onTimerEnded)
 
   useEffect(() => {
-    if (!socket) return
-    socket.on('timer:sync', handleSync)
-    socket.on('timer:ended', handleEnded)
-    return () => {
-      socket.off('timer:sync', handleSync)
-      socket.off('timer:ended', handleEnded)
+    onTimerEndedRef.current = onTimerEnded
+  }, [onTimerEnded])
+
+  useEffect(() => {
+    const generation = generationRef.current + 1
+    generationRef.current = generation
+    timerStatesRef.current = {}
+
+    const isCurrentGeneration = () => generationRef.current === generation
+    const handleSync = (data) => {
+      if (!isCurrentGeneration() || !data?.elementId) return
+      timerStatesRef.current = {
+        ...timerStatesRef.current,
+        [data.elementId]: data,
+      }
     }
-  }, [socket, handleSync, handleEnded])
+    const handleEnded = (data) => {
+      if (!isCurrentGeneration() || !data?.elementId) return
+      delete timerStatesRef.current[data.elementId]
+      onTimerEndedRef.current?.(data.elementId)
+    }
+
+    if (socket) {
+      socket.on('timer:sync', handleSync)
+      socket.on('timer:ended', handleEnded)
+    }
+
+    return () => {
+      if (isCurrentGeneration()) generationRef.current += 1
+      if (socket) {
+        socket.off('timer:sync', handleSync)
+        socket.off('timer:ended', handleEnded)
+      }
+      timerStatesRef.current = {}
+    }
+  }, [socket])
 
   return timerStatesRef
 }

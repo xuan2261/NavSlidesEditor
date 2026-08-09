@@ -267,6 +267,11 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 - Observers join read-only and remain outside the player map. Public leaderboard
   rows intentionally contain only `{ playerId, name, score }` for stable rank
   matching; they never contain session or host authority values.
+- Hot-potato question timing is server-authoritative. The question envelope
+  carries `questionStartedAt`, `timeRemainingMs`, and the room's `allowLate`
+  policy; expired answers are rejected unless late answers are explicitly
+  enabled. A player rejoin replays their private answer result for the active
+  question, so reconnect cannot reset an already-submitted answer.
 - The generated Present page waits for the authenticated presenter room to commit
   its deck identity, then calls `POST /api/presentations/:id/present/game-bootstrap`.
   The server reloads the authoritative presentation, extracts supported game

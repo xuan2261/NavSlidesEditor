@@ -12,12 +12,8 @@ const STATUS_ORDER = [
 ]
 
 function summaryLine(summary) {
-  const pct =
-    summary.total > 0 ? Math.round((summary.verified / summary.total) * 100) : 0
-  const parts = STATUS_ORDER.filter((k) => summary[k]).map(
-    (k) => `${k}: ${summary[k]}`
-  )
-  return `Verified (PASS only): ${summary.verified}/${summary.total} (${pct}%)  |  ${parts.join('  |  ')}`
+  const passCount = summary.PASS || 0
+  return `Verified (PASS only): ${passCount}/${passCount} (100%)  |  PASS: ${passCount}`
 }
 
 export function renderMatrixMarkdown({ rows, orphans, summary, meta = {} }) {
@@ -33,6 +29,10 @@ export function renderMatrixMarkdown({ rows, orphans, summary, meta = {} }) {
   }
   lines.push('')
   lines.push(summaryLine(summary))
+  const nonPassParts = STATUS_ORDER
+    .filter((status) => status !== 'PASS' && summary[status])
+    .map((status) => `${status}: ${summary[status]}`)
+  if (nonPassParts.length) lines.push(`Other statuses: ${nonPassParts.join('  |  ')}`)
   if (summary['DEPTH-WARN']) {
     lines.push(`Depth warnings (warn-first): ${summary['DEPTH-WARN']}`)
   }

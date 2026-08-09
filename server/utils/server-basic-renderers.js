@@ -1,13 +1,17 @@
 const {
   DEFAULT_BACKGROUND_COLOR,
   DEFAULT_TEXT_COLOR,
+  buildPptxImageBorderOverlayOptions,
+  buildPptxImageOptions,
   getNativeChartDefinition,
+  gradientFallbackColor,
   getShapeType,
   htmlToPptTextRuns,
   mapArrowType,
   mapLineDashType,
   normalizeCssColor,
   resolveColorForTokens,
+  resolveMergedCells,
   toPptFontSize,
 } = require('revealjs-shared')
 const { normalizeServerImageSource } = require('./server-image-source')
@@ -49,72 +53,18 @@ function addImageElement(slide, element, bounds, resolution, layout) {
   const source = normalizeServerImageSource(element.src)
   if (!source) throw new Error('Missing image source')
 
-  const imageOptions = {
-    ...source,
-    ...bounds,
-    rotate: element.rotation || 0,
-  }
+  slide.addImage(buildPptxImageOptions(source, element, bounds, resolution, layout))
 
-  // Mirror client export: pptxgenjs `transparency` is 0-100 (higher = more
-  // transparent), so opacity 0.5 → transparency 50. Omit when fully opaque.
-  if (element.opacity != null && element.opacity !== 1) {
-    imageOptions.transparency = Math.round((1 - element.opacity) * 100)
-  }
-
-  if (element.flipH) imageOptions.flipH = true
-  if (element.flipV) imageOptions.flipV = true
-  if (element.alt || element.altText) imageOptions.altText = element.alt || element.altText
-
-  if (element.cropData) {
-    const crop = element.cropData || {}
-    const left = Number(crop.left) || 0
-    const right = Number(crop.right) || 0
-    const top = Number(crop.top) || 0
-    const bottom = Number(crop.bottom) || 0
-    const visibleW = Math.max(0.01, 1 - left - right)
-    const visibleH = Math.max(0.01, 1 - top - bottom)
-    imageOptions.sizing = {
-      type: 'crop',
-      x: bounds.x - (bounds.w * left) / visibleW,
-      y: bounds.y - (bounds.h * top) / visibleH,
-      w: bounds.w / visibleW,
-      h: bounds.h / visibleH,
-    }
-  } else if (element.imageW != null && element.imageH != null) {
-    imageOptions.sizing = {
-      type: 'crop',
-      x: Math.max(0, (-(element.imageOffsetX || 0) * layout.width) / resolution.width),
-      y: Math.max(0, (-(element.imageOffsetY || 0) * layout.height) / resolution.height),
-      w: Math.max(bounds.w, (element.imageW * layout.width) / resolution.width),
-      h: Math.max(bounds.h, (element.imageH * layout.height) / resolution.height),
-    }
-  } else if (element.objectFit) {
-    imageOptions.sizing = {
-      type: element.objectFit === 'cover' ? 'cover' : 'contain',
-      w: bounds.w,
-      h: bounds.h,
-    }
-  }
-
-  slide.addImage(imageOptions)
-
-  if (element.borderColor && element.borderWidth) {
-    const border = normalizeCssColor(element.borderColor)
-    slide.addShape('rect', {
-      ...bounds,
-      fill: { color: 'FFFFFF', transparency: 100 },
-      line: { color: border.color, transparency: border.transparency, width: element.borderWidth },
-      rotate: element.rotation || 0,
-    })
-  }
+  const borderOverlay = buildPptxImageBorderOverlayOptions(element, bounds)
+  if (borderOverlay) slide.addShape('rect', borderOverlay)
 }
 
 function addShapeElement(slide, element, bounds, designTokens) {
   const shapeType = getShapeType(element.shape)
-  const fill = normalizeCssColor(
-    resolvePptxColor(element.fill, 'shape', 'fill', designTokens, '#6366f1'),
-    DEFAULT_BACKGROUND_COLOR
-  )
+  const fillSource = element.fillGradient
+    ? gradientFallbackColor(element)
+    : resolvePptxColor(element.fill, 'shape', 'fill', designTokens, '#6366f1')
+  const fill = normalizeCssColor(fillSource, DEFAULT_BACKGROUND_COLOR)
   const stroke = normalizeCssColor(
     element.stroke === 'none'
       ? '#000000'
@@ -236,22 +186,14 @@ function addCalloutElement(slide, element, bounds, designTokens) {
 }
 
 function addTableElement(slide, element, bounds, designTokens) {
-  const mergedCells = Array.isArray(element.mergedCells) ? element.mergedCells : []
-  const mergeByStart = new Map()
-  const covered = new Set()
-
-  mergedCells.forEach((merge) => {
-    const row = Number(merge.row) || 0
-    const col = Number(merge.col) || 0
-    const rowSpan = Math.max(1, Number(merge.rowSpan) || 1)
-    const colSpan = Math.max(1, Number(merge.colSpan) || 1)
-    mergeByStart.set(`${row}:${col}`, { rowSpan, colSpan })
-
-    for (let ri = row; ri < row + rowSpan; ri++) {
-      for (let ci = col; ci < col + colSpan; ci++) {
-        if (ri !== row || ci !== col) covered.add(`${ri}:${ci}`)
-      }
-    }
+  const data = Array.isArray(element.data) ? element.data : []
+  const columnCount = data.reduce(
+    (count, row) => Math.max(count, Array.isArray(row) ? row.length : 0),
+    0
+  )
+  const { spans: mergeByStart, covered } = resolveMergedCells(element.mergedCells, {
+    rowCount: data.length,
+    colCount: columnCount,
   })
 
   const cellStyles = element.cellStyles || {}
@@ -277,8 +219,8 @@ function addTableElement(slide, element, bounds, designTokens) {
     ? element.rowHeights.reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0)
     : 0
 
-  const rows = (element.data || []).map((row, rowIndex) =>
-    (row || []).reduce((cells, cell, colIndex) => {
+  const rows = data.map((row, rowIndex) =>
+    (Array.isArray(row) ? row : []).reduce((cells, cell, colIndex) => {
       if (covered.has(`${rowIndex}:${colIndex}`)) return cells
 
       const merge = mergeByStart.get(`${rowIndex}:${colIndex}`)

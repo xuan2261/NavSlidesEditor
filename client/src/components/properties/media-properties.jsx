@@ -1,5 +1,6 @@
 import { Input, Select } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
+import { resolveVideoSrc } from '../../utils/migrate-video-src'
 /**
  * Video/Audio media properties: source URL, poster, controls, autoplay, loop, muted.
  */
@@ -18,7 +19,7 @@ export default function MediaProperties({ element, onUpdate }) {
       <Input
         className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2"
         type="text"
-        value={element.src || ''}
+        value={isVideo ? resolveVideoSrc(element) : element.src || ''}
         onChange={(e) => onUpdate({ src: e.target.value })}
         placeholder={isVideo ? 'Upload path or URL' : 'Audio URL'}
       />

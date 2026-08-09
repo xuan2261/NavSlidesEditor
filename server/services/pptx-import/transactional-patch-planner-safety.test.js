@@ -127,4 +127,20 @@ describe('transactional patch planner input safety', () => {
       reasonCode: 'JOURNAL_MATRIX_AUTHORITY_SUBJECT_MISSING',
     })
   })
+
+  it('rejects MIME-changing package-native image or media replacement', () => {
+    const replacement = operation({
+      rowId: 'primitive.image.whole-replacement',
+      objectKind: 'image',
+      propertyId: 'media-source',
+      operationId: 'replace-whole-object',
+      before: '/uploads/source.png',
+      after: '/uploads/replacement.mp4',
+    })
+
+    expect(compilePatchPlan(journal([replacement]))).toMatchObject({
+      ok: false,
+      reasonCode: 'NON_SEED_ROW',
+    })
+  })
 })

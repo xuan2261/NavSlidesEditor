@@ -37,6 +37,23 @@ describe('presenter game bootstrap', () => {
     ])
   })
 
+  it('passes nested hot-potato allowLate configuration to the room', () => {
+    const result = bootstrapPresenterGames({
+      slides: [{ elements: [{
+        id: 'late-game',
+        type: 'game',
+        gameType: 'hot-potato',
+        'hot-potato': {
+          allowLate: true,
+          questions: [{ id: 'q1', correctIndex: 0, points: 10, timeLimit: 5 }],
+        },
+      }] }],
+    })
+
+    expect(result.ok).toBe(true)
+    expect(GameEngine.getRoom('late-game')).toMatchObject({ allowLate: true })
+  })
+
   it('creates rooms from authoritative options and returns a private capability', () => {
     const result = bootstrapPresenterGames({
       slides: [{ elements: [{

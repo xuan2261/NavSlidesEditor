@@ -8,6 +8,21 @@ function safeChartColor(value, fallback) {
   return fallback
 }
 
+function safeJson(value) {
+  return JSON.stringify(value).replace(/</g, '\\u003c')
+}
+
+function chartAxisTitle(value) {
+  const title = typeof value === 'string' ? value.trim() : ''
+  return title ? `title:{display:true,text:${safeJson(title)}},` : ''
+}
+
+function chartLegendOptions(value) {
+  if (value === 'topRight') return "position:'top',align:'end',"
+  const position = ['bottom', 'left', 'right', 'top'].includes(value) ? value : 'right'
+  return `position:'${position}',`
+}
+
 export function ChartRenderer({ element, isSelected, isDragging, slideBackground }) {
   const { chartType = 'bar', chartData = {} } = element
   const labels = chartData.labels || []
@@ -19,13 +34,15 @@ export function ChartRenderer({ element, isSelected, isDragging, slideBackground
   const axisTextColor = safeChartColor(element.axisTextColor, chartPalette.text)
   const gridColor = safeChartColor(element.gridColor, chartPalette.grid)
   const legendTextColor = safeChartColor(element.legendTextColor, axisTextColor)
+  const categoryAxisTitle = chartAxisTitle(element.axisTitles?.category)
+  const valueAxisTitle = chartAxisTitle(element.axisTitles?.value)
+  const legendOptions = chartLegendOptions(element.legendPosition)
   const scales =
     chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'
       ? '{}'
       : chartType === 'radar'
-        ? `{r:{angleLines:{color:'${gridColor}'},ticks:{color:'${axisTextColor}',backdropColor:'transparent'},grid:{color:'${gridColor}'},pointLabels:{color:'${axisTextColor}'}}}`
-        : `{x:{${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}},y:{${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}}}`
-  const safeJson = (value) => JSON.stringify(value).replace(/</g, '\\u003c')
+        ? `{r:{${valueAxisTitle}angleLines:{color:'${gridColor}'},ticks:{color:'${axisTextColor}',backdropColor:'transparent'},grid:{color:'${gridColor}'},pointLabels:{color:'${axisTextColor}'}}}`
+        : `{x:{${stackedAxis}${categoryAxisTitle}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}},y:{${stackedAxis}${valueAxisTitle}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}}}`
 
   const chartHtml = `<!doctype html><html><head>
 <meta charset="utf-8">
@@ -52,7 +69,7 @@ new Chart(document.getElementById('c'),{
   options:{
     responsive:true,
     maintainAspectRatio:false,
-    plugins:{legend:{labels:{color:'${legendTextColor}',font:{size:12}}}},
+    plugins:{legend:{${legendOptions}labels:{color:'${legendTextColor}',font:{size:12}}}},
     scales:${scales}
   }
 });

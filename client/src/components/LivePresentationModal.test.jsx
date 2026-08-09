@@ -23,6 +23,7 @@ describe('LivePresentationModal', () => {
   it('assigns the launch context before navigating the presenter popup', () => {
     const presenterWindow = { name: '', location: { href: '' } }
     const open = vi.spyOn(window, 'open').mockReturnValue(presenterWindow)
+    const onPresenterWindowOpened = vi.fn()
     const onClose = vi.fn()
 
     render(
@@ -30,6 +31,7 @@ describe('LivePresentationModal', () => {
         presentationId="deck-1"
         roomCode="ROOM1"
         presenterToken="presenter-token"
+        onPresenterWindowOpened={onPresenterWindowOpened}
         onClose={onClose}
       />
     )
@@ -38,8 +40,14 @@ describe('LivePresentationModal', () => {
 
     expect(open).toHaveBeenCalledWith('', '_blank')
     expect(JSON.parse(presenterWindow.name)).toEqual({
+      presentationId: 'deck-1',
       roomCode: 'ROOM1',
       presenterToken: 'presenter-token',
+    })
+    expect(onPresenterWindowOpened).toHaveBeenCalledWith({
+      presenterWindow,
+      presentationId: 'deck-1',
+      roomCode: 'ROOM1',
     })
     expect(presenterWindow.location.href).toBe('/api/presentations/deck-1/present?live=ROOM1')
     expect(onClose).toHaveBeenCalledTimes(1)

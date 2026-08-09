@@ -429,9 +429,15 @@ export function NamePickerRenderer({ element, isPresenting }) {
     if (lastEvent?.type !== 'random-result') return
     const idx = lastEvent.winnerIndex
     if (typeof idx !== 'number' || idx < 0) return
-    const name = (element.items || [])[idx]
+    const hasStableWinner = Object.prototype.hasOwnProperty.call(lastEvent, 'winner')
+    const name = hasStableWinner
+      ? lastEvent.winner
+      : (element.items || [])[idx]
+    const authoredIndex = hasStableWinner
+      ? (element.items || []).indexOf(name)
+      : idx
     // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing UI to an external socket event is the intended use
-    setLastWinner({ name, idx })
+    setLastWinner({ name, idx: authoredIndex })
     fireConfetti(element)
   }, [lastEvent, element])
 

@@ -18,6 +18,7 @@ export default function LiveViewPage() {
   // Socket reference shared across callbacks
   const socketRef = useRef(null)
   const presenterLeftRef = useRef(false)
+  const presenterStateRevisionRef = useRef(0)
 
   // Annotation strokes keyed by horizontal and vertical slide indices so
   // strokes never bleed across nested slides. The displayed set is derived
@@ -102,22 +103,51 @@ export default function LiveViewPage() {
 
   // 1. Socket.IO connection
   useEffect(() => {
+    presenterStateRevisionRef.current += 1
+    presenterLeftRef.current = false
+    setIsConnected(false)
+    setPresenterLeft(false)
+    setPresenterReconnecting(false)
+    setRoomEnded(false)
+    setHtmlContent('')
+    setLiveState({ slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 })
+    setCursorPos(null)
+    setLaserPos(null)
+    setViewerCount(0)
+    setRoomNotFound(false)
+    setJoinError('')
+    setStrokesBySlide({})
+
     const socket = io({ path: '/ws', reconnection: true })
     socketRef.current = socket  // make available for timer/event bridge hooks immediately
+    let cancelled = false
+    const isCurrentSocket = () => !cancelled && socketRef.current === socket
+    const invalidatePresenterPoll = () => {
+      if (!isCurrentSocket()) return
+      presenterStateRevisionRef.current += 1
+    }
 
     socket.on('connect_error', (err) => {
+      if (!isCurrentSocket()) return
       setJoinError(err.message || 'Connection failed')
     })
 
     socket.on('connect', () => {
+      if (!isCurrentSocket()) return
+      invalidatePresenterPoll()
       setIsConnected(true)
       setJoinError('')
       socket.emit('join-room', { roomId: roomCode, role: 'viewer' })
     })
 
-    socket.on('disconnect', () => setIsConnected(false))
+    socket.on('disconnect', () => {
+      if (!isCurrentSocket()) return
+      invalidatePresenterPoll()
+      setIsConnected(false)
+    })
 
     socket.on('sync-state', (state) => {
+      if (!isCurrentSocket()) return
       setLiveState({
         slideIndex: state.slideIndex || 0,
         verticalIndex: state.verticalIndex || 0,
@@ -126,27 +156,39 @@ export default function LiveViewPage() {
     })
 
     socket.on('navigate', ({ slideIndex, verticalIndex = 0, fragmentIndex = 0 }) => {
+      if (!isCurrentSocket()) return
       setLiveState({ slideIndex: slideIndex || 0, verticalIndex, fragmentIndex })
     })
 
-    socket.on('cursor-move', ({ x, y }) => setCursorPos({ x, y }))
+    socket.on('cursor-move', ({ x, y }) => {
+      if (!isCurrentSocket()) return
+      setCursorPos({ x, y })
+    })
 
     socket.on('laser', ({ x, y, active }) => {
+      if (!isCurrentSocket()) return
       setLaserPos(active ? { x, y } : null)
     })
 
     // Presenter disconnected (room survives, may reconnect) or left (room ended)
     socket.on('presenter-status', ({ hasPresenter, presenterConnected }) => {
-      if (presenterLeftRef.current) return
+      if (!isCurrentSocket() || presenterLeftRef.current) return
+      invalidatePresenterPoll()
       setPresenterReconnecting(presenterConnected === true && hasPresenter === false)
     })
     socket.on('presenter-disconnected', () => {
-      if (!presenterLeftRef.current) setPresenterReconnecting(true)
+      if (!isCurrentSocket() || presenterLeftRef.current) return
+      invalidatePresenterPoll()
+      setPresenterReconnecting(true)
     })
     socket.on('presenter-reconnected', () => {
-      if (!presenterLeftRef.current) setPresenterReconnecting(false)
+      if (!isCurrentSocket() || presenterLeftRef.current) return
+      invalidatePresenterPoll()
+      setPresenterReconnecting(false)
     })
     socket.on('presenter-left', () => {
+      if (!isCurrentSocket()) return
+      invalidatePresenterPoll()
       presenterLeftRef.current = true
       setPresenterLeft(true)
       setRoomEnded(false)
@@ -154,21 +196,33 @@ export default function LiveViewPage() {
       setPresenterReconnecting(false)
     })
     socket.on('room-ended', () => {
-      if (presenterLeftRef.current) return
+      if (!isCurrentSocket() || presenterLeftRef.current) return
+      invalidatePresenterPoll()
       setRoomEnded(true)
       setPresenterReconnecting(false)
     })
 
-    socket.on('viewer-count', ({ count }) => setViewerCount(count))
-    socket.on('room-not-found', () => setRoomNotFound(true))
+    socket.on('viewer-count', ({ count }) => {
+      if (!isCurrentSocket()) return
+      setViewerCount(count)
+    })
+    socket.on('room-not-found', () => {
+      if (!isCurrentSocket()) return
+      invalidatePresenterPoll()
+      setRoomNotFound(true)
+    })
     socket.on('join-error', ({ message }) => {
+      if (!isCurrentSocket()) return
+      invalidatePresenterPoll()
       setJoinError(message || 'Failed to join live room')
       setRoomNotFound(true)
     })
 
     // When we receive presentation data (HTML), render it
     socket.on('presentation-data', (data) => {
-      if (data.html) setHtmlContent(data.html)
+      if (!isCurrentSocket() || !data.html) return
+      invalidatePresenterPoll()
+      setHtmlContent(data.html)
     })
 
     // Check if the room exists
@@ -177,17 +231,16 @@ export default function LiveViewPage() {
         const roomRes = await fetch(`/api/live/room/${roomCode}`)
         if (!roomRes.ok) throw new Error('Failed to check room')
         const roomData = await roomRes.json()
-        if (!roomData.exists) {
-          setRoomNotFound(true)
-        }
+        if (!cancelled && !roomData.exists) setRoomNotFound(true)
       } catch (err) {
         console.error('Failed to check room', err)
-        setRoomNotFound(true)
+        if (!cancelled) setRoomNotFound(true)
       }
     }
     checkRoom()
 
     return () => {
+      cancelled = true
       socket.disconnect()
     }
   }, [roomCode])
@@ -195,13 +248,17 @@ export default function LiveViewPage() {
   useEffect(() => {
     if (!isConnected || !htmlContent || presenterLeft || roomEnded) return undefined
     let cancelled = false
+    let presenterCheckInFlight = false
 
     const checkPresenter = async () => {
+      if (presenterCheckInFlight) return
+      presenterCheckInFlight = true
+      const presenterStateRevision = presenterStateRevisionRef.current
       try {
         const res = await fetch(`/api/live/room/${roomCode}`)
         if (!res.ok) return
         const room = await res.json()
-        if (cancelled) return
+        if (cancelled || presenterStateRevision !== presenterStateRevisionRef.current) return
         if (!room.exists) {
           if (!presenterLeftRef.current) setRoomEnded(true)
           setPresenterReconnecting(false)
@@ -212,6 +269,8 @@ export default function LiveViewPage() {
         }
       } catch {
         // Socket events remain primary; this poll is only a missed-event fallback.
+      } finally {
+        presenterCheckInFlight = false
       }
     }
 

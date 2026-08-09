@@ -1,4 +1,5 @@
 import { sanitizeRichTextHtml } from './content-safety'
+import { resolveGameConfig } from '../constants/game-element-types-constants'
 import { migrateVideoSrc } from './migrate-video-src'
 import { normalizePresentationNotes } from './slide-notes'
 
@@ -13,12 +14,22 @@ const legacyTextElement = (content) => ({
   content,
 })
 
-export function migrateChild(child) {
-  if (child.elements) return child
+function migrateElement(element) {
+  const migrated = migrateVideoSrc(element)
+  if (migrated?.type !== 'game' || typeof migrated.gameType !== 'string') return migrated
   return {
-    ...child,
-    elements: child.html ? [legacyTextElement(sanitizeRichTextHtml(child.html))] : [],
+    ...migrated,
+    [migrated.gameType]: resolveGameConfig(migrated, migrated.gameType),
   }
+}
+
+export function migrateChild(child) {
+  const elements = Array.isArray(child.elements)
+    ? child.elements.map(migrateElement)
+    : child.html
+      ? [legacyTextElement(sanitizeRichTextHtml(child.html))]
+      : []
+  return { ...child, elements }
 }
 
 export function migrateSlide(slide) {
@@ -27,13 +38,13 @@ export function migrateSlide(slide) {
       ? { ...slide, children: slide.children.map(migrateChild) }
       : slide
 
-  if (!withChildren.elements) {
+  if (!Array.isArray(withChildren.elements)) {
     return {
       ...withChildren,
       elements: withChildren.html ? [legacyTextElement(withChildren.html)] : [],
     }
   }
-  return { ...withChildren, elements: withChildren.elements.map(migrateVideoSrc) }
+  return { ...withChildren, elements: withChildren.elements.map(migrateElement) }
 }
 
 export function migratePresentation(presentation) {

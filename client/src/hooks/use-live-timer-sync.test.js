@@ -8,6 +8,7 @@ function createMockSocket() {
     on: (event, handler) => { handlers[event] = handler },
     off: (event) => { handlers[event] = null },
     _trigger: (event, data) => { handlers[event]?.(data) },
+    _getHandler: (event) => handlers[event],
   }
 }
 
@@ -71,6 +72,44 @@ describe('useLiveTimerSync', () => {
     socket._trigger('timer:ended', { elementId: 'game-1' })
     expect(result.current.current['game-1']).toBeUndefined()
     expect(onEnded).toHaveBeenCalledWith('game-1')
+  })
+
+  it('clears prior room state and rejects retained callbacks on socket changes', () => {
+    const firstSocket = createMockSocket()
+    const secondSocket = createMockSocket()
+    const onEnded = vi.fn()
+    const { result, rerender } = renderHook(
+      ({ socket }) => useLiveTimerSync(socket, onEnded),
+      { initialProps: { socket: firstSocket } }
+    )
+
+    firstSocket._trigger('timer:sync', {
+      elementId: 'room-1-timer',
+      remaining: 20,
+      duration: 30,
+      running: true,
+      endedAt: null,
+    })
+    const staleSync = firstSocket._getHandler('timer:sync')
+    const staleEnded = firstSocket._getHandler('timer:ended')
+    expect(result.current.current['room-1-timer']).toBeDefined()
+
+    rerender({ socket: secondSocket })
+    expect(result.current.current).toEqual({})
+
+    staleSync({ elementId: 'room-1-timer', remaining: 1 })
+    staleEnded({ elementId: 'room-1-timer' })
+    expect(result.current.current).toEqual({})
+    expect(onEnded).not.toHaveBeenCalled()
+
+    secondSocket._trigger('timer:sync', {
+      elementId: 'room-2-timer',
+      remaining: 45,
+      duration: 60,
+      running: true,
+      endedAt: null,
+    })
+    expect(result.current.current['room-2-timer']).toBeDefined()
   })
 
   it('returns early when socket is null', () => {

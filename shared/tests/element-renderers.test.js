@@ -860,6 +860,19 @@ describe('element-renderers safety behavior', () => {
     expect(html).not.toContain('javascript:')
   })
 
+  it('renders malformed persisted table data without crashing', () => {
+    expect(() => renderElement(
+      {
+        ...base,
+        type: 'table',
+        data: [{ invalid: true }, [{ value: 'cell' }]],
+        mergedCells: [null, { row: 0, col: 0, rowSpan: 'bad' }],
+      },
+      {},
+      {}
+    )).not.toThrow()
+  })
+
   it('renders table cells with per-side borders', () => {
     const html = renderElement(
       {

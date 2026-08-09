@@ -4,7 +4,7 @@ import QRCode from 'qrcode'
 import iconPaths from '../../../shared/data/icon-paths.json'
 import { createSvgDataUri, normalizeCssColor } from './export-pptx-core'
 import { sanitizeSvgContent } from './content-safety'
-import { resolveColorForTokens } from 'revealjs-shared'
+import { classifyPptxPosterSource, resolveColorForTokens } from 'revealjs-shared'
 import {
   renderHtmlDocumentToPngDataUri,
   renderHtmlToPngDataUri,
@@ -332,15 +332,19 @@ export async function renderElementFallbackDataUri(element, designTokens) {
       })
     }
     case 'qrcode':
-      return await QRCode.toDataURL(element?.qrData || 'https://example.com', {
-        color: {
-          dark: element?.qrColor || '#000000',
-          light: element?.qrBgColor || '#ffffff',
-        },
-        errorCorrectionLevel: element?.qrErrorLevel || 'M',
-        margin: 1,
-        width: Math.max(width, height),
-      })
+      try {
+        return await QRCode.toDataURL(element?.qrData || 'https://example.com', {
+          color: {
+            dark: element?.qrColor || '#000000',
+            light: element?.qrBgColor || '#ffffff',
+          },
+          errorCorrectionLevel: element?.qrErrorLevel || 'M',
+          margin: 1,
+          width: Math.max(width, height),
+        })
+      } catch {
+        return null
+      }
     case 'svg':
       return element?.content ? createSvgDataUri(sanitizeSvgContent(element.content)) : null
     default:
@@ -350,7 +354,9 @@ export async function renderElementFallbackDataUri(element, designTokens) {
 
 export function getMediaCoverSource(element) {
   if (!element) return ''
-  if (element.type === 'video') return element.poster || ''
+  if (element.type === 'video') {
+    return classifyPptxPosterSource(element.poster)?.source || ''
+  }
   return ''
 }
 
