@@ -4,7 +4,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.15.6** — hardened PPTX import fidelity, editor workflows, and accessibility.
+Current release: **v1.15.7** — improved PPTX export fidelity, editor/live-session resilience, and CI coverage.
 
 ## Features
 
