@@ -1,0 +1,554 @@
+## Tools
+
+- Lifecycle event
+
+## User
+
+/ak-brainstorm ultrathink "review, debug, xem xét lại cho tôi chức năng Import PPTX, luồng xử lý, pipeline, chức năng đã hoàn thiện, ok hết chưa, cần sửa đổi, nâng cấp, bổ sung gì, đưa ra đề xuất cho tôi" --advice
+
+## Tools
+
+- Lifecycle event
+
+## Assistant
+
+Đang rà soát toàn diện chức năng Import PPTX: luồng xử lý, pipeline, trạng thái hoàn thiện và đề xuất cải tiến. Bắt đầu từ docs và code hiện có.
+
+## Tools
+
+- Read: C:\Users\Z10PAD8C_Xuan2261\.agents\skills\ak-brainstorm\SKILL.md
+- Read: C:\Work\NavSlidesEditor\README.md (1-120)
+- ListDir: \server\services\pptx-import
+- ListDir: \plans
+- Search: pptx-import|pptxImport|importPptx|import.*pptx
+- Read: C:\Work\NavSlidesEditor\plans\260722-1630-pptx-import-p0-readiness-remediation-deep-tdd\plan.md (1-150)
+- Read: C:\Work\NavSlidesEditor\plans\260724-1444-pptx-import-p1-p3-readiness-remediation-deep-tdd\plan.md (1-150)
+- Read: C:\Work\NavSlidesEditor\plans\260710-1757-pptx-package-first-officecli-roundtrip-deep-tdd\plan.md (1-200)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\importer.js (1-150)
+- Read: C:\Work\NavSlidesEditor\docs\system-architecture.md (281-460)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\importer.js (146-183)
+- Search: POST /api/pptx|runImport|async function|export
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\canonical-feature-matrix.js (1-100)
+- Read: C:\Work\NavSlidesEditor\plans\reports\2026-07-22-pptx-import-readiness-audit.md (1-120)
+- Search: importPptx|pptx-import|usePptxImport|waitForPptx
+- Execute: Get-ChildItem -Path "plans/reports" -Filter "*pptx*" | Sort-Object LastWriteTime -Descending | Select-Object -First 20 Name, LastWriteTime; Get-Content package.json | Select-String -Pattern "pptx" (List recent PPTX reports and npm scripts)
+- Read: C:\Work\NavSlidesEditor\plans\reports\2026-07-22-pptx-import-readiness-audit.md (401-550)
+- Read: C:\Work\NavSlidesEditor\plans\reports\2026-07-24-pptx-import-p1-p3-readiness-code-review.md (1-100)
+- Read: C:\Work\NavSlidesEditor\plans\reports\2026-07-24-pptx-p3-capability-coordination.md (1-46)
+- Read: C:\Work\NavSlidesEditor\server\routes\pptx-import.js (216-335)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\constants.js (1-80)
+- Read: C:\Work\NavSlidesEditor\plans\reports\2026-07-24-pptx-secondary-parser-eval.md (1-41)
+- Read: C:\Work\NavSlidesEditor\server\services\pptx-import\import-report.js (1-80)
+- Search: omittedCount|accumulateOmitted
+- Read: C:\Work\NavSlidesEditor\docs\export-fidelity-and-limits.md (1-80)
+
+## Assistant
+
+# Brainstorm (Advice): PPTX Import — review, pipeline, readiness, đề xuất
+
+## Delivery contract (scope của session này)
+
+| Field | Content |
+| --- | --- |
+| **Outcome** | Bản đánh giá trung thực: luồng import, phần đã xong, gap, và roadmap đề xuất — **không implement**. |
+| **Constraints** | Dựa trên source/plans/audit/tests hiện tại; không suy “done” từ intent; claim language fail-closed. |
+| **Non-goals** | Không sửa code; không claim 1:1; không re-plan package-first toàn bộ. |
+| **Acceptance** | Pipeline map rõ; verdict theo capability; P0–P3 đề xuất có owner plan; câu hỏi product còn mở. |
+
+---
+
+## Verdict thẳng
+
+**Import PPTX đã dùng được cho self-hosted best-effort.** Không “ok 100%”, không đủ bằng chứng cho 1:1 PowerPoint, full editability, hay visual fidelity release.
+
+| Capability | Verdict | Ghi chú ngắn |
+| --- | --- | --- |
+| Best-effort import → editor | **Usable** | Upload → job → projection → open |
+| Original package recovery | **Strong** | Immutable R0 / download original |
+| Browser layout health (corpus) | **Green (heuristic)** | ~5 deck / 227 slide structural pass (2026-07-22) |
+| Reliability (cancel/drain/crash) | **Mostly shipped** | P1–P3 plan `completed`; residual honesty items |
+| Strict native importer | **Blocked** | EMF + unmapped native leaves trên deck thật |
+| PowerPoint visual 1:1 | **Blocked** | Oracle goldens placeholder; P0 phase 4 blocked |
+| Native chart / L4 edit | **Not available** | preserve-only; package-first G4 open |
+| Validated edited-package export | **Bounded / fail-closed** | Software contracts; OfficeCLI/native qual open |
+| Multi-tenant job auth | **Out of model** | Single-tenant self-host |
+
+**Product claim an toàn hôm nay:**
+
+> Best-effort PPTX import tạo projection editable trong NavSlides và giữ nguyên file gốc để recovery. Feature phức tạp có thể preserve / approximate / read-only / placeholder.
+
+**Không được nói:** 100% compatible, pixel-perfect, mọi content editable, strict corpus = strict native, roundtrip = PowerPoint semantics.
+
+---
+
+## Pipeline thực tế (end-to-end)
+
+```text
+HomePage chọn .pptx
+  → POST /api/pptx/import  (upload quota chỉ POST; busy + Retry-After)
+  → reserve in-memory job (trước Multer body)
+  → temp file (tmp-pptx-imports/)
+  → fork parse-worker (env allowlist, heap/timeout)
+       → ZIP/CRC/XML/resource guards (CRC fail-closed)
+       → pptxtojson only (không runtime fallback parser)
+       → output usability
+  → host re-open + revalidate package
+  → OOXML scene graph (inventory truth)
+  → mapper → canvas 960×540 (pt = px @ 72 DPI)
+  → chart/SmartArt OOXML supplement
+  → scene reconcile + source map
+  → bounded import report + warning budget
+  → package-store commit: R0 immutable + head gen=1
+  → outbox sole-writer → drain compatibility (listable barrier)
+  → media commit → complete job
+  → client SSE/poll (AbortController + 150s wait budget)
+  → open /editor/:id  (chỉ khi listable / ownership còn)
+```
+
+**Hai “đường” fidelity (quan trọng khi debug):**
+
+1. **Best-effort projection** — dùng hằng ngày: `pptxtojson` + mapper + warnings.
+2. **Package authority** — R0 + generation + source map + (tương lai) patch export / OfficeCLI — owner plan package-first; claim gates **G0–G5 đều còn open**.
+
+---
+
+## Kiến trúc module (bản đồ ownership)
+
+| Layer | Path chính | Vai trò |
+| --- | --- | --- |
+| Client UX | `HomePage.jsx`, `api.js`, `pptx-job-wait.js` | Upload, wait, cancel, summary |
+| HTTP jobs | `server/routes/pptx-import.js` | Admission, `runImport`, durable GET, drain |
+| Core import | `importer.js` | Worker → scene → map → reconcile → stats |
+| Parser isolation | `worker-runner.js`, `parse-worker.js` | Child process + budgets |
+| Guards | `pptx-guards.js`, `nested-package-guard.js` | ZIP bomb, CRC, path safety |
+| Mapper | `mapper/*` | Text/image/shape/table/group/media/diagram |
+| Scene inventory | `ooxml-scene-graph/*` | Native node truth + strict policy |
+| Package | `package-store/*`, outbox | Authority, jobs[], compatibility |
+| Fidelity / claim | `evidence/*`, `oracle/*`, matrix | Qualification, không phải runtime import path |
+| Export giao với import | original / reconstructed / validated | 3 mode khác claim |
+
+**Resource ceilings (production defaults):** 100 MiB upload · 5k ZIP entries · 500 MiB decompressed · 256 MiB parsed JSON · 500 MiB media · parser 60 s · import 120 s · client wait ~150 s · warning cap 500 / 256 KiB.
+
+---
+
+## Đã hoàn thiện / OK (evidence-backed)
+
+### A. Product path best-effort — **production-usable**
+
+- Async job + SSE + poll fallback.
+- Progress stages, warning summary, open editor sau import.
+- Geometry/unit convention ổn định (960×540, `ptToCanvasPx`).
+- Text / shape / image / table / media mapping + placeholders có chủ đích.
+- `_pptxImportMeta` fit/wrap + invalidate khi user edit.
+- EMF/WMF → placeholder geometry (convert off mặc định).
+
+### B. Reliability hardening — **P1–P3 plan completed (2026-07-24)**
+
+- Single AbortController admission → wait; unmount không `onOpen` late.
+- Wait budget = server deadline + slack.
+- Outbox **sole writer** + await drain trước openable.
+- Contract B: durable `completed` ≠ listable khi pending-visibility.
+- Bounded `_pptxImportReport` server-owned, survive GET/merge.
+- Crash-point suite trên real package-store + outbox.
+- Worker env allowlist (parser); timeout message honest.
+- CRC fail-closed + adversarial lane tách corpus averages.
+- Perf matrix harness + sandbox eval (docs).
+
+### C. P0 software (phases 1–3) — **done**
+
+- Upload limiter chỉ `POST` import (không nuốt GET/SSE/DELETE).
+- Retry-After + abort admission sleep.
+- Bỏ claim `pptx2json` fallback runtime.
+- Tách corpus-metrics vs importer-qualification.
+- Finite scene stats (không infer zero).
+- Package-backed critical journey E2E contracts.
+
+### D. Package-first scaffolding — **nhiều software, 0 claim gate**
+
+- Matrix/reason-code contracts, journals, transactional patch skeleton.
+- One qualified-ish adapter seed: plain text run (G2 seed, **chưa L4**).
+- Generation fencing, authority DTO, compatibility recovery hardening.
+- **~31% checklist items** closed; **0/6 gates G0–G5** closed.
+
+---
+
+## Chưa OK / blocked / residual
+
+### 1. Visual fidelity & 1:1 — **blocker cứng**
+
+- P0 phase 4 blocked: chưa có trusted Microsoft PowerPoint golden + 3 role receipts.
+- Package-first **G5** open; plan bị block bởi P0 phase 4.
+- Placeholder goldens → SSIM null → **cấm claim** visual.
+
+### 2. Strict / native coverage — **truth gate đỏ (có chủ đích)**
+
+- Deck thật: `emf-convert-disabled`, hàng trăm unmapped native leaves.
+- Importer qualification non-zero = structured blocker, **không** phải “test hỏng”.
+
+### 3. Roundtrip reconstructed — **lossy by design**
+
+- ~63% average reconstructed semantic roundtrip (audit corpus).
+- Edit → hybrid PptxGenJS path vẫn mất OOXML phức tạp trừ khi validated package path qualify.
+
+### 4. Package-first claim readiness — **chưa release**
+
+| Gate | Ý nghĩa | Status |
+| --- | --- | --- |
+| G0 | Canonical matrix subject | Open |
+| G1 | OfficeCLI containment / real receipt | Open |
+| G2 | Valid edited package | Open |
+| G3 | Electron packaging honesty | Open |
+| G4 | Per-row L4 editability | Open |
+| G5 | PowerPoint oracle | Open |
+
+Blockers tiêu biểu (plan sync): matrix byte propagation đầy đủ; durable idempotency/quota; strict native re-import real package; direct OfficeCLI qualification; PowerPoint oracle; race/residual cleanup edge cases.
+
+### 5. Residual từ code review P1–P3 (7/10 conditional pass)
+
+Một số đã vá (vd. `accumulateOmittedCount` → report); vẫn theo dõi:
+
+| ID | Vấn đề | Ảnh hưởng |
+| --- | --- | --- |
+| H2 | SSE deadline reject có thể skip final reconcile (poll path có) | False “unknown” gần deadline |
+| H3 | EMF convert bật → vẫn inherit full `process.env` | Secret leak nếu bật EMF |
+| H4 | Durable `jobs[]` không store `reportSummary` native | Phụ thuộc presentation listable |
+| Hygiene | File size / phase status drift | Maintainability |
+
+### 6. Capability gaps (có chủ đích, không bug)
+
+- SmartArt / complex: preserve-opaque hoặc flatten.
+- Chart native: metadata/import partial; **edit UI preserve-only**.
+- Animations/transitions/notes inheritance: partial.
+- Multi-tenant: không có per-job auth (đúng model single-tenant).
+
+---
+
+## Debug checklist (khi “import hỏng”)
+
+1. **HTTP 429 busy** — chỉ POST; client Retry-After + abort.
+2. **422 parse/guards** — CRC, zip bomb, empty/schema, timeout worker.
+3. **Job cancel/unknown** — AbortController ownership; SSE vs poll deadline race (H2).
+4. **Done nhưng không mở được** — pending-visibility / drain chưa xong / unmount ownership.
+5. **Mở được nhưng thiếu object** — best-effort: xem `_pptxImportReport` + scene unmapped; không kỳ vọng strict.
+6. **Edit rồi export “mất PPT”** — reconstructed lossy; original download vẫn đúng; validated export fail-closed nếu chưa qualify.
+7. **Strict/qualification fail** — expected trên deck native-heavy; đừng “fix bằng nới gate”.
+
+---
+
+## Đề xuất ưu tiên (khuyến nghị)
+
+### Nhánh A — Mục tiêu: **best-effort production-ready** (nhỏ nhất, ROI cao)
+
+**Làm tiếp (1–2 sprint ngắn):**
+
+1. **Đóng residual honesty** từ review P1–P3  
+   - H2: SSE path = poll reconcile-after-deadline.  
+   - Wire reportSummary vào durable job nếu muốn recover trước listable.  
+   - EMF env allowlist trước khi bật `PPTX_EMF_CONVERT`.
+
+2. **UX diagnostic**  
+   - Panel “Import report” sau reload (summary counts + capped diagnostics).  
+   - Phân loại rõ: preserved / approximated / placeholder / failed (không gom “warnings”).  
+   - Hiển thị Retry-After countdown khi busy.
+
+3. **Giữ claim language** trong README/release notes đúng best-effort.
+
+4. **Không** mở L4 chart edit, không second parser, không 1:1 marketing.
+
+**Acceptance A:** residual tests green; cancel/SSE race closed; docs claim khớp code.
+
+### Nhánh B — Mục tiêu: **PowerPoint fidelity / package-first** (chương trình lớn)
+
+Thứ tự claim-driven (không parallel lung tung):
+
+```text
+P0 phase 4 (PowerPoint goldens + receipts)
+  → unblocks G5 evidence path
+G0 matrix fully bound
+  → G1 real OfficeCLI receipt (Windows local contract)
+  → G2 valid edited package (native re-import + transactional patch)
+  → G4 promote rows từng cái (text plain-run trước)
+  → G3 Electron honesty
+  → G5 scoped visual claim
+```
+
+**Không làm:** promote L4 theo “family”; dual production parser; LibreOffice làm oracle cho claim “PowerPoint”.
+
+**Secondary parser:** eval 2026-07-24 → **không implement**; đầu tư scene/mapper/package-first thay dual-pipeline.
+
+### Nhánh C — Mục tiêu: **fidelity content** (song song B, không chặn A)
+
+Theo gap thật từ qualification:
+
+| Priority | Work | Why |
+| --- | --- | --- |
+| High | Giảm unmapped scene leaves trên corpus đại diện (mapper + OOXML) | Strict qualification / fewer placeholders |
+| High | EMF/WMF policy rõ: off default + optional sandbox convert | Real teaching decks VN hay dùng EMF |
+| Med | SmartArt/diagram projection quality (vẫn preserve-opaque edit) | Visual usable without L4 |
+| Med | Chart: import metadata honesty + keep preserve-only until G4 | Tránh UI “edit được” giả |
+| Low | Animations/transitions import | Nice-to-have, editor model khác PPT |
+
+---
+
+## So sánh 3 hướng chiến lược
+
+| Approach | Ý | Pros | Cons | Khi chọn |
+| --- | --- | --- | --- | --- |
+| **1. Freeze best-effort + polish residual** | Ship A only | Nhanh, honest, low risk | Không 1:1 | Release/self-host gần |
+| **2. Package-first claim program** | B gates G0–G5 | Đường duy nhất tới edit-native + 1:1 claim | Dài, Windows/Office heavy | Muốn PPT-native product |
+| **3. Content mapper blitz** | C only | Ít placeholder trên deck thật | Không fix export/package validity | UX import “đẹp hơn” trước |
+
+**Khuyến nghị:** **1 → rồi 2 theo gate; 3 xen kẽ theo pain deck.**  
+Không trộn “mapper blitz” với “nới claim gate” — đó là cách tạo debt claim lớn nhất.
+
+---
+
+## Trạng thái plan (để điều phối)
+
+| Plan | Status | Ý nghĩa |
+| --- | --- | --- |
+| `260722-…-p0-readiness` | **blocked** (phase 4) | Software P0 ok; visual claim không |
+| `260724-…-p1-p3-readiness` | **completed** | Reliability track xong (+ residual review) |
+| `260710-…-package-first` | **in-progress** ~32% items; **0/6 gates** | Blocked bởi P0 phase 4 cho G5; G1–G4 tự còn open |
+
+---
+
+## Kết luận một câu
+
+**Import PPTX: production-usable best-effort + strong original recovery + reliability contracts mới; chưa complete fidelity product.** Tiếp theo hợp lý nhất là **đóng residual review + UX report honesty**, rồi **chỉ** đầu tư package-first/oracle nếu product claim mục tiêu là PowerPoint 1:1 — không cố “sửa import cho xong 100%” bằng cách nới truth gates.
+
+---
+
+## Unresolved questions (cần bạn chốt trước khi cook lớn)
+
+1. **Claim product mục tiêu:** best-effort self-host (A) hay PowerPoint 1:1 / native edit (B)?
+2. **Oracle:** có máy Windows + PowerPoint + người review golden không? (không có → G5/P0-4 mãi blocked)
+3. **EMF:** giữ placeholder hay chấp nhận convert opt-in + env isolation?
+4. **Độ ưu tiên chart edit** so với text/shape native patch?
+5. Có plan multi-tenant/public SaaS không? (hiện single-tenant job model đủ)
+
+Khi bạn chốt (1)–(2), bước tiếp theo phù hợp là plan nhỏ “residual honesty + UX report” (nhánh A) hoặc resume package-first theo G0/G1 — không cần brainstorm lại từ đầu.
+
+## User
+
+giải thích thêm về các câu hỏi
+
+## Tools
+
+- Lifecycle event
+
+## Assistant
+
+# Giải thích các câu hỏi còn mở
+
+Các câu này **không phải “bug cần fix”** — chúng là **lựa chọn sản phẩm / vận hành**. Mỗi câu chốt một hướng đi khác nhau (chi phí, claim, và thứ tự plan). Không chốt thì dễ làm việc lớn nhưng claim vẫn sai hoặc blocked.
+
+---
+
+## 1. Claim sản phẩm: best-effort (A) hay PowerPoint 1:1 / native edit (B)?
+
+### Ý hỏi gì?
+
+Bạn muốn **công bố / bán / hứa** điều gì với người dùng?
+
+| | **A — Best-effort import** | **B — PowerPoint fidelity / native edit** |
+| --- | --- | --- |
+| **Hứa** | Mở được `.pptx` trong NavSlides để chỉnh sửa “đủ dùng”; giữ file gốc để tải lại | Import + sửa + export gần PowerPoint; một số object **sửa native** trong package; (mức cao) so khớp visual với PowerPoint |
+| **Đã gần sẵn** | Có — pipeline best-effort + original recovery + reliability | Chưa — package-first G0–G5 open, oracle blocked |
+| **Công việc còn lại** | Residual honesty, UX report, polish | Chương trình nhiều tháng: OfficeCLI, native re-import, goldens, per-row L4 |
+
+### Vì sao quan trọng?
+
+- **A** = ship / release gần, claim khiêm tốn, ROI cao.
+- **B** = không phải “sửa thêm mapper”; là **đổi mô hình**: package authority + mutation journal + Office validation + evidence.
+
+Nếu trong đầu muốn **B** nhưng roadmap chỉ làm polish **A**, sẽ mãi cảm giác “import chưa xong”.  
+Nếu muốn **A** mà cố ép gate 1:1, sẽ đốt thời gian vào oracle/OfficeCLI không cần cho release.
+
+### Cách trả lời thực tế
+
+- Self-host, teaching, “mở PPT rồi soạn trong NavSlides” → **A**.
+- “Thay PowerPoint / roundtrip không mất chart-SmartArt-OOXML” → **B** (và chấp nhận timeline dài).
+
+Có thể **A ship trước, B làm song song** — nhưng **claim công bố** phải theo A cho đến khi gate B đóng.
+
+---
+
+## 2. Oracle: có Windows + PowerPoint + người review golden không?
+
+### Ý hỏi gì?
+
+**Visual fidelity / “1:1 với PowerPoint”** cần so ảnh thật do **Microsoft PowerPoint** render, không phải screenshot NavSlides hay LibreOffice (trừ khi claim khác).
+
+Hệ thống hiện tại (P0 phase 4 / G5) yêu cầu kiểu:
+
+1. Máy Windows có PowerPoint (phiên bản cố định).
+2. Render **mọi slide** của corpus → PNG “golden”.
+3. Ghi lại môi trường: OS, Office build, font, DPI, locale.
+4. **Người / role** ký receipt (App, Security, Release — có thể một người nhiều role nhưng phải ghi rõ).
+5. So SSIM (hoặc metric cố định) với actual từ pipeline package-backed — threshold đã chốt (vd. mean 0.99, min slide 0.97).
+
+### Vì sao quan trọng?
+
+- **Không có oracle** → phase 4 và claim visual **mãi blocked** — dù code import “đẹp” đến đâu.
+- Code review / unit test **không** thay được golden PowerPoint.
+- Hiện goldens trong repo từng là **placeholder 8×8** → SSIM `null` → cấm claim.
+
+### Các lựa chọn
+
+| Lựa chọn | Hệ quả |
+| --- | --- |
+| **Có** Windows + PPT + người review | Mở được nhánh visual claim; tốn setup + maintenance corpus |
+| **Không / chưa** | Giữ claim: browser structural + best-effort only; **không** nói pixel-perfect |
+| **Dùng LibreOffice làm “tạm”** | Được cho regression nội bộ; **không** được gán nhãn “PowerPoint 1:1” |
+
+### Cách trả lời thực tế
+
+- Có máy lab + Office license + 1 người chịu review định kỳ → trả lời **có**, gắn vào plan P0-4.  
+- Chỉ CI Linux / không Office → trả lời **không**, gạch visual claim khỏi milestone gần.
+
+---
+
+## 3. EMF: giữ placeholder hay bật convert opt-in + cô lập env?
+
+### Ý hỏi gì?
+
+**EMF/WMF** là vector Windows (thường từ diagram/clipart cũ). Trình duyệt **không vẽ** được; import hiện:
+
+- **Placeholder** (ô có nhãn + đúng kích thước/vị trí), convert **tắt mặc định**.
+- Strict importer / một số deck VN (vd. audit `Bai_2_1.pptx`) fail vì `emf-convert-disabled` nếu bật gate strict.
+
+**Convert opt-in** = bật env kiểu `PPTX_EMF_CONVERT=1`, spawn tool rasterize → PNG để editor/present xem được.
+
+### Trade-off
+
+| | **Giữ placeholder (mặc định hiện tại)** | **Convert opt-in** |
+| --- | --- | --- |
+| **Ưu** | An toàn, đơn giản, không thêm binary/CVE; đúng “best-effort honest” | Deck nhiều EMF **nhìn được** trong editor |
+| **Nhược** | User thấy “ô trống/nhãn”, không chỉnh vector gốc | Phụ thuộc converter; chất lượng/font khác PPT; **env isolation** (review H3: hiện convert path còn inherit full `process.env` nếu bật) |
+| **Không phải** | “Mất file” — original package vẫn giữ EMF | “Native EMF editable” — chỉ raster xem/sửa như ảnh |
+
+### Vì sao hỏi riêng?
+
+- Teaching deck / tài liệu hành chính VN hay dính EMF.  
+- Bật convert **không** đóng G5; chỉ cải thiện **best-effort visual**.  
+- Bật mà không allowlist env = rủi ro **lộ secret** vào process con.
+
+### Cách trả lời thực tế
+
+- Ưu tiên ổn định self-host, ít dependency → **placeholder** + cảnh báo rõ trong import report.  
+- Nhiều user kêu “mất hình diagram” → **opt-in convert** + bắt buộc env allowlist trước khi bật production.  
+- Muốn “EMF sửa như PowerPoint” → đó là **B/package-first**, không phải flip env.
+
+---
+
+## 4. Ưu tiên chart edit vs text/shape native patch?
+
+### Ý hỏi gì?
+
+Sau import, user **sửa trong editor** rồi **export lại package** theo hai triết lý khác nhau:
+
+| Hướng | Nghĩa | Trạng thái gần đúng |
+| --- | --- | --- |
+| **Text/shape native patch** | Sửa text plain / transform / fill → **vá OOXML** trong package (giữ phần còn lại) | Seed matrix: plain text run gần nhất (adapter qualified-ish, **chưa L4 promote**); shape transform/fill còn candidate |
+| **Chart edit** | Đổi data chart, workbook nhúng, series… → path chart/workbook riêng, rất phức tạp | **Preserve-only** cố ý; UI không mở edit native khi thiếu qualification |
+
+### Vì sao quan trọng?
+
+- **Text/shape** = pain hằng ngày (“sửa tiêu đề, kéo hộp”), ROI claim G2/G4 sớm hơn.  
+- **Chart** = ấn tượng demo (“sửa biểu đồ như PPT”) nhưng phụ thuộc embedded workbook, cache, re-import, Office validate — **dễ fail claim** nếu làm sớm.  
+- Package-first **cấm** promote chart theo cảm tính; phải từng row + evidence.
+
+### Trade-off roadmap
+
+```text
+Ưu tiên text/shape native
+  → G2 seed thật (edited package valid)
+  → user thấy “edit rồi export vẫn mở được trong PPT” trên primitive
+  → chart vẫn preserve / placeholder / read-only
+
+Ưu tiên chart edit trước
+  → effort lớn, nhiều edge
+  → chậm G2 “edited package” cho case phổ biến
+  → rủi ro UI “sửa được” nhưng package hỏng
+```
+
+### Cách trả lời thực tế
+
+- Editor teaching / nội dung chữ + hình → **text/shape trước**.  
+- Dashboard / report deck chart-heavy và claim “sửa chart” → **chart** nhưng **sau** G2 + matrix row riêng, không nhảy cóc.  
+- Default kỹ thuật đã gợi ý: **text/shape trước, chart sau**.
+
+---
+
+## 5. Multi-tenant / public SaaS?
+
+### Ý hỏi gì?
+
+Hiện model **self-host / single trust domain**:
+
+- Ai gọi được API (thường là localhost / mạng nội bộ tin cậy) có thể tạo/poll/cancel job import theo `jobId`.
+- **Không** có “job thuộc user X, user Y không đọc được”.
+
+**Multi-tenant** = nhiều user/org trên một server public: cần bind job ↔ owner (session/token/secret), authorize GET/SSE/DELETE, quota theo tenant, v.v.
+
+### Vì sao quan trọng?
+
+| Model | Việc cần làm |
+| --- | --- |
+| **Giữ self-host single-tenant** | Không làm auth job; security = network + reverse proxy + không expose API thô ra internet |
+| **Public SaaS / nhiều user** | Per-job authorization, anti-enumeration jobId, quota, isolation uploads/package store — **plan riêng**, không gộp mapper fidelity |
+
+Audit đã ghi: multi-tenant **không thuộc supported model hiện tại**. Decision P3 cũng chỉ “ghi nhận”, không productize.
+
+### Rủi ro nếu nhầm model
+
+- Deploy NavSlides **public** nhưng nghĩ import “an toàn multi-user” → user A đoán/leak `jobId` có thể poll job user B (tùy entropy UUID + network).  
+- Làm auth nửa vời (chỉ FE ẩn nút) **không** đủ.
+
+### Cách trả lời thực tế
+
+- Docker local / intranet một tổ chức → **single-tenant OK**.  
+- SaaS nhiều tenant → **có**, và phải lên plan security trước khi scale marketing import.
+
+---
+
+## Các câu hỏi “khóa” lẫn nhau thế nào?
+
+```text
+(1) Claim A hay B?
+      │
+      ├─ A → không bắt buộc (2) oracle PowerPoint
+      │       (3) EMF = UX optional
+      │       (4) native patch optional / thấp
+      │       (5) multi-tenant độc lập
+      │
+      └─ B → (2) oracle gần như bắt buộc cho claim visual
+              (4) thứ tự text/shape → chart
+              (3) EMF convert chỉ là phụ, không thay G5
+              (5) vẫn độc lập (auth ≠ fidelity)
+```
+
+| Nếu bạn chốt… | Roadmap gọn |
+| --- | --- |
+| **A + không oracle + single-tenant** | Residual review + UX import report + (tuỳ) EMF opt-in an toàn |
+| **A + EMF convert** | Như trên + env allowlist converter |
+| **B + có oracle** | P0-4 goldens → package-first G0→G1→G2→G4 (text) → chart sau |
+| **B + không oracle** | Vẫn làm G2 edited package; **không** claim 1:1 visual |
+| **SaaS multi-tenant** | Plan auth/quota **tách** khỏi fidelity |
+
+---
+
+## Gợi ý trả lời nhanh (template)
+
+Bạn có thể trả lời ngắn kiểu:
+
+1. **Claim:** A / B / A ship trước rồi B  
+2. **Oracle:** có máy + PPT + reviewer / không  
+3. **EMF:** placeholder / opt-in convert (có harden env)  
+4. **Native ưu tiên:** text-shape / chart / cả hai sau G2  
+5. **Deploy:** self-host only / sẽ SaaS (cần auth job)
+
+Khi có 5 dòng đó, có thể lập plan cook cụ thể mà không mơ hồ “import đã xong chưa”.
+
+Nếu bạn muốn, ở tin nhắn sau bạn chỉ cần chọn từng mục (A/B, có/không oracle, …) — tôi map thành backlog ưu tiên 1 trang, vẫn ở mức advice, chưa implement.

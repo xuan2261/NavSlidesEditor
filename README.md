@@ -6,6 +6,104 @@ A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revea
 
 Current release: **v1.15.7** — improved PPTX export fidelity, editor/live-session resilience, and CI coverage.
 
+<p align="center">
+  <img src="website/public/img/editor-empty.png" alt="NavSlides Editor workspace with the ribbon, slide navigator, canvas, and properties panel" width="100%">
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#visual-tour">Visual tour</a> ·
+  <a href="#documentation">Documentation</a> ·
+  <a href="#features">Features</a>
+</p>
+
+## Quick start
+
+### Docker (recommended for servers)
+
+Requires Docker 20.10+ and Docker Compose v2+.
+
+```bash
+git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor
+docker compose up -d
+```
+
+Open `http://localhost:3002`. Use `docker compose logs -f` to inspect the
+service, or `docker compose up -d --build` after pulling updates.
+
+### Desktop app
+
+Download the pre-built Windows package from
+[Releases](https://github.com/xuan2261/NavSlidesEditor/releases). Linux and
+macOS packages can be built locally with Node.js 20+:
+
+```bash
+git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
+npm run electron:build:linux   # .AppImage + .deb
+npm run electron:build:mac     # .zip
+npm run electron:build:win     # .exe
+npm run electron:dev           # development mode
+```
+
+Desktop data is stored under `~/.config/NavSlides Editor/` on Linux,
+`~/Library/Application Support/NavSlides Editor/` on macOS, and
+`%APPDATA%/NavSlides Editor/` on Windows.
+
+### Node.js from source
+
+Requires Node.js 20+ and npm 8+.
+
+```bash
+git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
+npm run dev
+```
+
+Development uses Vite on `http://localhost:5173` and the Express API on port
+`3002`. For a production-style local run:
+
+```bash
+npm run build
+npm start
+```
+
+### Create your first deck
+
+1. Open the dashboard and select **New Presentation**.
+2. Start with a blank deck or choose a template.
+3. Click a text element to edit it; use the **Home** and contextual **Format** tabs for styling.
+4. Add slides or content from the **Insert** tab. Changes auto-save after a short delay.
+5. Select **Present**, **Share**, or **File → Export** when the deck is ready.
+
+## Visual tour
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="website/public/img/home-dashboard.png" alt="NavSlides Editor dashboard with presentations, templates, and import actions">
+      <br><sub><strong>Dashboard:</strong> create, import, organize, and reopen presentations.</sub>
+    </td>
+    <td width="50%">
+      <img src="website/public/img/editor-chart-element.png" alt="A bar chart being edited in NavSlides Editor">
+      <br><sub><strong>Visual editing:</strong> work with charts, themes, slide settings, and speaker notes in one workspace.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <img src="website/public/img/editor-code-element.png" alt="A syntax-highlighted JavaScript code block in NavSlides Editor">
+      <br><sub><strong>Technical content:</strong> combine syntax-highlighted code, LaTeX, TikZ, tables, media, and diagrams with ordinary slide content.</sub>
+    </td>
+  </tr>
+</table>
+
+## Documentation
+
+| Resource | English | Tiếng Việt |
+| --- | --- | --- |
+| Get started | [Getting Started](https://xuan2261.github.io/NavSlidesEditor/guide/getting-started) | [Bắt đầu](https://xuan2261.github.io/NavSlidesEditor/vi/guide/getting-started) |
+| Installation | [Installation Guide](https://xuan2261.github.io/NavSlidesEditor/guide/installation) | [Hướng dẫn cài đặt](https://xuan2261.github.io/NavSlidesEditor/vi/guide/installation) |
+| First deck | [First Presentation Tutorial](https://xuan2261.github.io/NavSlidesEditor/tutorials/first-presentation) | [Bài trình chiếu đầu tiên](https://xuan2261.github.io/NavSlidesEditor/vi/tutorials/first-presentation) |
+| Shortcuts | [Keyboard Shortcuts](https://xuan2261.github.io/NavSlidesEditor/guide/keyboard-shortcuts) | [Phím tắt](https://xuan2261.github.io/NavSlidesEditor/vi/guide/keyboard-shortcuts) |
+
 ## Features
 
 ### Editing
@@ -77,46 +175,6 @@ rclone-based sync to Proton Drive or any rclone-supported provider (Google Drive
 ### Version History
 
 Named snapshots saved per presentation, restore any previous version, delete individual snapshots.
-
----
-
-## Installation
-
-### Option A — Desktop App (Electron)
-
-Run as a native desktop app (no server, no Docker). Download pre-built Windows packages from [Releases](https://github.com/xuan2261/NavSlidesEditor/releases). The current GitHub release workflow publishes Windows artifacts automatically; Linux/macOS packages can still be built locally with the scripts below (requires **Node.js 20+**):
-
-```bash
-git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
-npm run electron:build:linux   # → .AppImage + .deb
-npm run electron:build:mac     # → .zip
-npm run electron:build:win     # → .exe
-npm run electron:dev           # dev mode (no package)
-```
-
-Data stored at: Linux `~/.config/NavSlides Editor/`, macOS `~/Library/Application Support/NavSlides Editor/`, Windows `%APPDATA%/NavSlides Editor/`.
-
-### Option B — Docker (recommended for servers)
-
-Requires Docker 20.10+ and Docker Compose v2+.
-
-```bash
-git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor
-docker compose up -d
-```
-
-Opens at `http://localhost:3002`. Use `docker compose logs -f`, `docker compose down`, `docker compose up -d --build` to rebuild. Edit `docker-compose.yml` port mapping for a custom port.
-
-### Option C — Node.js from source
-
-Requires **Node.js 20+** and npm 8+.
-
-```bash
-git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
-npm run dev          # Vite dev (5173) + Express API (3002) concurrently
-npm run build && npm start   # production: builds React, serves on port 3002
-PORT=8080 npm start  # custom port
-```
 
 ## Data & Persistence
 
