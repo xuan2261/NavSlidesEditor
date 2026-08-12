@@ -164,7 +164,8 @@ function getPluginRuntimeInitScript() {
       });`
 }
 
-function generateRevealHTML(presentation) {
+function generateRevealHTML(presentation, options = {}) {
+  const includeSpeakerNotes = options.includeSpeakerNotes !== false
   const presentationTransition = normalizeTransition(presentation.transition, 'slide')
   const transitionSpeed = normalizeTransitionSpeed(presentation.transitionSpeed)
   const transitionSpeedConfig =
@@ -215,7 +216,7 @@ function generateRevealHTML(presentation) {
           : ''
       const autoAnimateAttr = slide.autoAnimate ? ' data-auto-animate' : ''
       const transitionAttrs = getSlideTransitionAttrs(slide)
-      const slideNotes = getSlideNotes(slide)
+      const slideNotes = includeSpeakerNotes ? getSlideNotes(slide) : ''
       const notes = slideNotes ? `<aside class="notes">${escapeHtml(slideNotes)}</aside>` : ''
 
       const elementsHtml = renderSlideElements(slide, {
@@ -276,7 +277,7 @@ function generateRevealHTML(presentation) {
             const childFxCanvas = getFxCanvasHtml(child.background)
             const childAutoAnimate = child.autoAnimate ? ' data-auto-animate' : ''
             const childTransitionAttrs = getSlideTransitionAttrs(child)
-            const childNotesText = getSlideNotes(child)
+            const childNotesText = includeSpeakerNotes ? getSlideNotes(child) : ''
             const childNotes = childNotesText
               ? `<aside class="notes">${escapeHtml(childNotesText)}</aside>`
               : ''

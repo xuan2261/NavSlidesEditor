@@ -228,20 +228,25 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 
 ### Live Protocol
 
-- Room roles are `presenter`, `controller`, and `viewer`.
-- Presenter join requires a server-issued `presenterToken` tied to the room.
-- Remote control and speaker surfaces join as `controller`, not `presenter`.
-- `control-navigate` is sent from a controller to the presenter, then the
-  presenter broadcasts `navigate` and `sync-state` to other clients.
+- Room roles are `presenter`, `remote`, `speaker`, and `viewer`; privileged
+  capabilities are issued per role and stored server-side only as hashes.
+- Presenter join requires a server-issued presenter capability tied to the room.
+- Remote and speaker surfaces join with their own fragment capability; the
+  fragment is held in browser memory and is never sent as an HTTP URL token.
+- Capability-bearing REST calls use an `Authorization: Bearer` header.
+- `control-navigate` is sent from a remote to the presenter, then the presenter
+  broadcasts `navigate` and `sync-state` to other clients.
 - Live state is `{ slideIndex, verticalIndex, fragmentIndex }`.
-- `presentation-meta` carries slide labels, slide count, and notes for the
-  controller UI.
-- Viewer count excludes controllers.
+- `presentation-meta` carries slide labels, slide count, and notes only to roles
+  that require them; viewer payloads are notes-free.
+- Viewer count excludes privileged clients.
 - Asynchronous presentation payloads are fenced by room object identity, a
   monotonic presentation generation, the expected deck ID, and the active
   presenter before they are emitted. A delayed lookup cannot overwrite a newer
   deck intent or a recreated room with the same code.
-- Room annotations and timers live in memory; a restart clears live room state even though presentation JSON persists. Orphaned rooms are cleaned up after presenter teardown so idle live sessions do not grow without bound.
+- Room annotations and timers live in memory; a restart clears live room state
+  even though presentation JSON persists. Orphaned rooms are cleaned up after
+  presenter teardown so idle live sessions do not grow without bound.
 
 ### Game Authority
 
@@ -583,6 +588,11 @@ diverge:
 
 - No authentication is built into the app.
 - Zod validates all mutation requests.
+- Upload SVGs are sanitized at ingestion and again at the `/uploads` serving
+  boundary so legacy files fail closed; responses use sandbox CSP, `nosniff`,
+  and same-origin resource policy headers.
+- PPTX imports perform ZIP structure, entry-count, declared-size, bounded
+  streamed-byte, and CRC32 checks before mapping package parts.
 - Content safety is targeted: text/markdown/svg/shape-text surfaces are
   sanitized or escaped.
 - HTML embed remains trusted programmable content by product policy; script

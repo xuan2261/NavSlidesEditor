@@ -6,7 +6,9 @@ progress: '77/244 phase checklist items closed (31.6%); 0/6 claim gates closed; 
 priority: P1
 branch: 'master'
 tags: [deep, tdd, pptx, package-first, officecli, ooxml, roundtrip, fidelity]
-blockedBy: [260722-1630-pptx-import-p0-readiness-remediation-deep-tdd]
+blockedBy:
+  - 260722-1630-pptx-import-p0-readiness-remediation-deep-tdd
+  - 260810-0921-verified-production-readiness-remediation-deep-tdd
 blocks: []
 related: [260724-1444-pptx-import-p1-p3-readiness-remediation-deep-tdd]
 # Note: P1+ plan owns sole-writer outbox, durable import report, job lifecycle abort, crash suite.
@@ -414,7 +416,11 @@ incrementally. Any local PowerPoint probe is diagnostic only.
   harness patterns; this plan owns PPTX artifact absence and capability assertions.
 - `260609-0830-element-control-functional-fixes-tdd`: preserve reconstructed-export
   wording; reconcile its stale plan status separately.
-- No whole-plan `blockedBy` edge is added because unrelated phases remain executable.
+- `260810-0921-verified-production-readiness-remediation-deep-tdd` is a
+  user-approved whole-plan blocker. It owns the shared archive guard,
+  compatibility receipt/compensation, and durable imported-media contracts.
+  Resume package-first implementation only after that plan's final gate releases
+  this dependency; do not implement competing versions of those contracts here.
 
 ## Repository Validation Baseline
 

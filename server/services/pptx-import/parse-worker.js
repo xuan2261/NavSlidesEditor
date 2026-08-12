@@ -8,11 +8,12 @@ function toArrayBuffer(buffer) {
   return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
 }
 
-async function parseFile(filePath, originalName) {
-  const validated = await validatePptxPackage(filePath, originalName)
+async function parseFile(filePath, originalName, signal) {
+  const validated = await validatePptxPackage(filePath, originalName, { signal })
   const { parse } = require('pptxtojson/dist/index.cjs')
   const pkg = require('pptxtojson/package.json')
-  const buffer = await fs.readFile(filePath)
+  const buffer = await fs.readFile(filePath, signal ? { signal } : undefined)
+  signal?.throwIfAborted?.()
   sendProgress('parsing', 5, 'Reading PPTX archive')
   let heartbeatPercent = 10
   const heartbeat = setInterval(() => {
@@ -26,6 +27,7 @@ async function parseFile(filePath, originalName) {
       videoMode: 'blob',
       audioMode: 'blob',
     })
+    signal?.throwIfAborted?.()
   } finally {
     clearInterval(heartbeat)
   }
@@ -45,13 +47,20 @@ async function parseFile(filePath, originalName) {
   }
 }
 
-function sendProgress(stage, percent, message) {
-  process.send?.({ type: 'progress', stage, percent, message })
-}
+let activeAbortController = null
 
-async function handleMessage({ filePath, originalName }) {
+async function handleMessage(message) {
+  if (message?.type === 'abort') {
+    activeAbortController?.abort()
+    process.send?.({ type: 'abort-ack' })
+    return
+  }
+
+  const controller = new AbortController()
+  activeAbortController = controller
+  const { filePath, originalName } = message || {}
   try {
-    const result = await parseFile(filePath, originalName || filePath)
+    const result = await parseFile(filePath, originalName || filePath, controller.signal)
     assertUsableParserOutput(result.output)
     process.send?.(result)
   } catch (err) {
@@ -63,7 +72,13 @@ async function handleMessage({ filePath, originalName }) {
         status: Number.isInteger(err?.status) ? err.status : undefined,
       },
     })
+  } finally {
+    if (activeAbortController === controller) activeAbortController = null
   }
+}
+
+function sendProgress(stage, percent, message) {
+  process.send?.({ type: 'progress', stage, percent, message })
 }
 
 if (require.main === module) {

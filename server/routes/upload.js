@@ -76,20 +76,14 @@ router.post('/', upload.single('file'), async (req, res) => {
     // file-type can't detect some formats (SVG, text) — fall back to extension check (already passed)
   }
 
-  // SVG content sniff: file-type cannot detect SVG, so a non-SVG payload renamed to
-  // .svg would pass on extension alone. Require it to actually look like SVG/XML.
   if (path.extname(req.file.path).toLowerCase() === '.svg') {
     try {
-      const head = (await fs.readFile(req.file.path, 'utf-8')).slice(0, 2048)
-      // Must contain an <svg> root (optionally preceded by an XML prolog / comments).
-      const looksLikeSvg = /<svg[\s>]/i.test(head)
-      if (!looksLikeSvg) {
-        await fs.unlink(req.file.path).catch(() => {})
-        return res.status(400).json({ error: 'File content is not valid SVG' })
-      }
-    } catch {
+      const { sanitizeSvgFile } = require('../services/svg-upload-sanitizer')
+      const sanitized = await sanitizeSvgFile(req.file.path)
+      await fs.writeFile(req.file.path, sanitized)
+    } catch (error) {
       await fs.unlink(req.file.path).catch(() => {})
-      return res.status(400).json({ error: 'Unable to read uploaded file' })
+      return res.status(400).json({ error: error.code || 'invalid-svg' })
     }
   }
 

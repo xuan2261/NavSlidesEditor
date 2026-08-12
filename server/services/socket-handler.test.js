@@ -412,8 +412,9 @@ describe('socket-handler', () => {
     resolveDeckA(deckA)
     await viewerJoin
 
-    expect(viewer.emitted.filter((event) => event.event === 'presentation-data')).toHaveLength(0)
-    expect(viewer.emitted.filter((event) => event.event === 'presentation-meta')).toHaveLength(0)
+    const viewerPayloads = viewer.emitted.filter((event) => event.event === 'presentation-data')
+    expect(viewerPayloads).toHaveLength(1)
+    expect(viewerPayloads[0].payload).toBeTruthy()
     expect(liveRooms.getRoomState('ROOM41')).toMatchObject({ presentationId: 'deck-b' })
   })
 

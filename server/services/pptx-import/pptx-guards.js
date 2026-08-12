@@ -1,5 +1,4 @@
 const fs = require('fs-extra')
-const nodeFs = require('fs').promises
 const path = require('path')
 const JSZip = require('jszip')
 const {
@@ -10,12 +9,12 @@ const {
 } = require('./constants')
 const { PptxImportError } = require('./diagnostics')
 const { parseRawEntries } = require('./package-store/raw-zip')
+const { createCrc32 } = require('./crc32')
 const { PackageSafetyError, createXmlSafetyBudget, isXmlPart, readLimit } = require('./xml-safety')
 
 /**
- * Import CRC integrity policy (fail-closed).
- * Declared ZIP CRC must match inflated payload for non-encrypted entries.
- * Enforced via JSZip checkCRC32 on package load; corpus probe 2026-07-24: 0/11 false positives.
+ * Declared ZIP CRC is checked against the bounded inflated payload.
+ * Resource preflight runs before JSZip indexing or inflation.
  * Do not default to silent warn-only success for CRC failures.
  */
 const IMPORT_CRC_POLICY = Object.freeze({
@@ -35,11 +34,16 @@ function isCrcMismatchError(error) {
   return /crc32\s*mismatch/i.test(message) || /corrupted zip\s*:\s*crc/i.test(message)
 }
 
-function streamBoundedZipEntry(entry, { perEntryCap, remainingBudget, signal, overflowError }, collect) {
+function streamBoundedZipEntry(
+  entry,
+  { perEntryCap, remainingBudget, signal, overflowError, expectedCrc32 },
+  collect
+) {
   return new Promise((resolve, reject) => {
     let count = 0
     let settled = false
     const chunks = []
+    const crc = createCrc32()
     const stream = entry.nodeStream('nodebuffer')
     const onAbort = () => {
       if (settled) return
@@ -62,11 +66,18 @@ function streamBoundedZipEntry(entry, { perEntryCap, remainingBudget, signal, ov
       } else if (count > remainingBudget) {
         stream.destroy?.()
         finish(new PptxImportError('PPTX package exceeds decompression budget', { status: 413 }))
-      } else if (collect) {
-        chunks.push(Buffer.from(chunk))
+      } else {
+        crc.update(chunk)
+        if (collect) chunks.push(Buffer.from(chunk))
       }
     })
-    stream.on('end', () => finish(null, collect ? Buffer.concat(chunks, count) : count))
+    stream.on('end', () => {
+      if (expectedCrc32 != null && crc.digest() !== Number.parseInt(String(expectedCrc32), 16)) {
+        finish(new PackageSafetyError(IMPORT_CRC_POLICY.errorCode, 'PPTX package entry CRC32 mismatch', 400))
+        return
+      }
+      finish(null, collect ? Buffer.concat(chunks, count) : count)
+    })
     stream.on('error', (error) => finish(new PptxImportError('Uploaded file is not a readable ZIP package', {
       status: 400, type: FAILURE_TYPES.parseFailed, cause: error,
     })))
@@ -113,45 +124,38 @@ async function validatePptxPackage(filePath, originalName = filePath, limits = {
   if (stat.size > maxFileBytes) {
     throw new PptxImportError('PPTX file exceeds 100MB limit', { status: 413 })
   }
-  const signature = Buffer.alloc(4)
-  const fd = await nodeFs.open(filePath, 'r')
-  try {
-    await fd.read(signature, 0, 4, 0)
-  } finally {
-    await fd.close()
-  }
-  signal?.throwIfAborted?.()
-  if (!signature.equals(Buffer.from([0x50, 0x4b, 0x03, 0x04]))) {
-    throw new PptxImportError('Uploaded file is not a ZIP package', { status: 400 })
-  }
-
   let bytes
   let zip
+  let rawEntries
   try {
     bytes = await fs.readFile(filePath)
     signal?.throwIfAborted?.()
-    zip = await JSZip.loadAsync(bytes, { checkCRC32: IMPORT_CRC_POLICY.checkCRC32 })
-    signal?.throwIfAborted?.()
+    if (!bytes.subarray(0, 4).equals(Buffer.from([0x50, 0x4b, 0x03, 0x04]))) {
+      throw new PptxImportError('Uploaded file is not a ZIP package', { status: 400 })
+    }
+    rawEntries = parseSafeRawEntries(bytes)
   } catch (error) {
     if (signal?.aborted) throw error
-    if (isCrcMismatchError(error)) {
-      throw new PackageSafetyError(
-        IMPORT_CRC_POLICY.errorCode,
-        'PPTX package entry CRC32 mismatch',
-        400,
-      )
-    }
-    throw new PptxImportError('Uploaded file is not a readable ZIP package', {
-      status: 400, type: FAILURE_TYPES.parseFailed,
+    if (error instanceof PptxImportError) throw error
+    throw new PptxImportError('Uploaded file has unsafe ZIP structure', {
+      status: 400, type: FAILURE_TYPES.parseFailed, cause: error,
     })
   }
-  const rawEntries = parseSafeRawEntries(bytes)
   if (rawEntries.length > maxZipEntries) {
     throw new PptxImportError('PPTX package has too many ZIP entries', { status: 413 })
   }
   const declaredBytes = rawEntries.reduce((sum, entry) => sum + entry.uncompressedSize, 0)
   if (declaredBytes > maxDecompressedBytes) {
     throw new PptxImportError('PPTX package exceeds decompression budget', { status: 413 })
+  }
+  try {
+    zip = await JSZip.loadAsync(bytes, { checkCRC32: false })
+    signal?.throwIfAborted?.()
+  } catch (error) {
+    if (signal?.aborted) throw error
+    throw new PptxImportError('Uploaded file is not a readable ZIP package', {
+      status: 400, type: FAILURE_TYPES.parseFailed, cause: error,
+    })
   }
 
   let measuredBytes = 0
@@ -165,6 +169,7 @@ async function validatePptxPackage(filePath, originalName = filePath, limits = {
         perEntryCap: Math.min(maxDecompressedBytes, xmlBudget.limits.maxXmlBytes),
         remainingBudget,
         signal,
+        expectedCrc32: raw.crc32,
         overflowError: () =>
           new PackageSafetyError('xml-byte-budget-exceeded', `XML byte budget exceeded in ${raw.name}`, 413),
       })
@@ -175,6 +180,7 @@ async function validatePptxPackage(filePath, originalName = filePath, limits = {
         perEntryCap: maxDecompressedBytes,
         remainingBudget,
         signal,
+        expectedCrc32: raw.crc32,
       })
     }
   }

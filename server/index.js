@@ -25,6 +25,8 @@ const {
   shutdownPackageStore,
 } = require('./services/pptx-import/package-store-runtime')
 const { stripControlChars } = require('./utils/strip-control-chars')
+const { resolveListenHost, getExposureWarning } = require('./services/listen-host-policy')
+const { sanitizeSvgBuffer } = require('./services/svg-upload-sanitizer')
 
 /**
  * A store that fails to release is exactly what leaves the writer lock held and
@@ -116,11 +118,36 @@ const shareLimiter = rateLimit({
 })
 app.use('/share/', shareLimiter)
 
-// Ensure correct MIME-type for wasm
-express.static.mime.define({ 'application/wasm': ['wasm'] })
-
-app.use('/uploads', express.static(UPLOADS_DIR))
 const socketIoClientDist = path.join(__dirname, '..', 'node_modules', 'socket.io-client', 'dist')
+// Uploaded SVG is untrusted as a navigable document, including legacy files.
+app.use('/uploads', async (req, res, next) => {
+  if (path.extname(req.path).toLowerCase() !== '.svg') return next()
+  let requestedPath
+  try {
+    requestedPath = decodeURIComponent(req.path)
+  } catch {
+    return res.status(400).json({ error: 'Invalid upload path' })
+  }
+  const uploadsRoot = path.resolve(UPLOADS_DIR)
+  const filePath = path.resolve(uploadsRoot, requestedPath.replace(/^[/\\]+/, ''))
+  if (!filePath.startsWith(`${uploadsRoot}${path.sep}`)) {
+    return res.status(400).json({ error: 'Invalid upload path' })
+  }
+  try {
+    const sanitized = sanitizeSvgBuffer(await fs.readFile(filePath))
+    res.set({
+      'Content-Type': 'image/svg+xml; charset=utf-8',
+      'Content-Security-Policy': "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'",
+      'X-Content-Type-Options': 'nosniff',
+      'Cross-Origin-Resource-Policy': 'same-origin',
+    })
+    return res.send(sanitized)
+  } catch (error) {
+    if (error?.code === 'ENOENT') return next()
+    return res.status(404).json({ error: 'SVG is unavailable' })
+  }
+})
+app.use('/uploads', express.static(UPLOADS_DIR))
 if (fs.existsSync(socketIoClientDist)) {
   app.use('/vendor/socket.io', express.static(socketIoClientDist))
 }
@@ -339,8 +366,14 @@ if (process.env.NODE_ENV === 'production') {
 app.use(errorHandler)
 
 // ── Server start ─────────────────────────────────────────────────────────────
-async function startServer(port) {
+async function startServer(port, options = {}) {
   const p = port ?? PORT
+  const listenHost = resolveListenHost({
+    explicitHost: options.host,
+    envHost: process.env.NAVSLIDES_LISTEN_HOST,
+  })
+  const exposureWarning = getExposureWarning(listenHost)
+  if (exposureWarning) console.warn(JSON.stringify(exposureWarning))
   await initializePackageStore({ rootDir: path.resolve(DATA_DIR) })
   return new Promise((resolve, reject) => {
     const server = http.createServer(app)
@@ -352,16 +385,18 @@ async function startServer(port) {
       reject(error)
     })
 
-    // Attach Socket.IO
     const corsOptions = process.env.NODE_ENV === 'production' ? { origin: false } : { origin: '*' }
     const io = new Server(server, { cors: corsOptions, path: '/ws' })
     app.set('io', io)
-
     setupSocketHandlers(io)
     setupGameSocketHandlers(io)
 
-    server.listen(p, () => {
-      console.log(`Server running on http://localhost:${p}`)
+    server.listen(p, listenHost, () => {
+      const address = server.address()
+      const actualAddress = typeof address === 'object' && address
+        ? `${address.address}:${address.port}`
+        : String(address)
+      console.log(`Server running on http://${actualAddress}`)
       resolve(server)
     })
   })

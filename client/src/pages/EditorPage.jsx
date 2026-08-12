@@ -488,6 +488,8 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const {
     currentLiveRoomCode,
     currentLivePresenterToken,
+    currentLiveRemoteToken,
+    currentLiveSpeakerToken,
     emitGameShortcutAction,
     handlePresenterWindowOpened,
     handleStartLive,
@@ -634,6 +636,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         updateElement, currentGameType, showGameHud, setShowGameHud, showGameLeaderboard,
         setShowGameLeaderboard, gameLeaderboardScores, selectedElementId, commands,
         liveRoomCode: currentLiveRoomCode, livePresenterToken: currentLivePresenterToken,
+        liveRemoteToken: currentLiveRemoteToken, liveSpeakerToken: currentLiveSpeakerToken,
         onPresenterWindowOpened: handlePresenterWindowOpened, galleryPreviewTemplate, setGalleryPreviewTemplate, addSlide, addImageElement,
         insertEmbedHtml, handleInsertFromFileBrowser, onCreatePresentation, onAICopywriterApply,
         onApplyTranslations, insertMediaElement, saveConflict, clearSaveConflict,

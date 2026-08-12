@@ -1,13 +1,12 @@
-// Room = presentationId or room code
-// Roles: presenter (1 per room), controller (remote/speaker), viewer (many)
+// Live rooms keep only hashed bearer capabilities. Raw capabilities are returned
+// once by room creation and are never retained in room state.
 const crypto = require('crypto')
 
-const rooms = new Map() // roomId -> { presenterId, presenterTokenHash, controllers, viewers, ... }
-const socketToRoom = new Map() // socketId -> roomId
-const socketRoles = new Map() // socketId -> role
+const rooms = new Map()
+const socketToRoom = new Map()
+const socketRoles = new Map()
+const LIVE_ROLES = new Set(['presenter', 'speaker', 'remote', 'viewer'])
 
-// Grace window before an orphaned room (presenter gone, no viewers or controllers) is reaped.
-// Mirrors the game-room TTL pattern. Overridable for fast tests.
 const DEFAULT_LIVE_ROOM_TTL_MS = 60 * 1000
 const DEFAULT_PRESENTER_GRACE_MS = 5 * 1000
 let liveRoomTtlMs = DEFAULT_LIVE_ROOM_TTL_MS
@@ -17,27 +16,60 @@ function hashToken(token) {
   return crypto.createHash('sha256').update(String(token || '')).digest('hex')
 }
 
-function createPresenterToken() {
+function createCapability() {
   return crypto.randomBytes(24).toString('base64url')
 }
 
-function createRoom(presenterToken, presenterId = null) {
+function createLiveCapabilities() {
   return {
+    presenterToken: createCapability(),
+    remoteToken: createCapability(),
+    speakerToken: createCapability(),
+  }
+}
+
+function createPresenterToken() {
+  return createCapability()
+}
+
+function normalizeCapabilities(input) {
+  if (input && typeof input === 'object') {
+    return {
+      presenterToken: input.presenterToken || createCapability(),
+      remoteToken: input.remoteToken || createCapability(),
+      speakerToken: input.speakerToken || createCapability(),
+    }
+  }
+  return {
+    presenterToken: input || createCapability(),
+    remoteToken: createCapability(),
+    speakerToken: createCapability(),
+  }
+}
+
+function createRoom(capabilities, presenterId = null) {
+  const tokens = normalizeCapabilities(capabilities)
+  const room = {
     presenterId,
     presenterConnected: false,
-    presenterTokenHash: hashToken(presenterToken),
-    controllers: [],
+    presenterTokenHash: hashToken(tokens.presenterToken),
+    remoteTokenHash: hashToken(tokens.remoteToken),
+    speakerTokenHash: hashToken(tokens.speakerToken),
+    remotes: [],
+    speakers: [],
     viewers: [],
     presentationId: null,
     presentationGeneration: 0,
     state: { slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 },
-    annotations: {},    // slideIndex -> Annotation[]
-    timers: {},         // elementId -> TimerState
-    timerTimeouts: {},  // elementId -> setTimeout ID
-    cleanupTimer: null, // pending orphaned-room reap handle
+    annotations: {},
+    timers: {},
+    timerTimeouts: {},
+    cleanupTimer: null,
     presenterTerminationTimer: null,
     presenterTerminationHandler: null,
   }
+  room.controllers = room.remotes
+  return room
 }
 
 function generateRoomCode() {
@@ -57,58 +89,61 @@ function getAnnotationKey(slideIndex, verticalIndex = 0) {
   return Number(verticalIndex) ? `${slideIndex}:${verticalIndex}` : String(slideIndex)
 }
 
-function isValidPresenterToken(room, presenterToken) {
-  if (!room || !presenterToken) return false
-  return room.presenterTokenHash === hashToken(presenterToken)
+function isValidCapability(room, role, capability) {
+  if (!room || !capability || !LIVE_ROLES.has(role)) return false
+  const hashName = role === 'presenter' ? 'presenterTokenHash' : `${role}TokenHash`
+  const expected = room[hashName]
+  const actual = hashToken(capability)
+  return Boolean(expected && crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(actual)))
 }
 
-// Pre-register a room (before presenter connects via Socket.IO)
-function registerRoom(roomId, presenterToken) {
-  if (!rooms.has(roomId)) {
-    const room = createRoom(presenterToken)
-    rooms.set(roomId, room)
-    maybeScheduleRoomCleanup(roomId, room)
-  }
+function isValidPresenterToken(room, token) {
+  return isValidCapability(room, 'presenter', token)
 }
 
-function joinRoom(roomId, socketId, role, options = {}) {
-  const { presenterToken } = options
+function registerRoom(roomId, capabilities) {
+  if (rooms.has(roomId)) return
+  const room = createRoom(capabilities)
+  room.legacyRoleAliases = typeof capabilities === 'string'
+  rooms.set(roomId, room)
+  maybeScheduleRoomCleanup(roomId, room)
+}
+
+function roleMembers(room, role) {
+  const effectiveRole = role === 'controller' ? 'remote' : role
+  if (effectiveRole === 'remote') return room.remotes
+  if (effectiveRole === 'speaker') return room.speakers
+  if (effectiveRole === 'viewer') return room.viewers
+  return null
+}
+function joinRoom(roomId, socketId, requestedRole, options = {}) {
+  const capability = options.capability || options.presenterToken
   const room = rooms.get(roomId)
+  const legacyController = requestedRole === 'controller' && room?.legacyRoleAliases
+  const role = legacyController ? 'remote' : requestedRole
   const previousRoomId = socketToRoom.get(socketId)
   if (previousRoomId && previousRoomId !== roomId) {
     return { ok: false, error: 'already-joined-room' }
   }
+  if (!LIVE_ROLES.has(role)) return { ok: false, error: 'invalid-role' }
+  if (!room) return { ok: false, error: 'room-not-found' }
 
+  if (role !== 'viewer' && !legacyController && !isValidCapability(room, role, capability)) {
+    return { ok: false, error: `invalid-${role}-token` }
+  }
   if (role === 'presenter') {
-    if (!room) {
-      return { ok: false, error: 'room-not-found' }
-    }
-    if (!isValidPresenterToken(room, presenterToken)) {
-      return { ok: false, error: 'invalid-presenter-token' }
-    }
     cancelPresenterTermination(room)
     room.presentationGeneration += 1
     room.presenterId = socketId
     room.presenterConnected = true
-  } else if (role === 'controller') {
-    if (!room) {
-      return { ok: false, error: 'room-not-found' }
-    }
-    if (!room.controllers.includes(socketId)) {
-      room.controllers.push(socketId)
-    }
   } else {
-    // Viewer — allow joining pre-registered rooms even without presenter
-    if (!room) return { ok: false, error: 'room-not-found' }
-    if (!room.viewers.includes(socketId)) {
-      room.viewers.push(socketId)
-    }
+    const members = roleMembers(room, role)
+    if (!members.includes(socketId)) members.push(socketId)
   }
-  // Joins cancel only orphan cleanup. Presenter joins also cancel terminal
-  // disconnect handling; viewer/controller joins cannot extend presenter grace.
+
   cancelRoomCleanup(room)
   socketToRoom.set(socketId, roomId)
-  socketRoles.set(socketId, role)
+  socketRoles.set(socketId, legacyController ? 'controller' : role)
   return { ok: true }
 }
 
@@ -140,19 +175,30 @@ function leaveRoom(socketId, options = {}) {
     return { roomId, role: 'stale-presenter' }
   }
 
-  room.viewers = room.viewers.filter((id) => id !== socketId)
-  room.controllers = room.controllers.filter((id) => id !== socketId)
+  const members = roleMembers(room, role)
+  if (members) {
+    const index = members.indexOf(socketId)
+    if (index >= 0) members.splice(index, 1)
+  }
   maybeScheduleRoomCleanup(roomId, room)
   return { roomId, role: role || 'viewer' }
 }
 
-// Arm a grace-window reap when a room is orphaned (no presenter, viewers, or controllers).
-// A (re)join within the window cancels it via cancelRoomCleanup. In-memory only —
-// annotations are NOT flushed to storage on cleanup.
+function hasRole(roomId, socketId, roles) {
+  const room = rooms.get(roomId)
+  const role = socketRoles.get(socketId)
+  const effectiveRole = role === 'controller' && room?.legacyRoleAliases ? 'remote' : role
+  if (!room || !effectiveRole || !roles.includes(effectiveRole)) return false
+  if (effectiveRole === 'presenter') return room.presenterId === socketId
+  return roleMembers(room, effectiveRole)?.includes(socketId) === true && Boolean(room.presenterId)
+}
+
+// Arm a grace-window reap when a room is orphaned.
 function maybeScheduleRoomCleanup(roomId, room) {
   if (!room) return
   if (room.presenterTerminationTimer) return
-  if (room.presenterId || room.viewers.length > 0 || room.controllers.length > 0) return
+  const memberCount = room.viewers.length + room.remotes.length + room.speakers.length
+  if (room.presenterId || memberCount > 0) return
   if (room.cleanupTimer) clearTimeout(room.cleanupTimer)
   room.cleanupTimer = setTimeout(() => removeRoom(roomId), liveRoomTtlMs)
 }
@@ -218,6 +264,9 @@ function removeRoom(roomId) {
 function getRoomForSocket(socketId) {
   return socketToRoom.get(socketId)
 }
+function getRoleForSocket(socketId) {
+  return socketRoles.get(socketId)
+}
 
 function updateRoomState(roomId, socketId, newState) {
   const room = rooms.get(roomId)
@@ -226,11 +275,23 @@ function updateRoomState(roomId, socketId, newState) {
   return true
 }
 
-function canControlRoom(roomId, socketId) {
+function canNavigateRoom(roomId, socketId) {
+  return hasRole(roomId, socketId, ['presenter', 'speaker', 'remote'])
+}
+
+function canAnnotateRoom(roomId, socketId) {
   const room = rooms.get(roomId)
-  if (!room) return false
-  if (room.presenterId === socketId) return true
-  return Boolean(room.presenterId && room.controllers.includes(socketId))
+  return hasRole(roomId, socketId, ['presenter', 'speaker']) ||
+    Boolean(room?.legacyRoleAliases && hasRole(roomId, socketId, ['remote']))
+}
+
+function canControlTimer(roomId, socketId) {
+  const room = rooms.get(roomId)
+  return hasRole(roomId, socketId, ['presenter', 'speaker']) ||
+    Boolean(room?.legacyRoleAliases && hasRole(roomId, socketId, ['remote']))
+}
+function canControlRoom(roomId, socketId) {
+  return canNavigateRoom(roomId, socketId)
 }
 
 function getViewerCount(roomId) {
@@ -255,13 +316,13 @@ function _setLiveRoomTtl(ms) {
   liveRoomTtlMs = ms
 }
 
-// Test seam: control presenter reconnect grace independently from orphan cleanup.
 function _setPresenterGraceMs(ms) {
   presenterGraceMs = Math.max(0, Number(ms) || 0)
 }
 
 module.exports = {
   createPresenterToken,
+  createLiveCapabilities,
   generateRoomCode,
   registerRoom,
   joinRoom,
@@ -269,7 +330,11 @@ module.exports = {
   getRoomState,
   removeRoom,
   getRoomForSocket,
+  getRoleForSocket,
   updateRoomState,
+  canNavigateRoom,
+  canAnnotateRoom,
+  canControlTimer,
   canControlRoom,
   getViewerCount,
   isValidPresenterToken,

@@ -111,7 +111,8 @@ export function EditorPageOverlays({ c }) {
         commands={c.commands}
         liveRoomCode={c.liveRoomCode}
         livePresenterToken={c.livePresenterToken}
-        onPresenterWindowOpened={c.onPresenterWindowOpened}
+        liveRemoteToken={c.liveRemoteToken}
+        liveSpeakerToken={c.liveSpeakerToken}
         galleryPreviewTemplate={c.galleryPreviewTemplate}
         setGalleryPreviewTemplate={c.setGalleryPreviewTemplate}
         addSlide={c.addSlide}

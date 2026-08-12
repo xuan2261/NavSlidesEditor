@@ -28,8 +28,11 @@ git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor
 docker compose up -d
 ```
 
-Open `http://localhost:3002`. Use `docker compose logs -f` to inspect the
-service, or `docker compose up -d --build` after pulling updates.
+Open `http://127.0.0.1:3002` by default. Docker listens on `0.0.0.0` inside
+the container but publishes to host loopback unless `NAVSLIDES_PUBLISH_HOST`
+is set. Use `docker compose logs -f` to inspect the service, or
+`docker compose up -d --build` after pulling updates. Internet-facing
+deployments require an external authentication layer and reverse proxy.
 
 ### Desktop app
 
@@ -140,10 +143,9 @@ npm start
 ### Slides
 
 **35 layouts** across 6 categories (basic, content, layout, data, structure, ending) + 20+ full-deck templates including interactive simulations and quiz decks. Per-slide backgrounds (solid, gradient, image, **animated FX**), **first-class vertical (child) slides** — create, select, edit, and export nested slides from the slide panel — fragment animations with visual timeline editor and preview modal, per-slide page numbers, hidden slides, footer system (basic / sequence modes), and global presentation settings (auto-slide, loop, navigation modes).
-
 ### Live Presentation
 
-Broadcast to viewers via Socket.IO with a server-issued presenter token. Includes a separate **speaker view** (notes, next-slide preview, timer), **remote control** from a phone or second device, **annotation tools** (pen, laser pointer, highlighter, eraser) that sync to viewers in real time and persist per slide on rejoin, **black/white screen overlays** (`B` / `W`), shared **live timer**, and PowerPoint-style navigation (`F5`, `Home`, `End`, arrows`). Remote and speaker URLs are bearer-style room links; for multi-user or internet-facing deployments, place them behind the external authentication layer described in the security model below.
+Broadcast to viewers via Socket.IO with server-issued capabilities. Includes a separate **speaker view** (notes, next-slide preview, timer), **remote control** from a phone or second device, **annotation tools** (pen, laser pointer, highlighter, eraser) that sync to viewers in real time and persist per slide on rejoin, **black/white screen overlays** (`B` / `W`), shared **live timer**, and PowerPoint-style navigation (`F5`, `Home`, `End`, arrows`). Viewer links use `/live/:roomCode`; privileged remote/speaker links carry their capability in the URL fragment. Capability-bearing REST calls use an `Authorization: Bearer` header; URL fragments are never sent in HTTP requests. For multi-user or internet-facing deployments, place them behind the external authentication layer described in the security model below.
 
 ### Game Mode
 
@@ -162,9 +164,7 @@ AI copywriter (rewrite slide text), AI generator (full presentation drafts from 
 
 Present mode (reveal.js, press `S` for speaker notes), export HTML (CDN-backed), export offline HTML (inlined runtime assets), export PDF (one page per slide with expanded fragments), export PPTX (hybrid: editable primitives + Playwright-rasterized fallback for unsupported elements), shareable links with optional password, GitHub push with auto-generated README, Markdown import, project export/import (`.navslides` archive with manifest v1.1).
 
-### PPTX Import
-
-Dashboard imports wait for a shared import slot separately from the admitted job's bounded wait. If the final outcome cannot be confirmed, the editor asks you to check existing presentations before retrying rather than making destructive recovery. A completed package job can remain pending visibility until it is safe to open. Imported external media is blocked unless a server administrator explicitly allows its origin; EMF/WMF conversion remains off until that administrator configures its guarded policy.
+Dashboard imports wait for a shared import slot separately from the admitted job's bounded wait. ZIP structure, entry count, declared decompressed size, streamed decompressed-byte budget, and per-entry CRC32 are validated before package mapping. If the final outcome cannot be confirmed, the editor asks you to check existing presentations before retrying rather than making destructive recovery. A completed package job can remain pending visibility until it is safe to open. Imported external media is blocked unless a server administrator explicitly allows its origin; EMF/WMF conversion remains off until that administrator configures its guarded policy.
 
 The import is parser-backed application behavior, not a native PowerPoint/OfficeCLI or pixel-perfect fidelity claim. See [PPTX import lifecycle and evidence](docs/pptx-import-fidelity-report.md#current-import-lifecycle-and-evidence) and [deployment policy](docs/deployment-guide.md#pptx-import-policy).
 
@@ -191,6 +191,7 @@ Code reviews and security scans should not flag trusted author-controlled HTML/C
 Still review issues that cross a trust boundary, including:
 
 - untrusted uploads or imported files executing outside the author's intent
+- Uploaded SVG content is sanitized on upload and again at the serving boundary, including legacy files, then served with sandbox CSP, `nosniff`, and same-origin resource policy headers.
 - public share links exposing admin/editor capabilities
 - stored content from one user/session affecting another user
 - credential leakage, path traversal, SSRF, command injection, or data loss

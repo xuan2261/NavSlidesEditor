@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "skipped": false,
+  "mode": "tiny",
+  "generatedAt": "2026-08-12T03:56:29.251Z",
+  "runs": [
+    {
+      "id": "tiny-0",
+      "dimension": "tiny",
+      "target": "baseline",
+      "sha256": "212554e165d53b9c7e444cd1aaefcf331fdb6d93c96e1f6d6c9d4b51a8061277",
+      "limitsDigest": "a0fcc146c54f1f62",
+      "ok": true,
+      "errorMessage": null,
+      "wallMs": 33,
+      "stages": {
+        "parse": {
+          "durationMs": 29,
+          "peakRssBytes": 39804928
+        },
+        "revalidate": {
+          "durationMs": 4,
+          "peakRssBytes": 40202240
+        },
+        "map": {
+          "durationMs": 0,
+          "peakRssBytes": 40202240
+        }
+      },
+      "entryCount": 5,
+      "fileSize": 1378,
+      "doublePass": {
+        "parseMs": 29,
+        "revalidateMs": 4,
+        "ratio": 0.138
+      }
+    },
+    {
+      "id": "entries-50",
+      "dimension": "entries",
+      "target": 50,
+      "sha256": "2c2aa37ee41f99c45d441387eb1f4c5127885773b76710cf9de3f91608b00074",
+      "limitsDigest": "a0fcc146c54f1f62",
+      "ok": true,
+      "errorMessage": null,
+      "wallMs": 42,
+      "stages": {
+        "parse": {
+          "durationMs": 32,
+          "peakRssBytes": 41775104
+        },
+        "revalidate": {
+          "durationMs": 9,
+          "peakRssBytes": 42180608
+        },
+        "map": {
+          "durationMs": 1,
+          "peakRssBytes": 42188800
+        }
+      },
+      "entryCount": 53,
+      "fileSize": 7658,
+      "doublePass": {
+        "parseMs": 32,
+        "revalidateMs": 9,
+        "ratio": 0.281
+      }
+    }
+  ],
+  "summary": {
+    "wall": {
+      "count": 2,
+      "min": 33,
+      "max": 42,
+      "p50": 33,
+      "p95": 42
+    },
+    "stages": {
+      "parse": {
+        "count": 2,
+        "min": 29,
+        "max": 32,
+        "p50": 29,
+        "p95": 32
+      },
+      "revalidate": {
+        "count": 2,
+        "min": 4,
+        "max": 9,
+        "p50": 4,
+        "p95": 9
+      },
+      "map": {
+        "count": 2,
+        "min": 0,
+        "max": 1,
+        "p50": 0,
+        "p95": 1
+      }
+    }
+  },
+  "doublePass": {
+    "sampleCount": 2,
+    "meanRatio": 0.21,
+    "residualCost": "worker validatePptxPackage + host loadPptxArchive full revalidate"
+  },
+  "archiveReuse": {
+    "status": "deferred",
+    "keyShape": "(sha256(packageBytes), limitsDigest)",
+    "residualCost": "worker validatePptxPackage + host loadPptxArchive full revalidate",
+    "rationale": "No sustained measurable win on default tiny matrix; hash-bound inventory cache deferred to avoid unsafe skip of revalidation"
+  }
+}

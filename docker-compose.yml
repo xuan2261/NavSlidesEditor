@@ -1,8 +1,11 @@
 services:
   revealjs-editor:
     build: .
+    environment:
+      NAVSLIDES_LISTEN_HOST: 0.0.0.0
+      NAVSLIDES_PUBLISH_HOST: ${NAVSLIDES_PUBLISH_HOST:-127.0.0.1}
     ports:
-      - '3002:3002'
+      - '${NAVSLIDES_PUBLISH_HOST:-127.0.0.1}:3002:3002'
     volumes:
       - revealjs-data:/app/server/data
       - revealjs-uploads:/app/server/uploads

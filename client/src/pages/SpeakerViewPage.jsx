@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import { Clock, Home, Layers, Users } from 'lucide-react'
+import { consumeLiveCapability } from '../utils/live-capability-url'
 import { useRevealPreviewFrame } from '../hooks/use-reveal-preview-frame'
 import { useAnnotationSync } from '../hooks/use-annotation-sync.js'
 import { useKeyboard } from '../hooks/use-keyboard'
@@ -9,7 +10,6 @@ import { useKeyboard } from '../hooks/use-keyboard'
 import { AnnotationCanvas } from '../components/annotation-canvas.jsx'
 import { AnnotationToolbar } from '../components/annotation-toolbar.jsx'
 import { LiveSocketContext } from '../contexts/live-socket-context-provider.jsx'
-
 const initialState = { slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 }
 
 function formatElapsed(seconds) {
@@ -129,6 +129,11 @@ export default function SpeakerViewPage() {
   }, [])
 
   useEffect(() => {
+    const capability = consumeLiveCapability('speaker', window.location.hash)
+    if (!capability) {
+      queueMicrotask(() => setRoomNotFound(true))
+      return undefined
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset speaker state before subscribing to a new room
     setIsConnected(false)
     setHasPresenter(false)
@@ -158,7 +163,7 @@ export default function SpeakerViewPage() {
       if (!isCurrentSocket()) return
       setIsConnected(true)
       setSocket(socket)
-      socket.emit('join-room', { roomId: roomCode, role: 'controller' })
+      socket.emit('join-room', { roomId: roomCode, role: 'speaker', capability })
     })
 
     socket.on('disconnect', () => {

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import { ChevronLeft, ChevronRight, Clock, Home, Pointer, Users } from 'lucide-react'
-
+import { consumeLiveCapability } from '../utils/live-capability-url'
 const initialState = { slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 }
 
 function findFlatSlideIndex(slides, state) {
@@ -51,6 +51,11 @@ export default function RemoteControlPage() {
   }, [])
 
   useEffect(() => {
+    const capability = consumeLiveCapability('remote', window.location.hash)
+    if (!capability) {
+      queueMicrotask(() => setRoomNotFound(true))
+      return undefined
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset controller state before subscribing to a new room
     setIsConnected(false)
     setHasPresenter(false)
@@ -77,7 +82,7 @@ export default function RemoteControlPage() {
     socket.on('connect', () => {
       if (!isCurrentSocket()) return
       setIsConnected(true)
-      socket.emit('join-room', { roomId: roomCode, role: 'controller' })
+      socket.emit('join-room', { roomId: roomCode, role: 'remote', capability })
     })
 
     socket.on('disconnect', () => {

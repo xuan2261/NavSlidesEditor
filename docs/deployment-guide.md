@@ -20,7 +20,10 @@ cd NavSlidesEditor
 docker compose up -d
 ```
 
-Open `http://localhost:3002`.
+Open `http://127.0.0.1:3002` by default. The container listens on
+`0.0.0.0:3002` so Docker networking works, while the host publishes to
+`127.0.0.1` unless `NAVSLIDES_PUBLISH_HOST` is set. Publishing on a non-loopback
+host requires an external authentication layer and reverse proxy.
 
 The container:
 
@@ -30,23 +33,29 @@ The container:
   - `revealjs-data` — presentations, templates, share tokens, version history
   - `revealjs-uploads` — uploaded images, videos, audio
 
+Set `NAVSLIDES_PUBLISH_HOST=0.0.0.0` only when the deployment's proxy/firewall
+provides the required external authentication.
+
 ### docker-compose.yml
 
 ```yaml
 services:
   revealjs-editor:
     build: .
+    environment:
+      NAVSLIDES_LISTEN_HOST: 0.0.0.0
+      NAVSLIDES_PUBLISH_HOST: ${NAVSLIDES_PUBLISH_HOST:-127.0.0.1}
     ports:
-      - '3002:3002'
+      - '${NAVSLIDES_PUBLISH_HOST:-127.0.0.1}:3002:3002'
     volumes:
       - revealjs-data:/app/server/data
       - revealjs-uploads:/app/server/uploads
     restart: unless-stopped
-
 volumes:
   revealjs-data:
   revealjs-uploads:
 ```
+
 
 ### Custom Port
 
@@ -168,15 +177,13 @@ npm run electron:dev
 | macOS    | `~/Library/Application Support/NavSlides Editor/` |
 | Windows  | `%APPDATA%/NavSlides Editor/`                     |
 
-Electron sets `SLIDES_DATA_DIR` and `SLIDES_UPLOADS_DIR` to subdirectories of `app.getPath('userData')` before starting the embedded Express server.
-
----
-
 ## Environment Variables
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `PORT` | `3002` | HTTP listen port |
+| `NAVSLIDES_LISTEN_HOST` | `127.0.0.1` | Server bind host; Docker sets `0.0.0.0` inside the container |
+| `NAVSLIDES_PUBLISH_HOST` | `127.0.0.1` | Docker host-side publish address; changing it does not provide authentication |
 | `SLIDES_DATA_DIR` | `server/data/` | Directory for JSON data files |
 | `SLIDES_UPLOADS_DIR` | `server/uploads/` | Directory for uploaded files |
 | `NODE_ENV` | `development` | Set to `production` to disable Vite proxy and serve `client/dist/` |
@@ -190,7 +197,35 @@ Electron sets `SLIDES_DATA_DIR` and `SLIDES_UPLOADS_DIR` to subdirectories of `a
 
 Set via shell, `.env` file (manually), or Docker environment config.
 
+### Local mutation ingress and reverse proxy
+
+The server has no built-in user authentication. Keep browser mutation routes on
+loopback by default, or put an external authentication layer in front of any
+non-loopback deployment. The local ingress policy uses these exact-match
+settings:
+
+- `NAVSLIDES_LOCAL_ALLOWED_HOSTS` — comma-separated `host[:port]` values accepted
+  for browser mutations. When unset, `localhost`, `127.0.0.1`, and `[::1]` are
+  allowed.
+- `NAVSLIDES_LOCAL_ALLOWED_ORIGINS` — optional comma-separated canonical
+  `http(s)://host[:port]` origins. Paths, credentials, query strings, and
+  fragments are rejected.
+- `NAVSLIDES_TRUSTED_PROXY_ADDRESSES` — comma-separated proxy IP addresses.
+  `X-Forwarded-Host` and `X-Forwarded-Proto` are honored only when the direct
+  peer address is in this list; forwarded values are never trusted broadly.
+- `NAVSLIDES_ALLOW_MISSING_ORIGIN` — missing `Origin` is allowed by default to
+  preserve non-browser clients and existing integrations. Set it to `false`
+  (`0`) for an exposed deployment that requires every mutation request to carry
+  a same-origin `Origin` header.
+
+An `Origin` header, when present, must match the effective request host and
+protocol and any configured origin allowlist. These settings are a local
+deployment/CSRF boundary, not authentication or tenant isolation.
+
 ## PPTX Import Policy
+Before package mapping, PPTX import validates ZIP structure, entry count, declared
+uncompressed size, bounded streamed decompressed size, and each entry's CRC32.
+CRC or resource-budget failures are fail-closed.
 
 ### External media
 
@@ -343,5 +378,6 @@ Current baseline file:
 - The application has **no built-in authentication**. Do not expose port 3002 directly to the internet without a reverse proxy + auth layer (e.g., Nginx + HTTP Basic Auth, Authelia, Cloudflare Access).
 - GitHub tokens are stored in plaintext in `github-config.json`. Restrict filesystem access accordingly.
 - File-backed settings may contain sensitive values such as API keys or sync credentials. Do not commit or deploy those files publicly.
-- CORS is open (all origins). In a restricted environment, add a CORS origin list to `server/index.js`.
+- CORS is open in development; production disables cross-origin requests by default. Add an explicit allowlist in `server/index.js` only for a trusted deployment boundary.
 - PPTX import job capabilities and stream-log handling are documented in [PPTX Import Policy](#pptx-import-policy). Scrub or drop the SSE stream query string in proxy access logs.
+- Uploaded SVG is sanitized on upload and at the serving boundary, including legacy files, and served with sandbox CSP, `nosniff`, and same-origin resource policy headers.

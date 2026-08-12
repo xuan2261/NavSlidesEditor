@@ -13,6 +13,8 @@ export function useEditorLiveSessionController({
   const popupBridgeRef = useRef(null)
   const [liveRoomCode, setLiveRoomCode] = useState(null)
   const [livePresenterToken, setLivePresenterToken] = useState(null)
+  const [liveRemoteToken, setLiveRemoteToken] = useState(null)
+  const [liveSpeakerToken, setLiveSpeakerToken] = useState(null)
   const [livePresentationId, setLivePresentationId] = useState(null)
 
   const getPresenterPopupBridge = useCallback(() => {
@@ -28,6 +30,8 @@ export function useEditorLiveSessionController({
     [getPresenterPopupBridge, presentationId]
   )
   const isLiveSessionForCurrentPresentation = livePresentationId === presentationId
+  const currentLiveRemoteToken = isLiveSessionForCurrentPresentation ? liveRemoteToken : null
+  const currentLiveSpeakerToken = isLiveSessionForCurrentPresentation ? liveSpeakerToken : null
   const currentLiveRoomCode = isLiveSessionForCurrentPresentation ? liveRoomCode : null
   const currentLivePresenterToken = isLiveSessionForCurrentPresentation ? livePresenterToken : null
 
@@ -48,6 +52,8 @@ export function useEditorLiveSessionController({
     setLivePresentationId(null)
     setLiveRoomCode(null)
     setLivePresenterToken(null)
+    setLiveRemoteToken(null)
+    setLiveSpeakerToken(null)
     setShowLiveModal(false)
   }, [presentationId, setShowLiveModal])
 
@@ -64,18 +70,23 @@ export function useEditorLiveSessionController({
       if (!isCurrentRequest()) return
       if (!response.ok) throw new Error('Live room creation failed')
       const data = await response.json()
-      if (!isCurrentRequest()) return
       if (
         typeof data?.roomCode !== 'string' ||
         !data.roomCode ||
         typeof data?.presenterToken !== 'string' ||
-        !data.presenterToken
+        !data.presenterToken ||
+        typeof data?.remoteToken !== 'string' ||
+        !data.remoteToken ||
+        typeof data?.speakerToken !== 'string' ||
+        !data.speakerToken
       ) {
         throw new Error('Invalid response')
       }
       setLivePresentationId(requestPresentationId)
       setLiveRoomCode(data.roomCode)
       setLivePresenterToken(data.presenterToken)
+      setLiveRemoteToken(data.remoteToken)
+      setLiveSpeakerToken(data.speakerToken)
       setShowLiveModal(true)
     } catch {
       if (isCurrentRequest()) showError('Failed to create live room')
@@ -110,7 +121,8 @@ export function useEditorLiveSessionController({
   return {
     currentLiveRoomCode,
     currentLivePresenterToken,
-    emitGameShortcutAction,
+    currentLiveRemoteToken,
+    currentLiveSpeakerToken,
     getPresenterPopupBridge,
     handlePresenterWindowOpened,
     handleStartLive,

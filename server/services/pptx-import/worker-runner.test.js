@@ -240,6 +240,44 @@ describe('pptx parser worker runner', () => {
       await fs.rm(dir, { recursive: true, force: true })
     }
   })
+  it('sends an abort IPC message before bounded child termination', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-worker-abort-ipc-'))
+    const workerPath = path.join(dir, 'abort-ipc-worker.js')
+    const markerPath = path.join(dir, 'abort-received')
+    const controller = new AbortController()
+    try {
+      await fs.writeFile(
+        workerPath,
+        `const fs=require('fs');process.on('SIGTERM',()=>{});process.on('message',(message)=>{if(message.type==='abort'){fs.writeFileSync(${JSON.stringify(markerPath)},'received');process.send({type:'abort-ack'})}});process.send({type:'ready'});setInterval(()=>{},1000)`,
+      )
+      const pending = runParserWorker('deck.pptx', {
+        workerPath,
+        timeoutMs: 1000,
+        killGraceMs: 100,
+        signal: controller.signal,
+      })
+      controller.abort()
+      const result = await pending
+      expect(result.ok).toBe(false)
+      expect(result.error.message).toContain('cancelled')
+      await result.workerClosed
+      await expect(fs.readFile(markerPath, 'utf8')).resolves.toBe('received')
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('passes parser cancellation into archive validation before file access', async () => {
+    const controller = new AbortController()
+    controller.abort()
+
+    await expect(
+      import('./parse-worker.js').then(({ parseFile }) =>
+        parseFile('missing-deck.pptx', 'missing-deck.pptx', controller.signal),
+      ),
+    ).rejects.toThrow(/abort/i)
+  })
+
 
   it.skipIf(process.platform === 'win32')('escalates to SIGKILL when a child ignores SIGTERM', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-worker-stubborn-'))

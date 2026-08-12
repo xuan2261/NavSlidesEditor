@@ -9,13 +9,21 @@ function getBearerToken(req) {
   return match ? match[1].trim() : null
 }
 
-// Generate a new room ID and register it
+function setCapabilityHeaders(res) {
+  res.set({
+    'Cache-Control': 'no-store, private',
+    Pragma: 'no-cache',
+    Expires: '0',
+  })
+}
+
+// Generate a new room ID and register it.
 router.post('/room', (req, res) => {
   const code = liveRooms.generateRoomCode()
-  const presenterToken = liveRooms.createPresenterToken()
-  // Pre-register the room so viewers can check it exists before presenter connects
-  liveRooms.registerRoom(code, presenterToken)
-  res.json({ roomCode: code, presenterToken })
+  const capabilities = liveRooms.createLiveCapabilities()
+  liveRooms.registerRoom(code, capabilities)
+  setCapabilityHeaders(res)
+  res.json({ roomCode: code, ...capabilities })
 })
 
 // Check if a room exists
@@ -34,10 +42,10 @@ router.get('/room/:code', (req, res) => {
   }
 })
 
-// Get annotations for a room (presenter-only via token auth)
+// Get annotations for a room (presenter-only via bearer auth).
 router.get('/room/:code/annotations', (req, res) => {
   const { code } = req.params
-  const { token } = req.query
+  const token = getBearerToken(req)
   const room = liveRooms.getRoomState(code)
   if (!room) return res.status(404).json({ error: 'Room not found' })
   if (!token || !liveRooms.isValidPresenterToken(room, token)) {
@@ -47,13 +55,14 @@ router.get('/room/:code/annotations', (req, res) => {
   for (const [idx, anns] of Object.entries(room.annotations)) {
     slideAnnotations[idx] = anns
   }
+  setCapabilityHeaders(res)
   res.json({ roomCode: code, slideAnnotations })
 })
 
-// End a room and clear in-memory live state. Presenter token required.
+// End a room and clear in-memory live state. Presenter bearer capability required.
 router.delete('/room/:code', (req, res) => {
   const { code } = req.params
-  const token = getBearerToken(req) || req.query.token
+  const token = getBearerToken(req)
   const room = liveRooms.getRoomState(code)
   if (!room) return res.status(404).json({ error: 'Room not found' })
   if (!token || !liveRooms.isValidPresenterToken(room, token)) {
@@ -65,6 +74,7 @@ router.delete('/room/:code', (req, res) => {
     io.in(code).socketsLeave(code)
   }
   liveRooms.removeRoom(code)
+  setCapabilityHeaders(res)
   res.status(204).end()
 })
 

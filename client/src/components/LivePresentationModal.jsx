@@ -7,6 +7,8 @@ export default function LivePresentationModal({
   presentationId,
   roomCode,
   presenterToken,
+  remoteToken,
+  speakerToken,
   onPresenterWindowOpened,
   onClose,
 }) {
@@ -61,8 +63,8 @@ export default function LivePresentationModal({
           <div className="flex gap-2">
             <input
               readOnly
-              value={`${window.location.origin}/remote/${roomCode}`}
               className="flex-1 px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-xs"
+              value={`${window.location.origin}/remote/${roomCode}#cap=${remoteToken || ''}`}
               onClick={handleCopy}
             />
             <span className="text-[11px] text-text-muted flex items-center">
@@ -72,8 +74,8 @@ export default function LivePresentationModal({
           <div className="flex gap-2">
             <input
               readOnly
-              value={`${window.location.origin}/speaker/${roomCode}`}
               className="flex-1 px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-xs"
+              value={`${window.location.origin}/speaker/${roomCode}#cap=${speakerToken || ''}`}
               onClick={handleCopy}
             />
             <span className="text-[11px] text-text-muted flex items-center">

@@ -105,7 +105,9 @@ async function buildOpcInventory(source, limits = {}) {
     const xmlPart = isXmlPart(raw.name)
     const partBytes = await readBoundedZipEntry(entry, {
       perEntryCap: xmlPart ? Math.min(maxDecompressedBytes, xmlBudget.limits.maxXmlBytes) : maxDecompressedBytes,
-      remainingBudget: maxDecompressedBytes - totalBytes, signal: limits.signal,
+      remainingBudget: maxDecompressedBytes - totalBytes,
+      signal: limits.signal,
+      expectedCrc32: raw.crc32,
       overflowError: xmlPart
         ? () => new PackageSafetyError('xml-byte-budget-exceeded', `XML byte budget exceeded in ${raw.name}`, 413)
         : undefined,

@@ -103,20 +103,20 @@ test.describe('Live Presentation & WebSockets', () => {
 
     const remote = await context.newPage()
     await remote.setViewportSize({ width: 390, height: 844 })
-    await remote.goto(`/remote/${room.roomCode}`)
-    await expect(remote.getByText('Notes A')).toBeVisible({ timeout: 10000 })
+    await remote.goto(`/remote/${room.roomCode}#cap=${room.remoteToken}`)
+    await expect(remote.getByText('No speaker notes for this slide.')).toBeVisible({ timeout: 10000 })
 
     await remote.getByRole('button', { name: /Next/ }).click()
     await waitForRevealIndex(viewer, 'Live Presentation', '0:1:0')
-    await expect(remote.getByText('Notes A.1')).toBeVisible({ timeout: 10000 })
+    await expect(remote.getByText('No speaker notes for this slide.')).toBeVisible({ timeout: 10000 })
 
     await remote.getByRole('button', { name: /Next/ }).click()
     await waitForRevealIndex(viewer, 'Live Presentation', '0:2:0')
-    await expect(remote.getByText('Notes A.2')).toBeVisible({ timeout: 10000 })
+    await expect(remote.getByText('No speaker notes for this slide.')).toBeVisible({ timeout: 10000 })
 
     await remote.getByRole('button', { name: /Prev/ }).click()
     await waitForRevealIndex(viewer, 'Live Presentation', '0:1:0')
-    await expect(remote.getByText('Notes A.1')).toBeVisible({ timeout: 10000 })
+    await expect(remote.getByText('No speaker notes for this slide.')).toBeVisible({ timeout: 10000 })
   })
 
   test('speaker view renders notes and thumbnail navigation syncs viewer', async ({
@@ -137,7 +137,7 @@ test.describe('Live Presentation & WebSockets', () => {
     await waitForRevealIndex(viewer, 'Live Presentation', '0:0:0')
 
     const speaker = await context.newPage()
-    await speaker.goto(`/speaker/${room.roomCode}`)
+    await speaker.goto(`/speaker/${room.roomCode}#cap=${room.speakerToken}`)
     await expect(speaker.getByText('Speaker notes A')).toBeVisible({ timeout: 10000 })
     await expect(speaker.locator('iframe[title="Current Slide"]')).toBeVisible()
     await expect(speaker.locator('iframe[title="Next Slide"]')).toBeVisible()
@@ -164,7 +164,7 @@ test.describe('Live Presentation & WebSockets', () => {
     await waitForRevealIndex(viewer, 'Live Presentation', '0:0:0')
 
     const speaker = await context.newPage()
-    await speaker.goto(`/speaker/${room.roomCode}`)
+    await speaker.goto(`/speaker/${room.roomCode}#cap=${room.speakerToken}`)
     await expect(speaker.getByRole('button', { name: '1.1' })).toBeVisible({ timeout: 10000 })
     await speaker.getByRole('button', { name: '1.1' }).click()
 

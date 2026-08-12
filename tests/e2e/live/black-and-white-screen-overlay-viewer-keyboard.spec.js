@@ -159,6 +159,7 @@ test.describe('Black and white screen overlay viewer keyboard toggle', () => {
       const iframe = page.locator('iframe[title="Live Presentation"]')
       await expect(iframe).toBeVisible({ timeout: 15000 })
       await expect.poll(async () => (await iframe.getAttribute('srcdoc')) || '', { timeout: 15000 }).toContain('BW Screen')
+      await expect(page.frameLocator('iframe[title="Live Presentation"]').locator('body')).toContainText('BW Screen', { timeout: 15000 })
       await iframe.focus()
       await expect(iframe).toBeFocused()
 

@@ -101,7 +101,7 @@ async function startBackend() {
 
   const serverPath = getResourcePath('server', 'index.js')
   const { startServer, stopServer } = require(serverPath)
-  serverInstance = await startServer(PORT)
+  serverInstance = await startServer(PORT, { host: '127.0.0.1' })
   stopBackend = () => stopServer(serverInstance)
 
   console.log(`Backend started on port ${PORT}`)
@@ -123,9 +123,8 @@ function createWindow() {
     },
   })
 
-  mainWindow.loadURL(`http://localhost:${PORT}`)
-
-  const APP_ORIGIN = `http://localhost:${PORT}`
+  const APP_ORIGIN = `http://127.0.0.1:${PORT}`
+  mainWindow.loadURL(APP_ORIGIN)
 
   // Open external links in the default browser, allow new windows for present mode.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {

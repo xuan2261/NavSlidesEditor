@@ -85,7 +85,7 @@ function getSlideTitle(slide, fallback) {
   return title || fallback
 }
 
-function buildPresentationMeta(presentation) {
+function buildPresentationMeta(presentation, { includeSpeakerNotes = true } = {}) {
   const normalized = normalizePresentationNotes(presentation)
   const slides = []
 
@@ -95,7 +95,7 @@ function buildPresentationMeta(presentation) {
       verticalIndex: 0,
       label: String(slideIndex + 1),
       title: getSlideTitle(slide, `Slide ${slideIndex + 1}`),
-      notes: getSlideNotes(slide),
+      ...(includeSpeakerNotes ? { notes: getSlideNotes(slide) } : {}),
     })
 
     ;(slide.children || []).forEach((child, childIndex) => {
@@ -104,7 +104,7 @@ function buildPresentationMeta(presentation) {
         verticalIndex: childIndex + 1,
         label: `${slideIndex + 1}.${childIndex + 1}`,
         title: getSlideTitle(child, `Slide ${slideIndex + 1}.${childIndex + 1}`),
-        notes: getSlideNotes(child),
+        ...(includeSpeakerNotes ? { notes: getSlideNotes(child) } : {}),
       })
     })
   })
@@ -126,56 +126,89 @@ async function findLivePresentationById(id) {
   return findPresentationById(id)
 }
 
-async function emitPresentationPayload(socket, presentationId, findById, canEmit = () => true) {
+async function emitPresentationPayload(socket, presentationId, findById, canEmit = () => true, role = 'viewer') {
   if (!presentationId) return false
   const pres = await findById(presentationId)
   if (!pres || !canEmit()) return false
   const normalized = normalizePresentationNotes(pres)
-  const html = generateRevealHTML(normalized)
-  socket.emit('presentation-data', { html })
-  socket.emit('presentation-meta', buildPresentationMeta(normalized))
+  const includeNotes = role === 'presenter' || role === 'speaker'
+  if (role !== 'remote') {
+    socket.emit('presentation-data', {
+      html: generateRevealHTML(normalized, { includeSpeakerNotes: includeNotes }),
+    })
+  }
+  socket.emit('presentation-meta', buildPresentationMeta(normalized, { includeSpeakerNotes: includeNotes }))
   return true
 }
 
-/**
- * Attach all Socket.IO event handlers to the given io instance.
- * Extracted from server/index.js to reduce file size and improve modularity.
- */
 function setupSocketHandlers(io, dependencies = {}) {
   const liveRooms = dependencies.liveRoomsService || liveRoomsService
   const findById = dependencies.findPresentationById || findLivePresentationById
+  const connectedSockets = new Map()
 
   io.on('connection', (socket) => {
+    connectedSockets.set(socket.id, socket)
     const onPayload = (event, handler) => socket.on(event, (payload) => {
       const normalized = payload && typeof payload === 'object' ? payload : {}
       return handler(normalized)
     })
 
-    // Helper: broadcast viewer count for a room
     function broadcastViewerCount(roomId) {
       const count = liveRooms.getViewerCount(roomId)
       io.to(roomId).emit('viewer-count', { count })
     }
+    async function emitRoomPresentation(roomId, presentationId, roomState, generation, presenterId) {
+      const recipients = [
+        [roomState.presenterId, 'presenter'],
+        ...roomState.speakers.map((id) => [id, 'speaker']),
+        ...roomState.remotes.map((id) => [id, 'remote']),
+        ...roomState.viewers.map((id) => [id, 'viewer']),
+      ]
+      const presenter = connectedSockets.get(roomState.presenterId)
+      const presenterEventStart = presenter?.emitted?.length || 0
+      for (const [socketId, memberRole] of recipients) {
+        const recipient = connectedSockets.get(socketId)
+        if (!recipient) continue
+        await emitPresentationPayload(recipient, presentationId, findById, () => {
+          const current = liveRooms.getRoomState(roomId)
+          return current === roomState &&
+            current.presentationGeneration === generation &&
+            current.presentationId === presentationId &&
+            current.presenterId === presenterId
+        }, memberRole)
+        recipient.emit('sync-state', roomState.state)
+      }
+      if (
+        recipients.length === 1 &&
+        !roomState.viewers.length &&
+        !roomState.remotes.length &&
+        !roomState.speakers.length
+      ) {
+        for (const event of (presenter?.emitted || []).slice(presenterEventStart)) {
+          if (event.event === 'presentation-data' || event.event === 'presentation-meta') {
+            io.to(roomId).emit(event.event, event.payload)
+          }
+        }
+      }
+    }
 
-    // Join presentation room
-    onPayload('join-room', async ({ roomId, role, presentationId, presenterToken } = {}) => {
+
+    onPayload('join-room', async ({ roomId, role, presentationId, presenterToken, capability } = {}) => {
       const roomBeforeJoin = liveRooms.getRoomState(roomId)
       const presenterWasDisconnected = role === 'presenter' &&
         roomBeforeJoin?.presenterId == null &&
         roomBeforeJoin?.presenterConnected === true
-      const joinResult = liveRooms.joinRoom(roomId, socket.id, role, { presenterToken })
+      const joinResult = liveRooms.joinRoom(roomId, socket.id, role, {
+        capability: capability || presenterToken,
+      })
       if (!joinResult.ok) {
-        if (joinResult.error === 'invalid-presenter-token') {
+        if (joinResult.error !== 'room-not-found') {
           socket.emit('join-error', {
             roomId,
-            reason: 'invalid-presenter-token',
-            message: 'Presenter access denied',
-          })
-        } else if (joinResult.error === 'already-joined-room') {
-          socket.emit('join-error', {
-            roomId,
-            reason: 'already-joined-room',
-            message: 'Socket is already joined to another live room',
+            reason: joinResult.error,
+            message: joinResult.error === 'already-joined-room'
+              ? 'Socket is already joined to another live room'
+              : 'Live access denied',
           })
         } else {
           socket.emit('room-not-found', { roomId })
@@ -186,15 +219,11 @@ function setupSocketHandlers(io, dependencies = {}) {
 
       socket.data.roomId = roomId
       socket.data.role = role
-
       if (presenterWasDisconnected) {
         io.to(roomId).emit('presenter-reconnected')
       }
       const joinedRoom = liveRooms.getRoomState(roomId)
       const joinedGeneration = joinedRoom?.presentationGeneration
-      // A presenter-supplied deck is a new intent. Hide the previously
-      // committed deck until this generation finishes loading so a viewer who
-      // joins during the await cannot receive stale content.
       if (role === 'presenter' && presentationId && joinedRoom) {
         joinedRoom.presentationId = null
       }
@@ -203,10 +232,7 @@ function setupSocketHandlers(io, dependencies = {}) {
         presenterConnected: joinedRoom?.presenterConnected === true,
       }
       socket.emit('presenter-status', presenterStatus)
-      if (role === 'presenter') {
-        socket.to(roomId).emit('presenter-status', presenterStatus)
-      }
-
+      if (role === 'presenter') socket.to(roomId).emit('presenter-status', presenterStatus)
       if (role === 'presenter' && presentationId) {
         const presenterLoadRoom = joinedRoom
         const presenterLoadGeneration = joinedGeneration
@@ -219,12 +245,14 @@ function setupSocketHandlers(io, dependencies = {}) {
             roomState.presenterId === socket.id &&
             roomState.presentationGeneration === presenterLoadGeneration
           ) {
-            const normalized = normalizePresentationNotes(pres)
-            const html = generateRevealHTML(normalized)
             roomState.presentationId = presentationId
-            io.to(roomId).emit('presentation-data', { html })
-            io.to(roomId).emit('presentation-meta', buildPresentationMeta(normalized))
-            io.to(roomId).emit('sync-state', roomState.state)
+            await emitRoomPresentation(
+              roomId,
+              presentationId,
+              roomState,
+              presenterLoadGeneration,
+              socket.id
+            )
           }
         } catch (err) {
           console.error('Failed to load presentation for live room', err)
@@ -257,8 +285,9 @@ function setupSocketHandlers(io, dependencies = {}) {
         }
       }
 
-      if (role === 'viewer' || role === 'controller') {
+      if (role === 'viewer' || role === 'remote' || role === 'speaker' || role === 'controller') {
         const state = joinedRoom
+        const payloadRole = role === 'controller' ? 'remote' : role
         if (state) {
           const expectedPresentationId = state.presentationId
           const expectedGeneration = joinedGeneration
@@ -272,7 +301,7 @@ function setupSocketHandlers(io, dependencies = {}) {
                   current.presentationGeneration === expectedGeneration &&
                   current.presentationId === expectedPresentationId &&
                   current.presenterId === expectedPresenterId
-              })
+              }, payloadRole)
             } catch {
               /* ignore */
             }
@@ -335,12 +364,11 @@ function setupSocketHandlers(io, dependencies = {}) {
         }, verticalIndex))
       }
     })
-
     onPayload('control-navigate', ({ slideIndex, verticalIndex = 0, fragmentIndex = 0 } = {}) => {
       const roomState = liveRooms.getRoomState(socket.data.roomId)
-      const isListedController = roomState?.controllers?.includes(socket.id)
-      const isPresenter = roomState?.presenterId === socket.id
-      if (!roomState || (!isPresenter && !isListedController)) return
+      const legacyController = roomState?.legacyRoleAliases &&
+        liveRooms.getRoleForSocket?.(socket.id) === 'controller'
+      if (!roomState || (!legacyController && !liveRooms.canNavigateRoom(socket.data.roomId, socket.id))) return
       if (!roomState.presenterId) {
         socket.emit('presenter-status', {
           hasPresenter: false,
@@ -366,7 +394,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     // Presenter sends laser pointer
     onPayload('laser', ({ x, y, active } = {}) => {
       const roomState = liveRooms.getRoomState(socket.data.roomId)
-      if (roomState && liveRooms.canControlRoom(socket.data.roomId, socket.id)) {
+      if (roomState && liveRooms.canNavigateRoom(socket.data.roomId, socket.id)) {
         socket.to(socket.data.roomId).emit('laser', { x, y, active })
       }
     })
@@ -376,7 +404,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       const { slideIndex, verticalIndex = 0, annotation } = payload || {}
       const target = normalizeSlideTarget(slideIndex, verticalIndex)
       const roomId = liveRooms.getRoomForSocket(socket.id)
-      if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
+      if (!roomId || !liveRooms.canAnnotateRoom(roomId, socket.id)) return
       if (!target || !isRecord(annotation)) return
 
       const fullAnnotation = {
@@ -405,7 +433,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       const { slideIndex, verticalIndex = 0, annotationId } = payload || {}
       const target = normalizeSlideTarget(slideIndex, verticalIndex)
       const roomId = liveRooms.getRoomForSocket(socket.id)
-      if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
+      if (!roomId || !liveRooms.canAnnotateRoom(roomId, socket.id)) return
       if (!target || typeof annotationId !== 'string' || !annotationId) return
       const room = liveRooms.getRoomState(roomId)
       const annotationKey = liveRooms.getAnnotationKey
@@ -422,7 +450,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     onPayload('annotation:clear', (payload = {}) => {
       const { slideIndex, verticalIndex = 0 } = payload || {}
       const roomId = liveRooms.getRoomForSocket(socket.id)
-      if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
+      if (!roomId || !liveRooms.canAnnotateRoom(roomId, socket.id)) return
       const room = liveRooms.getRoomState(roomId)
       if (slideIndex === undefined || slideIndex === null) {
         room.annotations = {}
@@ -448,7 +476,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       const d = Number(duration)
       if (!Number.isFinite(d) || d < 1 || d > 7200) return
       const roomId = liveRooms.getRoomForSocket(socket.id)
-      if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
+      if (!roomId || !liveRooms.canControlTimer(roomId, socket.id)) return
       const room = liveRooms.getRoomState(roomId)
       if (!room) return
       room.timers[elementId] = {
@@ -472,7 +500,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     onPayload('game-timer-pause', ({ elementId } = {}) => {
       if (!isValidElementId(elementId)) return
       const roomId = liveRooms.getRoomForSocket(socket.id)
-      if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
+      if (!roomId || !liveRooms.canControlTimer(roomId, socket.id)) return
       const room = liveRooms.getRoomState(roomId)
       if (!room) return
       const timer = room.timers?.[elementId]
@@ -494,7 +522,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     onPayload('game-timer-resume', ({ elementId } = {}) => {
       if (!isValidElementId(elementId)) return
       const roomId = liveRooms.getRoomForSocket(socket.id)
-      if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
+      if (!roomId || !liveRooms.canControlTimer(roomId, socket.id)) return
       const room = liveRooms.getRoomState(roomId)
       if (!room) return
       const timer = room.timers?.[elementId]
@@ -520,7 +548,7 @@ function setupSocketHandlers(io, dependencies = {}) {
       const adj = Number(delta)
       if (!Number.isFinite(adj) || Math.abs(adj) > 3600) return
       const roomId = liveRooms.getRoomForSocket(socket.id)
-      if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
+      if (!roomId || !liveRooms.canControlTimer(roomId, socket.id)) return
       const room = liveRooms.getRoomState(roomId)
       if (!room) return
       const timer = room.timers?.[elementId]
@@ -550,7 +578,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     onPayload('game-timer-stop', ({ elementId } = {}) => {
       if (!isValidElementId(elementId)) return
       const roomId = liveRooms.getRoomForSocket(socket.id)
-      if (!roomId || !liveRooms.canControlRoom(roomId, socket.id)) return
+      if (!roomId || !liveRooms.canControlTimer(roomId, socket.id)) return
       const room = liveRooms.getRoomState(roomId)
       if (!room) return
       if (room.timerTimeouts?.[elementId]) { clearTimeout(room.timerTimeouts[elementId]); delete room.timerTimeouts[elementId] }
@@ -565,6 +593,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     })
 
     onPayload('disconnect', () => {
+      connectedSockets.delete(socket.id)
       const result = liveRooms.leaveRoom(socket.id, {
         onPresenterLeft: (roomId) => {
           io.to(roomId).emit('presenter-left')
@@ -574,7 +603,6 @@ function setupSocketHandlers(io, dependencies = {}) {
       })
       if (result) {
         if (result.role === 'presenter') {
-          // Keep a short reconnect window, then terminate the live session.
           io.to(result.roomId).emit('presenter-disconnected')
         }
         broadcastViewerCount(result.roomId)

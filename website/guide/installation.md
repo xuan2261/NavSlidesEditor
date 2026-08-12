@@ -18,7 +18,34 @@ cd NavSlidesEditor
 docker compose up -d
 ```
 
-Then open **http://localhost:3002** in your browser.
+Then open **http://127.0.0.1:3002** in your browser. The container listens on
+`0.0.0.0` internally; host publication defaults to loopback. Set
+`NAVSLIDES_PUBLISH_HOST` only behind an external authentication layer.
+
+### Browser mutation and reverse-proxy policy
+
+The server has no built-in authentication. Keep browser mutation routes on
+loopback by default, or place an external authentication layer in front of any
+non-loopback deployment. Configure the local CSRF boundary with:
+
+- `NAVSLIDES_LOCAL_ALLOWED_HOSTS`: comma-separated `host[:port]` values; defaults
+  to `localhost`, `127.0.0.1`, and `[::1]`.
+- `NAVSLIDES_LOCAL_ALLOWED_ORIGINS`: optional exact `http(s)` origins; paths,
+  credentials, queries, and fragments are rejected.
+- `NAVSLIDES_TRUSTED_PROXY_ADDRESSES`: proxy IPs allowed to supply
+  `X-Forwarded-Host` and `X-Forwarded-Proto`; forwarded headers are ignored for
+  all other peers.
+- `NAVSLIDES_ALLOW_MISSING_ORIGIN`: missing `Origin` is allowed by default to
+  preserve non-browser clients and existing integrations. Set it to `0` when
+  an exposed deployment must require same-origin `Origin` headers on every
+  mutation request.
+
+Present `Origin` headers must match the effective host/protocol and configured
+allowlist. This policy is not application authentication or tenant isolation.
+
+Uploaded SVG is sanitized on upload and again when served, including legacy
+files, and is returned with sandbox CSP, `nosniff`, and same-origin resource
+policy headers.
 
 ### Useful Docker commands
 
@@ -66,7 +93,7 @@ Prebuilt Linux and macOS packages are not published yet. You can build them your
 :::
 
 ::: tip
-On first launch the desktop app will open both the editor window and a local server on port 3002. You can also access the editor from a browser at `http://localhost:3002`.
+On first launch the desktop app will open both the editor window and a local server on port 3002. You can also access the editor from a browser at `http://127.0.0.1:3002`.
 :::
 
 ---
@@ -77,7 +104,7 @@ For developers or anyone who wants to customize the editor.
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20+ and npm
 
 ### Steps
 
@@ -102,12 +129,12 @@ npm run build
 npm start
 ```
 
-Serves the built app at `http://localhost:3002`.
+Serves the built app at `http://127.0.0.1:3002`.
 
 ### Data persistence
 
-Presentations are saved to `./presentations/` and uploads to `./uploads/` in the project root.
+Data files are stored under `server/data/` and uploaded assets under
+`server/uploads/`. In Docker, named volumes mount these locations at
+`/app/server/data` and `/app/server/uploads`.
 
-::: warning
-When running from source, make sure to back up the `presentations/` directory — it is not tracked by git.
-:::
+Back up `server/data/` when running from source; it is not tracked by git.

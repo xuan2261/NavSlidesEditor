@@ -75,15 +75,15 @@ This section applies to decks imported from `.pptx`; it does not limit charts
 created directly in NavSlides.
 
 - **Import ZIP CRC is fail-closed.** `validatePptxPackage` /
-  `loadPptxArchive` load archives with JSZip `checkCRC32: true`. When a
-  non-encrypted entry’s declared CRC does not match its inflated payload, import
-  rejects with stable code `zip-crc-mismatch` (`PackageSafetyError`). There is
-  **no** default silent warn-only success path for CRC failures. Policy constant:
-  `IMPORT_CRC_POLICY` in
-  [`pptx-guards.js`](../server/services/pptx-import/pptx-guards.js). Regression:
-  intentional CRC-mismatch fixture in `pptx-guards.test.js` and the isolated
-  adversarial lane (`npm run test:pptx:adversarial`). Corpus probe (11 metrics
-  decks, 2026-07-24): **0 false positives** under CRC-on load.
+  `loadPptxArchive` perform raw ZIP structure and declared-size preflight, then
+  validate each bounded inflated entry against its declared CRC32. JSZip
+  indexing uses `checkCRC32: false` because integrity is enforced by the
+  bounded reader before package mapping. A mismatch rejects with stable code
+  `zip-crc-mismatch` (`PackageSafetyError`). There is **no** default silent
+  warn-only success path for CRC failures. Policy constant: `IMPORT_CRC_POLICY`
+  in [`pptx-guards.js`](../server/services/pptx-import/pptx-guards.js).
+  Regression: intentional CRC-mismatch fixture in `pptx-guards.test.js` and the
+  isolated adversarial lane (`npm run test:pptx:adversarial`).
 - **Adversarial fixtures are a separate lane.** Synthetic edge packages live under
   `server/data/test-corpus/adversarial/` and are **not** included in
   `test:pptx:corpus-metrics` averages. Use `npm run test:pptx:adversarial` for

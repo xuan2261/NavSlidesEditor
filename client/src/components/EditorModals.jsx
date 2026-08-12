@@ -231,7 +231,8 @@ export default function EditorModals(props) {
         commands={props.commands}
         liveRoomCode={props.liveRoomCode}
         livePresenterToken={props.livePresenterToken}
-        onPresenterWindowOpened={props.onPresenterWindowOpened}
+        liveRemoteToken={props.liveRemoteToken}
+        liveSpeakerToken={props.liveSpeakerToken}
         galleryPreviewTemplate={props.galleryPreviewTemplate}
         setGalleryPreviewTemplate={props.setGalleryPreviewTemplate}
         setPresentation={setPresentation}

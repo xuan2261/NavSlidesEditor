@@ -18,7 +18,33 @@ cd NavSlidesEditor
 docker compose up -d
 ```
 
-Sau đó mở **http://localhost:3002** trên trình duyệt của bạn.
+Sau đó mở **http://127.0.0.1:3002** trong trình duyệt. Container lắng nghe
+`0.0.0.0` nội bộ; địa chỉ publish trên máy chủ mặc định chỉ là loopback. Chỉ
+đặt `NAVSLIDES_PUBLISH_HOST` khi đã có lớp xác thực bên ngoài.
+
+### Chính sách request mutation và reverse proxy
+
+Máy chủ không tích hợp xác thực người dùng. Mặc định hãy giữ các route mutation
+trên loopback; khi triển khai ngoài loopback, cần đặt một lớp xác thực bên ngoài
+ở phía trước. Biên CSRF cục bộ được cấu hình bằng:
+
+- `NAVSLIDES_LOCAL_ALLOWED_HOSTS`: danh sách `host[:port]` cách nhau bằng dấu
+  phẩy; mặc định là `localhost`, `127.0.0.1` và `[::1]`.
+- `NAVSLIDES_LOCAL_ALLOWED_ORIGINS`: tùy chọn, danh sách origin `http(s)` chính
+  xác; đường dẫn, thông tin đăng nhập, query và fragment đều bị từ chối.
+- `NAVSLIDES_TRUSTED_PROXY_ADDRESSES`: địa chỉ IP proxy được phép cung cấp
+  `X-Forwarded-Host` và `X-Forwarded-Proto`; các peer khác sẽ bị bỏ qua header
+  forward.
+- `NAVSLIDES_ALLOW_MISSING_ORIGIN`: mặc định cho phép thiếu `Origin` để giữ
+  tương thích với client không phải trình duyệt và các tích hợp hiện có. Đặt
+  `0` khi deployment bên ngoài phải yêu cầu header `Origin` cùng origin trên
+  mọi request mutation.
+
+Khi có `Origin`, origin phải khớp host/protocol hiệu dụng và allowlist đã cấu
+hình. Đây là biên triển khai/CSRF, không phải xác thực ứng dụng hay cô lập tenant.
+
+SVG tải lên được làm sạch khi nhận và một lần nữa khi phục vụ, kể cả tệp cũ;
+response dùng CSP sandbox, `nosniff` và resource policy cùng origin.
 
 ### Các lệnh Docker hữu ích
 
@@ -66,7 +92,7 @@ Các gói Linux và macOS dựng sẵn chưa được phát hành. Bạn có th�
 :::
 
 ::: tip
-Trong lần khởi chạy đầu tiên, ứng dụng desktop sẽ mở cả cửa sổ trình soạn thảo và một máy chủ cục bộ trên cổng 3002. Bạn cũng có thể truy cập trình soạn thảo từ trình duyệt tại `http://localhost:3002`.
+Trong lần khởi chạy đầu tiên, ứng dụng desktop sẽ mở cả cửa sổ trình soạn thảo và một máy chủ cục bộ trên cổng 3002. Bạn cũng có thể truy cập trình soạn thảo từ trình duyệt tại `http://127.0.0.1:3002`.
 :::
 
 ---
@@ -77,7 +103,7 @@ Dành cho nhà phát triển hoặc bất kỳ ai muốn tùy biến trình so�
 
 ### Yêu cầu trước
 
-- Node.js 18+ và npm
+- Node.js 20+ và npm
 
 ### Các bước
 
@@ -102,12 +128,13 @@ npm run build
 npm start
 ```
 
-Phục vụ ứng dụng đã build tại `http://localhost:3002`.
+Phục vụ ứng dụng đã build tại `http://127.0.0.1:3002`.
 
 ### Lưu trữ dữ liệu bền vững
 
-Các bài trình chiếu được lưu vào `./presentations/` và các tệp tải lên vào `./uploads/` trong thư mục gốc của dự án.
+Dữ liệu JSON được lưu trong `server/data/`, tài nguyên tải lên trong
+`server/uploads/`. Với Docker, named volume mount các thư mục này vào
+`/app/server/data` và `/app/server/uploads`.
 
-::: warning
-Khi chạy từ mã nguồn, hãy chắc chắn sao lưu thư mục `presentations/` — thư mục này không được git theo dõi.
-:::
+Khi chạy từ mã nguồn, hãy sao lưu `server/data/` — thư mục này không được git
+theo dõi.

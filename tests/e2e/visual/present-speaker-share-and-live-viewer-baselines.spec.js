@@ -65,7 +65,7 @@ test.describe('Present, speaker, share landing, live viewer visual baselines', (
     const r = await request.post('/api/live/room')
     const room = await r.json()
     await page.setViewportSize({ width: 1280, height: 800 })
-    await page.goto(`/speaker/${room.roomCode}`)
+    await page.goto(`/speaker/${room.roomCode}#cap=${room.speakerToken}`)
     await page.waitForSelector('body', { timeout: 15000 })
     await expectStableScreenshot(page, 'speaker-view-1280x800.png')
   })

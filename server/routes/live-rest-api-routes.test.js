@@ -77,7 +77,8 @@ function handleGetRoomCheck(req, res) {
 
 function handleGetAnnotations(req, res) {
   const { code } = req.params
-  const { token } = req.query
+  const match = String(req.headers?.authorization || '').match(/^Bearer\s+(.+)$/i)
+  const token = match ? match[1].trim() : null
   const state = mockRooms.getRoomState(code)
   if (!state) return res.status(404).json({ error: 'Room not found' })
   if (!token || !mockRooms.isValidPresenterToken(state, token)) {
@@ -87,6 +88,11 @@ function handleGetAnnotations(req, res) {
   for (const [idx, anns] of Object.entries(state.annotations)) {
     slideAnnotations[idx] = anns
   }
+  res.set?.({
+    'Cache-Control': 'no-store, private',
+    Pragma: 'no-cache',
+    Expires: '0',
+  })
   res.status(200).json({ roomCode: code, slideAnnotations })
 }
 
@@ -131,33 +137,34 @@ describe('live REST routes', () => {
     expect(res.jsonData.exists).toBe(false)
   })
 
-  it('GET /room/:code/annotations returns annotations with valid presenter token', () => {
-    const req = { params: { code: 'ROOMCODE' }, query: { token: mockPresenterToken } }
-    const res = { statusCode: 200, jsonData: null, status(code) { this.statusCode = code; return this }, json(data) { this.jsonData = data; return this } }
+  it('GET /room/:code/annotations returns annotations with valid presenter bearer token', () => {
+    const req = { params: { code: 'ROOMCODE' }, headers: { authorization: `Bearer ${mockPresenterToken}` }, query: { token: mockPresenterToken } }
+    const res = { statusCode: 200, jsonData: null, headers: {}, status(code) { this.statusCode = code; return this }, set(values) { Object.assign(this.headers, values); return this }, json(data) { this.jsonData = data; return this } }
     handleGetAnnotations(req, res)
     expect(res.statusCode).toBe(200)
     expect(res.jsonData.roomCode).toBe('ROOMCODE')
     expect(res.jsonData.slideAnnotations).toEqual({})
+    expect(res.headers['Cache-Control']).toBe('no-store, private')
   })
 
   it('GET /room/:code/annotations returns 404 for non-existent room', () => {
-    const req = { params: { code: 'NOTFOUND' }, query: { token: 'bad-token' } }
+    const req = { params: { code: 'NOTFOUND' }, headers: { authorization: 'Bearer bad-token' } }
     const res = { statusCode: 200, jsonData: null, status(code) { this.statusCode = code; return this }, json(data) { this.jsonData = data; return this } }
     handleGetAnnotations(req, res)
     expect(res.statusCode).toBe(404)
     expect(res.jsonData.error).toBe('Room not found')
   })
 
-  it('GET /room/:code/annotations returns 403 for invalid token', () => {
-    const req = { params: { code: 'ROOMCODE' }, query: { token: 'bad-token' } }
+  it('GET /room/:code/annotations returns 403 for invalid bearer token', () => {
+    const req = { params: { code: 'ROOMCODE' }, headers: { authorization: 'Bearer bad-token' } }
     const res = { statusCode: 200, jsonData: null, status(code) { this.statusCode = code; return this }, json(data) { this.jsonData = data; return this } }
     handleGetAnnotations(req, res)
     expect(res.statusCode).toBe(403)
     expect(res.jsonData.error).toBe('Invalid presenter token')
   })
 
-  it('GET /room/:code/annotations returns 403 when token is missing', () => {
-    const req = { params: { code: 'ROOMCODE' }, query: {} }
+  it('GET /room/:code/annotations rejects query-only credentials', () => {
+    const req = { params: { code: 'ROOMCODE' }, query: { token: mockPresenterToken } }
     const res = { statusCode: 200, jsonData: null, status(code) { this.statusCode = code; return this }, json(data) { this.jsonData = data; return this } }
     handleGetAnnotations(req, res)
     expect(res.statusCode).toBe(403)

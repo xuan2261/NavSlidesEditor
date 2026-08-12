@@ -64,7 +64,7 @@ async function importPptxFile(filePath, options = {}) {
   options.signal?.throwIfAborted?.()
   const packageInfo = {
     ...parsed.packageInfo,
-    zip: await loadPptxArchive(filePath),
+    zip: await loadPptxArchive(filePath, { signal: options.signal }),
   }
   options.signal?.throwIfAborted?.()
   // Scene graph is inventory truth (Phase 03); mapper still uses pptxtojson payloads.

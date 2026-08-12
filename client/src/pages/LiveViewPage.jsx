@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import { useRevealPreviewFrame } from '../hooks/use-reveal-preview-frame'
@@ -77,7 +77,7 @@ export default function LiveViewPage() {
   }, [])
 
   // A focused same-origin presentation iframe does not bubble keyboard events to its parent.
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.addEventListener('keydown', handleOverlayKeyDown)
 
     const iframe = iframeElement

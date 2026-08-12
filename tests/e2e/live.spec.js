@@ -32,6 +32,8 @@ async function createRoom(request) {
   expect(res.ok()).toBeTruthy()
   const body = await res.json()
   expect(body.presenterToken).toBeTruthy()
+  expect(body.remoteToken).toBeTruthy()
+  expect(body.speakerToken).toBeTruthy()
   return body
 }
 
@@ -151,20 +153,19 @@ test.describe('Live Presentation & WebSockets', () => {
 
     const remote = await context.newPage()
     await remote.setViewportSize({ width: 390, height: 844 })
-    await remote.goto(`/remote/${room.roomCode}`)
-    await expect(remote.getByText('Notes A')).toBeVisible({ timeout: 10000 })
+    await remote.goto(`/remote/${room.roomCode}#cap=${room.remoteToken}`)
+    await expect(remote.getByText('No speaker notes for this slide.')).toBeVisible({ timeout: 10000 })
     await expect(remote.getByTestId('remote-viewer-count')).toContainText('1')
-
     await remote.getByRole('button', { name: /Next/ }).click()
     await waitForRevealIndex(viewer, 'Live Presentation', '1:0:0')
-    await expect(remote.getByText('Notes B')).toBeVisible({ timeout: 10000 })
+    await expect(remote.getByText('No speaker notes for this slide.')).toBeVisible({ timeout: 10000 })
     await expect(remote.getByTestId('remote-viewer-count')).toContainText('1')
   })
 
   test('speaker view stacks and scrolls at narrow desktop widths', async ({ page, request }) => {
     const room = await createRoom(request)
     await page.setViewportSize({ width: 640, height: 700 })
-    await page.goto(`/speaker/${room.roomCode}`)
+    await page.goto(`/speaker/${room.roomCode}#cap=${room.speakerToken}`)
 
     const main = page.getByTestId('speaker-main')
     const previews = page.getByTestId('speaker-previews')

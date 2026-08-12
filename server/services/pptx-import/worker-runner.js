@@ -107,6 +107,9 @@ function runParserWorker(filePath, options = {}) {
       env: buildParserWorkerEnv({ repoRoot }),
     })
     let settled = false
+    let abortRequested = false
+    let abortAckTimer
+    let abortTerminationStarted = false
     let stderr = ''
     let stdout = ''
     let ignoredMessages = ''
@@ -116,17 +119,39 @@ function runParserWorker(filePath, options = {}) {
       resolveClosed = resolveClosedPromise
     })
 
-    const finish = (result) => {
+    const terminateAfterAbort = () => {
+      if (abortTerminationStarted) return
+      abortTerminationStarted = true
+      clearTimeout(abortAckTimer)
+      killChild(child, childState, options.killGraceMs)
+    }
+
+    const finish = (result, { deferKill = false } = {}) => {
       if (settled) return
       settled = true
       clearTimeout(timer)
       options.signal?.removeEventListener?.('abort', abortWorker)
       result.workerClosed = workerClosed
-      killChild(child, childState, options.killGraceMs)
+      if (deferKill) {
+        const ackWaitMs = Math.min(
+          Number.isFinite(options.abortAckTimeoutMs) ? options.abortAckTimeoutMs : 250,
+          options.killGraceMs || PARSER_KILL_GRACE_MS,
+        )
+        abortAckTimer = setTimeout(terminateAfterAbort, Math.max(1, ackWaitMs))
+        abortAckTimer.unref?.()
+      } else {
+        killChild(child, childState, options.killGraceMs)
+      }
       resolve(result)
     }
 
     const abortWorker = () => {
+      abortRequested = true
+      try {
+        if (child.connected) child.send({ type: 'abort' })
+      } catch {
+        // The bounded kill below remains the cancellation fallback.
+      }
       finish({
         ok: false,
         error: {
@@ -134,7 +159,7 @@ function runParserWorker(filePath, options = {}) {
           message: 'PPTX import cancelled',
           diagnostics: sanitizeDiagnostic(stderr || stdout || ignoredMessages),
         },
-      })
+      }, { deferKill: true })
     }
 
     const timer = setTimeout(() => {
@@ -158,8 +183,11 @@ function runParserWorker(filePath, options = {}) {
       stderr = `${stderr}${chunk}`.slice(-2000)
     })
     child.on('message', (message) => {
+      if (message?.type === 'abort-ack') {
+        if (abortRequested) terminateAfterAbort()
+        return
+      }
       if (settled) return
-      if (isReadyMessage(message)) return
       if (isProgressMessage(message)) {
         try {
           options.onProgress?.(message)
