@@ -1,8 +1,13 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: v1.14.3 — Coverage governance, CI stabilization, release-confidence verification, design-token theming, FX backgrounds, Design Ideas, ribbon polish, and EditorPage hardening
+## Current Status: v1.15.7
 
-Core editing, export, live presentation, game presenter/player, and PPTX import flows are operational. The ribbon UI has replaced the old toolbar/menu system and now has clipping-safe portal popups. The design-token system (39 presets, 8 FX backgrounds, Design Ideas panel) landed in v1.13.0-v1.14.0. EditorPage hardening (vertical slides first-class, ~1356 LOC) and ribbon polish (contextual Format tab, RibbonBigButton, zoom slider, view switcher) completed in v1.14.0. v1.14.1 adds release-confidence verification docs, critical journey coverage, and CI gate contracts. The 2026-06-12 remediation pass closes the 2026-06-11 monorepo review findings across game sockets, server trust boundaries, import/export hardening, live room cleanup, and editor UI controls. v1.14.3 completes the 2026-06-15 coverage expansion pass: warn-first `depth:*` assertion-depth governance, Phase 3 behavior evidence for all 19 canonical element rows, focused Phase 4 browser-depth workflows, Phase 5 external-boundary coverage, Phase 6 visual/a11y/k6 lane ownership, Phase 7 manual-smoke disposition/final validation reporting, and a green full GitHub CI matrix with E2E shards, visual regression, mobile, live, PPTX corpus, feature coverage, and k6 lanes. The current docs baseline reflects Node.js 20+, the route-based shell, ribbon architecture, in-memory live room state with cleanup, and the hybrid PPTX export/import pipeline.
+Package manifests own the released version.
+[Unreleased changes](project-changelog.md#unreleased) track merged work after
+that release; [system architecture](system-architecture.md),
+[deployment](deployment-guide.md), and
+[export/import limits](export-fidelity-and-limits.md) own the current behavioral
+boundaries.
 
 ### What Works
 

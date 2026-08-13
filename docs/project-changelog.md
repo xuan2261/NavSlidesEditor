@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Hardened post-release live-session authority, default network exposure, upload
+  isolation, and PPTX archive integrity. Current contracts and executable owners
+  are linked from [Live Protocol](system-architecture.md#live-protocol),
+  [Local mutation ingress and reverse proxy](deployment-guide.md#local-mutation-ingress-and-reverse-proxy),
+  [PPTX Import Policy](deployment-guide.md#pptx-import-policy), and
+  [Imported PPTX package contract](export-fidelity-and-limits.md#imported-pptx-package-contract).
 - Package-backed export, present, live presentation, save-as-template, history restore, public share, GitHub push, cloud sync, and explore/fork workflows resolve projection content from package authority rather than stale compatibility JSON; history restore responses are authority-consistent with their successor generation. Covered snapshot/duplicate/fork paths check the exact source head, duplicate package work runs before presentation-file serialization, missing/malformed package heads fail closed, bulk summary/sync reads reuse one store snapshot, and external fork/GitHub/sync JSON strips package authority metadata. Covered package-backed template PUTs reject projection-changing edits; rclone sync stages manifest/blob bundles with per-request workspaces and same-destination serialization. Pending save-as-template is rejected, package-backed template projection edits are immutable, and focused permanent-delete path/owner/reconciliation plus restore/save/delete fencing coverage now exists. Template rollback/outbox cleanup, final snapshot/duplicate/fork race closure, explore rollback, retain/quarantine retry fencing, remote sync resource/publication behavior, and complete portable authority-archive semantics remain active hardening work. The sync bundle is not yet a restorable authority archive or native-fidelity qualification.
 - Imported PPTX charts now remain preserve-only/read-only until qualified. Validated edited-package export fails closed instead of falling back, while a verified immutable original remains the separate recovery path.
 - Added durable browser drafts for pending autosaves, including oversized unload receipts, generation/idempotency-preserving retry, and an explicit remote-first recovery dialog. Drafts clean up only after a matching commit or user-selected remote version; storage-disabled/private-browsing limits remain documented.

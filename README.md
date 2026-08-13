@@ -1,6 +1,10 @@
 # NavSlides Editor
 
 [![CI](https://github.com/xuan2261/NavSlidesEditor/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/badge.svg?branch=master)](https://github.com/xuan2261/NavSlidesEditor/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml)
+[![Latest release](https://img.shields.io/github/v/release/xuan2261/NavSlidesEditor?display_name=tag)](https://github.com/xuan2261/NavSlidesEditor/releases/latest)
+[![License](https://img.shields.io/github/license/xuan2261/NavSlidesEditor)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/xuan2261/NavSlidesEditor?style=flat)](https://github.com/xuan2261/NavSlidesEditor/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/xuan2261/NavSlidesEditor?style=flat)](https://github.com/xuan2261/NavSlidesEditor/forks)
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
@@ -11,11 +15,37 @@ Current release: **v1.15.7** — improved PPTX export fidelity, editor/live-sess
 </p>
 
 <p align="center">
+  <a href="#why-navslides">Why NavSlides</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#visual-tour">Visual tour</a> ·
   <a href="#documentation">Documentation</a> ·
-  <a href="#features">Features</a>
+  <a href="#open-source-maintenance">Maintenance</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#contributing">Contributing</a>
 </p>
+
+## Why NavSlides
+
+Most presentation tools trade away privacy, technical authoring, or deployment
+control. NavSlides provides an open browser-based alternative for people who
+need all three:
+
+- **Local ownership** — presentations stay on the operator's filesystem; the
+  default deployment requires no NavSlides account, hosted cloud, or telemetry.
+- **Technical authoring** — code, Markdown, LaTeX/TikZ, charts, diagrams, HTML,
+  media, and interactive elements live beside ordinary slide content.
+- **Portable delivery** — decks can run in the browser, broadcast to live
+  viewers, or move through HTML, offline HTML, PDF, PPTX, and project archives.
+- **Deployment choice** — the same project runs through Docker, Node.js, or an
+  Electron desktop package.
+
+The primary users are academics and researchers, educators and students,
+developer speakers, and privacy-conscious operators. The scope is deliberate:
+NavSlides is a single-user, self-hosted editor rather than a hosted SaaS or
+real-time collaborative document service. Internet-facing deployments therefore
+need the external authentication boundary described in the
+[Security Model](#security-model) and
+[deployment guide](docs/deployment-guide.md).
 
 ## Quick start
 
@@ -106,6 +136,40 @@ npm start
 | Installation | [Installation Guide](https://xuan2261.github.io/NavSlidesEditor/guide/installation) | [Hướng dẫn cài đặt](https://xuan2261.github.io/NavSlidesEditor/vi/guide/installation) |
 | First deck | [First Presentation Tutorial](https://xuan2261.github.io/NavSlidesEditor/tutorials/first-presentation) | [Bài trình chiếu đầu tiên](https://xuan2261.github.io/NavSlidesEditor/vi/tutorials/first-presentation) |
 | Shortcuts | [Keyboard Shortcuts](https://xuan2261.github.io/NavSlidesEditor/guide/keyboard-shortcuts) | [Phím tắt](https://xuan2261.github.io/NavSlidesEditor/vi/guide/keyboard-shortcuts) |
+
+Maintainer and AI navigation: [project intent](docs/project-overview-pdr.md),
+[architecture](docs/system-architecture.md),
+[code standards](docs/code-standards.md),
+[deployment](docs/deployment-guide.md),
+[export/import limits](docs/export-fidelity-and-limits.md), and current
+[roadmap](docs/project-roadmap.md) / [changelog](docs/project-changelog.md).
+
+## Open-source maintenance
+
+NavSlides is a public
+[AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html) project maintained by
+[@xuan2261](https://github.com/xuan2261), the repository owner and package
+author. Releases, verification, architectural decisions, and known limits are
+kept inspectable in the repository rather than represented by private service
+state.
+
+| Maintenance signal | Evidence |
+| --- | --- |
+| Public source and copyleft license | [Repository](https://github.com/xuan2261/NavSlidesEditor) · [LICENSE](LICENSE) |
+| Tagged releases and desktop artifacts | [GitHub Releases](https://github.com/xuan2261/NavSlidesEditor/releases) · [release workflow](.github/workflows/release.yml) |
+| Continuous verification | [CI workflow](.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml) · [testing guide](#testing--performance) |
+| Current architecture and trust boundaries | [System architecture](docs/system-architecture.md) · [Security Model](#security-model) · [deployment guide](docs/deployment-guide.md) |
+| Planning and change history | [Roadmap](docs/project-roadmap.md) · [changelog](docs/project-changelog.md) |
+
+Maintenance spans the React editor, Express and Socket.IO services, shared
+rendering/export code, the Electron shell, and the documentation site.
+Automation has the highest leverage in:
+
+- pull-request review and cross-runtime impact analysis;
+- issue triage, reproduction, and regression-test design;
+- security review of uploads, imports, exports, live capabilities, and
+  dependency changes;
+- CI failure analysis, release preparation, and documentation-drift checks.
 
 ## Features
 
@@ -388,7 +452,7 @@ PPTX browser audit artifacts are written under `plans/reports/pptx-import-real-b
 
 | Layer                | Technology                                    |
 | -------------------- | --------------------------------------------- |
-| Frontend             | React 18, Vite 5, React Router 7              |
+| Frontend             | React 18, Vite 8, React Router 7              |
 | State management     | Zustand (3 stores: editor, presentation, UI)  |
 | Rich text editor     | TipTap 2                                      |
 | Presentation engine  | reveal.js 5                                   |
@@ -402,12 +466,37 @@ PPTX browser audit artifacts are written under `plans/reports/pptx-import-real-b
 | PowerPoint import    | pptxtojson runtime parser; pptx2json benchmark-sandbox-only |
 | Backend              | Node.js 20+, Express 4                        |
 | Real-time transport  | Socket.IO                                     |
-| Desktop app          | Electron 33                                   |
+| Desktop app          | Electron 42                                   |
 | Cloud sync           | rclone                                        |
 | Validation           | Zod (mutation endpoints)                      |
 | Testing              | Vitest, Playwright, k6                        |
 | Linting & Formatting | ESLint 9 (flat config), Prettier              |
 | Storage              | JSON files + local filesystem                 |
+
+---
+
+## Contributing
+
+Contributions are welcome through
+[issues](https://github.com/xuan2261/NavSlidesEditor/issues) and
+[pull requests](https://github.com/xuan2261/NavSlidesEditor/pulls). For a large
+API, persistence, security, or format-compatibility change, open an issue first
+so the contract and migration risk are explicit before implementation.
+
+1. Fork the repository and branch from `master`.
+2. Install dependencies with `npm install`.
+3. Read the relevant [code standards](docs/code-standards.md) and
+   [system architecture](docs/system-architecture.md), then change the
+   executable owner instead of duplicating behavior in documentation.
+4. Run the focused checks for the changed surface and the applicable baseline
+   from [Testing & Performance](#testing--performance). `package.json` owns the
+   exact commands.
+5. Open a focused pull request that explains the problem, decision, behavioral
+   and security impact, and verification evidence. Include before/after images
+   for visible UI changes and call out persistence or compatibility effects.
+
+Maintainer triage and release ownership currently sit with
+[@xuan2261](https://github.com/xuan2261).
 
 ---
 
