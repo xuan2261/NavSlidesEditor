@@ -174,9 +174,10 @@ navslides-editor/
 - `electron/main.js` starts the embedded server on port `3002`, sets
   `SLIDES_DATA_DIR` and `SLIDES_UPLOADS_DIR` under Electron `userData`, and
   launches the desktop window.
-- Sandbox is disabled for the current desktop build path.
-- `electron/preload.js` exposes credential helpers backed by `safeStorage`
-  when the OS supports it.
+- The renderer uses Chromium sandboxing with `nodeIntegration: false` and
+  `contextIsolation: true`.
+- Window creation and navigation require the exact parsed app origin; external
+  HTTP(S) targets open in the system browser. No preload/IPC bridge is exposed.
 
 ## Data and Persistence
 
@@ -230,7 +231,7 @@ navslides-editor/
 ## Repo Notes
 
 - Root package version is `1.15.7`.
-- Runtime baseline is Node.js 20+.
+- Runtime baseline is Node.js >=22.13.0; CI and container builds pin 22.22.0.
 - There is no database layer; persistence is file-based by design.
 - There is no full TypeScript migration; JSDoc is the type system.
 - The repo includes large generated artifacts such as template assets, icon

@@ -12,6 +12,9 @@
 - Imported PPTX charts now remain preserve-only/read-only until qualified. Validated edited-package export fails closed instead of falling back, while a verified immutable original remains the separate recovery path.
 - Added durable browser drafts for pending autosaves, including oversized unload receipts, generation/idempotency-preserving retry, and an explicit remote-first recovery dialog. Drafts clean up only after a matching commit or user-selected remote version; storage-disabled/private-browsing limits remain documented.
 - Corrected the current PPTX import contract: runtime parsing uses `pptxtojson` only; parser-relative corpus metrics and manifest-bound two-pass importer qualification now have separate commands. Qualification records exact corpus/source hashes and finite native evidence, and remains non-zero for known EMF/native-node blockers rather than reporting a false pass.
+- Completed the five-phase full-codebase remediation: deterministic Electron/server dependency closure, operator-only analytics, exact-origin sandboxed Electron, canonical IPv4-mapped/NAT64 endpoint checks, presenter shortcut/timer repair, bounded shutdown, transactional rclone configuration, import cleanup, accessibility/state fixes, shared themes/runtime documentation, and a zero-warning lint baseline. Final source review passes; Windows Electron and best-effort PPTX lanes pass. Release remains truthfully blocked because Docker is unavailable, importer-native strict rejects `Bai_2_1`/`Bai_2_5`, and valid Microsoft PowerPoint oracle evidence is below the fixed SSIM policy.
+- Fixed PPTX oracle capture so the deterministic `960x540` viewport is passed explicitly into the browser context before Reveal CSS configuration; this removes the browser-side `VIEWPORT is not defined` failure and is covered by a focused regression assertion.
+
 
 ## v1.15.1 — 2026-06-30
 

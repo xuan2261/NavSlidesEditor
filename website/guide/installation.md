@@ -104,7 +104,7 @@ For developers or anyone who wants to customize the editor.
 
 ### Prerequisites
 
-- Node.js 20+ and npm
+- Node.js >=22.13.0 and npm. CI and container builds pin Node.js 22.22.0.
 
 ### Steps
 

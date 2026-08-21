@@ -5,8 +5,8 @@
 | Method               | Best For                        | Requirements                      |
 | -------------------- | ------------------------------- | --------------------------------- |
 | Docker (recommended) | Server / VPS                    | Docker 20.10+, Docker Compose v2+ |
-| Node.js from source  | Development, lightweight server | Node.js 20+, npm 8+               |
-| Electron desktop     | Single-user desktop app         | Node.js 20+ (build only)          |
+| Node.js from source  | Development, lightweight server | Node.js >=22.13.0, npm         |
+| Electron desktop     | Single-user desktop app         | Node.js >=22.13.0 (build only) |
 
 ---
 
@@ -86,10 +86,10 @@ docker compose down -v
 
 Multi-stage build (confirmed at `Dockerfile` in root):
 
-1. **Builder stage** — uses Node 20 Alpine, installs all deps, runs `npm run vendor` + `npm run build` (compiles React → `client/dist/`)
-2. **Production stage** — uses `mcr.microsoft.com/playwright:v1.59.1-noble` so server-side PPTX element rasterization has Chromium available, installs only server prod deps, copies `server/` + `client/dist/` + `server/vendor/`, and installs rclone via `apt`
+1. **Builder stage** — pins Node.js 22.22.0 on Debian Bookworm Slim, installs the workspace lockfile without lifecycle scripts, then runs vendor publication and the client build.
+2. **Production stage** — pins the same Node.js 22.22.0 image, installs rclone and the lock-derived server runtime dependency set, installs Playwright Chromium, copies the built client and published vendor assets, then verifies runtime closure.
 
-Final image runs: `node server/index.js`
+The final command re-runs runtime-closure verification before `node server/index.js`.
 
 ---
 
@@ -222,10 +222,27 @@ An `Origin` header, when present, must match the effective request host and
 protocol and any configured origin allowlist. These settings are a local
 deployment/CSRF boundary, not authentication or tenant isolation.
 
+`/api/analytics/:id` is an owner/editor route. It intentionally does not accept
+a share token as authorization and returns `Cache-Control: no-store`; the
+response redacts raw share tokens and full referrer URLs. An internet-facing
+proxy must keep this route behind the same operator authentication as the
+editor. If `/share/:token` is made public, do not exempt `/api/analytics` or
+other editor APIs from authentication, and do not use a share-token query
+parameter as a proxy bypass rule.
+
 ## PPTX Import Policy
 Before package mapping, PPTX import validates ZIP structure, entry count, declared
 uncompressed size, bounded streamed decompressed size, and each entry's CRC32.
 CRC or resource-budget failures are fail-closed.
+
+Parser-relative corpus metrics and browser layout audits are regression signals,
+not native-complete or PowerPoint-fidelity claims. Release qualification uses
+two additional fail-closed gates: the manifest-bound importer-native strict lane
+(`npm run test:pptx:importer-qualification`) and the Microsoft PowerPoint visual
+oracle described in [`pptx-visual-evidence-runbook.md`](pptx-visual-evidence-runbook.md).
+Any blocked deck, missing evidence, or below-policy SSIM result blocks those
+claims even when best-effort import remains usable.
+
 
 ### External media
 
@@ -376,6 +393,7 @@ Current baseline file:
 ## Security Notes
 
 - The application has **no built-in authentication**. Do not expose port 3002 directly to the internet without a reverse proxy + auth layer (e.g., Nginx + HTTP Basic Auth, Authelia, Cloudflare Access).
+- Public share capabilities authorize only their `/share/:token` presentation flow. They do not authorize `/api/analytics/:id`; keep analytics and editor APIs behind operator authentication.
 - GitHub tokens are stored in plaintext in `github-config.json`. Restrict filesystem access accordingly.
 - File-backed settings may contain sensitive values such as API keys or sync credentials. Do not commit or deploy those files publicly.
 - CORS is open in development; production disables cross-origin requests by default. Add an explicit allowlist in `server/index.js` only for a trusted deployment boundary.

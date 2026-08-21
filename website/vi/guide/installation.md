@@ -103,7 +103,7 @@ Dành cho nhà phát triển hoặc bất kỳ ai muốn tùy biến trình so�
 
 ### Yêu cầu trước
 
-- Node.js 20+ và npm
+- Node.js >=22.13.0 và npm. Các bản build CI và container khóa Node.js 22.22.0.
 
 ### Các bước
 

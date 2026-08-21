@@ -354,7 +354,7 @@ server/uploads/
   first run.
 - `tmp-pptx-imports/` is a temporary workspace for PPTX import uploads and is cleaned after each import.
 - `pptx-originals/{uuid}.pptx` stores the zero-loss original package for each successful PPTX import (lifecycle = presentation lifetime). Metadata on the presentation is `pptxOriginal: { id, sha256, byteLength, uploadedAt }` only — no client filesystem paths. Download via `GET /api/presentations/:id/pptx-original`. Import jobs complete with `{ presentationId, stats, warnings }` after server-side create.
-- PPTX import builds an OOXML **scene graph** (`ooxml-scene-graph/`) as inventory truth alongside `pptxtojson` mapping; mapped elements receive `_pptxSource.nodeId` for reconcile. Visual oracle tooling lives under `pptx-import/oracle/` (`npm run test:pptx:oracle`, `test:pptx:oracle:capture` for present-mode actuals).
+- PPTX import builds an OOXML **scene graph** (`ooxml-scene-graph/`) as inventory truth alongside `pptxtojson` mapping; mapped elements receive `_pptxSource.nodeId` for reconcile. Visual oracle tooling lives under `pptx-import/oracle/`: capture imports package-backed decks through HTTP, renders every Reveal leaf at an explicit deterministic `960x540` viewport, and compares those actuals only against Microsoft PowerPoint goldens. Importer-native strict and visual-oracle qualification are independent fail-closed gates.
 - Optional user plugins live under `server/data/plugins/<slug>/`; bundled
   plugins live under top-level `plugins/<slug>/`.
 
@@ -538,6 +538,11 @@ diverge:
 - PPTX layout regression protection has two browser gates: PR/runtime-sensitive
   strict smoke (`npm run test:pptx:browser-audit`) and release-blocking full
   strict audit (`npm run test:pptx:browser-audit:full`).
+- PowerPoint visual qualification is separate from both importer-native and
+  browser-layout gates. `test:pptx:oracle:integrity` validates the evidence
+  envelope and role receipts; `test:pptx:oracle:qualify` then applies the fixed
+  `phase08_full` mean/minimum SSIM policy. Integrity PASS alone never authorizes
+  a fidelity claim.
 - `exportPptx.js` reuses `getSlideNotes()` so speaker notes stay aligned across
   HTML and PPTX exports, and it preserves slide z-order by exporting sorted
   element stacks.
@@ -569,9 +574,8 @@ diverge:
 ### GitHub
 
 - GitHub push uses the Git Data API.
-- Config is stored in `github-config.json`.
-- Electron can encrypt credentials with `safeStorage`; Docker and Node use file
-  storage.
+- Config is stored in `github-config.json`; Electron, Docker, and Node use the
+  same file-backed integration contract.
 
 ### rclone
 
@@ -598,19 +602,21 @@ diverge:
 - HTML embed remains trusted programmable content by product policy; script
   execution is intentionally preserved in editor/present/export/share paths.
 - Upload routes enforce MIME validation and rate limiting.
-- `/api/analytics/:id` requires a valid share token mapped to that
-  presentation.
+- `/api/analytics/:id` is an owner/editor route protected by the operator's
+  deployment authentication boundary. Share tokens do not authorize analytics;
+  responses omit raw tokens/full referrers and use `Cache-Control: no-store`.
 - Soft-deleted presentations are blocked from serve/share/export-derived paths
   through centralized serveable-presentation lookup.
 - Live presenter takeover is blocked by `presenterToken` validation in
   `join-room`.
 - AI custom endpoints are restricted to public `http/https` targets, block
-  localhost/private/link-local ranges, and pin the outbound connection to the
-  validated IP to avoid DNS rebinding between validation and fetch.
+  private, mapped-private, link-local, and special-use IP ranges, and pin the
+  outbound connection to the validated IP to avoid DNS rebinding between
+  validation and fetch.
 - Share links use server-side tokens and optional passwords.
 - `ErrorBoundary` guards the React app against render crashes.
-- Electron denies unexpected window-open/navigation targets outside the app
-  origin and explicit safe external schemes.
+- Electron uses a sandboxed renderer and exact parsed-origin checks for window
+  creation/navigation; external HTTP(S) targets are handed to the system browser.
 
 ## Operational Notes
 

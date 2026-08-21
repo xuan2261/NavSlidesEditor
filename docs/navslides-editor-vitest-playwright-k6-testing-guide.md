@@ -17,7 +17,10 @@ NavSlides Editor uses three testing layers: Vitest (unit/integration JS), Playwr
 | `npm run test:load:api:smoke` / `:load` / `:stress` | k6 REST with explicit profile |
 | `npm run test:load:ws` | k6 Socket.IO load test (smoke profile by default) |
 | `npm run test:load:ws:smoke` / `:load` / `:stress` | k6 Socket.IO with explicit profile |
-| `npm run test:corpus` | PPTX import fidelity tester |
+| `npm run test:pptx:corpus-metrics` | Parser-relative PPTX semantic/round-trip metrics (`test:corpus` is the compatibility alias) |
+| `npm run test:pptx:importer-qualification` | Manifest-bound two-pass importer-native strict gate |
+| `npm run test:pptx:browser-audit:full` | Full real-browser PPTX layout audit |
+| `npm run test:pptx:oracle:integrity` / `:qualify` | PowerPoint evidence-integrity and fixed-policy visual gates |
 | `npm run test:deep` | Run only the `tier:deep` behavior tests (`*.deep.test.*`) |
 | `npm run inventory` | Regenerate the capability inventory (`scripts/feature-inventory/inventory.json`) |
 | `npm run matrix` | Regenerate the feature-coverage matrix → `docs/feature-coverage-matrix.md` + `scripts/feature-inventory/reports/feature-coverage-matrix.json` |
@@ -230,7 +233,7 @@ Current lane ownership is maintained here as evergreen release evidence. Archive
 |---|---|---|
 | PR fast lane | lint, focused unit/contract checks, matrix gate signal | Keep practical for PR feedback; new gates start warn-first |
 | Merge full lane | coverage, build, Playwright shards, visual, PPTX corpus, k6 smoke | Promote after two consecutive green CI runs |
-| Release strict lane | PPTX strict, Electron prepare/package, load profile, manual checklist | Blocks release signoff, not every PR |
+| Release strict lane | PPTX importer qualification + full browser audit + PowerPoint oracle, Electron prepare/package, load profile, manual checklist | Blocks release signoff, not every PR |
 
 #### Non-functional gate ownership
 

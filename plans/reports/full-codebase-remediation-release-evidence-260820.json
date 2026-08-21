@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-21T06:12:03Z",
+  "scope": "full-codebase-remediation",
+  "releaseVersion": "1.15.7",
+  "environment": {
+    "node": "v22.22.0",
+    "npm": "10.2.4",
+    "os": "win32",
+    "arch": "x64"
+  },
+  "decision": {
+    "status": "conditionally-blocked",
+    "productionReady": false,
+    "reasons": [
+      "Docker artifact qualification was not runnable because no docker executable is installed on this workstation.",
+      "PPTX importer-native qualification fails closed for 2 of 11 decks, and the PowerPoint visual oracle passes evidence integrity but fails the fixed SSIM policy; no native-complete or PowerPoint 1:1 claim is authorized."
+    ],
+    "qualifiedScope": [
+      "Windows Electron build and packaged runtime smoke",
+      "best-effort PPTX corpus, browser, adversarial, package and performance lanes",
+      "PowerPoint oracle evidence-integrity validation",
+      "dependency audit with zero disclosed vulnerabilities"
+    ]
+  },
+  "runtimeReceipt": {
+    "path": "dist-electron/runtime-receipt.json",
+    "sha256": "6fcbe112d80fd201a6cc90a918dd0d4be8187c1a66fa935ae7123f695f4b89b4",
+    "baseImage": "node:22.22.0-bookworm-slim@sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca6d3ea96f16cb30df6187d94",
+    "hashes": {
+      "rootLock": "34608c89b4218887d3eb23e409be3ebd0dd0467cfa46a4c12feef0fc58b4993d",
+      "electronServerLock": "b5fc3a83628677fba6392cf9e9556b6a57dd840556422abc2ff83eeb565eb488",
+      "productionTree": "a73fec26b9837c7e8afbf73723fd031745f0c5730182fcea21fc8c88291571b8",
+      "vendorManifest": "9df5a89ebc1a474cc3ce12547df2631b024e019ada6bc50f6be0a1ee4488e053"
+    },
+    "artifacts": [
+      {
+        "path": "dist-electron/latest.yml",
+        "bytes": 364,
+        "sha256": "d31fafd23566e6e2fa19cac0f51d4499c0345f51726c77ce1b91a4820865f66f"
+      },
+      {
+        "path": "dist-electron/NavSlides Editor 1.15.7.exe",
+        "bytes": 141535120,
+        "sha256": "6ef7d01052da0edb3751e5b6ae78c254c07fe84bc88517857bf3b6be73ffb9d1"
+      },
+      {
+        "path": "dist-electron/NavSlides Editor Setup 1.15.7.exe",
+        "bytes": 141965910,
+        "sha256": "645f6ffeeddc22d30071e1b9d38310bd676da2439deb2acc81729c7d7c17c454"
+      }
+    ]
+  },
+  "evidenceArtifacts": [
+    {
+      "path": "plans/reports/2026-08-20-pptx-import-perf-matrix.json",
+      "sha256": "ced8c0c5ebca258348e5f1e131871f7004807b42ae7164e1b3ce06844626943c"
+    },
+    {
+      "path": "plans/reports/pptx-oracle-runs/pptx-oracle-2026-08-20T09-07-11-214Z.json",
+      "sha256": "b123bab9a8882178cb30cf3ae152b89d6681a8952cacabae7cdf69ad87f760df"
+    },
+    {
+      "path": "plans/reports/pptx-import-real-browser-audit-runs/2026-08-20T09-07-34-593Z-14176/pptx-import-real-browser-audit.json",
+      "sha256": "284929e823a4c8738d2a47317f8b93438ffeebc23235ac52cc59406c1121993c"
+    },
+    {
+      "path": "plans/reports/pptx-import-real-browser-audit-runs/2026-08-20T09-07-34-593Z-14176/pptx-import-real-browser-audit.md",
+      "sha256": "b09df784b2c3fd51149ab83d76b5995d6c62c4cc5d683885a46eed779dfc34ff"
+    }
+  ],
+  "commandReceipts": [
+    {
+      "command": "npm run electron:build:win -- --publish never && npm run runtime:receipt",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": "Windows unpacked, NSIS and portable Electron artifacts built; runtime receipt emitted."
+    },
+    {
+      "command": "final packaged Electron HTTP/artifact smoke",
+      "cwd": "dist-electron/win-unpacked",
+      "exitCode": 0,
+      "status": "passed",
+      "result": {
+        "serverReady": "127.0.0.1:3002 accepted connections",
+        "presentationApi": { "status": 200 },
+        "socketIoAsset": { "status": 200, "version": "4.8.3" },
+        "packagedNat64Guard": true,
+        "packagedLiveTimerShortcutRouting": true,
+        "unsupportedTeamShortcutBundleEntryAbsent": true,
+        "runtimeReceiptSha256": "6fcbe112d80fd201a6cc90a918dd0d4be8187c1a66fa935ae7123f695f4b89b4"
+      }
+    },
+    {
+      "command": "which docker",
+      "cwd": ".",
+      "exitCode": 1,
+      "status": "environment-blocked",
+      "result": "No Docker executable found; Docker build/runtime smoke not executed."
+    },
+    {
+      "command": "npm audit --json",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "totalVulnerabilities": 0, "critical": 0, "high": 0, "moderate": 0, "low": 0 }
+    },
+    {
+      "command": "npm run test:pptx:corpus-metrics",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "files": 11, "passed": 11, "failed": 0, "averageSemanticFidelity": "100.0%", "averageRoundTripStability": "63.0%" }
+    },
+    {
+      "command": "npm run test:pptx:adversarial",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "tests": 10, "passed": 10, "failed": 0 }
+    },
+    {
+      "command": "npm run test:pptx:package:no-officecli",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "passed": true, "reasons": [] }
+    },
+    {
+      "command": "npm run test:pptx:phase13",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "testFiles": 4, "tests": 12, "passed": 12 }
+    },
+    {
+      "command": "npm run test:pptx:browser-audit:full",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "tests": 6, "passed": 6, "failed": 0, "duration": "3.5m" }
+    },
+    {
+      "command": "npm run test:pptx:perf",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "mode": "tiny", "runs": 2, "wallMs": { "min": 32, "max": 40 } }
+    },
+    {
+      "command": "npx vitest run server/services/pptx-import-job-manager.test.js server/services/pptx-import/worker-runner.test.js",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "testFiles": 2, "passed": 25, "skipped": 1, "total": 26 }
+    },
+    {
+      "command": "npm run test:pptx:importer-qualification",
+      "cwd": ".",
+      "exitCode": 1,
+      "status": "structured-blocked",
+      "result": { "manifestDigest": "b33ce28e3a867b77758eb0ce90716ae5443d0914a5d91a56e2f91ea432b760ed", "qualifiedDecks": 9, "blockedDecks": 2, "blocked": { "Bai_2_1.pptx": { "sceneGraphUnmapped": 8, "permanentPlaceholderCount": 8 }, "Bai_2_5.pptx": { "sceneGraphUnmapped": 5, "permanentPlaceholderCount": 5 } }, "reason": "native scene-graph gaps and strict rejection" }
+    },
+    {
+      "command": "npm run test:pptx:oracle:integrity -- <local PowerPoint evidence envelope>",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "integrityVerdict": "passed", "policyId": "phase08_full", "evidence": "local, non-committed PowerPoint capture envelope" }
+    },
+    {
+      "command": "npm run test:pptx:oracle:qualify -- <same local PowerPoint evidence envelope>",
+      "cwd": ".",
+      "exitCode": 1,
+      "status": "failed-policy",
+      "result": { "integrityVerdict": "passed", "qualificationVerdict": "failed", "policyId": "phase08_full", "meanSsim": 0.23698886751039192, "minSsim": 0, "requiredMeanSsim": 0.99, "requiredMinSsim": 0.97 }
+    },
+    {
+      "command": "npx vitest run server/services/pptx-import/oracle/capture-present.test.js",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "testFiles": 1, "tests": 9, "passed": 9 }
+    },
+    {
+      "command": "npm test",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "testFilesPassed": 564, "testFilesSkipped": 1, "testsPassed": 4539, "testsSkipped": 3 }
+    },
+    {
+      "command": "npm run lint",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "warnings": 0, "errors": 0 }
+    },
+    {
+      "command": "npm run build",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": "Production client bundle built successfully."
+    },
+    {
+      "command": "npm run docs:build",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": "VitePress documentation built successfully."
+    },
+    {
+      "command": "npm run test:audit",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "testFiles": 8, "tests": 37, "passed": 37 }
+    },
+    {
+      "command": "npm run matrix:gate",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "capabilitiesVerified": 112, "capabilitiesTotal": 112, "gaps": 0, "failures": 0, "tagged": 0, "elementControlRows": 141 }
+    },
+    {
+      "command": "npm run test:e2e",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "passed": 512, "skipped": 21, "duration": "12.6m" }
+    },
+    {
+      "command": "npm run test:pptx:browser-audit:full",
+      "cwd": ".",
+      "exitCode": 0,
+      "status": "passed",
+      "result": { "tests": 6, "passed": 6, "failed": 0, "duration": "3.6m" }
+    }
+  ]
+}
