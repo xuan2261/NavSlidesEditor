@@ -1,4 +1,3 @@
-/* global describe, expect, it */
 const { EventEmitter } = require('events')
 const fs = require('fs')
 const os = require('os')

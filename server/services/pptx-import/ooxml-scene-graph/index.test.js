@@ -117,6 +117,67 @@ describe('buildOoxmlSceneGraph + reconcile (T3.1 T3.6 T3.7 T3.8)', () => {
     )
   })
 
+  it('strict node identity rejects mixed authoritative and tentative coverage', async () => {
+    const graph = await buildOoxmlSceneGraph(await fixtureZip())
+    const leaves = graph.slides[0].nodes.filter((node) => node.kind !== 'grpSp')
+    const presentation = {
+      slides: [{
+        elements: leaves.map((leaf, index) => ({
+          type: leaf.kind === 'pic' ? 'image' : 'shape',
+          _pptxSource: {
+            nodeId: leaf.id,
+            slideIndex: 0,
+            matchedBy: index === 0 ? 'sourceId' : 'kind',
+            authoritative: index === 0,
+          },
+        })),
+      }],
+    }
+
+    const soft = reconcileSceneGraph(graph, presentation)
+    expect(soft.unmapped.some((item) => item.nodeId === leaves[1].id && item.severity === 'node-unmapped')).toBe(true)
+    expect(() => reconcileSceneGraph(graph, presentation, { strictNodeGate: true })).toThrow(
+      /PPTX_SLA_STRICT_NODES/
+    )
+  })
+
+  it('strict mode accepts complete authoritative same-slide coverage', async () => {
+    const graph = await buildOoxmlSceneGraph(await fixtureZip())
+    const leaves = graph.slides[0].nodes.filter((node) => node.kind !== 'grpSp')
+    const presentation = {
+      slides: [{
+        elements: leaves.map((leaf) => ({
+          type: leaf.kind === 'pic' ? 'image' : 'shape',
+          _pptxSource: { nodeId: leaf.id, kind: leaf.kind, slideIndex: 0, authoritative: true },
+        })),
+      }],
+    }
+
+    const result = reconcileSceneGraph(graph, presentation, { strict: true })
+    expect(result.unmapped).toEqual([])
+    expect(result.warnings).toEqual([])
+    expect([...result.mappedNodeIds]).toEqual(expect.arrayContaining(leaves.map((leaf) => `0:${leaf.id}`)))
+  })
+
+  it('does not gate package-preserved OLE frames as editable scene leaves', () => {
+    const graph = {
+      slides: [{
+        index: 0,
+        nodes: [{
+          id: '2',
+          kind: 'graphicFrame',
+          name: 'Object 1',
+          graphicUri: 'http://schemas.openxmlformats.org/presentationml/2006/ole',
+        }],
+      }],
+    }
+
+    expect(() => reconcileSceneGraph(graph, { slides: [{ elements: [] }] }, {
+      strictCountGate: true,
+      strictNodeGate: true,
+    })).not.toThrow()
+  })
+
   it('multi-slide reuses node ids without false coverage', async () => {
     const zip = new JSZip()
     zip.file('[Content_Types].xml', '<Types/>')

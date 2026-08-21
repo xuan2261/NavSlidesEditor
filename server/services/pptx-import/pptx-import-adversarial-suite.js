@@ -149,14 +149,12 @@ async function main(argv = process.argv.slice(2)) {
   const flag = argv.find((arg) => arg.startsWith('--fixture-dir='))
   const fixtureDir = flag ? flag.slice('--fixture-dir='.length) : DEFAULT_FIXTURE_DIR
   const summary = await runAdversarialSuite({ fixtureDir, materialize })
-  // eslint-disable-next-line no-console
   console.log(JSON.stringify(summary, null, 2))
   process.exitCode = summary.ok ? 0 : 1
 }
 
 if (require.main === module) {
   main().catch((error) => {
-    // eslint-disable-next-line no-console
     console.error(error)
     process.exitCode = 1
   })

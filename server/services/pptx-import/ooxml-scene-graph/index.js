@@ -1,7 +1,7 @@
 const { parseSpTree } = require('./parse-sptree')
 const { parseRelationshipTargets, rejectTraversalTarget } = require('./parse-rels')
 const { inspectOoxmlCoverage } = require('../ooxml-inspection')
-const { collectMappedNodeIds, leafNodes, sourceKey } = require('./attach-source-nodes')
+const { collectMappedNodeIds, strictLeafNodes, sourceKey } = require('./attach-source-nodes')
 const { resolveSceneGraphStrictPolicy } = require('./strict-policy')
 
 async function readZipText(zip, entry) {
@@ -117,7 +117,7 @@ function reconcileSceneGraph(graph, presentation, options = {}) {
   const mappedIds = collectMappedNodeIds(presentation)
 
   for (const gSlide of graph?.slides || []) {
-    const leaves = leafNodes(gSlide.nodes)
+    const leaves = strictLeafNodes(gSlide.nodes)
     const graphCount = leaves.length
     const mappedElements = presentation?.slides?.[gSlide.index]?.elements || []
     const mappedCount = mappedElements.length

@@ -129,8 +129,13 @@ async function captureRevealSlides(page, {
       const reveal = window.Reveal
       if (!reveal || typeof reveal.getCurrentSlide !== 'function') return false
       const indices = reveal.getIndices() || {}
+      const current = reveal.getCurrentSlide()
+      const animations = typeof current?.getAnimations === 'function'
+        ? current.getAnimations({ subtree: true })
+        : []
       return indices.h === expected.h && (indices.v ?? 0) === expected.v &&
-        reveal.getCurrentSlide() === reveal.getSlides()[expected.ordinal]
+        current === reveal.getSlides()[expected.ordinal] &&
+        animations.every((animation) => ['finished', 'idle'].includes(animation.playState))
     }, target))
     const currentHandle = await abortable(signal, () => page.evaluateHandle(() => window.Reveal.getCurrentSlide()))
     const currentSlide = currentHandle.asElement()
@@ -191,8 +196,28 @@ async function capturePresentSlides(presentation, options = {}) {
     if (!browser) browser = await launchBrowser(chromium, options.signal, teardownTimeoutMs)
     page = await abortable(options.signal, () => browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 1 }))
     const html = await abortable(options.signal, () => generatePresentHtml(presentation))
-    await abortable(options.signal, () => page.setContent(withAssetBase(html, options.assetBaseUrl), { waitUntil: 'load' }))
+    const assetBaseUrl = new URL(options.assetBaseUrl).origin
+    await abortable(options.signal, () => page.goto(`${assetBaseUrl}/`, { waitUntil: 'load' }))
+    await abortable(options.signal, () => page.setContent(withAssetBase(html, assetBaseUrl), { waitUntil: 'load' }))
     await abortable(options.signal, () => page.waitForFunction(() => window.Reveal?.isReady?.() === true))
+    await abortable(options.signal, () => page.evaluate(({ revealConfig, viewport }) => {
+      window.Reveal.configure(revealConfig)
+      const root = globalThis.document.documentElement
+      root.style.setProperty('--slide-scale', '1')
+      root.style.setProperty('--font-zoom', '1')
+      root.style.setProperty('--slide-aspect', String(viewport.width / viewport.height))
+      globalThis.document.body.style.margin = '0'
+    }, {
+      revealConfig: {
+        controls: false,
+        progress: false,
+        transition: 'none',
+        backgroundTransition: 'none',
+        history: false,
+        hash: false,
+      },
+      viewport: VIEWPORT,
+    }))
     const capture = await captureRevealSlides(page, {
       deckDir: path.join(outDir, deckStem), expectedSlideCount, signal: options.signal, teardownTimeoutMs,
     })

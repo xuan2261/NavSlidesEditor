@@ -8,7 +8,6 @@ const MAX_ARTIFACTS = 256
 const MAX_ARTIFACT_BYTES = 64 * 1024 * 1024
 const MAX_TOTAL_BYTES = 256 * 1024 * 1024
 const SAFE_CLAIM = /^[a-z0-9-]+$/
-const STATIC_FAILURES = new Set(['invalid-claim-level', 'invalid-claim-level-input'])
 
 function validClaimLevel(value) {
   return typeof value === 'string' && CLAIM_LEVELS.includes(value) && SAFE_CLAIM.test(value)

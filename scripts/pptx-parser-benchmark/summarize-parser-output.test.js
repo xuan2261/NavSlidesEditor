@@ -1,4 +1,3 @@
-/* global describe, expect, it */
 const { scoreParser } = require('./report-writer')
 const { summarizeParserOutput } = require('./summarize-parser-output')
 
