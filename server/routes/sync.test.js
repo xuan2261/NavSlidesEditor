@@ -107,6 +107,50 @@ afterAll(async () => {
 })
 
 describe('rclone sync authority boundaries', () => {
+  it('preserves the working config and sibling files when the candidate probe fails', async () => {
+    const configDir = path.dirname(storage.RCLONE_CONFIG_FILE)
+    const original = Buffer.from('[working]\ntype = local\n')
+    await fs.mkdir(configDir, { recursive: true })
+    await fs.writeFile(storage.RCLONE_CONFIG_FILE, original, { mode: 0o640 })
+    await fs.writeFile(path.join(configDir, 'keep.txt'), 'keep')
+    const beforeMode = (await fs.stat(storage.RCLONE_CONFIG_FILE)).mode
+    const beforeEntries = (await fs.readdir(configDir)).sort()
+
+    execFileMock.mockImplementation((_command, args, options, callback) => {
+      if (args[0] === 'obscure') return callback(null, 'obscured', '')
+      expect(options.env.RCLONE_CONFIG).not.toBe(storage.RCLONE_CONFIG_FILE)
+      callback(new Error('probe failed'), '', 'probe failed')
+    })
+
+    const response = await request(makeApp())
+      .post('/api/rclone/config')
+      .send({ username: 'user', password: 'secret', remoteName: 'candidate' })
+
+    expect(response.status).toBe(400)
+    expect(await fs.readFile(storage.RCLONE_CONFIG_FILE)).toEqual(original)
+    expect((await fs.stat(storage.RCLONE_CONFIG_FILE)).mode).toBe(beforeMode)
+    expect((await fs.readdir(configDir)).sort()).toEqual(beforeEntries)
+  })
+
+  it('probes a candidate config before replacing the active config', async () => {
+    await fs.mkdir(path.dirname(storage.RCLONE_CONFIG_FILE), { recursive: true })
+    await fs.writeFile(storage.RCLONE_CONFIG_FILE, '[old]\ntype = local\n')
+    let candidatePath
+    execFileMock.mockImplementation((_command, args, options, callback) => {
+      if (args[0] === 'obscure') return callback(null, 'obscured', '')
+      candidatePath = options.env.RCLONE_CONFIG
+      expect(candidatePath).not.toBe(storage.RCLONE_CONFIG_FILE)
+      callback(null, '', '')
+    })
+
+    const response = await request(makeApp())
+      .post('/api/rclone/config')
+      .send({ username: 'new-user', password: 'secret', remoteName: 'newremote' })
+
+    expect(response.status).toBe(200)
+    expect(await fs.readFile(storage.RCLONE_CONFIG_FILE, 'utf8')).toContain('[newremote]')
+    expect(await fs.stat(candidatePath).catch(() => null)).toBeNull()
+  })
   it('serializes concurrent bulk syncs and cleans each request workspace', async () => {
     await seedLegacyPresentations()
     const calls = []

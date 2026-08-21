@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { SUPPORTED_REVEAL_THEMES } from 'revealjs-shared'
 import {
   ChevronLeft,
   Save,
@@ -27,19 +28,6 @@ import {
 import { normalizeKey, isReservedChord } from '../utils/shortcut-normalizer'
 import SyncModal from '../components/SyncModal'
 
-const THEMES = [
-  'black',
-  'white',
-  'league',
-  'beige',
-  'sky',
-  'night',
-  'serif',
-  'simple',
-  'solarized',
-  'moon',
-  'dracula',
-]
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
 
 const PROVIDERS = [
@@ -559,7 +547,7 @@ export default function SettingsPage() {
                 onChange={(e) => update('defaultTheme', e.target.value)}
                 className={fieldClass}
               >
-                {THEMES.map((t) => (
+                {SUPPORTED_REVEAL_THEMES.map((t) => (
                   <option key={t} value={t}>
                     {t.charAt(0).toUpperCase() + t.slice(1)}
                   </option>

@@ -59,10 +59,9 @@ describe('deriveResponsiveWorkspace', () => {
     })
 
     function Probe() {
-      const workspace = useResponsiveEditorWorkspace()
+      const { observeContainer, tier } = useResponsiveEditorWorkspace()
       // The context deliberately exposes a callback ref for the measured shell.
-      // eslint-disable-next-line react-hooks/refs
-      return <div ref={workspace.observeContainer}>{workspace.tier}</div>
+      return <div ref={observeContainer}>{tier}</div>
     }
 
     render(

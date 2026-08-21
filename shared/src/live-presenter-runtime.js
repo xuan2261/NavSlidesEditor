@@ -28,10 +28,11 @@ function buildLivePresenterRuntime({ presentationId, hasGames }) {
             presenterToken = launchCtx.presenterToken;
           }
         } catch (e) {}
+        var livePresenterSocket = null;
 ${livePresentationReadyDeclaration}        var script = document.createElement('script');
         script.src = '/vendor/socket.io/socket.io.min.js';
         script.onload = function() {
-          var sock = io({ path: '/ws' });
+          var sock = livePresenterSocket = io({ path: '/ws' });
           sock.on('connect', function() {
             sock.emit('join-room', {
               roomId: liveRoom,
@@ -39,6 +40,7 @@ ${livePresentationReadyDeclaration}        var script = document.createElement('
               presentationId: ${presentationIdLiteral},
               presenterToken: presenterToken
             });
+            if (typeof drainAllGameShortcutActions === 'function') drainAllGameShortcutActions();
             if (!document.getElementById('navslides-live-indicator')) {
               var badge = document.createElement('div');
               badge.id = 'navslides-live-indicator';

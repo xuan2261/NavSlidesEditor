@@ -50,9 +50,12 @@ vi.mock('../hooks/use-reveal-preview-frame', () => ({
   useRevealPreviewFrame: () => ({ iframeRef: { current: null } }),
 }))
 vi.mock('../components/annotation-toolbar.jsx', () => ({
-  AnnotationToolbar: ({ onToolChange }) => onToolChange ? (
-    <button type="button" onClick={() => onToolChange('pen')}>Pen</button>
-  ) : null,
+  AnnotationToolbar: ({ onToolChange }) =>
+    onToolChange ? (
+      <button type="button" onClick={() => onToolChange('pen')}>
+        Pen
+      </button>
+    ) : null,
 }))
 
 class MockPointerEvent extends Event {
@@ -62,6 +65,15 @@ class MockPointerEvent extends Event {
     this.clientY = props?.clientY ?? 0
     this.pointerId = props?.pointerId ?? 1
   }
+}
+const TEST_CAPABILITY = 's'.repeat(32)
+
+function stageSpeakerCapability() {
+  window.history.replaceState(
+    null,
+    '',
+    `${window.location.pathname}${window.location.search}#cap=${TEST_CAPABILITY}`
+  )
 }
 
 describe('SpeakerViewPage annotations', () => {
@@ -73,6 +85,7 @@ describe('SpeakerViewPage annotations', () => {
     mocks.socket.emit.mockClear()
     mocks.socket.disconnect.mockClear()
     mocks.socketQueue.length = 0
+    stageSpeakerCapability()
     window.PointerEvent = MockPointerEvent
     SVGElement.prototype.setPointerCapture = vi.fn()
     SVGElement.prototype.getBoundingClientRect = vi.fn(() => ({
@@ -109,7 +122,9 @@ describe('SpeakerViewPage annotations', () => {
       })
     })
 
-    const legacyOverlay = container.querySelector('[data-testid="speaker-legacy-annotation-overlay"]')
+    const legacyOverlay = container.querySelector(
+      '[data-testid="speaker-legacy-annotation-overlay"]'
+    )
     const normalizedCanvas = container.querySelector('.annotation-canvas')
     expect(legacyOverlay).not.toBeNull()
     expect(legacyOverlay.querySelector('path').getAttribute('d')).toBe('M 100 50 L 300 150')
@@ -119,10 +134,12 @@ describe('SpeakerViewPage annotations', () => {
 
   it('keeps one local stroke when the server echoes the same annotation', async () => {
     const { container, getByRole } = await renderConnectedSpeaker()
-    act(() => mocks.socket.handlers['presenter-status']({
-      hasPresenter: true,
-      presenterConnected: true,
-    }))
+    act(() =>
+      mocks.socket.handlers['presenter-status']({
+        hasPresenter: true,
+        presenterConnected: true,
+      })
+    )
     fireEvent.click(getByRole('button', { name: 'Pen' }))
     const canvas = container.querySelector('.annotation-canvas')
 
@@ -152,16 +169,20 @@ describe('SpeakerViewPage annotations', () => {
   it('shows a reconnecting state without ending the session on presenter disconnect', async () => {
     const view = await renderConnectedSpeaker()
 
-    act(() => mocks.socket.handlers['presenter-status']({
-      hasPresenter: false,
-      presenterConnected: true,
-    }))
+    act(() =>
+      mocks.socket.handlers['presenter-status']({
+        hasPresenter: false,
+        presenterConnected: true,
+      })
+    )
     expect(view.getByText('Presenter reconnecting...')).toBeTruthy()
 
-    act(() => mocks.socket.handlers['presenter-status']({
-      hasPresenter: true,
-      presenterConnected: true,
-    }))
+    act(() =>
+      mocks.socket.handlers['presenter-status']({
+        hasPresenter: true,
+        presenterConnected: true,
+      })
+    )
     expect(view.queryByText('Presenter reconnecting...')).toBeNull()
 
     act(() => mocks.socket.handlers['presenter-disconnected']())
@@ -174,20 +195,24 @@ describe('SpeakerViewPage annotations', () => {
   it('disables slide navigation until a presenter is available', async () => {
     const view = await renderConnectedSpeaker()
 
-    act(() => mocks.socket.handlers['presentation-meta']({
-      slideCount: 1,
-      slides: [{ slideIndex: 0, verticalIndex: 0, label: '1', title: 'Slide 1' }],
-    }))
+    act(() =>
+      mocks.socket.handlers['presentation-meta']({
+        slideCount: 1,
+        slides: [{ slideIndex: 0, verticalIndex: 0, label: '1', title: 'Slide 1' }],
+      })
+    )
 
     const slideButton = await view.findByRole('button', { name: '1' })
     expect(slideButton.disabled).toBe(true)
     fireEvent.click(slideButton)
     expect(mocks.socket.emit.mock.calls.some(([event]) => event === 'control-navigate')).toBe(false)
 
-    act(() => mocks.socket.handlers['presenter-status']({
-      hasPresenter: true,
-      presenterConnected: true,
-    }))
+    act(() =>
+      mocks.socket.handlers['presenter-status']({
+        hasPresenter: true,
+        presenterConnected: true,
+      })
+    )
     expect(slideButton.disabled).toBe(false)
 
     fireEvent.click(slideButton)
@@ -196,10 +221,12 @@ describe('SpeakerViewPage annotations', () => {
 
   it('does not emit annotations after the presenter disappears', async () => {
     const { container, getByRole } = await renderConnectedSpeaker()
-    act(() => mocks.socket.handlers['presenter-status']({
-      hasPresenter: true,
-      presenterConnected: true,
-    }))
+    act(() =>
+      mocks.socket.handlers['presenter-status']({
+        hasPresenter: true,
+        presenterConnected: true,
+      })
+    )
     fireEvent.click(getByRole('button', { name: 'Pen' }))
     act(() => mocks.socket.handlers['presenter-disconnected']())
 
@@ -224,13 +251,14 @@ describe('SpeakerViewPage annotations', () => {
     expect(view.getByText('Session ended')).toBeTruthy()
 
     mocks.roomCode = 'ROOM2'
+    stageSpeakerCapability()
     view.rerender(<SpeakerViewPage />)
     expect(view.queryByText('Session ended')).toBeNull()
     expect(mocks.socket.disconnect).toHaveBeenCalled()
 
     act(() => mocks.socket.handlers.connect())
     const joinCall = mocks.socket.emit.mock.calls.filter(([event]) => event === 'join-room').at(-1)
-    expect(joinCall[1]).toMatchObject({ roomId: 'ROOM2', role: 'controller' })
+    expect(joinCall[1]).toMatchObject({ roomId: 'ROOM2', role: 'speaker' })
   })
 
   it('ignores retained callbacks from a previous room socket', async () => {
@@ -243,6 +271,7 @@ describe('SpeakerViewPage annotations', () => {
     await waitFor(() => expect(view.getByText('Waiting for presenter...')).toBeTruthy())
 
     mocks.roomCode = 'ROOM2'
+    stageSpeakerCapability()
     view.rerender(<SpeakerViewPage />)
     act(() => secondSocket.handlers.connect())
     await waitFor(() => expect(view.getByText('Waiting for presenter...')).toBeTruthy())

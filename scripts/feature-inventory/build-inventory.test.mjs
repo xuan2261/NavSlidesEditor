@@ -63,9 +63,9 @@ describe('feature inventory generator', () => {
     ]))
   })
 
-  it('auto-sources all 45 shortcut.* including shortcut.save', () => {
+  it('auto-sources all 41 supported shortcut.* entries including shortcut.save', () => {
     const shortcuts = inv.filter((e) => e.category === 'shortcut')
-    expect(shortcuts.length).toBe(45)
+    expect(shortcuts.length).toBe(41)
     expect(shortcuts.map((s) => s.id)).toContain('shortcut.save')
   })
 

@@ -2123,82 +2123,6 @@
       "depthResolutionPhase": null
     },
     {
-      "id": "shortcut.teamSelect1",
-      "category": "shortcut",
-      "risk": "low",
-      "tier": "smoke",
-      "layer": "unit",
-      "tests": [
-        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
-      ],
-      "status": "PASS",
-      "depths": [
-        "trace"
-      ],
-      "requiredDepths": [],
-      "missingDepths": [],
-      "depthStatus": "OK",
-      "depthOwner": null,
-      "depthResolutionPhase": null
-    },
-    {
-      "id": "shortcut.teamSelect2",
-      "category": "shortcut",
-      "risk": "low",
-      "tier": "smoke",
-      "layer": "unit",
-      "tests": [
-        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
-      ],
-      "status": "PASS",
-      "depths": [
-        "trace"
-      ],
-      "requiredDepths": [],
-      "missingDepths": [],
-      "depthStatus": "OK",
-      "depthOwner": null,
-      "depthResolutionPhase": null
-    },
-    {
-      "id": "shortcut.teamSelect3",
-      "category": "shortcut",
-      "risk": "low",
-      "tier": "smoke",
-      "layer": "unit",
-      "tests": [
-        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
-      ],
-      "status": "PASS",
-      "depths": [
-        "trace"
-      ],
-      "requiredDepths": [],
-      "missingDepths": [],
-      "depthStatus": "OK",
-      "depthOwner": null,
-      "depthResolutionPhase": null
-    },
-    {
-      "id": "shortcut.teamSelect4",
-      "category": "shortcut",
-      "risk": "low",
-      "tier": "smoke",
-      "layer": "unit",
-      "tests": [
-        "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js"
-      ],
-      "status": "PASS",
-      "depths": [
-        "trace"
-      ],
-      "requiredDepths": [],
-      "missingDepths": [],
-      "depthStatus": "OK",
-      "depthOwner": null,
-      "depthResolutionPhase": null
-    },
-    {
       "id": "shortcut.timerAdd",
       "category": "shortcut",
       "risk": "low",
@@ -2373,9 +2297,9 @@
   ],
   "orphans": [],
   "summary": {
-    "total": 116,
-    "verified": 116,
-    "PASS": 116,
+    "total": 112,
+    "verified": 112,
+    "PASS": 112,
     "DEPTH-WARN": 0
   }
 }

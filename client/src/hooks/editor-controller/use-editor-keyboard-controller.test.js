@@ -27,7 +27,7 @@ describe('useEditorKeyboardController presenter popup scope', () => {
     const activeHook = renderHook(() => useEditorKeyboardController(active))
 
     press(' ')
-    expect(active.emitGameShortcutAction).toHaveBeenCalledWith('startSpin')
+    expect(active.emitGameShortcutAction).toHaveBeenCalledWith('startSpin', {})
 
     activeHook.unmount()
     const inactiveHook = renderHook(() => useEditorKeyboardController(inactive))
@@ -37,16 +37,18 @@ describe('useEditorKeyboardController presenter popup scope', () => {
     inactiveHook.unmount()
   })
 
-  it('routes team selection through the configured action while presenting', () => {
+  it('routes timer commands through the presenter popup contract', () => {
     const controller = createController({
-      currentGameType: 'jeopardy',
-      activeGameElement: { id: 'game-2', gameType: 'jeopardy' },
+      currentGameType: 'hot-potato',
+      activeGameElement: { id: 'game-2', gameType: 'hot-potato', timerDuration: 45 },
     })
     const hook = renderHook(() => useEditorKeyboardController(controller))
 
-    press('1')
+    press(' ')
+    press('p')
 
-    expect(controller.emitGameShortcutAction).toHaveBeenCalledWith('selectTeam', { teamIndex: 0 })
+    expect(controller.emitGameShortcutAction).toHaveBeenNthCalledWith(1, 'startTimer', { duration: 45 })
+    expect(controller.emitGameShortcutAction).toHaveBeenNthCalledWith(2, 'pauseGame', {})
     hook.unmount()
   })
 

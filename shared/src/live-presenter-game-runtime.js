@@ -153,13 +153,13 @@ function buildGameBootstrapRuntime(presentationId) {
             queue.push(Object.assign({}, detail));
             return true;
           }
-          function socketEventForGameShortcut(state, action) {
+          function gameSocketEventForShortcut(state, action) {
             if ((action === 'startSpin' || action === 'random') && state.gameType === 'name-picker') {
               return 'game-random';
             }
             if (
               ['next', 'nextQuestion', 'nextPhase', 'nextTeam'].indexOf(action) >= 0 &&
-              ['hot-potato', 'relay-race', 'trivia-champ'].indexOf(state.gameType) >= 0
+              ['hot-potato', 'jeopardy', 'relay-race', 'trivia-champ'].indexOf(state.gameType) >= 0
             ) {
               return 'game-next';
             }
@@ -191,12 +191,35 @@ function buildGameBootstrapRuntime(presentationId) {
             }
             return null;
           }
+          function liveSocketEventForShortcut(action) {
+            if (action === 'startTimer') return 'game-timer-start';
+            if (action === 'pauseGame') return 'game-timer-pause';
+            if (action === 'addTime' || action === 'subTime') return 'game-timer-adjust';
+            return null;
+          }
           function dispatchGameShortcut(state, detail) {
             if (!state || !state.socket || !state.socket.connected || !state.joined) return false;
             if (!detail || detail.gameType !== state.gameType) return true;
-            var socketEvent = socketEventForGameShortcut(state, detail.action);
-            if (socketEvent) state.socket.emit(socketEvent, { gameId: state.gameId });
+            var gameSocketEvent = gameSocketEventForShortcut(state, detail.action);
+            if (gameSocketEvent) {
+              state.socket.emit(gameSocketEvent, { gameId: state.gameId });
+              return true;
+            }
+            var liveSocketEvent = liveSocketEventForShortcut(detail.action);
+            if (!liveSocketEvent) return true;
+            if (typeof livePresenterSocket === 'undefined' || !livePresenterSocket || !livePresenterSocket.connected) {
+              return false;
+            }
+            var payload = { elementId: state.gameId };
+            if (liveSocketEvent === 'game-timer-start') payload.duration = detail.duration;
+            if (liveSocketEvent === 'game-timer-adjust') payload.delta = detail.delta;
+            livePresenterSocket.emit(liveSocketEvent, payload);
             return true;
+          }
+          function drainAllGameShortcutActions() {
+            Object.keys(gameHostStates).forEach(function(gameId) {
+              drainGameShortcutActions(gameHostStates[gameId]);
+            });
           }
           function drainGameShortcutActions(state) {
             if (!state || !state.pendingShortcutActions || !state.pendingShortcutActions.length) return;

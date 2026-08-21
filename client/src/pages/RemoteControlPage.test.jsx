@@ -7,7 +7,9 @@ const mocks = vi.hoisted(() => {
   const createSocket = () => {
     const handlers = {}
     return {
-      on: vi.fn((event, handler) => { handlers[event] = handler }),
+      on: vi.fn((event, handler) => {
+        handlers[event] = handler
+      }),
       emit: vi.fn(),
       disconnect: vi.fn(),
       handlers,
@@ -24,6 +26,15 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: () => ({ roomCode: mocks.roomCode }),
 }))
+const TEST_CAPABILITY = 'r'.repeat(32)
+
+function stageRemoteCapability() {
+  window.history.replaceState(
+    null,
+    '',
+    `${window.location.pathname}${window.location.search}#cap=${TEST_CAPABILITY}`
+  )
+}
 
 describe('RemoteControlPage room lifecycle', () => {
   beforeEach(() => {
@@ -33,6 +44,7 @@ describe('RemoteControlPage room lifecycle', () => {
     mocks.socket.emit.mockClear()
     mocks.socket.disconnect.mockClear()
     mocks.socketQueue.length = 0
+    stageRemoteCapability()
   })
 
   it('ignores retained callbacks from a previous room socket', async () => {
@@ -45,6 +57,7 @@ describe('RemoteControlPage room lifecycle', () => {
     await waitFor(() => expect(view.getByText('Waiting for presenter...')).toBeTruthy())
 
     mocks.roomCode = 'ROOM2'
+    stageRemoteCapability()
     view.rerender(<RemoteControlPage />)
     act(() => secondSocket.handlers.connect())
     await waitFor(() => expect(view.getByText('Waiting for presenter...')).toBeTruthy())

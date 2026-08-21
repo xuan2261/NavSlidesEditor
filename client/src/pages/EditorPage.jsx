@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useContext } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 import { useSlideOperations } from '../hooks/use-slide-operations'
 import { createExitEditOnEscape } from '../hooks/tiptap-exit-edit-on-escape'
@@ -15,7 +15,6 @@ import { getSelectionIdsForActiveSlideElement } from '../utils/active-slide-sele
 import { getBlockedActionNotice } from '../utils/blocked-action-notice'
 import { useUIStore } from '../stores/ui-store'
 import { Button } from '../components/ui'
-import { LiveSocketContext } from '../contexts/live-socket-context-provider.jsx'
 import EditorShell from '../components/editor/editor-shell'
 import EditorWorkspace from '../components/editor/editor-workspace'
 import { EditorPageHeader, EditorPageOverlays } from '../components/editor/editor-page-chrome'
@@ -41,7 +40,6 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
   const [verticalEdit, setVerticalEdit] = useState(null)
 
-  const liveSocket = useContext(LiveSocketContext)
 
   const selectedElementIds = useEditorStore((s) => s.selectedElementIds)
   const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds)
@@ -532,7 +530,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     setShowCommandPalette, showGameHud, setShowGameHud, showGameLeaderboard,
     setShowGameLeaderboard, setSelectedElementIds, setEditingElementId, selectedElementIdsRef,
     activeSlideRef, notifyBlockedAction, presentation, updateElements, setCurrentSlideIndex,
-    editingElementId, currentGameType, isPresenterPopupActive, startSlideshow, activeGameElement, liveSocket,
+    editingElementId, currentGameType, isPresenterPopupActive, startSlideshow, activeGameElement,
     emitGameShortcutAction, setShowTemplateModal, groupElements, ungroupElements,
     selectedElementIds, stepSelectedZOrder, fitZoom, zoomIn, zoomOut,
   })

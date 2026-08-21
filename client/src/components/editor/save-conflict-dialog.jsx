@@ -8,7 +8,6 @@ export default function SaveConflictDialog(props) {
 }
 
 function ActiveSaveConflictDialog({
-  conflict,
   onUseRemote,
   onKeepLocal,
   onClose,

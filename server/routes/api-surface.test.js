@@ -139,6 +139,7 @@ describe('API surface routes', () => {
 
     expect(uploadRes.status).toBe(400)
     expect(uploadRes.body.error).toBe('File content is not valid SVG')
+    expect(uploadRes.body.code).toBe('invalid-svg')
   })
 
   it('accepts ogv uploads and lists them as video media', async () => {
@@ -241,20 +242,41 @@ describe('API surface routes', () => {
     await storage.writeShareTokens({
       analyticsToken: {
         presentationId: 'pres-analytics',
+        name: 'Primary audience',
+        createdAt: new Date().toISOString(),
+      },
+      secondaryToken: {
+        presentationId: 'pres-analytics',
+        name: 'Secondary audience',
         createdAt: new Date().toISOString(),
       },
     })
 
-    await recordView('pres-analytics', 'token-a', 'https://ref.example')
-    await recordView('pres-analytics', 'token-a', '')
-    const deniedRes = await request(app).get('/api/analytics/pres-analytics')
-    expect(deniedRes.status).toBe(403)
+    await recordView(
+      'pres-analytics',
+      'analyticsToken',
+      'https://ref.example/private/path?capability=secret'
+    )
+    await recordView('pres-analytics', 'secondaryToken', '')
 
-    const analyticsRes = await request(app).get('/api/analytics/pres-analytics?token=analyticsToken')
+    const analyticsRes = await request(app).get('/api/analytics/pres-analytics')
     expect(analyticsRes.status).toBe(200)
+    expect(analyticsRes.headers['cache-control']).toBe('no-store')
     expect(analyticsRes.body.totalViews).toBeGreaterThanOrEqual(2)
-    expect(analyticsRes.body.byToken['token-a']).toBeGreaterThanOrEqual(2)
+    expect(analyticsRes.body.byLinkLabels['Primary audience']).toBeGreaterThanOrEqual(1)
+    expect(analyticsRes.body.byLinkLabels['Secondary audience']).toBeGreaterThanOrEqual(1)
     expect(analyticsRes.body.dailyViews.length).toBeGreaterThanOrEqual(1)
+    expect(analyticsRes.body.recentEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ referrerHost: 'ref.example' }),
+      ])
+    )
+    const responseText = JSON.stringify(analyticsRes.body)
+    expect(responseText).not.toContain('analyticsToken')
+    expect(responseText).not.toContain('secondaryToken')
+    expect(responseText).not.toContain('/private/path')
+    expect(responseText).not.toContain('capability=secret')
+    expect(analyticsRes.body).not.toHaveProperty('byToken')
   })
 
   it('filters deleted presentations from explore even when share tokens remain', async () => {

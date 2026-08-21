@@ -20,6 +20,40 @@ const { hashRecord } = require('../services/pptx-import/package-store/schemas')
 
 const router = express.Router()
 const syncRemoteTails = new Map()
+let rcloneConfigTail = Promise.resolve()
+
+async function withRcloneConfigLock(action) {
+  const previous = rcloneConfigTail
+  let release
+  rcloneConfigTail = new Promise((resolve) => {
+    release = resolve
+  })
+  await previous
+  try {
+    return await action()
+  } finally {
+    release()
+  }
+}
+
+async function replaceRcloneConfig(candidatePath) {
+  try {
+    await fs.rename(candidatePath, RCLONE_CONFIG_FILE)
+    return
+  } catch (error) {
+    if (!['EEXIST', 'EPERM'].includes(error?.code) || !fs.existsSync(RCLONE_CONFIG_FILE)) throw error
+  }
+
+  const backupPath = `${RCLONE_CONFIG_FILE}.${crypto.randomUUID()}.backup`
+  await fs.rename(RCLONE_CONFIG_FILE, backupPath)
+  try {
+    await fs.rename(candidatePath, RCLONE_CONFIG_FILE)
+    await fs.remove(backupPath)
+  } catch (error) {
+    await fs.rename(backupPath, RCLONE_CONFIG_FILE).catch(() => {})
+    throw error
+  }
+}
 const MAX_SYNC_FOLDER_NAME_LENGTH = 96
 const MAX_VISIBLE_PRESENTATION_ID_LENGTH = 24
 const PRESENTATION_ID_FINGERPRINT_LENGTH = 16
@@ -336,23 +370,31 @@ router.post('/config', async (req, res) => {
     if (!safeUsername) return res.status(400).json({ error: 'Username cannot be empty' })
     if (!safePassword) return res.status(400).json({ error: 'Password cannot be empty' })
 
-    // Security: obscure password using rclone itself (prevents plaintext on disk)
-    // Fail hard if rclone obscure is unavailable — no plaintext fallback
-    let obscuredPassword
-    try {
-      obscuredPassword = await runRclone(['obscure', safePassword])
-    } catch {
-      return res.status(500).json({ error: 'Failed to obscure password. rclone must be installed and functional.' })
-    }
+    const result = await withRcloneConfigLock(async () => {
+      let obscuredPassword
+      try {
+        obscuredPassword = await runRclone(['obscure', safePassword])
+      } catch {
+        return { status: 500, body: { error: 'Failed to obscure password. rclone must be installed and functional.' } }
+      }
 
-    const configContent = `[${safeName}]\ntype = protondrive\nusername = ${safeUsername}\npassword = ${obscuredPassword}\n`
-    await fs.writeFile(RCLONE_CONFIG_FILE, configContent)
-    try {
-      await runRclone(['lsd', `${safeName}:`])
-    } catch (err) {
-      return res.status(400).json({ error: 'Connection failed: ' + err.message })
-    }
-    res.json({ success: true, remote: safeName })
+      await fs.ensureDir(path.dirname(RCLONE_CONFIG_FILE))
+      const candidatePath = `${RCLONE_CONFIG_FILE}.${crypto.randomUUID()}.tmp`
+      const configContent = `[${safeName}]\ntype = protondrive\nusername = ${safeUsername}\npassword = ${obscuredPassword}\n`
+      try {
+        await fs.writeFile(candidatePath, configContent, { flag: 'wx', mode: 0o600 })
+        try {
+          await runRclone(['lsd', `${safeName}:`], { RCLONE_CONFIG: candidatePath })
+        } catch (error) {
+          return { status: 400, body: { error: 'Connection failed: ' + error.message } }
+        }
+        await replaceRcloneConfig(candidatePath)
+        return { status: 200, body: { success: true, remote: safeName } }
+      } finally {
+        await fs.remove(candidatePath).catch(() => {})
+      }
+    })
+    res.status(result.status).json(result.body)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

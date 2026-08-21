@@ -125,6 +125,7 @@ export function useEditorLiveSessionController({
     currentLiveSpeakerToken,
     getPresenterPopupBridge,
     handlePresenterWindowOpened,
+    emitGameShortcutAction,
     handleStartLive,
     isPresenterPopupActive,
   }

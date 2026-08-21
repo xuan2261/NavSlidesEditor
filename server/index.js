@@ -40,6 +40,68 @@ function logStoreReleaseFailure(error) {
   )
 }
 
+const serverShutdownPromises = new WeakMap()
+let packageStoreShutdownPromise = null
+
+function releasePackageStore() {
+  if (!packageStoreShutdownPromise) {
+    packageStoreShutdownPromise = shutdownPackageStore().catch(logStoreReleaseFailure)
+  }
+  return packageStoreShutdownPromise
+}
+
+function drainServerTransports(server, timeoutMs) {
+  if (!server) return Promise.resolve()
+  const io = server.navslidesIo
+  return new Promise((resolve) => {
+    let pending = 0
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      try {
+        io?.engine?.close()
+      } catch {
+        // Transport is already closed or being force-closed.
+      }
+      settled = true
+      clearTimeout(timeout)
+      resolve()
+    }
+    const completeOne = () => {
+      pending -= 1
+      if (pending === 0) finish()
+    }
+    const timeout = setTimeout(() => {
+      server.getConnections?.((_error, count) => {
+        console.warn(`[shutdown] drain deadline exceeded; force-closing ${count} connection(s)`)
+      })
+      io?.disconnectSockets?.(true)
+      server.closeAllConnections?.()
+      finish()
+    }, timeoutMs)
+    timeout.unref?.()
+
+    if (io) {
+      try {
+        io.disconnectSockets(true)
+      } catch {
+        // HTTP drain still owns the bounded shutdown contract.
+      }
+    }
+
+    if (server.listening) {
+      pending += 1
+      try {
+        server.close(completeOne)
+      } catch {
+        completeOne()
+      }
+    }
+
+    if (pending === 0) finish()
+  })
+}
+
 // ── Routes ───────────────────────────────────────────────────────────────────
 const presentationsRouter = require('./routes/presentations')
 const templatesRouter = require('./routes/templates')
@@ -375,18 +437,20 @@ async function startServer(port, options = {}) {
   const exposureWarning = getExposureWarning(listenHost)
   if (exposureWarning) console.warn(JSON.stringify(exposureWarning))
   await initializePackageStore({ rootDir: path.resolve(DATA_DIR) })
+  packageStoreShutdownPromise = null
   return new Promise((resolve, reject) => {
     const server = http.createServer(app)
     server.once('close', () => {
-      shutdownPackageStore().catch(logStoreReleaseFailure)
+      if (!serverShutdownPromises.has(server)) releasePackageStore()
     })
     server.once('error', async (error) => {
-      await shutdownPackageStore().catch(logStoreReleaseFailure)
+      await releasePackageStore()
       reject(error)
     })
 
     const corsOptions = process.env.NODE_ENV === 'production' ? { origin: false } : { origin: '*' }
     const io = new Server(server, { cors: corsOptions, path: '/ws' })
+    server.navslidesIo = io
     app.set('io', io)
     setupSocketHandlers(io)
     setupGameSocketHandlers(io)
@@ -403,17 +467,27 @@ async function startServer(port, options = {}) {
 }
 
 /**
- * The package store writer lock outlives the process that took it, so an exit
- * that skips this leaves the store locked and the next boot refusing to start.
+ * Stop admission, drain HTTP and Socket.IO work, then release the package store.
+ * Concurrent callers share one shutdown so the writer lock cannot be released
+ * while another caller is still draining transports.
  */
-async function stopServer(server) {
-  if (server) server.close()
-  await shutdownPackageStore().catch(logStoreReleaseFailure)
+function stopServer(server, options = {}) {
+  if (!server) return releasePackageStore()
+  const existing = serverShutdownPromises.get(server)
+  if (existing) return existing
+  const timeoutMs = Number.isFinite(options.drainTimeoutMs)
+    ? Math.max(0, options.drainTimeoutMs)
+    : 5000
+  const shutdown = Promise.resolve()
+    .then(() => drainServerTransports(server, timeoutMs))
+    .then(() => pptxImportRouter.drainDetachedImportCleanups?.({ timeoutMs }))
+    .then(releasePackageStore)
+  serverShutdownPromises.set(server, shutdown)
+  return shutdown
 }
 
 /**
- * Live sockets keep server.close() from ever completing, so exit explicitly
- * once the store is released rather than waiting for the connections to drain.
+ * Signal shutdown uses the same bounded drain path as Electron and tests.
  */
 function installShutdownHandlers(server) {
   let stopping = false

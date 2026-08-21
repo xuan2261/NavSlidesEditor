@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from './api'
 import { pdfToSlides } from './pdf-import'
+const { getDocumentMock } = vi.hoisted(() => ({ getDocumentMock: vi.fn() }))
 
 vi.mock('pdfjs-dist', () => {
   const getPage = async () => ({
@@ -10,13 +11,12 @@ vi.mock('pdfjs-dist', () => {
   return {
     version: '1.0.0',
     GlobalWorkerOptions: { workerSrc: '' },
-    getDocument: () =>
-      ({
-        promise: Promise.resolve({
-          numPages: 2,
-          getPage,
-        }),
+    getDocument: getDocumentMock.mockImplementation(() => ({
+      promise: Promise.resolve({
+        numPages: 2,
+        getPage,
       }),
+    })),
   }
 })
 
@@ -67,6 +67,10 @@ describe('pdfToSlides', () => {
 
     const file = new File(['pdf'], 'demo.pdf', { type: 'application/pdf' })
     const result = await pdfToSlides(file)
+    expect(getDocumentMock).toHaveBeenCalledWith({
+      data: expect.any(ArrayBuffer),
+      enableScripting: false,
+    })
 
     expect(result.slides).toHaveLength(1)
     expect(result.slides[0].background).toEqual({ type: 'none' })

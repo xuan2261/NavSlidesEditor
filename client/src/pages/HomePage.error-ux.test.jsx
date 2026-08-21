@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   getPresentations: vi.fn(),
   getTemplates: vi.fn(),
   getTrash: vi.fn(),
+  getSettings: vi.fn(() => Promise.resolve({})),
   duplicatePresentation: vi.fn(),
   deletePresentation: vi.fn(),
   showError: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock('../utils/api', () => ({
     getPresentations: mocks.getPresentations,
     getTemplates: mocks.getTemplates,
     getTrash: mocks.getTrash,
+    getSettings: mocks.getSettings,
     duplicatePresentation: mocks.duplicatePresentation,
     deletePresentation: mocks.deletePresentation,
   },
@@ -31,6 +33,7 @@ vi.mock('../utils/app-feedback', () => ({
 vi.mock('../components/dashboard/TemplatePreview', () => ({ default: () => null }))
 vi.mock('../components/SlideThumbnail', () => ({ default: () => <div data-testid="thumbnail" /> }))
 vi.mock('revealjs-shared', () => ({
+  SUPPORTED_REVEAL_THEMES: ['black', 'white', 'league', 'beige', 'sky', 'night', 'serif', 'simple', 'solarized', 'blood', 'moon', 'dracula'],
   getDesignTokensForRevealTheme: vi.fn(() => ({})),
   getThemePreset: vi.fn(() => null),
 }))

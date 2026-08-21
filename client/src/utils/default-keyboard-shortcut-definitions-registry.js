@@ -36,10 +36,6 @@ export const DEFAULT_SHORTCUTS = [
   { id: 'gamePause',      label: 'Pause/Resume Game',  category: 'game', defaultKey: 'P',      scopes: ['presentation-game'] },
   { id: 'timerAdd',       label: 'Add 10s',            category: 'game', defaultKey: '+',      scopes: ['presentation-game'] },
   { id: 'timerSub',       label: 'Subtract 10s',       category: 'game', defaultKey: '-',      scopes: ['presentation-game'] },
-  { id: 'teamSelect1',    label: 'Select Team 1',     category: 'game', defaultKey: '1',      scopes: ['presentation-game'] },
-  { id: 'teamSelect2',     label: 'Select Team 2',     category: 'game', defaultKey: '2',      scopes: ['presentation-game'] },
-  { id: 'teamSelect3',    label: 'Select Team 3',     category: 'game', defaultKey: '3',      scopes: ['presentation-game'] },
-  { id: 'teamSelect4',    label: 'Select Team 4',     category: 'game', defaultKey: '4',      scopes: ['presentation-game'] },
   // Editor Enhancements
   { id: 'insertSlide',          label: 'Insert Slide',                category: 'editing', defaultKey: 'Ctrl+M',        scopes: ['editor'] },
   { id: 'group',                label: 'Group Elements',              category: 'editing', defaultKey: 'Ctrl+G',         scopes: ['editor'] },

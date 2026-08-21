@@ -2,7 +2,7 @@
 
 _Generated: local run_
 
-Verified (PASS only): 116/116 (100%)  |  PASS: 116
+Verified (PASS only): 112/112 (100%)  |  PASS: 112
 
 ## canvas
 
@@ -136,10 +136,6 @@ Verified (PASS only): 116/116 (100%)  |  PASS: 116
 | shortcut.slidePrev | low | smoke | unit | trace | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
 | shortcut.startSlideshow | low | smoke | unit | trace | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
 | shortcut.startSlideshowCurrent | low | smoke | unit | trace | client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js | PASS |
-| shortcut.teamSelect1 | low | smoke | unit | trace | client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js | PASS |
-| shortcut.teamSelect2 | low | smoke | unit | trace | client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js | PASS |
-| shortcut.teamSelect3 | low | smoke | unit | trace | client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js | PASS |
-| shortcut.teamSelect4 | low | smoke | unit | trace | client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js | PASS |
 | shortcut.timerAdd | low | smoke | unit | trace | client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js | PASS |
 | shortcut.timerSub | low | smoke | unit | trace | client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js | PASS |
 | shortcut.toggleFindReplace | low | smoke | unit | trace | client/src/hooks/use-keyboard.test.js | PASS |

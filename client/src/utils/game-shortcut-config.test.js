@@ -14,10 +14,10 @@ describe('GAME_SHORTCUT_CONFIG', () => {
     expect(cfg.leaderboard).toBeNull()
   })
 
-  it('hot-potato has timer, reveal, leaderboard, nextPhase, pause, timerAdd, timerSub', () => {
+  it('hot-potato exposes only implemented remote controls', () => {
     const cfg = GAME_SHORTCUT_CONFIG['hot-potato']
     expect(cfg.timer).not.toBeNull()
-    expect(cfg.reveal).not.toBeNull()
+    expect(cfg.reveal).toBeNull()
     expect(cfg.leaderboard).not.toBeNull()
     expect(cfg.nextPhase).not.toBeNull()
     expect(cfg.pause).not.toBeNull()
@@ -26,19 +26,26 @@ describe('GAME_SHORTCUT_CONFIG', () => {
     expect(cfg.teamSelect).toBeNull()
   })
 
-  it('jeopardy has teamSelect with keys 1-4', () => {
+  it('jeopardy omits unsupported reveal and team-selection controls', () => {
     const cfg = GAME_SHORTCUT_CONFIG['jeopardy']
-    expect(cfg.teamSelect).not.toBeNull()
-    expect(cfg.teamSelect.keys).toEqual(['1', '2', '3', '4'])
+    expect(cfg.teamSelect).toBeNull()
+    expect(cfg.reveal).toBeNull()
     expect(cfg.timer).not.toBeNull()
-    expect(cfg.reveal).not.toBeNull()
+    expect(cfg.nextPhase).not.toBeNull()
   })
 
-  it('relay-race has no timer', () => {
+  it('relay-race keeps next-team but omits unsupported direct team selection', () => {
     const cfg = GAME_SHORTCUT_CONFIG['relay-race']
     expect(cfg.timer).toBeNull()
     expect(cfg.leaderboard).not.toBeNull()
-    expect(cfg.teamSelect).not.toBeNull()
+    expect(cfg.nextPhase).not.toBeNull()
+    expect(cfg.teamSelect).toBeNull()
+  })
+
+  it('four-corners, trivia, and scattergories hide unsupported remote actions', () => {
+    expect(GAME_SHORTCUT_CONFIG['four-corners'].nextPhase).toBeNull()
+    expect(GAME_SHORTCUT_CONFIG['trivia-champ'].reveal).toBeNull()
+    expect(GAME_SHORTCUT_CONFIG.scattergories.reveal).toBeNull()
   })
 
   it('scattergories has +30s/-30s timer adjustment', () => {

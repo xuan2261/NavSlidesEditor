@@ -122,14 +122,17 @@ describe('game bare-keys are scoped out of the authoring canvas', () => {
     expect(cb.onTeamSelect1).not.toHaveBeenCalled()
   })
 
-  it('keeps HUD, reveal and leaderboard reachable in-editor with a game element', () => {
+  it('keeps each implemented HUD shortcut reachable in-editor', () => {
     const cb = baseCallbacks()
-    const handler = createKeyboardHandler({
+    const jeopardyHandler = createKeyboardHandler({
       ...cb, shortcuts, isPresenting: false, activeGameType: 'jeopardy',
     })
-    handler(createEvent('g'))
-    handler(createEvent('r'))
-    handler(createEvent('l'))
+    const pollHandler = createKeyboardHandler({
+      ...cb, shortcuts, isPresenting: false, activeGameType: 'poll',
+    })
+    jeopardyHandler(createEvent('g'))
+    jeopardyHandler(createEvent('l'))
+    pollHandler(createEvent('r'))
     expect(cb.onGameHud).toHaveBeenCalledTimes(1)
     expect(cb.onGameReveal).toHaveBeenCalledTimes(1)
     expect(cb.onGameLeaderboard).toHaveBeenCalledTimes(1)
@@ -144,12 +147,12 @@ describe('game bare-keys are scoped out of the authoring canvas', () => {
     expect(cb.onGameTimer).toHaveBeenCalledTimes(1)
   })
 
-  it('enables guarded game keys for an active popup without leaving editor scope', () => {
+  it('enables implemented guarded game keys for an active popup without leaving editor scope', () => {
     const cb = baseCallbacks()
     const handler = createKeyboardHandler({
       ...cb,
       shortcuts,
-      activeGameType: 'jeopardy',
+      activeGameType: 'hot-potato',
       isGamePresenterActive: () => true,
     })
 
@@ -160,7 +163,7 @@ describe('game bare-keys are scoped out of the authoring canvas', () => {
     handler(createEvent('Escape'))
 
     expect(cb.onGameTimer).toHaveBeenCalledTimes(1)
-    expect(cb.onTeamSelect1).toHaveBeenCalledTimes(1)
+    expect(cb.onTeamSelect1).not.toHaveBeenCalled()
     expect(cb.onSave).toHaveBeenCalledTimes(1)
     expect(cb.onArrow).toHaveBeenCalledWith('right', expect.anything())
     expect(cb.onEscape).toHaveBeenCalledTimes(1)

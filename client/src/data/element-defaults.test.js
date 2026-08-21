@@ -44,7 +44,7 @@ describe('shared presentation JSDoc mirrors canonical element defaults', () => {
     expect(presentationTypesSource).not.toMatch(/\blatex:/)
     expect(presentationTypesSource).not.toMatch(/\bhtmlContent:/)
     expect(presentationTypesSource).not.toMatch(/\bmarkdown:/)
-    expect(presentationTypesSource).not.toMatch(/\bcolor: string,\n \*   strokeWidth/)
+    expect(presentationTypesSource).not.toMatch(/\bcolor: string,\n {3}\* {3}strokeWidth/)
     expect(presentationTypesSource).toMatch(/\bshape:/)
     expect(presentationTypesSource).toMatch(/\bcontent: string/)
     expect(presentationTypesSource).toMatch(/\biconColor:/)

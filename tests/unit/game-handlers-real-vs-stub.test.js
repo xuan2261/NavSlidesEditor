@@ -19,12 +19,17 @@ describe('game handlers in the editor keyboard controller', () => {
     )
   })
 
-  it('Enter, R, P, and team handlers dispatch their configured actions', () => {
+  it('Enter, R, and P handlers dispatch their configured actions', () => {
     expect(src).not.toMatch(/onGameNext:\s*\(\)\s*=>\s*console\.log/)
     expect(src).not.toMatch(/onGameReveal:\s*\(\)\s*=>\s*console\.log/)
     expect(src).not.toMatch(/onGamePause:\s*\(\)\s*=>\s*console\.log/)
-    expect(src).not.toMatch(/onTeamSelect[1-4]:\s*\(\)\s*=>\s*console\.log/)
     expect(src).toContain("emitConfiguredGameShortcut(c, 'nextPhase')")
-    expect(src).toContain("emitConfiguredGameShortcut(c, 'teamSelect', { teamIndex: 0 })")
+    expect(src).toContain("emitConfiguredGameShortcut(c, 'reveal')")
+    expect(src).toContain("emitConfiguredGameShortcut(c, 'pause')")
+  })
+
+  it('does not expose unsupported direct team-selection handlers', () => {
+    expect(src).not.toMatch(/onTeamSelect[1-4]/)
+    expect(src).not.toContain("emitConfiguredGameShortcut(c, 'teamSelect'")
   })
 })

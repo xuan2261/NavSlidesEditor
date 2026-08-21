@@ -83,7 +83,13 @@ router.post('/', upload.single('file'), async (req, res) => {
       await fs.writeFile(req.file.path, sanitized)
     } catch (error) {
       await fs.unlink(req.file.path).catch(() => {})
-      return res.status(400).json({ error: error.code || 'invalid-svg' })
+      const code = ['invalid-svg', 'unsafe-svg', 'svg-too-large'].includes(error?.code)
+        ? error.code
+        : 'invalid-svg'
+      const message = code === error?.code
+        ? error.message
+        : 'File content is not valid SVG'
+      return res.status(400).json({ error: message, code })
     }
   }
 

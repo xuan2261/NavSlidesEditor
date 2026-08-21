@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import {
   Plus,
   Pencil,
@@ -41,21 +41,13 @@ import { showError, showNotice } from '../utils/app-feedback'
 import TemplatePreview from '../components/dashboard/TemplatePreview'
 import { Button, Input, ModalShell, Select } from '../components/ui'
 import SlideThumbnail from '../components/SlideThumbnail'
-import { getDesignTokensForRevealTheme, getThemePreset } from 'revealjs-shared'
+import {
+  SUPPORTED_REVEAL_THEMES,
+  getDesignTokensForRevealTheme,
+  getThemePreset,
+} from 'revealjs-shared'
 
-const THEMES = [
-  'black',
-  'white',
-  'league',
-  'beige',
-  'sky',
-  'night',
-  'serif',
-  'simple',
-  'solarized',
-  'moon',
-  'dracula',
-]
+const THEMES = SUPPORTED_REVEAL_THEMES || []
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
 
 // Maps each deck-starter preset to a token preset id (theme-presets.js) so a
@@ -260,6 +252,23 @@ const SIDEBAR_VIEWS = [
   { key: 'all', label: 'All Presentations', icon: FolderOpen },
 ]
 
+const FALLBACK_CREATION_DEFAULTS = Object.freeze({ theme: 'black', transition: 'slide' })
+
+function getCreationDefaults(settings) {
+  return {
+    theme: THEMES.includes(settings?.defaultTheme)
+      ? settings.defaultTheme
+      : FALLBACK_CREATION_DEFAULTS.theme,
+    transition: TRANSITIONS.includes(settings?.defaultTransition)
+      ? settings.defaultTransition
+      : FALLBACK_CREATION_DEFAULTS.transition,
+  }
+}
+
+function createEmptyForm(defaults = FALLBACK_CREATION_DEFAULTS) {
+  return { title: '', theme: defaults.theme, transition: defaults.transition, templateId: null }
+}
+
 // Import file refs
 // eslint-disable-next-line unused-imports/no-unused-vars
 let pdfInputRef = null
@@ -275,12 +284,9 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   const [loadError, setLoadError] = useState(null)
   const [hasLoadedData, setHasLoadedData] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState({
-    title: '',
-    theme: 'black',
-    transition: 'slide',
-    templateId: null,
-  })
+  const creationDefaultsRef = useRef(FALLBACK_CREATION_DEFAULTS)
+  const creationFormEditedRef = useRef(false)
+  const [form, setForm] = useState(() => createEmptyForm())
   const [creating, setCreating] = useState(false)
   const [previewTemplate, setPreviewTemplate] = useState(null)
   const [confirmDialog, setConfirmDialog] = useState(null) // { title, message, onConfirm, variant }
@@ -301,6 +307,25 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     loadData(true)
     // Initial dashboard fetch runs once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    api.getSettings()
+      .then((settings) => {
+        if (!active) return
+        const defaults = getCreationDefaults(settings)
+        creationDefaultsRef.current = defaults
+        if (!creationFormEditedRef.current) {
+          setForm((current) => ({ ...current, ...defaults }))
+        }
+      })
+      .catch(() => {
+        // The documented fallback remains black/slide when settings are unavailable.
+      })
+    return () => {
+      active = false
+    }
   }, [])
 
   useEffect(() => () => {
@@ -342,6 +367,16 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     loadData(true)
   }
 
+  function updateCreationForm(updater) {
+    creationFormEditedRef.current = true
+    setForm(updater)
+  }
+
+  function resetCreationForm() {
+    creationFormEditedRef.current = false
+    setForm(createEmptyForm(creationDefaultsRef.current))
+  }
+
   async function handleCreate(e) {
     e.preventDefault()
     setCreating(true)
@@ -352,7 +387,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
       }
       const pres = await api.createPresentation(payload)
       setShowModal(false)
-      setForm({ title: '', theme: 'black', transition: 'slide', templateId: null })
+      resetCreationForm()
       onOpen(pres.id)
     } catch (err) {
       console.error('Failed to create presentation', err)
@@ -540,7 +575,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   }
 
   function handleOpenModal() {
-    setForm({ title: '', theme: 'black', transition: 'slide', templateId: null })
+    resetCreationForm()
     setShowModal(true)
   }
 
@@ -805,9 +840,10 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
   const isMarketplaceView = sidebarView === 'marketplace'
   const isTrashView = sidebarView === 'trash'
   const [marketplaceData, setMarketplaceData] = useState({ categories: [], templates: [] })
+  const [marketplaceStatus, setMarketplaceStatus] = useState('idle')
+  const [marketplaceError, setMarketplaceError] = useState('')
   const [marketplaceCategory, setMarketplaceCategory] = useState('')
   const [marketplaceSearch, setMarketplaceSearch] = useState('')
-
   const filteredMarketplaceTemplates = useMemo(() => {
     return filterMarketplaceTemplates(
       marketplaceData.templates,
@@ -816,11 +852,25 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
     )
   }, [marketplaceCategory, marketplaceData.templates, marketplaceSearch])
 
-  useEffect(() => {
-    if (isMarketplaceView && marketplaceData.templates.length === 0) {
-      api.getMarketplaceTemplates().then(setMarketplaceData).catch(console.error)
+  const loadMarketplaceData = useCallback(async () => {
+    setMarketplaceStatus('loading')
+    setMarketplaceError('')
+    try {
+      const data = await api.getMarketplaceTemplates()
+      setMarketplaceData({
+        categories: Array.isArray(data?.categories) ? data.categories : [],
+        templates: Array.isArray(data?.templates) ? data.templates : [],
+      })
+      setMarketplaceStatus('success')
+    } catch (error) {
+      setMarketplaceError(error?.message || 'Could not load marketplace templates.')
+      setMarketplaceStatus('error')
     }
-  }, [isMarketplaceView, marketplaceData.templates.length])
+  }, [])
+
+  useEffect(() => {
+    if (isMarketplaceView && marketplaceStatus === 'idle') loadMarketplaceData()
+  }, [isMarketplaceView, loadMarketplaceData, marketplaceStatus])
 
   return (
     <div className="h-full flex flex-col bg-panel">
@@ -1426,7 +1476,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                 ))}
               </div>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5">
-                {filteredMarketplaceTemplates.map((tmpl) => {
+                {marketplaceStatus === 'success' && filteredMarketplaceTemplates.map((tmpl) => {
                     const bg = getCardBg(tmpl.thumbnail)
                     const bgProp = isGradientOrImage(tmpl.thumbnail)
                       ? { background: bg }
@@ -1457,7 +1507,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                       </div>
                     )
                   })}
-                {marketplaceData.templates.length === 0 && (
+                {(marketplaceStatus === 'idle' || marketplaceStatus === 'loading') && (
                   <div className="col-span-full text-center py-20 px-5 text-text-muted">
                     <Sparkles size={48} />
                     <p className="text-[17px] font-semibold text-text-secondary mb-2">
@@ -1465,7 +1515,27 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     </p>
                   </div>
                 )}
-                {marketplaceData.templates.length > 0 && filteredMarketplaceTemplates.length === 0 && (
+                {marketplaceStatus === 'error' && (
+                  <div className="col-span-full text-center py-20 px-5 text-text-muted" role="alert">
+                    <AlertCircle size={48} />
+                    <p className="text-[17px] font-semibold text-text-secondary mb-2">
+                      Could not load marketplace templates.
+                    </p>
+                    <p className="text-sm text-text-muted mb-6">{marketplaceError}</p>
+                    <Button variant="secondary" onClick={loadMarketplaceData}>
+                      Retry loading marketplace
+                    </Button>
+                  </div>
+                )}
+                {marketplaceStatus === 'success' && marketplaceData.templates.length === 0 && (
+                  <div className="col-span-full text-center py-20 px-5 text-text-muted">
+                    <Sparkles size={48} />
+                    <p className="text-[17px] font-semibold text-text-secondary mb-2">
+                      No marketplace templates available.
+                    </p>
+                  </div>
+                )}
+                {marketplaceStatus === 'success' && marketplaceData.templates.length > 0 && filteredMarketplaceTemplates.length === 0 && (
                   <div className="col-span-full text-center py-20 px-5 text-text-muted">
                     <Search size={48} />
                     <p className="text-[17px] font-semibold text-text-secondary mb-2">
@@ -1762,7 +1832,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   type="text"
                   placeholder="My Presentation"
                   value={form.title}
-                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                  onChange={(e) => updateCreationForm((f) => ({ ...f, title: e.target.value }))}
                   autoFocus
                 />
               </div>
@@ -1783,7 +1853,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                   <Button
                     variant="ghost"
                     type="button"
-                    onClick={() => setForm((f) => ({ ...f, templateId: null }))}
+                    onClick={() => updateCreationForm((f) => ({ ...f, templateId: null }))}
                     className={`h-auto min-h-[42px] px-2 py-2.5 rounded-sm border-2 text-center text-xs font-medium ${getTemplateStartButtonStateClassName(!form.templateId)}`}
                   >
                     Blank
@@ -1801,7 +1871,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                         key={tmpl.id}
                         type="button"
                         onClick={() =>
-                          setForm((f) => ({
+                          updateCreationForm((f) => ({
                             ...f,
                             templateId: tmpl.id,
                             theme: tmpl.theme || f.theme,
@@ -1836,7 +1906,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     <Select
                       id="create-presentation-theme"
                       value={form.theme}
-                      onChange={(e) => setForm((f) => ({ ...f, theme: e.target.value }))}
+                      onChange={(e) => updateCreationForm((f) => ({ ...f, theme: e.target.value }))}
                     >
                       {THEMES.map((t) => (
                         <option key={t} value={t}>
@@ -1855,7 +1925,7 @@ export default function HomePage({ onOpen, theme, onToggleTheme }) {
                     <Select
                       id="create-presentation-transition"
                       value={form.transition}
-                      onChange={(e) => setForm((f) => ({ ...f, transition: e.target.value }))}
+                      onChange={(e) => updateCreationForm((f) => ({ ...f, transition: e.target.value }))}
                     >
                       {TRANSITIONS.map((t) => (
                         <option key={t} value={t}>
