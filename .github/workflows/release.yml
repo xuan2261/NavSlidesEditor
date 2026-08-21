@@ -20,60 +20,71 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          node-version: '22.22.0'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build client
         run: npm run build
 
-      - name: Prepare Electron (server deps + shared module)
+      - name: Smoke production start on Windows
+        shell: pwsh
+        run: |
+          $server = Start-Process -FilePath "npm.cmd" -ArgumentList "start" -PassThru -NoNewWindow
+          try {
+            $ready = $false
+            for ($attempt = 0; $attempt -lt 30; $attempt++) {
+              Start-Sleep -Seconds 1
+              try {
+                $response = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:3002/"
+                if ($response.StatusCode -eq 200) {
+                  $ready = $true
+                  break
+                }
+              } catch {}
+            }
+            if (-not $ready) { throw "Production server did not become ready" }
+          } finally {
+            if (-not $server.HasExited) { & taskkill.exe /PID $server.Id /T /F | Out-Null }
+          }
+
+      - name: Prepare Electron from checked-in server lock
         run: node scripts/prepare-electron.js
 
-      - name: Verify server dependencies
-        shell: bash
-        run: |
-          echo "=== Checking critical server modules ==="
-          for mod in express cors fs-extra multer revealjs-shared; do
-            if [ -d "server/node_modules/$mod" ]; then
-              echo "✓ $mod"
-            else
-              echo "✗ $mod MISSING" && exit 1
-            fi
-          done
+      - name: Verify source runtime closure
+        run: npm run runtime:verify
 
       - name: Build Electron (Windows)
-        run: npx electron-builder --win --publish never
+        run: npm run electron:builder -- --win --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify packaged app
-        shell: bash
-        run: |
-          echo "=== Checking packaged resources ==="
-          ls -la dist-electron/ 2>/dev/null || echo "No output dir"
-          if [ -d "dist-electron/win-unpacked/resources/server/node_modules/express" ]; then
-            echo "✓ express bundled in packaged app"
-          else
-            echo "✗ express MISSING from packaged app" && exit 1
-          fi
+      - name: Verify packaged runtime closure
+        run: >
+          node scripts/verify-runtime-closure.js
+          --root dist-electron/win-unpacked/resources
+          --require-client-dist
+
+      - name: Generate checksummed runtime receipt
+        run: node scripts/runtime-receipt.js
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: electron-win
           path: |
             dist-electron/*.exe
             dist-electron/*.yml
             dist-electron/*.yaml
-          if-no-files-found: warn
+            dist-electron/runtime-receipt.json
+          if-no-files-found: error
           retention-days: 30
 
   release:
@@ -83,10 +94,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: release-assets
           merge-multiple: true
@@ -109,7 +120,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.name }}

@@ -24,7 +24,12 @@ function deferred() {
 function liveRoomResponse(roomCode = 'ROOM-A') {
   return {
     ok: true,
-    json: async () => ({ roomCode, presenterToken: 'presenter-token-a' }),
+    json: async () => ({
+      roomCode,
+      presenterToken: 'presenter-token-a',
+      remoteToken: 'remote-token-a',
+      speakerToken: 'speaker-token-a',
+    }),
   }
 }
 

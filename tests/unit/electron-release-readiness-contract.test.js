@@ -32,10 +32,12 @@ describe('Electron release readiness contract', () => {
     expect(workflow).toContain('name: Build & Release Electron')
     expect(workflow).toContain('build-windows:')
     expect(workflow).toContain('runs-on: windows-latest')
-    expect(workflow).toContain('npx electron-builder --win --publish never')
+    expect(workflow).toContain('npm run electron:builder -- --win --publish never')
     expect(workflow).toContain('name: electron-win')
     expect(workflow).toContain('dist-electron/*.exe')
-    expect(workflow).toContain('softprops/action-gh-release@v2')
+    expect(workflow).toContain(
+      'softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65'
+    )
 
     expect(workflow).not.toContain('electron-builder --linux')
     expect(workflow).not.toContain('electron-builder --mac')

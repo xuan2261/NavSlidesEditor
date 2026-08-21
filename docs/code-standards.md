@@ -20,8 +20,8 @@
 | Icons (editor UI) | Lucide | 0.441.0 (local npm) |
 | Backend | Express | 4 |
 | Request validation | Zod | 4.3.6 |
-| Runtime | Node.js | 20+ |
-| Desktop | Electron | 33 |
+| Runtime | Node.js | >=22.13.0 (CI/container: 22.22.0) |
+| Desktop | Electron | 42 |
 | Cloud sync | rclone | system / Docker |
 | Storage | JSON files + filesystem | - |
 | Testing | Vitest, Playwright | - |
@@ -522,10 +522,10 @@ If deployment is internet-facing or multi-user, require external authentication 
 | Trusted HTML embeds | Keep HTML embed content programmable (no blanket script stripping) |
 | MIME validation | File upload type checking |
 | Rate limiting | Applied to upload and sensitive endpoints |
-| Analytics access guard | `/api/analytics/:id` requires valid share token for that presentation |
+| Analytics ownership | `/api/analytics/:id` is operator-authenticated by the deployment boundary; share tokens never grant analytics access, and responses omit raw tokens/full referrers |
 | Live presenter auth | `presenterToken` required for presenter `join-room` |
-| AI custom endpoint guard | Public `http/https` only, localhost/private/link-local blocked |
-| Credential security | Electron `safeStorage` for GitHub tokens |
+| AI custom endpoint guard | Public `http/https` only; private, mapped-private, link-local, and special-use IP ranges blocked |
+| Electron confinement | Sandboxed renderer, exact parsed app-origin navigation, no preload/IPC bridge |
 | Error boundaries | React `ErrorBoundary` prevents crash exposure |
 | Share passwords | Optional password protection for shared links |
 

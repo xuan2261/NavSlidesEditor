@@ -41,6 +41,16 @@ export default [
       sourceType: 'module',
     },
   },
+  // Local CommonJS package replacements
+  {
+    files: ['vendor-overrides/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      sourceType: 'commonjs',
+    },
+  },
   // Root-level JSDOM setup
   {
     files: ['vitest-setup-*.js'],
@@ -135,9 +145,16 @@ export default [
       'react/react-in-jsx-scope': 'off',
     },
   },
+  // Socket setup intentionally publishes the external connection object from its effect.
+  {
+    files: ['client/src/hooks/use-game-socket.js'],
+    rules: {
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
   // Server
   {
-    files: ['server/**/*.js'],
+    files: ['server/**/*.{js,cjs}'],
     ignores: ['server/**/*.test.js'],
     languageOptions: {
       globals: {

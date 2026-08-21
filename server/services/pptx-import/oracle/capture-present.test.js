@@ -60,6 +60,7 @@ describe('capture-present', () => {
     const waitStarted = new Promise((resolve) => { beginWait = resolve })
     const page = {
       newPage: undefined,
+      goto: async () => {},
       setContent: async () => {},
       waitForFunction: async () => { beginWait(); return new Promise(() => {}) },
       close: async () => new Promise(() => {}),
@@ -79,6 +80,56 @@ describe('capture-present', () => {
       error: 'capture-timeout',
       cleanupErrors: expect.arrayContaining(['capture-page-close-timeout']),
     }))
+  })
+
+  it('establishes an HTTP origin and stable Reveal surface before capture', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'present-origin-'))
+    dirs.push(root)
+    const calls = []
+    const page = {
+      async goto(url) { calls.push(['goto', url]) },
+      async setContent() { calls.push(['setContent']) },
+      async waitForFunction() { calls.push(['waitForFunction']) },
+      async evaluate(_callback, argument) {
+        if (argument === undefined) return [{ ordinal: 0, h: 0, v: 0 }]
+        if (argument?.revealConfig) {
+          calls.push(['configure', argument])
+          return
+        }
+        calls.push(['slide', argument])
+      },
+      async evaluateHandle() {
+        return {
+          asElement: () => ({ screenshot: ({ path: output }) => fs.writeFile(output, png([0, 0, 0])) }),
+          dispose: async () => {},
+        }
+      },
+      async close() {},
+    }
+    const browser = { newPage: async () => page, close: async () => {} }
+
+    const result = await capturePresentSlides({
+      slides: [{ id: 'slide-1', elements: [] }],
+    }, {
+      outDir: root,
+      assetBaseUrl: 'http://127.0.0.1:3202/assets',
+      browser,
+    })
+
+    expect(result.ok).toBe(true)
+    expect(calls.slice(0, 2)).toEqual([
+      ['goto', 'http://127.0.0.1:3202/'],
+      ['setContent'],
+    ])
+    expect(calls).toContainEqual(['configure', {
+      revealConfig: expect.objectContaining({
+        controls: false,
+        progress: false,
+        transition: 'none',
+        backgroundTransition: 'none',
+      }),
+      viewport: VIEWPORT,
+    }])
   })
 
   it('counts vertical source slides as distinct Reveal leaves', () => {

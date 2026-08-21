@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22.22.0'
   CI: 'true'
   PLAYWRIGHT_CLIENT_PORT: '4173'
   PLAYWRIGHT_SERVER_PORT: '3202'
@@ -24,7 +24,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22.22.0'
           cache: npm
 
       - run: npm ci

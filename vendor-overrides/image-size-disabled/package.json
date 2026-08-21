@@ -1,0 +1,9 @@
+{
+  "name": "image-size",
+  "version": "3.0.0-security.1",
+  "private": true,
+  "description": "Fail-closed replacement for the unpatched image-size parser dependency",
+  "main": "index.js",
+  "exports": "./index.js",
+  "license": "AGPL-3.0-only"
+}

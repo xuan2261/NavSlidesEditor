@@ -35,6 +35,40 @@ const {
 fs.ensureDirSync(TEMP_UPLOAD_DIR)
 const activeTempUploads = new Set()
 setImmediate(() => sweepStaleTempUploads(TEMP_UPLOAD_DIR, { activePaths: activeTempUploads }).catch(() => {}))
+const detachedImportCleanups = new Set()
+const activeImportAbortControllers = new Set()
+
+function trackDetachedImportCleanup(promise) {
+  const tracked = Promise.resolve(promise)
+    .catch((error) => {
+      console.error('[pptx-import] detached cleanup failed:', sanitizeDiagnostic(error))
+    })
+    .finally(() => detachedImportCleanups.delete(tracked))
+  detachedImportCleanups.add(tracked)
+  return tracked
+}
+
+async function drainDetachedImportCleanups({ timeoutMs = 5000 } = {}) {
+  for (const controller of activeImportAbortControllers) {
+    controller.abort(new Error('Server shutdown'))
+  }
+  const drain = async () => {
+    while (detachedImportCleanups.size > 0) {
+      await Promise.allSettled([...detachedImportCleanups])
+    }
+  }
+  if (!Number.isFinite(timeoutMs)) return drain()
+  let timer
+  const timedOut = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(true), Math.max(0, timeoutMs))
+    timer.unref?.()
+  })
+  const result = await Promise.race([drain().then(() => false), timedOut])
+  clearTimeout(timer)
+  if (result) {
+    console.warn(`[pptx-import] cleanup drain deadline exceeded with ${detachedImportCleanups.size} operation(s)`)
+  }
+}
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, TEMP_UPLOAD_DIR),
@@ -299,8 +333,16 @@ function withAbort(promise, signal, cleanupLateResult, trackCleanup) {
       trackCleanup?.(cleanup)
     } catch {}
   }
+  const diagnoseLateRejection = (error) => {
+    const diagnostic = Promise.resolve().then(() => {
+      if (error?.name !== 'AbortError') {
+        console.warn('[pptx-import] detached stage rejected:', sanitizeDiagnostic(error))
+      }
+    })
+    trackCleanup?.(diagnostic)
+  }
   if (signal.aborted) {
-    Promise.resolve(promise).then(cleanupLate, () => {})
+    Promise.resolve(promise).then(cleanupLate, diagnoseLateRejection)
     return Promise.reject(signal.reason || new Error('PPTX import cancelled'))
   }
   return new Promise((resolve, reject) => {
@@ -322,7 +364,10 @@ function withAbort(promise, signal, cleanupLateResult, trackCleanup) {
         resolve(value)
       },
       (error) => {
-        if (settled) return
+        if (settled) {
+          diagnoseLateRejection(error)
+          return
+        }
         settled = true
         signal.removeEventListener('abort', onAbort)
         reject(error)
@@ -357,6 +402,7 @@ async function runImport({
   timeoutMs = IMPORT_TIMEOUT_MS,
 }) {
   const abortController = new AbortController()
+  activeImportAbortControllers.add(abortController)
   const mediaTransaction = createMediaTransaction()
   const stagePromises = []
   const cleanupPromises = []
@@ -531,11 +577,15 @@ async function runImport({
     }
   } finally {
     clearTimeout(deadlineTimer)
-    Promise.allSettled(stagePromises).then(() => Promise.allSettled(cleanupPromises)).then(async () => {
-      activeTempUploads.delete(filePath)
-      await fs.unlink(filePath).catch(() => {})
-      jobManager.settleOperation?.(jobId)
-    })
+    const cleanup = Promise.allSettled(stagePromises)
+      .then(() => Promise.allSettled(cleanupPromises))
+      .then(async () => {
+        activeImportAbortControllers.delete(abortController)
+        activeTempUploads.delete(filePath)
+        await fs.unlink(filePath).catch(() => {})
+        jobManager.settleOperation?.(jobId)
+      })
+    trackDetachedImportCleanup(cleanup)
   }
 }
 
@@ -655,11 +705,9 @@ function createPptxImportRouter({
       const jobId = req.pptxJobId
       const capability =
         jobManager.takeJobCapability?.(jobId) || defaultJobManager.takeJobCapability?.(jobId) || null
-      // Fire-and-forget: runImport owns its own try/catch/finally (marks the
-      // job failed and unlinks the temp file). The trailing catch guards
-      // against an unexpected synchronous throw escaping as an unhandled
-      // rejection before runImport's internal try is entered.
-      runImport({
+      // Track the detached operation so shutdown and tests can wait for both
+      // its terminal state and any late stage cleanup it registers.
+      trackDetachedImportCleanup(runImport({
         jobId,
         filePath: req.file.path,
         originalName: req.file.originalname,
@@ -681,8 +729,8 @@ function createPptxImportRouter({
           code: typeof err?.code === 'string' ? err.code : undefined,
           stage: 'failed',
         })
-        fs.unlink(req.file.path).catch(() => {})
-      })
+        return fs.unlink(req.file.path).catch(() => {})
+      }))
       res.status(202).json({
         jobId,
         ...(capability ? { capability } : {}),
@@ -835,6 +883,7 @@ function createPptxImportRouter({
 
 module.exports = createPptxImportRouter()
 module.exports.createPptxImportRouter = createPptxImportRouter
+module.exports.drainDetachedImportCleanups = drainDetachedImportCleanups
 module.exports.getDurableImportJob = getDurableImportJob
 module.exports.isPresentationListable = isPresentationListable
 module.exports.isValidJobId = isValidJobId

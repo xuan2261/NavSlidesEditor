@@ -79,13 +79,10 @@ export function useEditorKeyboardController(c) {
       const shortcut = getGameShortcut(c, 'timer')
       const el = c.activeGameElement
       if (!shortcut || !el) return
-      if (shortcut.action !== 'startTimer') {
-        c.emitGameShortcutAction(shortcut.action)
-        return
-      }
-      if (!c.liveSocket?.connected) return
-      const duration = shortcut.duration ?? 30
-      c.liveSocket.emit('game-timer-start', { elementId: el.id, duration })
+      const payload = shortcut.action === 'startTimer'
+        ? { duration: shortcut.duration ?? el.timerDuration ?? 30 }
+        : {}
+      c.emitGameShortcutAction(shortcut.action, payload)
     },
     onGameNext: () => emitConfiguredGameShortcut(c, 'nextPhase'),
     onGameReveal: () => {
@@ -96,21 +93,9 @@ export function useEditorKeyboardController(c) {
     onGameLeaderboard: () => {
       if (getGameShortcut(c, 'leaderboard')) c.setShowGameLeaderboard((v) => !v)
     },
-    onGamePause: () => {
-      const shortcut = getGameShortcut(c, 'pause')
-      const el = c.activeGameElement
-      if (!shortcut || !el) return
-      if (c.liveSocket?.connected) {
-        c.liveSocket.emit('game-timer-pause', { elementId: el.id })
-      }
-      c.emitGameShortcutAction(shortcut.action)
-    },
+    onGamePause: () => emitConfiguredGameShortcut(c, 'pause'),
     onTimerAdd: () => adjustTimer(c, 'timerAdd', 10),
     onTimerSub: () => adjustTimer(c, 'timerSub', -10),
-    onTeamSelect1: () => emitConfiguredGameShortcut(c, 'teamSelect', { teamIndex: 0 }),
-    onTeamSelect2: () => emitConfiguredGameShortcut(c, 'teamSelect', { teamIndex: 1 }),
-    onTeamSelect3: () => emitConfiguredGameShortcut(c, 'teamSelect', { teamIndex: 2 }),
-    onTeamSelect4: () => emitConfiguredGameShortcut(c, 'teamSelect', { teamIndex: 3 }),
     onCommandPalette: () => c.setShowCommandPalette((v) => !v),
     onInsertSlide: () => c.setShowTemplateModal(true),
     onGroup: c.groupElements,
@@ -135,8 +120,6 @@ function emitConfiguredGameShortcut(c, configKey, payload = {}) {
 
 function adjustTimer(c, configKey, fallback) {
   const shortcut = getGameShortcut(c, configKey)
-  const el = c.activeGameElement
-  if (!shortcut || !el || !c.liveSocket?.connected) return
-  const delta = shortcut.delta ?? fallback
-  c.liveSocket.emit('game-timer-adjust', { elementId: el.id, delta })
+  if (!shortcut || !c.activeGameElement) return
+  c.emitGameShortcutAction(shortcut.action, { delta: shortcut.delta ?? fallback })
 }

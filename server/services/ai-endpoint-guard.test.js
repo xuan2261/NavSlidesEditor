@@ -10,7 +10,7 @@ describe('AI custom endpoint guard', () => {
     delete process.env.AI_CUSTOM_ENDPOINT_ALLOWLIST
   })
 
-  it('[cap:ai.endpoint-guard tier:deep] blocks private and metadata IP ranges', () => {
+  it('[cap:ai.endpoint-guard tier:deep] blocks private, mapped, and special-use IP ranges', () => {
     for (const ip of [
       '127.0.0.1',
       '10.0.0.5',
@@ -21,10 +21,25 @@ describe('AI custom endpoint guard', () => {
       'fc00::1',
       'fe80::1',
       '::ffff:127.0.0.1',
+      '::ffff:7f00:1',
+      '0:0:0:0:0:ffff:0a00:1',
+      '64:ff9b::7f00:1',
+      '64:ff9b::0a00:1',
+      '64:ff9b:1::7f00:1',
+      '100::1',
+      '2001:2::1',
+      '2001:10::1',
+      '2001:20::1',
+      '2001:db8::1',
+      '2002::1',
+      '3fff::1',
+      'fec0::1',
     ]) {
       expect(isBlockedIp(ip)).toBe(true)
     }
     expect(isBlockedIp('93.184.216.34')).toBe(false)
+    expect(isBlockedIp('::ffff:5db8:d822')).toBe(false)
+    expect(isBlockedIp('64:ff9b::5db8:d822')).toBe(false)
     expect(isBlockedIp('2606:2800:220:1:248:1893:25c8:1946')).toBe(false)
   })
 

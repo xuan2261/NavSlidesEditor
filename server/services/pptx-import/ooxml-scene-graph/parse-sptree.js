@@ -2,7 +2,7 @@
  * Namespace-tolerant spTree walker for slide XML.
  */
 
-const EMU_PER_PX = 9525 // 96dpi approximation used elsewhere in import geometry
+const EMU_PER_POINT = 12700 // pptxtojson geometry is expressed in points
 
 function localName(tag) {
   const m = String(tag || '').match(/^<\/?([A-Za-z0-9]+):?([A-Za-z0-9]+)?/)
@@ -19,10 +19,10 @@ function attrsOf(openTag) {
   return attrs
 }
 
-function emuToPx(value) {
+function emuToPoint(value) {
   const n = Number(value)
   if (!Number.isFinite(n)) return null
-  return n / EMU_PER_PX
+  return n / EMU_PER_POINT
 }
 
 function emuValue(value) {
@@ -32,17 +32,21 @@ function emuValue(value) {
 
 function parseXfrm(chunk) {
   if (!chunk) return null
-  const off = chunk.match(/<(?:[a-z0-9]+:)?off\b[^>]*>/i)
-  const ext = chunk.match(/<(?:[a-z0-9]+:)?ext\b[^>]*>/i)
-  const xfrmOpen = chunk.match(/<(?:[a-z0-9]+:)?xfrm\b[^>]*>/i)
+  const xfrm = chunk.match(
+    /<(?:[a-z0-9]+:)?xfrm\b[^>]*(?:\/\s*>|>[\s\S]*?<\/(?:[a-z0-9]+:)?xfrm\s*>)/i
+  )?.[0]
+  if (!xfrm) return null
+  const off = xfrm.match(/<(?:[a-z0-9]+:)?off\b[^>]*>/i)
+  const ext = xfrm.match(/<(?:[a-z0-9]+:)?ext\b[^>]*>/i)
+  const xfrmOpen = xfrm.match(/<(?:[a-z0-9]+:)?xfrm\b[^>]*>/i)
   const offA = off ? attrsOf(off[0]) : {}
   const extA = ext ? attrsOf(ext[0]) : {}
   const xfA = xfrmOpen ? attrsOf(xfrmOpen[0]) : {}
   return {
-    x: emuToPx(offA.x),
-    y: emuToPx(offA.y),
-    cx: emuToPx(extA.cx),
-    cy: emuToPx(extA.cy),
+    x: emuToPoint(offA.x),
+    y: emuToPoint(offA.y),
+    cx: emuToPoint(extA.cx),
+    cy: emuToPoint(extA.cy),
     emu: {
       x: emuValue(offA.x),
       y: emuValue(offA.y),

@@ -115,14 +115,15 @@ async function mapSlideElements(slide, baseContext) {
   let pass1Index = 0
 
   for (const element of sortSlideElements(slide)) {
+    const topLevelOrder = pass1Index + 1
     if (element.type === 'group') {
-      const groupOrder = Number(element.order) || 0
-      const children = await withContextZIndex(baseContext, groupOrder, () => flattenGroupElement(element, baseContext, mapElement))
-      for (const result of children) pushOrderedResult(allResults, result, baseContext.stats, groupOrder, Number(result.order) || 0)
+      const children = await withContextZIndex(baseContext, topLevelOrder, () => flattenGroupElement(element, baseContext, mapElement))
+      for (const result of children) pushOrderedResult(allResults, result, baseContext.stats, topLevelOrder, Number(result.order) || 0)
+      pass1Index += 1
       continue
     }
-    const results = await withContextZIndex(baseContext, pass1Index + 1, () => mapElement(element, baseContext))
-    for (const result of results) pushOrderedResult(allResults, result, baseContext.stats, Number(result.order) || 0, 0)
+    const results = await withContextZIndex(baseContext, topLevelOrder, () => mapElement(element, baseContext))
+    for (const result of results) pushOrderedResult(allResults, result, baseContext.stats, topLevelOrder, 0)
     pass1Index += 1
   }
 

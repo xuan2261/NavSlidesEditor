@@ -68,6 +68,14 @@ directory, then permanently cleans up each imported presentation. Do not pass
 `--actual-manifest-out` — the CLI rejects path overrides; the published run dir
 always contains `actual-manifest.json` next to the captured deck PNGs.
 
+Capture is deterministic at `960x540` with device scale factor `1`. The capture
+implementation passes that viewport as an explicit `page.evaluate` argument
+before setting `--slide-aspect`; browser callbacks must not depend on Node-side
+module globals. A release claim must retain the evidence envelope, manifests,
+receipts, goldens, actuals, and comparison report. A deleted local envelope is
+only an execution receipt, not independently reproducible visual evidence.
+
+
 ```bash
 npm run test:pptx:oracle:capture -- \
   --base-url http://127.0.0.1:3202 \

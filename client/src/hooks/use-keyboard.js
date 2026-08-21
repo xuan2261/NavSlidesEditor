@@ -24,10 +24,6 @@ const GAME_SHORTCUT_CONFIG_KEYS = {
   gamePause: 'pause',
   timerAdd: 'timerAdd',
   timerSub: 'timerSub',
-  teamSelect1: 'teamSelect',
-  teamSelect2: 'teamSelect',
-  teamSelect3: 'teamSelect',
-  teamSelect4: 'teamSelect',
 }
 
 function isConfiguredGameShortcut(shortcutId, gameType) {
@@ -41,10 +37,6 @@ function isConfiguredGameShortcut(shortcutId, gameType) {
 // leaderboard remain reachable in-editor and are deliberately NOT listed here.
 const EDITOR_SUPPRESSED_GAME_IDS = new Set([
   'gameTimer',
-  'teamSelect1',
-  'teamSelect2',
-  'teamSelect3',
-  'teamSelect4',
 ])
 
 /**
@@ -118,14 +110,7 @@ export function createKeyboardHandler({
         // Bare game keys that collide with canvas typing/selection stay inert
         // until their matching presenter popup is live, without changing editor scope.
         if (!presenting && !gamePresenterActive && EDITOR_SUPPRESSED_GAME_IDS.has(match.id)) return
-        // Explicit map for camelCase shortcut IDs (teamSelect1 → onTeamSelect1, not onTeamselect1)
-        const explicitMap = {
-          teamSelect1: callbacks.onTeamSelect1,
-          teamSelect2: callbacks.onTeamSelect2,
-          teamSelect3: callbacks.onTeamSelect3,
-          teamSelect4: callbacks.onTeamSelect4,
-        }
-        const cb = explicitMap[match.id] ?? callbacks[`on${capitalize(match.id)}`]
+        const cb = callbacks[`on${capitalize(match.id)}`]
         cb?.()
         e.preventDefault()
         return

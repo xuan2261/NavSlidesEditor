@@ -130,6 +130,7 @@ async function fetchWithDeadline(url, init, deadlineAt, consume = (response) => 
 
 export const api = {
   getPresentations: () => fetch(`${BASE}/presentations`).then(handleResponse),
+  getSettings: () => fetch(`${BASE}/settings`).then(handleResponse),
   getPresentation: (id) => fetch(`${BASE}/presentations/${id}`).then(handleResponse),
   createPresentation: (data) =>
     fetch(`${BASE}/presentations`, {

@@ -30,7 +30,9 @@ async function waitForTrustedIframe(iframeLocator) {
   await expect
     .poll(
       async () => {
-        return frame.evaluate(() => document.getElementById('trusted-html-status')?.textContent || null)
+        return frame.evaluate(
+          () => document.getElementById('trusted-html-status')?.textContent || null
+        )
       },
       { timeout: 15000 }
     )
@@ -86,7 +88,9 @@ test.describe('Hardening regressions', () => {
     } catch {}
   })
 
-  test('analytics endpoint denies missing/invalid token and allows valid token', async ({ request }) => {
+  test('analytics stays on the operator boundary and redacts share capabilities', async ({
+    request,
+  }) => {
     await apiUpdatePresentation(request, presId, {
       slides: [
         {
@@ -99,20 +103,17 @@ test.describe('Hardening regressions', () => {
     })
 
     const share = await apiCreateShareLink(request, presId)
-
-    const deniedMissing = await request.get(`/api/analytics/${presId}`)
-    expect(deniedMissing.status()).toBe(403)
-
-    const deniedWrong = await request.get(`/api/analytics/${presId}?token=wrong-token`)
-    expect(deniedWrong.status()).toBe(403)
-
     const shareView = await request.get(`/share/${share.token}`)
     expect(shareView.ok()).toBeTruthy()
 
-    const allowed = await request.get(`/api/analytics/${presId}?token=${share.token}`)
-    expect(allowed.ok()).toBeTruthy()
-    const payload = await allowed.json()
+    const operatorResponse = await request.get(`/api/analytics/${presId}`)
+    expect(operatorResponse.ok()).toBeTruthy()
+    expect(operatorResponse.headers()['cache-control']).toBe('no-store')
+    const payload = await operatorResponse.json()
     expect(payload.totalViews).toBeGreaterThanOrEqual(1)
+    expect(payload.byLinkLabels['E2E Test Link']).toBeGreaterThanOrEqual(1)
+    expect(payload).not.toHaveProperty('byToken')
+    expect(JSON.stringify(payload)).not.toContain(share.token)
   })
 
   test('presenter takeover is rejected without presenter token', async ({ request }) => {

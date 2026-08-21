@@ -27,16 +27,18 @@ async function findWriterLocks(dir) {
 
 // A fresh module registry per boot: the runtime holds the active store in module
 // scope, so this is what makes a second import behave like a genuine restart.
-async function boot() {
+async function boot(configureApp) {
   vi.resetModules()
   const serverModule = await import('./index.js')
-  const { startServer, stopServer } = serverModule.default || serverModule
+  const { app, startServer, stopServer } = serverModule.default || serverModule
+  configureApp?.(app)
   const server = await startServer(0)
   return {
+    app,
     server,
-    async stop() {
-      server.closeAllConnections?.()
-      await stopServer(server)
+    stopServer,
+    async stop(options) {
+      await stopServer(server, options)
     },
   }
 }
@@ -55,11 +57,37 @@ describe('server shutdown', () => {
     process.env.SLIDES_UPLOADS_DIR = path.join(root, 'uploads')
     process.env.NODE_ENV = 'development'
 
+    let releaseRequest
+    let markRequestStarted
+    const requestStarted = new Promise((resolve) => {
+      markRequestStarted = resolve
+    })
+    const requestRelease = new Promise((resolve) => {
+      releaseRequest = resolve
+    })
+
     try {
-      const first = await boot()
+      const first = await boot((app) => {
+        app.get('/__shutdown-drain-test', async (_req, res) => {
+          markRequestStarted()
+          await requestRelease
+          res.json({ ok: true })
+        })
+      })
       expect(await findWriterLocks(dataDir)).toHaveLength(1)
 
-      await first.stop()
+      const address = first.server.address()
+      const responsePromise = fetch(`http://127.0.0.1:${address.port}/__shutdown-drain-test`)
+      await requestStarted
+      const firstStop = first.stopServer(first.server, { drainTimeoutMs: 1000 })
+      const secondStop = first.stopServer(first.server, { drainTimeoutMs: 1000 })
+      expect(secondStop).toBe(firstStop)
+      await new Promise((resolve) => setTimeout(resolve, 25))
+      expect(await findWriterLocks(dataDir)).toHaveLength(1)
+
+      releaseRequest()
+      expect((await responsePromise).status).toBe(200)
+      await firstStop
       expect(await findWriterLocks(dataDir)).toEqual([])
 
       // The lock file being gone is the mechanism; a second boot succeeding is
@@ -68,6 +96,7 @@ describe('server shutdown', () => {
       expect(second.server.listening).toBe(true)
       await second.stop()
     } finally {
+      releaseRequest?.()
       for (const key of envKeys) {
         if (saved[key] == null) delete process.env[key]
         else process.env[key] = saved[key]
@@ -75,4 +104,5 @@ describe('server shutdown', () => {
       vi.resetModules()
     }
   })
+
 })

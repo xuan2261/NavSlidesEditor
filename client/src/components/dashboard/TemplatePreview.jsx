@@ -153,10 +153,13 @@ export default function TemplatePreview({
                 {slides.map((s, i) => {
                   const isSelected = selectedSlides.includes(i)
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={i}
-                      className={`rounded-lg overflow-hidden cursor-pointer bg-white/5 ${isSelected ? 'border-2 border-indigo-500' : 'border-2 border-transparent'}`}
+                      className={`rounded-lg overflow-hidden cursor-pointer bg-white/5 text-left ${isSelected ? 'border-2 border-indigo-500' : 'border-2 border-transparent'}`}
                       onClick={() => toggleSlideSelection(i)}
+                      aria-label={`Slide ${i + 1}`}
+                      aria-pressed={isSelected}
                     >
                       <div className="w-full aspect-video relative pointer-events-none overflow-hidden">
                         <div className="scale-[0.22] origin-top-left w-[960px] h-[540px]">
@@ -171,7 +174,7 @@ export default function TemplatePreview({
                           <Square size={16} className="text-slate-400" />
                         )}
                       </div>
-                    </div>
+                    </button>
                   )
                 })}
               </div>

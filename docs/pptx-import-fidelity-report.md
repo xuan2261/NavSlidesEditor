@@ -213,8 +213,22 @@ and its
 | 07    | **Advanced** — EMF/WMF → PNG via policy-guarded, hash-pinned convert (`PPTX_EMF_CONVERT=1`); strict throws if unavailable; no OS sandbox claim            |
 | 08    | **Advanced** — theme/layout XML resolve; animation inventory; original-bytes export + PUT dirty flag; `test:pptx:sla-1to1` module gate (not numeric 0.99) |
 
-**Oracle debt:** placeholder goldens self-compare to SSIM 1 until LO/PP goldens + Nav present actuals land.  
+**Historical oracle debt:** the 2026-07-09 milestone still used placeholder self-comparison. The 2026-08-21 run below uses Microsoft PowerPoint evidence and fails the fixed policy rather than producing a false green.  
 **Not claimed:** product 1:1 visual/editable SLA.
+
+## 2026-08-21 Release Qualification Update
+
+- The current importer-native gate is `npm run test:pptx:importer-qualification`;
+  `npm run test:pptx:strict` is its deprecated alias. A fresh manifest-bound run
+  qualifies 9/11 decks and fails closed for `Bai_2_1.pptx` (8 unmapped/permanent
+  placeholder nodes) and `Bai_2_5.pptx` (5).
+- A local Microsoft PowerPoint evidence envelope passes oracle integrity, but
+  fixed `phase08_full` qualification fails at mean SSIM
+  `0.23698886751039192` and minimum `0` versus required `0.99`/`0.97`. No
+  native-complete or PowerPoint 1:1 claim is authorized.
+- Present-mode actual capture now passes the deterministic `960x540` viewport
+  explicitly into the browser callback before applying Reveal CSS. This fixes
+  the former browser-side `VIEWPORT is not defined` failure.
 
 ## 2026-07-09 Zero-Loss Original Package (Phase 01 SLA foundation)
 
@@ -233,8 +247,9 @@ and its
 
 ## 2026-06-17 Strict Gate And OOXML Visibility Update
 
-- `test:pptx:strict` now runs `test:corpus` plus the strict smoke browser audit;
-  `test:pptx:browser-audit:full` remains the release signoff command.
+- At the 2026-06-17 milestone, `test:pptx:strict` ran `test:corpus` plus the
+  strict smoke browser audit; the current command ownership is documented in
+  the 2026-08-21 update above.
 - Strict corpus diagnostics now print threshold labels generated from the
   enforced constants. Current global gates are average semantic >= 98%, average
   production round-trip floor >= 50%, corpus size >= 10, production export only,

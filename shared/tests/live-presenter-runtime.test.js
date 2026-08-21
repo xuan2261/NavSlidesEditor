@@ -86,14 +86,23 @@ describe('generated live presenter runtime', () => {
           { gameId: '__proto__', gameType: 'poll', hostCapability: 'capability-proto' },
           { gameId: 'constructor', gameType: 'poll', hostCapability: 'capability-constructor' },
           { gameId: 'toString', gameType: 'poll', hostCapability: 'capability-to-string' },
+          { gameId: 'hot-game', gameType: 'hot-potato', hostCapability: 'hot-capability' },
         ],
       }),
     }))
+    const livePresenterSocket = {
+      connected: true,
+      emitted: [],
+      emit(event, payload) {
+        this.emitted.push({ event, payload })
+      },
+    }
     const context = {
       liveRoom: 'ROOM1',
       presenterToken: 'presenter-token',
       io,
       fetch,
+      livePresenterSocket,
       sessionStorage: {
         getItem: (key) => stored.get(key) || null,
         setItem: (key, value) => stored.set(key, value),
@@ -245,12 +254,46 @@ describe('generated live presenter runtime', () => {
         },
       })
     })
+    messageHandler({
+      origin: 'https://app.test',
+      source: opener,
+      data: {
+        type: 'navslides:game-shortcut',
+        presentationId: 'presentation-1',
+        roomCode: 'ROOM1',
+        detail: {
+          elementId: 'hot-game',
+          gameType: 'hot-potato',
+          action: 'startTimer',
+          duration: 45,
+        },
+      },
+    })
+    messageHandler({
+      origin: 'https://app.test',
+      source: opener,
+      data: {
+        type: 'navslides:game-shortcut',
+        presentationId: 'presentation-1',
+        roomCode: 'ROOM1',
+        detail: {
+          elementId: 'hot-game',
+          gameType: 'hot-potato',
+          action: 'addTime',
+          delta: 10,
+        },
+      },
+    })
+    expect(livePresenterSocket.emitted).toEqual([
+      { event: 'game-timer-start', payload: { elementId: 'hot-game', duration: 45 } },
+      { event: 'game-timer-adjust', payload: { elementId: 'hot-game', delta: 10 } },
+    ])
 
     expect(sockets[0].emitted.filter(({ event }) => event !== 'game-join')).toEqual([
       { event: 'game-poll-start', payload: { gameId: 'poll-game' } },
       { event: 'game-poll-reveal', payload: { gameId: 'poll-game' } },
     ])
-    expect(sockets.slice(1).map((socket) =>
+    expect(sockets.slice(1, 4).map((socket) =>
       socket.emitted.filter(({ event }) => event !== 'game-join')
     )).toEqual(hostileGameIds.map((gameId) => [
       { event: 'game-poll-start', payload: { gameId } },

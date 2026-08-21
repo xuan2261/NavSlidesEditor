@@ -44,6 +44,39 @@ describe('pptx presentation mapper', () => {
     ])
   })
 
+  it('keeps grouped background content behind later top-level elements', async () => {
+    const result = await mapPptxOutput({
+      output: {
+        size: { width: 960, height: 540 },
+        slides: [{
+          elements: [
+            {
+              type: 'group',
+              order: 1376,
+              left: 0,
+              top: 0,
+              width: 960,
+              height: 540,
+              elements: [{ type: 'shape', order: 1, shapType: 'rect', left: 0, top: 0, width: 960, height: 540 }],
+            },
+            { type: 'text', order: 1407, content: '<p>Foreground title</p>', left: 100, top: 200, width: 600, height: 100 },
+          ],
+        }],
+      },
+      zip: { files: {} },
+      originalName: 'Layered.pptx',
+      uploadsDir: '/tmp',
+    })
+
+    expect(result.presentation.slides[0].elements.map((element) => ({
+      type: element.type,
+      zIndex: element.zIndex,
+    }))).toEqual([
+      { type: 'shape', zIndex: 1 },
+      { type: 'text', zIndex: 2 },
+    ])
+  })
+
   it('maps non-default slide sizes into the canonical canvas resolution', async () => {
     const result = await mapPptxOutput({
       output: {

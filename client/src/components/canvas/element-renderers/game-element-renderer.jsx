@@ -729,7 +729,6 @@ function InteractiveJeopardyBoard({ element }) {
       <JeopardyBoard
         element={element}
         usedCells={usedCells}
-        qLookup={qLookup}
         ddKeys={ddKeys}
         onCellClick={handleCellClick}
       />
@@ -755,7 +754,7 @@ function InteractiveJeopardyBoard({ element }) {
 // ---------------------------------------------------------------------------
 // JeopardyBoard — 5x5 grid (shared by edit + present modes)
 // ---------------------------------------------------------------------------
-function JeopardyBoard({ element, usedCells, qLookup, ddKeys, onCellClick }) {
+function JeopardyBoard({ element, usedCells, ddKeys, onCellClick }) {
   const cats = element.categories || []
   const accent = element.accentColor || '#f59e0b'
 
@@ -815,45 +814,53 @@ function JeopardyBoard({ element, usedCells, qLookup, ddKeys, onCellClick }) {
               const key = `${catIdx}-${pts}`
               const used = !!usedCells?.[key]
               const isDD = ddKeys?.has(key)
-              const _hasQuestion = !!qLookup?.[key]
               const interactive = !!onCellClick
+              const category = cats[catIdx]
+              const categoryName = category ? (category.name || String(category)) : `Category ${catIdx + 1}`
+              const cellStyle = {
+                position: 'relative',
+                background: used
+                  ? 'rgba(0,0,0,0.4)'
+                  : isDD
+                    ? 'linear-gradient(135deg, #fbbf24, #f59e0b)'
+                    : `${accent}22`,
+                border: isDD ? '2px solid #fbbf24' : `1px solid ${accent}55`,
+                borderRadius: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 11,
+                fontWeight: 'bold',
+                fontFamily: 'inherit',
+                padding: 0,
+                color: used ? 'rgba(255,255,255,0.3)' : isDD ? '#1a1a2e' : accent,
+                cursor: interactive && !used ? 'pointer' : 'default',
+                minHeight: 28,
+                flex: 1,
+                transition: 'background 0.2s',
+                userSelect: 'none',
+                boxSizing: 'border-box',
+              }
+              const content = used
+                ? <span style={{ fontSize: 10 }}>✓</span>
+                : <span>{pts}</span>
 
-              return (
-                <div
-                  key={key}
-                  onClick={() => interactive && !used ? onCellClick(catIdx, pts) : undefined}
-                  style={{
-                    position: 'relative',
-                    background: used
-                      ? 'rgba(0,0,0,0.4)'
-                      : isDD
-                        ? 'linear-gradient(135deg, #fbbf24, #f59e0b)'
-                        : `${accent}22`,
-                    border: isDD
-                      ? '2px solid #fbbf24'
-                      : `1px solid ${accent}55`,
-                    borderRadius: 4,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 11,
-                    fontWeight: 'bold',
-                    color: used ? 'rgba(255,255,255,0.3)' : isDD ? '#1a1a2e' : accent,
-                    cursor: interactive && !used ? 'pointer' : 'default',
-                    minHeight: 28,
-                    flex: 1,
-                    transition: 'background 0.2s',
-                    userSelect: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {used ? (
-                    <span style={{ fontSize: 10 }}>✓</span>
-                  ) : (
-                    <span>{pts}</span>
-                  )}
-                </div>
-              )
+              if (interactive) {
+                return (
+                  <button
+                    type="button"
+                    key={key}
+                    disabled={used}
+                    onClick={() => onCellClick(catIdx, pts)}
+                    aria-label={`${categoryName}, ${pts} points${isDD ? ', Daily Double' : ''}${used ? ', used' : ''}`}
+                    aria-pressed={used}
+                    style={cellStyle}
+                  >
+                    {content}
+                  </button>
+                )
+              }
+              return <div key={key} style={cellStyle}>{content}</div>
             })}
           </div>
         ))}
@@ -1146,32 +1153,46 @@ function TeamScorePanel({ teams, scores, activeTeam, onSelectTeam }) {
       flexWrap: 'wrap',
     }}>
       {teams.map((team, i) => {
-        const isActive = activeTeam === (team.id || team.name)
-        const score = scores[team.id || team.name] || 0
-        return (
-          <div
-            key={team.id || i}
-            onClick={() => onSelectTeam && onSelectTeam(team.id || team.name)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              background: isActive ? `${team.color}30` : 'rgba(255,255,255,0.05)',
-              border: `2px solid ${isActive ? team.color : 'rgba(255,255,255,0.1)'}`,
-              borderRadius: 8,
-              padding: '4px 12px',
-              cursor: onSelectTeam ? 'pointer' : 'default',
-              transition: 'border-color 0.2s, background 0.2s',
-              minWidth: 100,
-            }}
-          >
-            <div style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: team.color, flexShrink: 0 }} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+        const teamId = team.id || team.name
+        const isActive = activeTeam === teamId
+        const score = scores[teamId] || 0
+        const style = {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          background: isActive ? `${team.color}30` : 'rgba(255,255,255,0.05)',
+          border: `2px solid ${isActive ? team.color : 'rgba(255,255,255,0.1)'}`,
+          borderRadius: 8,
+          padding: '4px 12px',
+          cursor: onSelectTeam ? 'pointer' : 'default',
+          transition: 'border-color 0.2s, background 0.2s',
+          minWidth: 100,
+          color: 'inherit',
+          fontFamily: 'inherit',
+        }
+        const content = (
+          <>
+            <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: team.color, flexShrink: 0 }} />
+            <span style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', lineHeight: 1.2 }}>{team.name}</span>
               <span data-testid="game-score" style={{ fontSize: 13, fontWeight: 'bold', color: team.color, lineHeight: 1.2 }}>{score}</span>
-            </div>
-            {isActive && <span style={{ fontSize: 9, color: team.color }}>▶</span>}
-          </div>
+            </span>
+            {isActive && <span aria-hidden="true" style={{ fontSize: 9, color: team.color }}>▶</span>}
+          </>
+        )
+        return onSelectTeam ? (
+          <button
+            type="button"
+            key={teamId || i}
+            onClick={() => onSelectTeam(teamId)}
+            aria-label={`Select ${team.name}, score ${score}`}
+            aria-pressed={isActive}
+            style={style}
+          >
+            {content}
+          </button>
+        ) : (
+          <div key={teamId || i} style={style}>{content}</div>
         )
       })}
     </div>
@@ -1196,6 +1217,8 @@ function PresenterControls({ teams, activeTeam, onSelectTeam, _onReveal, _onRetu
       {teams.map((team, i) => (
         <button
           key={team.id || i}
+          type="button"
+          aria-pressed={activeTeam === (team.id || team.name)}
           onClick={() => onSelectTeam && onSelectTeam(team.id || team.name)}
           style={{
             background: activeTeam === (team.id || team.name) ? team.color : 'rgba(255,255,255,0.1)',
@@ -1214,6 +1237,7 @@ function PresenterControls({ teams, activeTeam, onSelectTeam, _onReveal, _onRetu
 
       {showFinalJeopardy && (
         <button
+          type="button"
           onClick={showFinalJeopardy}
           style={{
             background: 'rgba(255,255,255,0.1)',

@@ -1567,54 +1567,6 @@
     "coverageMode": "executable"
   },
   {
-    "id": "shortcut.teamSelect1",
-    "category": "shortcut",
-    "source": "DEFAULT_SHORTCUTS",
-    "risk": "low",
-    "tiers": [
-      "smoke"
-    ],
-    "scope": "editor-core",
-    "targetLayer": "unit",
-    "coverageMode": "executable"
-  },
-  {
-    "id": "shortcut.teamSelect2",
-    "category": "shortcut",
-    "source": "DEFAULT_SHORTCUTS",
-    "risk": "low",
-    "tiers": [
-      "smoke"
-    ],
-    "scope": "editor-core",
-    "targetLayer": "unit",
-    "coverageMode": "executable"
-  },
-  {
-    "id": "shortcut.teamSelect3",
-    "category": "shortcut",
-    "source": "DEFAULT_SHORTCUTS",
-    "risk": "low",
-    "tiers": [
-      "smoke"
-    ],
-    "scope": "editor-core",
-    "targetLayer": "unit",
-    "coverageMode": "executable"
-  },
-  {
-    "id": "shortcut.teamSelect4",
-    "category": "shortcut",
-    "source": "DEFAULT_SHORTCUTS",
-    "risk": "low",
-    "tiers": [
-      "smoke"
-    ],
-    "scope": "editor-core",
-    "targetLayer": "unit",
-    "coverageMode": "executable"
-  },
-  {
     "id": "shortcut.timerAdd",
     "category": "shortcut",
     "source": "DEFAULT_SHORTCUTS",

@@ -39,10 +39,6 @@ const makeGameCallbacks = () => ({
   onGamePause: vi.fn(),
   onTimerAdd: vi.fn(),
   onTimerSub: vi.fn(),
-  onTeamSelect1: vi.fn(),
-  onTeamSelect2: vi.fn(),
-  onTeamSelect3: vi.fn(),
-  onTeamSelect4: vi.fn(),
   getActiveElement: () => null,
 })
 
@@ -73,10 +69,10 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onGameNext).toHaveBeenCalledTimes(1)
   })
 
-  it('[cap:shortcut.gameReveal] fires gameReveal when R pressed with isPresenting=true and activeGameType set', () => {
+  it('[cap:shortcut.gameReveal] fires gameReveal only for a game with reveal support', () => {
     const cb = makeGameCallbacks()
     const shortcuts = getShortcuts({})
-    const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
+    const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'poll' })
     handler(createEvent('r'))
     expect(cb.onGameReveal).toHaveBeenCalledTimes(1)
   })
@@ -113,36 +109,12 @@ describe('createKeyboardHandler with presentation-game scope', () => {
     expect(cb.onTimerSub).toHaveBeenCalledTimes(1)
   })
 
-  it('[cap:shortcut.teamSelect1] fires teamSelect1 when 1 pressed with isPresenting=true and activeGameType set', () => {
-    const cb = makeGameCallbacks()
-    const shortcuts = getShortcuts({})
-    const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
-    handler(createEvent('1'))
-    expect(cb.onTeamSelect1).toHaveBeenCalledTimes(1)
-  })
-
-  it('[cap:shortcut.teamSelect2] fires teamSelect2 when 2 pressed with isPresenting=true and activeGameType set', () => {
-    const cb = makeGameCallbacks()
-    const shortcuts = getShortcuts({})
-    const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
-    handler(createEvent('2'))
-    expect(cb.onTeamSelect2).toHaveBeenCalledTimes(1)
-  })
-
-  it('[cap:shortcut.teamSelect3] fires teamSelect3 when 3 pressed with isPresenting=true and activeGameType set', () => {
-    const cb = makeGameCallbacks()
-    const shortcuts = getShortcuts({})
-    const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
-    handler(createEvent('3'))
-    expect(cb.onTeamSelect3).toHaveBeenCalledTimes(1)
-  })
-
-  it('[cap:shortcut.teamSelect4] fires teamSelect4 when 4 pressed with isPresenting=true and activeGameType set', () => {
-    const cb = makeGameCallbacks()
-    const shortcuts = getShortcuts({})
-    const handler = createKeyboardHandler({ ...cb, shortcuts, isPresenting: true, activeGameType: 'jeopardy' })
-    handler(createEvent('4'))
-    expect(cb.onTeamSelect4).toHaveBeenCalledTimes(1)
+  it('does not register unsupported direct team-selection shortcuts', () => {
+    const ids = getShortcuts({}).map((shortcut) => shortcut.id)
+    expect(ids).not.toContain('teamSelect1')
+    expect(ids).not.toContain('teamSelect2')
+    expect(ids).not.toContain('teamSelect3')
+    expect(ids).not.toContain('teamSelect4')
   })
 
   // Game shortcuts do NOT fire without activeGameType

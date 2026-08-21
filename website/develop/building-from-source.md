@@ -1,6 +1,6 @@
 # Building from Source
 
-How to run NavSlides Editor locally for development. Requires **Node.js 20+** and npm 8+.
+How to run NavSlides Editor locally for development. Requires **Node.js >=22.13.0** and npm. CI and container builds pin Node.js 22.22.0.
 
 ## Clone and install
 

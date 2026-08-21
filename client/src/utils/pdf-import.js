@@ -21,7 +21,7 @@ async function loadPdfJs() {
 export async function pdfToSlides(file, onProgress) {
   const pdfjs = await loadPdfJs()
   const arrayBuffer = await file.arrayBuffer()
-  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise
+  const pdf = await pdfjs.getDocument({ data: arrayBuffer, enableScripting: false }).promise
   const slides = []
   const warnings = []
 

@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 export function useRevealPreviewFrame(htmlContent, state = null, frameKey = 0) {
   const iframeRef = useRef(null)
   const deckRef = useRef(null)
-  const revealCheckRef = useRef(null)
+  const generationRef = useRef(0)
   const latestStateRef = useRef(state)
 
   useEffect(() => {
@@ -11,25 +11,41 @@ export function useRevealPreviewFrame(htmlContent, state = null, frameKey = 0) {
   }, [state])
 
   useEffect(() => {
-    if (!htmlContent || !iframeRef.current) return
+    const frame = iframeRef.current
+    if (!htmlContent || !frame) return
 
-    deckRef.current = null
-    if (revealCheckRef.current) {
-      clearInterval(revealCheckRef.current)
-      revealCheckRef.current = null
+    const generation = generationRef.current + 1
+    generationRef.current = generation
+    let intervalId = null
+    let timeoutId = null
+    const isCurrent = () => generationRef.current === generation && iframeRef.current === frame
+    const clearTimers = () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId)
+        intervalId = null
+      }
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
     }
 
-    iframeRef.current.srcdoc = htmlContent
-    iframeRef.current.onload = () => {
-      const iframeWindow = iframeRef.current?.contentWindow
+    deckRef.current = null
+    const handleLoad = () => {
+      if (!isCurrent()) return
+      clearTimers()
+      const iframeWindow = frame.contentWindow
       if (!iframeWindow) return
 
-      revealCheckRef.current = setInterval(() => {
+      intervalId = setInterval(() => {
+        if (!isCurrent()) {
+          clearTimers()
+          return
+        }
         try {
           const deck = iframeWindow.Reveal
           if (deck && typeof deck.isReady === 'function' && deck.isReady()) {
-            clearInterval(revealCheckRef.current)
-            revealCheckRef.current = null
+            clearTimers()
             deckRef.current = deck
             deck.configure({
               keyboard: false,
@@ -53,19 +69,18 @@ export function useRevealPreviewFrame(htmlContent, state = null, frameKey = 0) {
         }
       }, 100)
 
-      setTimeout(() => {
-        if (revealCheckRef.current) {
-          clearInterval(revealCheckRef.current)
-          revealCheckRef.current = null
-        }
+      timeoutId = setTimeout(() => {
+        if (isCurrent()) clearTimers()
       }, 15000)
     }
 
+    frame.onload = handleLoad
+    frame.srcdoc = htmlContent
+
     return () => {
-      if (revealCheckRef.current) {
-        clearInterval(revealCheckRef.current)
-        revealCheckRef.current = null
-      }
+      if (generationRef.current === generation) generationRef.current += 1
+      clearTimers()
+      if (frame.onload === handleLoad) frame.onload = null
     }
   }, [htmlContent, frameKey])
 

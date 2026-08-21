@@ -104,4 +104,21 @@ describe('parseSpTree (T3.1 T3.2 T3.3)', () => {
     expect(nodes.find((node) => node.id === '20')?.parentId).toBe('10')
     expect(nodes.find((node) => node.id === '31')).toMatchObject({ parentId: '30', depth: 3 })
   })
+
+  it('reads the shape transform instead of a preceding cNvPr extension', () => {
+    const xml = `<p:sld xmlns:p="p" xmlns:a="a"><p:cSld><p:spTree>
+      <p:sp>
+        <p:nvSpPr><p:cNvPr id="2" name="Rect"><a:extLst><a:ext uri="metadata" cx="999999" cy="888888"/></a:extLst></p:cNvPr></p:nvSpPr>
+        <p:spPr><a:xfrm><a:off x="914400" y="457200"/><a:ext cx="1828800" cy="914400"/></a:xfrm></p:spPr>
+      </p:sp>
+    </p:spTree></p:cSld></p:sld>`
+
+    expect(parseSpTree(xml)[0].xfrm).toMatchObject({
+      x: 72,
+      y: 36,
+      cx: 144,
+      cy: 72,
+      emu: { x: 914400, y: 457200, width: 1828800, height: 914400 },
+    })
+  })
 })

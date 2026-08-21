@@ -1,4 +1,3 @@
-/* global describe, expect, it */
 const { classifyError, createDiagnosticBuffer, sanitizeError } = require('./package-utils')
 
 describe('package-utils failure classification', () => {

@@ -186,9 +186,17 @@ const BASE_REVEAL_THEME_PRESET_IDS = {
   dracula: 'dracula',
 }
 
+const SUPPORTED_REVEAL_THEMES = Object.freeze(Object.keys(BASE_REVEAL_THEME_PRESET_IDS))
+
 function getDesignTokensForRevealTheme(theme) {
   const presetId = BASE_REVEAL_THEME_PRESET_IDS[theme]
   return presetId ? getThemePreset(presetId)?.tokens : undefined
 }
 
-module.exports = { THEME_PRESETS, getThemePreset, BASE_REVEAL_THEME_PRESET_IDS, getDesignTokensForRevealTheme }
+module.exports = {
+  THEME_PRESETS,
+  SUPPORTED_REVEAL_THEMES,
+  getThemePreset,
+  BASE_REVEAL_THEME_PRESET_IDS,
+  getDesignTokensForRevealTheme,
+}

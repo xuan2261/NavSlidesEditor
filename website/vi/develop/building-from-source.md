@@ -1,6 +1,6 @@
 # Build từ mã nguồn
 
-Cách chạy NavSlides Editor cục bộ để phát triển. Yêu cầu **Node.js 20+** và npm 8+.
+Cách chạy NavSlides Editor cục bộ để phát triển. Yêu cầu **Node.js >=22.13.0** và npm. Các bản build CI và container khóa Node.js 22.22.0.
 
 ## Clone và cài đặt
 

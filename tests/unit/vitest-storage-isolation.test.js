@@ -16,6 +16,10 @@ const configPath = path.join(repoRoot, 'vitest.config.mjs')
 const storageModuleUrl = pathToFileURL(path.join(repoRoot, 'server', 'services', 'storage.js')).href
 const projectDataDir = path.join(repoRoot, 'server', 'data')
 const projectUploadsDir = path.join(repoRoot, 'server', 'uploads')
+const testTempDir =
+  process.platform === 'win32' && process.env.LOCALAPPDATA
+    ? path.join(process.env.LOCALAPPDATA, 'Temp')
+    : tmpdir()
 
 function isWithinOrEqual(parent, child) {
   const relative = path.relative(parent, child)
@@ -59,13 +63,13 @@ async function runVitest(files, env, root) {
         '--config',
         configPath,
         '--root',
-        root,
+        '.',
         '--fileParallelism',
         '--maxWorkers=2',
         '--pool=forks',
-        ...files,
+        ...files.map((file) => path.relative(root, file)),
       ],
-      { cwd: repoRoot, env, windowsHide: true, timeout: 30_000 }
+      { cwd: root, env, windowsHide: true, timeout: 30_000 }
     )
   } catch (error) {
     throw new Error(
@@ -89,14 +93,11 @@ afterEach(async () => {
 
 describe('Vitest storage isolation', () => {
   it('discovers root tests but excludes Claude worktree tests', async () => {
-    const root = await mkdtemp(path.join(tmpdir(), 'navslides-vitest-discovery-'))
+    const root = await mkdtemp(path.join(testTempDir, 'navslides-vitest-discovery-'))
     testRoots.push(root)
     const witnessDir = path.join(root, 'witnesses')
     const worktreeDir = path.join(root, '.claude', 'worktrees', 'agent-a')
-    await Promise.all([
-      mkdir(witnessDir),
-      mkdir(worktreeDir, { recursive: true }),
-    ])
+    await Promise.all([mkdir(witnessDir), mkdir(worktreeDir, { recursive: true })])
     const probe = (name) => `
 import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -119,7 +120,7 @@ it('${name}', async () => {
     expect(process.env.SLIDES_DATA_DIR).toBe(storage.DATA_DIR)
     expect(process.env.SLIDES_UPLOADS_DIR).toBe(storage.UPLOADS_DIR)
 
-    const root = await mkdtemp(path.join(tmpdir(), 'navslides-vitest-contract-'))
+    const root = await mkdtemp(path.join(testTempDir, 'navslides-vitest-contract-'))
     testRoots.push(root)
     const witnessDir = path.join(root, 'witnesses')
     await Promise.all([

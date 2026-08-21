@@ -10,7 +10,7 @@ import routeModule from './pptx-import.js'
 import jobManager from '../services/pptx-import-job-manager.js'
 import originalPackage from '../services/pptx-import/original-package.js'
 
-const { createPptxImportRouter, runImport } = routeModule
+const { createPptxImportRouter, drainDetachedImportCleanups, runImport } = routeModule
 const { persistOriginalPptx, getOriginalsDir, sha256Buffer } = originalPackage
 
 async function writeMinimalPptx(filePath) {
@@ -557,6 +557,47 @@ describe('PPTX import route', () => {
     } finally {
       finishPersist?.()
       finishDelete?.()
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('tracks a late rejected persistence stage without overwriting the terminal job', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-late-reject-'))
+    const file = path.join(dir, 'valid.pptx')
+    let rejectPersist
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const failJob = vi.spyOn(jobManager, 'failJob')
+    try {
+      await writeMinimalPptx(file)
+      const app = express()
+      app.use('/api/pptx', createPptxImportRouter({
+        jobManager,
+        ...mockAtomicDeps(),
+        importTimeoutMs: 10,
+        importer: async () => ({ presentation: { slides: [] }, stats: {}, warnings: [] }),
+        persistOriginal: () => new Promise((_resolve, reject) => {
+          rejectPersist = reject
+        }),
+      }))
+
+      const res = await request(app).post('/api/pptx/import').attach('file', file)
+      const poll = await waitForJob(app, res.body.jobId, 'failed', res.body.capability)
+      expect(poll.body.error).toBe('PPTX import deadline exceeded')
+      expect(failJob).toHaveBeenCalledTimes(1)
+
+      rejectPersist(new Error('late persistence failure'))
+      await drainDetachedImportCleanups({ timeoutMs: 1000 })
+      expect(failJob).toHaveBeenCalledTimes(1)
+      expect((await request(app).post('/api/pptx/import')).status).toBe(400)
+      expect(warn).toHaveBeenCalledWith(
+        '[pptx-import] detached stage rejected:',
+        'late persistence failure'
+      )
+    } finally {
+      rejectPersist?.(new Error('test cleanup'))
+      warn.mockRestore()
+      failJob.mockRestore()
+      await drainDetachedImportCleanups({ timeoutMs: 1000 })
       await fs.rm(dir, { recursive: true, force: true })
     }
   })

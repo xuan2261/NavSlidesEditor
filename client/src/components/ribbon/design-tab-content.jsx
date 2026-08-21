@@ -14,15 +14,12 @@ const {
   BG_COLORS = [],
   GRADIENT_PRESETS = [],
   THEME_PRESETS = [],
+  SUPPORTED_REVEAL_THEMES = [],
   getDesignTokensForRevealTheme,
   listFx,
 } = shared
 const FX_LIST = typeof listFx === 'function' ? listFx() : []
 
-const THEMES = [
-  'black', 'white', 'league', 'beige', 'night',
-  'serif', 'simple', 'solarized', 'blood', 'moon', 'dracula',
-]
 
 const SIZE_PRESETS = [
   { label: '16:9', w: 960, h: 540, icon: Monitor },
@@ -102,7 +99,7 @@ function ThemeGallery({ open, anchorRef, current, currentTokens, onSelect, onSel
       <div className="mt-1 border-t border-border pt-1.5">
         <div className="text-[9px] uppercase tracking-wide text-text-muted mb-0.5 px-0.5">Base reveal theme</div>
         <div className="grid grid-cols-3 gap-1">
-          {THEMES.map((t) => (
+          {SUPPORTED_REVEAL_THEMES.map((t) => (
             <button
               key={t}
               className={`px-1.5 py-1 rounded text-[10px] capitalize cursor-pointer transition-colors

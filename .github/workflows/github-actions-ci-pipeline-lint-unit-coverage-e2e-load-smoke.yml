@@ -11,7 +11,7 @@ permissions:
   pull-requests: write
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22.22.0'
   PLAYWRIGHT_IMAGE: mcr.microsoft.com/playwright:v1.59.1-jammy
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run lint
 
@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:coverage
@@ -53,7 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
 
@@ -71,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
       - name: Playwright shard ${{ matrix.shard }}/4 (chromium project)
@@ -98,7 +98,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
       - name: Playwright package-backed PPTX import project
@@ -125,7 +125,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
       - name: Playwright live project
@@ -152,7 +152,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
       - name: Playwright touch/mobile suite on mobile-chromium
@@ -180,7 +180,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
       - name: Playwright visual suite
@@ -205,7 +205,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Run parser-relative corpus metrics
@@ -219,7 +219,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - uses: grafana/setup-k6-action@v1
       - run: npm ci
       - run: npm run build
@@ -256,7 +256,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Capture fresh vitest run results for matrix join
@@ -276,6 +276,109 @@ jobs:
       - name: Fail if committed docs/feature-coverage-matrix.md is stale
         run: git diff --exit-code docs/feature-coverage-matrix.md
 
+  docker-artifact:
+    name: Docker artifact qualification
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Build production image
+        run: docker build --tag navslides-editor:ci .
+      - name: Start production container
+        run: |
+          docker run --detach --name navslides-editor-ci \
+            --publish 127.0.0.1:3002:3002 \
+            --env NAVSLIDES_LISTEN_HOST=0.0.0.0 \
+            navslides-editor:ci
+      - name: Qualify packaged runtime and package persistence
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          wait_for_server() {
+            for attempt in $(seq 1 60); do
+              if curl --fail --silent --show-error http://127.0.0.1:3002/ > /dev/null; then
+                return 0
+              fi
+              sleep 1
+            done
+            return 1
+          }
+
+          wait_for_server
+          docker exec navslides-editor-ci node scripts/verify-runtime-closure.js --require-client-dist \
+            | tee docker-runtime-closure.json
+          curl --fail --silent --show-error \
+            http://127.0.0.1:3002/vendor/socket.io/socket.io.min.js \
+            --output /tmp/socket.io.min.js
+          test -s /tmp/socket.io.min.js
+          curl --fail --silent --show-error http://127.0.0.1:3002/api/presentations \
+            --output /tmp/presentations.json
+          jq -e 'type == "array"' /tmp/presentations.json > /dev/null
+
+          source_pptx=server/data/test-corpus/background-image-notes-footer.pptx
+          admission=$(curl --fail --silent --show-error \
+            --form "file=@${source_pptx};type=application/vnd.openxmlformats-officedocument.presentationml.presentation" \
+            http://127.0.0.1:3002/api/pptx/import)
+          job_id=$(jq -er '.jobId' <<<"$admission")
+          capability=$(jq -er '.capability' <<<"$admission")
+
+          presentation_id=''
+          for attempt in $(seq 1 120); do
+            job=$(curl --fail --silent --show-error \
+              --header "X-Pptx-Job-Capability: ${capability}" \
+              "http://127.0.0.1:3002/api/pptx/jobs/${job_id}")
+            status=$(jq -r '.status' <<<"$job")
+            if [[ "$status" == 'done' ]]; then
+              presentation_id=$(jq -er '.result.presentationId' <<<"$job")
+              break
+            fi
+            if [[ "$status" == 'failed' || "$status" == 'cancelled' ]]; then
+              jq . <<<"$job"
+              exit 1
+            fi
+            sleep 1
+          done
+          test -n "$presentation_id"
+
+          source_sha=$(sha256sum "$source_pptx" | cut -d' ' -f1)
+          curl --fail --silent --show-error --dump-header /tmp/pptx-original.headers \
+            "http://127.0.0.1:3002/api/presentations/${presentation_id}/pptx-original" \
+            --output /tmp/pptx-original.pptx
+          cmp "$source_pptx" /tmp/pptx-original.pptx
+          tr -d '\r' < /tmp/pptx-original.headers \
+            | grep -Fqi "x-pptx-original-sha256: ${source_sha}"
+
+          docker restart navslides-editor-ci
+          wait_for_server
+          curl --fail --silent --show-error \
+            "http://127.0.0.1:3002/api/presentations/${presentation_id}" \
+            --output /tmp/presentation-after-restart.json
+          jq -e --arg id "$presentation_id" '.id == $id' \
+            /tmp/presentation-after-restart.json > /dev/null
+          curl --fail --silent --show-error \
+            "http://127.0.0.1:3002/api/presentations/${presentation_id}/pptx-original" \
+            --output /tmp/pptx-original-after-restart.pptx
+          cmp "$source_pptx" /tmp/pptx-original-after-restart.pptx
+
+          docker image inspect navslides-editor:ci > docker-image-inspect.json
+      - name: Upload Docker qualification receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: docker-runtime-qualification
+          path: |
+            docker-runtime-closure.json
+            docker-image-inspect.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Capture container logs and clean up
+        if: always()
+        run: |
+          docker logs navslides-editor-ci || true
+          docker rm --force navslides-editor-ci || true
+
   required-checks:
     name: Required checks summary
     runs-on: ubuntu-latest
@@ -290,6 +393,7 @@ jobs:
       - e2e-visual
       - pptx-corpus-metrics
       - load-smoke
+      - docker-artifact
     if: always()
     steps:
       - name: Fail if any required job failed

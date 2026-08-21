@@ -17,6 +17,7 @@
     "file-type": "^22.0.0",
     "fs-extra": "^11.2.0",
     "jsdom": "^25.0.1",
+    "image-size": "file:../vendor-overrides/image-size-disabled",
     "jszip": "3.10.1",
     "multer": "^1.4.5-lts.1",
     "playwright": "^1.59.1",
@@ -24,6 +25,8 @@
     "pptxtojson": "2.0.2",
     "revealjs-shared": "*",
     "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "undici": "7.29.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -34,5 +37,8 @@
     "marked": "^18.0.4",
     "reveal.js": "^5.1.0",
     "supertest": "^7.2.2"
+  },
+  "overrides": {
+    "image-size": "$image-size"
   }
 }

@@ -68,7 +68,7 @@ deployments require an external authentication layer and reverse proxy.
 
 Download the pre-built Windows package from
 [Releases](https://github.com/xuan2261/NavSlidesEditor/releases). Linux and
-macOS packages can be built locally with Node.js 20+:
+macOS packages can be built locally with Node.js >=22.13.0:
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
@@ -84,7 +84,7 @@ Desktop data is stored under `~/.config/NavSlides Editor/` on Linux,
 
 ### Node.js from source
 
-Requires Node.js 20+ and npm 8+.
+Requires Node.js >=22.13.0 and npm. CI and container builds use Node.js 22.22.0.
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
@@ -261,7 +261,7 @@ Still review issues that cross a trust boundary, including:
 - credential leakage, path traversal, SSRF, command injection, or data loss
 - missing auth protections when deploying beyond local/private single-user use
 
-For internet-facing or multi-user deployments, place NavSlides Editor behind an external authentication layer and treat all shared/editable content as privileged.
+For internet-facing or multi-user deployments, place NavSlides Editor behind an external authentication layer and treat all editor/API content as privileged. `/api/analytics/:id` is an owner/editor route: share tokens do not authorize it, and its response exposes only aggregate link labels plus timestamp/referrer-host events. If a proxy makes `/share/:token` public, keep `/api/analytics`, presentation APIs, and editor routes behind operator authentication.
 
 ---
 
@@ -367,16 +367,17 @@ slides.example.com {
 
 ### Game Mode (presenter)
 
-| Shortcut  | Action              |
-| --------- | ------------------- |
-| `G`       | Toggle HUD          |
-| `Space`   | Start / pause timer |
-| `Enter`   | Next phase          |
-| `R`       | Reveal answer       |
-| `L`       | Show leaderboard    |
-| `P`       | Pause game          |
-| `+` / `-` | Adjust timer        |
-| `1`–`4`   | Select team         |
+Only shortcuts implemented by the active game are enabled.
+
+| Shortcut  | Action                         |
+| --------- | ------------------------------ |
+| `G`       | Toggle HUD                     |
+| `Space`   | Start timer                    |
+| `Enter`   | Next question or phase         |
+| `R`       | Reveal supported game results  |
+| `L`       | Show leaderboard               |
+| `P`       | Pause timer                    |
+| `+` / `-` | Adjust timer                   |
 
 ---
 
@@ -384,9 +385,9 @@ slides.example.com {
 
 | Method       | Requirement                                        |
 | ------------ | -------------------------------------------------- |
-| Desktop app  | Node.js 20+ (build only)                           |
+| Desktop app  | Node.js >=22.13.0 (build only)                    |
 | Docker       | Docker 20.10+ and Docker Compose v2+               |
-| Node.js      | Node.js 20+ and npm 8+                             |
+| Node.js      | Node.js >=22.13.0 and npm                           |
 | Load Testing | [k6](https://k6.io/docs/get-started/installation/) |
 
 ---
@@ -430,7 +431,17 @@ Verification typically runs in this order:
    npm run test:pptx:browser-audit:full   # strict full 5-deck release gate
    npm run test:pptx:browser-audit:headed # headed full audit for manual inspection
    ```
-7. Load tests with `k6`:
+7. Microsoft PowerPoint visual oracle:
+   ```bash
+   npm run test:pptx:oracle:capture -- --base-url http://127.0.0.1:3202 --corpus-manifest server/data/test-corpus/importer-qualification-manifest.json --actuals-dir <actuals-dir>
+   npm run test:pptx:oracle:integrity -- --evidence-manifest <manifest> --role-receipts <receipts> --goldens-dir <goldens-dir> --actuals-dir <actuals-dir>
+   npm run test:pptx:oracle:qualify -- --evidence-manifest <manifest> --role-receipts <receipts> --goldens-dir <goldens-dir> --actuals-dir <actuals-dir>
+   ```
+   Only Microsoft PowerPoint goldens can satisfy this gate. Integrity success
+   does not imply fidelity success; qualification enforces the fixed
+   `phase08_full` mean/minimum SSIM policy and fails closed.
+
+8. Load tests with `k6`:
    ```bash
    npm run test:load:api
    npm run test:load:ws
@@ -464,7 +475,7 @@ PPTX browser audit artifacts are written under `plans/reports/pptx-import-real-b
 | Icons                | Lucide (editor UI) + inline SVG (slide icons) |
 | PowerPoint export    | pptxgenjs + Playwright raster fallback        |
 | PowerPoint import    | pptxtojson runtime parser; pptx2json benchmark-sandbox-only |
-| Backend              | Node.js 20+, Express 4                        |
+| Backend              | Node.js >=22.13.0 (CI/container: 22.22.0), Express 4 |
 | Real-time transport  | Socket.IO                                     |
 | Desktop app          | Electron 42                                   |
 | Cloud sync           | rclone                                        |
