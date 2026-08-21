@@ -62,6 +62,23 @@ describe('production runtime closure contract', () => {
     expect(workflows).toContain(`NODE_VERSION: '${expected.node}'`)
   })
 
+  it('qualifies the production Docker artifact in the required CI fan-in', () => {
+    const workflow = readText(
+      '.github',
+      'workflows',
+      'github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml'
+    )
+
+    expect(workflow).toContain('docker-artifact:')
+    expect(workflow).toContain('docker build --tag navslides-editor:ci .')
+    expect(workflow).toContain('node scripts/verify-runtime-closure.js --require-client-dist')
+    expect(workflow).toContain('/vendor/socket.io/socket.io.min.js')
+    expect(workflow).toContain('/api/pptx/import')
+    expect(workflow).toContain('/pptx-original')
+    expect(workflow).toContain('docker restart navslides-editor-ci')
+    expect(workflow).toMatch(/required-checks:[\s\S]*needs:[\s\S]*- docker-artifact/)
+  })
+
   it('uses immutable action pins and npm ci in the release workflow', () => {
     const workflow = readText('.github', 'workflows', 'release.yml')
 
