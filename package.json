@@ -20,7 +20,12 @@
     "vendor": "node scripts/copy-vendor.js",
     "postinstall": "npm run vendor",
     "build": "npm run build --workspace=client",
-    "start": "NODE_ENV=production npm run start --workspace=server",
+    "prestart": "node scripts/verify-runtime-closure.js --require-client-dist",
+    "start": "node --env-file=config/production.env server/index.js",
+    "runtime:verify": "node scripts/verify-runtime-closure.js --require-client-dist",
+    "runtime:receipt": "node scripts/runtime-receipt.js",
+    "electron:lock": "node scripts/update-electron-server-lock.js",
+    "workspace:lock": "node scripts/update-workspace-lock.js",
     "format": "prettier --write .",
     "lint": "eslint .",
     "docs:dev": "npm run docs:dev --workspace=website",
@@ -69,10 +74,11 @@
     "test:pptx:phase13": "vitest run server/services/pptx-import/evidence/release-claim-policy.test.js server/services/pptx-import/evidence/composite-run.test.js server/services/pptx-import/evidence/protected-release-contract.test.js scripts/pptx-package-claim-gate.test.js",
     "electron:dev": "npm run build && electron .",
     "electron:prepare": "npm run build && node scripts/prepare-electron.js",
-    "electron:build": "npm run electron:prepare && npx electron-builder",
-    "electron:build:linux": "npm run electron:prepare && npx electron-builder --linux",
-    "electron:build:mac": "npm run electron:prepare && npx electron-builder --mac",
-    "electron:build:win": "npm run electron:prepare && npx electron-builder --win"
+    "electron:builder": "node --experimental-require-module node_modules/electron-builder/cli.js",
+    "electron:build": "npm run electron:prepare && npm run electron:builder",
+    "electron:build:linux": "npm run electron:prepare && npm run electron:builder -- --linux",
+    "electron:build:mac": "npm run electron:prepare && npm run electron:builder -- --mac",
+    "electron:build:win": "npm run electron:prepare && npm run electron:builder -- --win"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
@@ -83,31 +89,42 @@
     "@testing-library/user-event": "^14.6.1",
     "@vitest/coverage-v8": "^4.1.6",
     "concurrently": "^9.2.1",
-    "electron": "^42.3.0",
-    "electron-builder": "^26.8.1",
+    "electron": "42.9.3",
+    "electron-builder": "26.15.3",
+    "esbuild": "0.25.12",
     "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-hooks": "7.0.1",
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.4.0",
     "happy-dom": "^20.9.0",
     "jsdom": "^21.1.2",
     "playwright": "^1.59.1",
     "prettier": "^3.8.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "vitest": "^4.1.4"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
+    "image-size": "file:vendor-overrides/image-size-disabled",
     "jszip": "^3.10.1"
   },
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "overrides": {
+    "image-size": "$image-size",
+    "@electron/get": {
+      "undici": "7.29.0"
+    },
     "@xmldom/xmldom": ">=0.9.5",
     "@tootallnate/once": "^2.0.1",
-    "esbuild": "^0.25.0",
+    "esbuild": "0.25.12",
     "qs": "^6.15.2",
     "tar": "^7.5.11",
     "tmp": "^0.2.6",
-    "vite": "^8.0.14",
+    "vite": "8.2.2",
     "ws": "^8.20.1",
     "socket.io": {
       "engine.io": "^6.6.8",

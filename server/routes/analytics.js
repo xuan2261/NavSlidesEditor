@@ -3,6 +3,24 @@ const { readShareTokens, readAnalytics, withAnalytics } = require('../services/s
 
 const router = express.Router()
 
+function getReferrerHost(value) {
+  if (!value) return ''
+  try {
+    const url = new URL(String(value))
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.hostname : ''
+  } catch {
+    return ''
+  }
+}
+
+function getLinkLabel(token, shareTokens) {
+  const tokenData = shareTokens[token]
+  if (tokenData && typeof tokenData === 'object' && tokenData.name) {
+    return String(tokenData.name).slice(0, 200)
+  }
+  return tokenData ? 'Share link' : 'Revoked share link'
+}
+
 // Record a view event (called internally from share route)
 async function recordView(presentationId, token, referrer = '') {
   await withAnalytics((analytics) => {
@@ -14,7 +32,7 @@ async function recordView(presentationId, token, referrer = '') {
     events.push({
       timestamp: new Date().toISOString(),
       token,
-      referrer: referrer || '',
+      referrerHost: getReferrerHost(referrer),
     })
     if (events.length > 200) {
       analytics[presentationId].events = events.slice(-200)
@@ -22,45 +40,43 @@ async function recordView(presentationId, token, referrer = '') {
   })
 }
 
-// GET /api/analytics/:id — get analytics for a presentation
+// GET /api/analytics/:id — owner/editor surface. Deployment authentication is
+// supplied by the operator's reverse proxy; share tokens are never accepted as
+// analytics capabilities.
 router.get('/:id', async (req, res) => {
   try {
-    const token = String(req.query.token || '')
-    if (!token) {
-      return res.status(403).json({ error: 'Access denied' })
-    }
-
-    const shareTokens = await readShareTokens()
-    const tokenDataRaw = shareTokens[token]
-    const tokenData = typeof tokenDataRaw === 'string' ? { presentationId: tokenDataRaw } : tokenDataRaw
-    if (!tokenData || tokenData.presentationId !== req.params.id) {
-      return res.status(403).json({ error: 'Access denied' })
-    }
-
-    const analytics = await readAnalytics()
+    const [analytics, shareTokens] = await Promise.all([readAnalytics(), readShareTokens()])
     const data = analytics[req.params.id] || { totalViews: 0, events: [] }
+    const events = Array.isArray(data.events) ? data.events : []
 
-    // Compute daily views for chart
-    const dailyMap = {}
-    data.events.forEach((e) => {
-      const day = e.timestamp.split('T')[0]
-      dailyMap[day] = (dailyMap[day] || 0) + 1
-    })
-    const dailyViews = Object.entries(dailyMap)
+    const dailyMap = new Map()
+    const linkMap = new Map()
+    for (const event of events) {
+      const day = String(event.timestamp || '').split('T')[0]
+      if (day) dailyMap.set(day, (dailyMap.get(day) || 0) + 1)
+
+      const label = getLinkLabel(event.token, shareTokens)
+      linkMap.set(label, (linkMap.get(label) || 0) + 1)
+    }
+
+    const dailyViews = [...dailyMap.entries()]
       .map(([date, count]) => ({ date, count }))
-      .sort((a, b) => a.date.localeCompare(b.date))
+      .sort((left, right) => left.date.localeCompare(right.date))
+    const byLinkLabels = Object.fromEntries(linkMap)
+    const recentEvents = events
+      .slice(-20)
+      .reverse()
+      .map((event) => ({
+        timestamp: event.timestamp,
+        referrerHost: event.referrerHost || getReferrerHost(event.referrer),
+      }))
 
-    // Per-token breakdown
-    const tokenMap = {}
-    data.events.forEach((e) => {
-      tokenMap[e.token] = (tokenMap[e.token] || 0) + 1
-    })
-
+    res.set('Cache-Control', 'no-store')
     res.json({
-      totalViews: data.totalViews,
+      totalViews: Number(data.totalViews) || 0,
       dailyViews,
-      byToken: tokenMap,
-      recentEvents: data.events.slice(-20).reverse(),
+      byLinkLabels,
+      recentEvents,
     })
   } catch {
     res.status(500).json({ error: 'Failed to load analytics' })

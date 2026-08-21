@@ -3,7 +3,7 @@ productName: NavSlides Editor
 directories:
   output: dist-electron
 
-electronVersion: '33.4.11'
+electronVersion: '42.9.3'
 
 icon: build/icon.png
 
@@ -57,5 +57,3 @@ linux:
     - AppImage
     - deb
   category: Office
-  executableArgs:
-    - '--no-sandbox'

@@ -11,7 +11,7 @@ permissions:
   pull-requests: write
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22.22.0'
   PLAYWRIGHT_IMAGE: mcr.microsoft.com/playwright:v1.59.1-jammy
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run lint
 
@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:coverage
@@ -53,7 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
 
@@ -71,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
       - name: Playwright shard ${{ matrix.shard }}/4 (chromium project)
@@ -98,7 +98,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
       - name: Playwright package-backed PPTX import project
@@ -125,7 +125,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
       - name: Playwright live project
@@ -152,7 +152,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
       - name: Playwright touch/mobile suite on mobile-chromium
@@ -180,7 +180,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npm run build
       - name: Playwright visual suite
@@ -205,7 +205,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Run parser-relative corpus metrics
@@ -219,7 +219,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - uses: grafana/setup-k6-action@v1
       - run: npm ci
       - run: npm run build
@@ -256,7 +256,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm }
+        with: { node-version: '22.22.0', cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Capture fresh vitest run results for matrix join
