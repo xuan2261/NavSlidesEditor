@@ -176,6 +176,47 @@ describe('CanvasContextMenu copy URL action', () => {
   })
 })
 
+describe('CanvasContextMenu action command', () => {
+  it('requests focus for the shared action editor instead of duplicating action fields', () => {
+    const dispatch = vi.spyOn(window, 'dispatchEvent')
+    const { onClose } = renderMenu({ id: 'action-target', type: 'shape' })
+    fireEvent.click(screen.getByRole('button', { name: 'Edit action' }))
+    expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'navslides:focus-action' }))
+    expect(onClose).toHaveBeenCalledOnce()
+    dispatch.mockRestore()
+  })
+})
+
+describe('CanvasContextMenu viewport placement', () => {
+  it('clamps the menu inside the visible viewport', () => {
+    const originalWidth = Object.getOwnPropertyDescriptor(window, 'innerWidth')
+    const originalHeight = Object.getOwnPropertyDescriptor(window, 'innerHeight')
+    const width = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(200)
+    const height = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(180)
+
+    try {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: 320 })
+      Object.defineProperty(window, 'innerHeight', { configurable: true, value: 240 })
+      render(
+        <CanvasContextMenu
+          contextMenu={{ elementId: 'shape-1', elementType: 'shape', x: 1000, y: 800 }}
+          slide={{ elements: [{ id: 'shape-1', type: 'shape' }] }}
+          onClose={vi.fn()}
+        />
+      )
+
+      const root = screen.getByRole('menu', { name: 'Element actions' })
+      expect(root.style.left).toBe('112px')
+      expect(root.style.top).toBe('52px')
+    } finally {
+      Object.defineProperty(window, 'innerWidth', originalWidth)
+      Object.defineProperty(window, 'innerHeight', originalHeight)
+      width.mockRestore()
+      height.mockRestore()
+    }
+  })
+})
+
 describe('icon consistency pass — Lucide ctx-menu', () => {
   const ICON_GLYPHS = ['↖', '↑', '↗', '←', '⊕', '→', '↙', '↓', '↘', '↺', '⧉']
 

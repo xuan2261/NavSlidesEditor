@@ -16,8 +16,8 @@
     "express-rate-limit": "^8.5.2",
     "file-type": "^22.0.0",
     "fs-extra": "^11.2.0",
-    "jsdom": "^25.0.1",
     "image-size": "file:../vendor-overrides/image-size-disabled",
+    "jsdom": "^25.0.1",
     "jszip": "3.10.1",
     "multer": "^1.4.5-lts.1",
     "playwright": "^1.59.1",
@@ -35,7 +35,7 @@
     "highlight.js": "^11.11.1",
     "katex": "^0.16.11",
     "marked": "^18.0.4",
-    "reveal.js": "^5.1.0",
+    "reveal.js": "6.0.1",
     "supertest": "^7.2.2"
   },
   "overrides": {

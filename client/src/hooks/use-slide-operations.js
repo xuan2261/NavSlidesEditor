@@ -9,7 +9,27 @@ import {
   cloneTemplateElementForTheme,
 } from '../utils/slide-template-theme-normalization'
 import { hasBlockedGroupMutation } from '../utils/active-slide-selection'
-import { isPureUnlockUpdate } from '../utils/element-update-fanout'
+import {
+  applyConnectorDependentPatches,
+  buildConnectorUpdateBatch,
+  isPureUnlockUpdate,
+} from '../utils/element-update-fanout'
+
+function remapConnectorTargets(element, idRemap) {
+  if (!element.connections) return element
+  const remap = (endpoint) =>
+    endpoint && idRemap.has(endpoint.targetId)
+      ? { ...endpoint, targetId: idRemap.get(endpoint.targetId) }
+      : endpoint
+  return {
+    ...element,
+    connections: {
+      ...element.connections,
+      ...(element.connections.start ? { start: remap(element.connections.start) } : {}),
+      ...(element.connections.end ? { end: remap(element.connections.end) } : {}),
+    },
+  }
+}
 
 /**
  * Hook encapsulating multi-element operations (align, group, delete-selected)
@@ -56,19 +76,24 @@ export function useSlideOperations({
     (updates) => {
       setPresentation((prev) => {
         if (!prev) return prev
-        const map = {}
-        updates.forEach((u) => {
-          const { id, ...partial } = u
-          map[id] = partial
+        return mapActive(prev, (s) => {
+          if (s.locked) return s
+          const requested = (updates || []).filter(({ id, ...partial }) => {
+            const element = (s.elements || []).find((candidate) => candidate.id === id)
+            return element && (!element.locked || isPureUnlockUpdate(partial))
+          })
+          if (!requested.length) return s
+          const batch = buildConnectorUpdateBatch(s.elements || [], requested)
+          const byId = new Map(batch.map(({ id, ...partial }) => [id, partial]))
+          return {
+            ...s,
+            elements: (s.elements || []).map((el) =>
+              byId.has(el.id)
+                ? { ...el, ...invalidatePptxFitMetaForUpdates(el, byId.get(el.id)) }
+                : el
+            ),
+          }
         })
-        return mapActive(prev, (s) => ({
-          ...s,
-          elements: (s.elements || []).map((el) =>
-            map[el.id] && !s.locked && (!el.locked || isPureUnlockUpdate(map[el.id]))
-              ? { ...el, ...invalidatePptxFitMetaForUpdates(el, map[el.id]) }
-              : el
-          ),
-        }))
       })
     },
     [setPresentation, mapActive]
@@ -109,10 +134,10 @@ export function useSlideOperations({
     const deletableIds = ids.filter((id) => !lockedIds.has(id))
     if (!deletableIds.length) return
     setPresentation((prev) =>
-      mapActive(prev, (s) => ({
-        ...s,
-        elements: (s.elements || []).filter((el) => !deletableIds.includes(el.id)),
-      }))
+      mapActive(prev, (s) => {
+        const elements = (s.elements || []).filter((el) => !deletableIds.includes(el.id))
+        return { ...s, elements: applyConnectorDependentPatches(elements, deletableIds) }
+      })
     )
     if (lockedIds.size) {
       setSelectedElementIds(ids.filter((id) => lockedIds.has(id)))
@@ -261,10 +286,10 @@ export function useSlideOperations({
             })
           }
         }
-        return mapActive(prev, (sl) => ({
-          ...sl,
-          elements: (sl.elements || []).map((el) => (upd[el.id] ? { ...el, ...upd[el.id] } : el)),
-        }))
+        return mapActive(prev, (sl) => {
+          const elements = (sl.elements || []).map((el) => (upd[el.id] ? { ...el, ...upd[el.id] } : el))
+          return { ...sl, elements: applyConnectorDependentPatches(elements) }
+        })
       })
     },
     [setPresentation, selectedElementIdsRef, activeSlideOf, mapActive]
@@ -433,18 +458,22 @@ export function useSlideOperations({
         const parent = prev.slides[parentIndex]
         const child = parent?.children?.[childIndex]
         if (!child) return prev
+        const sourceElements = child.elements || []
+        const idRemap = new Map(sourceElements.map((element) => [element.id, crypto.randomUUID()]))
         const dup = {
           ...child,
           id: crypto.randomUUID(),
-          elements: (child.elements || []).map((el) => ({ ...el, id: crypto.randomUUID() })),
+          elements: sourceElements.map((element) =>
+            remapConnectorTargets({ ...element, id: idRemap.get(element.id) }, idRemap)
+          ),
         }
         return {
           ...prev,
-          slides: prev.slides.map((s, i) => {
-            if (i !== parentIndex) return s
-            const children = [...(s.children || [])]
+          slides: prev.slides.map((slide, index) => {
+            if (index !== parentIndex) return slide
+            const children = [...(slide.children || [])]
             children.splice(childIndex + 1, 0, dup)
-            return { ...s, children }
+            return { ...slide, children }
           }),
         }
       })

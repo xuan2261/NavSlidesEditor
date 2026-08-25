@@ -1,5 +1,17 @@
 [
   {
+    "id": "action.element-runtime",
+    "category": "action",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "ai.endpoint-guard",
     "category": "ai",
     "source": "manifest",
@@ -321,6 +333,18 @@
     "coverageMode": "executable"
   },
   {
+    "id": "connector.smart-geometry",
+    "category": "connector",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "control.file.menu",
     "category": "control",
     "source": "manifest",
@@ -465,6 +489,18 @@
     "coverageMode": "executable"
   },
   {
+    "id": "control.properties.disclosure",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "control.properties.panel",
     "category": "control",
     "source": "manifest",
@@ -474,6 +510,18 @@
     ],
     "scope": "editor-core",
     "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.active-reveal",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
     "coverageMode": "executable"
   },
   {
@@ -537,6 +585,66 @@
     "coverageMode": "executable"
   },
   {
+    "id": "control.ribbon.keyboard",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.overflow",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.reduced-motion",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.responsive",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.ribbon.touch-targets",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "control.ribbon.transitions",
     "category": "control",
     "source": "manifest",
@@ -582,6 +690,18 @@
     ],
     "scope": "editor-core",
     "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "control.status.touch-targets",
+    "category": "control",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
     "coverageMode": "executable"
   },
   {
@@ -936,6 +1056,30 @@
     "coverageMode": "inventory-only"
   },
   {
+    "id": "export.action-pptx",
+    "category": "export",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "export.connector-pptx",
+    "category": "export",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "export.html",
     "category": "export",
     "source": "manifest",
@@ -945,6 +1089,30 @@
     ],
     "scope": "export",
     "targetLayer": "e2e",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "export.layout-pptx",
+    "category": "export",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "export.media-pptx",
+    "category": "export",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
     "coverageMode": "executable"
   },
   {
@@ -1085,6 +1253,18 @@
     "coverageMode": "executable"
   },
   {
+    "id": "layout.master-resolution",
+    "category": "layout",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "live.presenter-authz",
     "category": "live",
     "source": "manifest",
@@ -1122,6 +1302,18 @@
     "coverageMode": "inventory-only"
   },
   {
+    "id": "media.accessibility",
+    "category": "media",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "plugin.runtime",
     "category": "plugin",
     "source": "manifest",
@@ -1145,6 +1337,18 @@
     "scope": "plugin",
     "targetLayer": "contract",
     "coverageMode": "inventory-only"
+  },
+  {
+    "id": "runtime.reveal6-assets",
+    "category": "runtime",
+    "source": "manifest",
+    "risk": "high",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "editor-core",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
   },
   {
     "id": "share.password",

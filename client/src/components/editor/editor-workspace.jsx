@@ -34,7 +34,7 @@ export default function EditorWorkspace({
               <button
                 type="button"
                 aria-label="Open slide navigator"
-                className="pointer-events-auto rounded bg-panel px-2 py-1 text-xs shadow"
+                className="ui-coarse-target pointer-events-auto rounded bg-panel px-2 py-1 text-xs shadow"
                 onClick={() => setActiveWorkspaceOverlay('navigator')}
               >
                 Slides
@@ -44,7 +44,7 @@ export default function EditorWorkspace({
               <button
                 type="button"
                 aria-label="Open inspector"
-                className="pointer-events-auto ml-auto rounded bg-panel px-2 py-1 text-xs shadow"
+                className="ui-coarse-target pointer-events-auto ml-auto rounded bg-panel px-2 py-1 text-xs shadow"
                 onClick={() => setActiveWorkspaceOverlay('inspector')}
               >
                 Inspector

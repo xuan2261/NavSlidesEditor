@@ -2,7 +2,7 @@ const fs = require('node:fs/promises')
 const os = require('node:os')
 const path = require('node:path')
 const { openPackageStore } = require('./index')
-const { SCHEMA_VERSION, hashRecord } = require('./schemas')
+const { RECORD_SCHEMA_VERSION, hashRecord } = require('./schemas')
 const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
 const { resolveEditedExportContext } = require('../validated-edited-export-context')
 const {
@@ -192,7 +192,7 @@ describe('portable package boundary', () => {
       },
       () => {
         const invalid = copyBundle()
-        invalid.manifest.blobs[0].schemaVersion = SCHEMA_VERSION + 1
+        invalid.manifest.blobs[0].schemaVersion = RECORD_SCHEMA_VERSION + 1
         return invalid
       },
     ]

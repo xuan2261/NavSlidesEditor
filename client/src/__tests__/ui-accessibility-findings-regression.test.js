@@ -52,4 +52,39 @@ describe('verified UI accessibility findings regression guards', () => {
     const slidePanel = read('client/src/components/SlidePanel.jsx')
     expect(slidePanel).toContain('aria-hidden="true"')
   })
+
+  it('[cap:control.ribbon.active-reveal] keeps active reveal and overflow affordances semantic', () => {
+    const source = read('client/src/components/ribbon/tab-bar-with-scroll-and-icons.jsx')
+
+    expect(source).toContain("scrollIntoView({ block: 'nearest', inline: 'nearest' })")
+    expect(source).toContain('Scroll ribbon tabs left')
+    expect(source).toContain('Scroll ribbon tabs right')
+    expect(source).toContain("aria-orientation=\"horizontal\"")
+  })
+
+  it('[cap:control.ribbon.touch-targets] centralizes 44px coarse-pointer hit areas', () => {
+    const css = read('client/src/index.css')
+    const primitives = [
+      'client/src/components/ui/Button.jsx',
+      'client/src/components/ui/Input.jsx',
+      'client/src/components/ui/Select.jsx',
+      'client/src/components/ui/ColorPicker.jsx',
+    ]
+
+    expect(css).toContain('--coarse-target-size: 44px')
+    expect(css).toContain('@media (pointer: coarse)')
+    for (const file of primitives) expect(read(file)).toContain('ui-coarse-target')
+  })
+
+  it('[cap:control.ribbon.responsive] assigns horizontal overflow to ribbon-owned rows', () => {
+    const tabs = read('client/src/components/ribbon/tab-bar-with-scroll-and-icons.jsx')
+    const contentRow = read('client/src/components/ribbon/ribbon-tab-content-row.jsx')
+    const editorHeader = read('client/src/components/editor/editor-header.jsx')
+
+    expect(tabs).toContain('overflow-x-auto')
+    expect(contentRow).toContain('overflow-x-auto')
+    expect(contentRow).not.toContain('overflow-x-hidden')
+    expect(editorHeader).toContain('min-w-0')
+    expect(editorHeader).toContain('overflow-hidden')
+  })
 })

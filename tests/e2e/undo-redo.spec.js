@@ -20,7 +20,6 @@ test.describe('Undo / Redo', () => {
     } catch {}
   })
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
   test('can undo adding an element', async ({ page }) => {
     const initialCount = await editorPage.getElementCount()
 
@@ -32,13 +31,13 @@ test.describe('Undo / Redo', () => {
 
     // Deselect first to ensure undo targets element addition
     await editorPage.deselectAll()
+    await page.getByTestId('canvas-area').click({ position: { x: 8, y: 8 } })
 
     // Undo
     await editorPage.undo()
     await expect.poll(async () => editorPage.getElementCount(), { timeout: 5000 }).toBe(initialCount)
   })
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
   test('can redo after undo', async ({ page }) => {
     const initialCount = await editorPage.getElementCount()
 
@@ -46,6 +45,7 @@ test.describe('Undo / Redo', () => {
     const afterAdd = await editorPage.getElementCount()
     await editorPage.waitForAutoSave()
     await editorPage.deselectAll()
+    await page.getByTestId('canvas-area').click({ position: { x: 8, y: 8 } })
     await editorPage.undo()
     await expect.poll(async () => editorPage.getElementCount(), { timeout: 5000 }).toBe(initialCount)
 

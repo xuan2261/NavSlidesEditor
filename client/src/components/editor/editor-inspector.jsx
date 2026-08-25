@@ -1,6 +1,5 @@
 import PropertiesPanel from '../PropertiesPanel'
 import DesignIdeasPanel from '../design-ideas-panel'
-import { SLIDE_TEMPLATES } from '../../data/slide-templates'
 import { getThemePreset } from 'revealjs-shared'
 
 export default function EditorInspector({
@@ -30,7 +29,7 @@ export default function EditorInspector({
         <button
           type="button"
           aria-pressed={!c.showDesignIdeas}
-          className="flex-1 rounded px-2 py-1 text-xs"
+          className="ui-coarse-target flex-1 rounded px-2 py-1 text-xs"
           onClick={() => {
             c.setRightPanelOpen(true)
             c.setShowDesignIdeas(false)
@@ -41,7 +40,7 @@ export default function EditorInspector({
         <button
           type="button"
           aria-pressed={c.showDesignIdeas}
-          className="flex-1 rounded px-2 py-1 text-xs"
+          className="ui-coarse-target flex-1 rounded px-2 py-1 text-xs"
           onClick={() => c.setShowDesignIdeas(true)}
         >
           Design Ideas
@@ -49,7 +48,7 @@ export default function EditorInspector({
       </div>
       {!c.showDesignIdeas && (
         <PropertiesPanel
-          slide={c.activeSlide}
+          slide={c.masterEdit ? { id: `master:${c.masterEdit.id}`, elements: c.masterEdit.fixedElements } : c.activeSlide}
           selectedElement={c.selectedElement}
           onUpdateSlide={c.updateCurrentSlide}
           onUpdateElement={(idOrUpdates, maybeUpdates) =>
@@ -81,31 +80,7 @@ export default function EditorInspector({
         <DesignIdeasPanel
           slide={c.activeSlide}
           presentation={c.presentation}
-          onApplyLayout={(templateId) => {
-            const template = SLIDE_TEMPLATES[templateId]
-            if (!template) return
-            const slots = (template.elements || []).filter((e) => e.type === 'text')
-            c.setPresentation((prev) =>
-              c.mapActive(prev, (s) => {
-                let slotIdx = 0
-                return {
-                  ...s,
-                  elements: (s.elements || []).map((el) => {
-                    if (el.type !== 'text' || slotIdx >= slots.length) return el
-                    const slot = slots[slotIdx++]
-                    return {
-                      ...el,
-                      x: slot.x,
-                      y: slot.y,
-                      width: slot.width,
-                      height: slot.height,
-                      zIndex: slot.zIndex ?? el.zIndex,
-                    }
-                  }),
-                }
-              })
-            )
-          }}
+          onApplyLayout={(templateId) => c.updateActiveLayout?.(templateId, 'change')}
           onApplyTheme={({ presetId, tokens }) => {
             const preset = presetId ? getThemePreset(presetId) : null
             c.setPresentation((prev) => ({

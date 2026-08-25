@@ -43,37 +43,83 @@ const elementSchema = z
   })
   .passthrough() // Allow type-specific fields like content, src, etc.
 
+const layoutElementSchema = elementSchema.extend({ id: z.string().min(1).max(200) })
+const layoutPlaceholderSchema = z.object({
+  id: z.string().min(1).max(200), type: builtInElementTypeSchema,
+  role: z.enum(['title', 'subtitle', 'body', 'image', 'media', 'chart', 'footer', 'custom']),
+  x: z.number(), y: z.number(), width: z.number().positive(), height: z.number().positive(),
+  zIndex: z.number().int().optional(), locked: z.boolean().optional(), contentPolicy: z.object({}).passthrough().optional(),
+}).strict()
+const layoutMasterSchema = z.object({
+  id: z.string().min(1).max(200), name: z.string().trim().min(1).max(200), system: z.boolean().optional(),
+  safeArea: z.object({ x: z.number(), y: z.number(), width: z.number().positive(), height: z.number().positive() }).strict().optional(),
+  tokens: z.object({}).passthrough().optional(), fixedElements: z.array(layoutElementSchema).max(128), placeholders: z.array(layoutPlaceholderSchema).max(64),
+}).strict().superRefine((master, ctx) => {
+  const ids = new Set()
+  for (const item of [...master.fixedElements, ...master.placeholders]) {
+    if (ids.has(item.id)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['id'], message: 'Layout element IDs must be unique' })
+    ids.add(item.id)
+  }
+})
+const layoutOverridesSchema = z.object({
+  hiddenElementIds: z.array(z.string().min(1).max(200)).max(256).optional(),
+  elementPatches: z.record(z.string().min(1).max(200), z.object({}).passthrough().refine((patch) => !Object.hasOwn(patch, 'id') && !Object.hasOwn(patch, 'type'), 'Layout patches cannot change identity or type')).refine((patches) => Object.keys(patches).length <= 256, 'Too many layout patches').optional(),
+  placeholderBindings: z.record(z.string().min(1).max(200), z.string().min(1).max(200)).refine((bindings) => Object.keys(bindings).length <= 256, 'Too many placeholder bindings').optional(),
+}).strict()
+
+function validatePresentationLayouts(presentation, ctx) {
+  if (!Array.isArray(presentation.layoutMasters)) return
+  const layouts = new Map(presentation.layoutMasters.map((layout) => [layout.id, layout]))
+  if (layouts.size !== presentation.layoutMasters.length) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['layoutMasters'], message: 'Layout master IDs must be unique' })
+  const visitSlides = (slides, path = ['slides']) => (slides || []).forEach((slide, index) => {
+    const slidePath = [...path, index]
+    if (slide.layoutId) {
+      const layout = layouts.get(slide.layoutId)
+      if (!layout) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [...slidePath, 'layoutId'], message: 'Layout reference must exist in registry' })
+      else {
+        const placeholders = new Set(layout.placeholders.map((placeholder) => placeholder.id))
+        for (const placeholderId of Object.keys(slide.layoutOverrides?.placeholderBindings || {})) {
+          if (!placeholders.has(placeholderId)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [...slidePath, 'layoutOverrides', 'placeholderBindings', placeholderId], message: 'Binding must target a layout placeholder' })
+        }
+      }
+    }
+    visitSlides(slide.children, [...slidePath, 'children'])
+  })
+  visitSlides(presentation.slides)
+}
+
 // ─── Slide Schema ────────────────────────────────────────────────────────────
 const slideSchema = z
   .object({
-    id: z.string().optional(),
-    elements: z.array(elementSchema).optional().default([]),
-    notes: z.string().optional(),
-    speakerNotes: z.string().optional(),
-    background: z.any().optional(),
+    id: z.string().optional(), elements: z.array(elementSchema).optional().default([]), notes: z.string().optional(),
+    speakerNotes: z.string().optional(), background: z.any().optional(), children: z.array(z.lazy(() => slideSchema)).max(100).optional(),
+    layoutId: z.string().min(1).max(200).optional(), layoutOverrides: layoutOverridesSchema.optional(),
   })
   .passthrough()
+  .superRefine((slide, ctx) => {
+    const elementIds = new Set((slide.elements || []).map((element) => element.id).filter(Boolean))
+    for (const [placeholderId, elementId] of Object.entries(slide.layoutOverrides?.placeholderBindings || {})) {
+      if (!elementIds.has(elementId)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['layoutOverrides', 'placeholderBindings', placeholderId], message: 'Placeholder binding must target a slide-owned element' })
+    }
+  })
 
 // ─── Create Presentation ─────────────────────────────────────────────────────
 const createPresentationSchema = z
   .object({
-    title: z.string().max(500).optional(),
-    theme: z.string().max(100).optional(),
-    transition: z.string().max(100).optional(),
-    templateId: z.string().min(1).max(200).optional(),
-    slides: z.array(slideSchema).optional(),
+    title: z.string().max(500).optional(), theme: z.string().max(100).optional(), transition: z.string().max(100).optional(),
+    templateId: z.string().min(1).max(200).optional(), slides: z.array(slideSchema).optional(), layoutMasters: z.array(layoutMasterSchema).max(64).optional(),
   })
   .passthrough()
+  .superRefine(validatePresentationLayouts)
 
 // ─── Update Presentation ─────────────────────────────────────────────────────
 const updatePresentationSchema = z
   .object({
-    title: z.string().max(500).optional(),
-    theme: z.string().max(100).optional(),
-    transition: z.string().max(100).optional(),
-    slides: z.array(slideSchema).optional(),
+    title: z.string().max(500).optional(), theme: z.string().max(100).optional(), transition: z.string().max(100).optional(),
+    slides: z.array(slideSchema).optional(), layoutMasters: z.array(layoutMasterSchema).max(64).optional(),
   })
   .passthrough()
+  .superRefine(validatePresentationLayouts)
 
 // ─── Templates ───────────────────────────────────────────────────────────────
 const createTemplateSchema = z

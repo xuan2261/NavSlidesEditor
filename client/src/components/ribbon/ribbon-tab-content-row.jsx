@@ -16,7 +16,7 @@ const RibbonTabContentRow = React.forwardRef(function RibbonTabContentRow(
       ref={ref}
       data-ribbon-content-row
       className={cn(
-        'flex h-full w-full min-w-0 flex-[1_1_100%] items-stretch gap-0 overflow-x-hidden',
+        'flex h-full w-full min-w-0 flex-[1_1_100%] items-stretch gap-0 overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x',
         className
       )}
       {...props}

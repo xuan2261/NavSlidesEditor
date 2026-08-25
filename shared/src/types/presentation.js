@@ -13,6 +13,16 @@
  * All supported element types in the editor.
  * @typedef {'text'|'image'|'shape'|'code'|'latex'|'html'|'markdown'|'chart'|'video'|'audio'|'table'|'icon'|'callout'|'qrcode'|'drawing'|'line'|'svg'|'timeline'|'game'} ElementType
  */
+/**
+ * @typedef {Object} ElementAction
+ * @property {'url'|'slide'|'next'|'previous'|'first'|'last'|'email'|'download'} kind
+ * @property {string} [url] - Required only by URL, email, and download actions
+ * @property {string} [slideId] - Required only by slide actions
+ * @property {'same'|'new'} [target='same'] - Supported only by URL-like actions
+ * @property {string} [label] - Accessible activation name
+ * @property {boolean} [hotspot=false] - Transparent presentation activation surface
+ */
+
 
 /**
  * Base element — properties shared by every element on the canvas.
@@ -29,6 +39,7 @@
  * @property {string}      [groupId]      - Group identifier (if grouped)
  * @property {Object}      [shadow]       - Drop shadow config
  * @property {number}      [opacity=1]    - Element opacity 0-1
+ * @property {ElementAction} [action] - Optional validated presentation action metadata
  */
 
 /**
@@ -39,6 +50,9 @@
 /**
  * @typedef {BaseElement & {
  *   src: string,
+ *   alt?: string,
+ *   decorative?: boolean,
+ *   longDescription?: string,
  *   objectFit?: 'cover'|'contain'|'fill',
  *   cropX?: number,
  *   cropY?: number,
@@ -106,15 +120,23 @@
  *   poster?: string,
  *   startTime?: number,
  *   endTime?: number,
- *   playbackRate?: number
+ *   playbackRate?: number,
+ *   transcript?: string,
+ *   audioDescription?: string,
+ *   tracks?: MediaTrack[]
  * }} VideoElement
  */
+
+/** @typedef {{ src: string, srcLang?: string, label?: string, kind?: 'captions'|'subtitles'|'descriptions'|'chapters'|'metadata', default?: boolean }} MediaTrack */
 
 /**
  * @typedef {BaseElement & {
  *   src: string,
  *   autoplay?: boolean,
- *   loop?: boolean
+ *   loop?: boolean,
+ *   transcript?: string,
+ *   audioDescription?: string,
+ *   tracks?: MediaTrack[]
  * }} AudioElement
  */
 
@@ -163,6 +185,12 @@
  */
 
 /**
+ * @typedef {Object} LineConnectionEndpoint
+ * @property {string} targetId
+ * @property {'center'|'n'|'ne'|'e'|'se'|'s'|'sw'|'w'|'nw'} anchor
+ */
+
+/**
  * @typedef {BaseElement & {
  *   x1: number,
  *   y1: number,
@@ -171,7 +199,8 @@
  *   stroke?: string,
  *   strokeWidth?: number,
  *   arrowStart?: string,
- *   arrowEnd?: string
+ *   arrowEnd?: string,
+ *   connections?: { start?: LineConnectionEndpoint, end?: LineConnectionEndpoint },
  * }} LineElement
  */
 
@@ -253,6 +282,8 @@
  * @property {boolean}             [hidden=false] - Whether slide is skipped
  * @property {boolean}             [showPageNumber] - Page number toggle
  * @property {FragmentAnimation[]} [fragments] - Animation sequence
+ * @property {string}              [layoutId] - Attached layout master ID; absent means detached/legacy
+ * @property {Object}              [layoutOverrides] - Per-slide master visibility, patches, and placeholder bindings
  */
 
 /**
@@ -277,6 +308,19 @@
  */
 
 /**
+ * Reusable complete slide layout definition. Layouts do not inherit from one
+ * another; master fixed elements resolve with ephemeral namespaced IDs.
+ * @typedef {Object} LayoutMaster
+ * @property {string} id
+ * @property {string} name
+ * @property {boolean} [system]
+ * @property {{x:number,y:number,width:number,height:number}} [safeArea]
+ * @property {DesignTokens} [tokens]
+ * @property {SlideElement[]} fixedElements
+ * @property {Array<{id:string,type:ElementType,role:string,x:number,y:number,width:number,height:number,zIndex?:number,locked?:boolean,contentPolicy?:Object}>} placeholders
+ */
+
+/**
  * A full presentation document.
  * @typedef {Object} Presentation
  * @property {string}          id
@@ -285,6 +329,7 @@
  * @property {string}          [transition='none']  - Transition type
  * @property {Slide[]}         slides
  * @property {DesignTokens}    [designTokens]       - Deck-level design token set (merged over DEFAULT_TOKENS)
+ * @property {LayoutMaster[]}      [layoutMasters] - Bounded optional reusable layout registry
  * @property {FooterConfig}    [footer]
  * @property {PresenterTools}  [presenterTools]
  * @property {string}          [createdAt]  - ISO date string

@@ -9,6 +9,25 @@
   },
   "rows": [
     {
+      "id": "action.element-runtime",
+      "category": "action",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "shared/tests/action-runtime.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
       "id": "canvas.align",
       "category": "canvas",
       "risk": "high",
@@ -390,6 +409,25 @@
       "depthResolutionPhase": null
     },
     {
+      "id": "connector.smart-geometry",
+      "category": "connector",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "shared/src/connector-geometry.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
       "id": "control.file.menu",
       "category": "control",
       "risk": "low",
@@ -627,6 +665,25 @@
       "depthResolutionPhase": null
     },
     {
+      "id": "control.properties.disclosure",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/CollapsibleSection.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
       "id": "control.properties.panel",
       "category": "control",
       "risk": "high",
@@ -634,6 +691,27 @@
       "layer": "unit",
       "tests": [
         "client/src/components/PropertiesPanel.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.active-reveal",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx",
+        "client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx",
+        "client/src/__tests__/ui-accessibility-findings-regression.test.js"
       ],
       "status": "PASS",
       "depths": [
@@ -671,7 +749,10 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
-        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+        "client/src/components/ribbon/format-tab-dynamic-visibility-and-label.test.jsx",
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx",
+        "client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx",
+        "client/src/stores/ui-store-ribbon.test.js"
       ],
       "status": "PASS",
       "depths": [
@@ -729,6 +810,105 @@
       "layer": "unit",
       "tests": [
         "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.keyboard",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.overflow",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.reduced-motion",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit,e2e",
+      "tests": [
+        "client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx",
+        "tests/e2e/ribbon-responsive-touch.spec.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.responsive",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit,e2e",
+      "tests": [
+        "client/src/__tests__/ui-accessibility-findings-regression.test.js",
+        "tests/e2e/ribbon-responsive-touch.spec.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.ribbon.touch-targets",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit,e2e",
+      "tests": [
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx",
+        "client/src/__tests__/ui-accessibility-findings-regression.test.js",
+        "tests/e2e/ribbon-responsive-touch.spec.js"
       ],
       "status": "PASS",
       "depths": [
@@ -805,6 +985,25 @@
       "layer": "unit",
       "tests": [
         "client/src/components/SlidePanel.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "control.status.touch-targets",
+      "category": "control",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/layout/StatusBar.test.jsx"
       ],
       "status": "PASS",
       "depths": [
@@ -1396,6 +1595,82 @@
       "depthResolutionPhase": 3
     },
     {
+      "id": "export.action-pptx",
+      "category": "export",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/utils/export-pptx-actions.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "export.connector-pptx",
+      "category": "export",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/utils/exportPptx.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "export.layout-pptx",
+      "category": "export",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/utils/exportPptx.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "export.media-pptx",
+      "category": "export",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/utils/export-pptx-media-renderer.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
       "id": "flow.autosave",
       "category": "flow",
       "risk": "high",
@@ -1484,6 +1759,63 @@
       "layer": "unit",
       "tests": [
         "client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "layout.master-resolution",
+      "category": "layout",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "shared/src/slide-layouts.test.js"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "media.accessibility",
+      "category": "media",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/components/properties/media-properties-single-source.test.jsx"
+      ],
+      "status": "PASS",
+      "depths": [
+        "trace"
+      ],
+      "requiredDepths": [],
+      "missingDepths": [],
+      "depthStatus": "OK",
+      "depthOwner": null,
+      "depthResolutionPhase": null
+    },
+    {
+      "id": "runtime.reveal6-assets",
+      "category": "runtime",
+      "risk": "high",
+      "tier": "smoke",
+      "layer": "unit",
+      "tests": [
+        "client/src/utils/offlineExport.test.js"
       ],
       "status": "PASS",
       "depths": [
@@ -2297,9 +2629,9 @@
   ],
   "orphans": [],
   "summary": {
-    "total": 112,
-    "verified": 112,
-    "PASS": 112,
+    "total": 129,
+    "verified": 129,
+    "PASS": 129,
     "DEPTH-WARN": 0
   }
 }

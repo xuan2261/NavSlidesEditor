@@ -13,6 +13,9 @@ const { resolveColorField, svgPaint, isTokenVar } = require('./design-tokens.js'
 const { resolveMergedCells } = require('./table-merge-resolver.js')
 const { normalizeLatexForRender } = require('./latex-utils.js')
 const { resolveChartPalette } = require('./chart-colors.js')
+const { normalizeElementAction, serializeElementAction } = require('./element-actions.js')
+const { normalizeImageAccessibility, normalizeMediaAccessibility } = require('./media-accessibility.js')
+const { resolveConnectorGeometry } = require('./connector-geometry.js')
 
 /**
  * Inline SVG paint that preserves the exact `name="value"` token shape for
@@ -120,13 +123,6 @@ function escapeSrcdoc(html) {
     .replace(/>/g, '&gt;')
 }
 
-function sanitizeLinkHref(value) {
-  const href = String(value || '').trim()
-  if (!href) return '#'
-  if (href[0] === '#' || href[0] === '/' || href.startsWith('./') || href.startsWith('../')) return href
-  if (/^(https?:|mailto:)/i.test(href)) return href
-  return '#'
-}
 
 function renderMarkdownInline(value) {
   const text = String(value || '')
@@ -135,7 +131,7 @@ function renderMarkdownInline(value) {
   return escapeHtml(text)
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, href) => {
-      return `<a href="${escapeHtml(sanitizeLinkHref(href))}" target="_blank" rel="noopener">${label}</a>`
+      return `<a href="${escapeHtml(sanitizeHref(href))}" target="_blank" rel="noopener">${label}</a>`
     })
 }
 
@@ -211,7 +207,30 @@ function buildWrapperAttrs(el, slide) {
   return { dataIdAttr, fragClass, fragIdx }
 }
 
+function renderActionSurface(el, style, opts) {
+  if (opts.forPrint) return ''
+  const { action } = normalizeElementAction(el.action)
+  if (!action) return ''
+  const label = action.label || (action.kind === 'slide' ? 'Go to slide' : action.kind === 'url' ? 'Open link' : action.kind)
+  const actionData = serializeElementAction(action)
+  const surfaceStyle = `${style}border:0;padding:0;background:transparent;color:transparent;cursor:pointer;`
+  return `<button type="button" class="ns-element-action${action.hotspot ? ' ns-element-hotspot' : ''}" data-ns-action="${escapeHtml(actionData)}" aria-label="${escapeHtml(label)}" style="${surfaceStyle}"></button>`
+}
+
 // ─── Per-type renderers ──────────────────────────────────────────────────────
+
+function importedTextInsetStyle(el) {
+  const insets = el?._pptxImportMeta?.textInsets
+  if (!insets) return 'padding:0;'
+  const unitScale = el._pptxImportMeta.textInsetsUnit === 'px' ? 1 : 96 / 72
+  const side = (value, maxDimension) => {
+    const raw = Number(value)
+    if (!Number.isFinite(raw)) return 0
+    const max = Math.min(Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96, 96)
+    return Math.min(Math.round(Math.max(0, raw) * unitScale * 10) / 10, max)
+  }
+  return `padding:${side(insets.top, el.height)}px ${side(insets.right, el.width)}px ${side(insets.bottom, el.height)}px ${side(insets.left, el.width)}px;`
+}
 
 function renderText(el, style, wrap, vis) {
   const resolvedTextColor = resolveColorField(el.textColor, 'text', 'textColor')
@@ -220,11 +239,14 @@ function renderText(el, style, wrap, vis) {
   const importedFit = Number(el._pptxImportMeta?.fitFontSizePx)
   const fontSize = Number.isFinite(importedFit) && importedFit > 0 ? importedFit : el.fontSize
   const fs = fontSize ? `;font-size:calc(${fontSize}px * var(--font-zoom, 1))` : ''
+  const textStyle = el?._pptxImportMeta?.textFit === 'wrap'
+    ? style.replace('overflow:hidden;', 'overflow:visible;')
+    : style
   const fit = el._pptxImportMeta
     ? ';overflow-wrap:anywhere;word-break:normal;white-space:pre-wrap'
     : ''
-  const padding = el._pptxImportMeta ? '0' : '8px 12px'
-  return `<div${wrap} style="${style}${vis}padding:${padding};color:white${tc}${ff}${fs}${fit}">${sanitizeRichTextHtml(el.content || '')}</div>`
+  const padding = el._pptxImportMeta ? importedTextInsetStyle(el) : 'padding:8px 12px;'
+  return `<div${wrap} style="${textStyle}${vis}${padding}color:white${tc}${ff}${fs}${fit}">${sanitizeRichTextHtml(el.content || '')}</div>`
 }
 
 function buildCitationHtml(el) {
@@ -242,41 +264,35 @@ function buildCitationHtml(el) {
 }
 
 function renderImage(el, style, wrap, vis, opts) {
-  const src = absoluteSrc(sanitizeMediaSrc(el.src))
+  const image = normalizeImageAccessibility(el)
+  const src = absoluteSrc(sanitizeMediaSrc(image.src))
   const imgFilterParts = [
-    el.filterBrightness != null && el.filterBrightness !== 100
-      ? `brightness(${el.filterBrightness}%)`
-      : '',
-    el.filterContrast != null && el.filterContrast !== 100 ? `contrast(${el.filterContrast}%)` : '',
-    el.filterGrayscale ? `grayscale(${el.filterGrayscale}%)` : '',
-    el.filterSaturate != null && el.filterSaturate !== 100 ? `saturate(${el.filterSaturate}%)` : '',
-  ]
-    .filter(Boolean)
-    .join(' ')
+    image.filterBrightness != null && image.filterBrightness !== 100 ? `brightness(${image.filterBrightness}%)` : '',
+    image.filterContrast != null && image.filterContrast !== 100 ? `contrast(${image.filterContrast}%)` : '',
+    image.filterGrayscale ? `grayscale(${image.filterGrayscale}%)` : '',
+    image.filterSaturate != null && image.filterSaturate !== 100 ? `saturate(${image.filterSaturate}%)` : '',
+  ].filter(Boolean).join(' ')
   const filterStyle = imgFilterParts ? `filter:${imgFilterParts};` : ''
-  const flipParts = [el.flipH ? 'scaleX(-1)' : '', el.flipV ? 'scaleY(-1)' : '']
-    .filter(Boolean)
-    .join(' ')
+  const flipParts = [image.flipH ? 'scaleX(-1)' : '', image.flipV ? 'scaleY(-1)' : ''].filter(Boolean).join(' ')
   const flipStyle = flipParts ? `transform:${flipParts};` : ''
-  const borderW = Number(el.borderWidth)
-  const borderColor = el.borderColor ? safeCssColor(el.borderColor, null) : null
-  const borderStyle =
-    Number.isFinite(borderW) && borderW > 0 && borderColor
-      ? `border:${borderW}px solid ${borderColor};`
-      : ''
+  const borderW = Number(image.borderWidth)
+  const borderColor = image.borderColor ? safeCssColor(image.borderColor, null) : null
+  const borderStyle = Number.isFinite(borderW) && borderW > 0 && borderColor ? `border:${borderW}px solid ${borderColor};` : ''
   const imgReset = opts.forPrint ? 'max-width:none;max-height:none;' : ''
-  const citationHtml = buildCitationHtml(el)
-  const sourceCrop = el._pptxImportMeta?.sourceCrop && el._pptxImportMeta?.cropData
-  const cropAttrs = sourceCrop
-    ? ` data-pptx-crop-intent="source-crop" data-pptx-crop-data="${escapeHtml(JSON.stringify(el._pptxImportMeta.cropData))}"`
-    : ''
-  if (el.imageW != null) {
-    const offX = el.imageOffsetX ?? 0
-    const offY = el.imageOffsetY ?? 0
-    const imgStyle = `position:absolute;left:${offX}px;top:${offY}px;width:${el.imageW}px;height:${el.imageH}px;object-fit:${el.objectFit || 'contain'};${filterStyle}${flipStyle}${imgReset}`
-    return `<div${wrap}${cropAttrs} style="${style}${borderStyle}${vis}overflow:hidden;"><img src="${src}" alt="${el.alt || ''}" style="${imgStyle}" />${citationHtml}</div>`
+  const citationHtml = buildCitationHtml(image)
+  const sourceCrop = image._pptxImportMeta?.sourceCrop && image._pptxImportMeta?.cropData
+  const cropAttrs = sourceCrop ? ` data-pptx-crop-intent="source-crop" data-pptx-crop-data="${escapeHtml(JSON.stringify(image._pptxImportMeta.cropData))}"` : ''
+  const descriptionId = image.longDescription ? `image-description-${hashId(image.id)}` : ''
+  const description = descriptionId ? `<span id="${descriptionId}" class="ns-image-long-description">${escapeHtml(image.longDescription)}</span>` : ''
+  const describedBy = descriptionId ? ` aria-describedby="${descriptionId}"` : ''
+  const alt = escapeHtml(image.decorative ? '' : image.alt)
+  if (image.imageW != null) {
+    const offX = image.imageOffsetX ?? 0
+    const offY = image.imageOffsetY ?? 0
+    const imgStyle = `position:absolute;left:${offX}px;top:${offY}px;width:${image.imageW}px;height:${image.imageH}px;object-fit:${image.objectFit || 'contain'};${filterStyle}${flipStyle}${imgReset}`
+    return `<div${wrap}${cropAttrs} style="${style}${borderStyle}${vis}overflow:hidden;"><img src="${src}" alt="${alt}"${describedBy} style="${imgStyle}" />${description}${citationHtml}</div>`
   }
-  return `<div${wrap} style="${style}${borderStyle}${vis}overflow:visible;"><img src="${src}" alt="${el.alt || ''}" style="display:block;width:100%;height:100%;object-fit:${el.objectFit || 'contain'};${filterStyle}${flipStyle}${imgReset}" />${citationHtml}</div>`
+  return `<div${wrap} style="${style}${borderStyle}${vis}overflow:visible;"><img src="${src}" alt="${alt}"${describedBy} style="display:block;width:100%;height:100%;object-fit:${image.objectFit || 'contain'};${filterStyle}${flipStyle}${imgReset}" />${description}${citationHtml}</div>`
 }
 
 function renderShape(el, style, wrap, vis) {
@@ -366,21 +382,67 @@ function renderMarkdown(el, style, wrap, vis, opts) {
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(srcdoc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
 }
 
+function suggestedImportedAxisMax(datasets, targetTicks, valueAt) {
+  let max = 0
+  for (const dataset of datasets || []) {
+    const values = valueAt(dataset) || []
+    for (const value of values) {
+      const numeric = Number(value)
+      if (Number.isFinite(numeric) && numeric > max) max = numeric
+    }
+  }
+  if (!(max > 0)) return undefined
+  const rawStep = max / targetTicks
+  const magnitude = 10 ** Math.floor(Math.log10(rawStep))
+  const normalized = rawStep / magnitude
+  const step = (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10) * magnitude
+  let axisMax = Math.ceil(max / step) * step
+  if (axisMax - max < step * 0.25) axisMax += step
+  return axisMax
+}
+
 function renderChart(el, style, wrap, vis, opts) {
   const { chartType = 'bar', chartData = {} } = el
+  const isScatter = el._pptxChartMeta?.originalType === 'scatterChart'
+  const runtimeChartType = isScatter ? 'scatter' : chartType
+  const lineLike = chartType === 'line' || isScatter
+  const chartTitle = String(el.chartTitle || '')
+  const titleText = JSON.stringify(chartTitle).replace(/</g, '\\u003c')
+  const legendPosition = ['top', 'right', 'bottom', 'left'].includes(el.legendPosition)
+    ? el.legendPosition
+    : 'top'
+  const legendFontSize = chartTitle ? 9 : 12
+  const importedLine = chartType === 'line' && Boolean(el._pptxChartMeta)
   const areaFill = chartType === 'line' && el.areaFill === true
   const stacked = el.stacked === true
   const chartPalette = resolveChartPalette(opts.slideBackground)
   const axisTextColor = safeCssColor(el.axisTextColor, chartPalette.text)
   const gridColor = safeCssColor(el.gridColor, chartPalette.grid)
   const legendTextColor = safeCssColor(el.legendTextColor, axisTextColor)
+  const importedChart = Boolean(el._pptxChartMeta)
+  const suggestedYMax = importedChart
+    ? suggestedImportedAxisMax(chartData.datasets, 10, (dataset) => dataset.data)
+    : undefined
+  const suggestedXMax = isScatter
+    ? suggestedImportedAxisMax(chartData.datasets, 5, (dataset) => dataset.xValues)
+    : undefined
+  const legendLabels = {
+    color: legendTextColor,
+    font: { size: legendFontSize },
+    boxWidth: lineLike ? 12 : 8,
+    boxHeight: 8,
+    ...(lineLike ? { usePointStyle: true, pointStyleWidth: 12 } : {}),
+  }
   const datasetsArr = (chartData.datasets || []).map((ds) => ({
     label: ds.label || '',
-    data: ds.data || [],
-    backgroundColor: ds.color || '#6366f1',
+    data: isScatter
+      ? (ds.data || []).map((y, index) => ({ x: ds.xValues?.[index] ?? index + 1, y }))
+      : ds.data || [],
+    backgroundColor: ds.colors || ds.color || '#6366f1',
     borderColor: ds.color || '#6366f1',
-    borderWidth: chartType === 'line' ? 2 : 0,
-    fill: chartType === 'line' ? areaFill : undefined,
+    borderWidth: lineLike ? 2 : 0,
+    ...(isScatter ? { showLine: true } : {}),
+    fill: lineLike ? areaFill : undefined,
   }))
   const stackedAxis = stacked ? 'stacked:true,' : ''
   const radialScales = {
@@ -393,12 +455,16 @@ function renderChart(el, style, wrap, vis, opts) {
   }
   const cartesianScales = {
     x: {
+      ...(isScatter ? { type: 'linear', beginAtZero: true } : {}),
+      ...(suggestedXMax ? { suggestedMax: suggestedXMax } : {}),
       ...(stacked ? { stacked: true } : {}),
       ticks: { color: axisTextColor },
       grid: { color: gridColor },
     },
     y: {
       ...(stacked ? { stacked: true } : {}),
+      ...(isScatter || importedLine ? { beginAtZero: true } : {}),
+      ...(suggestedYMax ? { suggestedMax: suggestedYMax } : {}),
       ticks: { color: axisTextColor },
       grid: { color: gridColor },
     },
@@ -408,7 +474,7 @@ function renderChart(el, style, wrap, vis, opts) {
       ? '{}'
       : chartType === 'radar'
         ? `{r:{angleLines:{color:'${gridColor}'},ticks:{color:'${axisTextColor}',backdropColor:'transparent'},grid:{color:'${gridColor}'},pointLabels:{color:'${axisTextColor}'}}}`
-        : `{x:{${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}},y:{${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}}}`
+        : `{x:{${isScatter ? `type:'linear',beginAtZero:true,${suggestedXMax ? `suggestedMax:${suggestedXMax},` : ''}` : ''}${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}},y:{${isScatter || importedLine ? 'beginAtZero:true,' : ''}${suggestedYMax ? `suggestedMax:${suggestedYMax},` : ''}${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}}}`
   const scalesConfig =
     chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'
       ? {}
@@ -419,13 +485,16 @@ function renderChart(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
     const canvasId = `chart-${el.id || Math.random().toString(36).slice(2, 8)}`
     const chartConfig = JSON.stringify({
-      type: chartType,
+      type: runtimeChartType,
       data: { labels: chartData.labels || [], datasets: datasetsArr },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
-        plugins: { legend: { labels: { color: legendTextColor, font: { size: 12 } } } },
+        plugins: {
+          title: { display: Boolean(chartTitle), text: chartTitle, color: axisTextColor, font: { size: 16, weight: 'normal' } },
+          legend: { position: legendPosition, labels: legendLabels },
+        },
         scales: scalesConfig,
       },
     }).replace(/</g, '\\u003c')
@@ -435,7 +504,8 @@ function renderChart(el, style, wrap, vis, opts) {
   const labels = JSON.stringify(chartData.labels || []).replace(/</g, '\\u003c')
   const datasets = JSON.stringify(datasetsArr).replace(/</g, '\\u003c')
   const _origin = getAssetOrigin()
-  const chartSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/chart.js/dist/chart.umd.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style></head><body><canvas id="c" style="width:100%;height:100%"></canvas><script>new Chart(document.getElementById('c'),{type:'${chartType}',data:{labels:${labels},datasets:${datasets}},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'${legendTextColor}',font:{size:12}}}},scales:${scalesOpt}}});</script></body></html>`
+  const legendLabelsOpt = JSON.stringify(legendLabels).replace(/</g, '\\u003c')
+  const chartSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/chart.js/dist/chart.umd.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style></head><body><canvas id="c" style="width:100%;height:100%"></canvas><script>new Chart(document.getElementById('c'),{type:'${runtimeChartType}',data:{labels:${labels},datasets:${datasets}},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{title:{display:${Boolean(chartTitle)},text:${titleText},color:'${axisTextColor}',font:{size:16,weight:'normal'}},legend:{position:'${legendPosition}',labels:${legendLabelsOpt}}},scales:${scalesOpt}}})</script></body></html>`
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(chartSrc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
 }
 
@@ -508,40 +578,56 @@ function renderLatex(el, style, wrap, vis, opts) {
   return `<iframe${wrap} srcdoc="${escapeSrcdoc(srcdoc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
 }
 
+function renderMediaAccessibility(el) {
+  const normalized = normalizeMediaAccessibility(el)
+  const tracks = normalized.tracks.map((track) => {
+    const attrs = [
+      `src="${escapeHtml(absoluteSrc(track.src))}"`,
+      `kind="${track.kind}"`,
+      track.srcLang ? `srclang="${escapeHtml(track.srcLang)}"` : '',
+      track.label ? `label="${escapeHtml(track.label)}"` : '',
+      track.default ? 'default' : '',
+    ].filter(Boolean).join(' ')
+    return `<track ${attrs}>`
+  }).join('')
+  const descriptions = [
+    normalized.audioDescription ? `<p class="ns-media-audio-description">${escapeHtml(normalized.audioDescription)}</p>` : '',
+    normalized.transcript ? `<details class="ns-media-transcript"><summary>Transcript</summary><p>${escapeHtml(normalized.transcript)}</p></details>` : '',
+  ].join('')
+  return { normalized, tracks, descriptions }
+}
+
 function renderVideo(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
     return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));">&#9654; Video</div>`
   }
-  const videoSrc = sanitizeMediaSrc(
-    Object.prototype.hasOwnProperty.call(el, 'src') ? el.src : el.videoUrl
-  )
-  const src = getMediaFragmentSrc(absoluteSrc(videoSrc), el.startTime, el.endTime)
+  const { normalized, tracks, descriptions } = renderMediaAccessibility(el)
+  const videoSrc = sanitizeMediaSrc(Object.prototype.hasOwnProperty.call(normalized, 'src') ? normalized.src : normalized.videoUrl)
+  const src = getMediaFragmentSrc(absoluteSrc(videoSrc), normalized.startTime, normalized.endTime)
   const attrs = []
-  if (el.controls !== false) attrs.push('controls')
-  if (el.autoplay) attrs.push('autoplay')
-  if (el.loop) attrs.push('loop')
-  if (el.muted) attrs.push('muted')
-  const playbackRate = getPlaybackRate(el.playbackRate)
-  const playbackAttr =
-    playbackRate && playbackRate !== 1
-      ? ` onloadedmetadata="this.playbackRate=${playbackRate}"`
-      : ''
-  const poster = sanitizeMediaSrc(el.poster)
+  if (normalized.controls !== false) attrs.push('controls')
+  if (normalized.autoplay) attrs.push('autoplay')
+  if (normalized.loop) attrs.push('loop')
+  if (normalized.muted) attrs.push('muted')
+  const playbackRate = getPlaybackRate(normalized.playbackRate)
+  const playbackAttr = playbackRate && playbackRate !== 1 ? ` onloadedmetadata="this.playbackRate=${playbackRate}"` : ''
+  const poster = sanitizeMediaSrc(normalized.poster)
   const posterAttr = poster ? ` poster="${absoluteSrc(poster)}"` : ''
-  return `<div${wrap} style="${style}"><video src="${src}" ${attrs.join(' ')}${posterAttr}${playbackAttr} style="width:100%;height:100%;object-fit:${el.objectFit || 'contain'};display:block;"></video></div>`
+  return `<div${wrap} style="${style}"><video src="${src}" ${attrs.join(' ')}${posterAttr}${playbackAttr} style="width:100%;height:100%;object-fit:${normalized.objectFit || 'contain'};display:block;">${tracks}</video>${descriptions}</div>`
 }
 
 function renderAudio(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
     return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));">&#9835; Audio</div>`
   }
-  const src = absoluteSrc(sanitizeMediaSrc(el.src))
+  const { normalized, tracks, descriptions } = renderMediaAccessibility(el)
+  const src = absoluteSrc(sanitizeMediaSrc(normalized.src))
   const attrs = []
-  if (el.controls !== false) attrs.push('controls')
-  if (el.autoplay) attrs.push('autoplay')
-  if (el.loop) attrs.push('loop')
-  if (el.muted) attrs.push('muted')
-  return `<div${wrap} style="${style}display:flex;align-items:center;justify-content:center;"><audio src="${src}" ${attrs.join(' ')} style="width:90%;"></audio></div>`
+  if (normalized.controls !== false) attrs.push('controls')
+  if (normalized.autoplay) attrs.push('autoplay')
+  if (normalized.loop) attrs.push('loop')
+  if (normalized.muted) attrs.push('muted')
+  return `<div${wrap} style="${style}display:flex;align-items:center;justify-content:center;"><audio src="${src}" ${attrs.join(' ')} style="width:90%;">${tracks}</audio>${descriptions}</div>`
 }
 
 function renderTable(el, style, wrap, vis) {
@@ -976,18 +1062,20 @@ function renderElement(el, slide, opts = {}) {
 
   const renderer = isPluginType(el.type) ? renderPlugin : RENDERERS[el.type]
   if (!renderer) return ''
-  return renderer(el, style, wrap, vis, renderOpts)
+  return `${renderer(el, style, wrap, vis, renderOpts)}${renderActionSurface(el, style, renderOpts)}`
 }
 
 /**
  * Render all elements of a slide, sorted by zIndex.
  */
 function renderSlideElements(slide, opts = {}) {
+  const { effectiveLines } = resolveConnectorGeometry(slide?.elements || [])
   return (slide.elements || [])
     .filter((el) => !(el.hidden || false))
     .slice()
     .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
-    .map((el) => {
+    .map((sourceElement) => {
+      const el = sourceElement.id ? effectiveLines.get(sourceElement.id) || sourceElement : sourceElement
       const elementOpts = {
         ...opts,
         slideBackground: opts.slideBackground === undefined ? slide.background : opts.slideBackground,

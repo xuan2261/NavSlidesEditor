@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url'
 import { test, expect } from '@playwright/test'
 import { EditorPage } from '../pages/editor-page.js'
 import {
@@ -10,7 +11,15 @@ const SAMPLE_SLIDES = [
   {
     id: 'slide-1',
     elements: [
-      { id: 'text-1', type: 'text', x: 100, y: 100, width: 600, height: 80, content: '<h1>Slide One</h1>' },
+      {
+        id: 'text-1',
+        type: 'text',
+        x: 100,
+        y: 100,
+        width: 600,
+        height: 80,
+        content: '<h1>Slide One</h1>',
+      },
     ],
     notes: '',
     background: { type: 'color', color: '#1e1e2e' },
@@ -18,7 +27,15 @@ const SAMPLE_SLIDES = [
   {
     id: 'slide-2',
     elements: [
-      { id: 'text-2', type: 'text', x: 100, y: 100, width: 600, height: 80, content: '<p>Body text</p>' },
+      {
+        id: 'text-2',
+        type: 'text',
+        x: 100,
+        y: 100,
+        width: 600,
+        height: 80,
+        content: '<p>Body text</p>',
+      },
     ],
     notes: '',
     background: { type: 'color', color: '#0f172a' },
@@ -33,7 +50,9 @@ async function withSeededPresentation({ request, page }, fn) {
   try {
     await fn({ editor, pres })
   } finally {
-    try { await apiDeletePresentation(request, pres.id) } catch {}
+    try {
+      await apiDeletePresentation(request, pres.id)
+    } catch {}
   }
 }
 
@@ -50,7 +69,7 @@ test.describe('Client side download flows for navslides project archive and offl
     })
   })
 
-  test('exports offline HTML with no remote CDN scripts', async ({ page, request }) => {
+  test('exports offline HTML with no remote CDN scripts', async ({ page, request }, testInfo) => {
     await withSeededPresentation({ request, page }, async ({ editor }) => {
       const downloadPromise = page.waitForEvent('download', { timeout: 60000 })
       await editor.menubar.openFileMenuItem('Export Offline HTML')
@@ -65,6 +84,32 @@ test.describe('Client side download flows for navslides project archive and offl
       expect(html).not.toMatch(/src=["']https:\/\/cdn\.jsdelivr\.net/)
       expect(html).not.toMatch(/src=["']https:\/\/unpkg\.com/)
       expect(html).not.toMatch(/src=["']https:\/\/cdnjs\.cloudflare\.com/)
+      expect(html).not.toMatch(/(?:src|href)=["']\/vendor\//)
+      expect(html).not.toMatch(/@import\s+[^;]*https?:\/\//i)
+      expect(html).toContain('name="navslides-reveal-version" content="6.0.1"')
+      const offlinePath = testInfo.outputPath('offline-export.html')
+      await fs.copyFile(path, offlinePath)
+
+      const offlinePage = await page.context().newPage()
+      const networkRequests = []
+      const offlineErrors = []
+      offlinePage.on('pageerror', (error) => offlineErrors.push(error.message))
+      offlinePage.on('request', (request) => {
+        if (/^https?:/i.test(request.url())) networkRequests.push(request.url())
+      })
+      await offlinePage.goto(pathToFileURL(offlinePath).href)
+      await offlinePage.waitForFunction(() => window.Reveal?.isReady?.(), null, { timeout: 15000 })
+      const runtime = await offlinePage.evaluate(() => ({
+        version: window.Reveal?.VERSION || null,
+        ready: window.Reveal?.isReady?.() || false,
+        title: document.title,
+      }))
+      expect({ runtime, offlineErrors }).toEqual({
+        runtime: { version: '6.0.1', ready: true, title: 'Client export E2E' },
+        offlineErrors: [],
+      })
+      expect(networkRequests).toEqual([])
+      await offlinePage.close()
     })
   })
 
@@ -88,6 +133,7 @@ test.describe('Client side download flows for navslides project archive and offl
       const html = await popup.content()
       expect(html.length).toBeGreaterThan(500)
       expect(html.toLowerCase()).toMatch(/section|reveal|slide/)
+      expect(html).toContain('name="navslides-reveal-version" content="6.0.1"')
       await popup.close()
     })
   })

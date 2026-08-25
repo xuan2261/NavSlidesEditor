@@ -1,5 +1,5 @@
 const { buildOpcInventory } = require('./package-store/opc-inventory')
-const { SCHEMA_VERSION, hashRecord, validateRevision } = require('./package-store/schemas')
+const { RECORD_SCHEMA_VERSION, hashRecord, validateRevision } = require('./package-store/schemas')
 const { canonicalEditableSnapshot } = require('./canonical-snapshot')
 const { deriveCanonicalPlainTextJournal } = require('./canonical-plain-text-journal')
 const { rebindSourceMap } = require('./source-map')
@@ -114,7 +114,7 @@ async function commitCandidateBlob(store, bytes) {
   const candidateId = hashRecord({ sha256: staged.sha256, stagePath: staged.stagePath })
   await store.mutate((next) => {
     next.candidateBlobs.push({
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: RECORD_SCHEMA_VERSION,
       id: candidateId,
       sha256: staged.sha256,
       byteLength: staged.byteLength,
@@ -171,7 +171,7 @@ async function executeLocked(dependencies, request) {
   const current = revisionFor(initial, head.packageRevisionId); const bytes = await store.readBlob(current.blobSha256)
   if (!journal.operations.length) {
     if (request.pendingEdit === true) return blocked('CANONICAL_TEXT_JOURNAL_INVALID')
-    const result = { schemaVersion: SCHEMA_VERSION, operation: OPERATION, presentationId: request.presentationId, idempotencyKey: request.idempotencyKey, requestHash: hash, requestIdentity: { expectedGeneration: request.expectedGeneration, baseRevisionId: request.baseRevisionId || null, snapshotHash: hashRecord(request.after) }, generation: head.generation, packageRevisionId: head.packageRevisionId, operationIds: [], projection: before, sourceMap, journal, state: 'committed' }
+    const result = { schemaVersion: RECORD_SCHEMA_VERSION, operation: OPERATION, presentationId: request.presentationId, idempotencyKey: request.idempotencyKey, requestHash: hash, requestIdentity: { expectedGeneration: request.expectedGeneration, baseRevisionId: request.baseRevisionId || null, snapshotHash: hashRecord(request.after) }, generation: head.generation, packageRevisionId: head.packageRevisionId, operationIds: [], projection: before, sourceMap, journal, state: 'committed' }
     await store.mutate((next) => {
       const nextHead = headFor(next, request.presentationId)
       assertTargetHeadUnchanged(nextHead, head, initial.matrixAuthorityEpoch)
@@ -211,19 +211,19 @@ async function executeLocked(dependencies, request) {
   const candidate = await commitCandidateBlob(store, applied.output)
   const { candidateId, ...blob } = candidate
   const ordinal = current.ordinal + 1
-  const revision = validateRevision({ schemaVersion: SCHEMA_VERSION, id: `r${ordinal}-${blob.sha256}`, ordinal, blobSha256: blob.sha256, manifestHash: inventory.manifestHash, createdAt: new Date().toISOString() })
+  const revision = validateRevision({ schemaVersion: RECORD_SCHEMA_VERSION, id: `r${ordinal}-${blob.sha256}`, ordinal, blobSha256: blob.sha256, manifestHash: inventory.manifestHash, createdAt: new Date().toISOString() })
   const projection = canonicalEditableSnapshot(request.after, request.budgets); const generation = head.generation + 1
   const touchedHashes = Object.fromEntries(plan.operations.map((operation) => [
     `${operation.slideId}:${operation.elementId}`, applied.sourceHashes[keyFor(operation)],
   ]))
   const successorMap = rebindSourceMap(sourceMap, { presentationId: request.presentationId, revisionId: revision.id, packageGeneration: generation }, touchedHashes)
-  const result = { schemaVersion: SCHEMA_VERSION, operation: OPERATION, presentationId: request.presentationId, idempotencyKey: request.idempotencyKey, requestHash: hash, requestIdentity: { expectedGeneration: request.expectedGeneration, baseRevisionId: request.baseRevisionId || null, snapshotHash: hashRecord(request.after) }, generation, packageRevisionId: revision.id, operationIds: journal.operations.map((operation) => operation.operationId), projection, sourceMap: successorMap, journal, state: 'committed' }
+  const result = { schemaVersion: RECORD_SCHEMA_VERSION, operation: OPERATION, presentationId: request.presentationId, idempotencyKey: request.idempotencyKey, requestHash: hash, requestIdentity: { expectedGeneration: request.expectedGeneration, baseRevisionId: request.baseRevisionId || null, snapshotHash: hashRecord(request.after) }, generation, packageRevisionId: revision.id, operationIds: journal.operations.map((operation) => operation.operationId), projection, sourceMap: successorMap, journal, state: 'committed' }
   const updatedAt = new Date().toISOString()
   await store.mutate((next) => {
     const nextHead = headFor(next, request.presentationId)
     assertTargetHeadUnchanged(nextHead, head, initial.matrixAuthorityEpoch)
     next.candidateBlobs = next.candidateBlobs.filter((candidate) => candidate.id !== candidateId)
-    next.blobs.push(blob); next.revisions.push(revision); next.owners.push({ schemaVersion: SCHEMA_VERSION, revisionId: revision.id, ownerType: 'presentation', ownerId: request.presentationId })
+    next.blobs.push(blob); next.revisions.push(revision); next.owners.push({ schemaVersion: RECORD_SCHEMA_VERSION, revisionId: revision.id, ownerType: 'presentation', ownerId: request.presentationId })
     next.heads = next.heads.map((item) => {
       if (item.presentationId !== request.presentationId) return item
       const successor = {

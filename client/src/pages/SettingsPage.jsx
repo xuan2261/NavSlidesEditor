@@ -225,6 +225,18 @@ export default function SettingsPage() {
       ...(s || DEFAULT_SETTINGS),
       ai: { ...(s?.ai || DEFAULT_SETTINGS.ai), [key]: val },
     }))
+  const handleProviderChange = (providerValue) => {
+    const provider = PROVIDERS.find((candidate) => candidate.value === providerValue) || PROVIDERS[0]
+    setSettings((current) => {
+      const ai = current?.ai || DEFAULT_SETTINGS.ai
+      const model = provider.models.includes(ai.model) ? ai.model : provider.models[0] || ai.model
+      return {
+        ...(current || DEFAULT_SETTINGS),
+        ai: { ...ai, provider: provider.value, model },
+      }
+    })
+  }
+
 
   const currentProvider =
     PROVIDERS.find((p) => p.value === (settings?.ai?.provider || 'openai')) || PROVIDERS[0]
@@ -257,10 +269,15 @@ export default function SettingsPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          {loadError && <span className="text-[13px] text-danger">{loadError}</span>}
+          {loadError && (
+            <span className="text-[13px] text-danger" role="alert">
+              {loadError}
+            </span>
+          )}
           {saveMsg && (
             <span
               className={`text-[13px] ${saveMsg.startsWith('Error') ? 'text-danger' : 'text-success'}`}
+              role={saveMsg.startsWith('Error') ? 'alert' : 'status'}
             >
               {saveMsg}
             </span>
@@ -288,7 +305,7 @@ export default function SettingsPage() {
               <select
                 id="ai-provider"
                 value={settings?.ai?.provider || 'openai'}
-                onChange={(e) => updateAI('provider', e.target.value)}
+                onChange={(e) => handleProviderChange(e.target.value)}
                 className={fieldClass}
               >
                 {PROVIDERS.map((p) => (

@@ -67,6 +67,7 @@ export default function TimelineProperties({ element, onUpdate }) {
     <div className="mb-2.5">
       <div className="text-[11px] text-text-muted mb-1">Tick Spacing</div>
       <Select
+        aria-label="Timeline tick spacing"
         className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent mb-2"
         value={spacing}
         onChange={(e) => onUpdate({ tickSpacing: e.target.value })}
@@ -87,6 +88,7 @@ export default function TimelineProperties({ element, onUpdate }) {
           </div>
           {yearMode ? (
             <Input
+              aria-label="Timeline start year"
               type="number"
               className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs"
               value={parseInt(startDate) || 0}
@@ -94,6 +96,7 @@ export default function TimelineProperties({ element, onUpdate }) {
             />
           ) : (
             <Input
+              aria-label="Timeline start date"
               type="date"
               className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs"
               value={startDate || ''}
@@ -107,6 +110,7 @@ export default function TimelineProperties({ element, onUpdate }) {
           </div>
           {yearMode ? (
             <Input
+              aria-label="Timeline end year"
               type="number"
               className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs"
               value={parseInt(endDate) || 0}
@@ -114,6 +118,7 @@ export default function TimelineProperties({ element, onUpdate }) {
             />
           ) : (
             <Input
+              aria-label="Timeline end date"
               type="date"
               className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs"
               value={endDate || ''}
@@ -127,6 +132,7 @@ export default function TimelineProperties({ element, onUpdate }) {
         <div>
           <div className="text-[10px] text-text-muted mb-1">Line</div>
           <ColorPicker
+            aria-label="Timeline line color"
             value={element.lineColor || '#6366f1'}
             onChange={(e) => onUpdate({ lineColor: e.target.value })}
             className="w-full h-7 border border-border rounded cursor-pointer"
@@ -135,6 +141,7 @@ export default function TimelineProperties({ element, onUpdate }) {
         <div>
           <div className="text-[10px] text-text-muted mb-1">Dots</div>
           <ColorPicker
+            aria-label="Timeline dot color"
             value={element.dotColor || element.lineColor || '#6366f1'}
             onChange={(e) => onUpdate({ dotColor: e.target.value })}
             className="w-full h-7 border border-border rounded cursor-pointer"
@@ -143,6 +150,7 @@ export default function TimelineProperties({ element, onUpdate }) {
         <div>
           <div className="text-[10px] text-text-muted mb-1">Text</div>
           <ColorPicker
+            aria-label="Timeline text color"
             value={element.textColor || '#ffffff'}
             onChange={(e) => onUpdate({ textColor: e.target.value })}
             className="w-full h-7 border border-border rounded cursor-pointer"
@@ -152,6 +160,7 @@ export default function TimelineProperties({ element, onUpdate }) {
 
       <div className="text-[11px] text-text-muted mb-1">Font Size</div>
       <Input
+        aria-label="Timeline font size"
         type="number"
         min={8}
         max={24}
@@ -163,13 +172,14 @@ export default function TimelineProperties({ element, onUpdate }) {
       <div className="text-[11px] text-text-muted mb-1.5 font-medium">Events</div>
       {items.map((item, idx) => (
         <div
-          key={item.id}
+          key={`${element.id || 'timeline'}-${item.id || 'event'}-${idx}`}
           className="bg-card border border-border rounded p-2 mb-1.5"
         >
           <div className="flex justify-between items-center mb-1">
             <span className="text-[10px] text-text-muted font-semibold">#{idx + 1}</span>
             <div className="flex gap-1 items-center">
               <Select
+                aria-label={`Timeline event ${idx + 1} side`}
                 className="text-[10px] px-1 py-0.5 bg-card border border-border rounded text-text-secondary"
                 value={item.side || 'top'}
                 onChange={(e) => updateItem(idx, { side: e.target.value })}
@@ -178,6 +188,8 @@ export default function TimelineProperties({ element, onUpdate }) {
                 <option value="bottom">Bottom</option>
               </Select>
               <button
+                type="button"
+                aria-label={`Remove timeline event ${idx + 1}`}
                 className="text-danger text-sm leading-none px-1 cursor-pointer"
                 onClick={() => removeItem(idx)}
               >
@@ -187,6 +199,7 @@ export default function TimelineProperties({ element, onUpdate }) {
           </div>
           {yearMode ? (
             <Input
+              aria-label={`Timeline event ${idx + 1} year`}
               type="number"
               className="w-full bg-card border border-border text-text-primary px-2 py-1 rounded-sm text-[11px] mb-1"
             value={parseInt(item.date) || 0}
@@ -195,6 +208,7 @@ export default function TimelineProperties({ element, onUpdate }) {
             />
           ) : (
             <Input
+              aria-label={`Timeline event ${idx + 1} date`}
               type="date"
               className="w-full bg-card border border-border text-text-primary px-2 py-1 rounded-sm text-[11px] mb-1"
               value={item.date || ''}
@@ -202,6 +216,7 @@ export default function TimelineProperties({ element, onUpdate }) {
             />
           )}
           <Input
+            aria-label={`Timeline event ${idx + 1} title`}
             type="text"
             className="w-full bg-card border border-border text-text-primary px-2 py-1 rounded-sm text-[11px] mb-1"
             value={item.title || ''}
@@ -209,6 +224,7 @@ export default function TimelineProperties({ element, onUpdate }) {
             onChange={(e) => updateItem(idx, { title: e.target.value })}
           />
           <Input
+            aria-label={`Timeline event ${idx + 1} description`}
             type="text"
             className="w-full bg-card border border-border text-text-primary px-2 py-1 rounded-sm text-[11px] mb-1"
             value={item.description || ''}
@@ -216,6 +232,7 @@ export default function TimelineProperties({ element, onUpdate }) {
             onChange={(e) => updateItem(idx, { description: e.target.value })}
           />
           <Input
+            aria-label={`Timeline event ${idx + 1} image URL`}
             type="text"
             className="w-full bg-card border border-border text-text-primary px-2 py-1 rounded-sm text-[11px] mb-1"
             value={item.imageUrl || ''}
@@ -226,6 +243,7 @@ export default function TimelineProperties({ element, onUpdate }) {
             <span className="text-[10px] text-text-muted">Connector length</span>
             <Input
               data-testid={`prop-timeline-connector-${idx}`}
+              aria-label={`Timeline event ${idx + 1} connector length`}
               type="number"
               className="w-16 bg-card border border-border text-text-primary px-2 py-1 rounded-sm text-[11px]"
               value={item.connectorOffset ?? 0}

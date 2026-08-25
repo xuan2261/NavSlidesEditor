@@ -46,7 +46,15 @@
     { "id": "control.timeline-animation", "risk": "low", "tiers": ["smoke"] },
     { "id": "control.view.smartGuides",   "risk": "low", "tiers": ["smoke"] },
     { "id": "control.view.selectionPane", "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.file.menu",          "risk": "low", "tiers": ["smoke"] }
+    { "id": "control.file.menu",          "risk": "low",  "tiers": ["smoke"] },
+    { "id": "control.properties.disclosure", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
+    { "id": "control.ribbon.active-reveal", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
+    { "id": "control.ribbon.keyboard", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
+    { "id": "control.ribbon.overflow", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
+    { "id": "control.ribbon.reduced-motion", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
+    { "id": "control.ribbon.responsive", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
+    { "id": "control.ribbon.touch-targets", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
+    { "id": "control.status.touch-targets", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
   ],
   "variant": [
     { "id": "variant.shape", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
@@ -70,9 +78,28 @@
     { "id": "command.startSlideshow", "risk": "low", "tiers": ["smoke"] },
     { "id": "command.commandPalette", "risk": "low", "tiers": ["smoke"] }
   ],
+  "action": [
+    { "id": "action.element-runtime", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+  ],
+  "connector": [
+    { "id": "connector.smart-geometry", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+  ],
+  "layout": [
+    { "id": "layout.master-resolution", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+  ],
+  "media": [
+    { "id": "media.accessibility", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+  ],
+  "runtime": [
+    { "id": "runtime.reveal6-assets", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+  ],
   "export": [
     { "id": "export.html", "risk": "high", "tiers": ["smoke"], "scope": "export", "targetLayer": "e2e", "coverageMode": "executable" },
-    { "id": "export.pptx", "risk": "high", "tiers": ["smoke"], "scope": "export", "targetLayer": "e2e", "coverageMode": "executable" }
+    { "id": "export.pptx", "risk": "high", "tiers": ["smoke"], "scope": "export", "targetLayer": "e2e", "coverageMode": "executable" },
+    { "id": "export.action-pptx", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
+    { "id": "export.connector-pptx", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
+    { "id": "export.layout-pptx", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
+    { "id": "export.media-pptx", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
   ],
   "import": [
     { "id": "import.markdown", "risk": "low", "tiers": ["smoke"], "scope": "import", "targetLayer": "e2e", "coverageMode": "executable" },

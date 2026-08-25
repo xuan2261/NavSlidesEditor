@@ -86,3 +86,23 @@ describe('Phase 2: single video source field', () => {
     expect(onUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ videoUrl: expect.anything() }))
   })
 })
+
+describe('media accessibility properties', () => {
+  it('[cap:media.accessibility] adds, edits, reorders, and removes named caption track rows', () => {
+    const onUpdate = vi.fn()
+    render(<MediaProperties element={{ id: 'v1', type: 'video', tracks: [] }} onUpdate={onUpdate} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Add track' }))
+    expect(onUpdate).toHaveBeenCalledWith({ tracks: [{ src: '', srcLang: '', label: '', kind: 'captions', default: true }] })
+    const tracks = [{ src: '/uploads/en.vtt', srcLang: 'en', label: 'English', kind: 'captions', default: true }, { src: '/uploads/fr.vtt', srcLang: 'fr', label: 'French', kind: 'captions', default: false }]
+    render(<MediaProperties element={{ id: 'v1', type: 'video', tracks }} onUpdate={onUpdate} />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Up' })[1])
+    expect(onUpdate).toHaveBeenLastCalledWith({ tracks: [tracks[1], tracks[0]] })
+    expect(screen.getByLabelText('Caption track 1 label').value).toBe('English')
+  })
+
+  it('disables media metadata editing on locked elements', () => {
+    render(<MediaProperties element={{ id: 'a1', type: 'audio', locked: true }} onUpdate={vi.fn()} />)
+    expect(screen.getByLabelText('Media transcript').disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Add track' }).disabled).toBe(true)
+  })
+})

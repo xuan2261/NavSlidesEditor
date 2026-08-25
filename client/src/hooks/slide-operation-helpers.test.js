@@ -76,4 +76,15 @@ describe('slide operation helpers', () => {
     expect(clampSlideIndex(-1, 2)).toBe(0)
     expect(clampSlideIndex(2, 0)).toBe(0)
   })
+  it('copies layout links while remapping only bindings to copied slide-owned elements', () => {
+    const source = {
+      id: 'slide', layoutId: 'layout', elements: [{ id: 'bound', type: 'text' }, { id: 'unbound', type: 'text' }],
+      layoutOverrides: { hiddenElementIds: ['fixed'], elementPatches: { fixed: { opacity: 0.5 } }, placeholderBindings: { title: 'bound', stale: 'missing' } },
+    }
+    const result = duplicateSlidesAtIndices([source], [0], createIdFactory(['copy-slide', 'copy-bound', 'copy-unbound']))
+    const copy = result.slides[1]
+    expect(copy.layoutId).toBe('layout')
+    expect(copy.layoutOverrides).toEqual({ hiddenElementIds: ['fixed'], elementPatches: { fixed: { opacity: 0.5 } }, placeholderBindings: { title: 'copy-bound' } })
+    expect(copy.layoutOverrides.elementPatches).not.toBe(source.layoutOverrides.elementPatches)
+  })
 })

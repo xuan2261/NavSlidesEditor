@@ -24,9 +24,14 @@ export function useEditorHistoryController({
   const applyingUndoRef = useRef(false)
   const seededRef = useRef(false)
   const [hasChanges, setHasChanges] = useState(false)
+  const [availability, setAvailability] = useState({ canUndo: false, canRedo: false })
 
-  const publishLength = useCallback(() => {
+  const publishHistoryState = useCallback(() => {
     if (window.__E2E__) window.__NAVSLIDES_E2E_HISTORY_LENGTH = historyRef.current.length
+    setAvailability({
+      canUndo: historyRef.current.length > 1,
+      canRedo: redoStackRef.current.length > 0,
+    })
   }, [])
 
   const seedHistory = useCallback(
@@ -35,9 +40,9 @@ export function useEditorHistoryController({
       redoStackRef.current = []
       seededRef.current = true
       setHasChanges(false)
-      publishLength()
+      publishHistoryState()
     },
-    [publishLength]
+    [publishHistoryState]
   )
 
   useEffect(() => {
@@ -54,10 +59,10 @@ export function useEditorHistoryController({
       historyRef.current = pushHistory(historyRef.current, clone(presentation))
       redoStackRef.current = []
       setHasChanges(historyRef.current.length > 1)
-      publishLength()
+      publishHistoryState()
     }, 500)
     return () => clearTimeout(timer)
-  }, [presentation, publishLength])
+  }, [presentation, publishHistoryState])
 
   const reconcile = useCallback(
     (state) => {
@@ -113,8 +118,9 @@ export function useEditorHistoryController({
     )
     historyRef.current = historyRef.current.slice(0, -1)
     setHasChanges(historyRef.current.length > 1)
+    publishHistoryState()
     restore(historyRef.current[historyRef.current.length - 1])
-  }, [restore])
+  }, [publishHistoryState, restore])
 
   const handleRedo = useCallback(() => {
     if (!redoStackRef.current.length) return
@@ -123,8 +129,9 @@ export function useEditorHistoryController({
     redoStackRef.current = redoStackRef.current.slice(0, -1)
     if (presentation) historyRef.current = pushHistory(historyRef.current, clone(presentation))
     setHasChanges(historyRef.current.length > 1)
+    publishHistoryState()
     restore(state)
-  }, [presentation, restore])
+  }, [presentation, publishHistoryState, restore])
 
-  return { handleRedo, handleUndo, hasChanges, seedHistory }
+  return { ...availability, handleRedo, handleUndo, hasChanges, seedHistory }
 }

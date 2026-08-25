@@ -5,7 +5,7 @@ const { readBoundedZipEntry } = require('../pptx-guards')
 const { createNestedPackageGuard, assertRelationshipsSafe, isZipPayload } = require('../nested-package-guard')
 const { PackageSafetyError, createXmlSafetyBudget, isXmlPart, readLimit } = require('../xml-safety')
 const { parseRawEntries, relationshipSource, resolveTarget } = require('./raw-zip')
-const { SCHEMA_VERSION, hashRecord, validateManifest } = require('./schemas')
+const { RECORD_SCHEMA_VERSION, hashRecord, validateManifest } = require('./schemas')
 const { describeComplexObjects, toSafeCapabilitySummary } = require('../complex-object-policy')
 
 const CLASSIFIERS = [
@@ -159,7 +159,7 @@ async function buildOpcInventory(source, limits = {}) {
   if (relationships.some((relationship) => relationship.dangling)) securityFlags.add('dangling-target')
   if (hasRelationshipCycle(relationships)) securityFlags.add('relationship-cycle')
   const manifest = {
-    schemaVersion: SCHEMA_VERSION,
+    schemaVersion: RECORD_SCHEMA_VERSION,
     packageSha256: crypto.createHash('sha256').update(bytes).digest('hex'), byteLength: bytes.length,
     contentTypes, parts, relationships,
     unknownParts: parts.filter((part) => part.classification === 'unknown').map((part) => part.path),

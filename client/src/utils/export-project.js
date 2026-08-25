@@ -158,7 +158,7 @@ export async function exportProject(presentation) {
 
   try {
     const html = generateRevealHTML(exportPresentation)
-    const offline = await generateOfflineHTML(html)
+    const offline = await generateOfflineHTML(html, { strictRequiredAssets: true })
     zip.file('presentation.html', offline)
   } catch {
     /* skip HTML generation */

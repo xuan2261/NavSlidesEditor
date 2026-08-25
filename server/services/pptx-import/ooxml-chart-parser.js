@@ -46,8 +46,22 @@ function seriesName(serXml) {
 }
 
 function seriesColor(serXml) {
-  const m = String(serXml || '').match(/<(?:[a-z0-9]+:)?srgbClr\b[^>]*val=(["'])([0-9A-Fa-f]{6})\1/i)
+  const spPr = textBetween(serXml, /<(?:[a-z0-9]+:)?spPr\b[^>]*>/i, '</c:spPr>')
+  const solidFill = textBetween(spPr, /<(?:[a-z0-9]+:)?solidFill\b[^>]*>/i, '</a:solidFill>')
+  const m = String(solidFill || '').match(/<(?:[a-z0-9]+:)?srgbClr\b[^>]*val=(["'])([0-9A-Fa-f]{6})\1/i)
   return m ? `#${m[2]}` : null
+}
+
+function seriesPointColors(serXml) {
+  const colors = []
+  const re = /<(?:[a-z0-9]+:)?dPt\b[^>]*>([\s\S]*?)<\/(?:[a-z0-9]+:)?dPt>/gi
+  let match
+  while ((match = re.exec(String(serXml || '')))) {
+    const index = Number(match[1].match(/<(?:[a-z0-9]+:)?idx\b[^>]*val=(["'])(\d+)\1/i)?.[2])
+    const color = match[1].match(/<(?:[a-z0-9]+:)?solidFill\b[^>]*>\s*<(?:[a-z0-9]+:)?srgbClr\b[^>]*val=(["'])([0-9A-Fa-f]{6})\1/i)?.[2]
+    if (Number.isSafeInteger(index) && color) colors[index] = `#${color}`
+  }
+  return colors.filter(Boolean).length ? colors : null
 }
 
 function seriesCategories(serXml) {
@@ -65,6 +79,16 @@ function seriesValues(serXml) {
     return parsePtValues(yVal).map((v) => Number(v)).map((n) => (Number.isFinite(n) ? n : 0))
   }
   return parsePtValues(val).map((v) => Number(v)).map((n) => (Number.isFinite(n) ? n : 0))
+}
+
+function seriesXValues(serXml) {
+  const xVal = textBetween(serXml, /<(?:[a-z0-9]+:)?xVal\b[^>]*>/i, '</c:xVal>')
+  return parsePtValues(xVal).map((value) => Number(value)).map((value) => (Number.isFinite(value) ? value : 0))
+}
+
+function chartLegendPosition(chartXml) {
+  const value = String(chartXml || '').match(/<(?:[a-z0-9]+:)?legendPos\b[^>]*val=(["'])(r|l|t|b|tr)\1/i)?.[2]
+  return ({ r: 'right', l: 'left', t: 'top', b: 'bottom', tr: 'right' })[value] || 'top'
 }
 
 function chartSupportMetadata(row) {
@@ -125,19 +149,22 @@ function parseOoxmlChart(chartXml, options = {}) {
     }
   }
 
-  let labels = seriesCategories(seriesBlocks[0])
+  const scatter = ooxmlType === 'scatterChart'
+  let labels = scatter ? [] : seriesCategories(seriesBlocks[0])
   const datasets = seriesBlocks.map((ser, i) => {
     const cats = seriesCategories(ser)
-    if ((!labels || !labels.length) && cats.length) labels = cats
+    if (!scatter && (!labels || !labels.length) && cats.length) labels = cats
     const values = seriesValues(ser)
-    // Align labels length
-    if (values.length && labels.length < values.length) {
+    if (!scatter && values.length && labels.length < values.length) {
       labels = values.map((_, idx) => labels[idx] || String(idx + 1))
     }
+    const xValues = scatter ? seriesXValues(ser) : []
     return {
       label: seriesName(ser) || `Series ${i + 1}`,
       data: values,
+      xValues: scatter ? xValues : undefined,
       color: seriesColor(ser) || undefined,
+      colors: seriesPointColors(ser) || undefined,
     }
   })
 
@@ -150,14 +177,17 @@ function parseOoxmlChart(chartXml, options = {}) {
     displayType: mapChartType(ooxmlType),
     ...chartSupportMetadata(row),
     chartData: {
-      labels: labels.length ? labels : datasets[0]?.data.map((_, i) => String(i + 1)) || [],
+      labels: scatter ? [] : labels.length ? labels : datasets[0]?.data.map((_, i) => String(i + 1)) || [],
       datasets: datasets.map((d, i) => ({
         label: d.label,
         data: d.data,
+        ...(d.xValues ? { xValues: d.xValues } : {}),
         color: d.color || ['#6366f1', '#ef4444', '#22c55e', '#f59e0b', '#3b82f6'][i % 5],
+        ...(d.colors ? { colors: d.colors } : {}),
       })),
     },
     title,
+    legendPosition: chartLegendPosition(chartXml),
     empty: false,
     native,
   }
@@ -379,6 +409,8 @@ async function injectChartsFromSceneGraph({
       type: 'chart',
       chartType: parsed.displayType,
       chartData: parsed.chartData,
+      chartTitle: parsed.title,
+      legendPosition: parsed.legendPosition,
       ...box,
       zIndex: list.length + 1,
       rotation: 0,

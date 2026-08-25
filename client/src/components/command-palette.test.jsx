@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { CommandPalette } from './command-palette'
+import { ModalShell } from './ui'
 
 describe('CommandPalette', () => {
   it('renders nothing when closed', () => {
@@ -33,6 +34,24 @@ describe('CommandPalette', () => {
 
     fireEvent.keyDown(screen.getByRole('textbox', { name: 'Search commands' }), { key: 'Escape' })
     expect(onClose).toHaveBeenCalled()
+  })
+  it('[F1] does not close an underlying modal when the palette receives Escape', () => {
+    const underlyingClose = vi.fn()
+    const paletteClose = vi.fn()
+
+    render(
+      <>
+        <ModalShell titleId="underlying-title" title="Underlying modal" onClose={underlyingClose}>
+          Underlying content
+        </ModalShell>
+        <CommandPalette open={true} onClose={paletteClose} commands={[]} />
+      </>
+    )
+
+    fireEvent.keyDown(screen.getByRole('dialog', { name: 'Command palette' }), { key: 'Escape' })
+
+    expect(paletteClose).toHaveBeenCalledOnce()
+    expect(underlyingClose).not.toHaveBeenCalled()
   })
 
   it('uses tokenized classes for shell colors instead of inline color literals', () => {
@@ -73,6 +92,33 @@ describe('CommandPalette', () => {
     fireEvent.keyDown(input, { key: 'Enter' })
     expect(actionB).toHaveBeenCalled()
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('restores editor focus before running the insert-link command', () => {
+    vi.useFakeTimers()
+    try {
+      const opener = document.createElement('button')
+      document.body.appendChild(opener)
+      opener.focus()
+      const action = vi.fn(() => expect(document.activeElement).toBe(opener))
+      const onClose = vi.fn()
+      render(
+        <CommandPalette
+          open={true}
+          onClose={onClose}
+          commands={[{ id: 'insertLink', label: 'Insert Link', action }]}
+        />
+      )
+
+      fireEvent.click(screen.getByRole('button', { name: 'Insert Link' }))
+      expect(onClose).toHaveBeenCalledOnce()
+      expect(action).not.toHaveBeenCalled()
+      vi.runAllTimers()
+      expect(action).toHaveBeenCalledOnce()
+      opener.remove()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('[F1] does not route Enter from a focused result button to the active input result', () => {

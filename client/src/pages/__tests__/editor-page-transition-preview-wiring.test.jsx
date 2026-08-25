@@ -51,8 +51,8 @@ describe('EditorPage transition preview wiring', () => {
     expect(editorPage).toMatch(
       /const setShowTransitionPreview = useUIStore\(\(s\) => s\.setShowTransitionPreview\)/,
     )
-    expect(editorPage).toMatch(
-      /setShowCssEditor, setShowAnimationPreview, setShowTransitionPreview, pluginTypes/,
+    expect(editorPage).toContain(
+      'setShowCssEditor, setShowMediaLibrary, setShowImageUrlPrompt, setShowFileBrowser, setShowAnimationPreview, setShowTransitionPreview, pluginTypes',
     )
   })
 })

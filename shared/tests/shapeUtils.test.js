@@ -101,7 +101,7 @@ describe('shapeUtils', () => {
     expect(rich).not.toContain('onerror')
     expect(rich).not.toContain('javascript:')
     expect(rich).toContain('href="#"')
-    expect(rich).toContain('src="#"')
+    expect(rich).toContain('src="x"')
   })
 
   it('applies imported text insets to shared rich shape text content', () => {
@@ -120,6 +120,31 @@ describe('shapeUtils', () => {
     expect(rich).toContain('padding-right:11px')
     expect(rich).toContain('padding-top:5px')
     expect(rich).toContain('padding-bottom:6px')
+  })
+
+  it('preserves imported shape text alignment and plain-text font styling', () => {
+    const rich = shapeSvgString({
+      shape: 'rect',
+      width: 160,
+      height: 80,
+      textAlign: 'left',
+      textHtml: '<p style="text-align:left"><span>Aligned</span></p>',
+    })
+    expect(rich).toContain('text-align:left')
+    expect(rich).toContain('style="width:100%;min-width:0;"')
+
+    const plain = shapeSvgString({
+      shape: 'rect',
+      width: 160,
+      height: 80,
+      text: 'Right',
+      textAlign: 'right',
+      fontFamily: 'Arial',
+      fontWeight: 'bold',
+      _pptxImportMeta: { textInsets: { left: 8 } },
+    })
+    expect(plain).toContain('text-anchor="end"')
+    expect(plain).toContain('font-family:Arial;font-weight:bold')
   })
 
   it('converts legacy unmarked shared shape text insets from pt to px', () => {

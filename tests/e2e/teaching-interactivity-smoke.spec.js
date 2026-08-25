@@ -31,7 +31,7 @@ test.describe('Teaching interactivity smoke', () => {
 
     await page.getByRole('tab', { name: 'Insert' }).click()
     await insertPanel.getByRole('button', { name: 'Add STEM simulation' }).click()
-    await page.getByRole('combobox').selectOption('phet')
+    await page.getByRole('dialog', { name: 'STEM Simulation' }).getByRole('combobox').selectOption('phet')
     await page.getByRole('textbox', { name: 'URL or ID' }).fill('fractions-intro')
     await page.getByRole('button', { name: 'Insert', exact: true }).click()
     await waitForElement(

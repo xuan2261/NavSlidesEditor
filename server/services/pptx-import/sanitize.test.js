@@ -42,9 +42,11 @@ describe('sanitizeStyle CSS length unit conversion', () => {
     ).toBe('font-size: 24px')
   })
 
-  test('preserves editor-supported line-height and highlight declarations', () => {
-    expect(sanitizeStyle('line-height: 1.5; background-color: #fef08a; font-size: 16px')).toBe(
-      'line-height: 1.5; background-color: #fef08a; font-size: 16px'
+  test('preserves and normalizes editor-supported paragraph metrics', () => {
+    expect(
+      sanitizeStyle('line-height: 30pt; margin-top: 3pt; margin-bottom: 6pt; background-color: #fef08a; font-size: 16px')
+    ).toBe(
+      'line-height: 40px; margin-top: 4px; margin-bottom: 8px; background-color: #fef08a; font-size: 16px'
     )
   })
 })

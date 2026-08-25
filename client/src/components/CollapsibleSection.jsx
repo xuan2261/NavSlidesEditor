@@ -17,7 +17,7 @@ export default function CollapsibleSection({
     <div className={`border-b border-border p-4 ${className}`}>
       <button
         type="button"
-        className="mb-3 flex w-full items-center justify-between rounded-md text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/30"
+        className="ui-coarse-target mb-3 flex w-full items-center justify-between rounded-md text-left transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/30"
         onClick={() => setIsOpen((v) => !v)}
         aria-expanded={isOpen}
       >

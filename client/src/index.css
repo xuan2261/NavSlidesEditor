@@ -102,6 +102,10 @@
   /* Sidebar */
   --sidebar-width: 220px;
 
+  /* Responsive interaction sizing */
+  --coarse-target-size: 44px;
+  --ribbon-scroll-affordance-size: 28px;
+
   /* Border radius tokens */
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -200,6 +204,85 @@ button {
   font-family: inherit;
 }
 
+.ribbon-tab-strip {
+  min-width: 0;
+}
+
+.ribbon-tab-list {
+  min-width: 0;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: var(--ribbon-scroll-affordance-size);
+  scrollbar-width: thin;
+  touch-action: pan-x;
+}
+
+.ribbon-tab-list[data-overflow='true'] {
+  padding-inline: var(--ribbon-scroll-affordance-size);
+}
+
+.ribbon-tab-scroll-button {
+  position: absolute;
+  inset-block: 0;
+  z-index: 10;
+  display: inline-flex;
+  width: var(--ribbon-scroll-affordance-size);
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  transition: color 150ms ease-out, background-color 150ms ease-out, opacity 150ms ease-out;
+}
+
+.ribbon-tab-scroll-button:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.ribbon-tab-scroll-button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.ribbon-tab-scroll-button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.ribbon-tab-scroll-button[data-direction='left'] {
+  inset-inline-start: 0;
+  border-inline-end: 1px solid var(--border);
+}
+
+.ribbon-tab-scroll-button[data-direction='right'] {
+  inset-inline-end: 0;
+  border-inline-start: 1px solid var(--border);
+}
+
+@media (pointer: coarse) {
+  .ui-coarse-target {
+    min-width: var(--coarse-target-size) !important;
+    min-height: var(--coarse-target-size) !important;
+    touch-action: manipulation;
+  }
+
+  .ui-coarse-target-square {
+    min-width: var(--coarse-target-size) !important;
+  }
+
+  .ribbon-tab-list {
+    scroll-padding-inline: var(--coarse-target-size);
+  }
+
+  .ribbon-tab-list[data-overflow='true'] {
+    padding-inline: var(--coarse-target-size);
+  }
+
+  .ribbon-tab-scroll-button {
+    width: var(--coarse-target-size);
+  }
+
+}
+
 .ribbon-shape-gallery-button {
   width: 32px;
   height: 32px;
@@ -214,6 +297,13 @@ button {
 .ribbon-table-picker-cell {
   width: 12px;
   height: 12px;
+}
+
+@media (pointer: coarse) {
+  .ribbon-shape-gallery-button {
+    min-width: var(--coarse-target-size);
+    min-height: var(--coarse-target-size);
+  }
 }
 
 input,

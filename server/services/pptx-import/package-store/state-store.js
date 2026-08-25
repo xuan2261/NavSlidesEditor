@@ -2,7 +2,15 @@ const crypto = require('node:crypto')
 const fs = require('node:fs/promises')
 const path = require('node:path')
 const { replaceDurable, writeDurable } = require('./durable-fs')
-const { createEmptyState, hashRecord, validateState, validateStateRoot } = require('./schemas')
+const {
+  STATE_ROOT_SCHEMA_VERSION,
+  createEmptyState,
+  hashRecord,
+  validateState,
+  validateStateRoot,
+} = require('./schemas')
+const { loadPackageStoreState, validatePackageStoreRoot } = require('./state-migrations')
+const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
 
 /**
  * Each root embeds its predecessor, so an unbounded chain makes state-root.json
@@ -29,6 +37,10 @@ class StateStore {
     )
     this.state = createEmptyState()
     this.root = null
+    this.pendingMigration = null
+    this.pendingRootRecovery = false
+    this.pendingHighWaterPersist = false
+    this.pendingWalRecovery = []
     this.recoveryActions = []
   }
 
@@ -44,16 +56,21 @@ class StateStore {
   async reload() {
     this.state = createEmptyState()
     this.root = null
+    this.pendingMigration = null
+    this.pendingRootRecovery = false
+    this.pendingHighWaterPersist = false
+    this.pendingWalRecovery = []
     this.recoveryActions = []
     await this.recover()
   }
 
   async readValidatedRoot(root) {
-    validateStateRoot(root)
-    if (!root.stateFile) throw new Error('Invalid state root file')
+    validatePackageStoreRoot(root)
+    if (!root?.stateFile) throw new Error('Invalid state root file')
     const state = JSON.parse(await fs.readFile(path.join(this.rootDir, root.stateFile), 'utf8'))
     if (hashRecord(state) !== root.stateHash) throw new Error('State index hash mismatch')
-    return validateState(state)
+    const highWater = await this.readMatrixAuthorityHighWater()
+    return loadPackageStoreState(root, state, { highWater })
   }
 
   /**
@@ -64,7 +81,7 @@ class StateStore {
     let candidate = root?.predecessor
     while (candidate) {
       try {
-        return { root: candidate, state: await this.readValidatedRoot(candidate) }
+        return await this.readValidatedRoot(candidate)
       } catch {
         candidate = candidate.predecessor
       }
@@ -85,26 +102,29 @@ class StateStore {
     }
     this.root = JSON.parse(serialized)
     try {
-      this.state = await this.readValidatedRoot(this.root)
+      const loaded = await this.readValidatedRoot(this.root)
+      this.root = loaded.root
+      this.state = loaded.state
+      this.pendingMigration = loaded.migration
+      this.recoveryActions.push(...(loaded.migration?.actions || []))
     } catch (error) {
       const restored = await this.restoreFromPredecessor(this.root)
       if (!restored) throw error
       this.state = restored.state
       this.root = restored.root
-      await writeDurable(this.rootPath, JSON.stringify(this.root))
+      this.pendingMigration = restored.migration
+      this.pendingRootRecovery = true
+      this.recoveryActions.push(...(restored.migration?.actions || []))
       this.recoveryActions.push('restored-verified-predecessor')
     }
     const names = await fs.readdir(this.walDir)
     for (const name of names.filter((entry) => entry.endsWith('.prepared.json'))) {
       const txId = name.slice(0, -'.prepared.json'.length)
-      const completed = path.join(this.walDir, `${txId}.completed`)
-      if (this.root?.transactionId === txId) {
-        await writeDurable(completed, 'completed')
-        this.recoveryActions.push('completed-published-wal')
-      } else {
-        await fs.rename(path.join(this.walDir, name), path.join(this.quarantineDir, name))
-        this.recoveryActions.push('quarantined-unpublished-prepared-wal')
-      }
+      this.pendingWalRecovery.push({
+        name,
+        transactionId: txId,
+        published: this.root?.transactionId === txId,
+      })
     }
     await this.recoverMatrixAuthorityHighWater()
   }
@@ -138,17 +158,46 @@ class StateStore {
 
   async recoverMatrixAuthorityHighWater() {
     const highWater = await this.readMatrixAuthorityHighWater()
-    if (highWater === null) {
-      await this.persistMatrixAuthorityHighWater(this.state.matrixAuthorityEpoch)
-      return
-    }
-    if (this.state.matrixAuthorityEpoch > highWater) {
-      await this.persistMatrixAuthorityHighWater(this.state.matrixAuthorityEpoch)
+    if (highWater === null || this.state.matrixAuthorityEpoch > highWater) {
+      this.pendingHighWaterPersist = true
       return
     }
     if (this.state.matrixAuthorityEpoch >= highWater) return
     this.state.matrixAuthorityEpoch = highWater
+    this.state.heads = this.state.heads.map((head) => ({
+      ...head,
+      matrixAuthorityEpoch: highWater,
+      matrixAuthoritySubjects: createMatrixAuthoritySubjects(undefined, highWater),
+    }))
+    validateState(this.state)
+    this.pendingRootRecovery = true
     this.recoveryActions.push('advanced-matrix-authority-high-water')
+  }
+
+  async finalizeWriterRecovery(assertWriter) {
+    await assertWriter()
+    if (this.pendingHighWaterPersist) {
+      await this.persistMatrixAuthorityHighWater(this.state.matrixAuthorityEpoch)
+      this.pendingHighWaterPersist = false
+    }
+    for (const recovery of this.pendingWalRecovery) {
+      await assertWriter()
+      if (recovery.published) {
+        await writeDurable(path.join(this.walDir, `${recovery.transactionId}.completed`), 'completed')
+        this.recoveryActions.push('completed-published-wal')
+        continue
+      }
+      try {
+        await fs.rename(
+          path.join(this.walDir, recovery.name),
+          path.join(this.quarantineDir, recovery.name)
+        )
+        this.recoveryActions.push('quarantined-unpublished-prepared-wal')
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error
+      }
+    }
+    this.pendingWalRecovery = []
   }
 
   async publish(nextState, {
@@ -173,7 +222,7 @@ class StateStore {
     }
     if (faultAfterIndex) throw new Error('Injected fault after index')
     const nextRoot = {
-      schemaVersion: 1,
+      schemaVersion: STATE_ROOT_SCHEMA_VERSION,
       transactionId,
       stateHash,
       stateFile: relativeStateFile,
@@ -191,6 +240,9 @@ class StateStore {
     await replaceDurable(tempRoot, this.rootPath)
     this.root = nextRoot
     this.state = nextState
+    this.pendingMigration = null
+    this.pendingRootRecovery = false
+    this.pendingHighWaterPersist = false
     if (faultAfterRoot) throw new Error('Injected fault after root')
     await writeDurable(path.join(this.walDir, `${transactionId}.completed`), 'completed')
     if (faultAfterCompletion) throw new Error('Injected fault after completion')

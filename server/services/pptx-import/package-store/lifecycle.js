@@ -1,4 +1,4 @@
-const { SCHEMA_VERSION, hashRecord, validateOwner } = require('./schemas')
+const { RECORD_SCHEMA_VERSION, hashRecord, validateOwner } = require('./schemas')
 const { queueCompatibilityRemoval, queueCompatibilityUpsert } = require('../compatibility-outbox')
 const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
 const { canonicalEditableSnapshot } = require('../canonical-snapshot')
@@ -82,7 +82,7 @@ function addOwner(next, revisionId, owner, retainedHead) {
     item.ownerId === owner.ownerId
   )) return
   next.owners.push({
-    schemaVersion: SCHEMA_VERSION,
+    schemaVersion: RECORD_SCHEMA_VERSION,
     revisionId,
     ...owner,
     ...(retainedHead ? { retainedHead: clone(retainedHead) } : {}),

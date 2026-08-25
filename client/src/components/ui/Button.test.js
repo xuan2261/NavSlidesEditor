@@ -13,6 +13,7 @@ describe('buttonVariants', () => {
     expect(classes).toContain('focus-visible:ring-focus')
     expect(classes).toContain('focus-visible:ring-offset-secondary')
     expect(classes).not.toContain('focus-visible:ring-offset-primary')
+    expect(classes).toContain('ui-coarse-target')
   })
 
   it('should return primary classes', () => {
@@ -48,6 +49,7 @@ describe('buttonVariants', () => {
     expect(classes).toContain('justify-center')
     expect(classes).toContain('border-transparent')
     expect(classes).toContain('focus-visible:ring-2')
+    expect(classes).toContain('ui-coarse-target-square')
   })
 
   it('should return ribbon classes with auto width and padding', () => {

@@ -8,6 +8,8 @@
  */
 import React from 'react'
 import { renderToString } from 'react-dom/server'
+import { render as renderDom, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import {
   GamePropertiesQuestionEditor,
@@ -112,7 +114,7 @@ describe('GamePropertiesQuestionEditor renders', () => {
 
   it('renders X close button with aria-label', () => {
     const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toContain('aria-label="Close"')
+    expect(html).toContain('aria-label="Close question editor"')
   })
 
   it('pre-fills question text when editing', () => {
@@ -140,7 +142,7 @@ describe('GamePropertiesQuestionEditor renders', () => {
     const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
     expect(html).toContain('role="dialog"')
     expect(html).toContain('aria-modal="true"')
-    expect(html).toContain('aria-labelledby="qeditor-title"')
+    expect(html).toMatch(/aria-labelledby="[^"]+"/)
   })
 
   it('renders Time Limit and Points labels', () => {
@@ -165,5 +167,57 @@ describe('GamePropertiesQuestionEditor renders', () => {
     const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
     expect(html).toContain('Options')
     expect(html).toContain('*')
+  })
+})
+
+describe('GamePropertiesQuestionEditor interaction', () => {
+  it('traps focus, closes with Escape, and restores the trigger', async () => {
+    const user = userEvent.setup()
+    const underlyingEscape = vi.fn()
+    function Harness() {
+      const [open, setOpen] = React.useState(false)
+      return (
+        <div onKeyDown={(event) => event.key === 'Escape' && underlyingEscape()}>
+          <button type="button" onClick={() => setOpen(true)}>Add quiz question</button>
+          <GamePropertiesQuestionEditor
+            isOpen={open}
+            question={null}
+            onSave={() => setOpen(false)}
+            onCancel={() => setOpen(false)}
+          />
+        </div>
+      )
+    }
+
+    renderDom(<Harness />)
+    const trigger = screen.getByRole('button', { name: 'Add quiz question' })
+    await user.click(trigger)
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Question text' }))
+    await user.tab({ shift: true })
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close question editor' }))
+    await user.tab({ shift: true })
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Save' }))
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(document.activeElement).toBe(trigger)
+    expect(underlyingEscape).not.toHaveBeenCalled()
+  })
+
+  it('connects validation errors to the affected fields', async () => {
+    const user = userEvent.setup()
+    renderDom(
+      <GamePropertiesQuestionEditor
+        isOpen={true}
+        question={null}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    const question = screen.getByRole('textbox', { name: 'Question text' })
+    const optionA = screen.getByRole('textbox', { name: 'Question option A' })
+    expect(question.getAttribute('aria-describedby')).toBe(screen.getByText('Question text is required').id)
+    expect(optionA.getAttribute('aria-describedby')).toBe(screen.getByText('At least 2 options are required').id)
   })
 })

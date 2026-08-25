@@ -82,4 +82,10 @@ describe('project-media-utils', () => {
     expect(result.slides[0].elements[1].poster).toBe('/uploads/poster-new.png')
     expect(presentation.slides[0].background.src).toBe('/uploads/bg-old.png')
   })
+
+  it('collects and rewrites local caption tracks on vertical child slides', () => {
+    const presentation = { slides: [{ children: [{ elements: [{ id: 'audio', type: 'audio', src: '/uploads/audio.mp3', tracks: [{ src: '/uploads/captions.vtt' }] }] }] }] }
+    expect(collectProjectMediaEntries(presentation, { localOnly: true }).map((entry) => entry.originalUrl)).toEqual(['/uploads/audio.mp3', '/uploads/captions.vtt'])
+    expect(rewriteProjectMediaUrls(presentation, { '/uploads/captions.vtt': '/uploads/new.vtt' }).slides[0].children[0].elements[0].tracks[0].src).toBe('/uploads/new.vtt')
+  })
 })

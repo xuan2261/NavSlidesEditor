@@ -192,16 +192,22 @@ function shapeSvgString(el) {
   }
 
   let textEl = ''
+  const textAlign = ['left', 'center', 'right', 'justify'].includes(el.textAlign) ? el.textAlign : 'center'
   if (el.textHtml) {
     const fs = importedFontSize(el)
     const tc = safeCssColor(resolveColorField(el.textColor, 'shape', 'textColor'), '#ffffff')
     const richText = sanitizeRichTextHtml(el.textHtml)
-    textEl = `<foreignObject x="0" y="0" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;color:${tc};font-size:${fs}px;overflow:hidden;${importedTextWrapStyle(el)}${importedTextInsetStyle(el)}">${richText}</div></foreignObject>`
+    textEl = `<foreignObject x="0" y="0" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;text-align:${textAlign};color:${tc};font-size:${fs}px;overflow:hidden;${importedTextWrapStyle(el)}${importedTextInsetStyle(el)}"><div style="width:100%;min-width:0;">${richText}</div></div></foreignObject>`
   } else if (el.text) {
     const fs = el.fontSize || 16
     const tc = safeCssColor(resolveColorField(el.textColor, 'shape', 'textColor'), '#ffffff')
     const tp = svgPaint('fill', tc)
-    textEl = `<text x="${w / 2}" y="${h / 2}" dominant-baseline="middle" text-anchor="middle" font-size="${fs}"${tp.attr} style="font-family:inherit;${tp.style}">${escapePlainText(el.text)}</text>`
+    const inset = Math.max(0, Number(el?._pptxImportMeta?.textInsets?.left) || 0)
+    const x = textAlign === 'left' ? inset : textAlign === 'right' ? w - inset : w / 2
+    const anchor = textAlign === 'left' ? 'start' : textAlign === 'right' ? 'end' : 'middle'
+    const family = typeof el.fontFamily === 'string' && !/[;{}]/.test(el.fontFamily) ? el.fontFamily : 'inherit'
+    const weight = el.fontWeight === 'bold' || Number(el.fontWeight) >= 600 ? 'bold' : 'normal'
+    textEl = `<text x="${x}" y="${h / 2}" dominant-baseline="middle" text-anchor="${anchor}" font-size="${fs}"${tp.attr} style="font-family:${family};font-weight:${weight};${tp.style}">${escapePlainText(el.text)}</text>`
   }
 
   return `<svg width="100%" height="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;">${defs}${inner}${textEl}</svg>`

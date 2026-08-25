@@ -88,10 +88,12 @@ describe('StatusBar zoom slider', () => {
     expect(useUIStore.getState().userZoomMode).toBe(false)
   })
 
-  it('exposes larger touch-comfort zoom controls before compact sm breakpoint classes', () => {
+  it('[cap:control.status.touch-targets] applies shared coarse-pointer targets without changing compact desktop classes', () => {
     render(<StatusBar />)
+    expect(screen.getByTestId('statusbar-zoom-in').className).toContain('ui-coarse-target-square')
     expect(screen.getByTestId('statusbar-zoom-in').className).toContain('h-7')
     expect(screen.getByTestId('statusbar-zoom-in').className).toContain('sm:h-5')
+    expect(screen.getByTestId('statusbar-zoom-fit').className).toContain('ui-coarse-target')
     expect(screen.getByTestId('statusbar-zoom-fit').className).toContain('h-7')
   })
 })

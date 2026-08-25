@@ -93,4 +93,23 @@ describe('EditorPage history characterization', () => {
       { timeout: 6000 }
     )
   })
+
+  it('reflects undo and redo availability in the quick-access controls', async () => {
+    renderPage()
+    const title = await screen.findByDisplayValue('Char Deck')
+    const undo = screen.getByRole('button', { name: 'Undo' })
+    const redo = screen.getByRole('button', { name: 'Redo' })
+
+    expect(undo.disabled).toBe(true)
+    expect(redo.disabled).toBe(true)
+
+    vi.useFakeTimers()
+    fireEvent.change(title, { target: { value: 'Availability Target' } })
+    await vi.runAllTimersAsync()
+    vi.useRealTimers()
+
+    await waitFor(() => expect(undo.disabled).toBe(false))
+    fireEvent.click(undo)
+    await waitFor(() => expect(redo.disabled).toBe(false))
+  })
 })

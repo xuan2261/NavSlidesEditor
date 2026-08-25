@@ -23,6 +23,8 @@ describe('generated live presenter runtime', () => {
     expect(gameHtml).toContain('function createHostPlayerId()')
     expect(gameHtml).not.toContain("playerId: 'presenter-' + gameId")
     expect(gameHtml).toContain("if (typeof livePresentationReady === 'function') livePresentationReady();")
+    expect(gameHtml).not.toMatch(/\balert\s*\(/)
+    expect(gameHtml).toContain("notice.setAttribute('role', 'alert')")
     expect(gameHtml).toContain('function rebootGameHost(state, gameSocket)')
     expect(gameHtml).toContain("data.message === 'room-not-found'")
     expect(gameHtml).toContain("gameSocket.on('game-room-expired'")

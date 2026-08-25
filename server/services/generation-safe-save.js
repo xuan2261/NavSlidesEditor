@@ -5,7 +5,7 @@ const {
 const { canonicalEditableSnapshot, deriveMutationJournal } = require(
   './pptx-import/mutation-journal'
 )
-const { hashRecord, SCHEMA_VERSION } = require('./pptx-import/package-store/schemas')
+const { hashRecord, RECORD_SCHEMA_VERSION } = require('./pptx-import/package-store/schemas')
 const { rebindSourceMap } = require('./pptx-import/source-map')
 const { queueCompatibilityUpsert } = require('./pptx-import/compatibility-outbox')
 const { validateMatrixAuthoritySubjects } = require('./pptx-import/canonical-feature-matrix')
@@ -147,7 +147,7 @@ async function savePackageProjection({
     })
     const updatedAt = new Date().toISOString()
     const result = {
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: RECORD_SCHEMA_VERSION,
       operation: OPERATION,
       presentationId,
       idempotencyKey,

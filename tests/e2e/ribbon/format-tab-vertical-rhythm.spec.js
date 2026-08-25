@@ -28,6 +28,7 @@ test.describe('Format Tab Vertical Rhythm', () => {
     expect(sectionLabels(metrics)).toEqual([
       'Fill',
       'Stroke',
+      'Action',
       'Position',
       'Size',
       'Rotate',

@@ -42,7 +42,6 @@ export function useModalFocusTrap({ initialFocusRef, autoFocus = true } = {}) {
   const handleFocusTrapKeyDown = (event) => {
     if (event.defaultPrevented) return
     if (event.key !== 'Tab') return
-
     const focusableElements = getFocusableElements(dialogRef.current)
     if (!focusableElements.length) return
 

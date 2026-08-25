@@ -1,6 +1,7 @@
 import { ELEMENT_DEFAULTS } from '../data/element-defaults'
 import { MIN_SIZE } from '../components/canvas/use-canvas-resize-rotate'
 import { hasBlockedGroupMutation } from './active-slide-selection'
+import { resolveConnectorGeometry } from 'revealjs-shared'
 
 /**
  * Shared rules for applying a property/geometry edit across a multi-element
@@ -43,7 +44,6 @@ export function normalizeRotation(value) {
 }
 
 function ownsProperty(element, key) {
-  if (element && Object.prototype.hasOwnProperty.call(element, key)) return true
   const defaults = ELEMENT_DEFAULTS[element?.type]
   return !!defaults && Object.prototype.hasOwnProperty.call(defaults, key)
 }
@@ -127,4 +127,35 @@ export function buildSelectionUpdates(elements, ids, primaryId, updates) {
   // with no fill-bearing element): nothing to write.
   if (!result.length && !hasCommon) return []
   return result
+}
+
+/**
+ * Applies an already-authorized batch to a post-mutation snapshot, then merges
+ * connector endpoint patches into that same transaction. It never recurses.
+ */
+export function buildConnectorUpdateBatch(elements, updates, { deletedTargetIds = [] } = {}) {
+  const requested = new Map()
+  for (const update of updates || []) {
+    if (!update?.id) continue
+    const { id, ...partial } = update
+    requested.set(id, { ...(requested.get(id) || {}), ...partial })
+  }
+  const postMutation = (elements || []).map((element) =>
+    requested.has(element.id) ? { ...element, ...requested.get(element.id) } : element
+  )
+  const { patches } = resolveConnectorGeometry(postMutation, { deletedTargetIds })
+  for (const patch of patches) {
+    const { id, ...partial } = patch
+    requested.set(id, { ...(requested.get(id) || {}), ...partial })
+  }
+  return [...requested].map(([id, partial]) => ({ id, ...partial }))
+}
+
+export function applyConnectorDependentPatches(elements, deletedTargetIds = []) {
+  const { patches } = resolveConnectorGeometry(elements, { deletedTargetIds })
+  if (!patches.length) return elements
+  const byId = new Map(patches.map(({ id, ...partial }) => [id, partial]))
+  return (elements || []).map((element) =>
+    byId.has(element.id) ? { ...element, ...byId.get(element.id) } : element
+  )
 }

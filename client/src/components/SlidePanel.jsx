@@ -7,7 +7,7 @@ const menuClass = 'flex w-full items-center gap-2 px-3 py-2 text-left text-xs ho
 const slideId = (slide, index) => slide?.id || `slide-${index}`
 
 export default function SlidePanel(props) {
-  const { slides, currentIndex, onSelect, onAdd, onDelete, onDuplicate, onDeleteSelected, onDuplicateSelected, onMove, onToggleLock, onToggleAutoAnimate, onAddVerticalSlide, onSelectVertical, currentVerticalIndex, onAddFromTemplate, resolution = {} } = props
+  const { slides, currentIndex, onSelect, onAdd, onDelete, onDuplicate, onDeleteSelected, onDuplicateSelected, onMove, onToggleLock, onToggleAutoAnimate, onAddVerticalSlide, onSelectVertical, currentVerticalIndex, onAddFromTemplate, resolution = {}, layoutOptions = [], onApplyLayout, onChangeLayout, onDetachLayout } = props
   const [selectedIds, setSelectedIds] = useState(() => new Set([slideId(slides[currentIndex], currentIndex)]))
   const [focusIndex, setFocusIndex] = useState(currentIndex)
   const [activeActionIndex, setActiveActionIndex] = useState(null)
@@ -89,6 +89,16 @@ export default function SlidePanel(props) {
       <button role="menuitem" className={menuClass} disabled={ctxMenu.index === 0} onClick={() => { onMove(ctxMenu.index, ctxMenu.index - 1); closeMenu() }}><ArrowUp size={14}/> Move Up</button>
       <button role="menuitem" className={menuClass} disabled={ctxMenu.index === slides.length - 1} onClick={() => { onMove(ctxMenu.index, ctxMenu.index + 1); closeMenu() }}><ArrowDown size={14}/> Move Down</button>
       {onAddVerticalSlide && <button role="menuitem" className={menuClass} onClick={() => { onAddVerticalSlide(ctxMenu.index); closeMenu() }}><ArrowDownRight size={14}/> Add Vertical Slide</button>}
+      {layoutOptions.length > 0 && <>
+        <label className="px-3 py-2 text-xs text-text-muted">Layout
+          <select aria-label="Slide layout" className="mt-1 w-full rounded border border-border bg-secondary px-1 py-1 text-xs" value={slides[ctxMenu.index]?.layoutId || ''} onChange={(event) => { if (event.target.value) onChangeLayout?.(event.target.value, ctxMenu.index); closeMenu() }}>
+            <option value="">No linked layout</option>
+            {layoutOptions.map((layout) => <option key={layout.id} value={layout.id}>{layout.name}</option>)}
+          </select>
+        </label>
+        <button role="menuitem" className={menuClass} onClick={() => { const id = layoutOptions[0]?.id; if (id) onApplyLayout?.(id, ctxMenu.index); closeMenu() }}><LayoutTemplate size={14}/> Apply layout</button>
+        {slides[ctxMenu.index]?.layoutId && <button role="menuitem" className={menuClass} onClick={() => { onDetachLayout?.(ctxMenu.index); closeMenu() }}><LayoutTemplate size={14}/> Detach layout</button>}
+      </>}
       <button role="menuitem" className={`${menuClass} text-danger`} disabled={slides.length <= 1} onClick={() => { onDelete(ctxMenu.index); closeMenu() }}><Trash2 size={14}/> Delete</button>
     </div></>}
   </div>

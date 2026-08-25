@@ -15,6 +15,7 @@ import PromptPopover from './PromptPopover'
 import TemplateGallery from './dashboard/TemplateGallery'
 import TemplatePreview from './dashboard/TemplatePreview'
 import { useUIStore } from '../stores/ui-store'
+import { resolveUrlEntry } from '../utils/url-safety'
 
 const imageUrlPromptPopoverStyle = {
   position: 'fixed',
@@ -190,8 +191,11 @@ export default function EditorModalsSecondary({
       {showImageUrlPrompt && (
         <PromptPopover
           title="Image URL"
+          label="Image source URL"
+          description="Use an HTTP(S), project-relative, upload, or image data URL."
           defaultValue=""
           placeholder="https://..."
+          validate={(url) => resolveUrlEntry(url, 'image').error}
           onSubmit={(url) => {
             addImageElement(url)
             setShowImageUrlPrompt(false)

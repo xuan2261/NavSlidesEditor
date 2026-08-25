@@ -51,8 +51,22 @@ describe('CI release confidence contract', () => {
   it('keeps destructive load smoke scoped to loopback targets', () => {
     const workflow = readText(workflowPath)
     const loadSmoke = getJobBlock(workflow, 'load-smoke')
-    const apiLoad = readText(resolve(root, 'tests', 'load', 'k6-load-test-api-presentations-post-endpoint-with-profiles.js'))
-    const wsLoad = readText(resolve(root, 'tests', 'load', 'k6-load-test-socketio-websocket-room-join-and-slide-change-broadcast.js'))
+    const apiLoad = readText(
+      resolve(
+        root,
+        'tests',
+        'load',
+        'k6-load-test-api-presentations-post-endpoint-with-profiles.js'
+      )
+    )
+    const wsLoad = readText(
+      resolve(
+        root,
+        'tests',
+        'load',
+        'k6-load-test-socketio-websocket-room-join-and-slide-change-broadcast.js'
+      )
+    )
 
     expect(loadSmoke).toContain("API_BASE_URL: 'http://127.0.0.1:3002/api'")
     expect(loadSmoke).toContain("WS_URL: 'ws://127.0.0.1:3002/ws/?EIO=4&transport=websocket'")
@@ -64,14 +78,18 @@ describe('CI release confidence contract', () => {
     const workflow = readText(workflowPath)
     const visualJob = getJobBlock(workflow, 'e2e-visual')
 
-    expect(visualJob).toContain('image: mcr.microsoft.com/playwright:v1.59.1-jammy')
-    expect(visualJob).toContain('npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js')
+    expect(visualJob).toContain('image: mcr.microsoft.com/playwright:v1.62.1-jammy')
+    expect(visualJob).toContain(
+      'npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js'
+    )
     expect(visualJob).toContain('--project=chromium-visual')
     expect(visualJob).not.toContain('--update-snapshots')
   })
 
   it('documents lanes, branch-protection rollout, rollback, quarantine, and scans', () => {
-    const guide = readText(resolve(root, 'docs', 'navslides-editor-vitest-playwright-k6-testing-guide.md'))
+    const guide = readText(
+      resolve(root, 'docs', 'navslides-editor-vitest-playwright-k6-testing-guide.md')
+    )
     const checklist = readText(resolve(root, 'docs', 'manual-smoke-checklist.md'))
     const docs = `${guide}\n${checklist}`
 

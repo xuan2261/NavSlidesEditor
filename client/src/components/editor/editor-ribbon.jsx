@@ -22,6 +22,7 @@ export default function EditorRibbon({ c }) {
         )
       }
       selectedElement={c.selectedElement}
+      onOpenLayoutManager={c.onOpenLayoutManager}
       selectedElementIds={c.selectedElementIds}
       elements={c.activeSlide?.elements || []}
       onUpdateElement={c.updateSelectedElements}

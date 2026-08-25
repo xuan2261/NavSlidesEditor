@@ -42,36 +42,29 @@ function addMediaEntry(target, seen, url, meta, localOnly) {
   target.push({ originalUrl: url, ...meta })
 }
 
+function eachSlide(presentation, visit) {
+  for (const [slideIndex, slide] of (presentation?.slides || []).entries()) {
+    visit(slide, slideIndex, null)
+    for (const [childIndex, child] of (slide?.children || []).entries()) visit(child, slideIndex, childIndex)
+  }
+}
+
 export function collectProjectMediaEntries(presentation, { localOnly = false } = {}) {
   const entries = []
   const seen = new Set()
 
-  for (const [slideIndex, slide] of (presentation?.slides || []).entries()) {
-    addMediaEntry(
-      entries,
-      seen,
-      getBackgroundImageUrl(slide),
-      { kind: 'background', slideIndex },
-      localOnly
-    )
-
+  eachSlide(presentation, (slide, slideIndex, childIndex) => {
+    const location = childIndex === null ? { slideIndex } : { slideIndex, childIndex }
+    addMediaEntry(entries, seen, getBackgroundImageUrl(slide), { kind: 'background', ...location }, localOnly)
     for (const element of slide?.elements || []) {
-      addMediaEntry(
-        entries,
-        seen,
-        element?.src,
-        { kind: 'src', slideIndex, elementId: element?.id || null },
-        localOnly
-      )
-      addMediaEntry(
-        entries,
-        seen,
-        element?.poster,
-        { kind: 'poster', slideIndex, elementId: element?.id || null },
-        localOnly
-      )
+      const meta = { ...location, elementId: element?.id || null }
+      addMediaEntry(entries, seen, element?.src, { kind: 'src', ...meta }, localOnly)
+      addMediaEntry(entries, seen, element?.poster, { kind: 'poster', ...meta }, localOnly)
+      for (const track of element?.tracks || []) {
+        addMediaEntry(entries, seen, track?.src, { kind: 'track', ...meta }, localOnly)
+      }
     }
-  }
+  })
 
   return entries
 }
@@ -89,13 +82,16 @@ export function buildArchiveMediaManifestEntries(presentation) {
 
 export function rewriteProjectMediaUrls(presentation, urlMap) {
   const clone = JSON.parse(JSON.stringify(presentation))
-
-  for (const slide of clone?.slides || []) {
+  eachSlide(clone, (slide) => {
     for (const element of slide?.elements || []) {
       if (element.src && urlMap[element.src]) element.src = urlMap[element.src]
       if (element.poster && urlMap[element.poster]) element.poster = urlMap[element.poster]
+      if (Array.isArray(element.tracks)) {
+        element.tracks.forEach((track) => {
+          if (track?.src && urlMap[track.src]) track.src = urlMap[track.src]
+        })
+      }
     }
-
     if (slide?.background?.type === 'image') {
       const current = getBackgroundImageUrl(slide)
       if (current && urlMap[current]) {
@@ -103,8 +99,7 @@ export function rewriteProjectMediaUrls(presentation, urlMap) {
         delete slide.background.src
       }
     }
-  }
-
+  })
   return clone
 }
 

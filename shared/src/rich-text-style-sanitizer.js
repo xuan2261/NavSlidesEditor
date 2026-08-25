@@ -7,6 +7,8 @@ const SAFE_STYLE_PROPS = new Set([
   'font-style',
   'font-weight',
   'line-height',
+  'margin-top',
+  'margin-bottom',
   'text-align',
   'text-decoration',
   'vertical-align',

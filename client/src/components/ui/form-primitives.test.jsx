@@ -13,6 +13,7 @@ describe('form primitives', () => {
     expect(html).toContain('border-border')
     expect(html).toContain('focus:ring-2')
     expect(html).toContain('focus:ring-focus')
+    expect(html).toContain('ui-coarse-target')
   })
 
   it('renders select with the same focus and surface contract as input', () => {
@@ -26,6 +27,7 @@ describe('form primitives', () => {
     expect(html).toContain('border-border')
     expect(html).toContain('focus:ring-2')
     expect(html).toContain('focus:ring-focus')
+    expect(html).toContain('ui-coarse-target')
   })
 
   it('keeps color picker compact and keyboard-focus visible', () => {
@@ -37,5 +39,6 @@ describe('form primitives', () => {
     expect(html).toContain('focus-visible:ring-focus')
     expect(html).toContain('focus-visible:ring-offset-secondary')
     expect(html).not.toContain('focus-visible:ring-offset-primary')
+    expect(html).toContain('ui-coarse-target-square')
   })
 })

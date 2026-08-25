@@ -1,8 +1,9 @@
-import { render } from '@testing-library/react'
+import { act, render } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import EditorCanvasWorkspace from './editor-canvas-workspace'
 import { api } from '../../utils/api'
 import { showError } from '../../utils/app-feedback'
+import { useEditorStore } from '../../stores/editor-store'
 
 let slideCanvasProps
 
@@ -48,6 +49,11 @@ describe('EditorCanvasWorkspace upload targeting', () => {
   beforeEach(() => {
     slideCanvasProps = null
     vi.clearAllMocks()
+    useEditorStore.setState({
+      smartGuidesEnabled: true,
+      showRulers: false,
+      guides: [],
+    })
   })
 
   it('does not insert a dropped file after navigation changes the active slide', async () => {
@@ -69,5 +75,24 @@ describe('EditorCanvasWorkspace upload targeting', () => {
 
     expect(context.addImageElement).not.toHaveBeenCalled()
     expect(showError).toHaveBeenCalledWith(expect.stringMatching(/active slide changed/i))
+  })
+
+  it('forwards live ruler and smart-guide store state to the canvas', () => {
+    useEditorStore.setState({
+      smartGuidesEnabled: false,
+      showRulers: true,
+      guides: [{ axis: 'x', position: 120 }],
+    })
+    render(<EditorCanvasWorkspace overlayOpen={false} c={createContext({ current: { id: 'slide-a' } })} />)
+
+    expect(slideCanvasProps.smartGuidesEnabled).toBe(false)
+    expect(slideCanvasProps.showRulers).toBe(true)
+    expect(slideCanvasProps.persistentGuides).toEqual([{ axis: 'x', position: 120 }])
+
+    act(() => slideCanvasProps.onAddGuide({ axis: 'y', position: 80 }))
+    expect(useEditorStore.getState().guides).toEqual([
+      { axis: 'x', position: 120 },
+      { axis: 'y', position: 80 },
+    ])
   })
 })

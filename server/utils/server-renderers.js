@@ -14,6 +14,7 @@ const {
   buildPptxRasterImageOptions,
   getPptxElementExportStrategy,
   getPptxMediaSemanticWarning,
+  getPptxImageSemanticWarning,
   hasPptxImageVisualEffects,
   recordPptxTableRotationWarning,
   scaleElementBounds,
@@ -22,8 +23,11 @@ const {
 const NATIVE_RENDERERS = {
   text: (slide, element, bounds, { designTokens }) =>
     addTextElement(slide, element, bounds, designTokens),
-  image: (slide, element, bounds, { resolution, layout }) =>
-    addImageElement(slide, element, bounds, resolution, layout),
+  image: (slide, element, bounds, { resolution, layout, warnings, slideNumber }) => {
+    const warning = getPptxImageSemanticWarning(element, slideNumber)
+    if (warning) warnings.push(warning)
+    addImageElement(slide, element, bounds, resolution, layout)
+  },
   shape: (slide, element, bounds, { designTokens }) =>
     addShapeElement(slide, element, bounds, designTokens),
   line: (slide, element, bounds, { resolution, layout, designTokens }) =>

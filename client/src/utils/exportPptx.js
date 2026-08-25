@@ -5,11 +5,31 @@ import {
   getPptxExportLayout,
   getPptxLayout,
   getPresentationResolution,
+  recordPptxExportWarning,
 } from './export-pptx-core'
 import { addElementToPptxSlide } from './export-pptx-renderers'
 import { clearPptxRasterAssetCaches } from './export-pptx-raster'
 import { getSlideNotes } from './slide-notes'
-import { DEFAULT_TOKENS, getPptxElementExportStrategy, mergeTokens } from 'revealjs-shared'
+import {
+  DEFAULT_TOKENS,
+  getPptxElementExportStrategy,
+  mergeTokens,
+  resolveConnectorGeometry,
+  resolveEffectiveSlide,
+} from 'revealjs-shared'
+
+function resolvePptxSlide(sourceSlide, layoutMasters, warnings, slideNumber) {
+  const { slide, warnings: layoutWarnings } = resolveEffectiveSlide(sourceSlide, layoutMasters)
+  if (sourceSlide?.layoutId) {
+    recordPptxExportWarning(warnings, {
+      element: { id: sourceSlide.layoutId, type: 'layout' }, slideNumber,
+      message: `Slide ${slideNumber}: linked layout was flattened for PowerPoint export; native PowerPoint masters are not preserved.`,
+      fallback: 'flattened-elements',
+    })
+  }
+  layoutWarnings.forEach((warning) => warnings.push(`Slide ${slideNumber}: ${warning}`))
+  return slide
+}
 
 function getSafeFilename(title) {
   return `${String(title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.pptx`
@@ -17,6 +37,17 @@ function getSafeFilename(title) {
 
 function requiresServerRaster(element) {
   return getPptxElementExportStrategy(element).mode === 'server-prefetch-raster'
+}
+
+function flattenPptxSlides(slides) {
+  const flattened = []
+  const visit = (slide) => {
+    if (!slide) return
+    flattened.push(slide)
+    ;(slide.children || []).forEach(visit)
+  }
+  ;(slides || []).forEach(visit)
+  return flattened
 }
 
 function hasServerRasterElements(slides) {
@@ -27,7 +58,7 @@ function hasServerRasterElements(slides) {
 }
 
 function hasServerOnlyElements(presentation) {
-  return hasServerRasterElements(presentation?.slides || [])
+  return hasServerRasterElements(flattenPptxSlides(presentation?.slides))
 }
 
 function validateServerRasterElementIds(slides) {
@@ -69,7 +100,7 @@ function getServerOnlyElementIds(slides) {
 function withoutHiddenElements(presentation) {
   return {
     ...presentation,
-    slides: (presentation?.slides || []).map((slide) => ({
+    slides: flattenPptxSlides(presentation?.slides).map(({ children: _children, ...slide }) => ({
       ...slide,
       elements: (slide.elements || []).filter((element) => !(element.hidden || false)),
     })),
@@ -86,7 +117,8 @@ function canUseServerRaster() {
 
 async function fetchComplexElementRasters(presentation) {
   if (!hasServerOnlyElements(presentation)) return {}
-  validateServerRasterElementIds(presentation?.slides || [])
+  const flattenedSlides = flattenPptxSlides(presentation?.slides)
+  validateServerRasterElementIds(flattenedSlides)
   if (!canUseServerRaster()) {
     throw new Error('PPTX export with HTML or LaTeX requires the NavSlides server renderer')
   }
@@ -108,7 +140,7 @@ async function fetchComplexElementRasters(presentation) {
 
   const payload = await response.json()
   const rasters = payload?.rasters || {}
-  const missing = getServerOnlyElementIds(presentation?.slides || []).filter((id) => !rasters[id])
+  const missing = getServerOnlyElementIds(flattenedSlides).filter((id) => !rasters[id])
   if (missing.length) {
     throw new Error(`Server PPTX rasterization missed ${missing.length} required element(s)`)
   }
@@ -126,19 +158,30 @@ async function exportToPptxClient(presentation, rasterOverrides = {}) {
   pptx.layout = 'NAVSLIDES_CUSTOM'
   pptx.title = presentation?.title || 'Presentation'
 
-  for (const [slideIndex, sourceSlide] of (presentation?.slides || []).entries()) {
+  for (const [slideIndex, sourceSlide] of flattenPptxSlides(presentation?.slides).entries()) {
     const slideNumber = slideIndex + 1
+    const source = resolvePptxSlide(sourceSlide, presentation?.layoutMasters, warnings, slideNumber)
     const slide = pptx.addSlide()
     const slideTokens = mergeTokens(
       mergeTokens(DEFAULT_TOKENS, presentation?.designTokens),
-      sourceSlide?.designTokens
+      source?.designTokens
     )
-    await applySlideBackground(slide, sourceSlide.background, resolution, layout, warnings, slideNumber, slideTokens)
+    await applySlideBackground(slide, source.background, resolution, layout, warnings, slideNumber, slideTokens)
 
-    const elements = [...(sourceSlide.elements || [])]
+    const { effectiveLines } = resolveConnectorGeometry(source.elements || [])
+    const elements = [...(source.elements || [])]
       .filter((element) => !(element.hidden || false))
+      .map((element) => (element.id ? effectiveLines.get(element.id) || element : element))
       .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
     for (const element of elements) {
+      if (element.type === 'line' && element.connections) {
+        recordPptxExportWarning(warnings, {
+          element,
+          slideNumber,
+          message: `Slide ${slideNumber}: connector attachment semantics were flattened to resolved line endpoints`,
+          fallback: 'native-line',
+        })
+      }
       await addElementToPptxSlide({
         slide,
         element,
@@ -152,7 +195,7 @@ async function exportToPptxClient(presentation, rasterOverrides = {}) {
       })
     }
 
-    const speakerNotes = getSlideNotes(sourceSlide)
+    const speakerNotes = getSlideNotes(source)
     if (speakerNotes) slide.addNotes(speakerNotes)
   }
 

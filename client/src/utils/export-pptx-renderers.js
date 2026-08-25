@@ -14,16 +14,21 @@ import { resolveClientPptxMedia } from './export-pptx-media'
 import {
   buildPptxRasterImageOptions,
   getPptxMediaSemanticWarning,
+  getPptxImageSemanticWarning,
   getPptxElementExportStrategy,
   hasPptxImageVisualEffects,
   recordPptxTableRotationWarning,
+  normalizeElementAction,
 } from 'revealjs-shared'
 
 const NATIVE_RENDERERS = {
   text: (slide, element, bounds, { designTokens }) =>
     addTextElement(slide, element, bounds, designTokens),
-  image: (slide, element, bounds, { resolution, layout }) =>
-    addImageElement(slide, element, bounds, resolution, layout),
+  image: (slide, element, bounds, { resolution, layout, warnings, slideNumber }) => {
+    const warning = getPptxImageSemanticWarning(element, slideNumber)
+    if (warning) recordPptxExportWarning(warnings, { element, slideNumber, message: warning, fallback: 'native-image-accessibility-limit' })
+    addImageElement(slide, element, bounds, resolution, layout)
+  },
   shape: (slide, element, bounds, { designTokens }) =>
     addShapeElement(slide, element, bounds, designTokens),
   line: (slide, element, bounds, { resolution, layout, designTokens }) =>
@@ -102,6 +107,15 @@ export async function addElementToPptxSlide({
   designTokens,
 }) {
   const bounds = scaleElementBounds(element, resolution, layout)
+  const { action } = normalizeElementAction(element.action)
+  if (action) {
+    recordPptxExportWarning(warnings, {
+      element,
+      slideNumber,
+      message: `Slide ${slideNumber}: ${element.type} action (${action.kind}) is not supported in PPTX and was omitted`,
+      fallback: 'browser-only-element-action',
+    })
+  }
   const rasterData = element?.id ? rasterOverrides[element.id] : null
 
   if (rasterData) {

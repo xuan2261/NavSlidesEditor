@@ -980,11 +980,13 @@ describe('element-renderers safety behavior', () => {
     // iframe path builds scales as a raw template literal (unquoted keys).
     const iframe = renderElement(element, {}, {})
     expect(iframe).toContain('stacked:true')
+    expect(iframe).toContain('animation:false')
 
     // print path JSON-stringifies the options object (quoted keys).
     const print = renderElement(element, {}, { forPrint: true })
     expect(print).toMatch(/"x":\{[^}]*"stacked":true/)
     expect(print).toMatch(/"y":\{[^}]*"stacked":true/)
+    expect(print).toContain('"animation":false')
   })
 
   it('renders an area chart as a filled line (iframe + print)', () => {
@@ -1007,6 +1009,49 @@ describe('element-renderers safety behavior', () => {
     expect(print).toContain('"fill":true')
   })
 
+  it('renders imported chart titles, point colors, legend placement, and linear scatter coordinates', () => {
+    const pie = renderElement({
+      ...base,
+      type: 'chart',
+      chartType: 'pie',
+      chartTitle: 'Mix',
+      legendPosition: 'right',
+      chartData: {
+        labels: ['A', 'B'],
+        datasets: [{ label: 'Mix', data: [40, 60], colors: ['#5DA5DA', '#FAA43A'] }],
+      },
+    }, {}, {})
+    expect(pie).toContain("title:{display:true,text:&quot;Mix&quot;")
+    expect(pie).toContain("legend:{position:'right'")
+    expect(pie).toContain('&quot;backgroundColor&quot;:[&quot;#5DA5DA&quot;,&quot;#FAA43A&quot;]')
+    expect(pie).toContain('&quot;boxWidth&quot;:8')
+
+    const scatter = renderElement({
+      ...base,
+      type: 'chart',
+      chartType: 'line',
+      chartData: { labels: [], datasets: [{ label: 'Observed', data: [8, 23], xValues: [5, 29] }] },
+      _pptxChartMeta: { originalType: 'scatterChart' },
+    }, {}, {})
+    expect(scatter).toContain("type:'scatter'")
+    expect(scatter).toContain("type:'linear'")
+    expect(scatter).toContain('&quot;x&quot;:5,&quot;y&quot;:8')
+    expect(scatter).toContain("suggestedMax:40")
+  })
+
+  it('uses PowerPoint-style zero baselines and compact line legends for imported charts', () => {
+    const importedLine = renderElement({
+      ...base,
+      type: 'chart',
+      chartType: 'line',
+      chartData: { labels: ['A'], datasets: [{ data: [89] }] },
+      _pptxChartMeta: { originalType: 'lineChart' },
+    }, {}, {})
+    expect(importedLine).toContain("y:{beginAtZero:true,")
+    expect(importedLine).toContain('&quot;usePointStyle&quot;:true')
+    expect(importedLine).toContain("suggestedMax:100")
+  })
+
   it('uses background-aware chart fallbacks in present and print output', () => {
     const element = {
       ...base,
@@ -1019,7 +1064,7 @@ describe('element-renderers safety behavior', () => {
     const iframe = renderSlideElements({ ...darkSlide, elements: [element] })
     expect(iframe).toContain("ticks:{color:'#f8fafc'}")
     expect(iframe).toContain("grid:{color:'rgba(248,250,252,0.28)'}")
-    expect(iframe).toContain("legend:{labels:{color:'#f8fafc'")
+    expect(iframe).toContain("legend:{position:'top',labels:{&quot;color&quot;:&quot;#f8fafc&quot;")
 
     const print = renderSlideElements({ ...darkSlide, elements: [element] }, { forPrint: true })
     expect(print).toContain('"color":"#f8fafc"')
@@ -1040,7 +1085,7 @@ describe('element-renderers safety behavior', () => {
 
     expect(html).toContain("ticks:{color:'#facc15'}")
     expect(html).toContain("grid:{color:'rgba(250,204,21,0.4)'}")
-    expect(html).toContain("legend:{labels:{color:'#22c55e'")
+    expect(html).toContain("legend:{position:'top',labels:{&quot;color&quot;:&quot;#22c55e&quot;")
   })
 
   it('does not stack a plain bar chart or fill a plain line chart', () => {
@@ -1106,5 +1151,15 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('Visible marker')
     expect(html).not.toContain('Hidden marker')
     expect(html).not.toContain('hidden-text')
+  })
+
+  it('renders normalized actions as labelled safe activation surfaces and leaves invalid actions inert', () => {
+    const actionElement = { ...base, type: 'shape', action: { kind: 'slide', slideId: 'vertical-child', label: 'Open detail', hotspot: true } }
+    const html = renderElement(actionElement, {}, {})
+    expect(html).toContain('data-ns-action=')
+    expect(html).toContain('aria-label="Open detail"')
+    expect(html).toContain('ns-element-hotspot')
+    expect(renderElement({ ...actionElement, action: { kind: 'url', url: 'javascript:alert(1)' } }, {}, {})).not.toContain('data-ns-action=')
+    expect(renderElement(actionElement, {}, { forPrint: true })).not.toContain('data-ns-action=')
   })
 })

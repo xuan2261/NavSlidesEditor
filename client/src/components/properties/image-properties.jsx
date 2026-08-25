@@ -1,15 +1,19 @@
 import { Select, Input, ColorPicker } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
+import { computeMixedValues } from '../../utils/selection-mixed-values'
 /**
  * Image-specific properties: object fit, brightness, contrast, grayscale, round corners.
  */
 
-export default function ImageProperties({ element, onUpdate }) {
+export default function ImageProperties({ element, onUpdate, elements = [], selectedElementIds = [] }) {
+  const mixed = computeMixedValues(elements, selectedElementIds, ['alt', 'decorative', 'longDescription'])
+  const locked = element.locked === true
   return (
     <div className="mb-2.5">
       <div className="text-[11px] text-text-muted mb-1">Object Fit</div>
       <Select
         data-testid="prop-image-object-fit"
+        aria-label="Image object fit"
         className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2.5"
         value={element.objectFit || 'contain'}
         onChange={(e) => onUpdate({ objectFit: e.target.value })}
@@ -26,6 +30,7 @@ export default function ImageProperties({ element, onUpdate }) {
         </div>
         <input
           data-testid="prop-image-brightness"
+          aria-label="Image brightness"
           type="range"
           className="w-full accent-accent"
           min="0"
@@ -44,6 +49,7 @@ export default function ImageProperties({ element, onUpdate }) {
         </div>
         <input
           data-testid="prop-image-contrast"
+          aria-label="Image contrast"
           type="range"
           className="w-full accent-accent"
           min="0"
@@ -62,6 +68,7 @@ export default function ImageProperties({ element, onUpdate }) {
         </div>
         <input
           data-testid="prop-image-grayscale"
+          aria-label="Image grayscale"
           type="range"
           className="w-full accent-accent"
           min="0"
@@ -80,6 +87,7 @@ export default function ImageProperties({ element, onUpdate }) {
         </div>
         <input
           data-testid="prop-image-saturation"
+          aria-label="Image saturation"
           type="range"
           className="w-full accent-accent"
           min="0"
@@ -98,6 +106,7 @@ export default function ImageProperties({ element, onUpdate }) {
         </div>
         <input
           data-testid="prop-image-border-radius"
+          aria-label="Image corner radius"
           type="range"
           className="w-full accent-accent"
           min="0"
@@ -115,6 +124,7 @@ export default function ImageProperties({ element, onUpdate }) {
           <div className="text-[11px] text-text-muted mb-1">Border Width</div>
           <Input
             data-testid="prop-image-border-width"
+            aria-label="Image border width"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent"
             type="number"
             min="0"
@@ -132,17 +142,30 @@ export default function ImageProperties({ element, onUpdate }) {
           <div className="text-[11px] text-text-muted mb-1">Border Color</div>
           <ColorPicker
             data-testid="prop-image-border-color"
+            aria-label="Image border color"
             value={element.borderColor || '#000000'}
             onChange={(e) => onUpdate({ borderColor: e.target.value })}
             className="w-full h-7 border border-border rounded cursor-pointer"
           />
         </div>
       </div>
+      <div className="border-t border-border pt-2 mt-1 mb-2.5">
+        <div className="text-[11px] text-text-muted mb-1.5 font-medium">Accessibility</div>
+        <label className="flex items-center gap-1.5 mb-2 cursor-pointer">
+          <input aria-label="Decorative image" data-mixed={mixed.decorative?.isMixed ? 'true' : undefined} type="checkbox" checked={element.decorative === true} disabled={locked} onChange={(event) => onUpdate({ decorative: event.target.checked, ...(event.target.checked ? { alt: '', longDescription: '' } : {}) })} className="accent-accent" />
+          <span className="text-xs text-text-secondary">Decorative image</span>
+        </label>
+        <div className="text-[11px] text-text-muted mb-1">Alternative text</div>
+        <Input aria-label="Image alternative text" data-mixed={mixed.alt?.isMixed ? 'true' : undefined} disabled={locked || element.decorative === true} className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs mb-2" value={mixed.alt?.isMixed ? '' : element.alt || ''} placeholder={mixed.alt?.isMixed ? '—' : 'Describe the image'} onChange={(event) => onUpdate({ alt: event.target.value })} />
+        <div className="text-[11px] text-text-muted mb-1">Long description</div>
+        <textarea aria-label="Image long description" data-mixed={mixed.longDescription?.isMixed ? 'true' : undefined} disabled={locked || element.decorative === true} className="w-full min-h-[56px] bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs resize-y" value={mixed.longDescription?.isMixed ? '' : element.longDescription || ''} placeholder={mixed.longDescription?.isMixed ? '—' : 'Optional detailed description'} onChange={(event) => onUpdate({ longDescription: event.target.value })} />
+      </div>
       <div className="border-t border-border pt-2 mt-1">
         <div className="text-[11px] text-text-muted mb-1.5 font-medium">Citation</div>
         <div className="text-[11px] text-text-muted mb-1">Citation Text</div>
         <Input
           data-testid="prop-image-citation-text"
+          aria-label="Image citation text"
           className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2"
           type="text"
           value={element.citationText || ''}
@@ -152,6 +175,7 @@ export default function ImageProperties({ element, onUpdate }) {
         <div className="text-[11px] text-text-muted mb-1">Citation Link</div>
         <Input
           data-testid="prop-image-citation-link"
+          aria-label="Image citation link"
           className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2"
           type="text"
           value={element.citationLink || ''}
@@ -163,6 +187,7 @@ export default function ImageProperties({ element, onUpdate }) {
             <div className="text-[11px] text-text-muted mb-1">Citation Color</div>
             <ColorPicker
               data-testid="prop-image-citation-color"
+              aria-label="Image citation color"
               value={element.citationColor || '#808080'}
               onChange={(e) => onUpdate({ citationColor: e.target.value })}
               className="w-full h-7 border border-border rounded cursor-pointer"
@@ -172,6 +197,7 @@ export default function ImageProperties({ element, onUpdate }) {
             <div className="text-[11px] text-text-muted mb-1">Alignment</div>
             <Select
               data-testid="prop-image-citation-align"
+              aria-label="Image citation alignment"
               className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent"
               value={element.citationAlign || 'left'}
               onChange={(e) => onUpdate({ citationAlign: e.target.value })}

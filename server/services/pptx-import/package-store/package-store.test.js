@@ -209,7 +209,11 @@ describe('package store lifecycle MVP', () => {
 
     const reopened = await openPackageStore({ rootDir })
     expect(reopened.getState().owners.map((owner) => owner.ownerId)).toEqual(['deck-a'])
+    expect(reopened.recoveryActions).not.toContain('quarantined-unpublished-prepared-wal')
+    await reopened.acquireWriter()
     expect(reopened.recoveryActions).toContain('quarantined-unpublished-prepared-wal')
+    await reopened.releaseWriter()
+
   })
 
   it('recovers matrix authority from independently durable high-water state', async () => {
@@ -227,7 +231,9 @@ describe('package store lifecycle MVP', () => {
     const reopened = await openPackageStore({ rootDir })
 
     expect(reopened.getState().matrixAuthorityEpoch).toBe(9)
-    expect(reopened.getState().heads[0].matrixAuthorityEpoch).toBe(2)
+    expect(reopened.getState().heads[0].matrixAuthorityEpoch).toBe(9)
+    expect(Object.values(reopened.getState().heads[0].matrixAuthoritySubjects)
+      .every((subject) => subject.evolutionEpoch === 9)).toBe(true)
     expect(reopened.recoveryActions).toContain('advanced-matrix-authority-high-water')
   })
 
@@ -255,7 +261,10 @@ describe('package store lifecycle MVP', () => {
       expect(reopened.getState().owners.map(({ ownerId }) => ownerId).sort())
         .toEqual(expectedOwners)
       expect(reopened.getState().generation).toBe(expectedOwners.length)
+      if (recoveryAction) expect(reopened.recoveryActions).not.toContain(recoveryAction)
+      await reopened.acquireWriter()
       if (recoveryAction) expect(reopened.recoveryActions).toContain(recoveryAction)
+      await reopened.releaseWriter()
     })
 
   it('rejects an active second writer and stale fencing epochs', async () => {

@@ -2,7 +2,7 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 const { BlobStore } = require('./blob-store')
 const { auditBlobFiles, auditCollection } = require('./collector')
-const { SCHEMA_VERSION, validateJob, validateOwner } = require('./schemas')
+const { RECORD_SCHEMA_VERSION, validateJob, validateOwner } = require('./schemas')
 const { StateStore } = require('./state-store')
 const { WriterLock } = require('./writer-lock')
 const lifecycle = require('./lifecycle')
@@ -33,20 +33,30 @@ async init() {
 getState() {
     return clone(this.metadata.state)
   }
-async acquireWriter() {
+  async acquireWriter() {
     const record = await this.lock.acquire()
     this.fencingEpoch = record.epoch
     try {
       await this.metadata.reload()
       this.recoveryActions = this.metadata.recoveryActions
       await this.assertWriter()
-      return record
+      if (this.metadata.pendingMigration || this.metadata.pendingRootRecovery) {
+        const isMigration = this.metadata.pendingMigration !== null
+        const successor = structuredClone(this.metadata.state)
+        successor.fencingEpoch = this.fencingEpoch
+        await this.metadata.publish(successor, { assertWriter: () => this.assertWriter() })
+        this.metadata.recoveryActions.push(isMigration
+          ? 'published-state-migration-v2'
+          : 'published-recovered-state-v2')
+      }
+      await this.metadata.finalizeWriterRecovery(() => this.assertWriter())
+      return this.fencingEpoch
     } catch (error) {
-      await this.lock.release().catch(() => {})
+      await this.lock.release()
       throw error
     }
   }
-releaseWriter() {
+  releaseWriter() {
     return this.lock.release()
   }
 async reload() {
@@ -137,7 +147,7 @@ async addOwner(revisionId, owner, options) {
       throw new Error('Unknown package revision')
     }
     await this.mutate((next) => {
-      next.owners.push({ schemaVersion: SCHEMA_VERSION, revisionId, ...owner })
+      next.owners.push({ schemaVersion: RECORD_SCHEMA_VERSION, revisionId, ...owner })
     }, options)
   }
 async releaseOwner(owner) {
@@ -182,7 +192,7 @@ importPresentationPackage(bundle, presentationId, options = {}) {
   }
 async putJob(input) {
     const job = validateJob({
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: RECORD_SCHEMA_VERSION,
       updatedAt: new Date().toISOString(),
       ...input,
     })
@@ -192,7 +202,7 @@ async putJob(input) {
       if (job.provisionalOwner) {
         next.leases = next.leases.filter((lease) => lease.jobId !== job.id)
         next.leases.push({
-          schemaVersion: SCHEMA_VERSION,
+          schemaVersion: RECORD_SCHEMA_VERSION,
           jobId: job.id,
           provisional: true,
           ...job.provisionalOwner,

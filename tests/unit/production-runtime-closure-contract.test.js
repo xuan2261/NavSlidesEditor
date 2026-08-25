@@ -12,6 +12,8 @@ const expected = {
   electronBuilder: '26.15.3',
   tiptap: '2.27.2',
   undici: '7.29.0',
+  playwright: '1.62.1',
+  playwrightImage: 'mcr.microsoft.com/playwright:v1.62.1-jammy',
 }
 
 const readText = (...parts) => readFileSync(resolve(root, ...parts), 'utf8').replace(/\r\n/g, '\n')
@@ -32,6 +34,8 @@ describe('production runtime closure contract', () => {
     expect(rootPkg.devDependencies.electron).toBe(expected.electron)
     expect(rootPkg.devDependencies['electron-builder']).toBe(expected.electronBuilder)
     expect(serverPkg.dependencies.undici).toBe(expected.undici)
+    expect(rootPkg.devDependencies['@playwright/test']).toBe(expected.playwright)
+    expect(rootPkg.devDependencies.playwright).toBe(expected.playwright)
     expect(tiptapEntries.length).toBeGreaterThan(0)
     expect(new Set(tiptapEntries.map(([, version]) => version))).toEqual(new Set([expected.tiptap]))
   })
@@ -60,6 +64,11 @@ describe('production runtime closure contract', () => {
     expect(builder).toContain(`electronVersion: '${expected.electron}'`)
     expect(workflows).not.toMatch(/node-version:\s*['"]?20(?:['"]|\s|$)/)
     expect(workflows).toContain(`NODE_VERSION: '${expected.node}'`)
+    const playwrightImages = [
+      ...workflows.matchAll(/image:\s*(mcr\.microsoft\.com\/playwright:[^\s]+)/g),
+    ].map((match) => match[1])
+    expect(playwrightImages.length).toBeGreaterThan(0)
+    expect(new Set(playwrightImages)).toEqual(new Set([expected.playwrightImage]))
   })
 
   it('qualifies the production Docker artifact in the required CI fan-in', () => {

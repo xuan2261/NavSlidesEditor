@@ -9,6 +9,7 @@ import { normalizeTableShape } from '../properties/table-properties-utils'
 import { normalizeRotation } from '../../utils/element-update-fanout'
 import { computeMixedValues } from '../../utils/selection-mixed-values'
 import { handleRibbonKeyboardActivation } from './ribbon-keyboard-activation'
+import ActionControls from '../properties/action-controls'
 
 const OBJECT_FIT_OPTIONS = ['cover', 'contain', 'fill', 'none']
 const CHART_TYPES = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea']
@@ -255,6 +256,9 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
   return (
     <RibbonTabContentRow>
       <ContextualControls selectedElement={selectedElement} onUpdateElement={onUpdateElement} />
+      <RibbonSection label="Action" className="border-r border-border">
+        <ActionControls element={selectedElement} onUpdate={onUpdateElement} presentation={presentation} compact />
+      </RibbonSection>
 
       <RibbonSection label="Position" className="border-r border-border">
         <div className="flex items-center gap-1 h-7">

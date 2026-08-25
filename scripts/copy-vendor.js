@@ -2,6 +2,11 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { build } = require('esbuild')
 const { publishVendorAssets } = require('./vendor-publication')
+const {
+  REVEAL_REQUIRED_VENDOR_PATHS,
+  REVEAL_RUNTIME_VERSION,
+  REVEAL_VENDOR_COPY_SPEC,
+} = require('../shared/src/reveal-runtime-assets')
 
 const rootDir = path.join(__dirname, '..')
 
@@ -15,8 +20,7 @@ function getPackagePath(packagePath) {
 }
 
 const localSpecs = [
-  ['reveal.js/dist', 'reveal.js/dist'],
-  ['reveal.js/plugin', 'reveal.js/plugin'],
+  [REVEAL_VENDOR_COPY_SPEC.sourceLabel, REVEAL_VENDOR_COPY_SPEC.destination],
   ['katex/dist', 'katex/dist'],
   ['chart.js/dist', 'chart.js/dist'],
   ['highlight.js/styles', 'highlight.js/styles'],
@@ -104,7 +108,13 @@ async function main() {
       destination: 'qrcode/qrcode.min.js',
     })
 
-    const manifest = await publishVendorAssets({ rootDir, localItems, remoteItems })
+    const manifest = await publishVendorAssets({
+      rootDir,
+      localItems,
+      remoteItems,
+      requiredPaths: REVEAL_REQUIRED_VENDOR_PATHS,
+      metadata: { runtimes: { revealJs: REVEAL_RUNTIME_VERSION } },
+    })
     console.log(`Vendor assets ready: ${manifest.files.length} files`)
   } finally {
     fs.rmSync(generatedDir, { force: true, recursive: true })

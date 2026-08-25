@@ -2,19 +2,47 @@
  * GamePropertiesQuestionEditor — modal for adding/editing quiz questions.
  * Used inside game-properties.jsx ContentTab.
  */
-import { useEffect, useRef, useState, startTransition } from 'react'
+import { startTransition, useEffect, useId, useRef, useState } from 'react'
 import { X } from 'lucide-react'
+import { useModalFocusTrap } from '../ui/ModalShell'
+import { useEscapeClose } from '../../lib/utils'
 import { clampNumber } from '../../utils/number-input'
+
 
 export function normalizeQuestionNumber(value, min, max, fallback) {
   return Math.round(clampNumber(value, min, max, fallback))
 }
 
-export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, question }) {
+export function GamePropertiesQuestionEditor(props) {
+  if (!props.isOpen) return null
+  return <OpenGamePropertiesQuestionEditor {...props} />
+}
+
+function OpenGamePropertiesQuestionEditor({ onSave, onCancel, question }) {
   const [form, setForm] = useState(() => buildDefaultForm(question))
   const [errors, setErrors] = useState({})
   const firstInputRef = useRef(null)
-  const dialogRef = useRef(null)
+  const { dialogRef, handleFocusTrapKeyDown } = useModalFocusTrap({
+    initialFocusRef: firstInputRef,
+  })
+  const titleId = useId()
+  const questionInputId = useId()
+  const questionErrorId = useId()
+  const optionsErrorId = useId()
+  const timeInputId = useId()
+  const pointsInputId = useId()
+
+  useEscapeClose(onCancel)
+  const handleDialogKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      onCancel()
+      return
+    }
+    handleFocusTrapKeyDown(event)
+  }
+
 
   // Rebuild form when question prop changes
   useEffect(() => {
@@ -22,25 +50,9 @@ export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, questio
       setForm(buildDefaultForm(question))
       setErrors({})
     })
-  }, [question, isOpen])
+  }, [question])
 
-  // Focus first input on open
-  useEffect(() => {
-    if (isOpen) {
-      const timer = setTimeout(() => firstInputRef.current?.focus(), 0)
-      return () => clearTimeout(timer)
-    }
-  }, [isOpen])
 
-  // Escape key closes modal
-  useEffect(() => {
-    if (!isOpen) return
-    const handler = (e) => { if (e.key === 'Escape') onCancel() }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [isOpen, onCancel])
-
-  if (!isOpen) return null
 
   const updateOption = (idx, value) => {
     const newOptions = [...form.options]
@@ -64,25 +76,25 @@ export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, questio
 
   return (
     <div
-      ref={dialogRef}
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="qeditor-title"
+      aria-labelledby={titleId}
+      onKeyDown={handleDialogKeyDown}
       onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel() }}
     >
-      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div ref={dialogRef} className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <h2 id="qeditor-title" className="text-sm font-semibold text-text-primary">
+          <h2 id={titleId} className="text-sm font-semibold text-text-primary">
             {question ? 'Edit Question' : 'Add Question'}
           </h2>
           <button
             onClick={onCancel}
-            aria-label="Close"
+            aria-label="Close question editor"
             className="text-text-muted hover:text-text-primary p-1 rounded transition-colors"
           >
-            <X size={16} />
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
 
@@ -90,10 +102,14 @@ export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, questio
         <div className="px-4 py-3 space-y-3 max-h-[60vh] overflow-y-auto">
           {/* Question text */}
           <div>
-            <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
+            <label htmlFor={questionInputId} className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
               Question <span className="text-red-400">*</span>
             </label>
             <textarea
+              id={questionInputId}
+              aria-label="Question text"
+              aria-invalid={errors.question ? 'true' : undefined}
+              aria-describedby={errors.question ? questionErrorId : undefined}
               ref={firstInputRef}
               value={form.question}
               onChange={e => { setForm(f => ({ ...f, question: e.target.value })); setErrors(er => ({ ...er, question: '' })) }}
@@ -101,7 +117,7 @@ export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, questio
               rows={2}
               className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none resize-y"
             />
-            {errors.question && <p className="text-[11px] text-red-400 mt-0.5">{errors.question}</p>}
+            {errors.question && <p id={questionErrorId} className="text-[11px] text-red-400 mt-0.5">{errors.question}</p>}
           </div>
 
           {/* Options */}
@@ -124,6 +140,9 @@ export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, questio
                     {String.fromCharCode(65 + idx)}
                   </button>
                   <input
+                    aria-label={`Question option ${String.fromCharCode(65 + idx)}`}
+                    aria-invalid={errors.options ? 'true' : undefined}
+                    aria-describedby={errors.options ? optionsErrorId : undefined}
                     type="text"
                     value={opt}
                     onChange={e => { updateOption(idx, e.target.value); setErrors(er => ({ ...er, options: '' })) }}
@@ -133,17 +152,19 @@ export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, questio
                 </div>
               ))}
             </div>
-            {errors.options && <p className="text-[11px] text-red-400 mt-0.5">{errors.options}</p>}
+            {errors.options && <p id={optionsErrorId} className="text-[11px] text-red-400 mt-0.5">{errors.options}</p>}
             <p className="text-[10px] text-text-muted mt-1">Click the letter to mark the correct answer</p>
           </div>
 
           {/* Time & Points */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
+              <label htmlFor={timeInputId} className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
                 Time Limit (s)
               </label>
               <input
+                id={timeInputId}
+                aria-label="Question time limit in seconds"
                 type="number"
                 min={5}
                 max={300}
@@ -156,10 +177,12 @@ export function GamePropertiesQuestionEditor({ isOpen, onSave, onCancel, questio
               />
             </div>
             <div>
-              <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
+              <label htmlFor={pointsInputId} className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
                 Points
               </label>
               <input
+                id={pointsInputId}
+                aria-label="Question points"
                 type="number"
                 min={1}
                 max={1000}

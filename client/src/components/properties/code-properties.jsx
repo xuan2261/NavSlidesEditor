@@ -76,6 +76,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
           <div className="text-[11px] text-text-muted mb-0.5">Language</div>
           <Select
             data-testid="prop-code-language"
+            aria-label="Code language"
             className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             value={element.language || 'plaintext'}
             onChange={(e) => onUpdate({ language: e.target.value })}
@@ -91,6 +92,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
           <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
           <Input
             data-testid="prop-code-font-size"
+            aria-label="Code font size"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             min="8"
@@ -111,6 +113,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
         </div>
         <input
           data-testid="prop-code-border-radius"
+          aria-label="Code corner radius"
           type="range"
           className="w-full accent-accent"
           min="0"
@@ -140,12 +143,13 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
             <div className="text-[11px] text-text-muted mb-0.5">Default Step</div>
             <Select
               data-testid="prop-code-walkthrough-default"
+              aria-label="Default walkthrough step"
               className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs"
               value={defaultStepIndex}
               onChange={(e) => onUpdate({ defaultStepIndex: Number(e.target.value) || 0 })}
             >
               {steps.map((step, index) => (
-                <option key={index} value={index}>
+                <option key={step.id || `${element.id || 'code'}-option-${index}`} value={index}>
                   {step.label || `Step ${index + 1}`}
                 </option>
               ))}
@@ -154,10 +158,11 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
         )}
         <div className="space-y-1.5">
           {steps.map((step, index) => (
-            <div key={index} className="rounded border border-border bg-hover p-2 space-y-1">
+            <div key={step.id || `${element.id || 'code'}-step-${index}`} className="rounded border border-border bg-hover p-2 space-y-1">
               <div className="flex items-center gap-1">
                 <Input
                   data-testid={`prop-code-walkthrough-label-${index}`}
+                  aria-label={`Walkthrough step ${index + 1} label`}
                   className="flex-1 px-1.5 py-1 text-[11px]"
                   value={step.label || ''}
                   onChange={(e) => updateStep(index, { label: e.target.value })}
@@ -165,6 +170,8 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
                 />
                 <button
                   data-testid={`prop-code-walkthrough-remove-${index}`}
+                  type="button"
+                  aria-label={`Remove walkthrough step ${index + 1}`}
                   className="text-[10px] text-text-muted hover:text-red-400 px-1"
                   onClick={() => removeStep(index)}
                 >
@@ -174,6 +181,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
               <div className="grid grid-cols-2 gap-1">
                 <Input
                   data-testid={`prop-code-walkthrough-start-${index}`}
+                  aria-label={`Walkthrough step ${index + 1} start line`}
                   className="px-1.5 py-1 text-[11px]"
                   type="number"
                   min="1"
@@ -182,6 +190,7 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
                 />
                 <Input
                   data-testid={`prop-code-walkthrough-end-${index}`}
+                  aria-label={`Walkthrough step ${index + 1} end line`}
                   className="px-1.5 py-1 text-[11px]"
                   type="number"
                   min="1"

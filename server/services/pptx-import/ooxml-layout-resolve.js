@@ -42,8 +42,94 @@ async function findSlideLayoutPath(zip, slideIndex) {
  * Build placeholder text elements from layout when slide has no text.
  * Applies theme major font to title, minor to body when provided.
  */
+function colorFromXml(xml, fallback = null, scheme = {}) {
+  const source = String(xml || '')
+  const rgb = source.match(/<a:solidFill>[\s\S]*?<a:srgbClr[^>]*\bval="([0-9a-f]{6,8})"/i)?.[1]
+  if (rgb) return `#${rgb.slice(0, 6).toUpperCase()}`
+  const schemeKey = source.match(/<a:solidFill>[\s\S]*?<a:schemeClr[^>]*\bval="([^"]+)"/i)?.[1]
+  return schemeKey && scheme[schemeKey] ? scheme[schemeKey] : fallback
+}
+
+function layoutDecoration(node, zIndex, context = {}) {
+  if (node?.ph || node?.kind !== 'shape' || !node.xfrm) return null
+  const scheme = context.scheme || {}
+  const xml = String(node.sourceXml || '')
+  if ([...xml.matchAll(/<a:t[^>]*>([\s\S]*?)<\/a:t>/gi)].some((match) => match[1].trim())) return null
+  const preset = xml.match(/<a:prstGeom[^>]*\bprst="([^"]+)"/i)?.[1]?.toLowerCase()
+  const x = Number(node.xfrm.x) || 0
+  const y = Number(node.xfrm.y) || 0
+  const width = Math.max(0, Number(node.xfrm.cx) || 0)
+  const height = Math.max(0, Number(node.xfrm.cy) || 0)
+  const base = {
+    id: `layout-decoration-${node.id || zIndex}`,
+    x,
+    y,
+    width,
+    height,
+    zIndex,
+    locked: true,
+    _pptxSource: {
+      nodeId: `layout:${context.layoutPath || 'unknown'}:${node.id || zIndex}`,
+      kind: node.kind,
+      slideIndex: context.slideIndex ?? 0,
+      fromLayoutDecoration: true,
+      authoritative: false,
+    },
+  }
+  if (preset === 'rect') {
+    const fill = colorFromXml(xml, null, scheme)
+    if (!fill) return null
+    return {
+      ...base,
+      type: 'shape',
+      shape: 'rect',
+      fill,
+      stroke: 'transparent',
+      strokeWidth: 0,
+    }
+  }
+  if (preset === 'line') {
+    const stroke = colorFromXml(xml, null, scheme)
+    if (!stroke) return null
+    const lineWidthEmu = Number(xml.match(/<a:ln[^>]*\bw="(\d+)"/i)?.[1])
+    return {
+      ...base,
+      type: 'line',
+      stroke,
+      strokeWidth: Number.isFinite(lineWidthEmu) ? Math.max(1, lineWidthEmu / 12700) : 1,
+    }
+  }
+  return null
+}
+
+function sameDecoration(left, right) {
+  const close = (a, b) => Math.abs((Number(a) || 0) - (Number(b) || 0)) <= 1
+  return left.type === right.type && close(left.x, right.x) && close(left.y, right.y) &&
+    close(left.width, right.width) && close(left.height, right.height)
+}
+
 async function resolveLayoutFromZip(slide, zip, options = {}) {
   const elements = [...(slide?.elements || [])]
+  if (!zip) return { elements, injected: 0, decorativeInjected: 0, layoutPath: null }
+
+  const slideIndex = options.slideIndex ?? 0
+  const layoutPath = await findSlideLayoutPath(zip, slideIndex)
+  if (!layoutPath) return { elements, injected: 0, decorativeInjected: 0, layoutPath: null }
+
+  const layoutXml = await readZipText(zip, layoutPath)
+  if (!layoutXml) return { elements, injected: 0, decorativeInjected: 0, layoutPath }
+
+  const nodes = parseSpTree(layoutXml)
+  const decorations = nodes
+    .map((node, index) => layoutDecoration(node, index + 1, {
+      scheme: options.scheme,
+      slideIndex,
+      layoutPath,
+    }))
+    .filter(Boolean)
+    .filter((candidate) => !elements.some((element) => sameDecoration(element, candidate)))
+  if (decorations.length) elements.unshift(...decorations)
+
   const hasText = elements.some(
     (el) =>
       (el?.type === 'text' || el?.type === 'shape') &&
@@ -51,16 +137,10 @@ async function resolveLayoutFromZip(slide, zip, options = {}) {
         .replace(/<[^>]+>/g, '')
         .trim().length > 0
   )
-  if (hasText || !zip) return { elements, injected: 0, layoutPath: null }
+  if (hasText) {
+    return { elements, injected: 0, decorativeInjected: decorations.length, layoutPath }
+  }
 
-  const slideIndex = options.slideIndex ?? 0
-  const layoutPath = await findSlideLayoutPath(zip, slideIndex)
-  if (!layoutPath) return { elements, injected: 0, layoutPath: null }
-
-  const layoutXml = await readZipText(zip, layoutPath)
-  if (!layoutXml) return { elements, injected: 0, layoutPath }
-
-  const nodes = parseSpTree(layoutXml)
   const fonts = options.fonts || {}
   let injected = 0
   for (const node of nodes) {
@@ -95,7 +175,7 @@ async function resolveLayoutFromZip(slide, zip, options = {}) {
     })
     injected += 1
   }
-  return { elements, injected, layoutPath }
+  return { elements, injected, decorativeInjected: decorations.length, layoutPath }
 }
 
 module.exports = {

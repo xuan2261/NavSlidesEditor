@@ -2,8 +2,8 @@ import { useRevealPreviewFrame } from './use-reveal-preview-frame'
 import { render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-function Harness({ html, frameKey }) {
-  const { iframeRef } = useRevealPreviewFrame(html, null, frameKey)
+function Harness({ html, frameKey, state = null }) {
+  const { iframeRef } = useRevealPreviewFrame(html, state, frameKey)
   return <iframe ref={iframeRef} title="preview" />
 }
 
@@ -40,5 +40,42 @@ describe('useRevealPreviewFrame timer ownership', () => {
 
     expect(clearIntervalSpy).toHaveBeenCalledWith(intervalId)
     expect(clearTimeoutSpy).toHaveBeenCalledWith(timeoutId)
+  })
+
+  it('configures and navigates horizontal, vertical, and fragment state after Reveal is ready', () => {
+    vi.useFakeTimers()
+    const deck = {
+      isReady: vi.fn(() => true),
+      configure: vi.fn(),
+      slide: vi.fn(),
+    }
+    const view = render(
+      <Harness
+        html="<p>Reveal 6</p>"
+        frameKey={1}
+        state={{ slideIndex: 2, verticalIndex: 1, fragmentIndex: 3 }}
+      />
+    )
+    const iframe = view.getByTitle('preview')
+    Object.defineProperty(iframe, 'contentWindow', {
+      configurable: true,
+      value: { Reveal: deck, document: { getElementById: vi.fn(() => null) } },
+    })
+
+    iframe.onload()
+    vi.advanceTimersByTime(100)
+
+    expect(deck.configure).toHaveBeenCalledTimes(1)
+    expect(deck.slide).toHaveBeenCalledWith(2, 1, 3)
+
+    view.rerender(
+      <Harness
+        html="<p>Reveal 6</p>"
+        frameKey={1}
+        state={{ slideIndex: 4, verticalIndex: 2, fragmentIndex: 0 }}
+      />
+    )
+    expect(deck.slide).toHaveBeenLastCalledWith(4, 2, 0)
+    view.unmount()
   })
 })

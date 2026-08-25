@@ -318,6 +318,14 @@ function validateMatrixAuthoritySubjects(subjects, matrix = CANONICAL_FEATURE_MA
       reasons: Object.freeze(['missing-matrix-authority-subjects']),
     })
   }
+  const subjectKeys = ownKeys(subjects)
+  if (subjectKeys.length !== MATRIX_AUTHORITY_TYPES.length ||
+    subjectKeys.some((key) => !MATRIX_AUTHORITY_TYPES.includes(key))) {
+    return Object.freeze({
+      authorized: false,
+      reasons: Object.freeze(['invalid-matrix-authority-subjects']),
+    })
+  }
   const reasons = []
   for (const type of MATRIX_AUTHORITY_TYPES) {
     const verdict = validateMatrixAuthoritySubject(ownData(subjects, type), matrix, evolutionEpoch)

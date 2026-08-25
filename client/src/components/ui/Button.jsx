@@ -3,7 +3,7 @@ import { cn } from '../../lib/utils'
 
 export function buttonVariants({ variant = 'primary', className = '' }) {
   const baseClasses =
-    'inline-flex items-center justify-center gap-[6px] rounded-md px-[14px] py-[7px] text-[13px] font-medium transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-150 ease-out cursor-pointer active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-secondary disabled:opacity-50 disabled:pointer-events-none'
+    'ui-coarse-target inline-flex items-center justify-center gap-[6px] rounded-md px-[14px] py-[7px] text-[13px] font-medium transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-150 ease-out cursor-pointer touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-secondary disabled:opacity-50 disabled:pointer-events-none'
 
   const variants = {
     primary:
@@ -13,7 +13,7 @@ export function buttonVariants({ variant = 'primary', className = '' }) {
     danger: 'min-h-8 border border-transparent bg-danger text-white hover:bg-danger-hover',
     ghost:
       'min-h-0 border border-transparent text-text-secondary px-2 py-1 rounded hover:bg-hover hover:text-text-primary active:bg-active active:text-text-primary',
-    icon: 'w-8 h-8 min-h-8 !p-0 shrink-0 inline-flex items-center justify-center rounded-md border border-transparent text-text-secondary hover:bg-hover hover:text-text-primary',
+    icon: 'ui-coarse-target-square w-8 h-8 min-h-8 !p-0 shrink-0 inline-flex items-center justify-center rounded-md border border-transparent text-text-secondary hover:bg-hover hover:text-text-primary',
     ribbon:
       'w-auto min-w-8 h-8 min-h-8 px-2 py-0 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-md border border-transparent text-[11px] text-text-secondary hover:bg-hover hover:text-text-primary',
   }

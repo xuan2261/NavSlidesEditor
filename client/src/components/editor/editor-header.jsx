@@ -10,7 +10,7 @@ export default function EditorHeader({
   ribbonHeader,
 }) {
   return (
-    <div className="relative z-[200] flex items-center gap-x-3 px-4 py-1.5 min-h-[44px] bg-secondary border-b border-border shrink-0">
+    <div className="relative z-[200] flex min-w-0 items-center gap-x-2 overflow-hidden px-2 py-1.5 min-h-[44px] bg-secondary border-b border-border shrink-0 lg:gap-x-3 lg:px-4">
       <Button
         variant="ghost"
         className="flex items-center gap-1.5 text-text-secondary text-[13px] px-2.5 py-1.5 rounded-sm transition-colors hover:bg-hover hover:text-text-primary"
@@ -25,7 +25,7 @@ export default function EditorHeader({
         </span>
       )}
       <Input
-        className="w-[150px] sm:w-[200px] shrink-0"
+        className="w-[120px] shrink-0 lg:w-[200px]"
         value={title}
         onChange={onTitleChange}
         placeholder={isTemplate ? 'Untitled Template' : 'Untitled Presentation'}

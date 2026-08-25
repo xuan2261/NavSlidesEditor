@@ -136,9 +136,16 @@ export function CropOverlay({
           onDoubleClick={(e) => e.stopPropagation()}
         />
       ))}
-      <div style={cropCommitStyle} onPointerDown={(e) => e.stopPropagation()} onClick={onCommit}>
+      <button
+        type="button"
+        data-testid="crop-apply"
+        aria-label="Apply crop"
+        style={{ ...cropCommitStyle, border: 'none' }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={onCommit}
+      >
         Apply ↵
-      </div>
+      </button>
     </div>
   )
 }

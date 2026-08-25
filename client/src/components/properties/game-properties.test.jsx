@@ -91,8 +91,8 @@ describe('GameProperties game subtype persistence', () => {
       <GameProperties element={makeElement('name-picker')} onUpdate={vi.fn()} onDelete={() => {}} />
     )
 
-    expect(screen.queryByRole('button', { name: 'Scoring' })).toBeNull()
-    expect(screen.getByRole('button', { name: 'Display' })).toBeTruthy()
+    expect(screen.queryByRole('tab', { name: 'Scoring' })).toBeNull()
+    expect(screen.getByRole('tab', { name: 'Display' })).toBeTruthy()
 
     rerender(
       <GameProperties element={makeElement('relay-race')} onUpdate={vi.fn()} onDelete={() => {}} />
@@ -200,7 +200,7 @@ describe('GameProperties game subtype persistence', () => {
         onDelete={() => {}}
       />
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Display' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Display' }))
     expect(screen.getByRole('checkbox', { name: 'Confetti animation' }).checked).toBe(false)
     unmount()
 
@@ -211,7 +211,7 @@ describe('GameProperties game subtype persistence', () => {
         onDelete={() => {}}
       />
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Display' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Display' }))
     expect(screen.getByRole('checkbox', { name: 'Show timer' }).checked).toBe(false)
   })
 
@@ -228,7 +228,7 @@ describe('GameProperties game subtype persistence', () => {
       />
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Display' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Display' }))
     const confetti = screen.getByRole('checkbox', { name: 'Confetti animation' })
     expect(confetti.checked).toBe(false)
     fireEvent.click(confetti)

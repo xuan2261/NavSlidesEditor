@@ -1,5 +1,6 @@
 import { ELEMENT_DEFAULTS, DEFAULT_POSITIONS } from '../data/element-defaults.js'
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../data/slide-constants.js'
+import { normalizeElementAction, normalizeLineElement } from 'revealjs-shared'
 
 /** @typedef {import('../../../shared/src/types/presentation').ElementType} ElementType */
 /** @typedef {import('../../../shared/src/types/presentation').BaseElement} BaseElement */
@@ -22,12 +23,16 @@ export function createElement(type, overrides = {}) {
   if (x === 'center') x = (CANVAS_WIDTH - (overrides.width || defaults.width)) / 2
   if (y === 'center') y = (CANVAS_HEIGHT - (overrides.height || defaults.height)) / 2
 
-  return {
+  const { action } = normalizeElementAction(overrides.action)
+  const { action: _ignoredAction, ...safeOverrides } = overrides
+  const element = {
     id: crypto.randomUUID(),
     type,
     x,
     y,
     ...defaults,
-    ...overrides,
+    ...safeOverrides,
+    ...(overrides.action === undefined ? {} : { action: action || overrides.action }),
   }
+  return type === 'line' ? normalizeLineElement(element) : element
 }

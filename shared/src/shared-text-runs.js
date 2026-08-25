@@ -1,4 +1,5 @@
 const { DEFAULT_TEXT_COLOR, normalizeCssColor } = require('./shared-color-utils')
+const { isSafeHref } = require('./content-safety')
 const {
   cssPxToPptPt,
   decodeHtmlEntities,
@@ -20,7 +21,7 @@ function buildRunOptions(style) {
   if (style.fontFace) options.fontFace = style.fontFace
   if (style.fontSize) options.fontSize = cssPxToPptPt(style.fontSize)
   if (style.charSpacing) options.charSpacing = cssPxToPptPt(style.charSpacing)
-  if (style.link) options.hyperlink = { url: style.link }
+  if (style.link && isSafeHref(style.link)) options.hyperlink = { url: style.link }
   if (style.color) {
     const normalized = normalizeCssColor(style.color, DEFAULT_TEXT_COLOR)
     options.color = normalized.color

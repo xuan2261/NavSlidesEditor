@@ -4,18 +4,29 @@ const os = require('node:os')
 const path = require('node:path')
 const { writeDurable } = require('./durable-fs')
 
-const HELD_MESSAGE = 'Package store writer lock is held; stale reclaim requires proven owner absence'
+const HELD_MESSAGE =
+  'Package store writer lock is held; stale reclaim requires proven owner absence'
+const PROCESS_INSTANCE_ID = crypto.randomUUID()
 
 /**
- * A lock keeps its claim while its owner could still be running. Only ESRCH
- * proves the owner is gone: EPERM means it is alive under another user, and a
- * record written by a different host cannot be probed at all. Anything short of
- * proof — including an unreadable record — leaves the lock in place.
+ * A lock keeps its claim while its owner could still be running. ESRCH proves
+ * the owner is gone. A reused PID is also safe to reclaim when it is our own
+ * PID but the durable process-instance nonce differs: two live processes on
+ * one host cannot have the same PID, so the recorded incarnation has ended.
+ * EPERM, foreign-host records, legacy same-PID records, and unreadable records
+ * prove nothing and therefore keep the lock in place.
  */
 function ownerIsProvablyGone(record) {
   if (!record || record.host !== os.hostname()) return false
   const pid = Number(record.pid)
   if (!Number.isInteger(pid) || pid <= 0) return false
+  if (
+    pid === process.pid &&
+    typeof record.processInstanceId === 'string' &&
+    record.processInstanceId.length > 0 &&
+    record.processInstanceId !== PROCESS_INSTANCE_ID
+  )
+    return true
   try {
     process.kill(pid, 0)
     return false
@@ -51,8 +62,9 @@ class WriterLock {
    */
   async claim() {
     const record = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       nonce: crypto.randomUUID(),
+      processInstanceId: PROCESS_INSTANCE_ID,
       host: os.hostname(),
       pid: process.pid,
       acquiredAt: new Date().toISOString(),
@@ -100,7 +112,7 @@ class WriterLock {
     if (reclaimed) {
       console.warn(
         `[package-store] reclaimed writer lock abandoned by pid ${reclaimed.pid} ` +
-        `at ${reclaimed.acquiredAt}; fencing epoch ${reclaimed.epoch} -> ${record.epoch}`
+          `at ${reclaimed.acquiredAt}; fencing epoch ${reclaimed.epoch} -> ${record.epoch}`
       )
     }
     await writeDurable(this.epochPath, JSON.stringify({ schemaVersion: 1, epoch: record.epoch }))

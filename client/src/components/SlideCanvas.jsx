@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import CanvasGridOverlay from './canvas/canvas-grid-overlay'
 import CanvasRulers from './canvas/canvas-rulers'
 import CanvasFooterOverlay from './canvas/canvas-footer-overlay-with-section-and-page-number'
@@ -19,10 +19,12 @@ import useCanvasPointerInteraction from './canvas/use-canvas-pointer-interaction
 import useCanvasRubberBandSelection from './canvas/use-canvas-rubber-band-drag-selection'
 import CanvasElement from './canvas/canvas-element-wrapper'
 import { cn } from '../lib/utils'
+import { isInteractiveKeyboardTarget } from '../utils/interactive-keyboard-target'
 import {
   DEFAULT_TOKENS,
   mergeTokens,
   resolveChartBackground,
+  resolveConnectorGeometry,
   tokensToStyleObject,
 } from 'revealjs-shared'
 import { Lock } from 'lucide-react'
@@ -109,6 +111,8 @@ export default function SlideCanvas({
   onPaste,
   onDuplicate,
   onBlockedAction,
+  masterEdit = false,
+  safeArea,
 }) {
   const SLIDE_W = resolution?.width || 960
   const SLIDE_H = resolution?.height || 540
@@ -268,7 +272,7 @@ export default function SlideCanvas({
         }
         return
       }
-      const tag = document.activeElement?.tagName
+      const shortcutTargetOwnsKeyboard = isInteractiveKeyboardTarget(document.activeElement)
       if (editingElementId) {
         if (e.key === 'Escape') {
           onStopEdit()
@@ -287,8 +291,7 @@ export default function SlideCanvas({
       if (selectedElementIds.length > 0) {
         if (
           (e.key === 'Delete' || e.key === 'Backspace') &&
-          tag !== 'INPUT' &&
-          tag !== 'TEXTAREA' &&
+          !shortcutTargetOwnsKeyboard &&
           !slideRef.current?.locked
         ) {
           onDeleteSelectedElements()
@@ -299,9 +302,9 @@ export default function SlideCanvas({
           e.preventDefault()
         }
         // ── Clipboard shortcuts — delegated to command callbacks ────────────
-        // Skip clipboard shortcuts when focus is inside a textarea or input
-        // (e.g. the HTML editor modal, code editor, etc.)
-        if ((e.ctrlKey || e.metaKey) && tag !== 'TEXTAREA' && tag !== 'INPUT') {
+        // Focused controls, contenteditable regions, dialogs/popovers, and
+        // media controls own clipboard keystrokes.
+        if ((e.ctrlKey || e.metaKey) && !shortcutTargetOwnsKeyboard) {
           if (e.key === 'c' || e.key === 'C') {
             onCopy?.()
             e.preventDefault()
@@ -327,8 +330,7 @@ export default function SlideCanvas({
         (e.ctrlKey || e.metaKey) &&
         (e.key === 'v' || e.key === 'V') &&
         selectedElementIds.length === 0 &&
-        tag !== 'TEXTAREA' &&
-        tag !== 'INPUT' &&
+        !shortcutTargetOwnsKeyboard &&
         !slideRef.current?.locked
       ) {
         onPaste?.()
@@ -367,10 +369,14 @@ export default function SlideCanvas({
     setContextMenu(null)
   }
 
+  useEffect(() => {
+    if (slide?.locked) setCropMode(null)
+  }, [slide?.locked])
+
   const commitCrop = useCallback(() => {
     if (!cropMode) return
     const element = slide?.elements?.find((el) => el.id === cropMode.elementId)
-    if (!element || element.locked) return
+    if (!element || element.locked || slide?.locked) return
     const { x: cx, y: cy } = cropMode
 
     // Pixel crop amounts relative to current element box
@@ -435,8 +441,17 @@ export default function SlideCanvas({
   // 'auto' elements resolve to the historical hex out-of-box; frozen-hex
   // content ignores them harmlessly.
   const resolvedTokens = mergeTokens(mergeTokens(DEFAULT_TOKENS, designTokens), slide?.designTokens)
-  const chartFallbackColor = slide?.background?.type === 'fx' ? '#0d0221' : resolvedTokens.colors?.bg
+  const chartFallbackColor =
+    slide?.background?.type === 'fx' ? '#0d0221' : resolvedTokens.colors?.bg
   const chartBackground = resolveChartBackground(slide?.background, chartFallbackColor)
+  const renderElements = useMemo(() => {
+    const previewed = (slide?.elements || []).map((element) => ({
+      ...element,
+      ...(elementPreview[element.id] || {}),
+    }))
+    const { effectiveLines } = resolveConnectorGeometry(previewed)
+    return previewed.map((element) => effectiveLines.get(element.id) || element)
+  }, [elementPreview, slide?.elements])
 
   const canvasStyle = {
     width: SLIDE_W,
@@ -520,15 +535,27 @@ export default function SlideCanvas({
 
         {/* Grid overlay */}
         <CanvasGridOverlay showGrid={showGrid} gridSize={gridSize} />
+        {masterEdit && safeArea && <div aria-label="Master safe area guide" className="absolute pointer-events-none border border-dashed border-amber-400" style={{ left: safeArea.x, top: safeArea.y, width: safeArea.width, height: safeArea.height, zIndex: 996 }}><span className="absolute -top-5 left-0 whitespace-nowrap text-xs text-amber-300">Safe area guide — content outside may be cropped</span></div>}
+
 
         {/* Persistent guide lines */}
         {persistentGuides.map((guide, i) => (
           <div
             key={`pg${i}`}
+            role="button"
+            tabIndex={0}
+            aria-label={`Remove ${guide.axis === 'x' ? 'vertical' : 'horizontal'} guide at ${guide.position} pixels`}
             data-testid={`persistent-guide-${guide.axis}`}
+            data-guide-index={i}
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             style={getPersistentGuideStyle(guide, SLIDE_W, SLIDE_H)}
             onDoubleClick={() => onRemoveGuide?.(i)}
-            title="Double-click to remove guide"
+            onKeyDown={(event) => {
+              if (!['Enter', ' ', 'Delete', 'Backspace'].includes(event.key)) return
+              event.preventDefault()
+              onRemoveGuide?.(i)
+            }}
+            title="Double-click or press Enter/Delete to remove guide"
           />
         ))}
 
@@ -559,112 +586,119 @@ export default function SlideCanvas({
           />
         )}
 
-        {slide?.elements
-          ?.filter((el) => !(el.hidden || false)) // hide elements with hidden:true
+        {renderElements
+          .filter((el) => !(el.hidden || false)) // hide elements with hidden:true
           .slice()
           .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
           .map((element) => {
-            const previewedElement = { ...element, ...(elementPreview[element.id] || {}) }
+            const fixedMasterElement = !masterEdit && String(element.id || '').startsWith('layout-fixed:')
+            const previewedElement = masterEdit ? { ...element, locked: false } : element
             return (
-            <CanvasElement
-              key={element.id}
-              element={previewedElement}
-              isSelected={selectedElementIds.includes(element.id)}
-              selectedElementCount={selectedElementIds.length}
-              isEditing={editingElementId === element.id}
-              isCropping={cropMode?.elementId === element.id}
-              cropState={cropMode?.elementId === element.id ? cropMode : null}
-              isDragging={draggingRef.current?.elementId === element.id}
-              editor={editor}
-              iconPaths={iconPaths}
-              slideBackground={chartBackground}
-              slideWidth={SLIDE_W}
-              slideHeight={SLIDE_H}
-              onPointerDown={(e, type, handle) => {
-                if (cropMode || editingElementId === element.id || pinchActiveRef.current) return
-                if (element.locked && type === 'move') return
-                e.stopPropagation()
-                const dragIds = resolvePointerDownSelection({
-                  activeSlide: slide,
-                  elementId: element.id,
-                  currentSelectionIds: selectedElementIdsRef.current,
-                  shiftKey: e.shiftKey,
-                  type,
-                })
-                if (!startElementDrag(e, element.id, type, handle, slide, scale, dragIds)) return
-                if (dragIds !== selectedElementIdsRef.current) {
-                  selectedElementIdsRef.current = dragIds
-                  onToggleSelectElement(element.id, false)
-                }
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-                if (suppressCanvasClickRef.current) {
-                  suppressCanvasClickRef.current = false
-                  return
-                }
-                if (!cropMode && editingElementId !== element.id) {
-                  if (
-                    selectedElementIdsRef.current.includes(element.id) &&
-                    element.type === 'table' &&
-                    !e.shiftKey
-                  ) {
-                    onStartEdit(element.id)
-                  } else {
-                    onToggleSelectElement(element.id, e.shiftKey)
+              <CanvasElement
+                key={element.id}
+                element={previewedElement}
+                isSelected={selectedElementIds.includes(element.id)}
+                selectedElementCount={selectedElementIds.length}
+                isEditing={editingElementId === element.id}
+                isCropping={cropMode?.elementId === element.id}
+                cropState={cropMode?.elementId === element.id ? cropMode : null}
+                isDragging={draggingRef.current?.elementId === element.id}
+                slideLocked={Boolean(slide?.locked)}
+                editor={editor}
+                iconPaths={iconPaths}
+                slideBackground={chartBackground}
+                slideWidth={SLIDE_W}
+                slideHeight={SLIDE_H}
+                onPointerDown={(e, type, handle) => {
+                  if (fixedMasterElement) return
+                  if (cropMode || editingElementId === element.id || pinchActiveRef.current) return
+                  if (element.locked && !masterEdit && type === 'move') return
+                  e.stopPropagation()
+                  const dragIds = resolvePointerDownSelection({
+                    activeSlide: slide,
+                    elementId: element.id,
+                    currentSelectionIds: selectedElementIdsRef.current,
+                    shiftKey: e.shiftKey,
+                    type,
+                  })
+                  if (!startElementDrag(e, element.id, type, handle, slide, scale, dragIds)) return
+                  if (dragIds !== selectedElementIdsRef.current) {
+                    selectedElementIdsRef.current = dragIds
+                    onToggleSelectElement(element.id, false)
                   }
-                }
-              }}
-              onDoubleClick={(e) => {
-                e.stopPropagation()
-                if (element.type === 'text' && editingElementId !== element.id)
-                  onStartEdit(element.id)
-                else if (element.type === 'table' && editingElementId !== element.id)
-                  onStartEdit(element.id)
-                else if (element.type === 'html') onOpenHtmlEditor?.(element.id)
-                else if (element.type === 'code') onOpenCodeEditor?.(element.id)
-                else if (element.type === 'latex') onOpenLatexEditor?.(element.id)
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                const contextSelectionIds = selectedElementIdsRef.current.includes(element.id)
-                  ? selectedElementIdsRef.current
-                  : expandSelectionIdsForGroups(slide, [element.id])
-                if (!selectedElementIdsRef.current.includes(element.id)) {
-                  selectedElementIdsRef.current = contextSelectionIds
-                  onToggleSelectElement(element.id, false)
-                }
-                setContextMenu({
-                  elementId: element.id,
-                  elementType: element.type,
-                  contextSelectionIds,
-                  x: e.clientX,
-                  y: e.clientY,
-                })
-              }}
-              onStopEdit={onStopEdit}
-              onCropHandleDown={(handle, clientX, clientY, pointerId, captureTarget) => {
-                if (pinchActiveRef.current) return
-                const el = slide?.elements?.find((item) => item.id === element.id)
-                if (!el) return
-                setCropDrag(
-                  handle,
-                  clientX,
-                  clientY,
-                  { x: cropMode.x, y: cropMode.y, w: cropMode.w, h: cropMode.h },
-                  el.width,
-                  el.height,
-                  el.rotation || 0,
-                  pointerId,
-                  captureTarget
-                )
-              }}
-              onCommitCrop={commitCrop}
-              onUpdateElement={onUpdateElement}
-              onDeleteElement={onDeleteElement}
-              onStartEdit={onStartEdit}
-            />
+                }}
+                onClick={(e) => {
+                  if (fixedMasterElement) return
+                  e.stopPropagation()
+                  if (suppressCanvasClickRef.current) {
+                    suppressCanvasClickRef.current = false
+                    return
+                  }
+                  if (!cropMode && editingElementId !== element.id) {
+                    if (
+                      selectedElementIdsRef.current.includes(element.id) &&
+                      element.type === 'table' &&
+                      !e.shiftKey
+                    ) {
+                      onStartEdit(element.id)
+                    } else {
+                      onToggleSelectElement(element.id, e.shiftKey)
+                    }
+                  }
+                }}
+                onDoubleClick={(e) => {
+                  if (fixedMasterElement) return
+                  if (slide?.locked) return
+                  e.stopPropagation()
+                  if (element.type === 'text' && editingElementId !== element.id)
+                    onStartEdit(element.id)
+                  else if (element.type === 'table' && editingElementId !== element.id)
+                    onStartEdit(element.id)
+                  else if (element.type === 'html') onOpenHtmlEditor?.(element.id)
+                  else if (element.type === 'code') onOpenCodeEditor?.(element.id)
+                  else if (element.type === 'latex') onOpenLatexEditor?.(element.id)
+                }}
+                onContextMenu={(e) => {
+                  if (fixedMasterElement) return
+                  e.preventDefault()
+                  e.stopPropagation()
+                  const contextSelectionIds = selectedElementIdsRef.current.includes(element.id)
+                    ? selectedElementIdsRef.current
+                    : expandSelectionIdsForGroups(slide, [element.id])
+                  if (!selectedElementIdsRef.current.includes(element.id)) {
+                    selectedElementIdsRef.current = contextSelectionIds
+                    onToggleSelectElement(element.id, false)
+                  }
+                  setContextMenu({
+                    elementId: element.id,
+                    elementType: element.type,
+                    contextSelectionIds,
+                    x: e.clientX,
+                    y: e.clientY,
+                  })
+                }}
+                onStopEdit={onStopEdit}
+                onCropHandleDown={(handle, clientX, clientY, pointerId, captureTarget) => {
+                  if (pinchActiveRef.current) return
+                  const el = slide?.elements?.find((item) => item.id === element.id)
+                  if (!el) return
+                  setCropDrag(
+                    handle,
+                    clientX,
+                    clientY,
+                    { x: cropMode.x, y: cropMode.y, w: cropMode.w, h: cropMode.h },
+                    el.width,
+                    el.height,
+                    el.rotation || 0,
+                    pointerId,
+                    captureTarget
+                  )
+                }}
+                onCommitCrop={commitCrop}
+                onUpdateElement={onUpdateElement}
+                onDeleteElement={onDeleteElement}
+                onStartEdit={onStartEdit}
+              />
             )
           })}
 

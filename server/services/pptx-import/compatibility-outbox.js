@@ -1,4 +1,4 @@
-const { SCHEMA_VERSION, hashRecord } = require('./package-store/schemas')
+const { RECORD_SCHEMA_VERSION, hashRecord } = require('./package-store/schemas')
 
 function clone(value) {
   return structuredClone(value)
@@ -11,7 +11,7 @@ function writeId(input) {
 function queueCompatibilityWrite(state, input) {
   if (!Array.isArray(state.compatibilityOutbox)) state.compatibilityOutbox = []
   const record = {
-    schemaVersion: SCHEMA_VERSION,
+    schemaVersion: RECORD_SCHEMA_VERSION,
     id: writeId(input),
     ...clone(input),
   }

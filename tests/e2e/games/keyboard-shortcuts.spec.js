@@ -12,6 +12,7 @@ test.describe('game keyboard shortcuts', () => {
     const game = new GamePage(page)
 
     await expect(game.hud).toBeHidden()
+    await page.getByTestId('canvas-area').click({ position: { x: 8, y: 8 } })
     await page.keyboard.press('g')
     await expect(game.hud).toBeVisible()
     await page.keyboard.press('g')

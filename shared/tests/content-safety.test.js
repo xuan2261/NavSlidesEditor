@@ -58,6 +58,13 @@ describe('shared rich text content safety', () => {
     )
   })
 
+  test('href policy rejects control characters and attribute breakout payloads', () => {
+    expect(sanitizeHref('/safe/path')).toBe('/safe/path')
+    expect(sanitizeHref('/x" onclick="evil()')).toBe('#')
+    expect(sanitizeHref("#x' onmouseover='evil()")).toBe('#')
+    expect(sanitizeHref('https://example.com/a\nb')).toBe('#')
+  })
+
   test('media src policy rejects executable, local file, and unsafe data schemes', () => {
     expect(sanitizeMediaSrc('/uploads/a.mp4')).toBe('/uploads/a.mp4')
     expect(sanitizeMediaSrc('https://cdn.example.com/a.mp4')).toBe('https://cdn.example.com/a.mp4')

@@ -84,17 +84,21 @@ describe('PPTX media export policy', () => {
     expect(warning).toContain('not preserved for video in PPTX')
   })
 
+  it('reports unpreserved browser-only accessibility semantics deterministically', () => {
+    expect(getPptxMediaSemanticWarning({ type: 'video', tracks: [{ src: '/uploads/captions.vtt' }], transcript: 'Text', audioDescription: 'Narration' }, 2)).toContain('caption tracks, transcript, audio description settings are not preserved')
+  })
+
   it('checks expected media and poster magic bytes', () => {
     expect(
       hasPptxUploadSignature(Uint8Array.from([0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70]), 'mp4')
     ).toBe(true)
-    expect(hasPptxUploadSignature(new TextEncoder().encode('RIFF0000WAVE'), 'wav')).toBe(true)
+    expect(hasPptxUploadSignature(Uint8Array.from([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x41, 0x56, 0x45]), 'wav')).toBe(true)
     expect(
       hasPptxUploadSignature(
         Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10]),
         'png'
       )
     ).toBe(true)
-    expect(hasPptxUploadSignature(new TextEncoder().encode('RIFF0000WAVE'), 'mp4')).toBe(false)
+    expect(hasPptxUploadSignature(Uint8Array.from([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x41, 0x56, 0x45]), 'mp4')).toBe(false)
   })
 })

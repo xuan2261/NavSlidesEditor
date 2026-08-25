@@ -3,26 +3,10 @@ import {
   apiCreatePresentation,
   apiDeletePresentation,
   apiUpdatePresentation,
+  apiCreateShareLink,
 } from '../fixtures/test-fixtures.js'
+import { SAMPLE_SLIDES } from './html-export-and-present-fixture.js'
 
-const SAMPLE_SLIDES = [
-  {
-    id: 'slide-1',
-    elements: [
-      { id: 'text-1', type: 'text', x: 100, y: 100, width: 600, height: 80, content: '<h1>Slide One</h1>' },
-    ],
-    notes: 'note one',
-    background: { type: 'color', color: '#1e1e2e' },
-  },
-  {
-    id: 'slide-2',
-    elements: [
-      { id: 'text-2', type: 'text', x: 100, y: 100, width: 600, height: 80, content: '<p>Body text</p>' },
-    ],
-    notes: '',
-    background: { type: 'color', color: '#0f172a' },
-  },
-]
 
 test.describe('HTML export and present endpoints with content validation', () => {
   let presId
@@ -30,11 +14,16 @@ test.describe('HTML export and present endpoints with content validation', () =>
   test.beforeEach(async ({ request }) => {
     const pres = await apiCreatePresentation(request, 'HTML export E2E')
     presId = pres.id
-    await apiUpdatePresentation(request, presId, { slides: SAMPLE_SLIDES })
+    await apiUpdatePresentation(request, presId, {
+      slides: SAMPLE_SLIDES,
+      presenterTools: { slideMenu: true, chalkboard: true },
+    })
   })
 
   test.afterEach(async ({ request }) => {
-    try { await apiDeletePresentation(request, presId) } catch {}
+    try {
+      await apiDeletePresentation(request, presId)
+    } catch {}
   })
 
   test('export endpoint sets attachment headers and HTML mime', async ({ request }) => {
@@ -88,5 +77,83 @@ test.describe('HTML export and present endpoints with content validation', () =>
     await expect(page.locator('.reveal section').first()).toBeVisible()
     const critical = errors.filter((e) => !e.includes('Warning') && !e.includes('net::'))
     expect(critical).toHaveLength(0)
+  })
+
+  test('present mode runs Reveal 6 navigation, fragments, overview, notes, and plugins', async ({
+    page,
+  }) => {
+    await page.goto(`/api/presentations/${presId}/present`, { timeout: 15000 })
+    await page.waitForFunction(() => window.Reveal?.isReady?.(), null, { timeout: 10000 })
+
+    const runtime = await page.evaluate(() => {
+      const deck = window.Reveal
+      deck.slide(0, 0)
+      const fragmentAdvanced = deck.nextFragment()
+      const fragmentIndices = deck.getIndices()
+      deck.slide(0, 1)
+      const verticalText = deck.getCurrentSlide()?.textContent || ''
+      const notes = deck.getCurrentSlide()?.querySelector('aside.notes')?.textContent || ''
+      deck.toggleOverview(true)
+      const overview = deck.isOverview()
+      deck.toggleOverview(false)
+      deck.configure({ view: null, autoSlide: 60000, controls: false })
+      deck.toggleAutoSlide(true)
+      const autoSliding = deck.isAutoSliding()
+      deck.toggleAutoSlide(false)
+      return {
+        version: deck.VERSION,
+        fragmentAdvanced,
+        fragmentIndex: fragmentIndices.f,
+        verticalIndices: deck.getIndices(),
+        verticalText,
+        notes,
+        overview,
+        plugins: Object.keys(deck.getPlugins()),
+        autoSliding,
+      }
+    })
+
+    expect(runtime.version).toBe('6.0.1')
+    expect(runtime.fragmentAdvanced).toBe(true)
+    expect(runtime.fragmentIndex).toBe(0)
+    expect(runtime.verticalIndices).toMatchObject({ h: 0, v: 1 })
+    expect(runtime.verticalText).toContain('Vertical Child')
+    expect(runtime.notes).toContain('vertical note')
+    expect(runtime.overview).toBe(true)
+    expect(runtime.autoSliding).toBe(true)
+    expect(runtime.plugins).toEqual(
+      expect.arrayContaining([
+        'notes',
+        'highlight',
+        'menu',
+        'RevealChalkboard',
+        'RevealCustomControls',
+      ])
+    )
+  })
+
+  test('scroll query activates the Reveal 6 scroll view', async ({ page }) => {
+    await page.goto(`/api/presentations/${presId}/present?view=scroll`, { timeout: 15000 })
+    await page.waitForFunction(() => window.Reveal?.isReady?.(), null, { timeout: 10000 })
+
+    await expect.poll(() => page.evaluate(() => window.Reveal.isScrollView())).toBe(true)
+    await expect.poll(() => page.evaluate(() => window.Reveal.VERSION)).toBe('6.0.1')
+  })
+
+  test('share mode initializes the same Reveal 6 runtime', async ({ page, request }) => {
+    const { token } = await apiCreateShareLink(request, presId)
+    await page.goto(`/share/${token}`, { timeout: 15000 })
+    await page.waitForFunction(() => window.Reveal?.isReady?.(), null, { timeout: 10000 })
+
+    await expect.poll(() => page.evaluate(() => window.Reveal.VERSION)).toBe('6.0.1')
+    await expect(page.locator('.reveal section').first()).toBeVisible()
+  })
+
+  test('legacy print-pdf query activates the Reveal 6 print view', async ({ page }) => {
+    await page.goto(`/api/presentations/${presId}/present?print-pdf`, { timeout: 15000 })
+    await page.waitForFunction(() => window.Reveal?.isReady?.(), null, { timeout: 10000 })
+
+    await expect.poll(() => page.evaluate(() => window.Reveal.isPrintView())).toBe(true)
+    await expect.poll(() => page.evaluate(() => window.Reveal.VERSION)).toBe('6.0.1')
   })
 })

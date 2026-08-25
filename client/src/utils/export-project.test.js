@@ -2,7 +2,8 @@ import JSZip from 'jszip'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { exportProject } from './export-project'
 
-vi.mock('revealjs-shared', () => ({
+vi.mock('revealjs-shared', async (importOriginal) => ({
+  ...(await importOriginal()),
   generateRevealHTML: vi.fn(() => '<html><body>deck</body></html>'),
 }))
 

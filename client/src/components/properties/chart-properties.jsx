@@ -47,6 +47,7 @@ export default function ChartProperties({ element, onUpdate }) {
       <div className="text-[11px] text-text-muted mb-1">Chart Type</div>
       <Select
         data-testid="prop-chart-type"
+        aria-label="Chart type"
         className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2"
         value={element.chartType || 'bar'}
         disabled={preserveOnly}
@@ -98,6 +99,7 @@ export default function ChartProperties({ element, onUpdate }) {
           <Input
             key={axis}
             data-testid={`prop-chart-${axis}-axis-title`}
+            aria-label={`${axis} axis title`}
             type="text"
             value={axisTitles[axis] || ''}
             disabled={preserveOnly}
@@ -111,6 +113,7 @@ export default function ChartProperties({ element, onUpdate }) {
       </div>
       <Input
         data-testid="prop-chart-labels"
+        aria-label="Chart category labels"
         className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-[11px] transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-1.5"
         type="text"
         value={(element.chartData?.labels || []).join(', ')}
@@ -125,11 +128,12 @@ export default function ChartProperties({ element, onUpdate }) {
         }
       />
       {datasets.map((dataset, index) => (
-        <div key={index} className="mb-2 border-t border-border pt-2">
+        <div key={dataset.id || `${element.id || 'chart'}-series-${index}`} className="mb-2 border-t border-border pt-2">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="text-[11px] text-text-muted">Series {index + 1}</div>
             <Button
               data-testid={`prop-chart-remove-series-${index}`}
+              aria-label={`Remove chart series ${index + 1}`}
               variant="secondary"
               className="text-[11px] px-1.5 py-0.5"
               disabled={preserveOnly || datasets.length <= 1}
@@ -141,6 +145,7 @@ export default function ChartProperties({ element, onUpdate }) {
           <div className="text-[11px] text-text-muted mb-1">Series Label</div>
           <Input
             data-testid={`prop-chart-series-label-${index}`}
+            aria-label={`Chart series ${index + 1} label`}
             className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-[11px] transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-1.5"
             type="text"
             value={dataset.label || ''}
@@ -150,6 +155,7 @@ export default function ChartProperties({ element, onUpdate }) {
           <div className="text-[11px] text-text-muted mb-1">Values (comma-separated)</div>
           <Input
             data-testid={`prop-chart-values-${index}`}
+            aria-label={`Chart series ${index + 1} values`}
             className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-[11px] transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-1.5"
             type="text"
             value={(dataset.data || []).join(', ')}
@@ -164,6 +170,7 @@ export default function ChartProperties({ element, onUpdate }) {
             <div className="text-[11px] text-text-muted">Color</div>
             <ColorPicker
               data-testid={`prop-chart-color-${index}`}
+              aria-label={`Chart series ${index + 1} color`}
               className="w-7 h-7 p-0.5 bg-card border border-border rounded cursor-pointer"
               value={dataset.color || '#6366f1'}
               disabled={preserveOnly}

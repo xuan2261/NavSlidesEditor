@@ -25,6 +25,10 @@ function chartLegendOptions(value) {
 
 export function ChartRenderer({ element, isSelected, isDragging, slideBackground }) {
   const { chartType = 'bar', chartData = {} } = element
+  const isScatter = element._pptxChartMeta?.originalType === 'scatterChart'
+  const runtimeChartType = isScatter ? 'scatter' : chartType
+  const lineLike = chartType === 'line' || isScatter
+  const chartTitle = typeof element.chartTitle === 'string' ? element.chartTitle.trim() : ''
   const labels = chartData.labels || []
   const datasets = chartData.datasets || []
   const areaFill = chartType === 'line' && element.areaFill === true
@@ -42,7 +46,7 @@ export function ChartRenderer({ element, isSelected, isDragging, slideBackground
       ? '{}'
       : chartType === 'radar'
         ? `{r:{${valueAxisTitle}angleLines:{color:'${gridColor}'},ticks:{color:'${axisTextColor}',backdropColor:'transparent'},grid:{color:'${gridColor}'},pointLabels:{color:'${axisTextColor}'}}}`
-        : `{x:{${stackedAxis}${categoryAxisTitle}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}},y:{${stackedAxis}${valueAxisTitle}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}}}`
+        : `{x:{${isScatter ? "type:'linear',beginAtZero:true," : ''}${stackedAxis}${categoryAxisTitle}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}},y:{${isScatter ? 'beginAtZero:true,' : ''}${stackedAxis}${valueAxisTitle}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}}}`
 
   const chartHtml = `<!doctype html><html><head>
 <meta charset="utf-8">
@@ -52,24 +56,28 @@ export function ChartRenderer({ element, isSelected, isDragging, slideBackground
 <canvas id="c" style="width:100%;height:100%"></canvas>
 <script>
 new Chart(document.getElementById('c'),{
-  type:'${chartType}',
+  type:'${runtimeChartType}',
   data:{
     labels:${safeJson(labels)},
     datasets:${safeJson(
       datasets.map((ds) => ({
         label: ds.label || '',
-        data: ds.data || [],
-        backgroundColor: ds.color || '#6366f1',
+        data: isScatter
+          ? (ds.data || []).map((y, index) => ({ x: ds.xValues?.[index] ?? index + 1, y }))
+          : ds.data || [],
+        backgroundColor: ds.colors || ds.color || '#6366f1',
         borderColor: ds.color || '#6366f1',
-        borderWidth: chartType === 'line' ? 2 : 0,
-        fill: chartType === 'line' ? areaFill : undefined,
+        borderWidth: lineLike ? 2 : 0,
+        fill: lineLike ? areaFill : undefined,
+        ...(isScatter ? { showLine: true } : {}),
       }))
     )}
   },
   options:{
     responsive:true,
     maintainAspectRatio:false,
-    plugins:{legend:{${legendOptions}labels:{color:'${legendTextColor}',font:{size:12}}}},
+    animation:false,
+    plugins:{title:{display:${Boolean(chartTitle)},text:${safeJson(chartTitle)},color:'${axisTextColor}',font:{size:16,weight:'normal'}},legend:{${legendOptions}labels:{color:'${legendTextColor}',font:{size:${chartTitle ? 9 : 12}}}}},
     scales:${scales}
   }
 });

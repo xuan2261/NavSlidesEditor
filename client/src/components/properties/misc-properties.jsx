@@ -19,6 +19,7 @@ function IconElementProperties({ element, onUpdate }) {
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Color</div>
           <ColorPicker
+            aria-label="Icon color"
             value={element.iconColor || '#ffffff'}
             onChange={(e) => onUpdate({ iconColor: e.target.value })}
             className="w-full h-7 border border-border rounded cursor-pointer"
@@ -27,6 +28,7 @@ function IconElementProperties({ element, onUpdate }) {
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Stroke</div>
           <input
+            aria-label="Icon stroke width"
             className={CONTROL_INPUT_CLASS}
             type="number"
             min="0.5"
@@ -45,10 +47,11 @@ function IconElementProperties({ element, onUpdate }) {
         Icon: <span className="text-text-primary">{element.iconName || 'Star'}</span>
       </div>
       <button
+        type="button"
         ref={triggerRef}
         data-testid="prop-icon-change"
         className={`${SECONDARY_BUTTON_CLASS} w-full justify-center gap-2 text-xs`}
-        onMouseDown={(e) => { e.preventDefault(); setShowIconGallery((v) => !v) }}
+        onClick={() => setShowIconGallery((visible) => !visible)}
       >
         <IconSvgPreview name={element.iconName || 'Star'} size={14} />
         Change Icon
@@ -99,6 +102,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
             <input
               data-testid="prop-latex-font-size"
+              aria-label="LaTeX font size"
               className={CONTROL_INPUT_CLASS}
               type="number"
               min="8"
@@ -115,6 +119,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             <div className="text-[11px] text-text-muted mb-0.5">Color</div>
             <ColorPicker
               data-testid="prop-latex-text-color"
+              aria-label="LaTeX text color"
               value={element.textColor || '#ffffff'}
               onChange={(e) => onUpdate({ textColor: e.target.value })}
               className="w-full h-7 border border-border rounded cursor-pointer"
@@ -142,6 +147,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
         </div>
         <textarea
           data-testid="prop-markdown-content"
+          aria-label="Markdown content"
           value={element.content || ''}
           onChange={(e) => onUpdate({ content: e.target.value })}
           className="w-full min-h-[120px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] font-mono resize-y box-border"
@@ -152,6 +158,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             <div className="text-[11px] text-text-muted mb-0.5">Text Color</div>
             <ColorPicker
               data-testid="prop-markdown-text-color"
+              aria-label="Markdown text color"
               className="w-full h-8 border border-border rounded cursor-pointer"
               value={element.textColor || '#ffffff'}
               onChange={(e) => onUpdate({ textColor: e.target.value })}
@@ -161,6 +168,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
             <input
               data-testid="prop-markdown-font-size"
+              aria-label="Markdown font size"
               className={CONTROL_INPUT_CLASS}
               type="number"
               min={8}
@@ -188,6 +196,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             <div key={k}>
               <div className="text-[11px] text-text-muted mb-0.5">{l}</div>
               <input
+                aria-label={`Callout ${l}`}
                 className={CONTROL_INPUT_CLASS}
                 type={type}
                 {...extra}
@@ -209,6 +218,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             <div key={k}>
               <div className="text-[11px] text-text-muted mb-0.5">{l}</div>
               <ColorPicker
+                aria-label={`Callout ${l}`}
                 value={element[k] || d}
                 onChange={(e) => onUpdate({ [k]: e.target.value })}
                 className="w-full h-7 border border-border rounded cursor-pointer"
@@ -228,6 +238,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
           QR Data / URL
         </div>
         <input
+          aria-label="QR code data or URL"
           className={`${CONTROL_INPUT_CLASS} mb-2`}
           type="text"
           value={element.qrData || ''}
@@ -242,6 +253,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             <div key={k}>
               <div className="text-[11px] text-text-muted mb-0.5">{l}</div>
               <ColorPicker
+                aria-label={`QR code ${l} color`}
                 value={element[k] || d}
                 onChange={(e) => onUpdate({ [k]: e.target.value })}
                 className="w-full h-8 border border-border rounded cursor-pointer"
@@ -253,6 +265,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
           Error Correction Level
         </div>
         <select
+          aria-label="QR code error correction level"
           className={`${CONTROL_INPUT_CLASS} mb-2 px-1.5 py-1`}
           value={element.qrErrorLevel || 'M'}
           onChange={(e) => onUpdate({ qrErrorLevel: e.target.value })}
@@ -274,6 +287,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
               Stroke Color
             </div>
             <ColorPicker
+              aria-label="Drawing stroke color"
               value={element.strokeColor || '#ffffff'}
               onChange={(e) => onUpdate({ strokeColor: e.target.value })}
               className="w-full h-7 border border-border rounded cursor-pointer"
@@ -282,6 +296,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
           <div>
             <div className="text-[11px] text-text-muted mb-0.5">Width</div>
             <input
+              aria-label="Drawing stroke width"
               className={CONTROL_INPUT_CLASS}
               type="number"
               min="1"
@@ -310,6 +325,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
               Stroke Color
             </div>
             <ColorPicker
+              aria-label="Line stroke color"
               value={element.stroke || '#ffffff'}
               onChange={(e) => onUpdate({ stroke: e.target.value })}
               className="w-full h-7 border border-border rounded cursor-pointer"
@@ -318,6 +334,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
           <div>
             <div className="text-[11px] text-text-muted mb-0.5">Width</div>
             <input
+              aria-label="Line stroke width"
               className={CONTROL_INPUT_CLASS}
               type="number"
               min="1"
@@ -339,6 +356,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             <div key={k}>
               <div className="text-[11px] text-text-muted mb-0.5">{l}</div>
               <select
+                aria-label={`Line ${l.toLowerCase()} marker`}
                 className={`${CONTROL_INPUT_CLASS} px-1.5 py-1`}
                 value={element[k] || 'none'}
                 onChange={(e) => onUpdate({ [k]: e.target.value })}
@@ -357,6 +375,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             Dash Pattern
           </div>
           <select
+            aria-label="Line dash pattern"
             className={`${CONTROL_INPUT_CLASS} px-1.5 py-1`}
             value={element.dashArray || ''}
             onChange={(e) => onUpdate({ dashArray: e.target.value })}
@@ -381,6 +400,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             <div key={k}>
               <div className="text-[11px] text-text-muted mb-0.5">{l}</div>
               <ColorPicker
+                aria-label={`SVG ${l}`}
                 value={element[k] || d}
                 onChange={(e) => onUpdate({ [k]: e.target.value })}
                 className="w-full h-7 border border-border rounded cursor-pointer"
@@ -396,6 +416,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
         </button>
         <div className="text-[11px] text-text-muted mb-0.5">SVG Markup</div>
         <textarea
+          aria-label="SVG markup"
           data-testid="prop-svg-content"
           value={element.content || ''}
           onChange={(e) => onUpdate({ content: e.target.value })}

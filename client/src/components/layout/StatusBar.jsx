@@ -20,7 +20,7 @@ function ZoomControls() {
         title="Zoom out"
         aria-label="Zoom out"
         onClick={zoomOut}
-        className="h-7 w-7 sm:h-5 sm:w-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
+        className="ui-coarse-target ui-coarse-target-square h-7 w-7 sm:h-5 sm:w-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
       >
         −
       </button>
@@ -36,7 +36,7 @@ function ZoomControls() {
           setZoom(parseInt(e.target.value, 10) / 100)
           setUserZoomMode(true)
         }}
-        className="h-6 w-28 sm:h-1 sm:w-24 cursor-pointer accent-white/80"
+        className="ui-coarse-target h-6 w-28 sm:h-1 sm:w-24 cursor-pointer accent-white/80"
       />
       <button
         type="button"
@@ -44,7 +44,7 @@ function ZoomControls() {
         title="Zoom in"
         aria-label="Zoom in"
         onClick={zoomIn}
-        className="h-7 w-7 sm:h-5 sm:w-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
+        className="ui-coarse-target ui-coarse-target-square h-7 w-7 sm:h-5 sm:w-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
       >
         +
       </button>
@@ -54,7 +54,7 @@ function ZoomControls() {
         title="Fit to window"
         aria-label="Fit to window"
         onClick={fitZoom}
-        className="h-7 sm:h-5 px-2 sm:px-1.5 rounded hover:bg-white/15 transition-colors cursor-pointer whitespace-nowrap"
+        className="ui-coarse-target h-7 sm:h-5 px-2 sm:px-1.5 rounded hover:bg-white/15 transition-colors cursor-pointer whitespace-nowrap"
       >
         Fit
       </button>
@@ -85,7 +85,7 @@ function ViewSwitcher() {
   const presentHandler = useUIStore((s) => s.presentHandler)
 
   const btn =
-    'h-7 w-7 sm:w-6 sm:h-5 flex items-center justify-center rounded transition-colors cursor-pointer'
+    'ui-coarse-target ui-coarse-target-square h-7 w-7 sm:w-6 sm:h-5 flex items-center justify-center rounded transition-colors cursor-pointer'
   const active = 'bg-white/25'
   const idle = 'hover:bg-white/15'
 

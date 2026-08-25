@@ -103,7 +103,7 @@ describe('pptx mapImage', () => {
     }
   })
 
-  it('maps uncropped images without offset overflow fields', async () => {
+  it('stretches uncropped PowerPoint pictures to their authored shape bounds', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-plain-'))
     try {
       const ctx = context(dir)
@@ -116,7 +116,7 @@ describe('pptx mapImage', () => {
         base64: `data:image/png;base64,${PNG.toString('base64')}`,
       }, ctx)
 
-      expect(result[0].objectFit).toBe('contain')
+      expect(result[0].objectFit).toBe('fill')
       expect(result[0].imageW).toBeUndefined()
       expect(result[0].imageH).toBeUndefined()
       expect(result[0].imageOffsetX).toBeUndefined()

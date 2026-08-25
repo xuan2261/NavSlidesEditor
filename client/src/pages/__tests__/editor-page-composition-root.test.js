@@ -11,6 +11,7 @@ const productionModules = [
   path.join(clientRoot, 'pages/editor-page-helpers.js'),
   path.join(clientRoot, 'hooks/editor-controller/use-editor-element-controller.js'),
   path.join(clientRoot, 'hooks/editor-controller/use-editor-keyboard-controller.js'),
+  path.join(clientRoot, 'hooks/editor-controller/use-editor-layout-controller.js'),
   path.join(clientRoot, 'hooks/editor-controller/use-editor-live-session-controller.js'),
 ]
 

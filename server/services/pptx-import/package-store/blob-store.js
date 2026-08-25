@@ -5,7 +5,7 @@ const path = require('node:path')
 const { pipeline } = require('node:stream/promises')
 const { Readable, Transform } = require('node:stream')
 const { syncDirectory } = require('./durable-fs')
-const { SCHEMA_VERSION, validateBlob } = require('./schemas')
+const { RECORD_SCHEMA_VERSION, validateBlob } = require('./schemas')
 
 function sourceStream(source) {
   if (Buffer.isBuffer(source)) return Readable.from(source)
@@ -106,7 +106,7 @@ class BlobStore {
       throw new Error('Committed blob reread verification failed')
     }
     return validateBlob({
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: RECORD_SCHEMA_VERSION,
       sha256: staged.sha256,
       byteLength: staged.byteLength,
       committedAt: new Date().toISOString(),

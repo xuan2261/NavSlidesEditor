@@ -77,4 +77,21 @@ describe('QuickAccessToolbar — Lucide Undo/Redo', () => {
     saveBtn.click()
     expect(onSave).toHaveBeenCalled()
   })
+
+  it('disables unavailable Undo and Redo actions', () => {
+    render(
+      <QuickAccessToolbar
+        onSave={vi.fn()}
+        onUndo={vi.fn()}
+        onRedo={vi.fn()}
+        saving={false}
+        hasChanges={false}
+        canUndo={false}
+        canRedo={true}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: 'Undo' }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Redo' }).disabled).toBe(false)
+  })
 })

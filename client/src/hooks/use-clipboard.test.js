@@ -129,6 +129,19 @@ describe('createPasteOperation', () => {
     expect(result.elements[0].x).toBe(20)
     expect(result.elements[0].y).toBe(20)
   })
+
+  it('remaps connector targets only when both endpoints are copied', () => {
+    const copied = createCopyOperation({
+      slideElements: [
+        makeEl('target'),
+        makeEl('line', { type: 'line', connections: { start: { targetId: 'target', anchor: 'e' } } }),
+      ],
+      selectedElementIds: ['target', 'line'],
+    })
+    const result = createPasteOperation({ clipboardElements: copied })
+
+    expect(result.elements[1].connections.start.targetId).toBe(result.elements[0].id)
+  })
 })
 
 describe('useClipboard paste integration', () => {

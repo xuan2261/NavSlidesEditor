@@ -43,6 +43,7 @@ import { Button } from '../ui'
 import { GAME_TYPES } from '../../constants/game-element-types-constants'
 import PromptPopover from '../PromptPopover'
 import { api } from '../../utils/api'
+import { resolveUrlEntry } from '../../utils/url-safety'
 import StemSimulationPresetModal from '../stem-simulation-preset-modal'
 import { getTechnicalSymbolPacks } from '../../data/technical-symbol-packs'
 
@@ -516,8 +517,8 @@ export default function InsertTabContent({
           <Button
             variant="icon"
             className="h-7 w-7"
-            title="Add image (URL)"
-            aria-label="Add image"
+            title="Add image from URL"
+            aria-label="Add image from URL"
             onMouseDown={(e) => {
               e.preventDefault()
               onAddImage?.()
@@ -740,8 +741,8 @@ export default function InsertTabContent({
           <Button
             variant="icon"
             className="h-7 w-7"
-            title="Add video"
-            aria-label="Add video"
+            title="Add video from URL"
+            aria-label="Add video from URL"
             onMouseDown={(e) => {
               e.preventDefault()
               setShowVideoPrompt(true)
@@ -946,8 +947,11 @@ export default function InsertTabContent({
       {showVideoPrompt && (
         <PromptPopover
           title="Video URL"
+          label="Video source URL"
+          description="Use an HTTP(S), project-relative, upload, or video data URL."
           defaultValue=""
           placeholder="https://..."
+          validate={(url) => resolveUrlEntry(url, 'video').error}
           onSubmit={(url) => {
             onAddVideo?.(url)
             setShowVideoPrompt(false)

@@ -32,7 +32,8 @@ describe('generateOfflineHTML', () => {
         if (requestUrl.includes('theme/black.css')) {
           return {
             ok: true,
-            text: async () => '.reveal{background:#000}',
+            text: async () =>
+              '@import "https://fonts.googleapis.com/css?family=Lato";.reveal{background:#000}',
           }
         }
         if (requestUrl.includes('reveal-overrides.css')) {
@@ -93,6 +94,37 @@ describe('generateOfflineHTML', () => {
     expect(offline).toContain('<style>/* /reveal-overrides.css */')
     expect(offline).toContain('<\\/script safe')
     expect(offline).toContain('data:image/png;base64')
+    expect(offline).not.toContain('fonts.googleapis.com')
+  })
+
+  it('embeds local caption track sources for offline playback', async () => {
+    fetch.mockImplementation(async (url) => String(url).includes('/uploads/captions.vtt') ? { ok: true, blob: async () => blobFrom('WEBVTT', 'text/vtt') } : { ok: false, text: async () => '', blob: async () => blobFrom('') })
+    const offline = await generateOfflineHTML('<video><track src="/uploads/captions.vtt" kind="captions"></video>')
+    expect(offline).toContain('data:text/vtt;base64,')
+  })
+
+  it('embeds local assets referenced by required Reveal theme CSS', async () => {
+    fetch.mockImplementation(async (url) => {
+      const requestUrl = String(url)
+      if (requestUrl.endsWith('/vendor/reveal.js/dist/theme/black.css')) {
+        return {
+          ok: true,
+          text: async () =>
+            '@import "https://fonts.googleapis.com/css?family=Lato";@font-face{font-family:Local;src:url(../fonts/theme.woff2)}',
+        }
+      }
+      if (requestUrl.endsWith('/vendor/reveal.js/dist/fonts/theme.woff2')) {
+        return { ok: true, blob: async () => blobFrom('font-bytes', 'font/woff2') }
+      }
+      return { ok: false, text: async () => '', blob: async () => blobFrom('') }
+    })
+    const html = '<link rel="stylesheet" href="/vendor/reveal.js/dist/theme/black.css">'
+
+    const offline = await generateOfflineHTML(html, { strictRequiredAssets: true })
+
+    expect(offline).not.toContain('fonts.googleapis.com')
+    expect(offline).toContain('data:font/woff2;base64,')
+    expect(offline).not.toContain('../fonts/theme.woff2')
   })
 
   it('inlines Mermaid runtime inside data-url html embed iframes', async () => {
@@ -110,8 +142,27 @@ describe('generateOfflineHTML', () => {
   it('rejects when strict mode cannot inline a required Reveal asset', async () => {
     const html = '<link rel="stylesheet" href="/vendor/katex/dist/strict-missing.css">'
 
-    await expect(generateOfflineHTML(html, { strictRequiredAssets: true }))
-      .rejects.toThrow('offline-asset-fetch-failed')
+    await expect(generateOfflineHTML(html, { strictRequiredAssets: true })).rejects.toThrow(
+      'offline-asset-fetch-failed'
+    )
+  })
+
+  it('[cap:runtime.reveal6-assets] treats Reveal 6 dist plugin scripts as required offline assets', async () => {
+    const html = '<script src="/vendor/reveal.js/dist/plugin/notes.js"></script>'
+    fetch.mockResolvedValueOnce({ ok: false, text: async () => '' })
+
+    await expect(generateOfflineHTML(html, { strictRequiredAssets: true })).rejects.toThrow(
+      'offline-asset-fetch-failed'
+    )
+  })
+  it('fails closed when a required Reveal asset is missing inside iframe HTML', async () => {
+    const html =
+      '<iframe srcdoc="&lt;script src=&quot;/vendor/reveal.js/dist/plugin/notes.js&quot;&gt;&lt;/script&gt;"></iframe>'
+    fetch.mockResolvedValueOnce({ ok: false, text: async () => '' })
+
+    await expect(generateOfflineHTML(html, { strictRequiredAssets: true })).rejects.toThrow(
+      'offline-asset-fetch-failed'
+    )
   })
 
   it('does not cache failed required assets and retries after recovery', async () => {
@@ -121,8 +172,9 @@ describe('generateOfflineHTML', () => {
       .mockImplementationOnce(async () => ({ ok: false, text: async () => '' }))
       .mockImplementationOnce(async () => ({ ok: true, text: async () => '.reveal{}' }))
 
-    await expect(generateOfflineHTML(html, { strictRequiredAssets: true }))
-      .rejects.toThrow('offline-asset-fetch-failed')
+    await expect(generateOfflineHTML(html, { strictRequiredAssets: true })).rejects.toThrow(
+      'offline-asset-fetch-failed'
+    )
     const offline = await generateOfflineHTML(html, { strictRequiredAssets: true })
 
     expect(offline).toContain('/* /vendor/reveal.js/dist/theme/strict-recovery.css */')

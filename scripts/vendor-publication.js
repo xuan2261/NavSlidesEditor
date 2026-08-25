@@ -59,6 +59,8 @@ async function publishVendorAssets({
   rootDir,
   localItems,
   remoteItems,
+  requiredPaths = [],
+  metadata = {},
   fetchImpl = globalThis.fetch,
   logger = console,
 }) {
@@ -99,7 +101,14 @@ async function publishVendorAssets({
       }
     }
 
-    const manifest = { schemaVersion: 1, files: collectFiles(stageDir) }
+    for (const requiredPath of requiredPaths) {
+      const stagedPath = resolveDestination(stageDir, requiredPath)
+      if (!fs.existsSync(stagedPath)) {
+        throw new Error(`Required staged vendor asset missing: ${requiredPath}`)
+      }
+    }
+
+    const manifest = { schemaVersion: 1, ...metadata, files: collectFiles(stageDir) }
     fs.writeFileSync(
       path.join(stageDir, 'vendor-manifest.json'),
       `${JSON.stringify(manifest, null, 2)}\n`

@@ -68,6 +68,7 @@ async function selectElements(ids) {
 }
 
 async function pressKey(init) {
+  document.activeElement?.blur?.()
   document.body.focus()
   await act(async () => {
     fireEvent.keyDown(document, init)
@@ -198,6 +199,44 @@ describe('EditorPage element-ops characterization', () => {
       expect(elements.filter((element) => element.locked)).toHaveLength(1)
     }, { timeout: 2500 })
   })
+
+  it('routes duplicate, copy, paste, and cut through the active master authoring surface', async () => {
+    h.seed.layoutMasters = [{
+      id: 'layout-1',
+      name: 'Test Master',
+      fixedElements: [
+        { id: 'master-a', type: 'shape', shape: 'rect', x: 100, y: 100, width: 200, height: 120, zIndex: 1, locked: true },
+      ],
+      placeholders: [],
+    }]
+    renderPage()
+    await screen.findByDisplayValue('Char Deck')
+
+    await act(async () => useUIStore.getState().setActiveTab('design'))
+    fireEvent.mouseDown(await screen.findByRole('button', { name: 'Open Layout Manager' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit master Test Master' }))
+    await selectElements(['master-a'])
+
+    await pressKey({ key: 'd', ctrlKey: true })
+    await waitFor(() => expect(lastSaved()?.layoutMasters?.[0]?.fixedElements).toHaveLength(2), {
+      timeout: 2500,
+    })
+    await selectElements(['master-a'])
+    await act(async () => useUIStore.getState().setActiveTab('home'))
+    await pressKey({ key: 'c', ctrlKey: true })
+    expect(useEditorStore.getState().clipboard).toHaveLength(1)
+    fireEvent.mouseDown(await screen.findByRole('button', { name: 'Paste' }))
+    await waitFor(() => expect(lastSaved()?.layoutMasters?.[0]?.fixedElements).toHaveLength(3), {
+      timeout: 2500,
+    })
+
+    fireEvent.mouseDown(await screen.findByRole('button', { name: 'Cut' }))
+    await waitFor(() => {
+      const saved = lastSaved()
+      expect(saved.layoutMasters[0].fixedElements).toHaveLength(2)
+      expect(saved.slides[0].elements).toHaveLength(2)
+    }, { timeout: 2500 })
+  }, 10000)
 
   it('uses a 1px default document-level keyboard nudge', async () => {
     renderPage()

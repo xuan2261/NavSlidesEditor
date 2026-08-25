@@ -121,7 +121,6 @@ function visibleTextUsesStyle(node, inheritedStyle, expectedStyle) {
   if (node.type === 'text') {
     return !visibleTextLength(node) || hasSameDominantTextStyle(inheritedStyle, expectedStyle)
   }
-
   const nextStyle = node.type === 'element' ? mergeInlineStyleInPt(inheritedStyle, node) : inheritedStyle
   return (node.children || []).every((child) => visibleTextUsesStyle(child, nextStyle, expectedStyle))
 }
@@ -171,10 +170,27 @@ function normalizeImportedRichTextHtml(html) {
       .split(';')
       .map((part) => part.trim())
       .filter(Boolean)
-      .filter((part) => {
-        const prop = String(part.split(':')[0] || '').trim().toLowerCase()
-        return prop !== 'font-size' && prop !== 'line-height'
+      .map((part) => {
+        const [rawProp, ...rest] = part.split(':')
+        const prop = String(rawProp || '').trim().toLowerCase()
+        if (prop === 'font-size') return null
+        if (prop !== 'font-family') return part
+        const family = rest.join(':').trim().replace(/^[A-Z]{6}\+/i, '')
+        if (/^URW DIN SemiCond(?: Bold)?$/i.test(family)) {
+          return 'font-family: Arial Narrow, Arial, sans-serif'
+        }
+        if (/^Aptos Display$/i.test(family)) {
+          return 'font-family: Aptos Display, Aptos, Segoe UI, Arial, sans-serif'
+        }
+        if (/^Aptos$/i.test(family)) {
+          return 'font-family: Aptos, Segoe UI, Arial, sans-serif'
+        }
+        if (/^Calibri$/i.test(family)) {
+          return 'font-family: Calibri, Carlito, Arial, sans-serif'
+        }
+        return `font-family: ${family}`
       })
+      .filter(Boolean)
       .join('; ')
     return safe ? ` style=${quote}${safe}${quote}` : ''
   })
@@ -186,9 +202,13 @@ function computeFitFontSizePx(box = {}, metadata = {}, extra = {}) {
   const width = Number(box.width)
   if (!Number.isFinite(height) || height <= 0) return source
   const readableMin = 8
-  const heightLimit = height * 0.38
+  // PowerPoint text boxes commonly reserve about 20% leading. The previous
+  // height * 0.38 heuristic halved valid single-line titles and footer fields.
+  const heightLimit = height / 1.2
   const textLength = Number(extra.textLength)
-  const widthLimit = Number.isFinite(width) && textLength > 0 && textLength <= 3 ? width * 0.38 : source
+  const widthLimit = Number.isFinite(width) && textLength > 0 && textLength <= 3
+    ? width / (textLength * 0.6)
+    : source
   return Math.max(readableMin, Math.min(source, Math.round(Math.min(heightLimit, widthLimit) * 10) / 10))
 }
 
@@ -206,7 +226,14 @@ function extractTextInsetsWithScale(element = {}, scale = { x: 1, y: 1 }, box = 
   const right = toPx(element.insetRight ?? element.marginRight ?? element.rIns ?? element.insetR, scale.x, box.width)
   const top = toPx(element.insetTop ?? element.marginTop ?? element.tIns ?? element.insetT, scale.y, box.height)
   const bottom = toPx(element.insetBottom ?? element.marginBottom ?? element.bIns ?? element.insetB, scale.y, box.height)
-  if (![left, right, top, bottom].some((value) => value != null)) return null
+  if (![left, right, top, bottom].some((value) => value != null)) {
+    return {
+      left: toPx(7.2, scale.x, box.width),
+      right: toPx(7.2, scale.x, box.width),
+      top: toPx(3.6, scale.y, box.height),
+      bottom: toPx(3.6, scale.y, box.height),
+    }
+  }
   return { left, right, top, bottom }
 }
 

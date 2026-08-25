@@ -3,6 +3,7 @@ import textUtils from './utils-text.js'
 
 const {
   buildBaseTextStyle,
+  buildPptxTextImportMeta,
   extractTextInsets,
   extractTextMetadata,
   normalizeFontFamily,
@@ -120,7 +121,7 @@ describe('pptx mapper text utilities', () => {
       top: 3,
       bottom: 4,
     })
-    expect(extractTextInsets({})).toBeNull()
+    expect(extractTextInsets({})).toEqual({ left: 7.2, right: 7.2, top: 3.6, bottom: 3.6 })
   })
 
   it('converts text insets from pt to scaled canvas px', () => {
@@ -149,9 +150,45 @@ describe('pptx mapper text utilities', () => {
     expect(result).toEqual({ left: 0, right: 60, top: null, bottom: null })
   })
 
-  it('removes imported run font sizing so element-level fit can control layout', () => {
+  it('preserves a valid single-line title font inside its authored text box', () => {
+    const meta = buildPptxTextImportMeta(
+      { width: 926, height: 51 },
+      { fontSize: 36 },
+      { textLength: 20 }
+    )
+
+    expect(meta.fitFontSizePx).toBe(36)
+  })
+
+  it('only width-clamps very short labels when their authored font cannot fit', () => {
+    const meta = buildPptxTextImportMeta(
+      { width: 12, height: 40 },
+      { fontSize: 32 },
+      { textLength: 2 }
+    )
+
+    expect(meta.fitFontSizePx).toBe(10)
+  })
+
+  it('removes imported run font sizing while retaining paragraph line height', () => {
     expect(
       normalizeImportedRichTextHtml('<p style="font-size:24px;line-height:1.4;color:#123456">Hello</p>')
-    ).toBe('<p style="color:#123456">Hello</p>')
+    ).toBe('<p style="line-height:1.4; color:#123456">Hello</p>')
+  })
+
+  it('maps subset PowerPoint fonts to browser-safe families', () => {
+    expect(
+      normalizeImportedRichTextHtml('<span style="font-family:VVQNOC+URW DIN SemiCond Bold;font-weight:bold">Title</span>')
+    ).toContain('font-family: Arial Narrow, Arial, sans-serif')
+    expect(
+      normalizeImportedRichTextHtml('<span style="font-family:DJLWTP+Symbol">α</span>')
+    ).toContain('font-family: Symbol')
+  })
+
+  it('adds browser-safe fallbacks for common Office fonts', () => {
+    expect(normalizeImportedRichTextHtml('<span style="font-family:Aptos Display">Title</span>'))
+      .toContain('font-family: Aptos Display, Aptos, Segoe UI, Arial, sans-serif')
+    expect(normalizeImportedRichTextHtml('<span style="font-family:Calibri">Body</span>'))
+      .toContain('font-family: Calibri, Carlito, Arial, sans-serif')
   })
 })

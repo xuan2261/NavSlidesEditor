@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react'
 import { EditorContent } from '@tiptap/react'
 import hljs from 'highlight.js'
 import katex from 'katex'
-import { resolveColorField } from 'revealjs-shared'
+import { normalizeImageAccessibility, normalizeMediaAccessibility, resolveColorField } from 'revealjs-shared'
 import { sanitizeRichTextHtml } from '../../utils/content-safety'
 import { sanitizeMediaSrc } from '../../utils/url-safety'
 import { resolveVideoSrc } from '../../utils/migrate-video-src'
@@ -57,7 +57,10 @@ function getElementAccessibleName(element) {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 60)
-  return [typeLabel, content && `"${content}"`, element.locked && 'locked']
+  const connectionState = element.type === 'line' && element.connections
+    ? `connected ${[element.connections.start && 'start', element.connections.end && 'end'].filter(Boolean).join(' and ')}`
+    : ''
+  return [typeLabel, content && `"${content}"`, connectionState, element.locked && 'locked']
     .filter(Boolean)
     .join(', ')
 }
@@ -157,6 +160,7 @@ export default function CanvasElement({
   isCropping,
   cropState,
   isDragging,
+  slideLocked = false,
   editor,
   onPointerDown,
   onClick,
@@ -197,6 +201,8 @@ export default function CanvasElement({
     videoRef.current.playbackRate = playbackRate || 1
   }, [element.playbackRate, element.type])
 
+  const importedTextCanOverflow =
+    element.type === 'text' && element?._pptxImportMeta?.textFit === 'wrap'
   const elementWrapperStyle = {
     position: 'absolute',
     left: element.x,
@@ -219,12 +225,14 @@ export default function CanvasElement({
         ? 'text'
         : isDragging
           ? 'grabbing'
-          : element.locked
+          : element.locked || slideLocked
             ? 'not-allowed'
             : 'grab',
     userSelect: isEditing ? 'text' : 'none',
     overflow:
-      isSelected || isEditing || isCropping || element.type === 'line' ? 'visible' : 'hidden',
+      isSelected || isEditing || isCropping || element.type === 'line' || importedTextCanOverflow
+        ? 'visible'
+        : 'hidden',
     boxSizing: 'border-box',
     borderRadius:
       (element.type === 'image' || element.type === 'code') && element.borderRadius
@@ -248,7 +256,7 @@ export default function CanvasElement({
   const textPreviewStyle = {
     width: '100%',
     height: '100%',
-    overflow: 'hidden',
+    overflow: importedTextCanOverflow ? 'visible' : 'hidden',
     padding: textPadding,
     boxSizing: 'border-box',
     ...textElementStyle,
@@ -305,13 +313,23 @@ export default function CanvasElement({
       return
     }
 
-    if ((key === 'Enter' || key === 'F2') && isSelected && isTextEditableElement(element)) {
+    if (
+      (key === 'Enter' || key === 'F2') &&
+      isSelected &&
+      !slideLocked &&
+      isTextEditableElement(element)
+    ) {
       event.preventDefault()
       onStartEdit?.(element.id)
       return
     }
 
-    if ((key === 'Delete' || key === 'Backspace') && isSelected && !element.locked) {
+    if (
+      (key === 'Delete' || key === 'Backspace') &&
+      isSelected &&
+      !element.locked &&
+      !slideLocked
+    ) {
       if (selectedElementCount > 1) return
       event.preventDefault()
       onDeleteElement?.(element.id)
@@ -325,7 +343,7 @@ export default function CanvasElement({
       ArrowRight: { x: 1, y: 0 },
     }
     const nudge = nudges[key]
-    if (nudge && isSelected && !element.locked) {
+    if (nudge && isSelected && !element.locked && !slideLocked) {
       if (selectedElementCount > 1) return
       event.preventDefault()
       const step = getKeyboardNudgeStep(event.shiftKey)
@@ -430,6 +448,11 @@ export default function CanvasElement({
     borderRadius: 3,
     userSelect: 'none',
   }
+  const hotspotBadgeStyle = {
+    position: 'absolute', bottom: -20, left: 0, zIndex: 101, pointerEvents: 'none',
+    background: 'var(--accent)', color: 'white', fontSize: '9px', fontFamily: 'sans-serif',
+    padding: '1px 5px', borderRadius: 3, userSelect: 'none',
+  }
   const getResizeHandleStyle = (handleStyle) => ({
     position: 'absolute',
     width: 10,
@@ -490,6 +513,8 @@ export default function CanvasElement({
       }}
       onClick={(e) => {
         if (!isLinePathEvent(element, e)) return
+        // Presentation actions and preview rich-text links must not navigate while editing.
+        e.target?.closest?.('a')?.preventDefault?.()
         if (!isEditing) onClick(e)
         else e.stopPropagation()
       }}
@@ -513,6 +538,8 @@ export default function CanvasElement({
         )}
         {element.type === 'image' &&
           (() => {
+            const image = normalizeImageAccessibility(element)
+            const descriptionId = image.longDescription ? `image-description-${image.id}` : undefined
             const imgFilter =
               [
                 element.filterBrightness != null && element.filterBrightness !== 100
@@ -531,8 +558,9 @@ export default function CanvasElement({
             return (
               <div style={imageWrapperStyle}>
                 <img
-                  src={sanitizeMediaSrc(element.src)}
-                  alt={element.alt || ''}
+                  src={sanitizeMediaSrc(image.src)}
+                  alt={image.decorative ? '' : image.alt}
+                  aria-describedby={descriptionId}
                   style={
                     element.imageW != null
                       ? {
@@ -558,6 +586,7 @@ export default function CanvasElement({
                   }
                   draggable={false}
                 />
+                {descriptionId && <span id={descriptionId} className="ns-image-long-description">{image.longDescription}</span>}
                 {isCropping && cropState && (
                   <CropOverlay
                     crop={cropState}
@@ -593,7 +622,7 @@ export default function CanvasElement({
                   pluginData={element.pluginData || {}}
                   width={element.width}
                   height={element.height}
-                  interactive={isSelected && !isDragging}
+                  interactive={isSelected && !isDragging && !slideLocked}
                   onDataUpdate={(patch) =>
                     onUpdateElement?.(element.id, {
                       pluginData: { ...(element.pluginData || {}), ...patch },
@@ -623,36 +652,28 @@ export default function CanvasElement({
                 </pre>
               )
             if (element.type === 'video') {
-              const playbackRate = getPlaybackRate(element.playbackRate)
-              const videoSrc = sanitizeMediaSrc(resolveVideoSrc(element))
+              const media = normalizeMediaAccessibility(element)
+              const playbackRate = getPlaybackRate(media.playbackRate)
+              const videoSrc = sanitizeMediaSrc(resolveVideoSrc(media))
               return (
-                <video
-                  ref={videoRef}
-                  src={getMediaFragmentSrc(videoSrc, element.startTime, element.endTime)}
-                  controls={element.controls !== false}
-                  autoPlay={element.autoplay || false}
-                  muted={element.muted || false}
-                  loop={element.loop || false}
-                  poster={sanitizeMediaSrc(element.poster) || undefined}
-                  style={videoStyle}
-                  onLoadedMetadata={(event) => {
-                    if (playbackRate && playbackRate !== 1)
-                      event.currentTarget.playbackRate = playbackRate
-                  }}
-                />
+                <>
+                  <video ref={videoRef} src={getMediaFragmentSrc(videoSrc, media.startTime, media.endTime)} controls={media.controls !== false} autoPlay={media.autoplay || false} muted={media.muted || false} loop={media.loop || false} poster={sanitizeMediaSrc(media.poster) || undefined} style={videoStyle} onLoadedMetadata={(event) => { if (playbackRate && playbackRate !== 1) event.currentTarget.playbackRate = playbackRate }}>
+                    {media.tracks.map((track, index) => <track key={`${track.src}-${index}`} src={sanitizeMediaSrc(track.src)} kind={track.kind} srcLang={track.srcLang || undefined} label={track.label || undefined} default={track.default} />)}
+                  </video>
+                  {media.audioDescription && <p className="ns-media-audio-description">{media.audioDescription}</p>}
+                  {media.transcript && <details className="ns-media-transcript"><summary>Transcript</summary><p>{media.transcript}</p></details>}
+                </>
               )
             }
             if (element.type === 'audio') {
+              const media = normalizeMediaAccessibility(element)
               return (
                 <div style={audioWrapperStyle}>
-                  <audio
-                    src={sanitizeMediaSrc(element.src)}
-                    controls={element.controls !== false}
-                    autoPlay={element.autoplay || false}
-                    loop={element.loop || false}
-                    muted={element.muted || false}
-                    style={audioControlStyle}
-                  />
+                  <audio src={sanitizeMediaSrc(media.src)} controls={media.controls !== false} autoPlay={media.autoplay || false} loop={media.loop || false} muted={media.muted || false} style={audioControlStyle}>
+                    {media.tracks.map((track, index) => <track key={`${track.src}-${index}`} src={sanitizeMediaSrc(track.src)} kind={track.kind} srcLang={track.srcLang || undefined} label={track.label || undefined} default={track.default} />)}
+                  </audio>
+                  {media.audioDescription && <p className="ns-media-audio-description">{media.audioDescription}</p>}
+                  {media.transcript && <details className="ns-media-transcript"><summary>Transcript</summary><p>{media.transcript}</p></details>}
                 </div>
               )
             }
@@ -684,11 +705,13 @@ export default function CanvasElement({
           })()}
       </div>
       {element.fragment && <div style={fragmentBadgeStyle}>▶ {element.fragmentIndex ?? 1}</div>}
+      {element.action?.hotspot && <div style={hotspotBadgeStyle}>Hotspot</div>}
       {element.groupId && isSelected && <div style={groupBadgeStyle}>Group</div>}
       {isSelected &&
         !isEditing &&
         !isCropping &&
         !element.locked &&
+        !slideLocked &&
         Object.entries(HANDLE_STYLES).map(([handle, hStyle]) => (
           <div
             key={handle}
@@ -703,7 +726,7 @@ export default function CanvasElement({
             onDoubleClick={(e) => e.stopPropagation()}
           />
         ))}
-      {isSelected && !isEditing && !isCropping && !element.locked && (
+      {isSelected && !isEditing && !isCropping && !element.locked && !slideLocked && (
         <>
           <div style={rotationGuideStyle} />
           <div

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LiveSocketContext } from '../../contexts/live-socket-context-provider.jsx'
 import { useEditorStore } from '../../stores/editor-store'
@@ -203,14 +203,16 @@ describe('EditorPage command palette element actions', () => {
     })
     fireEvent.click(screen.getByText('Insert Link'))
 
-    expect(feedback).toHaveBeenCalledWith(
-      expect.objectContaining({
-        detail: expect.objectContaining({
-          type: 'notice',
-          message: 'Enter text edit mode and select a text element before inserting a link.',
-        }),
-      })
-    )
+    await waitFor(() => {
+      expect(feedback).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: expect.objectContaining({
+            type: 'notice',
+            message: 'Enter text edit mode and select a text element before inserting a link.',
+          }),
+        })
+      )
+    })
     expect(document.querySelector('[title="Add link"]')).toBeNull()
     expect(useUIStore.getState().showCommandPalette).toBe(false)
 

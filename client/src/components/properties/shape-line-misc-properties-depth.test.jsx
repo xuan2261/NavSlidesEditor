@@ -75,6 +75,18 @@ describe('canonical shape/line/misc property depth', () => {
     expect(onUpdate).toHaveBeenCalledWith({ arrowEnd: 'arrow' })
   })
 
+  it('[cap:element.line depth:behavior] attaches endpoints through named target and anchor selectors', () => {
+    const onUpdate = vi.fn()
+    const line = { id: 'line-1', type: 'line', strokeWidth: 2 }
+    const target = { id: 'shape-1', type: 'shape', name: 'Status card' }
+    render(<ShapeProperties element={line} elements={[line, target]} selectedElementIds={[line.id]} onUpdate={onUpdate} />)
+
+    fireEvent.change(screen.getByLabelText('Start connector target'), { target: { value: 'shape-1' } })
+    expect(onUpdate).toHaveBeenLastCalledWith({
+      connections: { start: { targetId: 'shape-1', anchor: 'center' } },
+    })
+  })
+
   it('[cap:element.callout depth:behavior] writes callout number and color', () => {
     const onUpdate = vi.fn()
     render(<MiscProperties element={{ id: 'callout-1', type: 'callout', calloutNumber: 1 }} onUpdate={onUpdate} />)

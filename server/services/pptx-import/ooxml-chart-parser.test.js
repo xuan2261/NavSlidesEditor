@@ -70,6 +70,16 @@ describe('ooxml-chart-parser (T5.1)', () => {
     expect(parsed.chartData.datasets[0].data).toEqual([40, 60])
   })
 
+  it('preserves pie point colors, legend placement, and scatter x-values', () => {
+    const pie = parseOoxmlChart(`<c:chartSpace><c:chart><c:title><c:tx><c:rich><a:p><a:r><a:t>Mix</a:t></a:r></a:p></c:rich></c:tx></c:title><c:plotArea><c:pieChart><c:ser><c:dPt><c:idx val="0"/><c:spPr><a:solidFill><a:srgbClr val="5DA5DA"/></a:solidFill></c:spPr></c:dPt><c:dPt><c:idx val="1"/><c:spPr><a:solidFill><a:srgbClr val="FAA43A"/></a:solidFill></c:spPr></c:dPt><c:cat><c:strCache><c:pt idx="0"><c:v>A</c:v></c:pt><c:pt idx="1"><c:v>B</c:v></c:pt></c:strCache></c:cat><c:val><c:numCache><c:pt idx="0"><c:v>40</c:v></c:pt><c:pt idx="1"><c:v>60</c:v></c:pt></c:numCache></c:val></c:ser></c:pieChart></c:plotArea><c:legend><c:legendPos val="r"/></c:legend></c:chart></c:chartSpace>`)
+    expect(pie).toMatchObject({ title: 'Mix', legendPosition: 'right' })
+    expect(pie.chartData.datasets[0].colors).toEqual(['#5DA5DA', '#FAA43A'])
+
+    const scatter = parseOoxmlChart(`<c:chartSpace><c:chart><c:plotArea><c:scatterChart><c:ser><c:tx><c:v>Observed</c:v></c:tx><c:xVal><c:numCache><c:pt idx="0"><c:v>5</c:v></c:pt><c:pt idx="1"><c:v>20</c:v></c:pt></c:numCache></c:xVal><c:yVal><c:numCache><c:pt idx="0"><c:v>8</c:v></c:pt><c:pt idx="1"><c:v>23</c:v></c:pt></c:numCache></c:yVal></c:ser></c:scatterChart></c:plotArea></c:chart></c:chartSpace>`)
+    expect(scatter.chartData.labels).toEqual([])
+    expect(scatter.chartData.datasets[0]).toMatchObject({ data: [8, 23], xValues: [5, 20] })
+  })
+
   it('returns empty structure for invalid input', () => {
     expect(parseOoxmlChart(null)).toBeNull()
     const empty = parseOoxmlChart('<c:chartSpace/>')

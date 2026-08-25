@@ -1,4 +1,10 @@
-const LENGTH_PROPS = new Set(['font-size', 'letter-spacing', 'line-height'])
+const LENGTH_PROPS = new Set([
+  'font-size',
+  'letter-spacing',
+  'line-height',
+  'margin-top',
+  'margin-bottom',
+])
 
 const CSS_LENGTH_TO_PX_FACTORS = {
   pt: 96 / 72,

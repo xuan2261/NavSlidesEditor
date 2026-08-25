@@ -23,11 +23,20 @@ describe('runtime closure verifier', () => {
     const root = makeRoot()
     fs.writeFileSync(
       path.join(root, 'server', 'vendor', 'vendor-manifest.json'),
-      JSON.stringify({ schemaVersion: 1, files: [{ path: 'socket.io/socket.io.min.js', bytes: 1, sha256: '0'.repeat(64) }] })
+      JSON.stringify({
+        schemaVersion: 1,
+        files: [{ path: 'socket.io/socket.io.min.js', bytes: 1, sha256: '0'.repeat(64) }],
+      })
     )
 
     expect(() =>
-      verifyRuntimeClosure({ rootDir: root, requiredServerModules: [], requireClientDist: false })
+      verifyRuntimeClosure({
+        rootDir: root,
+        requiredServerModules: [],
+        requireClientDist: false,
+        requiredVendorPaths: [],
+        expectedRevealVersion: null,
+      })
     ).toThrow('Vendor asset missing: socket.io/socket.io.min.js')
   })
 
@@ -51,7 +60,55 @@ describe('runtime closure verifier', () => {
     )
 
     expect(
-      verifyRuntimeClosure({ rootDir: root, requiredServerModules: [], requireClientDist: false })
-    ).toEqual({ vendorFiles: 1, serverModules: 0, clientDist: false })
+      verifyRuntimeClosure({
+        rootDir: root,
+        requiredServerModules: [],
+        requireClientDist: false,
+        requiredVendorPaths: [],
+        expectedRevealVersion: null,
+      })
+    ).toEqual({ vendorFiles: 1, revealJs: null, serverModules: 0, clientDist: false })
+  })
+
+  it('rejects stale Reveal versions and legacy plugin paths', () => {
+    const root = makeRoot()
+    const vendorDir = path.join(root, 'server', 'vendor')
+    const legacyPath = 'reveal.js/plugin/notes/notes.js'
+    fs.mkdirSync(path.dirname(path.join(vendorDir, legacyPath)), { recursive: true })
+    fs.writeFileSync(path.join(vendorDir, legacyPath), 'x')
+    fs.writeFileSync(
+      path.join(vendorDir, 'vendor-manifest.json'),
+      JSON.stringify({
+        schemaVersion: 1,
+        runtimes: { revealJs: '5.2.1' },
+        files: [
+          {
+            path: legacyPath,
+            bytes: 1,
+            sha256: '2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881',
+          },
+        ],
+      })
+    )
+
+    expect(() =>
+      verifyRuntimeClosure({
+        rootDir: root,
+        requiredServerModules: [],
+        requireClientDist: false,
+        requiredVendorPaths: [],
+        expectedRevealVersion: '6.0.1',
+      })
+    ).toThrow('Reveal runtime version mismatch')
+
+    expect(() =>
+      verifyRuntimeClosure({
+        rootDir: root,
+        requiredServerModules: [],
+        requireClientDist: false,
+        requiredVendorPaths: [],
+        expectedRevealVersion: '5.2.1',
+      })
+    ).toThrow('Legacy Reveal vendor asset is not allowed')
   })
 })

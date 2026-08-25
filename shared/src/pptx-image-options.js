@@ -46,7 +46,7 @@ function buildPptxImageOptions(source, element, bounds, resolution, layout) {
   }
   if (element.flipH) imageOptions.flipH = true
   if (element.flipV) imageOptions.flipV = true
-  if (element.alt || element.altText) imageOptions.altText = element.alt || element.altText
+  if (!element.decorative && (element.alt || element.altText)) imageOptions.altText = element.alt || element.altText
 
   if (element.cropData) {
     const crop = element.cropData || {}
@@ -71,7 +71,7 @@ function buildPptxImageOptions(source, element, bounds, resolution, layout) {
       w: Math.max(bounds.w, (element.imageW * layout.width) / resolution.width),
       h: Math.max(bounds.h, (element.imageH * layout.height) / resolution.height),
     }
-  } else if (element.objectFit) {
+  } else if (element.objectFit && element.objectFit !== 'fill') {
     imageOptions.sizing = {
       type: element.objectFit === 'cover' ? 'cover' : 'contain',
       w: bounds.w,
@@ -92,7 +92,7 @@ function buildPptxRasterImageOptions(data, element, bounds) {
   if (element.opacity != null && element.opacity !== 1) {
     imageOptions.transparency = Math.round((1 - element.opacity) * 100)
   }
-  if (element.alt || element.altText) imageOptions.altText = element.alt || element.altText
+  if (!element.decorative && (element.alt || element.altText)) imageOptions.altText = element.alt || element.altText
 
   return imageOptions
 }
@@ -109,10 +109,21 @@ function buildPptxImageBorderOverlayOptions(element, bounds) {
   }
 }
 
+function getPptxImageSemanticWarning(element, slideNumber) {
+  if (element?.type !== 'image') return null
+  const semantics = []
+  if (element.decorative === true) semantics.push('decorative status')
+  if (typeof element.longDescription === 'string' && element.longDescription.trim()) semantics.push('long description')
+  return semantics.length
+    ? `Slide ${slideNumber}: image ${semantics.join(' and ')} ${semantics.length === 1 ? 'is' : 'are'} not preserved in PPTX`
+    : null
+}
+
 module.exports = {
   buildPptxImageBorderOverlayOptions,
   buildPptxImageOptions,
   buildPptxRasterImageOptions,
   hasPptxImageVisualEffects,
   isPptxRasterSafeImageSource,
+  getPptxImageSemanticWarning,
 }

@@ -12,7 +12,7 @@ permissions:
 
 env:
   NODE_VERSION: '22.22.0'
-  PLAYWRIGHT_IMAGE: mcr.microsoft.com/playwright:v1.59.1-jammy
+  PLAYWRIGHT_IMAGE: mcr.microsoft.com/playwright:v1.62.1-jammy
 
 jobs:
   lint:
@@ -63,7 +63,7 @@ jobs:
     timeout-minutes: 25
     needs: [build]
     container:
-      image: mcr.microsoft.com/playwright:v1.59.1-jammy
+      image: mcr.microsoft.com/playwright:v1.62.1-jammy
     strategy:
       fail-fast: false
       matrix:
@@ -94,7 +94,7 @@ jobs:
     timeout-minutes: 30
     needs: [build]
     container:
-      image: mcr.microsoft.com/playwright:v1.59.1-jammy
+      image: mcr.microsoft.com/playwright:v1.62.1-jammy
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -121,7 +121,7 @@ jobs:
     timeout-minutes: 20
     needs: [build]
     container:
-      image: mcr.microsoft.com/playwright:v1.59.1-jammy
+      image: mcr.microsoft.com/playwright:v1.62.1-jammy
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -148,7 +148,7 @@ jobs:
     timeout-minutes: 15
     needs: [build]
     container:
-      image: mcr.microsoft.com/playwright:v1.59.1-jammy
+      image: mcr.microsoft.com/playwright:v1.62.1-jammy
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -176,7 +176,7 @@ jobs:
     timeout-minutes: 15
     needs: [build]
     container:
-      image: mcr.microsoft.com/playwright:v1.59.1-jammy
+      image: mcr.microsoft.com/playwright:v1.62.1-jammy
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

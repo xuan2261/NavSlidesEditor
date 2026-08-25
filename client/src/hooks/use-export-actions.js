@@ -12,9 +12,11 @@ import { usePresentationStore } from '../stores/presentation-store'
 import { showError, showNotice } from '../utils/app-feedback'
 
 function hasAdvancedPackageGeneration(presentation) {
-  return presentation?.pptxSourceAvailable === true &&
+  return (
+    presentation?.pptxSourceAvailable === true &&
     Number.isSafeInteger(presentation.aggregateGeneration) &&
     presentation.aggregateGeneration > 1
+  )
 }
 
 function pptxContentFingerprint(presentation) {
@@ -60,9 +62,10 @@ export function useExportActions(
   const cleanState = pptxCleanStateRef.current
   if (cleanState.presentationId !== presentation?.id) {
     cleanState.presentationId = presentation?.id || null
-    cleanState.fingerprint = presentation?.pptxOriginal || presentation?.pptxSourceAvailable
-      ? pptxContentFingerprint(presentation)
-      : ''
+    cleanState.fingerprint =
+      presentation?.pptxOriginal || presentation?.pptxSourceAvailable
+        ? pptxContentFingerprint(presentation)
+        : ''
     cleanState.locallyEdited = false
   } else if (
     cleanState.fingerprint &&
@@ -75,23 +78,25 @@ export function useExportActions(
 
   const onExportPPTX = useCallback(async () => {
     try {
-      const expectedOriginalGeneration = presentation?.pptxSourceAvailable === true &&
+      const expectedOriginalGeneration =
+        presentation?.pptxSourceAvailable === true &&
         Number.isSafeInteger(presentation.aggregateGeneration)
-        ? presentation.aggregateGeneration
-        : undefined
+          ? presentation.aggregateGeneration
+          : undefined
       const canDownloadOriginal = Boolean(
         presentation?.id &&
-          (presentation?.pptxSourceAvailable ||
-            (presentation?.pptxOriginal?.id && presentation?.pptxOriginal?.sha256)) &&
-          !presentation?._pptxEdited &&
-          !hasAdvancedPackageGeneration(presentation) &&
-          !cleanState.locallyEdited
+        (presentation?.pptxSourceAvailable ||
+          (presentation?.pptxOriginal?.id && presentation?.pptxOriginal?.sha256)) &&
+        !presentation?._pptxEdited &&
+        !hasAdvancedPackageGeneration(presentation) &&
+        !cleanState.locallyEdited
       )
       if (canDownloadOriginal) {
         try {
-          const original = expectedOriginalGeneration === undefined
-            ? await api.downloadPptxOriginal(presentation.id)
-            : await api.downloadPptxOriginal(presentation.id, expectedOriginalGeneration)
+          const original =
+            expectedOriginalGeneration === undefined
+              ? await api.downloadPptxOriginal(presentation.id)
+              : await api.downloadPptxOriginal(presentation.id, expectedOriginalGeneration)
           const filename = `${(presentation.title || 'presentation').replace(/[^a-z0-9._-]+/gi, '_')}.pptx`
           downloadBlob(original, filename)
           globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = {
@@ -108,7 +113,8 @@ export function useExportActions(
       const { exportToPptx } = await import('../utils/exportPptx')
       const warnings = await exportToPptx(presentation)
       globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = warnings.exportReport || null
-      if (warnings.length) showNotice(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
+      if (warnings.length)
+        showNotice(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
     } catch (err) {
       console.error('PPTX export failed:', err)
       showError('PPTX export failed: ' + err.message)
@@ -131,7 +137,8 @@ export function useExportActions(
       const { exportToPptx } = await import('../utils/exportPptx')
       const warnings = await exportToPptx(presentation)
       globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = warnings.exportReport || null
-      if (warnings.length) showNotice(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
+      if (warnings.length)
+        showNotice(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
     } catch (err) {
       console.error('Reconstructed PPTX export failed:', err)
       showError('Reconstructed PPTX export failed: ' + err.message)
@@ -153,16 +160,13 @@ export function useExportActions(
       const fidelity = await api.getPptxFidelity(presentation.id)
       const generation = fidelity.aggregateGeneration
       const validatedEdited = fidelity.exports?.validatedEdited
-      const canExportOrReconcile = validatedEdited?.available === true ||
-        validatedEdited?.reconciliationAvailable === true
+      const canExportOrReconcile =
+        validatedEdited?.available === true || validatedEdited?.reconciliationAvailable === true
       if (!canExportOrReconcile || !Number.isSafeInteger(generation)) {
         throw new Error('Validated edited export is not currently available')
       }
-      const key = globalThis.crypto?.randomUUID?.() ||
-        `export-${presentation.id}-${generation}`
-      const bytes = await api.downloadValidatedEditedPptx(
-        presentation.id, generation, key
-      )
+      const key = globalThis.crypto?.randomUUID?.() || `export-${presentation.id}-${generation}`
+      const bytes = await api.downloadValidatedEditedPptx(presentation.id, generation, key)
       if (Number.isSafeInteger(bytes?.aggregateGeneration)) {
         const store = usePresentationStore.getState()
         if (!store.presentation || store.presentation.id === presentation.id) {
@@ -172,8 +176,10 @@ export function useExportActions(
           onAggregateGeneration(bytes.aggregateGeneration, presentation.id)
         }
       }
-      const filename = `${(presentation.title || 'presentation')
-        .replace(/[^a-z0-9._-]+/gi, '_')}.pptx`
+      const filename = `${(presentation.title || 'presentation').replace(
+        /[^a-z0-9._-]+/gi,
+        '_'
+      )}.pptx`
       downloadBlob(bytes, filename)
     } catch (err) {
       console.error('Validated edited PPTX export failed:', err)
@@ -195,7 +201,7 @@ export function useExportActions(
   const onExportOffline = useCallback(async () => {
     try {
       const html = generateRevealHTML(presentation)
-      const offline = await generateOfflineHTML(html)
+      const offline = await generateOfflineHTML(html, { strictRequiredAssets: true })
       const blob = new Blob([offline], { type: 'text/html' })
       downloadBlob(
         blob,

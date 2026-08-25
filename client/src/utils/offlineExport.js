@@ -1,3 +1,5 @@
+import { REVEAL_REQUIRED_OFFLINE_ASSET_PATHS } from 'revealjs-shared'
+
 // Offline export: fetch vendor resources from local server and inline them into the HTML.
 // Uses a safe inlining technique to avoid </script> breakage inside inlined JS.
 
@@ -122,11 +124,50 @@ function resolveToVendor(url) {
 }
 
 function isRequiredOfflineAsset(url) {
-  return url === '/reveal-overrides.css' ||
-    /\/vendor\/reveal\.js\/dist\/(?:reset|reveal|theme\/[^/]+)\.css$/i.test(url) ||
-    /\/vendor\/reveal\.js\/dist\/reveal\.js$/i.test(url) ||
-    /\/vendor\/reveal\.js\/plugin\/(?:notes|highlight)\/[^/]+\.js$/i.test(url) ||
+  return (
+    url === '/reveal-overrides.css' ||
+    REVEAL_REQUIRED_OFFLINE_ASSET_PATHS.includes(url) ||
+    /\/vendor\/reveal\.js\/dist\/theme\/[^/]+\.css$/i.test(url) ||
     /\/vendor\/(?:katex|highlight\.js)\//i.test(url)
+  )
+}
+
+function stripRemoteCssImports(css) {
+  return css.replace(
+    /@import\s+(?:url\(\s*)?["']?https?:\/\/[^;]+;?/gi,
+    '/* Remote font import removed for offline mode */'
+  )
+}
+
+async function inlineCssDependencies(css, stylesheetPath, { required = false } = {}) {
+  let result = stripRemoteCssImports(css)
+  const references = [
+    ...new Set(
+      [...result.matchAll(/url\(\s*(["']?)([^"')]+)\1\s*\)/gi)]
+        .map((match) => match[2].trim())
+        .filter((url) => url && !/^(?:data:|blob:|#)/i.test(url))
+    ),
+  ]
+  const embedded = await Promise.all(
+    references.map(async (reference) => {
+      const resolvedUrl = new URL(reference, new URL(stylesheetPath, window.location.origin))
+      const fetchUrl =
+        resolvedUrl.origin === window.location.origin
+          ? `${resolvedUrl.pathname}${resolvedUrl.search}`
+          : resolvedUrl.href
+      const dataUri =
+        resolvedUrl.origin === window.location.origin
+          ? await fetchAsDataUri(fetchUrl)
+          : await fetchExternalAsDataUri(fetchUrl)
+      if (!dataUri && required) throw new Error(`offline-asset-fetch-failed:${fetchUrl}`)
+      return { reference, dataUri }
+    })
+  )
+
+  for (const { reference, dataUri } of embedded) {
+    if (dataUri) result = result.split(reference).join(dataUri)
+  }
+  return result
 }
 
 /**
@@ -145,7 +186,7 @@ function decodeSrcdoc(raw) {
 /**
  * Inline vendor scripts and CSS inside a decoded srcdoc HTML string.
  */
-async function inlineSrcdocDeps(inner) {
+async function inlineSrcdocDeps(inner, { strictRequiredAssets = false } = {}) {
   let changed = false
 
   // Normalize backslash-escaped closing tags from htmlGenerator template literals
@@ -159,7 +200,9 @@ async function inlineSrcdocDeps(inner) {
   ]
   for (const sm of vendorScriptMatches) {
     const vendorPath = toVendorPath(sm[1])
-    const js = await cachedFetchText(vendorPath)
+    const js = await cachedFetchText(vendorPath, {
+      required: strictRequiredAssets && isRequiredOfflineAsset(vendorPath),
+    })
     const safe = safeInlineJS(js)
     inner = inner.split(sm[0]).join(`<script>/* ${vendorPath} */\n${safe}\n</script>`)
     changed = true
@@ -173,7 +216,9 @@ async function inlineSrcdocDeps(inner) {
     const cdnUrl = sm[1]
     const vendorPath = resolveToVendor(cdnUrl)
     const fetchUrl = vendorPath || cdnUrl
-    const js = await cachedFetchText(fetchUrl)
+    const js = await cachedFetchText(fetchUrl, {
+      required: strictRequiredAssets && Boolean(vendorPath) && isRequiredOfflineAsset(vendorPath),
+    })
     const safe = safeInlineJS(js)
     const comment = vendorPath ? `/* ${vendorPath} (from ${cdnUrl}) */` : `/* ${cdnUrl} */`
     inner = inner.split(sm[0]).join(`<script>${comment}\n${safe}\n</script>`)
@@ -188,20 +233,9 @@ async function inlineSrcdocDeps(inner) {
   ]
   for (const lm of vendorLinkMatches) {
     const vendorPath = toVendorPath(lm[1])
-    let css = await cachedFetchText(vendorPath)
-    const origin = window.location.origin
-    if (vendorPath.includes('katex') && vendorPath.endsWith('.css')) {
-      const katexFontsBase = `${origin}/vendor/katex/dist/fonts`
-      css = css.replace(/url\(fonts\//g, `url(${katexFontsBase}/`)
-      css = css.replace(/url\("fonts\//g, `url("${katexFontsBase}/`)
-      css = css.replace(/url\('fonts\//g, `url('${katexFontsBase}/`)
-    }
-    if (vendorPath.includes('font-awesome') && vendorPath.endsWith('.css')) {
-      const faWebfontsBase = `${origin}/vendor/font-awesome/webfonts`
-      css = css.replace(/url\(\.\.\/webfonts\//g, `url(${faWebfontsBase}/`)
-      css = css.replace(/url\("\.\.\/webfonts\//g, `url("${faWebfontsBase}/`)
-      css = css.replace(/url\('\.\.\/webfonts\//g, `url('${faWebfontsBase}/`)
-    }
+    const required = strictRequiredAssets && isRequiredOfflineAsset(vendorPath)
+    let css = await cachedFetchText(vendorPath, { required })
+    css = await inlineCssDependencies(css, vendorPath, { required })
     inner = inner.split(lm[0]).join(`<style>/* ${vendorPath} */\n${css}\n</style>`)
     changed = true
   }
@@ -214,7 +248,10 @@ async function inlineSrcdocDeps(inner) {
     const cdnUrl = lm[1]
     const vendorPath = resolveToVendor(cdnUrl)
     const fetchUrl = vendorPath || cdnUrl
-    let css = await cachedFetchText(fetchUrl)
+    const required =
+      strictRequiredAssets && Boolean(vendorPath) && isRequiredOfflineAsset(vendorPath)
+    let css = await cachedFetchText(fetchUrl, { required })
+    css = await inlineCssDependencies(css, fetchUrl, { required })
     const comment = vendorPath ? `/* ${vendorPath} (from ${cdnUrl}) */` : `/* ${cdnUrl} */`
     inner = inner.split(lm[0]).join(`<style>${comment}\n${css}\n</style>`)
     changed = true
@@ -239,23 +276,9 @@ export async function generateOfflineHTML(html, options = {}) {
       let css = await cachedFetchText(vendorPath, {
         required: strictRequiredAssets && isRequiredOfflineAsset(vendorPath),
       })
-      const origin = window.location.origin
-
-      // Resolve KaTeX font relative paths to absolute URLs
-      if (vendorPath.includes('katex') && vendorPath.endsWith('.css')) {
-        const katexFontsBase = `${origin}/vendor/katex/dist/fonts`
-        css = css.replace(/url\(fonts\//g, `url(${katexFontsBase}/`)
-        css = css.replace(/url\("fonts\//g, `url("${katexFontsBase}/`)
-        css = css.replace(/url\('fonts\//g, `url('${katexFontsBase}/`)
-      }
-
-      // Resolve Font Awesome webfont relative paths (../webfonts/) to absolute URLs
-      if (vendorPath.includes('font-awesome') && vendorPath.endsWith('.css')) {
-        const faWebfontsBase = `${origin}/vendor/font-awesome/webfonts`
-        css = css.replace(/url\(\.\.\/webfonts\//g, `url(${faWebfontsBase}/`)
-        css = css.replace(/url\("\.\.\/webfonts\//g, `url("${faWebfontsBase}/`)
-        css = css.replace(/url\('\.\.\/webfonts\//g, `url('${faWebfontsBase}/`)
-      }
+      css = await inlineCssDependencies(css, vendorPath, {
+        required: strictRequiredAssets && isRequiredOfflineAsset(vendorPath),
+      })
 
       result = result.split(match[0]).join(`<style>/* ${vendorPath} */\n${css}\n</style>`)
     }
@@ -267,7 +290,10 @@ export async function generateOfflineHTML(html, options = {}) {
     ]
     for (const match of publicCssMatches) {
       const publicPath = match[1]
-      const css = await cachedFetchText(publicPath, {
+      let css = await cachedFetchText(publicPath, {
+        required: strictRequiredAssets && isRequiredOfflineAsset(publicPath),
+      })
+      css = await inlineCssDependencies(css, publicPath, {
         required: strictRequiredAssets && isRequiredOfflineAsset(publicPath),
       })
       result = result.split(match[0]).join(`<style>/* ${publicPath} */\n${css}\n</style>`)
@@ -351,7 +377,7 @@ export async function generateOfflineHTML(html, options = {}) {
       const afterSrcdoc = srcdocMatch[3]
       let inner = decodeSrcdoc(raw)
 
-      const { html: processedInner } = await inlineSrcdocDeps(inner)
+      const { html: processedInner } = await inlineSrcdocDeps(inner, { strictRequiredAssets })
 
       const iframeId = `__offline_iframe_${iframeCounter++}`
       iframeEntries.push({ id: iframeId, html: processedInner })
@@ -371,7 +397,7 @@ export async function generateOfflineHTML(html, options = {}) {
       const afterSrc = dataUrlMatch[3]
       let inner = decodeURIComponent(raw)
 
-      const { html: processedInner } = await inlineSrcdocDeps(inner)
+      const { html: processedInner } = await inlineSrcdocDeps(inner, { strictRequiredAssets })
 
       const iframeId = `__offline_iframe_${iframeCounter++}`
       iframeEntries.push({ id: iframeId, html: processedInner })

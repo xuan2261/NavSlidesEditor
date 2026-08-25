@@ -1,18 +1,31 @@
+import { resolveEffectiveSlide } from 'revealjs-shared'
 import SlideCanvas from '../SlideCanvas'
 import { api } from '../../utils/api'
 import { showError } from '../../utils/app-feedback'
+import { useEditorStore } from '../../stores/editor-store'
 
 export default function EditorCanvasWorkspace({ overlayOpen, c }) {
+  const smartGuidesEnabled = useEditorStore((state) => state.smartGuidesEnabled)
+  const showRulers = useEditorStore((state) => state.showRulers)
+  const guides = useEditorStore((state) => state.guides)
+  const setGuides = useEditorStore((state) => state.setGuides)
+  const ownerSlide = c.masterEdit
+    ? { id: `master:${c.masterEdit.id}`, elements: c.masterEdit.fixedElements, background: c.masterEdit.background }
+    : c.activeSlide
+  const slide = c.masterEdit
+    ? ownerSlide
+    : resolveEffectiveSlide(ownerSlide, c.presentation.layoutMasters).slide
   return (
     <div
       inert={overlayOpen ? '' : undefined}
       className="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-workspace"
     >
       <div className="flex-1 flex flex-col relative overflow-hidden">
+      {c.masterEdit && <div className="flex items-center justify-between border-b border-accent bg-primary-light px-3 py-1 text-xs text-text-primary"><span>Editing master: {c.masterEdit.name}</span><button type="button" className="underline" onClick={c.onExitMasterEdit}>Exit master edit</button></div>}
         <SlideCanvas
           editor={c.editor}
-          slide={c.activeSlide}
           designTokens={c.presentation.designTokens}
+          slide={slide}
           selectedElementIds={c.selectedElementIds}
           editingElementId={c.editingElementId}
           showGrid={c.showGrid}
@@ -31,11 +44,11 @@ export default function EditorCanvasWorkspace({ overlayOpen, c }) {
           footerMode={c.presentation.footerMode || 'basic'}
           sequenceSections={c.presentation.sequenceSections || []}
           activeSection={c.currentSlide?.activeSection ?? null}
-          smartGuidesEnabled={c.smartGuidesEnabled}
-          showRulers={c.showRulers}
-          persistentGuides={c.guides}
-          onAddGuide={(guide) => c.setGuides((prev) => [...prev, guide])}
-          onRemoveGuide={(idx) => c.setGuides((prev) => prev.filter((_, i) => i !== idx))}
+          smartGuidesEnabled={smartGuidesEnabled}
+          showRulers={showRulers}
+          persistentGuides={guides}
+          onAddGuide={(guide) => setGuides((previous) => [...previous, guide])}
+          onRemoveGuide={(index) => setGuides((previous) => previous.filter((_, itemIndex) => itemIndex !== index))}
           onToggleSelectElement={c.toggleElementSelection}
           onStartEdit={c.startEditingElement}
           onStopEdit={c.stopEditingElement}
@@ -48,9 +61,11 @@ export default function EditorCanvasWorkspace({ overlayOpen, c }) {
           onPaste={c.handlePaste}
           onDuplicate={c.handleDuplicate}
           onBlockedAction={c.notifyBlockedAction}
+          safeArea={c.masterEdit?.safeArea}
           onOpenHtmlEditor={c.openHtmlEditor}
           onOpenCodeEditor={c.openCodeEditor}
           onOpenLatexEditor={c.openLatexEditor}
+          masterEdit={Boolean(c.masterEdit)}
           onAddMedia={async (file, dropX, dropY, targetSlideId) => {
             const targetId = targetSlideId ?? c.activeSlideRef?.current?.id ?? c.activeSlide?.id
             try {

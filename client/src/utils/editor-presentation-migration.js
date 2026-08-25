@@ -2,6 +2,14 @@ import { sanitizeRichTextHtml } from './content-safety'
 import { resolveGameConfig } from '../constants/game-element-types-constants'
 import { migrateVideoSrc } from './migrate-video-src'
 import { normalizePresentationNotes } from './slide-notes'
+import {
+  normalizeElementAction,
+  normalizeImageAccessibility,
+  normalizeLayoutMasters,
+  normalizeLayoutOverrides,
+  normalizeMediaAccessibility,
+  normalizeSlideConnectorConnections,
+} from 'revealjs-shared'
 
 const legacyTextElement = (content) => ({
   id: crypto.randomUUID(),
@@ -16,18 +24,37 @@ const legacyTextElement = (content) => ({
 
 function migrateElement(element) {
   const migrated = migrateVideoSrc(element)
-  if (migrated?.type !== 'game' || typeof migrated.gameType !== 'string') return migrated
+  const withGameConfig = migrated?.type !== 'game' || typeof migrated.gameType !== 'string'
+    ? migrated
+    : {
+        ...migrated,
+        [migrated.gameType]: resolveGameConfig(migrated, migrated.gameType),
+      }
+  const { action } = normalizeElementAction(withGameConfig?.action)
+  const withAction = action ? { ...withGameConfig, action } : withGameConfig
+  return normalizeMediaAccessibility(normalizeImageAccessibility(withAction))
+}
+
+function migrateElements(elements) {
+  return normalizeSlideConnectorConnections(elements.map(migrateElement))
+}
+
+function migrateLayoutMetadata(slide) {
+  const layoutOverrides = normalizeLayoutOverrides(slide.layoutOverrides)
+  const children = Array.isArray(slide.children) ? slide.children.map(migrateLayoutMetadata) : slide.children
+  if (!layoutOverrides && children === slide.children) return slide
   return {
-    ...migrated,
-    [migrated.gameType]: resolveGameConfig(migrated, migrated.gameType),
+    ...slide,
+    ...(children !== slide.children ? { children } : {}),
+    ...(layoutOverrides ? { layoutOverrides } : {}),
   }
 }
 
 export function migrateChild(child) {
   const elements = Array.isArray(child.elements)
-    ? child.elements.map(migrateElement)
+    ? migrateElements(child.elements)
     : child.html
-      ? [legacyTextElement(sanitizeRichTextHtml(child.html))]
+      ? migrateElements([legacyTextElement(sanitizeRichTextHtml(child.html))])
       : []
   return { ...child, elements }
 }
@@ -38,18 +65,19 @@ export function migrateSlide(slide) {
       ? { ...slide, children: slide.children.map(migrateChild) }
       : slide
 
-  if (!Array.isArray(withChildren.elements)) {
-    return {
-      ...withChildren,
-      elements: withChildren.html ? [legacyTextElement(withChildren.html)] : [],
-    }
-  }
-  return { ...withChildren, elements: withChildren.elements.map(migrateElement) }
+  const elements = Array.isArray(withChildren.elements)
+    ? migrateElements(withChildren.elements)
+    : withChildren.html
+      ? migrateElements([legacyTextElement(withChildren.html)])
+      : []
+  return { ...withChildren, elements }
 }
 
 export function migratePresentation(presentation) {
+  const layoutMasters = normalizeLayoutMasters(presentation.layoutMasters)
   return normalizePresentationNotes({
     ...presentation,
-    slides: (presentation.slides || []).map(migrateSlide),
+    slides: (presentation.slides || []).map(migrateSlide).map(migrateLayoutMetadata),
+    ...(layoutMasters ? { layoutMasters } : {}),
   })
 }

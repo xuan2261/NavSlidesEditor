@@ -78,4 +78,45 @@ describe('SettingsPage accessibility and AI connection test', () => {
 
     expect(screen.queryByRole('dialog', { name: 'Sync to Cloud' })).toBeNull()
   })
+
+  it('switches to a compatible default model when the provider changes', async () => {
+    testAIConnection.mockResolvedValue(true)
+    render(
+      <MemoryRouter>
+        <SettingsPage />
+      </MemoryRouter>
+    )
+
+    fireEvent.change(await screen.findByLabelText('Provider'), { target: { value: 'gemini' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Test Connection' }))
+
+    expect(screen.getByLabelText('Model').value).toBe('gemini-2.0-flash')
+    await waitFor(() => {
+      expect(testAIConnection).toHaveBeenCalledWith(
+        expect.objectContaining({ provider: 'gemini', model: 'gemini-2.0-flash' })
+      )
+    })
+  })
+
+  it('announces save failures as an alert', async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ai: { provider: 'openai', apiKey: '', model: 'gpt-4o-mini' },
+        }),
+      })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({}) })
+    render(
+      <MemoryRouter>
+        <SettingsPage />
+      </MemoryRouter>
+    )
+
+    await screen.findByLabelText('Provider')
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect((await screen.findByRole('alert')).textContent).toContain('Error: Save failed')
+  })
 })

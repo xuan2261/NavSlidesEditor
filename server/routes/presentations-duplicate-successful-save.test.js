@@ -18,7 +18,7 @@ process.env.SLIDES_DATA_DIR = dataDir
 const storage = require('../services/storage')
 const packageRuntime = require('../services/pptx-import/package-store-runtime')
 const packageLifecycle = require('../services/package-lifecycle-integration')
-const { hashRecord, SCHEMA_VERSION } = require('../services/pptx-import/package-store/schemas')
+const { hashRecord, RECORD_SCHEMA_VERSION } = require('../services/pptx-import/package-store/schemas')
 
 function deferred() {
   let resolve
@@ -44,7 +44,7 @@ async function seedCommittedAuthority() {
     const source = store.getState().heads.find((head) => head.presentationId === 'deck-1')
     const projection = { id: 'deck-1', title: 'Original', slides: [{ id: 's1', elements: [] }] }
     const sourceMap = {
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: RECORD_SCHEMA_VERSION,
       presentationId: 'deck-1',
       revisionId: source.packageRevisionId,
       packageGeneration: source.generation,
@@ -55,7 +55,7 @@ async function seedCommittedAuthority() {
       head.projectionRevisionId = hashRecord(projection)
       head.sourceMapRevisionId = hashRecord(sourceMap)
       next.mutationResults.push({
-        schemaVersion: SCHEMA_VERSION,
+        schemaVersion: RECORD_SCHEMA_VERSION,
         operation: 'package-import',
         presentationId: 'deck-1',
         idempotencyKey: 'fixture-import',

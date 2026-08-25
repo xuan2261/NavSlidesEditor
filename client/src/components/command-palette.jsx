@@ -25,12 +25,30 @@ export function CommandPalette({ open, onClose, commands = [] }) {
     c.label.toLowerCase().includes(query.toLowerCase())
   )
 
-  const closeAndRestoreFocus = () => {
-    onClose()
+  const closeAndRestoreFocus = (afterClose) => {
     const previousFocus = previousFocusRef.current
+    const closingDialog = dialogRef.current
+    onClose()
     setTimeout(() => {
-      if (previousFocus?.isConnected) previousFocus.focus?.()
+      const activeElement = document.activeElement
+      const focusStayedInClosingDialog = closingDialog?.contains(activeElement)
+      if (
+        previousFocus?.isConnected &&
+        (activeElement === document.body || focusStayedInClosingDialog)
+      ) {
+        previousFocus.focus?.()
+      }
+      if (typeof afterClose === 'function') afterClose()
     }, 0)
+  }
+
+  const executeCommand = (command) => {
+    if (command.id === 'insertLink') {
+      closeAndRestoreFocus(command.action)
+      return
+    }
+    command.action()
+    closeAndRestoreFocus()
   }
 
   useEffect(() => {
@@ -49,10 +67,7 @@ export function CommandPalette({ open, onClose, commands = [] }) {
     } else if (e.key === 'Enter') {
       e.preventDefault()
       e.stopPropagation()
-      if (filtered[selectedIndex]) {
-        filtered[selectedIndex].action()
-        closeAndRestoreFocus()
-      }
+      if (filtered[selectedIndex]) executeCommand(filtered[selectedIndex])
     } else if (e.key === 'Escape') {
       e.stopPropagation()
       closeAndRestoreFocus()
@@ -62,6 +77,7 @@ export function CommandPalette({ open, onClose, commands = [] }) {
   const handleDialogKeyDown = (e) => {
     if (e.key === 'Escape') {
       e.preventDefault()
+      e.stopPropagation()
       closeAndRestoreFocus()
       return
     }
@@ -120,10 +136,7 @@ export function CommandPalette({ open, onClose, commands = [] }) {
             <li key={cmd.id}>
               <button
                 type="button"
-                onClick={() => {
-                  cmd.action()
-                  closeAndRestoreFocus()
-                }}
+                onClick={() => executeCommand(cmd)}
                 className={`flex w-full cursor-pointer items-center justify-between border-0 px-4 py-2.5 text-left ${
                   i === selectedIndex ? 'bg-hover' : 'bg-transparent'
                 }`}

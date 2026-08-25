@@ -121,4 +121,143 @@ describe('SlideCanvas media drop', () => {
       's1',
     ])
   })
+
+  it('does not enter element edit mode when the slide is locked', () => {
+    const onStartEdit = vi.fn()
+    renderCanvas({
+      onStartEdit,
+      slide: {
+        id: 's1',
+        locked: true,
+        elements: [
+          {
+            id: 'text-1',
+            type: 'text',
+            x: 0,
+            y: 0,
+            width: 200,
+            height: 80,
+            content: '<p>Locked</p>',
+          },
+        ],
+      },
+    })
+
+    fireEvent.doubleClick(screen.getByTestId('slide-element-text-1'))
+
+    expect(onStartEdit).not.toHaveBeenCalled()
+  })
+
+  it('does not commit an active crop after the slide becomes locked', () => {
+    const onUpdateElement = vi.fn()
+    const image = {
+      id: 'image-1',
+      type: 'image',
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 100,
+      src: '/image.png',
+    }
+    const view = renderCanvas({
+      slide: { id: 's1', elements: [image] },
+      onUpdateElement,
+    })
+
+    fireEvent.contextMenu(screen.getByTestId('slide-element-image-1'))
+    fireEvent.click(screen.getByRole('button', { name: 'Crop' }))
+    expect(screen.getByRole('button', { name: 'Apply crop' })).toBeTruthy()
+
+    view.rerender(
+      <SlideCanvas
+        editor={null}
+        slide={{ id: 's1', locked: true, elements: [image] }}
+        selectedElementIds={[]}
+        editingElementId={null}
+        showGrid={false}
+        resolution={{ width: 960, height: 540 }}
+        persistentGuides={[]}
+        onToggleSelectElement={vi.fn()}
+        onStartEdit={vi.fn()}
+        onStopEdit={vi.fn()}
+        onUpdateElement={onUpdateElement}
+        onUpdateElements={vi.fn()}
+        onDeleteElement={vi.fn()}
+        onDeleteSelectedElements={vi.fn()}
+      />
+    )
+    expect(screen.queryByRole('button', { name: 'Apply crop' })).toBeNull()
+
+    expect(onUpdateElement).not.toHaveBeenCalled()
+  })
+
+  it('removes persistent guides from the keyboard', () => {
+    const onRemoveGuide = vi.fn()
+    renderCanvas({
+      persistentGuides: [{ axis: 'x', position: 120 }],
+      onRemoveGuide,
+    })
+
+    const guide = screen.getByRole('button', { name: 'Remove vertical guide at 120 pixels' })
+    fireEvent.keyDown(guide, { key: 'Enter' })
+
+    expect(onRemoveGuide).toHaveBeenCalledWith(0)
+  })
+
+  it.each(
+    ['Delete', 'Backspace'].flatMap((key) => [
+      [key, 'select', () => document.createElement('select')],
+      [key, 'button', () => document.createElement('button')],
+      [
+        key,
+        'contenteditable',
+        () => {
+          const target = document.createElement('div')
+          target.contentEditable = 'true'
+          return target
+        },
+      ],
+      [key, 'media control', () => document.createElement('video')],
+    ])
+  )('does not delete selected elements when %s is owned by %s', (key, _name, createTarget) => {
+    const onDeleteSelectedElements = vi.fn()
+    renderCanvas({ selectedElementIds: ['shape-1'], onDeleteSelectedElements })
+    const target = createTarget()
+    target.tabIndex = 0
+    document.body.appendChild(target)
+    target.focus()
+
+    fireEvent.keyDown(target, { key })
+
+    expect(onDeleteSelectedElements).not.toHaveBeenCalled()
+    target.remove()
+  })
+
+  it.each(['Delete', 'Backspace'])('deletes once when the canvas owns %s', (key) => {
+    const onDeleteSelectedElements = vi.fn()
+    renderCanvas({ selectedElementIds: ['shape-1'], onDeleteSelectedElements })
+    const canvas = screen.getByTestId('canvas-area')
+    canvas.tabIndex = 0
+    canvas.focus()
+
+    fireEvent.keyDown(canvas, { key })
+
+    expect(onDeleteSelectedElements).toHaveBeenCalledTimes(1)
+  })
+
+  it.each(['Delete', 'Backspace'])('does not delete from a locked slide with %s', (key) => {
+    const onDeleteSelectedElements = vi.fn()
+    renderCanvas({
+      slide: { id: 's1', locked: true, elements: [] },
+      selectedElementIds: ['shape-1'],
+      onDeleteSelectedElements,
+    })
+    const canvas = screen.getByTestId('canvas-area')
+    canvas.tabIndex = 0
+    canvas.focus()
+
+    fireEvent.keyDown(canvas, { key })
+
+    expect(onDeleteSelectedElements).not.toHaveBeenCalled()
+  })
 })

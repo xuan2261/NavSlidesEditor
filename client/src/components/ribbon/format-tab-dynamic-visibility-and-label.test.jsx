@@ -4,6 +4,7 @@ import * as Tabs from '@radix-ui/react-tabs'
 import { useUIStore } from '../../stores/ui-store'
 import TabBar from './tab-bar-with-scroll-and-icons'
 import RibbonPanel from './ribbon-panel'
+import { FORMAT_RIBBON_ELEMENT_POLICY } from './ribbon-tabs-config'
 
 function renderTabBar(activeTab = 'home') {
   return render(
@@ -16,6 +17,7 @@ function renderTabBar(activeTab = 'home') {
 beforeEach(() => {
   useUIStore.setState({
     activeTab: 'home',
+    lastNonContextualTab: 'home',
     formatContext: { hasSelection: false, elementType: null },
     formatAutoActivatedForSelection: false,
   })
@@ -36,16 +38,13 @@ describe('Format tab dynamic visibility', () => {
 })
 
 describe('Format tab dynamic label', () => {
-  const cases = [
-    ['image', 'Picture Format'],
-    ['table', 'Table Design'],
-    ['chart', 'Chart Design'],
-    ['shape', 'Shape Format'],
-    ['code', 'Code'],
-    ['video', 'Media'],
-  ]
+  const cases = Object.entries(FORMAT_RIBBON_ELEMENT_POLICY).map(([type, policy]) => [
+    type,
+    policy.label,
+  ])
+
   for (const [type, label] of cases) {
-    it(`labels a ${type} selection as "${label}"`, () => {
+    it(`[cap:control.ribbon.contextual-format] labels a ${type} selection as "${label}"`, () => {
       useUIStore.setState({ formatContext: { hasSelection: true, elementType: type } })
       renderTabBar()
       const tab = screen.getByTestId('ribbon-tab-format')

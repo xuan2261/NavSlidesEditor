@@ -28,4 +28,16 @@ describe('line element renderer', () => {
     expect(markerIds.some((id) => id.startsWith('ms-'))).toBe(true)
     expect(markerIds.some((id) => id.startsWith('me-'))).toBe(true)
   })
+
+  it('renders resolved attached endpoints without changing curves or markers', () => {
+    const { container } = render(
+      <LineArrowRenderer
+        element={{ ...baseLine, id: 'attached', x1: 24, y1: 30, x2: 88, y2: 10, cx: 50, cy: 0 }}
+      />
+    )
+
+    expect(container.querySelector('path').getAttribute('d')).toBe('M 24 30 Q 50 0 88 10')
+    expect(container.querySelector('path').getAttribute('marker-start')).toContain('ms-l')
+    expect(container.querySelector('path').getAttribute('marker-end')).toContain('me-l')
+  })
 })

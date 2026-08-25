@@ -48,6 +48,7 @@ export default function CommonElementControls({
           <div className="text-[11px] text-text-muted">X</div>
           <Input
             data-testid="prop-x"
+            aria-label="Horizontal position"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             {...numProps('x', Math.round(element.x))}
@@ -58,6 +59,7 @@ export default function CommonElementControls({
           <div className="text-[11px] text-text-muted">Y</div>
           <Input
             data-testid="prop-y"
+            aria-label="Vertical position"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             {...numProps('y', Math.round(element.y))}
@@ -68,6 +70,7 @@ export default function CommonElementControls({
           <div className="text-[11px] text-text-muted">Rot</div>
           <Input
             data-testid="prop-rotation"
+            aria-label="Rotation"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             step="1"
@@ -84,6 +87,7 @@ export default function CommonElementControls({
           <div className="text-[11px] text-text-muted">W</div>
           <Input
             data-testid="prop-width"
+            aria-label="Width"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             {...numProps('width', Math.round(element.width))}
@@ -94,6 +98,7 @@ export default function CommonElementControls({
           <div className="text-[11px] text-text-muted">H</div>
           <Input
             data-testid="prop-height"
+            aria-label="Height"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             {...numProps('height', Math.round(element.height))}
@@ -114,6 +119,7 @@ export default function CommonElementControls({
           <input
             data-testid="prop-opacity"
             data-mixed={mixed.opacity?.isMixed ? 'true' : undefined}
+            aria-label="Opacity"
             type="range"
             className="w-full accent-accent"
             min="0"
@@ -172,6 +178,7 @@ export default function CommonElementControls({
               <div className="text-[11px] text-text-muted">Order</div>
               <Input
                 data-testid="prop-fragment-index"
+                aria-label="Fragment order"
                 className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 type="number"
                 min="1"
@@ -184,6 +191,7 @@ export default function CommonElementControls({
               <div className="text-[11px] text-text-muted">Animation</div>
               <Select
                 data-testid="prop-fragment-animation"
+                aria-label="Fragment animation"
                 className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 value={element.fragmentAnimation || 'fade-in'}
                 onChange={(e) => onUpdate({ fragmentAnimation: e.target.value })}
@@ -206,6 +214,7 @@ export default function CommonElementControls({
               <div className="text-[10px] text-text-muted">X</div>
               <Input
                 data-testid="prop-shadow-x"
+                aria-label="Shadow horizontal offset"
                 className="w-full bg-card border border-border text-text-primary px-2 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 type="number"
                 value={element.shadowX ?? 0}
@@ -216,6 +225,7 @@ export default function CommonElementControls({
               <div className="text-[10px] text-text-muted">Y</div>
               <Input
                 data-testid="prop-shadow-y"
+                aria-label="Shadow vertical offset"
                 className="w-full bg-card border border-border text-text-primary px-2 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 type="number"
                 value={element.shadowY ?? 0}
@@ -226,6 +236,7 @@ export default function CommonElementControls({
               <div className="text-[10px] text-text-muted">Blur</div>
               <Input
                 data-testid="prop-shadow-blur"
+                aria-label="Shadow blur"
                 className="w-full bg-card border border-border text-text-primary px-2 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 type="number"
                 min="0"
@@ -237,6 +248,7 @@ export default function CommonElementControls({
               <div className="text-[10px] text-text-muted">Color</div>
               <ColorPicker
                 data-testid="prop-shadow-color"
+                aria-label="Shadow color"
                 className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
                 value={element.shadowColor || '#000000'}
                 onChange={(e) => onUpdate({ shadowColor: e.target.value })}

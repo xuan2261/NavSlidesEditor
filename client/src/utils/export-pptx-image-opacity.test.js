@@ -76,14 +76,14 @@ describe('Phase 3 pptx: image crop and accepted filter/radius limits', () => {
     expect(sizing.h).toBeCloseTo(4.691666666666666)
   })
 
-  it('maps objectFit cover to cover sizing and other fits to contain sizing', () => {
+  it('maps cover sizing and preserves fill on the authored bounds', () => {
     const coverSlide = mockSlide()
     addImageElement(coverSlide, { type: 'image', src: 'https://example.com/x.png', objectFit: 'cover' }, bounds, resolution, layout)
     expect(coverSlide.addImage.mock.calls[0][0].sizing).toEqual({ type: 'cover', w: 4, h: 3 })
 
     const fillSlide = mockSlide()
     addImageElement(fillSlide, { type: 'image', src: 'https://example.com/x.png', objectFit: 'fill' }, bounds, resolution, layout)
-    expect(fillSlide.addImage.mock.calls[0][0].sizing).toEqual({ type: 'contain', w: 4, h: 3 })
+    expect(fillSlide.addImage.mock.calls[0][0].sizing).toBeUndefined()
   })
 
   it('exports borderColor/borderWidth as a rectangular overlay without claiming rounded image corners', () => {

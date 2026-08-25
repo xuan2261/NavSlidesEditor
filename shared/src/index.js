@@ -21,21 +21,61 @@ const chartColors = require('./chart-colors.js')
 const pptxImageOptions = require('./pptx-image-options.js')
 const pptxTableWarnings = require('./pptx-table-warnings.js')
 const pptxMediaOptions = require('./pptx-media-options.js')
+const revealRuntimeAssets = require('./reveal-runtime-assets.js')
+const elementActions = require('./element-actions.js')
+const connectorGeometry = require('./connector-geometry.js')
+const slideLayouts = require('./slide-layouts.js')
+const slideLayoutNormalization = require('./slide-layout-normalization.js')
+const mediaAccessibility = require('./media-accessibility.js')
 
 const TEXT_COLORS = [
-  '#ffffff', '#e2e8f0', '#94a3b8', '#64748b', '#334155', '#1e293b', '#0f172a', '#000000',
-  '#fca5a5', '#f87171', '#ef4444', '#dc2626',
-  '#fcd34d', '#fbbf24', '#f59e0b', '#d97706',
-  '#86efac', '#4ade80', '#22c55e', '#16a34a',
-  '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2',
-  '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed',
-  '#f5d0fe', '#f0abfc', '#e879f9', '#d946ef',
+  '#ffffff',
+  '#e2e8f0',
+  '#94a3b8',
+  '#64748b',
+  '#334155',
+  '#1e293b',
+  '#0f172a',
+  '#000000',
+  '#fca5a5',
+  '#f87171',
+  '#ef4444',
+  '#dc2626',
+  '#fcd34d',
+  '#fbbf24',
+  '#f59e0b',
+  '#d97706',
+  '#86efac',
+  '#4ade80',
+  '#22c55e',
+  '#16a34a',
+  '#67e8f9',
+  '#22d3ee',
+  '#06b6d4',
+  '#0891b2',
+  '#c4b5fd',
+  '#a78bfa',
+  '#8b5cf6',
+  '#7c3aed',
+  '#f5d0fe',
+  '#f0abfc',
+  '#e879f9',
+  '#d946ef',
 ]
 
 const BG_COLORS = [
-  '#1e1e2e', '#0a0a0f', '#1a1a4e', '#0d3349',
-  '#1a3a1a', '#3a1a1a', '#2d1b69', '#000000',
-  '#ffffff', '#f8f9fa', '#4a4a6a', '#6b3fa0',
+  '#1e1e2e',
+  '#0a0a0f',
+  '#1a1a4e',
+  '#0d3349',
+  '#1a3a1a',
+  '#3a1a1a',
+  '#2d1b69',
+  '#000000',
+  '#ffffff',
+  '#f8f9fa',
+  '#4a4a6a',
+  '#6b3fa0',
 ]
 
 const GRADIENT_PRESETS = [
@@ -82,6 +122,15 @@ module.exports = {
   ...pptxImageOptions,
   ...pptxTableWarnings,
   ...pptxMediaOptions,
+  ...revealRuntimeAssets,
+  ...elementActions,
+  ...connectorGeometry,
+  ...slideLayouts,
+  ...slideLayoutNormalization,
+  ...mediaAccessibility,
+  isSafeHref: contentSafety.isSafeHref,
+  isSafeMediaSrc: contentSafety.isSafeMediaSrc,
+  sanitizeMediaSrc: contentSafety.sanitizeMediaSrc,
   TEXT_COLORS,
   BG_COLORS,
   GRADIENT_PRESETS,

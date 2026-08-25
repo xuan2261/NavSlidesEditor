@@ -20,12 +20,18 @@ describe('runtime receipt', () => {
     fs.mkdirSync(path.join(root, 'server', 'node_modules', 'express'), { recursive: true })
     fs.mkdirSync(path.join(root, 'server', 'vendor'), { recursive: true })
     fs.writeFileSync(path.join(root, 'package-lock.json'), '{"lockfileVersion":3}')
-    fs.writeFileSync(path.join(root, 'electron', 'server-package-lock.json'), '{"lockfileVersion":3}')
+    fs.writeFileSync(
+      path.join(root, 'electron', 'server-package-lock.json'),
+      '{"lockfileVersion":3}'
+    )
     fs.writeFileSync(
       path.join(root, 'server', 'node_modules', 'express', 'package.json'),
       '{"name":"express","version":"4.22.2"}'
     )
-    fs.writeFileSync(path.join(root, 'server', 'vendor', 'vendor-manifest.json'), '{"files":[]}')
+    fs.writeFileSync(
+      path.join(root, 'server', 'vendor', 'vendor-manifest.json'),
+      '{"runtimes":{"revealJs":"6.0.1"},"files":[]}'
+    )
     fs.writeFileSync(path.join(root, 'artifact.bin'), 'artifact')
 
     const receipt = createRuntimeReceipt({
@@ -44,6 +50,7 @@ describe('runtime receipt', () => {
       arch: 'x64',
     })
     expect(receipt.baseImage).toBe('node@sha256:test')
+    expect(receipt.runtimes).toEqual({ revealJs: '6.0.1' })
     expect(receipt.hashes.rootLock).toMatch(/^[a-f0-9]{64}$/)
     expect(receipt.hashes.electronServerLock).toMatch(/^[a-f0-9]{64}$/)
     expect(receipt.hashes.productionTree).toMatch(/^[a-f0-9]{64}$/)

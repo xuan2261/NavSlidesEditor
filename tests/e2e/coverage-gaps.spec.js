@@ -14,8 +14,8 @@ async function openInsert(page) {
 async function getInsertItem(page, label) {
   await openInsert(page)
   const aliases = {
-    'Image (URL)': 'Add image',
-    Video: 'Add video',
+    'Image (URL)': 'Add image from URL',
+    Video: 'Add video from URL',
     Audio: 'Audio / Upload',
     'Audio / Upload': 'Audio / Upload',
     'QR Code': 'Add QR code',

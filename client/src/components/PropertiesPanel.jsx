@@ -9,8 +9,10 @@ import MediaProperties from './properties/media-properties'
 import TableProperties from './properties/table-properties'
 import MiscProperties from './properties/misc-properties'
 import TimelineProperties from './properties/timeline-properties'
+import ActionControls from './properties/action-controls'
 import { Button, Input, Select, ColorPicker } from '../components/ui'
 import { MousePointer2 } from 'lucide-react'
+import { clampNumber } from '../utils/number-input'
 
 /**
  * Type-specific property panel router.
@@ -22,14 +24,14 @@ function ElementTypeProperties({ element, onUpdate, onDelete, onEditHtml, onEdit
     case 'line':
       return <ShapeProperties element={element} onUpdate={onUpdate} elements={elements} selectedElementIds={selectedElementIds} />
     case 'image':
-      return <ImageProperties element={element} onUpdate={onUpdate} />
+      return <ImageProperties element={element} onUpdate={onUpdate} elements={elements} selectedElementIds={selectedElementIds} />
     case 'chart':
       return <ChartProperties element={element} onUpdate={onUpdate} />
     case 'code':
       return <CodeProperties element={element} onUpdate={onUpdate} onEditCode={onEditCode} />
     case 'video':
     case 'audio':
-      return <MediaProperties element={element} onUpdate={onUpdate} />
+      return <MediaProperties element={element} onUpdate={onUpdate} elements={elements} selectedElementIds={selectedElementIds} />
     case 'table':
       return <TableProperties element={element} onUpdate={onUpdate} />
     case 'timeline':
@@ -177,6 +179,9 @@ export default function PropertiesPanel({
             elements={slide?.elements || []}
             selectedElementIds={selectedElementIds || []}
           />
+          <CollapsibleSection title="Action" defaultOpen={true}>
+            <ActionControls element={selectedElement} onUpdate={onUpdateElement} presentation={presentation} />
+          </CollapsibleSection>
         </div>
       )}
 
@@ -194,8 +199,8 @@ export default function PropertiesPanel({
                 step="1"
                 value={presentation.autoSlide ? presentation.autoSlide / 1000 : 0}
                 onChange={(e) => {
-                  const val = Number(e.target.value) || 0
-                  onUpdatePresentation({ autoSlide: val * 1000 })
+                  const seconds = clampNumber(e.target.value, 0, null, 0)
+                  onUpdatePresentation({ autoSlide: seconds * 1000 })
                 }}
               />
             </div>
@@ -238,6 +243,7 @@ export default function PropertiesPanel({
       <div className="mt-6 border-t border-border pt-2">
         <CollapsibleSection title="Speaker Notes">
           <textarea
+            aria-label="Speaker notes"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-2 rounded-sm text-xs resize-y min-h-[80px] focus:outline-none focus:border-accent placeholder:text-text-muted"
             value={slide.notes || ''}
             onChange={(e) => onUpdateSlide({ notes: e.target.value })}
@@ -253,13 +259,14 @@ export default function PropertiesPanel({
             CSS applied to all slides in presentations created from this template.
           </p>
           <textarea
+            aria-label="Template custom CSS"
             value={presentation.customCSS || ''}
             onChange={(e) => onUpdatePresentation({ customCSS: e.target.value })}
             placeholder={`/* Example */\n.reveal .slides section h1 {\n  color: #6366f1;\n  text-transform: uppercase;\n}`}
             spellCheck={false}
             className="css-editor-textarea w-full min-h-[140px] rounded border font-mono resize-y outline-none"
             onKeyDown={(e) => {
-              if (e.key === 'Tab') {
+              if (e.key === 'Tab' && !e.shiftKey) {
                 e.preventDefault()
                 const { selectionStart: s, selectionEnd: end, value } = e.target
                 const next = value.substring(0, s) + '  ' + value.substring(end)
@@ -275,6 +282,33 @@ export default function PropertiesPanel({
       )}
     </div>
   )
+}
+
+function reindexFooterSectionOnSlide(slide, removedIndex) {
+  const activeSection = slide?.activeSection
+  const nextActiveSection = Number.isInteger(activeSection)
+    ? activeSection === removedIndex
+      ? null
+      : activeSection > removedIndex
+        ? activeSection - 1
+        : activeSection
+    : activeSection
+  const children = Array.isArray(slide?.children)
+    ? slide.children.map((child) => reindexFooterSectionOnSlide(child, removedIndex))
+    : slide?.children
+  return { ...slide, activeSection: nextActiveSection, children }
+}
+
+function removeSequenceSection(presentation, removedIndex) {
+  const sections = [...(presentation?.sequenceSections || [])]
+  sections.splice(removedIndex, 1)
+  return {
+    ...presentation,
+    sequenceSections: sections,
+    slides: (presentation?.slides || []).map((slide) =>
+      reindexFooterSectionOnSlide(slide, removedIndex)
+    ),
+  }
 }
 
 /**
@@ -300,6 +334,7 @@ function SlideFooterSection({ slide, presentation, onUpdateSlide, onUpdatePresen
       {(presentation?.footerMode || 'basic') === 'basic' && (
         <div className="w-full mb-2.5 flex flex-col">
           <Input
+            aria-label="Slide footer section name"
             className="w-full flex-1 px-2.5 py-1.5 text-xs"
             type="text"
             value={slide.section || ''}
@@ -320,6 +355,8 @@ function SlideFooterSection({ slide, presentation, onUpdateSlide, onUpdatePresen
           ) : (
             <div className="flex flex-col gap-1">
               <Button
+                aria-pressed={slide.activeSection == null}
+                aria-label="Use no active footer section"
                 variant="ghost"
                 className={`py-1 px-2 text-[11px] text-left cursor-pointer border rounded text-text-secondary ${slide.activeSection == null ? 'bg-accent text-white border-accent' : 'bg-hover border-border'}`}
                 onClick={() => onUpdateSlide({ activeSection: null })}
@@ -330,6 +367,8 @@ function SlideFooterSection({ slide, presentation, onUpdateSlide, onUpdatePresen
                 <Button
                   variant="ghost"
                   key={i}
+                  aria-pressed={slide.activeSection === i}
+                  aria-label={`Use footer section ${i + 1}: ${sec || `Section ${i + 1}`}`}
                   className={`py-1 px-2 text-[11px] text-left cursor-pointer border rounded text-text-secondary ${slide.activeSection === i ? 'bg-accent text-white border-accent' : 'bg-hover border-border'}`}
                   onClick={() => onUpdateSlide({ activeSection: i })}
                 >
@@ -371,6 +410,8 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
           <Button
             variant="ghost"
             key={mode}
+            aria-pressed={(presentation.footerMode || 'basic') === mode}
+            aria-label={`${label} footer mode`}
             className={`flex-1 py-1 px-1 rounded text-[11px] text-center cursor-pointer border-none transition-all ${(presentation.footerMode || 'basic') === mode ? 'bg-accent text-white' : 'text-text-muted bg-transparent'}`}
             onClick={() => onUpdatePresentation({ footerMode: mode })}
           >
@@ -386,6 +427,7 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
           {(presentation.sequenceSections || []).map((sec, i) => (
             <div key={i} className="flex gap-1 mb-0.5">
               <Input
+                aria-label={`Footer section ${i + 1} title`}
                 type="text"
                 value={sec}
                 onChange={(e) => {
@@ -400,11 +442,10 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
                 variant="icon"
                 className="w-[22px] h-[22px] text-xs shrink-0"
                 title="Remove section"
-                onClick={() => {
-                  const sections = [...(presentation.sequenceSections || [])]
-                  sections.splice(i, 1)
-                  onUpdatePresentation({ sequenceSections: sections })
-                }}
+                aria-label={`Remove footer section ${i + 1}: ${sec || `Section ${i + 1}`}`}
+                onClick={() =>
+                  onUpdatePresentation((current) => removeSequenceSection(current, i))
+                }
               >
                 ×
               </Button>
@@ -428,6 +469,7 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
         <div className="flex flex-col gap-1">
           <div className="text-[10px] text-text-muted">Font</div>
           <Select
+            aria-label="Footer font family"
             className="px-1 py-0.5 text-[11px]"
             value={presentation.footerFontFamily || '-apple-system,sans-serif'}
             onChange={(e) => onUpdatePresentation({ footerFontFamily: e.target.value })}
@@ -455,6 +497,7 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
         <div className="flex flex-col gap-1">
           <div className="text-[10px] text-text-muted">Size</div>
           <Input
+            aria-label="Footer font size"
             type="number"
             min="8"
             max="32"
@@ -471,6 +514,7 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
         <div className="flex flex-col gap-1">
           <div className="text-[10px] text-text-muted">Active</div>
           <ColorPicker
+            aria-label="Footer active color"
             value={presentation.footerColor || '#a8b4c8'}
             onChange={(e) => onUpdatePresentation({ footerColor: e.target.value })}
             className="w-7 h-7 p-[2px] bg-card border border-border rounded cursor-pointer"
@@ -481,6 +525,7 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
         <div className="flex items-center gap-1.5 mt-1.5">
           <div className="text-[10px] text-text-muted">Inactive color</div>
           <ColorPicker
+            aria-label="Footer inactive color"
             value={presentation.footerInactiveColor || '#404060'}
             onChange={(e) => onUpdatePresentation({ footerInactiveColor: e.target.value })}
             className="w-7 h-7 p-[2px] bg-card border border-border rounded cursor-pointer"

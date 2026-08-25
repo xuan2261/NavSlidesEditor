@@ -2,11 +2,13 @@ import { describe, expect, it, vi } from 'vitest'
 import exportModule from './validated-edited-export.js'
 
 const {
-  SCHEMA_VERSION,
+  PACKAGE_HEAD_SCHEMA_VERSION,
+  RECORD_SCHEMA_VERSION,
   createEmptyState,
   hashRecord,
   validateState,
 } = await import('./pptx-import/package-store/schemas.js')
+const { createMatrixAuthoritySubjects } = await import('./pptx-import/canonical-feature-matrix.js')
 const {
   configuredLauncherClient, createQualifiedValidators, editedExportAvailability, productionComposition,
 } = exportModule
@@ -73,7 +75,7 @@ describe('validated edited export validators', () => {
     }
     const pendingJournalHash = hashRecord({ baseRevisionId: revisionId, operations: [] })
     const state = authorityState(2, {
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: PACKAGE_HEAD_SCHEMA_VERSION,
       presentationId,
       packageRevisionId: revisionId,
       originalRevisionId: revisionId,
@@ -84,9 +86,10 @@ describe('validated edited export validators', () => {
       pendingJournalHash,
       fencingEpoch: 1,
       matrixAuthorityEpoch: 1,
+      matrixAuthoritySubjects: createMatrixAuthoritySubjects(),
     }, [
       {
-        schemaVersion: SCHEMA_VERSION,
+        schemaVersion: RECORD_SCHEMA_VERSION,
         operation: 'package-import',
         presentationId,
         idempotencyKey: 'import-deck',
@@ -98,7 +101,7 @@ describe('validated edited export validators', () => {
         projection: committedProjection,
       },
       {
-        schemaVersion: SCHEMA_VERSION,
+        schemaVersion: RECORD_SCHEMA_VERSION,
         operation: 'projection-save',
         presentationId,
         idempotencyKey: 'save-deck',
@@ -138,7 +141,7 @@ describe('validated edited export validators', () => {
       entries: {},
     }
     const state = authorityState(1, {
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: PACKAGE_HEAD_SCHEMA_VERSION,
       presentationId,
       packageRevisionId: revisionId,
       originalRevisionId: revisionId,
@@ -148,8 +151,9 @@ describe('validated edited export validators', () => {
       journalRevisionId: null,
       fencingEpoch: 1,
       matrixAuthorityEpoch: 1,
+      matrixAuthoritySubjects: createMatrixAuthoritySubjects(),
     }, [{
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: RECORD_SCHEMA_VERSION,
       presentationId,
       idempotencyKey: 'legacy-deck',
       packageRevisionId: revisionId,

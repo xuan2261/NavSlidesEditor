@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildSelectionUpdates } from './element-update-fanout'
+import { buildConnectorUpdateBatch, buildSelectionUpdates } from './element-update-fanout'
+import { createElement } from './element-factory'
 
 describe('buildSelectionUpdates', () => {
   it('excludes locked elements from property updates', () => {
@@ -83,5 +84,99 @@ describe('buildSelectionUpdates', () => {
       { id: 'html-1', locked: true },
       { id: 'code-1', locked: true },
     ])
+  })
+
+  it.each([
+    [
+      'image',
+      {
+        filterBrightness: 125,
+        filterContrast: 90,
+        filterSaturate: 80,
+        filterGrayscale: 10,
+        filterSepia: 20,
+        filterBlur: 2,
+        borderRadius: 12,
+        citationText: 'Source',
+        citationLink: 'https://example.com',
+        citationColor: '#123456',
+        citationAlign: 'right',
+      },
+    ],
+    ['code', { borderRadius: 16 }],
+    ['markdown', { fontSize: 24 }],
+    [
+      'chart',
+      {
+        areaFill: true,
+        stacked: true,
+        legendPosition: 'bottom',
+        axisTitles: { category: 'Month', value: 'Revenue' },
+      },
+    ],
+  ])('fans every authored optional %s property to legacy elements', (type, updates) => {
+    const elements = [{ id: `${type}-1`, type, x: 10, y: 20, width: 120, height: 90 }]
+
+    expect(buildSelectionUpdates(elements, [`${type}-1`], `${type}-1`, updates)).toEqual([
+      { id: `${type}-1`, ...updates },
+    ])
+  })
+
+  it('ignores stale wrong-type properties on legacy elements', () => {
+    const elements = [
+      { id: 'image-1', type: 'image', x: 10, y: 20, width: 120, height: 90, fontSize: 99 },
+    ]
+
+    expect(buildSelectionUpdates(elements, ['image-1'], 'image-1', { fontSize: 24 })).toEqual([])
+  })
+
+  it.each([
+    [
+      'image',
+      {
+        filterBrightness: 100,
+        filterContrast: 100,
+        filterSaturate: 100,
+        filterGrayscale: 0,
+        filterSepia: 0,
+        filterBlur: 0,
+        borderRadius: 0,
+        citationText: '',
+        citationLink: '',
+        citationColor: '#808080',
+        citationAlign: 'left',
+      },
+    ],
+    ['code', { borderRadius: 0 }],
+    ['markdown', { fontSize: 18 }],
+    [
+      'chart',
+      {
+        areaFill: false,
+        stacked: false,
+        legendPosition: 'right',
+        axisTitles: { category: '', value: '' },
+      },
+    ],
+  ])('creates %s elements with every authored optional property', (type, expected) => {
+    expect(createElement(type)).toMatchObject(expected)
+  })
+})
+
+describe('connector update fanout', () => {
+  it('merges target and dependent endpoint patches into one batch', () => {
+    const batch = buildConnectorUpdateBatch(
+      [
+        { id: 'target', type: 'shape', x: 10, y: 20, width: 100, height: 40 },
+        {
+          id: 'line', type: 'line', x: 0, y: 0, width: 300, height: 100,
+          x1: 0, y1: 50, x2: 300, y2: 50,
+          connections: { start: { targetId: 'target', anchor: 'e' } },
+        },
+      ],
+      [{ id: 'target', x: 40 }]
+    )
+
+    expect(batch).toEqual([{ id: 'target', x: 40 }, { id: 'line', x1: 140, y1: 40 }])
   })
 })

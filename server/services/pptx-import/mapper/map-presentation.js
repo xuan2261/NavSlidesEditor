@@ -31,7 +31,10 @@ async function mapElement(element, context) {
   if (element.type === 'table') return mapTable(element, context)
   if (element.type === 'video') return mapVideo(element, context)
   if (element.type === 'audio') return mapAudio(element, context)
-  if (element.type === 'shape') return mapShape(element, context)
+  if (element.type === 'shape') {
+    if (element.fill?.type === 'image') return mapImage({ ...element, type: 'image' }, context)
+    return mapShape(element, context)
+  }
   if (element.type === 'diagram') return flattenDiagramElement(element, context)
   if (element.type === 'chart') return mapChartElement(element, context)
   if (element.type === 'math') return mapMath(element, context)
@@ -169,12 +172,14 @@ function isMeaningfulRelatedChart(element) {
   if (!element?._pptxChartMeta?.chartPath) return false
   const labels = element?.chartData?.labels
   const datasets = element?.chartData?.datasets
-  return (
-    Array.isArray(labels) &&
-    labels.length > 0 &&
-    Array.isArray(datasets) &&
-    datasets.some((dataset) => Array.isArray(dataset?.data) && dataset.data.length > 0)
+  const hasData = Array.isArray(datasets) && datasets.some(
+    (dataset) => Array.isArray(dataset?.data) && dataset.data.length > 0
   )
+  const hasCategories = Array.isArray(labels) && labels.length > 0
+  const hasScatterCoordinates = Array.isArray(datasets) && datasets.some(
+    (dataset) => Array.isArray(dataset?.xValues) && dataset.xValues.length === dataset?.data?.length
+  )
+  return hasData && (hasCategories || hasScatterCoordinates)
 }
 
 const TRANSITION_MAP = Object.freeze({
@@ -261,6 +266,7 @@ async function mapPptxOutput({
     audioCount: 0,
     mathCount: 0,
     layoutPlaceholderInjected: 0,
+    layoutDecorationInjected: 0,
     animationCount: 0,
     unsupportedAnimationCount: 0,
   }
@@ -271,6 +277,10 @@ async function mapPptxOutput({
   const themeInfo = zip ? await parseThemeFromZip(zip) : { scheme: null, fonts: {}, themePath: null }
   const packageEntries = Object.keys(zip?.files || {}).map((e) => e.replace(/\\/g, '/'))
   const unsupportedFeatures = classifyUnsupportedPackageFeatures(packageEntries)
+  const hasNativeMasters = packageEntries.some((entry) => /^ppt\/slide(Masters|Layouts)\//.test(entry))
+  if (hasNativeMasters) {
+    warnings.push({ slideIndex: null, type: 'native-layout-flattened', message: 'PowerPoint master/layout content was flattened into ordinary slide elements; NavSlides did not synthesize linked masters.' })
+  }
   for (const feature of unsupportedFeatures) {
     warnings.push({ slideIndex: null, type: feature.type, message: `${feature.feature}: ${feature.entry}` })
   }
@@ -313,6 +323,7 @@ async function mapPptxOutput({
       )
       elements = fromLayout.elements
       stats.layoutPlaceholderInjected += fromLayout.injected
+      stats.layoutDecorationInjected += fromLayout.decorativeInjected || 0
     }
     if (graphSlide) {
       // OOXML-first charts when parser omitted type:chart but package has chart parts
@@ -469,6 +480,7 @@ async function mapPptxOutput({
         themeFonts: themeInfo.fonts || null,
         themePath: themeInfo.themePath || null,
         unsupportedFeatures,
+        layoutProvenance: hasNativeMasters ? { source: 'pptx-native-master', treatment: 'flattened-no-linked-layout' } : undefined,
       },
     },
     stats: {

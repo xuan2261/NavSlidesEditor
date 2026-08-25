@@ -117,6 +117,21 @@ describe('export-pptx-core', () => {
     expect(definition.options).not.toHaveProperty('valAxisTitle')
   })
 
+  it('preserves imported pie point colors in native PPTX charts', () => {
+    const definition = getNativeChartDefinition(
+      { ChartType: { pie: 'pie' } },
+      {
+        chartType: 'pie',
+        chartData: {
+          labels: ['A', 'B'],
+          datasets: [{ data: [2, 3], color: '#000000', colors: ['#5DA5DA', '#FAA43A'] }],
+        },
+      }
+    )
+
+    expect(definition.options.chartColors).toEqual(['5DA5DA', 'FAA43A'])
+  })
+
   it('exports image crop, flip, alt text, and border overlay', () => {
     const calls = []
     const slide = {

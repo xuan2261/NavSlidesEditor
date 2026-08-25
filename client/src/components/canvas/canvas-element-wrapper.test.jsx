@@ -41,6 +41,7 @@ function renderCanvasElement(element, props = {}) {
       cropState={null}
       isDragging={props.isDragging ?? false}
       slideWidth={props.slideWidth}
+      slideLocked={props.slideLocked ?? false}
       slideHeight={props.slideHeight}
       editor={null}
       onPointerDown={handlers.onPointerDown}
@@ -157,6 +158,22 @@ describe('CanvasElement video playback', () => {
     fireEvent.keyDown(wrapper, { key: 'ArrowDown' })
     fireEvent.keyDown(wrapper, { key: 'Backspace' })
 
+    expect(handlers.onUpdateElement).not.toHaveBeenCalled()
+    expect(handlers.onDeleteElement).not.toHaveBeenCalled()
+  })
+
+  it('does not edit, nudge, or delete elements when the slide is locked', () => {
+    const { handlers } = renderCanvasElement(baseElement, {
+      isSelected: true,
+      slideLocked: true,
+    })
+    const wrapper = screen.getByTestId('slide-element-video-1')
+
+    fireEvent.keyDown(wrapper, { key: 'F2' })
+    fireEvent.keyDown(wrapper, { key: 'ArrowDown' })
+    fireEvent.keyDown(wrapper, { key: 'Backspace' })
+
+    expect(handlers.onStartEdit).not.toHaveBeenCalled()
     expect(handlers.onUpdateElement).not.toHaveBeenCalled()
     expect(handlers.onDeleteElement).not.toHaveBeenCalled()
   })
@@ -401,7 +418,10 @@ describe('CanvasElement PPTX text insets', () => {
       />
     )
 
-    content = screen.getByTestId('slide-element-text-1').querySelector('.slide-text-content')
+    const importedWrapper = screen.getByTestId('slide-element-text-1')
+    content = importedWrapper.querySelector('.slide-text-content')
+    expect(importedWrapper.style.overflow).toBe('visible')
+    expect(content.style.overflow).toBe('visible')
     expect(content.style.overflowWrap).toBe('anywhere')
     expect(content.style.whiteSpace).toBe('pre-wrap')
     expect(content.style.wordBreak).toBe('normal')
@@ -551,5 +571,19 @@ describe('CanvasElement html embed sandbox', () => {
     const iframe = wrapper.querySelector('iframe')
 
     expect(iframe.style.pointerEvents).toBe('auto')
+  })
+})
+
+describe('CanvasElement presentation actions', () => {
+  it('keeps a hotspot selectable with mouse and keyboard in edit mode', () => {
+    const { handlers } = renderCanvasElement({
+      id: 'hotspot', type: 'shape', x: 0, y: 0, width: 100, height: 40,
+      action: { kind: 'url', url: 'https://example.test', hotspot: true },
+    })
+    const wrapper = screen.getByTestId('slide-element-hotspot')
+    expect(wrapper.textContent).toContain('Hotspot')
+    fireEvent.click(wrapper)
+    fireEvent.keyDown(wrapper, { key: 'Enter' })
+    expect(handlers.onClick).toHaveBeenCalledTimes(2)
   })
 })

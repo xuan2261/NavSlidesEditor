@@ -1241,17 +1241,17 @@ describe('Presentations API', () => {
     } finally { await fixture.cleanup() }
   })
 
-  it('rejects a save whose persisted head matrix authority is stale without advancing it', async () => {
+  it('rejects a save whose loaded head matrix authority is stale without advancing it', async () => {
     const fixture = await createNativeRouteFixture(app)
     try {
       const head = fixture.store.getState().heads.find((item) => item.presentationId === fixture.id)
-      await fixture.store.mutate((next) => {
-        const staleHead = next.heads.find((item) => item.presentationId === fixture.id)
-        staleHead.matrixAuthoritySubjects = {
-          ...staleHead.matrixAuthoritySubjects,
-          journal: { ...staleHead.matrixAuthoritySubjects.journal, hash: '0'.repeat(64) },
-        }
-      })
+      const staleHead = fixture.store.metadata.state.heads.find(
+        (item) => item.presentationId === fixture.id
+      )
+      staleHead.matrixAuthoritySubjects = {
+        ...staleHead.matrixAuthoritySubjects,
+        journal: { ...staleHead.matrixAuthoritySubjects.journal, hash: '0'.repeat(64) },
+      }
 
       const saved = await nativeSave(app, fixture.id, {
         aggregateGeneration: head.generation,

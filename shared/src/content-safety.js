@@ -1,14 +1,29 @@
 const { convertCssLengthToPx } = require('./css-length-conversion.js')
 const { sanitizeRichTextStyle, sanitizeStyleAttributes } = require('./rich-text-style-sanitizer.js')
 
+const SAFE_HREF_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:'])
+const SAFE_MEDIA_SCHEMES = new Set(['http:', 'https:'])
+const SAFE_MEDIA_DATA = /^data:(image|audio|video)\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]*$/i
+const ATTRIBUTE_BREAKOUT = /["'<>`\s]/
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARS = /[\x00-\x1f\x7f]/
+
+function isSafeHref(value) {
+  const raw = String(value || '').trim()
+  if (!raw || CONTROL_CHARS.test(raw) || ATTRIBUTE_BREAKOUT.test(raw)) return false
+  if (raw.startsWith('#') || raw.startsWith('/') || raw.startsWith('./') || raw.startsWith('../')) {
+    return true
+  }
+  try {
+    return SAFE_HREF_SCHEMES.has(new URL(raw, 'https://navslides.local').protocol)
+  } catch {
+    return false
+  }
+}
+
 function sanitizeHref(value) {
   const raw = String(value || '').trim()
-  if (!raw) return '#'
-  if (raw.startsWith('#') || raw.startsWith('/') || raw.startsWith('./') || raw.startsWith('../')) {
-    return raw
-  }
-  if (/^(https?:|mailto:|tel:)/i.test(raw)) return raw
-  return '#'
+  return isSafeHref(raw) ? raw : '#'
 }
 
 function stripEventAttributes(html) {
@@ -20,15 +35,11 @@ function stripEventAttributes(html) {
 
 function isSafeMediaSrc(value) {
   const raw = String(value || '').trim()
-  if (!raw) return false
-  // eslint-disable-next-line no-control-regex
-  if (/[\x00-\x1f\x7f]/.test(raw)) return false
-  if (/["'<>`\s]/.test(raw)) return false
+  if (!raw || CONTROL_CHARS.test(raw) || ATTRIBUTE_BREAKOUT.test(raw)) return false
   if (raw.startsWith('/') || raw.startsWith('./') || raw.startsWith('../')) return true
-  if (/^data:(image|audio|video)\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]*$/i.test(raw)) return true
+  if (SAFE_MEDIA_DATA.test(raw)) return true
   try {
-    const parsed = new URL(raw, 'https://navslides.local')
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+    return SAFE_MEDIA_SCHEMES.has(new URL(raw, 'https://navslides.local').protocol)
   } catch {
     return false
   }
@@ -98,6 +109,8 @@ function escapePlainText(text) {
 }
 
 module.exports = {
+  isSafeHref,
+  isSafeMediaSrc,
   sanitizeHref,
   sanitizeMediaSrc,
   sanitizeRichTextHtml,

@@ -1,7 +1,7 @@
 import * as Tabs from '@radix-ui/react-tabs'
 import { BarChart3, Bot, FileText, Languages, Play, Radio, Share2, Sparkles } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useUIStore } from '../../stores/ui-store'
+import { resolveRibbonActiveTab, useUIStore } from '../../stores/ui-store'
 import { Button } from '../ui'
 import FileDropdown from './ribbon-file-dropdown-menu'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
@@ -49,7 +49,7 @@ function RibbonActionDropdown({ label, icon: Icon, items }) {
         }}
       >
         <Icon size={14} />
-        <span className="text-[11px] hidden md:inline">{label}</span>
+        <span className="text-[11px] hidden lg:inline">{label}</span>
       </Button>
       {open && (
         <RibbonFloatingOverlay
@@ -67,7 +67,7 @@ function RibbonActionDropdown({ label, icon: Icon, items }) {
               return (
                 <button
                   key={item.label}
-                  className="dropdown-item flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-[11px] text-text-primary transition-colors hover:bg-secondary"
+                  className="ui-coarse-target dropdown-item flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-[11px] text-text-primary transition-colors hover:bg-secondary"
                   role="menuitem"
                   onMouseDown={(e) => {
                     e.preventDefault()
@@ -116,16 +116,17 @@ export default function RibbonHeaderBar({
   const activeTab = useUIStore((s) => s.activeTab)
   const setActiveTab = useUIStore((s) => s.setActiveTab)
   const formatContext = useUIStore((s) => s.formatContext)
+  const lastNonContextualTab = useUIStore((s) => s.lastNonContextualTab)
 
-  // Keep the header's Tabs.Root value in sync with the panel guard so a
-  // persisted activeTab='format' without a selection never marks a missing
-  // trigger as selected.
-  const effectiveTab =
-    activeTab === 'format' && !formatContext.hasSelection ? 'home' : activeTab
+  const effectiveTab = resolveRibbonActiveTab(
+    activeTab,
+    formatContext,
+    lastNonContextualTab
+  )
 
   return (
-    <Tabs.Root value={effectiveTab} onValueChange={setActiveTab} className="flex min-w-0 flex-1">
-      <div className="flex min-w-0 flex-1 items-center border-b border-border bg-secondary">
+    <Tabs.Root value={effectiveTab} onValueChange={setActiveTab} className="flex min-w-0 flex-1 overflow-hidden">
+      <div className="flex w-full min-w-0 flex-1 items-center overflow-hidden border-b border-border bg-secondary">
         <FileDropdown
           onSave={onSave}
           onOpenProject={onOpenProject}
@@ -142,7 +143,7 @@ export default function RibbonHeaderBar({
           pptxBusy={pptxBusy}
           onReloadPptxFidelity={onReloadPptxFidelity}
         />
-        <TabBar activeTab={effectiveTab} onTabChange={setActiveTab} />
+        <TabBar activeTab={effectiveTab} />
         <div className="ml-auto flex shrink-0 items-center gap-1 px-1">
           <RibbonActionDropdown
             label="AI"

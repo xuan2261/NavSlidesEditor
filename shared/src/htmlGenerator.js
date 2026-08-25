@@ -23,6 +23,26 @@ const {
   normalizeTransitionDuration,
   normalizeTransitionSpeed,
 } = require('./transition-settings.js')
+const {
+  REVEAL_ASSET_PATHS,
+  REVEAL_RUNTIME_VERSION,
+  revealThemePath,
+} = require('./reveal-runtime-assets.js')
+const { resolveEffectiveSlide } = require('./slide-layouts.js')
+const { normalizeElementAction } = require('./element-actions.js')
+
+function resolveSlideForRender(slide, presentation) {
+  return resolveEffectiveSlide(slide, presentation?.layoutMasters).slide
+}
+function resolvePresentationForRender(presentation) {
+  return {
+    ...presentation,
+    slides: (presentation?.slides || []).map((slide) => {
+      const resolved = resolveSlideForRender(slide, presentation)
+      return { ...resolved, ...(slide.children ? { children: slide.children.map((child) => resolveSlideForRender(child, presentation)) } : {}) }
+    }),
+  }
+}
 
 function formatGradientCss(bg) {
   if (!bg || bg.type !== 'gradient') return ''
@@ -78,12 +98,23 @@ const TRANSITION_METADATA_CSS = `    /* Reveal does not consume NavSlides direct
 
 function presentationUsesTransitionMetadata(presentation) {
   return (presentation?.slides || []).some((slide) =>
-    [slide, ...(slide?.children || [])].some((section) =>
-      normalizeTransitionDirection(section?.transitionDirection) !== 'default' ||
-      normalizeTransitionDuration(section?.transitionDuration) !== null
+    [slide, ...(slide?.children || [])].some(
+      (section) =>
+        normalizeTransitionDirection(section?.transitionDirection) !== 'default' ||
+        normalizeTransitionDuration(section?.transitionDuration) !== null
     )
   )
 }
+function presentationUsesActions(presentation) {
+  return (presentation?.slides || []).some((slide) =>
+    [slide, ...(slide?.children || [])].some((section) =>
+      (section?.elements || []).some(
+        (element) => normalizeElementAction(element?.action).action != null
+      )
+    )
+  )
+}
+
 
 function getSectionBackgroundStyle(background, usesTokens) {
   return usesTokens && (!background || background.type === 'none') ? 'background:var(--ns-bg);' : ''
@@ -91,11 +122,8 @@ function getSectionBackgroundStyle(background, usesTokens) {
 
 function getPresentChartBackground(slide, deckTokens, usesTokens) {
   const slideTokens = mergeTokens(deckTokens, slide?.designTokens)
-  const fallbackColor = slide?.background?.type === 'fx'
-    ? '#0d0221'
-    : usesTokens
-      ? slideTokens.colors?.bg
-      : '#000000'
+  const fallbackColor =
+    slide?.background?.type === 'fx' ? '#0d0221' : usesTokens ? slideTokens.colors?.bg : '#000000'
   return resolveChartBackground(slide?.background, fallbackColor)
 }
 
@@ -164,14 +192,42 @@ function getPluginRuntimeInitScript() {
       });`
 }
 
+function buildActionRuntimeScript(presentation) {
+  const slideMap = {}
+  ;(presentation.slides || []).forEach((slide, horizontal) => {
+    if (slide?.id) slideMap[slide.id] = [horizontal, 0]
+    ;(slide.children || []).forEach((child, vertical) => {
+      if (child?.id) slideMap[child.id] = [horizontal, vertical + 1]
+    })
+  })
+  const serializedMap = JSON.stringify(slideMap).replace(/</g, '\\u003c')
+  return `
+    (function(){
+      var slideMap = ${serializedMap}; var warned = {};
+      function feedback(message) { var node = document.getElementById('ns-action-feedback'); if (node) node.textContent = message; }
+      function invalid(message) { if (!warned[message]) { warned[message] = true; console.warn(message); } feedback(message); }
+      function activate(node) {
+        var action; try { action = JSON.parse(node.getAttribute('data-ns-action') || ''); } catch (_) { invalid('Invalid presentation action.'); return; }
+        if (!action || typeof action.kind !== 'string') return invalid('Invalid presentation action.');
+        if (action.kind === 'next') return Reveal.next(); if (action.kind === 'previous') return Reveal.prev();
+        if (action.kind === 'first') return Reveal.slide(0, 0); if (action.kind === 'last') { var slides = Reveal.getSlides(); var last = slides[slides.length - 1]; if (!last) return; var indices = Reveal.getIndices(last); return Reveal.slide(indices.h, indices.v || 0); }
+        if (action.kind === 'slide') { var target = slideMap[action.slideId]; if (!target) return invalid('Action destination is unavailable.'); return Reveal.slide(target[0], target[1]); }
+        if (!['url','email','download'].includes(action.kind) || typeof action.url !== 'string') return invalid('Invalid presentation action.');
+        if (action.kind === 'download') { var link = document.createElement('a'); link.href = action.url; link.download = ''; link.rel = 'noopener noreferrer'; link.target = action.target === 'new' ? '_blank' : '_self'; document.body.appendChild(link); link.click(); link.remove(); return; }
+        if (action.target === 'new') { var opened = window.open(action.url, '_blank', 'noopener,noreferrer'); if (opened) opened.opener = null; return; }
+        window.location.assign(action.url);
+      }
+      document.addEventListener('click', function(event) { var node = event.target.closest('[data-ns-action]'); if (!node) return; event.preventDefault(); event.stopPropagation(); activate(node); });
+      document.addEventListener('keydown', function(event) { if (event.key !== 'Enter' && event.key !== ' ') return; var node = event.target.closest('[data-ns-action]'); if (!node) return; event.preventDefault(); event.stopPropagation(); activate(node); });
+    })();`
+}
+
 function generateRevealHTML(presentation, options = {}) {
   const includeSpeakerNotes = options.includeSpeakerNotes !== false
   const presentationTransition = normalizeTransition(presentation.transition, 'slide')
   const transitionSpeed = normalizeTransitionSpeed(presentation.transitionSpeed)
   const transitionSpeedConfig =
-    presentation.transitionSpeed == null
-      ? ''
-      : `\n      transitionSpeed: '${transitionSpeed}',`
+    presentation.transitionSpeed == null ? '' : `\n      transitionSpeed: '${transitionSpeed}',`
   const showFooter = presentation.showFooter || false
   const showPageNumbers = presentation.showPageNumbers || false
   const pageNumberFormat = presentation.pageNumberFormat || 'c/t'
@@ -192,23 +248,26 @@ function generateRevealHTML(presentation, options = {}) {
     _baseHeight: resH,
   }
   // Compute page numbers: only count slides where showPageNumber !== false
+  const resolvedPresentation = resolvePresentationForRender(presentation)
   const totalNumberedSlides = (presentation.slides || []).filter(
     (s) => s.showPageNumber !== false
   ).length
   let pageCounter = 0
 
-  const usesTokens = presentationUsesTokens(presentation)
+  const usesTokens = presentationUsesTokens(resolvedPresentation)
   const deckTokens = mergeTokens(DEFAULT_TOKENS, presentation.designTokens)
-  const tokenInfo = usesTokens ? buildTokenStyleBlock(presentation) : null
-  const slideOverrideIdx = tokenInfo ? tokenInfo.slideOverrideIdx : null
+  const tokenInfo = usesTokens ? buildTokenStyleBlock(resolvedPresentation) : null
+  const slideOverrideIdx = tokenInfo?.slideOverrideIdx
   const fxRuntimeScript = presentationUsesFx(presentation) ? buildFxRuntimeScript() : ''
   const hasGameElements = presentationUsesGameElements(presentation)
   const transitionMetadataCss = presentationUsesTransitionMetadata(presentation)
     ? TRANSITION_METADATA_CSS
     : ''
+  const hasActions = presentationUsesActions(resolvedPresentation)
 
   const slidesHtml = presentation.slides
-    .map((slide, slideIndex) => {
+    .map((sourceSlide, slideIndex) => {
+      const slide = resolveSlideForRender(sourceSlide, presentation)
       const bgAttrs = getBackgroundAttrs(slide.background)
       const slideIdxAttr =
         slideOverrideIdx && slideOverrideIdx.has(String(slideIndex))
@@ -267,7 +326,8 @@ function generateRevealHTML(presentation, options = {}) {
       // Vertical slides support: if slide has children, wrap in a vertical section stack
       if (slide.children && slide.children.length > 0) {
         const childSections = slide.children
-          .map((child, childIndex) => {
+          .map((sourceChild, childIndex) => {
+            const child = resolveSlideForRender(sourceChild, presentation)
             const childBg = getBackgroundAttrs(child.background)
             const childKey = `${slideIndex}.${childIndex}`
             const childIdxAttr =
@@ -301,10 +361,11 @@ function generateRevealHTML(presentation, options = {}) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="navslides-reveal-version" content="${REVEAL_RUNTIME_VERSION}">
   <title>${escapeHtml(presentation.title || 'Presentation')}</title>
-  <link rel="stylesheet" href="/vendor/reveal.js/dist/reset.css">
-  <link rel="stylesheet" href="/vendor/reveal.js/dist/reveal.css">
-  <link rel="stylesheet" href="/vendor/reveal.js/dist/theme/${presentation.theme || 'black'}.css">
+  <link rel="stylesheet" href="${REVEAL_ASSET_PATHS.resetCss}">
+  <link rel="stylesheet" href="${REVEAL_ASSET_PATHS.revealCss}">
+  <link rel="stylesheet" href="${revealThemePath(presentation.theme || 'black')}">
   <link rel="stylesheet" href="/vendor/highlight.js/styles/${codeTheme}.min.css">
   <link rel="stylesheet" href="/vendor/katex/dist/katex.min.css">
   <link rel="stylesheet" href="/reveal-overrides.css">
@@ -332,7 +393,11 @@ ${transitionMetadataCss}    /* Neutralise theme typography overrides so presenta
     /* Footer ΓÇö explicit CSS rule with high specificity so reveal.js theme cannot override */
     .reveal .slides section .reveal-footer,
     .reveal .slides section .reveal-footer * { font-family: ${footerFontFamily} !important; font-size: ${footerFontSize}px !important; color: ${footerColor} !important; }
-  </style>
+${hasActions ? `    .reveal .slides .ns-element-action { outline: none; }
+    .reveal .slides .ns-element-action:focus-visible { outline: 3px solid #60a5fa; outline-offset: -3px; }
+    #ns-action-feedback { position:fixed;left:50%;bottom:20px;z-index:2000;transform:translateX(-50%);padding:8px 12px;border-radius:4px;background:rgba(0,0,0,.82);color:#fff;font:14px/1.2 sans-serif; }
+    #ns-action-feedback:empty { display:none; }
+` : ''}  </style>
 ${tokenInfo ? `${tokenInfo.styleBlock}\n` : ''}  ${getPresenterToolsHead(presenterTools)}${presentation.customCSS ? `\n  <style>\n${presentation.customCSS}\n  </style>` : ''}
 </head>
 <body>
@@ -342,9 +407,9 @@ ${slidesHtml}
     </div>
   </div>
   ${getPresenterToolsBody(presenterTools)}
-  <script src="/vendor/reveal.js/dist/reveal.js"></script>
-  <script src="/vendor/reveal.js/plugin/notes/notes.js"></script>
-  <script src="/vendor/reveal.js/plugin/highlight/highlight.js"></script>
+${hasActions ? '  <div id="ns-action-feedback" role="status" aria-live="polite"></div>\n' : ''}  <script src="${REVEAL_ASSET_PATHS.revealJs}"></script>
+  <script src="${REVEAL_ASSET_PATHS.notesJs}"></script>
+  <script src="${REVEAL_ASSET_PATHS.highlightJs}"></script>
   <script src="/vendor/katex/dist/katex.min.js"></script>
   ${getPresenterToolsScripts(presenterTools)}
   <script>
@@ -376,7 +441,7 @@ ${slidesHtml}
         } catch(e) {}
       });
 ${getPluginRuntimeInitScript()}
-${buildLivePresenterRuntime({ presentationId: presentation.id, hasGames: hasGameElements })}
+${buildLivePresenterRuntime({ presentationId: presentation.id, hasGames: hasGameElements })}${hasActions ? buildActionRuntimeScript(resolvedPresentation) : ''}
     });
   </script>${getPresenterToolsInlineJS(presenterTools)}${fxRuntimeScript ? `\n${fxRuntimeScript}` : ''}
 </body>
@@ -398,18 +463,30 @@ function getBackgroundAttrs(bg) {
 }
 
 const PRESENTATION_GAME_TYPES = new Set([
-  'name-picker', 'hot-potato', 'jeopardy', 'four-corners', 'relay-race',
-  'trivia-champ', 'scattergories', 'poll', 'word-cloud', 'matching',
+  'name-picker',
+  'hot-potato',
+  'jeopardy',
+  'four-corners',
+  'relay-race',
+  'trivia-champ',
+  'scattergories',
+  'poll',
+  'word-cloud',
+  'matching',
 ])
 
 function presentationUsesGameElements(presentation) {
   for (const slide of presentation?.slides || []) {
     for (const group of [slide, ...(slide?.children || [])]) {
-      if ((group?.elements || []).some((element) => (
-        element?.type === 'game' &&
-        typeof element.id === 'string' &&
-        PRESENTATION_GAME_TYPES.has(element.gameType)
-      ))) return true
+      if (
+        (group?.elements || []).some(
+          (element) =>
+            element?.type === 'game' &&
+            typeof element.id === 'string' &&
+            PRESENTATION_GAME_TYPES.has(element.gameType)
+        )
+      )
+        return true
     }
   }
   return false
@@ -439,19 +516,14 @@ function getFxCanvasHtml(bg) {
 }
 
 function downloadHTML(presentation) {
-  try {
-    const html = generateRevealHTML(presentation)
-    const blob = new Blob([html], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
-    a.click()
-    URL.revokeObjectURL(url)
-  } catch (err) {
-    console.error('Failed to download HTML:', err)
-    if (typeof alert === 'function') alert('Failed to export HTML: ' + err.message)
-  }
+  const html = generateRevealHTML(presentation)
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 // ΓöÇΓöÇΓöÇ PDF export (print-ready HTML, one page per fragment state) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -464,7 +536,10 @@ function getBgPrintStyle(bg, deckTokens) {
   if (bg.type === 'fx') {
     // Canvas can't print — fall back to a solid color (author override, then the
     // theme bg token, then default).
-    const fallback = (bg.fx && bg.fx.fallbackColor) || (deckTokens && deckTokens.colors && deckTokens.colors.bg) || '#1e1e2e'
+    const fallback =
+      (bg.fx && bg.fx.fallbackColor) ||
+      (deckTokens && deckTokens.colors && deckTokens.colors.bg) ||
+      '#1e1e2e'
     return `background-color:${fallback};`
   }
   const imageSrc = bg.type === 'image' ? bg.image || bg.src : ''
@@ -495,7 +570,8 @@ function generatePrintHTML(presentation, options = {}) {
   const printDeckTokens = mergeTokens(DEFAULT_TOKENS, presentation.designTokens)
   const pages = []
   let printPageCounter = 0
-  presentation.slides.forEach((slide) => {
+  presentation.slides.forEach((sourceSlide) => {
+    const slide = resolveSlideForRender(sourceSlide, presentation)
     if (fragmentMode === 'final') {
       pages.push({ slide, maxIdx: Infinity, countPageNumber: true })
       return
@@ -588,6 +664,7 @@ function generatePrintHTML(presentation, options = {}) {
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="navslides-reveal-version" content="${REVEAL_RUNTIME_VERSION}">
   <title>${title} — PDF</title>${baseUrl ? `\n  <base href="${baseUrl}/">` : ''}
   <link rel="stylesheet" href="/vendor/katex/dist/katex.min.css">
   <link rel="stylesheet" href="/vendor/highlight.js/styles/${codeTheme}.min.css">
@@ -630,7 +707,7 @@ function generatePrintHTML(presentation, options = {}) {
 ${printBarHtml}
 ${pagesHtml}
   <script src="/vendor/katex/dist/katex.min.js"></script>
-  <script src="/vendor/reveal.js/plugin/highlight/highlight.js"></script>
+  <script src="${REVEAL_ASSET_PATHS.highlightJs}"></script>
   <script src="/vendor/chart.js/dist/chart.umd.js"></script>
   <script src="/vendor/qrcode/qrcode.min.js"></script>
   <script>
@@ -693,34 +770,24 @@ ${pagesHtml}
 }
 
 function exportPDF(presentation) {
-  try {
-    const html = generatePrintHTML(presentation)
+  const html = generatePrintHTML(presentation)
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  window.open(url, '_blank')
+  setTimeout(() => URL.revokeObjectURL(url), 120000)
+}
+
+function presentInWindow(presentation) {
+  if (presentation && presentation.id) {
+    // Use server endpoint so vendor assets (reveal.js, katex, etc.) resolve correctly
+    window.open(`/api/presentations/${presentation.id}/present`, '_blank')
+  } else {
+    // Fallback for cases without an ID (e.g. template preview)
+    const html = generateRevealHTML(presentation)
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     window.open(url, '_blank')
     setTimeout(() => URL.revokeObjectURL(url), 120000)
-  } catch (err) {
-    console.error('Failed to export PDF:', err)
-    if (typeof alert === 'function') alert('Failed to export PDF: ' + err.message)
-  }
-}
-
-function presentInWindow(presentation) {
-  try {
-    if (presentation && presentation.id) {
-      // Use server endpoint so vendor assets (reveal.js, katex, etc.) resolve correctly
-      window.open(`/api/presentations/${presentation.id}/present`, '_blank')
-    } else {
-      // Fallback for cases without an ID (e.g. template preview)
-      const html = generateRevealHTML(presentation)
-      const blob = new Blob([html], { type: 'text/html' })
-      const url = URL.createObjectURL(blob)
-      window.open(url, '_blank')
-      setTimeout(() => URL.revokeObjectURL(url), 120000)
-    }
-  } catch (err) {
-    console.error('Failed to open presentation:', err)
-    if (typeof alert === 'function') alert('Failed to present: ' + err.message)
   }
 }
 

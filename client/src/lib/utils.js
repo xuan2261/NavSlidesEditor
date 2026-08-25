@@ -20,7 +20,7 @@ export function isBackdropClick(event) {
   return event.target === event.currentTarget
 }
 
-export function useEscapeClose(onClose) {
+export function useEscapeClose(onClose, active = true) {
   const onCloseRef = useRef(onClose)
 
   useLayoutEffect(() => {
@@ -28,6 +28,7 @@ export function useEscapeClose(onClose) {
   }, [onClose])
 
   useLayoutEffect(() => {
+    if (!active) return undefined
     const entry = { onCloseRef }
     escapeCloseStack.push(entry)
     if (escapeCloseStack.length === 1) {
@@ -41,5 +42,5 @@ export function useEscapeClose(onClose) {
         document.removeEventListener('keydown', handleEscapeKeyDown)
       }
     }
-  }, [])
+  }, [active])
 }

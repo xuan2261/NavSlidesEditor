@@ -3,6 +3,7 @@ import { normalizeKey } from '../utils/shortcut-normalizer'
 import { getShortcuts } from '../utils/default-keyboard-shortcut-definitions-registry'
 import { loadOverrides } from '../utils/shortcut-local-storage-persistence'
 import { GAME_SHORTCUT_CONFIG } from '../utils/game-shortcut-config'
+import { isInteractiveKeyboardTarget } from '../utils/interactive-keyboard-target'
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
@@ -35,9 +36,7 @@ function isConfiguredGameShortcut(shortcutId, gameType) {
 // Bare game keys that hijack canvas typing/selection while authoring. These stay
 // inert in the editor (only live when actually presenting a game). HUD/reveal/
 // leaderboard remain reachable in-editor and are deliberately NOT listed here.
-const EDITOR_SUPPRESSED_GAME_IDS = new Set([
-  'gameTimer',
-])
+const EDITOR_SUPPRESSED_GAME_IDS = new Set(['gameTimer'])
 
 /**
  * Create keyboard event handler that dispatches from shortcut registry.
@@ -74,23 +73,18 @@ export function createKeyboardHandler({
         (!presenting && s.scopes.includes('canvas')) ||
         (activeGameType && s.scopes.includes('presentation-game'))
     )
-    const saveShortcut = ctrl && scopeShortcuts.find(
-      (shortcut) => shortcut.id === 'save' && shortcut.activeKey === normalizeKey(e)
-    )
+    const saveShortcut =
+      ctrl &&
+      scopeShortcuts.find(
+        (shortcut) => shortcut.id === 'save' && shortcut.activeKey === normalizeKey(e)
+      )
     if (saveShortcut) {
       if (!disabled) callbacks.onSave?.()
       e.preventDefault()
       return
     }
     if (disabled || isEditing) return
-    const active = getActiveElement()
-    const tag = active?.tagName
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
-    // A focused rich-text surface (TipTap root, table cell) owns typing and
-    // clipboard keys even if the editing-state flag has not propagated yet, so
-    // the canvas-level shortcuts must stand down whenever the caret lives in any
-    // contenteditable region.
-    if (active?.isContentEditable) return
+    if (isInteractiveKeyboardTarget(getActiveElement())) return
 
     // Standalone keys (no Ctrl) — F5, arrows, B, W, Home, End, Escape in presentation
     if (!ctrl) {

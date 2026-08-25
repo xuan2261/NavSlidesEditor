@@ -26,6 +26,8 @@ export function EditorPageHeader({ c }) {
             hasChanges={c.hasChanges}
             saveStatus={c.saveStatus}
             saveError={c.lastSaveError}
+            canUndo={c.canUndo}
+            canRedo={c.canRedo}
             onUndo={c.handleUndo}
             onRedo={c.handleRedo}
           />

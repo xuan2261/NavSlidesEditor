@@ -17,7 +17,7 @@ exports[`pptx mapper golden masters > maps diagram deterministically 1`] = `
       "source": "parser-flatten",
     },
     "_pptxImportMeta": {
-      "fitFontSizePx": 15.2,
+      "fitFontSizePx": 16,
       "sourceBox": {
         "height": 40,
         "width": 80,
@@ -79,7 +79,7 @@ exports[`pptx mapper golden masters > maps image deterministically 1`] = `
   {
     "alt": "Logo",
     "height": 70,
-    "objectFit": "contain",
+    "objectFit": "fill",
     "opacity": 1,
     "rotation": 0,
     "src": "/uploads/<asset>",
@@ -285,13 +285,20 @@ exports[`pptx mapper golden masters > maps text deterministically 1`] = `
 [
   {
     "_pptxImportMeta": {
-      "fitFontSizePx": 15.2,
+      "fitFontSizePx": 16,
       "sourceBox": {
         "height": 40,
         "width": 180,
       },
       "sourceFontSizePx": undefined,
       "textFit": "wrap",
+      "textInsets": {
+        "bottom": 3.6,
+        "left": 7.2,
+        "right": 7.2,
+        "top": 3.6,
+      },
+      "textInsetsUnit": "px",
       "textLength": 11,
       "version": 1,
     },

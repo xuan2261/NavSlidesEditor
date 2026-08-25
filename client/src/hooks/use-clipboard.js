@@ -1,6 +1,21 @@
 import { useCallback } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 
+
+function copyElementWithoutId(element) {
+  const { id, ...copy } = element
+  Object.defineProperty(copy, '__connectorSourceId', { value: id, enumerable: false })
+  return copy
+}
+
+function remapConnections(connections, idRemap) {
+  if (!connections) return connections
+  const remap = (endpoint) =>
+    endpoint && idRemap.has(endpoint.targetId)
+      ? { ...endpoint, targetId: idRemap.get(endpoint.targetId) }
+      : endpoint
+  return { ...connections, ...(connections.start ? { start: remap(connections.start) } : {}), ...(connections.end ? { end: remap(connections.end) } : {}) }
+}
 /**
  * Pure function: perform a copy operation.
  * Returns the clipboard data that should be set.
@@ -17,10 +32,7 @@ export function createCopyOperation({ slideElements, selectedElementIds }) {
   )
   if (elementsToCopy.length === 0) return null
   // Strip IDs so pasted elements get fresh UUIDs
-  return elementsToCopy.map((el) => {
-    const { id: _id, ...rest } = el
-    return { ...rest }
-  })
+  return elementsToCopy.map(copyElementWithoutId)
 }
 
 /**
@@ -51,8 +63,12 @@ export function createPasteOperation({ clipboardElements, pasteIndex = 0 }) {
   const elements = []
   const allIds = []
   let lastId = null
+  const idRemap = new Map()
   for (const el of clipboardElements) {
-    const newId = crypto.randomUUID()
+    if (el.__connectorSourceId) idRemap.set(el.__connectorSourceId, crypto.randomUUID())
+  }
+  for (const el of clipboardElements) {
+    const newId = idRemap.get(el.__connectorSourceId) || crypto.randomUUID()
     lastId = newId
     allIds.push(newId)
     let groupId
@@ -60,7 +76,14 @@ export function createPasteOperation({ clipboardElements, pasteIndex = 0 }) {
       if (!groupRemap.has(el.groupId)) groupRemap.set(el.groupId, crypto.randomUUID())
       groupId = groupRemap.get(el.groupId)
     }
-    elements.push({ ...el, id: newId, groupId, x: (el.x || 0) + off, y: (el.y || 0) + off })
+    elements.push({
+      ...el,
+      id: newId,
+      groupId,
+      connections: remapConnections(el.connections, idRemap),
+      x: (el.x || 0) + off,
+      y: (el.y || 0) + off,
+    })
   }
   return { elements, allIds, lastId }
 }
@@ -95,27 +118,32 @@ export function createDuplicateOperation({ slideElements, selectedElementIds }) 
     return { toAdd: [], clipboardData: null, lastId: null }
   }
 
-  const clipboardData = elementsToDuplicate.map((el) => {
-    const { id: _id, ...rest } = el
-    return { ...rest }
-  })
+  const clipboardData = elementsToDuplicate.map(copyElementWithoutId)
 
   const counts = new Map()
   for (const el of elementsToDuplicate) {
     if (el.groupId) counts.set(el.groupId, (counts.get(el.groupId) || 0) + 1)
   }
   const groupRemap = new Map()
+  const idRemap = new Map(elementsToDuplicate.map((element) => [element.id, crypto.randomUUID()]))
   const toAdd = []
   let lastId = null
   for (const el of elementsToDuplicate) {
-    const newId = crypto.randomUUID()
+    const newId = idRemap.get(el.id)
     lastId = newId
     let groupId
     if (el.groupId && counts.get(el.groupId) >= 2) {
       if (!groupRemap.has(el.groupId)) groupRemap.set(el.groupId, crypto.randomUUID())
       groupId = groupRemap.get(el.groupId)
     }
-    toAdd.push({ ...el, id: newId, groupId, x: (el.x || 0) + 20, y: (el.y || 0) + 20 })
+    toAdd.push({
+      ...el,
+      id: newId,
+      groupId,
+      connections: remapConnections(el.connections, idRemap),
+      x: (el.x || 0) + 20,
+      y: (el.y || 0) + 20,
+    })
   }
 
   return { toAdd, clipboardData, lastId }
@@ -141,11 +169,8 @@ export function createCutOperation({ slideElements, selectedElementIds }) {
   if (elementsToCut.length === 0) {
     return { clipboardData: null, idsToDelete: [] }
   }
-  const clipboardData = elementsToCut.map((el) => {
-    const { id: _id, ...rest } = el
-    return { ...rest }
-  })
-  const idsToDelete = elementsToCut.map((el) => el.id)
+  const clipboardData = elementsToCut.map(copyElementWithoutId)
+  const idsToDelete = elementsToCut.map((element) => element.id)
   return { clipboardData, idsToDelete }
 }
 
@@ -158,7 +183,6 @@ export function createCutOperation({ slideElements, selectedElementIds }) {
  * @param {(presentation: Object) => void} opts.setPresentation - presentation store setter
  */
 export function useClipboard({ mapActiveSlide, setPresentation }) {
-  const selectedElementIds = useEditorStore((s) => s.selectedElementIds)
   const setClipboard = useEditorStore((s) => s.setClipboard)
   const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds)
   const clearSelection = useEditorStore((s) => s.clearSelection)
@@ -167,6 +191,7 @@ export function useClipboard({ mapActiveSlide, setPresentation }) {
 
   const performCopy = useCallback(
     (slideElements) => {
+      const selectedElementIds = useEditorStore.getState().selectedElementIds
       const data = createCopyOperation({
         slideElements: slideElements || [],
         selectedElementIds,
@@ -176,7 +201,7 @@ export function useClipboard({ mapActiveSlide, setPresentation }) {
         resetPasteCount()
       }
     },
-    [selectedElementIds, setClipboard, resetPasteCount]
+    [setClipboard, resetPasteCount]
   )
 
   const performPaste = useCallback(

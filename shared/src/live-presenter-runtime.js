@@ -55,7 +55,16 @@ ${livePresentationReadyDeclaration}        var script = document.createElement('
             emitLiveNavigate(true);
           });
 ${presentationDataListener}          sock.on('join-error', function(payload) {
-            alert((payload && payload.message) || 'Presenter access denied');
+            var notice = document.getElementById('navslides-live-error');
+            if (!notice) {
+              notice = document.createElement('div');
+              notice.id = 'navslides-live-error';
+              notice.setAttribute('role', 'alert');
+              notice.setAttribute('aria-live', 'assertive');
+              notice.style.cssText = 'position:fixed;top:12px;right:12px;z-index:10000;max-width:360px;background:#991b1b;color:#fff;padding:10px 14px;border-radius:8px;font:600 14px/1.4 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);';
+              document.body.appendChild(notice);
+            }
+            notice.textContent = (payload && payload.message) || 'Presenter access denied';
           });
           var lastLiveIndices = null;
           function getLiveRevealIndices() {

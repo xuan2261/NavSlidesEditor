@@ -7,13 +7,21 @@ import {
 } from '../../utils/active-slide-selection'
 
 export function useEditorSelectionController(c) {
+  const {
+    activeSlideRef,
+    getSelectionSlide: resolveSelectionSlide,
+  } = c
+  const getSelectionSlide = useCallback(
+    () => resolveSelectionSlide?.() || activeSlideRef.current,
+    [activeSlideRef, resolveSelectionSlide]
+  )
   const reorderSelection = useCallback(
     (operation, direction) => {
       const ids = c.selectedElementIdsRef.current
-      const slide = c.activeSlideRef.current
+      const slide = getSelectionSlide()
       if (!ids?.length || slide?.locked || hasBlockedGroupMutation(slide, ids)) return
-      const allowedIds = ids.filter(
-        (id) => slide?.elements?.find((element) => element.id === id && !element.locked)
+      const allowedIds = ids.filter((id) =>
+        slide?.elements?.find((element) => element.id === id && !element.locked)
       )
       if (!allowedIds.length) return
       const reordered = operation(slide.elements || [], allowedIds, direction)
@@ -21,7 +29,7 @@ export function useEditorSelectionController(c) {
         reordered.map((element) => ({ id: element.id, zIndex: element.zIndex }))
       )
     },
-    [c]
+    [c, getSelectionSlide]
   )
   const stepSelectedZOrder = useCallback(
     (direction) => reorderSelection(computeMultiZOrderStep, direction),
@@ -34,7 +42,7 @@ export function useEditorSelectionController(c) {
   const updateSelectedElements = useCallback(
     (updates) => {
       const ids = c.selectedElementIdsRef.current
-      const slide = c.activeSlideRef.current
+      const slide = getSelectionSlide()
       if (!ids?.length || !slide) return
       const keys = Object.keys(updates || {})
       if (!(keys.length === 1 && keys[0] === 'locked') && hasBlockedGroupMutation(slide, ids)) {
@@ -42,12 +50,12 @@ export function useEditorSelectionController(c) {
         return
       }
       const batch = buildSelectionUpdates(slide.elements || [], ids, ids.at(-1), updates)
-      if (batch.length === 1) {
+      if (batch.length === 1 && ids.length === 1) {
         const [{ id, ...partial }] = batch
         c.updateElement(id, partial)
-      } else if (batch.length > 1) c.updateElements(batch)
+      } else if (batch.length > 0) c.updateElements(batch)
     },
-    [c]
+    [c, getSelectionSlide]
   )
   const toggleElementSelection = useCallback(
     (id, multi = false) => {
@@ -59,14 +67,14 @@ export function useEditorSelectionController(c) {
       } else {
         c.setSelectedElementIds(
           getSelectionIdsForActiveSlideElement(
-            c.activeSlideRef.current,
+            getSelectionSlide(),
             c.presentation?.slides[c.currentSlideIndexRef.current],
             id
           )
         )
       }
     },
-    [c]
+    [c, getSelectionSlide]
   )
   return {
     moveSelectedToStackEdge,

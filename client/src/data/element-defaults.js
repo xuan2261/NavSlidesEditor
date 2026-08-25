@@ -11,6 +11,7 @@ export const ELEMENT_DEFAULTS = {
     zIndex: 1,
     content: '<p>New text</p>',
     textColor: 'auto', // adopts active theme --ns-text (DEFAULT_TOKENS.text = #ffffff = prior white)
+    fontSize: 16,
   },
   image: {
     width: 400,
@@ -21,6 +22,21 @@ export const ELEMENT_DEFAULTS = {
     borderWidth: 0,
     borderColor: '#000000',
     alt: '',
+    decorative: false,
+    borderRadius: 0,
+    opacity: 1,
+    flipH: false,
+    flipV: false,
+    filterBrightness: 100,
+    filterContrast: 100,
+    filterSaturate: 100,
+    filterGrayscale: 0,
+    filterSepia: 0,
+    filterBlur: 0,
+    citationText: '',
+    citationLink: '',
+    citationColor: '#808080',
+    citationAlign: 'left',
   },
   shape: {
     width: 200,
@@ -44,6 +60,7 @@ export const ELEMENT_DEFAULTS = {
     language: 'javascript',
     fontSize: 14,
     walkthroughSteps: [],
+    borderRadius: 0,
     defaultStepIndex: 0,
   },
   latex: {
@@ -80,6 +97,7 @@ svg.selectAll('circle').data(data).join('circle')
     height: 380,
     zIndex: 2,
     textColor: 'auto',
+    fontSize: 18,
     content:
       '## Hello Markdown\n\n- Item one\n- Item two\n- Item three\n\n**Bold** and *italic* text with [links](https://example.com).\n\n```python\ndef hello():\n    print("Hello!")\n```',
   },
@@ -92,6 +110,10 @@ svg.selectAll('circle').data(data).join('circle')
       labels: ['A', 'B', 'C', 'D', 'E'],
       datasets: [{ label: 'Series 1', data: [12, 19, 8, 15, 10], color: '#6366f1' }],
     },
+    areaFill: false,
+    stacked: false,
+    legendPosition: 'right',
+    axisTitles: { category: '', value: '' },
   },
   video: {
     width: 480,
@@ -107,6 +129,7 @@ svg.selectAll('circle').data(data).join('circle')
     startTime: 0,
     endTime: 0,
     playbackRate: 1,
+    tracks: [],
   },
   audio: {
     width: 400,
@@ -117,6 +140,7 @@ svg.selectAll('circle').data(data).join('circle')
     autoplay: false,
     loop: false,
     muted: false,
+    tracks: [],
   },
   table: {
     width: 600,
@@ -141,14 +165,14 @@ svg.selectAll('circle').data(data).join('circle')
     borderStyle: 'solid', // 'solid' | 'dashed' | 'dotted'
     // Per-cell styling (2D arrays indexed [row][col], null = inherit default)
     cellStyles: {
-      textColors: [],   // [[null, '#ff0000', null], ...]
-      bgColors: [],      // [[null, '#ffff00', null], ...]
-      isBold: [],        // [[false, true, false], ...]
-      aligns: [],        // [['left', 'center', 'right'], ...]
-      vAligns: [],       // [['top', 'middle', 'bottom'], ...]
+      textColors: [], // [[null, '#ff0000', null], ...]
+      bgColors: [], // [[null, '#ffff00', null], ...]
+      isBold: [], // [[false, true, false], ...]
+      aligns: [], // [['left', 'center', 'right'], ...]
+      vAligns: [], // [['top', 'middle', 'bottom'], ...]
     },
     // Merged cells
-    mergedCells: [],     // [{ row: 0, col: 1, rowSpan: 1, colSpan: 2 }]
+    mergedCells: [], // [{ row: 0, col: 1, rowSpan: 1, colSpan: 2 }]
     // Sizing
     colWidths: [],
     rowHeights: [],
@@ -202,6 +226,7 @@ svg.selectAll('circle').data(data).join('circle')
     arrowStart: 'none',
     arrowEnd: 'arrow',
     dashArray: '',
+    connections: undefined,
   },
   svg: {
     width: 200,

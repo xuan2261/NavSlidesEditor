@@ -5,7 +5,8 @@ const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
 const { queueCompatibilityUpsert } = require('../compatibility-outbox')
 const { buildOpcInventory } = require('./opc-inventory')
 const {
-  SCHEMA_VERSION,
+  PACKAGE_HEAD_SCHEMA_VERSION,
+  RECORD_SCHEMA_VERSION,
   hashRecord,
   validateRevision,
 } = require('./schemas')
@@ -109,7 +110,7 @@ async function prepareImport(store, source, input, options = {}) {
   const canonicalProjection = canonicalEditableSnapshot(projection, options.snapshotLimits)
   const inventory = await buildOpcInventory(source, options.inventoryLimits)
   const revision = validateRevision({
-    schemaVersion: SCHEMA_VERSION,
+    schemaVersion: RECORD_SCHEMA_VERSION,
     id: `r0-${inventory.packageSha256}`,
     ordinal: 0,
     blobSha256: inventory.packageSha256,
@@ -127,7 +128,7 @@ async function prepareImport(store, source, input, options = {}) {
     sourceMapHash: hashRecord(sourceMap),
   })
   const authority = {
-    schemaVersion: SCHEMA_VERSION,
+    schemaVersion: RECORD_SCHEMA_VERSION,
     operation: MUTATION_OPERATIONS.PACKAGE_IMPORT,
     presentationId,
     idempotencyKey: jobId,
@@ -176,13 +177,13 @@ async function publishImport(store, prepared, options = {}) {
     if (!next.blobs.some((item) => item.sha256 === blob.sha256)) next.blobs.push(blob)
     if (!next.revisions.some((item) => item.id === revision.id)) next.revisions.push(revision)
     next.owners.push({
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: RECORD_SCHEMA_VERSION,
       revisionId: revision.id,
       ownerType: 'presentation',
       ownerId: presentationId,
     })
     const head = {
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: PACKAGE_HEAD_SCHEMA_VERSION,
       presentationId,
       originalRevisionId: revision.id,
       projectionRevisionId: hashRecord(authority.projection),
@@ -212,7 +213,7 @@ async function publishImport(store, prepared, options = {}) {
     }
     next.jobs = next.jobs.filter((job) => job.id !== jobId)
     next.jobs.push({
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: RECORD_SCHEMA_VERSION,
       id: jobId,
       kind: 'import',
       status: 'completed',

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../../..')
 const CLIENT_SRC_ROOT = path.join(REPO_ROOT, 'client', 'src')
+const SHARED_SRC_ROOT = path.join(REPO_ROOT, 'shared', 'src')
 const EXCLUDED_DIRS = new Set(['__tests__'])
 const EXCLUDED_SUFFIXES = ['.test.js', '.test.jsx', '.test.ts', '.test.tsx']
 
@@ -22,13 +23,15 @@ function collectSourceFiles(dir) {
 
 describe('native dialog audit', () => {
   it('keeps production UI flows on themed feedback surfaces', () => {
-    const offenders = collectSourceFiles(CLIENT_SRC_ROOT).flatMap((filePath) => {
-      const relativePath = path.relative(REPO_ROOT, filePath).replaceAll('\\', '/')
-      const source = fs.readFileSync(filePath, 'utf8')
-      return [...source.matchAll(/\b(alert|confirm)\s*\(/g)].map(
-        (match) => `${relativePath}:${match[1]}`
-      )
-    })
+    const offenders = [CLIENT_SRC_ROOT, SHARED_SRC_ROOT].flatMap((root) =>
+      collectSourceFiles(root).flatMap((filePath) => {
+        const relativePath = path.relative(REPO_ROOT, filePath).replaceAll('\\', '/')
+        const source = fs.readFileSync(filePath, 'utf8')
+        return [...source.matchAll(/\b(?:window\.)?(prompt|confirm|alert)\s*\(/g)].map(
+          (match) => `${relativePath}:${match[1]}`
+        )
+      })
+    )
 
     expect(offenders).toEqual([])
   })

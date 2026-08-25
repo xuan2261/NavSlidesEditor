@@ -69,6 +69,26 @@ describe('writer lock reclaim', () => {
     expect(persisted.epoch).toBe(8)
   })
 
+  it('reclaims a lock from an earlier process incarnation that reused this PID', async () => {
+    const rootDir = await createRoot()
+    const firstModulePath = require.resolve('./writer-lock')
+    const first = new WriterLock(rootDir)
+    const firstRecord = await first.acquire()
+
+    delete require.cache[firstModulePath]
+    const { WriterLock: RestartedWriterLock } = require('./writer-lock')
+    const restarted = new RestartedWriterLock(rootDir)
+    const restartedRecord = await restarted.acquire()
+
+    expect(restartedRecord.pid).toBe(process.pid)
+    expect(restartedRecord.processInstanceId).not.toBe(firstRecord.processInstanceId)
+    expect(restarted.reclaimedFrom).toMatchObject({
+      pid: process.pid,
+      processInstanceId: firstRecord.processInstanceId,
+    })
+    await restarted.release()
+  })
+
   it('refuses a lock whose owner is still running', async () => {
     const rootDir = await createRoot()
     await writeLock(rootDir, heldRecord())
@@ -78,7 +98,10 @@ describe('writer lock reclaim', () => {
 
   it('refuses a lock taken by another host, whose owner cannot be probed', async () => {
     const rootDir = await createRoot()
-    await writeLock(rootDir, heldRecord({ host: `${os.hostname()}-elsewhere`, pid: await deadPid() }))
+    await writeLock(
+      rootDir,
+      heldRecord({ host: `${os.hostname()}-elsewhere`, pid: await deadPid() })
+    )
 
     await expect(new WriterLock(rootDir).acquire()).rejects.toThrow(/writer lock is held/)
   })

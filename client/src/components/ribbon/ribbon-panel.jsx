@@ -1,5 +1,5 @@
 import * as Tabs from '@radix-ui/react-tabs'
-import { useUIStore } from '../../stores/ui-store'
+import { resolveRibbonActiveTab, useUIStore } from '../../stores/ui-store'
 import HomeTabContent from './home-tab-content'
 import InsertTabContent from './ribbon-insert-tab-element-galleries-panel'
 import DesignTabContent from './design-tab-content'
@@ -23,19 +23,19 @@ export default function RibbonPanel(props) {
   const activeTab = useUIStore((s) => s.activeTab)
   const setActiveTab = useUIStore((s) => s.setActiveTab)
   const formatContext = useUIStore((s) => s.formatContext)
+  const lastNonContextualTab = useUIStore((s) => s.lastNonContextualTab)
 
-  // Guard against radix showing the Format panel for a persisted activeTab
-  // ('format' from localStorage) before a selection exists. Tabs.Root renders
-  // whichever Content matches `value` regardless of a matching trigger, so we
-  // must coerce the value synchronously rather than rely on an async effect.
-  const effectiveTab =
-    activeTab === 'format' && !formatContext.hasSelection ? 'home' : activeTab
+  const effectiveTab = resolveRibbonActiveTab(
+    activeTab,
+    formatContext,
+    lastNonContextualTab
+  )
 
   return (
-    <Tabs.Root value={effectiveTab} onValueChange={setActiveTab}>
+    <Tabs.Root value={effectiveTab} onValueChange={setActiveTab} className="min-w-0 max-w-full">
       <RibbonDensityProvider
           data-testid="ribbon-panel-container"
-          className="tour-step-ribbon relative h-[80px] overflow-hidden bg-panel border-b border-border"
+          className="tour-step-ribbon relative h-[80px] min-w-0 max-w-full overflow-hidden bg-panel border-b border-border"
       >
         {Object.entries(TAB_PANELS).map(([id, Content]) => (
           <Tabs.Content
@@ -44,7 +44,7 @@ export default function RibbonPanel(props) {
             id={`ribbon-panel-${id}`}
             data-testid={`ribbon-tab-${id}-content`}
             aria-labelledby={`ribbon-tab-${id}`}
-            className="absolute inset-0 hidden h-full w-full min-w-0 items-center outline-none data-[state=active]:flex"
+            className="absolute inset-0 hidden h-full w-full min-w-0 items-center overflow-hidden outline-none data-[state=active]:flex"
           >
             <Content {...props} slideElements={props.slide?.elements || []} />
           </Tabs.Content>

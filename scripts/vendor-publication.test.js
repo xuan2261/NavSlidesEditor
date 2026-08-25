@@ -42,9 +42,31 @@ describe('vendor publication', () => {
 
     expect(fs.readFileSync(path.join(vendorDir, 'old.txt'), 'utf8')).toBe('old asset')
     expect(fs.existsSync(path.join(vendorDir, 'present'))).toBe(false)
-    expect(fs.readdirSync(path.dirname(vendorDir)).filter((name) => name.includes('vendor-'))).toEqual([])
+    expect(
+      fs.readdirSync(path.dirname(vendorDir)).filter((name) => name.includes('vendor-'))
+    ).toEqual([])
   })
 
+  it('preserves the live tree when a required staged asset is absent', async () => {
+    const root = makeRoot()
+    const vendorDir = path.join(root, 'server', 'vendor')
+    const sourceDir = path.join(root, 'source')
+    fs.mkdirSync(sourceDir)
+    fs.writeFileSync(path.join(sourceDir, 'asset.js'), 'new asset')
+    fs.writeFileSync(path.join(vendorDir, 'old.txt'), 'old asset')
+
+    await expect(
+      publishVendorAssets({
+        rootDir: root,
+        localItems: [{ source: sourceDir, destination: 'present' }],
+        remoteItems: [],
+        requiredPaths: ['present/missing.js'],
+        logger: { log() {}, warn() {}, error() {} },
+      })
+    ).rejects.toThrow('Required staged vendor asset missing: present/missing.js')
+
+    expect(fs.readFileSync(path.join(vendorDir, 'old.txt'), 'utf8')).toBe('old asset')
+  })
   it('publishes a complete hashed manifest atomically', async () => {
     const root = makeRoot()
     const vendorDir = path.join(root, 'server', 'vendor')
@@ -57,6 +79,7 @@ describe('vendor publication', () => {
       rootDir: root,
       localItems: [{ source: sourceDir, destination: 'present' }],
       remoteItems: [],
+      metadata: { runtimes: { revealJs: '6.0.1' } },
       logger: { log() {}, warn() {}, error() {} },
     })
 
@@ -65,9 +88,12 @@ describe('vendor publication', () => {
     expect(manifest.files).toEqual([
       expect.objectContaining({ path: 'present/asset.js', bytes: 9, sha256: expect.any(String) }),
     ])
-    expect(JSON.parse(fs.readFileSync(path.join(vendorDir, 'vendor-manifest.json'), 'utf8'))).toEqual(
-      manifest
-    )
-    expect(fs.readdirSync(path.dirname(vendorDir)).filter((name) => name.includes('vendor-'))).toEqual([])
+    expect(manifest.runtimes).toEqual({ revealJs: '6.0.1' })
+    expect(
+      JSON.parse(fs.readFileSync(path.join(vendorDir, 'vendor-manifest.json'), 'utf8'))
+    ).toEqual(manifest)
+    expect(
+      fs.readdirSync(path.dirname(vendorDir)).filter((name) => name.includes('vendor-'))
+    ).toEqual([])
   })
 })

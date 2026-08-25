@@ -10,6 +10,30 @@ const VALID_RIBBON_TABS = new Set([
   'view',
 ])
 
+const DEFAULT_RIBBON_TAB = 'home'
+
+function readStoredRibbonTab() {
+  try {
+    localStorage.removeItem('navslides-ribbon-use-ribbon')
+    const storedTab = localStorage.getItem('navslides-ribbon-active-tab')
+    return VALID_RIBBON_TABS.has(storedTab) ? storedTab : DEFAULT_RIBBON_TAB
+  } catch {
+    return DEFAULT_RIBBON_TAB
+  }
+}
+
+const initialRibbonTab = readStoredRibbonTab()
+
+export function resolveRibbonActiveTab(activeTab, formatContext, lastNonContextualTab) {
+  const fallback =
+    VALID_RIBBON_TABS.has(lastNonContextualTab) && lastNonContextualTab !== 'format'
+      ? lastNonContextualTab
+      : DEFAULT_RIBBON_TAB
+  if (!VALID_RIBBON_TABS.has(activeTab)) return fallback
+  if (activeTab === 'format' && !formatContext?.hasSelection) return fallback
+  return activeTab
+}
+
 const clampZoom = (v) => Math.max(0.1, Math.min(4, v))
 
 export const useUIStore = create((set, get) => ({
@@ -61,13 +85,9 @@ export const useUIStore = create((set, get) => ({
   presentHandler: null,
 
   // Ribbon
-  activeTab: (() => {
-    try {
-      localStorage.removeItem('navslides-ribbon-use-ribbon')
-      const storedTab = localStorage.getItem('navslides-ribbon-active-tab')
-      return VALID_RIBBON_TABS.has(storedTab) ? storedTab : 'home'
-    } catch { return 'home' }
-  })(),
+  activeTab: initialRibbonTab,
+  lastNonContextualTab:
+    initialRibbonTab === 'format' ? DEFAULT_RIBBON_TAB : initialRibbonTab,
 
   // Format-tab context — bridges EditorPage selection to the ribbon TabBar
   // without prop-drilling selectedElement through RibbonHeaderBar.
@@ -121,26 +141,54 @@ export const useUIStore = create((set, get) => ({
   setShowDesignIdeas: (v) => set((s) => ({ showDesignIdeas: typeof v === 'function' ? v(s.showDesignIdeas) : v })),
 
   // Ribbon
-  setActiveTab: (tab) => {
-    if (!VALID_RIBBON_TABS.has(tab)) tab = 'home'
+  setActiveTab: (requestedTab) => {
+    const state = get()
+    let tab = VALID_RIBBON_TABS.has(requestedTab) ? requestedTab : DEFAULT_RIBBON_TAB
+    if (tab === 'format' && !state.formatContext.hasSelection) {
+      tab = resolveRibbonActiveTab(tab, state.formatContext, state.lastNonContextualTab)
+    }
     try { localStorage.setItem('navslides-ribbon-active-tab', tab) } catch { /* ignore */ }
-    set({ activeTab: tab })
+    set({
+      activeTab: tab,
+      ...(tab === 'format' ? {} : { lastNonContextualTab: tab }),
+    })
   },
 
   // Sync EditorPage selection into the ribbon. Auto-activates Format the first
   // time a selection appears (none -> some); once the user navigates away while
   // the selection persists, later type changes must not yank them back.
   setFormatContext: ({ hasSelection, elementType }) => {
-    const prev = get()
-    if (hasSelection && !prev.formatContext.hasSelection) {
-      get().setActiveTab('format')
-      set({ formatAutoActivatedForSelection: true })
+    const previous = get()
+    const formatContext = { hasSelection, elementType }
+
+    if (hasSelection && !previous.formatContext.hasSelection) {
+      try { localStorage.setItem('navslides-ribbon-active-tab', 'format') } catch { /* ignore */ }
+      set({
+        activeTab: 'format',
+        formatContext,
+        formatAutoActivatedForSelection: true,
+      })
+      return
     }
+
     if (!hasSelection) {
-      set({ formatAutoActivatedForSelection: false })
-      if (get().activeTab === 'format') get().setActiveTab('home')
+      const fallback = resolveRibbonActiveTab(
+        previous.activeTab,
+        formatContext,
+        previous.lastNonContextualTab
+      )
+      if (fallback !== previous.activeTab) {
+        try { localStorage.setItem('navslides-ribbon-active-tab', fallback) } catch { /* ignore */ }
+      }
+      set({
+        activeTab: fallback,
+        formatContext,
+        formatAutoActivatedForSelection: false,
+      })
+      return
     }
-    set({ formatContext: { hasSelection, elementType } })
+
+    set({ formatContext })
   },
 
   // Zoom actions

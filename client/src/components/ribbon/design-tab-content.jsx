@@ -263,6 +263,7 @@ export default function DesignTabContent({
   slide,
   onUpdateSlide,
   onUpdatePresentation,
+  onOpenLayoutManager,
 }) {
   const [showThemes, setShowThemes] = useState(false)
   const [showBg, setShowBg] = useState(false)
@@ -318,6 +319,13 @@ export default function DesignTabContent({
             />
           )}
         </div>
+      </RibbonSection>
+
+      <RibbonSection label="Layouts" className="border-r border-border">
+        <Button variant="ribbon" className="h-7" title="Open Layout Manager" aria-label="Open Layout Manager" onMouseDown={(event) => { event.preventDefault(); onOpenLayoutManager?.() }} onKeyDown={(event) => handleRibbonKeyboardActivation(event, () => onOpenLayoutManager?.())}>
+          <Layers size={14} />
+          <span className="text-[11px] hidden lg:inline">Layouts</span>
+        </Button>
       </RibbonSection>
 
       <RibbonSection label="Background" className="border-r border-border">

@@ -190,6 +190,9 @@ function getNativeChartDefinition(pptx, element) {
   const axisTitles = getAxisTitles(element)
   const legendPos = LEGEND_POSITIONS[element.legendPosition] || LEGEND_POSITIONS.right
   const supportsStacking = chartType === 'bar' || isArea
+  const chartColors = ['pie', 'doughnut'].includes(chartType) && Array.isArray(datasets[0]?.colors)
+    ? datasets[0].colors
+    : datasets.map((dataset) => (dataset && dataset.color) || '#6366f1')
 
   return {
     type: outputType,
@@ -208,8 +211,8 @@ function getNativeChartDefinition(pptx, element) {
         showValAxisTitle: true,
       }),
       lineSize: chartType === 'line' && !isArea ? 2 : undefined,
-      chartColors: datasets
-        .map((dataset) => normalizeCssColor((dataset && dataset.color) || '#6366f1').color)
+      chartColors: chartColors
+        .map((color) => normalizeCssColor(color || '#6366f1').color)
         .filter(Boolean),
     },
   }

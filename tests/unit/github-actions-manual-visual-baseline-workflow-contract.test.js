@@ -66,7 +66,7 @@ describe('manual visual baseline update workflow contract', () => {
     expect(triggerBlock.trim()).toBe('on:\n  workflow_dispatch:')
     expect(workflow).toContain('contents: read')
     expect(workflow).not.toContain('contents: write')
-    expect(workflow).toContain('image: mcr.microsoft.com/playwright:v1.59.1-jammy')
+    expect(workflow).toContain('image: mcr.microsoft.com/playwright:v1.62.1-jammy')
     expect(workflow).not.toMatch(/\bgit\s+(push|commit|tag)\b/)
     expect(workflow).not.toMatch(/\bgh\s+(pr|release)\b/)
     expect(workflow).not.toMatch(/peter-evans\/create-pull-request/i)

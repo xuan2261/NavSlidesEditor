@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { useUIStore } from '../../stores/ui-store'
 import RibbonShell from './ribbon-toolbar-shell-with-tab-panels'
 import RibbonHeaderBar from './ribbon-header-bar'
@@ -9,6 +10,7 @@ describe('RibbonShell', () => {
   beforeEach(() => {
     useUIStore.setState({
       activeTab: 'home',
+      lastNonContextualTab: 'home',
       formatContext: { hasSelection: false, elementType: null },
       formatAutoActivatedForSelection: false,
     })
@@ -55,12 +57,42 @@ describe('RibbonShell', () => {
     expect(homeTab.getAttribute('aria-selected')).toBe('true')
   })
 
-  it('switches tab on click', () => {
+  it('[cap:control.ribbon.active-reveal] switches tab once on pointer activation and retains focus', async () => {
+    const user = userEvent.setup()
     render(<RibbonShell />)
+    let changes = 0
+    const unsubscribe = useUIStore.subscribe((state, previous) => {
+      if (state.activeTab !== previous.activeTab) changes += 1
+    })
     const insertTab = screen.getByRole('tab', { name: /insert/i })
-    fireEvent.click(insertTab)
+    await user.click(insertTab)
     expect(insertTab.getAttribute('aria-selected')).toBe('true')
     expect(useUIStore.getState().activeTab).toBe('insert')
+    expect(document.activeElement).toBe(insertTab)
+    expect(changes).toBe(1)
+    unsubscribe()
+  })
+
+  it('activates a tab from native programmatic click', () => {
+    render(<RibbonShell />)
+
+    screen.getByRole('tab', { name: /view/i }).click()
+
+    expect(useUIStore.getState().activeTab).toBe('view')
+  })
+
+  it('[cap:control.ribbon.touch-targets] activates a touched tab without treating a swipe as a tap', () => {
+    render(<RibbonShell />)
+    const viewTab = screen.getByRole('tab', { name: /view/i })
+    const insertTab = screen.getByRole('tab', { name: /insert/i })
+
+    fireEvent.touchStart(viewTab, { changedTouches: [{ clientX: 100, clientY: 20 }] })
+    fireEvent.touchEnd(viewTab, { changedTouches: [{ clientX: 104, clientY: 22 }] })
+    expect(useUIStore.getState().activeTab).toBe('view')
+
+    fireEvent.touchStart(insertTab, { changedTouches: [{ clientX: 100, clientY: 20 }] })
+    fireEvent.touchEnd(insertTab, { changedTouches: [{ clientX: 40, clientY: 20 }] })
+    expect(useUIStore.getState().activeTab).toBe('view')
   })
 
   it('tablist has aria-orientation attribute', () => {
@@ -112,7 +144,8 @@ describe('RibbonShell', () => {
     expect(onExportPDF).toHaveBeenCalled()
   })
 
-  it('keeps header tab selection synced with panel content through ui-store', () => {
+  it('keeps header tab selection synced with panel content through ui-store', async () => {
+    const user = userEvent.setup()
     render(
       <>
         <RibbonHeaderBar />
@@ -120,7 +153,7 @@ describe('RibbonShell', () => {
       </>
     )
 
-    fireEvent.click(screen.getByRole('tab', { name: /view/i }))
+    await user.click(screen.getByRole('tab', { name: /view/i }))
 
     expect(useUIStore.getState().activeTab).toBe('view')
     expect(screen.getByRole('tab', { name: /view/i }).getAttribute('aria-selected')).toBe('true')

@@ -1,4 +1,4 @@
-const { SCHEMA_VERSION, hashRecord, validateOwner, validateRevision } = require('./schemas')
+const { PACKAGE_HEAD_SCHEMA_VERSION, RECORD_SCHEMA_VERSION, hashRecord, validateOwner, validateRevision } = require('./schemas')
 const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
 
 async function commitOriginal(store, source, owner, options = {}) {
@@ -8,7 +8,7 @@ async function commitOriginal(store, source, owner, options = {}) {
   const blob = await store.blobs.commit(staged)
   const revisionId = `r0-${blob.sha256}`
   const revision = validateRevision({
-    schemaVersion: SCHEMA_VERSION,
+    schemaVersion: RECORD_SCHEMA_VERSION,
     id: revisionId,
     ordinal: 0,
     blobSha256: blob.sha256,
@@ -22,12 +22,12 @@ async function commitOriginal(store, source, owner, options = {}) {
       item.revisionId === revisionId &&
       item.ownerType === owner.ownerType &&
       item.ownerId === owner.ownerId
-    )) next.owners.push({ schemaVersion: SCHEMA_VERSION, revisionId, ...owner })
+    )) next.owners.push({ schemaVersion: RECORD_SCHEMA_VERSION, revisionId, ...owner })
     if (owner.ownerType !== 'presentation') return
     const predecessor = next.heads.find((head) => head.presentationId === owner.ownerId)
     next.heads = next.heads.filter((head) => head.presentationId !== owner.ownerId)
     next.heads.push({
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: PACKAGE_HEAD_SCHEMA_VERSION,
       presentationId: owner.ownerId,
       originalRevisionId: revisionId,
       projectionRevisionId: null,

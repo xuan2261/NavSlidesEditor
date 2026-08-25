@@ -134,7 +134,7 @@ export default function FileDropdown({
         onKeyDown={(e) => handleKeyboardActivation(e, () => setOpen((v) => !v))}
       >
         <FileText size={14} />
-        <span className="text-[11px] hidden sm:inline">File</span>
+        <span className="text-[11px] hidden lg:inline">File</span>
       </Button>
 
       {open && (
@@ -170,7 +170,7 @@ export default function FileDropdown({
                             ? 'ribbon-file-export-html'
                             : undefined
                       }
-                      className="dropdown-item w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-text-primary hover:bg-secondary cursor-pointer transition-colors text-left"
+                      className="ui-coarse-target dropdown-item w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-text-primary hover:bg-secondary cursor-pointer transition-colors text-left"
                       role="menuitem"
                       tabIndex={-1}
                       onMouseDown={(e) => {

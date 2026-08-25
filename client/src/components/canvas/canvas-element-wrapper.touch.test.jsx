@@ -191,6 +191,41 @@ describe('CanvasElement touch pointer consumer path', () => {
     expect(onTouchCropHandleDown).not.toHaveBeenCalled()
   })
 
+  it('exposes the crop commit action as a keyboard-accessible button', () => {
+    const onCommitCrop = vi.fn()
+    render(
+      <CanvasElement
+        element={{
+          id: 'image-2',
+          type: 'image',
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          src: '/image.png',
+        }}
+        isSelected
+        isEditing={false}
+        isCropping
+        cropState={{ x: 0.1, y: 0.1, w: 0.8, h: 0.8 }}
+        isDragging={false}
+        editor={null}
+        onPointerDown={vi.fn()}
+        onClick={vi.fn()}
+        onDoubleClick={vi.fn()}
+        onContextMenu={vi.fn()}
+        onCropHandleDown={vi.fn()}
+        onCommitCrop={onCommitCrop}
+        onUpdateElement={vi.fn()}
+        iconPaths={{}}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Apply crop' }))
+
+    expect(onCommitCrop).toHaveBeenCalledTimes(1)
+  })
+
   it('cancels the first touch session in container capture before a second touch can select', () => {
     const handlers = renderSlide({
       elements: [shape('a', 40), shape('b', 220)],

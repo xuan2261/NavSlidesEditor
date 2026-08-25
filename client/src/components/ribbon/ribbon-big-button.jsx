@@ -23,7 +23,7 @@ export default function RibbonBigButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'flex flex-col items-center justify-center gap-1 px-2.5 h-[52px] min-w-[56px] rounded-md',
+        'ui-coarse-target flex flex-col items-center justify-center gap-1 px-2.5 h-[52px] min-w-[56px] rounded-md',
         'text-text-secondary hover:bg-hover hover:text-text-primary transition-colors cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
         active && 'bg-primary-light text-accent',

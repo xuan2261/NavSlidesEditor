@@ -131,10 +131,9 @@ async function mapImage(element, context) {
   const box = fitBoxWithinBounds(mapBox(element, context.scale))
   const img = { ...baseElement(element, context.scale, context.zIndex, box), type: 'image', src }
   const fillMode = typeof element.fill === 'string' ? element.fill : element.fill?.mode || element.fill?.fit
-  if (element.geom === 'picture' || fillMode === 'cover') img.objectFit = 'cover'
+  if (fillMode === 'cover') img.objectFit = 'cover'
   else if (fillMode === 'contain') img.objectFit = 'contain'
-  else if (fillMode === 'stretch' || fillMode === 'fill') img.objectFit = 'fill'
-  else img.objectFit = 'contain'
+  else img.objectFit = 'fill'
   const altText = element.alt || element.title || element.descr || element.description
   if (altText) img.alt = plainText(altText)
   if (element.isFlipH) img.flipH = true

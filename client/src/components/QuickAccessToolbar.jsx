@@ -9,6 +9,8 @@ export default function QuickAccessToolbar({
   retryAvailable = true,
   onUndo,
   onRedo,
+  canUndo = false,
+  canRedo = false,
   saving,
   hasChanges,
   saveStatus,
@@ -38,7 +40,7 @@ export default function QuickAccessToolbar({
     >
       {/* Save */}
       <button
-        className="flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
+        className="ui-coarse-target ui-coarse-target-square flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
         onClick={onSave}
         disabled={saving}
         title={statusTitle || (hasChanges ? 'Save (Ctrl+S)' : 'No changes')}
@@ -63,7 +65,7 @@ export default function QuickAccessToolbar({
           <span>Save failed</span>
           {retryAvailable && (
             <button
-              className="rounded px-1.5 py-0.5 text-danger underline-offset-2 hover:bg-danger/10 hover:underline"
+              className="ui-coarse-target rounded px-1.5 py-0.5 text-danger underline-offset-2 hover:bg-danger/10 hover:underline"
               onClick={onRetry}
               title={statusTitle}
               aria-label="Retry"
@@ -78,8 +80,9 @@ export default function QuickAccessToolbar({
 
       {/* Undo */}
       <button
-        className="flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
+        className="ui-coarse-target ui-coarse-target-square flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
         onClick={handleUndo}
+        disabled={!canUndo}
         title="Undo (Ctrl+Z)"
         aria-label="Undo"
       >
@@ -88,8 +91,9 @@ export default function QuickAccessToolbar({
 
       {/* Redo */}
       <button
-        className="flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
+        className="ui-coarse-target ui-coarse-target-square flex h-7 w-7 items-center justify-center rounded text-text-muted transition-colors hover:bg-hover hover:text-text-primary disabled:pointer-events-none disabled:opacity-40"
         onClick={handleRedo}
+        disabled={!canRedo}
         title="Redo (Ctrl+Y)"
         aria-label="Redo"
       >

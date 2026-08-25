@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import JSZip from 'jszip'
 import presentationMapper from './map-presentation.js'
 
@@ -75,6 +78,45 @@ describe('pptx presentation mapper', () => {
       { type: 'shape', zIndex: 1 },
       { type: 'text', zIndex: 2 },
     ])
+  })
+
+  it('maps picture-filled PowerPoint shapes as stretched images', async () => {
+    const uploadsDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-picture-fill-'))
+    try {
+      const base64 = `data:image/png;base64,${Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13]).toString('base64')}`
+      const result = await mapPptxOutput({
+        output: {
+          size: { width: 960, height: 540 },
+          slides: [{
+            elements: [{
+              type: 'shape',
+              shapType: 'rect',
+              left: 100,
+              top: 120,
+              width: 300,
+              height: 180,
+              fill: { type: 'image', value: { base64 } },
+            }],
+          }],
+        },
+        zip: { files: {} },
+        originalName: 'Picture fill.pptx',
+        uploadsDir,
+      })
+
+      expect(result.presentation.slides[0].elements[0]).toMatchObject({
+        type: 'image',
+        x: 100,
+        y: 120,
+        width: 300,
+        height: 180,
+        objectFit: 'fill',
+        src: expect.stringMatching(/^\/uploads\/.+\.png$/),
+      })
+      expect(result.stats).toMatchObject({ imageCount: 1, shapeCount: 0 })
+    } finally {
+      await fs.rm(uploadsDir, { recursive: true, force: true })
+    }
   })
 
   it('maps non-default slide sizes into the canonical canvas resolution', async () => {

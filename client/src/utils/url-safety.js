@@ -1,47 +1,36 @@
-const SAFE_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:'])
-const SAFE_MEDIA_SCHEMES = new Set(['http:', 'https:'])
-const SAFE_MEDIA_DATA = /^data:(image|audio|video)\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]*$/i
+import shared from 'revealjs-shared'
 
-// Characters that would let an href break out of an HTML attribute or inject
-// markup once interpolated into `href="..."`. Reject them for every form,
-// including the relative/anchor fast-paths below.
-const ATTRIBUTE_BREAKOUT = /["'<>`\s]/
-// eslint-disable-next-line no-control-regex
-const CONTROL_CHARS = /[\x00-\x1f\x7f]/
+const {
+  isSafeHref: isSharedSafeHref,
+  isSafeMediaSrc: isSharedSafeMediaSrc,
+  sanitizeMediaSrc: sanitizeSharedMediaSrc,
+} = shared
 
-export function isSafeHref(href) {
-  const raw = String(href || '').trim()
-  if (!raw) return false
-  if (CONTROL_CHARS.test(raw)) return false
-  if (ATTRIBUTE_BREAKOUT.test(raw)) return false
-  if (raw.startsWith('#') || raw.startsWith('/')) return true
-  if (raw.startsWith('./') || raw.startsWith('../')) return true
+const MEDIA_DATA_KIND = /^data:(image|audio|video)\//i
 
-  try {
-    const parsed = new URL(raw, 'https://navslides.local')
-    return SAFE_SCHEMES.has(parsed.protocol)
-  } catch {
-    return false
+export const isSafeHref = isSharedSafeHref
+export const isSafeMediaSrc = isSharedSafeMediaSrc
+export const sanitizeMediaSrc = sanitizeSharedMediaSrc
+
+export function resolveUrlEntry(value, kind) {
+  const normalized = String(value || '').trim()
+  const mediaKind = String(kind || '').toLowerCase()
+
+  if (mediaKind === 'link') {
+    return isSafeHref(normalized)
+      ? { value: normalized, error: '' }
+      : { value: '', error: 'Enter a safe HTTP(S), mailto, tel, project-relative, or slide link.' }
   }
-}
 
-export function isSafeMediaSrc(src) {
-  const raw = String(src || '').trim()
-  if (!raw) return false
-  if (CONTROL_CHARS.test(raw)) return false
-  if (ATTRIBUTE_BREAKOUT.test(raw)) return false
-  if (raw.startsWith('/') || raw.startsWith('./') || raw.startsWith('../')) return true
-  if (SAFE_MEDIA_DATA.test(raw)) return true
-
-  try {
-    const parsed = new URL(raw, 'https://navslides.local')
-    return SAFE_MEDIA_SCHEMES.has(parsed.protocol)
-  } catch {
-    return false
+  if (!isSafeMediaSrc(normalized)) {
+    return { value: '', error: `Enter a safe ${mediaKind || 'media'} URL.` }
   }
-}
 
-export function sanitizeMediaSrc(src) {
-  const raw = String(src || '').trim()
-  return isSafeMediaSrc(raw) ? raw : ''
+  const dataKind = normalized.match(MEDIA_DATA_KIND)?.[1]?.toLowerCase()
+  if (dataKind && mediaKind && dataKind !== mediaKind) {
+    const article = /^[aeiou]/.test(mediaKind) ? 'an' : 'a'
+    return { value: '', error: `Enter ${article} ${mediaKind} data URL, not ${dataKind}.` }
+  }
+
+  return { value: normalized, error: '' }
 }

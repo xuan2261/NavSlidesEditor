@@ -62,6 +62,7 @@ module.exports = defineConfig({
       testMatch: [
         /tests\/e2e\/a11y\/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport\.spec\.js$/,
         /tests\/e2e\/a11y\/tablet-touch-editor-interactions\.spec\.js$/,
+        /tests\/e2e\/ribbon-responsive-touch\.spec\.js$/,
       ],
       use: {
         ...devices['Desktop Chrome'],

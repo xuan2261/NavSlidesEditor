@@ -132,11 +132,12 @@ test.describe('Critical MVP user journeys', () => {
     const shapeIndex = await editor.addShape('Rectangle')
     await editor.selectElement(shapeIndex)
     await page.getByRole('tab', { name: 'Shape Format' }).click()
-    await page.getByLabel('Fill color').fill('#22c55e')
-    await page.getByRole('spinbutton', { name: 'Width', exact: true }).fill('180')
-    await page.getByRole('spinbutton', { name: 'Height', exact: true }).fill('90')
-    await page.getByRole('button', { name: 'Align center horizontal' }).click()
-    await page.getByLabel('Y position').fill('260')
+    const formatPanel = page.getByTestId('ribbon-tab-format-content')
+    await formatPanel.getByLabel('Fill color', { exact: true }).fill('#22c55e')
+    await formatPanel.getByRole('spinbutton', { name: 'Width', exact: true }).fill('180')
+    await formatPanel.getByRole('spinbutton', { name: 'Height', exact: true }).fill('90')
+    await formatPanel.getByRole('button', { name: 'Align center horizontal' }).click()
+    await formatPanel.getByLabel('Y position').fill('260')
 
     await expect
       .poll(async () => {

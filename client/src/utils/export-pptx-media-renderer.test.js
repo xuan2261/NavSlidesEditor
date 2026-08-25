@@ -45,7 +45,7 @@ async function render(element, warnings = []) {
 describe('client PPTX media renderer', () => {
   afterEach(() => vi.unstubAllGlobals())
 
-  it('embeds validated audio and warns about browser-only semantics', async () => {
+  it('[cap:export.media-pptx] embeds validated audio and warns about browser-only semantics', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response('audio/wav')))
     const { slide, warnings } = await render({
       type: 'audio',

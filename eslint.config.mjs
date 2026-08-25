@@ -165,7 +165,7 @@ export default [
   },
   // Server + Shared test files (use ES modules)
   {
-    files: ['server/**/*.test.js', 'shared/**/*.test.js'],
+    files: ['server/**/*.test.js', 'shared/tests/**/*.js'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -177,7 +177,7 @@ export default [
   // Shared
   {
     files: ['shared/**/*.js'],
-    ignores: ['shared/**/*.test.js'],
+    ignores: ['shared/**/*.test.js', 'shared/tests/**/*.js'],
     languageOptions: {
       globals: {
         ...globals.node,

@@ -8,6 +8,7 @@ import {
   normalizeWhitespace,
   parseHtmlTree,
 } from './export-pptx-html-parser'
+import { isSafeHref } from './url-safety'
 
 function buildRunOptions(style) {
   const options = {}
@@ -20,7 +21,7 @@ function buildRunOptions(style) {
   if (style.fontFace) options.fontFace = style.fontFace
   if (style.fontSize) options.fontSize = cssPxToPptPt(style.fontSize)
   if (style.charSpacing) options.charSpacing = cssPxToPptPt(style.charSpacing) // Phase 1
-  if (style.link) options.hyperlink = { url: style.link } // Phase 1: hyperlink
+  if (style.link && isSafeHref(style.link)) options.hyperlink = { url: style.link }
   if (style.color) {
     const normalized = normalizeCssColor(style.color, DEFAULT_TEXT_COLOR)
     options.color = normalized.color

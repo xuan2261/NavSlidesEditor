@@ -40,7 +40,7 @@ describe('PPTX image renderer parity', () => {
     })
   })
 
-  it('keeps legacy sizing and fill objectFit parity, mapping fill to contain', () => {
+  it('keeps legacy crop parity and preserves fill on authored bounds', () => {
     const legacySlide = renderWithBoth({
       type: 'image',
       src: 'data:image/png;base64,abc',
@@ -62,6 +62,6 @@ describe('PPTX image renderer parity', () => {
       src: 'data:image/png;base64,abc',
       objectFit: 'fill',
     })
-    expect(fillSlide.addImage.mock.calls[0][0].sizing).toEqual({ type: 'contain', w: 4, h: 3 })
+    expect(fillSlide.addImage.mock.calls[0][0].sizing).toBeUndefined()
   })
 })

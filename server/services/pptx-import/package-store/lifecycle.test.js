@@ -3,7 +3,7 @@ const os = require('node:os')
 const path = require('node:path')
 const { openPackageStore } = require('./index')
 const { validateMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
-const { hashRecord, SCHEMA_VERSION } = require('./schemas')
+const { hashRecord, RECORD_SCHEMA_VERSION } = require('./schemas')
 const { resolveEditedExportContext } = require('../validated-edited-export-context')
 
 const roots = []
@@ -51,7 +51,7 @@ async function createAuthorityStore() {
     current.projectionRevisionId = hashRecord(projection)
     current.sourceMapRevisionId = hashRecord(sourceMap)
     next.mutationResults.push({
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: RECORD_SCHEMA_VERSION,
       operation: 'package-import',
       presentationId: 'deck-a',
       idempotencyKey: 'import-authority',

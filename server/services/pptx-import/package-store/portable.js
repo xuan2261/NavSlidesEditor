@@ -1,6 +1,6 @@
 const crypto = require('node:crypto')
 const {
-  SCHEMA_VERSION,
+  RECORD_SCHEMA_VERSION,
   hashRecord,
   validateBlob,
   validateHead,
@@ -199,7 +199,7 @@ function assertDestinationClosure(state, revisions, blobs) {
 
 function validatePortableBundle(bundle, presentationId) {
   const manifest = bundle?.manifest
-  if (!manifest || manifest.schemaVersion !== SCHEMA_VERSION ||
+  if (!manifest || manifest.schemaVersion !== RECORD_SCHEMA_VERSION ||
       typeof presentationId !== 'string' || !presentationId ||
       typeof manifest.presentationId !== 'string' || !manifest.presentationId ||
       manifest.head?.presentationId !== manifest.presentationId ||
@@ -418,12 +418,12 @@ async function exportPresentationPackage(store, presentationId, options = {}) {
   }
   return {
     manifest: {
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: RECORD_SCHEMA_VERSION,
       presentationId,
       head: clone(head),
       revisions: clone(closure.revisions),
       blobs: blobs.map(({ bytes: _bytes, ...blob }) => ({
-        schemaVersion: SCHEMA_VERSION,
+        schemaVersion: RECORD_SCHEMA_VERSION,
         ...blob,
       })),
       mutationResults: clone(authorityResultsFor(state, head)),
@@ -473,7 +473,7 @@ async function importPresentationPackage(store, bundle, presentationId, options 
     next.mutationResults.push(...importedAuthority.results)
     for (const revision of revisions) {
       next.owners.push({
-        schemaVersion: SCHEMA_VERSION,
+        schemaVersion: RECORD_SCHEMA_VERSION,
         revisionId: revision.id,
         ownerType: 'presentation',
         ownerId: presentationId,

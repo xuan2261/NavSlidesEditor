@@ -12,12 +12,16 @@ import {
   CopyPlus,
   Crop,
   Crosshair,
+  Pencil,
   Scissors,
   Undo2,
 } from 'lucide-react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '../ui'
 import { sanitizeMediaSrc } from '../../utils/url-safety'
 import { computeCropResetGeometry } from './image-crop-geometry'
+
+const VIEWPORT_GAP = 8
 
 const SNAP_REF_OPTIONS = [
   { id: 'ul', label: 'Upper Left', fx: 0, fy: 0 },
@@ -116,6 +120,28 @@ export default function CanvasContextMenu({
   clipboard = globalThis.navigator?.clipboard,
   origin = globalThis.location?.origin,
 }) {
+  const menuRef = useRef(null)
+  const [position, setPosition] = useState({ top: 0, left: 0 })
+
+  useLayoutEffect(() => {
+    if (!contextMenu) return undefined
+
+    const updatePosition = () => {
+      const menu = menuRef.current
+      if (!menu) return
+      const maxLeft = Math.max(VIEWPORT_GAP, window.innerWidth - menu.offsetWidth - VIEWPORT_GAP)
+      const maxTop = Math.max(VIEWPORT_GAP, window.innerHeight - menu.offsetHeight - VIEWPORT_GAP)
+      setPosition({
+        left: Math.max(VIEWPORT_GAP, Math.min(contextMenu.x, maxLeft)),
+        top: Math.max(VIEWPORT_GAP, Math.min(contextMenu.y, maxTop)),
+      })
+    }
+
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    return () => window.removeEventListener('resize', updatePosition)
+  }, [contextMenu])
+
   if (!contextMenu) return null
 
   const ctxEl = slide?.elements?.find((e) => e.id === contextMenu.elementId)
@@ -142,8 +168,11 @@ export default function CanvasContextMenu({
 
   return (
     <div
+      ref={menuRef}
+      role="menu"
+      aria-label="Element actions"
       className="fixed z-[9999] bg-card border border-border shadow-md rounded-md p-1 min-w-[160px] flex flex-col gap-1"
-      style={{ top: contextMenu.y, left: contextMenu.x }}
+      style={{ top: position.top, left: position.left }}
       onClick={(e) => e.stopPropagation()}
     >
       <Button
@@ -185,6 +214,16 @@ export default function CanvasContextMenu({
         }}
       >
         <CopyPlus size={14} /> Duplicate (Ctrl+D)
+      </Button>
+      <Button
+        variant="ghost"
+        disabled={isReadOnly}
+        onClick={() => {
+          window.dispatchEvent(new CustomEvent('navslides:focus-action', { detail: { elementId: contextMenu.elementId } }))
+          onClose()
+        }}
+      >
+        <Pencil size={14} /> Edit action
       </Button>
       <div className="h-px bg-border my-1" />
 

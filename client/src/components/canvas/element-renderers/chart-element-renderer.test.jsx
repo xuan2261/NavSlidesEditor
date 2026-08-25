@@ -124,4 +124,38 @@ describe('chart element renderer', () => {
     expect(srcDoc).toContain('title:{display:true,text:"Month"}')
     expect(srcDoc).toContain('title:{display:true,text:"Revenue"}')
   })
+
+  it('preserves imported chart titles, pie colors, and scatter coordinates', () => {
+    const { container, rerender } = render(
+      <ChartRenderer
+        element={{
+          chartType: 'pie',
+          chartTitle: 'Mix',
+          legendPosition: 'right',
+          chartData: {
+            labels: ['A', 'B'],
+            datasets: [{ data: [40, 60], colors: ['#5DA5DA', '#FAA43A'] }],
+          },
+        }}
+      />
+    )
+    let srcDoc = container.querySelector('iframe').getAttribute('srcdoc')
+    expect(srcDoc).toContain('animation:false')
+    expect(srcDoc).toContain('title:{display:true,text:"Mix"')
+    expect(srcDoc).toContain('"backgroundColor":["#5DA5DA","#FAA43A"]')
+
+    rerender(
+      <ChartRenderer
+        element={{
+          chartType: 'line',
+          chartData: { labels: [], datasets: [{ data: [8, 23], xValues: [5, 20] }] },
+          _pptxChartMeta: { originalType: 'scatterChart' },
+        }}
+      />
+    )
+    srcDoc = container.querySelector('iframe').getAttribute('srcdoc')
+    expect(srcDoc).toContain("type:'scatter'")
+    expect(srcDoc).toContain("type:'linear'")
+    expect(srcDoc).toContain('"x":5,"y":8')
+  })
 })

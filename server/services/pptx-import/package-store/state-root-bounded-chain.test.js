@@ -64,6 +64,10 @@ describe('state root predecessor chain', () => {
 
     const reopened = await openPackageStore({ rootDir })
     expect(reopened.getState().generation).toBeGreaterThanOrEqual(0)
+    expect(await readRoot(rootDir)).toMatchObject({ stateFile: root.stateFile })
+    expect(reopened.metadata.pendingRootRecovery).toBe(true)
+    await reopened.acquireWriter()
     expect(await readRoot(rootDir)).not.toMatchObject({ stateFile: root.stateFile })
+    await reopened.releaseWriter()
   })
 })

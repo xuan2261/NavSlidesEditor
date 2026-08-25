@@ -6,6 +6,7 @@ import { useUIStore } from './ui-store'
 beforeEach(() => {
   useUIStore.setState({
     activeTab: 'home',
+    lastNonContextualTab: 'home',
     formatContext: { hasSelection: false, elementType: null },
     formatAutoActivatedForSelection: false,
   })

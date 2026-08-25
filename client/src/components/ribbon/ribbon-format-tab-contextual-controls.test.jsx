@@ -137,5 +137,12 @@ describe('FormatTabContent — contextual controls', () => {
       render(<FormatTabContent selectedElement={baseElement} />)
       expect(screen.getByLabelText('Opacity')).toBeTruthy()
     })
+
+    it('reuses the action editor in the contextual Format tab', () => {
+      const onUpdateElement = vi.fn()
+      render(<FormatTabContent selectedElement={baseElement} onUpdateElement={onUpdateElement} />)
+      fireEvent.change(screen.getByLabelText('Element action'), { target: { value: 'previous' } })
+      expect(onUpdateElement).toHaveBeenCalledWith({ action: { kind: 'previous' } })
+    })
   })
 })

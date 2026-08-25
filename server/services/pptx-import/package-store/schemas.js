@@ -1,7 +1,11 @@
 const crypto = require('node:crypto')
 const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
+const { validateMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
 
-const SCHEMA_VERSION = 1
+const RECORD_SCHEMA_VERSION = 1
+const STATE_ROOT_SCHEMA_VERSION = 2
+const PACKAGE_STATE_SCHEMA_VERSION = 2
+const PACKAGE_HEAD_SCHEMA_VERSION = 2
 const SHA256_RE = /^[a-f0-9]{64}$/
 const OWNER_TYPES = new Set([
   'presentation',
@@ -13,9 +17,18 @@ const OWNER_TYPES = new Set([
 ])
 const JOB_KINDS = new Set(['import', 'export', 'provider'])
 const JOB_STATUSES = new Set(['queued', 'running', 'completed', 'failed', 'cancelled'])
+const STATE_AUTHORITY_FIELDS = new Set(['matrixAuthorityEpoch'])
+const HEAD_AUTHORITY_FIELDS = new Set(['matrixAuthorityEpoch', 'matrixAuthoritySubjects'])
 
 function assert(condition, message) {
   if (!condition) throw new TypeError(message)
+}
+
+function assertAuthorityFields(record, allowed, label) {
+  for (const key of Object.keys(record || {})) {
+    assert(!key.startsWith('matrixAuthority') || allowed.has(key),
+      `Invalid ${label} matrix authority field`)
+  }
 }
 
 function validateOwner(owner) {
@@ -25,14 +38,14 @@ function validateOwner(owner) {
 }
 
 function validateBlob(blob) {
-  assert(blob?.schemaVersion === SCHEMA_VERSION, 'Invalid blob schema version')
+  assert(blob?.schemaVersion === RECORD_SCHEMA_VERSION, 'Invalid blob schema version')
   assert(SHA256_RE.test(blob.sha256), 'Invalid blob SHA-256')
   assert(Number.isSafeInteger(blob.byteLength) && blob.byteLength >= 0, 'Invalid blob byte length')
   return blob
 }
 
 function validateRevision(revision) {
-  assert(revision?.schemaVersion === SCHEMA_VERSION, 'Invalid revision schema version')
+  assert(revision?.schemaVersion === RECORD_SCHEMA_VERSION, 'Invalid revision schema version')
   assert(typeof revision.id === 'string' && revision.id.length > 0, 'Invalid revision id')
   assert(Number.isSafeInteger(revision.ordinal) && revision.ordinal >= 0, 'Invalid revision ordinal')
   assert(SHA256_RE.test(revision.blobSha256), 'Invalid revision blob SHA-256')
@@ -40,7 +53,7 @@ function validateRevision(revision) {
 }
 
 function validateCandidateBlob(candidate) {
-  assert(candidate?.schemaVersion === SCHEMA_VERSION, 'Invalid candidate blob schema version')
+  assert(candidate?.schemaVersion === RECORD_SCHEMA_VERSION, 'Invalid candidate blob schema version')
   assert(typeof candidate.id === 'string' && candidate.id.length > 0, 'Invalid candidate blob id')
   assert(SHA256_RE.test(candidate.sha256), 'Invalid candidate blob SHA-256')
   assert(Number.isSafeInteger(candidate.byteLength) && candidate.byteLength >= 0,
@@ -66,7 +79,7 @@ function validateImportOutcome(job) {
 }
 
 function validateJob(job) {
-  assert(job?.schemaVersion === SCHEMA_VERSION, 'Invalid job schema version')
+  assert(job?.schemaVersion === RECORD_SCHEMA_VERSION, 'Invalid job schema version')
   assert(typeof job.id === 'string' && job.id.length > 0, 'Invalid job id')
   assert(JOB_KINDS.has(job.kind), 'Invalid job kind')
   assert(JOB_STATUSES.has(job.status), 'Invalid job status')
@@ -81,13 +94,20 @@ function validateJob(job) {
 }
 
 function validateHead(head) {
-  assert(head?.schemaVersion === SCHEMA_VERSION, 'Invalid package head schema version')
+  assertAuthorityFields(head, HEAD_AUTHORITY_FIELDS, 'head')
+  assert(head?.schemaVersion === PACKAGE_HEAD_SCHEMA_VERSION, 'Invalid package head schema version')
   assert(typeof head.presentationId === 'string' && head.presentationId, 'Invalid presentation id')
   assert(typeof head.originalRevisionId === 'string', 'Invalid original revision pointer')
   assert(Number.isSafeInteger(head.generation) && head.generation > 0, 'Invalid head generation')
   assert(Number.isSafeInteger(head.fencingEpoch) && head.fencingEpoch > 0, 'Invalid fencing epoch')
   assert(Number.isSafeInteger(head.matrixAuthorityEpoch) && head.matrixAuthorityEpoch > 0,
     'Invalid head matrix authority epoch')
+  const authority = validateMatrixAuthoritySubjects(
+    head.matrixAuthoritySubjects,
+    undefined,
+    head.matrixAuthorityEpoch
+  )
+  assert(authority.authorized, 'Invalid head matrix authority subjects')
   if (head.pendingJournalHash !== undefined) {
     assert(SHA256_RE.test(head.pendingJournalHash), 'Invalid pending journal hash')
   }
@@ -95,14 +115,14 @@ function validateHead(head) {
 }
 
 function validateLease(lease) {
-  assert(lease?.schemaVersion === SCHEMA_VERSION, 'Invalid lease schema version')
+  assert(lease?.schemaVersion === RECORD_SCHEMA_VERSION, 'Invalid lease schema version')
   assert(typeof lease.jobId === 'string' && lease.jobId, 'Invalid lease job id')
   validateOwner(lease)
   return lease
 }
 
 function validateManifest(manifest) {
-  assert(manifest?.schemaVersion === SCHEMA_VERSION, 'Invalid OPC manifest schema version')
+  assert(manifest?.schemaVersion === RECORD_SCHEMA_VERSION, 'Invalid OPC manifest schema version')
   assert(SHA256_RE.test(manifest.packageSha256), 'Invalid package SHA-256')
   assert(Array.isArray(manifest.parts), 'Invalid OPC parts')
   assert(Array.isArray(manifest.relationships), 'Invalid OPC relationships')
@@ -110,16 +130,21 @@ function validateManifest(manifest) {
 }
 
 function validateStateRoot(root) {
-  assert(root?.schemaVersion === SCHEMA_VERSION, 'Invalid state root schema version')
+  assert(root?.schemaVersion === STATE_ROOT_SCHEMA_VERSION, 'Invalid state root schema version')
   assert(typeof root.transactionId === 'string' && root.transactionId, 'Invalid transaction id')
   assert(SHA256_RE.test(root.stateHash), 'Invalid state index hash')
-  assert(Number.isSafeInteger(root.storeGeneration), 'Invalid store generation')
-  assert(Number.isSafeInteger(root.fencingEpoch), 'Invalid root fencing epoch')
+  assert(root.stateFile?.replace(/\\/g, '/') === `indexes/${root.stateHash}.json`,
+    'Invalid state root file')
+  assert(Number.isSafeInteger(root.storeGeneration) && root.storeGeneration >= 0,
+    'Invalid store generation')
+  assert(Number.isSafeInteger(root.fencingEpoch) && root.fencingEpoch >= 0,
+    'Invalid root fencing epoch')
   return root
 }
 
 function validateState(state) {
-  assert(state?.schemaVersion === SCHEMA_VERSION, 'Invalid package state schema version')
+  assertAuthorityFields(state, STATE_AUTHORITY_FIELDS, 'state')
+  assert(state?.schemaVersion === PACKAGE_STATE_SCHEMA_VERSION, 'Invalid package state schema version')
   assert(Number.isSafeInteger(state.generation) && state.generation >= 0, 'Invalid state generation')
   assert(Number.isSafeInteger(state.matrixAuthorityEpoch) && state.matrixAuthorityEpoch > 0,
     'Invalid matrix authority epoch')
@@ -133,12 +158,16 @@ function validateState(state) {
   state.blobs.forEach(validateBlob)
   state.candidateBlobs.forEach(validateCandidateBlob)
   state.revisions.forEach(validateRevision)
-  state.heads.forEach(validateHead)
+  state.heads.forEach((head) => {
+    validateHead(head)
+    assert(head.matrixAuthorityEpoch === state.matrixAuthorityEpoch,
+      'Package head matrix authority epoch mismatch')
+  })
   state.owners.forEach(validateOwner)
   state.leases.forEach(validateLease)
   state.jobs.forEach(validateJob)
   state.mutationResults.forEach((result) => {
-    assert(result?.schemaVersion === SCHEMA_VERSION, 'Invalid mutation result schema version')
+    assert(result?.schemaVersion === RECORD_SCHEMA_VERSION, 'Invalid mutation result schema version')
     assert(typeof result.idempotencyKey === 'string' && result.idempotencyKey, 'Invalid idempotency key')
     if (result.operation !== undefined) {
       assert(Object.values(MUTATION_OPERATIONS).includes(result.operation), 'Invalid mutation operation')
@@ -147,7 +176,7 @@ function validateState(state) {
     assert(result.requestHash === undefined || SHA256_RE.test(result.requestHash), 'Invalid mutation request hash')
   })
   state.compatibilityOutbox.forEach((record) => {
-    assert(record?.schemaVersion === SCHEMA_VERSION, 'Invalid compatibility outbox schema version')
+    assert(record?.schemaVersion === RECORD_SCHEMA_VERSION, 'Invalid compatibility outbox schema version')
     assert(typeof record.id === 'string' && record.id, 'Invalid compatibility outbox id')
     assert(typeof record.presentationId === 'string' && record.presentationId, 'Invalid compatibility presentation id')
     assert(Number.isSafeInteger(record.generation) && record.generation > 0, 'Invalid compatibility generation')
@@ -161,7 +190,7 @@ function validateState(state) {
 
 function createEmptyState(fencingEpoch = 0) {
   return {
-    schemaVersion: SCHEMA_VERSION,
+    schemaVersion: PACKAGE_STATE_SCHEMA_VERSION,
     generation: 0,
     fencingEpoch,
     matrixAuthorityEpoch: 1,
@@ -192,7 +221,10 @@ function hashRecord(value) {
 }
 
 module.exports = {
-  SCHEMA_VERSION,
+  PACKAGE_HEAD_SCHEMA_VERSION,
+  PACKAGE_STATE_SCHEMA_VERSION,
+  RECORD_SCHEMA_VERSION,
+  STATE_ROOT_SCHEMA_VERSION,
   createEmptyState,
   hashRecord,
   validateBlob,

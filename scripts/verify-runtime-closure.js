@@ -1,6 +1,10 @@
 const crypto = require('node:crypto')
 const fs = require('node:fs')
 const path = require('node:path')
+const {
+  REVEAL_REQUIRED_VENDOR_PATHS,
+  REVEAL_RUNTIME_VERSION,
+} = require('../shared/src/reveal-runtime-assets')
 
 const DEFAULT_SERVER_MODULES = [
   'cors',
@@ -18,12 +22,25 @@ function hashFile(filePath) {
   return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex')
 }
 
-function verifyVendor(vendorDir) {
+function verifyVendor(vendorDir, { requiredVendorPaths, expectedRevealVersion }) {
   const manifestPath = path.join(vendorDir, 'vendor-manifest.json')
   if (!fs.existsSync(manifestPath)) throw new Error('Vendor manifest missing')
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
   if (manifest.schemaVersion !== 1 || !Array.isArray(manifest.files)) {
     throw new Error('Vendor manifest is invalid')
+  }
+  if (expectedRevealVersion !== null && manifest.runtimes?.revealJs !== expectedRevealVersion) {
+    throw new Error(`Reveal runtime version mismatch: expected ${expectedRevealVersion}`)
+  }
+  const manifestPaths = new Set(manifest.files.map((entry) => entry.path))
+  for (const requiredPath of requiredVendorPaths) {
+    if (!manifestPaths.has(requiredPath))
+      throw new Error(`Required vendor asset missing: ${requiredPath}`)
+  }
+  for (const assetPath of manifestPaths) {
+    if (assetPath.startsWith('reveal.js/plugin/')) {
+      throw new Error(`Legacy Reveal vendor asset is not allowed: ${assetPath}`)
+    }
   }
   for (const entry of manifest.files) {
     const assetPath = path.resolve(vendorDir, entry.path)
@@ -38,13 +55,15 @@ function verifyVendor(vendorDir) {
       throw new Error(`Vendor asset hash mismatch: ${entry.path}`)
     }
   }
-  return manifest.files.length
+  return { files: manifest.files.length, revealJs: manifest.runtimes?.revealJs || null }
 }
 
 function verifyRuntimeClosure({
   rootDir,
   requiredServerModules = DEFAULT_SERVER_MODULES,
   requireClientDist = false,
+  requiredVendorPaths = REVEAL_REQUIRED_VENDOR_PATHS,
+  expectedRevealVersion = REVEAL_RUNTIME_VERSION,
 }) {
   const serverDir = path.join(rootDir, 'server')
   for (const moduleName of requiredServerModules) {
@@ -60,8 +79,13 @@ function verifyRuntimeClosure({
     throw new Error('Production client artifact missing: client/dist/index.html')
   }
 
+  const vendor = verifyVendor(path.join(rootDir, 'server', 'vendor'), {
+    requiredVendorPaths,
+    expectedRevealVersion,
+  })
   return {
-    vendorFiles: verifyVendor(path.join(rootDir, 'server', 'vendor')),
+    vendorFiles: vendor.files,
+    revealJs: vendor.revealJs,
     serverModules: requiredServerModules.length,
     clientDist: requireClientDist,
   }

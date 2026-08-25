@@ -10,13 +10,46 @@ function uniqueSortedIndices(indices, maxLength) {
 }
 
 function cloneSlideWithNewIds(slide, createId) {
+  const id = createId()
+  const elementIds = new Map()
+  const sourceElements = slide.elements || []
+  for (const element of sourceElements) elementIds.set(element.id, createId())
+  const remapEndpoint = (endpoint) =>
+    endpoint && elementIds.has(endpoint.targetId)
+      ? { ...endpoint, targetId: elementIds.get(endpoint.targetId) }
+      : endpoint
+  const elements = sourceElements.map((element) => ({
+    ...element,
+    id: elementIds.get(element.id),
+    ...(element.connections
+      ? {
+          connections: {
+            ...element.connections,
+            ...(element.connections.start ? { start: remapEndpoint(element.connections.start) } : {}),
+            ...(element.connections.end ? { end: remapEndpoint(element.connections.end) } : {}),
+          },
+        }
+      : {}),
+  }))
+  const overrides = slide.layoutOverrides
+    ? {
+        ...slide.layoutOverrides,
+        ...(Array.isArray(slide.layoutOverrides.hiddenElementIds)
+          ? { hiddenElementIds: [...slide.layoutOverrides.hiddenElementIds] }
+          : {}),
+        ...(slide.layoutOverrides.elementPatches
+          ? { elementPatches: Object.fromEntries(Object.entries(slide.layoutOverrides.elementPatches).map(([id, patch]) => [id, { ...patch }])) }
+          : {}),
+        ...(slide.layoutOverrides.placeholderBindings
+          ? { placeholderBindings: Object.fromEntries(Object.entries(slide.layoutOverrides.placeholderBindings).flatMap(([placeholderId, elementId]) => elementIds.has(elementId) ? [[placeholderId, elementIds.get(elementId)]] : [])) }
+          : {}),
+      }
+    : undefined
   return {
     ...slide,
-    id: createId(),
-    elements: (slide.elements || []).map((element) => ({
-      ...element,
-      id: createId(),
-    })),
+    id,
+    elements,
+    ...(overrides ? { layoutOverrides: overrides } : {}),
     children: (slide.children || []).map((child) => cloneSlideWithNewIds(child, createId)),
   }
 }

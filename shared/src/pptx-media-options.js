@@ -114,6 +114,9 @@ function getUnsupportedPptxMediaSemantics(element) {
   if (element.autoplay === true) semantics.push('autoplay')
   if (element.loop === true) semantics.push('loop')
   if (element.muted === true) semantics.push('muted')
+  if (Array.isArray(element.tracks) && element.tracks.length) semantics.push('caption tracks')
+  if (typeof element.transcript === 'string' && element.transcript.trim()) semantics.push('transcript')
+  if (typeof element.audioDescription === 'string' && element.audioDescription.trim()) semantics.push('audio description')
   return semantics
 }
 

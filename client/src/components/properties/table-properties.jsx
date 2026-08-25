@@ -58,6 +58,12 @@ export default function TableProperties({ element, onUpdate }) {
             variant="secondary"
             key={label}
             className="flex-1 text-[11px] px-1.5 py-1 justify-center"
+            aria-label={{
+              '+Row': 'Add table row',
+              '-Row': 'Remove last table row',
+              '+Col': 'Add table column',
+              '-Col': 'Remove last table column',
+            }[label]}
             onClick={fn}
           >
             {label}
@@ -85,6 +91,7 @@ export default function TableProperties({ element, onUpdate }) {
             <div className="text-[11px] text-text-muted mb-0.5">{l}</div>
             <ColorPicker
               data-testid={testId}
+              aria-label={`Table ${l}`}
               className="w-full h-7 border border-border rounded cursor-pointer bg-card"
               value={element[k] || d}
               onChange={(e) => onUpdate({ [k]: e.target.value })}
@@ -95,6 +102,7 @@ export default function TableProperties({ element, onUpdate }) {
           <div className="text-[11px] text-text-muted mb-0.5">Border Style</div>
           <Select
             data-testid="prop-table-border-style"
+            aria-label="Table border style"
             className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs"
             value={element.borderStyle || 'solid'}
             onChange={(e) => onUpdate({ borderStyle: e.target.value })}
@@ -108,6 +116,7 @@ export default function TableProperties({ element, onUpdate }) {
           <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
           <Input
             data-testid="prop-table-font-size"
+            aria-label="Table font size"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="number"
             min="8"
@@ -128,6 +137,7 @@ export default function TableProperties({ element, onUpdate }) {
             {(row || []).map((cell, ci) => (
               <input
                 data-testid={`prop-table-cell-${ri}-${ci}`}
+                aria-label={`Table cell row ${ri + 1} column ${ci + 1}`}
                 key={ci}
                 type="text"
                 value={cell || ''}
@@ -152,6 +162,7 @@ export default function TableProperties({ element, onUpdate }) {
           <div className="text-[11px] text-text-muted mb-0.5">Cell BG</div>
           <ColorPicker
             data-testid="prop-table-cell-bg"
+            aria-label={`Selected cell row ${clampedCell.row + 1} column ${clampedCell.col + 1} background color`}
             className="w-full h-7 border border-border rounded cursor-pointer bg-card"
             value={getCellStyle('bgColors', element.cellBgColor || '#1e1e2e')}
             onChange={(e) => updateCellStyle('bgColors', e.target.value)}
@@ -161,6 +172,7 @@ export default function TableProperties({ element, onUpdate }) {
           <div className="text-[11px] text-text-muted mb-0.5">Cell Text</div>
           <ColorPicker
             data-testid="prop-table-cell-text"
+            aria-label={`Selected cell row ${clampedCell.row + 1} column ${clampedCell.col + 1} text color`}
             className="w-full h-7 border border-border rounded cursor-pointer bg-card"
             value={getCellStyle('textColors', element.textColor || '#ffffff')}
             onChange={(e) => updateCellStyle('textColors', e.target.value)}
@@ -170,6 +182,7 @@ export default function TableProperties({ element, onUpdate }) {
           <input
             data-testid="prop-table-cell-bold"
             type="checkbox"
+            aria-label={`Selected cell row ${clampedCell.row + 1} column ${clampedCell.col + 1} bold`}
             checked={Boolean(getCellStyle('isBold', false))}
             onChange={(e) => updateCellStyle('isBold', e.target.checked)}
             className="accent-accent"
@@ -180,6 +193,7 @@ export default function TableProperties({ element, onUpdate }) {
           <div className="text-[11px] text-text-muted mb-0.5">Cell Align</div>
           <Select
             data-testid="prop-table-cell-align"
+            aria-label={`Selected cell row ${clampedCell.row + 1} column ${clampedCell.col + 1} horizontal alignment`}
             className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs"
             value={getCellStyle('aligns', 'left')}
             onChange={(e) => updateCellStyle('aligns', e.target.value)}
@@ -195,6 +209,7 @@ export default function TableProperties({ element, onUpdate }) {
           <div className="text-[11px] text-text-muted mb-0.5">Cell VAlign</div>
           <Select
             data-testid="prop-table-cell-valign"
+            aria-label={`Selected cell row ${clampedCell.row + 1} column ${clampedCell.col + 1} vertical alignment`}
             className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-xs"
             value={getCellStyle('vAligns', 'middle')}
             onChange={(e) => updateCellStyle('vAligns', e.target.value)}

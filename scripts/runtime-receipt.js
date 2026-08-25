@@ -23,6 +23,7 @@ function createRuntimeReceipt({ rootDir, versions, baseImage, artifacts, environ
   const rootLock = path.join(rootDir, 'package-lock.json')
   const electronLockPath = path.join(rootDir, 'electron', 'server-package-lock.json')
   const vendorManifest = path.join(rootDir, 'server', 'vendor', 'vendor-manifest.json')
+  const vendorMetadata = JSON.parse(fs.readFileSync(vendorManifest, 'utf8'))
   const electronLock = JSON.parse(fs.readFileSync(electronLockPath, 'utf8'))
   const productionTree = canonicalInstalledTree(
     electronLock,
@@ -33,6 +34,7 @@ function createRuntimeReceipt({ rootDir, versions, baseImage, artifacts, environ
     schemaVersion: 1,
     versions,
     environment,
+    runtimes: vendorMetadata.runtimes || {},
     baseImage,
     hashes: {
       rootLock: hashFile(rootLock),
@@ -59,7 +61,9 @@ function collectArtifacts(rootDir, artifactsDir, releaseVersion) {
         accepted.has(path.extname(entry.name)) &&
         (entry.name.includes(releaseVersion) || releaseMetadata.test(entry.name))
     )
-    .map((entry) => path.relative(rootDir, path.join(directory, entry.name)).split(path.sep).join('/'))
+    .map((entry) =>
+      path.relative(rootDir, path.join(directory, entry.name)).split(path.sep).join('/')
+    )
     .sort()
 }
 
@@ -83,7 +87,9 @@ function runCli() {
   const rootDir = path.join(__dirname, '..')
   const options = parseArguments(process.argv.slice(2))
   const versions = JSON.parse(fs.readFileSync(path.join(rootDir, 'runtime-versions.json'), 'utf8'))
-  const releaseVersion = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8')).version
+  const releaseVersion = JSON.parse(
+    fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8')
+  ).version
   const receipt = createRuntimeReceipt({
     rootDir,
     versions,

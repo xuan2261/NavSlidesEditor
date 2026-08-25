@@ -81,6 +81,7 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
       <div className="mb-2">
         <div className="text-[11px] text-text-muted mb-0.5">Game Type</div>
         <select
+          aria-label="Game type"
           value={gt}
           onChange={handleGameTypeChange}
           className={`${CONTROL_INPUT_CLASS} px-1.5 py-1`}
@@ -91,10 +92,24 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
         </select>
       </div>
 
-      <div className="flex border-b border-border mb-2">
+      <div className="flex border-b border-border mb-2" role="tablist" aria-label="Game property sections">
         {tabs.map(tab => (
           <button
             key={tab}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab}
+            tabIndex={activeTab === tab ? 0 : -1}
+            onKeyDown={(event) => {
+              if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+              event.preventDefault()
+              const currentIndex = tabs.indexOf(tab)
+              const offset = event.key === 'ArrowRight' ? 1 : -1
+              const nextIndex = (currentIndex + offset + tabs.length) % tabs.length
+              setActiveTab(tabs[nextIndex])
+              const tabElements = event.currentTarget.parentElement?.querySelectorAll('[role="tab"]')
+              tabElements?.[nextIndex]?.focus()
+            }}
             onClick={() => setActiveTab(tab)}
             className={`flex-1 text-[11px] px-2 py-1.5 text-center transition-colors ${
               activeTab === tab
@@ -107,7 +122,7 @@ export default function GameProperties({ element, onUpdate, onDelete }) {
         ))}
       </div>
 
-      <div>
+      <div role="tabpanel" aria-label={`${activeTab} game properties`}>
         {activeTab === 'Content' && (
           <ContentTab
             gt={gt} element={element} gameConfig={gameConfig}
@@ -162,6 +177,7 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Items (comma-separated)</div>
           <textarea
+            aria-label="Name picker items"
             className="w-full min-h-[60px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] resize-y box-border"
             value={(gameConfig.items || []).join(', ')}
             onChange={onItemsChange}
@@ -177,6 +193,9 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
             {['wheel', 'dice', 'button'].map(mode => (
               <button
                 key={mode}
+                type="button"
+                aria-pressed={(gameConfig.pickerMode || 'wheel') === mode}
+                aria-label={`${mode} picker mode`}
                 onClick={() => onPickerModeChange(mode)}
                 className={`text-[10px] px-2 py-1 rounded border transition-colors ${
                   (gameConfig.pickerMode || 'wheel') === mode
@@ -264,6 +283,7 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
           <div>
             <div className="text-[11px] text-text-muted mb-0.5">Prompt</div>
             <textarea
+              aria-label="Poll prompt"
               className="w-full min-h-[56px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] resize-y box-border"
               value={gameConfig.prompt || ''}
               onChange={(e) => onUpdate({ [gt]: { ...gameConfig, prompt: e.target.value } })}
@@ -274,6 +294,8 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
             <div className="flex items-center justify-between mb-0.5">
               <div className="text-[11px] text-text-muted">Options</div>
               <button
+                type="button"
+                aria-label="Add poll option"
                 onClick={() => {
                   const options = Array.isArray(gameConfig.options) ? gameConfig.options : []
                   if (options.length >= 6) return
@@ -297,6 +319,7 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
               {(gameConfig.options || []).map((option, i) => (
                 <div key={option.id || i} className="flex gap-1">
                   <input
+                    aria-label={`Poll option ${i + 1}`}
                     className={`${CONTROL_INPUT_CLASS} flex-1 px-1.5 py-1 text-[11px]`}
                     value={option.text || ''}
                     onChange={(e) => {
@@ -307,6 +330,8 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
                     placeholder={`Option ${i + 1}`}
                   />
                   <button
+                    type="button"
+                    aria-label={`Remove poll option ${i + 1}`}
                     onClick={() => {
                       const options = (gameConfig.options || []).filter((_, idx) => idx !== i)
                       if (options.length < 2) return
@@ -330,6 +355,7 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
           <div>
             <div className="text-[11px] text-text-muted mb-0.5">Prompt</div>
             <textarea
+              aria-label="Word cloud prompt"
               className="w-full min-h-[56px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] resize-y box-border"
               value={gameConfig.prompt || ''}
               onChange={(e) => onUpdate({ [gt]: { ...gameConfig, prompt: e.target.value } })}
@@ -348,6 +374,7 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
           <div>
             <div className="text-[11px] text-text-muted mb-0.5">Prompt</div>
             <textarea
+              aria-label="Matching prompt"
               className="w-full min-h-[56px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] resize-y box-border"
               value={gameConfig.prompt || ''}
               onChange={(e) => onUpdate({ [gt]: { ...gameConfig, prompt: e.target.value } })}
@@ -358,6 +385,8 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
             <div className="flex items-center justify-between mb-0.5">
               <div className="text-[11px] text-text-muted">Pairs</div>
               <button
+                type="button"
+                aria-label="Add matching pair"
                 onClick={() => {
                   const pairs = Array.isArray(gameConfig.pairs) ? gameConfig.pairs : []
                   if (pairs.length >= 8) return
@@ -409,6 +438,8 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
                     placeholder={`Definition ${i + 1}`}
                   />
                   <button
+                    type="button"
+                    aria-label={`Remove matching pair ${i + 1}`}
                     onClick={() => {
                       const pairs = (gameConfig.pairs || []).filter((_, idx) => idx !== i)
                       if (pairs.length < 2) return
@@ -432,6 +463,7 @@ function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsC
           Timer: <span className="text-text-primary font-medium">{gameConfig.timerDuration || 30}s</span>
         </div>
         <input
+          aria-label="Game timer duration"
           type="range" min="5" max="120" step="5"
           value={gameConfig.timerDuration || 30}
           onChange={onTimerChange}
@@ -452,6 +484,7 @@ function DisplayTab({ element, gameConfig, capabilities, onColorChange, onConfet
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Background</div>
           <ColorPicker
+            aria-label="Game background color"
             value={element.backgroundColor || '#1a1a2e'}
             onChange={onColorChange('backgroundColor')}
             className="w-full h-7 border border-border rounded cursor-pointer"
@@ -460,6 +493,7 @@ function DisplayTab({ element, gameConfig, capabilities, onColorChange, onConfet
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Accent</div>
           <ColorPicker
+            aria-label="Game accent color"
             value={element.accentColor || '#6366f1'}
             onChange={onColorChange('accentColor')}
             className="w-full h-7 border border-border rounded cursor-pointer"
