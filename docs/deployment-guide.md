@@ -5,8 +5,8 @@
 | Method               | Best For                        | Requirements                      |
 | -------------------- | ------------------------------- | --------------------------------- |
 | Docker (recommended) | Server / VPS                    | Docker 20.10+, Docker Compose v2+ |
-| Node.js from source  | Development, lightweight server | Node.js >=22.13.0, npm         |
-| Electron desktop     | Single-user desktop app         | Node.js >=22.13.0 (build only) |
+| Node.js from source  | Development, lightweight server | Node.js >=22.13.0, npm            |
+| Electron desktop     | Single-user desktop app         | Node.js >=22.13.0 (build only)    |
 
 ---
 
@@ -56,7 +56,6 @@ volumes:
   revealjs-uploads:
 ```
 
-
 ### Custom Port
 
 Edit `docker-compose.yml`, change the host port (left side):
@@ -86,10 +85,10 @@ docker compose down -v
 
 Multi-stage build (confirmed at `Dockerfile` in root):
 
-1. **Builder stage** — pins Node.js 22.22.0 on Debian Bookworm Slim, installs the workspace lockfile without lifecycle scripts, then runs vendor publication and the client build.
+1. **Builder stage** — pins Node.js 22.22.0 on Debian Bookworm Slim, installs the workspace lockfile without lifecycle scripts, publishes the exact Reveal.js 6.0.1 `dist/` tree plus other vendor assets, then builds the client.
 2. **Production stage** — pins the same Node.js 22.22.0 image, installs rclone and the lock-derived server runtime dependency set, installs Playwright Chromium, copies the built client and published vendor assets, then verifies runtime closure.
 
-The final command re-runs runtime-closure verification before `node server/index.js`.
+Vendor publication records runtime versions and hashes in `server/vendor/vendor-manifest.json`. The final command and server prestart verification reject a missing required Reveal.js asset, a version other than 6.0.1, a hash mismatch, or a legacy `reveal.js/plugin/` tree before `node server/index.js` starts.
 
 ---
 
@@ -179,21 +178,21 @@ npm run electron:dev
 
 ## Environment Variables
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `PORT` | `3002` | HTTP listen port |
-| `NAVSLIDES_LISTEN_HOST` | `127.0.0.1` | Server bind host; Docker sets `0.0.0.0` inside the container |
-| `NAVSLIDES_PUBLISH_HOST` | `127.0.0.1` | Docker host-side publish address; changing it does not provide authentication |
-| `SLIDES_DATA_DIR` | `server/data/` | Directory for JSON data files |
-| `SLIDES_UPLOADS_DIR` | `server/uploads/` | Directory for uploaded files |
-| `NODE_ENV` | `development` | Set to `production` to disable Vite proxy and serve `client/dist/` |
-| `NAVSLIDES_CHROMIUM_PATH` | bundled Playwright Chromium | Optional custom Chromium executable for server-side PPTX element rasterization |
-| `NAVSLIDES_PPTX_SCALE` | `2` | Screenshot scale used for PPTX HTML/LaTeX raster elements |
-| `PPTX_IMPORT_MEDIA_ORIGINS` | unset | Comma-separated exact `http(s)` origins permitted for external media referenced by PPTX imports; default policy blocks them |
-| `PPTX_EMF_CONVERT` | unset | Set to `1` to request EMF/WMF conversion; conversion remains disabled otherwise |
-| `PPTX_EMF_BINARY` | no policy-valid default | Absolute converter path, validated by the EMF/WMF policy |
-| `PPTX_EMF_BINARY_ROOT` | unset | Absolute trusted root required by the EMF/WMF policy |
-| `PPTX_EMF_BINARY_SHA256` | unset | SHA-256 pin required by the EMF/WMF policy |
+| Variable                    | Default                     | Purpose                                                                                                                     |
+| --------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                      | `3002`                      | HTTP listen port                                                                                                            |
+| `NAVSLIDES_LISTEN_HOST`     | `127.0.0.1`                 | Server bind host; Docker sets `0.0.0.0` inside the container                                                                |
+| `NAVSLIDES_PUBLISH_HOST`    | `127.0.0.1`                 | Docker host-side publish address; changing it does not provide authentication                                               |
+| `SLIDES_DATA_DIR`           | `server/data/`              | Directory for JSON data files                                                                                               |
+| `SLIDES_UPLOADS_DIR`        | `server/uploads/`           | Directory for uploaded files                                                                                                |
+| `NODE_ENV`                  | `development`               | Set to `production` to disable Vite proxy and serve `client/dist/`                                                          |
+| `NAVSLIDES_CHROMIUM_PATH`   | bundled Playwright Chromium | Optional custom Chromium executable for server-side PPTX element rasterization                                              |
+| `NAVSLIDES_PPTX_SCALE`      | `2`                         | Screenshot scale used for PPTX HTML/LaTeX raster elements                                                                   |
+| `PPTX_IMPORT_MEDIA_ORIGINS` | unset                       | Comma-separated exact `http(s)` origins permitted for external media referenced by PPTX imports; default policy blocks them |
+| `PPTX_EMF_CONVERT`          | unset                       | Set to `1` to request EMF/WMF conversion; conversion remains disabled otherwise                                             |
+| `PPTX_EMF_BINARY`           | no policy-valid default     | Absolute converter path, validated by the EMF/WMF policy                                                                    |
+| `PPTX_EMF_BINARY_ROOT`      | unset                       | Absolute trusted root required by the EMF/WMF policy                                                                        |
+| `PPTX_EMF_BINARY_SHA256`    | unset                       | SHA-256 pin required by the EMF/WMF policy                                                                                  |
 
 Set via shell, `.env` file (manually), or Docker environment config.
 
@@ -231,6 +230,7 @@ other editor APIs from authentication, and do not use a share-token query
 parameter as a proxy bypass rule.
 
 ## PPTX Import Policy
+
 Before package mapping, PPTX import validates ZIP structure, entry count, declared
 uncompressed size, bounded streamed decompressed size, and each entry's CRC32.
 CRC or resource-budget failures are fail-closed.
@@ -242,7 +242,6 @@ two additional fail-closed gates: the manifest-bound importer-native strict lane
 oracle described in [`pptx-visual-evidence-runbook.md`](pptx-visual-evidence-runbook.md).
 Any blocked deck, missing evidence, or below-policy SSIM result blocks those
 claims even when best-effort import remains usable.
-
 
 ### External media
 
@@ -262,21 +261,21 @@ PPTX admission returns a one-time per-job capability. Its plaintext handoff is m
 
 ### File Paths (Node.js / Docker)
 
-| Path                             | Contents                       |
-| -------------------------------- | ------------------------------ |
-| `server/data/presentations.json` | All presentation data          |
-| `server/data/templates.json`     | Custom presentation templates  |
-| `server/data/share-tokens.json`  | Shareable link tokens          |
-| `server/data/github-config.json` | GitHub integration credentials |
-| `server/data/settings.json`      | Editor settings and AI API key |
-| `server/data/analytics.json`     | Share-view analytics records    |
-| `server/data/media.json`         | Uploaded media metadata        |
+| Path                             | Contents                              |
+| -------------------------------- | ------------------------------------- |
+| `server/data/presentations.json` | All presentation data                 |
+| `server/data/templates.json`     | Custom presentation templates         |
+| `server/data/share-tokens.json`  | Shareable link tokens                 |
+| `server/data/github-config.json` | GitHub integration credentials        |
+| `server/data/settings.json`      | Editor settings and AI API key        |
+| `server/data/analytics.json`     | Share-view analytics records          |
+| `server/data/media.json`         | Uploaded media metadata               |
 | `server/data/upload-hashes.json` | SHA256 dedup index for uploaded files |
-| `server/data/rclone.conf`        | rclone configuration           |
-| `server/data/history/`           | Version history snapshots      |
-| `server/data/sync-export/`       | rclone export staging          |
-| `server/data/tmp-pptx-imports/`  | Temporary PPTX import uploads  |
-| `server/uploads/`                | Uploaded images, videos, audio |
+| `server/data/rclone.conf`        | rclone configuration                  |
+| `server/data/history/`           | Version history snapshots             |
+| `server/data/sync-export/`       | rclone export staging                 |
+| `server/data/tmp-pptx-imports/`  | Temporary PPTX import uploads         |
+| `server/uploads/`                | Uploaded images, videos, audio        |
 
 All directories are created automatically on first run.
 
@@ -341,23 +340,23 @@ The repository includes GitHub Actions workflows for validation and Electron rel
 
 ### Required CI Jobs (blocking)
 
-| Job | What it runs |
-| --- | --- |
-| `lint` | ESLint across all packages |
-| `unit-coverage` | Vitest with coverage thresholds |
-| `build` | `npm run build` (React → client/dist/) |
-| `e2e-chromium` | Playwright E2E, 4 shards |
-| `e2e-live` | Playwright live presentation flows |
-| `e2e-mobile` | Playwright mobile / a11y |
-| `e2e-visual` | Playwright visual regression |
-| `pptx-corpus` | PPTX semantic fidelity + round-trip corpus |
-| `load-smoke` | k6 REST + WebSocket load smoke |
-| `required-checks` | Fan-in gate — all above must pass |
+| Job               | What it runs                               |
+| ----------------- | ------------------------------------------ |
+| `lint`            | ESLint across all packages                 |
+| `unit-coverage`   | Vitest with coverage thresholds            |
+| `build`           | `npm run build` (React → client/dist/)     |
+| `e2e-chromium`    | Playwright E2E, 4 shards                   |
+| `e2e-live`        | Playwright live presentation flows         |
+| `e2e-mobile`      | Playwright mobile / a11y                   |
+| `e2e-visual`      | Playwright visual regression               |
+| `pptx-corpus`     | PPTX semantic fidelity + round-trip corpus |
+| `load-smoke`      | k6 REST + WebSocket load smoke             |
+| `required-checks` | Fan-in gate — all above must pass          |
 
 ### Non-Required (warn-first)
 
-| Job | What it runs |
-| --- | --- |
+| Job                     | What it runs                                            |
+| ----------------------- | ------------------------------------------------------- |
 | `feature-coverage-gate` | `npm run matrix:gate` + drift-check on committed matrix |
 
 ### Release
@@ -366,6 +365,7 @@ The repository includes GitHub Actions workflows for validation and Electron rel
 - Linux and macOS Electron packages exist as local `electron-builder` scripts but are not part of the current release workflow.
 
 Test commands run locally:
+
 ```bash
 npm run lint
 npm run test

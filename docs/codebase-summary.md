@@ -24,17 +24,17 @@ navslides-editor/
 
 ## Client Runtime
 
-| Area | Key Files | Notes |
-| --- | --- | --- |
-| App shell | `client/src/App.jsx` | `BrowserRouter` + `Routes`; `MainLayout` wraps app chrome; live/game routes stay outside the editor shell |
-| Pages | `client/src/pages/` | Route-level pages for home, editor, settings, explore, live, remote, speaker, and game player join |
-| Editor canvas | `client/src/components/SlideCanvas.jsx`, `client/src/components/canvas/*` | Drag / resize / rotate / snap surface split into focused chrome, renderer, and interaction modules |
-| Ribbon shell | `client/src/components/ribbon/*`, `client/src/stores/ui-store.js` | `RibbonHeaderBar` and `RibbonPanel` are the default editor controls; active tab persists to localStorage and syncs through `ui-store.activeTab`; Home/View canvas controls share grid-size persistence |
-| Element renderers | `client/src/components/canvas/element-renderers/` | Registry-based renderers for callout, icon, qrcode, drawing, svg, markdown, chart, latex, table, shape, line, and game |
-| Properties panels | `client/src/components/properties/` | Type-specific property editors, including game Content/Display/Scoring tabs |
-| Hooks | `client/src/hooks/` | Autosave, clipboard, keyboard, annotation sync, live timer, swipe/pinch/touch, game socket, and slide operations; `use-keyboard-contract.test.js` guards registry→hook forwarding |
-| Stores | `client/src/stores/` | Zustand stores for editor, presentation, and UI state |
-| Utilities | `client/src/utils/` | API wrapper, content safety, export helpers, project archive helpers, PPTX import/export helpers |
+| Area              | Key Files                                                                 | Notes                                                                                                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| App shell         | `client/src/App.jsx`                                                      | `BrowserRouter` + `Routes`; `MainLayout` wraps app chrome; live/game routes stay outside the editor shell                                                                                              |
+| Pages             | `client/src/pages/`                                                       | Route-level pages for home, editor, settings, explore, live, remote, speaker, and game player join                                                                                                     |
+| Editor canvas     | `client/src/components/SlideCanvas.jsx`, `client/src/components/canvas/*` | Drag / resize / rotate / snap surface split into focused chrome, renderer, and interaction modules                                                                                                     |
+| Ribbon shell      | `client/src/components/ribbon/*`, `client/src/stores/ui-store.js`         | `RibbonHeaderBar` and `RibbonPanel` are the default editor controls; active tab persists to localStorage and syncs through `ui-store.activeTab`; Home/View canvas controls share grid-size persistence |
+| Element renderers | `client/src/components/canvas/element-renderers/`                         | Registry-based renderers for callout, icon, qrcode, drawing, svg, markdown, chart, latex, table, shape, line, and game                                                                                 |
+| Properties panels | `client/src/components/properties/`                                       | Type-specific property editors, including game Content/Display/Scoring tabs                                                                                                                            |
+| Hooks             | `client/src/hooks/`                                                       | Autosave, clipboard, keyboard, annotation sync, live timer, swipe/pinch/touch, game socket, and slide operations; `use-keyboard-contract.test.js` guards registry→hook forwarding                      |
+| Stores            | `client/src/stores/`                                                      | Zustand stores for editor, presentation, and UI state                                                                                                                                                  |
+| Utilities         | `client/src/utils/`                                                       | API wrapper, content safety, export helpers, project archive helpers, PPTX import/export helpers                                                                                                       |
 
 ### Editor Model
 
@@ -83,6 +83,10 @@ navslides-editor/
   reachable and labelled, the highlight palette uses `listbox` / `option`
   semantics, and `PropertiesPanel` is exposed as `role="complementary"` with
   the accessible name `Properties panel`.
+- Action/Hotspot is normalized base-element metadata: it is selectable and inert in edit mode, while the browser runtime handles only validated URL, slide, navigation, email, and download actions. Unsafe or missing targets become inert with author/export feedback; `target: 'new'` uses opener isolation. Browser-only actions are omitted from PPTX with warnings rather than represented as native behavior.
+- Smart Connector is `line.connections` metadata, not an element type. A shared resolver resolves same-slide target anchors to finite endpoint coordinates; missing/deleted targets retain last-resolved coordinates. PPTX emits a resolved native line with a warning that attachment semantics are flattened.
+- Layout masters are presentation/slide metadata. The shared effective-slide resolver merges master fixed elements, placeholder bindings, overrides, and slide-owned elements for canvas, Reveal/offline, and export. While master edit is active, selection, clipboard, duplicate, select-all, media insertion, and batch operations target the master authoring surface rather than the active slide. PPTX flattens resolved layouts and warns; import does not synthesize native masters.
+- Image `alt`, decorative, and long-description metadata plus media tracks, transcript, and audio-description metadata are validated browser semantics. Legacy decks remain loadable with warnings; local track assets participate in archive/offline rewriting. PPTX preserves image alt where supported and reports unsupported decorative, long-description, caption/track, transcript, and browser-playback semantics.
 - Common property lock/layer actions now use Lucide icons instead of structural
   emoji or arrow glyphs.
 - `SlideCanvas.jsx` owns core canvas interaction; clipboard and keyboard logic
@@ -94,14 +98,14 @@ navslides-editor/
 
 ## Server Runtime
 
-| Area | Key Files | Notes |
-| --- | --- | --- |
-| Entry | `server/index.js` | Mounts REST routes, static `/uploads` and `/vendor`, and Socket.IO at `/ws` |
-| Storage | `server/services/storage.js` | File-backed JSON persistence with per-file locks |
-| Live rooms | `server/services/live-rooms.js` | In-memory room state, presenter tokens, annotations, and timer state |
-| Game engine | `server/services/game-room-manager-singleton-service.js`, `server/services/game-socket-handler.js` | Game room lifecycle, scoring, timers, leaderboard, player join flow |
-| PPTX import | `server/routes/pptx-import.js`, `server/services/pptx-import/*` | `.pptx` upload route, parser isolation, geometry normalization, fidelity harness |
-| REST routes | `server/routes/*.js` | Presentations, templates, share, history, upload, GitHub, sync, settings, media, live, games, explore, analytics, marketplace, AI |
+| Area        | Key Files                                                                                          | Notes                                                                                                                             |
+| ----------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Entry       | `server/index.js`                                                                                  | Mounts REST routes, static `/uploads` and `/vendor`, and Socket.IO at `/ws`                                                       |
+| Storage     | `server/services/storage.js`                                                                       | File-backed JSON persistence with per-file locks                                                                                  |
+| Live rooms  | `server/services/live-rooms.js`                                                                    | In-memory room state, presenter tokens, annotations, and timer state                                                              |
+| Game engine | `server/services/game-room-manager-singleton-service.js`, `server/services/game-socket-handler.js` | Game room lifecycle, scoring, timers, leaderboard, player join flow                                                               |
+| PPTX import | `server/routes/pptx-import.js`, `server/services/pptx-import/*`                                    | `.pptx` upload route, parser isolation, geometry normalization, fidelity harness                                                  |
+| REST routes | `server/routes/*.js`                                                                               | Presentations, templates, share, history, upload, GitHub, sync, settings, media, live, games, explore, analytics, marketplace, AI |
 
 ### Live Model
 
@@ -113,17 +117,18 @@ navslides-editor/
 
 ## Shared Runtime
 
-| Module | Purpose |
-| --- | --- |
-| `shared/src/htmlGenerator.js` | Reveal.js HTML, print HTML, offline HTML, and present-mode generation |
-| `shared/src/element-renderers.js` | Shared render helpers for export and preview |
-| `shared/src/design-tokens.js` | Design-token resolver: `DEFAULT_TOKENS`, `AUTO_FIELD_MAP`, `resolveAutoColor`, `isTokenVar` — single source for the `'auto'` → `var(--ns-*)` mapping shared by both render paths |
-| `shared/src/theme-presets.js` | 39 token presets (`THEME_PRESETS`) across 7 categories; `{id,label,category,tokens,revealTheme}` |
-| `shared/src/fx/` | 8 animated canvas FX modules + `index.js` registry (`getFxModule`, `listFx`, `buildFxRuntimeScript`) for the `'fx'` slide background type |
-| `shared/src/slideNotes.js` | Canonical notes normalization |
-| `shared/src/shapeUtils.js` | SVG shape/path helpers |
-| `shared/src/presenterTools.js` | Presenter overlay tools |
-| `shared/src/types/presentation.js` | JSDoc data model used by client and server |
+| Module                                | Purpose                                                                                                                                                                          |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shared/src/htmlGenerator.js`         | Reveal.js HTML, print HTML, offline HTML, and present-mode generation                                                                                                            |
+| `shared/src/reveal-runtime-assets.js` | Reveal.js 6.0.1 version receipt and the canonical manifest for `/vendor/reveal.js/dist` core, plugin, theme, vendor, and offline assets                                      |
+| `shared/src/element-renderers.js`     | Shared element rendering helpers for export and preview                                                                                                                         |
+| `shared/src/design-tokens.js`         | Design-token resolver: `DEFAULT_TOKENS`, `AUTO_FIELD_MAP`, `resolveAutoColor`, `isTokenVar` — single source for the `'auto'` → `var(--ns-*)` mapping shared by both render paths |
+| `shared/src/theme-presets.js`         | 39 token presets (`THEME_PRESETS`) across 7 categories; `{id,label,category,tokens,revealTheme}`                                                                                 |
+| `shared/src/fx/`                      | 8 animated canvas FX modules + `index.js` registry (`getFxModule`, `listFx`, `buildFxRuntimeScript`) for the `'fx'` slide background type                                        |
+| `shared/src/slideNotes.js`            | Canonical notes normalization                                                                                                                                                    |
+| `shared/src/shapeUtils.js`            | SVG shape/path helpers                                                                                                                                                           |
+| `shared/src/presenterTools.js`        | Presenter overlay tools                                                                                                                                                          |
+| `shared/src/types/presentation.js`    | JSDoc data model used by client and server                                                                                                                                       |
 
 ### Design Tokens and Theming
 
@@ -160,14 +165,10 @@ navslides-editor/
 
 ### Export and Import
 
-- Standard HTML export is CDN-backed.
-- Offline HTML inlines runtime assets.
-- PPTX export is hybrid: stable primitives stay editable, while complex DOM-backed
-  content and unsupported cases fall back to raster assets.
-- PPTX import uses `pptxtojson` as its only runtime parser; `pptx2json` is
-  benchmark-sandbox-only, never a runtime fallback. A checked-in 11-deck corpus
-  supports parser-relative metrics and separately hash-bound, two-pass importer
-  qualification.
+- Standard HTML, present mode, preview, share, and offline output consume the Reveal.js 6.0.1 asset manifest. Vendor publication owns `/vendor/reveal.js/dist`, including built-in plugins under `dist/plugin/`; offline HTML inlines those same required assets and fails closed if one is unavailable.
+- PPTX export is hybrid: stable primitives stay editable, while complex DOM-backed content and unsupported cases fall back to raster assets. Vertical child slides flatten recursively in parent-first order, including child notes and server-raster elements. Actions are browser-only and omitted with warnings; smart connectors become resolved native lines with an attachment warning; layout masters flatten to resolved objects without native-master preservation.
+- Validated image alternatives map to native PPTX image metadata when the library supports them. Decorative/long-description and media caption, transcript, audio-description, track, and browser playback semantics are explicitly warned/fallback-limited rather than claimed as preserved.
+- PPTX import uses `pptxtojson` as its only runtime parser; `pptx2json` is benchmark-sandbox-only, never a runtime fallback. A checked-in 11-deck corpus supports parser-relative metrics and separately hash-bound, two-pass importer qualification.
 
 ## Electron Wrapper
 
@@ -181,20 +182,20 @@ navslides-editor/
 
 ## Data and Persistence
 
-| Path | Purpose |
-| --- | --- |
-| `server/data/presentations.json` | Presentation data |
-| `server/data/templates.json` | Custom templates |
-| `server/data/share-tokens.json` | Share links and passwords |
-| `server/data/github-config.json` | GitHub integration config |
-| `server/data/settings.json` | App settings and AI API key |
-| `server/data/analytics.json` | Share-view analytics |
-| `server/data/media.json` | Uploaded media metadata |
-| `server/data/history/` | Version snapshots |
-| `server/data/rclone.conf` | rclone config |
-| `server/data/sync-export/` | Sync staging |
-| `server/data/tmp-pptx-imports/` | Temporary PPTX import uploads |
-| `server/uploads/` | Uploaded media files |
+| Path                             | Purpose                       |
+| -------------------------------- | ----------------------------- |
+| `server/data/presentations.json` | Presentation data             |
+| `server/data/templates.json`     | Custom templates              |
+| `server/data/share-tokens.json`  | Share links and passwords     |
+| `server/data/github-config.json` | GitHub integration config     |
+| `server/data/settings.json`      | App settings and AI API key   |
+| `server/data/analytics.json`     | Share-view analytics          |
+| `server/data/media.json`         | Uploaded media metadata       |
+| `server/data/history/`           | Version snapshots             |
+| `server/data/rclone.conf`        | rclone config                 |
+| `server/data/sync-export/`       | Sync staging                  |
+| `server/data/tmp-pptx-imports/`  | Temporary PPTX import uploads |
+| `server/uploads/`                | Uploaded media files          |
 
 - `storage.js` initializes the data folders on first run.
 - File writes are serialized with per-file locks.

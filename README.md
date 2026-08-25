@@ -130,12 +130,12 @@ npm start
 
 ## Documentation
 
-| Resource | English | Tiếng Việt |
-| --- | --- | --- |
-| Get started | [Getting Started](https://xuan2261.github.io/NavSlidesEditor/guide/getting-started) | [Bắt đầu](https://xuan2261.github.io/NavSlidesEditor/vi/guide/getting-started) |
-| Installation | [Installation Guide](https://xuan2261.github.io/NavSlidesEditor/guide/installation) | [Hướng dẫn cài đặt](https://xuan2261.github.io/NavSlidesEditor/vi/guide/installation) |
-| First deck | [First Presentation Tutorial](https://xuan2261.github.io/NavSlidesEditor/tutorials/first-presentation) | [Bài trình chiếu đầu tiên](https://xuan2261.github.io/NavSlidesEditor/vi/tutorials/first-presentation) |
-| Shortcuts | [Keyboard Shortcuts](https://xuan2261.github.io/NavSlidesEditor/guide/keyboard-shortcuts) | [Phím tắt](https://xuan2261.github.io/NavSlidesEditor/vi/guide/keyboard-shortcuts) |
+| Resource     | English                                                                                                | Tiếng Việt                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Get started  | [Getting Started](https://xuan2261.github.io/NavSlidesEditor/guide/getting-started)                    | [Bắt đầu](https://xuan2261.github.io/NavSlidesEditor/vi/guide/getting-started)                         |
+| Installation | [Installation Guide](https://xuan2261.github.io/NavSlidesEditor/guide/installation)                    | [Hướng dẫn cài đặt](https://xuan2261.github.io/NavSlidesEditor/vi/guide/installation)                  |
+| First deck   | [First Presentation Tutorial](https://xuan2261.github.io/NavSlidesEditor/tutorials/first-presentation) | [Bài trình chiếu đầu tiên](https://xuan2261.github.io/NavSlidesEditor/vi/tutorials/first-presentation) |
+| Shortcuts    | [Keyboard Shortcuts](https://xuan2261.github.io/NavSlidesEditor/guide/keyboard-shortcuts)              | [Phím tắt](https://xuan2261.github.io/NavSlidesEditor/vi/guide/keyboard-shortcuts)                     |
 
 Maintainer and AI navigation: [project intent](docs/project-overview-pdr.md),
 [architecture](docs/system-architecture.md),
@@ -153,13 +153,13 @@ author. Releases, verification, architectural decisions, and known limits are
 kept inspectable in the repository rather than represented by private service
 state.
 
-| Maintenance signal | Evidence |
-| --- | --- |
-| Public source and copyleft license | [Repository](https://github.com/xuan2261/NavSlidesEditor) · [LICENSE](LICENSE) |
-| Tagged releases and desktop artifacts | [GitHub Releases](https://github.com/xuan2261/NavSlidesEditor/releases) · [release workflow](.github/workflows/release.yml) |
-| Continuous verification | [CI workflow](.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml) · [testing guide](#testing--performance) |
-| Current architecture and trust boundaries | [System architecture](docs/system-architecture.md) · [Security Model](#security-model) · [deployment guide](docs/deployment-guide.md) |
-| Planning and change history | [Roadmap](docs/project-roadmap.md) · [changelog](docs/project-changelog.md) |
+| Maintenance signal                        | Evidence                                                                                                                                   |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Public source and copyleft license        | [Repository](https://github.com/xuan2261/NavSlidesEditor) · [LICENSE](LICENSE)                                                             |
+| Tagged releases and desktop artifacts     | [GitHub Releases](https://github.com/xuan2261/NavSlidesEditor/releases) · [release workflow](.github/workflows/release.yml)                |
+| Continuous verification                   | [CI workflow](.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml) · [testing guide](#testing--performance) |
+| Current architecture and trust boundaries | [System architecture](docs/system-architecture.md) · [Security Model](#security-model) · [deployment guide](docs/deployment-guide.md)      |
+| Planning and change history               | [Roadmap](docs/project-roadmap.md) · [changelog](docs/project-changelog.md)                                                                |
 
 Maintenance spans the React editor, Express and Socket.IO services, shared
 rendering/export code, the Electron shell, and the documentation site.
@@ -202,11 +202,13 @@ Automation has the highest leverage in:
 
 ### Element Types
 
-19 element types: text (TipTap rich text), image (upload/URL, crop, filters, round corners), shape (rectangle, circle, triangle, arrow, star), code (10 themes, 25+ languages), LaTeX / TikZ (KaTeX + TikZJax), HTML embeds, Markdown, Chart.js charts (bar, line, pie, doughnut, radar, polar area), video / audio (with start/end trim, playback speed), table (drag-resize, inline editing), QR code, icon (60+ Lucide icons), callout, drawing, line, SVG, timeline, and **game** (10 interactive game types). The Insert ribbon shows 30+ actions because shapes, technical symbol packs, and games (10 variants) expose sub-variants from existing element types. The 19 canonical types are listed in `client/src/data/element-defaults.js`.
+19 element types: text (TipTap rich text), image (upload/URL, crop, filters, round corners), shape (rectangle, circle, triangle, arrow, star), code (10 themes, 25+ languages), LaTeX / TikZ (KaTeX + TikZJax), HTML embeds, Markdown, Chart.js charts (bar, line, pie, doughnut, radar, polar area), video / audio (with start/end trim, playback speed), table (drag-resize, inline editing), QR code, icon (60+ Lucide icons), callout, drawing, line, SVG, timeline, and **game** (10 interactive game types). The Insert ribbon shows 30+ actions because shapes, technical symbol packs, and games (10 variants) expose sub-variants from existing element types. Action/Hotspot is validated base-element metadata; Smart Connector extends `line` with same-slide endpoint attachments, not a new type. The 19 canonical types are listed in `client/src/data/element-defaults.js`.
+Image alternatives (including decorative and long-description metadata) and video/audio captions, transcripts, audio descriptions, and safe media tracks are authorable browser semantics. Blank non-decorative alternatives and malformed media metadata warn rather than changing legacy decks; transcript text is user-authored, not generated.
 
 ### Slides
 
-**35 layouts** across 6 categories (basic, content, layout, data, structure, ending) + 20+ full-deck templates including interactive simulations and quiz decks. Per-slide backgrounds (solid, gradient, image, **animated FX**), **first-class vertical (child) slides** — create, select, edit, and export nested slides from the slide panel — fragment animations with visual timeline editor and preview modal, per-slide page numbers, hidden slides, footer system (basic / sequence modes), and global presentation settings (auto-slide, loop, navigation modes).
+**35 layouts** across 6 categories (basic, content, layout, data, structure, ending) + 20+ full-deck templates including interactive simulations and quiz decks. Reusable layout masters resolve fixed elements, bound placeholders, and slide-owned content into one effective slide; built-in templates remain materialized insertion presets, not masters. Per-slide backgrounds (solid, gradient, image, **animated FX**), **first-class vertical (child) slides** — create, select, edit, and export nested slides from the slide panel — fragment animations with visual timeline editor and preview modal, per-slide page numbers, hidden slides, footer system (basic / sequence modes), and global presentation settings (auto-slide, loop, navigation modes).
+
 ### Live Presentation
 
 Broadcast to viewers via Socket.IO with server-issued capabilities. Includes a separate **speaker view** (notes, next-slide preview, timer), **remote control** from a phone or second device, **annotation tools** (pen, laser pointer, highlighter, eraser) that sync to viewers in real time and persist per slide on rejoin, **black/white screen overlays** (`B` / `W`), shared **live timer**, and PowerPoint-style navigation (`F5`, `Home`, `End`, arrows`). Viewer links use `/live/:roomCode`; privileged remote/speaker links carry their capability in the URL fragment. Capability-bearing REST calls use an `Authorization: Bearer` header; URL fragments are never sent in HTTP requests. For multi-user or internet-facing deployments, place them behind the external authentication layer described in the security model below.
@@ -226,7 +228,7 @@ AI copywriter (rewrite slide text), AI generator (full presentation drafts from 
 
 ### Export & Sharing
 
-Present mode (reveal.js, press `S` for speaker notes), export HTML (CDN-backed), export offline HTML (inlined runtime assets), export PDF (one page per slide with expanded fragments), export PPTX (hybrid: editable primitives + Playwright-rasterized fallback for unsupported elements), shareable links with optional password, GitHub push with auto-generated README, Markdown import, project export/import (`.navslides` archive with manifest v1.1).
+Present mode (Reveal.js 6.0.1, press `S` for speaker notes), export HTML (the canonical manifest-owned `/vendor/reveal.js/dist` runtime), export offline HTML (the same runtime assets inlined), export PDF (one page per slide with expanded fragments), export PPTX (hybrid: editable primitives + Playwright-rasterized fallback for unsupported elements), shareable links with optional password, GitHub push with auto-generated README, Markdown import, project export/import (`.navslides` archive with manifest v1.1). Browser actions remain browser-only and are omitted from PPTX with a warning; connectors export as resolved native lines with an attachment-semantics warning; layout masters flatten to resolved objects without native PowerPoint masters. Image alt text is native where supported, while decorative/long-description/media-track/transcript semantics have explicit PPTX warnings or fallbacks rather than unsupported preservation claims.
 
 Dashboard imports wait for a shared import slot separately from the admitted job's bounded wait. ZIP structure, entry count, declared decompressed size, streamed decompressed-byte budget, and per-entry CRC32 are validated before package mapping. If the final outcome cannot be confirmed, the editor asks you to check existing presentations before retrying rather than making destructive recovery. A completed package job can remain pending visibility until it is safe to open. Imported external media is blocked unless a server administrator explicitly allows its origin; EMF/WMF conversion remains off until that administrator configures its guarded policy.
 
@@ -272,6 +274,7 @@ For internet-facing or multi-user deployments, place NavSlides Editor behind an 
 3. Click **Push to GitHub** (optionally with a commit message).
 
 Output structure:
+
 ```
 my-repo/
 ├── README.md                          ← auto-generated
@@ -369,15 +372,15 @@ slides.example.com {
 
 Only shortcuts implemented by the active game are enabled.
 
-| Shortcut  | Action                         |
-| --------- | ------------------------------ |
-| `G`       | Toggle HUD                     |
-| `Space`   | Start timer                    |
-| `Enter`   | Next question or phase         |
-| `R`       | Reveal supported game results  |
-| `L`       | Show leaderboard               |
-| `P`       | Pause timer                    |
-| `+` / `-` | Adjust timer                   |
+| Shortcut  | Action                        |
+| --------- | ----------------------------- |
+| `G`       | Toggle HUD                    |
+| `Space`   | Start timer                   |
+| `Enter`   | Next question or phase        |
+| `R`       | Reveal supported game results |
+| `L`       | Show leaderboard              |
+| `P`       | Pause timer                   |
+| `+` / `-` | Adjust timer                  |
 
 ---
 
@@ -385,9 +388,9 @@ Only shortcuts implemented by the active game are enabled.
 
 | Method       | Requirement                                        |
 | ------------ | -------------------------------------------------- |
-| Desktop app  | Node.js >=22.13.0 (build only)                    |
+| Desktop app  | Node.js >=22.13.0 (build only)                     |
 | Docker       | Docker 20.10+ and Docker Compose v2+               |
-| Node.js      | Node.js >=22.13.0 and npm                           |
+| Node.js      | Node.js >=22.13.0 and npm                          |
 | Load Testing | [k6](https://k6.io/docs/get-started/installation/) |
 
 ---
@@ -432,11 +435,13 @@ Verification typically runs in this order:
    npm run test:pptx:browser-audit:headed # headed full audit for manual inspection
    ```
 7. Microsoft PowerPoint visual oracle:
+
    ```bash
    npm run test:pptx:oracle:capture -- --base-url http://127.0.0.1:3202 --corpus-manifest server/data/test-corpus/importer-qualification-manifest.json --actuals-dir <actuals-dir>
    npm run test:pptx:oracle:integrity -- --evidence-manifest <manifest> --role-receipts <receipts> --goldens-dir <goldens-dir> --actuals-dir <actuals-dir>
    npm run test:pptx:oracle:qualify -- --evidence-manifest <manifest> --role-receipts <receipts> --goldens-dir <goldens-dir> --actuals-dir <actuals-dir>
    ```
+
    Only Microsoft PowerPoint goldens can satisfy this gate. Integrity success
    does not imply fidelity success; qualification enforces the fixed
    `phase08_full` mean/minimum SSIM policy and fails closed.
@@ -461,28 +466,28 @@ PPTX browser audit artifacts are written under `plans/reports/pptx-import-real-b
 
 ## Tech Stack
 
-| Layer                | Technology                                    |
-| -------------------- | --------------------------------------------- |
-| Frontend             | React 18, Vite 8, React Router 7              |
-| State management     | Zustand (3 stores: editor, presentation, UI)  |
-| Rich text editor     | TipTap 2                                      |
-| Presentation engine  | reveal.js 5                                   |
-| Math rendering       | KaTeX                                         |
-| Diagrams             | TikZJax                                       |
-| Charts               | Chart.js 4                                    |
-| Syntax highlighting  | highlight.js                                  |
-| Markdown             | Built-in converter + marked.js (export)       |
-| Icons                | Lucide (editor UI) + inline SVG (slide icons) |
-| PowerPoint export    | pptxgenjs + Playwright raster fallback        |
+| Layer                | Technology                                                  |
+| -------------------- | ----------------------------------------------------------- |
+| Frontend             | React 18, Vite 8, React Router 7                            |
+| State management     | Zustand (3 stores: editor, presentation, UI)                |
+| Rich text editor     | TipTap 2                                                    |
+| Presentation engine  | reveal.js 6.0.1 (canonical manifest-owned `/vendor/reveal.js/dist` assets) |
+| Math rendering       | KaTeX                                                       |
+| Diagrams             | TikZJax                                                     |
+| Charts               | Chart.js 4                                                  |
+| Syntax highlighting  | highlight.js                                                |
+| Markdown             | Built-in converter + marked.js (export)                     |
+| Icons                | Lucide (editor UI) + inline SVG (slide icons)               |
+| PowerPoint export    | pptxgenjs + Playwright raster fallback                      |
 | PowerPoint import    | pptxtojson runtime parser; pptx2json benchmark-sandbox-only |
-| Backend              | Node.js >=22.13.0 (CI/container: 22.22.0), Express 4 |
-| Real-time transport  | Socket.IO                                     |
-| Desktop app          | Electron 42                                   |
-| Cloud sync           | rclone                                        |
-| Validation           | Zod (mutation endpoints)                      |
-| Testing              | Vitest, Playwright, k6                        |
-| Linting & Formatting | ESLint 9 (flat config), Prettier              |
-| Storage              | JSON files + local filesystem                 |
+| Backend              | Node.js >=22.13.0 (CI/container: 22.22.0), Express 4        |
+| Real-time transport  | Socket.IO                                                   |
+| Desktop app          | Electron 42                                                 |
+| Cloud sync           | rclone                                                      |
+| Validation           | Zod (mutation endpoints)                                    |
+| Testing              | Vitest, Playwright, k6                                      |
+| Linting & Formatting | ESLint 9 (flat config), Prettier                            |
+| Storage              | JSON files + local filesystem                               |
 
 ---
 

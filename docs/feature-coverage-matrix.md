@@ -2,7 +2,13 @@
 
 _Generated: local run_
 
-Verified (PASS only): 112/112 (100%)  |  PASS: 112
+Verified (PASS only): 129/129 (100%)  |  PASS: 129
+
+## action
+
+| Capability | Risk | Tier | Layer | Depth | Test(s) | Status |
+|---|---|---|---|---|---|---|
+| action.element-runtime | high | smoke | unit | trace | shared/tests/action-runtime.test.js | PASS |
 
 ## canvas
 
@@ -34,6 +40,12 @@ Verified (PASS only): 112/112 (100%)  |  PASS: 112
 | command.zoomIn | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 | command.zoomOut | low | smoke | unit | trace | client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx | PASS |
 
+## connector
+
+| Capability | Risk | Tier | Layer | Depth | Test(s) | Status |
+|---|---|---|---|---|---|---|
+| connector.smart-geometry | high | smoke | unit | trace | shared/src/connector-geometry.test.js | PASS |
+
 ## control
 
 | Capability | Risk | Tier | Layer | Depth | Test(s) | Status |
@@ -50,16 +62,24 @@ Verified (PASS only): 112/112 (100%)  |  PASS: 112
 | control.format.underline | low | smoke | unit | trace | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
 | control.insert.shape | low | smoke | unit | trace | client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx | PASS |
 | control.insert.text | low | smoke | unit | trace | client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx | PASS |
+| control.properties.disclosure | high | smoke | unit | trace | client/src/components/CollapsibleSection.test.jsx | PASS |
 | control.properties.panel | high | smoke | unit | trace | client/src/components/PropertiesPanel.test.jsx | PASS |
+| control.ribbon.active-reveal | high | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx<br>client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx<br>client/src/__tests__/ui-accessibility-findings-regression.test.js | PASS |
 | control.ribbon.animations | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
-| control.ribbon.contextual-format | high | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
+| control.ribbon.contextual-format | high | smoke | unit | trace | client/src/components/ribbon/format-tab-dynamic-visibility-and-label.test.jsx<br>client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx<br>client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx<br>client/src/stores/ui-store-ribbon.test.js | PASS |
 | control.ribbon.design | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
 | control.ribbon.home | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
 | control.ribbon.insert | high | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
+| control.ribbon.keyboard | high | smoke | unit | trace | client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx | PASS |
+| control.ribbon.overflow | high | smoke | unit | trace | client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx | PASS |
+| control.ribbon.reduced-motion | high | smoke | unit,e2e | trace | client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx<br>tests/e2e/ribbon-responsive-touch.spec.js | PASS |
+| control.ribbon.responsive | high | smoke | unit,e2e | trace | client/src/__tests__/ui-accessibility-findings-regression.test.js<br>tests/e2e/ribbon-responsive-touch.spec.js | PASS |
+| control.ribbon.touch-targets | high | smoke | unit,e2e | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx<br>client/src/__tests__/ui-accessibility-findings-regression.test.js<br>tests/e2e/ribbon-responsive-touch.spec.js | PASS |
 | control.ribbon.transitions | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
 | control.ribbon.view | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
 | control.selection-pane | low | smoke | unit | trace | client/src/components/SelectionPane.test.jsx | PASS |
 | control.slide-panel | high | smoke | unit | trace | client/src/components/SlidePanel.test.jsx | PASS |
+| control.status.touch-targets | high | smoke | unit | trace | client/src/components/layout/StatusBar.test.jsx | PASS |
 | control.status.view-mode | low | smoke | unit | trace | client/src/components/layout/StatusBar.test.jsx | PASS |
 | control.status.zoom | low | smoke | unit | trace | client/src/components/layout/StatusBar.test.jsx | PASS |
 | control.timeline-animation | low | smoke | unit | trace | client/src/components/AnimationTimeline.test.jsx | PASS |
@@ -89,6 +109,15 @@ Verified (PASS only): 112/112 (100%)  |  PASS: 112
 | element.timeline | high | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/missing-controls.test.jsx<br>client/src/components/properties/timeline-properties.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.video | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 
+## export
+
+| Capability | Risk | Tier | Layer | Depth | Test(s) | Status |
+|---|---|---|---|---|---|---|
+| export.action-pptx | high | smoke | unit | trace | client/src/utils/export-pptx-actions.test.js | PASS |
+| export.connector-pptx | high | smoke | unit | trace | client/src/utils/exportPptx.test.js | PASS |
+| export.layout-pptx | high | smoke | unit | trace | client/src/utils/exportPptx.test.js | PASS |
+| export.media-pptx | high | smoke | unit | trace | client/src/utils/export-pptx-media-renderer.test.js | PASS |
+
 ## flow
 
 | Capability | Risk | Tier | Layer | Depth | Test(s) | Status |
@@ -98,6 +127,24 @@ Verified (PASS only): 112/112 (100%)  |  PASS: 112
 | flow.find-replace | low | smoke | unit | trace | client/src/components/find-replace-helpers.test.js | PASS |
 | flow.multiselect | high | deep | unit | trace, behavior | client/src/components/properties/indeterminate-multi-select.test.jsx<br>client/src/stores/editor-store-multiselect.deep.test.js<br>client/src/stores/editor-store.test.js | PASS |
 | flow.undo-redo | high | deep | unit | trace | client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx | PASS |
+
+## layout
+
+| Capability | Risk | Tier | Layer | Depth | Test(s) | Status |
+|---|---|---|---|---|---|---|
+| layout.master-resolution | high | smoke | unit | trace | shared/src/slide-layouts.test.js | PASS |
+
+## media
+
+| Capability | Risk | Tier | Layer | Depth | Test(s) | Status |
+|---|---|---|---|---|---|---|
+| media.accessibility | high | smoke | unit | trace | client/src/components/properties/media-properties-single-source.test.jsx | PASS |
+
+## runtime
+
+| Capability | Risk | Tier | Layer | Depth | Test(s) | Status |
+|---|---|---|---|---|---|---|
+| runtime.reveal6-assets | high | smoke | unit | trace | client/src/utils/offlineExport.test.js | PASS |
 
 ## shortcut
 

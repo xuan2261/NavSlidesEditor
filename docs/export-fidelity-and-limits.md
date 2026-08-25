@@ -4,6 +4,27 @@ How element properties map across the three export targets — reveal.js HTML
 (share link, offline bundle, PDF print) and PowerPoint (`.pptx`) — and which
 properties cannot be represented by a given format.
 
+## Reveal.js runtime contract
+
+- Present mode, share HTML, standard HTML export, and offline HTML are qualified
+  against **Reveal.js 6.0.1**. Generated documents record that version in the
+  `navslides-reveal-version` metadata tag.
+- `shared/src/reveal-runtime-assets.js` is the source of truth for core,
+  built-in plugin, theme, vendor-copy, and strict-offline asset paths. The
+  package is pinned exactly in `server/package.json`; no second Reveal.js
+  version is supported in the workspace.
+- Vendor publication copies the Reveal.js 6 `dist/` layout, including built-in
+  plugins under `dist/plugin/`. Publication and startup fail closed when a
+  required path is absent, the manifest version differs, a hash differs, or a
+  legacy `reveal.js/plugin/` path reappears.
+- Offline HTML inlines every referenced runtime asset from the published local
+  tree. A missing required Reveal.js, KaTeX, or Highlight.js asset aborts the
+  export instead of producing a partially portable document.
+- The bundled Menu, Chalkboard, and Custom Controls plugins are compatibility-
+  tested with Reveal.js 6.0.1. User-supplied Reveal plugins remain responsible
+  for their own Reveal.js 6 compatibility; NavSlides does not rewrite third-
+  party plugin APIs.
+
 ## Fixed mapping gaps (resolved)
 
 These were render-support gaps where one target dropped a property the others
@@ -277,15 +298,15 @@ PPTX export returns the existing string warning list for backward-compatible UI
 alerts. The same list also carries a non-enumerable `exportReport` object for
 machine checks:
 
-| Field         | Meaning                                                                                                               |
-| ------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `elementId`   | Source element id when present                                                                                        |
-| `elementType` | Source element type                                                                                                   |
-| `control`     | Element-control audit control id                                                                                      |
-| `surface`     | Always `pptx-export`                                                                                                  |
-| `matrixRowId` | Audit matrix row, e.g. `game.game-subtype-live-policy.pptx-export`                                                    |
-| `severity`    | `warning` for expected fallback, `error` for failed native path                                                       |
-| `message`     | User-visible warning text                                                                                             |
+| Field         | Meaning                                                                                                                                                                                                               |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `elementId`   | Source element id when present                                                                                                                                                                                        |
+| `elementType` | Source element type                                                                                                                                                                                                   |
+| `control`     | Element-control audit control id                                                                                                                                                                                      |
+| `surface`     | Always `pptx-export`                                                                                                                                                                                                  |
+| `matrixRowId` | Audit matrix row, e.g. `game.game-subtype-live-policy.pptx-export`                                                                                                                                                    |
+| `severity`    | `warning` for expected fallback, `error` for failed native path                                                                                                                                                       |
+| `message`     | User-visible warning text                                                                                                                                                                                             |
 | `fallback`    | Fallback class, including `server-raster`, `client-raster`, `media-cover`, `placeholder`, `static-media`, `browser-only-media-semantics`, `default-media-cover`, `static-code`, `background-color`, or `export-error` |
 
 The editor export action stores the most recent report on
@@ -295,23 +316,23 @@ the application feedback channel/export-result UI (`showNotice` and the
 
 ## Element-control export-gap classification
 
-| Matrix row                                    | Classification                                                                                                                                       |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `audio.audio-source-playback.pptx-export`     | `native-with-warning`: validated upload-root audio embeds; external/unsupported sources stay static, and browser-only playback semantics warn          |
-| `chart.chart-data-options.pptx-export`        | `fallback-warning`: native chart types stay editable; unsupported variants such as polarArea use raster/placeholder fallback and structured warnings |
-| `code.code-content-language.pptx-export`      | `accepted-limit`: plain editable monospace text; syntax theme fidelity is not native                                                                 |
-| `drawing.drawing-path-style.pptx-export`      | `fallback-warning`: raster/placeholder for editable path parity                                                                                      |
-| `game.game-subtype-live-policy.pptx-export`   | `fallback-warning`: live-only static placeholder, no private config                                                                                  |
-| `html.trusted-html-content.pptx-export`       | `fallback-warning`: server raster when available; active scripts remain trusted HTML-only                                                            |
-| `icon.icon-name-style.pptx-export`            | `fallback-warning`: raster/placeholder for icon glyph parity                                                                                         |
+| Matrix row                                    | Classification                                                                                                                                                                                |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `audio.audio-source-playback.pptx-export`     | `native-with-warning`: validated upload-root audio embeds; external/unsupported sources stay static, and browser-only playback semantics warn                                                 |
+| `chart.chart-data-options.pptx-export`        | `fallback-warning`: native chart types stay editable; unsupported variants such as polarArea use raster/placeholder fallback and structured warnings                                          |
+| `code.code-content-language.pptx-export`      | `accepted-limit`: plain editable monospace text; syntax theme fidelity is not native                                                                                                          |
+| `drawing.drawing-path-style.pptx-export`      | `fallback-warning`: raster/placeholder for editable path parity                                                                                                                               |
+| `game.game-subtype-live-policy.pptx-export`   | `fallback-warning`: live-only static placeholder, no private config                                                                                                                           |
+| `html.trusted-html-content.pptx-export`       | `fallback-warning`: server raster when available; active scripts remain trusted HTML-only                                                                                                     |
+| `icon.icon-name-style.pptx-export`            | `fallback-warning`: raster/placeholder for icon glyph parity                                                                                                                                  |
 | `image.media-source-and-fit.pptx-export`      | `fallback-warning`: ordinary images remain editable; safe data/local filtered or rounded images rasterize with frame metadata, while external URLs stay native with an accepted-limit warning |
-| `latex.latex-content-style.pptx-export`       | `fallback-warning`: server raster when available; editable equation parity is out of scope                                                           |
-| `markdown.markdown-content-style.pptx-export` | `fallback-warning`: raster/placeholder for authored Markdown structure                                                                               |
-| `qrcode.qr-data-style.pptx-export`            | `fallback-warning`: raster/placeholder for generated QR output                                                                                       |
-| `svg.svg-content-overrides.pptx-export`       | `fallback-warning`: sanitizer-covered HTML/canvas path, PPTX fallback for editable SVG parity                                                        |
-| `table.table-layout-rotation.pptx-export`     | `accepted-limit`: rotated tables remain editable native tables; rotation is omitted with a structured warning                                         |
-| `timeline.timeline-events-style.pptx-export`  | `fallback-warning`: raster/placeholder for timeline geometry                                                                                         |
-| `video.video-source-playback.pptx-export`     | `native-with-warning`: validated upload-root video embeds with an optional validated PNG cover; external/unsupported sources stay poster/placeholder, and browser-only semantics warn |
+| `latex.latex-content-style.pptx-export`       | `fallback-warning`: server raster when available; editable equation parity is out of scope                                                                                                    |
+| `markdown.markdown-content-style.pptx-export` | `fallback-warning`: raster/placeholder for authored Markdown structure                                                                                                                        |
+| `qrcode.qr-data-style.pptx-export`            | `fallback-warning`: raster/placeholder for generated QR output                                                                                                                                |
+| `svg.svg-content-overrides.pptx-export`       | `fallback-warning`: sanitizer-covered HTML/canvas path, PPTX fallback for editable SVG parity                                                                                                 |
+| `table.table-layout-rotation.pptx-export`     | `accepted-limit`: rotated tables remain editable native tables; rotation is omitted with a structured warning                                                                                 |
+| `timeline.timeline-events-style.pptx-export`  | `fallback-warning`: raster/placeholder for timeline geometry                                                                                                                                  |
+| `video.video-source-playback.pptx-export`     | `native-with-warning`: validated upload-root video embeds with an optional validated PNG cover; external/unsupported sources stay poster/placeholder, and browser-only semantics warn         |
 
 ## Export security limits
 

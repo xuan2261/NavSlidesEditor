@@ -1,0 +1,13 @@
+{
+  "generatedAt": "local run",
+  "sourceMatrix": "scripts/feature-inventory/reports/feature-coverage-matrix.json",
+  "editorCoreBaselineTotal": 129,
+  "summary": {
+    "total": 129,
+    "verified": 129,
+    "PASS": 129,
+    "DEPTH-WARN": 0
+  },
+  "staleRunResults": false,
+  "gaps": []
+}

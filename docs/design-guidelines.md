@@ -2,23 +2,19 @@
 
 ## Layout
 
-The editor uses a fixed 3-column layout:
+The workspace is responsive rather than a fixed three-column shell. The authored canvas remains a fixed logical `960×540` surface; editor chrome adapts around it:
 
 ```
-┌──────────────┬──────────────────────────────┬─────────────────┐
-│  SlidePanel  │         SlideCanvas          │ PropertiesPanel │
-│  (left)      │         (center)             │  (right)        │
-│  thumbnails  │   960×540 scaled canvas      │  per-element    │
-│  + CRUD      │   drag / resize / rotate     │  property form  │
-└──────────────┴──────────────────────────────┴─────────────────┘
-                    Ribbon Header + Panel (top)
+compact (<1024)       standard (1024–1279)       wide (≥1280)
+canvas + overlays      navigator docked            navigator + inspector docked
+inspector overlay      inspector overlay            shared inspector host
 ```
 
-- **RibbonHeaderBar** spans the full width with tabs (Home/Insert/Design/Transitions/Animations/View)
-- **RibbonPanel** displays controls for the active tab below the header
-- **FindReplaceBar** overlays the top of the canvas (activated by Ctrl+F)
-- **AnimationTimeline** overlays the bottom of the canvas
-- **Modals** render inline in `EditorPage` via conditional JSX (not portals)
+- **RibbonHeaderBar** and **RibbonPanel** span the workspace and adapt their density to the available container width.
+- **SlidePanel** docks in standard and wide tiers; compact tier opens it as an overlay.
+- **PropertiesPanel** and Design Ideas share one inspector host. It docks only in wide tier and otherwise opens as an overlay, so it does not shrink the canvas.
+- **FindReplaceBar** overlays the top of the canvas (activated by Ctrl+F); **AnimationTimeline** overlays its bottom.
+- **Modal composition** is extracted from `EditorPage`: `EditorModals.jsx` and `editor-modals-secondary.jsx` mount feature dialogs, while `ModalShell` owns the shared dialog/focus/backdrop contract. Escaping ribbon popups use `RibbonFloatingOverlay`.
 
 ---
 
@@ -183,13 +179,12 @@ Default font families offered in the font picker (verified in Toolbar):
 - Active tab persists to `localStorage` and syncs via `ui-store.activeTab`
 - Tab-based organization groups related commands (insert elements, apply design, configure animations)
 
-**PowerPoint classic ribbon layout contract:**
-- The `RibbonPanel` keeps a fixed `80px` command area.
-- The active tab panel fills the full ribbon command area; inactive tab panels must be hidden and must not intercept pointer events.
-- Each active tab has one command row marked with `data-ribbon-content-row`; that row is the horizontal scroll owner under viewport pressure.
-- Ribbon groups are marked with `data-ribbon-section`; visible group labels are marked with `data-ribbon-section-label`.
-- Tab command rows flow from the left edge. Group content stays centered inside each group, and group labels stay centered at the bottom.
-- The contextual Format tab uses the same row/group rhythm in both empty and selected states; the empty state is a `Selection` group, not free-floating text.
+**Responsive ribbon contract:**
+- `RibbonDensityProvider` selects compact, condensed, or wide density from the ribbon container; lower-frequency groups move into a named **More** menu rather than relying on an invisible horizontal scrollbar.
+- The active panel owns its overflow behavior and inactive panels are hidden and cannot intercept pointer events.
+- Group surfaces retain `data-ribbon-content-row`, `data-ribbon-section`, and `data-ribbon-section-label` hooks for keyboard and layout contracts.
+- At coarse-pointer/tablet breakpoints, primary interactive targets use a 44 CSS-pixel hit area without inflating fine-pointer desktop density.
+- At 320, 768, and 1024 CSS-pixel viewports, page-level horizontal overflow is not an acceptable fallback; owned ribbon overflow must not cover the canvas, status, or inspector controls.
 
 **Contextual Format tab (dynamic):**
 - The Format tab is hidden from the tab bar when nothing is selected and appears only when an element is selected. Selection context flows through `ui-store.formatContext` (`{ hasSelection, elementType }`) instead of prop-drilling `selectedElement` through `RibbonHeaderBar`.
@@ -199,7 +194,7 @@ Default font families offered in the font picker (verified in Toolbar):
 - Both `Tabs.Root` value props (`RibbonPanel` and `RibbonHeaderBar`) coerce a persisted `activeTab='format'` to `home` when `!hasSelection` (`effectiveTab` guard) so a reload never flashes an empty Format panel before an async effect can correct it.
 
 **Big-button hierarchy:**
-- A tab's primary action is promoted to `RibbonBigButton` (icon ~22px over an 11px label, ~52px tall, fits inside the 80px command row) for PowerPoint-style visual hierarchy; secondary actions stay compact (`h-7`).
+- A tab's primary action is promoted to `RibbonBigButton` (icon ~22px over an 11px label, ~52px tall) for PowerPoint-style visual hierarchy; secondary actions stay compact where the active density permits.
 - Applied to: Home → Paste; Insert → Text Box (`onAddText`) and Picture (`onAddImageUpload`, file upload — not the URL-prompt `onAddImage`, which remains a small button).
 - Big buttons accept an explicit `aria-label` so the visible label can differ from the stable accessible name used by tests/automation (e.g. visible "Text Box" / accessible "Add text", `data-testid="ribbon-insert-text"`).
 
@@ -218,7 +213,7 @@ Default font families offered in the font picker (verified in Toolbar):
 - Slide background swatches must be keyboard reachable and carry explicit labels.
 - Highlight color controls use `listbox`/`option` semantics instead of plain button groups.
 - Keep accessible names stable on icon-only toolbar controls.
-- Ribbon popups that can escape the 80px command area use `RibbonFloatingOverlay` instead of inline `absolute top-full` panels. The overlay portals to `document.body`, anchors to the invoking control, clamps to the viewport on both axes, recomputes on scroll/resize, closes on Escape/outside click, and restores focus to the trigger.
+- Ribbon popups that can escape their command group use `RibbonFloatingOverlay` instead of inline `absolute top-full` panels. The overlay portals to `document.body`, anchors to the invoking control, clamps to the viewport on both axes, recomputes on scroll/resize, closes on Escape/outside click, and restores focus to the trigger.
 - Migrated popup surfaces: File, header AI, header Share, Design theme/background, Transitions, Animations effect controls, Paragraph compact controls, Insert Advanced launcher, Shape, Table, and Games.
 - Insert Advanced exposes fixed commands as direct icon buttons: Add kinetic text, Add math grid, Add Anime.js, Add Three.js, and Add timeline. Dynamic or multi-choice commands stay behind the icon-only `More advanced insert options` launcher, including Games and plugin insert items.
 
@@ -235,20 +230,13 @@ Default font families offered in the font picker (verified in Toolbar):
 
 ---
 
-## Slide Templates (8 Layouts)
+## Templates and Layouts
 
-| Template       | Description                     |
-| -------------- | ------------------------------- |
-| blank          | Empty slide                     |
-| title          | Large centered title + subtitle |
-| two-column     | Two equal text columns          |
-| three-column   | Three equal text columns        |
-| image+text     | Image on left, text on right    |
-| section-header | Full-width bold section label   |
-| comparison     | Side-by-side with divider       |
-| big-number     | Large stat/number + caption     |
+The built-in `SLIDE_TEMPLATES` catalog remains the materialized-slide insertion source. Reusable layout masters are a separate, bounded model: normal slides resolve fixed master elements, bound placeholders, and slide-owned elements into one effective slide. Fixed master elements are edited only in master-edit context; placeholders remain slide-owned.
 
-Templates insert pre-positioned elements at standard canvas coordinates. Users can modify freely after insertion.
+The Layout Manager creates, duplicates, renames, replaces, or deletes bounded custom layouts. System layouts are read-only until duplicated. Apply, Change, and Detach are distinct from inserting a materialized template; Detach materializes the effective slide without visual loss. Missing layout references render slide-owned content and warn rather than hiding content.
+
+PPTX export flattens effective layouts into ordinary objects and warns; it does not synthesize or claim native PowerPoint masters. PPTX import remains flattened and does not synthesize layout masters.
 
 ---
 

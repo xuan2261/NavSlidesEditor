@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-24",
+  "plan": "plans/260821-1631-controls-elements-reveal-upgrade-deep-tdd/plan.md",
+  "status": "completed",
+  "verification": {
+    "vitest": {
+      "report": "scripts/feature-inventory/run-results-vitest.json",
+      "suites": 1419,
+      "passedSuites": 1419,
+      "failedSuites": 0,
+      "tests": 4748,
+      "passed": 4745,
+      "failed": 0,
+      "skipped": 3
+    },
+    "playwright": {
+      "report": "scripts/feature-inventory/run-results-playwright.json",
+      "projects": ["chromium", "tablet-touch"],
+      "tests": 442,
+      "passed": 441,
+      "failed": 0,
+      "skipped": 1,
+      "sanitized": true,
+      "removedFields": ["config.webServer.env"]
+    },
+    "audit": { "command": "npm run test:audit", "passed": 37, "failed": 0 },
+    "lint": { "command": "npm run lint", "status": "passed" },
+    "build": { "command": "npm run build", "status": "passed" },
+    "docsBuild": { "command": "npm run docs:build", "status": "passed" },
+    "vendor": { "command": "npm run vendor", "files": 1672, "status": "passed" },
+    "runtime": {
+      "command": "npm run runtime:verify",
+      "revealJs": "6.0.1",
+      "vendorFiles": 1672,
+      "serverModules": 9,
+      "clientDist": true,
+      "status": "passed"
+    },
+    "matrix": {
+      "command": "npm run matrix:gate",
+      "verified": 129,
+      "total": 129,
+      "gaps": 0,
+      "deepGaps": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tagged": 0,
+      "orphans": 0,
+      "elementControlRows": 141,
+      "status": "passed"
+    },
+    "pptxPackageBoundary": {
+      "command": "npm run test:pptx:package:no-officecli",
+      "status": "passed"
+    }
+  },
+  "manualBrowserProof": {
+    "masterInspector": {
+      "operation": "Create custom master, insert shape, edit Inspector X",
+      "before": 380,
+      "after": 420,
+      "persisted": true
+    },
+    "masterClipboard": {
+      "operation": "Copy and paste a selected master shape",
+      "fixedElementsBefore": 1,
+      "fixedElementsAfter": 2,
+      "activeSlideUnaffected": true
+    }
+  },
+  "review": {
+    "codeReviewer": "approved",
+    "tester": "passed",
+    "debugger": "passed"
+  },
+  "externalGates": {
+    "ownerPlan": "plans/260820-0235-full-codebase-review/plan.md",
+    "notClaimed": ["Docker", "LibreOffice", "PowerPoint visual oracle", "external PPTX oracle"]
+  }
+}

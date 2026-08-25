@@ -107,6 +107,13 @@ Browser / Electron
   (`Button`, `Select`, `Input`, `ColorPicker`).
 - Game elements render through `client/src/components/canvas/element-renderers/game-element-renderer.jsx` with a placeholder fallback while presenter/player flows use dedicated sockets and overlays.
 
+### Phase 06–11 Editor Contracts
+
+- **Actions and hotspots** use normalized base-element metadata. Edit mode remains selection-only; Reveal/share/preview/offline dispatch only validated URL, slide, navigation, email, and download actions. Unsafe or unresolved actions are inert with explicit feedback, and new-window actions use `noopener,noreferrer`.
+- **Smart connectors** extend `line` with same-slide target IDs and anchor names. A pure resolver supplies finite effective endpoints to canvas, shared HTML, offline, and PPTX paths; deleted or unavailable targets retain last-resolved coordinates. PPTX writes the resolved ordinary line and warns that live attachment semantics are flattened.
+- **Layout masters** are a bounded presentation registry plus per-slide references and overrides. `resolveEffectiveSlide`/`resolveEffectiveElements` compose master fixed elements, bound placeholders, and slide-owned content with deterministic ordering. Master edit derives an unlocked authoring view while retaining persisted lock metadata; selection, clipboard, duplicate, select-all, media insertion, and batch mutations route to that master surface. Missing references fall back to slide-owned content with a warning; PPTX flattens resolved objects and does not preserve or synthesize native masters.
+- **Media accessibility** keeps image `alt`, decorative, and long-description metadata plus video/audio tracks, transcript, and audio-description metadata in the presentation model. Shared media URL policy governs tracks and archive/offline rewriting. Browser renderers expose those semantics; PPTX preserves image alt only where supported and warns for unsupported media semantics.
+
 ### Canvas Decomposition
 
 `SlideCanvas.jsx` was decomposed from ~2759 LOC down to ~841 LOC. All renderers and chrome components live under `client/src/components/canvas/`:
@@ -395,6 +402,7 @@ billing, and offline sandbox inlining are not part of Phase 1.
 | Module | Purpose |
 | --- | --- |
 | `htmlGenerator.js` | Reveal.js HTML and print HTML generation |
+| `reveal-runtime-assets.js` | Reveal.js 6.0.1 receipt and canonical manifest for `/vendor/reveal.js/dist` core, theme, plugin, vendor, and offline assets |
 | `live-presenter-runtime.js` | Generated live presenter navigation and live-room runtime |
 | `live-presenter-game-runtime.js` | Generated presenter game bootstrap, host sockets, and bounded cleanup |
 | `transition-settings.js` | Validated presentation/slide transition resolution shared by generation and preview |
@@ -474,24 +482,12 @@ diverge:
 
 ## Export Pipeline
 
-- `generateRevealHTML()` renders the live/present HTML deck.
+- `generateRevealHTML()` renders the live/present HTML deck from the Reveal.js 6.0.1 manifest; present, preview, share, and offline use the canonical `/vendor/reveal.js/dist` asset set. Built-in plugins resolve beneath `dist/plugin/`.
 - `generatePrintHTML()` expands fragments into print pages.
-- `transition-settings.js` normalizes transition type, direction, duration, and
-  speed. Destination-slide settings override presentation settings, with
-  validated defaults shared by production generation and `TransitionPreview`.
-- `TransitionPreview` builds a two-slide deck through `generateRevealHTML()`,
-  uses the configured presentation resolution, local `/vendor/reveal.js` assets,
-  and `generateOfflineHTML()` before loading the sandboxed iframe. Its replay
-  hook disables automatic advancement while preserving the effective transition
-  metadata.
-- `downloadHTML()` produces the standard CDN-backed HTML export, while
-  `generateOfflineHTML(generateRevealHTML(...))` produces the fully inlined
-  offline HTML export.
-- `server/services/pptx-exporter.js` uses a hybrid strategy: stable primitives render as native PPT
-  objects, while complex DOM-backed content and gradient backgrounds fall back
-  to rasterized assets so exported slides keep visual fidelity instead of
-  dropping elements. Element-level render failures degrade to labelled
-  placeholders and warnings instead of failing the whole export.
+- `transition-settings.js` normalizes transition type, direction, duration, and speed. Destination-slide settings override presentation settings, with validated defaults shared by production generation and `TransitionPreview`.
+- `TransitionPreview` builds a two-slide deck through `generateRevealHTML()`, uses the configured presentation resolution and local `/vendor/reveal.js` assets, and loads the generated offline HTML in a sandboxed iframe. Its replay hook disables automatic advancement while preserving effective transition metadata.
+- `downloadHTML()` emits the manifest-owned Reveal runtime; `generateOfflineHTML(generateRevealHTML(...))` fully inlines the same required runtime assets and fails closed if an asset is missing.
+- `client/src/utils/exportPptx.js` and `server/services/pptx-exporter.js` use a hybrid strategy: stable primitives render as native PPT objects, while complex DOM-backed content and gradient backgrounds fall back to rasterized assets. Client export recursively flattens vertical child slides parent-first and includes child notes and child server-raster targets. Browser-only actions are omitted with warnings; smart connectors resolve to native lines and warn that attachment semantics are flattened; layout masters resolve then flatten without native-master preservation. Validated image alt metadata is native where supported; media accessibility semantics that PPTX cannot represent produce warnings/fallbacks. Element-level render failures degrade to labelled placeholders and warnings instead of failing the whole export.
 - `server/routes/pptx-import.js` exposes `POST /api/pptx/import`, which
   parses `.pptx` files through `pptxtojson` 2.0.2 only. `pptx2json` remains
   isolated to the parser benchmark sandbox, never a runtime fallback. The route
@@ -585,8 +581,8 @@ diverge:
 
 ### CDN Dependencies
 
-- Reveal.js, KaTeX, Chart.js, highlight.js, and TikZJax are loaded from CDN
-  paths in the exported HTML.
+- Reveal.js is never loaded from a CDN: the 6.0.1 manifest owns the published `/vendor/reveal.js/dist` assets and the strict offline closure.
+- Standard exported HTML may use CDN paths for KaTeX, Chart.js, highlight.js, and TikZJax; offline output uses its asset-collection/inlining policy for supported dependencies.
 
 ## Security Model
 
