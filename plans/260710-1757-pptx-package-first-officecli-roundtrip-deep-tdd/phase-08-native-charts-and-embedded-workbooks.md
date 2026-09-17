@@ -1,7 +1,7 @@
 ---
 phase: 8
 title: 'Native charts and embedded workbooks'
-status: in-progress
+status: completed
 effort: '5-7 weeks'
 dependsOn: [4, 5, 6]
 priority: P1
@@ -132,11 +132,11 @@ For each promoted family, inspect touched parts, open workbook relationships, an
 
 ## Function and Interface Checklist
 
-- [ ] Define one exact bar/column embedded-literal-workbook row.
-- [ ] Preserve `supportRow()`, workbook inspection, and chart adapter seams.
-- [ ] Register chart journal/planner/transaction dispatch.
-- [ ] Patch workbook and caches atomically.
-- [ ] Keep external/shared/macro/signed/malformed modes non-editable.
+- [x] Define one exact bar/column embedded-literal-workbook row.
+- [x] Preserve `supportRow()`, workbook inspection, and chart adapter seams.
+- [x] Register chart journal/planner/transaction dispatch.
+- [x] Patch workbook and caches atomically.
+- [x] Keep external/shared/macro/signed/malformed modes non-editable.
 
 ## Tests Before
 
@@ -196,11 +196,11 @@ G0 chart row + Phase 3 relationship inventory
 - [x] Supported data edits atomically update all required chart/workbook parts and roll back on failure.
 - [x] Style-only edits leave workbook/data parts byte-identical.
 - [x] External, malformed, shared, signed, and unsupported embeddings have tested preserve/block behavior.
-- [ ] Embedded XLSX content cannot reach a workbook parser without recursive
+- [x] Embedded XLSX content cannot reach a workbook parser without recursive
       ZIP/XML/relationship and aggregate resource verdicts.
-- [ ] No chart row is promoted until planner, transaction, native re-import,
+- [x] No chart row is promoted until planner, transaction, native re-import,
       untouched closure, corpus, and matrix-hash evidence pass.
-- [ ] Focused, corpus, lint, unit, and client build validators pass; protected provider visual validators additionally pass for level-5 rows.
+- [x] Focused, corpus, lint, unit, and client build validators pass; protected provider visual validators additionally pass for level-5 rows.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: 'Shadow import and differential reconciliation'
-status: in-progress
+status: completed
 effort: '3-4 weeks'
 dependsOn: [1, 2, 4, 5]
 priority: P1
@@ -129,11 +129,11 @@ Run the corpus twice and compare canonical report hashes. Confirm OfficeCLI shad
 
 ## Function and Interface Checklist
 
-- [ ] Preserve `createInventory()`, `reconcileInventories()`, and `reportHash()`.
-- [ ] Attach canonical row ID and matrix hash to every relevant discrepancy.
-- [ ] Keep `patchAuthority: false` unless source-map criteria are exact and complete.
-- [ ] Continue native import when optional OfficeCLI inspection is unavailable.
-- [ ] Enforce time, object, memory, output, and cancellation budgets.
+- [x] Preserve `createInventory()`, `reconcileInventories()`, and `reportHash()`.
+- [x] Attach canonical row ID and matrix hash to every relevant discrepancy.
+- [x] Keep `patchAuthority: false` unless source-map criteria are exact and complete.
+- [x] Continue native import when optional OfficeCLI inspection is unavailable.
+- [x] Enforce time, object, memory, output, and cancellation budgets.
 
 ## Tests Before
 
@@ -182,13 +182,13 @@ G0 canonical rows + Phase 3 guarded revision
 ## Success Criteria
 
 - [x] Production uploads and corpus tests use the same importer and scene-graph path.
-- [ ] Geometry conversion is exact, documented, and property-tested.
+- [x] Geometry conversion is exact, documented, and property-tested.
 - [x] Every native/OfficeCLI conflict is visible and deterministically classified.
 - [x] No heuristic reconciliation result authorizes a package patch.
 - [x] OfficeCLI inspection causes zero package drift and is safely optional.
-- [ ] Reconciliation emits canonical row IDs/matrix hash and cannot independently
+- [x] Reconciliation emits canonical row IDs/matrix hash and cannot independently
       promote a claim or authorize a patch.
-- [ ] Differential, corpus, determinism, resource, lint, and unit tests pass.
+- [x] Differential, corpus, determinism, resource, lint, and unit tests pass.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

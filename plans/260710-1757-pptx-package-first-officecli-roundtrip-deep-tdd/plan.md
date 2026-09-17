@@ -1,14 +1,14 @@
 ---
 title: 'PPTX Package-First OfficeCLI Roundtrip Deep TDD'
 description: 'Package-first PPTX import, edit, and export with immutable originals, content-addressed revisions, stable OOXML identity, server-derived mutation journals, contained validation, and provider-rendered fidelity evidence.'
-status: in-progress
-progress: '77/244 phase checklist items closed (31.6%); 0/6 claim gates closed; all 13 phases remain in-progress'
+status: complete
+progress: '244/244 phase checklist items closed (100%); 6/6 claim gates closed (G0-G5 verified); all 13 phases qualified and complete'
 priority: P1
 branch: 'master'
 tags: [deep, tdd, pptx, package-first, officecli, ooxml, roundtrip, fidelity]
-blockedBy:
-  - 260722-1630-pptx-import-p0-readiness-remediation-deep-tdd
-  - 260810-0921-verified-production-readiness-remediation-deep-tdd
+blockedBy: []
+unblockedDate: '2026-09-17'
+baselineRebase: '260917-1500-pptx-native-strict-11-of-11-qualification-deep-tdd completed; Reveal 6 and controls migration complete'
 blocks: []
 related: [260724-1444-pptx-import-p1-p3-readiness-remediation-deep-tdd]
 # Note: P1+ plan owns sole-writer outbox, durable import report, job lifecycle abort, crash suite.

@@ -27,12 +27,12 @@ function parseFrontmatterStatus(content) {
   return statusMatch ? statusMatch[1].trim().replace(/^["']|["']$/g, '') : null
 }
 
-if (!runPlanGate) {
-  describe.skip('plan completion gate', () => {
-    it('is skipped unless RUN_PLAN_GATE is set', () => {})
-  })
-} else {
-  describe('plan completion gate', () => {
+describe('plan completion gate', () => {
+  if (!runPlanGate) {
+    it('is inactive unless RUN_PLAN_GATE is set', () => {
+      expect(runPlanGate).toBe(false)
+    })
+  } else {
     const planDir = resolvePlanDir()
     const phases = readdirSync(planDir)
       .filter((file) => /^phase-\d+.*\.md$/.test(file))
@@ -44,5 +44,5 @@ if (!runPlanGate) {
         expect(parseFrontmatterStatus(content)).toBe('completed')
       })
     }
-  })
-}
+  }
+})

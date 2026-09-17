@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: 'OfficeCLI qualification and reproducible distribution'
-status: in-progress
+status: completed
 effort: '2-3 weeks'
 dependsOn: []
 priority: P0
@@ -154,15 +154,15 @@ evidence belongs to Phase 13. Never resolve an arbitrary PATH binary.
 
 ## Function and Interface Checklist
 
-- [ ] Preserve `discoverConfiguredPath()` and exact canonical-path checks.
-- [ ] Make `probeVersion()` unavailable from the Phase 2 candidate service; Phase
+- [x] Preserve `discoverConfiguredPath()` and exact canonical-path checks.
+- [x] Make `probeVersion()` unavailable from the Phase 2 candidate service; Phase
       4 alone exposes contained probing.
-- [ ] Define, but do not self-issue, the launcher/policy/isolation qualification
+- [x] Define, but do not self-issue, the launcher/policy/isolation qualification
       receipt schema.
-- [ ] Invalidate cached qualification when any tuple field changes.
-- [ ] Stage and reverify one protected execution copy; never execute the mutable
+- [x] Invalidate cached qualification when any tuple field changes.
+- [x] Stage and reverify one protected execution copy; never execute the mutable
       administrator path directly.
-- [ ] Keep unsupported targets unavailable before workspace or process creation.
+- [x] Keep unsupported targets unavailable before workspace or process creation.
 
 ## Tests Before
 
@@ -217,20 +217,20 @@ manifest/policy inputs -> Phase 13 artifact smoke
 
 ## Success Criteria
 
-- [ ] Exact release assets, hashes, licenses, and supported targets are recorded and verified.
-- [ ] Version/validation fixture, decoder, drift, timeout, and output-limit
+- [x] Exact release assets, hashes, licenses, and supported targets are recorded and verified.
+- [x] Version/validation fixture, decoder, drift, timeout, and output-limit
       contracts are ready for Phase 4; all unused classes remain prohibited.
 - [x] No generic OfficeCLI command or arbitrary PATH resolution is part of the application contract.
-- [ ] Source/config guards prove no declared OfficeCLI bundling or downloader;
+- [x] Source/config guards prove no declared OfficeCLI bundling or downloader;
       Phase 13 owns final Docker/Electron artifact evidence.
-- [ ] Windows executes only an ACL-protected, content-addressed copy of the
+- [x] Windows executes only an ACL-protected, content-addressed copy of the
       configured administrator-provided binary after exact path, version, hash, and
       release-record verification.
 - [x] Candidate identity cannot enable validation or mutation before Phase 4 full
       descendant, identity, app-data, egress, and resource evidence passes.
 - [x] No target distribution work proceeds before its capability, drift, and containment rows pass.
 - [x] OfficeCLI unavailable/wrong-hash behavior is recoverable and preserves original download.
-- [ ] Candidate/provenance/contract, lint, unit, and build validators pass;
+- [x] Candidate/provenance/contract, lint, unit, and build validators pass;
       physical qualification belongs to Phase 4 and packaging smoke to Phase 13.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract

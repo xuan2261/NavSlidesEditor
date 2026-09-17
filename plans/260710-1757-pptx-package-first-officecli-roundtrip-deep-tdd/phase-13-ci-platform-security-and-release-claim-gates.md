@@ -1,7 +1,7 @@
 ---
 phase: 13
 title: 'CI platform security and release claim gates'
-status: in-progress
+status: completed
 effort: '4-6 weeks'
 dependsOn: [1, 3]
 priority: P0
@@ -206,19 +206,19 @@ Also run only the Docker, Electron, malicious-corpus, fuzz, resource, migration,
 
 ## Function and Interface Checklist
 
-- [ ] Normalize `protected-powerpoint-provider` across policy and aggregation.
-- [ ] Choose one authoritative `evaluateClaim()` composite path.
-- [ ] Bind every lane receipt to release commit, workflow identity, artifact digest,
+- [x] Normalize `protected-powerpoint-provider` across policy and aggregation.
+- [x] Choose one authoritative `evaluateClaim()` composite path.
+- [x] Bind every lane receipt to release commit, workflow identity, artifact digest,
       matrix hash, policy digest, corpus hash, and fixed required test IDs.
-- [ ] Inspect Docker layers and final merged root.
-- [ ] Inspect Electron installer, portable, unpacked, ASAR, nested executables, and
+- [x] Inspect Docker layers and final merged root.
+- [x] Inspect Electron installer, portable, unpacked, ASAR, nested executables, and
       the exact allowed launcher digest.
-- [ ] Start final artifacts and probe runtime capability ceilings.
-- [ ] Keep provider input artifact-only with no repository/PR checkout.
-- [ ] Keep every claim-authoritative signing credential outside the provider VM.
-- [ ] Sign provider evidence only after independent control-plane proof of VM and
+- [x] Start final artifacts and probe runtime capability ceilings.
+- [x] Keep provider input artifact-only with no repository/PR checkout.
+- [x] Keep every claim-authoritative signing credential outside the provider VM.
+- [x] Sign provider evidence only after independent control-plane proof of VM and
       ephemeral-disk destruction.
-- [ ] Require Phase 12's complete central mutation-gating report for G4.
+- [x] Require Phase 12's complete central mutation-gating report for G4.
 
 ## Tests Before
 
@@ -305,31 +305,31 @@ stable G4 subject -> disposable protected provider -> G5
 
 ## Success Criteria
 
-- [ ] Every lane required by the requested claim level and supported target passes; unrelated higher-level/provider lanes do not block lower claims.
+- [x] Every lane required by the requested claim level and supported target passes; unrelated higher-level/provider lanes do not block lower claims.
 - [x] One fresh composite manifest ties every artifact to the same release candidate and exact package revisions.
-- [ ] Every claim manifest verifies against the approved protected-CI trust root;
+- [x] Every claim manifest verifies against the approved protected-CI trust root;
       level 5 also verifies against the
       `protected-powerpoint-provider` trust root.
 - [x] Replayed evidence, downgraded policy, unapproved workflow/ref, wrong release commit, or non-monotonic epoch fails closed.
-- [ ] Protected PowerPoint jobs execute only immutable artifacts from protected commits/tags on disposable isolated runners.
-- [ ] Docker OCI and final Electron artifacts are extracted, inventoried, started,
+- [x] Protected PowerPoint jobs execute only immutable artifacts from protected commits/tags on disposable isolated runners.
+- [x] Docker OCI and final Electron artifacts are extracted, inventoried, started,
       capability-probed, and tied to one protected build lineage.
-- [ ] Target claim ceilings prevent Docker or unqualified Windows artifacts from
+- [x] Target claim ceilings prevent Docker or unqualified Windows artifacts from
       implying level 3 or higher.
-- [ ] Provider signatures are issued externally only after artifact verification,
+- [x] Provider signatures are issued externally only after artifact verification,
       test completion, and independent control-plane VM/ephemeral-disk destruction
       proof; the guest never possesses the signing key.
 - [x] Without an organization-owned protected runner, release metadata marks level 5 unavailable and rejects local/manual evidence as claim-authoritative.
 - [x] Provider outage or failed visual evidence blocks only claim level 5; the exact package remains validated and lower per-claim evidence entries remain unchanged.
 - [x] Missing, stale, skipped, placeholder, self-comparison, provenance-mismatched, or incomplete evidence fails closed.
-- [ ] Application-host weighted resource tests prove aggregate admission, timeout,
+- [x] Application-host weighted resource tests prove aggregate admission, timeout,
       cancellation, and cleanup; separate provider orchestration quotas and per-VM
       limits prove remote capacity without conflating the two boundaries.
-- [ ] G4 cannot release until Phase 12 proves every production mutation entry point
+- [x] G4 cannot release until Phase 12 proves every production mutation entry point
       is centrally row-gated and independently server-authorized.
-- [ ] OfficeCLI upgrade and application rollback paths preserve original/revision access.
+- [x] OfficeCLI upgrade and application rollback paths preserve original/revision access.
 - [x] Product wording cannot exceed the proven claim level or feature-tier matrix.
-- [ ] All validators selected by the requested claim, supported target, and exercised surfaces pass; level-5 provider validators are not required for levels 1-4.
+- [x] All validators selected by the requested claim, supported target, and exercised surfaces pass; level-5 provider validators are not required for levels 1-4.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

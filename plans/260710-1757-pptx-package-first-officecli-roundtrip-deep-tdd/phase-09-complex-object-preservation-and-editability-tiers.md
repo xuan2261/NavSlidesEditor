@@ -1,7 +1,7 @@
 ---
 phase: 9
 title: 'Complex-object preservation and editability tiers'
-status: in-progress
+status: completed
 effort: '4-6 weeks'
 dependsOn: [4, 5, 6]
 priority: P1
@@ -130,11 +130,11 @@ Run hostile corpus tests in a network-restricted environment and prove no child/
 
 ## Function and Interface Checklist
 
-- [ ] Preserve `describeComplexObjects()`, `securityPreflight()`, and relationship closure.
-- [ ] Map every known and unknown object kind to a canonical row.
-- [ ] Reconcile `ORIGINAL_ONLY_KINDS` with package security policy.
-- [ ] Prevent preserve-only/blocking rows from adapter dispatch.
-- [ ] Keep preview/metadata availability distinct from source editability.
+- [x] Preserve `describeComplexObjects()`, `securityPreflight()`, and relationship closure.
+- [x] Map every known and unknown object kind to a canonical row.
+- [x] Reconcile `ORIGINAL_ONLY_KINDS` with package security policy.
+- [x] Prevent preserve-only/blocking rows from adapter dispatch.
+- [x] Keep preview/metadata availability distinct from source editability.
 
 ## Tests Before
 
@@ -187,14 +187,14 @@ G0 canonical rows + Phase 3 OPC/security inventory
 - [x] Every corpus complex object has an explicit tier and package-preservation result.
 - [x] Lower claim milestones require preservation/non-execution only; semantic complex-object editing remains independent expansion work.
 - [x] Hostile fixtures cause no execution, network fetch, path escape, or unbounded resource use.
-- [ ] No complex-object parser or preview runs before outer and recursively
+- [x] No complex-object parser or preview runs before outer and recursively
       embedded ZIP/XML safety validation.
-- [ ] Adjacent supported edits preserve opaque object parts and relationships byte-for-byte.
+- [x] Adjacent supported edits preserve opaque object parts and relationships byte-for-byte.
 - [x] Replace-only and structured-partial UX cannot be mistaken for native editability.
 - [x] Signed, PPTM/macro, ActiveX, OLE, encrypted, and protected packages retain exact original recovery and cannot enter edited package export.
-- [ ] Canonical row IDs/tiers drive policy, DTO, corpus, and claim evidence; no
+- [x] Canonical row IDs/tiers drive policy, DTO, corpus, and claim evidence; no
       current complex-object row is implied editable.
-- [ ] Focused security/package tests, corpus, lint, unit, and client build validators pass.
+- [x] Focused security/package tests, corpus, lint, unit, and client build validators pass.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

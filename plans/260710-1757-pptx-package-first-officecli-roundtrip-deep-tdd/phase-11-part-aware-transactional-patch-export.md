@@ -1,7 +1,7 @@
 ---
 phase: 11
 title: 'Part-aware transactional patch export'
-status: in-progress
+status: completed
 effort: '5-7 weeks'
 dependsOn: [3, 4, 5]
 priority: P0
@@ -240,16 +240,16 @@ Run the edited-roundtrip rows currently promoted, transaction fault matrix, expo
 
 ## Function and Interface Checklist
 
-- [ ] Preserve `createMutationTransactionService().execute()`.
-- [ ] Preserve `compilePatchPlan()` and `runLayeredValidators()`.
+- [x] Preserve `createMutationTransactionService().execute()`.
+- [x] Preserve `compilePatchPlan()` and `runLayeredValidators()`.
 - [x] Implement isolated production `nativeReimport(context)`.
-- [ ] Implement contained `officeCli(context)` via `validatePackage()`.
-- [ ] Replace availability hardcode with explicit qualification predicates.
-- [ ] Bind idempotency key to canonical request hash.
-- [ ] Bound idempotency key size, retained outcomes, job count, and stream replay.
-- [ ] Release the metadata mutex before every external worker call and revalidate
+- [x] Implement contained `officeCli(context)` via `validatePackage()`.
+- [x] Replace availability hardcode with explicit qualification predicates.
+- [x] Bind idempotency key to canonical request hash.
+- [x] Bound idempotency key size, retained outcomes, job count, and stream replay.
+- [x] Release the metadata mutex before every external worker call and revalidate
       all publication predicates after reacquisition.
-- [ ] Publish only after all required layers and cleanup certainty pass.
+- [x] Publish only after all required layers and cleanup certainty pass.
 
 ## Tests Before
 
@@ -325,25 +325,25 @@ G0 canonical matrix + G1 contained OfficeCLI
 
 ## Success Criteria
 
-- [ ] No-op exports are exact and multi-operation exports are atomic/idempotent.
-- [ ] Projection, package, source-map, journal, per-claim evidence, owner references, leases, and export-job outcome publish through one metadata-root transaction with no split state.
-- [ ] Cancellation before commit aborts; cancellation after the point-of-no-return returns a durable reconcilable outcome.
-- [ ] Async create/status/stream/cancel/download survive refresh/restart and never
+- [x] No-op exports are exact and multi-operation exports are atomic/idempotent.
+- [x] Projection, package, source-map, journal, per-claim evidence, owner references, leases, and export-job outcome publish through one metadata-root transaction with no split state.
+- [x] Cancellation before commit aborts; cancellation after the point-of-no-return returns a durable reconcilable outcome.
+- [x] Async create/status/stream/cancel/download survive refresh/restart and never
       place bearer capabilities in URLs.
 - [x] Stale revisions, ambiguous identity, source drift, unexpected part changes, and validation failures never publish.
 - [x] Signed, encrypted/protected, macro-enabled, ActiveX, and OLE packages never enter edited-export staging in the first release.
-- [ ] Every published revision passes ZIP, OPC, OfficeCLI, native re-import, impact, and security gates.
-- [ ] `editedExportAvailability()` is true only for an exact current qualified
+- [x] Every published revision passes ZIP, OPC, OfficeCLI, native re-import, impact, and security gates.
+- [x] `editedExportAvailability()` is true only for an exact current qualified
       subject; executable presence or partial validator availability never enables it.
-- [ ] Production native re-import runs in Phase 4 containment with isolated
+- [x] Production native re-import runs in Phase 4 containment with isolated
       media/temp storage and compares only exact transaction-eligible rows.
-- [ ] Idempotency keys are request-hash bound, size/quota limited, durable across
+- [x] Idempotency keys are request-hash bound, size/quota limited, durable across
       restart for the documented 30-day retention window, and safely expired.
-- [ ] PowerPoint compatibility/visual claims also pass protected open/render/behavior evidence tied to the exact full evidence subject.
-- [ ] Provider failure changes only its target claim entry; lower verified claims and package validity remain intact, and evidence can advance only an exact unchanged subject.
+- [x] PowerPoint compatibility/visual claims also pass protected open/render/behavior evidence tied to the exact full evidence subject.
+- [x] Provider failure changes only its target claim entry; lower verified claims and package validity remain intact, and evidence can advance only an exact unchanged subject.
 - [x] Phase 11 extends the Phase 5 engine and endpoint; no parallel transaction implementation exists.
 - [x] Original, edited revision, and reconstructed PPTX are distinct honest surfaces.
-- [ ] Focused, route, corpus, fault, resource, lint, unit, and build validators pass; protected provider validators additionally pass when level 5 is requested.
+- [x] Focused, route, corpus, fault, resource, lint, unit, and build validators pass; protected provider validators additionally pass when level 5 is requested.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

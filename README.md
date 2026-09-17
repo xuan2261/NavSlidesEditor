@@ -8,7 +8,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.15.7** — improved PPTX export fidelity, editor/live-session resilience, and CI coverage.
+Current release: **v1.16.0** — improved PPTX export fidelity, editor/live-session resilience, and CI coverage.
 
 <p align="center">
   <img src="website/public/img/editor-empty.png" alt="NavSlides Editor workspace with the ribbon, slide navigator, canvas, and properties panel" width="100%">

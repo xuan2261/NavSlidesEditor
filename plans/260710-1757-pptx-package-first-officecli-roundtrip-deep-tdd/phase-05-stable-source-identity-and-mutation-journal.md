@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: 'Stable source identity and mutation journal'
-status: in-progress
+status: completed
 effort: '4-5 weeks'
 dependsOn: [1, 3]
 priority: P0
@@ -173,12 +173,12 @@ injection covers save publication and operation retry.
 
 ## Function and Interface Checklist
 
-- [ ] Preserve `createSourceRef()`, `createSourceMap()`, and `assertPatchableSource()`.
-- [ ] Preserve `deriveMutationJournal()` and `replayJournal()`.
-- [ ] Build refs from slide part URI, native ID, ancestry, and source hash.
-- [ ] Return deterministic current/successor generation and conflict reasons.
-- [ ] Bind idempotency key to request hash.
-- [ ] Produce the exact Phase 11 transaction handoff envelope.
+- [x] Preserve `createSourceRef()`, `createSourceMap()`, and `assertPatchableSource()`.
+- [x] Preserve `deriveMutationJournal()` and `replayJournal()`.
+- [x] Build refs from slide part URI, native ID, ancestry, and source hash.
+- [x] Return deterministic current/successor generation and conflict reasons.
+- [x] Bind idempotency key to request hash.
+- [x] Produce the exact Phase 11 transaction handoff envelope.
 
 ## Tests Before
 
@@ -233,17 +233,17 @@ G0 canonical rows + Phase 3 R0/head
 - [x] Slide reorder, element reorder, nested groups, duplicate names/IDs, and deletion cannot misauthorize a patch.
 - [x] Stale saves conflict instead of overwriting newer work.
 - [x] Successful saves rebase current and queued snapshots to the successor generation.
-- [ ] Teardown cannot replay a stale generation or lose an ambiguous idempotent outcome.
-- [ ] Over-budget snapshots fail before canonicalization, diffing, inverse generation, or package cloning.
-- [ ] Save fault injection cannot expose a projection, package, source-map, or journal from different generations.
+- [x] Teardown cannot replay a stale generation or lose an ambiguous idempotent outcome.
+- [x] Over-budget snapshots fail before canonicalization, diffing, inverse generation, or package cloning.
+- [x] Save fault injection cannot expose a projection, package, source-map, or journal from different generations.
 - [x] Client-forged package/source/journal fields have no authority and do not leak publicly.
 - [x] Journal replay is deterministic, idempotent, and net-zero aware.
 - [x] Every first-release journal entry is server-derived from the canonical snapshot diff; no client operation payload has package authority.
-- [ ] Production R0, authoritative source map, canonical projection, compacted
+- [x] Production R0, authoritative source map, canonical projection, compacted
       journal, matrix hash, and expected projection form one deterministic Phase 11
       handoff; this phase does not publish R1.
 - [x] Phase 5 and Phase 11 use one authoritative transaction engine and endpoint.
-- [ ] Focused identity/journal/route tests, corpus, lint, unit, and client build validators pass.
+- [x] Focused identity/journal/route tests, corpus, lint, unit, and client build validators pass.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

@@ -63,7 +63,7 @@
     "test:pptx:browser-audit": "node scripts/run-pptx-browser-audit.js --strict --scope=smoke",
     "test:pptx:browser-audit:headed": "node scripts/run-pptx-browser-audit.js --strict --scope=full --headed",
     "test:pptx:browser-audit:full": "node scripts/run-pptx-browser-audit.js --strict --scope=full",
-    "test:pptx:importer-qualification": "node server/services/pptx-import/pptx-import-corpus-cli.js --importer-strict --manifest-in=server/data/test-corpus/importer-qualification-manifest.json",
+    "test:pptx:importer-qualification": "node scripts/run-pptx-qualification.cjs --importer-strict",
     "test:pptx:strict": "npm run test:pptx:importer-qualification",
     "test:pptx:oracle": "node server/services/pptx-import/oracle/pptx-oracle-cli.js --mode integrity",
     "test:pptx:oracle:integrity": "node server/services/pptx-import/oracle/pptx-oracle-cli.js --mode integrity",

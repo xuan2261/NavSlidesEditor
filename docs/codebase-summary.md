@@ -231,7 +231,7 @@ navslides-editor/
 
 ## Repo Notes
 
-- Root package version is `1.15.7`.
+- Root package version is `1.16.0`.
 - Runtime baseline is Node.js >=22.13.0; CI and container builds pin 22.22.0.
 - There is no database layer; persistence is file-based by design.
 - There is no full TypeScript migration; JSDoc is the type system.

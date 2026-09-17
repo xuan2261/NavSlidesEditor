@@ -8,7 +8,7 @@ function computeFileSha256(filePath) {
   try {
     const data = fs.readFileSync(filePath);
     return crypto.createHash('sha256').update(data).digest('hex');
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -19,24 +19,25 @@ async function main() {
 
   const env = { ...process.env };
   if (hasMagick) {
-    env.PPTX_EMF_CONVERTER_BIN = magickBin;
-    env.PPTX_EMF_CONVERTER_TRUSTED_ROOT = path.dirname(magickBin);
+    process.env.PPTX_EMF_CONVERT = '1'; env.PPTX_EMF_CONVERT = '1';
+    process.env.PPTX_EMF_BINARY = magickBin; env.PPTX_EMF_BINARY = magickBin;
+    process.env.PPTX_EMF_BINARY_ROOT = path.dirname(magickBin); env.PPTX_EMF_BINARY_ROOT = path.dirname(magickBin);
     const sha = computeFileSha256(magickBin);
     if (sha) {
-      env.PPTX_EMF_CONVERTER_SHA256 = sha;
+      process.env.PPTX_EMF_BINARY_SHA256 = sha; env.PPTX_EMF_BINARY_SHA256 = sha;
     }
   }
 
-  const manifestPath = path.resolve('tests/fixtures/pptx-corpus/manifest.json');
+  const manifestPath = path.resolve('server/data/test-corpus/importer-qualification-manifest.json');
   const outEvidencePath = path.resolve('tests/fixtures/pptx-corpus/pptx-qualification-evidence.json');
 
   console.log('[PPTX-QUAL] Starting native qualification with manifest:', manifestPath);
   console.log('[PPTX-QUAL] EMF converter configured:', hasMagick ? magickBin : 'none');
 
   const args = [
-    '--manifest', manifestPath,
-    '--importer-qualify',
-    '--output', outEvidencePath
+    '--importer-strict',
+    `--manifest-in=${manifestPath}`,
+    `--qualification-out=${outEvidencePath}`,
   ];
 
   const code = await runFromCli(args, {
@@ -44,9 +45,10 @@ async function main() {
     stdout: process.stdout,
     stderr: process.stderr,
     outputJson: (targetPath, payload) => {
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
       fs.writeFileSync(targetPath, JSON.stringify(payload, null, 2), 'utf8');
       console.log('[PPTX-QUAL] Wrote qualification report to:', targetPath);
-    }
+    },
   });
 
   console.log('[PPTX-QUAL] Finished with exit code:', code);

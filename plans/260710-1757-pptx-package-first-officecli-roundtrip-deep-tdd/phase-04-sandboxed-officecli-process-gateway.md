@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: 'Direct local OfficeCLI process gateway'
-status: in-progress
+status: completed
 effort: '2-3 weeks'
 dependsOn: [2]
 priority: P0
@@ -213,15 +213,15 @@ a local native toolchain is an infrastructure limitation, never a mock pass.
 
 ## Function and Interface Checklist
 
-- [ ] Parse one length-bounded launcher request and one terminal receipt.
-- [ ] Bind receipt to job ID, launcher hash/version, binary hash/version, and policy digest.
-- [ ] Create target at job association or suspended before assignment.
-- [ ] Await `ACTIVE_PROCESS_ZERO` before success or cleanup.
-- [ ] Deny app-data, profile-secret, and cross-job reads.
-- [ ] Prove DNS, loopback, LAN, and public egress denial.
-- [ ] Route OfficeCLI version/validate and native import/re-import through their
+- [x] Parse one length-bounded launcher request and one terminal receipt.
+- [x] Bind receipt to job ID, launcher hash/version, binary hash/version, and policy digest.
+- [x] Create target at job association or suspended before assignment.
+- [x] Await `ACTIVE_PROCESS_ZERO` before success or cleanup.
+- [x] Deny app-data, profile-secret, and cross-job reads.
+- [x] Prove DNS, loopback, LAN, and public egress denial.
+- [x] Route OfficeCLI version/validate and native import/re-import through their
       typed manifested targets on one containment lifecycle.
-- [ ] Bind executable execution-copy and input-copy hashes to the receipt.
+- [x] Bind executable execution-copy and input-copy hashes to the receipt.
 
 ## Tests Before
 
@@ -285,24 +285,24 @@ Phase 3 guarded revision/workspace/admission
       authentication; status/stream/download/cancel require scoped bearer
       capabilities without claiming multi-user identity.
 - [x] No OfficeCLI process or workspace starts unless the exact immutable revision passed Phase 3 raw ZIP-directory and XML safety gates.
-- [ ] Timeout, cancellation, flood, partial batch, and server-restart tests leave no published revision.
-- [ ] Windows child and grandchild processes terminate through Job Object kill-on-close.
-- [ ] OfficeCLI is assigned before executing, and completion evidence proves the
+- [x] Timeout, cancellation, flood, partial batch, and server-restart tests leave no published revision.
+- [x] Windows child and grandchild processes terminate through Job Object kill-on-close.
+- [x] OfficeCLI is assigned before executing, and completion evidence proves the
       full process tree reached zero.
-- [ ] Restricted identity, app-data/profile/cross-job isolation, and egress denial
+- [x] Restricted identity, app-data/profile/cross-job isolation, and egress denial
       pass physical Windows tests.
 - [x] OfficeCLI mutation remains disabled where restricted identity, app-data isolation, egress/resource controls, or full-tree termination are unproven.
-- [ ] Import, OfficeCLI, native parser, raster, conversion, sync, and export
+- [x] Import, OfficeCLI, native parser, raster, conversion, sync, and export
       workloads share one application-host admission budget; provider VMs use
       separate orchestrator quotas.
 - [x] Wrong or unavailable OfficeCLI degrades safely without blocking original download.
 - [x] Linux/Docker/macOS mutation remains capability-disabled in the first release; only a manifest-matching configured Windows binary can reach spawn.
-- [ ] G2 input copies, OfficeCLI validation, and native import/re-import run in
+- [x] G2 input copies, OfficeCLI validation, and native import/re-import run in
       private contained staging; later mutations inherit the same boundary.
-- [ ] Verified mutable source paths cannot be replaced between qualification and
+- [x] Verified mutable source paths cannot be replaced between qualification and
       execution because receipts bind protected execution-copy hashes.
-- [ ] Supported platform containment and known gaps are evidenced.
-- [ ] Gateway tests, security fuzzing, route tests, lint, and unit suite pass.
+- [x] Supported platform containment and known gaps are evidenced.
+- [x] Gateway tests, security fuzzing, route tests, lint, and unit suite pass.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

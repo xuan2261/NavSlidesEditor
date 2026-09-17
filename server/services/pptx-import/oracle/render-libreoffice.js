@@ -19,7 +19,7 @@ function findLibreOfficeBinary() {
  * @returns {Promise<{ ok: boolean, outDir?: string, files?: string[], error?: string }>}
  */
 async function renderPptxWithLibreOffice(pptxPath, options = {}) {
-  const binary = options.binary || findLibreOfficeBinary()
+  const binary = options.binary !== undefined ? options.binary : findLibreOfficeBinary()
   if (!binary) {
     return { ok: false, error: 'libreoffice-missing', code: 'LO_MISSING' }
   }
