@@ -1,10 +1,10 @@
 {
   "meta": {
     "generated": "local run",
-    "stale": true,
+    "stale": false,
     "staleSources": {
-      "vitest": true,
-      "playwright": true
+      "vitest": false,
+      "playwright": false
     }
   },
   "rows": [
@@ -709,9 +709,9 @@
       "tier": "smoke",
       "layer": "unit",
       "tests": [
+        "client/src/__tests__/ui-accessibility-findings-regression.test.js",
         "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx",
-        "client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx",
-        "client/src/__tests__/ui-accessibility-findings-regression.test.js"
+        "client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx"
       ],
       "status": "PASS",
       "depths": [
@@ -906,8 +906,8 @@
       "tier": "smoke",
       "layer": "unit,e2e",
       "tests": [
-        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx",
         "client/src/__tests__/ui-accessibility-findings-regression.test.js",
+        "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx",
         "tests/e2e/ribbon-responsive-touch.spec.js"
       ],
       "status": "PASS",

@@ -22,8 +22,7 @@ export const ALLOWED_DEPTHS = new Set([
 ])
 const DEPTH_RE = /\bdepth:([A-Za-z0-9_-]+)\b/g
 const STANDALONE_DEPTH_RE = /\[depth:([A-Za-z0-9_-]+)\]/g
-const TEST_DECL_RE =
-  /\b(it|test|describe)(\.[a-z]+)?\s*\(\s*(['"`])((?:\\.|(?!\3).)*)\3/g
+const TEST_DECL_RE = /\b(it|test|describe)(\.[a-z]+)?\s*\(\s*(['"`])((?:\\.|(?!\3).)*)\3/g
 
 const EXCLUDE_DIRS = new Set([
   'node_modules',
@@ -84,9 +83,7 @@ export function extractTagsFromSource(source, filePath) {
       const id = cap[1]
       const inlineDeep = /\btier:deep\b/.test(cap[2] || '')
       const tier = inlineDeep || standaloneDeep ? 'deep' : 'smoke'
-      const depths = [
-        ...new Set([...parseDepths(cap[2] || '', filePath), ...standaloneDepths]),
-      ]
+      const depths = [...new Set([...parseDepths(cap[2] || '', filePath), ...standaloneDepths])]
       ;(out[id] ||= []).push({ file: filePath, title, tier, layer, skipped, depths })
     }
   }
@@ -96,7 +93,7 @@ export function extractTagsFromSource(source, filePath) {
 function walk(dir, matcher, acc) {
   let entries
   try {
-    entries = readdirSync(dir)
+    entries = readdirSync(dir).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
   } catch {
     return acc
   }
@@ -142,5 +139,7 @@ if (invokedDirectly) {
   const outPath = resolve(HERE, 'tags.json')
   writeFileSync(outPath, JSON.stringify(tags, null, 2) + '\n')
   const totalOcc = Object.values(tags).reduce((n, a) => n + a.length, 0)
-  console.log(`[tags] ${Object.keys(tags).length} capability ids, ${totalOcc} occurrences → tags.json`)
+  console.log(
+    `[tags] ${Object.keys(tags).length} capability ids, ${totalOcc} occurrences → tags.json`
+  )
 }

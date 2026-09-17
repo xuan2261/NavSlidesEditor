@@ -2,8 +2,6 @@
 
 _Generated: local run_
 
-> ⚠️ **Run results stale or missing** — statuses derived without a fresh test run. PASS counts may be optimistic; regenerate with a fresh `--reporter=json` run.
-
 Verified (PASS only): 129/129 (100%)  |  PASS: 129
 
 ## action
@@ -66,7 +64,7 @@ Verified (PASS only): 129/129 (100%)  |  PASS: 129
 | control.insert.text | low | smoke | unit | trace | client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx | PASS |
 | control.properties.disclosure | high | smoke | unit | trace | client/src/components/CollapsibleSection.test.jsx | PASS |
 | control.properties.panel | high | smoke | unit | trace | client/src/components/PropertiesPanel.test.jsx | PASS |
-| control.ribbon.active-reveal | high | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx<br>client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx<br>client/src/__tests__/ui-accessibility-findings-regression.test.js | PASS |
+| control.ribbon.active-reveal | high | smoke | unit | trace | client/src/__tests__/ui-accessibility-findings-regression.test.js<br>client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx<br>client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx | PASS |
 | control.ribbon.animations | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
 | control.ribbon.contextual-format | high | smoke | unit | trace | client/src/components/ribbon/format-tab-dynamic-visibility-and-label.test.jsx<br>client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx<br>client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx<br>client/src/stores/ui-store-ribbon.test.js | PASS |
 | control.ribbon.design | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
@@ -76,7 +74,7 @@ Verified (PASS only): 129/129 (100%)  |  PASS: 129
 | control.ribbon.overflow | high | smoke | unit | trace | client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx | PASS |
 | control.ribbon.reduced-motion | high | smoke | unit,e2e | trace | client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx<br>tests/e2e/ribbon-responsive-touch.spec.js | PASS |
 | control.ribbon.responsive | high | smoke | unit,e2e | trace | client/src/__tests__/ui-accessibility-findings-regression.test.js<br>tests/e2e/ribbon-responsive-touch.spec.js | PASS |
-| control.ribbon.touch-targets | high | smoke | unit,e2e | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx<br>client/src/__tests__/ui-accessibility-findings-regression.test.js<br>tests/e2e/ribbon-responsive-touch.spec.js | PASS |
+| control.ribbon.touch-targets | high | smoke | unit,e2e | trace | client/src/__tests__/ui-accessibility-findings-regression.test.js<br>client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx<br>tests/e2e/ribbon-responsive-touch.spec.js | PASS |
 | control.ribbon.transitions | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
 | control.ribbon.view | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
 | control.selection-pane | low | smoke | unit | trace | client/src/components/SelectionPane.test.jsx | PASS |
