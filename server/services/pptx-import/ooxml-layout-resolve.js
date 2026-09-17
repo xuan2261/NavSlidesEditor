@@ -58,8 +58,8 @@ function layoutDecoration(node, zIndex, context = {}) {
   const preset = xml.match(/<a:prstGeom[^>]*\bprst="([^"]+)"/i)?.[1]?.toLowerCase()
   const x = Number(node.xfrm.x) || 0
   const y = Number(node.xfrm.y) || 0
-  const width = Math.max(0, Number(node.xfrm.cx) || 0)
-  const height = Math.max(0, Number(node.xfrm.cy) || 0)
+  const width = Math.max(1, Number(node.xfrm.cx) || 1)
+  const height = Math.max(1, Number(node.xfrm.cy) || 1)
   const base = {
     id: `layout-decoration-${node.id || zIndex}`,
     x,

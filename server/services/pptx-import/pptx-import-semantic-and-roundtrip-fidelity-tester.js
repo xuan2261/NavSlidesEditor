@@ -381,6 +381,15 @@ function globallyMatchSourceEntries(sourceEntries, navElements) {
     const preferred = semanticTypePreferences(sourceSemanticType(entry.element))
     for (const [navIndex, nav] of navElements.entries()) {
       if (!preferred.includes(normalizeSemanticType(nav?.type))) continue
+      const source = semanticBounds(entry.element)
+      const target = semanticBounds(nav)
+      const maxDrift = Math.max(
+        Math.abs(source.x - target.x),
+        Math.abs(source.y - target.y),
+        Math.abs(source.width - target.width),
+        Math.abs(source.height - target.height)
+      )
+      if (maxDrift > 50) continue
       candidates.push({
         sourceIndex,
         navIndex,

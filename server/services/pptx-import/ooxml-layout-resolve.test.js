@@ -78,7 +78,7 @@ describe('ooxml-layout-resolve (T8.1)', () => {
     expect(decorativeInjected).toBe(2)
     expect(elements.map((element) => element.type)).toEqual(['shape', 'line', 'text'])
     expect(elements[0]).toMatchObject({ x: 1, y: 2, width: 10, height: 1, fill: '#005AA9' })
-    expect(elements[1]).toMatchObject({ x: 1, y: 3, width: 10, height: 0, stroke: '#000000', strokeWidth: 1 })
+    expect(elements[1]).toMatchObject({ x: 1, y: 3, width: 10, height: 1, stroke: '#000000', strokeWidth: 1 })
     expect(elements[2]).toBe(authored)
   })
 })
