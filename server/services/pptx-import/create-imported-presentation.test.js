@@ -1,9 +1,44 @@
 import { describe, expect, it } from 'vitest'
-import {
-  stampImportedPresentationFields,
-} from './create-imported-presentation.js'
+import { stampImportedPresentationFields } from './create-imported-presentation.js'
 
 describe('stampImportedPresentationFields', () => {
+  it('normalizes imported connector and media defaults before package authority snapshots', () => {
+    const stamped = stampImportedPresentationFields(
+      {
+        slides: [
+          {
+            id: 's1',
+            elements: [
+              { id: 'line-1', type: 'line', x: 10, y: 20, width: 100, height: 40 },
+              { id: 'image-1', type: 'image', src: 'data:image/png;base64,AA==' },
+            ],
+            children: [
+              {
+                id: 'child-1',
+                elements: [{ id: 'line-child', type: 'line', x: 0, y: 0, width: 20, height: 10 }],
+              },
+            ],
+          },
+        ],
+      },
+      { id: 'pres-normalized' }
+    )
+
+    expect(stamped.slides[0].elements[0]).toMatchObject({
+      x1: 0,
+      y1: 20,
+      x2: 100,
+      y2: 20,
+    })
+    expect(stamped.slides[0].elements[1]).toMatchObject({ alt: '', decorative: false })
+    expect(stamped.slides[0].children[0].elements[0]).toMatchObject({
+      x1: 0,
+      y1: 5,
+      x2: 20,
+      y2: 5,
+    })
+  })
+
   it('assigns ids, title fallback, and strips template fields without requiring storage', () => {
     const stamped = stampImportedPresentationFields(
       {

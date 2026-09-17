@@ -1,6 +1,12 @@
 const uuidv4 = () => require('node:crypto').randomUUID()
 const { getDesignTokensForRevealTheme, normalizePresentationNotes } = require('revealjs-shared')
-const { withPresentations } = require('../storage')
+const { withPresentations } = require('../storage'),
+  { normalizeElementAction } = require('../../../shared/src/element-actions.js'),
+  {
+    normalizeImageAccessibility,
+    normalizeMediaAccessibility,
+  } = require('../../../shared/src/media-accessibility.js'),
+  { normalizeSlideConnectorConnections } = require('../../../shared/src/connector-geometry.js')
 const { toPptxOriginalMeta } = require('./original-package')
 const { stripControlChars } = require('../../utils/strip-control-chars')
 
@@ -19,10 +25,31 @@ function sanitizeImportedTitle(value) {
  * to presentations.json. Package-backed imports feed this into the outbox only.
  */
 function stampImportedPresentationFields(mappedPresentation, options = {}) {
+  function normalizeImportedElement(element) {
+    const { action } = normalizeElementAction(element?.action)
+    const withAction = action ? { ...element, action } : element
+    return normalizeMediaAccessibility(normalizeImageAccessibility(withAction))
+  }
+
+  function normalizeImportedSlide(slide) {
+    const children = Array.isArray(slide.children)
+      ? slide.children.map(normalizeImportedSlide)
+      : slide.children
+    const elements = normalizeSlideConnectorConnections(
+      (slide.elements || []).map(normalizeImportedElement)
+    )
+    return {
+      ...slide,
+      elements,
+      ...(children !== slide.children ? { children } : {}),
+    }
+  }
+
   const now = new Date().toISOString()
   const createdAt = options.createdAt || options.timestamp || now
   const updatedAt = options.updatedAt || options.timestamp || createdAt
-  const source = mappedPresentation && typeof mappedPresentation === 'object' ? mappedPresentation : {}
+  const source =
+    mappedPresentation && typeof mappedPresentation === 'object' ? mappedPresentation : {}
   const theme = source.theme || 'black'
   const designTokens = source.designTokens || getDesignTokensForRevealTheme(theme)
   const originalArtifact = options.originalArtifact
@@ -38,11 +65,13 @@ function stampImportedPresentationFields(mappedPresentation, options = {}) {
     theme,
     transition: source.transition || 'slide',
     designTokens,
-    slides: (source.slides || []).map((s) => ({
-      ...s,
-      id: s.id || uuidv4(),
-      elements: (s.elements || []).map((el) => ({ ...el, id: el.id || uuidv4() })),
-    })),
+    slides: (source.slides || [])
+      .map((s) => ({
+        ...s,
+        id: s.id || uuidv4(),
+        elements: (s.elements || []).map((el) => ({ ...el, id: el.id || uuidv4() })),
+      }))
+      .map(normalizeImportedSlide),
     pptxOriginal,
     ...(options.packageHead ? { pptxAggregateHead: options.packageHead } : {}),
     ...(options.importReport ? { _pptxImportReport: options.importReport } : {}),
