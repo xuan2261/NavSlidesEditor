@@ -5,7 +5,7 @@ title: "Full codebase remediation plan"
 # Full codebase remediation plan
 
 Ngày: 2026-08-20  
-Status: Implemented and verified — source remediation complete; release conditionally blocked by unavailable Docker qualification plus failing PPTX native-strict and PowerPoint visual gates.
+Status: Implemented and verified — source remediation complete; Docker artifact qualification passed on GitHub Actions run `35201411686`; release remains conditionally blocked by failing PPTX native-strict and PowerPoint visual gates.
 Source review: [verified closure report](../reports/code-review-260820-0235-full-codebase.md)
 
 ## Outcome
@@ -29,7 +29,7 @@ Source review: [verified closure report](../reports/code-review-260820-0235-full
 2. [Security and capability boundaries](phase-02-security-capability-boundaries.md) — **Complete**.
 3. [Presenter and product reliability](phase-03-presenter-product-reliability.md) — **Complete**.
 4. [Data integrity and accessibility](phase-04-data-integrity-accessibility.md) — **Complete**.
-5. [Full verification and artifact qualification](phase-05-full-verification-artifacts.md) — **Conditionally complete**: Windows Electron and best-effort PPTX qualified; Docker unavailable; native strict passes 9/11 decks and PowerPoint oracle evidence is valid but below fixed SSIM policy.
+5. [Full verification and artifact qualification](phase-05-full-verification-artifacts.md) — **Conditionally complete**: Windows Electron, Docker artifact/runtime, and best-effort PPTX qualified; native strict passes 9/11 decks and PowerPoint oracle evidence is valid but below the fixed SSIM policy.
 
 ## Dependencies
 
@@ -52,11 +52,11 @@ Source review: [verified closure report](../reports/code-review-260820-0235-full
 | Coverage matrix | PASS — 112/112, 0 GAP/FAIL/TAGGED; 141 element-control rows |
 | Independent final code review | PASS |
 | Windows Electron final rebuild/runtime smoke/receipt | PASS |
-| Docker artifact/runtime smoke | BLOCKED — no Docker executable on this workstation |
+| Docker artifact/runtime smoke | PASS — GitHub Actions run `35201411686`, job `105137151588`; runtime closure, vendored Socket.IO, PPTX import/original recovery, restart persistence, and receipt upload passed |
 | PPTX best-effort qualification | PASS |
 | PPTX native importer strict + PowerPoint visual oracle | FAIL-CLOSED — strict passes 9/11 decks; PowerPoint evidence integrity passes but visual qualification fails mean/min SSIM policy |
 
-Release decision: **conditionally blocked**, not unconditional production-ready. Authoritative evidence: `../reports/full-codebase-remediation-release-evidence-260820.json`.
+Release decision: **conditionally blocked by PPTX qualification only**, not unconditional production-ready. The original evidence remains at `../reports/full-codebase-remediation-release-evidence-260820.json`; Docker supplemental evidence is `../reports/docker-runtime-qualification-20260917.json`.
 
 ## Locked decisions
 
@@ -97,4 +97,5 @@ Consistency sweep: không còn contradiction với locked Node/Electron/TipTap/a
 - 2026-08-20 — Added NAT64 embedded-IPv4 normalization; routed popup timer actions through the primary live socket; mapped supported game actions; removed unsupported team/reveal controls from registry/config/docs.
 - 2026-08-21 — Fixed oracle capture's browser-context `VIEWPORT` reference by passing the deterministic viewport explicitly into `page.evaluate`; focused capture tests, full Vitest, E2E and full browser audit pass.
 - 2026-08-21 — Re-ran release gates: native strict now qualifies 9/11 decks but still rejects `Bai_2_1`/`Bai_2_5`; local Microsoft PowerPoint evidence passes integrity but fails the fixed `phase08_full` SSIM policy. Release remains blocked by those truthful PPTX results and unavailable Docker qualification.
+- 2026-09-17 — Qualified the production Docker artifact on GitHub Actions run `35201411686` at head `4acdf0f48f8532f1009f529d73dae710edae8b09`. Build/start, runtime closure, Socket.IO asset, PPTX import, immutable-original recovery, restart persistence, and receipt upload passed. Docker is no longer a release blocker; native-strict and PowerPoint visual qualification remain open.
 

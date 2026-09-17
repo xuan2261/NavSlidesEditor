@@ -147,6 +147,40 @@ describe('pptx import corpus cli strict gates', () => {
     }))
   })
 
+  it('writes importer qualification evidence with configured EMF converter provenance', async () => {
+    const runImporterQualification = vi.fn().mockResolvedValue({ exitCode: 0, results: [] })
+    const outputJson = vi.fn()
+    const logger = { log: vi.fn(), warn: vi.fn() }
+    const env = {
+      PPTX_EMF_CONVERT: '1',
+      PPTX_EMF_BINARY: 'C:\\Program Files\\ImageMagick\\magick.exe',
+      PPTX_EMF_BINARY_ROOT: 'C:\\Program Files\\ImageMagick',
+      PPTX_EMF_BINARY_SHA256: 'A'.repeat(64),
+    }
+
+    const code = await runFromCli([
+      'fixture-corpus',
+      '--importer-strict',
+      '--manifest-in=fixture-manifest.json',
+      '--qualification-out=qualification.json',
+    ], { runImporterQualification, outputJson, logger, env })
+
+    expect(code).toBe(0)
+    expect(outputJson).toHaveBeenCalledWith('qualification.json', {
+      exitCode: 0,
+      results: [],
+      qualificationEnvironment: {
+        emfConversion: {
+          enabled: true,
+          binary: env.PPTX_EMF_BINARY,
+          trustedRoot: env.PPTX_EMF_BINARY_ROOT,
+          sha256: 'a'.repeat(64),
+        },
+      },
+    }, { spaces: 2 })
+    expect(logger.log).toHaveBeenCalledWith(expect.stringContaining('qualificationEnvironment'))
+  })
+
   it('keeps legacy --strict as a deprecated metrics-only alias', async () => {
     const runCorpusTests = vi.fn().mockResolvedValue({ results: [], summary: strictSummary() })
     const logger = { log: vi.fn(), warn: vi.fn() }

@@ -25,10 +25,22 @@ function readFlagValue(args, name) {
   return index >= 0 && !args[index + 1]?.startsWith('--') ? args[index + 1] : ''
 }
 
+function qualificationEnvironment(env = process.env) {
+  const read = (name) => typeof env[name] === 'string' && env[name].length > 0 ? env[name] : null
+  return {
+    emfConversion: {
+      enabled: env.PPTX_EMF_CONVERT === '1',
+      binary: read('PPTX_EMF_BINARY'),
+      trustedRoot: read('PPTX_EMF_BINARY_ROOT'),
+      sha256: read('PPTX_EMF_BINARY_SHA256')?.toLowerCase() || null,
+    },
+  }
+}
+
 function corpusArgument(args) {
   const valueFlags = new Set([
     '--baseline-out', '--drift-out', '--fixture-map', '--manifest-in', '--manifest-out',
-    '--max-class-drop', '--per-deck-min',
+    '--max-class-drop', '--per-deck-min', '--qualification-out',
   ])
   for (let index = 0; index < args.length; index += 1) {
     if (valueFlags.has(args[index])) {
@@ -108,14 +120,20 @@ async function runFromCli(args = process.argv.slice(2), dependencies = {}) {
   const strictMetrics = args.includes('--strict-metrics') || legacyStrict
   const importerStrict = args.includes('--importer-strict')
   const manifestIn = readFlagValue(args, '--manifest-in')
+  const qualificationOut = readFlagValue(args, '--qualification-out')
 
   if (strictMetrics && importerStrict) throw new Error('--strict-metrics and --importer-strict cannot be combined')
   if (manifestIn && !importerStrict) throw new Error('--manifest-in requires --importer-strict')
+  if (qualificationOut && !importerStrict) throw new Error('--qualification-out requires --importer-strict')
   if (legacyStrict) logger.warn('--strict is deprecated; use --strict-metrics or --importer-strict explicitly.')
 
   if (importerStrict) {
     if (!manifestIn) throw new Error('--importer-strict requires --manifest-in')
-    const report = await qualifyImporter({ corpusDir, manifestPath: manifestIn })
+    const report = {
+      ...await qualifyImporter({ corpusDir, manifestPath: manifestIn }),
+      qualificationEnvironment: qualificationEnvironment(dependencies.env || process.env),
+    }
+    if (qualificationOut) await outputJson(qualificationOut, report, { spaces: 2 })
     logger.log(JSON.stringify(report, null, 2))
     return report.exitCode || 0
   }

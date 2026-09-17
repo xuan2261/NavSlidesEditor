@@ -1,6 +1,6 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: v1.15.7
+## Current Status: v1.16.0
 
 Package manifests own the released version.
 [Unreleased changes](project-changelog.md#unreleased) track merged work after

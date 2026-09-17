@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-17T08:48:04Z",
+  "scope": "docker-artifact-qualification",
+  "source": {
+    "repository": "xuan2261/NavSlidesEditor",
+    "headSha": "4acdf0f48f8532f1009f529d73dae710edae8b09",
+    "workflowRunId": 35201411686,
+    "workflowRunUrl": "https://github.com/xuan2261/NavSlidesEditor/actions/runs/35201411686",
+    "jobId": 105137151588,
+    "jobUrl": "https://github.com/xuan2261/NavSlidesEditor/actions/runs/35201411686/job/105137151588",
+    "jobConclusion": "success"
+  },
+  "artifact": {
+    "id": 10488306853,
+    "name": "docker-runtime-qualification",
+    "digest": "sha256:ffe6c6f052d36d406ee6b956f5347ca708f9112c9c8b874138f09263bd151932",
+    "expiresAt": "2026-10-17T08:48:03Z"
+  },
+  "qualification": {
+    "buildProductionImage": "passed",
+    "startProductionContainer": "passed",
+    "runtimeClosure": "passed",
+    "socketIoVendorAsset": "passed",
+    "presentationsApi": "passed",
+    "pptxImport": "passed",
+    "immutableOriginalRecovery": "passed",
+    "restartPersistence": "passed",
+    "receiptUpload": "passed"
+  },
+  "runtimeClosure": {
+    "vendorFiles": 1672,
+    "revealJs": "6.0.1",
+    "serverModules": 9,
+    "clientDist": true
+  },
+  "image": {
+    "id": "sha256:0c2b9f8c2d3311a4040963eb7e151ca3c082d1aaf48ef667c598b28e78f6efd1",
+    "created": "2026-09-17T08:47:41.658289704Z",
+    "os": "linux",
+    "architecture": "amd64",
+    "sizeBytes": 1465521453,
+    "nodeVersion": "22.22.0",
+    "exposedPort": "3002/tcp",
+    "layerCount": 22
+  },
+  "receipts": [
+    {
+      "path": "plans/reports/docker-runtime-qualification-35201411686/docker-runtime-closure.json",
+      "sha256": "a7e7cccfd61129399dbe66fecfa2d71d520b48c1cb1c32cdddc57ac47ad42e38"
+    },
+    {
+      "path": "plans/reports/docker-runtime-qualification-35201411686/docker-image-inspect.json",
+      "sha256": "7fd3876475608f0181188f7d93a3eadc49807b70a5cf462bb79e194a5e2aad58"
+    }
+  ],
+  "decision": {
+    "status": "passed",
+    "effect": "Closes the Docker artifact/runtime qualification blocker for the full-codebase remediation plan. PPTX native-strict and PowerPoint visual qualification remain separate release blockers."
+  }
+}
