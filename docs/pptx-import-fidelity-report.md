@@ -34,6 +34,14 @@ administrator-process environment. These are executable-authority and process
 hygiene checks, not a full OS/network sandbox: Windows reparse-point proof,
 TOCTOU-free execution, and whole-server RSS isolation remain outside the claim.
 
+## Current strict importer qualification sync (2026-09-17)
+
+The manifest-bound strict importer qualification passes all 11 checked-in corpus
+decks. The receipt records exact source hashes, `exitCode: 0`, zero unmapped
+scene-graph nodes, zero permanent placeholders, and zero blockers for every
+strict result. This is application importer-corpus evidence only; it does not
+qualify an edited package, OfficeCLI, or Microsoft PowerPoint.
+
 ## Current package-first evidence boundary (2026-07-22)
 
 The immutable original package remains the recovery authority when its bytes can

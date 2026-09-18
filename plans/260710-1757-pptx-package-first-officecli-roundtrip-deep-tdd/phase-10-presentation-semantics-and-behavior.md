@@ -1,7 +1,7 @@
 ---
 phase: 10
 title: 'Presentation semantics and behavior'
-status: completed
+status: in-progress
 effort: '6-8 weeks'
 dependsOn: [4, 5, 6]
 priority: P1
@@ -140,11 +140,11 @@ Verify every promoted structural row has a complete touched-part closure, no dan
 
 ## Function and Interface Checklist
 
-- [x] Preserve `inspectPresentationStructure()` and structural mutation seams.
-- [x] Unify generic and structure journal operation shapes.
-- [x] Register each structural candidate with planner/transaction dispatch.
-- [x] Allocate and tombstone source lineage deterministically.
-- [x] Validate all internal references and dependent relationships.
+- [ ] Preserve `inspectPresentationStructure()` and structural mutation seams.
+- [ ] Unify generic and structure journal operation shapes.
+- [ ] Register each structural candidate with planner/transaction dispatch.
+- [ ] Allocate and tombstone source lineage deterministically.
+- [ ] Validate all internal references and dependent relationships.
 
 ## Tests Before
 
@@ -195,16 +195,16 @@ G0 presentation rows + Phase 5 journal/source map
 ## Success Criteria
 
 - [x] Slide add/delete/reorder/duplicate preserve stable identity and valid package references.
-- [x] Structural MVP implementations remain candidates until each passes the
+- [ ] Structural MVP implementations remain candidates until each passes the
       authoritative transaction and evidence pipeline; preserve-only behavior rows
       do not block level 3.
 - [x] Hidden slide, notes, comments, hyperlink, transition, animation, and show-setting rows have explicit tiers.
 - [x] Rich notes and hidden-slide state remain source-backed and uneditable in the first milestone; adjacent structural edits preserve their package bytes/relationships.
-- [x] Promoted structural edits roundtrip semantically and roll back atomically
+- [ ] Promoted structural edits roundtrip semantically and roll back atomically
       through the authoritative transaction.
 - [x] Unsupported behavior XML is preserved by adjacent edits.
 - [x] Editor/reveal.js behavior is never used as sole proof of PowerPoint equivalence.
-- [x] Focused, corpus, lint, unit, and client build validators pass; protected provider validators additionally pass for level-5 rows.
+- [ ] Focused, corpus, lint, unit, and client build validators pass; protected provider validators additionally pass for level-5 rows.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

@@ -27,7 +27,7 @@ boundaries.
 | Export PDF                                         | Done                                                                                                      |
 | Export PPTX                                        | Done (hybrid native + high-res raster fallback, structured export-gap warnings/report)                    |
 | Project export/import (.navslides)                 | Done (manifest v1.1, partial media skip warnings)                                                         |
-| Import PPTX                                        | Done (editable best-effort projection through the pptxtojson-only runtime; parser metrics and browser audit are separate from currently blocked native importer qualification) |
+| Import PPTX                                        | Done (editable best-effort projection through the `pptxtojson`-only runtime; the current manifest-bound strict importer qualification passes 11/11 decks, while OfficeCLI/edited-package/PowerPoint claim gates remain separate and fail-closed) |
 | Offline HTML export                                | Done (self-contained)                                                                                     |
 | Shareable links (with password option)             | Done                                                                                                      |
 | GitHub push integration                            | Done                                                                                                      |
@@ -87,9 +87,12 @@ boundaries.
   regression floors; `npm run test:corpus` is its compatibility alias. `npm run test:pptx:best-effort`
   adds the browser smoke without qualifying the importer. The separate, fail-closed
   11-deck importer qualification binds exact manifest names and SHA-256 values,
-  captures best-effort native evidence, then requests a strict importer decision.
-  `npm run test:pptx:strict` is its deprecated alias. Known EMF and native-node
-  gaps can keep that truth gate blocked rather than presenting a false green result.
+  captures best-effort native evidence, then evaluates the strict importer decision.
+  The current qualification report passes all 11 decks with zero blockers, zero
+  unmapped scene-graph nodes, and zero permanent placeholders. This qualifies the
+  checked-in importer corpus only; OfficeCLI, edited-package, and PowerPoint claim
+  gates remain separate and fail closed when their evidence is unavailable.
+  `npm run test:pptx:strict` is its deprecated alias.
   Imported PPTX media uses SHA256 dedup, extension allowlisting, magic-byte
   checks, external media URL gating, worker startup ACK handling, `/api/pptx`
   upload rate limiting, a split mapper module tree under

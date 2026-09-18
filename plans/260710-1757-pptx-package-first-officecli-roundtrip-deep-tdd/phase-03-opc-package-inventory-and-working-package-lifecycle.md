@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: 'OPC package inventory and working-package lifecycle'
-status: completed
+status: in-progress
 effort: '5-7 weeks'
 dependsOn: [1]
 priority: P0
@@ -229,14 +229,14 @@ Run fault injection at every blob and metadata-root durability boundary and a di
 
 ## Function and Interface Checklist
 
-- [x] Preserve `openPackageStore()`, `commitOriginal()`, and state-root publication.
-- [x] Restrict `openPackageStore()` to bootstrap/tests; inject one live store.
-- [x] Make `buildOpcInventory()` mandatory during production commit.
-- [x] Publish R0/head/owner/job atomically before presentation visibility.
-- [x] Keep durable export/provider job schemas generic for Phases 11 and 13.
-- [x] Remove primary-route reliance on `persistOriginalPptx()`.
-- [x] Make package-state projection authoritative and drain a durable compatibility outbox.
-- [x] Publish import media references in the R0 transaction.
+- [ ] Preserve `openPackageStore()`, `commitOriginal()`, and state-root publication.
+- [ ] Restrict `openPackageStore()` to bootstrap/tests; inject one live store.
+- [ ] Make `buildOpcInventory()` mandatory during production commit.
+- [ ] Publish R0/head/owner/job atomically before presentation visibility.
+- [ ] Keep durable export/provider job schemas generic for Phases 11 and 13.
+- [ ] Remove primary-route reliance on `persistOriginalPptx()`.
+- [ ] Make package-state projection authoritative and drain a durable compatibility outbox.
+- [ ] Publish import media references in the R0 transaction.
 
 ## Tests Before
 
@@ -298,14 +298,14 @@ durable provider jobs -> Phase 13
 
 ## Success Criteria
 
-- [x] Every production import route has immutable original bytes, a complete
+- [ ] Every production import route has immutable original bytes, a complete
       manifest, revision R0, canonical projection/source map, owner, and durable job.
 - [x] Duplicate/history/template/delete/restart scenarios preserve correct ownership.
-- [x] Fault injection never publishes a corrupt or partial metadata root or head.
-- [x] No crash or concurrent writer can expose mismatched projection, package, source-map, journal, evidence, owner-reference, lease, or job generations.
-- [x] Package-backed projection has one authority; `presentations.json` is only a
+- [ ] Fault injection never publishes a corrupt or partial metadata root or head.
+- [ ] No crash or concurrent writer can expose mismatched projection, package, source-map, journal, evidence, owner-reference, lease, or job generations.
+- [ ] Package-backed projection has one authority; `presentations.json` is only a
       durable-outbox-fed compatibility read model.
-- [x] One process-scoped store owns the data-directory lock for the server
+- [ ] One process-scoped store owns the data-directory lock for the server
       lifetime; a second process or stale fencing epoch cannot publish state.
 - [x] Every published blob survives durability/restart verification or the aggregate recovers to its verified predecessor.
 - [x] No route, rollback, history, template, or migration path can physically unlink package bytes.
@@ -313,15 +313,15 @@ durable provider jobs -> Phase 13
 - [x] History restore creates a new forward aggregate generation.
 - [x] Durable import, export, and provider jobs survive restart or reach one deterministic rollback/terminal outcome.
 - [x] Every public/external sink uses an allowlisted DTO.
-- [x] Imported media owner refs publish with R0 or remain quarantined.
-- [x] Duplicate/fork/template/history snapshots carry complete package authority.
+- [ ] Imported media owner refs publish with R0 or remain quarantined.
+- [ ] Duplicate/fork/template/history snapshots carry complete package authority.
 - [x] Concurrent sync and partial portable import cannot publish or delete incomplete remote/local state.
-- [x] Raw ZIP ambiguity and unsafe outer or recursively embedded ZIP/XML are
+- [ ] Raw ZIP ambiguity and unsafe outer or recursively embedded ZIP/XML are
       rejected before native, OfficeCLI, workbook, diagram, or provider parsing.
 - [x] Portable/copy/sync surfaces include all referenced package bytes with verified hashes or fail before creating an artifact.
 - [x] Unknown parts and external relationships are inventoried without execution.
 - [x] Legacy presentations retain exact original download and recoverable export behavior.
-- [x] Package, route, corpus, lint, unit, client build, quota, and crash-recovery validators pass.
+- [ ] Package, route, corpus, lint, unit, client build, quota, and crash-recovery validators pass.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

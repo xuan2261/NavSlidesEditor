@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: 'Evidence provenance and claim contract'
-status: completed
+status: in-progress
 effort: '1-2 weeks'
 dependsOn: []
 priority: P0
@@ -143,14 +143,14 @@ The fail-closed harness invokes the claim CLI, asserts non-zero for missing Powe
 
 ## Function and Interface Checklist
 
-- [x] Define `parseCanonicalFeatureMatrix(input)`.
-- [x] Define `canonicalFeatureMatrixHash(matrix)`.
-- [x] Define `featureRow(rowId)` with unknown-row fail-closed behavior.
-- [x] Derive planner, DTO, corpus, and evidence adapters from one envelope.
-- [x] Bind each row to input transport/schema, eligibility-policy ID/version, and
+- [ ] Define `parseCanonicalFeatureMatrix(input)`.
+- [ ] Define `canonicalFeatureMatrixHash(matrix)`.
+- [ ] Define `featureRow(rowId)` with unknown-row fail-closed behavior.
+- [ ] Derive planner, DTO, corpus, and evidence adapters from one envelope.
+- [ ] Bind each row to input transport/schema, eligibility-policy ID/version, and
       canonical-normalization contract.
-- [x] Preserve `evaluateClaim()`, `requiredLanes()`, and production importer entrypoint.
-- [x] Remove the `protected-provider` lookup alias from authoritative evaluation.
+- [ ] Preserve `evaluateClaim()`, `requiredLanes()`, and production importer entrypoint.
+- [ ] Remove the `protected-provider` lookup alias from authoritative evaluation.
 
 ## Tests Before
 
@@ -210,20 +210,20 @@ canonical provider contract -> Phase 13 protected workflow
 - [x] Exact original and package-preservation claims can pass independently of visual fidelity.
 - [x] The current repository still rejects the 1:1 product claim honestly.
 - [x] Every required corpus deck and feature row is hash-addressed.
-- [x] Every claim verifies against a protected-CI trust root; level 5 additionally
+- [ ] Every claim verifies against a protected-CI trust root; level 5 additionally
       verifies against the `protected-powerpoint-provider` trust root.
 - [x] Older/forked ledger evidence, duplicate concurrent epochs, downgraded policy, unapproved workflow identity, or wrong release commit fails closed.
 - [x] Corpus and production imports use the same guards, scene graph, strict policy, and mapper entrypoint; no private corpus extractor remains.
 - [x] Evidence privacy, retention, and provider-authority policies are explicit.
-- [x] One canonical feature matrix drives planner, DTO, corpus, and evidence with
+- [ ] One canonical feature matrix drives planner, DTO, corpus, and evidence with
       one deterministic schema/version/hash.
-- [x] Unknown rows and properties fail closed, and broad family rows cannot imply
+- [ ] Unknown rows and properties fail closed, and broad family rows cannot imply
       untested editability.
-- [x] G2 transaction eligibility and G4 claim promotion are independent states.
-- [x] Planner, adapter, corpus, evidence, and claim hashes reject transport,
+- [ ] G2 transaction eligibility and G4 claim promotion are independent states.
+- [ ] Planner, adapter, corpus, evidence, and claim hashes reject transport,
       eligibility-policy, or normalization-contract mismatch.
-- [x] `protected-powerpoint-provider` is the only authoritative provider lane.
-- [x] Focused tests, corpus tests, lint, and unit suite pass.
+- [ ] `protected-powerpoint-provider` is the only authoritative provider lane.
+- [ ] Focused tests, corpus tests, lint, and unit suite pass.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

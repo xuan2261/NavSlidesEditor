@@ -426,8 +426,11 @@ Verification typically runs in this order:
    ```
    This fail-closed two-pass gate verifies the checked-in 11-deck manifest and
    every source SHA-256, then uses one hash-checked temporary snapshot for
-   best-effort native evidence and `{ strict: true }`. Known EMF/native-node
-   blockers can make it exit non-zero; that result is truthful, not a release pass.
+   best-effort native evidence and `{ strict: true }`. The current report passes
+   all 11 decks with zero blockers, zero unmapped scene-graph nodes, and zero
+   permanent placeholders; this qualifies the importer corpus only, not OfficeCLI
+   or Microsoft PowerPoint fidelity claims. Future known EMF/native-node blockers
+   still fail closed rather than producing a false release pass.
 6. PPTX real-browser layout audit:
    ```bash
    npm run test:pptx:browser-audit        # strict smoke subset for PR/runtime-sensitive checks

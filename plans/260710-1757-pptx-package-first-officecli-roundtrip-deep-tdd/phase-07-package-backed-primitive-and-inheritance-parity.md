@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: 'Package-backed primitive and inheritance parity'
-status: completed
+status: in-progress
 effort: '6-8 weeks'
 dependsOn: [1, 5]
 priority: P1
@@ -142,12 +142,12 @@ Run edited-roundtrip suites for every promoted matrix row. Run protected PowerPo
 
 ## Function and Interface Checklist
 
-- [x] Preserve native text and primitive adapter contracts.
-- [x] Bind the adapter registry to planner dispatch.
-- [x] Split rows whose listed properties do not share complete evidence.
-- [x] Add source-fragment refs before rich text/table/group promotion.
-- [x] Emit exact touched-part closure and matrix hash per result.
-- [x] Prove the production TipTap transport, not a test-only plain string,
+- [ ] Preserve native text and primitive adapter contracts.
+- [ ] Bind the adapter registry to planner dispatch.
+- [ ] Split rows whose listed properties do not share complete evidence.
+- [ ] Add source-fragment refs before rich text/table/group promotion.
+- [ ] Emit exact touched-part closure and matrix hash per result.
+- [ ] Prove the production TipTap transport, not a test-only plain string,
       satisfies or fails the exact seed eligibility contract.
 
 ## Tests Before
@@ -202,16 +202,16 @@ Phase 6 differential evidence
 
 ## Success Criteria
 
-- [x] Every promoted primitive property has import, edit, journal, patch, re-import, and untouched-part evidence; rows promoted to level 5 also have protected provider evidence.
-- [x] The exact plain-run seed is adapter-qualified and transaction-eligible only
+- [ ] Every promoted primitive property has import, edit, journal, patch, re-import, and untouched-part evidence; rows promoted to level 5 also have protected provider evidence.
+- [ ] The exact plain-run seed is adapter-qualified and transaction-eligible only
       for the strict TipTap subset; it is not level-4 promoted by G2.
-- [x] Later candidates remain candidates until complete production transaction
+- [ ] Later candidates remain candidates until complete production transaction
       evidence passes; unfinished rows remain preserve-only and cannot block G2.
-- [x] Nested groups, placeholders, and inheritance retain authoritative identity and style origin.
+- [ ] Nested groups, placeholders, and inheritance retain authoritative identity and style origin.
 - [x] Repeated exports do not accumulate out-of-tolerance geometry or text drift.
 - [x] Editing supported adjacent properties preserves unsupported XML/media bytes.
 - [x] Product capability rows match the actual tested editability tier.
-- [x] Focused, corpus, lint, unit, and client build validators pass; visual validators additionally pass for level-5 rows.
+- [ ] Focused, corpus, lint, unit, and client build validators pass; visual validators additionally pass for level-5 rows.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

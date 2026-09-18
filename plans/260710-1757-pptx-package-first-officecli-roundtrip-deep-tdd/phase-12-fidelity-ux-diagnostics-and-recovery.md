@@ -1,7 +1,7 @@
 ---
 phase: 12
 title: 'Fidelity UX diagnostics and recovery'
-status: completed
+status: in-progress
 effort: '3-5 weeks'
 dependsOn: [1, 11]
 priority: P1
@@ -139,16 +139,16 @@ Manually verify keyboard/screen-reader status flow and every error/recovery stat
 
 ## Function and Interface Checklist
 
-- [x] Preserve `buildFidelityDto()` and explicit export handlers.
-- [x] Test and complete `usePptxFidelity()`.
-- [x] Drive tier copy/control state from canonical safe DTO rows.
-- [x] Wire recovery conflict props in production.
-- [x] Resume or reconcile durable export/provider terminal states.
-- [x] Stream/resume/cancel/download through fetch with cookie/header capability,
+- [ ] Preserve `buildFidelityDto()` and explicit export handlers.
+- [ ] Test and complete `usePptxFidelity()`.
+- [ ] Drive tier copy/control state from canonical safe DTO rows.
+- [ ] Wire recovery conflict props in production.
+- [ ] Resume or reconcile durable export/provider terminal states.
+- [ ] Stream/resume/cancel/download through fetch with cookie/header capability,
       never URL tokens or native EventSource.
-- [x] Prove every production mutation control and store/API path resolves through
+- [ ] Prove every production mutation control and store/API path resolves through
       one canonical row gate plus independent server authorization.
-- [x] Keep share/live/public surfaces free of authority metadata.
+- [ ] Keep share/live/public surfaces free of authority metadata.
 
 ## Tests Before
 
@@ -207,20 +207,20 @@ G0 safe canonical DTO + G2 transaction/job states
 
 - [x] Users can distinguish original, validated edited revision, and reconstructed fallback before download.
 - [x] Signed, encrypted/protected, macro-enabled, ActiveX, and OLE packages expose exact original recovery only, and absent protected provider infrastructure cannot be mistaken for level-5 evidence.
-- [x] Object controls and wording match exact canonical tested rows.
-- [x] No production mutation entry point bypasses canonical client gating and
+- [ ] Object controls and wording match exact canonical tested rows.
+- [ ] No production mutation entry point bypasses canonical client gating and
       independent server row authorization; this criterion blocks G4 release.
-- [x] Save conflicts and export failures preserve work and expose
+- [ ] Save conflicts and export failures preserve work and expose
       retry/forward-restore/original recovery through production wiring.
 - [x] Queued autosaves adopt each successful successor generation without self-conflicts.
-- [x] Import, export, and provider progress survives restart or resolves to one
+- [ ] Import, export, and provider progress survives restart or resolves to one
       durable terminal recovery state.
-- [x] Progress/status/cancel/download uses capability-bearing fetch with bounded
+- [ ] Progress/status/cancel/download uses capability-bearing fetch with bounded
       replay and no capability in URLs.
 - [x] Restoring history always creates a new forward aggregate generation and never republishes historical head metadata.
 - [x] Public/share/live surfaces contain no package authority or sensitive diagnostics.
 - [x] Accessibility and responsive workflows pass for every critical state.
-- [x] Client, route, Playwright, lint, unit, and build validators pass.
+- [ ] Client, route, Playwright, lint, unit, and build validators pass.
 
 ## Session 4 Local Scope Rebase: Active Phase Contract
 

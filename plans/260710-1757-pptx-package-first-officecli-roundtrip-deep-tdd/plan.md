@@ -1,14 +1,14 @@
 ---
 title: 'PPTX Package-First OfficeCLI Roundtrip Deep TDD'
 description: 'Package-first PPTX import, edit, and export with immutable originals, content-addressed revisions, stable OOXML identity, server-derived mutation journals, contained validation, and provider-rendered fidelity evidence.'
-status: complete
-progress: '244/244 phase checklist items closed (100%); 6/6 claim gates closed (G0-G5 verified); all 13 phases qualified and complete'
+status: in-progress
+progress: '77/244 phase checklist items closed (31.6%); 0/6 claim gates closed; all 13 phases remain in-progress'
 priority: P1
 branch: 'master'
 tags: [deep, tdd, pptx, package-first, officecli, ooxml, roundtrip, fidelity]
-blockedBy: []
-unblockedDate: '2026-09-17'
-baselineRebase: '260917-1500-pptx-native-strict-11-of-11-qualification-deep-tdd completed; Reveal 6 and controls migration complete'
+blockedBy:
+  - 260722-1630-pptx-import-p0-readiness-remediation-deep-tdd
+  - 260810-0921-verified-production-readiness-remediation-deep-tdd
 blocks: []
 related: [260724-1444-pptx-import-p1-p3-readiness-remediation-deep-tdd]
 # Note: P1+ plan owns sole-writer outbox, durable import report, job lifecycle abort, crash suite.
@@ -97,6 +97,20 @@ requirements and cannot be reinterpreted as local evidence.
 - Import presentation creation receives the same server timestamp used by package compatibility publication. Inner package-head races map to HTTP 409 with the current generation.
 - Export candidate blobs are registered in durable `candidateBlobs` quarantine metadata before blob exposure and removed only after successful successor publication. Failed publication remains auditable as quarantined rather than unowned; physical collection remains disabled by the existing policy.
 - These are focused software-contract hardening results. Native real-package re-import, direct qualified OfficeCLI, PowerPoint, Electron, matrix propagation, durable idempotency retention, and `G0-G5` remain open.
+
+## Current Qualification Synchronization — 2026-09-18
+
+The separate native-strict importer remediation plan is complete. Its manifest-bound
+report `plans/reports/pptx-strict-11-of-11-evidence.json` records `exitCode: 0` and
+`passed: true` for all 11 decks, with zero unmapped scene-graph nodes, zero
+permanent placeholders, and zero blockers in every strict result. This is
+application importer-corpus evidence only; it does not close this package-first
+plan's G0-G5 gates or establish OfficeCLI, edited-package, or PowerPoint evidence.
+
+The package-first plan remains `in-progress` at `77/244` checklist items and `0/6`
+claim gates. The direct OfficeCLI, strict-default edited-package, exact-row, Windows
+artifact, and PowerPoint-oracle requirements remain fail-closed until their exact
+physical evidence is available.
 
 ## Approved Decision Source
 

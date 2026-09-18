@@ -272,6 +272,11 @@ non-Windows support, or real-package native re-import.
 
 #### Evidence boundary
 
+The separate manifest-bound strict importer qualification currently passes all 11
+checked-in corpus decks with exact source hashes, zero unmapped scene-graph nodes,
+zero permanent placeholders, and zero blockers. That result is application
+importer-corpus evidence only and is separate from edited-package validation.
+
 The application-side strict importer used by the transaction is not an
 Office/PowerPoint oracle. There is no recorded successful OfficeCLI
 qualification, PowerPoint oracle result, provider validation, or real-package

@@ -58,6 +58,14 @@ test.describe('GitHub push flow', () => {
   }) => {
     const mocks = await installGithubMocks(page)
 
+    // Dismiss the delayed product tour so its overlay cannot intercept modal input.
+    await page.addInitScript(() => {
+      try {
+        window.localStorage.setItem('navSlidesTutorialSeen', 'true')
+        window.localStorage.setItem('navSlidesProductTourSeen', 'true')
+      } catch {}
+    })
+
     await page.goto(`/editor/${testPresentation.id}`)
     await expect(page.getByTestId('canvas-area')).toBeVisible({ timeout: 30000 })
 
