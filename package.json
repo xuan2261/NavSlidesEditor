@@ -79,7 +79,7 @@
     "electron:build:linux": "npm run electron:prepare && npm run electron:builder -- --linux",
     "electron:build:mac": "npm run electron:prepare && npm run electron:builder -- --mac",
     "electron:build:win": "npm run electron:prepare && npm run electron:builder -- --win",
-    "prepare": "husky",
+    "prepare": "node scripts/install-git-hooks.mjs",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
