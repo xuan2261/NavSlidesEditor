@@ -1,3 +1,4 @@
+const logger = require('./services/logger')
 const express = require('express')
 const cors = require('cors')
 const path = require('path')
@@ -34,7 +35,7 @@ const { sanitizeSvgBuffer } = require('./services/svg-upload-sanitizer')
  * shutdown must not turn an otherwise healthy stop into a non-zero exit.
  */
 function logStoreReleaseFailure(error) {
-  console.error(
+  logger.error(
     '[shutdown] package store release failed:',
     stripControlChars(error?.message || error).trim()
   )
@@ -73,7 +74,7 @@ function drainServerTransports(server, timeoutMs) {
     }
     const timeout = setTimeout(() => {
       server.getConnections?.((_error, count) => {
-        console.warn(`[shutdown] drain deadline exceeded; force-closing ${count} connection(s)`)
+        logger.warn(`[shutdown] drain deadline exceeded; force-closing ${count} connection(s)`)
       })
       io?.disconnectSockets?.(true)
       server.closeAllConnections?.()
@@ -435,7 +436,7 @@ async function startServer(port, options = {}) {
     envHost: process.env.NAVSLIDES_LISTEN_HOST,
   })
   const exposureWarning = getExposureWarning(listenHost)
-  if (exposureWarning) console.warn(JSON.stringify(exposureWarning))
+  if (exposureWarning) logger.warn(JSON.stringify(exposureWarning))
   await initializePackageStore({ rootDir: path.resolve(DATA_DIR) })
   packageStoreShutdownPromise = null
   return new Promise((resolve, reject) => {
@@ -460,7 +461,7 @@ async function startServer(port, options = {}) {
       const actualAddress = typeof address === 'object' && address
         ? `${address.address}:${address.port}`
         : String(address)
-      console.log(`Server running on http://${actualAddress}`)
+      logger.log(`Server running on http://${actualAddress}`)
       resolve(server)
     })
   })
@@ -495,7 +496,7 @@ function installShutdownHandlers(server) {
     process.once(signal, () => {
       if (stopping) return
       stopping = true
-      console.log(`Received ${signal}, shutting down`)
+      logger.log(`Received ${signal}, shutting down`)
       stopServer(server).finally(() => process.exit(0))
     })
   }
@@ -506,7 +507,7 @@ if (require.main === module) {
   startServer()
     .then(installShutdownHandlers)
     .catch((error) => {
-      console.error('Server failed to start', error)
+      logger.error('Server failed to start', error)
       process.exitCode = 1
     })
 }

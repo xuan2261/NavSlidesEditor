@@ -1,3 +1,4 @@
+const logger = require('../services/logger')
 const express = require('express')
 const fs = require('fs-extra')
 const multer = require('multer')
@@ -41,7 +42,7 @@ const activeImportAbortControllers = new Set()
 function trackDetachedImportCleanup(promise) {
   const tracked = Promise.resolve(promise)
     .catch((error) => {
-      console.error('[pptx-import] detached cleanup failed:', sanitizeDiagnostic(error))
+      logger.error('[pptx-import] detached cleanup failed:', sanitizeDiagnostic(error))
     })
     .finally(() => detachedImportCleanups.delete(tracked))
   detachedImportCleanups.add(tracked)
@@ -66,7 +67,7 @@ async function drainDetachedImportCleanups({ timeoutMs = 5000 } = {}) {
   const result = await Promise.race([drain().then(() => false), timedOut])
   clearTimeout(timer)
   if (result) {
-    console.warn(`[pptx-import] cleanup drain deadline exceeded with ${detachedImportCleanups.size} operation(s)`)
+    logger.warn(`[pptx-import] cleanup drain deadline exceeded with ${detachedImportCleanups.size} operation(s)`)
   }
 }
 
@@ -336,7 +337,7 @@ function withAbort(promise, signal, cleanupLateResult, trackCleanup) {
   const diagnoseLateRejection = (error) => {
     const diagnostic = Promise.resolve().then(() => {
       if (error?.name !== 'AbortError') {
-        console.warn('[pptx-import] detached stage rejected:', sanitizeDiagnostic(error))
+        logger.warn('[pptx-import] detached stage rejected:', sanitizeDiagnostic(error))
       }
     })
     trackCleanup?.(diagnostic)

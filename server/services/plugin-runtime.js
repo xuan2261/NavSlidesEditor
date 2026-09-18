@@ -1,3 +1,4 @@
+const logger = require('./logger')
 const path = require('path')
 const fs = require('fs-extra')
 const { DATA_DIR } = require('./storage')
@@ -55,7 +56,7 @@ async function readPluginFromRoot(root, slug) {
     const manifest = await fs.readJson(manifestPath)
     return normalizeManifest(manifest, slug, pluginRoot)
   } catch (err) {
-    console.warn(`Skipping invalid plugin manifest ${manifestPath}: ${err.message}`)
+    logger.warn(`Skipping invalid plugin manifest ${manifestPath}: ${err.message}`)
     return null
   }
 }

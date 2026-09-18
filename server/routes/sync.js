@@ -1,3 +1,4 @@
+const logger = require('../services/logger')
 const crypto = require('node:crypto')
 const express = require('express')
 const fs = require('fs-extra')
@@ -320,7 +321,7 @@ function runRclone(args, env = {}) {
         // rclone stderr can echo absolute paths, remote names, and config
         // hints. Log full detail server-side only; surface a generic message
         // so the HTTP client never receives the raw stderr.
-        console.error('[rclone]', args[0], stderr || err.message)
+        logger.error('[rclone]', args[0], stderr || err.message)
         const generic = new Error('rclone command failed')
         generic.rcloneCommand = args[0]
         return reject(generic)

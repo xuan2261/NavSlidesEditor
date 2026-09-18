@@ -1,3 +1,4 @@
+const logger = require('../services/logger')
 const express = require('express')
 const uuidv4 = () => require('node:crypto').randomUUID()
 const {
@@ -421,7 +422,7 @@ router.post('/raster-elements', async (req, res) => {
     const rasters = await rasterizeComplexElements(presentation, { baseUrl: getLocalBaseUrl(req) })
     res.json({ rasters })
   } catch (err) {
-    console.error('PPTX element rasterization failed:', err)
+    logger.error('PPTX element rasterization failed:', err)
     res.status(500).json({ error: 'PPTX element rasterization failed' })
   }
 })

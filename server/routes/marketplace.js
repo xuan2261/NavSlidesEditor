@@ -1,3 +1,4 @@
+const logger = require('../services/logger')
 const express = require('express')
 const path = require('path')
 const fs = require('fs')
@@ -19,7 +20,7 @@ function loadBuiltInTemplates() {
     cachedTemplates = normalizeBuiltInTemplates(JSON.parse(fs.readFileSync(BUILT_IN_PATH, 'utf-8')))
     cacheTimestamp = now
   } catch (err) {
-    console.error('Failed to load built-in templates:', err)
+    logger.error('Failed to load built-in templates:', err)
     cachedTemplates = []
   }
   return cachedTemplates

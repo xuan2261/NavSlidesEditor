@@ -1,3 +1,4 @@
+const logger = require('../services/logger')
 const { stripControlChars } = require('../utils/strip-control-chars')
 
 /**
@@ -9,7 +10,7 @@ function errorHandler(err, req, res, _next) {
   // document content). Strip them before they reach the operator's terminal or
   // a client that prints the parsed response.
   const message = stripControlChars(err?.message || '').replace(/\s+/g, ' ').trim()
-  console.error('[Server Error]', message || err)
+  logger.error('[Server Error]', message || err)
 
   // Multer file-size / file-type errors
   if (err.code === 'LIMIT_FILE_SIZE') {

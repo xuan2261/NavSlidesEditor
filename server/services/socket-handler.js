@@ -1,3 +1,4 @@
+const logger = require('./logger')
 const { findPresentationById, findServeablePresentation } = require('./presentation-finder')
 const { readAuthoritativePresentation } = require('./package-backed-presentation-read')
 const liveRoomsService = require('./live-rooms')
@@ -255,7 +256,7 @@ function setupSocketHandlers(io, dependencies = {}) {
             )
           }
         } catch (err) {
-          console.error('Failed to load presentation for live room', err)
+          logger.error('Failed to load presentation for live room', err)
         }
       }
 

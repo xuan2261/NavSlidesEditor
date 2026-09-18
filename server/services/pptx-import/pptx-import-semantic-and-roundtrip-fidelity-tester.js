@@ -5,6 +5,7 @@
  *   2. Round-trip stability: NavSlides → PPTX → NavSlides (our data stability)
  */
 
+const logger = require('../logger')
 const path = require('path')
 const os = require('os')
 const fs = require('fs-extra')
@@ -1445,7 +1446,7 @@ function reportResults({ results, summary }) {
     lines.push('')
   }
 
-  console.log(lines.join('\n'))
+  logger.log(lines.join('\n'))
   return { text: lines.join('\n') }
 }
 

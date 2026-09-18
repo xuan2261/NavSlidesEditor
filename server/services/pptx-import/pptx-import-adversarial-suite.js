@@ -2,6 +2,7 @@
  * Isolated adversarial PPTX import suite.
  * Expected reject/warn/map outcomes — never folded into metrics averages.
  */
+const logger = require('../logger')
 const fs = require('node:fs/promises')
 const http = require('node:http')
 const https = require('node:https')
@@ -149,13 +150,13 @@ async function main(argv = process.argv.slice(2)) {
   const flag = argv.find((arg) => arg.startsWith('--fixture-dir='))
   const fixtureDir = flag ? flag.slice('--fixture-dir='.length) : DEFAULT_FIXTURE_DIR
   const summary = await runAdversarialSuite({ fixtureDir, materialize })
-  console.log(JSON.stringify(summary, null, 2))
+  logger.log(JSON.stringify(summary, null, 2))
   process.exitCode = summary.ok ? 0 : 1
 }
 
 if (require.main === module) {
   main().catch((error) => {
-    console.error(error)
+    logger.error(error)
     process.exitCode = 1
   })
 }
