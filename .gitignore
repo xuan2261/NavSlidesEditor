@@ -62,6 +62,6 @@ plans/**/research/parser-sandbox/node_modules/
 .claude/
 
 # Scratch / personal artifacts (not source)
-sessions/
-slides.com/
-xuatN26th7/
+sessions
+slides.com
+xuatN26th7
