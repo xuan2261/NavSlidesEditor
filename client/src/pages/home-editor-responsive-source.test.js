@@ -1,10 +1,19 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const homeSource = () => readFileSync(path.resolve(HERE, 'HomePage.jsx'), 'utf8')
+// HomePage.jsx was split into pages/home/* — scan the page plus its modules.
+const homeSource = () =>
+  [
+    'HomePage.jsx',
+    ...readdirSync(path.resolve(HERE, 'home'))
+      .filter((f) => /\.(js|jsx)$/.test(f))
+      .map((f) => path.join('home', f)),
+  ]
+    .map((f) => readFileSync(path.resolve(HERE, f), 'utf8'))
+    .join('\n')
 const editorSource = () => readFileSync(path.resolve(HERE, 'EditorPage.jsx'), 'utf8')
 const statusBarSource = () =>
   readFileSync(path.resolve(HERE, '../components/layout/StatusBar.jsx'), 'utf8')
