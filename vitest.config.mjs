@@ -51,16 +51,16 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov', 'json-summary'],
       reportsDirectory: './coverage',
-      // Anti-regression thresholds based on 2026-05-19 baseline (Phase 9).
-      // Set ~3 pts below measured coverage (lines:37.7, branches:31.6,
-      // functions:30.3, statements:36.2) to absorb noise from removed/added
+      // Anti-regression thresholds based on the 2026-09-18 measurement.
+      // Set ~3 pts below measured coverage (lines:77.5, branches:62.8,
+      // functions:71.2, statements:74.4) to absorb noise from removed/added
       // tests in unrelated PRs while still preventing real regression. Bump
       // these via dedicated PRs as coverage rises toward the 80% goal.
       thresholds: {
-        lines: 33,
-        branches: 28,
-        functions: 26,
-        statements: 33,
+        lines: 74,
+        branches: 60,
+        functions: 68,
+        statements: 71,
       },
       include: [
         'client/src/**/*.{js,jsx}',
