@@ -45,8 +45,8 @@ const REQUIRED_TESTIDS = [
   { file: 'client/src/components/game-hud-overlay.jsx', testid: 'game-hud' },
   { file: 'client/src/components/game-leaderboard-overlay.jsx', testid: 'game-leaderboard' },
   { file: 'client/src/components/EditorModals.jsx', testid: 'game-active-indicator' },
-  { file: 'client/src/components/canvas/element-renderers/game-element-renderer.jsx', testid: 'game-question' },
-  { file: 'client/src/components/canvas/element-renderers/game-element-renderer.jsx', testid: 'game-score' },
+  { file: 'client/src/components/canvas/element-renderers/game-renderers/jeopardy-question-modal.jsx', testid: 'game-question' },
+  { file: 'client/src/components/canvas/element-renderers/game-renderers/jeopardy-score-panel.jsx', testid: 'game-score' },
 ]
 
 function testIdPattern(testid) {
