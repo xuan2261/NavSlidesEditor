@@ -1,0 +1,65 @@
+name: Electron server lock refresh
+
+# Regenerates electron/server-package-lock.json via `npm run electron:lock` on a
+# weekly cadence. Dependabot manages the workspace lockfile at root, but the
+# isolated lock the Electron packaging flow consumes is generated — this job
+# keeps it in sync with in-range server dependency updates.
+
+on:
+  schedule:
+    - cron: '30 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: electron-server-lock-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Regenerate isolated Electron server lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0' }
+      - run: npm run electron:lock
+      - name: Verify the regenerated lock installs its declared tree
+        # prepare-electron performs `npm ci` against the isolated lock and
+        # compares the installed tree hash with the lock — the artifact-level
+        # validation for this file. Note: PRs opened with GITHUB_TOKEN do not
+        # trigger the push/pull_request CI suite (GitHub limitation), so this
+        # in-job check is the automated verification for generated lock PRs.
+        run: node scripts/prepare-electron.js
+      - name: Open or update the refresh PR
+        # Single stable automation branch: an already-open refresh PR gets its
+        # branch updated in place instead of spawning a duplicate PR.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if ! git status --porcelain electron/server-package-lock.json | grep -q .; then
+            echo "Electron server lock already up to date."
+            exit 0
+          fi
+          branch="chore/electron-server-lock-refresh"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add electron/server-package-lock.json
+          git commit -m "chore: refresh isolated Electron server lock"
+          git push --force origin "$branch"
+          open_pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')
+          if [ -z "$open_pr" ]; then
+            gh pr create \
+              --title "chore: refresh isolated Electron server lock" \
+              --body "Regenerates electron/server-package-lock.json via \`npm run electron:lock\` so the packaged Electron server picks up in-range dependency updates that Dependabot lands on the workspace lockfile. The refresh job verifies the lock installs its declared tree via \`node scripts/prepare-electron.js\`." \
+              --base master \
+              --head "$branch"
+          else
+            echo "Refresh PR #$open_pr already open — branch updated in place."
+          fi

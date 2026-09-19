@@ -98,8 +98,8 @@ NavSlidesEditor/
   - `presentation-store.js` — presentation data (loaded/saved via REST)
   - `ui-store.js` — UI state (includes ribbon state)
 - **Pages** (`client/src/pages/`):
-  - `EditorPage.jsx` — main editor (77k LOC; large file)
-  - `HomePage.jsx` — dashboard, CRUD, templates (68k LOC)
+  - `EditorPage.jsx` — main editor (~650 LOC)
+  - `HomePage.jsx` — dashboard, CRUD, templates (~2k LOC; largest page)
   - `LiveViewPage.jsx`, `RemoteControlPage.jsx`, `SpeakerViewPage.jsx` — live presentation
   - `SettingsPage.jsx`, `ExplorePage.jsx`, `game-player-join-page.jsx`
 - **Components** (`client/src/components/`): SlideCanvas, PropertiesPanel, SlidePanel, QuickAccessToolbar, AnimationTimeline, FindReplaceBar, ShareModal, ribbon/ (new UI), various modals (AI, media, templates, etc.).

@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      tiptap:
+        patterns:
+          - "@tiptap/*"
+      dev-tools:
+        patterns:
+          - "eslint*"
+          - "prettier"
+          - "vitest*"
+          - "@vitest/*"
+          - "playwright*"
+          - "@playwright/*"
+    open-pull-requests-limit: 5
