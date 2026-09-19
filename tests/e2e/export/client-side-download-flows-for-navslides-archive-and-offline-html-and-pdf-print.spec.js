@@ -105,7 +105,7 @@ test.describe('Client side download flows for navslides project archive and offl
         title: document.title,
       }))
       expect({ runtime, offlineErrors }).toEqual({
-        runtime: { version: '6.0.1', ready: true, title: 'Client export E2E' },
+        runtime: { version: '6.0.2', ready: true, title: 'Client export E2E' },
         offlineErrors: [],
       })
       expect(networkRequests).toEqual([])
