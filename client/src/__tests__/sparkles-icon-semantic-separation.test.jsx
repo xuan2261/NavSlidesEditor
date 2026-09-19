@@ -61,7 +61,7 @@ describe('sparkles semantic separation', () => {
       'components/AICopywriterModal.jsx',
       'components/AIGeneratorModal.jsx',
       'components/ribbon/ribbon-header-bar.jsx',
-      'pages/HomePage.jsx',
+      'pages/home/home-sidebar.jsx',
     ]
     for (const rel of aiFiles) {
       const content = readSrc(rel)
