@@ -36,6 +36,9 @@ const NON_TEST_SRC_FILES = ALL_SRC_FILES.filter(
 
 const SPARKLES_NON_TEST_WHITELIST = [
   'pages/HomePage.jsx',
+  'pages/home/home-sidebar.jsx',
+  'pages/home/marketplace-view.jsx',
+  'pages/home/template-gallery-view.jsx',
   'components/AIGeneratorModal.jsx',
   'components/AICopywriterModal.jsx',
   'components/ribbon/ribbon-header-bar.jsx',
