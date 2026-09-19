@@ -2,6 +2,7 @@
  * Isolated adversarial PPTX import suite.
  * Expected reject/warn/map outcomes — never folded into metrics averages.
  */
+const logger = require('../logger')
 const fs = require('node:fs/promises')
 const http = require('node:http')
 const https = require('node:https')
@@ -155,7 +156,7 @@ async function main(argv = process.argv.slice(2)) {
 
 if (require.main === module) {
   main().catch((error) => {
-    console.error(error)
+    logger.error(error)
     process.exitCode = 1
   })
 }

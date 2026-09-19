@@ -1,3 +1,4 @@
+const logger = require('../services/logger')
 const express = require('express')
 const { readSettings } = require('../services/storage')
 const { callAI } = require('../services/ai-provider')
@@ -15,7 +16,7 @@ function logAiError(context, err) {
     .replace(/\b(sk-[A-Za-z0-9_-]{8,})\b/g, '<REDACTED_TOKEN>')
     .replace(/\b(gh[pousr]_[A-Za-z0-9_]{8,})\b/g, '<REDACTED_TOKEN>')
     .replace(/\b(Bearer\s+)[A-Za-z0-9._-]{12,}/gi, '$1<REDACTED_TOKEN>')
-  console.error(`[AI:${context}]`, safeMessage)
+  logger.error(`[AI:${context}]`, safeMessage)
 }
 
 function sendAiProviderFailure(res) {

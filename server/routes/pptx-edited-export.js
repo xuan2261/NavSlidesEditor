@@ -1,3 +1,4 @@
+const logger = require('../services/logger')
 const crypto = require('node:crypto')
 const { isValidIdempotencyKey } = require('../services/pptx-import/request-limits')
 
@@ -21,7 +22,7 @@ function createEditedExportHandler({
   execute,
   drainCompatibility = async () => 0,
   reportCompatibilityDrainFailure = (error) => {
-    console.error('Validated edited PPTX compatibility drain failed:', error)
+    logger.error('Validated edited PPTX compatibility drain failed:', error)
   },
 }) {
   return async function editedExport(req, res) {

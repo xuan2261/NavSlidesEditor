@@ -1,3 +1,4 @@
+const logger = require('../../logger')
 const crypto = require('node:crypto')
 const fs = require('node:fs/promises')
 const os = require('node:os')
@@ -110,7 +111,7 @@ class WriterLock {
     }
     if (!record) throw new Error(HELD_MESSAGE)
     if (reclaimed) {
-      console.warn(
+      logger.warn(
         `[package-store] reclaimed writer lock abandoned by pid ${reclaimed.pid} ` +
           `at ${reclaimed.acquiredAt}; fencing epoch ${reclaimed.epoch} -> ${record.epoch}`
       )
