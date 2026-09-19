@@ -49,10 +49,22 @@ describe('EditorPage transition preview wiring', () => {
     const editorPage = fs.readFileSync(editorPagePath, 'utf8')
 
     expect(editorPage).toMatch(
-      /const setShowTransitionPreview = useUIStore\(\(s\) => s\.setShowTransitionPreview\)/,
+      /const setShowTransitionPreview = useUIStore\(\(s\) => s\.setShowTransitionPreview\)/
     )
-    expect(editorPage).toContain(
-      'setShowCssEditor, setShowMediaLibrary, setShowImageUrlPrompt, setShowFileBrowser, setShowAnimationPreview, setShowTransitionPreview, pluginTypes',
+    const workspaceContext = editorPage.slice(
+      editorPage.indexOf('c={{'),
+      editorPage.indexOf('<EditorPageOverlays')
     )
+    for (const prop of [
+      'setShowCssEditor',
+      'setShowMediaLibrary',
+      'setShowImageUrlPrompt',
+      'setShowFileBrowser',
+      'setShowAnimationPreview',
+      'setShowTransitionPreview',
+      'pluginTypes',
+    ]) {
+      expect(workspaceContext).toContain(prop)
+    }
   })
 })
