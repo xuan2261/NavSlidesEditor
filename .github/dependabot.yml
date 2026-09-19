@@ -1,19 +1,30 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: "/"
+    directory: '/'
     schedule:
       interval: weekly
     groups:
       tiptap:
         patterns:
-          - "@tiptap/*"
+          - '@tiptap/*'
       dev-tools:
         patterns:
-          - "eslint*"
-          - "prettier"
-          - "vitest*"
-          - "@vitest/*"
-          - "playwright*"
-          - "@playwright/*"
+          - 'eslint*'
+          - 'prettier'
+          - 'vitest*'
+          - '@vitest/*'
+          - 'playwright*'
+          - '@playwright/*'
     open-pull-requests-limit: 5
+    ignore:
+      # Majors needing coordinated migrations; eslint 10 is blocked by
+      # eslint-plugin-react's peer range, react 19 needs a react-dom pair bump.
+      - dependency-name: 'eslint'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@eslint/js'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
