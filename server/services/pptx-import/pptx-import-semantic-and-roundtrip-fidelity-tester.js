@@ -5,7 +5,6 @@
  *   2. Round-trip stability: NavSlides → PPTX → NavSlides (our data stability)
  */
 
-const logger = require('../logger')
 const path = require('path')
 const os = require('os')
 const fs = require('fs-extra')
@@ -14,7 +13,17 @@ const { sanitizeHtml } = require('./mapper')
 const { importPptxFile } = require('./importer')
 const { sanitizeDiagnostic } = require('./diagnostics')
 const { assertPresentationAcceptance } = require('./acceptance-criteria')
-const { fitBoxWithinBounds, identityMatrix, mapBoxByMatrix, multiply, readCoord, readNumber, rotateAround, scaleAround, translate } = require('./geometry')
+const {
+  fitBoxWithinBounds,
+  identityMatrix,
+  mapBoxByMatrix,
+  multiply,
+  readCoord,
+  readNumber,
+  rotateAround,
+  scaleAround,
+  translate,
+} = require('./geometry')
 const { UPLOADS_DIR } = require('../storage')
 const { hashFile } = require('./evidence/corpus-manifest')
 
@@ -25,8 +34,19 @@ const DEFAULT_MAX_CLASS_DROP = 0.15
 const STRICT_AVG_MIN_SEMANTIC = 0.98
 const STRICT_AVG_MIN_ROUND_TRIP = 0.5
 const STRICT_MIN_CORPUS_FILES = 10
-const STRICT_CLASS_DROP_TYPES = ['image', 'shape', 'table', 'text', 'chart', 'group', 'diagram', 'line', 'other']
-const formatStrictPercent = (value) => `${(value * 100).toFixed(Number.isInteger(value * 100) ? 0 : 1)}%`
+const STRICT_CLASS_DROP_TYPES = [
+  'image',
+  'shape',
+  'table',
+  'text',
+  'chart',
+  'group',
+  'diagram',
+  'line',
+  'other',
+]
+const formatStrictPercent = (value) =>
+  `${(value * 100).toFixed(Number.isInteger(value * 100) ? 0 : 1)}%`
 const STRICT_CORPUS_GATES = Object.freeze({
   minCorpusFiles: STRICT_MIN_CORPUS_FILES,
   avgSemanticFidelity: {
@@ -96,7 +116,11 @@ function pptColor(value, fallback = 'FFFFFF') {
   const rgb = raw.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/i)
   if (rgb) {
     return [rgb[1], rgb[2], rgb[3]]
-      .map((part) => Math.max(0, Math.min(255, Number(part) || 0)).toString(16).padStart(2, '0'))
+      .map((part) =>
+        Math.max(0, Math.min(255, Number(part) || 0))
+          .toString(16)
+          .padStart(2, '0')
+      )
       .join('')
       .toUpperCase()
   }
@@ -104,22 +128,26 @@ function pptColor(value, fallback = 'FFFFFF') {
 }
 
 function stripHtml(html) {
-  return sanitizeHtml(html).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  return sanitizeHtml(html)
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function imageSource(src) {
   if (!src) return null
   if (String(src).startsWith('data:')) return { data: src }
-  if (String(src).startsWith('/uploads/')) return { path: path.join(UPLOADS_DIR, path.basename(src)) }
+  if (String(src).startsWith('/uploads/'))
+    return { path: path.join(UPLOADS_DIR, path.basename(src)) }
   return { path: src }
 }
 
 function elementBounds(element, scaleX, scaleY) {
   return {
-    x: ((element.x || 0) * scaleX),
-    y: ((element.y || 0) * scaleY),
-    w: ((element.width || 0) * scaleX),
-    h: ((element.height || 0) * scaleY),
+    x: (element.x || 0) * scaleX,
+    y: (element.y || 0) * scaleY,
+    w: (element.width || 0) * scaleX,
+    h: (element.height || 0) * scaleY,
   }
 }
 
@@ -140,7 +168,9 @@ async function exportPresentationForRoundTrip(presentation, filePath) {
       slide.background = { color: pptColor(sourceSlide.background.color) }
     }
 
-    const elements = [...(sourceSlide.elements || [])].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+    const elements = [...(sourceSlide.elements || [])].sort(
+      (a, b) => (a.zIndex || 0) - (b.zIndex || 0)
+    )
     for (const element of elements) {
       const bounds = elementBounds(element, scaleX, scaleY)
       try {
@@ -195,7 +225,11 @@ async function exportPresentationForRoundTrip(presentation, filePath) {
 }
 
 async function exportViaProduction(presentation, filePath, options = {}) {
-  const { baseUrl = process.env.NAVSLIDES_API_URL || '', strictRaster = true, allowFallback = false } = options
+  const {
+    baseUrl = process.env.NAVSLIDES_API_URL || '',
+    strictRaster = true,
+    allowFallback = false,
+  } = options
   const { exportToFile } = require('../../utils/server-export')
   return exportToFile(presentation, filePath, { baseUrl, strictRaster, allowFallback })
 }
@@ -205,23 +239,55 @@ async function exportViaProduction(presentation, filePath, options = {}) {
 // ---------------------------------------------------------------------------
 
 function shapeNameFromShapType(shapType = '') {
-  const s = String(shapType || '').toLowerCase().replace(/[\s_-]/g, '')
+  const s = String(shapType || '')
+    .toLowerCase()
+    .replace(/[\s_-]/g, '')
   if (s.includes('ellipse') || s.includes('oval') || s.includes('circle')) return 'circle'
-  if (s.includes('triangle') || s.includes('isoscelestriangle') || s.includes('righttriangle')) return 'triangle'
+  if (s.includes('triangle') || s.includes('isoscelestriangle') || s.includes('righttriangle'))
+    return 'triangle'
   if (s.includes('diamond') || s.includes('rhombus')) return 'diamond'
   if (s.includes('arrow')) return 'arrow-right'
-  if (s === 'line' || (s.includes('line') && !s.includes('arrow') && !s.includes('connector') && !s.includes('straight'))) return 'line'
-  if (s.includes('straightconnector') || (s.includes('straight') && s.includes('connector'))) return 'line'
-  if (s.includes('round') || s.includes('roundedrect') || s.includes('rounded') || s.includes('corner')) return 'rounded-rect'
+  if (
+    s === 'line' ||
+    (s.includes('line') &&
+      !s.includes('arrow') &&
+      !s.includes('connector') &&
+      !s.includes('straight'))
+  )
+    return 'line'
+  if (s.includes('straightconnector') || (s.includes('straight') && s.includes('connector')))
+    return 'line'
+  if (
+    s.includes('round') ||
+    s.includes('roundedrect') ||
+    s.includes('rounded') ||
+    s.includes('corner')
+  )
+    return 'rounded-rect'
   if (/star/.test(s) && /\d/.test(s)) return 'star'
-  if (s.includes('star4') || s.includes('star5') || s.includes('star6') || s.includes('star7') || s.includes('star8') || s.includes('star10') || s.includes('star12')) return 'star'
+  if (
+    s.includes('star4') ||
+    s.includes('star5') ||
+    s.includes('star6') ||
+    s.includes('star7') ||
+    s.includes('star8') ||
+    s.includes('star10') ||
+    s.includes('star12')
+  )
+    return 'star'
   if (s.includes('hexagon')) return 'hexagon'
   if (s.includes('pentagon')) return 'pentagon'
   if (s.includes('cloud')) return 'cloud'
   if (s.includes('cylinder') || s.includes('can')) return 'cylinder'
   if (s.includes('parallelogram')) return 'parallelogram'
   if (s.includes('trapezoid')) return 'trapezoid'
-  if (s.includes('bracket') || s.includes('leftbrace') || s.includes('rightbrace') || s.includes('brace')) return 'bracket'
+  if (
+    s.includes('bracket') ||
+    s.includes('leftbrace') ||
+    s.includes('rightbrace') ||
+    s.includes('brace')
+  )
+    return 'bracket'
   return 'rect'
 }
 
@@ -233,7 +299,17 @@ function computeSemanticFidelity(pptxtojsonJSON, navslidesJSON) {
   const pptxSlides = (pptxtojsonJSON?.slides || []).map((s) => s.elements || [])
   const navSlides = (navslidesJSON?.slides || []).map((s) => s.elements || [])
 
-  const categories = ['text', 'shape', 'image', 'table', 'chart', 'group', 'diagram', 'line', 'other']
+  const categories = [
+    'text',
+    'shape',
+    'image',
+    'table',
+    'chart',
+    'group',
+    'diagram',
+    'line',
+    'other',
+  ]
   const categoryScores = {}
   const diffs = []
 
@@ -269,7 +345,13 @@ function computeSemanticFidelity(pptxtojsonJSON, navslidesJSON) {
       categoryScores[cat].captured += captured.score
 
       if (captured.gaps.length) {
-        diffs.push({ slide: si, type: 'partial', pptxType: type, navType: navEl.type, gaps: captured.gaps })
+        diffs.push({
+          slide: si,
+          type: 'partial',
+          pptxType: type,
+          navType: navEl.type,
+          gaps: captured.gaps,
+        })
       }
     }
   }
@@ -349,7 +431,10 @@ function sourceToNavScale(source, nav) {
         ? navWidth / sourceWidth
         : 1,
     y:
-      Number.isFinite(sourceHeight) && sourceHeight > 0 && Number.isFinite(navHeight) && navHeight > 0
+      Number.isFinite(sourceHeight) &&
+      sourceHeight > 0 &&
+      Number.isFinite(navHeight) &&
+      navHeight > 0
         ? navHeight / sourceHeight
         : 1,
   }
@@ -433,9 +518,10 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
       // element is reclassified to a shape, not dropped), so count it toward the
       // image class. Genuinely dropped images produce no nav element and still
       // register as a class drop; image→generic-shape bugs lack this marker.
-      const navType = navEl?.importPlaceholderType === 'unsupported-image'
-        ? 'image'
-        : normalizeCountType(navEl?.type || 'other')
+      const navType =
+        navEl?.importPlaceholderType === 'unsupported-image'
+          ? 'image'
+          : normalizeCountType(navEl?.type || 'other')
       navByType[navType] = (navByType[navType] || 0) + 1
     }
 
@@ -450,14 +536,15 @@ function computeDetailedFidelityMetrics(pptxtojsonJSON, navslidesJSON) {
             const c = children[childIndex]
             const childPath = [...pathParts, childIndex]
             if (c.type === 'group') recurse(c, childPath, groupMatrix)
-            else ppts.push({
-              element: normalizeSourceElementGeometry(
-                transformSourceChild(c, groupMatrix),
-                sourceScale
-              ),
-              sourceIndex,
-              sourcePath: childPath.join('.'),
-            })
+            else
+              ppts.push({
+                element: normalizeSourceElementGeometry(
+                  transformSourceChild(c, groupMatrix),
+                  sourceScale
+                ),
+                sourceIndex,
+                sourcePath: childPath.join('.'),
+              })
           }
         }
         recurse(el, [sourceIndex])
@@ -709,7 +796,8 @@ function findMatchingNavElement(pptxEl, navEls, usedIndices = new Set()) {
     const groupIndex = navEls.findIndex(
       (element, index) =>
         !usedIndices.has(index) &&
-        (normalizeSemanticType(element?.type) === 'group' || Boolean(element?.importPlaceholderType))
+        (normalizeSemanticType(element?.type) === 'group' ||
+          Boolean(element?.importPlaceholderType))
     )
     if (groupIndex >= 0) {
       usedIndices.add(groupIndex)
@@ -781,8 +869,13 @@ function evaluateCapture(pptxEl, navEl) {
     const hasMergedCells = navEl.mergedCells && navEl.mergedCells.length > 0
     const hasCellStyles = navEl.cellStyles && Object.keys(navEl.cellStyles).length > 0
     const hasBorders = Boolean(navEl.cellStyles?.borders?.length)
-    const expectsCellFonts = sourceCells.some((cell) =>
-      cell?.fontSize != null || cell?.fontSz != null || cell?.fontFace || cell?.fontFamily || cell?.fontName
+    const expectsCellFonts = sourceCells.some(
+      (cell) =>
+        cell?.fontSize != null ||
+        cell?.fontSz != null ||
+        cell?.fontFace ||
+        cell?.fontFamily ||
+        cell?.fontName
     )
     const hasCellFonts =
       !expectsCellFonts ||
@@ -804,7 +897,8 @@ function evaluateCapture(pptxEl, navEl) {
 
   if (type === 'chart') {
     const hasChartType = Boolean(navEl.chartType)
-    const hasData = navEl.chartData && navEl.chartData.datasets && navEl.chartData.datasets.length > 0
+    const hasData =
+      navEl.chartData && navEl.chartData.datasets && navEl.chartData.datasets.length > 0
     const score = (hasChartType ? 0.3 : 0) + (hasData ? 0.5 : 0) + 0.2
     if (!hasChartType) gaps.push('missing-chart-type')
     if (!hasData) gaps.push('missing-chart-data')
@@ -858,7 +952,11 @@ function evaluateCapture(pptxEl, navEl) {
     const hasStroke = navEl.stroke !== undefined && navEl.stroke !== null
     const expectedShape = type === 'shape' ? shapeNameFromShapType(pptxEl.shapType) : null
     const shapeMatches = !expectedShape || navEl.type === 'line' || navEl.shape === expectedShape
-    const score = (hasPosition ? 0.25 : 0) + (hasFill ? 0.2 : 0) + (hasStroke ? 0.2 : 0) + (shapeMatches ? 0.35 : 0)
+    const score =
+      (hasPosition ? 0.25 : 0) +
+      (hasFill ? 0.2 : 0) +
+      (hasStroke ? 0.2 : 0) +
+      (shapeMatches ? 0.35 : 0)
     if (!hasPosition) gaps.push('missing-position')
     if (!hasFill) gaps.push('missing-fill')
     if (!hasStroke) gaps.push('missing-stroke')
@@ -896,7 +994,11 @@ function getRoundTripText(element) {
 function isTextBoxShape(element) {
   const type = normalizeType(element?.type)
   const shape = normalizeType(element?.shape || element?.shapType)
-  return type === 'shape' && (!shape || shape === 'rect' || shape === 'rectangle') && Boolean(getRoundTripText(element))
+  return (
+    type === 'shape' &&
+    (!shape || shape === 'rect' || shape === 'rectangle') &&
+    Boolean(getRoundTripText(element))
+  )
 }
 
 function roundTripMatchType(element) {
@@ -989,9 +1091,7 @@ function matchElements(sourceElements, roundTripElements) {
 
     if (!target) {
       target = targets.find(
-        (candidate) =>
-          !candidate.used &&
-          isStableElementPair(source.element, candidate.element)
+        (candidate) => !candidate.used && isStableElementPair(source.element, candidate.element)
       )
       method = target ? 'type-only' : null
     }
@@ -1180,7 +1280,11 @@ async function testCorpusFile(filePath, options = {}) {
   try {
     const parsed = await parsePptxWithPptxtojson(filePath)
     if (!parsed.ok) {
-      appendResultError(result, `parse failed: ${parsed.error?.message}`, parsed.error?.type || 'parse-failed')
+      appendResultError(
+        result,
+        `parse failed: ${parsed.error?.message}`,
+        parsed.error?.type || 'parse-failed'
+      )
       return result
     }
 
@@ -1206,7 +1310,10 @@ async function testCorpusFile(filePath, options = {}) {
     if (!effectiveSkipRoundTrip) {
       const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'navslides-roundtrip-'))
       try {
-        const roundTripPath = path.join(tempDir, `${path.basename(filePath, '.pptx')}-roundtrip.pptx`)
+        const roundTripPath = path.join(
+          tempDir,
+          `${path.basename(filePath, '.pptx')}-roundtrip.pptx`
+        )
         const roundTripUploads = path.join(tempDir, 'uploads')
         await fs.ensureDir(roundTripUploads)
         let exportMethod = 'production'
@@ -1230,7 +1337,10 @@ async function testCorpusFile(filePath, options = {}) {
         }
 
         const reimported = await importPresentation(roundTripPath, roundTripUploads, importPolicy)
-        result.roundTrip = await computeRoundTripStability(imported.presentation, reimported.presentation)
+        result.roundTrip = await computeRoundTripStability(
+          imported.presentation,
+          reimported.presentation
+        )
       } catch (err) {
         result.roundTrip = { available: false, reason: String(err.message) }
       } finally {
@@ -1270,33 +1380,57 @@ async function runCorpusTests(corpusDir = DEFAULT_CORPUS, options = {}) {
   let roundTripCount = 0
 
   const entries = await fs.readdir(effectiveCorpusDir)
-  const pptxFiles = entries.filter((f) => f.toLowerCase().endsWith('.pptx')).sort((a, b) => a.localeCompare(b))
+  const pptxFiles = entries
+    .filter((f) => f.toLowerCase().endsWith('.pptx'))
+    .sort((a, b) => a.localeCompare(b))
 
   for (const file of pptxFiles) {
     totalFiles++
     const filePath = path.join(effectiveCorpusDir, file)
     const stat = await fs.stat(filePath)
-    const testResult = await testCorpusFile(filePath, corpusFileOptions({
-      allowFallback,
-      strict,
-      baseUrl,
-      importOptions: options.importOptions,
-    }, effectiveSkipRoundTrip))
+    const testResult = await testCorpusFile(
+      filePath,
+      corpusFileOptions(
+        {
+          allowFallback,
+          strict,
+          baseUrl,
+          importOptions: options.importOptions,
+        },
+        effectiveSkipRoundTrip
+      )
+    )
     testResult.fileSizeBytes = stat.size
     testResult.sourceSha256 = await hashFile(filePath)
 
     if (!effectiveSkipRoundTrip && !testResult.roundTrip?.available) {
-      appendResultError(testResult, `Round-trip unavailable: ${testResult.roundTrip?.reason || 'missing'}`, 'roundtrip-unavailable')
+      appendResultError(
+        testResult,
+        `Round-trip unavailable: ${testResult.roundTrip?.reason || 'missing'}`,
+        'roundtrip-unavailable'
+      )
     }
 
     if (strict) {
       if (testResult.roundTripExportMethod !== 'production') {
-        appendResultError(testResult, 'Strict mode requires production export method', 'strict-export-method')
+        appendResultError(
+          testResult,
+          'Strict mode requires production export method',
+          'strict-export-method'
+        )
       }
       if (!testResult.roundTrip?.available) {
-        appendResultError(testResult, `Strict mode requires round-trip result: ${testResult.roundTrip?.reason || 'missing'}`, 'strict-roundtrip-unavailable')
+        appendResultError(
+          testResult,
+          `Strict mode requires round-trip result: ${testResult.roundTrip?.reason || 'missing'}`,
+          'strict-roundtrip-unavailable'
+        )
       }
-      for (const message of applyStrictPerTypeGates(testResult, { perDeckMin, maxClassDrop, excludeClassDrop })) {
+      for (const message of applyStrictPerTypeGates(testResult, {
+        perDeckMin,
+        maxClassDrop,
+        excludeClassDrop,
+      })) {
         appendResultError(testResult, message, 'strict-metrics-gate')
       }
     }
@@ -1307,15 +1441,21 @@ async function runCorpusTests(corpusDir = DEFAULT_CORPUS, options = {}) {
       passedFiles++
       semanticTotal += testResult.semanticFidelity
       semanticCount++
-      if (!effectiveSkipRoundTrip && testResult.roundTrip?.available && testResult.roundTrip.overall != null) {
+      if (
+        !effectiveSkipRoundTrip &&
+        testResult.roundTrip?.available &&
+        testResult.roundTrip.overall != null
+      ) {
         roundTripTotal += testResult.roundTrip.overall
         roundTripCount++
       }
     }
   }
 
-  const avgSemantic = semanticCount > 0 ? Math.round((semanticTotal / semanticCount) * 100) / 100 : null
-  const avgRoundTrip = roundTripCount > 0 ? Math.round((roundTripTotal / roundTripCount) * 100) / 100 : null
+  const avgSemantic =
+    semanticCount > 0 ? Math.round((semanticTotal / semanticCount) * 100) / 100 : null
+  const avgRoundTrip =
+    roundTripCount > 0 ? Math.round((roundTripTotal / roundTripCount) * 100) / 100 : null
 
   const summary = {
     mode: 'corpus-metrics',
@@ -1356,7 +1496,11 @@ async function resolveCorpusDir(corpusDir) {
 function parsePercentFlag(value, fallback) {
   if (value == null || value === '') return fallback
   const numeric = Number(value)
-  return Number.isFinite(numeric) && numeric >= 0 ? (numeric > 1 ? numeric / 100 : numeric) : fallback
+  return Number.isFinite(numeric) && numeric >= 0
+    ? numeric > 1
+      ? numeric / 100
+      : numeric
+    : fallback
 }
 
 // ---------------------------------------------------------------------------
@@ -1371,9 +1515,15 @@ function reportResults({ results, summary }) {
   lines.push(`Manifest digest: ${summary.manifestDigest || 'not-bound'}`)
   lines.push(`Importer options: ${JSON.stringify(summary.importerOptions || {})}`)
   lines.push(`Run: ${summary.runAt}`)
-  lines.push(`Files: ${summary.totalFiles} total, ${summary.passedFiles} passed, ${summary.failedFiles} failed`)
-  lines.push(`Avg Semantic Fidelity: ${summary.avgSemanticFidelity != null ? (summary.avgSemanticFidelity * 100).toFixed(1) + '%' : 'N/A'}`)
-  lines.push(`Avg Round-trip Stability: ${summary.avgRoundTripStability != null ? (summary.avgRoundTripStability * 100).toFixed(1) + '%' : 'N/A'}`)
+  lines.push(
+    `Files: ${summary.totalFiles} total, ${summary.passedFiles} passed, ${summary.failedFiles} failed`
+  )
+  lines.push(
+    `Avg Semantic Fidelity: ${summary.avgSemanticFidelity != null ? (summary.avgSemanticFidelity * 100).toFixed(1) + '%' : 'N/A'}`
+  )
+  lines.push(
+    `Avg Round-trip Stability: ${summary.avgRoundTripStability != null ? (summary.avgRoundTripStability * 100).toFixed(1) + '%' : 'N/A'}`
+  )
   lines.push('')
 
   for (const r of results) {
@@ -1382,7 +1532,8 @@ function reportResults({ results, summary }) {
     if (r.errors.length > 0) {
       lines.push(`  ERROR: ${r.errors.join('; ')}`)
     } else {
-      const fidelity = r.semanticFidelity != null ? (r.semanticFidelity * 100).toFixed(1) + '%' : 'N/A'
+      const fidelity =
+        r.semanticFidelity != null ? (r.semanticFidelity * 100).toFixed(1) + '%' : 'N/A'
       lines.push(`  Semantic Fidelity: ${fidelity}`)
       if (r.geometryDrift) {
         lines.push(
@@ -1398,7 +1549,10 @@ function reportResults({ results, summary }) {
         }
       }
       if (r.propertyCoverage) {
-        const overall = r.propertyCoverage.overall != null ? `${(r.propertyCoverage.overall * 100).toFixed(1)}%` : 'N/A'
+        const overall =
+          r.propertyCoverage.overall != null
+            ? `${(r.propertyCoverage.overall * 100).toFixed(1)}%`
+            : 'N/A'
         lines.push(`  Property Coverage: ${overall}`)
         lines.push('  Property per-type breakdown:')
         for (const [type, value] of Object.entries(r.propertyCoverage.byType || {})) {
@@ -1435,7 +1589,9 @@ function reportResults({ results, summary }) {
             }
           }
         } else {
-          lines.push(`  Round-trip Stability: unavailable (${r.roundTrip.reason || 'no reason provided'})`)
+          lines.push(
+            `  Round-trip Stability: unavailable (${r.roundTrip.reason || 'no reason provided'})`
+          )
         }
         lines.push(`  Export Method: ${r.roundTripExportMethod || 'N/A'}`)
       }
@@ -1446,7 +1602,7 @@ function reportResults({ results, summary }) {
     lines.push('')
   }
 
-  logger.log(lines.join('\n'))
+  console.log(lines.join('\n'))
   return { text: lines.join('\n') }
 }
 
@@ -1478,9 +1634,13 @@ module.exports = {
   runCorpusTests,
   reportResults,
   writeDriftRows,
-  DEFAULT_CORPUS, DEFAULT_MAX_CLASS_DROP, DEFAULT_PER_DECK_MIN_SEMANTIC,
+  DEFAULT_CORPUS,
+  DEFAULT_MAX_CLASS_DROP,
+  DEFAULT_PER_DECK_MIN_SEMANTIC,
   STRICT_CORPUS_GATES,
-  STRICT_AVG_MIN_ROUND_TRIP, STRICT_AVG_MIN_SEMANTIC, STRICT_MIN_CORPUS_FILES,
+  STRICT_AVG_MIN_ROUND_TRIP,
+  STRICT_AVG_MIN_SEMANTIC,
+  STRICT_MIN_CORPUS_FILES,
   parsePercentFlag,
 }
 
