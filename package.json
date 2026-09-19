@@ -78,7 +78,9 @@
     "electron:build": "npm run electron:prepare && npm run electron:builder",
     "electron:build:linux": "npm run electron:prepare && npm run electron:builder -- --linux",
     "electron:build:mac": "npm run electron:prepare && npm run electron:builder -- --mac",
-    "electron:build:win": "npm run electron:prepare && npm run electron:builder -- --win"
+    "electron:build:win": "npm run electron:prepare && npm run electron:builder -- --win",
+    "prepare": "node scripts/install-git-hooks.mjs",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
@@ -98,7 +100,9 @@
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.4.0",
     "happy-dom": "^20.9.0",
+    "husky": "^9.1.7",
     "jsdom": "^21.1.2",
+    "lint-staged": "^16.4.0",
     "playwright": "1.62.1",
     "prettier": "^3.8.2",
     "react": "18.3.1",
@@ -151,5 +155,14 @@
     "minimatch@5.1.9": {
       "brace-expansion": "^2.0.2"
     }
+  },
+  "lint-staged": {
+    "*.{js,jsx,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css,html}": [
+      "prettier --write"
+    ]
   }
 }
