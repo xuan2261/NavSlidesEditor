@@ -1,6 +1,6 @@
 const { SUPPORTED_REVEAL_THEMES } = require('./theme-presets.js')
 
-const REVEAL_RUNTIME_VERSION = '6.0.1'
+const REVEAL_RUNTIME_VERSION = '6.0.2'
 const REVEAL_VENDOR_DIST_URL = '/vendor/reveal.js/dist'
 
 const REVEAL_ASSET_PATHS = Object.freeze({

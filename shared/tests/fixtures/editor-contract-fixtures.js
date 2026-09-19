@@ -1,4 +1,4 @@
-export const BASELINE_REVEAL_VERSION = '6.0.1'
+export const BASELINE_REVEAL_VERSION = '6.0.2'
 
 const elementTypes = [
   'text',
