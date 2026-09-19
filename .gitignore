@@ -60,3 +60,8 @@ plans/**/research/parser-sandbox/node_modules/
 
 # Local Claude Code session data
 .claude/
+
+# Scratch / personal artifacts (not source)
+sessions
+slides.com
+xuatN26th7
