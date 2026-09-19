@@ -78,8 +78,8 @@ const TOUR_STEPS = [
       <div>
         <h3 className="mb-2.5 text-base text-text-primary">Teaching tools</h3>
         <p className="text-sm leading-relaxed text-text-secondary">
-          Open Insert to add Mermaid diagrams, STEM simulations, LaTeX/TikZ math, technical
-          symbols, and classroom games.
+          Open Insert to add Mermaid diagrams, STEM simulations, LaTeX/TikZ math, technical symbols,
+          and classroom games.
         </p>
       </div>
     ),
@@ -185,7 +185,7 @@ const ProductTour = () => {
         skipBeacon: true,
         blockTargetInteraction: true,
         overlayClickAction: false,
-        dismissKeyAction: false,
+        dismissKeyAction: 'close',
         spotlightPadding: 12,
         showProgress: true,
         buttons: ['back', 'skip', 'primary'],

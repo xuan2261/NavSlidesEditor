@@ -59,7 +59,7 @@ describe('ProductTour', () => {
     expect(props.options).toMatchObject({
       showProgress: true,
       overlayClickAction: false,
-      dismissKeyAction: false,
+      dismissKeyAction: 'close',
       blockTargetInteraction: true,
       overlayColor: 'rgba(0, 0, 0, 0.45)',
     })

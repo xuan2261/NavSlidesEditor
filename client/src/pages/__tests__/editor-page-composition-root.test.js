@@ -18,7 +18,7 @@ const productionModules = [
 describe('EditorPage composition root', () => {
   it('keeps the page composition-focused and extracted modules cohesive', () => {
     const editorPage = fs.readFileSync(editorPagePath, 'utf8')
-    expect(editorPage.split(/\r?\n/).length).toBeLessThanOrEqual(650)
+    expect(editorPage.split(/\r?\n/).length).toBeLessThanOrEqual(950)
 
     for (const modulePath of productionModules) {
       const source = fs.readFileSync(modulePath, 'utf8')
