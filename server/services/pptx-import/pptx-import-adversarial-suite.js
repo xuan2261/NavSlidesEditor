@@ -9,10 +9,7 @@ const https = require('node:https')
 const os = require('node:os')
 const path = require('node:path')
 const { buildOpcInventory } = require('./package-store/opc-inventory')
-const {
-  FIXTURE_BUILDERS,
-  materializeFixtures,
-} = require('./pptx-import-adversarial-fixtures')
+const { FIXTURE_BUILDERS, materializeFixtures } = require('./pptx-import-adversarial-fixtures')
 const { IMPORT_CRC_POLICY, validatePptxPackage } = require('./pptx-guards')
 
 const DEFAULT_FIXTURE_DIR = path.join('server', 'data', 'test-corpus', 'adversarial')
@@ -22,11 +19,35 @@ const DEFAULT_FIXTURE_DIR = path.join('server', 'data', 'test-corpus', 'adversar
  * Metrics corpus must not include these intentional failures.
  */
 const ADVERSARIAL_CASES = Object.freeze([
-  { id: 'C1', fixture: 'bad-crc.pptx', gate: 'package', expect: 'reject', code: IMPORT_CRC_POLICY.errorCode },
+  {
+    id: 'C1',
+    fixture: 'bad-crc.pptx',
+    gate: 'package',
+    expect: 'reject',
+    code: IMPORT_CRC_POLICY.errorCode,
+  },
   { id: 'C2', fixture: 'good-package.pptx', gate: 'package', expect: 'map' },
-  { id: 'C3', fixture: 'nested-package.pptx', gate: 'inventory', expect: 'reject', code: 'zip-recursion-depth-exceeded' },
-  { id: 'C4', fixture: 'malformed-xml.pptx', gate: 'package', expect: 'reject', code: 'xml-dtd-prohibited' },
-  { id: 'C5', fixture: 'external-rel.pptx', gate: 'inventory', expect: 'map', assertNoNetwork: true },
+  {
+    id: 'C3',
+    fixture: 'nested-package.pptx',
+    gate: 'inventory',
+    expect: 'reject',
+    code: 'zip-recursion-depth-exceeded',
+  },
+  {
+    id: 'C4',
+    fixture: 'malformed-xml.pptx',
+    gate: 'package',
+    expect: 'reject',
+    code: 'xml-dtd-prohibited',
+  },
+  {
+    id: 'C5',
+    fixture: 'external-rel.pptx',
+    gate: 'inventory',
+    expect: 'map',
+    assertNoNetwork: true,
+  },
   { id: 'C6', fixture: 'emf-stub.pptx', gate: 'package', expect: 'map' },
   { id: 'A1', fixture: 'smartart-stub.pptx', gate: 'package', expect: 'map' },
   { id: 'A2', fixture: 'macro-ole-stub.pptx', gate: 'package', expect: 'map' },
@@ -36,10 +57,11 @@ const ADVERSARIAL_CASES = Object.freeze([
 
 function withNetworkProbe(run) {
   let hits = 0
-  const wrap = (original) => function patched(...args) {
-    hits += 1
-    return original.apply(this, args)
-  }
+  const wrap = (original) =>
+    function patched(...args) {
+      hits += 1
+      return original.apply(this, args)
+    }
   const originals = {
     httpReq: http.request,
     httpsReq: https.request,
@@ -82,14 +104,24 @@ function outcomeFromError(caseDef, error) {
   const code = error?.code || error?.reason || null
   if (caseDef.expect !== 'reject') {
     return {
-      id: caseDef.id, fixture: caseDef.fixture, ok: false,
-      expected: caseDef.expect, actual: 'reject', code, message: error?.message,
+      id: caseDef.id,
+      fixture: caseDef.fixture,
+      ok: false,
+      expected: caseDef.expect,
+      actual: 'reject',
+      code,
+      message: error?.message,
     }
   }
   const codeOk = !caseDef.code || code === caseDef.code
   return {
-    id: caseDef.id, fixture: caseDef.fixture, ok: codeOk,
-    expected: caseDef.expect, actual: 'reject', code, message: error?.message,
+    id: caseDef.id,
+    fixture: caseDef.fixture,
+    ok: codeOk,
+    expected: caseDef.expect,
+    actual: 'reject',
+    code,
+    message: error?.message,
   }
 }
 
@@ -98,22 +130,35 @@ async function runCase(caseDef, bytes) {
   try {
     const run = () => executeGate(caseDef, filePath, bytes)
     try {
-      const result = caseDef.assertNoNetwork ? await withNetworkProbe(run) : { value: await run(), networkHits: 0 }
+      const result = caseDef.assertNoNetwork
+        ? await withNetworkProbe(run)
+        : { value: await run(), networkHits: 0 }
       if (caseDef.expect === 'reject') {
         return {
-          id: caseDef.id, fixture: caseDef.fixture, ok: false,
-          expected: 'reject', actual: 'map', detail: 'expected reject but gate accepted',
+          id: caseDef.id,
+          fixture: caseDef.fixture,
+          ok: false,
+          expected: 'reject',
+          actual: 'map',
+          detail: 'expected reject but gate accepted',
         }
       }
       if (caseDef.assertNoNetwork && result.networkHits > 0) {
         return {
-          id: caseDef.id, fixture: caseDef.fixture, ok: false,
-          expected: 'map-no-network', actual: `networkHits=${result.networkHits}`,
+          id: caseDef.id,
+          fixture: caseDef.fixture,
+          ok: false,
+          expected: 'map-no-network',
+          actual: `networkHits=${result.networkHits}`,
         }
       }
       return {
-        id: caseDef.id, fixture: caseDef.fixture, ok: true,
-        expected: caseDef.expect, actual: 'map', networkHits: result.networkHits,
+        id: caseDef.id,
+        fixture: caseDef.fixture,
+        ok: true,
+        expected: caseDef.expect,
+        actual: 'map',
+        networkHits: result.networkHits,
       }
     } catch (error) {
       return outcomeFromError(caseDef, error)
@@ -150,7 +195,7 @@ async function main(argv = process.argv.slice(2)) {
   const flag = argv.find((arg) => arg.startsWith('--fixture-dir='))
   const fixtureDir = flag ? flag.slice('--fixture-dir='.length) : DEFAULT_FIXTURE_DIR
   const summary = await runAdversarialSuite({ fixtureDir, materialize })
-  logger.log(JSON.stringify(summary, null, 2))
+  console.log(JSON.stringify(summary, null, 2))
   process.exitCode = summary.ok ? 0 : 1
 }
 
