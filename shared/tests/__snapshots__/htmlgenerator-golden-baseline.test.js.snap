@@ -6,7 +6,7 @@ exports[`htmlGenerator golden baseline (frozen-hex backward compat) > renders th
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="navslides-reveal-version" content="6.0.1">
+  <meta name="navslides-reveal-version" content="6.0.2">
   <title>Frozen Hex Deck</title>
   <link rel="stylesheet" href="/vendor/reveal.js/dist/reset.css">
   <link rel="stylesheet" href="/vendor/reveal.js/dist/reveal.css">

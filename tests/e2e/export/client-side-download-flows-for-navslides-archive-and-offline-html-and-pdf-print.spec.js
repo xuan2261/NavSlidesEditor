@@ -86,7 +86,7 @@ test.describe('Client side download flows for navslides project archive and offl
       expect(html).not.toMatch(/src=["']https:\/\/cdnjs\.cloudflare\.com/)
       expect(html).not.toMatch(/(?:src|href)=["']\/vendor\//)
       expect(html).not.toMatch(/@import\s+[^;]*https?:\/\//i)
-      expect(html).toContain('name="navslides-reveal-version" content="6.0.1"')
+      expect(html).toContain('name="navslides-reveal-version" content="6.0.2"')
       const offlinePath = testInfo.outputPath('offline-export.html')
       await fs.copyFile(path, offlinePath)
 
@@ -105,7 +105,7 @@ test.describe('Client side download flows for navslides project archive and offl
         title: document.title,
       }))
       expect({ runtime, offlineErrors }).toEqual({
-        runtime: { version: '6.0.1', ready: true, title: 'Client export E2E' },
+        runtime: { version: '6.0.2', ready: true, title: 'Client export E2E' },
         offlineErrors: [],
       })
       expect(networkRequests).toEqual([])
@@ -133,7 +133,7 @@ test.describe('Client side download flows for navslides project archive and offl
       const html = await popup.content()
       expect(html.length).toBeGreaterThan(500)
       expect(html.toLowerCase()).toMatch(/section|reveal|slide/)
-      expect(html).toContain('name="navslides-reveal-version" content="6.0.1"')
+      expect(html).toContain('name="navslides-reveal-version" content="6.0.2"')
       await popup.close()
     })
   })

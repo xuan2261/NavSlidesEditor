@@ -113,7 +113,7 @@ test.describe('HTML export and present endpoints with content validation', () =>
       }
     })
 
-    expect(runtime.version).toBe('6.0.1')
+    expect(runtime.version).toBe('6.0.2')
     expect(runtime.fragmentAdvanced).toBe(true)
     expect(runtime.fragmentIndex).toBe(0)
     expect(runtime.verticalIndices).toMatchObject({ h: 0, v: 1 })
@@ -137,7 +137,7 @@ test.describe('HTML export and present endpoints with content validation', () =>
     await page.waitForFunction(() => window.Reveal?.isReady?.(), null, { timeout: 10000 })
 
     await expect.poll(() => page.evaluate(() => window.Reveal.isScrollView())).toBe(true)
-    await expect.poll(() => page.evaluate(() => window.Reveal.VERSION)).toBe('6.0.1')
+    await expect.poll(() => page.evaluate(() => window.Reveal.VERSION)).toBe('6.0.2')
   })
 
   test('share mode initializes the same Reveal 6 runtime', async ({ page, request }) => {
@@ -145,7 +145,7 @@ test.describe('HTML export and present endpoints with content validation', () =>
     await page.goto(`/share/${token}`, { timeout: 15000 })
     await page.waitForFunction(() => window.Reveal?.isReady?.(), null, { timeout: 10000 })
 
-    await expect.poll(() => page.evaluate(() => window.Reveal.VERSION)).toBe('6.0.1')
+    await expect.poll(() => page.evaluate(() => window.Reveal.VERSION)).toBe('6.0.2')
     await expect(page.locator('.reveal section').first()).toBeVisible()
   })
 
@@ -154,6 +154,6 @@ test.describe('HTML export and present endpoints with content validation', () =>
     await page.waitForFunction(() => window.Reveal?.isReady?.(), null, { timeout: 10000 })
 
     await expect.poll(() => page.evaluate(() => window.Reveal.isPrintView())).toBe(true)
-    await expect.poll(() => page.evaluate(() => window.Reveal.VERSION)).toBe('6.0.1')
+    await expect.poll(() => page.evaluate(() => window.Reveal.VERSION)).toBe('6.0.2')
   })
 })
