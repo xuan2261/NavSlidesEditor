@@ -6,15 +6,40 @@ describe('editor presentation migration', () => {
     vi.stubGlobal('crypto', { randomUUID: vi.fn(() => 'generated-id') })
     const source = {
       id: 'deck',
-      slides: [{ id: 'parent', html: '<p>Parent</p>', children: [{ id: 'child', html: '<p>Child</p>' }] }],
+      slides: [
+        { id: 'parent', html: '<p>Parent</p>', children: [{ id: 'child', html: '<p>Child</p>' }] },
+      ],
     }
 
     const migrated = migratePresentation(source)
 
-    expect(migrated.slides[0].elements[0]).toMatchObject({ id: 'generated-id', content: '<p>Parent</p>' })
+    expect(migrated.slides[0].elements[0]).toMatchObject({
+      id: 'generated-id',
+      content: '<p>Parent</p>',
+    })
     expect(migrated.slides[0].children[0].elements[0].content).toBe('<p>Child</p>')
     expect(source.slides[0].elements).toBeUndefined()
     vi.unstubAllGlobals()
+  })
+
+  it('backfills ids on legacy id-less elements so they stay selectable and exportable', () => {
+    const source = {
+      slides: [
+        {
+          elements: [
+            { type: 'game', gameType: 'poll' },
+            { id: 'kept', type: 'text' },
+          ],
+        },
+      ],
+    }
+
+    const migrated = migratePresentation(source)
+
+    expect(migrated.slides[0].elements[0].id).toEqual(expect.any(String))
+    expect(migrated.slides[0].elements[0].id).not.toBe('')
+    expect(migrated.slides[0].elements[1].id).toBe('kept')
+    expect(source.slides[0].elements[0].id).toBeUndefined()
   })
 
   it('preserves existing elements while migrating video sources', () => {
@@ -84,7 +109,19 @@ describe('editor presentation migration', () => {
 
   it('normalizes valid layout metadata through vertical children without adding it to legacy slides', () => {
     const master = { id: 'layout', name: 'Layout', fixedElements: [], placeholders: [] }
-    const source = { slides: [{ id: 'legacy', elements: [] }, { id: 'parent', elements: [], children: [{ id: 'child', elements: [], layoutOverrides: { hiddenElementIds: ['fixed'] } }] }], layoutMasters: [master] }
+    const source = {
+      slides: [
+        { id: 'legacy', elements: [] },
+        {
+          id: 'parent',
+          elements: [],
+          children: [
+            { id: 'child', elements: [], layoutOverrides: { hiddenElementIds: ['fixed'] } },
+          ],
+        },
+      ],
+      layoutMasters: [master],
+    }
     const migrated = migratePresentation(source)
 
     expect(migrated.slides[0].layoutId).toBeUndefined()
@@ -94,19 +131,60 @@ describe('editor presentation migration', () => {
   })
 
   it('normalizes valid actions while leaving invalid persisted metadata inert', () => {
-    const source = { elements: [
-      { id: 'safe', type: 'shape', action: { kind: 'url', url: 'https://example.test', hotspot: true } },
-      { id: 'unsafe', type: 'shape', action: { kind: 'url', url: 'javascript:alert(1)' } },
-    ] }
+    const source = {
+      elements: [
+        {
+          id: 'safe',
+          type: 'shape',
+          action: { kind: 'url', url: 'https://example.test', hotspot: true },
+        },
+        { id: 'unsafe', type: 'shape', action: { kind: 'url', url: 'javascript:alert(1)' } },
+      ],
+    }
     const migrated = migrateSlide(source)
-    expect(migrated.elements[0].action).toEqual({ kind: 'url', url: 'https://example.test', hotspot: true })
+    expect(migrated.elements[0].action).toEqual({
+      kind: 'url',
+      url: 'https://example.test',
+      hotspot: true,
+    })
     expect(migrated.elements[1].action).toEqual(source.elements[1].action)
   })
   it('normalizes image and media accessibility metadata on parent and child slides', () => {
-    const migrated = migratePresentation({ slides: [{ elements: [{ type: 'image', alt: 3, decorative: 'yes', longDescription: ['bad'] }, { type: 'video', tracks: [{ src: '/uploads/captions.vtt', label: 'English', srcLang: 'en', default: true }, { src: '/uploads/second.vtt', default: true }, { src: 'javascript:bad' }] }], children: [{ elements: [{ type: 'audio', transcript: 3, audioDescription: ' description ' }] }] }] })
+    const migrated = migratePresentation({
+      slides: [
+        {
+          elements: [
+            { type: 'image', alt: 3, decorative: 'yes', longDescription: ['bad'] },
+            {
+              type: 'video',
+              tracks: [
+                { src: '/uploads/captions.vtt', label: 'English', srcLang: 'en', default: true },
+                { src: '/uploads/second.vtt', default: true },
+                { src: 'javascript:bad' },
+              ],
+            },
+          ],
+          children: [
+            { elements: [{ type: 'audio', transcript: 3, audioDescription: ' description ' }] },
+          ],
+        },
+      ],
+    })
     expect(migrated.slides[0].elements[0]).toMatchObject({ alt: '', decorative: false })
-    expect(migrated.slides[0].elements[1].tracks).toEqual([{ src: '/uploads/captions.vtt', label: 'English', srcLang: 'en', kind: 'captions', default: true }, { src: '/uploads/second.vtt', label: '', srcLang: '', kind: 'captions', default: false }])
-    expect(migrated.slides[0].children[0].elements[0]).toMatchObject({ audioDescription: 'description', tracks: [] })
+    expect(migrated.slides[0].elements[1].tracks).toEqual([
+      {
+        src: '/uploads/captions.vtt',
+        label: 'English',
+        srcLang: 'en',
+        kind: 'captions',
+        default: true,
+      },
+      { src: '/uploads/second.vtt', label: '', srcLang: '', kind: 'captions', default: false },
+    ])
+    expect(migrated.slides[0].children[0].elements[0]).toMatchObject({
+      audioDescription: 'description',
+      tracks: [],
+    })
   })
 
   it('normalizes line connections and stores finite resolved fallbacks', () => {
@@ -115,8 +193,14 @@ describe('editor presentation migration', () => {
       elements: [
         { id: 'target', type: 'shape', x: 100, y: 50, width: 40, height: 20 },
         {
-          id: 'line', type: 'line', x: 0, y: 0, width: 200, height: 100,
-          x1: Number.NaN, y1: Infinity,
+          id: 'line',
+          type: 'line',
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          x1: Number.NaN,
+          y1: Infinity,
           connections: {
             start: { targetId: 'target', anchor: 'e' },
             end: { targetId: 'missing', anchor: 'invalid' },

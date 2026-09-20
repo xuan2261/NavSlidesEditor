@@ -23,13 +23,18 @@ const legacyTextElement = (content) => ({
 })
 
 function migrateElement(element) {
-  const migrated = migrateVideoSrc(element)
-  const withGameConfig = migrated?.type !== 'game' || typeof migrated.gameType !== 'string'
-    ? migrated
-    : {
-        ...migrated,
-        [migrated.gameType]: resolveGameConfig(migrated, migrated.gameType),
-      }
+  const withId =
+    element && (typeof element.id !== 'string' || !element.id.trim())
+      ? { ...element, id: crypto.randomUUID() }
+      : element
+  const migrated = migrateVideoSrc(withId)
+  const withGameConfig =
+    migrated?.type !== 'game' || typeof migrated.gameType !== 'string'
+      ? migrated
+      : {
+          ...migrated,
+          [migrated.gameType]: resolveGameConfig(migrated, migrated.gameType),
+        }
   const { action } = normalizeElementAction(withGameConfig?.action)
   const withAction = action ? { ...withGameConfig, action } : withGameConfig
   return normalizeMediaAccessibility(normalizeImageAccessibility(withAction))
@@ -41,7 +46,9 @@ function migrateElements(elements) {
 
 function migrateLayoutMetadata(slide) {
   const layoutOverrides = normalizeLayoutOverrides(slide.layoutOverrides)
-  const children = Array.isArray(slide.children) ? slide.children.map(migrateLayoutMetadata) : slide.children
+  const children = Array.isArray(slide.children)
+    ? slide.children.map(migrateLayoutMetadata)
+    : slide.children
   if (!layoutOverrides && children === slide.children) return slide
   return {
     ...slide,
@@ -61,9 +68,7 @@ export function migrateChild(child) {
 
 export function migrateSlide(slide) {
   const withChildren =
-    slide.children?.length > 0
-      ? { ...slide, children: slide.children.map(migrateChild) }
-      : slide
+    slide.children?.length > 0 ? { ...slide, children: slide.children.map(migrateChild) } : slide
 
   const elements = Array.isArray(withChildren.elements)
     ? migrateElements(withChildren.elements)
