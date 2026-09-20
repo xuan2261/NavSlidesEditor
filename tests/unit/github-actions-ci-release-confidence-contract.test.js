@@ -78,7 +78,7 @@ describe('CI release confidence contract', () => {
     const workflow = readText(workflowPath)
     const visualJob = getJobBlock(workflow, 'e2e-visual')
 
-    expect(visualJob).toContain('image: mcr.microsoft.com/playwright:v1.62.1-jammy')
+    expect(visualJob).toContain('image: mcr.microsoft.com/playwright:v1.63.0-jammy')
     expect(visualJob).toContain(
       'npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js'
     )

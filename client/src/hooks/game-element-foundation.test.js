@@ -30,7 +30,7 @@ describe('GAME_TYPES constants', () => {
       'matching',
     ]
     expect(GAME_TYPES.all).toHaveLength(10)
-    expected.forEach(gt => {
+    expected.forEach((gt) => {
       expect(GAME_TYPES).toHaveProperty(gt)
       expect(GAME_TYPES[gt]).toBe(gt)
     })
@@ -53,7 +53,7 @@ describe('DEFAULT_GAME_COLORS', () => {
 
   it('has valid hex color strings', () => {
     const hexRegex = /^#[0-9A-Fa-f]{6}$/
-    DEFAULT_GAME_COLORS.wheelColors.forEach(color => {
+    DEFAULT_GAME_COLORS.wheelColors.forEach((color) => {
       expect(color).toMatch(hexRegex)
     })
   })
@@ -65,7 +65,7 @@ describe('ELEMENT_DEFAULTS.game — base schema', () => {
   })
 
   it('game has all 10 gameTypes', () => {
-    GAME_TYPES.all.forEach(gt => {
+    GAME_TYPES.all.forEach((gt) => {
       expect(ELEMENT_DEFAULTS.game[gt]).toBeDefined()
     })
   })
@@ -255,7 +255,7 @@ describe('createGameElement factory', () => {
   })
 
   it('creates element with correct gameType', () => {
-    GAME_TYPES.all.forEach(gt => {
+    GAME_TYPES.all.forEach((gt) => {
       const el = createGameElement(gt)
       expect(el.gameType).toBe(gt)
     })
@@ -337,6 +337,7 @@ describe('createGameElement factory', () => {
     for (const gameType of GAME_TYPES.all) {
       const overrides = { width: 777 }
       expect(createGameElement(gameType, overrides)).toEqual({
+        id: expect.any(String),
         ...structuredClone(GAME_BASE_DEFAULTS),
         gameType,
         [gameType]: structuredClone(GAME_TYPE_DEFAULTS[gameType]),
@@ -362,7 +363,9 @@ describe('createGameElement factory', () => {
 })
 
 describe('createQuestion factory', () => {
-  beforeEach(() => { /* reset not needed — each call generates unique id */ })
+  beforeEach(() => {
+    /* reset not needed — each call generates unique id */
+  })
 
   it('creates a valid question object', () => {
     const q = createQuestion()
@@ -410,7 +413,9 @@ describe('createQuestion factory', () => {
 })
 
 describe('createTeam factory', () => {
-  beforeEach(() => { resetTeamCounter() })
+  beforeEach(() => {
+    resetTeamCounter()
+  })
 
   it('creates a valid team object', () => {
     const t = createTeam()

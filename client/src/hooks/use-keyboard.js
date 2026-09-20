@@ -17,6 +17,12 @@ const ARROW_DIRECTION = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', A
 // excluded so holding an arrow keeps moving the selection.
 const REPEAT_SUPPRESSED_IDS = new Set(['commandPalette', 'group', 'insertSlide', 'gameNext'])
 
+// Zoom chords fire even while editing text or when a form control owns keyboard
+// focus — otherwise the early stand-downs let them fall through to Chrome's
+// native page zoom, which hijacks the whole editor while the app's zoom
+// readout stays frozen.
+const ZOOM_CHORD_IDS = new Set(['zoomIn', 'zoomOut', 'resetZoom'])
+
 const GAME_SHORTCUT_CONFIG_KEYS = {
   gameTimer: 'timer',
   gameNext: 'nextPhase',
@@ -83,8 +89,43 @@ export function createKeyboardHandler({
       e.preventDefault()
       return
     }
+
+    // Zoom chords resolve before every stand-down (disabled, text editing,
+    // interactive focus): they preventDefault before Chrome can claim them for
+    // native page zoom. The callback is gated on `disabled` so a loading route
+    // suppresses app zoom but still blocks the browser's.
+    if (ctrl) {
+      const zoomShortcut = scopeShortcuts.find(
+        (s) => s.activeKey === normalizeKey(e) && ZOOM_CHORD_IDS.has(s.id)
+      )
+      if (zoomShortcut) {
+        if (!disabled) callbacks[`on${capitalize(zoomShortcut.id)}`]?.()
+        e.preventDefault()
+        return
+      }
+    }
+
     if (disabled || isEditing) return
-    if (isInteractiveKeyboardTarget(getActiveElement())) return
+    const interactiveTarget = isInteractiveKeyboardTarget(getActiveElement())
+
+    // Ctrl chords
+    if (ctrl) {
+      const chord = normalizeKey(e)
+      const shortcut = scopeShortcuts.find((s) => s.activeKey === chord)
+      if (shortcut && !interactiveTarget) {
+        // One-shot chords must not re-fire while the key is held down.
+        if (e.repeat && REPEAT_SUPPRESSED_IDS.has(shortcut.id)) {
+          e.preventDefault()
+          return
+        }
+        const cbName = `on${capitalize(shortcut.id)}`
+        callbacks[cbName]?.()
+        e.preventDefault()
+        return
+      }
+    }
+
+    if (interactiveTarget) return
 
     // Standalone keys (no Ctrl) — F5, arrows, B, W, Home, End, Escape in presentation
     if (!ctrl) {
@@ -106,23 +147,6 @@ export function createKeyboardHandler({
         if (!presenting && !gamePresenterActive && EDITOR_SUPPRESSED_GAME_IDS.has(match.id)) return
         const cb = callbacks[`on${capitalize(match.id)}`]
         cb?.()
-        e.preventDefault()
-        return
-      }
-    }
-
-    // Ctrl chords
-    if (ctrl) {
-      const chord = normalizeKey(e)
-      const shortcut = scopeShortcuts.find((s) => s.activeKey === chord)
-      if (shortcut) {
-        // One-shot chords must not re-fire while the key is held down.
-        if (e.repeat && REPEAT_SUPPRESSED_IDS.has(shortcut.id)) {
-          e.preventDefault()
-          return
-        }
-        const cbName = `on${capitalize(shortcut.id)}`
-        callbacks[cbName]?.()
         e.preventDefault()
         return
       }

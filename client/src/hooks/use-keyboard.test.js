@@ -159,6 +159,32 @@ describe('createKeyboardHandler', () => {
     expect(resetZoom.preventDefault).toHaveBeenCalledTimes(1)
   })
 
+  it('[cap:shortcut.zoomIn] zoom chords still beat native page zoom while editing or focused on a control', () => {
+    const shortcuts = getShortcuts({})
+    const onZoomOut = vi.fn()
+
+    const editing = createKeyboardHandler({
+      onZoomOut,
+      shortcuts,
+      isEditing: true,
+      getActiveElement: () => ({ tagName: 'DIV', isContentEditable: true }),
+    })
+    const editingEvent = createEvent('-', { ctrlKey: true })
+    editing(editingEvent)
+    expect(onZoomOut).toHaveBeenCalledTimes(1)
+    expect(editingEvent.preventDefault).toHaveBeenCalledTimes(1)
+
+    const focused = createKeyboardHandler({
+      onZoomOut,
+      shortcuts,
+      getActiveElement: () => ({ tagName: 'BUTTON' }),
+    })
+    const focusedEvent = createEvent('-', { ctrlKey: true })
+    focused(focusedEvent)
+    expect(onZoomOut).toHaveBeenCalledTimes(2)
+    expect(focusedEvent.preventDefault).toHaveBeenCalledTimes(1)
+  })
+
   it('honors a customized Save shortcut from the registry in editable controls', () => {
     const shortcuts = getShortcuts({}).map((shortcut) =>
       shortcut.id === 'save' ? { ...shortcut, activeKey: 'Ctrl+Shift+S' } : shortcut

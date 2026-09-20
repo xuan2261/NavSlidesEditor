@@ -6,26 +6,38 @@
 export const GAME_TYPES = {
   'name-picker': 'name-picker',
   'hot-potato': 'hot-potato',
-  'jeopardy': 'jeopardy',
+  jeopardy: 'jeopardy',
   'four-corners': 'four-corners',
   'relay-race': 'relay-race',
   'trivia-champ': 'trivia-champ',
-  'scattergories': 'scattergories',
-  'poll': 'poll',
+  scattergories: 'scattergories',
+  poll: 'poll',
   'word-cloud': 'word-cloud',
-  'matching': 'matching',
+  matching: 'matching',
 }
 GAME_TYPES.all = Object.values(GAME_TYPES)
 
 // Default color palette for game elements
 export const DEFAULT_GAME_COLORS = {
   wheelColors: [
-    '#FF5722', '#2196F3', '#4CAF50', '#FFC107',
-    '#9C27B0', '#00BCD4', '#FF9800', '#795548',
+    '#FF5722',
+    '#2196F3',
+    '#4CAF50',
+    '#FFC107',
+    '#9C27B0',
+    '#00BCD4',
+    '#FF9800',
+    '#795548',
   ],
   accentColors: [
-    '#6366f1', '#ec4899', '#10b981', '#f59e0b',
-    '#3b82f6', '#8b5cf6', '#14b8a6', '#f97316',
+    '#6366f1',
+    '#ec4899',
+    '#10b981',
+    '#f59e0b',
+    '#3b82f6',
+    '#8b5cf6',
+    '#14b8a6',
+    '#f97316',
   ],
 }
 
@@ -44,8 +56,16 @@ export const GAME_BASE_DEFAULTS = {
 export const GAME_TYPE_DEFAULTS = {
   'name-picker': {
     pickerMode: 'wheel',
-    items: ['Học sinh 1', 'Học sinh 2', 'Học sinh 3', 'Học sinh 4',
-            'Học sinh 5', 'Học sinh 6', 'Học sinh 7', 'Học sinh 8'],
+    items: [
+      'Học sinh 1',
+      'Học sinh 2',
+      'Học sinh 3',
+      'Học sinh 4',
+      'Học sinh 5',
+      'Học sinh 6',
+      'Học sinh 7',
+      'Học sinh 8',
+    ],
     wheelSegments: 8,
     wheelColors: DEFAULT_GAME_COLORS.wheelColors,
     diceCount: 2,
@@ -62,7 +82,7 @@ export const GAME_TYPE_DEFAULTS = {
     showLeaderboard: true,
     shuffleQuestions: false,
   },
-  'jeopardy': {
+  jeopardy: {
     title: 'Jeopardy',
     teams: [],
     categories: [],
@@ -85,13 +105,13 @@ export const GAME_TYPE_DEFAULTS = {
     lightningRound: { enabled: false, timePerQ: 10 },
     jackpotRound: { enabled: false, multiplier: 2 },
   },
-  'scattergories': {
+  scattergories: {
     timePerRound: 60,
     letterMode: 'random',
     categories: [],
     scoring: 'unique',
   },
-  'poll': {
+  poll: {
     title: 'Live Poll',
     prompt: 'What do you think?',
     options: [
@@ -110,7 +130,7 @@ export const GAME_TYPE_DEFAULTS = {
     displayLimit: 50,
     timerDuration: 30,
   },
-  'matching': {
+  matching: {
     title: 'Matching',
     prompt: 'Match each item to its answer',
     pairs: [
@@ -178,15 +198,14 @@ export function createTeam(overrides = {}) {
 }
 
 // Reset counter for testing
-export function resetTeamCounter() { _teamCounter = 0 }
+export function resetTeamCounter() {
+  _teamCounter = 0
+}
 
 // Factory: create a game element with a canonical nested subtype config.
 export function createGameElement(gameType = 'name-picker', overrides = {}) {
   const typeDefaults = GAME_TYPE_DEFAULTS[gameType] || GAME_TYPE_DEFAULTS['name-picker']
-  const {
-    [gameType]: nestedOverrides,
-    ...remainingOverrides
-  } = overrides || {}
+  const { [gameType]: nestedOverrides, ...remainingOverrides } = overrides || {}
   const subtypeKeys = new Set(Object.keys(typeDefaults))
   const legacySubtypeOverrides = {}
   const baseOverrides = {}
@@ -197,6 +216,7 @@ export function createGameElement(gameType = 'name-picker', overrides = {}) {
   })
 
   return {
+    id: crypto.randomUUID(),
     ...cloneGameDefaults(GAME_BASE_DEFAULTS),
     ...baseOverrides,
     gameType,

@@ -32,13 +32,15 @@ describe('server-raster route isolation', () => {
     expect(targets).toEqual([{ id: 'html-visible', slideIndex: 0, type: 'html' }])
   })
 
-  it('rejects visible raster elements without stable ids', () => {
-    expect(() =>
-      __private.collectRasterTargets(
-        { slides: [{ elements: [{ type: 'html', content: '<p>Missing id</p>' }] }] },
-        new Set(['html'])
-      )
-    ).toThrow(/requires an id/)
+  it('assigns fresh ids to visible raster elements missing one', () => {
+    const element = { type: 'html', content: '<p>Missing id</p>' }
+    const targets = __private.collectRasterTargets(
+      { slides: [{ elements: [element] }] },
+      new Set(['html'])
+    )
+
+    expect(element.id).toEqual(expect.any(String))
+    expect(targets).toEqual([{ id: element.id, slideIndex: 0, type: 'html' }])
   })
 
   it('rejects duplicate visible raster target ids', () => {
