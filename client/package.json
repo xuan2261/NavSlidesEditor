@@ -32,7 +32,7 @@
     "clsx": "^2.1.1",
     "highlight.js": "^11.11.1",
     "katex": "^0.16.40",
-    "lucide-react": "^0.441.0",
+    "lucide-react": "^1.47.0",
     "marked": "^18.0.4",
     "pdfjs-dist": "6.3.289",
     "postcss": "^8.5.10",
