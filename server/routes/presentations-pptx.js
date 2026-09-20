@@ -1,9 +1,6 @@
 const logger = require('../services/logger')
 const express = require('express')
-const {
-  generateRevealHTML,
-  normalizePresentationNotes,
-} = require('revealjs-shared')
+const { generateRevealHTML, normalizePresentationNotes } = require('revealjs-shared')
 const { rasterizeComplexElements } = require('../services/pptx-exporter')
 const { findServeablePresentation } = require('../services/presentation-finder')
 const { hashCanonical } = require('../services/pptx-import/evidence/canonical-hash')
@@ -50,7 +47,10 @@ router.post('/raster-elements', async (req, res) => {
     res.json({ rasters })
   } catch (err) {
     logger.error('PPTX element rasterization failed:', err)
-    res.status(500).json({ error: 'PPTX element rasterization failed' })
+    if (err && err.code === 'INVALID_RASTER_TARGETS') {
+      return res.status(400).json({ error: err.message, code: err.code })
+    }
+    res.status(500).json({ error: 'PPTX element rasterization failed', details: err.message })
   }
 })
 
@@ -62,12 +62,14 @@ router.get('/:id/pptx-fidelity', async (req, res) => {
     const presentation = resolved.presentation
     const { buildFidelityDto } = require('../services/pptx-import/fidelity-contract')
     let verifiedOriginalAvailable = false
-    if ((presentation.pptxOriginal?.id && presentation.pptxOriginal?.sha256) ||
-      presentation.pptxAggregateHead?.packageRevisionId) {
+    if (
+      (presentation.pptxOriginal?.id && presentation.pptxOriginal?.sha256) ||
+      presentation.pptxAggregateHead?.packageRevisionId
+    ) {
       try {
-        const { resolvePptxOriginalPayload } = require(
-          '../services/pptx-import/roundtrip-original-parts'
-        )
+        const {
+          resolvePptxOriginalPayload,
+        } = require('../services/pptx-import/roundtrip-original-parts')
         const {
           resolveImmutableOriginalRevisionBytes,
         } = require('../services/pptx-import/package-revision-resolver')
@@ -114,9 +116,12 @@ router.get('/:id/pptx-package-snapshot', async (req, res) => {
     if (!resolved) return res.status(404).json({ error: 'Not found' })
     const snapshot = await readPackageAuthoritySnapshot(req.params.id)
     const head = resolved.presentation?.pptxAggregateHead
-    if (!head || resolved.generation !== snapshot.aggregateGeneration ||
-        hashCanonical(head) !== snapshot.packageHeadHash ||
-        head.packageRevisionId !== snapshot.packageRevisionId) {
+    if (
+      !head ||
+      resolved.generation !== snapshot.aggregateGeneration ||
+      hashCanonical(head) !== snapshot.packageHeadHash ||
+      head.packageRevisionId !== snapshot.packageRevisionId
+    ) {
       return res.status(409).json({
         error: 'Package authority changed while reading the snapshot',
         code: 'PACKAGE_AUTHORITY_CHANGED',
@@ -133,8 +138,10 @@ router.get('/:id/pptx-original', async (req, res) => {
   try {
     const generationHeader = req.get('If-Pptx-Generation')
     const generationRequested = generationHeader !== undefined
-    if (generationRequested && (!/^[1-9]\d*$/u.test(generationHeader) ||
-      !Number.isSafeInteger(Number(generationHeader)))) {
+    if (
+      generationRequested &&
+      (!/^[1-9]\d*$/u.test(generationHeader) || !Number.isSafeInteger(Number(generationHeader)))
+    ) {
       return res.status(400).json({
         error: 'If-Pptx-Generation must be a positive safe integer',
         code: 'INVALID_EXPECTED_GENERATION',
@@ -142,13 +149,15 @@ router.get('/:id/pptx-original', async (req, res) => {
     }
     const packageRevisionHeader = req.get('If-Pptx-Package-Revision')
     const packageHeadHashHeader = req.get('If-Pptx-Package-Head-Hash')
-    const packageAuthorityRequested = packageRevisionHeader !== undefined ||
-      packageHeadHashHeader !== undefined
-    if (packageAuthorityRequested &&
-        (typeof packageRevisionHeader !== 'string' ||
-          !/^[A-Za-z0-9._:-]+$/u.test(packageRevisionHeader) ||
-          typeof packageHeadHashHeader !== 'string' ||
-          !/^[a-f0-9]{64}$/u.test(packageHeadHashHeader))) {
+    const packageAuthorityRequested =
+      packageRevisionHeader !== undefined || packageHeadHashHeader !== undefined
+    if (
+      packageAuthorityRequested &&
+      (typeof packageRevisionHeader !== 'string' ||
+        !/^[A-Za-z0-9._:-]+$/u.test(packageRevisionHeader) ||
+        typeof packageHeadHashHeader !== 'string' ||
+        !/^[a-f0-9]{64}$/u.test(packageHeadHashHeader))
+    ) {
       return res.status(400).json({
         error: 'If-Pptx-Package-Revision and If-Pptx-Package-Head-Hash are required',
         code: 'INVALID_EXPECTED_PACKAGE_AUTHORITY',
@@ -173,16 +182,19 @@ router.get('/:id/pptx-original', async (req, res) => {
         currentGeneration: Number.isSafeInteger(resolved.generation) ? resolved.generation : null,
       })
     }
-    const { resolvePptxOriginalPayload } = require('../services/pptx-import/roundtrip-original-parts')
+    const {
+      resolvePptxOriginalPayload,
+    } = require('../services/pptx-import/roundtrip-original-parts')
     const {
       resolveImmutableOriginalRevisionBytes,
     } = require('../services/pptx-import/package-revision-resolver')
     const payload = await resolvePptxOriginalPayload(presentation, {
-      resolveImmutableOriginalRevision: (input) => resolveImmutableOriginalRevisionBytes(input, {
-        expectedGeneration: generationRequested ? Number(generationHeader) : undefined,
-        expectedPackageRevisionId: packageAuthorityRequested ? packageRevisionHeader : undefined,
-        expectedPackageHeadHash: packageAuthorityRequested ? packageHeadHashHeader : undefined,
-      }),
+      resolveImmutableOriginalRevision: (input) =>
+        resolveImmutableOriginalRevisionBytes(input, {
+          expectedGeneration: generationRequested ? Number(generationHeader) : undefined,
+          expectedPackageRevisionId: packageAuthorityRequested ? packageRevisionHeader : undefined,
+          expectedPackageHeadHash: packageAuthorityRequested ? packageHeadHashHeader : undefined,
+        }),
     })
     if (!payload.buffer) {
       return res.status(payload.status || 404).json({
@@ -208,13 +220,16 @@ router.get('/:id/pptx-original', async (req, res) => {
 })
 
 // POST /api/presentations/:id/pptx-edited — authoritative, fail-closed package export.
-router.post('/:id/pptx-edited', createEditedExportHandler({
-  findPresentation: (id) => findServeablePresentation(id, { normalize: false }),
-  getReplay: hasValidatedEditedReplay,
-  getAvailability: editedExportAvailability,
-  execute: executeValidatedEditedExport,
-  drainCompatibility: drainPackageCompatibilityOutbox,
-}))
+router.post(
+  '/:id/pptx-edited',
+  createEditedExportHandler({
+    findPresentation: (id) => findServeablePresentation(id, { normalize: false }),
+    getReplay: hasValidatedEditedReplay,
+    getAvailability: editedExportAvailability,
+    execute: executeValidatedEditedExport,
+    drainCompatibility: drainPackageCompatibilityOutbox,
+  })
+)
 
 router.get('/:id/export', async (req, res) => {
   try {
