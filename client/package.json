@@ -34,7 +34,7 @@
     "katex": "^0.16.40",
     "lucide-react": "^0.441.0",
     "marked": "^18.0.4",
-    "pdfjs-dist": "6.2.108",
+    "pdfjs-dist": "6.3.289",
     "postcss": "^8.5.10",
     "pptxgenjs": "^4.0.1",
     "qrcode": "^1.5.4",
