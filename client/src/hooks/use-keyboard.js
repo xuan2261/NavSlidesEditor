@@ -17,9 +17,10 @@ const ARROW_DIRECTION = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', A
 // excluded so holding an arrow keeps moving the selection.
 const REPEAT_SUPPRESSED_IDS = new Set(['commandPalette', 'group', 'insertSlide', 'gameNext'])
 
-// Zoom chords fire even when a form control owns keyboard focus — otherwise the
-// early stand-down lets them fall through to Chrome's native page zoom, which
-// hijacks the whole editor while the app's zoom readout stays frozen.
+// Zoom chords fire even while editing text or when a form control owns keyboard
+// focus — otherwise the early stand-downs let them fall through to Chrome's
+// native page zoom, which hijacks the whole editor while the app's zoom
+// readout stays frozen.
 const ZOOM_CHORD_IDS = new Set(['zoomIn', 'zoomOut', 'resetZoom'])
 
 const GAME_SHORTCUT_CONFIG_KEYS = {
