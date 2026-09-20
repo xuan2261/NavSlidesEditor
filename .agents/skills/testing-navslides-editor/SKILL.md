@@ -41,6 +41,69 @@ description: How to run and manually test the NavSlidesEditor app locally (dev s
 ## Known quirks (pre-existing, not bugs to flag on refactors)
 
 - Editor shows a product-tour overlay ("Welcome to NavSlidesEditor!") on each editor mount;
-  "Skip Tour" may not respond to clicks — navigate via URL bar to leave the editor.
+  fixed on master — Escape and Skip Tour now dismiss it. If on an old branch, navigate via URL
+  bar to leave the editor. Clear `localStorage.navSlidesTutorialSeen` + reload to re-trigger it.
 - Console shows highlight.js warnings `Could not find the language 'asm'` when viewing decks with
   unrecognized code blocks — harmless.
+
+## Browser/automation specifics
+
+- Launch Chrome with `--remote-debugging-port=<port>` or `browser_console`/CDP won't connect;
+  add `--disable-popup-blocking` when testing blob-URL exports (File→Export PDF opens
+  `window.open(blob:)`) — otherwise they silently fail and look like dead buttons.
+- Tool→DOM coordinate mapping on this box (1024×768 tool space, maximized window):
+  `DOM_x = tool_x × 1.5`, `DOM_y = tool_y × 1.5 − 93.5` (browser chrome offset).
+  Verify against a known-good target (e.g. File button DOM center ~(445,23) ↔ tool (297,78)).
+- `browser_console` quirks: scripts with `var`/`;`-separated statements or top-level Promises
+  return `undefined`/fail — use single bare expressions; React state reads (e.g. `aria-expanded`)
+  must be done in a SEPARATE call after the triggering action since updates are async.
+- Ribbon chevron dropdowns (`RibbonDropdownMenuGroup`, e.g. Insert→Advanced "More advanced
+  insert options" → Games gallery) toggle on `mousedown`/`Enter` on the FOCUSED trigger —
+  synthetic `.click()` does NOT work. Reliable path: `el.focus()` in console, then press Enter,
+  then click menu items (which also fire on mousedown).
+- Navigating decks: use Ctrl+L + type URL (clicking the omnibox can race with open menus).
+
+## Server-side rasterization dependency (PPTX export)
+
+- Export PPTX rasterizes latex/html/game/QR elements via headless Chromium
+  (`server/utils/server-raster.js`). Requires `npx playwright install chromium` matching the
+  installed playwright version (`~/.cache/ms-playwright/chromium_headless_shell-<build>`);
+  a missing/mismatched build fails the whole export with the opaque "PPTX element
+  rasterization failed" — check server log for the real reason (it prints the fix command).
+- `validateRasterTargetIds` hard-fails export when ANY raster-target element lacks an `id`;
+  legacy decks with pre-PR-#32 id-less game elements are permanently un-exportable
+  (heal path: export project → import). Minimal repro: fresh deck + Insert→Games element
+  exports fine on master.
+
+### Reading live element state via React fiber (browser_console)
+
+Canvas elements expose aria-labels like `text element` / `game element` / `qrcode element` — but never the element `id` in the DOM. To verify ids/state without instrumenting React, walk `__reactFiber*` upward until a node whose `memoizedProps.element` exists:
+
+```js
+;(function () {
+  const els = [
+    ...document.querySelectorAll('div[aria-label$="element"],div[aria-label*=" element,"]'),
+  ]
+  const out = []
+  els.forEach((e) => {
+    const k = Object.keys(e).find((k) => k.startsWith('__reactFiber'))
+    let n = e[k],
+      el = null
+    for (let i = 0; i < 10 && n; i++) {
+      if (n.memoizedProps && n.memoizedProps.element) {
+        el = n.memoizedProps.element
+        break
+      }
+      n = n.return
+    }
+    if (el) out.push(el.type + ':' + el.id)
+  })
+  return out.join(' ;; ')
+})()
+```
+
+The canvas wrapper div carries `element` in its props (~1-3 hops up). This is the reliable way to confirm migration/heal fixes that change element fields invisible in the DOM — pair with `node -e` reads of `server/data/presentations.json` for the persisted side.
+
+### Omnibox history trap
+
+Ctrl+L + typing `localhost:5173/editor/<id>` can autocomplete to a _different_ previously-visited path containing the same id (e.g. `/api/presentations/<id>/present` from an earlier Present test) when you hit Enter. Always type the full `http://localhost:5173/editor/<id>` URL, or verify the final URL after navigation.

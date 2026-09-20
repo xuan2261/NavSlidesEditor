@@ -37,6 +37,18 @@ module.exports = defineConfig({
     trace: process.env.CI ? 'retain-on-failure' : 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    // The product-tour joyride overlay (blockTargetInteraction) mounts on a
+    // fresh profile's first editor visit and races with tests that click the
+    // canvas — mark it seen for every context so specs don't have to.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: new URL(baseURL).origin,
+          localStorage: [{ name: 'navSlidesTutorialSeen', value: 'true' }],
+        },
+      ],
+    },
   },
   expect: {
     toHaveScreenshot: {

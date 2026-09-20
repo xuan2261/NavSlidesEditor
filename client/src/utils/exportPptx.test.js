@@ -93,14 +93,27 @@ describe('exportPptx', () => {
     vi.restoreAllMocks()
   })
 
-  it('rejects server-raster HTML elements without stable ids', async () => {
-    await expect(
-      exportToPptx({
-        title: 'Missing raster id',
-        slides: [{ elements: [{ type: 'html', content: '<p>Missing id</p>' }] }],
-      })
-    ).rejects.toThrow(/requires a stable id/)
-    expect(writeFileMock).not.toHaveBeenCalled()
+  it('heals server-raster elements missing ids so legacy decks still export', async () => {
+    globalThis.window = {}
+    globalThis.document = {}
+    globalThis.fetch = vi.fn().mockImplementation(async (_url, init) => {
+      const posted = JSON.parse(init.body).presentation.slides[0].elements[0]
+      return {
+        ok: true,
+        json: async () => ({ rasters: { [posted.id]: 'data:image/png;base64,html' } }),
+      }
+    })
+
+    const deck = {
+      title: 'Missing raster id',
+      slides: [{ elements: [{ type: 'html', content: '<p>Missing id</p>' }] }],
+    }
+    const warnings = await exportToPptx(deck)
+
+    expect(deck.slides[0].elements[0].id).toEqual(expect.any(String))
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+    expect(writeFileMock).toHaveBeenCalledTimes(1)
+    expect(warnings).toEqual(expect.arrayContaining([expect.stringContaining('rasterized html')]))
   })
 
   it('rejects duplicate ids before server-raster mapping can cross-wire elements', async () => {
@@ -163,15 +176,17 @@ describe('exportPptx', () => {
           ],
         },
         {
-          elements: [{
-            id: 'legacy-duplicate',
-            type: 'image',
-            src: 'data:image/png;base64,legacy',
-            x: 0,
-            y: 100,
-            width: 200,
-            height: 80,
-          }],
+          elements: [
+            {
+              id: 'legacy-duplicate',
+              type: 'image',
+              src: 'data:image/png;base64,legacy',
+              x: 0,
+              y: 100,
+              width: 200,
+              height: 80,
+            },
+          ],
         },
       ],
     })
@@ -233,12 +248,14 @@ describe('exportPptx', () => {
   it('preserves idless non-line elements when resolving idless connector geometry', async () => {
     await exportToPptx({
       title: 'Idless connector lookup',
-      slides: [{
-        elements: [
-          { type: 'text', content: '<p>Keep this text</p>', x: 0, y: 0, width: 200, height: 80 },
-          { type: 'line', x: 0, y: 100, width: 200, height: 0, x1: 0, y1: 0, x2: 200, y2: 0 },
-        ],
-      }],
+      slides: [
+        {
+          elements: [
+            { type: 'text', content: '<p>Keep this text</p>', x: 0, y: 0, width: 200, height: 80 },
+            { type: 'line', x: 0, y: 100, width: 200, height: 0, x1: 0, y1: 0, x2: 200, y2: 0 },
+          ],
+        },
+      ],
     })
 
     expect(slides[0].addText).toHaveBeenCalledTimes(1)
@@ -248,16 +265,26 @@ describe('exportPptx', () => {
   it('[cap:export.connector-pptx] flattens resolved connector endpoints to an editable native line with a warning', async () => {
     const warnings = await exportToPptx({
       title: 'Connector export',
-      slides: [{
-        elements: [
-          { id: 'target', type: 'shape', shape: 'rect', x: 100, y: 50, width: 80, height: 40 },
-          {
-            id: 'connector', type: 'line', x: 10, y: 20, width: 300, height: 100,
-            x1: 0, y1: 50, x2: 300, y2: 50,
-            connections: { start: { targetId: 'target', anchor: 'e' } },
-          },
-        ],
-      }],
+      slides: [
+        {
+          elements: [
+            { id: 'target', type: 'shape', shape: 'rect', x: 100, y: 50, width: 80, height: 40 },
+            {
+              id: 'connector',
+              type: 'line',
+              x: 10,
+              y: 20,
+              width: 300,
+              height: 100,
+              x1: 0,
+              y1: 50,
+              x2: 300,
+              y2: 50,
+              connections: { start: { targetId: 'target', anchor: 'e' } },
+            },
+          ],
+        },
+      ],
     })
 
     const nativeLine = slides[0].addShape.mock.calls.find(([type]) => type === 'line')?.[1]
@@ -267,31 +294,60 @@ describe('exportPptx', () => {
     expect(nativeLine.w).toBeCloseTo(1.3542, 3)
     expect(nativeLine.h).toBe(0)
     expect(slides[0].addImage).not.toHaveBeenCalled()
-    expect(warnings.exportReport.warnings).toEqual(expect.arrayContaining([
-      expect.objectContaining({ elementId: 'connector', elementType: 'line', fallback: 'native-line' }),
-    ]))
+    expect(warnings.exportReport.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          elementId: 'connector',
+          elementType: 'line',
+          fallback: 'native-line',
+        }),
+      ])
+    )
   })
 
   it('[cap:export.layout-pptx] flattens linked layouts into editable native elements without PowerPoint masters', async () => {
     const warnings = await exportToPptx({
       title: 'Layout export',
-      layoutMasters: [{
-        id: 'master', name: 'Master', fixedElements: [
-          { id: 'band', type: 'shape', shape: 'rect', x: 0, y: 0, width: 960, height: 40 },
-        ], placeholders: [],
-      }],
-      slides: [{
-        layoutId: 'master',
-        elements: [{ id: 'body', type: 'text', content: '<p>Editable body</p>', x: 80, y: 100, width: 400, height: 80 }],
-      }],
+      layoutMasters: [
+        {
+          id: 'master',
+          name: 'Master',
+          fixedElements: [
+            { id: 'band', type: 'shape', shape: 'rect', x: 0, y: 0, width: 960, height: 40 },
+          ],
+          placeholders: [],
+        },
+      ],
+      slides: [
+        {
+          layoutId: 'master',
+          elements: [
+            {
+              id: 'body',
+              type: 'text',
+              content: '<p>Editable body</p>',
+              x: 80,
+              y: 100,
+              width: 400,
+              height: 80,
+            },
+          ],
+        },
+      ],
     })
 
     expect(slides[0].addShape).toHaveBeenCalledWith('rect', expect.any(Object))
     expect(slides[0].addText).toHaveBeenCalledWith(expect.any(Array), expect.any(Object))
     expect(slides[0].addImage).not.toHaveBeenCalled()
-    expect(warnings.exportReport.warnings).toEqual(expect.arrayContaining([
-      expect.objectContaining({ elementId: 'master', elementType: 'layout', fallback: 'flattened-elements' }),
-    ]))
+    expect(warnings.exportReport.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          elementId: 'master',
+          elementType: 'layout',
+          fallback: 'flattened-elements',
+        }),
+      ])
+    )
   })
 
   it('exports images and native charts without fallback warnings', async () => {
@@ -776,18 +832,22 @@ describe('exportPptx', () => {
   it('keeps rotated tables native and reports the accepted rotation limit', async () => {
     const warnings = await exportToPptx({
       title: 'Rotated table',
-      slides: [{
-        elements: [{
-          id: 'table-rotation',
-          type: 'table',
-          rotation: 15,
-          x: 20,
-          y: 20,
-          width: 300,
-          height: 120,
-          data: [['Native table']],
-        }],
-      }],
+      slides: [
+        {
+          elements: [
+            {
+              id: 'table-rotation',
+              type: 'table',
+              rotation: 15,
+              x: 20,
+              y: 20,
+              width: 300,
+              height: 120,
+              data: [['Native table']],
+            },
+          ],
+        },
+      ],
     })
 
     expect(slides[0].addTable).toHaveBeenCalledTimes(1)
@@ -1085,15 +1145,39 @@ describe('exportPptx', () => {
 
     await exportToPptx({
       title: 'Vertical export',
-      slides: [{
-        id: 'parent',
-        elements: [{ id: 'parent-text', type: 'text', content: '<p>Parent</p>', x: 10, y: 10, width: 200, height: 60 }],
-        children: [{
-          id: 'child',
-          elements: [{ id: 'child-html', type: 'html', content: '<p>Child</p>', x: 20, y: 20, width: 240, height: 120 }],
-          notes: 'Child notes',
-        }],
-      }],
+      slides: [
+        {
+          id: 'parent',
+          elements: [
+            {
+              id: 'parent-text',
+              type: 'text',
+              content: '<p>Parent</p>',
+              x: 10,
+              y: 10,
+              width: 200,
+              height: 60,
+            },
+          ],
+          children: [
+            {
+              id: 'child',
+              elements: [
+                {
+                  id: 'child-html',
+                  type: 'html',
+                  content: '<p>Child</p>',
+                  x: 20,
+                  y: 20,
+                  width: 240,
+                  height: 120,
+                },
+              ],
+              notes: 'Child notes',
+            },
+          ],
+        },
+      ],
     })
 
     expect(globalThis.fetch).toHaveBeenCalledTimes(1)
