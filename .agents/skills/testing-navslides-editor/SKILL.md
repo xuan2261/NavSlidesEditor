@@ -80,14 +80,30 @@ description: How to run and manually test the NavSlidesEditor app locally (dev s
 Canvas elements expose aria-labels like `text element` / `game element` / `qrcode element` — but never the element `id` in the DOM. To verify ids/state without instrumenting React, walk `__reactFiber*` upward until a node whose `memoizedProps.element` exists:
 
 ```js
-(function(){ const els=[...document.querySelectorAll('div[aria-label$="element"],div[aria-label*=" element,"]')];
-const out=[]; els.forEach(e=>{ const k=Object.keys(e).find(k=>k.startsWith('__reactFiber'));
-let n=e[k],el=null; for(let i=0;i<10&&n;i++){ if(n.memoizedProps&&n.memoizedProps.element){el=n.memoizedProps.element;break;} n=n.return;}
-if(el) out.push(el.type+':'+el.id); }); return out.join(' ;; '); })()
+;(function () {
+  const els = [
+    ...document.querySelectorAll('div[aria-label$="element"],div[aria-label*=" element,"]'),
+  ]
+  const out = []
+  els.forEach((e) => {
+    const k = Object.keys(e).find((k) => k.startsWith('__reactFiber'))
+    let n = e[k],
+      el = null
+    for (let i = 0; i < 10 && n; i++) {
+      if (n.memoizedProps && n.memoizedProps.element) {
+        el = n.memoizedProps.element
+        break
+      }
+      n = n.return
+    }
+    if (el) out.push(el.type + ':' + el.id)
+  })
+  return out.join(' ;; ')
+})()
 ```
 
 The canvas wrapper div carries `element` in its props (~1-3 hops up). This is the reliable way to confirm migration/heal fixes that change element fields invisible in the DOM — pair with `node -e` reads of `server/data/presentations.json` for the persisted side.
 
 ### Omnibox history trap
 
-Ctrl+L + typing `localhost:5173/editor/<id>` can autocomplete to a *different* previously-visited path containing the same id (e.g. `/api/presentations/<id>/present` from an earlier Present test) when you hit Enter. Always type the full `http://localhost:5173/editor/<id>` URL, or verify the final URL after navigation.
+Ctrl+L + typing `localhost:5173/editor/<id>` can autocomplete to a _different_ previously-visited path containing the same id (e.g. `/api/presentations/<id>/present` from an earlier Present test) when you hit Enter. Always type the full `http://localhost:5173/editor/<id>` URL, or verify the final URL after navigation.

@@ -116,6 +116,11 @@ export default [
       ...reactHooksPlugin.configs.recommended.rules,
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
+      // react-hooks v7 compiler-era rules — kept visible but non-blocking
+      'react-hooks/refs': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/immutability': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
     },
   },
   // Client unit tests
@@ -143,6 +148,10 @@ export default [
       ...reactHooksPlugin.configs.recommended.rules,
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
+      'react-hooks/refs': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/immutability': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
     },
   },
   // Socket setup intentionally publishes the external connection object from its effect.
