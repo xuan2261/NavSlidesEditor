@@ -22,7 +22,8 @@ function resolvePptxSlide(sourceSlide, layoutMasters, warnings, slideNumber) {
   const { slide, warnings: layoutWarnings } = resolveEffectiveSlide(sourceSlide, layoutMasters)
   if (sourceSlide?.layoutId) {
     recordPptxExportWarning(warnings, {
-      element: { id: sourceSlide.layoutId, type: 'layout' }, slideNumber,
+      element: { id: sourceSlide.layoutId, type: 'layout' },
+      slideNumber,
       message: `Slide ${slideNumber}: linked layout was flattened for PowerPoint export; native PowerPoint masters are not preserved.`,
       fallback: 'flattened-elements',
     })
@@ -67,18 +68,16 @@ function validateServerRasterElementIds(slides) {
   for (const [slideIndex, slide] of (slides || []).entries()) {
     for (const element of slide.elements || []) {
       if (element.hidden || false) continue
-      const id = typeof element.id === 'string' ? element.id.trim() : ''
+      let id = typeof element.id === 'string' ? element.id.trim() : ''
       if (requiresServerRaster(element) && !id) {
-        throw new Error(
-          `PPTX export requires a stable id for ${element.type} on slide ${slideIndex + 1}`
-        )
+        // Legacy decks can carry id-less raster elements; assign one so the
+        // server render/match pipeline can target them.
+        element.id = crypto.randomUUID()
+        id = element.id
       }
       if (!id) continue
       const previous = seen.get(id)
-      if (
-        previous &&
-        (requiresServerRaster(previous.element) || requiresServerRaster(element))
-      ) {
+      if (previous && (requiresServerRaster(previous.element) || requiresServerRaster(element))) {
         throw new Error(
           `PPTX export found duplicate element id "${id}" on slides ${previous.slideIndex + 1} and ${slideIndex + 1}`
         )
@@ -86,7 +85,6 @@ function validateServerRasterElementIds(slides) {
       seen.set(id, { slideIndex, type: element.type, element })
     }
   }
-
 }
 
 function getServerOnlyElementIds(slides) {
@@ -109,9 +107,7 @@ function withoutHiddenElements(presentation) {
 
 function canUseServerRaster() {
   return (
-    typeof window !== 'undefined' &&
-    typeof document !== 'undefined' &&
-    typeof fetch === 'function'
+    typeof window !== 'undefined' && typeof document !== 'undefined' && typeof fetch === 'function'
   )
 }
 
@@ -166,7 +162,15 @@ async function exportToPptxClient(presentation, rasterOverrides = {}) {
       mergeTokens(DEFAULT_TOKENS, presentation?.designTokens),
       source?.designTokens
     )
-    await applySlideBackground(slide, source.background, resolution, layout, warnings, slideNumber, slideTokens)
+    await applySlideBackground(
+      slide,
+      source.background,
+      resolution,
+      layout,
+      warnings,
+      slideNumber,
+      slideTokens
+    )
 
     const { effectiveLines } = resolveConnectorGeometry(source.elements || [])
     const elements = [...(source.elements || [])]

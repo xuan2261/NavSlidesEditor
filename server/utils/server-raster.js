@@ -28,16 +28,26 @@ const CDN_TO_VENDOR = [
   [/cdn\.jsdelivr\.net\/npm\/d3(?:@[^/"']*)?/i, '/vendor/d3/dist/d3.min.js'],
   [/cdnjs\.cloudflare\.com\/ajax\/libs\/d3\/[^/]+\/d3\.min\.js/i, '/vendor/d3/dist/d3.min.js'],
   [/cdn\.jsdelivr\.net\/npm\/chart\.js(?:@[^/"']*)?/i, '/vendor/chart.js/dist/chart.umd.js'],
-  [/cdn\.jsdelivr\.net\/npm\/katex(?:@[^/"']*)?\/?dist\/katex\.min\.css/i, '/vendor/katex/dist/katex.min.css'],
-  [/cdn\.jsdelivr\.net\/npm\/katex(?:@[^/"']*)?\/?dist\/katex\.min\.js/i, '/vendor/katex/dist/katex.min.js'],
+  [
+    /cdn\.jsdelivr\.net\/npm\/katex(?:@[^/"']*)?\/?dist\/katex\.min\.css/i,
+    '/vendor/katex/dist/katex.min.css',
+  ],
+  [
+    /cdn\.jsdelivr\.net\/npm\/katex(?:@[^/"']*)?\/?dist\/katex\.min\.js/i,
+    '/vendor/katex/dist/katex.min.js',
+  ],
   [/tikzjax\.com\/v1\/fonts\.css/i, '/vendor/tikzjax/fonts.css'],
   [/tikzjax\.com\/v1\/tikzjax\.js/i, '/vendor/tikzjax/tikzjax.js'],
 ]
 
 function getResolution(presentation) {
   return {
-    width: Number(presentation && presentation.resolution && presentation.resolution.width) || DEFAULT_WIDTH,
-    height: Number(presentation && presentation.resolution && presentation.resolution.height) || DEFAULT_HEIGHT,
+    width:
+      Number(presentation && presentation.resolution && presentation.resolution.width) ||
+      DEFAULT_WIDTH,
+    height:
+      Number(presentation && presentation.resolution && presentation.resolution.height) ||
+      DEFAULT_HEIGHT,
   }
 }
 
@@ -97,7 +107,8 @@ function shouldRasterElement(element, rasterTypes) {
     )
   }
   if (rasterTypes.has(element.type)) return true
-  if (element.type === 'chart' && !isNativeChartType((element.chartType || '').toLowerCase())) return true
+  if (element.type === 'chart' && !isNativeChartType((element.chartType || '').toLowerCase()))
+    return true
   return false
 }
 
@@ -106,12 +117,12 @@ function validateRasterTargetIds(presentation, rasterTypes) {
   for (const [slideIndex, slide] of (presentation.slides || []).entries()) {
     for (const element of slide.elements || []) {
       if (element.hidden || !shouldRasterElement(element, rasterTypes)) continue
-      const id = typeof element.id === 'string' ? element.id.trim() : ''
-      if (!id) {
-        const error = new Error(`Raster target ${element.type} on slide ${slideIndex + 1} requires an id`)
-        error.code = 'INVALID_RASTER_TARGETS'
-        throw error
+      if (typeof element.id !== 'string' || !element.id.trim()) {
+        // Legacy decks can carry id-less raster elements; assign one so the
+        // render/match pipeline can target them.
+        element.id = crypto.randomUUID()
       }
+      const id = element.id.trim()
       const previous = seen.get(id)
       if (previous) {
         const error = new Error(
