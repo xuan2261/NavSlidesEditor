@@ -35,7 +35,7 @@
     "lucide-react": "^0.441.0",
     "marked": "^18.0.4",
     "pdfjs-dist": "6.3.289",
-    "postcss": "^8.5.10",
+    "postcss": "^8.5.28",
     "pptxgenjs": "^4.0.1",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
