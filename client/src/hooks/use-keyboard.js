@@ -88,15 +88,30 @@ export function createKeyboardHandler({
       e.preventDefault()
       return
     }
+
+    // Zoom chords resolve before every stand-down (disabled, text editing,
+    // interactive focus): they preventDefault before Chrome can claim them for
+    // native page zoom. The callback is gated on `disabled` so a loading route
+    // suppresses app zoom but still blocks the browser's.
+    if (ctrl) {
+      const zoomShortcut = scopeShortcuts.find(
+        (s) => s.activeKey === normalizeKey(e) && ZOOM_CHORD_IDS.has(s.id)
+      )
+      if (zoomShortcut) {
+        if (!disabled) callbacks[`on${capitalize(zoomShortcut.id)}`]?.()
+        e.preventDefault()
+        return
+      }
+    }
+
     if (disabled || isEditing) return
     const interactiveTarget = isInteractiveKeyboardTarget(getActiveElement())
 
-    // Ctrl chords — resolved before the interactive-target stand-down so zoom
-    // chords still preventDefault before the browser can steal them.
+    // Ctrl chords
     if (ctrl) {
       const chord = normalizeKey(e)
       const shortcut = scopeShortcuts.find((s) => s.activeKey === chord)
-      if (shortcut && (!interactiveTarget || ZOOM_CHORD_IDS.has(shortcut.id))) {
+      if (shortcut && !interactiveTarget) {
         // One-shot chords must not re-fire while the key is held down.
         if (e.repeat && REPEAT_SUPPRESSED_IDS.has(shortcut.id)) {
           e.preventDefault()
