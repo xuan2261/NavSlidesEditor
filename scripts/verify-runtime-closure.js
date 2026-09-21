@@ -58,6 +58,52 @@ function verifyVendor(vendorDir, { requiredVendorPaths, expectedRevealVersion })
   return { files: manifest.files.length, revealJs: manifest.runtimes?.revealJs || null }
 }
 
+function listJsFiles(dir, out = []) {
+  if (!fs.existsSync(dir)) return out
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const entryPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue
+      listJsFiles(entryPath, out)
+    } else if (entry.name.endsWith('.js')) {
+      out.push(entryPath)
+    }
+  }
+  return out
+}
+
+function stripComments(source) {
+  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1')
+}
+
+function verifyLocalRequireClosure(serverDir, rootDir) {
+  const requirePattern = /\brequire\(\s*(['"])(\.{1,2}\/[^'"]+)\1\s*\)/g
+  const rootPrefix = path.resolve(rootDir) + path.sep
+  const failures = []
+  for (const file of listJsFiles(serverDir)) {
+    const source = stripComments(fs.readFileSync(file, 'utf8'))
+    const relativeFile = path.relative(rootDir, file)
+    for (const match of source.matchAll(requirePattern)) {
+      const specifier = match[2]
+      let resolved
+      try {
+        resolved = require.resolve(specifier, { paths: [path.dirname(file)] })
+      } catch {
+        failures.push(`${relativeFile}: unresolved require '${specifier}'`)
+        continue
+      }
+      if (!resolved.startsWith(rootPrefix)) {
+        failures.push(
+          `${relativeFile}: require '${specifier}' escapes packaged root -> ${resolved}`
+        )
+      }
+    }
+  }
+  if (failures.length) {
+    throw new Error(`Packaged server requires escape the runtime closure:\n${failures.join('\n')}`)
+  }
+}
+
 function verifyRuntimeClosure({
   rootDir,
   requiredServerModules = DEFAULT_SERVER_MODULES,
@@ -73,6 +119,7 @@ function verifyRuntimeClosure({
       throw new Error(`Server runtime dependency missing: ${moduleName}`)
     }
   }
+  verifyLocalRequireClosure(serverDir, rootDir)
 
   const clientDist = path.join(rootDir, 'client', 'dist', 'index.html')
   if (requireClientDist && !fs.existsSync(clientDist)) {
@@ -106,4 +153,4 @@ if (require.main === module) {
   console.log(JSON.stringify(result))
 }
 
-module.exports = { verifyRuntimeClosure }
+module.exports = { verifyRuntimeClosure, verifyLocalRequireClosure }
