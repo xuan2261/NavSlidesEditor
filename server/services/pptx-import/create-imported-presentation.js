@@ -1,12 +1,13 @@
 const uuidv4 = () => require('node:crypto').randomUUID()
-const { getDesignTokensForRevealTheme, normalizePresentationNotes } = require('revealjs-shared')
-const { withPresentations } = require('../storage'),
-  { normalizeElementAction } = require('../../../shared/src/element-actions.js'),
-  {
-    normalizeImageAccessibility,
-    normalizeMediaAccessibility,
-  } = require('../../../shared/src/media-accessibility.js'),
-  { normalizeSlideConnectorConnections } = require('../../../shared/src/connector-geometry.js')
+const {
+  getDesignTokensForRevealTheme,
+  normalizeElementAction,
+  normalizeImageAccessibility,
+  normalizeMediaAccessibility,
+  normalizePresentationNotes,
+  normalizeSlideConnectorConnections,
+} = require('revealjs-shared')
+const { withPresentations } = require('../storage')
 const { toPptxOriginalMeta } = require('./original-package')
 const { stripControlChars } = require('../../utils/strip-control-chars')
 
