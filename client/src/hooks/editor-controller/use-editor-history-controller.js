@@ -82,7 +82,7 @@ export function useEditorHistoryController({
       if (!result.editingCleared) return
       setEditingElementId(result.editingId)
       editingElementIdRef.current = result.editingId
-      if (!editor) return
+      if (!editor || editor.isDestroyed) return
       settingContentRef.current = true
       editor.commands.setContent('', false)
       settingContentRef.current = false

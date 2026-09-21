@@ -115,7 +115,7 @@ export function useEditorRichTextController({
   })
 
   const clearContent = useCallback(() => {
-    if (!editor) return
+    if (!editor || editor.isDestroyed) return
     settingContent.current = true
     editor.commands.setContent('', false)
     settingContent.current = false
@@ -133,12 +133,25 @@ export function useEditorRichTextController({
       setEditingElementId(elementId)
       editingElementIdRef.current = elementId
       setSelectedElementIds([elementId])
+      if (!editor || editor.isDestroyed) return
       settingContent.current = true
-      editor?.commands.setContent(preserveBlockColors(element.content || ''), false)
+      editor.commands.setContent(preserveBlockColors(element.content || ''), false)
       settingContent.current = false
-      setTimeout(() => editor?.commands.focus(), 10)
+      setTimeout(() => {
+        if (!editor.isDestroyed) editor.commands.focus()
+      }, 10)
     },
-    [activeSlideRef, currentSlideIndexRef, editingElementIdRef, editor, getElement, presentation, setActiveTab, setEditingElementId, setSelectedElementIds]
+    [
+      activeSlideRef,
+      currentSlideIndexRef,
+      editingElementIdRef,
+      editor,
+      getElement,
+      presentation,
+      setActiveTab,
+      setEditingElementId,
+      setSelectedElementIds,
+    ]
   )
 
   const stopEditingElement = useCallback(() => {
@@ -146,5 +159,12 @@ export function useEditorRichTextController({
     editingElementIdRef.current = null
   }, [editingElementIdRef, setEditingElementId])
 
-  return { editor, settingContent, editingElementIdRef, clearContent, startEditingElement, stopEditingElement }
+  return {
+    editor,
+    settingContent,
+    editingElementIdRef,
+    clearContent,
+    startEditingElement,
+    stopEditingElement,
+  }
 }
