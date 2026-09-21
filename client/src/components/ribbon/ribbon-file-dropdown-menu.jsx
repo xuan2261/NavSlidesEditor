@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FileText, FolderOpen, Download, FileDown, History, Github, CloudUpload } from 'lucide-react'
+import { FileText, FolderOpen, Download, FileDown, History, CloudUpload } from 'lucide-react'
+import GithubIcon from '../icons/github-icon'
 import { Button } from '../ui'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
 import { PptxFidelityPanel } from '../PptxFidelityPanel'
@@ -25,15 +26,13 @@ const MENU_GROUPS = [
   {
     label: 'Publish',
     items: [
-      { id: 'github', label: 'Save to GitHub', icon: Github, action: 'onGithub' },
+      { id: 'github', label: 'Save to GitHub', icon: GithubIcon, action: 'onGithub' },
       { id: 'sync', label: 'Sync to Cloud', icon: CloudUpload, action: 'onSync' },
     ],
   },
   {
     label: 'History',
-    items: [
-      { id: 'history', label: 'Version History', icon: History, action: 'onHistory' },
-    ],
+    items: [{ id: 'history', label: 'Version History', icon: History, action: 'onHistory' }],
   },
 ]
 
@@ -59,8 +58,16 @@ export default function FileDropdown({
   const menuItems = MENU_GROUPS.flatMap((group) => group.items)
 
   const callbacks = {
-    onSave, onOpenProject, onExportPDF, onExportPPTX, onExportHTML,
-    onExportOffline, onExportProject, onGithub, onSync, onHistory,
+    onSave,
+    onOpenProject,
+    onExportPDF,
+    onExportPPTX,
+    onExportHTML,
+    onExportOffline,
+    onExportProject,
+    onGithub,
+    onSync,
+    onHistory,
   }
 
   const handleAction = (actionKey) => {
@@ -149,56 +156,56 @@ export default function FileDropdown({
           ariaLabel="File menu"
           dataRibbonPopup="file-menu"
         >
-            {MENU_GROUPS.map((group) => (
-              <div key={group.label}>
-                <div className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
-                  {group.label}
-                </div>
-                {group.items.map((item) => {
-                  const Icon = item.icon
-                  const itemIndex = menuItems.findIndex((menuItem) => menuItem.id === item.id)
-                  return (
-                    <button
-                      key={item.id}
-                      ref={(node) => {
-                        itemRefs.current[itemIndex] = node
-                      }}
-                      data-testid={
-                        item.id === 'pptx'
-                          ? 'ribbon-file-export-pptx'
-                          : item.id === 'html'
-                            ? 'ribbon-file-export-html'
-                            : undefined
-                      }
-                      className="ui-coarse-target dropdown-item w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-text-primary hover:bg-secondary cursor-pointer transition-colors text-left"
-                      role="menuitem"
-                      tabIndex={-1}
-                      onMouseDown={(e) => {
-                        e.preventDefault()
-                        handleAction(item.action)
-                      }}
-                      onKeyDown={(e) =>
-                        handleMenuItemKeyDown(e, itemIndex, () => handleAction(item.action))
-                      }
-                    >
-                      <Icon size={14} className="text-text-muted" />
-                      {item.label}
-                    </button>
-                  )
-                })}
-                <div className="mx-2 my-0.5 border-t border-border" />
+          {MENU_GROUPS.map((group) => (
+            <div key={group.label}>
+              <div className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
+                {group.label}
               </div>
-            ))}
-            {pptxFidelity && (
-              <div className="p-2">
-                <PptxFidelityPanel
-                  contract={pptxFidelity}
-                  actions={pptxActions}
-                  busy={pptxBusy}
-                  onReload={onReloadPptxFidelity}
-                />
-              </div>
-            )}
+              {group.items.map((item) => {
+                const Icon = item.icon
+                const itemIndex = menuItems.findIndex((menuItem) => menuItem.id === item.id)
+                return (
+                  <button
+                    key={item.id}
+                    ref={(node) => {
+                      itemRefs.current[itemIndex] = node
+                    }}
+                    data-testid={
+                      item.id === 'pptx'
+                        ? 'ribbon-file-export-pptx'
+                        : item.id === 'html'
+                          ? 'ribbon-file-export-html'
+                          : undefined
+                    }
+                    className="ui-coarse-target dropdown-item w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-text-primary hover:bg-secondary cursor-pointer transition-colors text-left"
+                    role="menuitem"
+                    tabIndex={-1}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      handleAction(item.action)
+                    }}
+                    onKeyDown={(e) =>
+                      handleMenuItemKeyDown(e, itemIndex, () => handleAction(item.action))
+                    }
+                  >
+                    <Icon size={14} className="text-text-muted" />
+                    {item.label}
+                  </button>
+                )
+              })}
+              <div className="mx-2 my-0.5 border-t border-border" />
+            </div>
+          ))}
+          {pptxFidelity && (
+            <div className="p-2">
+              <PptxFidelityPanel
+                contract={pptxFidelity}
+                actions={pptxActions}
+                busy={pptxBusy}
+                onReload={onReloadPptxFidelity}
+              />
+            </div>
+          )}
         </RibbonFloatingOverlay>
       )}
     </div>
