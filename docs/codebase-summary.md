@@ -4,7 +4,7 @@
 
 NavSlides Editor is a self-hostable presentation editor built as a monorepo with
 `client/`, `server/`, `shared/`, and `electron/` runtimes. Current release is
-`v1.16.0`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
+`v1.16.1`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
 checked-in corpus / report artifacts used for verification. The editor shell
 uses the tab-based ribbon as the default controls surface.
 
@@ -120,8 +120,8 @@ navslides-editor/
 | Module                                | Purpose                                                                                                                                                                          |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `shared/src/htmlGenerator.js`         | Reveal.js HTML, print HTML, offline HTML, and present-mode generation                                                                                                            |
-| `shared/src/reveal-runtime-assets.js` | Reveal.js 6.0.1 version receipt and the canonical manifest for `/vendor/reveal.js/dist` core, plugin, theme, vendor, and offline assets                                      |
-| `shared/src/element-renderers.js`     | Shared element rendering helpers for export and preview                                                                                                                         |
+| `shared/src/reveal-runtime-assets.js` | Reveal.js 6.0.1 version receipt and the canonical manifest for `/vendor/reveal.js/dist` core, plugin, theme, vendor, and offline assets                                          |
+| `shared/src/element-renderers.js`     | Shared element rendering helpers for export and preview                                                                                                                          |
 | `shared/src/design-tokens.js`         | Design-token resolver: `DEFAULT_TOKENS`, `AUTO_FIELD_MAP`, `resolveAutoColor`, `isTokenVar` — single source for the `'auto'` → `var(--ns-*)` mapping shared by both render paths |
 | `shared/src/theme-presets.js`         | 39 token presets (`THEME_PRESETS`) across 7 categories; `{id,label,category,tokens,revealTheme}`                                                                                 |
 | `shared/src/fx/`                      | 8 animated canvas FX modules + `index.js` registry (`getFxModule`, `listFx`, `buildFxRuntimeScript`) for the `'fx'` slide background type                                        |
@@ -231,7 +231,7 @@ navslides-editor/
 
 ## Repo Notes
 
-- Root package version is `1.16.0`.
+- Root package version is `1.16.1`.
 - Runtime baseline is Node.js >=22.13.0; CI and container builds pin 22.22.0.
 - There is no database layer; persistence is file-based by design.
 - There is no full TypeScript migration; JSDoc is the type system.

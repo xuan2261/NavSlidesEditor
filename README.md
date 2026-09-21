@@ -8,7 +8,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.16.0** — improved PPTX export fidelity, editor/live-session resilience, and CI coverage.
+Current release: **v1.16.1** — fixes for dead editor controls (Find/Sorter/game settings), zoom chords vs native page zoom, legacy-element PPTX export, writer-lock recovery after container restart, and dependency updates.
 
 <p align="center">
   <img src="website/public/img/editor-empty.png" alt="NavSlides Editor workspace with the ribbon, slide navigator, canvas, and properties panel" width="100%">
@@ -469,28 +469,28 @@ PPTX browser audit artifacts are written under `plans/reports/pptx-import-real-b
 
 ## Tech Stack
 
-| Layer                | Technology                                                  |
-| -------------------- | ----------------------------------------------------------- |
-| Frontend             | React 18, Vite 8, React Router 7                            |
-| State management     | Zustand (3 stores: editor, presentation, UI)                |
-| Rich text editor     | TipTap 2                                                    |
+| Layer                | Technology                                                                 |
+| -------------------- | -------------------------------------------------------------------------- |
+| Frontend             | React 18, Vite 8, React Router 7                                           |
+| State management     | Zustand (3 stores: editor, presentation, UI)                               |
+| Rich text editor     | TipTap 2                                                                   |
 | Presentation engine  | reveal.js 6.0.1 (canonical manifest-owned `/vendor/reveal.js/dist` assets) |
-| Math rendering       | KaTeX                                                       |
-| Diagrams             | TikZJax                                                     |
-| Charts               | Chart.js 4                                                  |
-| Syntax highlighting  | highlight.js                                                |
-| Markdown             | Built-in converter + marked.js (export)                     |
-| Icons                | Lucide (editor UI) + inline SVG (slide icons)               |
-| PowerPoint export    | pptxgenjs + Playwright raster fallback                      |
-| PowerPoint import    | pptxtojson runtime parser; pptx2json benchmark-sandbox-only |
-| Backend              | Node.js >=22.13.0 (CI/container: 22.22.0), Express 4        |
-| Real-time transport  | Socket.IO                                                   |
-| Desktop app          | Electron 42                                                 |
-| Cloud sync           | rclone                                                      |
-| Validation           | Zod (mutation endpoints)                                    |
-| Testing              | Vitest, Playwright, k6                                      |
-| Linting & Formatting | ESLint 9 (flat config), Prettier                            |
-| Storage              | JSON files + local filesystem                               |
+| Math rendering       | KaTeX                                                                      |
+| Diagrams             | TikZJax                                                                    |
+| Charts               | Chart.js 4                                                                 |
+| Syntax highlighting  | highlight.js                                                               |
+| Markdown             | Built-in converter + marked.js (export)                                    |
+| Icons                | Lucide (editor UI) + inline SVG (slide icons)                              |
+| PowerPoint export    | pptxgenjs + Playwright raster fallback                                     |
+| PowerPoint import    | pptxtojson runtime parser; pptx2json benchmark-sandbox-only                |
+| Backend              | Node.js >=22.13.0 (CI/container: 22.22.0), Express 4                       |
+| Real-time transport  | Socket.IO                                                                  |
+| Desktop app          | Electron 42                                                                |
+| Cloud sync           | rclone                                                                     |
+| Validation           | Zod (mutation endpoints)                                                   |
+| Testing              | Vitest, Playwright, k6                                                     |
+| Linting & Formatting | ESLint 9 (flat config), Prettier                                           |
+| Storage              | JSON files + local filesystem                                              |
 
 ---
 
