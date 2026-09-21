@@ -96,6 +96,35 @@ describe('writer lock reclaim', () => {
     await expect(new WriterLock(rootDir).acquire()).rejects.toThrow(/writer lock is held/)
   })
 
+  // Container restarts reset the PID namespace: a stale record can name a PID
+  // that an unrelated fresh process now occupies. That process started after
+  // the lock was written, so the original owner is provably gone.
+  it.runIf(process.platform === 'linux')(
+    'reclaims a lock when the recorded PID was reused by a newer process',
+    async () => {
+      const rootDir = await createRoot()
+      const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 500)'], {
+        stdio: 'ignore',
+      })
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        await writeLock(
+          rootDir,
+          heldRecord({ pid: child.pid, acquiredAt: new Date(Date.now() - 60_000).toISOString() })
+        )
+
+        const lock = new WriterLock(rootDir)
+        const record = await lock.acquire()
+
+        expect(record.pid).toBe(process.pid)
+        expect(lock.reclaimedFrom).not.toBeNull()
+        await lock.release()
+      } finally {
+        child.kill()
+      }
+    }
+  )
+
   it('refuses a lock taken by another host, whose owner cannot be probed', async () => {
     const rootDir = await createRoot()
     await writeLock(

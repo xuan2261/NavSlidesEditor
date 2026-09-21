@@ -11,13 +11,16 @@ const PROCESS_INSTANCE_ID = crypto.randomUUID()
 
 /**
  * A lock keeps its claim while its owner could still be running. ESRCH proves
- * the owner is gone. A reused PID is also safe to reclaim when it is our own
- * PID but the durable process-instance nonce differs: two live processes on
- * one host cannot have the same PID, so the recorded incarnation has ended.
+ * the owner is gone. A live PID is weaker evidence than it looks: a container
+ * restart reuses the PID namespace, so the recorded number can belong to an
+ * unrelated fresh process — one that started after `acquiredAt` cannot be the
+ * owner and is safe to reclaim past. A reused PID is also safe when it is our
+ * own PID but the durable process-instance nonce differs: two live processes
+ * on one host cannot have the same PID, so the recorded incarnation has ended.
  * EPERM, foreign-host records, legacy same-PID records, and unreadable records
  * prove nothing and therefore keep the lock in place.
  */
-function ownerIsProvablyGone(record) {
+async function ownerIsProvablyGone(record) {
   if (!record || record.host !== os.hostname()) return false
   const pid = Number(record.pid)
   if (!Number.isInteger(pid) || pid <= 0) return false
@@ -30,9 +33,29 @@ function ownerIsProvablyGone(record) {
     return true
   try {
     process.kill(pid, 0)
-    return false
   } catch (error) {
     return error.code === 'ESRCH'
+  }
+  return pidStartedAfterRecord(pid, record)
+}
+
+/**
+ * True when the live process at `pid` began after the lock record was
+ * written — impossible for the real owner, so the recorded process is gone.
+ * Compares the /proc entry's creation time on Linux; other platforms and
+ * unreadable fields stay conservative. A /proc entry that vanishes between
+ * the liveness check and the stat means the owner died mid-check.
+ */
+async function pidStartedAfterRecord(pid, record) {
+  if (process.platform !== 'linux') return false
+  const acquiredAt = Date.parse(record.acquiredAt)
+  if (!Number.isFinite(acquiredAt)) return false
+  try {
+    const procStartedAt = (await fs.stat(`/proc/${pid}`)).ctimeMs
+    return procStartedAt > acquiredAt
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'ESRCH') return true
+    return false
   }
 }
 
@@ -92,7 +115,7 @@ class WriterLock {
     } catch {
       return null
     }
-    if (!ownerIsProvablyGone(record)) return null
+    if (!(await ownerIsProvablyGone(record))) return null
     try {
       await fs.unlink(this.lockPath)
     } catch (error) {
