@@ -8,7 +8,7 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.16.1** — fixes for dead editor controls (Find/Sorter/game settings), zoom chords vs native page zoom, legacy-element PPTX export, writer-lock recovery after container restart, and dependency updates.
+Current release: **v1.16.2** — fixes the packaged desktop startup crash (`Cannot find module .../shared/src/element-actions.js`) by routing server code through the packaged `revealjs-shared` module, and hardens release CI to catch any future packaged-runtime closure escapes.
 
 <p align="center">
   <img src="website/public/img/editor-empty.png" alt="NavSlides Editor workspace with the ribbon, slide navigator, canvas, and properties panel" width="100%">
