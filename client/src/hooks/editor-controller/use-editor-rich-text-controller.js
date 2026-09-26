@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -70,13 +70,15 @@ export function useEditorRichTextController({
   exitEditOnEscape,
 }) {
   const settingContent = useRef(false)
+  const mapTargetRef = useRef(mapActive)
+  useLayoutEffect(() => { mapTargetRef.current = mapActive }, [mapActive])
   useEffect(() => {
     editingElementIdRef.current = editingElementId
   }, [editingElementId, editingElementIdRef])
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: false, underline: false }),
       Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Color,
@@ -102,7 +104,7 @@ export function useEditorRichTextController({
       const content = instance.getHTML()
       const id = editingElementIdRef.current
       setPresentation((previous) =>
-        mapActive(previous, (slide) => ({
+        mapTargetRef.current(previous, (slide) => ({
           ...slide,
           elements: (slide.elements || []).map((element) =>
             element.id === id

@@ -9,6 +9,7 @@ import {
 export function useEditorSelectionController(c) {
   const {
     activeSlideRef,
+    editingElementIdRef,
     getSelectionSlide: resolveSelectionSlide,
   } = c
   const getSelectionSlide = useCallback(
@@ -59,6 +60,11 @@ export function useEditorSelectionController(c) {
   )
   const toggleElementSelection = useCallback(
     (id, multi = false) => {
+      if (editingElementIdRef?.current && (id !== editingElementIdRef.current || multi)) {
+        editingElementIdRef.current = null
+        c.setEditingElementId(null)
+        c.clearRichTextContent()
+      }
       if (!id) return c.setSelectedElementIds([])
       if (multi) {
         c.setSelectedElementIds((ids) =>
@@ -74,7 +80,7 @@ export function useEditorSelectionController(c) {
         )
       }
     },
-    [c, getSelectionSlide]
+    [c, getSelectionSlide, editingElementIdRef]
   )
   return {
     moveSelectedToStackEdge,
