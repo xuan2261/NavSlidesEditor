@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest'
-import { validateProjectFile, rewriteMediaUrls } from './import-project'
+import { describe, it, expect, vi } from 'vitest'
+import {
+  importProjectAtomically,
+  parseProjectFile,
+  validateProjectFile,
+  rewriteMediaUrls,
+} from './import-project'
 
 describe('validateProjectFile', () => {
   it('validates correct JSON project', () => {
@@ -148,5 +153,44 @@ describe('rewriteMediaUrls', () => {
     })
     expect(result.slides[0].elements[0].src).toBe('/uploads/video-new.mp4')
     expect(result.slides[0].elements[0].poster).toBe('/uploads/video-poster-new.png')
+  })
+})
+
+describe('atomic project import', () => {
+  it('does not expand ZIP archives in the browser', async () => {
+    const file = new File(['PK\u0003\u0004'], 'deck.navslides')
+    await expect(parseProjectFile(file, { serverAuthoritative: true })).resolves.toEqual({
+      type: 'zip',
+      file,
+      serverAuthoritative: true,
+    })
+  })
+
+  it('delegates preflight, media ownership, and publication to the server', async () => {
+    const api = {
+      preflightProjectImport: vi.fn().mockResolvedValue({
+        sessionId: 'session-1',
+        capability: 'capability-1',
+        mediaCount: 1,
+        trustedAuthorActiveContentAcknowledged: false,
+      }),
+      stageProjectImportMedia: vi.fn().mockResolvedValue({ placed: 1 }),
+      publishProjectImport: vi.fn().mockResolvedValue({
+        status: 'committed',
+        presentationId: 'deck-1',
+      }),
+    }
+    const result = await importProjectAtomically(api, new File(['zip'], 'deck.navslides'))
+    expect(api.stageProjectImportMedia).toHaveBeenCalledWith(
+      'session-1',
+      'capability-1',
+      expect.any(Object)
+    )
+    expect(api.publishProjectImport).toHaveBeenCalledWith(
+      'session-1',
+      'capability-1',
+      expect.objectContaining({ trustedAuthorActiveContentAcknowledged: false })
+    )
+    expect(result.presentationId).toBe('deck-1')
   })
 })

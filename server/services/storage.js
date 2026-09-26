@@ -17,6 +17,30 @@ const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json')
 const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics.json')
 const MEDIA_DB_FILE = path.join(DATA_DIR, 'media.json')
 const UPLOAD_HASHES_FILE = path.join(DATA_DIR, 'upload-hashes.json')
+const SECRET_FILE_NAMES = new Set([
+  path.basename(SHARE_FILE),
+  path.basename(GITHUB_CONFIG_FILE),
+  path.basename(SETTINGS_FILE),
+  path.basename(RCLONE_CONFIG_FILE),
+  'project-import-sessions.json',
+])
+const OWNER_ONLY_MODE = 0o600
+
+function isSecretBearingPath(filePath) {
+  const resolved = path.resolve(filePath)
+  if (path.dirname(resolved) !== path.resolve(DATA_DIR)) return false
+  const name = path.basename(resolved).toLowerCase()
+  return [...SECRET_FILE_NAMES].some(
+    (secretName) => name === secretName || name.startsWith(`${secretName}.`)
+  )
+}
+
+function applySecretModeSync(filePath) {
+  if (process.platform === 'win32' || !isSecretBearingPath(filePath) || !fs.existsSync(filePath)) {
+    return
+  }
+  fs.chmodSync(filePath, OWNER_ONLY_MODE)
+}
 
 // ── File locking to prevent race conditions ──────────────────────────────────
 const fileLocks = new Map()
@@ -68,9 +92,12 @@ async function renameWithRetry(src, dest, attempts = 5) {
 
 async function writeJsonAtomic(filePath, data, options) {
   const tmpPath = `${filePath}.tmp.${process.pid}.${++atomicCounter}`
+  const secret = isSecretBearingPath(filePath)
   try {
-    await fs.writeJson(tmpPath, data, options)
+    await fs.writeJson(tmpPath, data, secret ? { ...options, mode: OWNER_ONLY_MODE } : options)
+    if (secret && process.platform !== 'win32') await fs.chmod(tmpPath, OWNER_ONLY_MODE)
     await renameWithRetry(tmpPath, filePath)
+    if (secret && process.platform !== 'win32') await fs.chmod(filePath, OWNER_ONLY_MODE)
   } catch (err) {
     await fs.remove(tmpPath).catch(() => {})
     throw err
@@ -86,19 +113,32 @@ function initDataFiles() {
   fs.ensureDirSync(path.join(DATA_DIR, 'pptx-originals'))
 
   if (!fs.existsSync(DATA_FILE)) fs.writeJsonSync(DATA_FILE, [])
-  if (!fs.existsSync(SHARE_FILE)) fs.writeJsonSync(SHARE_FILE, {})
+  if (!fs.existsSync(SHARE_FILE)) {
+    fs.writeJsonSync(SHARE_FILE, {}, { mode: OWNER_ONLY_MODE })
+  }
   if (!fs.existsSync(TEMPLATES_FILE)) fs.writeJsonSync(TEMPLATES_FILE, [])
   if (!fs.existsSync(ANALYTICS_FILE)) fs.writeJsonSync(ANALYTICS_FILE, {})
   if (!fs.existsSync(MEDIA_DB_FILE)) fs.writeJsonSync(MEDIA_DB_FILE, [])
   if (!fs.existsSync(GITHUB_CONFIG_FILE)) {
-    fs.writeJsonSync(GITHUB_CONFIG_FILE, { token: '', owner: '', repo: '' })
+    fs.writeJsonSync(
+      GITHUB_CONFIG_FILE,
+      { token: '', owner: '', repo: '' },
+      { mode: OWNER_ONLY_MODE }
+    )
   }
   if (!fs.existsSync(SETTINGS_FILE)) {
-    fs.writeJsonSync(SETTINGS_FILE, {
-      aiApiKey: '',
-      defaultTheme: 'black',
-      defaultTransition: 'slide',
-    })
+    fs.writeJsonSync(
+      SETTINGS_FILE,
+      {
+        aiApiKey: '',
+        defaultTheme: 'black',
+        defaultTransition: 'slide',
+      },
+      { mode: OWNER_ONLY_MODE }
+    )
+  }
+  for (const name of fs.readdirSync(DATA_DIR)) {
+    applySecretModeSync(path.join(DATA_DIR, name))
   }
 
   // Clean up stale .tmp files from prior crashes. Async + non-blocking so
@@ -270,6 +310,7 @@ module.exports = {
 
   // Init
   initDataFiles,
+  isSecretBearingPath,
 
   // Lock
   withFileLock,

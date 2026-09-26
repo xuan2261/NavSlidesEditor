@@ -21,7 +21,15 @@
   "license": {
     "spdx": "Apache-2.0",
     "noticesStatus": "upstream-license-reviewed",
-    "sbomStatus": "not-published"
+    "sbomStatus": "not-published",
+    "textSha256": "7E282402A5A6DB33995FE638BB3FE79013F9884D8F7D15A42E481C1E86AADDA1",
+    "upstreamNoticeStatus": "present",
+    "redistributionReviewStatus": "reviewed-not-bundled"
+  },
+  "provenance": {
+    "acquisitionTimestampRequired": true,
+    "releaseCommitVerified": true,
+    "checksumManifestVerified": true
   },
   "distribution": {
     "supportedPlatform": "win32",

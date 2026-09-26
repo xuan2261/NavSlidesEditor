@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../utils/api'
 import { markdownToSlidesWithWarnings } from '../../utils/markdown-import'
-import { parseProjectFile, rehydrateImportedPresentation, validateProjectFile } from '../../utils/import-project'
+import { importProjectAtomically } from '../../utils/import-project'
 import { summarizePptxImportWarnings } from '../../utils/pptx-import-summary'
 import {
   DEFAULT_PPTX_JOB_MAX_WAIT_MS,
@@ -12,19 +12,26 @@ import {
 } from '../../utils/pptx-job-wait'
 import { showError, showNotice } from '../../utils/app-feedback'
 
-export function usePresentationImports({ onOpen }) {
+export function usePresentationImports({ onOpen, confirmActiveContent }) {
   const [importProgress, setImportProgress] = useState(null)
   const [importWarningSummary, setImportWarningSummary] = useState(null)
   const pptxImportRef = useRef(null)
+  const projectImportRef = useRef(null)
 
   useEffect(() => () => {
     const activeImport = pptxImportRef.current
+    pptxImportRef.current = null
     activeImport?.admissionController?.abort()
     activeImport?.connection?.es?.close()
     if (activeImport?.jobId) {
       api.cancelPptxJob(activeImport.jobId, { capability: activeImport.capability }).catch(() => {})
     }
-    pptxImportRef.current = null
+    const projectImport = projectImportRef.current
+    projectImport?.controller.abort()
+    if (projectImport?.state === 'pending' && projectImport.sessionId) {
+      api.rollbackProjectImport(projectImport.sessionId, projectImport.capability).catch(() => {})
+    }
+    projectImportRef.current = null
   }, [])
 
   async function handleImportPdf(file) {
@@ -87,43 +94,72 @@ export function usePresentationImports({ onOpen }) {
   }
 
   async function handleImportProject(file) {
-    if (!file) return
+    if (!file || projectImportRef.current) return
     setImportWarningSummary(null)
-    setImportProgress('Parsing project file...')
+    const activeImport = {
+      controller: new AbortController(),
+      state: 'preflight',
+      sessionId: null,
+      capability: null,
+    }
+    projectImportRef.current = activeImport
+    const runImport = (acknowledged = false) => importProjectAtomically(api, file, {
+      signal: activeImport.controller.signal,
+      trustedAuthorActiveContentAcknowledged: acknowledged,
+      onSession: (session) => {
+        activeImport.state = 'pending'
+        activeImport.sessionId = session.sessionId
+        activeImport.capability = session.capability
+      },
+      onPhase: (phase) => {
+        if (projectImportRef.current !== activeImport) return
+        if (phase === 'preflight') setImportProgress('Validating project archive...')
+        if (phase === 'media') setImportProgress('Placing project media...')
+        if (phase === 'publishing') {
+          activeImport.state = 'committing'
+          setImportProgress('Publishing presentation...')
+        }
+      },
+    })
     try {
-      const parsed = await parseProjectFile(file)
-      const { valid, errors, warnings } = validateProjectFile(parsed)
-      if (!valid) {
-        showError('Invalid project file: ' + errors.join(', '))
-        return
+      let receipt
+      try {
+        receipt = await runImport(false)
+      } catch (error) {
+        if (error?.code !== 'ACTIVE_CONTENT_ACK_REQUIRED') throw error
+        const types = Array.isArray(error.activeContent) ? error.activeContent.join(', ') : 'active content'
+        const message = `This project contains trusted-author active content (${types}). Import only if you trust its author.`
+        const confirmFn = confirmActiveContent || (typeof window !== 'undefined' ? window.__confirmActiveContent : null)
+        const accepted = confirmFn ? await confirmFn(message) : false
+        if (!accepted) return
+        receipt = await runImport(true)
       }
-      if (warnings.length) console.warn('Import warnings:', warnings)
-
-      let finalPres = parsed.presentation
-      const importWarnings = [...warnings]
-      if (parsed.type === 'zip' && parsed.mediaFiles && parsed.mediaFiles.length > 0) {
-        setImportProgress('Uploading media files...')
-        const rehydrated = await rehydrateImportedPresentation(api, parsed)
-        finalPres = rehydrated.presentation
-        importWarnings.push(...rehydrated.warnings)
+      if (projectImportRef.current === activeImport && receipt?.presentationId) {
+        activeImport.state = 'committed'
+        if (receipt.warnings?.length) {
+          setImportWarningSummary(`Project import warnings:\n- ${receipt.warnings.join('\n- ')}`)
+        }
+        onOpen(receipt.presentationId)
       }
-
-      setImportProgress('Creating presentation...')
-      finalPres.title = (finalPres.title || 'Imported') + ' (Imported)'
-      const pres = await api.createPresentation({
-        ...finalPres,
-        slides: finalPres.slides,
-      })
-      if (importWarnings.length) {
-        const message = `Project import warnings:\n- ${importWarnings.join('\n- ')}`
-        setImportWarningSummary(message)
-      }
-      onOpen(pres.id)
     } catch (err) {
-      console.error('Project import failed:', err)
-      showError('Failed to import project: ' + err.message)
+      const abandoned = err?.name === 'AbortError' || projectImportRef.current !== activeImport
+      if (!abandoned && activeImport.state === 'pending' && activeImport.sessionId) {
+        await api.rollbackProjectImport(activeImport.sessionId, activeImport.capability).catch(() => {})
+        activeImport.state = 'rolled-back'
+      }
+      if (!abandoned) {
+        console.error('Project import failed:', err)
+        const message = activeImport.state === 'committing'
+          ? 'Project publication outcome is unknown. Check existing presentations before retrying.'
+          : `Failed to import project: ${err.message}`
+        showError(message)
+      }
     } finally {
-      setImportProgress(null)
+      if (projectImportRef.current === activeImport) {
+        activeImport.controller.abort()
+        projectImportRef.current = null
+        setImportProgress(null)
+      }
     }
   }
 

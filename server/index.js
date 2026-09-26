@@ -22,12 +22,19 @@ const { recordView } = require('./routes/analytics')
 const { setupSocketHandlers } = require('./services/socket-handler')
 const { setupGameSocketHandlers } = require('./services/game-socket-handler')
 const {
+  getPackageStore,
   initializePackageStore,
   shutdownPackageStore,
 } = require('./services/pptx-import/package-store-runtime')
 const { stripControlChars } = require('./utils/strip-control-chars')
 const { resolveListenHost, getExposureWarning } = require('./services/listen-host-policy')
 const { sanitizeSvgBuffer } = require('./services/svg-upload-sanitizer')
+const { createHealthState, READY_REASON_CODES } = require('./services/health-state')
+const { assertSingleProcessTopology } = require('./services/health-state-topology')
+const {
+  assertWritableRoot,
+  durableRecoveryReason,
+} = require('./services/health-state-readiness')
 
 /**
  * A store that fails to release is exactly what leaves the writer lock held and
@@ -121,9 +128,15 @@ const pluginsRouter = require('./routes/plugins')
 // ── App setup ────────────────────────────────────────────────────────────────
 const app = express()
 const PORT = process.env.PORT || 3002
+const healthState = createHealthState()
 
-// Initialize data directories and files
-initDataFiles()
+app.get('/health/live', (_req, res) => {
+  res.set('Cache-Control', 'no-store').status(200).json(healthState.live())
+})
+app.get('/health/ready', (_req, res) => {
+  const body = healthState.ready()
+  res.set('Cache-Control', 'no-store').status(body.status === 'ready' ? 200 : 503).json(body)
+})
 
 // ── Security: UUID validation for :id and :snapshotId params ─────────────────
 function isValidId(id) {
@@ -430,6 +443,8 @@ app.use(errorHandler)
 
 // ── Server start ─────────────────────────────────────────────────────────────
 async function startServer(port, options = {}) {
+  healthState.beginStartup()
+  assertSingleProcessTopology()
   const p = port ?? PORT
   const listenHost = resolveListenHost({
     explicitHost: options.host,
@@ -437,14 +452,53 @@ async function startServer(port, options = {}) {
   })
   const exposureWarning = getExposureWarning(listenHost)
   if (exposureWarning) logger.warn(JSON.stringify(exposureWarning))
-  await initializePackageStore({ rootDir: path.resolve(DATA_DIR) })
   packageStoreShutdownPromise = null
+  try {
+    initDataFiles()
+  } catch (error) {
+    healthState.markDegraded(READY_REASON_CODES.DATA_ROOT_NOT_WRITABLE)
+    throw error
+  }
+  try {
+    await initializePackageStore({ rootDir: path.resolve(DATA_DIR) })
+  } catch (error) {
+    healthState.markDegraded(READY_REASON_CODES.PACKAGE_STORE_UNAVAILABLE)
+    throw error
+  }
+  const store = getPackageStore()
+  try {
+    if (!(await store.ownsWriter())) {
+      throw Object.assign(new Error('Package store writer ownership unavailable'), {
+        code: READY_REASON_CODES.PACKAGE_STORE_WRITER_UNAVAILABLE,
+      })
+    }
+  } catch (error) {
+    healthState.markDegraded(READY_REASON_CODES.PACKAGE_STORE_WRITER_UNAVAILABLE)
+    await releasePackageStore()
+    throw error
+  }
+  for (const [rootDir, reason] of [
+    [DATA_DIR, READY_REASON_CODES.DATA_ROOT_NOT_WRITABLE],
+    [UPLOADS_DIR, READY_REASON_CODES.UPLOADS_ROOT_NOT_WRITABLE],
+  ]) {
+    try {
+      await assertWritableRoot(rootDir)
+    } catch (error) {
+      healthState.markDegraded(reason)
+      await releasePackageStore()
+      throw error
+    }
+  }
+  const recoveryReason = durableRecoveryReason(store.getState())
+  if (recoveryReason) healthState.markDegraded(recoveryReason)
+  else healthState.markReady()
   return new Promise((resolve, reject) => {
     const server = http.createServer(app)
     server.once('close', () => {
       if (!serverShutdownPromises.has(server)) releasePackageStore()
     })
     server.once('error', async (error) => {
+      healthState.markDegraded(READY_REASON_CODES.READINESS_DEGRADED)
       await releasePackageStore()
       reject(error)
     })
@@ -473,6 +527,7 @@ async function startServer(port, options = {}) {
  * while another caller is still draining transports.
  */
 function stopServer(server, options = {}) {
+  healthState.markStopping()
   if (!server) return releasePackageStore()
   const existing = serverShutdownPromises.get(server)
   if (existing) return existing
@@ -512,4 +567,4 @@ if (require.main === module) {
     })
 }
 
-module.exports = { app, startServer, stopServer }
+module.exports = { app, healthState, startServer, stopServer }
