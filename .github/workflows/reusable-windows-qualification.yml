@@ -1,0 +1,169 @@
+name: Reusable Windows qualification
+
+on:
+  workflow_call:
+    inputs:
+      subject_sha: { required: true, type: string }
+      source_run_id: { required: true, type: string }
+      physical_receipt_run_id: { required: true, type: string }
+      client_artifact: { required: true, type: string }
+      client_digest: { required: true, type: string }
+      linux_receipt_artifact: { required: true, type: string }
+      officecli_receipt_artifact: { required: true, type: string }
+      fidelity_receipt_artifact: { required: true, type: string }
+      gate_policy_version: { required: true, type: string }
+    outputs:
+      windows_artifact:
+        value: ${{ jobs.qualify.outputs.windows_artifact }}
+      receipt_artifact:
+        value: ${{ jobs.qualify.outputs.receipt_artifact }}
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  qualify:
+    runs-on: windows-latest
+    environment: release-windows-signing
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    outputs:
+      windows_artifact: ${{ steps.names.outputs.windows }}
+      receipt_artifact: ${{ steps.names.outputs.receipt }}
+    env:
+      WINDOWS_SIGNING_SCRIPT: ${{ secrets.WINDOWS_SIGNING_SCRIPT }}
+      WINDOWS_SIGNING_SUBJECT: ${{ vars.WINDOWS_SIGNING_SUBJECT }}
+      WINDOWS_SIGNING_THUMBPRINT: ${{ vars.WINDOWS_SIGNING_THUMBPRINT }}
+      RFC3161_TIMESTAMP_URL: ${{ vars.RFC3161_TIMESTAMP_URL }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.subject_sha }}
+          fetch-depth: 0
+      - shell: pwsh
+        run: if ((git rev-parse HEAD) -ne '${{ inputs.subject_sha }}') { throw 'checkout subject mismatch' }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0', cache: npm }
+      - run: npm ci
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ inputs.client_artifact }}
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+          path: .
+      - run: node scripts/ci/verify-client-dist-manifest.mjs --root client/dist --manifest client-dist-manifest.json --subject "${{ inputs.subject_sha }}"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ inputs.linux_receipt_artifact }}
+          run-id: ${{ inputs.physical_receipt_run_id }}
+          github-token: ${{ github.token }}
+          path: evidence/linux
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ inputs.officecli_receipt_artifact }}
+          run-id: ${{ inputs.physical_receipt_run_id }}
+          github-token: ${{ github.token }}
+          path: evidence/officecli
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ inputs.fidelity_receipt_artifact }}
+          run-id: ${{ inputs.physical_receipt_run_id }}
+          github-token: ${{ github.token }}
+          path: evidence/fidelity
+      - name: Fail closed on absent physical evidence
+        shell: pwsh
+        run: |
+          if (-not (Test-Path evidence/officecli/*.json)) { throw 'officecli physical receipt missing' }
+          if (-not (Test-Path evidence/fidelity/*.json)) { throw 'fidelity PowerPoint receipt missing' }
+      - run: node scripts/prepare-electron.js
+      - run: npm run runtime:verify
+      - run: npm run electron:builder -- --win nsis portable --publish never
+      - shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force evidence | Out-Null
+          node scripts/verify-runtime-closure.js --root dist-electron/win-unpacked/resources --require-client-dist | Out-File evidence/runtime-closure.json
+      - name: Sign with protected external signer
+        shell: pwsh
+        run: |
+          foreach ($value in @($env:WINDOWS_SIGNING_SCRIPT, $env:WINDOWS_SIGNING_SUBJECT, $env:WINDOWS_SIGNING_THUMBPRINT, $env:RFC3161_TIMESTAMP_URL)) {
+            if ([string]::IsNullOrWhiteSpace($value)) { throw 'protected signing policy input missing' }
+          }
+          if (-not [IO.Path]::IsPathRooted($env:WINDOWS_SIGNING_SCRIPT)) { throw 'signing script must be provisioned outside the repository' }
+          if ($env:WINDOWS_SIGNING_SCRIPT.StartsWith($env:GITHUB_WORKSPACE, [StringComparison]::OrdinalIgnoreCase)) { throw 'signing script must be external to the checkout' }
+          New-Item -ItemType Directory -Force evidence/authenticode/signer | Out-Null
+          & $env:WINDOWS_SIGNING_SCRIPT -ArtifactsPath (Resolve-Path dist-electron) -TimestampUrl $env:RFC3161_TIMESTAMP_URL -EvidencePath (Resolve-Path evidence/authenticode/signer)
+          if ($LASTEXITCODE -ne 0) { throw 'external signer failed' }
+      - name: Capture pre-upload Authenticode evidence
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force evidence/authenticode | Out-Null
+          Get-ChildItem dist-electron/*.exe | ForEach-Object {
+            $signature = Get-AuthenticodeSignature $_.FullName
+            if ($signature.Status -ne 'Valid') { throw "invalid Authenticode: $($_.Name)" }
+            if ($signature.SignerCertificate.Subject -ne $env:WINDOWS_SIGNING_SUBJECT) { throw "publisher mismatch: $($_.Name)" }
+            if ($signature.SignerCertificate.Thumbprint -ne $env:WINDOWS_SIGNING_THUMBPRINT) { throw "thumbprint mismatch: $($_.Name)" }
+            if (-not $signature.TimeStamperCertificate) { throw "timestamp missing: $($_.Name)" }
+            node scripts/ci/release-receipt-workflow.mjs authenticode-pre $_.FullName evidence/authenticode
+          }
+      - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with: { subject-path: 'dist-electron/*.exe' }
+      - id: names
+        shell: pwsh
+        run: |
+          "stage=electron-windows-stage-v1-${{ inputs.subject_sha }}" >> $env:GITHUB_OUTPUT
+          "windows=electron-windows-v1-${{ inputs.subject_sha }}" >> $env:GITHUB_OUTPUT
+          "receipt=windows-qualification-receipt-v1-${{ inputs.subject_sha }}" >> $env:GITHUB_OUTPUT
+      - name: Stage signed artifacts for independent download
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force staged-windows/evidence/authenticode | Out-Null
+          Copy-Item dist-electron/*.exe staged-windows/
+          Copy-Item evidence/authenticode/*.json staged-windows/evidence/authenticode/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ steps.names.outputs.stage }}
+          path: staged-windows/
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ steps.names.outputs.stage }}', path: post-download }
+      - name: Post-download hash and Authenticode verification
+        shell: pwsh
+        run: |
+          Get-ChildItem post-download/*.exe | ForEach-Object {
+            $signature = Get-AuthenticodeSignature $_.FullName
+            if ($signature.Status -ne 'Valid') { throw "post-download signature invalid: $($_.Name)" }
+            if ($signature.SignerCertificate.Subject -ne $env:WINDOWS_SIGNING_SUBJECT) { throw "post-download publisher mismatch: $($_.Name)" }
+            if ($signature.SignerCertificate.Thumbprint -ne $env:WINDOWS_SIGNING_THUMBPRINT) { throw "post-download thumbprint mismatch: $($_.Name)" }
+            if (-not $signature.TimeStamperCertificate) { throw "post-download timestamp missing: $($_.Name)" }
+            node scripts/ci/release-receipt-workflow.mjs authenticode-post $_.FullName evidence/authenticode
+          }
+          Get-ChildItem evidence/authenticode/*.json | ForEach-Object {
+            node scripts/ci/authenticode-policy.mjs $_.FullName $env:WINDOWS_SIGNING_SUBJECT $env:WINDOWS_SIGNING_THUMBPRINT
+          }
+          Copy-Item evidence/authenticode/*.json post-download/evidence/authenticode/ -Force
+      - name: Verify workflow-bound attestations
+        shell: pwsh
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          $identity = "https://github.com/${{ github.repository }}/.github/workflows/reusable-windows-qualification.yml@${{ github.ref }}"
+          $signerWorkflow = "${{ github.repository }}/.github/workflows/reusable-windows-qualification.yml"
+          $results = Get-ChildItem post-download/*.exe | ForEach-Object { gh attestation verify $_.FullName --repo "${{ github.repository }}" --signer-workflow $signerWorkflow --format json | ConvertFrom-Json }
+          $results | ConvertTo-Json -Depth 100 | Out-File evidence/attestation-verification.txt
+          node scripts/ci/release-receipt-workflow.mjs attestation-windows evidence/attestation-verification.txt "${{ inputs.subject_sha }}" "${{ inputs.client_digest }}" $identity
+          node scripts/ci/attestation-policy.mjs evidence/attestation-policy.json electron-windows "${{ inputs.subject_sha }}" "${{ inputs.client_digest }}" $identity
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with: { name: '${{ steps.names.outputs.windows }}', path: post-download/, if-no-files-found: error, retention-days: 30 }
+      - name: Create Windows qualification receipt
+        shell: pwsh
+        run: node scripts/ci/release-receipt-workflow.mjs windows "${{ inputs.subject_sha }}" "${{ inputs.client_digest }}" "${{ inputs.gate_policy_version }}" linux_receipt_hash
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ steps.names.outputs.receipt }}
+          path: windows-qualification-receipt.json
+          if-no-files-found: error
+          retention-days: 30

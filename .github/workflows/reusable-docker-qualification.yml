@@ -1,0 +1,52 @@
+name: Reusable Docker qualification
+
+on:
+  workflow_call:
+    inputs:
+      subject_sha: { required: true, type: string }
+      client_artifact: { required: true, type: string }
+      attest: { required: false, type: boolean, default: true }
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha }}' }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ inputs.client_artifact }}', path: .tmp/ci-client-artifact }
+      - run: node scripts/ci/verify-client-dist-manifest.mjs --root .tmp/ci-client-artifact/client/dist --manifest .tmp/ci-client-artifact/client-dist-manifest.json --subject "${{ inputs.subject_sha }}"
+      - run: docker build --target production-prebuilt --tag navslides-editor:ci .
+      - run: docker run --detach --name navslides-editor-ci --publish 127.0.0.1:3002:3002 --env NAVSLIDES_LISTEN_HOST=0.0.0.0 navslides-editor:ci
+      - run: bash scripts/ci/qualify-docker-runtime.sh
+      - run: docker save navslides-editor:ci --output navslides-editor-image.tar
+      - run: docker image inspect navslides-editor:ci --format '{{.Id}}' > docker-image-digest.txt
+      - if: inputs.attest
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with: { subject-path: navslides-editor-image.tar }
+      - if: inputs.attest
+        run: GH_TOKEN="${{ github.token }}" gh attestation verify navslides-editor-image.tar --repo "${{ github.repository }}" | tee docker-attestation-verification.txt
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: docker-runtime-qualification
+          path: |
+            docker-runtime-closure.json
+            docker-image-inspect.json
+            docker-image-digest.txt
+            navslides-editor-image.tar
+            docker-attestation-verification.txt
+          if-no-files-found: warn
+          retention-days: 30
+      - if: always()
+        shell: bash
+        run: docker logs navslides-editor-ci || true; docker rm --force navslides-editor-ci || true

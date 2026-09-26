@@ -1,0 +1,43 @@
+name: Reusable container supply chain
+
+on:
+  workflow_call:
+    inputs:
+      subject_sha: { required: true, type: string }
+      source_run_id: { required: true, type: string }
+      docker_artifact: { required: true, type: string }
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha }}' }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ inputs.docker_artifact }}', run-id: '${{ inputs.source_run_id }}', github-token: '${{ github.token }}', path: container-evidence }
+      - run: docker load --input container-evidence/navslides-editor-image.tar
+      - run: docker image inspect navslides-editor:ci --format '{{.Id}}' > actual-image-digest.txt
+      - name: Capture browser inventory
+        run: |
+          docker run --rm navslides-editor:ci node -e "const fs=require('fs');const p=require('/app/server/node_modules/playwright/package.json');const c=require('/app/server/node_modules/playwright').chromium;const b=require('/app/server/node_modules/playwright-core/browsers.json').browsers.find(x=>x.name==='chromium');const executablePath=c.executablePath();fs.accessSync(executablePath);process.stdout.write(JSON.stringify({playwrightVersion:p.version,chromium:{revision:b.revision,executablePath}}))" > container-browser-inventory.json
+      - run: docker run --rm navslides-editor:ci sh -c "dpkg-query -W -f='\${Package}\t\${Version}\n' | sort" > container-os-packages.txt
+      - uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        with: { image: navslides-editor:ci, format: spdx-json, output-file: container-sbom.spdx.json, syft-version: v1.52.0 }
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with: { scan-type: image, image-ref: navslides-editor:ci, format: json, output: container-trivy.json, severity: 'HIGH,CRITICAL', ignore-unfixed: false, exit-code: '0', version: v0.74.0 }
+      - run: node scripts/verify-container-supply-chain.js --policy config/container-vulnerability-policy.json --report container-trivy.json --sbom container-sbom.spdx.json --browser container-browser-inventory.json --image-digest actual-image-digest.txt --expected-image-digest "$(cat container-evidence/docker-image-digest.txt)" --playwright-version 1.63.0 --chromium-revision 1243 --out container-supply-chain-receipt.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: container-supply-chain-v1-${{ inputs.subject_sha }}
+          path: |
+            container-sbom.spdx.json
+            container-trivy.json
+            container-browser-inventory.json
+            container-os-packages.txt
+            container-supply-chain-receipt.json
+          if-no-files-found: error
+          retention-days: 30

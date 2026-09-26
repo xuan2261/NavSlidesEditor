@@ -5,10 +5,12 @@ on:
     branches: ['master', 'main']
   pull_request:
     branches: ['master', 'main']
+  workflow_dispatch:
+    inputs:
+      subject_sha: { required: false, type: string, default: '' }
 
 permissions:
   contents: read
-  pull-requests: write
 
 env:
   NODE_VERSION: '22.22.0'
@@ -17,367 +19,122 @@ env:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
-      - run: npm ci
-      - run: npm run lint
+    uses: ./.github/workflows/reusable-ci-quality.yml
+    with:
+      gate: lint
+      subject_sha: ${{ inputs.subject_sha || github.sha }}
 
   unit-coverage:
     name: Unit + Coverage Gate
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:coverage
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-html
-          path: coverage/
-          retention-days: 14
+    uses: ./.github/workflows/reusable-ci-quality.yml
+    with:
+      gate: unit-coverage
+      subject_sha: ${{ inputs.subject_sha || github.sha }}
+
+  vitest-performance-budget:
+    name: Vitest performance budget
+    uses: ./.github/workflows/reusable-ci-quality.yml
+    with:
+      gate: vitest-budget
+      subject_sha: ${{ inputs.subject_sha || github.sha }}
 
   build:
     name: Build client
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
     needs: [lint]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
-      - run: npm ci
-      - run: npm run build
+    uses: ./.github/workflows/reusable-client-artifact.yml
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    with:
+      subject_sha: ${{ inputs.subject_sha || github.sha }}
+      mode: ci
+      attest: ${{ github.event_name != 'pull_request' }}
 
   e2e-chromium:
     name: 'E2E chromium (shard ${{ matrix.shard }}/4)'
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
     needs: [build]
-    container:
-      image: mcr.microsoft.com/playwright:v1.63.0-jammy
     strategy:
       fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
-      - run: npm ci
-      - run: npm run build
-      - name: Playwright shard ${{ matrix.shard }}/4 (chromium project)
-        run: npx playwright test --project=chromium --shard=${{ matrix.shard }}/4
-        env:
-          CI: 'true'
-          PLAYWRIGHT_CLIENT_PORT: '4173'
-          PLAYWRIGHT_SERVER_PORT: '3202'
-      - name: Upload report (shard ${{ matrix.shard }})
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-chromium-${{ matrix.shard }}
-          path: playwright-report/
-          retention-days: 14
+      matrix: { shard: [1, 2, 3, 4] }
+    uses: ./.github/workflows/reusable-playwright-consumer.yml
+    with:
+      subject_sha: ${{ inputs.subject_sha || github.sha }}
+      client_artifact: ${{ needs.build.outputs.artifact_name }}
+      lane: chromium-${{ matrix.shard }}
 
   e2e-pptx-import:
     name: E2E PPTX import (workers:1)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
     needs: [build]
-    container:
-      image: mcr.microsoft.com/playwright:v1.63.0-jammy
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
-      - run: npm ci
-      - run: npm run build
-      - name: Playwright package-backed PPTX import project
-        run: npx playwright test --project=chromium-pptx-import --workers=1
-        env:
-          CI: 'true'
-          PLAYWRIGHT_CLIENT_PORT: '4173'
-          PLAYWRIGHT_SERVER_PORT: '3202'
-      - name: Upload PPTX import report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-pptx-import
-          path: playwright-report/
-          retention-days: 14
+    uses: ./.github/workflows/reusable-playwright-consumer.yml
+    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: pptx-import }
 
   e2e-live:
     name: E2E live (workers:1)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
     needs: [build]
-    container:
-      image: mcr.microsoft.com/playwright:v1.63.0-jammy
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
-      - run: npm ci
-      - run: npm run build
-      - name: Playwright live project
-        run: npx playwright test --project=chromium-live
-        env:
-          CI: 'true'
-          PLAYWRIGHT_CLIENT_PORT: '4173'
-          PLAYWRIGHT_SERVER_PORT: '3202'
-      - name: Upload live report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-live
-          path: playwright-report/
-          retention-days: 14
+    uses: ./.github/workflows/reusable-playwright-consumer.yml
+    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: live }
 
   e2e-mobile:
     name: E2E mobile-chromium (Phase 7 a11y)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
     needs: [build]
-    container:
-      image: mcr.microsoft.com/playwright:v1.63.0-jammy
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
-      - run: npm ci
-      - run: npm run build
-      - name: Playwright touch/mobile suite on mobile-chromium
-        run: npx playwright test tests/e2e/a11y/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js --project=mobile-chromium
-        env:
-          CI: 'true'
-          PLAYWRIGHT_MOBILE_CHROMIUM: '1'
-          PLAYWRIGHT_CLIENT_PORT: '4173'
-          PLAYWRIGHT_SERVER_PORT: '3202'
-      - name: Upload mobile report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-mobile
-          path: playwright-report/
-          retention-days: 14
+    uses: ./.github/workflows/reusable-playwright-consumer.yml
+    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: mobile }
 
   e2e-visual:
     name: E2E visual regression (Linux baseline only)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
     needs: [build]
-    container:
-      image: mcr.microsoft.com/playwright:v1.63.0-jammy
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
-      - run: npm ci
-      - run: npm run build
-      - name: Playwright visual suite
-        run: npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js --project=chromium-visual
-        env:
-          CI: 'true'
-          PLAYWRIGHT_CLIENT_PORT: '4173'
-          PLAYWRIGHT_SERVER_PORT: '3202'
-      - name: Upload visual report (drift artifacts)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-visual
-          path: playwright-report/
-          retention-days: 14
+    uses: ./.github/workflows/reusable-playwright-consumer.yml
+    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: visual }
 
   pptx-corpus-metrics:
     name: PPTX corpus metrics
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
     needs: [lint]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - name: Run parser-relative corpus metrics
-        run: npm run test:pptx:corpus-metrics
+    uses: ./.github/workflows/reusable-ci-quality.yml
+    with:
+      gate: pptx-corpus
+      subject_sha: ${{ inputs.subject_sha || github.sha }}
 
   load-smoke:
     name: k6 load smoke (api + ws)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
     needs: [build]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
-      - uses: grafana/setup-k6-action@v1
-      - run: npm ci
-      - run: npm run build
-      - name: Start server in background
-        run: |
-          NODE_ENV=production PORT=3002 node server/index.js &
-          echo $! > server.pid
-          for i in $(seq 1 60); do
-            if curl -sf http://127.0.0.1:3002/api/presentations > /dev/null; then break; fi
-            sleep 1
-          done
-      - name: k6 smoke — REST presentations endpoint
-        run: npm run test:load:api:smoke
-        env:
-          API_BASE_URL: 'http://127.0.0.1:3002/api'
-      - name: k6 smoke — Socket.IO room join
-        run: npm run test:load:ws:smoke
-        env:
-          WS_URL: 'ws://127.0.0.1:3002/ws/?EIO=4&transport=websocket'
-      - name: Stop server
-        if: always()
-        run: |
-          if [ -f server.pid ]; then kill "$(cat server.pid)" || true; fi
+    uses: ./.github/workflows/reusable-load-consumer.yml
+    with:
+      subject_sha: ${{ inputs.subject_sha || github.sha }}
+      client_artifact: ${{ needs.build.outputs.artifact_name }}
 
   feature-coverage-gate:
     name: Feature coverage gate (warn-first, non-required)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [lint]
-    # ROLLOUT: this job is intentionally NOT in required-checks yet. Observe one
-    # cycle, then flip to required in branch protection via:
-    #   gh api -X PATCH repos/OWNER/REPO/branches/master/protection/required_status_checks \
-    #     -f 'checks[][context]=Feature coverage gate (warn-first, non-required)'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - name: Capture fresh vitest run results for matrix join
-        # `|| true`: vitest exits non-zero on a failing test but still writes the
-        # JSON reporter file. Keep going so the gate can SEE that failure and
-        # report it as a FAIL row, instead of the job aborting before the gate runs.
-        run: npx vitest run --reporter=json --outputFile=scripts/feature-inventory/run-results-vitest.json || true
-      - name: Capture fresh Playwright a11y depth results for matrix join
-        run: npx playwright test tests/e2e/a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js --project=chromium --reporter=json || true
-        env:
-          CI: 'true'
-          PLAYWRIGHT_JSON_OUTPUT_NAME: scripts/feature-inventory/run-results-playwright.json
-          PLAYWRIGHT_CLIENT_PORT: '4173'
-          PLAYWRIGHT_SERVER_PORT: '3202'
-      - name: Regenerate matrix + run coverage + manifest-completeness gates
-        run: npm run matrix:gate
-      - name: Fail if committed docs/feature-coverage-matrix.md is stale
-        run: git diff --exit-code docs/feature-coverage-matrix.md
+    needs: [lint, build]
+    uses: ./.github/workflows/reusable-ci-quality.yml
+    with:
+      gate: feature-coverage
+      subject_sha: ${{ inputs.subject_sha || github.sha }}
+      client_artifact: ${{ needs.build.outputs.artifact_name }}
 
   docker-artifact:
     name: Docker artifact qualification
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: [lint]
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Build production image
-        run: docker build --tag navslides-editor:ci .
-      - name: Start production container
-        run: |
-          docker run --detach --name navslides-editor-ci \
-            --publish 127.0.0.1:3002:3002 \
-            --env NAVSLIDES_LISTEN_HOST=0.0.0.0 \
-            navslides-editor:ci
-      - name: Qualify packaged runtime and package persistence
-        shell: bash
-        run: |
-          set -euo pipefail
+    needs: [lint, build]
+    uses: ./.github/workflows/reusable-docker-qualification.yml
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    with:
+      subject_sha: ${{ inputs.subject_sha || github.sha }}
+      client_artifact: ${{ needs.build.outputs.artifact_name }}
+      attest: ${{ github.event_name != 'pull_request' }}
 
-          wait_for_server() {
-            for attempt in $(seq 1 60); do
-              if curl --fail --silent --show-error http://127.0.0.1:3002/ > /dev/null; then
-                return 0
-              fi
-              sleep 1
-            done
-            return 1
-          }
-
-          wait_for_server
-          docker exec navslides-editor-ci node scripts/verify-runtime-closure.js --require-client-dist \
-            | tee docker-runtime-closure.json
-          curl --fail --silent --show-error \
-            http://127.0.0.1:3002/vendor/socket.io/socket.io.min.js \
-            --output /tmp/socket.io.min.js
-          test -s /tmp/socket.io.min.js
-          curl --fail --silent --show-error http://127.0.0.1:3002/api/presentations \
-            --output /tmp/presentations.json
-          jq -e 'type == "array"' /tmp/presentations.json > /dev/null
-
-          source_pptx=server/data/test-corpus/background-image-notes-footer.pptx
-          admission=$(curl --fail --silent --show-error \
-            --form "file=@${source_pptx};type=application/vnd.openxmlformats-officedocument.presentationml.presentation" \
-            http://127.0.0.1:3002/api/pptx/import)
-          job_id=$(jq -er '.jobId' <<<"$admission")
-          capability=$(jq -er '.capability' <<<"$admission")
-
-          presentation_id=''
-          for attempt in $(seq 1 120); do
-            job=$(curl --fail --silent --show-error \
-              --header "X-Pptx-Job-Capability: ${capability}" \
-              "http://127.0.0.1:3002/api/pptx/jobs/${job_id}")
-            status=$(jq -r '.status' <<<"$job")
-            if [[ "$status" == 'done' ]]; then
-              presentation_id=$(jq -er '.result.presentationId' <<<"$job")
-              break
-            fi
-            if [[ "$status" == 'failed' || "$status" == 'cancelled' ]]; then
-              jq . <<<"$job"
-              exit 1
-            fi
-            sleep 1
-          done
-          test -n "$presentation_id"
-
-          source_sha=$(sha256sum "$source_pptx" | cut -d' ' -f1)
-          curl --fail --silent --show-error --dump-header /tmp/pptx-original.headers \
-            "http://127.0.0.1:3002/api/presentations/${presentation_id}/pptx-original" \
-            --output /tmp/pptx-original.pptx
-          cmp "$source_pptx" /tmp/pptx-original.pptx
-          tr -d '\r' < /tmp/pptx-original.headers \
-            | grep -Fqi "x-pptx-original-sha256: ${source_sha}"
-
-          docker restart navslides-editor-ci
-          wait_for_server
-          curl --fail --silent --show-error \
-            "http://127.0.0.1:3002/api/presentations/${presentation_id}" \
-            --output /tmp/presentation-after-restart.json
-          jq -e --arg id "$presentation_id" '.id == $id' \
-            /tmp/presentation-after-restart.json > /dev/null
-          curl --fail --silent --show-error \
-            "http://127.0.0.1:3002/api/presentations/${presentation_id}/pptx-original" \
-            --output /tmp/pptx-original-after-restart.pptx
-          cmp "$source_pptx" /tmp/pptx-original-after-restart.pptx
-
-          docker image inspect navslides-editor:ci > docker-image-inspect.json
-      - name: Upload Docker qualification receipts
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: docker-runtime-qualification
-          path: |
-            docker-runtime-closure.json
-            docker-image-inspect.json
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Capture container logs and clean up
-        if: always()
-        run: |
-          docker logs navslides-editor-ci || true
-          docker rm --force navslides-editor-ci || true
+  container-supply-chain:
+    name: Container supply chain
+    needs: [docker-artifact]
+    uses: ./.github/workflows/reusable-container-supply-chain.yml
+    with:
+      subject_sha: ${{ inputs.subject_sha || github.sha }}
+      source_run_id: ${{ github.run_id }}
+      docker_artifact: docker-runtime-qualification
 
   required-checks:
     name: Required checks summary
@@ -385,6 +142,7 @@ jobs:
     needs:
       - lint
       - unit-coverage
+      - vitest-performance-budget
       - build
       - e2e-chromium
       - e2e-pptx-import
@@ -394,6 +152,7 @@ jobs:
       - pptx-corpus-metrics
       - load-smoke
       - docker-artifact
+      - container-supply-chain
     if: always()
     steps:
       - name: Fail if any required job failed
@@ -403,3 +162,22 @@ jobs:
           case "$status" in
             *failure*|*cancelled*|*timed_out*) exit 1 ;;
           esac
+
+  linux-ci-receipt:
+    name: Linux CI qualification receipt
+    if: github.event_name == 'push'
+    needs: [build, required-checks]
+    runs-on: ubuntu-latest
+    permissions: { contents: read, actions: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha || github.sha }}' }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0' }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: docker-runtime-qualification, path: evidence/docker }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: 'container-supply-chain-v1-${{ inputs.subject_sha || github.sha }}', path: evidence/supply-chain }
+      - run: node scripts/ci/release-receipt-workflow.mjs linux "${{ inputs.subject_sha || github.sha }}" "${{ needs.build.outputs.client_digest }}" release-target-policy-v1 evidence
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with: { name: 'linux-ci-receipt-v1-${{ inputs.subject_sha || github.sha }}', path: linux-ci-receipt.json, if-no-files-found: error, retention-days: 30 }

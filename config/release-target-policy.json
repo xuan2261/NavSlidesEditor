@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1",
+  "policyVersion": "release-target-policy-v1",
+  "receiptSchemaVersion": "release-receipt-v1",
+  "targets": {
+    "linux-ci": {
+      "selected": true,
+      "requiredGates": [
+        "client-manifest",
+        "unit-coverage",
+        "playwright",
+        "load",
+        "docker",
+        "supply-chain",
+        "attestation"
+      ]
+    },
+    "windows": {
+      "selected": true,
+      "publicArtifacts": ["nsis-exe", "portable-exe"],
+      "requiredGates": [
+        "electron-runtime-closure",
+        "officecli-physical",
+        "fidelity-powerpoint",
+        "authenticode",
+        "post-download-authenticode",
+        "attestation"
+      ]
+    },
+    "linux-desktop": {
+      "selected": false,
+      "unselectedReceiptStatus": "not-selected",
+      "requiredGates": []
+    },
+    "macos-desktop": {
+      "selected": false,
+      "unselectedReceiptStatus": "not-selected",
+      "requiredGates": []
+    }
+  },
+  "authenticode": {
+    "publisherSubjectSource": "protected-environment:WINDOWS_SIGNING_SUBJECT",
+    "publisherThumbprintSource": "protected-environment:WINDOWS_SIGNING_THUMBPRINT",
+    "requireRfc3161Timestamp": true,
+    "requirePostDownloadVerification": true
+  },
+  "attestations": {
+    "issuer": "https://token.actions.githubusercontent.com",
+    "requireWorkflowIdentity": true,
+    "requiredArtifacts": ["client-dist", "docker-image", "electron-windows"]
+  }
+}

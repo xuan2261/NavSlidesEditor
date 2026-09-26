@@ -2,131 +2,186 @@ name: Build & Release Electron
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Release version (e.g. 1.0.0)'
-        required: false
-        default: ''
+      tag:
+        description: Existing v1.17.0 or v1.17.0-rc.N tag
+        required: true
+        type: string
 
 permissions:
-  contents: write
+  contents: read
+  actions: read
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
-
+  resolve:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, actions: read }
+    outputs:
+      tag: ${{ steps.subject.outputs.tag }}
+      subject_sha: ${{ steps.subject.outputs.sha }}
+      source_run_id: ${{ steps.ci.outputs.run_id }}
+      ci_head_sha: ${{ steps.ci.outputs.head_sha }}
+      kind: ${{ steps.subject.outputs.kind }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { fetch-depth: 0 }
+      - id: subject
+        shell: bash
+        env:
+          REQUESTED_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          TAG="$REQUESTED_TAG"
+          git show-ref --verify --quiet "refs/tags/${TAG}"
+          SHA="$(git rev-parse "${TAG}^{commit}")"
+          git checkout --detach "$SHA"
+          test "$(git rev-parse HEAD)" = "$SHA"
+          node --input-type=module -e "import {parseReleaseTag} from './scripts/ci/release-subject.mjs';import p from './package.json' with {type:'json'};const r=parseReleaseTag(process.argv[1],p.version);if(!r)process.exit(1);console.log('kind='+r.kind)" "$TAG" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+      - id: ci
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUBJECT_SHA: ${{ steps.subject.outputs.sha }}
+        run: |
+          RUN="$(gh api "repos/${{ github.repository }}/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs?head_sha=${SUBJECT_SHA}&branch=master&event=push&status=success&per_page=1" --jq '.workflow_runs[0] | [.id,.head_sha,.conclusion] | @tsv')"
+          IFS=$'\t' read -r RUN_ID CI_HEAD CONCLUSION <<< "$RUN"
+          test -n "$RUN_ID" && test "$CI_HEAD" = "$SUBJECT_SHA" && test "$CONCLUSION" = success
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$CI_HEAD" >> "$GITHUB_OUTPUT"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+  verification:
+    needs: [resolve, container-supply-chain]
+    uses: ./.github/workflows/reusable-green-sha-verification.yml
+    secrets: inherit
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    with:
+      subject_sha: ${{ needs.resolve.outputs.subject_sha }}
+      mode: release
+      release_tag: ${{ needs.resolve.outputs.tag }}
+      gate_policy_version: release-target-policy-v1
+      source_run_id: ${{ needs.resolve.outputs.source_run_id }}
+      officecli_receipt_artifact: officecli-physical-receipt-v1-${{ needs.resolve.outputs.subject_sha }}
+      fidelity_receipt_artifact: powerpoint-fidelity-receipt-v1-${{ needs.resolve.outputs.subject_sha }}
+
+  container-supply-chain:
+    needs: resolve
+    uses: ./.github/workflows/reusable-container-supply-chain.yml
+    with:
+      subject_sha: ${{ needs.resolve.outputs.subject_sha }}
+      source_run_id: ${{ needs.resolve.outputs.source_run_id }}
+      docker_artifact: docker-runtime-qualification
+
+  verify-staged-assets:
+    needs: [resolve, verification]
+    runs-on: windows-latest
+    permissions: { contents: read, actions: read, attestations: read }
+    outputs:
+      staged_artifact: ${{ steps.name.outputs.value }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          node-version: '22.22.0'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build client
-        run: npm run build
-
-      - name: Smoke production start on Windows
+          ref: ${{ needs.resolve.outputs.subject_sha }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ needs.verification.outputs.client_artifact }}', path: client-evidence }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ needs.verification.outputs.windows_artifact }}', path: post-download }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ needs.verification.outputs.green_receipt_artifact }}', path: root-evidence }
+      - name: Verify exact release subject
         shell: pwsh
         run: |
-          $server = Start-Process -FilePath "npm.cmd" -ArgumentList "start" -PassThru -NoNewWindow
-          try {
-            $ready = $false
-            for ($attempt = 0; $attempt -lt 30; $attempt++) {
-              Start-Sleep -Seconds 1
-              try {
-                $response = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:3002/"
-                if ($response.StatusCode -eq 200) {
-                  $ready = $true
-                  break
-                }
-              } catch {}
-            }
-            if (-not $ready) { throw "Production server did not become ready" }
-          } finally {
-            if (-not $server.HasExited) { & taskkill.exe /PID $server.Id /T /F | Out-Null }
-          }
-
-      - name: Prepare Electron from checked-in server lock
-        run: node scripts/prepare-electron.js
-
-      - name: Verify source runtime closure
-        run: npm run runtime:verify
-
-      - name: Build Electron (Windows)
-        run: npm run electron:builder -- --win --publish never
+          $root = Get-Content root-evidence/green-sha-root-receipt.json | ConvertFrom-Json
+          $manifest = Get-Content client-evidence/client-dist-manifest.json | ConvertFrom-Json
+          $artifactSubject = $manifest.subject.sha
+          node scripts/ci/release-subject.mjs --tag "${{ needs.resolve.outputs.tag }}" --subject "${{ needs.resolve.outputs.subject_sha }}" --tag-commit "${{ needs.resolve.outputs.subject_sha }}" --checkout "$(git rev-parse HEAD)" --ci-head "${{ needs.resolve.outputs.ci_head_sha }}" --artifact-subjects "$artifactSubject" --receipt-subjects "$($root.subjectSha)"
+      - name: Post-download Authenticode verification
+        shell: pwsh
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Verify packaged runtime closure
-        run: >
-          node scripts/verify-runtime-closure.js
-          --root dist-electron/win-unpacked/resources
-          --require-client-dist
-
-      - name: Generate checksummed runtime receipt
-        run: node scripts/runtime-receipt.js
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+          WINDOWS_SIGNING_SUBJECT: ${{ vars.WINDOWS_SIGNING_SUBJECT }}
+          WINDOWS_SIGNING_THUMBPRINT: ${{ vars.WINDOWS_SIGNING_THUMBPRINT }}
+        run: |
+          Get-ChildItem post-download/*.exe | ForEach-Object {
+            $signature = Get-AuthenticodeSignature $_.FullName
+            if ($signature.Status -ne 'Valid') { throw "post-download Authenticode invalid: $($_.Name)" }
+            if ($signature.SignerCertificate.Subject -ne $env:WINDOWS_SIGNING_SUBJECT) { throw 'post-download publisher mismatch' }
+            if ($signature.SignerCertificate.Thumbprint -ne $env:WINDOWS_SIGNING_THUMBPRINT) { throw 'post-download thumbprint mismatch' }
+            if (-not $signature.TimeStamperCertificate) { throw 'post-download RFC3161 timestamp missing' }
+          }
+          Get-ChildItem post-download/evidence/authenticode/*.json | ForEach-Object {
+            node scripts/ci/authenticode-policy.mjs $_.FullName $env:WINDOWS_SIGNING_SUBJECT $env:WINDOWS_SIGNING_THUMBPRINT
+          }
+      - name: Verify workflow-bound attestations
+        shell: pwsh
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          New-Item -ItemType Directory -Force evidence | Out-Null
+          $identity = "https://github.com/${{ github.repository }}/.github/workflows/reusable-windows-qualification.yml@${{ github.ref }}"
+          $signerWorkflow = "${{ github.repository }}/.github/workflows/reusable-windows-qualification.yml"
+          $results = Get-ChildItem post-download/*.exe | ForEach-Object { gh attestation verify $_.FullName --repo "${{ github.repository }}" --signer-workflow $signerWorkflow --format json | ConvertFrom-Json }
+          $results | ConvertTo-Json -Depth 100 | Out-File attestation-post-download.json
+          node scripts/ci/release-receipt-workflow.mjs attestation-windows attestation-post-download.json "${{ needs.resolve.outputs.subject_sha }}" "$(Get-FileHash client-evidence/client-dist-manifest.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash | ForEach-Object ToLower)" $identity
+          node scripts/ci/attestation-policy.mjs evidence/attestation-policy.json electron-windows "${{ needs.resolve.outputs.subject_sha }}" "$(Get-FileHash client-evidence/client-dist-manifest.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash | ForEach-Object ToLower)" $identity
+      - id: name
+        shell: pwsh
+        run: '"value=staged-release-v1-${{ needs.resolve.outputs.subject_sha }}" >> $env:GITHUB_OUTPUT'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: electron-win
+          name: ${{ steps.name.outputs.value }}
           path: |
-            dist-electron/*.exe
-            dist-electron/*.yml
-            dist-electron/*.yaml
-            dist-electron/runtime-receipt.json
+            post-download/*.exe
+            root-evidence/green-sha-root-receipt.json
           if-no-files-found: error
           retention-days: 30
 
-  release:
-    needs: build-windows
+  stage-draft:
+    needs: [resolve, verification, verify-staged-assets]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-
+    environment: release-staging
+    permissions:
+      contents: write
+      actions: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          path: release-assets
-          merge-multiple: true
-
-      - name: List release files
-        run: find release-assets -type f 2>/dev/null | head -50 || echo "No files"
-
-      - name: Determine version
-        id: version
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.version }}" ]]; then
-            echo "tag=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-            echo "name=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-            echo "name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          else
-            echo "tag=v0.0.0-dev.$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
-            echo "name=Dev Build $(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create GitHub Release
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ needs.verify-staged-assets.outputs.staged_artifact }}', path: release-assets }
+      - name: Draft existing-tag release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: ${{ steps.version.outputs.name }}
-          draft: false
-          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          tag_name: ${{ needs.resolve.outputs.tag }}
+          target_commitish: ${{ needs.resolve.outputs.subject_sha }}
+          draft: true
+          prerelease: ${{ needs.resolve.outputs.kind == 'rc' }}
           generate_release_notes: true
-          files: release-assets/**/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: release-assets/post-download/*.exe
+
+  publish-final:
+    if: needs.resolve.outputs.kind == 'final'
+    needs: [resolve, verification, verify-staged-assets, stage-draft]
+    runs-on: ubuntu-latest
+    environment: release-publication
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ needs.verify-staged-assets.outputs.staged_artifact }}', path: release-assets }
+      - name: Publish verified final assets
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          tag_name: ${{ needs.resolve.outputs.tag }}
+          target_commitish: ${{ needs.resolve.outputs.subject_sha }}
+          draft: false
+          prerelease: false
+          files: release-assets/post-download/*.exe

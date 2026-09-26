@@ -1,0 +1,72 @@
+name: Reusable client artifact
+
+on:
+  workflow_call:
+    inputs:
+      subject_sha: { required: true, type: string }
+      mode: { required: true, type: string }
+      source_run_id: { required: false, type: string, default: '' }
+      attest: { required: false, type: boolean, default: true }
+    outputs:
+      artifact_name:
+        value: ${{ jobs.client.outputs.artifact_name }}
+      client_digest:
+        value: ${{ jobs.client.outputs.client_digest }}
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  client:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    outputs:
+      artifact_name: ${{ steps.names.outputs.artifact }}
+      client_digest: ${{ steps.digest.outputs.digest }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha }}', fetch-depth: 0 }
+      - shell: bash
+        run: |
+          [[ "${{ inputs.subject_sha }}" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "${{ inputs.subject_sha }}"
+          [[ "${{ inputs.mode }}" == ci || "${{ inputs.mode }}" == release ]]
+          if [[ "${{ inputs.mode }}" == release ]]; then test -n "${{ inputs.source_run_id }}"; fi
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0', cache: npm }
+      - id: names
+        run: echo "artifact=client-dist-v1-${{ inputs.subject_sha }}" >> "$GITHUB_OUTPUT"
+      - name: Import successful main-CI client artifact
+        if: inputs.mode == 'release'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: client-dist-v1-${{ inputs.subject_sha }}
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+          path: .
+      - name: Build client once
+        if: inputs.mode == 'ci'
+        run: npm ci && npm run build
+      - name: Verify imported or built client
+        run: node scripts/ci/verify-client-dist-manifest.mjs --root client/dist --manifest client-dist-manifest.json --subject "${{ inputs.subject_sha }}"
+      - id: digest
+        shell: bash
+        run: echo "digest=$(sha256sum client-dist-manifest.json | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+      - if: inputs.mode == 'ci' && inputs.attest
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with: { subject-path: client-dist-manifest.json }
+      - if: inputs.mode == 'release' || inputs.attest
+        run: GH_TOKEN="${{ github.token }}" gh attestation verify client-dist-manifest.json --repo "${{ github.repository }}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ steps.names.outputs.artifact }}
+          path: |
+            client/dist
+            client-dist-manifest.json
+          if-no-files-found: error
+          retention-days: 30

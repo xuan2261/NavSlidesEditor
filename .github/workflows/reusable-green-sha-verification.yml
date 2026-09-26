@@ -1,0 +1,172 @@
+name: Reusable green SHA verification
+
+on:
+  workflow_call:
+    inputs:
+      subject_sha: { required: true, type: string }
+      mode: { required: true, type: string }
+      release_tag: { required: false, type: string, default: '' }
+      gate_policy_version: { required: true, type: string }
+      source_run_id: { required: false, type: string, default: '' }
+      officecli_receipt_artifact: { required: false, type: string, default: '' }
+      fidelity_receipt_artifact: { required: false, type: string, default: '' }
+    outputs:
+      client_artifact:
+        value: ${{ jobs.client.outputs.artifact_name }}
+      green_receipt_artifact:
+        value: ${{ jobs.create-root.outputs.artifact_name }}
+      windows_artifact:
+        value: ${{ jobs.windows.outputs.windows_artifact }}
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  client:
+    uses: ./.github/workflows/reusable-client-artifact.yml
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    with: { subject_sha: '${{ inputs.subject_sha }}', mode: '${{ inputs.mode }}', source_run_id: '${{ inputs.source_run_id }}' }
+  unit:
+    if: inputs.mode == 'ci'
+    runs-on: ubuntu-latest
+    permissions: { contents: read, actions: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha }}' }
+      - run: test "$(git rev-parse HEAD)" = "${{ inputs.subject_sha }}"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0', cache: npm }
+      - run: npm ci
+      - run: npm run lint && npm run test:inventory && npm run test:coverage && npm run matrix:gate && npm run test:pptx:corpus-metrics
+  e2e:
+    if: inputs.mode == 'ci'
+    needs: client
+    runs-on: ubuntu-latest
+    permissions: { contents: read, actions: read }
+    container: { image: 'mcr.microsoft.com/playwright:v1.63.0-jammy' }
+    strategy:
+      fail-fast: false
+      matrix: { lane: [chromium-1, chromium-2, chromium-3, chromium-4, pptx-import, live, mobile, visual] }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha }}' }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0', cache: npm }
+      - run: npm ci
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ needs.client.outputs.artifact_name }}', path: . }
+      - run: node scripts/ci/verify-client-dist-manifest.mjs --root client/dist --manifest client-dist-manifest.json --subject "${{ inputs.subject_sha }}"
+      - name: Run production-byte Playwright lane
+        shell: bash
+        run: |
+          case "${{ matrix.lane }}" in
+            chromium-*) shard="${{ matrix.lane }}"; npx playwright test --project=chromium --shard="${shard#chromium-}/4" ;;
+            pptx-import) npx playwright test --project=chromium-pptx-import --workers=1 ;;
+            live) npx playwright test --project=chromium-live ;;
+            mobile) npx playwright test tests/e2e/a11y/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport.spec.js --project=mobile-chromium ;;
+            visual) npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js --project=chromium-visual ;;
+          esac
+        env: { CI: 'true', PLAYWRIGHT_CLIENT_PORT: '4173', PLAYWRIGHT_SERVER_PORT: '3202' }
+  load:
+    if: inputs.mode == 'ci'
+    needs: client
+    runs-on: ubuntu-latest
+    permissions: { contents: read, actions: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha }}' }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0', cache: npm }
+      - run: npm ci
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ needs.client.outputs.artifact_name }}', path: . }
+      - run: node scripts/ci/verify-client-dist-manifest.mjs --root client/dist --manifest client-dist-manifest.json --subject "${{ inputs.subject_sha }}"
+      - run: NODE_ENV=production PORT=3002 node server/index.js > server.log 2>&1 & echo $! > server.pid
+      - run: for i in {1..60}; do curl -fsS http://127.0.0.1:3002/api/presentations && break || sleep 1; done
+      - run: docker run --rm --network host -e PROFILE=smoke -e API_BASE_URL=http://127.0.0.1:3002/api -v "$PWD:/work" grafana/k6:0.54.0 run /work/tests/load/k6-load-test-api-presentations-post-endpoint-with-profiles.js
+      - run: docker run --rm --network host -e PROFILE=smoke -e WS_URL='ws://127.0.0.1:3002/ws/?EIO=4&transport=websocket' -v "$PWD:/work" grafana/k6:0.54.0 run /work/tests/load/k6-load-test-socketio-websocket-room-join-and-slide-change-broadcast.js
+  docker:
+    if: inputs.mode == 'ci'
+    needs: client
+    runs-on: ubuntu-latest
+    permissions: { contents: read, actions: read, id-token: write, attestations: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha }}' }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ needs.client.outputs.artifact_name }}', path: .tmp/ci-client-artifact }
+      - run: node scripts/ci/verify-client-dist-manifest.mjs --root .tmp/ci-client-artifact/client/dist --manifest .tmp/ci-client-artifact/client-dist-manifest.json --subject "${{ inputs.subject_sha }}"
+      - run: docker build --target production-prebuilt --tag navslides-editor:${{ inputs.subject_sha }} .
+      - run: docker run --rm navslides-editor:${{ inputs.subject_sha }} node scripts/verify-runtime-closure.js --require-client-dist > docker-runtime-closure.json
+      - run: docker save navslides-editor:${{ inputs.subject_sha }} --output navslides-editor-image.tar
+      - run: docker image inspect navslides-editor:${{ inputs.subject_sha }} --format '{{.Id}}' > docker-image-digest.txt
+      - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with: { subject-path: navslides-editor-image.tar }
+      - run: GH_TOKEN="${{ github.token }}" gh attestation verify navslides-editor-image.tar --repo "${{ github.repository }}" | tee docker-attestation-verification.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: docker-runtime-qualification
+          path: |
+            navslides-editor-image.tar
+            docker-image-digest.txt
+            docker-runtime-closure.json
+            docker-attestation-verification.txt
+          if-no-files-found: error
+          retention-days: 30
+  container-supply-chain:
+    if: inputs.mode == 'ci'
+    needs: docker
+    uses: ./.github/workflows/reusable-container-supply-chain.yml
+    with: { subject_sha: '${{ inputs.subject_sha }}', source_run_id: '${{ github.run_id }}', docker_artifact: docker-runtime-qualification }
+  linux-receipt:
+    if: inputs.mode == 'ci'
+    needs: [client, unit, e2e, load, docker, container-supply-chain]
+    runs-on: ubuntu-latest
+    permissions: { contents: read }
+    outputs:
+      artifact_name: ${{ steps.name.outputs.value }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha }}' }
+      - id: name
+        run: echo "value=linux-ci-receipt-v1-${{ inputs.subject_sha }}" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: docker-runtime-qualification, path: evidence/docker }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: 'container-supply-chain-v1-${{ inputs.subject_sha }}', path: evidence/supply-chain }
+      - shell: bash
+        run: node scripts/ci/release-receipt-workflow.mjs linux "${{ inputs.subject_sha }}" "${{ needs.client.outputs.client_digest }}" "${{ inputs.gate_policy_version }}" evidence
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with: { name: '${{ steps.name.outputs.value }}', path: linux-ci-receipt.json, if-no-files-found: error, retention-days: 30 }
+
+  windows:
+    if: inputs.mode == 'release'
+    needs: [client]
+    uses: ./.github/workflows/reusable-windows-qualification.yml
+    secrets: inherit
+    with: { subject_sha: '${{ inputs.subject_sha }}', source_run_id: '${{ github.run_id }}', physical_receipt_run_id: '${{ inputs.source_run_id }}', client_artifact: '${{ needs.client.outputs.artifact_name }}', client_digest: '${{ needs.client.outputs.client_digest }}', linux_receipt_artifact: 'linux-ci-receipt-v1-${{ inputs.subject_sha }}', officecli_receipt_artifact: '${{ inputs.officecli_receipt_artifact }}', fidelity_receipt_artifact: '${{ inputs.fidelity_receipt_artifact }}', gate_policy_version: '${{ inputs.gate_policy_version }}' }
+  create-root:
+    if: inputs.mode == 'release'
+    needs: [client, windows]
+    runs-on: ubuntu-latest
+    permissions: { contents: read, actions: read }
+    outputs:
+      artifact_name: ${{ steps.name.outputs.value }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        name: Import successful main-CI Linux receipt
+        with: { name: 'linux-ci-receipt-v1-${{ inputs.subject_sha }}', run-id: '${{ inputs.source_run_id }}', github-token: '${{ github.token }}', path: receipts }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ needs.windows.outputs.receipt_artifact }}', path: receipts }
+      - id: name
+        run: echo "value=green-sha-root-receipt-v1-${{ inputs.subject_sha }}" >> "$GITHUB_OUTPUT"
+      - name: Create root and explicit not-selected receipts
+        run: node scripts/ci/release-receipt-workflow.mjs create-root "${{ inputs.subject_sha }}" "${{ needs.client.outputs.client_digest }}" "${{ inputs.gate_policy_version }}" "${{ inputs.release_tag }}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with: { name: '${{ steps.name.outputs.value }}', path: '*-receipt.json', if-no-files-found: error, retention-days: 30 }

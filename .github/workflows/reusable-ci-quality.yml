@@ -1,0 +1,64 @@
+name: Reusable CI quality gate
+
+on:
+  workflow_call:
+    inputs:
+      gate: { required: true, type: string }
+      subject_sha: { required: true, type: string }
+      client_artifact: { required: false, type: string, default: '' }
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha }}' }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0', cache: npm }
+      - shell: bash
+        run: |
+          [[ "${{ inputs.subject_sha }}" =~ ^[0-9a-f]{40}$ ]]
+          case "${{ inputs.gate }}" in
+            lint|unit-coverage|vitest-budget|pptx-corpus|feature-coverage) ;;
+            *) exit 1 ;;
+          esac
+      - run: npm ci
+      - if: inputs.gate == 'feature-coverage'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ inputs.client_artifact }}', path: . }
+      - if: inputs.gate == 'feature-coverage'
+        run: node scripts/ci/verify-client-dist-manifest.mjs --root client/dist --manifest client-dist-manifest.json --subject "${{ inputs.subject_sha }}"
+      - if: inputs.gate == 'unit-coverage' || inputs.gate == 'pptx-corpus' || inputs.gate == 'feature-coverage'
+        run: npx playwright install --with-deps chromium
+      - if: inputs.gate == 'lint'
+        run: npm run lint
+      - if: inputs.gate == 'unit-coverage'
+        run: npm run test:coverage
+      - if: inputs.gate == 'unit-coverage'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with: { name: coverage-html, path: coverage/, retention-days: 14 }
+      - if: inputs.gate == 'vitest-budget'
+        run: npm run test:ci-budget
+      - if: inputs.gate == 'vitest-budget'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with: { name: 'vitest-ci-budget-v1-${{ inputs.subject_sha }}', path: .tmp/vitest-ci-budget-benchmark.json, if-no-files-found: error, retention-days: 30 }
+      - if: inputs.gate == 'pptx-corpus'
+        run: npm run test:pptx:corpus-metrics
+      - if: inputs.gate == 'feature-coverage'
+        continue-on-error: true
+        run: npm run test:feature-inventory
+      - if: inputs.gate == 'feature-coverage'
+        run: npx playwright test tests/e2e/a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js --project=chromium --reporter=json || true
+        env:
+          CI: 'true'
+          PLAYWRIGHT_JSON_OUTPUT_NAME: scripts/feature-inventory/run-results-playwright.json
+          PLAYWRIGHT_CLIENT_PORT: '4173'
+          PLAYWRIGHT_SERVER_PORT: '3202'
+      - if: inputs.gate == 'feature-coverage'
+        run: npm run matrix:gate
+      - if: inputs.gate == 'feature-coverage'
+        run: git diff --exit-code docs/feature-coverage-matrix.md

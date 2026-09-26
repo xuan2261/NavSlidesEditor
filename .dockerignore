@@ -4,5 +4,11 @@ server/node_modules
 client/dist
 server/data
 server/uploads
+.tmp/*
+!.tmp/ci-client-artifact/
+!.tmp/ci-client-artifact/client/
+!.tmp/ci-client-artifact/client/dist/
+!.tmp/ci-client-artifact/client/dist/**
+!.tmp/ci-client-artifact/client-dist-manifest.json
 .git
 *.md
