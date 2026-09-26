@@ -63,11 +63,11 @@ function lastSaved() {
 async function openGeneratorAndCreate() {
   const aiBtn = await screen.findByRole('button', { name: /^AI$/i })
   await act(async () => {
-    fireEvent.mouseDown(aiBtn)
+    fireEvent.click(aiBtn)
   })
   const genItem = await screen.findByText('AI Slide Generator')
   await act(async () => {
-    fireEvent.mouseDown(genItem)
+    fireEvent.click(genItem)
   })
   const topic = await screen.findByPlaceholderText(/IoT Security/i)
   await act(async () => {

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LiveSocketContext } from '../../contexts/live-socket-context-provider.jsx'
 import { useEditorStore } from '../../stores/editor-store'
@@ -191,7 +191,7 @@ describe('EditorPage command palette element actions', () => {
     expect(screen.getByRole('heading', { name: 'Add Slide' })).toBeTruthy()
   })
 
-  it('[cap:command.insertLink depth:trace] uses the typed rich-text link action through the command palette', async () => {
+  it('[cap:command.insertLink depth:trace] explains why links are unavailable outside text editing', async () => {
     const feedback = vi.fn()
     window.addEventListener(APP_FEEDBACK_EVENT, feedback)
 
@@ -201,20 +201,18 @@ describe('EditorPage command palette element actions', () => {
     await act(async () => {
       useUIStore.getState().setShowCommandPalette(true)
     })
-    fireEvent.click(screen.getByText('Insert Link'))
-
-    await waitFor(() => {
-      expect(feedback).toHaveBeenCalledWith(
-        expect.objectContaining({
-          detail: expect.objectContaining({
-            type: 'notice',
-            message: 'Enter text edit mode and select a text element before inserting a link.',
-          }),
-        })
-      )
+    const insertLink = screen.getByRole('button', { name: /^Insert Link/ })
+    expect(insertLink.disabled).toBe(true)
+    expect(insertLink.title).toBeTruthy()
+    fireEvent.click(insertLink)
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search commands' }), {
+      target: { value: 'Insert Link' },
     })
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'Search commands' }), { key: 'Enter' })
+
+    expect(feedback).not.toHaveBeenCalled()
     expect(document.querySelector('[title="Add link"]')).toBeNull()
-    expect(useUIStore.getState().showCommandPalette).toBe(false)
+    expect(useUIStore.getState().showCommandPalette).toBe(true)
 
     window.removeEventListener(APP_FEEDBACK_EVENT, feedback)
   })

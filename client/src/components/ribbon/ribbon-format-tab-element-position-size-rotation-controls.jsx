@@ -209,7 +209,7 @@ function ContextualControls({ selectedElement, onUpdateElement }) {
   }
 }
 
-export default function FormatTabContent({ selectedElement, onUpdateElement, elements, selectedElementIds, slideWidth, presentation }) {
+export default function FormatTabContent({ selectedElement, onUpdateElement, elements, selectedElementIds, slideWidth, presentation, availability = {} }) {
   if (!selectedElement) {
     return (
       <RibbonTabContentRow>
@@ -255,6 +255,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
 
   return (
     <RibbonTabContentRow>
+      <fieldset className="contents" disabled={Boolean(availability.arrange)} title={availability.arrange || undefined}>
       <ContextualControls selectedElement={selectedElement} onUpdateElement={onUpdateElement} />
       <RibbonSection label="Action" className="border-r border-border">
         <ActionControls element={selectedElement} onUpdate={onUpdateElement} presentation={presentation} compact />
@@ -374,6 +375,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
           </Button>
         </div>
       </RibbonSection>
+      </fieldset>
 
       <RibbonSection label="Properties">
         <Button variant="ribbon"

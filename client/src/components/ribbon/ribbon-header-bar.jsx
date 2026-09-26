@@ -1,6 +1,6 @@
 import * as Tabs from '@radix-ui/react-tabs'
 import { BarChart3, Bot, FileText, Languages, Play, Radio, Share2, Sparkles } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { resolveRibbonActiveTab, useUIStore } from '../../stores/ui-store'
 import { Button } from '../ui'
 import FileDropdown from './ribbon-file-dropdown-menu'
@@ -10,24 +10,21 @@ import TabBar from './tab-bar-with-scroll-and-icons'
 function RibbonActionDropdown({ label, icon: Icon, items }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef(null)
+  const entryFocusRef = useRef(null)
+  const itemRefs = useRef([])
   const toggleOpen = () => setOpen((v) => !v)
   const runItem = (item) => {
-    item.onClick?.()
     setOpen(false)
+    triggerRef.current?.focus({ preventScroll: true })
+    item.onClick?.()
   }
   const closeMenu = useCallback(() => setOpen(false), [])
 
-  useEffect(() => {
-    if (!open) return undefined
-    const closeOnEscape = (event) => {
-      if (event.key !== 'Escape') return
-      event.preventDefault()
-      event.stopPropagation()
-      closeMenu()
-    }
-    document.addEventListener('keydown', closeOnEscape, true)
-    return () => document.removeEventListener('keydown', closeOnEscape, true)
-  }, [closeMenu, open])
+  useLayoutEffect(() => {
+    if (!open || entryFocusRef.current === null) return
+    itemRefs.current[entryFocusRef.current]?.focus({ preventScroll: true })
+    entryFocusRef.current = null
+  }, [open])
 
   return (
     <div className="relative">
@@ -38,14 +35,19 @@ function RibbonActionDropdown({ label, icon: Icon, items }) {
         title={label}
         aria-label={label}
         aria-expanded={open}
-        onMouseDown={(e) => {
-          e.preventDefault()
+        aria-haspopup="menu"
+        onClick={() => {
+          entryFocusRef.current = 0
           toggleOpen()
         }}
         onKeyDown={(e) => {
-          if (e.key !== 'Enter' && e.key !== ' ') return
+          if (!['ArrowDown', 'ArrowUp'].includes(e.key)) return
           e.preventDefault()
-          toggleOpen()
+          entryFocusRef.current = e.key === 'ArrowUp' ? items.length - 1 : 0
+          if (open) {
+            itemRefs.current[entryFocusRef.current]?.focus()
+            entryFocusRef.current = null
+          } else setOpen(true)
         }}
       >
         <Icon size={14} />
@@ -62,21 +64,26 @@ function RibbonActionDropdown({ label, icon: Icon, items }) {
           ariaLabel={`${label} menu`}
           dataRibbonPopup={`${label.toLowerCase()}-menu`}
         >
-            {items.map((item) => {
+            {items.map((item, index) => {
               const ItemIcon = item.icon
               return (
                 <button
                   key={item.label}
+                  ref={(node) => { itemRefs.current[index] = node }}
                   className="ui-coarse-target dropdown-item flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-[11px] text-text-primary transition-colors hover:bg-secondary"
                   role="menuitem"
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    runItem(item)
-                  }}
+                  onClick={() => runItem(item)}
                   onKeyDown={(e) => {
-                    if (e.key !== 'Enter' && e.key !== ' ') return
+                    if (e.key === 'Tab') {
+                      setOpen(false)
+                      triggerRef.current?.focus()
+                      return
+                    }
+                    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return
                     e.preventDefault()
-                    runItem(item)
+                    const next = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1
+                      : (index + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length
+                    itemRefs.current[next]?.focus({ preventScroll: true })
                   }}
                 >
                   <ItemIcon size={14} className="text-text-muted" />
@@ -108,6 +115,7 @@ export default function RibbonHeaderBar({
   onLive,
   onAnalytics,
   onPresent,
+  onPresentCurrent,
   pptxFidelity,
   pptxActions,
   pptxBusy,
@@ -163,9 +171,14 @@ export default function RibbonHeaderBar({
               { label: 'View Analytics', icon: BarChart3, onClick: onAnalytics },
             ]}
           />
-          <Button variant="icon" title="Present" aria-label="Present" onClick={onPresent}>
-            <Play size={14} />
-          </Button>
+          <RibbonActionDropdown
+            label="Present"
+            icon={Play}
+            items={[
+              { label: 'From beginning (F5)', icon: Play, onClick: onPresent },
+              { label: 'From current slide (Shift+F5)', icon: Play, onClick: onPresentCurrent },
+            ]}
+          />
         </div>
       </div>
     </Tabs.Root>

@@ -1,12 +1,15 @@
-import { useState } from 'react'
-import { Button } from './ui'
-import { isBackdropClick } from '../lib/utils'
+import { useRef, useState } from 'react'
+import { Button, useModalFocusTrap } from './ui'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 import { buildStemSimulationEmbed, STEM_SIMULATION_PROVIDERS } from '../utils/stem-embed-presets'
 
 export default function StemSimulationPresetModal({ onInsert, onCancel }) {
   const [provider, setProvider] = useState(STEM_SIMULATION_PROVIDERS[0].id)
   const [source, setSource] = useState('')
   const [error, setError] = useState('')
+  const sourceRef = useRef(null)
+  const { dialogRef, handleFocusTrapKeyDown } = useModalFocusTrap({ initialFocusRef: sourceRef })
+  useEscapeClose(onCancel)
 
   const handleInsert = () => {
     try {
@@ -25,6 +28,8 @@ export default function StemSimulationPresetModal({ onInsert, onCancel }) {
       aria-modal="true"
       aria-labelledby="stem-simulation-modal-title"
       aria-describedby="stem-online-warning"
+      ref={dialogRef}
+      onKeyDown={handleFocusTrapKeyDown}
       onClick={(event) => {
         if (isBackdropClick(event)) onCancel?.()
       }}
@@ -39,14 +44,14 @@ export default function StemSimulationPresetModal({ onInsert, onCancel }) {
           </h2>
           <p
             id="stem-online-warning"
-            className="mt-1 text-xs text-amber-300"
+            className="mt-1 text-xs text-text-secondary"
             data-testid="stem-online-warning"
           >
             Online-only embed. Only PhET, GeoGebra, Desmos, and CircuitJS/Falstad URLs are allowed.
           </p>
         </div>
         <div className="space-y-3 p-4">
-          <label className="block text-xs text-text-muted">
+          <label className="block text-xs text-text-secondary">
             Provider
             <select
               value={provider}
@@ -60,23 +65,23 @@ export default function StemSimulationPresetModal({ onInsert, onCancel }) {
               ))}
             </select>
           </label>
-          <label className="block text-xs text-text-muted">
+          <label className="block text-xs text-text-secondary">
             URL or ID
             <input
+              ref={sourceRef}
               value={source}
               onChange={(event) => setSource(event.target.value)}
               placeholder="Paste an allowed URL or provider ID"
               aria-invalid={error ? 'true' : 'false'}
               aria-describedby={error ? 'stem-online-warning stem-source-error' : 'stem-online-warning'}
               className="mt-1 w-full rounded-md border border-border bg-hover px-2 py-2 text-sm text-text-primary"
-              autoFocus
             />
           </label>
           {error && (
             <div
               id="stem-source-error"
               role="alert"
-              className="rounded-md border border-danger bg-danger/10 px-3 py-2 text-xs text-danger"
+              className="rounded-md border border-danger bg-danger/10 px-3 py-2 text-xs text-text-primary"
             >
               {error}
             </div>

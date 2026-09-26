@@ -46,7 +46,7 @@ export default function RibbonPanel(props) {
             aria-labelledby={`ribbon-tab-${id}`}
             className="absolute inset-0 hidden h-full w-full min-w-0 items-center overflow-hidden outline-none data-[state=active]:flex"
           >
-            <Content {...props} slideElements={props.slide?.elements || []} />
+            {props.isMaster && id === 'transitions' ? <p className="px-4 text-xs text-text-secondary">Exit master editing to change slide transitions.</p> : <Content {...props} slideElements={props.slide?.elements || []} />}
           </Tabs.Content>
         ))}
       </RibbonDensityProvider>

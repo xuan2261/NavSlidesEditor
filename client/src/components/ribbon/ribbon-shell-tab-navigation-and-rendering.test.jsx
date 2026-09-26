@@ -177,18 +177,19 @@ describe('RibbonShell', () => {
       />
     )
 
-    fireEvent.mouseDown(screen.getByRole('button', { name: /^AI$/i }))
-    fireEvent.mouseDown(screen.getByText('AI Slide Generator'))
-    fireEvent.mouseDown(screen.getByRole('button', { name: /^Share$/i }))
-    fireEvent.mouseDown(screen.getByText('Share Link'))
+    fireEvent.click(screen.getByRole('button', { name: /^AI$/i }))
+    fireEvent.click(screen.getByText('AI Slide Generator'))
+    fireEvent.click(screen.getByRole('button', { name: /^Share$/i }))
+    fireEvent.click(screen.getByText('Share Link'))
     fireEvent.click(screen.getByRole('button', { name: /Present/i }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'From beginning (F5)' }))
 
     expect(onAIGenerator).toHaveBeenCalledTimes(1)
     expect(onShare).toHaveBeenCalledTimes(1)
     expect(onPresent).toHaveBeenCalledTimes(1)
   })
 
-  it('supports keyboard operation for AI and Share action menus', () => {
+  it('supports keyboard operation for AI and Share action menus', async () => {
     const onAICopywriter = vi.fn()
     const onShare = vi.fn()
 
@@ -200,18 +201,20 @@ describe('RibbonShell', () => {
     )
 
     const aiTrigger = screen.getByRole('button', { name: /^AI$/i })
-    fireEvent.keyDown(aiTrigger, { key: 'Enter' })
+    aiTrigger.focus()
+    await userEvent.keyboard('{Enter}')
     expect(screen.getByRole('menu', { name: 'AI menu' })).toBeTruthy()
 
-    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'AI Copywriter' }), { key: ' ' })
+    await userEvent.keyboard(' ')
     expect(onAICopywriter).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('menu', { name: 'AI menu' })).toBeNull()
 
     const shareTrigger = screen.getByRole('button', { name: /^Share$/i })
-    fireEvent.keyDown(shareTrigger, { key: ' ' })
+    shareTrigger.focus()
+    await userEvent.keyboard(' ')
     expect(screen.getByRole('menu', { name: 'Share menu' })).toBeTruthy()
 
-    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Share Link' }), { key: 'Enter' })
+    await userEvent.keyboard('{Enter}')
     expect(onShare).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('menu', { name: 'Share menu' })).toBeNull()
   })
@@ -220,13 +223,13 @@ describe('RibbonShell', () => {
     render(<RibbonHeaderBar />)
 
     const aiTrigger = screen.getByRole('button', { name: /^AI$/i })
-    fireEvent.mouseDown(aiTrigger)
+    fireEvent.click(aiTrigger)
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('menu', { name: 'AI menu' })).toBeNull()
     expect(document.activeElement).toBe(aiTrigger)
 
     const shareTrigger = screen.getByRole('button', { name: /^Share$/i })
-    fireEvent.mouseDown(shareTrigger)
+    fireEvent.click(shareTrigger)
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('menu', { name: 'Share menu' })).toBeNull()
     expect(document.activeElement).toBe(shareTrigger)

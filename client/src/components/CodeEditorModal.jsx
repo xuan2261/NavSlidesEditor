@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useRef } from 'react'
 import { Button, useModalFocusTrap } from '../components/ui'
-import { isBackdropClick } from '../lib/utils'
+import { isBackdropClick, useEscapeClose } from '../lib/utils'
 
 const LANGUAGES = [
   { id: 'plaintext', label: 'Plain Text' },
@@ -37,28 +37,15 @@ export default function CodeEditorModal({
   codeTheme,
   onChangeTheme,
 }) {
-  const [isOpen, setIsOpen] = useState(true)
-  const { dialogRef, handleFocusTrapKeyDown } = useModalFocusTrap({ autoFocus: false })
-
-  const handleClose = () => {
-    setIsOpen(false)
-    onCancel()
-  }
-
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') handleClose() }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  if (!isOpen) return null
+  const sourceRef = useRef(null)
+  const { dialogRef, handleFocusTrapKeyDown } = useModalFocusTrap({ initialFocusRef: sourceRef })
+  useEscapeClose(onCancel)
 
   return (
     <div
       className="fixed inset-0 z-[10000] bg-black/75 flex items-center justify-center"
       onClick={(event) => {
-        if (isBackdropClick(event)) handleClose()
+        if (isBackdropClick(event)) onCancel()
       }}
       role="dialog"
       aria-modal="true"
@@ -73,9 +60,10 @@ export default function CodeEditorModal({
         <div className="px-4 py-3 border-b border-border flex justify-between items-center shrink-0 gap-3">
           <h2 id="code-editor-modal-title" className="font-semibold text-sm">Code Block</h2>
           <select
+            aria-label="Code language"
             value={state.language}
             onChange={(e) => onChange({ ...state, language: e.target.value })}
-            className="bg-hover border border-border text-[#e0e0e0] px-2 py-1 rounded-md text-xs cursor-pointer focus:outline-none focus:border-accent transition-colors"
+            className="bg-hover border border-border text-text-primary px-2 py-1 rounded-md text-xs cursor-pointer focus:outline-none focus:border-accent transition-colors"
           >
             {LANGUAGES.map((l) => (
               <option key={l.id} value={l.id}>
@@ -84,9 +72,10 @@ export default function CodeEditorModal({
             ))}
           </select>
           <select
+            aria-label="Code highlight theme"
             value={codeTheme || 'monokai'}
             onChange={(e) => onChangeTheme(e.target.value)}
-            className="bg-hover border border-border text-[#e0e0e0] px-2 py-1 rounded-md text-xs cursor-pointer focus:outline-none focus:border-accent transition-colors"
+            className="bg-hover border border-border text-text-primary px-2 py-1 rounded-md text-xs cursor-pointer focus:outline-none focus:border-accent transition-colors"
             title="Code highlight theme"
           >
             <optgroup label="Dark">
@@ -114,14 +103,15 @@ export default function CodeEditorModal({
           </div>
         </div>
         <textarea
+          ref={sourceRef}
+          aria-label="Code source"
           value={state.content}
           onChange={(e) => onChange({ ...state, content: e.target.value })}
-          className="flex-1 bg-[#0d0d1a] text-[#e2e8f0] font-mono text-[13px] p-4 md:p-5 border-none outline-none resize-none rounded-b-xl leading-relaxed"
+          className="flex-1 bg-[#0d0d1a] text-[#e2e8f0] font-mono text-[13px] p-4 md:p-5 border-none outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus resize-none rounded-b-xl leading-relaxed"
           style={{ tabSize: 2 }}
           spellCheck={false}
-          autoFocus
           onKeyDown={(e) => {
-            if (e.key === 'Tab') {
+            if (e.key === 'Tab' && !e.shiftKey) {
               e.preventDefault()
               const { selectionStart: s, selectionEnd: end, value } = e.target
               const next = value.substring(0, s) + '  ' + value.substring(end)
