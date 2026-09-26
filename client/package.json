@@ -27,7 +27,7 @@
     "@tiptap/pm": "3.31.3",
     "@tiptap/react": "3.31.3",
     "@tiptap/starter-kit": "3.31.3",
-    "autoprefixer": "^10.5.0",
+    "autoprefixer": "^10.6.1",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "highlight.js": "^11.11.1",
