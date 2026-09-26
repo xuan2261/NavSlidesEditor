@@ -1,7 +1,8 @@
 const path = require('path')
 const { defineConfig, devices } = require('@playwright/test')
-const clientPort = process.env.PLAYWRIGHT_CLIENT_PORT || '4173'
-const serverPort = process.env.PLAYWRIGHT_SERVER_PORT || '3202'
+const useDevServers = process.env.PLAYWRIGHT_USE_DEV_SERVERS === '1'
+const serverPort = process.env.PLAYWRIGHT_SERVER_PORT || (useDevServers ? '3002' : '3202')
+const clientPort = useDevServers ? process.env.PLAYWRIGHT_CLIENT_PORT || '5173' : serverPort
 const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || `http://127.0.0.1:${clientPort}`
 const apiTarget = `http://127.0.0.1:${serverPort}`
 const apiBaseUrl = process.env.PLAYWRIGHT_API_BASE_URL || `${apiTarget}/api`
@@ -117,14 +118,10 @@ module.exports = defineConfig({
       : []),
   ],
   webServer: {
-    // E2E runs against a static production build served by `vite preview`, not the
-    // dev server. The dev server transforms lazy route chunks (App.jsx lazy-loads
-    // EditorPage et al.) on demand; under multi-worker CPU contention that transform
-    // can stall past the mount timeout, intermittently tripping the React error
-    // boundary. Pre-built chunks are served as plain files, removing that race.
-    // NODE_ENV is left non-production so the API rate limiters stay at their high
-    // dev ceilings and the destructive E2E traffic is not throttled.
-    command: `npm run build --workspace=client && npx concurrently "npm run dev --workspace=server" "npm run preview --workspace=client -- --host 127.0.0.1 --port ${clientPort} --strictPort"`,
+    // CI and normal E2E runs consume the already-built client through the same
+    // production Express server used after release. Developers can explicitly opt
+    // into Vite plus the API server with PLAYWRIGHT_USE_DEV_SERVERS=1.
+    command: useDevServers ? 'npm run dev' : 'npm start',
     env: {
       ...process.env,
       DATA_DIR: dataDir,

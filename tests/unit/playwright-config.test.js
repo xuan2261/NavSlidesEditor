@@ -95,4 +95,25 @@ describe('playwright config testIgnore', () => {
     expect(process.env.PLAYWRIGHT_API_BASE_URL).toBe(config.webServer.env.PLAYWRIGHT_API_BASE_URL)
     expect(process.env.PLAYWRIGHT_API_BASE_URL).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/api$/)
   })
+
+  it('uses one production server without Vite or a client rebuild', () => {
+    expect(config.webServer.command).toBe('npm start')
+    expect(config.webServer.command).not.toMatch(/\b(?:vite|build|preview)\b/)
+    expect(config.webServer.url).toBe(config.use.baseURL)
+    expect(new URL(config.use.baseURL).port).toBe(config.webServer.env.PORT)
+    expect(config.webServer.reuseExistingServer).toBe(false)
+  })
+
+  it('retains an explicit local development-server path', () => {
+    process.env.PLAYWRIGHT_USE_DEV_SERVERS = '1'
+    delete process.env.PLAYWRIGHT_TEST_BASE_URL
+    delete process.env.PLAYWRIGHT_API_BASE_URL
+    delete require.cache[require.resolve('../../playwright.config.js')]
+    const devConfig = require('../../playwright.config.js')
+    delete process.env.PLAYWRIGHT_USE_DEV_SERVERS
+
+    expect(devConfig.webServer.command).toBe('npm run dev')
+    expect(devConfig.use.baseURL).toBe('http://127.0.0.1:5173')
+    expect(devConfig.webServer.env.PORT).toBe('3002')
+  })
 })

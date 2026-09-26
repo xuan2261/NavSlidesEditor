@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "kind": "vitest-ci-wall-clock-budget",
+  "status": "pending",
+  "reason": "Local samples exist, but measured authority requires a clean CI-equivalent subject",
+  "targetMedianImprovement": 0.3,
+  "requiredSampleCount": 5,
+  "maxWallSeconds": null,
+  "sampleDurationsSeconds": [],
+  "runnerClass": null,
+  "inventoryHash": null,
+  "configHash": null,
+  "measurementCommit": null,
+  "statistic": null,
+  "varianceMargin": null
+}
