@@ -21,6 +21,6 @@ export function exportPDF(presentation) {
   return runWithFeedback('PDF export failed', () => shared.exportPDF(presentation))
 }
 
-export function presentInWindow(presentation) {
-  return runWithFeedback('Failed to present', () => shared.presentInWindow(presentation))
+export function presentInWindow(presentation, options) {
+  return runWithFeedback('Failed to present', () => shared.presentInWindow(presentation, options))
 }

@@ -777,16 +777,17 @@ function exportPDF(presentation) {
   setTimeout(() => URL.revokeObjectURL(url), 120000)
 }
 
-function presentInWindow(presentation) {
+function presentInWindow(presentation, { startAt } = {}) {
+  const hash = startAt ? `#/${startAt.h}/${startAt.v}` : ''
   if (presentation && presentation.id) {
     // Use server endpoint so vendor assets (reveal.js, katex, etc.) resolve correctly
-    window.open(`/api/presentations/${presentation.id}/present`, '_blank')
+    window.open(`/api/presentations/${presentation.id}/present${hash}`, '_blank')
   } else {
     // Fallback for cases without an ID (e.g. template preview)
     const html = generateRevealHTML(presentation)
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
-    window.open(url, '_blank')
+    window.open(`${url}${hash}`, '_blank')
     setTimeout(() => URL.revokeObjectURL(url), 120000)
   }
 }
