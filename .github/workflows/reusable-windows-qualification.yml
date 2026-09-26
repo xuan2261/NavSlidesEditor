@@ -21,7 +21,8 @@ on:
 permissions:
   contents: read
   actions: read
-
+  id-token: write
+  attestations: write
 jobs:
   qualify:
     runs-on: windows-latest

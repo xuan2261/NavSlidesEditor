@@ -16,7 +16,8 @@ on:
 permissions:
   contents: read
   actions: read
-
+  id-token: write
+  attestations: write
 jobs:
   client:
     runs-on: ubuntu-latest

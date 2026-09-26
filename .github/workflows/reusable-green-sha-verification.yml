@@ -21,7 +21,8 @@ on:
 permissions:
   contents: read
   actions: read
-
+  id-token: write
+  attestations: write
 jobs:
   client:
     uses: ./.github/workflows/reusable-client-artifact.yml
