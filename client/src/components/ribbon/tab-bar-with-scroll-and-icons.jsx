@@ -36,6 +36,17 @@ function sameScrollState(left, right) {
   )
 }
 
+function revealActiveTab(list, trigger) {
+  if (!list?.clientWidth || !trigger) return
+  const style = window.getComputedStyle(list)
+  const left = list.getBoundingClientRect().left + list.clientLeft
+  const visibleLeft = left + (Number.parseFloat(style.paddingLeft) || 0)
+  const visibleRight = left + list.clientWidth - (Number.parseFloat(style.paddingRight) || 0)
+  const bounds = trigger.getBoundingClientRect()
+  if (bounds.left < visibleLeft) list.scrollLeft += bounds.left - visibleLeft
+  else if (bounds.right > visibleRight) list.scrollLeft += bounds.right - visibleRight
+}
+
 function prefersReducedMotion() {
   return typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
@@ -73,7 +84,8 @@ export default function TabBar({ activeTab }) {
   }
 
   const measureScrollState = useCallback(() => {
-    const next = readScrollState(listRef.current)
+    const list = listRef.current
+    const next = readScrollState(list)
     setScrollState((current) => (sameScrollState(current, next) ? current : next))
   }, [])
 
@@ -92,17 +104,21 @@ export default function TabBar({ activeTab }) {
 
     measureScrollState()
     list.addEventListener('scroll', scheduleScrollMeasure, { passive: true })
+    const revealAfterLayout = () => {
+      revealActiveTab(list, list.querySelector('[data-state="active"]'))
+      scheduleScrollMeasure()
+    }
     const observer =
       typeof ResizeObserver === 'undefined'
         ? null
-        : new ResizeObserver(scheduleScrollMeasure)
+        : new ResizeObserver(revealAfterLayout)
     observer?.observe(list)
-    window.addEventListener('resize', scheduleScrollMeasure)
+    window.addEventListener('resize', revealAfterLayout)
 
     return () => {
       list.removeEventListener('scroll', scheduleScrollMeasure)
       observer?.disconnect()
-      window.removeEventListener('resize', scheduleScrollMeasure)
+      window.removeEventListener('resize', revealAfterLayout)
       if (measureFrameRef.current != null) {
         const cancel = window.cancelAnimationFrame || window.clearTimeout
         cancel(measureFrameRef.current)
@@ -115,9 +131,9 @@ export default function TabBar({ activeTab }) {
     const activeTrigger = triggerRefs.current.get(activeTab)
     if (!activeTrigger) return
 
-    activeTrigger.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    revealActiveTab(listRef.current, activeTrigger)
     measureScrollState()
-  }, [activeTab, formatContext.elementType, measureScrollState, visibleTabKey])
+  }, [activeTab, formatContext.elementType, measureScrollState, scrollState.hasOverflow, visibleTabKey])
 
   useLayoutEffect(() => {
     if (!restoreContextualFocusRef.current) return

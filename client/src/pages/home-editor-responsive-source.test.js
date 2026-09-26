@@ -49,7 +49,8 @@ describe('responsive source contracts', () => {
   it('Status bar wraps or hides long attribution text on narrow screens', () => {
     const src = statusBarSource()
 
-    expect(src).toContain('hidden sm:inline-flex')
+    expect(src).toContain("density === 'wide'")
+    expect(src).toContain('overflow-hidden')
     expect(src).toContain('min-w-0')
   })
 })

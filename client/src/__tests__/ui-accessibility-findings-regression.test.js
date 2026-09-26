@@ -56,7 +56,8 @@ describe('verified UI accessibility findings regression guards', () => {
   it('[cap:control.ribbon.active-reveal] keeps active reveal and overflow affordances semantic', () => {
     const source = read('client/src/components/ribbon/tab-bar-with-scroll-and-icons.jsx')
 
-    expect(source).toContain("scrollIntoView({ block: 'nearest', inline: 'nearest' })")
+    expect(source).toContain('function revealActiveTab')
+    expect(source).toContain('revealActiveTab(listRef.current, activeTrigger)')
     expect(source).toContain('Scroll ribbon tabs left')
     expect(source).toContain('Scroll ribbon tabs right')
     expect(source).toContain("aria-orientation=\"horizontal\"")

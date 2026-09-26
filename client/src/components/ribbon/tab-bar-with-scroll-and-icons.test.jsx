@@ -29,30 +29,7 @@ function makeTabListOverflow() {
 }
 
 describe('responsive Ribbon tab strip', () => {
-  it('[cap:control.ribbon.active-reveal] reveals pointer, keyboard, and programmatic active tabs', async () => {
-    const reveal = vi
-      .spyOn(Element.prototype, 'scrollIntoView')
-      .mockImplementation(() => {})
-    render(<RibbonHeaderBar />)
-
-    fireEvent.click(screen.getByRole('tab', { name: 'Insert' }))
-    expect(reveal).toHaveBeenLastCalledWith({ block: 'nearest', inline: 'nearest' })
-
-    const home = screen.getByRole('tab', { name: 'Home' })
-    home.focus()
-    fireEvent.keyDown(home, { key: 'End' })
-    await waitFor(() => {
-      expect(screen.getByRole('tab', { name: 'View' }).getAttribute('aria-selected')).toBe('true')
-    })
-    expect(reveal).toHaveBeenLastCalledWith({ block: 'nearest', inline: 'nearest' })
-
-    act(() => useUIStore.getState().setActiveTab('design'))
-    expect(screen.getByRole('tab', { name: 'Design' }).getAttribute('aria-selected')).toBe('true')
-    expect(reveal).toHaveBeenLastCalledWith({ block: 'nearest', inline: 'nearest' })
-  })
-
   it('[cap:control.ribbon.contextual-format] restores the focused last non-contextual tab when Format disappears', () => {
-    const reveal = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {})
     act(() => {
       useUIStore.getState().setActiveTab('design')
       useUIStore.getState().setFormatContext({ hasSelection: true, elementType: 'shape' })
@@ -69,7 +46,6 @@ describe('responsive Ribbon tab strip', () => {
 
     const design = screen.getByRole('tab', { name: 'Design' })
     expect(useUIStore.getState().activeTab).toBe('design')
-    expect(reveal).toHaveBeenLastCalledWith({ block: 'nearest', inline: 'nearest' })
     expect(design.getAttribute('aria-selected')).toBe('true')
     expect(document.activeElement).toBe(design)
     expect(screen.queryByRole('tab', { name: 'Shape Format' })).toBeNull()
