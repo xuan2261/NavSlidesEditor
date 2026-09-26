@@ -28,11 +28,10 @@ export default function EditorNavigator({ visible, overlay, onCloseOverlay, c })
       <SlidePanel
         slides={c.presentation.slides}
         resolution={c.presentation.resolution}
+        designTokens={c.presentation.designTokens}
+        layoutMasters={c.presentation.layoutMasters}
         currentIndex={c.currentSlideIndex}
-        onSelect={(idx) => {
-          c.setVerticalEdit(null)
-          c.setCurrentSlideIndex(idx)
-        }}
+        onSelect={c.navigateToSlide}
         onAdd={() => c.setShowTemplateModal(true)}
         onAddFromTemplate={() => c.setShowTemplateGallery(true)}
         layoutOptions={c.availableLayouts}
@@ -60,14 +59,7 @@ export default function EditorNavigator({ visible, overlay, onCloseOverlay, c })
         }
         onAddVerticalSlide={c.addChildSlide}
         currentVerticalIndex={c.currentVerticalIndex}
-        onSelectVertical={({ parent, child }) => {
-          const parentSlide = c.presentation.slides[parent]
-          if (!parentSlide) return
-          c.setSelectedElementIds([])
-          c.setEditingElementId(null)
-          c.clearEditingElementRef()
-          c.setVerticalEdit({ parentId: parentSlide.id, child })
-        }}
+        onSelectVertical={({ parent, child }) => c.navigateToSlide(parent, child)}
       />
     </div>
   )

@@ -206,7 +206,7 @@ export const useUIStore = create((set, get) => ({
   fitZoom: () => set({ userZoomMode: false }),
 
   // Slide position + present action setters.
-  setSlidePosition: ({ current, total }) => set({ slidePosition: { current, total } }),
+  setSlidePosition: (slidePosition) => set({ slidePosition }),
   // Plain set on purpose: a function-updater idiom would call fn(state) here and
   // open the present window the moment EditorPage registers the handler.
   setPresentHandler: (fn) => set({ presentHandler: fn }),

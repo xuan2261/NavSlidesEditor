@@ -1,36 +1,8 @@
 import { useEffect, useState } from 'react'
 import { X, Copy, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui'
+import { SlideThumbnailPreview } from './slide-panel/slide-thumbnail-preview'
 
-function getBgStyle(bg) {
-  if (!bg) return { backgroundColor: 'var(--bg-card)' }
-  if (bg.type === 'color') return { backgroundColor: bg.color || 'var(--bg-card)' }
-  if (bg.type === 'gradient') return { background: bg.gradient || 'var(--bg-card)' }
-  if (bg.type === 'image' && bg.image)
-    return {
-      backgroundImage: `url(${bg.image})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      opacity: 0.5,
-  }
-  if (bg.type === 'fx') return { backgroundColor: bg.fx?.fallbackColor || '#0d0221' }
-  return { backgroundColor: 'var(--bg-card)' }
-}
-
-function getMiniPreviewElementStyle(el) {
-  return {
-    position: 'absolute',
-    left: `${(el.x / 1280) * 100}%`,
-    top: `${(el.y / 720) * 100}%`,
-    width: `${((el.width ?? 100) / 1280) * 100}%`,
-    height: `${((el.height ?? 40) / 720) * 100}%`,
-    fontSize: 4,
-    overflow: 'hidden',
-    color: 'var(--text-primary)',
-    pointerEvents: 'none',
-    zIndex: el.zIndex ?? 1,
-  }
-}
 
 function getContextMenuStyle(ctxMenu) {
   return {
@@ -39,35 +11,12 @@ function getContextMenuStyle(ctxMenu) {
   }
 }
 
-function MiniPreview({ slide, idx }) {
-  const els = (slide.elements || []).slice(0, 4)
-  return (
-    <div
-      data-testid={`slide-sorter-preview-${idx}`}
-      className="relative aspect-video w-full overflow-hidden rounded-b-md"
-      style={getBgStyle(slide.background)}
-    >
-      {els.map((el, i) => (
-        <div key={el.id || i} style={getMiniPreviewElementStyle(el)}>
-          {el.type === 'text' && (
-            <span>{(el.content || '').replace(/<[^>]+>/g, ' ').slice(0, 20)}</span>
-          )}
-          {el.type === 'image' && <span className="opacity-40">🖼</span>}
-          {el.type === 'html' && <span className="opacity-40">&lt;/&gt;</span>}
-          {el.type === 'code' && <span className="opacity-40">⌨</span>}
-          {el.type === 'latex' && <span className="opacity-40">∑</span>}
-          {!['text', 'image', 'html', 'code', 'latex'].includes(el.type) && (
-            <span className="opacity-30">{el.type}</span>
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
-
 export default function SlideSorterView({
   slides,
   currentIndex,
+  designTokens,
+  layoutMasters,
+  resolution,
   onSelect,
   onMove,
   onDelete,
@@ -238,7 +187,7 @@ export default function SlideSorterView({
               >
                 {idx + 1}
               </div>
-              <MiniPreview slide={slide} idx={idx} />
+              <SlideThumbnailPreview slide={slide} resolution={resolution} designTokens={designTokens} layoutMasters={layoutMasters} data-testid={`slide-sorter-preview-${idx}`} className="w-full rounded-b-md" />
             </div>
           )
         })}

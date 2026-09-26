@@ -37,6 +37,23 @@ describe('SlideSorterView Phase 1 UX', () => {
     expect(indicator.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
+  it('shows all visible slide content at the presentation resolution with its master theme', () => {
+    const elements = Array.from({ length: 6 }, (_, index) => ({
+      id: `text-${index}`, type: 'text', x: 10, y: index * 60, width: 400, height: 50,
+      content: `Paragraph ${index + 1}`, hidden: index === 1,
+    }))
+    setup({
+      slides: [{ id: 'themed', layoutId: 'master', elements }], resolution: { width: 800, height: 600 },
+      designTokens: { colors: { bg: '#ffffff' } },
+      layoutMasters: [{ id: 'master', name: 'Dark master', tokens: { colors: { bg: '#101020' } }, fixedElements: [], placeholders: [] }],
+    })
+    const preview = screen.getByTestId('slide-sorter-preview-0')
+    expect(preview.style.aspectRatio).toBe('800 / 600')
+    expect(preview.style.backgroundColor).toBe('rgb(16, 16, 32)')
+    expect(screen.getByText('Paragraph 6')).toBeTruthy()
+    expect(screen.queryByText('Paragraph 2')).toBeNull()
+  })
+
   it('pressing Esc calls onClose', () => {
     const onClose = vi.fn()
     setup({ onClose })

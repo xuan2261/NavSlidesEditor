@@ -20,7 +20,7 @@ function ZoomControls() {
         title="Zoom out"
         aria-label="Zoom out"
         onClick={zoomOut}
-        className="ui-coarse-target ui-coarse-target-square h-7 w-7 sm:h-5 sm:w-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
+        className="ui-coarse-target ui-coarse-target-square h-7 w-7 sm:h-5 sm:w-5 flex items-center justify-center rounded hover:bg-black/10 transition-colors cursor-pointer leading-none"
       >
         −
       </button>
@@ -44,7 +44,7 @@ function ZoomControls() {
         title="Zoom in"
         aria-label="Zoom in"
         onClick={zoomIn}
-        className="ui-coarse-target ui-coarse-target-square h-7 w-7 sm:h-5 sm:w-5 flex items-center justify-center rounded hover:bg-white/15 transition-colors cursor-pointer leading-none"
+        className="ui-coarse-target ui-coarse-target-square h-7 w-7 sm:h-5 sm:w-5 flex items-center justify-center rounded hover:bg-black/10 transition-colors cursor-pointer leading-none"
       >
         +
       </button>
@@ -54,13 +54,13 @@ function ZoomControls() {
         title="Fit to window"
         aria-label="Fit to window"
         onClick={fitZoom}
-        className="ui-coarse-target h-7 sm:h-5 px-2 sm:px-1.5 rounded hover:bg-white/15 transition-colors cursor-pointer whitespace-nowrap"
+        className="ui-coarse-target h-7 sm:h-5 px-2 sm:px-1.5 rounded hover:bg-black/10 transition-colors cursor-pointer whitespace-nowrap"
       >
         Fit
       </button>
       <span
         data-testid="statusbar-zoom-display"
-        className="ml-1 opacity-75 tabular-nums min-w-[36px] text-right"
+        className="ml-1 tabular-nums min-w-[36px] text-right"
       >
         {pct}%
       </span>
@@ -68,13 +68,13 @@ function ZoomControls() {
   )
 }
 
-function SlidePosition({ current, total }) {
+function SlidePosition({ current, total, vertical, masterName }) {
+  const label = masterName
+    ? `Editing master: ${masterName}`
+    : `Slide ${current + 1}${vertical != null ? `.${vertical + 1}` : ''} / ${total}`
   return (
-    <span
-      data-testid="statusbar-slide-position"
-      className="opacity-90 tabular-nums whitespace-nowrap"
-    >
-      Slide {current + 1} / {total}
+    <span data-testid="statusbar-slide-position" title={label} className="min-w-0 truncate tabular-nums">
+      {label}
     </span>
   )
 }
@@ -86,8 +86,8 @@ function ViewSwitcher() {
 
   const btn =
     'ui-coarse-target ui-coarse-target-square h-7 w-7 sm:w-6 sm:h-5 flex items-center justify-center rounded transition-colors cursor-pointer'
-  const active = 'bg-white/25'
-  const idle = 'hover:bg-white/15'
+  const active = 'bg-black/20'
+  const idle = 'hover:bg-black/10'
 
   return (
     <div className="flex items-center gap-0.5">
@@ -127,41 +127,18 @@ function ViewSwitcher() {
   )
 }
 
-const iconCls = 'w-[11px] h-[11px]'
-
 export function getStatusBarDensity(width) {
   if (width < 640) return 'compact'
   if (width < 1024) return 'standard'
   return 'wide'
 }
 
-function AttributionItem({ title, path, children, className = '' }) {
-  return (
-    <span
-      className={`flex items-center gap-1.5 opacity-90 transition-opacity hover:opacity-100 ${className}`}
-      title={title}
-    >
-      <svg
-        className={iconCls}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {path}
-      </svg>
-      {children}
-    </span>
-  )
-}
 
 export default function StatusBar() {
-  const { current, total } = useUIStore((s) => s.slidePosition)
-  const editorActive = total > 0
+  const slidePosition = useUIStore((s) => s.slidePosition)
+  const editorActive = slidePosition.total > 0
   const footerRef = useRef(null)
-  const [density, setDensity] = useState('wide')
+  const [density, setDensity] = useState('standard')
 
   useLayoutEffect(() => {
     const node = footerRef.current
@@ -177,52 +154,25 @@ export default function StatusBar() {
     <footer
       ref={footerRef}
       data-density={density}
-      className="min-h-8 sm:h-6 bg-accent text-white flex items-center justify-between gap-2 overflow-hidden px-2 text-[11px] select-none z-[100] shrink-0 font-medium sm:px-6"
+      className="min-h-8 sm:min-h-6 bg-brand-hover text-white flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-2 text-[11px] select-none z-[100] shrink-0 font-medium sm:px-6"
     >
-      <div className="flex min-w-0 items-center h-full gap-2 sm:gap-4">
-        <span
-          data-testid="statusbar-attribution"
-          data-priority="low"
-          className={density === 'wide' ? 'inline-flex' : 'hidden'}
-        >
-          <AttributionItem
-            title="Application Name"
-            path={<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />}
-          >
-            NavSlides Editor
-          </AttributionItem>
-        </span>
-        {editorActive && <SlidePosition current={current} total={total} />}
-      </div>
-
+      {editorActive && <SlidePosition {...slidePosition} />}
+      {density === 'wide' && (
+        <div data-testid="statusbar-attribution" className="flex min-w-0 flex-1 items-center gap-4 overflow-hidden">
+          <span className="truncate" title="NavSlides Editor">NavSlides Editor</span>
+          <span className="min-w-0 truncate" title="Designed by Xuan Bui Thanh - Department of Fundamental Engineering - Vietnam Naval Academy">
+            Designed by Xuan Bui Thanh - Department of Fundamental Engineering - Vietnam Naval Academy
+          </span>
+        </div>
+      )}
       <div
         data-testid="statusbar-critical-controls"
-        className="flex shrink-0 items-center h-full gap-2 sm:gap-4"
+        className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-4"
       >
-        {editorActive && (
-          <>
-            <ViewSwitcher />
-            <ZoomControls />
-          </>
+        {editorActive && <><ViewSwitcher /><ZoomControls /></>}
+        {density !== 'compact' && (
+          <span title="Version">{`v${typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}`}</span>
         )}
-        <AttributionItem
-          title="Author Signature"
-          path={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />}
-          className={`hidden sm:inline-flex min-w-0 truncate ${density === 'wide' ? '' : 'invisible w-0 overflow-hidden'}`}
-        >
-          Designed by Xuan Bui Thanh - Department of Fundamental Engineering - Vietnam Naval Academy
-        </AttributionItem>
-        <AttributionItem
-          title="Version"
-          path={
-            <>
-              <polyline points="16 18 22 12 16 6" />
-              <polyline points="8 6 2 12 8 18" />
-            </>
-          }
-        >
-          {`v${typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}`}
-        </AttributionItem>
       </div>
     </footer>
   )
