@@ -4,7 +4,7 @@ import { SlideThumbnailPreview } from './slide-thumbnail-preview'
 const ITEM_CLASS = 'slide-item group relative rounded-md border-2 transition-colors focus-within:ring-2 focus-within:ring-focus/25'
 
 export function SlideNavigatorItem({
-  slide, index, current, selected, focused, actionsActive, dragOver, slideCount, resolution,
+  slide, index, current, selected, focused, actionsActive, dragOver, slideCount, resolution, designTokens, layoutMasters,
   onActivate, onFocus, onKeyDown, onContextMenu, onDuplicate, onDelete,
   onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd,
   currentVerticalIndex, onSelectVertical, buttonRef,
@@ -42,7 +42,7 @@ export function SlideNavigatorItem({
           {slide.autoAnimate && <Wand2 size={9} />}
         </span>
         {slide.section && <span className="block truncate pl-1 text-[9px] text-white/50">§ {slide.section}</span>}
-        <SlideThumbnailPreview slide={slide} width={resolution.width} height={resolution.height} className="m-1.5" />
+        <SlideThumbnailPreview slide={slide} resolution={resolution} designTokens={designTokens} layoutMasters={layoutMasters} className="m-1.5" />
       </button>
       <div className="absolute right-1 top-1 z-20 flex gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(pointer:coarse)]:opacity-100">
         <button type="button" title="Duplicate" aria-label={`Duplicate slide ${index + 1}`} tabIndex={actionsActive ? 0 : -1} onClick={() => onDuplicate(index)} className="flex min-h-11 min-w-11 items-center justify-center rounded bg-black/60 p-1 text-white"><Copy size={12} /></button>
@@ -56,7 +56,7 @@ export function SlideNavigatorItem({
               <li key={child.id || childIndex} className="mb-1">
                 <button type="button" className={`relative block w-full rounded border-2 ${childCurrent ? 'border-accent' : 'border-transparent'}`} aria-label={`Select vertical slide ${index + 1}.${childIndex + 1}`} aria-current={childCurrent ? 'true' : undefined} onClick={() => onSelectVertical?.({ parent: index, child: childIndex })}>
                   <span className="absolute left-1 top-1 z-10 text-[8px]">{index + 1}.{childIndex + 1}</span>
-                  <SlideThumbnailPreview slide={child} width={resolution.width} height={resolution.height} className="min-h-[24px]" />
+                  <SlideThumbnailPreview slide={child} resolution={resolution} designTokens={designTokens} layoutMasters={layoutMasters} className="min-h-[24px]" />
                 </button>
               </li>
             )
