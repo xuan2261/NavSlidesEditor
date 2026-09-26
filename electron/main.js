@@ -1,15 +1,12 @@
 const { app, BrowserWindow, shell, dialog, Menu } = require('electron')
 const path = require('path')
 const { isTrustedAppUrl, isExternalHttpUrl } = require('./navigation-policy')
-
-// Remove default menu bar (File, Edit, View, Window, Help)
-Menu.setApplicationMenu(null)
+const { acquireSingleInstance, focusExistingWindow } = require('./single-instance')
 
 const PORT = 3002
 let mainWindow
 let serverInstance
 let stopBackend
-
 
 function getResourcePath(...parts) {
   if (app.isPackaged) {
@@ -83,30 +80,41 @@ function createWindow() {
   })
 }
 
-app.whenReady().then(async () => {
-  try {
-    await startBackend()
-    createWindow()
-  } catch (err) {
-    dialog.showErrorBox('Startup Error', `Failed to start: ${err.message}`)
-    app.quit()
-  }
+const hasSingleInstanceLock = acquireSingleInstance({
+  app,
+  onSecondInstance: () => focusExistingWindow(mainWindow),
+})
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+if (!hasSingleInstanceLock) {
+  app.quit()
+} else {
+  // Remove default menu bar (File, Edit, View, Window, Help)
+  Menu.setApplicationMenu(null)
+
+  app.whenReady().then(async () => {
+    try {
+      await startBackend()
+      createWindow()
+    } catch (err) {
+      dialog.showErrorBox('Startup Error', `Failed to start: ${err.message}`)
+      app.quit()
+    }
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    })
   })
-})
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
-})
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit()
+  })
 
-// Quitting must wait for the backend to release the package store writer lock,
-// otherwise the next launch finds the store locked by a process that is gone.
-let quitting = false
-app.on('before-quit', (event) => {
-  if (quitting || !stopBackend) return
-  quitting = true
-  event.preventDefault()
-  stopBackend().catch(() => {}).then(() => app.quit())
-})
+  // Wait for the backend to release the package-store writer lock.
+  let quitting = false
+  app.on('before-quit', (event) => {
+    if (quitting || !stopBackend) return
+    quitting = true
+    event.preventDefault()
+    stopBackend().catch(() => {}).then(() => app.quit())
+  })
+}

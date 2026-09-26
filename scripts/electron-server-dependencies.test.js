@@ -25,8 +25,16 @@ describe('Electron server dependency preparation', () => {
     const manifest = createIsolatedManifest(serverPackage)
     expect(() =>
       validateIsolatedLock(manifest, {
+        name: manifest.name,
+        version: manifest.version,
         lockfileVersion: 3,
-        packages: { '': { dependencies: { express: '4.21.0' } } },
+        packages: {
+          '': {
+            name: manifest.name,
+            version: manifest.version,
+            dependencies: { express: '4.21.0' },
+          },
+        },
       })
     ).toThrow('Electron server lock dependencies do not match server/package.json')
   })

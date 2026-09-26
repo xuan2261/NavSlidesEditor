@@ -24,6 +24,12 @@ function validateIsolatedLock(manifest, lock) {
   if (lock.lockfileVersion !== 3 || !lock.packages || !lock.packages['']) {
     throw new Error('Electron server lock must use package-lock v3')
   }
+  if (lock.name !== manifest.name || lock.packages[''].name !== manifest.name) {
+    throw new Error('Electron server lock identity does not match isolated manifest')
+  }
+  if (lock.version !== manifest.version || lock.packages[''].version !== manifest.version) {
+    throw new Error('Electron server lock version does not match server/package.json')
+  }
   const lockedDependencies = sortObject(lock.packages[''].dependencies)
   if (JSON.stringify(lockedDependencies) !== JSON.stringify(sortObject(manifest.dependencies))) {
     throw new Error('Electron server lock dependencies do not match server/package.json')
