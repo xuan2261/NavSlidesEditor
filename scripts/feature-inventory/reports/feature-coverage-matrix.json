@@ -711,7 +711,7 @@
       "tests": [
         "client/src/__tests__/ui-accessibility-findings-regression.test.js",
         "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx",
-        "client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx"
+        "client/src/components/ribbon/tab-bar-with-scroll-and-icons-viewport.test.jsx"
       ],
       "status": "PASS",
       "depths": [

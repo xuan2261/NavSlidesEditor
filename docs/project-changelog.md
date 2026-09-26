@@ -1,27 +1,53 @@
 # Project Changelog
 
-## Unreleased
+## Unreleased (v1.17.0)
 
-- Hardened post-release live-session authority, default network exposure, upload
-  isolation, and PPTX archive integrity. Current contracts and executable owners
-  are linked from [Live Protocol](system-architecture.md#live-protocol),
-  [Local mutation ingress and reverse proxy](deployment-guide.md#local-mutation-ingress-and-reverse-proxy),
-  [PPTX Import Policy](deployment-guide.md#pptx-import-policy), and
-  [Imported PPTX package contract](export-fidelity-and-limits.md#imported-pptx-package-contract).
-- Package-backed export, present, live presentation, save-as-template, history restore, public share, GitHub push, cloud sync, and explore/fork workflows resolve projection content from package authority rather than stale compatibility JSON; history restore responses are authority-consistent with their successor generation. Covered snapshot/duplicate/fork paths check the exact source head, duplicate package work runs before presentation-file serialization, missing/malformed package heads fail closed, bulk summary/sync reads reuse one store snapshot, and external fork/GitHub/sync JSON strips package authority metadata. Covered package-backed template PUTs reject projection-changing edits; rclone sync stages manifest/blob bundles with per-request workspaces and same-destination serialization. Pending save-as-template is rejected, package-backed template projection edits are immutable, and focused permanent-delete path/owner/reconciliation plus restore/save/delete fencing coverage now exists. Template rollback/outbox cleanup, final snapshot/duplicate/fork race closure, explore rollback, retain/quarantine retry fencing, remote sync resource/publication behavior, and complete portable authority-archive semantics remain active hardening work. The sync bundle is not yet a restorable authority archive or native-fidelity qualification.
-- Imported PPTX charts now remain preserve-only/read-only until qualified. Validated edited-package export fails closed instead of falling back, while a verified immutable original remains the separate recovery path.
-- Added durable browser drafts for pending autosaves, including oversized unload receipts, generation/idempotency-preserving retry, and an explicit remote-first recovery dialog. Drafts clean up only after a matching commit or user-selected remote version; storage-disabled/private-browsing limits remain documented.
-- Corrected the current PPTX import contract: runtime parsing uses `pptxtojson` only; parser-relative corpus metrics and manifest-bound two-pass importer qualification now have separate commands. The current manifest-bound strict report passes all 11 decks with exact source hashes, zero unmapped scene-graph nodes, zero permanent placeholders, and zero blockers. This is importer-corpus evidence only; OfficeCLI and PowerPoint claim gates remain fail-closed.
-- Completed the five-phase full-codebase remediation: deterministic Electron/server dependency closure, operator-only analytics, exact-origin sandboxed Electron, canonical IPv4-mapped/NAT64 endpoint checks, presenter shortcut/timer repair, bounded shutdown, transactional rclone configuration, import cleanup, accessibility/state fixes, shared themes/runtime documentation, and a zero-warning lint baseline. Final source review passes; Windows Electron, Docker artifact/runtime, best-effort PPTX, and strict importer-corpus lanes pass. Release remains bounded because valid Microsoft PowerPoint oracle evidence is unavailable and package-first edited-package claim gates remain fail-closed.
-- Fixed PPTX oracle capture so the deterministic `960x540` viewport is passed explicitly into the browser context before Reveal CSS configuration; this removes the browser-side `VIEWPORT is not defined` failure and is covered by a focused regression assertion.
-- Completed the Phase 06–11 editor/runtime capability cutover: Reveal.js 6.0.1 now ships only through the canonical manifest-owned `/vendor/reveal.js/dist` closure (including `dist/plugin/`); the editor uses compact, standard, and wide workspace/ribbon tiers with extracted modal and viewport-safe overlay primitives.
-- Added validated Action/Hotspot metadata and same-slide Smart Connector endpoint resolution. Edit mode keeps actions inert; browser-only actions are omitted from PPTX with warnings, while connectors flatten to resolved native lines with attachment-semantics warnings.
-- Added bounded linked layout/master authoring and effective-slide resolution. Built-in templates remain materialized presets; PPTX exports resolved layout objects with warnings and neither preserves nor synthesizes native PowerPoint masters.
-- Added image alternative/decorative/long-description and media caption, transcript, audio-description, and track metadata. HTML/offline paths preserve supported browser semantics; PPTX keeps image alt only where supported and warns for unsupported media semantics instead of claiming preservation.
-- Completed master-authoring command routing for select-all, copy/paste/cut/duplicate, media-library insertion, batch updates, deletion, and z-order without mutating the active slide. Client PPTX export now flattens vertical child slides parent-first and includes child notes and server-raster elements.
-- Hardened the GitHub push E2E flow by dismissing the delayed product tour before modal interaction, preventing its Joyride overlay from intercepting the push action.
-- Cleanup audit found no obsolete native prompt, temporary feature flag, migration debug branch, test-only production hook, or dual Reveal runtime path. Required compatibility migrations and explicit fallbacks remain intentional.
+Pending. No release entries are recorded until exact-subject implementation evidence and the
+downstream release gates authorize publication.
 
+## Working-tree draft notes (not release evidence)
+
+- Unified vertical-slide navigation across the navigator, Find, Sorter, timeline and status bar. Master authoring now targets the displayed layout, including rich-text edits and recovery when Undo removes a master.
+- Separated presentation from the beginning and from the current horizontal or vertical slide in the Present menu, shortcuts and command palette.
+- Fixed Speaker Notes and Selection Pane access on desktop and tablet. Inspector focus now scrolls only the inspector, and changing layers ends editing of the previous text element.
+- Expanded the command palette and added shared disabled reasons for unavailable or locked operations. Corrected Line versus Arrow insertion.
+- Replaced schematic thumbnails with source-sized static previews using slide resolution, design tokens and layouts. Preview-only markup allowlists prevent embedded stylesheets and media runtimes from affecting the editor.
+- Kept the active ribbon tab visible after layout changes; repaired native menu activation and keyboard context-menu focus; added Code Editor field labels, STEM modal focus containment and readable theme/status colors.
+- Added a build-once exact-SHA CI draft: one manifest-bound client artifact now feeds Playwright, load, Docker prebuilt, Electron and release consumers; existing-tag release, multi-host receipt, protected signing and attestation gates remain non-publishing until their physical prerequisites pass.
+
+## v1.16.2 — 2026-09-22
+
+- Fixed the packaged Electron startup failure caused by server-side relative
+  imports escaping the packaged `revealjs-shared` module boundary.
+- Hardened release verification so packaged-runtime closure regressions fail
+  before publication.
+- Updated Zod to 4.6.5 and regenerated the isolated Electron server lock.
+
+## v1.16.1 — 2026-09-21
+
+- Repaired dead editor controls for Find, Slide Sorter, and game settings, and
+  guarded TipTap commands after editor destruction.
+- Made application zoom shortcuts take precedence over native page zoom and
+  healed missing legacy element IDs before PPTX export.
+- Reclaimed writer locks safely after process-ID reuse or container restart.
+- Updated supported dependencies, CI runtime pins, coverage thresholds, and
+  release lock metadata.
+
+## v1.16.0 — 2026-09-17
+
+- Completed the production-readiness hardening program across live-session
+  authority, deployment exposure, upload/import integrity, Electron isolation,
+  persistence, shutdown, accessibility, and CI artifact qualification.
+- Completed the editor controls and Reveal.js 6 migration, including the
+  canonical manifest-owned runtime closure and responsive ribbon/workspace
+  behavior.
+- Added validated actions/hotspots, smart connectors, linked layout/master
+  authoring, accessibility metadata, vertical-slide export coverage, and
+  explicit PPTX fallback warnings.
+- Qualified the exact checked-in 11-deck importer corpus with source hashes,
+  zero blockers, zero unmapped scene-graph nodes, and zero permanent
+  placeholders. This remained importer-corpus evidence only; OfficeCLI,
+  edited-package, and Microsoft PowerPoint gates stayed separate.
 
 ## v1.15.1 — 2026-06-30
 
@@ -210,10 +236,12 @@ E2E cleanup and coverage hardening; PPTX import review completion.
 - Closed Q1/Q2 keyboard + README follow-ups from prior smoke-test plan via TDD plan `plans/260523-1230-keyboard-shortcut-and-readme-cleanup-tdd/`. 8 editor-scope shortcuts now fire their store actions; README element-count claim reconciled with `ELEMENT_DEFAULTS`.
 
 ### Fixed
+
 - **Q1 (P1 latent)**: 8 editor-scope keyboard shortcuts (`Ctrl+M` insert slide, `Ctrl+G` group, `Ctrl+Shift+G` ungroup, `Ctrl+]` bring-forward, `Ctrl+[` send-backward, `Ctrl+0` reset zoom, `Ctrl+=` zoom in, `Ctrl+-` zoom out) now invoke their canonical actions. Root cause: 8 callbacks were dispatched by the shortcut registry but never destructured by `useKeyboard`, so the dispatcher silently no-op'd (same bug class as I-003 `Ctrl+K`). Hook now destructures + forwards the 8 props; `EditorPage` wires them to `editor-store` zoom actions, slide-operations `groupElements`/`ungroupElements`, and existing `bringElementForward`/`sendElementBackward` (1-element guard). `client/src/hooks/use-keyboard.js`, `client/src/pages/EditorPage.jsx`.
 - **Q2 (P2 docs)**: README "20 element types" reconciled to 19 (matches `Object.keys(ELEMENT_DEFAULTS).length`); false items "divider" (a `line` preset) and "inline math" (a TipTap text feature, not a type) removed from the prose enumeration. Insert ribbon footnote added explaining the ~27 actions reflect shape/game sub-variants of single types. `README.md`, `docs/project-overview-pdr.md`.
 
 ### Added
+
 - `client/src/hooks/use-keyboard-contract.test.js`: registry-driven `test.each` contract test asserting every editor-scope shortcut in the registry has a forwarded callback in `useKeyboard`. Adding a new editor-scope shortcut without wiring it now fails CI.
 - `client/src/data/element-defaults.test.js`: 10-line count guard pinning `Object.keys(ELEMENT_DEFAULTS).length` to 19; future drift fails CI before README can desync.
 - "Documentation Drift" section in `CLAUDE.md` documenting element-count canonical source and the divider/inline-math non-types.
@@ -223,6 +251,7 @@ E2E cleanup and coverage hardening; PPTX import review completion.
 - Closed 2026-05-23 manual smoke-test issues I-001..I-005 via TDD plan `plans/260523-0900-smoke-test-bug-fixes-tdd/`. Two release-blockers (I-002, I-005) and three minor UX/cosmetic issues (I-001, I-003, I-004) resolved.
 
 ### Fixed
+
 - **I-002 (Medium)**: Legacy fixture decks no longer fail save validation. `elementSchema` in `server/middleware/schemas.js` now defaults missing geometry to `(x=0, y=0, width=100, height=100)`; `.positive()` invariant on width/height preserved so zero/negative still rejects.
 - **I-005 (Medium)**: Storage writes are now atomic (`writeJsonAtomic`: write to `*.tmp.<pid>.<seq>` then rename with Windows-tolerant EPERM/EBUSY/EACCES/EEXIST retries). Prevents `presentations.json` truncation under concurrent reads, `node --watch` restarts, or crash-mid-write. Startup cleanup is PID-scoped to avoid removing in-flight tmp files from the current process. `server/services/storage.js`.
 - **I-001 (Low)**: Trash entry in dashboard sidebar is now `position: sticky bottom-0` with `bg-secondary z-10` and a subtle border-top divider, pinned to the viewport bottom regardless of viewport height or import-warning verbosity. `client/src/pages/HomePage.jsx`.
@@ -230,6 +259,7 @@ E2E cleanup and coverage hardening; PPTX import review completion.
 - **I-004 (Low)**: Footer version is now derived from `package.json` at build time via Vite `define: { __APP_VERSION__: JSON.stringify(pkg.version) }`. `createRequire(import.meta.url)` keeps the build portable across Node 18/20/22/24. Footer displays `vdev` if the define is not applied (jsdom unit tests). `client/vite.config.js`, `client/src/components/layout/StatusBar.jsx`, `eslint.config.mjs`.
 
 ### Added
+
 - `writeJsonAtomic` helper in `server/services/storage.js` (atomic temp+rename pattern with Windows-tolerant retry).
 - Regression test suites: `server/services/storage.test.js` (atomic-write coverage including crash-simulation, PID-scoped cleanup, retry behavior), `client/src/hooks/use-keyboard.test.js` (Ctrl+K dispatcher + hook-integration with `renderHook`), `tests/e2e/regression-smoke-fixes.spec.js` (I-001 default & small viewport, I-003 Ctrl+K, I-004 footer-version-from-package-json).
 

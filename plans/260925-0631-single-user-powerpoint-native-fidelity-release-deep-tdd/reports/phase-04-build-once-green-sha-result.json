@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "phase": 4,
+  "subject": {
+    "sha": "f4211075a5bb8bf4c9b125afa3e1ace2306f409a",
+    "dirty": true
+  },
+  "status": {
+    "functional": "passed",
+    "releaseAuthority": "blocked"
+  },
+  "clientArtifact": {
+    "files": 102,
+    "identity": "3c189f81c5e900d9254eba33743f8dea52c227c65910e0c5cab651ec7d1faf38",
+    "runtimeClosureVerified": true
+  },
+  "localChecks": [
+    {
+      "name": "phase-04-focused-contracts",
+      "status": "passed",
+      "testFiles": 14,
+      "tests": 57
+    },
+    {
+      "name": "workflow-yaml-parse",
+      "status": "passed"
+    },
+    {
+      "name": "phase-04-eslint",
+      "status": "passed"
+    },
+    {
+      "name": "git-diff-check",
+      "status": "passed"
+    },
+    {
+      "name": "client-build",
+      "status": "passed"
+    },
+    {
+      "name": "runtime-closure",
+      "status": "passed"
+    },
+    {
+      "name": "production-playwright-smoke",
+      "status": "passed",
+      "tests": 1
+    }
+  ],
+  "blockedChecks": [
+    {
+      "name": "clean-ci-performance-budget",
+      "reason": "The exact implementation is uncommitted and has not been published to GitHub Actions; local dirty-tree samples cannot authorize the measured budget."
+    },
+    {
+      "name": "docker-prebuilt-physical",
+      "reason": "Docker CLI is not installed in the local environment."
+    },
+    {
+      "name": "electron-windows-package",
+      "reason": "electron-builder failed before packaging because Windows denied the win-unpacked.tmp rename with EPERM in both the normal and fresh temporary output roots."
+    },
+    {
+      "name": "authenticode-and-attestation",
+      "reason": "No approved protected signing provider, publisher identity, RFC 3161 timestamp service, protected GitHub environments, or executed GitHub attestation run is available locally."
+    },
+    {
+      "name": "officecli-and-powerpoint-physical",
+      "reason": "Later physical phases have not produced exact-subject OfficeCLI or Microsoft PowerPoint receipts."
+    },
+    {
+      "name": "release-dry-runs",
+      "reason": "No existing v1.17.0-rc.N tag, disposable protected release environment, or authorization to create remote release state is available."
+    }
+  ],
+  "claims": {
+    "dockerQualified": false,
+    "electronQualified": false,
+    "authenticodeQualified": false,
+    "attestationQualified": false,
+    "officecliQualified": false,
+    "powerpointQualified": false,
+    "releasePublishable": false
+  }
+}

@@ -8,7 +8,10 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.16.2** — fixes the packaged desktop startup crash (`Cannot find module .../shared/src/element-actions.js`) by routing server code through the packaged `revealjs-shared` module, and hardens release CI to catch any future packaged-runtime closure escapes.
+The current published release is **v1.16.2**. Published history also retains
+**v1.16.0** and **v1.16.1**. The next release candidate is the untagged
+**v1.17.0** product version; package manifests own that candidate version, while
+`runtime-versions.json` separately owns runtime and toolchain pins.
 
 <p align="center">
   <img src="website/public/img/editor-empty.png" alt="NavSlides Editor workspace with the ribbon, slide navigator, canvas, and properties panel" width="100%">
@@ -42,8 +45,9 @@ need all three:
 The primary users are academics and researchers, educators and students,
 developer speakers, and privacy-conscious operators. The scope is deliberate:
 NavSlides is a single-user, self-hosted editor rather than a hosted SaaS or
-real-time collaborative document service. Internet-facing deployments therefore
-need the external authentication boundary described in the
+real-time collaborative document service. One application process is supported;
+horizontal workers, cluster mode, and tenant isolation are not. Internet-facing
+deployments therefore need the external authentication boundary described in the
 [Security Model](#security-model) and
 [deployment guide](docs/deployment-guide.md).
 
@@ -63,6 +67,8 @@ the container but publishes to host loopback unless `NAVSLIDES_PUBLISH_HOST`
 is set. Use `docker compose logs -f` to inspect the service, or
 `docker compose up -d --build` after pulling updates. Internet-facing
 deployments require an external authentication layer and reverse proxy.
+The image runs as fixed non-root UID/GID `10001:10001`; Compose reports healthy
+only after `GET /health/ready` confirms storage, package ownership, and recovery.
 
 ### Desktop app
 
@@ -246,6 +252,11 @@ Named snapshots saved per presentation, restore any previous version, delete ind
 
 All data lives in `server/data/` (presentations, templates, share tokens, GitHub config, settings, analytics, media metadata, history snapshots, rclone config) and `server/uploads/` (media). Docker uses named volumes `revealjs-data` and `revealjs-uploads`. All locations are created automatically on first run.
 
+Back up both volumes at one stopped consistency point with
+`npm run backup:docker`; restore only into empty volumes with
+`npm run restore:docker -- -BackupDirectory <path>`. The manifest verifies both
+archives before extraction. See the [deployment guide](docs/deployment-guide.md#backup-and-restore-docker).
+
 ---
 
 ## Security Model
@@ -263,7 +274,13 @@ Still review issues that cross a trust boundary, including:
 - credential leakage, path traversal, SSRF, command injection, or data loss
 - missing auth protections when deploying beyond local/private single-user use
 
-For internet-facing or multi-user deployments, place NavSlides Editor behind an external authentication layer and treat all editor/API content as privileged. `/api/analytics/:id` is an owner/editor route: share tokens do not authorize it, and its response exposes only aggregate link labels plus timestamp/referrer-host events. If a proxy makes `/share/:token` public, keep `/api/analytics`, presentation APIs, and editor routes behind operator authentication.
+NavSlides has no built-in authentication and no multi-tenant isolation. For
+internet-facing use, place the whole editor/API behind an external authentication
+layer and treat all content as privileged. `/api/analytics/:id` is an
+owner/editor route: share tokens do not authorize it, and its response exposes
+only aggregate link labels plus timestamp/referrer-host events. If a proxy makes
+`/share/:token` public, keep `/api/analytics`, presentation APIs, and editor
+routes behind operator authentication.
 
 ---
 

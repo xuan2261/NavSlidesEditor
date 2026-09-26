@@ -14,6 +14,9 @@ const expected = {
   undici: '7.29.0',
   playwright: '1.63.0',
   playwrightImage: 'mcr.microsoft.com/playwright:v1.63.0-jammy',
+  playwrightChromiumRevision: '1243',
+  syft: '1.52.0',
+  trivy: '0.74.0',
 }
 
 const readText = (...parts) => readFileSync(resolve(root, ...parts), 'utf8').replace(/\r\n/g, '\n')
@@ -69,27 +72,47 @@ describe('production runtime closure contract', () => {
     ].map((match) => match[1])
     expect(playwrightImages.length).toBeGreaterThan(0)
     expect(new Set(playwrightImages)).toEqual(new Set([expected.playwrightImage]))
+    expect(workflows).toContain(`--chromium-revision ${expected.playwrightChromiumRevision}`)
+    expect(workflows).toContain(`syft-version: v${expected.syft}`)
+    expect(workflows).toContain(`version: v${expected.trivy}`)
   })
 
   it('qualifies the production Docker artifact in the required CI fan-in', () => {
-    const workflow = readText(
+    const main = readText(
       '.github',
       'workflows',
       'github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml'
     )
+    const workflow = `${main}\n${readText(
+      '.github',
+      'workflows',
+      'reusable-docker-qualification.yml'
+    )}\n${readText('scripts', 'ci', 'qualify-docker-runtime.sh')}`
 
     expect(workflow).toContain('docker-artifact:')
-    expect(workflow).toContain('docker build --tag navslides-editor:ci .')
+    expect(workflow).toContain('path: .tmp/ci-client-artifact')
+    expect(workflow).toContain('verify-client-dist-manifest.mjs')
+    expect(workflow).toContain(
+      'docker build --target production-prebuilt --tag navslides-editor:ci .'
+    )
     expect(workflow).toContain('node scripts/verify-runtime-closure.js --require-client-dist')
     expect(workflow).toContain('/vendor/socket.io/socket.io.min.js')
     expect(workflow).toContain('/api/pptx/import')
     expect(workflow).toContain('/pptx-original')
     expect(workflow).toContain('docker restart navslides-editor-ci')
-    expect(workflow).toMatch(/required-checks:[\s\S]*needs:[\s\S]*- docker-artifact/)
+    expect(main).toMatch(/required-checks:[\s\S]*needs:[\s\S]*- docker-artifact/)
   })
 
   it('uses immutable action pins and npm ci in the release workflow', () => {
-    const workflow = readText('.github', 'workflows', 'release.yml')
+    const releaseFiles = [
+      'release.yml',
+      'reusable-client-artifact.yml',
+      'reusable-green-sha-verification.yml',
+      'reusable-windows-qualification.yml',
+    ]
+    const workflow = releaseFiles
+      .map((name) => readText('.github', 'workflows', name))
+      .join('\n')
 
     expect(workflow).toContain('actions/checkout@11d5960a326750d5838078e36cf38b85af677262')
     expect(workflow).toContain('actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020')
@@ -112,6 +135,8 @@ describe('production runtime closure contract', () => {
     delete expectedDependencies['revealjs-shared']
 
     expect(isolatedLock.lockfileVersion).toBe(3)
+    expect(isolatedLock.version).toBe(serverPkg.version)
+    expect(isolatedLock.packages[''].version).toBe(serverPkg.version)
     expect(isolatedLock.packages[''].dependencies).toEqual(expectedDependencies)
     expect(readText('scripts', 'prepare-electron.js')).toContain(
       "['ci', '--omit=dev', '--ignore-scripts']"

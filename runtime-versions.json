@@ -7,5 +7,8 @@
   "tiptap": "3.31.3",
   "undici": "7.29.0",
   "playwright": "1.63.0",
-  "playwrightImage": "mcr.microsoft.com/playwright:v1.63.0-jammy"
+  "playwrightImage": "mcr.microsoft.com/playwright:v1.63.0-jammy",
+  "playwrightChromiumRevision": "1243",
+  "syft": "1.52.0",
+  "trivy": "0.74.0"
 }

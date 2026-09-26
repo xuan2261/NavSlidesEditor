@@ -5,3 +5,10 @@ NavSlides Editor is licensed under the **GNU Affero General Public License v3.0 
 ## Upstream attribution
 
 This documentation site is adapted from the [parallax-presentations](https://github.com/jbirky/parallax-presentations) VitePress docs by jbirky, used under the AGPL-3.0 license. Pages have been ported and rewritten to reflect NavSlides Editor's feature set; original structure and copy have been preserved where it remains accurate.
+
+NavSlides also contains an optional compatibility integration for
+[OfficeCLI](https://github.com/iOfficeAI/OfficeCLI), pinned to v1.0.135. The
+checked-in qualification manifest identifies the upstream license as
+Apache-2.0. NavSlides does not bundle or redistribute OfficeCLI. This
+attribution does not grant or determine redistribution rights; operators must
+obtain OfficeCLI separately and review its upstream license and notices.

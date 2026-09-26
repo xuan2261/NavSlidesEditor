@@ -29,6 +29,8 @@ The container:
 
 - Builds React frontend and bundles it with the Express server
 - Installs rclone for cloud sync support
+- Runs as fixed unprivileged UID/GID `10001:10001`
+- Uses `/health/ready` for Docker and Compose health
 - Creates two named volumes for persistence:
   - `revealjs-data` — presentations, templates, share tokens, version history
   - `revealjs-uploads` — uploaded images, videos, audio
@@ -42,6 +44,7 @@ provides the required external authentication.
 services:
   revealjs-editor:
     build: .
+    user: '10001:10001'
     environment:
       NAVSLIDES_LISTEN_HOST: 0.0.0.0
       NAVSLIDES_PUBLISH_HOST: ${NAVSLIDES_PUBLISH_HOST:-127.0.0.1}
@@ -50,6 +53,12 @@ services:
     volumes:
       - revealjs-data:/app/server/data
       - revealjs-uploads:/app/server/uploads
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3002/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
     restart: unless-stopped
 volumes:
   revealjs-data:
@@ -88,7 +97,16 @@ Multi-stage build (confirmed at `Dockerfile` in root):
 1. **Builder stage** — pins Node.js 22.22.0 on Debian Bookworm Slim, installs the workspace lockfile without lifecycle scripts, publishes the exact Reveal.js 6.0.1 `dist/` tree plus other vendor assets, then builds the client.
 2. **Production stage** — pins the same Node.js 22.22.0 image, installs rclone and the lock-derived server runtime dependency set, installs Playwright Chromium, copies the built client and published vendor assets, then verifies runtime closure.
 
+CI uses the separate `production-prebuilt` target. It downloads the single
+manifest-bound client artifact for the exact subject SHA, verifies every byte,
+and then assembles the image without recompiling the client. Normal local
+`docker build .` keeps the source-build path.
+
 Vendor publication records runtime versions and hashes in `server/vendor/vendor-manifest.json`. The final command and server prestart verification reject a missing required Reveal.js asset, a version other than 6.0.1, a hash mismatch, or a legacy `reveal.js/plugin/` tree before `node server/index.js` starts.
+
+The final image creates both mount points for UID/GID `10001:10001` and never
+falls back to root. Existing bind mounts or migrated named volumes must be made
+writable by that identity before startup.
 
 ---
 
@@ -183,6 +201,7 @@ npm run electron:dev
 | `PORT`                      | `3002`                      | HTTP listen port                                                                                                            |
 | `NAVSLIDES_LISTEN_HOST`     | `127.0.0.1`                 | Server bind host; Docker sets `0.0.0.0` inside the container                                                                |
 | `NAVSLIDES_PUBLISH_HOST`    | `127.0.0.1`                 | Docker host-side publish address; changing it does not provide authentication                                               |
+| `NAVSLIDES_WORKERS`         | `1`                         | Supported process count; values other than `1` fail with `UNSUPPORTED_MULTI_PROCESS_TOPOLOGY`                              |
 | `SLIDES_DATA_DIR`           | `server/data/`              | Directory for JSON data files                                                                                               |
 | `SLIDES_UPLOADS_DIR`        | `server/uploads/`           | Directory for uploaded files                                                                                                |
 | `NODE_ENV`                  | `development`               | Set to `production` to disable Vite proxy and serve `client/dist/`                                                          |
@@ -195,6 +214,22 @@ npm run electron:dev
 | `PPTX_EMF_BINARY_SHA256`    | unset                       | SHA-256 pin required by the EMF/WMF policy                                                                                  |
 
 Set via shell, `.env` file (manually), or Docker environment config.
+
+### Health and supported topology
+
+- `GET /health/live` returns `200` when the HTTP process is serving. It does not
+  inspect dependencies.
+- `GET /health/ready` returns `200` only after package-store initialization and
+  writer ownership, writable data/uploads probes, and startup recovery. It
+  returns `503` during startup, shutdown, or durable recovery degradation.
+- Responses contain only schema version, status, bounded reason codes, and
+  uptime. They do not expose paths, filenames, tokens, hashes, or error text.
+
+Only one NavSlides server process may use a deployment's persistent roots.
+`NAVSLIDES_WORKERS`, `WEB_CONCURRENCY`, `PM2_INSTANCES`, `INSTANCE_COUNT`, and
+`CLUSTER_WORKERS` must be unset or `1`; Node cluster workers are rejected.
+Socket.IO rooms, import jobs, and file/package locks are process-local, so
+horizontal scaling is unsupported.
 
 ### Local mutation ingress and reverse proxy
 
@@ -277,23 +312,36 @@ PPTX admission returns a one-time per-job capability. Its plaintext handoff is m
 | `server/data/tmp-pptx-imports/`  | Temporary PPTX import uploads         |
 | `server/uploads/`                | Uploaded images, videos, audio        |
 
-All directories are created automatically on first run.
+All directories are created automatically on first run. On POSIX,
+`share-tokens.json`, `github-config.json`, `settings.json`, `rclone.conf`, and
+their atomic replacement candidates are created or tightened to owner-only
+`0600`. Windows does not implement POSIX mode bits; use NTFS ACLs to restrict the
+same files to the account running NavSlides. The application does not claim that
+`chmod 0600` provides a Windows ACL guarantee.
 
-### Backup (Docker)
+### Backup and Restore (Docker)
 
-```bash
-# Export presentations JSON from volume
-docker run --rm \
-  -v revealjs-data:/data \
-  -v $(pwd):/backup \
-  alpine cp /data/presentations.json /backup/presentations.json
+Backups contain credentials, share tokens, author content, package originals,
+history, and media. Store them with the same care as the live volumes.
 
-# Export entire data directory
-docker run --rm \
-  -v revealjs-data:/data \
-  -v $(pwd):/backup \
-  alpine tar czf /backup/revealjs-data-backup.tar.gz /data
+```powershell
+# Captures pre-state, stops only a running service, archives both volumes,
+# writes SHA-256 hashes to manifest.json, and restarts in finally.
+npm run backup:docker -- -OutputDirectory .\backups\navslides-20260925
+
+# Restore into a separate Compose project with new, empty volumes.
+$env:COMPOSE_PROJECT_NAME = "navslides-restore-drill"
+docker compose build
+npm run restore:docker -- -BackupDirectory .\backups\navslides-20260925
 ```
+
+The backup script never calls `docker compose down -v`. A backup/snapshot error
+and a restart error are retained and reported separately; either fails the
+command. Restore verifies both archive hashes before extraction, refuses a
+running service or non-empty target volume, starts the service, waits for
+readiness, and checks presentations JSON, package originals, history, settings,
+and uploaded-media retrieval. Remove the drill project only after verifying it;
+do not point restore at volumes containing data you need.
 
 ---
 
@@ -361,8 +409,22 @@ The repository includes GitHub Actions workflows for validation and Electron rel
 
 ### Release
 
-- `Build & Release Electron` builds the Windows Electron package and creates a GitHub Release asset when a `v*` tag is pushed or a manual dispatch is used.
+- Main CI builds the client once as `client-dist-v1-<full-sha>`. Playwright,
+  load, Docker, and Windows Electron consumers download and verify those exact
+  bytes before use.
+- `Build & Release Electron` accepts only an existing `v<package.version>` or
+  `v<package.version>-rc.N` tag whose target is the exact successful main-CI
+  subject. Manual dispatch is rerun/recovery by existing tag name only.
+- Windows signing, draft staging, and final publication use separate protected
+  environments. Missing physical Office/PowerPoint receipts, signing identity,
+  trusted RFC 3161 timestamp, post-download verification, or attestation blocks
+  publication. There is no unsigned public fallback.
 - Linux and macOS Electron packages exist as local `electron-builder` scripts but are not part of the current release workflow.
+
+For a failed rerun, keep the tag immutable and rerun against the same commit.
+If the retained client or Linux receipt artifact expired, rerun full main CI for
+that same SHA. Never move the tag, rebuild from a different SHA, or delete an
+in-progress public release to hide a failed gate.
 
 Test commands run locally:
 
@@ -393,6 +455,8 @@ Current baseline file:
 ## Security Notes
 
 - The application has **no built-in authentication**. Do not expose port 3002 directly to the internet without a reverse proxy + auth layer (e.g., Nginx + HTTP Basic Auth, Authelia, Cloudflare Access).
+- The supported model is one operator, one server process, and one pair of
+  persistent roots. There is no tenant isolation or supported HA/cluster mode.
 - Public share capabilities authorize only their `/share/:token` presentation flow. They do not authorize `/api/analytics/:id`; keep analytics and editor APIs behind operator authentication.
 - GitHub tokens are stored in plaintext in `github-config.json`. Restrict filesystem access accordingly.
 - File-backed settings may contain sensitive values such as API keys or sync credentials. Do not commit or deploy those files publicly.

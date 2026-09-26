@@ -1,0 +1,2810 @@
+{
+  "schemaVersion": 1,
+  "kind": "vitest-legacy-inventory",
+  "capturedAt": "2026-09-25T15:48:42.958Z",
+  "commit": "f4211075a5bb8bf4c9b125afa3e1ace2306f409a",
+  "branch": "feature/local-pptx-native-fidelity-sync",
+  "dirtyStatus": [
+    " M .github/workflows/electron-server-lock-refresh.yml",
+    " M NOTICE",
+    " M README.md",
+    " M client/package.json",
+    " M client/src/__tests__/ui-accessibility-findings-regression.test.js",
+    " M client/src/components/AnimationPreviewModal.jsx",
+    " M client/src/components/CodeEditorModal.jsx",
+    " M client/src/components/EditorModals.jsx",
+    " M client/src/components/EditorModals.test.jsx",
+    " M client/src/components/PropertiesPanel.jsx",
+    " M client/src/components/SelectionPane.jsx",
+    " M client/src/components/SlidePanel.jsx",
+    " M client/src/components/SlidePanel.test.jsx",
+    " M client/src/components/SlideSorterView.jsx",
+    " M client/src/components/SlideSorterView.test.jsx",
+    " M client/src/components/command-palette.jsx",
+    " M client/src/components/editor/editor-canvas-workspace.jsx",
+    " M client/src/components/editor/editor-inspector.jsx",
+    " M client/src/components/editor/editor-navigator.jsx",
+    " M client/src/components/editor/editor-page-chrome.jsx",
+    " M client/src/components/editor/editor-panel-keyboard-propagation.test.jsx",
+    " M client/src/components/editor/editor-ribbon.jsx",
+    " M client/src/components/layout/StatusBar.jsx",
+    " M client/src/components/layout/StatusBar.test.jsx",
+    " M client/src/components/ribbon/controls/arrange-controls.jsx",
+    " M client/src/components/ribbon/controls/clipboard-buttons.jsx",
+    " M client/src/components/ribbon/design-tab-content.jsx",
+    " M client/src/components/ribbon/home-tab-content.jsx",
+    " M client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.jsx",
+    " M client/src/components/ribbon/ribbon-header-bar.jsx",
+    " M client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.jsx",
+    " M client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.test.jsx",
+    " M client/src/components/ribbon/ribbon-panel.jsx",
+    " M client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx",
+    " M client/src/components/ribbon/ribbon-view-mode-controls-content.jsx",
+    " M client/src/components/ribbon/ribbon-view-tab-mode-controls-and-window-panel-toggles.test.jsx",
+    " M client/src/components/ribbon/tab-bar-with-scroll-and-icons.jsx",
+    " M client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx",
+    " M client/src/components/slide-panel/slide-navigator-item.jsx",
+    " M client/src/components/slide-panel/slide-thumbnail-preview.jsx",
+    " M client/src/components/stem-simulation-preset-modal.jsx",
+    " M client/src/components/stem-simulation-preset-modal.test.jsx",
+    " M client/src/hooks/editor-controller/use-editor-command-model.js",
+    " M client/src/hooks/editor-controller/use-editor-keyboard-controller.js",
+    " M client/src/hooks/editor-controller/use-editor-layout-controller.js",
+    " M client/src/hooks/editor-controller/use-editor-rich-text-controller.js",
+    " M client/src/hooks/editor-controller/use-editor-selection-controller.js",
+    " M client/src/index.css",
+    " M client/src/pages/EditorPage.jsx",
+    " M client/src/pages/__tests__/editor-page-ai-generate.characterization.test.jsx",
+    " M client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx",
+    " D client/src/pages/__tests__/editor-page-composition-root.test.js",
+    " M client/src/pages/editor-live-presenter-route-state.test.jsx",
+    " M client/src/pages/home-editor-responsive-source.test.js",
+    " M client/src/stores/ui-store.js",
+    " M client/src/utils/generateHTML.js",
+    " M client/src/utils/tailwind-inline-style-audit.test.js",
+    " M docs/codebase-summary.md",
+    " M docs/project-changelog.md",
+    " M docs/project-overview-pdr.md",
+    " M docs/project-roadmap.md",
+    " M docs/system-architecture.md",
+    " M docs/upstream-parity-matrix.md",
+    " M electron/server-package-lock.json",
+    " M package-lock.json",
+    " M package.json",
+    " M plans/archive/260523-0500-upstream-parity-verification-tdd/plan.md",
+    " M scripts/electron-server-dependencies.js",
+    " M scripts/electron-server-dependencies.test.js",
+    " M scripts/update-electron-server-lock.js",
+    " M scripts/update-workspace-lock.js",
+    " M server/package.json",
+    " M server/services/pptx-import/officecli/qualification-manifest.json",
+    " M shared/package.json",
+    " M shared/src/htmlGenerator.js",
+    " M shared/tests/__snapshots__/htmlgenerator-golden-baseline.test.js.snap",
+    " M tests/unit/electron-release-readiness-contract.test.js",
+    " M tests/unit/production-runtime-closure-contract.test.js",
+    " M tests/unit/website-bootstrap-workspace-structure-and-config-presence.test.js",
+    " M website/NOTICE.md",
+    " M website/package.json",
+    "?? .vitepress/cache/deps/_metadata.json",
+    "?? .vitepress/cache/deps/package.json",
+    "?? .vitepress/cache/deps/vitepress_n_@vue_devtools-api.js",
+    "?? .vitepress/cache/deps/vitepress_n_@vue_devtools-api.js.map",
+    "?? .vitepress/cache/deps/vitepress_n_@vueuse_core.js",
+    "?? .vitepress/cache/deps/vitepress_n_@vueuse_core.js.map",
+    "?? .vitepress/cache/deps/vue.js",
+    "?? .vitepress/cache/deps/vue.runtime.esm-bundler-D4M2X7UN.js",
+    "?? .vitepress/cache/deps/vue.runtime.esm-bundler-D4M2X7UN.js.map",
+    "?? client/src/components/CodeEditorModal.test.jsx",
+    "?? client/src/components/editor-control-audit.regression.test.jsx",
+    "?? client/src/components/editor-review-findings.regression.test.jsx",
+    "?? client/src/components/ribbon/controls/command-capability-controls.test.jsx",
+    "?? client/src/components/ribbon/editor-command-availability.regression.test.jsx",
+    "?? client/src/components/ribbon/ribbon-header-bar.test.jsx",
+    "?? client/src/components/ribbon/tab-bar-with-scroll-and-icons-viewport.test.jsx",
+    "?? client/src/components/slide-panel/slide-thumbnail-preview.test.jsx",
+    "?? client/src/components/slide-panel/thumbnail-markup-safety.js",
+    "?? client/src/pages/__tests__/editor-authoring-context.regression.test.jsx",
+    "?? client/src/utils/editor-command-availability.js",
+    "?? client/src/utils/editor-command-availability.test.js",
+    "?? config/vitest/legacy-vitest.config.mjs",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-01-start.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-02-release-state-and-documentation-governance.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-03-vitest-topology-and-full-suite-performance.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-04-build-once-ci-and-green-sha-release.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-05-single-user-operational-hardening.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-06-compatibility-projection-and-durable-media-recovery.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-07-package-authority-and-matrix-g0.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-08-direct-officecli-qualification-g1.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-09-native-reimport-and-transactional-publication.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-10-physical-edited-package-seed-g2.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-11-central-mutation-gating-and-primitive-g4-rows.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-12-native-chart-and-workbook-editability.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-13-shared-pptx-export-plan-and-parity.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-14-module-decomposition-and-registry-cleanup.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-15-powerpoint-oracle-and-windows-artifact-g3-g5.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-16-final-full-verification-and-release-rehearsal.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/plan.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/baseline-characterization.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/decisions.tsv",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/officecli-physical-feasibility-blocker.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/phase-01-replan-after-officecli-spike.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/release-scope-manifest.json",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-artifacts.sha256",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-invalidation.json",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-raw/full-suite-run-1.json",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-raw/full-suite-run-1.stderr.txt",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-raw/full-suite-run-1.stdout.txt",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline.json",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline.sha256",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-legacy-inventory.json",
+    "?? plans/journals/2026-09-25-plan-single-user-powerpoint-native-fidelity-release.md",
+    "?? scripts/lock-version-metadata.js",
+    "?? scripts/lock-version-metadata.test.js",
+    "?? scripts/officecli/physical-feasibility-receipt.mjs",
+    "?? scripts/officecli/physical-feasibility-support.mjs",
+    "?? scripts/officecli/run-physical-feasibility.mjs",
+    "?? scripts/vitest/baseline-support.mjs",
+    "?? scripts/vitest/baseline-support.test.mjs",
+    "?? scripts/vitest/benchmark-full-suite.mjs",
+    "?? scripts/vitest/build-test-inventory.mjs",
+    "?? scripts/workspace-lock.js",
+    "?? scripts/workspace-lock.test.js",
+    "?? server/services/pptx-import/officecli/physical-feasibility-contract.test.js",
+    "?? server/services/pptx-import/officecli/physical-feasibility.test.js",
+    "?? shared/tests/presentation-start-position.test.js",
+    "?? test_derive.cjs",
+    "?? test_sm.cjs",
+    "?? test_source_map.cjs",
+    "?? tests/unit/release-scope-governance-contract.test.js",
+    "?? tests/unit/release-scope-governance-fixtures.js",
+    "?? tests/unit/release-version-governance-contract.test.js",
+    "?? tests/unit/release-version-governance-helpers.js"
+  ],
+  "externalDirtyStatus": [
+    " M .github/workflows/electron-server-lock-refresh.yml",
+    " M NOTICE",
+    " M README.md",
+    " M client/package.json",
+    " M client/src/__tests__/ui-accessibility-findings-regression.test.js",
+    " M client/src/components/AnimationPreviewModal.jsx",
+    " M client/src/components/CodeEditorModal.jsx",
+    " M client/src/components/EditorModals.jsx",
+    " M client/src/components/EditorModals.test.jsx",
+    " M client/src/components/PropertiesPanel.jsx",
+    " M client/src/components/SelectionPane.jsx",
+    " M client/src/components/SlidePanel.jsx",
+    " M client/src/components/SlidePanel.test.jsx",
+    " M client/src/components/SlideSorterView.jsx",
+    " M client/src/components/SlideSorterView.test.jsx",
+    " M client/src/components/command-palette.jsx",
+    " M client/src/components/editor/editor-canvas-workspace.jsx",
+    " M client/src/components/editor/editor-inspector.jsx",
+    " M client/src/components/editor/editor-navigator.jsx",
+    " M client/src/components/editor/editor-page-chrome.jsx",
+    " M client/src/components/editor/editor-panel-keyboard-propagation.test.jsx",
+    " M client/src/components/editor/editor-ribbon.jsx",
+    " M client/src/components/layout/StatusBar.jsx",
+    " M client/src/components/layout/StatusBar.test.jsx",
+    " M client/src/components/ribbon/controls/arrange-controls.jsx",
+    " M client/src/components/ribbon/controls/clipboard-buttons.jsx",
+    " M client/src/components/ribbon/design-tab-content.jsx",
+    " M client/src/components/ribbon/home-tab-content.jsx",
+    " M client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.jsx",
+    " M client/src/components/ribbon/ribbon-header-bar.jsx",
+    " M client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.jsx",
+    " M client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.test.jsx",
+    " M client/src/components/ribbon/ribbon-panel.jsx",
+    " M client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx",
+    " M client/src/components/ribbon/ribbon-view-mode-controls-content.jsx",
+    " M client/src/components/ribbon/ribbon-view-tab-mode-controls-and-window-panel-toggles.test.jsx",
+    " M client/src/components/ribbon/tab-bar-with-scroll-and-icons.jsx",
+    " M client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx",
+    " M client/src/components/slide-panel/slide-navigator-item.jsx",
+    " M client/src/components/slide-panel/slide-thumbnail-preview.jsx",
+    " M client/src/components/stem-simulation-preset-modal.jsx",
+    " M client/src/components/stem-simulation-preset-modal.test.jsx",
+    " M client/src/hooks/editor-controller/use-editor-command-model.js",
+    " M client/src/hooks/editor-controller/use-editor-keyboard-controller.js",
+    " M client/src/hooks/editor-controller/use-editor-layout-controller.js",
+    " M client/src/hooks/editor-controller/use-editor-rich-text-controller.js",
+    " M client/src/hooks/editor-controller/use-editor-selection-controller.js",
+    " M client/src/index.css",
+    " M client/src/pages/EditorPage.jsx",
+    " M client/src/pages/__tests__/editor-page-ai-generate.characterization.test.jsx",
+    " M client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx",
+    " D client/src/pages/__tests__/editor-page-composition-root.test.js",
+    " M client/src/pages/editor-live-presenter-route-state.test.jsx",
+    " M client/src/pages/home-editor-responsive-source.test.js",
+    " M client/src/stores/ui-store.js",
+    " M client/src/utils/generateHTML.js",
+    " M client/src/utils/tailwind-inline-style-audit.test.js",
+    " M docs/codebase-summary.md",
+    " M docs/project-changelog.md",
+    " M docs/project-overview-pdr.md",
+    " M docs/project-roadmap.md",
+    " M docs/system-architecture.md",
+    " M docs/upstream-parity-matrix.md",
+    " M electron/server-package-lock.json",
+    " M package-lock.json",
+    " M package.json",
+    " M plans/archive/260523-0500-upstream-parity-verification-tdd/plan.md",
+    " M scripts/electron-server-dependencies.js",
+    " M scripts/electron-server-dependencies.test.js",
+    " M scripts/update-electron-server-lock.js",
+    " M scripts/update-workspace-lock.js",
+    " M server/package.json",
+    " M server/services/pptx-import/officecli/qualification-manifest.json",
+    " M shared/package.json",
+    " M shared/src/htmlGenerator.js",
+    " M shared/tests/__snapshots__/htmlgenerator-golden-baseline.test.js.snap",
+    " M tests/unit/electron-release-readiness-contract.test.js",
+    " M tests/unit/production-runtime-closure-contract.test.js",
+    " M tests/unit/website-bootstrap-workspace-structure-and-config-presence.test.js",
+    " M website/NOTICE.md",
+    " M website/package.json",
+    "?? .vitepress/cache/deps/_metadata.json",
+    "?? .vitepress/cache/deps/package.json",
+    "?? .vitepress/cache/deps/vitepress_n_@vue_devtools-api.js",
+    "?? .vitepress/cache/deps/vitepress_n_@vue_devtools-api.js.map",
+    "?? .vitepress/cache/deps/vitepress_n_@vueuse_core.js",
+    "?? .vitepress/cache/deps/vitepress_n_@vueuse_core.js.map",
+    "?? .vitepress/cache/deps/vue.js",
+    "?? .vitepress/cache/deps/vue.runtime.esm-bundler-D4M2X7UN.js",
+    "?? .vitepress/cache/deps/vue.runtime.esm-bundler-D4M2X7UN.js.map",
+    "?? client/src/components/CodeEditorModal.test.jsx",
+    "?? client/src/components/editor-control-audit.regression.test.jsx",
+    "?? client/src/components/editor-review-findings.regression.test.jsx",
+    "?? client/src/components/ribbon/controls/command-capability-controls.test.jsx",
+    "?? client/src/components/ribbon/editor-command-availability.regression.test.jsx",
+    "?? client/src/components/ribbon/ribbon-header-bar.test.jsx",
+    "?? client/src/components/ribbon/tab-bar-with-scroll-and-icons-viewport.test.jsx",
+    "?? client/src/components/slide-panel/slide-thumbnail-preview.test.jsx",
+    "?? client/src/components/slide-panel/thumbnail-markup-safety.js",
+    "?? client/src/pages/__tests__/editor-authoring-context.regression.test.jsx",
+    "?? client/src/utils/editor-command-availability.js",
+    "?? client/src/utils/editor-command-availability.test.js",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-01-start.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-02-release-state-and-documentation-governance.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-03-vitest-topology-and-full-suite-performance.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-04-build-once-ci-and-green-sha-release.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-05-single-user-operational-hardening.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-06-compatibility-projection-and-durable-media-recovery.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-07-package-authority-and-matrix-g0.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-08-direct-officecli-qualification-g1.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-09-native-reimport-and-transactional-publication.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-10-physical-edited-package-seed-g2.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-11-central-mutation-gating-and-primitive-g4-rows.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-12-native-chart-and-workbook-editability.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-13-shared-pptx-export-plan-and-parity.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-14-module-decomposition-and-registry-cleanup.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-15-powerpoint-oracle-and-windows-artifact-g3-g5.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-16-final-full-verification-and-release-rehearsal.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/plan.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/baseline-characterization.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/decisions.tsv",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/officecli-physical-feasibility-blocker.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/phase-01-replan-after-officecli-spike.md",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/release-scope-manifest.json",
+    "?? plans/journals/2026-09-25-plan-single-user-powerpoint-native-fidelity-release.md",
+    "?? scripts/lock-version-metadata.js",
+    "?? scripts/lock-version-metadata.test.js",
+    "?? scripts/officecli/physical-feasibility-receipt.mjs",
+    "?? scripts/officecli/physical-feasibility-support.mjs",
+    "?? scripts/officecli/run-physical-feasibility.mjs",
+    "?? scripts/workspace-lock.js",
+    "?? scripts/workspace-lock.test.js",
+    "?? server/services/pptx-import/officecli/physical-feasibility-contract.test.js",
+    "?? server/services/pptx-import/officecli/physical-feasibility.test.js",
+    "?? shared/tests/presentation-start-position.test.js",
+    "?? test_derive.cjs",
+    "?? test_sm.cjs",
+    "?? test_source_map.cjs",
+    "?? tests/unit/release-scope-governance-contract.test.js",
+    "?? tests/unit/release-scope-governance-fixtures.js",
+    "?? tests/unit/release-version-governance-contract.test.js",
+    "?? tests/unit/release-version-governance-helpers.js"
+  ],
+  "baselineOwnedStatus": [
+    "?? config/vitest/legacy-vitest.config.mjs",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-artifacts.sha256",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-invalidation.json",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-raw/full-suite-run-1.json",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-raw/full-suite-run-1.stderr.txt",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-raw/full-suite-run-1.stdout.txt",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline.json",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline.sha256",
+    "?? plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-legacy-inventory.json",
+    "?? scripts/vitest/baseline-support.mjs",
+    "?? scripts/vitest/baseline-support.test.mjs",
+    "?? scripts/vitest/benchmark-full-suite.mjs",
+    "?? scripts/vitest/build-test-inventory.mjs"
+  ],
+  "versions": {
+    "node": "v22.22.0",
+    "npm": "10.2.4",
+    "vitest": "5.0.1",
+    "coverageV8": "5.0.1"
+  },
+  "host": {
+    "platform": "win32",
+    "release": "10.0.18363",
+    "arch": "x64",
+    "cpuModel": "Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz",
+    "logicalCpuCount": 56,
+    "totalMemoryBytes": 85797384192,
+    "hostname": "DESKTOP-4DHCORT",
+    "powerMode": "not-declared"
+  },
+  "browserInstallation": {
+    "root": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\ms-playwright",
+    "entries": [
+      "chromium-1234",
+      "chromium-1243",
+      "chromium_headless_shell-1243",
+      "ffmpeg-1011",
+      "winldd-1007"
+    ]
+  },
+  "config": {
+    "path": "config/vitest/legacy-vitest.config.mjs",
+    "sha256": "0bb18eb86cec411f36f4eb2f88793533c96a2db598a9ef1d137ab33bc243ad83",
+    "sourcePath": "vitest.config.mjs",
+    "sourceSha256": "dca5c0f37279cb9f1af0d6e76b99416896466dc8affb3d913aa97aa3f89d5b50",
+    "relocationDifference": "configRoot resolves '../..' because the immutable snapshot moved under config/vitest",
+    "topology": {
+      "projects": null,
+      "environment": "jsdom",
+      "fileParallelism": false,
+      "thresholds": {
+        "lines": 74,
+        "branches": 60,
+        "functions": 68,
+        "statements": 71
+      }
+    }
+  },
+  "discovery": {
+    "pattern": "**/*.{test,spec}.?(c|m)[jt]s?(x)",
+    "excluded": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/dist-electron/**",
+      "**/.claude/worktrees/**",
+      "tests/e2e/**"
+    ]
+  },
+  "sourceFingerprint": {
+    "algorithm": "sha256",
+    "fileCount": 3512,
+    "hash": "7d3f823afa4d00a4c25d35ce0667b7f86bc79fb514081de046c5febd4f36472c"
+  },
+  "sourceStableDuringCapture": true,
+  "inventory": {
+    "algorithm": "sha256",
+    "hash": "e6556bb4ac6c07e0918bb5e6bcb8d50caff7bb776d0e4a583a0669c0ad26e50f",
+    "fileCount": 605,
+    "files": [
+      {
+        "path": "client/src/App.suspense-fallback.test.jsx",
+        "sourceSha256": "ddbc07082c9ea69c7ab01205ab83379b39dc1658c12f6b8045b44039a79b7628"
+      },
+      {
+        "path": "client/src/__tests__/icon-policy-invariants.test.js",
+        "sourceSha256": "c95fa219502e6242b5b5a96d614665cc826d1673d47c0fdd69fafbe672806116"
+      },
+      {
+        "path": "client/src/__tests__/sparkles-icon-semantic-separation.test.jsx",
+        "sourceSha256": "e407fbd73782ec2fb75df0d33a90ae411983dbb99f1b9176df005ee286d653ca"
+      },
+      {
+        "path": "client/src/__tests__/ui-accessibility-findings-regression.test.js",
+        "sourceSha256": "ec1aad4b9b43cfe45e0880ce2852815b286e132f2dc06df0216fa56cbf4d6a12"
+      },
+      {
+        "path": "client/src/components/AnalyticsModal.test.jsx",
+        "sourceSha256": "37fac67423204222633d466e69cbb6df71999d7b237a1c9fca6375211443af1f"
+      },
+      {
+        "path": "client/src/components/AnimationPreviewModal.test.jsx",
+        "sourceSha256": "b0b99e2801820ac4117e2eda61af989984f89c33463a7047eec3159f26a98623"
+      },
+      {
+        "path": "client/src/components/AnimationTimeline.test.jsx",
+        "sourceSha256": "cccc67a12a0d4b60f8d600d341222451751144be4be4dd236664d090d0ab8449"
+      },
+      {
+        "path": "client/src/components/CodeEditorModal.test.jsx",
+        "sourceSha256": "a4c51a5564e181c31e503df871d32dbeb8184fa30a9352e0ddb173bd032f273a"
+      },
+      {
+        "path": "client/src/components/CollapsibleSection.test.jsx",
+        "sourceSha256": "90b8bbca461b50c17780b295e8cb1df8c667e638b53d3ff2b671d63ae3d422db"
+      },
+      {
+        "path": "client/src/components/EditorModals.test.jsx",
+        "sourceSha256": "52dbb5cc4ea32e1eea7ec8260e51a7b57bcf1071668a2d58ad795c3bb78e9b22"
+      },
+      {
+        "path": "client/src/components/IconGallery.test.jsx",
+        "sourceSha256": "decd7fe61185a1ac803d600dff3aaa19ba6c507e637f1da10daf55b6f2592bce"
+      },
+      {
+        "path": "client/src/components/LayoutManagerModal.test.jsx",
+        "sourceSha256": "10bd86c1c2ac04fd55418af9ef322f07c00bc6ae998b29ea978dc7b913fa130f"
+      },
+      {
+        "path": "client/src/components/LivePresentationModal.test.jsx",
+        "sourceSha256": "dce419cd8970f60ebee5c76c05d436aba979aa9f233a286ed2f15966e285b177"
+      },
+      {
+        "path": "client/src/components/MediaLibraryModal.test.jsx",
+        "sourceSha256": "9d9544a6d26800f53792f2d0c5632672c0db72a5f4260c3d293e0fcf2d209c0c"
+      },
+      {
+        "path": "client/src/components/PptxFidelityPanel.test.jsx",
+        "sourceSha256": "97cb07205d4ced99e03083ebfcbec2da8c2c7fd563dfeb250252a129b50018bb"
+      },
+      {
+        "path": "client/src/components/ProductTour.test.js",
+        "sourceSha256": "335bf7f8aa307aeb10c47204d2f25e862a6c16f00d77c2fb7eb9f90283e01253"
+      },
+      {
+        "path": "client/src/components/PromptPopover.test.jsx",
+        "sourceSha256": "3050bdde8d0e27cb8556b5775074d26dd79ce0b91ca3a7c712f928923e392723"
+      },
+      {
+        "path": "client/src/components/PropertiesPanel.test.jsx",
+        "sourceSha256": "920a767085c7a1bdc00c644d04e073af12445bbed67d1f849d0121865712f36f"
+      },
+      {
+        "path": "client/src/components/QuickAccessToolbar.test.jsx",
+        "sourceSha256": "0bd6ec026f6e822d1d2fa573f4da28b9d5881f362648286e9c107a49aa554ec9"
+      },
+      {
+        "path": "client/src/components/SelectionPane.test.jsx",
+        "sourceSha256": "8a92aa12351732497c848e8661cf36bf4f86c67e19052e786e72175dcd859505"
+      },
+      {
+        "path": "client/src/components/ShareModal.test.jsx",
+        "sourceSha256": "591506ed4478e482d67749f559de6e9eb9556a51c962b43c7b4c28cc60e8b866"
+      },
+      {
+        "path": "client/src/components/SlideCanvas.test.jsx",
+        "sourceSha256": "15ed509bdad9849cf64b63010d5d71d11a275a49d1e2a667987fcdcfc8e3fc94"
+      },
+      {
+        "path": "client/src/components/SlidePanel.test.jsx",
+        "sourceSha256": "3657879c09e6d835f975a6de3794cec87624331516993dccda43c6d6be5c068f"
+      },
+      {
+        "path": "client/src/components/SlideSorterView.test.jsx",
+        "sourceSha256": "6f661f7b29f16243251b7c9f352b6e6969174e7347f6bf4169818155bf918eb7"
+      },
+      {
+        "path": "client/src/components/SlideThumbnail.test.jsx",
+        "sourceSha256": "d0678f3b05a947cfb075d956b76e3bc9e7b5dfb0b1d9ef2f07c1c186bb6905c9"
+      },
+      {
+        "path": "client/src/components/TransitionPreview.test.jsx",
+        "sourceSha256": "559f87d5ca3a0c579ef7c96f406070bac45ec5f4c0412721db3e84c43c397918"
+      },
+      {
+        "path": "client/src/components/animation-preview-helpers.test.js",
+        "sourceSha256": "759a53f18c93be3cc8b694fd4455716bec143a90c6cc5fe5e803cb36bae64393"
+      },
+      {
+        "path": "client/src/components/anime-js-animation-template-selector-modal.test.jsx",
+        "sourceSha256": "85e5c382e3c1443cb88bb1ca2d1528b12954cfe24d6dfacf5ae2d12bbb56eb47"
+      },
+      {
+        "path": "client/src/components/annotation-canvas.test.jsx",
+        "sourceSha256": "98a825353f17f6df40f1bfa31cd4263f2baa080e06083988e06e9b60f750c366"
+      },
+      {
+        "path": "client/src/components/annotation-toolbar.test.jsx",
+        "sourceSha256": "b54bc034f48e97a530680175e4111951dd40293fc92f0fd9d2c5346b21d0cfab"
+      },
+      {
+        "path": "client/src/components/canvas/canvas-element-wrapper-plugin.test.jsx",
+        "sourceSha256": "e620d7f374754c7aeccbe7f4cf3e36fc705cbdd9e43e47e24314728d7191ac27"
+      },
+      {
+        "path": "client/src/components/canvas/canvas-element-wrapper.test.jsx",
+        "sourceSha256": "e3229e5f413647765a0681a8f81f6b1c16535e7f40d9f77b75f902fffd90486b"
+      },
+      {
+        "path": "client/src/components/canvas/canvas-element-wrapper.touch.test.jsx",
+        "sourceSha256": "05ec2983a8a26100a33bd774cd7806ef711d1eee43a65b78e965b7485ffa0afd"
+      },
+      {
+        "path": "client/src/components/canvas/canvas-geometry-ops.smoke.test.js",
+        "sourceSha256": "0cc72d9af1f4be0a9ef9c95ad3c315891a9a93b22e952e82e7dc0e152567017b"
+      },
+      {
+        "path": "client/src/components/canvas/canvas-pointer-transaction.test.jsx",
+        "sourceSha256": "78fd8161a8fe0d8bb79623629c3dc226679c3ffd272b1f50c0dbb2b47f7d8bdb"
+      },
+      {
+        "path": "client/src/components/canvas/canvas-right-click-context-menu-for-slide-elements.test.jsx",
+        "sourceSha256": "0327cb24002aab188f863168dbded509436fcf3a6566973e075cb4f1dc24fd3a"
+      },
+      {
+        "path": "client/src/components/canvas/canvas-rulers.test.jsx",
+        "sourceSha256": "f576e2b9fe192a88040028ad4e8f6ecdc0339040e31b974d7cf240c4fd7b1cab"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/auto-color-resolution.test.jsx",
+        "sourceSha256": "e402534e7d99c2af797462810657242a528845d07787fc1295d665bbaaee019d"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/canvas-game-element-renderer-phase-03.contract.test.jsx",
+        "sourceSha256": "8c874e02c9cb132606381d116a41efc77e2c332cc7dafa6f4361747cd7daf2a1"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/chart-element-renderer.test.jsx",
+        "sourceSha256": "99fd7f85341d82353016a247b50549b626d2e40d2cfca5b180e93a1cb2a52b19"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/element-factory.smoke.test.js",
+        "sourceSha256": "e4c5bb7aae888127f2a20ddd72db8c0e2ba017394e7cd024ba1d35bfa611ee19"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/latex-element-renderer.test.jsx",
+        "sourceSha256": "d3cb4c9fc252faf64bc40af5b66d0b6810d5a3d4afa71cce0a9646136b50b580"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/line-element-renderer.test.jsx",
+        "sourceSha256": "7dfffa38728784609db71e94d8b1d46febe352e18c5517c9084c61ee177e244f"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/markdown-element-renderer.test.jsx",
+        "sourceSha256": "2656cde099f173afa81e08980b7b85a07597395edd4230d9709f248266dffccb"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/qrcode-element-renderer.test.jsx",
+        "sourceSha256": "cc77ebf98f4e676d01fe0fef6fea1430400a7560fb0f62f598a220f93b6ea2c3"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/shape-element-renderer.test.jsx",
+        "sourceSha256": "4daf5660c59f69d668dc0f678d4a1aba33a550f61c76a1a65bc1a7ae9828c684"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/svg-element-renderer.test.jsx",
+        "sourceSha256": "00601bd88b85a82c8cfa0b2bf95ccec1506a80fc4908c5ceb7c5b7f86686c2fc"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/table-border-and-header-text.test.jsx",
+        "sourceSha256": "b0b1b88eb62e2947345049ff82ae7b64ec92fd28f9a8b6a994a296d2fff8ba85"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx",
+        "sourceSha256": "ffd5b0e8942e77aba649afbb8cb48c3573db72f7151d12e520b407c7da6bd5d6"
+      },
+      {
+        "path": "client/src/components/canvas/element-renderers/table-element-renderer.test.jsx",
+        "sourceSha256": "7708113d46f99e338907ed3503cc063f00cfd3c8257137505343e46562514c3e"
+      },
+      {
+        "path": "client/src/components/canvas/global-render-mapping.test.jsx",
+        "sourceSha256": "a2581616a1fa4da214e76533fe64dc16734a58b6b07391a7d608f129143cc49a"
+      },
+      {
+        "path": "client/src/components/canvas/image-crop-geometry.test.js",
+        "sourceSha256": "0607c8fcd88e907bd9d5b93cd56f59c0578cdc6ed8ac4c1245d20d929c978fbf"
+      },
+      {
+        "path": "client/src/components/canvas/rotated-geometry.test.js",
+        "sourceSha256": "d4d1c1408b29cd8a1e4e4f1ece83c55c3c76084808353d348fae18d74ac8dde2"
+      },
+      {
+        "path": "client/src/components/canvas/rubber-band-marquee-selection.test.js",
+        "sourceSha256": "90456debfb5bf41f65d46b98a096493ff208f941b9d4e34180b29ebb4a45a37a"
+      },
+      {
+        "path": "client/src/components/canvas/use-canvas-pointer-interaction.test.js",
+        "sourceSha256": "202ce79b762fa62f5a60d2d180af01800e6b20d6565f4cf232b38736ac86bb1c"
+      },
+      {
+        "path": "client/src/components/canvas/use-canvas-pointer-interaction.touch.test.jsx",
+        "sourceSha256": "ee0a05491bc53c94ca4369fc8aedf47c53fc6f046c05bc7907eddf71c067b46a"
+      },
+      {
+        "path": "client/src/components/canvas/use-canvas-resize-rotate.deep.test.js",
+        "sourceSha256": "44aba27ad2989dfa30bfc919660f8efb266e0352f2b6b9fd960ac6fcc733faf1"
+      },
+      {
+        "path": "client/src/components/command-palette.test.jsx",
+        "sourceSha256": "ab6015291cede0c603d61771676320d22f256dbb83d1ce35e6cbfe21764124cf"
+      },
+      {
+        "path": "client/src/components/content-editor-modals.test.jsx",
+        "sourceSha256": "765406d550af39da872d3eca47c9abe30ce547af9ddcba19868c30f315bd8a83"
+      },
+      {
+        "path": "client/src/components/dashboard/TemplateGallery.test.jsx",
+        "sourceSha256": "8f67cfe5a382c59894e989e0112c5da40c1f7de4e21fe4a0d1588fef2558ec8c"
+      },
+      {
+        "path": "client/src/components/dashboard/TemplateSlideThumbnail.test.jsx",
+        "sourceSha256": "dc813a7a40b4b31d3b36e816d36945bb2eff16e264432fb59ddc3c016766ec9b"
+      },
+      {
+        "path": "client/src/components/editor-control-audit.regression.test.jsx",
+        "sourceSha256": "f61243cd4181e244746fa6f435d88c33245901fcc7e0866e34d69ddfd21fa69d"
+      },
+      {
+        "path": "client/src/components/editor-feature-modal-accessibility.test.jsx",
+        "sourceSha256": "d64f283d520f3127f0c922e9fc439e3796ec434f0ab2fda0e2be363158235cbb"
+      },
+      {
+        "path": "client/src/components/editor-review-findings.regression.test.jsx",
+        "sourceSha256": "fd72c46e384ebcf18225b4f721f5bf723e7a722ec10c6223c519920f6781c61a"
+      },
+      {
+        "path": "client/src/components/editor/editor-canvas-workspace.test.jsx",
+        "sourceSha256": "a9a4be7279b474c4a59628716e88d66b191182e3318371c211506fb9d12d12dc"
+      },
+      {
+        "path": "client/src/components/editor/editor-panel-keyboard-propagation.test.jsx",
+        "sourceSha256": "cc5decd85b452ba702211e77328336e249dd49d3867d6d7e52d36a3fea5c1550"
+      },
+      {
+        "path": "client/src/components/editor/editor-shell.test.jsx",
+        "sourceSha256": "244db2828e87dd17fa93c42622a6c9656c3ac72ed56e056c5e663e3de055905b"
+      },
+      {
+        "path": "client/src/components/editor/editor-workspace-overlay.test.jsx",
+        "sourceSha256": "627a72773fdabf1d162298aa3479ed9c14297e35d604765f59e260d408215bb7"
+      },
+      {
+        "path": "client/src/components/editor/save-conflict-dialog.test.jsx",
+        "sourceSha256": "8298e678707421996e70aaa229cc65cea4198c2e629fe127eb3aac715b5f9cf8"
+      },
+      {
+        "path": "client/src/components/editor/save-recovery-dialog.test.jsx",
+        "sourceSha256": "361515bb5bd1f175a398d52e8ae2f6512e1f89d9d3bd515b65045021d804811f"
+      },
+      {
+        "path": "client/src/components/file-browser-modal-to-select-and-insert-media.test.jsx",
+        "sourceSha256": "12531be8b446ed0f02a68517db0a143aa3e2d0b8c17f94c0881ffd3643a0a4e4"
+      },
+      {
+        "path": "client/src/components/find-replace-helpers.test.js",
+        "sourceSha256": "f5a49dbaf5a0aac7207bb1ea4c0954313c38ee334ea6cf32ccc110d0a8a1b8e8"
+      },
+      {
+        "path": "client/src/components/find-replace-vertical-slides.test.jsx",
+        "sourceSha256": "b8d1c2e9c5cc90fc1f17acbd5042eebf8094173b82cd338565d621d316b0aad2"
+      },
+      {
+        "path": "client/src/components/game-hud-overlay.test.jsx",
+        "sourceSha256": "4bba186df86313392d210dba7aeaaff26350c2afaa9735f42449e32deb86e2df"
+      },
+      {
+        "path": "client/src/components/game-integration-tests.test.jsx",
+        "sourceSha256": "7879351a5c99cd8cae754dbed8f8ac496913c2886e674816edc092974c0b827f"
+      },
+      {
+        "path": "client/src/components/game-leaderboard-overlay.test.jsx",
+        "sourceSha256": "34ff14b3517b9fd37d104882c77efe3632483685b9f44906daadf462da8ba70e"
+      },
+      {
+        "path": "client/src/components/kinetic-text-animation-template-selector-modal.test.jsx",
+        "sourceSha256": "1de55851a7d234e44df6a320154f3e10ee321292f6ca48d50354dd3baa63790a"
+      },
+      {
+        "path": "client/src/components/laser-pointer-renders-null-conditions.test.jsx",
+        "sourceSha256": "c104f71d173126d5fe11ae26a40ce5645f1065734041e7bbb529d7d3266a481a"
+      },
+      {
+        "path": "client/src/components/layout/StatusBar.test.jsx",
+        "sourceSha256": "bf18347e82d804c2d60de998214d209b82ed13de4c27e9a3a81e8e6e8249bba8"
+      },
+      {
+        "path": "client/src/components/layout/responsive-editor-workspace-context.test.jsx",
+        "sourceSha256": "48979f940081885c755158915a4261b8bf3005016389442f0889f5b70a507d0d"
+      },
+      {
+        "path": "client/src/components/parametric-math-grid-surface-plotter-modal.test.jsx",
+        "sourceSha256": "5f9c460bc013069fe2c1e2a38b3e07d94b04e81883342c824e8a32086113ca35"
+      },
+      {
+        "path": "client/src/components/pptx-import-report-panel.test.jsx",
+        "sourceSha256": "20267d79a844518498a0e391f3e8a2137e6fc7eea026a38064909b5188f7080f"
+      },
+      {
+        "path": "client/src/components/primary-interaction-semantics.test.jsx",
+        "sourceSha256": "3a238dca804c0e8996e596430f16bd3223d2b72cc783767254e7e4fabf01846c"
+      },
+      {
+        "path": "client/src/components/properties/apply-to-selection.test.jsx",
+        "sourceSha256": "a9c7220ad10dc439ff9442a157c41cd7978746b4bce2328886d0a746156d1f32"
+      },
+      {
+        "path": "client/src/components/properties/chart-properties.test.jsx",
+        "sourceSha256": "0e4a82a14aab98ba8a8e73f4fc95a3926f7cd1d6f5f1fca0eaf1ccaf45ebb3e8"
+      },
+      {
+        "path": "client/src/components/properties/game-properties-panel-vitest-unit-tests.test.jsx",
+        "sourceSha256": "e9980fec0731ff53d694fca44c3140577b7f07de1b8f555527cf1feb8d4190bd"
+      },
+      {
+        "path": "client/src/components/properties/game-properties-question-editor.test.jsx",
+        "sourceSha256": "120f8147091248984d0dbd653844e6510a991a2f823f1b2626c3aea0f74ba9ff"
+      },
+      {
+        "path": "client/src/components/properties/game-properties.test.jsx",
+        "sourceSha256": "b5cbda172f8e86b91edd295d25c16a12ea3f9349deedd3924db06eec9a4c4925"
+      },
+      {
+        "path": "client/src/components/properties/image-properties.test.jsx",
+        "sourceSha256": "c33408c1cd4c3ebcd2314636b792ef0a484f66fcce5c1dfae6a8cb3144c28e30"
+      },
+      {
+        "path": "client/src/components/properties/import-fidelity-properties.test.jsx",
+        "sourceSha256": "e1e5791578a73a654cd9f9bc6a2ecc28beadf734e22148e310f5f5d9f1c9b7ea"
+      },
+      {
+        "path": "client/src/components/properties/indeterminate-multi-select.test.jsx",
+        "sourceSha256": "37d7031db866b11706f8d1255fd3c6f2ffb8a88630f5e7b8cf607122ad7d946e"
+      },
+      {
+        "path": "client/src/components/properties/markdown-controls.test.jsx",
+        "sourceSha256": "2761201eae422ca5cf4887d71866c6a0b2940efeca604035570736a68ce304a4"
+      },
+      {
+        "path": "client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx",
+        "sourceSha256": "8f7d53cdf5ec9945335c079760c7ad12a77d1728dd1ecea8fb8d194e67b3922c"
+      },
+      {
+        "path": "client/src/components/properties/media-properties-single-source.test.jsx",
+        "sourceSha256": "44c605adaba3824fa78b83cdf2475ceaad35ba8866e3e1c67c8597bda5a8e232"
+      },
+      {
+        "path": "client/src/components/properties/missing-controls.test.jsx",
+        "sourceSha256": "e636b2a30bb30ee61176fe4618ed6146f27b7faf456c0db3a1d4ad4769dd4164"
+      },
+      {
+        "path": "client/src/components/properties/semantic-control-accessibility.test.jsx",
+        "sourceSha256": "2bcda7033d50003ea662fa4097aac7cfac82c1b6a4cb6287c730216182d3189b"
+      },
+      {
+        "path": "client/src/components/properties/shape-line-misc-properties-depth.test.jsx",
+        "sourceSha256": "a97d12a59c2cd310dacaeab3af10473cd038f21180152366741d524130cfed09"
+      },
+      {
+        "path": "client/src/components/properties/table-properties-utils.test.js",
+        "sourceSha256": "b7c7b5bbb9fec39b38cf5bb9a8c024df563f2299c12d2dc2198579cb03525462"
+      },
+      {
+        "path": "client/src/components/properties/table-properties.test.jsx",
+        "sourceSha256": "c40a360732c30ab0d5bb0db6fcee4e0d5f30aaddb18b0fb1ad06ea43d34cfe7c"
+      },
+      {
+        "path": "client/src/components/properties/text-properties-panel-render.test.jsx",
+        "sourceSha256": "46c43d15dd5a0b025155800b1dead6529d51633df239525887d00ee441f1170f"
+      },
+      {
+        "path": "client/src/components/properties/timeline-properties.test.jsx",
+        "sourceSha256": "7098af400c434e41783985bc990b9da1e250f4b614bc9576e5fe1dcd7f9f17d5"
+      },
+      {
+        "path": "client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx",
+        "sourceSha256": "4649e4c2f44066ce894b29c90763c432ac1266593acd921140bc042df110c820"
+      },
+      {
+        "path": "client/src/components/ribbon/controls/command-capability-controls.test.jsx",
+        "sourceSha256": "68a015767e3f2b8023d8e36871aa8a09266c4c1cc91f7a5d9fb603d42f14d69f"
+      },
+      {
+        "path": "client/src/components/ribbon/controls/paragraph-formatting-and-alignment-controls.test.jsx",
+        "sourceSha256": "8f1cb18c2b36358d7973c81dd915099abadb9f74ee1e293c62fed660d449e061"
+      },
+      {
+        "path": "client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx",
+        "sourceSha256": "e3966f93afb93101e77c8b1954f846fe724c2ddaae3cbab74517a61997c72d4f"
+      },
+      {
+        "path": "client/src/components/ribbon/design-tab-content.test.jsx",
+        "sourceSha256": "50ec44c1cf254f8e8687e3f9b77b332292d80dfbbb14998b69509c46640666e0"
+      },
+      {
+        "path": "client/src/components/ribbon/editor-command-availability.regression.test.jsx",
+        "sourceSha256": "07d40ef510f650f47b0887ff2f5cd3d2e48ebae2357f2b67098a9c75d977cda3"
+      },
+      {
+        "path": "client/src/components/ribbon/format-tab-dynamic-visibility-and-label.test.jsx",
+        "sourceSha256": "446517601af629a2ea1f7a74ac33ba96fd17c97177425f6d0c88b1e67ee3b0c7"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-big-button.test.jsx",
+        "sourceSha256": "1a5d0cc811f7843dbf0a5a399fb7245b3867699d331f3130eb45bc3c124d37c3"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-density-context.test.jsx",
+        "sourceSha256": "e7eb196f850937209e43d749e15a6b3eab9e3da749693558775b86daf9e6071b"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-design-tab-slide-presentation-controls.test.jsx",
+        "sourceSha256": "ea1fb494fad651db96cd796f802c482bc1f18c07f68ddce3915e023c47d87141"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-dropdown-menu-group-trigger.test.jsx",
+        "sourceSha256": "c016d74937ebc30e555de1733e8c0c58560512f09ab939948848a1338cc683ea"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-element-animation-effect-controls-tab-content.test.jsx",
+        "sourceSha256": "9fb574142f6dc3d20a9363d406198a05417a126a1faa4faa3a7a87084ff4ac3a"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-file-dropdown-menu.test.jsx",
+        "sourceSha256": "6de38c0880f9dde67e9d697676e5f7bf6f0ebfe2a0481f05cd50ef94a12c5a86"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-floating-overlay.test.jsx",
+        "sourceSha256": "4a02f2fb3abd0149846efaf2a66c83d8c04d4564e49631992a574292e693b0a3"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-format-tab-contextual-controls.test.jsx",
+        "sourceSha256": "261e16845b4e906bd3ff22b2bf9c400b2d5164c7d0a842c146d03cc12ef07f64"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.test.jsx",
+        "sourceSha256": "e6bc027fbb61ff6cf1ad7466aa7fdac4ed00f74cd656c87583ecf3ab2adfb6f8"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-header-bar.test.jsx",
+        "sourceSha256": "0824103b3c5260a0c39653787e4ccf005e64aa0792c46693d5d925dd02da51d4"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.test.jsx",
+        "sourceSha256": "a04fd7a20fbf468a7630a8e8c8920b4490ee58bdb6651efb5225e92c63283a4f"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-line-fill-gate.test.jsx",
+        "sourceSha256": "f9f62f821d345f1aa0927b334b8a6ab27e2c490a2d9837b095d450e435287fd4"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-multiselect-arrange-geometry.test.jsx",
+        "sourceSha256": "1d4cade476873f6a8bb49c1b957e2ea5b160ea6034ef529a4a8f829ae8dfe274"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-opacity-indeterminate.test.jsx",
+        "sourceSha256": "55afef8b192485ddb817a63cc09382a32214569c86802b4d3624be1e8979ee08"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-overflow-group-menu.test.jsx",
+        "sourceSha256": "2ad5190cff8ebba6497e71af5d1c11235104a0cd219997b42af0b3f8fb98565b"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-plugin-insert.test.jsx",
+        "sourceSha256": "ca66bc2a6e8136cea937b754766ccacfa3932bcf7b1ae9d4cddafb8f12581487"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-section.test.jsx",
+        "sourceSha256": "f24ca1e0cb9eed5a1fefe34b4d536777c9f2dc11aa3df42556d11c900a6316a1"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx",
+        "sourceSha256": "a313ed0f6d2686030ad5550322eafc6e81a2baaf5d101ee32fa2aadebd794126"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-tabs-config.test.js",
+        "sourceSha256": "227dabfd2af4bbf9b78d306c4601850db5a218357ac89f7b6dcefe819f4f84d0"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-transitions-tab-slide-transition-auto-advance-controls.test.jsx",
+        "sourceSha256": "1664da66363453647439a3bf58da6a5193f359f6591d26c3a5e4653a1f038377"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-ui-consistency.test.jsx",
+        "sourceSha256": "de19bb5f54598acae1f46cb0e3aacb9089380a693fb51955a6bc93298ad3f9e8"
+      },
+      {
+        "path": "client/src/components/ribbon/ribbon-view-tab-mode-controls-and-window-panel-toggles.test.jsx",
+        "sourceSha256": "69f1a4e97b6ea6a87e742f08bdb0695abce1109e2d1b9616bf610e8427b6320f"
+      },
+      {
+        "path": "client/src/components/ribbon/tab-bar-with-scroll-and-icons-viewport.test.jsx",
+        "sourceSha256": "f9517ff94cde8ad1aeb1825976a59884159b678a20165ea63ca9b23318dbc8ba"
+      },
+      {
+        "path": "client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx",
+        "sourceSha256": "3de4c5e19835b56d7d5314c3e1cdc7aefe60e6a2592f00bc90758950ff20d53b"
+      },
+      {
+        "path": "client/src/components/slide-panel/slide-thumbnail-preview.test.jsx",
+        "sourceSha256": "29cfffcf768ab4bb66c8701da769a977f7f6d3978f187955851aba6eb2ded03f"
+      },
+      {
+        "path": "client/src/components/stem-simulation-preset-modal.test.jsx",
+        "sourceSha256": "4e304c6b07990494734864f140b26739ea24063f42c55bb163c7e44e95825deb"
+      },
+      {
+        "path": "client/src/components/three-js-3d-scene-template-selector-modal.test.jsx",
+        "sourceSha256": "9fb24add16647e8ca437241d71cbe6e8103d3377848bc633560f73b84fcdc143"
+      },
+      {
+        "path": "client/src/components/timeline-element.test.jsx",
+        "sourceSha256": "02a05c7e5c6fd1c9986592cbf274db68e0579665ad3c7eb1c24a94816db130f0"
+      },
+      {
+        "path": "client/src/components/transition-preview-helpers.test.js",
+        "sourceSha256": "202eb3db456455d4f2558da09314a8c2baeefeee520fd891fa42411cb47f454f"
+      },
+      {
+        "path": "client/src/components/ui/Button.test.js",
+        "sourceSha256": "cbced8ca02ea60edc8e2a40cecb59d8b64d150705c4f0ff59e10417030dbc17a"
+      },
+      {
+        "path": "client/src/components/ui/ModalShell.test.jsx",
+        "sourceSha256": "6810f8c098b1b8b620d3f7c681e4d0c69557c2f6373061f8159975bb2ba44edd"
+      },
+      {
+        "path": "client/src/components/ui/form-primitives.test.jsx",
+        "sourceSha256": "1013ce4bd44ae5e39aba1823fca75c8868cc2959fe9c0ed275024366b2df03de"
+      },
+      {
+        "path": "client/src/data/editor-contract-fixtures.test.js",
+        "sourceSha256": "82b638c78a08e1555add5fd97ed8a0a44088fc173a5087770e7176de5547c116"
+      },
+      {
+        "path": "client/src/data/element-defaults.test.js",
+        "sourceSha256": "7dbba1c1aae2e778b869543c1fd7d96dc8f8ded17f6a037ce60f75e423331092"
+      },
+      {
+        "path": "client/src/data/slide-template-layout-adapter.test.js",
+        "sourceSha256": "d7cc8f912c8ae0ea0177f03f9f4193d26b1f1b189a4a6346002bf6206b582832"
+      },
+      {
+        "path": "client/src/data/slide-templates.test.js",
+        "sourceSha256": "c6416c0f076716d7e570b331f4c1b2cafcebd6e514c2191b19e1db23fbcda9f4"
+      },
+      {
+        "path": "client/src/editor-interaction-bug-repro.test.js",
+        "sourceSha256": "f5134d39cefa27baba1608fc0cb9f8cca92e500cf192805558ad2cb312748010"
+      },
+      {
+        "path": "client/src/extensions/font-weight.test.js",
+        "sourceSha256": "8259591ac3320eb2b983eb86bdd3505c639020499c372f262252638e086acf7e"
+      },
+      {
+        "path": "client/src/extensions/line-height.test.js",
+        "sourceSha256": "bf05e04aa4ba3916b8fc6df415de541088eb0f25daa17a69c2b25468ecb685c3"
+      },
+      {
+        "path": "client/src/hooks/editor-controller/use-editor-active-slide-controller.test.jsx",
+        "sourceSha256": "f70aa59fe7b05e5ce32e39469baee8768dddf5125f9f200b70fc6ce95389e2ec"
+      },
+      {
+        "path": "client/src/hooks/editor-controller/use-editor-keyboard-controller.test.js",
+        "sourceSha256": "416d01cc20f170c688b3f7b796a44b224944265bc4a52234d918b8d771d617a1"
+      },
+      {
+        "path": "client/src/hooks/editor-controller/use-editor-layout-controller.test.js",
+        "sourceSha256": "6a1285edd1d6091d6abe5024dc8f5ceaa719d6164cbf85d7bab32577b05517a7"
+      },
+      {
+        "path": "client/src/hooks/editor-controller/use-editor-live-session-controller.test.js",
+        "sourceSha256": "d6e5adc525c4aa8b073ec15973ebde56a55664c78c94f5f9ad59de7606700bb0"
+      },
+      {
+        "path": "client/src/hooks/editor-controller/use-editor-persistence-controller.test.jsx",
+        "sourceSha256": "daf8153f5065a420eadec818e69634db29a10b03735a9234d9bb1f4a849793e1"
+      },
+      {
+        "path": "client/src/hooks/editor-controller/use-editor-rich-text-controller.test.js",
+        "sourceSha256": "6150da4d3f622c576af45c8e42edfa545968e525e2bb9d7b331c1299c9c87849"
+      },
+      {
+        "path": "client/src/hooks/editor-controller/use-editor-save-controller.test.jsx",
+        "sourceSha256": "c3cff7510f9c21a88d172d9f00d71e4d4dbb1745597c00c180afbca959128d5b"
+      },
+      {
+        "path": "client/src/hooks/editor-controller/use-editor-selection-controller.test.js",
+        "sourceSha256": "58452caa350548220f10b153773c5971651aa9adc19a64871c85de54be2053ac"
+      },
+      {
+        "path": "client/src/hooks/game-element-foundation.test.js",
+        "sourceSha256": "2b5116c32054695ba6e9f686f8870d47433fc243baa3f549c436932904ae5053"
+      },
+      {
+        "path": "client/src/hooks/game-presenter-keyboard-shortcut-handler.test.js",
+        "sourceSha256": "7ff468372023d177049a8d146e02a1fd1c3376983c5b1a424368c0e91892537e"
+      },
+      {
+        "path": "client/src/hooks/pinch-zoom.test.js",
+        "sourceSha256": "67c613e7d0c171cdec280439bbe3ddd851da9d23a83c8d3967ee2304570263dd"
+      },
+      {
+        "path": "client/src/hooks/slide-operation-helpers.test.js",
+        "sourceSha256": "f969c38d7d57d4179c58b2d8fe533b9a936aa17460cc1a34f5e6995aa94843d7"
+      },
+      {
+        "path": "client/src/hooks/slideshow-presentation-mode-keyboard-navigation-shortcuts-handler.test.js",
+        "sourceSha256": "79ba20324a2edbbedea7367486bbc3a2454a78a3e5f08d2774baf77935c2a8a6"
+      },
+      {
+        "path": "client/src/hooks/swipe-navigation.test.js",
+        "sourceSha256": "8f0a46428c7e22af2151ba705521f0c206fa4e332204b84911e6e4f7d432b0ec"
+      },
+      {
+        "path": "client/src/hooks/tiptap-exit-edit-on-escape.test.js",
+        "sourceSha256": "221e4d318142eb6b61c44909b5608a89fef96b23e04df1096416f24c02ca5ae5"
+      },
+      {
+        "path": "client/src/hooks/touch-gestures.test.js",
+        "sourceSha256": "842e8bc108b97de300515d20ae89a53ab5a7a47e33f9e3bdc6185f42fba554e5"
+      },
+      {
+        "path": "client/src/hooks/use-ai-actions.test.js",
+        "sourceSha256": "e8572b158e9deb8873e479369047046c73a8abdd2ce215a40e948f36dbd548f5"
+      },
+      {
+        "path": "client/src/hooks/use-annotation-sync.test.js",
+        "sourceSha256": "a701595fa0dedd9c436317591244873d5df01c2bffc850d4d07b471c90c4d119"
+      },
+      {
+        "path": "client/src/hooks/use-clipboard.test.js",
+        "sourceSha256": "3d43915b6ca34c08c7981332e09e70bb14c3d2d7077cd65bb9bf8f53572e1b0e"
+      },
+      {
+        "path": "client/src/hooks/use-editor-game-leaderboard.test.js",
+        "sourceSha256": "220e8a8682b2270de568430aa55f6435f2bae1aa7f3a2d2059f982832c611c7e"
+      },
+      {
+        "path": "client/src/hooks/use-editor-save-queue.test.js",
+        "sourceSha256": "b91c1287e2e536dcc123782b0b90fb9a97836e9dd6cdbcc1fc3520b0b4f70c64"
+      },
+      {
+        "path": "client/src/hooks/use-element-creation.test.js",
+        "sourceSha256": "5eb3db43e1ad590cc62505a79d753e32079fb62161f2c677d8622d4db0748969"
+      },
+      {
+        "path": "client/src/hooks/use-element-cycle-through-slide-elements-hook.test.js",
+        "sourceSha256": "1bd5d8ac6e1f51751901e5731370fc001815f29324cd225885bd61f6da6f6fc0"
+      },
+      {
+        "path": "client/src/hooks/use-export-actions.test.js",
+        "sourceSha256": "3bdaf69e0977e6d669e38ab7a17ddbc92a6dca4755c26b89a3dadcbd3f521d2f"
+      },
+      {
+        "path": "client/src/hooks/use-game-player.test.js",
+        "sourceSha256": "2586c0a8f9d6831bb2fd61945d2314605541accb329599a97cb1283913120ac9"
+      },
+      {
+        "path": "client/src/hooks/use-game-socket.test.js",
+        "sourceSha256": "9b91bef4fceb093ff71d9221c8999e1d68291fc0a5e38dfe1e2eab4629573edc"
+      },
+      {
+        "path": "client/src/hooks/use-keyboard-contract.test.js",
+        "sourceSha256": "562685e097b58e06ac1897c32912276b5970ed574d425957735ea9cdb03c63d4"
+      },
+      {
+        "path": "client/src/hooks/use-keyboard-repeat-and-scope.test.js",
+        "sourceSha256": "64cb47d19d3337a31beb035dced85bae0886e30c8d6e94eb1d980cb3b288a6b4"
+      },
+      {
+        "path": "client/src/hooks/use-keyboard.test.js",
+        "sourceSha256": "19636beb6c81812d9cae0063342fc60e850b7db6f2b88174d22873f101c7961f"
+      },
+      {
+        "path": "client/src/hooks/use-live-timer-sync.test.js",
+        "sourceSha256": "5cbb306720414cf1473a80f32cd448819875546f4ca0de5991e1386f76fad727"
+      },
+      {
+        "path": "client/src/hooks/use-live-timer.test.js",
+        "sourceSha256": "b22c23db21cfb069ab86c8a6f92d65085fb81b80fd71c6aa60f4d1fdef1a8c2b"
+      },
+      {
+        "path": "client/src/hooks/use-pptx-fidelity.test.js",
+        "sourceSha256": "49388b381e4b2add8303055072e4e18c81b95bdf34d21f7c861e673095dd5163"
+      },
+      {
+        "path": "client/src/hooks/use-reveal-preview-frame.test.jsx",
+        "sourceSha256": "ed26a5c3b6bbbeb728242563d8ed3efb591c3e8ff39cd1b937d2d3781f338812"
+      },
+      {
+        "path": "client/src/hooks/use-slide-operations-align-group-distribute.deep.test.js",
+        "sourceSha256": "b121154d40d9feada8843f44ba08cdf3fe6e43ec23353471dd3a8bbd9f4a16f7"
+      },
+      {
+        "path": "client/src/hooks/use-slide-operations.child-slides.test.js",
+        "sourceSha256": "d393f24d23be9faca47b2eb4c790b8a959277864ac4946f9c6a7cf5925db9cbc"
+      },
+      {
+        "path": "client/src/lib/design-ideas/analyze-slide.test.js",
+        "sourceSha256": "76f3d5642e293b83affb3157a04f99a0132f636c4e6afc158ad2913e4265a8dd"
+      },
+      {
+        "path": "client/src/lib/design-ideas/suggest.test.js",
+        "sourceSha256": "5e0c49ce10f3f092b92d2928f9dd9a93eb202de11052e9a6ede2dfd5d83cdb76"
+      },
+      {
+        "path": "client/src/pages/HomePage.creation-and-marketplace-state.test.jsx",
+        "sourceSha256": "0af398ab49162e3ea1ed8bfb7f49cc0e0e5666b5eefb6e730966266c51a99660"
+      },
+      {
+        "path": "client/src/pages/HomePage.error-ux.test.jsx",
+        "sourceSha256": "6d85d59f961323d32f7015e38ec0e285e9b76a217b4b232eb79cfed277d9f7a7"
+      },
+      {
+        "path": "client/src/pages/HomePage.import-accessibility.test.jsx",
+        "sourceSha256": "17ad6bbf1e6786664096724cd736d2a6bdf8a6e9d1ec50536b3262a798de8696"
+      },
+      {
+        "path": "client/src/pages/HomePage.pptx-import-lifecycle.test.jsx",
+        "sourceSha256": "8414e7b8a17d842f4a7302981d5ee8ae16eaba71888313df057b258a7a3b5bf5"
+      },
+      {
+        "path": "client/src/pages/LiveViewPage.test.jsx",
+        "sourceSha256": "835340c7d75a9e835b45072f265daf81213d1838a7104e1d9f5d0433b06201ca"
+      },
+      {
+        "path": "client/src/pages/RemoteControlPage.test.jsx",
+        "sourceSha256": "e2a258c8de22f8fbb19cca9f5f4426c24d8396d3209d64b474d6f269c53bf30c"
+      },
+      {
+        "path": "client/src/pages/SettingsPage.test.jsx",
+        "sourceSha256": "c6e9641908131899ea4c6d53ffed1b3eb096d642f73c1d9225b79f7703ff20d4"
+      },
+      {
+        "path": "client/src/pages/SpeakerViewPage.test.jsx",
+        "sourceSha256": "72becb5978ceb9144ac05dcb18483d5d57ff0b550cd04213135e0e9b99cb30d2"
+      },
+      {
+        "path": "client/src/pages/__tests__/editor-authoring-context.regression.test.jsx",
+        "sourceSha256": "e16577dca24ebff0e357a13c30aae02c893fbbc2cfb375658c80b61216b79a56"
+      },
+      {
+        "path": "client/src/pages/__tests__/editor-page-ai-generate.characterization.test.jsx",
+        "sourceSha256": "13b355dd0aa5123c1da79c1825e7527b7a5b99dffcf73cfc80a163530aa13572"
+      },
+      {
+        "path": "client/src/pages/__tests__/editor-page-autosave.characterization.test.jsx",
+        "sourceSha256": "f70a81f4a2b63b9da1e7d499aad97b822845335c5689e4e32e57da41777520d2"
+      },
+      {
+        "path": "client/src/pages/__tests__/editor-page-command-palette-actions.characterization.test.jsx",
+        "sourceSha256": "d871e36083f487b1068389d409673d4ba72aa3b338f00b10aeafbe2dffd322aa"
+      },
+      {
+        "path": "client/src/pages/__tests__/editor-page-element-ops.characterization.test.jsx",
+        "sourceSha256": "a708a7b83ccb41fb486fcfe8e3c8e21851b13a9bad1764455a980d6fa35d944c"
+      },
+      {
+        "path": "client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx",
+        "sourceSha256": "4b1f35eabef4792a1ad87709b428b5474f8879bf6c51638aff8f19abe91b7a3d"
+      },
+      {
+        "path": "client/src/pages/__tests__/editor-page-present-wiring.test.jsx",
+        "sourceSha256": "9bc31240513d3c903015d4ca144be77af71679a6beb4d8e19e16e97e2d3401b1"
+      },
+      {
+        "path": "client/src/pages/__tests__/editor-page-renderability-spike.test.jsx",
+        "sourceSha256": "fb843a7445bf35e4c4a5c54bd67e9a05cc708b08fa1478eb0a368d77aaf08aa6"
+      },
+      {
+        "path": "client/src/pages/__tests__/editor-page-slide-ops.characterization.test.jsx",
+        "sourceSha256": "81dbf89a82a114f9781f8f681151587970a0ac61dfd4f5c89668b2dc6c86a147"
+      },
+      {
+        "path": "client/src/pages/__tests__/editor-page-transition-preview-wiring.test.jsx",
+        "sourceSha256": "fb05f76cec024c0fdb27887a98c121c6d0fdcf3463f1fcc155149df87818b16e"
+      },
+      {
+        "path": "client/src/pages/__tests__/editor-page-vertical-slides.test.jsx",
+        "sourceSha256": "94264542befc24b6f3016ed113467fca4f22d06bdf7042449d51abab9206695e"
+      },
+      {
+        "path": "client/src/pages/editor-autosave-lifecycle.test.jsx",
+        "sourceSha256": "563b49943527b7a086f0a2bd9b63eb4014067b9436711298446297bdc7041816"
+      },
+      {
+        "path": "client/src/pages/editor-live-presenter-route-state.test.jsx",
+        "sourceSha256": "b06cbc74241c2f1867a342589e5d823081eaca34177c191325cdb09eea2c2d4e"
+      },
+      {
+        "path": "client/src/pages/editor-undo-selection-reconcile.test.js",
+        "sourceSha256": "62f9c62bf1626d88abe7aeda490deda9455c95cee11b39399f0176a5117e9c97"
+      },
+      {
+        "path": "client/src/pages/editor-z-order.test.js",
+        "sourceSha256": "125dff7de04bf3131df1f3fdabb164d041a9b1d4c4ba4898ddcaabe42e507104"
+      },
+      {
+        "path": "client/src/pages/game-player-join-page.test.jsx",
+        "sourceSha256": "21e8e1ac822a8ff18256ce68fc48f854e8c67d1d701a0db790a1c5580326258e"
+      },
+      {
+        "path": "client/src/pages/game-player-matching-card.test.jsx",
+        "sourceSha256": "6af3f12532840dcbf1247446243613d9edd33d446e4d8b492f6b9c38f8b59fa1"
+      },
+      {
+        "path": "client/src/pages/home-dashboard-card-semantics.test.jsx",
+        "sourceSha256": "2c62c4df9fad8848ac7d66b83f92b16cf8603c529280f2e1602d15f812d6bf5e"
+      },
+      {
+        "path": "client/src/pages/home-editor-responsive-source.test.js",
+        "sourceSha256": "0c9368a977d00016a8125eb06095d9818355fc755f1bc9cffb63d5c277d45383"
+      },
+      {
+        "path": "client/src/plugins/plugin-loader.test.js",
+        "sourceSha256": "57e412d6e09629659385914fe55e2e14d28b6709740bdc09b408078209c5bebf"
+      },
+      {
+        "path": "client/src/plugins/plugin-registry.test.js",
+        "sourceSha256": "2e5131b13f870f111117479384350b787fdf3635a7f7b962f2ef8869c7d59ca3"
+      },
+      {
+        "path": "client/src/plugins/plugin-sandbox.test.jsx",
+        "sourceSha256": "6bcb26a273148fd7a693086de80d0ce1c6dbb3b94786d2f514a18cd9faf25c09"
+      },
+      {
+        "path": "client/src/services/media-provider-contract.test.js",
+        "sourceSha256": "e78985e62186f5ed66d7c7d3ebf2d12168b80961ce97457520d678e20fe1c3c7"
+      },
+      {
+        "path": "client/src/stores/editor-store-multiselect.deep.test.js",
+        "sourceSha256": "d603324f22e2dbc2a144a5e3fdeae000f2ca4dbbb65001f0d27f723c1c84e713"
+      },
+      {
+        "path": "client/src/stores/editor-store.test.js",
+        "sourceSha256": "a4887f54248b98bcef4c6203535bdcc3cc69c09ba348efc92fb52a21e16dd399"
+      },
+      {
+        "path": "client/src/stores/presentation-store.test.js",
+        "sourceSha256": "7726423c5e459b6c932bdc0c0fe19f153ca59c988bbc2f2cdaf655524d91335f"
+      },
+      {
+        "path": "client/src/stores/ui-store-format-context.test.js",
+        "sourceSha256": "edc17cfc5f9bda61c2c4562a8e7e3c4e9ebb42c8a5efebf00b3bfef7f525a50d"
+      },
+      {
+        "path": "client/src/stores/ui-store-ribbon.test.js",
+        "sourceSha256": "9e1729f4d9734ec2e4be541f0d884efbc3059e1ec75f1513d9382af861cd0ddc"
+      },
+      {
+        "path": "client/src/stores/ui-store-slide-position-and-present-handler.test.js",
+        "sourceSha256": "04e57220982429cad490cc604aa5767478332fafdb78de9b64fe1f883f944938"
+      },
+      {
+        "path": "client/src/stores/ui-store.test.js",
+        "sourceSha256": "f08acfbe23877c09e5820930c9901bfec4c8fde6f1fb41e6d8f154f01fba3c96"
+      },
+      {
+        "path": "client/src/tiptap-rich-text-roundtrip.test.js",
+        "sourceSha256": "d1194b6bf1ec1395f8fd2a499838af1be9a5a1a2da91584609ebddd3ab314cfb"
+      },
+      {
+        "path": "client/src/utils/accessibility-findings.test.js",
+        "sourceSha256": "2627c8d1e19379ebb5d01da31ee9ceb7ae45d4d8c82f9bb0d47c9cb25c62f3de"
+      },
+      {
+        "path": "client/src/utils/active-slide-mapper.test.js",
+        "sourceSha256": "5e37fb1aa55fea0b71d88538466620949582e6f44fbc4590196f9fe2bf638b1f"
+      },
+      {
+        "path": "client/src/utils/active-slide-selection.pointer-down.test.js",
+        "sourceSha256": "7e137a493c4a4df3c63df0983b04c3494fb136b5a1937e3cf8fdafc9259793c8"
+      },
+      {
+        "path": "client/src/utils/api.test.js",
+        "sourceSha256": "790a2162abf32799bdcc7c04ed54731f8ba599dfd70b77a6a134e7bb02c1a909"
+      },
+      {
+        "path": "client/src/utils/blocked-action-notice.test.js",
+        "sourceSha256": "930fe985532b2eeaa931ab8560256e500f626b2680b72c3bb928cafc3c1d5dda"
+      },
+      {
+        "path": "client/src/utils/build-slides-from-outline.test.js",
+        "sourceSha256": "4d920aea0abb9d67ecedd378bccbbb1d77314ba400d5e6da3c711ebb05333af3"
+      },
+      {
+        "path": "client/src/utils/command-palette.test.jsx",
+        "sourceSha256": "2b47f86462340f3feafef424446706b83e3737a059eb5d0f9e870f8584c64e84"
+      },
+      {
+        "path": "client/src/utils/content-safety.test.js",
+        "sourceSha256": "b24a175c5e9f010c6f6d54f44d85660a19022c6eb5624763a4d34fdc29f2d07e"
+      },
+      {
+        "path": "client/src/utils/copy-to-clipboard.test.js",
+        "sourceSha256": "5faa870be8db08525a9417e38dc70142dce4547582a92768bd70e3d4ac6c44b9"
+      },
+      {
+        "path": "client/src/utils/editor-command-availability.test.js",
+        "sourceSha256": "7ab630a953111c55a56fef31a2e43d9a0b049e4ee79c1e4897360736b61c5be0"
+      },
+      {
+        "path": "client/src/utils/editor-draft-store.test.js",
+        "sourceSha256": "da34b8f555773357b0e211a49cac268f9781852d6e90068695dcc0be38d9abd3"
+      },
+      {
+        "path": "client/src/utils/editor-presentation-migration.test.js",
+        "sourceSha256": "5737ace561962d11b71bc02d332bd0e2b2450f4ac29239fc38b18eafc0c86a80"
+      },
+      {
+        "path": "client/src/utils/element-update-fanout.test.js",
+        "sourceSha256": "b1ed2d93dafd97fb3ba55ab162e2db0d132463c629b4a1c40f69a89caa0b1890"
+      },
+      {
+        "path": "client/src/utils/export-pptx-actions.test.js",
+        "sourceSha256": "b53900bf57a38ad1f313e74e8929e1736bb750aca3d08024f1b359ef223a3e6f"
+      },
+      {
+        "path": "client/src/utils/export-pptx-core.test.js",
+        "sourceSha256": "3c744b8bb6920ea1e05b9b22dff8f9d37464ffe5d479426c8fef29d6660e733d"
+      },
+      {
+        "path": "client/src/utils/export-pptx-image-opacity.test.js",
+        "sourceSha256": "ccfb8bbb05edaf43c6424b87ad18ed0c7d3fa62f19ee61dbea58a149ed8c9e7d"
+      },
+      {
+        "path": "client/src/utils/export-pptx-media-renderer.test.js",
+        "sourceSha256": "d85b951a262e262d76bb41111be97cbc8ab1c7a5256a2dd51f42e1f39d7b6c5e"
+      },
+      {
+        "path": "client/src/utils/export-pptx-media.test.js",
+        "sourceSha256": "78cd839435a1422ea88885e769b241ad4c7f9c28af848e42127af4edd8fdfe11"
+      },
+      {
+        "path": "client/src/utils/export-pptx-raster.test.js",
+        "sourceSha256": "6fb492d4c4fa99b9dce6c7304e1882fbd79bbd6fb43dde981450bf4a4da7bbcd"
+      },
+      {
+        "path": "client/src/utils/export-pptx-text-runs.test.js",
+        "sourceSha256": "19637eeb9efff1e3ba04e1c72ee1e6d7b81712c63ae77e5aaa55966d6e1f1722"
+      },
+      {
+        "path": "client/src/utils/export-project.test.js",
+        "sourceSha256": "02e0fe5846263f9aaf57ac1e40ca4ce383cce1393c8f417a9ccd2b622b922497"
+      },
+      {
+        "path": "client/src/utils/exportPptx.test.js",
+        "sourceSha256": "b8aab396d5ecdc025a174f0bda245a0cbd1f726817fe6c082ee514df1848fb90"
+      },
+      {
+        "path": "client/src/utils/game-shortcut-config.test.js",
+        "sourceSha256": "1a63b090edfcdd2540a9660c84a6f5c81d3617351d67e5fda8d1e2e18bd415d0"
+      },
+      {
+        "path": "client/src/utils/generateHTML.test.js",
+        "sourceSha256": "5ff5f5691f5d2c1fcf1a5bbb76058bc5c19aeadc8c7a0638ab334e7cc653538a"
+      },
+      {
+        "path": "client/src/utils/history-stack.test.js",
+        "sourceSha256": "f8de4bef4c6877b7cc1b1a03064da18d9ed0856e62b7ed1766667762c4131719"
+      },
+      {
+        "path": "client/src/utils/import-project.test.js",
+        "sourceSha256": "c9c8a19d7e7139096087f22d4ddd245b17776204bbf571a082305e15b09fdeb5"
+      },
+      {
+        "path": "client/src/utils/interactive-keyboard-target.test.js",
+        "sourceSha256": "27cad83975072c4f1e33bc7c79d330a0287310f7ec8b2e4aa870abc0803667d1"
+      },
+      {
+        "path": "client/src/utils/legacy-control-class-audit.test.js",
+        "sourceSha256": "cd9d18384a6749221a27fce6745dfd43477c9e95a1cf1c46fe069a9a4ef58ab3"
+      },
+      {
+        "path": "client/src/utils/markdown-import-xss.test.js",
+        "sourceSha256": "e00ba104fff82594f2e1063b0f641270902a9884fcb733471e981a5155e90347"
+      },
+      {
+        "path": "client/src/utils/markdown-import.test.js",
+        "sourceSha256": "c781942a4f201084db00d304fcea3be64ff3bb6f6012f3b914d788d383192951"
+      },
+      {
+        "path": "client/src/utils/markdown-utils.test.js",
+        "sourceSha256": "8a5a86420edc09caf5e84bc660f9d918dff5098bc71300194a4dc91902ff48fd"
+      },
+      {
+        "path": "client/src/utils/media-detector.test.js",
+        "sourceSha256": "a1fd93e0f038c8a64c147859ccd31fd396553d0ab8eb5bc9774bfe868cabc500"
+      },
+      {
+        "path": "client/src/utils/migrate-video-src.test.js",
+        "sourceSha256": "263447afa38438bafd25cc3969d375f38d2341e1ba2e9e5764baccc361bad6f7"
+      },
+      {
+        "path": "client/src/utils/native-dialog-audit.test.js",
+        "sourceSha256": "8fc79d823a1ed639331c90635a94513a11393545045482641a8ca17bc1a5384f"
+      },
+      {
+        "path": "client/src/utils/number-input.test.js",
+        "sourceSha256": "05d88836fce8bb29c561b62b2cbcffaa31d19ee771575fe8dc4f1d980bd3f905"
+      },
+      {
+        "path": "client/src/utils/offlineExport.test.js",
+        "sourceSha256": "c0f696154d46ecca3b6e1a3b9ca09b8701c1011268a3afb724c40605e2739e9a"
+      },
+      {
+        "path": "client/src/utils/pdf-import.test.js",
+        "sourceSha256": "dbb6075b7ecf0800656290de9760debdc05f9f4f7466b39ff299edfc37174479"
+      },
+      {
+        "path": "client/src/utils/pptx-import-meta.test.js",
+        "sourceSha256": "a28716445d74301b7ec21475fba00a266f630e7d809fce10e80be45fa25d0ca2"
+      },
+      {
+        "path": "client/src/utils/pptx-import-summary.test.js",
+        "sourceSha256": "88756e9619e48cff857d35e79cb041e2d2e8e46df5a76be3acaf8453bde2c446"
+      },
+      {
+        "path": "client/src/utils/pptx-job-wait.test.js",
+        "sourceSha256": "c20c8bf83dfe841b0672bce6be765e1d6e2f605d4ea71e4b2d93d7fa9beb3902"
+      },
+      {
+        "path": "client/src/utils/presentation-ui-token-audit.test.js",
+        "sourceSha256": "68a4d3b91e0c2e7045e476992f80847f135a8c8d369be639379fac13fc35c164"
+      },
+      {
+        "path": "client/src/utils/presenter-popup-bridge.test.js",
+        "sourceSha256": "b816a0a9a035cf31713c0484b488af163c2c0151eae1b1ba6b0f3752a4090929"
+      },
+      {
+        "path": "client/src/utils/project-media-utils.test.js",
+        "sourceSha256": "37c12fe9fe13a9c3cd3dfaf05ec54bf95273ef0ec25a5f2fefc78f897233526e"
+      },
+      {
+        "path": "client/src/utils/selection-mixed-values.test.js",
+        "sourceSha256": "e3aca187b7817518f46a1b2aea64e10bb962b313a45187c3d53c203569574024"
+      },
+      {
+        "path": "client/src/utils/shortcut-normalizer.test.js",
+        "sourceSha256": "fe4a2a03cd9155f9c7469b90bc885c67b689d8bc26c896faf78b22061ecc869f"
+      },
+      {
+        "path": "client/src/utils/shortcut-registry-unit-tests-for-lookup-override-merge.test.js",
+        "sourceSha256": "9005a477273435d064e0cec1e099083667d6fc85a1b363b08c182c5ed47584a9"
+      },
+      {
+        "path": "client/src/utils/shortcut-storage-unit-tests-for-load-save-reset.test.js",
+        "sourceSha256": "d71bf0b0cb83b887b12b8916473d355d2266f92b6d1cdf98b79cae3f19368f27"
+      },
+      {
+        "path": "client/src/utils/slide-notes.test.js",
+        "sourceSha256": "521c7b87b81e28d7cabf0aac7b531437cb0efc6ff9b2143da88a45b6d43c305c"
+      },
+      {
+        "path": "client/src/utils/smartGuides.test.js",
+        "sourceSha256": "7a0ab31c86f50a8128a5adb5a8ebfc71470ce4a8786389d8e918d3f4c06eaa55"
+      },
+      {
+        "path": "client/src/utils/stem-embed-presets.test.js",
+        "sourceSha256": "a0797f337bd5533ede1f37a768fd60c5c6e93117a825ba563a213fa034cbab73"
+      },
+      {
+        "path": "client/src/utils/tailwind-inline-style-audit.test.js",
+        "sourceSha256": "e670d221d6d8a4ceb0ccf9195d418d9f7724cc2f653a99bfc168ab95ad41a320"
+      },
+      {
+        "path": "client/src/utils/tailwind-token-contract.test.js",
+        "sourceSha256": "be0b93e08ea44b5e458fcbe79e177ab8df109286af36eb8302d00ace6cff60d1"
+      },
+      {
+        "path": "client/src/utils/template-filters.test.js",
+        "sourceSha256": "47b2500cfe3e2d1f55024ee5bf9beffe2158078698498ae353295a6e05bbc5e5"
+      },
+      {
+        "path": "client/src/utils/ui-typography-token-audit.test.js",
+        "sourceSha256": "cbc54c22a8da2bca5cafcec714541aacabf4161ba2d2759ea1a2b8f15e497ddb"
+      },
+      {
+        "path": "client/src/utils/url-safety.test.js",
+        "sourceSha256": "e26cdf71f105d4b07696f08eaa5e2d896a08250977c0acc6d7ab5f6cf165ee1f"
+      },
+      {
+        "path": "client/src/utils/z-order-step.test.js",
+        "sourceSha256": "5f9c992dc31ef1823a013fbfe9e0aed9cd990f2acc0d2a23c21b825178171c1d"
+      },
+      {
+        "path": "client/src/verified-element-control-defects.repro.test.js",
+        "sourceSha256": "30f65c59141b0c845bbc538608a5a1de97b43ff64b034d1a92f1419c4dbfaec8"
+      },
+      {
+        "path": "scripts/electron-server-dependencies.test.js",
+        "sourceSha256": "d1304d81e8abda847fe8ed546a26bcf0d712b217f8cfab3630a7a1310cdd0ae3"
+      },
+      {
+        "path": "scripts/feature-inventory/baseline-gap-report.test.mjs",
+        "sourceSha256": "65a1957fb7d10d518d9573140e584c71d92424632bd94c71ecec11ec9ece516d"
+      },
+      {
+        "path": "scripts/feature-inventory/build-inventory.test.mjs",
+        "sourceSha256": "4b77c0fe81b45692b70a21700253f6ce46dab1f0b8ffa52c21896718c7ee1dcf"
+      },
+      {
+        "path": "scripts/feature-inventory/build-matrix.test.mjs",
+        "sourceSha256": "b048258a0e8bb03be75bf5a27aa4a73829a9dcc26f6c0e413503573ec950b3cb"
+      },
+      {
+        "path": "scripts/feature-inventory/check-coverage-gate.test.mjs",
+        "sourceSha256": "49061c6626a54b97d9e942310fe0d9b249e17defc776fe3cdcf71be979bed7c2"
+      },
+      {
+        "path": "scripts/feature-inventory/check-manifest-completeness.test.mjs",
+        "sourceSha256": "913cfb9125cb26b5e11466899092f60e44f1798983f98bb2045034ce67efba80"
+      },
+      {
+        "path": "scripts/feature-inventory/coverage-depth-policy.test.mjs",
+        "sourceSha256": "a892095453bd448edf385d8b2cad9c429502585ee4d1d0e7b13eba8151d99317"
+      },
+      {
+        "path": "scripts/feature-inventory/extended-domain-report.test.mjs",
+        "sourceSha256": "f9693157225119190bbb9f23944ba99c6b36487b9474422b8e1b65f497a7792c"
+      },
+      {
+        "path": "scripts/feature-inventory/extract-tags.test.mjs",
+        "sourceSha256": "3d540b0d6966dadb8b24c24fac352c21b3310ea3dde8930dde1436ba9a8c6735"
+      },
+      {
+        "path": "scripts/feature-inventory/join-run-status.test.mjs",
+        "sourceSha256": "9b829b9017bc8cac45710c4795e9cbb2e52303113b7fda2bea70ac849dc9967d"
+      },
+      {
+        "path": "scripts/feature-inventory/tag-retrofit-guard.test.mjs",
+        "sourceSha256": "5c17041388ea70c2a02bc840569c8ef6a2a71906818f3cf9573247624b23bcec"
+      },
+      {
+        "path": "scripts/feature-inventory/validate-element-control-audit-matrix.test.mjs",
+        "sourceSha256": "41cadd2a111758b0a1bf999f51ab972a088cb4cef5ec3848be81a8c9fb1313b5"
+      },
+      {
+        "path": "scripts/lock-version-metadata.test.js",
+        "sourceSha256": "7a4af287175bcd3d39b0c18f4b8e51f119c8d3732c800f7101f4c123a9af05f2"
+      },
+      {
+        "path": "scripts/pptx-claim-composite.test.js",
+        "sourceSha256": "23caa56a13e1a72a43bb8df6bea851575a0512f26069934abf436a7a063231d2"
+      },
+      {
+        "path": "scripts/pptx-package-claim-gate.test.js",
+        "sourceSha256": "499b248c5f7a99da0d5f8392dacba1056c50780c343398e3a743c477c93019ac"
+      },
+      {
+        "path": "scripts/pptx-parser-benchmark/json-utils.test.js",
+        "sourceSha256": "615414f2fb00dd9ffeb8e9d014e9c0cb0e81b42e35a6b72a0b25384ed2d0b782"
+      },
+      {
+        "path": "scripts/pptx-parser-benchmark/package-utils.test.js",
+        "sourceSha256": "059eea28610a5182fcd2d0cbad8f3ada28d0e60a3ae254d4f3d9c6576b0a9688"
+      },
+      {
+        "path": "scripts/pptx-parser-benchmark/pptx-guards.test.js",
+        "sourceSha256": "158ab9db6c3093d0715b7d1ea31d30839658d6d19ce2ba07e710f3909d867232"
+      },
+      {
+        "path": "scripts/pptx-parser-benchmark/run-all.test.js",
+        "sourceSha256": "13c101f3c9d02af6800ad4b323d4ebd14f3ab9ff698221b2b79668e1b73283e8"
+      },
+      {
+        "path": "scripts/pptx-parser-benchmark/summarize-parser-output.test.js",
+        "sourceSha256": "2b7e9ae058efc22a142ee9e372dc230a40f1cab8f930c7bcd98da7624be6cb75"
+      },
+      {
+        "path": "scripts/runtime-receipt.test.js",
+        "sourceSha256": "39bed20ad80780fad727265b1bd521bc8a02025fa2c7cdf7cc347e084e047d36"
+      },
+      {
+        "path": "scripts/vendor-publication.test.js",
+        "sourceSha256": "d81e9cc01184d1cd5520a72e318526682c11ec031be2cf7c86a0d6313c1c04dc"
+      },
+      {
+        "path": "scripts/verify-runtime-closure.test.js",
+        "sourceSha256": "77589f493025005f64fd6b1457b6ab49bf751b62ec424b9b21aae24eb5878810"
+      },
+      {
+        "path": "scripts/vitest/baseline-support.test.mjs",
+        "sourceSha256": "1bdcc6d0c155e3a90b3300d9eab820545a96f361c15fd28d2f824b750a40be70"
+      },
+      {
+        "path": "scripts/workspace-lock.test.js",
+        "sourceSha256": "d95eb0eb81331651f14e4e2f7da553984e58564d39793c471278844bcd15766b"
+      },
+      {
+        "path": "server/index-pptx-rate-limit.test.js",
+        "sourceSha256": "671d20f4f15e3f69708797170f23d58f4dfdfeb92176a42f1c62e0c8ee4b2035"
+      },
+      {
+        "path": "server/index-shutdown-writer-lock.test.js",
+        "sourceSha256": "1ae2f8e724c0e53c4cb9c1e2ea84a4b929ed2856fffb38cbea0c101db8a53824"
+      },
+      {
+        "path": "server/middleware/local-mutation-ingress-app.test.js",
+        "sourceSha256": "b1eb8f328be1533eea41b52c47b3e3aaa4a09c42509acc60b1cb1ec16d593b31"
+      },
+      {
+        "path": "server/middleware/local-mutation-ingress.test.js",
+        "sourceSha256": "6060b87b8d718407a77fb73535483e2f245786e136444e57567f1df6121eecb2"
+      },
+      {
+        "path": "server/middleware/schemas.test.js",
+        "sourceSha256": "d1dcecdab6d7523c0c139bbf4ff205d56d23fdec99d1b2d6e0739d42e6089676"
+      },
+      {
+        "path": "server/routes/ai.test.js",
+        "sourceSha256": "83d512d9061121cfe54d4781c000c9bd78d152c02b2708722748a46629f4d805"
+      },
+      {
+        "path": "server/routes/api-surface.test.js",
+        "sourceSha256": "fdb66fddcac237ea04a08401c50e6ef38d2f299d41d650fc92a18cdbb5ba3a35"
+      },
+      {
+        "path": "server/routes/atomic-mutations-concurrency.test.js",
+        "sourceSha256": "aa194cf1eb0351c3010b4060b3876d280c1775b996581c248cde57c40bfecfff"
+      },
+      {
+        "path": "server/routes/explore-reader-policy.test.js",
+        "sourceSha256": "759de8b0c2d2f4467c98e044a26c2f88769b4520543b2ba5c4aacb7eb78f99da"
+      },
+      {
+        "path": "server/routes/games-rest-api.test.js",
+        "sourceSha256": "0671bcf829142310a1d91ba4096f23741b39c84c569c9a0ab2b5659c174ec214"
+      },
+      {
+        "path": "server/routes/history-package-integrity.test.js",
+        "sourceSha256": "75f72de6968d5897e30867788426b4560460df32088a4e1b1c055bc787ba30c7"
+      },
+      {
+        "path": "server/routes/history-package-lock-order.test.js",
+        "sourceSha256": "444d93d76080e246d9f1760201608dac4fe18b0399c3c9c325a007b059bb228d"
+      },
+      {
+        "path": "server/routes/history-restore-snapshot.test.js",
+        "sourceSha256": "01ddc980539b24289200f8fb48839467eba5d54f26be53d8161ece89436463ee"
+      },
+      {
+        "path": "server/routes/history-snapshot-delete-compensation.test.js",
+        "sourceSha256": "ea7d3dbd5701dfc0bc4123d944402f436b043ef30b166bc3db4e116fb8ad6654"
+      },
+      {
+        "path": "server/routes/live-rest-api-routes.test.js",
+        "sourceSha256": "5b6024eecddfa99ecda0dd3207799319b2b9a5257b68bcebe7f52b9efe6d8929"
+      },
+      {
+        "path": "server/routes/marketplace.test.js",
+        "sourceSha256": "f329481a34df5b6205bdb1716a7066ea3d1c60eea5aacd0bf4d47b910b649801"
+      },
+      {
+        "path": "server/routes/plugins.test.js",
+        "sourceSha256": "4466a007a3d9eddba3d29fa3209d32a400c3a2ee5c3858548d31a75366209ad9"
+      },
+      {
+        "path": "server/routes/pptx-edited-export.test.js",
+        "sourceSha256": "d9ea9e18d264372bdab917ed79166699d43b469470aa4253f0d222a3f966cfaf"
+      },
+      {
+        "path": "server/routes/pptx-export.test.js",
+        "sourceSha256": "e320189b9c0610f92f634da0ba5cad2b1252d3742153e5396a9b5d5302f69846"
+      },
+      {
+        "path": "server/routes/pptx-fidelity.test.js",
+        "sourceSha256": "3e8c9a7fba07a57e68d1705458a8800217f50f76efa2cd820a71d6a89c590414"
+      },
+      {
+        "path": "server/routes/pptx-import-crash-points.test.js",
+        "sourceSha256": "9033513b54ffa88aac702dc24308fb1086ba3cef99ed220526872722d4e4b884"
+      },
+      {
+        "path": "server/routes/pptx-import-durable-job.test.js",
+        "sourceSha256": "e49a1bb77ae552011d9fcc5344be0d0eec7639ac33e4f23005bd1b4e705015cd"
+      },
+      {
+        "path": "server/routes/pptx-import.test.js",
+        "sourceSha256": "5e36233e57f47421294d4bef188192599cc6a4236923b2e3bc70eb4e627e2b3f"
+      },
+      {
+        "path": "server/routes/pptx-original.test.js",
+        "sourceSha256": "3c85f7b9212c23fce31682b3c3f413e07c1dbd5f541f9e47c51fae004a6110ad"
+      },
+      {
+        "path": "server/routes/pptx-package-snapshot.test.js",
+        "sourceSha256": "d5db6e951767a675a75c618b6b7a9722a1bcc3acb41803adec9daa058cbe065f"
+      },
+      {
+        "path": "server/routes/presentations-duplicate-compensation.test.js",
+        "sourceSha256": "baa0c4d1ead54d150052aaad22373f0151b38b2b632c9b0bfdc9429d59e49816"
+      },
+      {
+        "path": "server/routes/presentations-duplicate-race.test.js",
+        "sourceSha256": "db773399fb72f2bd5af0bf0bafc3a85fef1116eb343a1198470b2a6e24e956b2"
+      },
+      {
+        "path": "server/routes/presentations-duplicate-successful-save.test.js",
+        "sourceSha256": "44ad11f63b741c5ece53972359e7b00bd0a4e4608bb4a9681492187976f4996c"
+      },
+      {
+        "path": "server/routes/presentations-game-bootstrap.test.js",
+        "sourceSha256": "d97a511332db694d6ec91530e52096955769d467e5057f35356547ed5f5a2056"
+      },
+      {
+        "path": "server/routes/presentations.test.js",
+        "sourceSha256": "6ca11a60707ff8248c1ea208300217e3dbb5fad63e5805224b7a39e51bce6bbe"
+      },
+      {
+        "path": "server/routes/settings-merge.test.js",
+        "sourceSha256": "e9fbf89e1ea3c2e866fc240c08f38232953f57ff98772c58822f5ec51722fb91"
+      },
+      {
+        "path": "server/routes/share-no-password-bcrypt.test.js",
+        "sourceSha256": "79b6c6bd0614b336bd5c0725272dd073103c489f5b01ae370c740276774d0f07"
+      },
+      {
+        "path": "server/routes/share.test.js",
+        "sourceSha256": "40b79fe44c18e6b0a417a5ce7d86962ba66980084e7990e090217617d628311b"
+      },
+      {
+        "path": "server/routes/soft-delete-share-guard.test.js",
+        "sourceSha256": "25700fb1b90c888178b079fe7475ee5f8d8a9a2c724e475006305635545a60c1"
+      },
+      {
+        "path": "server/routes/sync.test.js",
+        "sourceSha256": "dc2e3442a762e2a4064d7aca241a2ba3ae6820047dd8236cbe577020e84710f9"
+      },
+      {
+        "path": "server/routes/templates.test.js",
+        "sourceSha256": "0f60252088f425ab58825b5af2e73b8daa2b0b592a2f9f0dfe110646af62fc2a"
+      },
+      {
+        "path": "server/routes/upload-dedup.test.js",
+        "sourceSha256": "cdada7a98873958c631d739afbf7643e1e93dfe1fe46fc6f8f4d54421502f16b"
+      },
+      {
+        "path": "server/services/ai-endpoint-guard.test.js",
+        "sourceSha256": "699b299b2d43af26069446a6be0b4666dc5107cddbb5fadc4ff735afb071a53b"
+      },
+      {
+        "path": "server/services/ai-provider.test.js",
+        "sourceSha256": "94010342682301db41f2e6612875c3cc080dfad195cc7500b2bb51b520fb447c"
+      },
+      {
+        "path": "server/services/game-engine-singleton-room-management-join-leave-answer-scoring-random-picker-leaderboard-cleanup.test.js",
+        "sourceSha256": "a3a026593e16565ad859195d09d413781d83d5970a242d053cb4e07889062fbf"
+      },
+      {
+        "path": "server/services/game-matching-reveal-persistence.test.js",
+        "sourceSha256": "a1406acc442c45519028b3b28373c47bcca12392511ffec1c62d7653f1be4f30"
+      },
+      {
+        "path": "server/services/game-socket-end-to-end.test.js",
+        "sourceSha256": "71d68a65224111817971ee67f414b1534628c1aa3f79e259c7cc714e4ca10091"
+      },
+      {
+        "path": "server/services/listen-host-policy.test.js",
+        "sourceSha256": "2666f5851c70f5250e15bfec5bd2c6f98ad70292a659a021a9ffd3839a19a413"
+      },
+      {
+        "path": "server/services/live-capability-separation.test.js",
+        "sourceSha256": "91ec90cfaffe759529ae69949735c592d25142f050c22fe3ce4f2ca89861a8e5"
+      },
+      {
+        "path": "server/services/live-room-cleanup.test.js",
+        "sourceSha256": "31e09fbfb446a5681ba14d2a0790deb859a1447511d5c8cc8c624dc742e0c26f"
+      },
+      {
+        "path": "server/services/live-rooms.test.js",
+        "sourceSha256": "dbcb55b1c0d7e028617abce282bdfc84df3436f339a2b7a55a09864ab6756dce"
+      },
+      {
+        "path": "server/services/package-backed-presentation-read.test.js",
+        "sourceSha256": "740d002db9ea074e1b6f3f602093744a03b5c8cb8b9725ae00e750cfb0b4c277"
+      },
+      {
+        "path": "server/services/pptx-import-job-manager.test.js",
+        "sourceSha256": "3e0f2e456ce33112e4f2a644b750bd3c6fe4841296c14e032bf7955515cb160a"
+      },
+      {
+        "path": "server/services/pptx-import/__fixtures__/parser-convention-drift.test.js",
+        "sourceSha256": "056db368ae97cd5f4f11b238df58332bd743b10fe2789ae7a847a999de3e8c71"
+      },
+      {
+        "path": "server/services/pptx-import/acceptance-criteria.test.js",
+        "sourceSha256": "6d3ead2fdc4ef7310eae4ce462d8f2ac2f95cbcd1c4a4fd98fd3babbc1615116"
+      },
+      {
+        "path": "server/services/pptx-import/authority-sanitizer.test.js",
+        "sourceSha256": "7ab451c2691e9d2e790f99424e63cf46014bb22694ed9becccc53fc73774a4a9"
+      },
+      {
+        "path": "server/services/pptx-import/background-allowlist.test.js",
+        "sourceSha256": "dc1d7e417c225ada256ac8783133da732dc71deeb71eed1348082430a0f33de0"
+      },
+      {
+        "path": "server/services/pptx-import/canonical-feature-matrix.test.js",
+        "sourceSha256": "b546c0f3967234bed069e7ca9a592e90b628fd7e34bce18a47a657a0846da045"
+      },
+      {
+        "path": "server/services/pptx-import/chart-output-to-navslides-mapper.test.js",
+        "sourceSha256": "02378c957a891d72d552aaf36d6d198da4dacf0b723d837d99b4bd05865f3fe8"
+      },
+      {
+        "path": "server/services/pptx-import/chart-roundtrip.test.js",
+        "sourceSha256": "52cb2e95622df54609527e80fee81a2e136d7c1ece683f3edacd30c9339c802a"
+      },
+      {
+        "path": "server/services/pptx-import/chart-support-matrix.test.js",
+        "sourceSha256": "6711064bc22f42846d54ef8f23125559b69dd5d5ee71b37fb6051c9e822a10fa"
+      },
+      {
+        "path": "server/services/pptx-import/compatibility-outbox.test.js",
+        "sourceSha256": "8d956abe078ac3ff7ae5de2427baba29689abbae24823abf3a74fcd3fec3bdfc"
+      },
+      {
+        "path": "server/services/pptx-import/complex-object-policy.test.js",
+        "sourceSha256": "f6c76febd82fd0595b4eb13bdf148dc88d53c13284a9237cfe4b19057db4d292"
+      },
+      {
+        "path": "server/services/pptx-import/corpus-baseline.test.js",
+        "sourceSha256": "6347607cc00d91099c3354c5f17a78890729739da6d9380886bb14c8b7e38284"
+      },
+      {
+        "path": "server/services/pptx-import/corpus-chart-gap.test.js",
+        "sourceSha256": "a8d569f06eacec76972a42c170661eb4dcd2e7057168e3cf563991947cd8bc57"
+      },
+      {
+        "path": "server/services/pptx-import/crc32.test.js",
+        "sourceSha256": "d5a5fdf9def2a58196c230279b3b74e4fbc2dc465d1e6ad42917c0efe4ae4268"
+      },
+      {
+        "path": "server/services/pptx-import/create-imported-presentation.test.js",
+        "sourceSha256": "649d5517d22bc4f9a6e3add39b64c7ee4a1ec9edb9de74ef8ac42d2bedc487e3"
+      },
+      {
+        "path": "server/services/pptx-import/diagnostics-output-empty-characterization.test.js",
+        "sourceSha256": "69274a5f3cf2965dfed755730cb83af3ba8328cbe5bf52333be8e4df7e695fd5"
+      },
+      {
+        "path": "server/services/pptx-import/edited-roundtrip.test.js",
+        "sourceSha256": "66a9240355977dbe093e2fcf1cd783c30f10dc7439c365d9fa80db63e419579a"
+      },
+      {
+        "path": "server/services/pptx-import/embedded-workbook-safety.test.js",
+        "sourceSha256": "b22461bff39adaf8bac864fcdf4ff2f5a5d158e2b0e3cb928efe7e97ecd5dbee"
+      },
+      {
+        "path": "server/services/pptx-import/emf-wmf-sandbox.test.js",
+        "sourceSha256": "a3bc423844cf5af79d00daadc5e93e9017eb357e1491775542bf4ca8929bc1bd"
+      },
+      {
+        "path": "server/services/pptx-import/evidence-contract.test.js",
+        "sourceSha256": "b5feac2df7911b5030901cac608f950d0e311ff75dd66ae25819c46ffa340d9e"
+      },
+      {
+        "path": "server/services/pptx-import/evidence/composite-run.test.js",
+        "sourceSha256": "e6610de87b51fdfdb5e06691d0f97fa6310b1daf6830637571b9b4d2623b73df"
+      },
+      {
+        "path": "server/services/pptx-import/evidence/corpus-manifest.test.js",
+        "sourceSha256": "ffa1b01c226e9778b39e893450394ace54cc1c67d334565d1b3f92c2dd81534d"
+      },
+      {
+        "path": "server/services/pptx-import/evidence/local-evidence-contract.test.js",
+        "sourceSha256": "3948b2b4cf3829d3883f165484c2cd4cf73cf67c96399a23322b46ca71c36aad"
+      },
+      {
+        "path": "server/services/pptx-import/evidence/local-role-receipts.test.js",
+        "sourceSha256": "c3445fb475ccdd1f48d933d6116108d393f3e4cbb173e3e1ca89ebf518c56377"
+      },
+      {
+        "path": "server/services/pptx-import/evidence/protected-release-contract.test.js",
+        "sourceSha256": "4fdc90fa3ed454bd03e06de0058c25ecd89041be833a02028d1bdb957350cc24"
+      },
+      {
+        "path": "server/services/pptx-import/evidence/release-claim-policy.test.js",
+        "sourceSha256": "62940f4e4e4f01151813f96881f3ab052843f4d33c8f86218de2e3f7827214d9"
+      },
+      {
+        "path": "server/services/pptx-import/export-security-preflight.test.js",
+        "sourceSha256": "f696a53a6f5b28fbcd242e25b62a0e859d447246c1ba41770a5806932cb148bb"
+      },
+      {
+        "path": "server/services/pptx-import/fidelity-contract.test.js",
+        "sourceSha256": "c6f01e85ce1a9f8038f87cd1d8437602905a53ce7c75d2f140a3a35528ea9381"
+      },
+      {
+        "path": "server/services/pptx-import/generated-fixtures.test.js",
+        "sourceSha256": "095f60bd368400455a3c8670b4d4be0c5c01f2052f7683cc438a6efb662e2183"
+      },
+      {
+        "path": "server/services/pptx-import/geometry-drift.test.js",
+        "sourceSha256": "eeb1ec4a4ea896e6811811866fc57189a663c40c884258a29df57436353d26e0"
+      },
+      {
+        "path": "server/services/pptx-import/geometry.test.js",
+        "sourceSha256": "c99b7af76db2f83305dee75318e15683b09c8a8072d9c0d5f98abffed4fec1d9"
+      },
+      {
+        "path": "server/services/pptx-import/group-transform.test.js",
+        "sourceSha256": "cc00fbd7c9d71fe50217af926ead9f4ed8e3c7e1cd89b059c2c4b0c0e0483ef7"
+      },
+      {
+        "path": "server/services/pptx-import/harness-integration-real-export-path.test.js",
+        "sourceSha256": "8dca7eaa87aa255a655ff87b8df644879b66319699adbaf5b426dc0515c14f70"
+      },
+      {
+        "path": "server/services/pptx-import/import-report.test.js",
+        "sourceSha256": "a5a4991eed061797e9e8495955daf66121103926b72cfd013633919f31a1f3be"
+      },
+      {
+        "path": "server/services/pptx-import/importer.test.js",
+        "sourceSha256": "b26432ee26131962b51f9fc2273196824a3df03ca60b44ce1f6ba17d3bf59ebe"
+      },
+      {
+        "path": "server/services/pptx-import/mapper-golden-master.test.js",
+        "sourceSha256": "b83197d37192d91a5a1641919cd2ed9a6e202a7dba3e6646b58190bab100f6c9"
+      },
+      {
+        "path": "server/services/pptx-import/mapper.test.js",
+        "sourceSha256": "a5c600e8eb2c83652aa76457d4b5d977fe3a0b44fdcfa030ae85ad2def5e8c08"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/map-diagram.test.js",
+        "sourceSha256": "1c3b2f589d6e1b3af5130488f5ebec78ed12809ceb113ad91d7cb12caff10ce5"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/map-group.test.js",
+        "sourceSha256": "2be78c7be4904ee573e1340cddcd19e280de2e43b317cea8295e8f06811aff34"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/map-image.test.js",
+        "sourceSha256": "47dc235030cbc9987842377601694ebe782fb2b538cbeb8a078bb74a8d7b6a66"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/map-media-private-host.test.js",
+        "sourceSha256": "b4011b871a1f3c56f724c0b11c278c41ccc5576cd9d8ae7ff6f0ab5ee6b6f91c"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/map-media.test.js",
+        "sourceSha256": "8e8f1146d2600109b4071f802a7bc181895a93ddece9cf766189d5be1eef210a"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/map-presentation.test.js",
+        "sourceSha256": "60d1b8aa9cc4d6ba98a9c7b602aef5bf20383f402d6ad51f69b51c6abff3dcd8"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/map-shape.test.js",
+        "sourceSha256": "e9aeab946a336bbc5b9574d96a76648b680644d114d6b3c1effdc1d7b66236ab"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/map-table.test.js",
+        "sourceSha256": "a774ccee06df561359253135bdf628e3ec747a53a050a8181d26027abf92dc6e"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/placeholder-resolve.test.js",
+        "sourceSha256": "d63f7123d01d81a295fdb52b738e3cb4ae1ee7b388fd90440ba629224dc73779"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/primitives-strict.test.js",
+        "sourceSha256": "ab9d38ab5fb55e1a91100a0221e9e2b7074c6c3cfd55c19e076d3a66f45bb09d"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/theme-resolve.test.js",
+        "sourceSha256": "26e60b75823b95c38499c7538d3eb3437a0cac20770bf1ed251e346d2a9beb67"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/utils-base.test.js",
+        "sourceSha256": "b7a7d61a47ae7cf4799c8e9c3d7703e8827954d83439262f8964f75bf371a889"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/utils-color.test.js",
+        "sourceSha256": "da43bf4471d91a1d50003f3c832898746ff1e414b6f077399793827d311f24f7"
+      },
+      {
+        "path": "server/services/pptx-import/mapper/utils-text.test.js",
+        "sourceSha256": "08acf917da8c2111965583052fefbd1c91b445dbb2a193ba47b23ff1120b07ea"
+      },
+      {
+        "path": "server/services/pptx-import/media.test.js",
+        "sourceSha256": "8733b53121c68fc2a1170d954500adf31d000ad0e525f0be6988f5d25742a8d8"
+      },
+      {
+        "path": "server/services/pptx-import/mutation-journal.test.js",
+        "sourceSha256": "a15d9a92bf32c8e81b1b7678fa4e7b6d6a382d7d34554cc7abda4769911d2688"
+      },
+      {
+        "path": "server/services/pptx-import/mutation-transaction.test.js",
+        "sourceSha256": "1679c7a655fe7874f6f6190a1a2c49a49ddf732fbba6ae3ecc1ba40035de4cf0"
+      },
+      {
+        "path": "server/services/pptx-import/native-plain-run-postcondition.test.js",
+        "sourceSha256": "5614d64fa70901138813be9aa91f739199e293a013dc17c1ce9c1bc737a5d8e6"
+      },
+      {
+        "path": "server/services/pptx-import/native-reimport-containment.test.js",
+        "sourceSha256": "cac6fbb1f52746e9e3451341e3da5819ee7674629e844cb74d444db3191af559"
+      },
+      {
+        "path": "server/services/pptx-import/native-reimport-validator.test.js",
+        "sourceSha256": "1810d5c471c58ed49fbdbf3b79d7cc315ff4ab132d99e7cf4699a5865abd3285"
+      },
+      {
+        "path": "server/services/pptx-import/native-shape-fill-postcondition.test.js",
+        "sourceSha256": "5eede499322b60579fbd349c37a2540791c4b6f5d51c941d46c6161b3738c37a"
+      },
+      {
+        "path": "server/services/pptx-import/nested-package-guard.test.js",
+        "sourceSha256": "73f480bc0f63ba3e56392ce3cbee99a2f4962a2332e978f6ce6be8a740693fd3"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/contracts.test.js",
+        "sourceSha256": "b54c2dae8dace29386315422d9da56edbb3e4e5599288f5b80937b0fba6cf9b8"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/execution.test.js",
+        "sourceSha256": "b26edd891652bdeeba2df59ee3f0cb3e2253ed997afcc63d14c5d1ca43ccb536"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/gateway-command-contract.test.js",
+        "sourceSha256": "5baa46ba5a69ec8333ab8279a9040b94f297607f83b7cb4993ffefbbc473d222"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/gateway.test.js",
+        "sourceSha256": "842bcea0b6761e92a9047fdf59de934db6fc5f65c88446a7375adf01bed9aedc"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/job-hooks.test.js",
+        "sourceSha256": "4a8b94b5b27cc0b1bcb487b5bc39928b855afdd02bc5b81f4ab3b9986a1d379d"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/native-launcher-client.test.js",
+        "sourceSha256": "bbda96b72918e13a8fab9f0d5165176439f0ea2833037526c1be3f2871efe2ca"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/native-launcher-contract.test.js",
+        "sourceSha256": "c5e148c8b17435b926b99ed1035409002296294bb4c794daaa52c8dccd449515"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/packaging.test.js",
+        "sourceSha256": "4d903c1d69b3f1ef598df9bfd18f0c7203f8b35f6bf42d07afc0f19798035fa6"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/physical-feasibility-contract.test.js",
+        "sourceSha256": "e89a9376fc7610bee0ca290bc5c748f58687dbf16a99bc55eab7dbb0e7a57675"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/physical-feasibility.test.js",
+        "sourceSha256": "63fdd9d403a46d5673cbf7e882405328ddec4370439de6d32819c59630c6ba99"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/qualification.test.js",
+        "sourceSha256": "1af3236767084ea6adc105ab3b65ce2080d8ddb5b04a4f100b256bb25cef6222"
+      },
+      {
+        "path": "server/services/pptx-import/officecli/staged-validator.test.js",
+        "sourceSha256": "1a27ad8673338759df9f6ca3d7567e0ae5e0dfc11fdac0c2d40b584730b23e88"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-animation.test.js",
+        "sourceSha256": "231f55fde85d66ed99eed2930ef7aedfee1610fc9f1572458e2637f8ac513e2a"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-chart-inject.test.js",
+        "sourceSha256": "ab6e121f621e710a2bc689627cc947dab8fab8ec787ba34b30dd395e9d7def07"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-chart-parser.test.js",
+        "sourceSha256": "349011b7cd964845a93d9611ece4f3e7716780aba5a84f8a0d2cb8c07554b341"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-diagram-parser.test.js",
+        "sourceSha256": "dad109f546e46b8c5a0f7ca8a2ca45aa2b8ad88cb9552897c51356f89b5b12c7"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-inspection.test.js",
+        "sourceSha256": "b9debde15d0185db822d43231b0debf0e552e16e001af09a09559da667302631"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-layout-resolve.test.js",
+        "sourceSha256": "270ecf77e6e874cb73087e02e164bf83dc35724d544cff6316954197f9abdefc"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-scene-graph/attach-source-nodes.test.js",
+        "sourceSha256": "deeddc66e3966337e2e1451740ccae867a7de3974bae87e4114a35fdce7655f9"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-scene-graph/index.test.js",
+        "sourceSha256": "ad18c843c19199f7dc529a7ccd8f1e04fd63c16618c0de4f965b9b33136057f1"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-scene-graph/parse-rels.test.js",
+        "sourceSha256": "7b3ff3e938de0ab6713042d1518fa8aa4d80513511218e2b99171dfb26aab90b"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-scene-graph/parse-sptree.test.js",
+        "sourceSha256": "8a66f43296f77dbfc26b75af868d8541dd59b5cca7542d2264c53c5ecbec621b"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-scene-graph/strict-policy.test.js",
+        "sourceSha256": "41ed29e2ed0402ca28ea1b919eccf20c262346f98668a0a918a6c8370b34cfa5"
+      },
+      {
+        "path": "server/services/pptx-import/ooxml-theme-parse.test.js",
+        "sourceSha256": "4ba2ca472047195dd38410cb7a2f70f06ed925bc24854caa9e99fbc376be42ba"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/actual-evidence.test.js",
+        "sourceSha256": "76e911067837d42cc1c75a1b1c1b3896833ec9b09303e2b7c4b7743b797eb035"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/capture-present.test.js",
+        "sourceSha256": "5b69416214aa9fb45f76828391b33de17c7cbfa34efd5eb48810e37a4f58b564"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/compare-goldens.test.js",
+        "sourceSha256": "f228c58093e2e452f6bc54fd246ab733fd23c74e697441e4212e4bfe26bd3846"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/comparison-evidence.test.js",
+        "sourceSha256": "3c515d11d6acff241bce3159ca5569c183223ce2a32506539f929b2880270870"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/golden-evidence.test.js",
+        "sourceSha256": "aa17f076298aee0b7fef40e2ab28b2d877b471383a9e2783351b640ff33b4635"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/golden-source-evidence.test.js",
+        "sourceSha256": "b40e3f3e273b1a0f18b8dd1337dbc3a7707faab8337ea5485ca39f39a2ae68be"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/http-boundary.test.js",
+        "sourceSha256": "a7868136f32d63c34d95e97489c89a41e7f52b4681236cf7817eed417c9cdb55"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/oracle-evidence-runner.test.js",
+        "sourceSha256": "0bcbc220c7426635058171f94f8d35fe1f00b3907496e8704cb6a29525ab6caa"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/oracle-gate.test.js",
+        "sourceSha256": "27847ce0fd09d868d57f43a5c48ec63f1ff45ea014b5b6d7d3004341a8996acf"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/package-backed-actuals.integration.test.js",
+        "sourceSha256": "1a8854d90a8c222138d9930b5a8f99ceca9b9e110b2a8993a6337f5d5c156d59"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/package-backed-actuals.test.js",
+        "sourceSha256": "a63f9c9f10998ec760eeef2952d1a8da1246b32e6a7534d8378ea5fa39d3c288"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/package-snapshot.test.js",
+        "sourceSha256": "49ac2f58d45f2127d2457d6759b0d43edc8707f2784f51b080dad5a2f9895667"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/png-rgba.test.js",
+        "sourceSha256": "5d91eff40bd5823050e3f0dc238811fb06f70aa4e6e90a382b3cd1ead9753bb6"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/pptx-oracle-cli.test.js",
+        "sourceSha256": "f78255fc865bef676b6f6d685e9153edde2f7b204b203f32b0fcdf5edc35edf1"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/render-libreoffice.test.js",
+        "sourceSha256": "cf93badaa46deeb3dd9d94e83e8d2f1fda11f21ac4782f2e41f853298cb5c008"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/ssim.test.js",
+        "sourceSha256": "c71511daa207ae04fbbc20fb0517065c57ee5a5819f1bd262f371c6759787057"
+      },
+      {
+        "path": "server/services/pptx-import/oracle/visual-evidence.test.js",
+        "sourceSha256": "ef28a6324de1d4110f259d99845ce48773407da8a318443ebe99938b7824cac9"
+      },
+      {
+        "path": "server/services/pptx-import/original-package.test.js",
+        "sourceSha256": "4ac142f0ebfe84865ed203f73c470b8f017e615d61c9256444a338c02ae53f7d"
+      },
+      {
+        "path": "server/services/pptx-import/output-usability.test.js",
+        "sourceSha256": "a85b27637e8c8bf1083855848a9ce0881298a0075c35bf701d2ae394e63701c2"
+      },
+      {
+        "path": "server/services/pptx-import/package-authority-snapshot.test.js",
+        "sourceSha256": "d1f8683721db7306f6e78ba66f2755852b46f932eb650c75b0f5a1acbaf2899c"
+      },
+      {
+        "path": "server/services/pptx-import/package-revision-resolver.test.js",
+        "sourceSha256": "278a0c03b2385ba9bbcf8fe49f3d3cbdf5cd77b0470394f5b8ed9f6bebd849a1"
+      },
+      {
+        "path": "server/services/pptx-import/package-store-runtime-lock-order.test.js",
+        "sourceSha256": "a37942a4cd2a7d51e70d17069b01c0cf7d0c7a90a997619d76579948baa52171"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/authority-dto.test.js",
+        "sourceSha256": "3aa410bca231f729e74aa8cc98c55665bcb2d583d1e6ffc3159c53636b19745d"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/blob-store.test.js",
+        "sourceSha256": "3e3943b9e3e9395177a21d744f048338cd4bb19a591ea3e51ed6f90a42a48781"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/corpus-tier-audit.test.js",
+        "sourceSha256": "1d1ca0c0c3e41eaf3683a260ccc45abb50671809a2cc31cd3d12d878a92123a7"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/inventory-dto-legacy.test.js",
+        "sourceSha256": "04f6317d9fc7c41692da80f7797e88b2b3338d86ce100ff2a89d93383b9e12e4"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/legacy-state-migration.test.js",
+        "sourceSha256": "8fcf406401da5b8b02b0377465b376602df34f2f1f474e7112a7532826e33137"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/lifecycle.test.js",
+        "sourceSha256": "4899ca248c5ca43a8f83608535cd311bb9aba1e0e535e203f17622769ff758a5"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/opc-hostile-complex.test.js",
+        "sourceSha256": "9f6d66e4b60461604e4129b169330d1852277554a7b0198d65b93500785f17bb"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/opc-xml-safety.test.js",
+        "sourceSha256": "9dcdd6733ba71df105a90642587192898113ccd98a166773496af1344abf2bf0"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/package-store.test.js",
+        "sourceSha256": "40064dc4147bbc9838f53f6c1ae482ff158130a7821843adcb401d6b3418eb18"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/portable.test.js",
+        "sourceSha256": "b743889bd5eb7a436bb4eac0f54cb7ff564c34260cb4fee13b22cfb3a2fdb08c"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/retention-dry-run.test.js",
+        "sourceSha256": "d76913e9d64c58b8e01339c5f6061f7186ea9178b8102a8df764965d50e640de"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/state-root-bounded-chain.test.js",
+        "sourceSha256": "e9d1938d271c7f284b734219563c299232e55e2686934da14b9686f10600d8fc"
+      },
+      {
+        "path": "server/services/pptx-import/package-store/writer-lock-reclaim.test.js",
+        "sourceSha256": "4c826f5af15f41a3c7fdf93ea0b2d6666077f60f96b87a054515b7a83f718a42"
+      },
+      {
+        "path": "server/services/pptx-import/perf/report-schema.test.js",
+        "sourceSha256": "64fc3e5ddd8913fbdd6d128bab5a4844b02373f2b572f4eca8b33a3303decfe0"
+      },
+      {
+        "path": "server/services/pptx-import/perf/run-matrix.test.js",
+        "sourceSha256": "7e4f12cd04ad6976b26dbe0e8bc48afb014621cfc74ba2c4faa50ca7e72a104c"
+      },
+      {
+        "path": "server/services/pptx-import/perf/stage-timers.test.js",
+        "sourceSha256": "e56da78c0d01da934189628334c3fca7773c8c7bdc8d25aef387708c7f12f85d"
+      },
+      {
+        "path": "server/services/pptx-import/pptx-guards.test.js",
+        "sourceSha256": "238ae2a4ffe43aff6be0e59ac541b7b1e8dc850a2b2a4dffaebbd6cf359ca743"
+      },
+      {
+        "path": "server/services/pptx-import/pptx-import-adversarial-suite.test.js",
+        "sourceSha256": "cc71ed741de8d6ac89093671da9fa83f50a969cd951085c176845d8b7bea0a16"
+      },
+      {
+        "path": "server/services/pptx-import/pptx-import-corpus-cli.test.js",
+        "sourceSha256": "0ce41f26fe804d0571a2018faf8b65294de0ee9be37b1511d3c34eb1a076eb2c"
+      },
+      {
+        "path": "server/services/pptx-import/pptx-import-e2e-flow.test.js",
+        "sourceSha256": "00ce57a58072006a9c3d60755b1e0ceb3cc480f28c152d911c788fdc0175b625"
+      },
+      {
+        "path": "server/services/pptx-import/pptx-import-qualification-source.test.js",
+        "sourceSha256": "51804fca1aa5a58260a54a7930fd6fa2cba1d7a8363776fc216b7fe5670a068b"
+      },
+      {
+        "path": "server/services/pptx-import/pptx-import-qualification.test.js",
+        "sourceSha256": "ad09e8d73fa81449d7b47bb67fc7c5665ab44958de4260f72dd708e59767785e"
+      },
+      {
+        "path": "server/services/pptx-import/pptx-sla-1to1-cli.test.js",
+        "sourceSha256": "bfed17a547ef6591621fb20e43b668adb3dc815e8b3fe07173c784d31d4205fe"
+      },
+      {
+        "path": "server/services/pptx-import/presentation-capabilities.test.js",
+        "sourceSha256": "641216b3182d56ce77b694016c0c56fd921f8c9353a11823fabf081fc09b796b"
+      },
+      {
+        "path": "server/services/pptx-import/primitive-adapter-registry.test.js",
+        "sourceSha256": "6e426a58b05c1831adfba3074de24ea9140edf428278ae224ce62b88d2138f40"
+      },
+      {
+        "path": "server/services/pptx-import/primitive-feature-matrix.test.js",
+        "sourceSha256": "b370168ac0629b7148b55670188769676cce46768bc6ecad9352eab6d4295fcb"
+      },
+      {
+        "path": "server/services/pptx-import/primitive-ooxml-adapters.test.js",
+        "sourceSha256": "fb2fb0c88588d76a905ae8ffd34089749c1d8cafb5dc3e913588fb8cd8c2e269"
+      },
+      {
+        "path": "server/services/pptx-import/production-corpus-parity.test.js",
+        "sourceSha256": "65e3d688d67b74f37d5e52a50469a08b0a9cb96a20d8b23d3a0f7bf085aa78d2"
+      },
+      {
+        "path": "server/services/pptx-import/property-mapping.test.js",
+        "sourceSha256": "7661a0b585dd4d57cd11df78213add63ff79d0dae9188eb994531fe4940c448f"
+      },
+      {
+        "path": "server/services/pptx-import/reason-code-contract.test.js",
+        "sourceSha256": "c69918c577849cc378dcc3d5994f2ffa15d1997a0bdceec13d97f882f56ff278"
+      },
+      {
+        "path": "server/services/pptx-import/reconciliation/reconciliation.test.js",
+        "sourceSha256": "8e7f1a714bdc4986e4fe527eb4fca57652136f35aaecfcdb6bff29bbc582a6be"
+      },
+      {
+        "path": "server/services/pptx-import/reconciliation/shadow.test.js",
+        "sourceSha256": "ea9f9f8ffb5fb8fbcd3c746c0071eef0092f6fdec90d67dbeeceb0eb4de0e63d"
+      },
+      {
+        "path": "server/services/pptx-import/request-limits.test.js",
+        "sourceSha256": "0d77979974ce49b454adbea223d83bf0768521578bb525319b53bdc2acda7a6f"
+      },
+      {
+        "path": "server/services/pptx-import/resource-budgets.test.js",
+        "sourceSha256": "0559fb5cc037c2c809552242fd6a67f43b868ff45ff48c90b0f81470024e938f"
+      },
+      {
+        "path": "server/services/pptx-import/roundtrip-matching.test.js",
+        "sourceSha256": "245e785395a0d9d50a01d72a5eec64bcccfc6f5a49c8efc0422a2a72c4da2ed1"
+      },
+      {
+        "path": "server/services/pptx-import/roundtrip-original-parts.test.js",
+        "sourceSha256": "5e6d827f31961e3c589d1f506fc0e642dd034d6a8cfa160906caa6b225c4d4d7"
+      },
+      {
+        "path": "server/services/pptx-import/roundtrip-policy.test.js",
+        "sourceSha256": "65d02b8938f1777177ddbdf21a04ff20376c74e70c95d28bf8e99e5931506e81"
+      },
+      {
+        "path": "server/services/pptx-import/sanitize.test.js",
+        "sourceSha256": "d63a14a96a2d10d377626bc92d5f986948f9080124e26005ccaaa968a06d6697"
+      },
+      {
+        "path": "server/services/pptx-import/shape-fill-planner.test.js",
+        "sourceSha256": "641fdb30220173368f161df65e761ce4a2ae9b56f719e3abcf649a85860b5ddd"
+      },
+      {
+        "path": "server/services/pptx-import/sla-contract.test.js",
+        "sourceSha256": "53207f79eb3ac5363ebad513907089272ae5de8d800f93fd342932cd666a9eb5"
+      },
+      {
+        "path": "server/services/pptx-import/sla-failclosed.test.js",
+        "sourceSha256": "b0c0c440cc6b0af868dbcca2b5da4994247bad8ed3811297e201dd59f1d95b8f"
+      },
+      {
+        "path": "server/services/pptx-import/slide-structure-roundtrip.test.js",
+        "sourceSha256": "170e2a5946bbfb631523d3068ed3b3bc80ee715a4ff1a35199e51bb999c7929f"
+      },
+      {
+        "path": "server/services/pptx-import/source-map.test.js",
+        "sourceSha256": "628ef646ed0b4a94250582a7697ac1cf8d5b85c9d0bc5c1e4f4d03ca868f0f62"
+      },
+      {
+        "path": "server/services/pptx-import/temp-upload-sweep.test.js",
+        "sourceSha256": "e28382a3655c25412cfd3df14fb064e09913a528a5a92a66edf79cb7e4f1ac1e"
+      },
+      {
+        "path": "server/services/pptx-import/text-ooxml-adapter.test.js",
+        "sourceSha256": "4bd15cc33b6ac7afd25433ae8f1ff7259d8616ea952b136797a5f07cdef00de4"
+      },
+      {
+        "path": "server/services/pptx-import/tiptap-single-plain-run-eligibility.test.js",
+        "sourceSha256": "d01907f758eaff32375bb973c6127cd07f8664b61de0516e1cb3934971650b40"
+      },
+      {
+        "path": "server/services/pptx-import/transactional-patch-planner-safety.test.js",
+        "sourceSha256": "6913f21354b5a42f2c35fd609e192f664bc32159e31c9b0c62251f8cc49b046e"
+      },
+      {
+        "path": "server/services/pptx-import/transactional-patch.test.js",
+        "sourceSha256": "d757ee4f6f6db50ddc607d61d663e5b303adf6a6ea54222804eaa29d9f3d7382"
+      },
+      {
+        "path": "server/services/pptx-import/vector-media-convert.test.js",
+        "sourceSha256": "1153fb23a63c4ae98bc3811de3cce66723b59f2fcd07e6a7c1f66af7aaadb02c"
+      },
+      {
+        "path": "server/services/pptx-import/warning-budget.test.js",
+        "sourceSha256": "f8a4870714d94cdd9ffe4547249ff881eb7d1e83590e18878fb7150e6f5c4db8"
+      },
+      {
+        "path": "server/services/pptx-import/workbook-sync.test.js",
+        "sourceSha256": "3e381a49f76df2d4fcb99266e39032c4aacaee94689060e8650c44b273d0f2ae"
+      },
+      {
+        "path": "server/services/pptx-import/worker-runner.test.js",
+        "sourceSha256": "a9d519d6826f4cb69d14a1f33481736bffd34bf70485bb7d66abcb5c99f2beb6"
+      },
+      {
+        "path": "server/services/pptx-import/zip-bomb-guard.test.js",
+        "sourceSha256": "e05f04bd89a4460eafa96da39df4ba7996b6b256bc269db0ee1433f3dd87d448"
+      },
+      {
+        "path": "server/services/presentation-normalization.test.js",
+        "sourceSha256": "ff45093b9396d26cbe003aafb22ac559c0f28fa4287632f79de5158a75f3e225"
+      },
+      {
+        "path": "server/services/presenter-game-bootstrap.test.js",
+        "sourceSha256": "70b324aadd7f33e50855267f3f260151b96032bfae729db4465d64a5cfb638d0"
+      },
+      {
+        "path": "server/services/raster-resilience.test.js",
+        "sourceSha256": "f3b375d149f8b5716bc9c001c90ecb4bb5b7c7198cc7fe04a2983998c25f59b2"
+      },
+      {
+        "path": "server/services/socket-handler.test.js",
+        "sourceSha256": "5e14f1ef55d027d0429fa05a2eb90e7fdfa6430085f34bed24e3feb481119403"
+      },
+      {
+        "path": "server/services/ssrf-guard.test.js",
+        "sourceSha256": "6fa13916cc31a5cf72533a4a16174040771efbf556b1e346d59589d041956287"
+      },
+      {
+        "path": "server/services/storage.test.js",
+        "sourceSha256": "35192e4d666e68e63e80f00b8eac0ca6001c1192a6ac97e5aa1d0f7ac641d1ec"
+      },
+      {
+        "path": "server/services/svg-upload-sanitizer.test.js",
+        "sourceSha256": "2dda3c6f7d02e51768c2373e95faa58d6eaf31cfc8b7b5fc17ed28ed2aa34f43"
+      },
+      {
+        "path": "server/services/sync-job-manifest.test.js",
+        "sourceSha256": "767041e402f136f0f0c5d02f3247c74d6c2c43c323943c926a3a494f402f66dc"
+      },
+      {
+        "path": "server/services/validated-edited-export-materialization.test.js",
+        "sourceSha256": "57d13dcbc3bd87101de4dfb18589e3de226b4e11860b37e7cafe899dab08d0f7"
+      },
+      {
+        "path": "server/services/validated-edited-export.test.js",
+        "sourceSha256": "bac3fc62e5ed14f5deda72d38e3ed89ba46de897e888bc6539004a6731a9ded5"
+      },
+      {
+        "path": "server/utils/image-opacity-export.test.js",
+        "sourceSha256": "6d0505299687d85ef6ca9142b3e1ea1c96f021e56e518751184e45a8c868550c"
+      },
+      {
+        "path": "server/utils/image-renderer-parity.test.js",
+        "sourceSha256": "c2b3c208cecdf246a31392fbf6c8d643ac444b024c1cb3c9f312012f22c77164"
+      },
+      {
+        "path": "server/utils/server-background-raster.test.js",
+        "sourceSha256": "2513db1fd81b28ee32a7a96b1ea4e36de73ada63baa3de3e2769793c11250bc0"
+      },
+      {
+        "path": "server/utils/server-basic-renderers.test.js",
+        "sourceSha256": "d6a50aef14f5505e32d094f94c6bd8e0476987ce2b95ccf29f181819e6610e2b"
+      },
+      {
+        "path": "server/utils/server-export-chart-table.test.js",
+        "sourceSha256": "32376522c57ad9309b267873c6c200769bd02c7537c7a5c8e20d34ca2adc4542"
+      },
+      {
+        "path": "server/utils/server-export-media.test.js",
+        "sourceSha256": "de4c913272a7736c1a8dbe80dc48ba76d020581dd5dc9b8e2d60d774a0693e64"
+      },
+      {
+        "path": "server/utils/server-export.test.js",
+        "sourceSha256": "69455180c9c5b9edff81843286141763532250b4c5787351be05d4407c73e70e"
+      },
+      {
+        "path": "server/utils/server-image-source.test.js",
+        "sourceSha256": "5fc0a1479e18b77da38f850eac2828016ad35923ad9c688901f5db67b7e6323d"
+      },
+      {
+        "path": "server/utils/server-raster.test.js",
+        "sourceSha256": "3f600be4726e87669129fc082d57ee6dd06e409137693a0552c5d4b1cba44f87"
+      },
+      {
+        "path": "server/utils/strip-control-chars.test.js",
+        "sourceSha256": "0ba1a060f503442c8290576232335bfb8a34b9309dadd5b8829cd12fefbaa793"
+      },
+      {
+        "path": "server/vendor-assets.test.js",
+        "sourceSha256": "a1baf94324e0615f9df676fb914e0d7805a0535af165830520236ab039ed9515"
+      },
+      {
+        "path": "shared/src/connector-geometry.test.js",
+        "sourceSha256": "026f76e0a9096cc6365b0c6842adfc9f0ef39181f4ad1a66f61aac19af4910e5"
+      },
+      {
+        "path": "shared/src/element-renderers.test.js",
+        "sourceSha256": "2009eb8d0cd77962b15514ff109fc1bf2ffe550665939ef1aec76c55e4e50fa0"
+      },
+      {
+        "path": "shared/src/pptx-export-policy.test.js",
+        "sourceSha256": "7e1ed8bba18f5d062cb549e601b960b57f2767948b7ef81fe34f78f2c4bf7651"
+      },
+      {
+        "path": "shared/src/pptx-image-options.test.js",
+        "sourceSha256": "7a013e886658e79b8d339a9c77c07570e55a0df66083ad125a4704bab5c06928"
+      },
+      {
+        "path": "shared/src/pptx-media-options.test.js",
+        "sourceSha256": "884f1c527fa135e9c694728e5b882749dccce60ecd2bbf10432e277dd6dc7c15"
+      },
+      {
+        "path": "shared/src/slide-layouts.test.js",
+        "sourceSha256": "6dd4ba143e5c02b9c85a240144c74e475128b2184884e56bda50238fe8c8e326"
+      },
+      {
+        "path": "shared/src/theme-presets.test.js",
+        "sourceSha256": "e23d160f171c2f848f61013ea09ea07455b378b9e3cfdd0c82bf0c4ba4eac40d"
+      },
+      {
+        "path": "shared/src/types/ai-slide-contract.test.js",
+        "sourceSha256": "8b59191fb0ef3beb24fa4ee516d8dede68249cb7cdec6091b8cd526ea636824e"
+      },
+      {
+        "path": "shared/tests/action-runtime.test.js",
+        "sourceSha256": "f44fdeab6f4b809e0c3fa1ee9717eb6e0d529928d5cd9fa3f6ef07a9406fb341"
+      },
+      {
+        "path": "shared/tests/bug-fixes-element-renderers.test.js",
+        "sourceSha256": "02ad8c0c1fe681eb0c25f35e780b3969c041989a2daf19d92ca35417b25d515c"
+      },
+      {
+        "path": "shared/tests/chart-colors.test.js",
+        "sourceSha256": "fa40a6021499c3ed77be7b155e7a6df744eaccfdcaef2a2cd450ceffec6cb502"
+      },
+      {
+        "path": "shared/tests/content-safety.test.js",
+        "sourceSha256": "b3228121b43cddfcbd282e677a13d56c4f232266c61bea827af9b3e1736ebb01"
+      },
+      {
+        "path": "shared/tests/design-tokens.test.js",
+        "sourceSha256": "10cf5b5c1db5f1e3aa89f551826b040dde20248e4d2a7b32a3a54c7da9ba09f4"
+      },
+      {
+        "path": "shared/tests/element-actions.test.js",
+        "sourceSha256": "4fb9aba71cab3dabbb4da7a0acb1e338b60ec20a16af5eaafa28684fda3d39b8"
+      },
+      {
+        "path": "shared/tests/element-export-parity.test.js",
+        "sourceSha256": "5e4ab2d7857272fe3d88811172a6666579cdb08fd6a35952f02fe9388623f3b6"
+      },
+      {
+        "path": "shared/tests/element-renderers.test.js",
+        "sourceSha256": "124b00a44b02080eda9c4f719f9818f8884cb6c9948a4e5ed19b42d9e0e2cbcb"
+      },
+      {
+        "path": "shared/tests/fx-registry.test.js",
+        "sourceSha256": "1a3545a6dbec6e73862e4c6d19313566df5e8ae7c575769034e76695a5c47ab6"
+      },
+      {
+        "path": "shared/tests/global-render-mapping-reveal.test.js",
+        "sourceSha256": "38239fc33adf03646e1ab22db3a69606d24eceaae9c9ad75fe41406d8ec407fe"
+      },
+      {
+        "path": "shared/tests/html-generator-contract-fixtures.test.js",
+        "sourceSha256": "1b3354a29cc8b7d5805b5dae90c534a298b7bc802403ac8da4e75c5b6c2f1d9e"
+      },
+      {
+        "path": "shared/tests/htmlGenerator-vertical-children.test.js",
+        "sourceSha256": "1c1ba04ef186012650609b7043f603f5d00f9079fc7ff26eea38ee9bf846ffc0"
+      },
+      {
+        "path": "shared/tests/htmlGenerator.test.js",
+        "sourceSha256": "bc1087d90c34d35f107e03d2efeff33ab9f6fae2382b609252a11a15f9d7209e"
+      },
+      {
+        "path": "shared/tests/htmlgenerator-golden-baseline.test.js",
+        "sourceSha256": "68cfdc7c2389e16805d8d4033690301ec928ea5a3b88d968d7208d627d2ac505"
+      },
+      {
+        "path": "shared/tests/htmlgenerator-token-injection.test.js",
+        "sourceSha256": "52542d2e8076bc4fe7acad51cf79e5afb06f62315ee6575741ae6e5efdb3650a"
+      },
+      {
+        "path": "shared/tests/line-export-clipping.test.js",
+        "sourceSha256": "aca91741cefaa0ff117cdcc9f6c7112a49fbef315afe6c6ad2efa055ed727e4f"
+      },
+      {
+        "path": "shared/tests/live-presenter-runtime.test.js",
+        "sourceSha256": "b65f4044fc7f3705379811a1ff4cd1f0da24bcdb63a50c691aa1aa6d1029f032"
+      },
+      {
+        "path": "shared/tests/markdown-reveal-textcolor-fontsize.test.js",
+        "sourceSha256": "09fb33a0f706be99668a706a177317f4e61ff7b4e7ec860251873c41018331fe"
+      },
+      {
+        "path": "shared/tests/parallax-features-integration.test.js",
+        "sourceSha256": "9ed62b4167c772a905324f75295f56788547c7e0f33f440ca59de08c535f288e"
+      },
+      {
+        "path": "shared/tests/present-mode-section-styles.test.js",
+        "sourceSha256": "bc36cfc1a756c973033f2fb64275c0bb0a793f885f996b3d672ba790d6287658"
+      },
+      {
+        "path": "shared/tests/presentation-start-position.test.js",
+        "sourceSha256": "af6719ca5d9475fdf459ca55e260bc4ebd0ad936a40159ac9c73350a50680fee"
+      },
+      {
+        "path": "shared/tests/reveal-export-fidelity.test.js",
+        "sourceSha256": "f9f4319d50b53541457ad7106d5c4aa2b369385a4579a09373716cbb9a674099"
+      },
+      {
+        "path": "shared/tests/shapeUtils.test.js",
+        "sourceSha256": "ac76f5f1bbb9620dcfd775cca0c9ec99224d0c06088c09f7968209832e418aed"
+      },
+      {
+        "path": "shared/tests/shared-pptx-utils.test.js",
+        "sourceSha256": "826475808289051d6860e42175790cd48f05ccc33a6aa1a50035c96b82a36f3c"
+      },
+      {
+        "path": "shared/tests/table-merge-resolver.test.js",
+        "sourceSha256": "4a5f4dd63b4737bd935ffbf99fef01d602783bb4d634f549001c62a224629267"
+      },
+      {
+        "path": "shared/tests/theme-presets.test.js",
+        "sourceSha256": "5c00a5c97b8ed59181b8f57408cd3c522d833893f84a58be589c74cf31ee289a"
+      },
+      {
+        "path": "shared/tests/transition-settings.test.js",
+        "sourceSha256": "2eb7b66a807c3d20bbffd35310478978fb4db20c20f9fbfd2b2519d5603a4e04"
+      },
+      {
+        "path": "tests/unit/clipboard-offset-source.test.js",
+        "sourceSha256": "2b9cfc1dc5e4bcd062f8eb6de0870d25ed045d4f89351d429741404868d0c840"
+      },
+      {
+        "path": "tests/unit/data-testid-presence.test.js",
+        "sourceSha256": "6d8950d9dcf586bcd4ca7fda77450120eecfb1caf7426bff4fcd67773a9a0712"
+      },
+      {
+        "path": "tests/unit/dependency-audit-security-floor.test.js",
+        "sourceSha256": "a9665240753d7e6dbc45ef2891ae5dfc9fa5d2e125ba1f06cf5a2ba8c0e557d1"
+      },
+      {
+        "path": "tests/unit/docker-compose-network-exposure-contract.test.js",
+        "sourceSha256": "7547d7ecd809e9e6f059a1e04341d69b0466b0ad0c2d5f476e84c31668920499"
+      },
+      {
+        "path": "tests/unit/electron-navigation-policy.test.js",
+        "sourceSha256": "09c8762ef4c24ca4684ba243fea488acd3396d7a8ca2fdad2e544eb291a765ad"
+      },
+      {
+        "path": "tests/unit/electron-release-readiness-contract.test.js",
+        "sourceSha256": "2f74c35b5ec0e15b1869fcf9adee8e95209ef2b860f5342550ded822c3ecce82"
+      },
+      {
+        "path": "tests/unit/element-hide-feature-source.test.js",
+        "sourceSha256": "c51271e13b90299d45ca21eb0912a0a265190ede62eb29ea8f94b4e57b630185"
+      },
+      {
+        "path": "tests/unit/game-handlers-real-vs-stub.test.js",
+        "sourceSha256": "c2b3ec2257f3a4ee3e19f565bf58c388218b0253086af2794b71f288b7ae199c"
+      },
+      {
+        "path": "tests/unit/game-shortcuts-registry.test.js",
+        "sourceSha256": "40383ac3034801c77ae8436da49cd943fa92aeadce9878d542e39b03e397a382"
+      },
+      {
+        "path": "tests/unit/github-actions-ci-release-confidence-contract.test.js",
+        "sourceSha256": "5e1069abadf3d1ec5a8394ab8dfb563d54173ba7e2feac5da7f5fb7aecd06268"
+      },
+      {
+        "path": "tests/unit/github-actions-manual-visual-baseline-workflow-contract.test.js",
+        "sourceSha256": "a4f632a150b4bfbca096061e17eac9e7f3786824cd3cc3ef61b4533efdfb6577"
+      },
+      {
+        "path": "tests/unit/lint-build-warning-policy.test.js",
+        "sourceSha256": "b06384fce929f6728d06d6af3dd6dc1fb8bf1c8fa5d7cd83c46389f8806c057c"
+      },
+      {
+        "path": "tests/unit/nightly-workflow-ribbon-ref-updated.test.js",
+        "sourceSha256": "b51944f9fbeb44c1412285d60c2045e92d4476d18b1319b11ce306298cc943ab"
+      },
+      {
+        "path": "tests/unit/no-adhoc-presentation-creation.test.js",
+        "sourceSha256": "666d712b86bc172b959625f6f15d25a3c3bba2eee48f9ab3ab242fbbc2fb068f"
+      },
+      {
+        "path": "tests/unit/no-fabricated-sync-endpoints.test.js",
+        "sourceSha256": "ef1f5a3151091eaae37f7b7a84dc8fadb5adcb7af2b6a90b5d04d29624de2e1d"
+      },
+      {
+        "path": "tests/unit/no-wait-for-timeout.test.js",
+        "sourceSha256": "20b69e94aa88441a6ce08eb1cbf72f9fbf38c33e469685601ea1e84e04a8a368"
+      },
+      {
+        "path": "tests/unit/packaged-server-require-closure.test.js",
+        "sourceSha256": "8ab53b3c733516c8e21cdf1d9d0f2ba1b611095c144e001a20fdf5b378692a88"
+      },
+      {
+        "path": "tests/unit/page-object-kebab-case.test.js",
+        "sourceSha256": "342e221fc7ac5e1056e1f4f7eaf4ca0d7f7cf7f891b4ced753db244afd34857f"
+      },
+      {
+        "path": "tests/unit/plan-completion-gate.test.js",
+        "sourceSha256": "11ac365caf6457f2d29136aefa4021b60b7ebad078bfd42d3cd5a32a00253db0"
+      },
+      {
+        "path": "tests/unit/playwright-config.test.js",
+        "sourceSha256": "1dacc19a00d410685b85164ba66dd238e7e94a775520f5f91d549d8e953493c0"
+      },
+      {
+        "path": "tests/unit/pptx-import-api-helper.test.js",
+        "sourceSha256": "f8148bf5fceac138ff57d32f611463c1b0b7a822670c5d4bccffaca5e8030f0b"
+      },
+      {
+        "path": "tests/unit/pptx-import-audit-helper.test.js",
+        "sourceSha256": "65bd68e7c099e272f3ca2a1b3914ba6f2aeb28bd3f68d3a02cd94551d6680c9a"
+      },
+      {
+        "path": "tests/unit/pptx-import-docs-contract.test.js",
+        "sourceSha256": "beb7dec74dcc104743c28dd1363b0b387897f8d6622180d24392892bfee0c675"
+      },
+      {
+        "path": "tests/unit/pptx-import-strict-scripts-contract.test.js",
+        "sourceSha256": "a07b3a1df320df42fe6f3f2e8980c2f130c001d150cd83816c33a21cf4a61408"
+      },
+      {
+        "path": "tests/unit/production-runtime-closure-contract.test.js",
+        "sourceSha256": "2c2198adca77d9d1fbb7423e4604d9545d003d5eb3b4b954b610f58301457905"
+      },
+      {
+        "path": "tests/unit/release-scope-governance-contract.test.js",
+        "sourceSha256": "38654ec3fa730d6b655b66d5e0c2b5d158c9f297ac383d76717b6fda3895171a"
+      },
+      {
+        "path": "tests/unit/release-verification-docs-contract.test.js",
+        "sourceSha256": "b855a2f4a8c5a0512d456a382a21cf1db1a7b5b9095b23a55425f242ed2557f7"
+      },
+      {
+        "path": "tests/unit/release-version-governance-contract.test.js",
+        "sourceSha256": "18b355dcd7328f02334e6b1ad2199ded5af141650068601fb136d2db3a2be3ef"
+      },
+      {
+        "path": "tests/unit/ribbon-split-completeness.test.js",
+        "sourceSha256": "1ab757d0ea8d6a3e34569ad6adf465ba65f55f5dd2eb475a5cfcfde0fe5c3e45"
+      },
+      {
+        "path": "tests/unit/spec-file-size.test.js",
+        "sourceSha256": "28a7fe4a453537654e83b8e4b79073d4df01f3baca6cf6ff93fa576dbf83a5a5"
+      },
+      {
+        "path": "tests/unit/sync-routes-contract.test.js",
+        "sourceSha256": "7c8adcf153c9d6d5a01091593cf11f2d24b3000795de1f308349a081440c799f"
+      },
+      {
+        "path": "tests/unit/test-fixtures-loopback.test.js",
+        "sourceSha256": "dc43da61cac0be9d3fce54a090159e531cb57c710c4915ba861f6506e229038a"
+      },
+      {
+        "path": "tests/unit/vitest-storage-isolation.test.js",
+        "sourceSha256": "10f2fcf862a80cf891efe5bb6173f34b939d06194ed2a5b8e96c3b015bf98efc"
+      },
+      {
+        "path": "tests/unit/website-bootstrap-workspace-structure-and-config-presence.test.js",
+        "sourceSha256": "eadcd5ce1a13fbb9ae2fa700a06d2537524b7147e6395d57a35a0ec9f9d1ba43"
+      },
+      {
+        "path": "tests/unit/website-content-accuracy-v1-14-guards.test.js",
+        "sourceSha256": "659d9014b4fa42817a0477f065ea45759d49a8df2fad388c7593d3708e669821"
+      },
+      {
+        "path": "tests/unit/website-content-port-pages-and-sidebar-coverage.test.js",
+        "sourceSha256": "d8cd0ba6c6bf74fbb2d11820a205dad3ac6b48172c64a5954fefbe7da141cae0"
+      },
+      {
+        "path": "tests/unit/website-develop-section-pages-and-sidebar.test.js",
+        "sourceSha256": "2f51be07f010f6df69858674489ecbbab4562b599fe8f67f2903e60766ca24bc"
+      },
+      {
+        "path": "tests/unit/website-screenshot-assets-and-references.test.js",
+        "sourceSha256": "40f0fe749383f4fb6335e8904d59c224bc3fb262cdca85fcd04dfdccf22dc614"
+      },
+      {
+        "path": "tests/unit/website-vi-locale-structure-and-config.test.js",
+        "sourceSha256": "7562dce1151bb31cdab928f3a2c008b43fdfce0aee7823d5fd3029adecd42486"
+      }
+    ]
+  }
+}

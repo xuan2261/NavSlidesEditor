@@ -1,7 +1,7 @@
 ---
 title: "Upstream Parity Verification TDD"
 description: "Build a full verification system to prove NavSlides Editor features, elements, controls, logic, and flows match approved upstream behavior."
-status: in_progress
+status: historical
 priority: P0
 effort: "2-3 weeks single dev / 1-1.5 weeks with 3 lanes"
 branch: master
@@ -12,9 +12,19 @@ source: skill
 mode: "--deep --tdd"
 blockedBy: [260523-0900-smoke-test-bug-fixes-tdd]
 blocks: []
+archived: 2026-09-25
+supersededBy: plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-02-release-state-and-documentation-governance.md
 ---
 
 # Upstream Parity Verification TDD
+
+## Historical Status
+
+Archived on 2026-09-25 because NavSlides now uses current local executable
+contracts and release governance rather than upstream parity as release
+authority. The approved upstream SHA
+`ce548c535abc7701ac45cc3164560caba121adce` remains unchanged for provenance.
+This plan and its matrix are historical, non-blocking, and not a release gate.
 
 ## Overview
 

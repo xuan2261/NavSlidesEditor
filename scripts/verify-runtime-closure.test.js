@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -12,6 +13,34 @@ function makeRoot() {
   roots.push(root)
   fs.mkdirSync(path.join(root, 'server', 'vendor'), { recursive: true })
   return root
+}
+
+function writeClientManifest(root, subject = 'a'.repeat(40)) {
+  const dist = path.join(root, 'client', 'dist')
+  fs.mkdirSync(dist, { recursive: true })
+  fs.writeFileSync(path.join(dist, 'index.html'), 'client')
+  const files = [
+    {
+      path: 'index.html',
+      bytes: 6,
+      sha256: crypto.createHash('sha256').update('client').digest('hex'),
+    },
+  ]
+  const payload = {
+    schemaVersion: 1,
+    subject: { sha: subject, dirty: false },
+    build: { command: 'npm run build', node: '22.22.0', npm: '10.9.3', vite: '8.2.2' },
+    locks: [{ name: 'workspace', path: 'package-lock.json', bytes: 2, sha256: 'b'.repeat(64) }],
+    files,
+    artifact: { files: 1, bytes: 6 },
+  }
+  payload.artifact.identity = crypto
+    .createHash('sha256')
+    .update(JSON.stringify(payload))
+    .digest('hex')
+  const manifestPath = path.join(root, 'client-dist-manifest.json')
+  fs.writeFileSync(manifestPath, JSON.stringify(payload))
+  return manifestPath
 }
 
 afterEach(() => {
@@ -110,5 +139,40 @@ describe('runtime closure verifier', () => {
         expectedRevealVersion: '5.2.1',
       })
     ).toThrow('Legacy Reveal vendor asset is not allowed')
+  })
+
+  it('verifies complete client manifest identity in an assembled runtime', () => {
+    const root = makeRoot()
+    const manifestPath = writeClientManifest(root)
+    const vendorDir = path.join(root, 'server', 'vendor')
+    fs.writeFileSync(
+      path.join(vendorDir, 'vendor-manifest.json'),
+      JSON.stringify({ schemaVersion: 1, files: [] })
+    )
+
+    expect(
+      verifyRuntimeClosure({
+        rootDir: root,
+        requiredServerModules: [],
+        requireClientDist: true,
+        clientManifestPath: manifestPath,
+        clientSubject: 'a'.repeat(40),
+        requiredVendorPaths: [],
+        expectedRevealVersion: null,
+      })
+    ).toMatchObject({ clientDist: true, clientArtifactIdentity: expect.stringMatching(/^[a-f0-9]{64}$/) })
+
+    fs.writeFileSync(path.join(root, 'client', 'dist', 'index.html'), 'changed')
+    expect(() =>
+      verifyRuntimeClosure({
+        rootDir: root,
+        requiredServerModules: [],
+        requireClientDist: true,
+        clientManifestPath: manifestPath,
+        clientSubject: 'a'.repeat(40),
+        requiredVendorPaths: [],
+        expectedRevealVersion: null,
+      })
+    ).toThrow(/Client artifact (?:size|hash) mismatch/)
   })
 })

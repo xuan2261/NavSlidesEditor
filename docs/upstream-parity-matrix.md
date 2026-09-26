@@ -1,22 +1,30 @@
 ---
 title: "Upstream Parity Matrix"
 date: 2026-05-23
-status: draft-blocked
-releaseReady: no
+status: historical
+releaseReady: not-applicable
 ---
 
 # Upstream Parity Matrix
 
+## Historical Notice
+
+This is a **historical**, **non-blocking** comparison artifact retained for
+provenance. It is not current release authority and cannot block or approve a
+NavSlides release. Current source, executable local contracts, and the active
+release plan supersede its old gate conclusions. The approved upstream SHA and
+all historical row outcomes below remain unchanged.
+
 ## Scope Guard
 
-This matrix is a draft traceability artifact, not release approval. The approved
+The following text records the matrix's May 2026 historical scope. The approved
 upstream automation is unavailable because the upstream build fails in the
 approved worktrees. Rows affected by unavailable upstream automation are
 `Blocked` unless they later receive complete manual oracle evidence or a signed
 row-level waiver.
 
-Do not treat failed upstream build logs, local-only tests, or this draft matrix
-as upstream parity `Pass` evidence.
+Do not treat failed upstream build logs, local-only tests, or this matrix as
+upstream parity `Pass` evidence.
 
 ## Metadata
 

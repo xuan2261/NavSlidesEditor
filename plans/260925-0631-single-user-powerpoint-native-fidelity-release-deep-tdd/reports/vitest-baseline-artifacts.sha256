@@ -1,0 +1,7 @@
+0bb18eb86cec411f36f4eb2f88793533c96a2db598a9ef1d137ab33bc243ad83  config/vitest/legacy-vitest.config.mjs
+85d4b91fbc8a8bd0f2b7d60aaab7a1c784257b6b67eb4b5741e56231cc9ce773  plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-legacy-inventory.json
+d05b7cd3aea0eb64b0a86d70ea6887c9b958aec4075ae2a3059501abb8c68f64  plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline.json
+0fed68ddd3a0464cb6aba37c916dd921d71a57885a14dc1fdfd49654651d543a  plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-invalidation.json
+aaf597965de28c4e98a264ef07616fd3372bb5eae45e1b6a1a441b54b79105d5  plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-raw/full-suite-run-1.json
+67fc700998d0459b9395c9ecfe0127de3d556b713c106eb17fec011d2605911b  plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-raw/full-suite-run-1.stdout.txt
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/vitest-baseline-raw/full-suite-run-1.stderr.txt

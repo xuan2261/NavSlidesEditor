@@ -5,6 +5,7 @@ const {
   REVEAL_REQUIRED_VENDOR_PATHS,
   REVEAL_RUNTIME_VERSION,
 } = require('../shared/src/reveal-runtime-assets')
+const { verifyClientArtifact } = require('./ci/artifact-manifest-runtime.cjs')
 
 const DEFAULT_SERVER_MODULES = [
   'cors',
@@ -108,6 +109,8 @@ function verifyRuntimeClosure({
   rootDir,
   requiredServerModules = DEFAULT_SERVER_MODULES,
   requireClientDist = false,
+  clientManifestPath = null,
+  clientSubject = null,
   requiredVendorPaths = REVEAL_REQUIRED_VENDOR_PATHS,
   expectedRevealVersion = REVEAL_RUNTIME_VERSION,
 }) {
@@ -125,17 +128,32 @@ function verifyRuntimeClosure({
   if (requireClientDist && !fs.existsSync(clientDist)) {
     throw new Error('Production client artifact missing: client/dist/index.html')
   }
+  let clientArtifact = null
+  if (requireClientDist) {
+    const manifestPath = clientManifestPath || path.join(rootDir, 'client-dist-manifest.json')
+    if (!fs.existsSync(manifestPath)) throw new Error('Client artifact manifest missing')
+    clientArtifact = verifyClientArtifact({
+      rootDir: path.join(rootDir, 'client', 'dist'),
+      manifestPath,
+      expectedSubject: clientSubject,
+    })
+  }
 
   const vendor = verifyVendor(path.join(rootDir, 'server', 'vendor'), {
     requiredVendorPaths,
     expectedRevealVersion,
   })
-  return {
+  const result = {
     vendorFiles: vendor.files,
     revealJs: vendor.revealJs,
     serverModules: requiredServerModules.length,
     clientDist: requireClientDist,
   }
+  if (clientArtifact) {
+    result.clientArtifactIdentity = clientArtifact.identity
+    result.clientSubject = clientArtifact.subject
+  }
+  return result
 }
 
 function parseArguments(args) {
@@ -143,6 +161,9 @@ function parseArguments(args) {
   for (let index = 0; index < args.length; index += 1) {
     if (args[index] === '--root') options.rootDir = path.resolve(args[++index])
     else if (args[index] === '--require-client-dist') options.requireClientDist = true
+    else if (args[index] === '--client-manifest') {
+      options.clientManifestPath = path.resolve(args[++index])
+    } else if (args[index] === '--client-subject') options.clientSubject = args[++index]
     else throw new Error(`Unknown argument: ${args[index]}`)
   }
   return options
@@ -153,4 +174,13 @@ if (require.main === module) {
   console.log(JSON.stringify(result))
 }
 
-module.exports = { verifyRuntimeClosure, verifyLocalRequireClosure }
+function verifyElectronBeforePack() {
+  return verifyRuntimeClosure({
+    rootDir: path.join(__dirname, '..'),
+    requireClientDist: true,
+  })
+}
+
+module.exports = verifyElectronBeforePack
+module.exports.verifyRuntimeClosure = verifyRuntimeClosure
+module.exports.verifyLocalRequireClosure = verifyLocalRequireClosure

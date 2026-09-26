@@ -3,6 +3,7 @@ node_modules/
 
 # Build outputs
 client/dist/
+client-dist-manifest.json
 dist-electron/
 .electron-tmp/
 
@@ -60,6 +61,9 @@ plans/**/research/parser-sandbox/node_modules/
 
 # Local Claude Code session data
 .claude/
+
+# Vitepress cache
+.vitepress/cache/
 
 # Scratch / personal artifacts (not source)
 sessions
