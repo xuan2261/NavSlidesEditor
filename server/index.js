@@ -172,17 +172,24 @@ app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: false }))
 
 // ── Rate limiting ────────────────────────────────────────────────────────────
+const isRateLimitSkipped = () =>
+  process.env.NODE_ENV === 'test' ||
+  process.env.DISABLE_RATE_LIMIT === 'true' ||
+  Boolean(process.env.PLAYWRIGHT_API_BASE_URL) ||
+  process.env.PLAYWRIGHT_TEST === 'true'
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: process.env.NODE_ENV === 'production' ? 300 : 200000,
   message: { error: 'Too many requests, please try again later' },
+  skip: isRateLimitSkipped,
 })
 app.use('/api/', apiLimiter)
 
 const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: process.env.NODE_ENV === 'production' ? 30 : 300,
-  skip: () => process.env.NODE_ENV === 'test',
+  skip: isRateLimitSkipped,
   message: { error: 'Too many uploads, please try again later' },
 })
 app.use('/api/upload', uploadLimiter)
@@ -191,6 +198,7 @@ const shareLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: process.env.NODE_ENV === 'production' ? 10 : 1000,
   message: 'Too many attempts. Try again later.',
+  skip: isRateLimitSkipped,
 })
 app.use('/share/', shareLimiter)
 

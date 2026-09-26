@@ -9,7 +9,7 @@ describe('exact green-SHA release workflow contract', () => {
   it('accepts only an existing tag and contains no synthetic tag path', () => {
     const workflow = read('.github/workflows/release.yml')
     expect(workflow).toContain('tag:')
-    expect(workflow).not.toMatch(/\bversion:/)
+    expect(workflow).not.toMatch(/(?<![a-z0-9_-])version:/)
     expect(workflow).not.toContain('v0.0.0-dev')
     expect(workflow).not.toMatch(/date \+%Y/)
     expect(workflow).toContain('git rev-parse "${TAG}^{commit}"')

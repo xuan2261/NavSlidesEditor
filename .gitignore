@@ -4,8 +4,9 @@ node_modules/
 # Build outputs
 client/dist/
 client-dist-manifest.json
-dist-electron/
+dist-electron*/
 .electron-tmp/
+.tmp/
 
 # Runtime data
 server/data/*

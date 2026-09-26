@@ -78,6 +78,7 @@
     "test:pptx:sla-1to1": "node server/services/pptx-import/pptx-sla-1to1-cli.js",
     "test:pptx:package:no-officecli": "node scripts/pptx-package-claim-gate.js client server electron scripts",
     "test:pptx:phase13": "vitest run server/services/pptx-import/evidence/release-claim-policy.test.js server/services/pptx-import/evidence/composite-run.test.js server/services/pptx-import/evidence/protected-release-contract.test.js scripts/pptx-package-claim-gate.test.js",
+    "package": "npm run electron:build",
     "electron:dev": "npm run build && electron .",
     "electron:prepare": "npm run build && node scripts/prepare-electron.js",
     "electron:builder": "node --experimental-require-module node_modules/electron-builder/cli.js",

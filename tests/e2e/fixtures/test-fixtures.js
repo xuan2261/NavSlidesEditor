@@ -2,7 +2,7 @@ import { test as base, expect } from '@playwright/test'
 
 const API_BASE = process.env.PLAYWRIGHT_API_BASE_URL || '/api'
 const ALLOWED_BASE_URL = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/
-const TRANSIENT_STATUSES = new Set([502, 503, 504])
+const TRANSIENT_STATUSES = new Set([429, 502, 503, 504])
 
 export function getBaseUrl() {
   return process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:4173'

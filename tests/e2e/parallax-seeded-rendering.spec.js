@@ -91,7 +91,7 @@ test.describe('Parallax Features E2E', () => {
 
     await editorPage.gotoPresentation(presId)
     await expect(page.locator('.element-wrapper')).toHaveCount(4)
-    await expect(page.locator('[data-testid="timeline-svg"]')).toBeVisible()
+    await expect(page.locator('.slide-canvas [data-testid="timeline-svg"]')).toBeVisible()
 
     const exportRes = await request.get(`/api/presentations/${presId}/present?preview=true`)
     expect(exportRes.ok()).toBeTruthy()

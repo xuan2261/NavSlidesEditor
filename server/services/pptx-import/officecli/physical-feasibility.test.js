@@ -74,7 +74,7 @@ describe('OfficeCLI physical feasibility harness', () => {
   it('blocks unresolved legal and provenance fields before inspecting or running a binary', async () => {
     const inspectBinary = vi.fn()
     const unresolved = { ...manifest, license: { ...manifest.license, textSha256: undefined } }
-    await expect(harness.runPhysicalFeasibility(requestOptions(), { manifest: unresolved, inspectBinary }))
+    await expect(harness.runPhysicalFeasibility(requestOptions(), { platform: 'win32', manifest: unresolved, inspectBinary }))
       .rejects.toMatchObject({ code: 'LEGAL_PROVENANCE_UNRESOLVED' })
     expect(inspectBinary).not.toHaveBeenCalled()
   })
@@ -85,6 +85,7 @@ describe('OfficeCLI physical feasibility harness', () => {
   ])('rejects wrong binary %s before staging', async (_case, sha256, byteLength) => {
     const stageExecutionCopy = vi.fn()
     await expect(harness.runPhysicalFeasibility(requestOptions(), {
+      platform: 'win32',
       manifest: reviewedManifest(), stageExecutionCopy,
       inspectBinary: vi.fn(async () => ({ canonicalPath: 'C:\\admin\\officecli.exe', sha256, byteLength })),
     })).rejects.toMatchObject({ code: 'BINARY_IDENTITY_MISMATCH' })
@@ -99,6 +100,7 @@ describe('OfficeCLI physical feasibility harness', () => {
       ? { exitCode: 0, stdout: `${manifest.version}\n`, stderr: '' }
       : { exitCode: 0, stdout: '{"valid":true}', stderr: '' })
     const result = await harness.runPhysicalFeasibility(requestOptions(root), {
+      platform: 'win32',
       evidenceMode: 'test-double',
       manifest: reviewedManifest(),
       probe: safeProbe(),
@@ -148,6 +150,7 @@ describe('OfficeCLI physical feasibility harness', () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'officecli-version-drift-'))
     roots.push(root)
     await expect(harness.runPhysicalFeasibility(requestOptions(root), {
+      platform: 'win32',
       manifest: reviewedManifest(),
       probe: safeProbe(),
       inspectBinary: vi.fn(async () => ({

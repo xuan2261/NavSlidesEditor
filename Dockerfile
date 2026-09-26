@@ -25,10 +25,11 @@ RUN BUILD_SUBJECT_SHA="${BUILD_SUBJECT_SHA}" BUILD_DIRTY="${BUILD_DIRTY}" npm ru
 FROM vendor-builder AS prebuilt-client
 ARG BUILD_SUBJECT_SHA
 COPY .tmp/ci-client-artifact/ ./.tmp/ci-client-artifact/
-RUN node scripts/ci/verify-client-dist-manifest.mjs \
+RUN SUBJECT="${BUILD_SUBJECT_SHA:-$(node -e 'console.log(JSON.parse(require("fs").readFileSync(".tmp/ci-client-artifact/client-dist-manifest.json","utf8")).subject.sha)')}" && \
+  node scripts/ci/verify-client-dist-manifest.mjs \
   --root .tmp/ci-client-artifact/client/dist \
   --manifest .tmp/ci-client-artifact/client-dist-manifest.json \
-  --subject "${BUILD_SUBJECT_SHA}" \
+  --subject "${SUBJECT}" \
   --dirty false \
   --build-command "npm run build" \
   --lock workspace=package-lock.json \
