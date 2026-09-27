@@ -317,9 +317,9 @@ export function useSlideOperations({
                 '<h2 style="text-align: center">New Slide</h2><p style="text-align: center">Double-click to edit</p>',
             },
           ]
-      let nextSlideIndex = null
+      if (!presentation) return
+      const insertAt = afterIndex !== undefined ? afterIndex + 1 : presentation.slides.length
       setPresentation((prev) => {
-        const insertAt = afterIndex !== undefined ? afterIndex + 1 : prev.slides.length
         const currentIdx = afterIndex !== undefined ? afterIndex : currentSlideIndexRef.current
         const referenceSlide = prev.slides[currentIdx] || prev.slides[prev.slides.length - 1]
         const inheritedBg = referenceSlide?.background
@@ -335,80 +335,53 @@ export function useSlideOperations({
         }
         const slides = [...prev.slides]
         slides.splice(insertAt, 0, newSlide)
-        // Select the new slide AFTER the state commits — never inside the
-        // reducer (StrictMode double-invokes updaters; setState there is impure).
-        nextSlideIndex = insertAt
         return { ...prev, slides }
       })
-      if (nextSlideIndex != null) setCurrentSlideIndex(nextSlideIndex)
+      setCurrentSlideIndex(insertAt)
     },
-    [setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
+    [presentation, setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
   )
 
   const deleteSlide = useCallback(
     (index) => {
-      let nextSlideIndex = null
-      setPresentation((prev) => {
-        if (!prev || prev.slides.length <= 1) return prev
-        const result = deleteSlidesAtIndices(prev.slides, [index], currentSlideIndexRef.current)
-        nextSlideIndex = result.currentSlideIndex
-        return { ...prev, slides: result.slides }
-      })
-      if (nextSlideIndex != null) setCurrentSlideIndex(nextSlideIndex)
+      if (!presentation || presentation.slides.length <= 1) return
+      const result = deleteSlidesAtIndices(presentation.slides, [index], currentSlideIndexRef.current)
+      if (result.slides === presentation.slides) return
+      setPresentation((prev) => ({ ...prev, slides: result.slides }))
+      setCurrentSlideIndex(result.currentSlideIndex)
     },
-    [setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
+    [presentation, setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
   )
 
   const duplicateSlide = useCallback(
     (index) => {
-      let nextSlideIndex = null
-      setPresentation((prev) => {
-        if (!prev) return prev
-        const result = duplicateSlidesAtIndices(
-          prev.slides,
-          [index],
-          () => crypto.randomUUID(),
-          currentSlideIndexRef.current
-        )
-        nextSlideIndex = result.currentSlideIndex
-        return { ...prev, slides: result.slides }
-      })
-      if (nextSlideIndex != null) setCurrentSlideIndex(nextSlideIndex)
+      if (!presentation) return
+      const result = duplicateSlidesAtIndices(presentation.slides, [index])
+      setPresentation((prev) => ({ ...prev, slides: result.slides }))
+      setCurrentSlideIndex(result.currentSlideIndex)
     },
-    [setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
+    [presentation, setPresentation, setCurrentSlideIndex]
   )
 
   const duplicateSlides = useCallback(
     (indices) => {
-      let nextSlideIndex = null
-      setPresentation((prev) => {
-        if (!prev) return prev
-        const result = duplicateSlidesAtIndices(
-          prev.slides,
-          indices,
-          () => crypto.randomUUID(),
-          currentSlideIndexRef.current
-        )
-        nextSlideIndex = result.currentSlideIndex
-        return { ...prev, slides: result.slides }
-      })
-      if (nextSlideIndex != null) setCurrentSlideIndex(nextSlideIndex)
+      if (!presentation) return
+      const result = duplicateSlidesAtIndices(presentation.slides, indices)
+      setPresentation((prev) => ({ ...prev, slides: result.slides }))
+      setCurrentSlideIndex(result.currentSlideIndex)
     },
-    [setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
+    [presentation, setPresentation, setCurrentSlideIndex]
   )
 
   const deleteSlides = useCallback(
     (indices) => {
-      let nextSlideIndex = null
-      setPresentation((prev) => {
-        if (!prev) return prev
-        const result = deleteSlidesAtIndices(prev.slides, indices, currentSlideIndexRef.current)
-        nextSlideIndex = result.currentSlideIndex
-        return { ...prev, slides: result.slides }
-      })
-      if (nextSlideIndex != null) setCurrentSlideIndex(nextSlideIndex)
+      if (!presentation) return
+      const result = deleteSlidesAtIndices(presentation.slides, indices, currentSlideIndexRef.current)
+      if (result.slides === presentation.slides) return
+      setPresentation((prev) => ({ ...prev, slides: result.slides }))
+      setCurrentSlideIndex(result.currentSlideIndex)
     },
-    [setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
+    [presentation, setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
   )
 
   const moveSlide = useCallback(

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import navigationPolicy from '../../electron/navigation-policy.js'
 
-const { isTrustedAppUrl, isExternalHttpUrl } = navigationPolicy
+const { isTrustedAppUrl, isTrustedPopupUrl, isExternalHttpUrl } = navigationPolicy
 const APP_ORIGIN = 'http://127.0.0.1:3002'
 const root = resolve(__dirname, '..', '..')
 
@@ -29,6 +29,14 @@ describe('Electron navigation policy', () => {
     ]) {
       expect(isTrustedAppUrl(url, APP_ORIGIN)).toBe(false)
     }
+  })
+
+  it('allows an initial blank presenter popup without trusting blank navigation or unsafe schemes', () => {
+    expect(isTrustedPopupUrl('about:blank', APP_ORIGIN)).toBe(true)
+    expect(isTrustedAppUrl('about:blank', APP_ORIGIN)).toBe(false)
+    expect(isTrustedPopupUrl(`${APP_ORIGIN}/api/presentations/deck/present?live=ROOM`, APP_ORIGIN)).toBe(true)
+    expect(isTrustedPopupUrl('javascript:alert(1)', APP_ORIGIN)).toBe(false)
+    expect(isTrustedPopupUrl('blob:https://example.com/id', APP_ORIGIN)).toBe(false)
   })
 
   it('opens only parsed external HTTP(S) targets in the system browser', () => {

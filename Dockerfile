@@ -42,6 +42,7 @@ ENV NODE_ENV=production
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 RUN apt-get update \
+  && apt-get upgrade -y \
   && apt-get install -y --no-install-recommends ca-certificates rclone \
   && rm -rf /var/lib/apt/lists/*
 

@@ -23,6 +23,7 @@ const TEST_FILE = /\.(?:test|spec)\.[cm]?[jt]sx?$/
 const KNOWN_ROOTS = new Set(['client', 'scripts', 'server', 'shared', 'tests'])
 const EXCLUDED_SEGMENTS = new Set([
   '.git',
+  '.tmp',
   'coverage',
   'dist',
   'dist-electron',

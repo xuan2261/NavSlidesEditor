@@ -358,14 +358,16 @@ function renderHtml(el, style, wrap, vis, opts) {
     return `<iframe${wrap} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
   }
 
-  // Normal (present) mode: use iframe + data URL to isolate CSS/JS without
-  // relying on srcdoc, which has inconsistent export behavior in reveal views.
-  // Wrapped in a div so reveal.js fragment animations work correctly.
+  // srcdoc retains the parent origin, so Mermaid's /vendor script resolves
+  // correctly; a data: iframe has an opaque origin and cannot load that path.
+  if (isMermaid) {
+    return `<div${wrap} style="${style}${vis}"><iframe srcdoc="${escapeSrcdoc(content)}" style="width:100%;height:100%;border:none;background:transparent;" scrolling="no"></iframe></div>`
+  }
+
+  // Other HTML embeds remain data URLs to isolate their CSS and scripts.
   const _origin = getAssetOrigin()
   const base = _origin ? `<base href="${_origin}/">` : ''
-  const wrappedContent = isMermaid
-    ? content.replace('<head><meta charset="utf-8">', `<head><meta charset="utf-8">${base}`)
-    : `<!doctype html><html><head><meta charset="utf-8">${base}<style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style></head><body>${content}</body></html>`
+  const wrappedContent = `<!doctype html><html><head><meta charset="utf-8">${base}<style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style></head><body>${content}</body></html>`
   return `<div${wrap} style="${style}${vis}"><iframe src="${toHtmlDataUrl(wrappedContent)}" style="width:100%;height:100%;border:none;background:transparent;" scrolling="no"></iframe></div>`
 }
 

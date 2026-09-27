@@ -1,9 +1,11 @@
-const { app, BrowserWindow, shell, dialog, Menu } = require('electron')
+const { app, BrowserWindow, shell, dialog, Menu, session } = require('electron')
 const path = require('path')
-const { isTrustedAppUrl, isExternalHttpUrl } = require('./navigation-policy')
+const { isTrustedAppUrl, isTrustedPopupUrl, isExternalHttpUrl } = require('./navigation-policy')
 const { acquireSingleInstance, focusExistingWindow } = require('./single-instance')
+const { withDesktopCsp } = require('./content-security-policy')
 
 const PORT = 3002
+const APP_ORIGIN = `http://127.0.0.1:${PORT}`
 let mainWindow
 let serverInstance
 let stopBackend
@@ -42,6 +44,23 @@ async function startBackend() {
   console.log(`Data: ${dataDir}`)
 }
 
+function confineWindow(window, appOrigin) {
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    if (isTrustedPopupUrl(url, appOrigin)) return { action: 'allow' }
+    if (isExternalHttpUrl(url, appOrigin)) shell.openExternal(url)
+    return { action: 'deny' }
+  })
+
+  window.webContents.on('will-navigate', (event, url) => {
+    if (isTrustedAppUrl(url, appOrigin)) return
+    event.preventDefault()
+    if (isExternalHttpUrl(url, appOrigin)) shell.openExternal(url)
+  })
+
+  // Electron does not apply the opener's navigation handlers to child windows.
+  window.webContents.on('did-create-window', (child) => confineWindow(child, appOrigin))
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -57,23 +76,8 @@ function createWindow() {
     },
   })
 
-  const APP_ORIGIN = `http://127.0.0.1:${PORT}`
+  confineWindow(mainWindow, APP_ORIGIN)
   mainWindow.loadURL(APP_ORIGIN)
-
-  // Keep app windows on the exact parsed origin. Prefix checks are unsafe:
-  // URLs with userinfo or lookalike hosts can start with APP_ORIGIN while
-  // resolving to a different origin.
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (isTrustedAppUrl(url, APP_ORIGIN)) return { action: 'allow' }
-    if (isExternalHttpUrl(url, APP_ORIGIN)) shell.openExternal(url)
-    return { action: 'deny' }
-  })
-
-  mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (isTrustedAppUrl(url, APP_ORIGIN)) return
-    event.preventDefault()
-    if (isExternalHttpUrl(url, APP_ORIGIN)) shell.openExternal(url)
-  })
 
   mainWindow.on('closed', () => {
     mainWindow = null
@@ -92,6 +96,10 @@ if (!hasSingleInstanceLock) {
   Menu.setApplicationMenu(null)
 
   app.whenReady().then(async () => {
+    session.defaultSession.webRequest.onHeadersReceived(
+      { urls: [`${APP_ORIGIN}/*`] },
+      (details, callback) => callback({ responseHeaders: withDesktopCsp(details.responseHeaders) })
+    )
     try {
       await startBackend()
       createWindow()

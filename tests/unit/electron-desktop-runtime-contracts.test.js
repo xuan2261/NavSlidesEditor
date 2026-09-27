@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import navigationPolicy from '../../electron/navigation-policy.js'
+import desktopCsp from '../../electron/content-security-policy.js'
 
 const { isTrustedAppUrl, isExternalHttpUrl } = navigationPolicy
 const APP_ORIGIN = 'http://127.0.0.1:3002'
 const root = resolve(__dirname, '..', '..')
 
 const readText = (...parts) => readFileSync(resolve(root, ...parts), 'utf8').replace(/\r\n/g, '\n')
+const { DESKTOP_CSP, withDesktopCsp } = desktopCsp
 
 describe('Electron desktop runtime & packaging contracts', () => {
   it('permits Reveal presentation tabs launched via F5 and Shift+F5', () => {
@@ -56,7 +58,7 @@ describe('Electron desktop runtime & packaging contracts', () => {
     expect(editorPage).not.toMatch(/\bwindow\.(alert|confirm|prompt)\s*\(/)
   })
 
-  it('verifies CSP isolation protects media uploads while leaving Reveal HTML unconstrained', () => {
+  it('keeps uploaded SVG sandboxed independently of the desktop presentation policy', () => {
     const serverIndex = readText('server', 'index.js')
 
     // SVG uploads are sandboxed with restrictive CSP to prevent XSS
@@ -66,6 +68,20 @@ describe('Electron desktop runtime & packaging contracts', () => {
 
     // Rate limiter is bypassed during test automation to prevent 429 cascades
     expect(serverIndex).toContain('isRateLimitSkipped')
+  })
+
+  it('applies a desktop-only policy that permits inline Reveal and packaged assets without eval', () => {
+    const headers = withDesktopCsp({ 'Content-Type': ['text/html'] })
+    expect(headers['Content-Security-Policy']).toEqual([DESKTOP_CSP])
+    expect(DESKTOP_CSP).toContain("script-src 'self' 'unsafe-inline' blob:")
+    expect(DESKTOP_CSP).toContain("style-src 'self' 'unsafe-inline'")
+    expect(DESKTOP_CSP).toContain("img-src 'self' data: blob:")
+    expect(DESKTOP_CSP).toContain("font-src 'self' data:")
+    expect(DESKTOP_CSP).toContain("connect-src 'self' ws://127.0.0.1:3002")
+    expect(DESKTOP_CSP).not.toContain('unsafe-eval')
+
+    const uploadHeaders = { 'content-security-policy': ["sandbox; default-src 'none'"] }
+    expect(withDesktopCsp(uploadHeaders)).toBe(uploadHeaders)
   })
 
   it('enforces Electron security confinement: sandbox, contextIsolation, and no IPC bridge', () => {

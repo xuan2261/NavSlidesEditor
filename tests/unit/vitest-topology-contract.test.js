@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -91,6 +92,20 @@ describe('Vitest topology contract', () => {
       excluded: true,
     })
     expect(() => classifyVitestFile('plugins/example.test.js', '')).toThrow(/unknown test root/i)
+  })
+
+  it('ignores generated scratch tests without ignoring source tests', () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'navslides-vitest-discovery-'))
+    try {
+      mkdirSync(path.join(root, '.tmp'), { recursive: true })
+      mkdirSync(path.join(root, 'scripts'), { recursive: true })
+      writeFileSync(path.join(root, '.tmp', 'generated.test.js'), 'test("generated", () => {})')
+      writeFileSync(path.join(root, 'scripts', 'real.test.js'), 'test("real", () => {})')
+      expect(discoverVitestFiles(root)).toEqual(['scripts/real.test.js'])
+      expect(classifyVitestFile('.tmp/generated.test.js')).toMatchObject({ excluded: true })
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
   })
 
   it('routes reviewed hazards to serial and exposes registry and exemptions', () => {

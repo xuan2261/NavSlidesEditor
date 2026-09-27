@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test'
  * Freeze UI for visual snapshot determinism. Disables animations, hides
  * blinking carets, and removes hover transitions across the page.
  * Baselines for these snapshots MUST be generated in the
- * mcr.microsoft.com/playwright:v1.59.1-jammy Docker container.
+ * mcr.microsoft.com/playwright:v1.63.0-jammy Docker container.
  * Running --update-snapshots on a Windows or macOS host produces drift
  * that the CI gate will reject (see plans/.../phase-06-*.md and Patch-02).
  */

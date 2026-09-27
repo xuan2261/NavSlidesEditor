@@ -120,8 +120,10 @@ describe('element-renderers safety behavior', () => {
       {},
       {}
     )
-    const encoded = html.match(/src="data:text\/html;charset=utf-8,([^"]+)"/)[1]
-    const decoded = decodeURIComponent(encoded)
+    const match = html.match(/srcdoc="([^"]+)"/) || html.match(/src="data:text\/html;charset=utf-8,([^"]+)"/)
+    const decoded = match[1].includes('&quot;') || match[1].includes('&lt;')
+      ? match[1].replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+      : decodeURIComponent(match[1])
 
     expect(decoded).toContain('/vendor/mermaid/mermaid.min.js')
     expect(decoded).toContain('flowchart TD')

@@ -42,6 +42,11 @@ function summarizeResult(file, laneByPath) {
       success: result.success,
       counts,
       executedFiles: executedFiles.sort(),
+      failedAssertions: result.success ? [] : (result.testResults || []).flatMap((item) =>
+        (item.assertionResults || [])
+          .filter((assertion) => assertion.status === 'failed')
+          .map((assertion) => `${normalizeVitestPath(item.name)}: ${assertion.fullName || assertion.title}`)
+      ),
       laneDurationsSeconds,
       schema: {
         topLevelKeys: schemaKeys(result),

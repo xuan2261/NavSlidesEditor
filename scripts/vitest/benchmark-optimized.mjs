@@ -193,5 +193,33 @@ export async function runOptimizedBenchmark(values) {
   writeFileSync(outputPath, `${JSON.stringify(receipt, null, 2)}\n`)
   console.log(`[vitest-benchmark] ${mode} median ${summary.medianSeconds} seconds`)
   console.log(`[vitest-benchmark] receipt ${path.relative(repoRoot, outputPath)}`)
-  if (!receipt.valid) process.exitCode = 2
+  if (!receipt.valid) {
+    for (const run of runs) {
+      const result = run.result
+      if (run.exitCode === 0 && result?.readable && result?.success && result?.counts?.failedTests === 0) continue
+      console.error(
+        `[vitest-benchmark] ${run.label}: exit=${run.exitCode}, signal=${run.signal}, ` +
+        `readable=${result?.readable ?? false}, success=${result?.success ?? false}, ` +
+        `failedTests=${result?.counts?.failedTests ?? 'unknown'}, ` +
+        `error=${run.error || result?.error || 'none'}; ` +
+        `logs: ${run.raw?.stderr ?? 'unavailable'}, ${run.raw?.stdout ?? 'unavailable'}`
+      )
+      for (const failure of result?.failedAssertions || []) {
+        console.error(`[vitest-benchmark] ${run.label} failed: ${failure}`)
+      }
+    }
+    for (const [index, validation] of executionInventory.runs.entries()) {
+      for (const [reason, files] of Object.entries(validation)) {
+        if (files.length) console.error(`[vitest-benchmark] run ${index + 1} ${reason}: ${files.join(', ')}`)
+      }
+    }
+    if (comparison && !comparison.protocolCompatible) {
+      console.error(`[vitest-benchmark] incompatible baseline protocol: ${JSON.stringify(comparison)}`)
+    }
+    if (mode === 'ci-budget' && !budgetAuthority.valid) {
+      console.error(`[vitest-benchmark] budget authority blockers: ${budgetAuthority.blockers.join(', ')}`)
+      if (subject.dirty) console.error(`[vitest-benchmark] dirty files: ${facts.dirtyStatus.join(', ')}`)
+    }
+    process.exitCode = 2
+  }
 }

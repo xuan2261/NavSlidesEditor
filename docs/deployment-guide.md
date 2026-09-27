@@ -186,6 +186,10 @@ Dev mode (no package):
 npm run electron:dev
 ```
 
+The desktop renderer runs sandboxed with context isolation, no Node integration or preload/IPC bridge. The application is served by its bundled loopback HTTP server; file exports use browser downloads and Blob URLs. Electron applies a desktop-only CSP to loopback responses (inline Reveal scripts/styles and local vendor assets are permitted, dynamic evaluation is not). Uploaded SVG keeps its separate, stricter sandbox CSP. Presentation popups stay inside the shell only for same-origin URLs; external HTTP(S) links open in the system browser.
+
+To qualify an unpacked desktop build locally, run `npm run electron:prepare`, then `npm run electron:builder -- --win --dir --publish never` on Windows and verify `dist-electron/win-unpacked/resources` with `node scripts/verify-runtime-closure.js --root dist-electron/win-unpacked/resources --require-client-dist`. In the launched shell, F5 presents from the beginning, Shift+F5 presents from the selected slide, and confirmation dialogs are in-app rather than native blocking prompts.
+
 ### Data Location
 
 | Platform | Path                                              |

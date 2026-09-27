@@ -43,9 +43,15 @@ jobs:
         with: { name: coverage-html, path: coverage/, retention-days: 14 }
       - if: inputs.gate == 'vitest-budget'
         run: npm run test:ci-budget
-      - if: inputs.gate == 'vitest-budget'
+      - if: inputs.gate == 'vitest-budget' && (success() || failure())
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with: { name: 'vitest-ci-budget-v1-${{ inputs.subject_sha }}', path: .tmp/vitest-ci-budget-benchmark.json, if-no-files-found: error, retention-days: 30 }
+        with:
+          name: 'vitest-ci-budget-v1-${{ inputs.subject_sha }}'
+          path: |
+            .tmp/vitest-ci-budget-benchmark.json
+            .tmp/vitest-ci-budget-raw/
+          if-no-files-found: error
+          retention-days: 30
       - if: inputs.gate == 'pptx-corpus'
         run: npm run test:pptx:corpus-metrics
       - if: inputs.gate == 'feature-coverage'
