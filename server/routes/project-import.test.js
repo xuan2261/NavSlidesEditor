@@ -1,19 +1,21 @@
 import express from 'express'
 import path from 'node:path'
 import os from 'node:os'
+import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import fs from 'fs-extra'
 import JSZip from 'jszip'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const require = createRequire(import.meta.url)
+const serverCachePrefix = fileURLToPath(new URL('../', import.meta.url))
 
 let root
 let app
 
 function resetCjsModules() {
   for (const key of Object.keys(require.cache)) {
-    if (key.includes(`${path.sep}NavSlidesEditor${path.sep}server${path.sep}`)) {
+    if (key.startsWith(serverCachePrefix)) {
       delete require.cache[key]
     }
   }
@@ -42,10 +44,13 @@ afterEach(async () => {
 async function deck() {
   const zip = new JSZip()
   zip.file('manifest.json', JSON.stringify({ version: '1.1', media: [] }))
-  zip.file('presentation.json', JSON.stringify({
-    title: 'Deck',
-    slides: [{ id: 's1', elements: [] }],
-  }))
+  zip.file(
+    'presentation.json',
+    JSON.stringify({
+      title: 'Deck',
+      slides: [{ id: 's1', elements: [] }],
+    })
+  )
   return zip.generateAsync({ type: 'nodebuffer' })
 }
 
@@ -69,17 +74,22 @@ describe('project import routes', () => {
   })
 
   it('requires the separate capability for media, publish, and rollback', async () => {
-    const admitted = await editor(request(app).post('/api/project-imports/preflight'))
-      .attach('file', await deck(), 'deck.navslides')
+    const admitted = await editor(request(app).post('/api/project-imports/preflight')).attach(
+      'file',
+      await deck(),
+      'deck.navslides'
+    )
     expect(admitted.status).toBe(201)
     expect(admitted.body.capability).toBeTruthy()
 
-    const denied = await editor(request(app)
-      .post(`/api/project-imports/${admitted.body.sessionId}/media`))
+    const denied = await editor(
+      request(app).post(`/api/project-imports/${admitted.body.sessionId}/media`)
+    )
     expect(denied.status).toBe(403)
 
-    const published = await editor(request(app)
-      .post(`/api/project-imports/${admitted.body.sessionId}/publish`))
+    const published = await editor(
+      request(app).post(`/api/project-imports/${admitted.body.sessionId}/publish`)
+    )
       .set('X-NavSlides-Import-Capability', admitted.body.capability)
       .send({ trustedAuthorActiveContentAcknowledged: false })
     expect(published.status).toBe(201)

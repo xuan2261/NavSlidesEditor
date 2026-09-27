@@ -1,16 +1,18 @@
 import path from 'node:path'
 import os from 'node:os'
 import { createRequire } from 'node:module'
+import { fileURLToPath } from 'node:url'
 import fs from 'fs-extra'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const require = createRequire(import.meta.url)
 
 let root
+const serverCachePrefix = fileURLToPath(new URL('../', import.meta.url))
 let ownership
 
 function resetCjsModules() {
   for (const key of Object.keys(require.cache)) {
-    if (key.includes(`${path.sep}NavSlidesEditor${path.sep}server${path.sep}`)) {
+    if (key.startsWith(serverCachePrefix)) {
       delete require.cache[key]
     }
   }

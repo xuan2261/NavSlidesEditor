@@ -155,29 +155,37 @@ describe('release-state CLI', () => {
     expectFailure(root, /tag|head|commit/i)
   })
 
-  it('rejects invalid SemVer and manifest or lock version drift', () => {
-    const invalidVersion = fixture({ packageVersion: '1.17.0-rc.01' })
-    tag(invalidVersion, 'v1.17.0-rc.01')
-    expectFailure(invalidVersion, /invalid|version|semver/i)
-    const reusedVersion = fixture({ packageVersion: '1.16.2' })
-    tag(reusedVersion, 'v1.16.2')
-    expectFailure(reusedVersion, /newer than published/i)
-
-    const manifestDrift = fixture({ manifestVersions: { client: '1.18.0' } })
-    tag(manifestDrift, `v${version}-rc.1`)
-    expectFailure(manifestDrift, /version|drift/i)
-
-    const lockDrift = fixture({ lockVersions: { server: '1.18.0' } })
-    tag(lockDrift, `v${version}-rc.1`)
-    expectFailure(lockDrift, /version|drift/i)
-
-    const rootLockDrift = fixture({ lockVersions: { root: '1.18.0' } })
-    tag(rootLockDrift, `v${version}-rc.1`)
-    expectFailure(rootLockDrift, /version|drift/i)
-
-    const electronLockDrift = fixture({ lockVersions: { electron: '1.18.0' } })
-    tag(electronLockDrift, `v${version}-rc.1`)
-    expectFailure(electronLockDrift, /version|drift/i)
+  it.each([
+    [
+      'invalid SemVer',
+      { packageVersion: '1.17.0-rc.01' },
+      'v1.17.0-rc.01',
+      /invalid|version|semver/i,
+    ],
+    ['published version reuse', { packageVersion: '1.16.2' }, 'v1.16.2', /newer than published/i],
+    [
+      'manifest drift',
+      { manifestVersions: { client: '1.18.0' } },
+      `v${version}-rc.1`,
+      /version|drift/i,
+    ],
+    [
+      'workspace lock drift',
+      { lockVersions: { server: '1.18.0' } },
+      `v${version}-rc.1`,
+      /version|drift/i,
+    ],
+    ['root lock drift', { lockVersions: { root: '1.18.0' } }, `v${version}-rc.1`, /version|drift/i],
+    [
+      'Electron lock drift',
+      { lockVersions: { electron: '1.18.0' } },
+      `v${version}-rc.1`,
+      /version|drift/i,
+    ],
+  ])('rejects %s', (_case, options, releaseTag, error) => {
+    const root = fixture(options)
+    tag(root, releaseTag)
+    expectFailure(root, error)
   })
 
   it('rejects tracked and untracked dirty worktrees', () => {
