@@ -29,8 +29,19 @@ jobs:
         with: { image: navslides-editor:ci, format: spdx-json, output-file: container-sbom.spdx.json, syft-version: v1.52.0 }
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with: { scan-type: image, image-ref: navslides-editor:ci, format: json, output: container-trivy.json, severity: 'HIGH,CRITICAL', ignore-unfixed: false, exit-code: '0', version: v0.74.0 }
-      - run: node scripts/verify-container-supply-chain.js --policy config/container-vulnerability-policy.json --report container-trivy.json --sbom container-sbom.spdx.json --browser container-browser-inventory.json --image-digest actual-image-digest.txt --expected-image-digest "$(cat container-evidence/docker-image-digest.txt)" --playwright-version 1.63.0 --chromium-revision 1243 --out container-supply-chain-receipt.json
-      - if: success() || failure()
+      - name: Verify scan evidence and emit receipt
+        run: node scripts/verify-container-supply-chain.js --policy config/container-vulnerability-policy.json --report container-trivy.json --sbom container-sbom.spdx.json --browser container-browser-inventory.json --image-digest actual-image-digest.txt --expected-image-digest "$(cat container-evidence/docker-image-digest.txt)" --playwright-version 1.63.0 --chromium-revision 1243 --out container-supply-chain-receipt.json
+      - name: Surface accepted findings as advisory
+        if: success()
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs'
+          const receipt = JSON.parse(readFileSync('container-supply-chain-receipt.json', 'utf8'))
+          if (receipt.status === 'risk-accepted') {
+            console.log(`::warning title=Container vulnerability scan is advisory::${receipt.unapprovedFindings.count} HIGH/CRITICAL findings remain unapproved; risk was accepted, not remediated.`)
+          }
+          NODE
+      - if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: container-supply-chain-v1-${{ inputs.subject_sha }}
