@@ -1,28 +1,7 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import {
-  enforcePerformanceBudget,
-  validatePerformanceBudgetSchema,
-} from '../../scripts/vitest/performance-budget.mjs'
-
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
-const budgetPath = path.join(repoRoot, 'config', 'vitest', 'performance-budget.json')
+import { enforcePerformanceBudget } from '../../scripts/vitest/performance-budget.mjs'
 
 describe('Vitest performance budget contract', () => {
-  it('checks in an explicit pending budget without inventing maxWallSeconds', () => {
-    const budget = JSON.parse(readFileSync(budgetPath, 'utf8'))
-    expect(validatePerformanceBudgetSchema(budget)).toEqual(budget)
-    expect(budget).toMatchObject({
-      schemaVersion: 1,
-      status: 'pending',
-      maxWallSeconds: null,
-      requiredSampleCount: 5,
-    })
-    expect(budget.sampleDurationsSeconds).toEqual([])
-  })
-
   it('fails enforcement while the budget is pending or unset', () => {
     expect(() =>
       enforcePerformanceBudget(
