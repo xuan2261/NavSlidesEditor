@@ -130,16 +130,27 @@ describe('release scope governance contract', () => {
     }
   })
 
-  it('stops before G0 while the physical OfficeCLI receipt is absent', () => {
-    const { officeCliPreG0Decision } = readManifest()
-    const receiptExists = existsSync(resolve(root, officeCliPreG0Decision.receiptPath))
+  it('keeps G0 blocked while the external schema-v2 receipt remains historical', () => {
+    const decision = readManifest().officeCliPreG0Decision
+    const external = decision.externalHistoricalReceipt
 
-    expect(receiptExists).toBe(false)
-    expect(officeCliPreG0Decision).toMatchObject({
-      status: 'blocked',
-      observedReceipt: expect.stringMatching(/absent/i),
-      decision: expect.stringMatching(/stop before G0/i),
+    expect(external.receiptPath).not.toBe(decision.receiptPath)
+    expect(decision.status).toBe('blocked')
+    expect(external).toMatchObject({
+      receiptSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+      schemaVersion: 2,
+      subjectCommit: '6c0921105c71c23e80355653efcfd6e1c4db654f',
+      subjectWorktreeClean: true,
+      claimScope: 'local-physical-feasibility',
+      classification: 'historical-only-not-gate-approval',
+      retention: 'external-only-to-avoid-self-referential-source-SHA',
+      storageIntegrity: expect.stringMatching(/not independently asserted/i),
     })
+    expect(decision.observedReceipt).toMatch(/external.*schema-v2/i)
+    expect(decision.observedReceipt).toMatch(/historical evidence/i)
+    expect(decision.decision).toMatch(/final committed source SHA/i)
+    expect(decision.currentPolicyAnnotation.activeG1Decision).toMatch(/still blocked/i)
+    expect(decision.currentPolicyAnnotation.containmentClaim).toBe(false)
   })
 
   it('keeps deterministic ordering and reproducible baseline commands', () => {

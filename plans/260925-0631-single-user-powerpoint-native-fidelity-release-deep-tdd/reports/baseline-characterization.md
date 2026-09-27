@@ -178,3 +178,7 @@ real `success: true` JSON because it expects `valid: true`. No passing physical
 receipt exists. See [the redacted blocker report](./officecli-physical-feasibility-blocker.md).
 The stop-before-G0 decision remains in force; this annotation does not revise
 the earlier governance snapshot.
+
+## Subsequent evidence note — 2026-09-27
+
+The absence statements above describe this report's 2026-09-25 baseline close. A later external, digest-pinned schema-v2 receipt validates clean source `6c0921105c71c23e80355653efcfd6e1c4db654f`; the [blocker report](./officecli-physical-feasibility-blocker.md) and [manifest](./release-scope-manifest.json) record its scope and limits. It establishes only local physical feasibility for that exact subject, not account isolation, egress denial, release authority, or qualification of the subsequent source SHA. The digest detects later byte changes; write-protected external storage is not independently asserted. G0/G1 remain blocked pending fresh exact-subject evidence and acquisition review.
