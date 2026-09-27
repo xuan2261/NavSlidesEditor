@@ -90,7 +90,8 @@ COPY scripts/prepare-electron.js ./scripts/prepare-electron.js
 RUN node scripts/prepare-electron.js
 
 WORKDIR /app/server
-RUN npx playwright install --with-deps chromium \
+RUN set -x; \
+  npx playwright install --with-deps chromium \
   && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx \
   && test -x /usr/local/bin/node \
   && ! command -v npm >/dev/null 2>&1 \
