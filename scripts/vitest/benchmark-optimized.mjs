@@ -6,7 +6,7 @@ import {
   discoverVitestFiles,
   repoRoot,
 } from '../../config/vitest/vitest-lanes.mjs'
-import { enforcePerformanceBudget, validatePerformanceBudgetSchema } from './performance-budget.mjs'
+import { evaluatePerformanceBudget, validatePerformanceBudgetSchema } from './performance-budget.mjs'
 import { captureFacts, hashBytes, hashFile } from './baseline-support.mjs'
 import {
   assertFrozenInventory,
@@ -45,6 +45,12 @@ function currentInventory(topology) {
 
 function defaultOutput(mode) {
   return path.join(repoRoot, '.tmp', `vitest-${mode}-benchmark.json`)
+}
+
+export function writeBenchmarkReceipt(outputPath, receipt) {
+  mkdirSync(path.dirname(outputPath), { recursive: true })
+  writeFileSync(outputPath, `${JSON.stringify(receipt, null, 2)}\n`)
+  return receipt.valid ? 0 : 2
 }
 
 export async function runOptimizedBenchmark(values) {
@@ -153,22 +159,23 @@ export async function runOptimizedBenchmark(values) {
             measurementCommit: subject.commit,
           })
         : null
+    const enforcement = evaluatePerformanceBudget(
+      configured,
+      runs.map((run) => ({
+        label: run.label,
+        wallSeconds: run.durationSeconds,
+        runnerClass: subject.runnerClass,
+        inventoryHash: subject.inventoryHash,
+        configHash: subject.configHash,
+      })),
+      { authorityValid: budgetAuthority.valid }
+    )
     budget = {
       configured,
       authority: budgetAuthority,
       candidate: budgetAuthority.valid ? preview : null,
       preview,
-      enforced: configured.status === 'measured' && budgetAuthority.valid,
-    }
-    if (configured.status === 'measured' && budgetAuthority.valid) {
-      for (const duration of durations) {
-        enforcePerformanceBudget(configured, {
-          wallSeconds: duration,
-          runnerClass: subject.runnerClass,
-          inventoryHash: subject.inventoryHash,
-          configHash: subject.configHash,
-        })
-      }
+      ...enforcement,
     }
   }
   const receipt = {
@@ -186,13 +193,18 @@ export async function runOptimizedBenchmark(values) {
       summary.green &&
       executionInventory.valid &&
       (comparison?.protocolCompatible ?? true) &&
-      (mode !== 'ci-budget' || budgetAuthority.valid),
+      (mode !== 'ci-budget' || (budgetAuthority.valid && budget.valid)),
   }
   const outputPath = path.resolve(repoRoot, values.out || defaultOutput(mode))
-  mkdirSync(path.dirname(outputPath), { recursive: true })
-  writeFileSync(outputPath, `${JSON.stringify(receipt, null, 2)}\n`)
+  const receiptExitCode = writeBenchmarkReceipt(outputPath, receipt)
   console.log(`[vitest-benchmark] ${mode} median ${summary.medianSeconds} seconds`)
   console.log(`[vitest-benchmark] receipt ${path.relative(repoRoot, outputPath)}`)
+  if (mode === 'ci-budget') {
+    for (const blocker of budget.blockers) {
+      const sample = blocker.sample == null ? '' : `${blocker.sample}: `
+      console.error(`[vitest-benchmark] budget gate blocked: ${sample}${blocker.reason}`)
+    }
+  }
   if (!receipt.valid) {
     for (const run of runs) {
       const result = run.result
@@ -220,6 +232,6 @@ export async function runOptimizedBenchmark(values) {
       console.error(`[vitest-benchmark] budget authority blockers: ${budgetAuthority.blockers.join(', ')}`)
       if (subject.dirty) console.error(`[vitest-benchmark] dirty files: ${facts.dirtyStatus.join(', ')}`)
     }
-    process.exitCode = 2
+    process.exitCode = receiptExitCode
   }
 }

@@ -70,3 +70,33 @@ export function enforcePerformanceBudget(budget, actual) {
   }
   return budget
 }
+
+export function evaluatePerformanceBudget(budget, actuals, { authorityValid = true } = {}) {
+  validatePerformanceBudgetSchema(budget)
+  if (!Array.isArray(actuals)) throw new Error('actuals must be an array')
+
+  if (budget.status === 'pending') {
+    return {
+      valid: false,
+      enforced: false,
+      blockers: [{ reason: 'performance budget is pending measured optimized/CI samples' }],
+    }
+  }
+  if (!authorityValid) {
+    return {
+      valid: false,
+      enforced: false,
+      blockers: [{ reason: 'budget authority is unavailable' }],
+    }
+  }
+
+  const blockers = []
+  actuals.forEach((actual, index) => {
+    try {
+      enforcePerformanceBudget(budget, actual)
+    } catch (error) {
+      blockers.push({ sample: actual?.label ?? index + 1, reason: error.message })
+    }
+  })
+  return { valid: blockers.length === 0, enforced: true, blockers }
+}
