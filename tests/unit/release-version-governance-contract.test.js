@@ -2,11 +2,8 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import {
-  compareCoreVersions,
-  parseReleaseTag,
-  semanticLockHash,
-} from './release-version-governance-helpers'
+import { parseReleaseTag } from '../../scripts/ci/release-subject.mjs'
+import { compareCoreVersions, semanticLockHash } from './release-version-governance-helpers'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const readText = (...parts) => readFileSync(resolve(root, ...parts), 'utf8').replace(/\r\n/g, '\n')

@@ -9,7 +9,9 @@ export function parseReleaseTag(tag, packageVersion) {
   const match = TAG_PATTERN.exec(tag ?? '')
   if (!match || match[1] !== packageVersion) return null
   if (match[5]) {
-    return { kind: 'rc', coreVersion: match[1], rcNumber: Number(match[5]) }
+    const rcNumber = Number(match[5])
+    if (!Number.isSafeInteger(rcNumber)) return null
+    return { kind: 'rc', coreVersion: match[1], rcNumber }
   }
   return { kind: 'final', coreVersion: match[1] }
 }

@@ -24,6 +24,7 @@
     "start": "node --env-file=config/production.env server/index.js",
     "runtime:verify": "node scripts/verify-runtime-closure.js --require-client-dist",
     "runtime:receipt": "node scripts/runtime-receipt.js",
+    "release-state": "node scripts/ci/release-state.mjs",
     "backup:docker": "pwsh -NoProfile -NonInteractive -File scripts/backup-docker-volumes.ps1",
     "restore:docker": "pwsh -NoProfile -NonInteractive -File scripts/restore-docker-volumes.ps1",
     "electron:lock": "node scripts/update-electron-server-lock.js",

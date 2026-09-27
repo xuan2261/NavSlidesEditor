@@ -9,6 +9,18 @@ dependencies: [1]
 
 # Phase 2: Release state and documentation governance
 
+## Execution correction (2026-09-27)
+
+The `v1.16.0`-as-latest and `1.15.7`-lock statements below describe the
+original planning baseline, not current repository state. `v1.16.1` and
+`v1.16.2` are published history; all five product manifests and both locks
+currently carry the unpublished `1.17.0` candidate. Preserve those releases,
+derive the current change range from `v1.16.2`, and do not reuse any published
+tag. The checked-in scope manifest and its version contract still pin an older
+`f4211075` planning subject; replace that evidence only after a clean exact
+integration subject exists. `npm run release-state` now checks local clean
+tag/SHA and version consistency but does not prove CI or publication.
+
 ## Context Links
 
 - [Phase 1 baseline and scope lock](./phase-01-start.md)
@@ -26,7 +38,7 @@ dependencies: [1]
 - [Historical upstream matrix](../../docs/upstream-parity-matrix.md)
 - [Archived upstream parity plan](../archive/260523-0500-upstream-parity-verification-tdd/plan.md)
 - [Existing Electron release contract](../../tests/unit/electron-release-readiness-contract.test.js)
-- [Existing runtime closure contract](../../tests/unit/production-runtime-closure-contract.test.js)
+- [Runtime artifact behavior tests](../../scripts/verify-runtime-closure.test.js)
 
 ## Goal/Overview
 
@@ -217,7 +229,7 @@ Version authorities:
 | `C:\Work\NavSlidesEditor\docs\upstream-parity-matrix.md`                                     | Modify                 |      96 lines | Add historical/non-blocking banner; preserve rows                     | Historical-status assertion |
 | `C:\Work\NavSlidesEditor\plans\archive\260523-0500-upstream-parity-verification-tdd\plan.md` | Modify metadata/header |    ~220 lines | `in_progress` -> `historical`; add superseded-by link                 | Governance test             |
 | `C:\Work\NavSlidesEditor\tests\unit\electron-release-readiness-contract.test.js`             | Modify                 |      45 lines | Include overview/roadmap/changelog version checks or delegate clearly | Focused regression          |
-| `C:\Work\NavSlidesEditor\tests\unit\production-runtime-closure-contract.test.js`             | Modify if needed       |     126 lines | Assert isolated lock project version aligns with server manifest      | Runtime regression          |
+| `C:\Work\NavSlidesEditor\scripts\verify-runtime-closure.test.js`                             | Reuse                  |     178 lines | Exercise runtime vendor and client artifact rejection behavior        | Runtime regression          |
 
 ## Tests Before (RED)
 
@@ -244,7 +256,7 @@ Create the dedicated contract and assert:
 Run:
 
 ```powershell
-npx vitest run tests/unit/release-version-governance-contract.test.js tests/unit/electron-release-readiness-contract.test.js tests/unit/production-runtime-closure-contract.test.js
+npx vitest run tests/unit/release-version-governance-contract.test.js tests/unit/electron-release-readiness-contract.test.js scripts/verify-runtime-closure.test.js
 ```
 
 Expected RED reasons:
@@ -325,7 +337,7 @@ npm run electron:lock
 ## Tests After (GREEN)
 
 ```powershell
-npx vitest run tests/unit/release-version-governance-contract.test.js tests/unit/electron-release-readiness-contract.test.js tests/unit/production-runtime-closure-contract.test.js
+npx vitest run tests/unit/release-version-governance-contract.test.js tests/unit/electron-release-readiness-contract.test.js scripts/verify-runtime-closure.test.js
 npm ci --ignore-scripts
 npm run electron:lock
 git diff --exit-code electron/server-package-lock.json
@@ -357,7 +369,7 @@ The second lock-generation pass must be idempotent.
 Focused:
 
 ```powershell
-npx vitest run tests/unit/release-version-governance-contract.test.js tests/unit/electron-release-readiness-contract.test.js tests/unit/production-runtime-closure-contract.test.js
+npx vitest run tests/unit/release-version-governance-contract.test.js tests/unit/electron-release-readiness-contract.test.js scripts/verify-runtime-closure.test.js
 ```
 
 Phase gate:
