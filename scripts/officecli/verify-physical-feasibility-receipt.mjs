@@ -10,8 +10,6 @@ const MANIFEST_PATH = path.join(
   ROOT,
   'server/services/pptx-import/officecli/qualification-manifest.json'
 )
-const SOURCE_COMMIT = /^[a-f0-9]{40}$/
-const SHA256 = /^[a-f0-9]{64}$/
 
 export function verifyExternalReceiptFile(
   { receiptPath, expectedSourceCommit, expectedReceiptSha256 },
@@ -80,7 +78,10 @@ function parseArguments(argv) {
     const key = flags.get(flag)
     const value = argv[index + 1]
     if (!key || !value || value.startsWith('--') || options[key]) {
-      throw failure('ARGUMENT_INVALID', 'Supply one receipt path, source commit, and receipt SHA-256')
+      throw failure(
+        'ARGUMENT_INVALID',
+        'Supply one receipt path, source commit, and receipt SHA-256'
+      )
     }
     options[key] = value
     index += 1

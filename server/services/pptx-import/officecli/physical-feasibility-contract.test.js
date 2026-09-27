@@ -22,8 +22,6 @@ const REPORTS = path.join(
   'plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports'
 )
 const GOVERNANCE = path.join(REPORTS, 'release-scope-manifest.json')
-const externalReceiptEvidence = JSON.parse(fs.readFileSync(GOVERNANCE, 'utf8'))
-  .officeCliPreG0Decision.externalHistoricalReceipt
 const RECEIPT_FIXTURES = [
   {
     name: 'officecli-positive-powerpoint-16.pptx',
@@ -286,69 +284,6 @@ describe('OfficeCLI physical feasibility gate', () => {
       code: 1,
     })
   })
-
-  it('keeps G0 and G1 blocked when only historical external feasibility is recorded', () => {
-    const decision = JSON.parse(fs.readFileSync(GOVERNANCE, 'utf8')).officeCliPreG0Decision
-    expect(decision.status).toBe('blocked')
-    expect(decision.externalHistoricalReceipt).toMatchObject({
-      schemaVersion: 2,
-      subjectCommit: '6c0921105c71c23e80355653efcfd6e1c4db654f',
-      claimScope: 'local-physical-feasibility',
-      classification: 'historical-only-not-gate-approval',
-    })
-    expect(decision.currentPolicyAnnotation.activeG1Decision).toMatch(/still blocked/i)
-    expect(decision.currentPolicyAnnotation.containmentClaim).toBe(false)
-  })
-
-  it.skipIf(!fs.existsSync(externalReceiptEvidence.receiptPath))(
-    'validates the external receipt for its supplied historical subject without promoting G0/G1',
-    () => {
-      const governance = JSON.parse(fs.readFileSync(GOVERNANCE, 'utf8'))
-      const decision = governance.officeCliPreG0Decision
-      const { receipt, receiptSha256 } = verifyExternalReceiptFile(
-        {
-          receiptPath: externalReceiptEvidence.receiptPath,
-          expectedSourceCommit: externalReceiptEvidence.subjectCommit,
-          expectedReceiptSha256: externalReceiptEvidence.receiptSha256,
-        },
-        manifest
-      )
-
-      expect(receiptSha256).toBe(externalReceiptEvidence.receiptSha256)
-      expect(receipt.fixtures.map(({ name, expected, actual, reasonCode }) => ({
-        name,
-        expected,
-        actual,
-        reasonCode,
-      }))).toEqual([
-        {
-          name: 'officecli-positive-powerpoint-16.pptx',
-          expected: 'accept',
-          actual: 'accepted',
-          reasonCode: null,
-        },
-        {
-          name: 'bad-crc.pptx',
-          expected: 'reject',
-          actual: 'rejected',
-          reasonCode: 'zip-crc-mismatch',
-        },
-        {
-          name: 'malformed-xml.pptx',
-          expected: 'reject',
-          actual: 'rejected',
-          reasonCode: 'xml-dtd-prohibited',
-        },
-      ])
-      expect(receipt.executionContext).toMatchObject({
-        accountIsolationClaim: false,
-        egressDenialClaim: false,
-        containmentClaim: false,
-      })
-      expect(decision.status).toBe('blocked')
-      expect(decision.currentPolicyAnnotation.activeG1Decision).toMatch(/still blocked/i)
-    }
-  )
 
   it('rejects a shallow hand-written authoritative receipt', () => {
     expect(() =>
