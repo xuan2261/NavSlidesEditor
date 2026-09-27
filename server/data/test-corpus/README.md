@@ -2,10 +2,12 @@
 
 This directory is the default corpus for `npm run test:corpus`.
 
-All generated decks are hand-built synthetic fixtures created for NavSlides
-import regression testing. The copied Vietnamese school decks come from the
-existing checked-in `PPTX/` corpus and are retained here so the default corpus
-has at least 10 decks.
+All generated decks in the default metrics corpus are hand-built synthetic
+fixtures created for NavSlides import regression testing. The separate
+`officecli/` directory contains one PowerPoint-COM-generated physical
+feasibility fixture and is excluded from corpus metrics. The copied Vietnamese
+school decks come from the existing checked-in `PPTX/` corpus and are retained
+here so the default corpus has at least 10 decks.
 
 ## Fixtures
 
@@ -32,7 +34,7 @@ baseline counts them under `shape` until parser chart extraction improves.
 
 The Phase 9 acceptance gate expects:
 
-- at least 10 `.pptx` files in this directory
+- at least 10 `.pptx` files in the default root-level metrics corpus; exclude `officecli/`
 - average semantic >= 98%
 - average production round-trip floor >= 50% as a regression floor
 - no deck below 95% semantic fidelity
@@ -52,6 +54,21 @@ performance fixture.
 | **Importer qualification** | `npm run test:pptx:importer-qualification` | Strict gate via `importer-qualification-manifest.json` |
 | **Adversarial** | `npm run test:pptx:adversarial` | Expected reject/map table; **isolated** from metrics averages |
 
+## OfficeCLI physical fixture (`officecli/`)
+
+`officecli-positive-powerpoint-16.pptx` is a separate, one-slide blank package
+generated with local Microsoft PowerPoint COM `16.0`, build `10417`. It contains
+no slide shapes or user content; creator, last modifier, title, subject,
+description, keywords, company, and manager properties are cleared.
+
+- Size: 31,659 bytes
+- SHA-256: `29B2D6F12E922204C4A914D3C3BC427FF48B0915231DFF37DCF3F91A21D00FC2`
+- Lane: physical OfficeCLI feasibility only; excluded from metrics and adversarial generation.
+
+The synthetic `adversarial/good-package.pptx` remains a package-safety fixture;
+its minimal shape is not a guarantee of OfficeCLI-valid OPC structure. Do not
+replace it or change its generator to serve as the physical positive.
+
 ## Adversarial fixtures (`adversarial/`)
 
 Project-owned synthetic packages for guard regression. Intentional failures must
@@ -60,7 +77,7 @@ Project-owned synthetic packages for guard regression. Intentional failures must
 | File | Class | Expected |
 |---|---|---|
 | `bad-crc.pptx` | CRC mismatch | reject `zip-crc-mismatch` |
-| `good-package.pptx` | Minimal valid | map |
+| `good-package.pptx` | Minimal NavSlides safety-preflight fixture; not OfficeCLI-valid | map |
 | `nested-package.pptx` | Nested ZIP depth | reject `zip-recursion-depth-exceeded` |
 | `malformed-xml.pptx` | DTD in slide XML | reject `xml-dtd-prohibited` |
 | `external-rel.pptx` | External media URL | map; **no network fetch** |

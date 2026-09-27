@@ -35,7 +35,18 @@ function parseBoundedJson(stdout, { maxBytes = DEFAULT_MAX_OUTPUT_BYTES } = {}) 
 
 function parseValidationResult(stdout, options) {
   const result = parseBoundedJson(stdout, options)
-  if (Array.isArray(result) || result.valid !== true) {
+  if (
+    Array.isArray(result) ||
+    result.success !== true ||
+    !result.data ||
+    typeof result.data !== 'object' ||
+    Array.isArray(result.data) ||
+    result.data.count !== 0 ||
+    !Array.isArray(result.data.errors) ||
+    result.data.errors.length !== 0 ||
+    (Object.hasOwn(result, 'message') && typeof result.message !== 'string') ||
+    Object.hasOwn(result, 'valid')
+  ) {
     throw new Error('OfficeCLI validation output does not report success')
   }
   return Object.freeze({ valid: true })

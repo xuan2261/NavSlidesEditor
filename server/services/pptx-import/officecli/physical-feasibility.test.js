@@ -1,20 +1,28 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import crypto from 'node:crypto'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import guards from '../pptx-guards.js'
 import manifest from './qualification-manifest.json'
 import harness from '../../../../scripts/officecli/run-physical-feasibility.mjs'
+const { validatePptxPackage } = guards
 
 const ROOT = path.resolve(import.meta.dirname, '../../../..')
 const FIXTURES = path.join(ROOT, 'server/data/test-corpus/adversarial')
+const POSITIVE_FIXTURE = path.join(
+  ROOT,
+  'server/data/test-corpus/officecli/officecli-positive-powerpoint-16.pptx'
+)
+const POSITIVE_SHA256 = '29B2D6F12E922204C4A914D3C3BC427FF48B0915231DFF37DCF3F91A21D00FC2'
 const roots = []
 
 function requestOptions(root) {
   return {
     binary: 'C:\\admin\\officecli.exe',
-    valid: path.join(FIXTURES, 'good-package.pptx'),
+    valid: POSITIVE_FIXTURE,
     malformed: ['bad-crc.pptx', 'malformed-xml.pptx'].map((name) => path.join(FIXTURES, name)),
-    acquiredAt: '2026-09-25T00:00:00.000Z',
+    acquiredAt: '2000-01-01T00:00:00.000Z',
     ...(root && {
       executionRoot: path.join(root, 'execution'),
       workspaceRoot: path.join(root, 'workspace'),
@@ -66,16 +74,22 @@ afterEach(async () => {
 describe('OfficeCLI physical feasibility harness', () => {
   it('fails closed before process work when physical prerequisites are absent', async () => {
     const runBoundedProcess = vi.fn()
-    await expect(harness.runPhysicalFeasibility({}, { runBoundedProcess }))
-      .rejects.toMatchObject({ code: 'PHYSICAL_PREREQUISITE_MISSING' })
+    await expect(harness.runPhysicalFeasibility({}, { runBoundedProcess })).rejects.toMatchObject({
+      code: 'PHYSICAL_PREREQUISITE_MISSING',
+    })
     expect(runBoundedProcess).not.toHaveBeenCalled()
   })
 
   it('blocks unresolved legal and provenance fields before inspecting or running a binary', async () => {
     const inspectBinary = vi.fn()
     const unresolved = { ...manifest, license: { ...manifest.license, textSha256: undefined } }
-    await expect(harness.runPhysicalFeasibility(requestOptions(), { platform: 'win32', manifest: unresolved, inspectBinary }))
-      .rejects.toMatchObject({ code: 'LEGAL_PROVENANCE_UNRESOLVED' })
+    await expect(
+      harness.runPhysicalFeasibility(requestOptions(), {
+        platform: 'win32',
+        manifest: unresolved,
+        inspectBinary,
+      })
+    ).rejects.toMatchObject({ code: 'LEGAL_PROVENANCE_UNRESOLVED' })
     expect(inspectBinary).not.toHaveBeenCalled()
   })
 
@@ -84,11 +98,18 @@ describe('OfficeCLI physical feasibility harness', () => {
     ['length', manifest.releaseAsset.sha256, 1],
   ])('rejects wrong binary %s before staging', async (_case, sha256, byteLength) => {
     const stageExecutionCopy = vi.fn()
-    await expect(harness.runPhysicalFeasibility(requestOptions(), {
-      platform: 'win32',
-      manifest: reviewedManifest(), stageExecutionCopy,
-      inspectBinary: vi.fn(async () => ({ canonicalPath: 'C:\\admin\\officecli.exe', sha256, byteLength })),
-    })).rejects.toMatchObject({ code: 'BINARY_IDENTITY_MISMATCH' })
+    await expect(
+      harness.runPhysicalFeasibility(requestOptions(), {
+        platform: 'win32',
+        manifest: reviewedManifest(),
+        stageExecutionCopy,
+        inspectBinary: vi.fn(async () => ({
+          canonicalPath: 'C:\\admin\\officecli.exe',
+          sha256,
+          byteLength,
+        })),
+      })
+    ).rejects.toMatchObject({ code: 'BINARY_IDENTITY_MISMATCH' })
     expect(stageExecutionCopy).not.toHaveBeenCalled()
   })
 
@@ -96,9 +117,11 @@ describe('OfficeCLI physical feasibility harness', () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'officecli-feasibility-'))
     roots.push(root)
     const staged = 'C:\\staged\\937DB176\\officecli.exe'
-    const runBoundedProcess = vi.fn(async ({ argv }) => argv[0] === '--version'
-      ? { exitCode: 0, stdout: `${manifest.version}\n`, stderr: '' }
-      : { exitCode: 0, stdout: '{"valid":true}', stderr: '' })
+    const runBoundedProcess = vi.fn(async ({ argv }) =>
+      argv[0] === '--version'
+        ? { exitCode: 0, stdout: `${manifest.version}\n`, stderr: '' }
+        : { exitCode: 0, stdout: '{"success":true,"data":{"count":0,"errors":[]}}', stderr: '' }
+    )
     const result = await harness.runPhysicalFeasibility(requestOptions(root), {
       platform: 'win32',
       evidenceMode: 'test-double',
@@ -118,60 +141,94 @@ describe('OfficeCLI physical feasibility harness', () => {
     })
 
     expect(result).toMatchObject({
-      schemaVersion: 1,
+      schemaVersion: 2,
       status: 'test-only',
       authoritative: false,
       binary: { version: manifest.version, sha256: manifest.releaseAsset.sha256 },
       processPolicy: { stdoutBounded: true, stderrBounded: true, pathLookup: false },
       fixtures: [
         {
-          name: 'good-package.pptx', actual: 'accepted',
-          validationPath: 'production-preflight-and-gateway', ok: true,
+          name: 'officecli-positive-powerpoint-16.pptx',
+          actual: 'accepted',
+          validationPath: 'production-preflight-and-gateway',
+          ok: true,
         },
         {
-          name: 'bad-crc.pptx', actual: 'rejected',
-          validationPath: 'production-preflight', reasonCode: 'zip-crc-mismatch', ok: true,
+          name: 'bad-crc.pptx',
+          actual: 'rejected',
+          validationPath: 'production-preflight',
+          reasonCode: 'zip-crc-mismatch',
+          ok: true,
         },
         {
-          name: 'malformed-xml.pptx', actual: 'rejected',
-          validationPath: 'production-preflight', reasonCode: 'xml-dtd-prohibited', ok: true,
+          name: 'malformed-xml.pptx',
+          actual: 'rejected',
+          validationPath: 'production-preflight',
+          reasonCode: 'xml-dtd-prohibited',
+          ok: true,
         },
       ],
     })
-    expect(runBoundedProcess.mock.calls.some(([request]) => request.argv[0] === '--version')).toBe(true)
-    expect(runBoundedProcess.mock.calls.filter(([request]) => request.argv[0] === 'validate')).toHaveLength(1)
-    expect(result.processes).toEqual(expect.arrayContaining([
-      expect.objectContaining({ operation: 'version', exitCode: 0, stdoutBytes: expect.any(Number) }),
-      expect.objectContaining({ operation: 'validate', exitCode: 0, stdoutSha256: expect.stringMatching(/^[A-F0-9]{64}$/) }),
-    ]))
+    expect(runBoundedProcess.mock.calls.some(([request]) => request.argv[0] === '--version')).toBe(
+      true
+    )
+    expect(
+      runBoundedProcess.mock.calls.filter(([request]) => request.argv[0] === 'validate')
+    ).toHaveLength(1)
+    expect(result.processes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          operation: 'version',
+          exitCode: 0,
+          stdoutBytes: expect.any(Number),
+        }),
+        expect.objectContaining({
+          operation: 'validate',
+          exitCode: 0,
+          stdoutSha256: expect.stringMatching(/^[A-F0-9]{64}$/),
+        }),
+      ])
+    )
   })
 
   it('fails qualification on real-output version drift', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'officecli-version-drift-'))
     roots.push(root)
-    await expect(harness.runPhysicalFeasibility(requestOptions(root), {
-      platform: 'win32',
-      manifest: reviewedManifest(),
-      probe: safeProbe(),
-      inspectBinary: vi.fn(async () => ({
-        canonicalPath: 'C:\\admin\\officecli.exe',
-        sha256: manifest.releaseAsset.sha256,
-        byteLength: manifest.releaseAsset.byteLength,
-      })),
-      stageExecutionCopy: vi.fn(async () => ({
-        canonicalPath: 'C:\\staged\\officecli.exe',
-        sha256: manifest.releaseAsset.sha256,
-        byteLength: manifest.releaseAsset.byteLength,
-      })),
-      runBoundedProcess: vi.fn(async () => ({ exitCode: 0, stdout: '9.9.9', stderr: '' })),
-    })).rejects.toMatchObject({ code: 'OFFICECLI_VERSION_MISMATCH' })
+    await expect(
+      harness.runPhysicalFeasibility(requestOptions(root), {
+        platform: 'win32',
+        manifest: reviewedManifest(),
+        probe: safeProbe(),
+        inspectBinary: vi.fn(async () => ({
+          canonicalPath: 'C:\\admin\\officecli.exe',
+          sha256: manifest.releaseAsset.sha256,
+          byteLength: manifest.releaseAsset.byteLength,
+        })),
+        stageExecutionCopy: vi.fn(async () => ({
+          canonicalPath: 'C:\\staged\\officecli.exe',
+          sha256: manifest.releaseAsset.sha256,
+          byteLength: manifest.releaseAsset.byteLength,
+        })),
+        runBoundedProcess: vi.fn(async () => ({ exitCode: 0, stdout: '9.9.9', stderr: '' })),
+      })
+    ).rejects.toMatchObject({ code: 'OFFICECLI_VERSION_MISMATCH' })
   })
 
   it('rejects receipts containing absolute paths or raw process output', () => {
-    expect(() => harness.assertSafeReceipt({ configuredPath: 'C:\\secret\\officecli.exe' }))
-      .toThrow(/receipt/i)
-    expect(() => harness.assertSafeReceipt({ stdout: '{"valid":true}' }))
-      .toThrow(/receipt/i)
+    expect(() =>
+      harness.assertSafeReceipt({ configuredPath: 'C:\\secret\\officecli.exe' })
+    ).toThrow(/receipt/i)
+    expect(() => harness.assertSafeReceipt({ stdout: '{"valid":true}' })).toThrow(/receipt/i)
   })
 
+  it('preflights the pinned PowerPoint-generated positive fixture', async () => {
+    const bytes = await fs.readFile(POSITIVE_FIXTURE)
+    expect(bytes).toHaveLength(31659)
+    expect(crypto.createHash('sha256').update(bytes).digest('hex').toUpperCase()).toBe(
+      POSITIVE_SHA256
+    )
+    await expect(
+      validatePptxPackage(POSITIVE_FIXTURE, path.basename(POSITIVE_FIXTURE))
+    ).resolves.toMatchObject({ fileSize: bytes.length })
+  })
 })

@@ -10,5 +10,10 @@ if (mode === 'hang') {
 } else if (mode === 'malformed') {
   process.stdout.write('noise before json')
 } else {
-  process.stdout.write(JSON.stringify({ ok: true, argv: process.argv.slice(3) }))
+  process.stdout.write(
+    JSON.stringify({
+      success: true,
+      data: { count: 0, errors: [] },
+    })
+  )
 }

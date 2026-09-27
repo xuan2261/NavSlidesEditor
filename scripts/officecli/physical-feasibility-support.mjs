@@ -7,7 +7,10 @@ const SHA256 = /^[A-F0-9]{64}$/
 const SENSITIVE_KEY = /(?:stdout|stderr|rawOutput|configuredPath|canonicalPath|command)$/i
 const WINDOWS_ABSOLUTE = /^[A-Za-z]:[\\/]/
 const FIXTURE_HASHES = new Map([
-  ['good-package.pptx', 'A870BA588E1F29D0DE0814C2F52977A2556A3041A4291FB19174E210274C17D1'],
+  [
+    'officecli-positive-powerpoint-16.pptx',
+    '29B2D6F12E922204C4A914D3C3BC427FF48B0915231DFF37DCF3F91A21D00FC2',
+  ],
   ['bad-crc.pptx', '9D572715870493397798E82473593F4CF373B01DDDEB8175EAB034C131274607'],
   ['malformed-xml.pptx', '4F3B3BC9E807BAF99ECD2C462BBB95D7212457AC24CA424B69903DF73425E55C'],
 ])
@@ -18,7 +21,14 @@ export function failure(code, message) {
 
 export function parseArguments(argv, env = process.env) {
   const options = { malformed: [], acquiredAt: env.OFFICECLI_ACQUIRED_AT }
-  const single = new Set(['--binary', '--valid', '--manifest', '--out', '--acquired-at'])
+  const single = new Set([
+    '--binary',
+    '--valid',
+    '--manifest',
+    '--out',
+    '--acquired-at',
+    '--expected-source-commit',
+  ])
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index]
     const value = argv[index + 1]
@@ -27,7 +37,8 @@ export function parseArguments(argv, env = process.env) {
       options.malformed.push(value)
       index += 1
     } else if (single.has(flag)) {
-      if (!value || options[argumentName(flag)]) throw failure('ARGUMENT_INVALID', `${flag} requires one value`)
+      if (!value || options[argumentName(flag)])
+        throw failure('ARGUMENT_INVALID', `${flag} requires one value`)
       options[argumentName(flag)] = value
       index += 1
     } else {
@@ -44,6 +55,7 @@ function argumentName(flag) {
     '--manifest': 'manifestPath',
     '--out': 'out',
     '--acquired-at': 'acquiredAt',
+    '--expected-source-commit': 'expectedSourceCommit',
   }[flag]
 }
 
@@ -56,8 +68,10 @@ export function assertPrerequisites(options) {
     throw failure('PHYSICAL_PREREQUISITE_MISSING', 'Exactly two malformed fixtures are required')
   }
   const malformedNames = options.malformed.map((value) => path.basename(value)).sort()
-  if (path.basename(options.valid) !== 'good-package.pptx' ||
-      malformedNames.join(',') !== 'bad-crc.pptx,malformed-xml.pptx') {
+  if (
+    path.basename(options.valid) !== 'officecli-positive-powerpoint-16.pptx' ||
+    malformedNames.join(',') !== 'bad-crc.pptx,malformed-xml.pptx'
+  ) {
     throw failure('PHYSICAL_PREREQUISITE_MISSING', 'Pinned feasibility fixtures are required')
   }
   if (!Number.isFinite(Date.parse(options.acquiredAt))) {
@@ -66,11 +80,14 @@ export function assertPrerequisites(options) {
 }
 
 export function assertCanonicalFixturePaths(options, projectRoot) {
-  const fixtureRoot = path.resolve(projectRoot, 'server/data/test-corpus/adversarial')
+  const corpusRoot = path.resolve(projectRoot, 'server/data/test-corpus')
   const expected = new Map([
-    ['good-package.pptx', path.join(fixtureRoot, 'good-package.pptx')],
-    ['bad-crc.pptx', path.join(fixtureRoot, 'bad-crc.pptx')],
-    ['malformed-xml.pptx', path.join(fixtureRoot, 'malformed-xml.pptx')],
+    [
+      'officecli-positive-powerpoint-16.pptx',
+      path.join(corpusRoot, 'officecli', 'officecli-positive-powerpoint-16.pptx'),
+    ],
+    ['bad-crc.pptx', path.join(corpusRoot, 'adversarial', 'bad-crc.pptx')],
+    ['malformed-xml.pptx', path.join(corpusRoot, 'adversarial', 'malformed-xml.pptx')],
   ])
   for (const candidate of [options.valid, ...options.malformed]) {
     const name = path.basename(candidate)
@@ -85,7 +102,8 @@ export function assertReviewedManifest(manifest) {
   const provenance = manifest?.provenance
   const asset = manifest?.releaseAsset
   const upstream = manifest?.upstream
-  const reviewed = license?.spdx === 'Apache-2.0' &&
+  const reviewed =
+    license?.spdx === 'Apache-2.0' &&
     SHA256.test(license?.textSha256 || '') &&
     ['present', 'absent'].includes(license?.upstreamNoticeStatus) &&
     license?.redistributionReviewStatus === 'reviewed-not-bundled' &&
@@ -93,10 +111,16 @@ export function assertReviewedManifest(manifest) {
     provenance?.checksumManifestVerified === true &&
     /^https:\/\/github\.com\/iOfficeAI\/OfficeCLI(?:\/|$)/.test(upstream?.repository || '') &&
     /^https:\/\/github\.com\/iOfficeAI\/OfficeCLI\/releases\//.test(upstream?.releasePage || '') &&
-    /^https:\/\/github\.com\/iOfficeAI\/OfficeCLI\/releases\/download\//.test(asset?.sourceAssetUrl || '') &&
-    SHA256.test(asset?.sha256 || '') && Number.isSafeInteger(asset?.byteLength)
+    /^https:\/\/github\.com\/iOfficeAI\/OfficeCLI\/releases\/download\//.test(
+      asset?.sourceAssetUrl || ''
+    ) &&
+    SHA256.test(asset?.sha256 || '') &&
+    Number.isSafeInteger(asset?.byteLength)
   if (!reviewed) {
-    throw failure('LEGAL_PROVENANCE_UNRESOLVED', 'OfficeCLI legal or provenance review is unresolved')
+    throw failure(
+      'LEGAL_PROVENANCE_UNRESOLVED',
+      'OfficeCLI legal or provenance review is unresolved'
+    )
   }
 }
 
@@ -107,15 +131,21 @@ export async function hashFile(filePath) {
 }
 
 export async function inspectPinnedBinary(binary, manifest) {
-  if (!path.win32.isAbsolute(binary) || /^\\\\/.test(binary)) {
+  if (!path.win32.isAbsolute(binary) || /^\\\\/.test(binary) || binary.slice(2).includes(':')) {
     throw failure('BINARY_PATH_INVALID', 'OfficeCLI binary must use an absolute local Windows path')
   }
   const link = await fsp.lstat(binary)
   const canonicalPath = await fsp.realpath(binary)
   const stat = await fsp.stat(binary)
-  if (!link.isFile() || link.isSymbolicLink() || link.isReparsePoint?.() ||
-      !stat.isFile() || stat.isReparsePoint?.() || (stat.nlink && stat.nlink !== 1) ||
-      path.win32.normalize(canonicalPath).toLowerCase() !== path.win32.normalize(binary).toLowerCase()) {
+  if (
+    !link.isFile() ||
+    link.isSymbolicLink() ||
+    link.isReparsePoint?.() ||
+    !stat.isFile() ||
+    stat.isReparsePoint?.() ||
+    (stat.nlink && stat.nlink !== 1) ||
+    path.win32.normalize(canonicalPath).toLowerCase() !== path.win32.normalize(binary).toLowerCase()
+  ) {
     throw failure('BINARY_PATH_UNSAFE', 'OfficeCLI binary path is unsafe')
   }
   const sha256 = await hashFile(binary)
@@ -146,16 +176,28 @@ export async function validateFixture(filePath, expected, context, snapshotRoot)
       throw failure('MALFORMED_FIXTURE_ACCEPTED', `${name} passed the package safety gate`)
     }
     const revisionSha256 = sha256.toLowerCase()
-    const revision = context.createRevisionDescriptor({
-      id: `physical-${revisionSha256}`, sha256: revisionSha256, byteLength: bytes.length,
-      safetyVerdict: { rawZipSafe: true, xmlSafe: true, verifiedSha256: revisionSha256 },
-    }, bytes)
+    const revision = context.createRevisionDescriptor(
+      {
+        id: `physical-${revisionSha256}`,
+        sha256: revisionSha256,
+        byteLength: bytes.length,
+        safetyVerdict: { rawZipSafe: true, xmlSafe: true, verifiedSha256: revisionSha256 },
+      },
+      bytes
+    )
     const result = await context.gateway.validatePackage(revision)
-    if (result?.ok !== true) throw failure('VALID_FIXTURE_REJECTED', `${name} was not validated`)
+    if (result?.ok !== true || (expected === 'accept' && result?.metrics?.exitCode !== 0)) {
+      throw failure('VALID_FIXTURE_REJECTED', `${name} was not validated successfully`)
+    }
     return {
-      ...common, expected, actual: 'accepted', ok: true,
-      exitCode: result?.metrics?.exitCode ?? null, reasonCode: null,
-      validationPath: 'production-preflight-and-gateway', durationMs: Date.now() - started,
+      ...common,
+      expected,
+      actual: 'accepted',
+      ok: true,
+      exitCode: result?.metrics?.exitCode ?? null,
+      reasonCode: null,
+      validationPath: 'production-preflight-and-gateway',
+      durationMs: Date.now() - started,
     }
   } catch (error) {
     if (expected !== 'reject' || error?.code === 'MALFORMED_FIXTURE_ACCEPTED') throw error
@@ -164,14 +206,25 @@ export async function validateFixture(filePath, expected, context, snapshotRoot)
       throw failure('MALFORMED_REJECTION_UNTYPED', `${name} did not produce a typed rejection`)
     }
     return {
-      ...common, expected, actual: 'rejected', ok: true, exitCode: null,
-      reasonCode, validationPath: 'production-preflight', durationMs: Date.now() - started,
+      ...common,
+      expected,
+      actual: 'rejected',
+      ok: true,
+      exitCode: null,
+      reasonCode,
+      validationPath: 'production-preflight',
+      durationMs: Date.now() - started,
     }
   }
 }
 
 export function hostReceipt(osModule) {
-  const subject = [osModule.hostname(), osModule.platform(), osModule.release(), osModule.arch()].join('\0')
+  const subject = [
+    osModule.hostname(),
+    osModule.platform(),
+    osModule.release(),
+    osModule.arch(),
+  ].join('\0')
   return {
     platform: osModule.platform(),
     release: osModule.release(),
@@ -182,7 +235,8 @@ export function hostReceipt(osModule) {
 
 export function assertSafeReceipt(receipt) {
   function visit(value, key = '') {
-    if (SENSITIVE_KEY.test(key)) throw failure('RECEIPT_UNSAFE', 'Receipt contains prohibited process or path data')
+    if (SENSITIVE_KEY.test(key))
+      throw failure('RECEIPT_UNSAFE', 'Receipt contains prohibited process or path data')
     if (typeof value === 'string' && (WINDOWS_ABSOLUTE.test(value) || value.startsWith('/'))) {
       throw failure('RECEIPT_UNSAFE', 'Receipt contains an absolute local path')
     }

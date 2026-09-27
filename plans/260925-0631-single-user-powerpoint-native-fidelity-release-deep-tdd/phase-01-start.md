@@ -174,8 +174,8 @@ Current facts to preserve:
      analysis, and required root/website notice text;
    - recomputed byte length and SHA-256 matching the pin;
    - real `1.0.135` version output decoded by production code;
-   - real gateway validation of
-     `server/data/test-corpus/adversarial/good-package.pptx`;
+   - real gateway validation of the separate, pinned PowerPoint-generated
+     positive fixture `server/data/test-corpus/officecli/officecli-positive-powerpoint-16.pptx`;
    - fail-closed typed rejection of `bad-crc.pptx` and `malformed-xml.pptx`;
    - bounded stdout/stderr, exit code, reason code, schema version, fixture hash,
      binary hash, host identity, and duration in a redacted receipt.
@@ -287,16 +287,20 @@ to this release.
 
 ```powershell
 $env:NAVSLIDES_OFFICECLI_PATH = 'C:\absolute\admin-provided\OfficeCLI.exe'
-$env:OFFICECLI_ACQUIRED_AT = '<verified local acquisition time in ISO 8601>'
+$env:OFFICECLI_ACQUIRED_AT = '<verified administrator acquisition time; not file creation time>'
+$env:OFFICECLI_EXPECTED_SOURCE_COMMIT = '<reviewed clean 40-character SHA>'
 node scripts/officecli/run-physical-feasibility.mjs `
   --binary $env:NAVSLIDES_OFFICECLI_PATH `
-  --valid server/data/test-corpus/adversarial/good-package.pptx `
+  --valid server/data/test-corpus/officecli/officecli-positive-powerpoint-16.pptx `
   --malformed server/data/test-corpus/adversarial/bad-crc.pptx `
   --malformed server/data/test-corpus/adversarial/malformed-xml.pptx `
   --manifest server/services/pptx-import/officecli/qualification-manifest.json `
   --acquired-at $env:OFFICECLI_ACQUIRED_AT `
+  --expected-source-commit $env:OFFICECLI_EXPECTED_SOURCE_COMMIT `
   --out plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/officecli-physical-feasibility.json
-npx vitest run server/services/pptx-import/officecli/physical-feasibility.test.js
+npx vitest run `
+  server/services/pptx-import/officecli/physical-feasibility.test.js `
+  server/services/pptx-import/officecli/physical-feasibility-contract.test.js
 ```
 
 Expected RED before a physical run: receipt absent. A fake-backed green result is
@@ -505,7 +509,7 @@ npm run test:pptx:oracle:qualify
 - Any dispute over package-first or production-readiness ownership blocks only
   the affected capability; do not expand scope by guessing.
 
-## Physical spike outcome on 2026-09-25
+## Historical physical spike outcome on 2026-09-25
 
 The real pinned OfficeCLI rejected the checked-in `good-package.pptx`. The
 [failed-spike report](./reports/officecli-physical-feasibility-blocker.md)
@@ -513,3 +517,29 @@ records the identity, exact OPC validation failure, and successful disposable
 PowerPoint-generated counterexample. A clean isolated account/VM and outbound
 deny policy are also unproven. Apply the stop/re-plan rule above; Phase 1 remains
 pending and no later release gate inherits this developer-session probe.
+
+## PowerPoint-generated OfficeCLI positive fixture
+
+`server/data/test-corpus/officecli/officecli-positive-powerpoint-16.pptx` is a
+separate physical-feasibility fixture. Local Microsoft PowerPoint COM reported
+version `16.0`, build `10417`; it generated a new presentation with one blank
+slide and zero shapes. The package's creator, last modifier, title, subject,
+description, keywords, company, and manager properties are blank, and the
+package XML contains no local username. It contains no customer or user content.
+
+Pinned bytes: `31,659`; SHA-256:
+`29B2D6F12E922204C4A914D3C3BC427FF48B0915231DFF37DCF3F91A21D00FC2`.
+Attribution: Microsoft PowerPoint-generated blank package; no external deck or
+customer source material. The synthetic `adversarial/good-package.pptx` remains
+unchanged and is not an OfficeCLI-positive fixture. `bad-crc.pptx` and
+`malformed-xml.pptx` remain unchanged.
+
+This fixture provenance is separate from OfficeCLI acquisition provenance. The
+official v1.0.135 binary and SHA256SUMS were downloaded by the operator and
+verified against their pinned hashes. A local production-gateway run accepted
+the positive fixture and rejected both malformed fixtures. Its earlier receipt
+was generated against a dirty tree and lacks schema-v2 source binding, so it
+remains exploratory evidence outside the repository. Independent administrator
+provisioning is not claimed. Re-run on a clean checkout with an independently
+reviewed expected commit before publishing the canonical Phase 1 receipt.
+The scoped G1 account/egress waiver does not close the remaining gates.
