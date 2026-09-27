@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -11,7 +12,10 @@ const base = () => ({
     failSeverities: ['HIGH', 'CRITICAL'],
     exceptions: [],
   },
-  report: { SchemaVersion: 2, Results: [] },
+  report: {
+    SchemaVersion: 2,
+    Results: [{ Target: 'node', Class: 'lang-pkgs', Type: 'npm', Vulnerabilities: [] }],
+  },
   sbom: {
     spdxVersion: 'SPDX-2.3',
     packages: [{ name: 'navslides-editor', versionInfo: '1.17.0' }],
@@ -38,10 +42,65 @@ describe('container supply-chain policy', () => {
     input.report.Results = [
       {
         Target: 'node',
+        Class: 'lang-pkgs',
+        Type: 'npm',
         Vulnerabilities: [{ VulnerabilityID: 'CVE-1', PkgName: 'node', Severity: 'HIGH' }],
       },
     ]
     expect(() => verifyContainerSupplyChain(input)).toThrow(/CVE-1/)
+  })
+
+  it('records exactly 71 risk-accepted findings as advisory without clearing them', () => {
+    const input = base()
+    const vulnerabilities = Array.from({ length: 71 }, (_, index) => ({
+      VulnerabilityID: `CVE-TEST-${String(index + 1).padStart(3, '0')}`,
+      PkgName: `package-${index + 1}`,
+      Severity: index < 50 ? 'HIGH' : 'CRITICAL',
+    }))
+    input.policy.unapprovedFindingDisposition = {
+      status: 'risk-accepted',
+      expectedCount: 71,
+      reason: "User decision ('bỏ qua'): existing findings remain advisory, not remediated.",
+    }
+    input.report.Results[0].Vulnerabilities = vulnerabilities
+
+    const receipt = verifyContainerSupplyChain(input)
+    expect(receipt.status).toBe('risk-accepted')
+    expect(receipt.securityStatus).toBe('advisory')
+    expect(receipt.scan.vulnerabilityCount).toBe(71)
+    expect(receipt.unapprovedFindings).toMatchObject({
+      status: 'risk-accepted',
+      reason: input.policy.unapprovedFindingDisposition.reason,
+      count: 71,
+      severityCounts: { HIGH: 50, CRITICAL: 21 },
+      ids: vulnerabilities.map((entry) => entry.VulnerabilityID).sort(),
+      truncated: false,
+    })
+    expect(receipt.unapprovedFindings.findings).toHaveLength(71)
+
+    input.report.Results[0].Vulnerabilities.push({
+      VulnerabilityID: 'CVE-TEST-072',
+      PkgName: 'package-72',
+      Severity: 'HIGH',
+    })
+    expect(() => verifyContainerSupplyChain(input)).toThrow(/expected exactly 71/)
+  })
+
+  it('fails closed for a missing or malformed Trivy report', () => {
+    for (const report of [
+      undefined,
+      {},
+      { SchemaVersion: 2 },
+      { SchemaVersion: 2, Results: [] },
+      {
+        SchemaVersion: 2,
+        Results: [{ Target: 'node', Class: 'lang-pkgs', Type: 'npm', Vulnerabilities: [{}] }],
+      },
+    ]) {
+      const input = base()
+      input.report = report
+      expect(() => verifyContainerSupplyChain(input)).toThrow(/Trivy vulnerability report/)
+    }
   })
 
   it('accepts only unexpired exact exceptions', () => {
@@ -49,6 +108,8 @@ describe('container supply-chain policy', () => {
     input.report.Results = [
       {
         Target: 'node',
+        Class: 'lang-pkgs',
+        Type: 'npm',
         Vulnerabilities: [{ VulnerabilityID: 'CVE-1', PkgName: 'node', Severity: 'CRITICAL' }],
       },
     ]
@@ -58,7 +119,7 @@ describe('container supply-chain policy', () => {
     expect(verifyContainerSupplyChain(input).status).toBe('passed')
     input.policy.exceptions[0].expires = '2000-01-01T00:00:00.000Z'
     expect(() => verifyContainerSupplyChain(input)).toThrow(/expired/i)
-    input.report.Results = []
+    input.report.Results[0].Vulnerabilities = []
     expect(() => verifyContainerSupplyChain(input)).toThrow(/expired/i)
   })
 
@@ -100,7 +161,24 @@ describe('container supply-chain policy', () => {
       '--chromium-revision', input.expected.chromiumRevision,
       '--out', out,
     ])
-    expect(JSON.parse(await import('node:fs/promises').then((fs) => fs.readFile(out, 'utf8'))))
-      .toMatchObject({ status: 'passed', imageDigest: input.expected.imageDigest })
+    const receipt = JSON.parse(
+      await import('node:fs/promises').then((fs) => fs.readFile(out, 'utf8'))
+    )
+    const digest = (value) =>
+      `sha256:${createHash('sha256').update(JSON.stringify(value)).digest('hex')}`
+    expect(receipt).toMatchObject({
+      status: 'passed',
+      securityStatus: 'passed',
+      subject: { imageDigest: input.expected.imageDigest },
+      scan: {
+        status: 'completed',
+        trivyReportSha256: digest(input.report),
+        vulnerabilityCount: 0,
+      },
+      unapprovedFindings: { status: 'none', count: 0 },
+    })
+    expect(receipt.subject.sbomSha256).toBe(digest(input.sbom))
+    expect(receipt.subject.browserInventorySha256).toBe(digest(input.browser))
+    expect(receipt.scan.policySha256).toBe(digest(input.policy))
   })
 })
