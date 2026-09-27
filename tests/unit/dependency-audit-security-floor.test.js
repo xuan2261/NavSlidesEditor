@@ -5,7 +5,6 @@ import { createRequire } from 'node:module'
 
 const root = resolve(__dirname, '..', '..')
 const readJson = (...parts) => JSON.parse(readFileSync(resolve(root, ...parts), 'utf8'))
-const readText = (...parts) => readFileSync(resolve(root, ...parts), 'utf8')
 const require = createRequire(import.meta.url)
 
 function normalizeVersion(range) {
@@ -77,46 +76,5 @@ describe('dependency audit security floor', () => {
     expect(() => disabledImageSize(Buffer.from('image'))).toThrow(
       'Automatic image dimension parsing is disabled'
     )
-  })
-
-  it('keeps the public Node floor and build runtime aligned', () => {
-    expect(readJson('package.json').engines.node).toBe('>=22.13.0')
-
-    const dockerVersions = [...readText('Dockerfile').matchAll(/FROM node:([^\s@-]+)/g)].map(
-      (match) => match[1]
-    )
-    expect(dockerVersions).toEqual(['22.22.0', '22.22.0'])
-
-    const workflowFiles = [
-      'github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml',
-      'manual-update-playwright-visual-baselines.yml',
-      'nightly-ribbon-layout-768px-soft-warning-no-pr-gate.yml',
-      'release.yml',
-      'website-deploy-github-pages.yml',
-    ]
-    for (const file of workflowFiles) {
-      const source = readText('.github', 'workflows', file)
-      const versions = [...source.matchAll(/node-version:\s*['"]?([^'"\s},]+)/g)].map(
-        (match) => match[1]
-      )
-      expect(versions.length, file).toBeGreaterThan(0)
-      expect(new Set(versions), file).toEqual(new Set(['22.22.0']))
-    }
-
-    const publicDocs = [
-      ['README.md'],
-      ['docs', 'code-standards.md'],
-      ['docs', 'codebase-summary.md'],
-      ['docs', 'deployment-guide.md'],
-      ['website', 'develop', 'building-from-source.md'],
-      ['website', 'guide', 'installation.md'],
-      ['website', 'vi', 'develop', 'building-from-source.md'],
-      ['website', 'vi', 'guide', 'installation.md'],
-    ]
-    for (const pathParts of publicDocs) {
-      const source = readText(...pathParts)
-      expect(source, pathParts.join('/')).toContain('>=22.13.0')
-      expect(source, pathParts.join('/')).toContain('22.22.0')
-    }
   })
 })

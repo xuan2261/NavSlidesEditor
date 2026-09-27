@@ -14,6 +14,11 @@ downstream release gates authorize publication.
 - Replaced schematic thumbnails with source-sized static previews using slide resolution, design tokens and layouts. Preview-only markup allowlists prevent embedded stylesheets and media runtimes from affecting the editor.
 - Kept the active ribbon tab visible after layout changes; repaired native menu activation and keyboard context-menu focus; added Code Editor field labels, STEM modal focus containment and readable theme/status colors.
 - Added a build-once exact-SHA CI draft: one manifest-bound client artifact now feeds Playwright, load, Docker prebuilt, Electron and release consumers; existing-tag release, multi-host receipt, protected signing and attestation gates remain non-publishing until their physical prerequisites pass.
+- Qualified the hash-pinned OfficeCLI 1.0.135 against a PowerPoint-generated blank package: `success: true`, zero validation errors, and exit code 0. The parser rejects legacy `valid` stdout and nonzero error counts; G1 still needs its separate physical process and claim gates.
+- Added `npm run release-state` to reject dirty or untagged release subjects and version drift across workspaces and locks; it reports local tag/SHA state but makes no publication or CI claim.
+- Installed Chromium in the hosted Vitest performance-budget lane; the five clean-SHA samples previously failed four raster tests because that job had no Playwright browser binary.
+- Pinned the container to Node.js 22.23.3 Trixie Slim, added checksum- and architecture-verified upstream rclone 1.75.1, and removed global npm/npx after installing Chromium. The HIGH/CRITICAL scan gate and empty exception list remain unchanged; the rebuilt image still needs hosted verification.
+- Restricted OfficeCLI physical receipts to local feasibility for an independently supplied clean source SHA. The earlier dirty-tree run remains exploratory and cannot be promoted as a schema-v2 receipt.
 
 ## v1.16.2 — 2026-09-22
 

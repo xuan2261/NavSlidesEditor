@@ -238,7 +238,7 @@ navslides-editor/
   immutable release history.
 - Product manifests and lock metadata own the product version;
   `runtime-versions.json` owns runtime/toolchain pins.
-- Runtime baseline is Node.js >=22.13.0; CI and container builds pin 22.22.0.
+- Runtime baseline is Node.js >=22.13.0; CI pins 22.22.0 and the container image pins 22.23.3.
 - There is no database layer; persistence is file-based by design.
 - There is no full TypeScript migration; JSDoc is the type system.
 - The repo includes large generated artifacts such as template assets, icon

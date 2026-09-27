@@ -20,7 +20,7 @@ dependencies: [2, 3]
 - [Electron package preparation](../../scripts/prepare-electron.js)
 - [Runtime closure verification](../../scripts/verify-runtime-closure.js)
 - [Electron builder config](../../electron-builder.yml)
-- [Runtime/action pin contract](../../tests/unit/production-runtime-closure-contract.test.js)
+- [Runtime artifact behavior tests](../../scripts/verify-runtime-closure.test.js)
 - [Electron release contract](../../tests/unit/electron-release-readiness-contract.test.js)
 - [Package-first Phase 13 release design](../260710-1757-pptx-package-first-officecli-roundtrip-deep-tdd/phase-13-ci-platform-security-and-release-claim-gates.md)
 - [Historical Windows release plan](../archive/260522-0922-windows-electron-v1-9-1-release/phase-04-commit-tag-push-readiness.md)
@@ -293,7 +293,7 @@ Build boundaries:
 | `C:\Work\NavSlidesEditor\tests\unit\github-actions-green-sha-release-contract.test.js`                       | Create                 |        140-200 lines | No synthetic tag; exact receipt/tag/SHA checks                                    | Primary release gate               |
 | `C:\Work\NavSlidesEditor\tests\unit\github-actions-multi-host-receipt-contract.test.js`                      | Create                 |        140-200 lines | DAG edges, selected hosts, same subject/client digest                             | Multi-host release gate            |
 | `C:\Work\NavSlidesEditor\tests\unit\github-actions-signing-provenance-contract.test.js`                      | Create                 |        120-180 lines | Authenticode, timestamp, attestation, and SHA-pinned actions                      | Public artifact gate               |
-| `C:\Work\NavSlidesEditor\tests\unit\production-runtime-closure-contract.test.js`                             | Modify                 |            126 lines | New workflow path/action pins/Docker target assertions                            | Runtime regression                 |
+| `C:\Work\NavSlidesEditor\scripts\verify-runtime-closure.test.js`                                             | Reuse                  |            178 lines | Vendor/client artifact rejection behavior                                         | Runtime regression                 |
 | `C:\Work\NavSlidesEditor\tests\unit\electron-release-readiness-contract.test.js`                             | Modify                 |             45 lines | Existing-tag and artifact-reuse contract                                          | Release regression                 |
 | `C:\Work\NavSlidesEditor\Dockerfile`                                                                         | Modify                 |   51 -> 70-110 lines | Add normal source-build and CI prebuilt production targets                        | Docker artifact gate               |
 | `C:\Work\NavSlidesEditor\.dockerignore`                                                                      | Modify                 |              8 lines | Permit prebuilt context through explicit staging path, not arbitrary local dist   | Docker contract                    |
@@ -359,7 +359,7 @@ Write contract tests first.
 Run:
 
 ```powershell
-npx vitest run scripts/ci/client-artifact-manifest.test.js scripts/ci/release-subject.test.js tests/unit/github-actions-build-once-contract.test.js tests/unit/github-actions-green-sha-release-contract.test.js tests/unit/electron-release-readiness-contract.test.js tests/unit/production-runtime-closure-contract.test.js
+npx vitest run scripts/ci/client-artifact-manifest.test.js scripts/ci/release-subject.test.js tests/unit/github-actions-build-once-contract.test.js tests/unit/github-actions-green-sha-release-contract.test.js tests/unit/electron-release-readiness-contract.test.js scripts/verify-runtime-closure.test.js
 npx vitest run tests/unit/github-actions-multi-host-receipt-contract.test.js tests/unit/github-actions-signing-provenance-contract.test.js
 ```
 
@@ -479,7 +479,7 @@ Authenticode gate, or signed provenance exists.
 Focused:
 
 ```powershell
-npx vitest run scripts/ci/client-artifact-manifest.test.js scripts/ci/release-subject.test.js tests/unit/github-actions-build-once-contract.test.js tests/unit/github-actions-green-sha-release-contract.test.js tests/unit/github-actions-multi-host-receipt-contract.test.js tests/unit/github-actions-signing-provenance-contract.test.js tests/unit/electron-release-readiness-contract.test.js tests/unit/production-runtime-closure-contract.test.js
+npx vitest run scripts/ci/client-artifact-manifest.test.js scripts/ci/release-subject.test.js tests/unit/github-actions-build-once-contract.test.js tests/unit/github-actions-green-sha-release-contract.test.js tests/unit/github-actions-multi-host-receipt-contract.test.js tests/unit/github-actions-signing-provenance-contract.test.js tests/unit/electron-release-readiness-contract.test.js scripts/verify-runtime-closure.test.js
 ```
 
 Local artifact proof:
@@ -552,7 +552,7 @@ Workflow proof:
 Phase-focused:
 
 ```powershell
-npx vitest run scripts/ci/client-artifact-manifest.test.js scripts/ci/release-subject.test.js tests/unit/github-actions-build-once-contract.test.js tests/unit/github-actions-green-sha-release-contract.test.js tests/unit/electron-release-readiness-contract.test.js tests/unit/production-runtime-closure-contract.test.js
+npx vitest run scripts/ci/client-artifact-manifest.test.js scripts/ci/release-subject.test.js tests/unit/github-actions-build-once-contract.test.js tests/unit/github-actions-green-sha-release-contract.test.js tests/unit/electron-release-readiness-contract.test.js scripts/verify-runtime-closure.test.js
 npm run lint
 npm run build
 npm run runtime:verify

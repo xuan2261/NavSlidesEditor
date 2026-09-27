@@ -54,7 +54,13 @@ services:
       - revealjs-data:/app/server/data
       - revealjs-uploads:/app/server/uploads
     healthcheck:
-      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3002/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3002/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 30s
       timeout: 5s
       start_period: 20s
@@ -94,15 +100,15 @@ docker compose down -v
 
 Multi-stage build (confirmed at `Dockerfile` in root):
 
-1. **Builder stage** — pins Node.js 22.22.0 on Debian Bookworm Slim, installs the workspace lockfile without lifecycle scripts, publishes the exact Reveal.js 6.0.1 `dist/` tree plus other vendor assets, then builds the client.
-2. **Production stage** — pins the same Node.js 22.22.0 image, installs rclone and the lock-derived server runtime dependency set, installs Playwright Chromium, copies the built client and published vendor assets, then verifies runtime closure.
+1. **Builder stage** — pins Node.js 22.23.3 on Debian Trixie Slim, installs the workspace lockfile without lifecycle scripts, publishes the Reveal.js 6.0.2 `dist/` tree plus other vendor assets, then builds the client.
+2. **Production stage** — uses the same pinned base and installs the lock-derived server dependencies plus checksum-verified upstream rclone 1.75.1 packages for amd64/arm64. After Chromium installation it removes global npm/npx and smoke-checks Node, Playwright/Chromium, and rclone. Other rclone artifact architectures fail the build explicitly.
 
 CI uses the separate `production-prebuilt` target. It downloads the single
 manifest-bound client artifact for the exact subject SHA, verifies every byte,
 and then assembles the image without recompiling the client. Normal local
 `docker build .` keeps the source-build path.
 
-Vendor publication records runtime versions and hashes in `server/vendor/vendor-manifest.json`. The final command and server prestart verification reject a missing required Reveal.js asset, a version other than 6.0.1, a hash mismatch, or a legacy `reveal.js/plugin/` tree before `node server/index.js` starts.
+Vendor publication records runtime versions and hashes in `server/vendor/vendor-manifest.json`. The final command and server prestart verification reject a missing required Reveal.js asset, a version other than 6.0.2, a hash mismatch, or a legacy `reveal.js/plugin/` tree before `node server/index.js` starts.
 
 The final image creates both mount points for UID/GID `10001:10001` and never
 falls back to root. Existing bind mounts or migrated named volumes must be made
@@ -205,7 +211,7 @@ To qualify an unpacked desktop build locally, run `npm run electron:prepare`, th
 | `PORT`                      | `3002`                      | HTTP listen port                                                                                                            |
 | `NAVSLIDES_LISTEN_HOST`     | `127.0.0.1`                 | Server bind host; Docker sets `0.0.0.0` inside the container                                                                |
 | `NAVSLIDES_PUBLISH_HOST`    | `127.0.0.1`                 | Docker host-side publish address; changing it does not provide authentication                                               |
-| `NAVSLIDES_WORKERS`         | `1`                         | Supported process count; values other than `1` fail with `UNSUPPORTED_MULTI_PROCESS_TOPOLOGY`                              |
+| `NAVSLIDES_WORKERS`         | `1`                         | Supported process count; values other than `1` fail with `UNSUPPORTED_MULTI_PROCESS_TOPOLOGY`                               |
 | `SLIDES_DATA_DIR`           | `server/data/`              | Directory for JSON data files                                                                                               |
 | `SLIDES_UPLOADS_DIR`        | `server/uploads/`           | Directory for uploaded files                                                                                                |
 | `NODE_ENV`                  | `development`               | Set to `production` to disable Vite proxy and serve `client/dist/`                                                          |

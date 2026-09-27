@@ -90,7 +90,7 @@ Desktop data is stored under `~/.config/NavSlides Editor/` on Linux,
 
 ### Node.js from source
 
-Requires Node.js >=22.13.0 and npm. CI and container builds use Node.js 22.22.0.
+Requires Node.js >=22.13.0 and npm. CI uses Node.js 22.22.0; the container uses Node.js 22.23.3 on Debian Trixie Slim and omits npm from its final runtime.
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
@@ -500,7 +500,7 @@ PPTX browser audit artifacts are written under `plans/reports/pptx-import-real-b
 | Icons                | Lucide (editor UI) + inline SVG (slide icons)                              |
 | PowerPoint export    | pptxgenjs + Playwright raster fallback                                     |
 | PowerPoint import    | pptxtojson runtime parser; pptx2json benchmark-sandbox-only                |
-| Backend              | Node.js >=22.13.0 (CI/container: 22.22.0), Express 4                       |
+| Backend              | Node.js >=22.13.0 (CI: 22.22.0; container: 22.23.3), Express 4             |
 | Real-time transport  | Socket.IO                                                                  |
 | Desktop app          | Electron 42                                                                |
 | Cloud sync           | rclone                                                                     |

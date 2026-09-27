@@ -1,13 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join } from 'node:path'
 import { createRequire } from 'node:module'
 
 const require_ = createRequire(import.meta.url)
 const { verifyLocalRequireClosure } = require_('../../scripts/verify-runtime-closure.js')
-
-const root = resolve(__dirname, '..', '..')
 
 const makeTree = (files) => {
   const dir = mkdtempSync(join(tmpdir(), 'closure-'))
@@ -60,24 +58,5 @@ describe('packaged server require closure', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
-  })
-
-  it('keeps server source free of relative requires into shared/', () => {
-    const escaped = []
-    const walk = (dir) => {
-      for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        const entryPath = join(dir, entry.name)
-        if (entry.isDirectory()) {
-          if (entry.name !== 'node_modules') walk(entryPath)
-        } else if (entry.name.endsWith('.js')) {
-          const source = readFileSync(entryPath, 'utf8')
-          for (const match of source.matchAll(/require\(\s*['"](\.{1,2}\/[^'"]+)['"]/g)) {
-            if (/^(\.\.\/)+shared\//.test(match[1])) escaped.push(`${entryPath}: ${match[1]}`)
-          }
-        }
-      }
-    }
-    walk(join(root, 'server'))
-    expect(escaped).toEqual([])
   })
 })

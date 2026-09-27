@@ -1,7 +1,7 @@
 {
   "node": "22.22.0",
   "nodeFloor": ">=22.13.0",
-  "nodeImage": "node:22.22.0-bookworm-slim@sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca6d3ea96f16cb30df6187d94",
+  "nodeImage": "node:22.23.3-trixie-slim@sha256:b26b04c123d9ff8ab646ceb18b9d75a1173acf64b9a401094b906d27b29338d4",
   "electron": "42.9.3",
   "electronBuilder": "26.15.3",
   "tiptap": "3.31.3",

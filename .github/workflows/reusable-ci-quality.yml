@@ -32,7 +32,7 @@ jobs:
         with: { name: '${{ inputs.client_artifact }}', path: . }
       - if: inputs.gate == 'feature-coverage'
         run: node scripts/ci/verify-client-dist-manifest.mjs --root client/dist --manifest client-dist-manifest.json --subject "${{ inputs.subject_sha }}"
-      - if: inputs.gate == 'unit-coverage' || inputs.gate == 'pptx-corpus' || inputs.gate == 'feature-coverage'
+      - if: inputs.gate == 'unit-coverage' || inputs.gate == 'pptx-corpus' || inputs.gate == 'feature-coverage' || inputs.gate == 'vitest-budget'
         run: npx playwright install --with-deps chromium
       - if: inputs.gate == 'lint'
         run: npm run lint
