@@ -101,7 +101,7 @@ docker compose down -v
 Multi-stage build (confirmed at `Dockerfile` in root):
 
 1. **Builder stage** — pins Node.js 22.23.3 on Debian Trixie Slim, installs the workspace lockfile without lifecycle scripts, publishes the Reveal.js 6.0.2 `dist/` tree plus other vendor assets, then builds the client.
-2. **Production stage** — uses the same pinned base and installs the lock-derived server dependencies plus checksum-verified upstream rclone 1.75.1 packages for amd64/arm64. After Chromium installation it removes global npm/npx and smoke-checks Node, Playwright/Chromium, and rclone; this command chain is shell-traced in Docker build output to identify the exact failed check. Other rclone artifact architectures fail the build explicitly.
+2. **Production stage** — uses the same pinned base and installs the lock-derived server dependencies plus checksum-verified upstream rclone 1.75.1 packages for amd64/arm64. After Chromium installation it removes global npm/npx, clears the shell command cache before checking their absence, and smoke-checks Node, Playwright/Chromium, and rclone. The chain is shell-traced in Docker build output to identify a failed check. Other rclone artifact architectures fail the build explicitly.
 
 CI uses the separate `production-prebuilt` target. It downloads the single
 manifest-bound client artifact for the exact subject SHA, verifies every byte,

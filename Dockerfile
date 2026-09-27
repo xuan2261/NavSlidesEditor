@@ -93,6 +93,7 @@ WORKDIR /app/server
 RUN set -x; \
   npx playwright install --with-deps chromium \
   && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx \
+  && hash -r \
   && test -x /usr/local/bin/node \
   && ! command -v npm >/dev/null 2>&1 \
   && ! command -v npx >/dev/null 2>&1 \
