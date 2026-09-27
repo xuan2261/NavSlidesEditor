@@ -98,11 +98,24 @@
     "status": "blocked",
     "receiptPath": "plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/officecli-physical-feasibility.json",
     "blockerPath": "plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/officecli-physical-feasibility-blocker.md",
-    "observedReceipt": "absent from canonical reports; a separately retained local physical candidate accepted the PowerPoint-generated fixture and rejected both malformed fixtures, but no clean exact-source receipt is approved",
+    "observedReceipt": "An external digest-pinned schema-v2 receipt validates clean source 6c0921105c71c23e80355653efcfd6e1c4db654f and records the PowerPoint positive accepted plus both malformed fixtures rejected; it is historical evidence, not approval for the final source subject.",
+    "externalHistoricalReceipt": {
+      "receiptPath": "C:/Work/NavSlidesEditor-release-store/officecli-v1.0.135/physical-feasibility-6c092110.json",
+      "receiptSha256": "b53ef91e2b8bfe0fdde78f657c1170d4208258d53461dfdaf469d1ab065a7f1e",
+      "schemaVersion": 2,
+      "subjectCommit": "6c0921105c71c23e80355653efcfd6e1c4db654f",
+      "subjectWorktreeClean": true,
+      "claimScope": "local-physical-feasibility",
+      "classification": "historical-only-not-gate-approval",
+      "retention": "external-only-to-avoid-self-referential-source-SHA",
+      "storageIntegrity": "Receipt SHA-256 pins the observed bytes; write-protected external storage is not independently asserted.",
+      "validator": "scripts/officecli/verify-physical-feasibility-receipt.mjs",
+      "validatedAt": "2026-09-27"
+    },
     "configuredAdministratorPath": "operator downloaded the official v1.0.135 asset and SHA256SUMS with gh, verified both pinned hashes and byte length; independent administrator provisioning is not claimed",
-    "decision": "Stop before G0. The pinned good-package fixture fails real OPC validation; the production parser also rejects the real successful OfficeCLI JSON shape. Re-plan fixture provenance, decoder contract, and clean-account isolation before promoting this gate.",
-    "decisionRecordedAt": "2026-09-25",
-    "freshnessRule": "Re-evaluate only with a reviewed OfficeCLI-valid fixture, a decoder exercised on actual 1.0.135 output, verified acquisition/legal provenance, corrected receipt integrity/redaction checks, and a separately generated authoritative redacted physical receipt. The operator waiver removes only the clean-account/VM and deny-by-default-egress prerequisites.",
+    "decision": "Keep G0 and G1 blocked. The external receipt binds only source 6c0921105c71c23e80355653efcfd6e1c4db654f; create and externally retain a fresh receipt for the final committed source SHA, validate it with independently supplied source SHA and pinned receipt digest, and review acquisition provenance before any promotion. The receipt makes no account-isolation, egress-denial, or containment claim.",
+    "decisionRecordedAt": "2026-09-27",
+    "freshnessRule": "A local-feasibility receipt applies only to its exact clean source commit and exact digest-pinned bytes. Keep the receipt outside the source commit it describes; validate it using an independently supplied expected source SHA and receipt SHA-256. Re-evaluate only after fresh final-subject evidence and acquisition review, with G0 authority and remaining G1 process/cleanup qualification reviewed separately.",
     "historicalFreshnessRule": "Re-evaluate only with a reviewed OfficeCLI-valid fixture, a decoder exercised on actual 1.0.135 output, proven clean-account isolation, and a separately generated authoritative redacted physical receipt.",
     "currentPolicyAnnotation": {
       "recordedAt": "2026-09-27",
@@ -115,10 +128,10 @@
       "residualRisk": "OfficeCLI runs with the ordinary developer account's filesystem credentials and outbound network access. No filesystem, credential, network, or process containment is proven or claimed.",
       "containmentClaim": false,
       "supersedes": "Only the clean-account/VM and deny-by-default-egress clauses in the 2026-09-25 decision and freshness rule; their original text remains historical evidence.",
-      "activeG1Decision": "Still blocked: a local physical feasibility candidate passed against the dirty integration worktree; no canonical exact-source feasibility receipt, completed G0 authority, or full G1 process/cleanup qualification exists.",
+      "activeG1Decision": "Still blocked: the external schema-v2 receipt proves only local physical feasibility for prior source 6c0921105c71c23e80355653efcfd6e1c4db654f; the final source needs a fresh exact-subject receipt and acquisition review, completed G0 authority, and independent G1 process/cleanup qualification. No account-isolation or egress-denial claim is made.",
       "remainingUnwaivedGates": [
-        "Review the real positive and malformed fixture evidence on a clean exact-source candidate and retain its canonical receipt.",
-        "Resolve administrator provisioning requirements and bind official acquisition provenance to the release subject.",
+        "Produce a fresh digest-pinned schema-v2 receipt externally after the final commit and validate it against an independently supplied exact source SHA.",
+        "Review official binary acquisition provenance; matching hashes and operator download are not independent administrator provisioning.",
         "Complete G0 authority and the independent G1 cache, process cleanup, path, limits, and qualification gates before any promotion."
       ]
     }

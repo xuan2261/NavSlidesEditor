@@ -289,6 +289,7 @@ to this release.
 $env:NAVSLIDES_OFFICECLI_PATH = 'C:\absolute\admin-provided\OfficeCLI.exe'
 $env:OFFICECLI_ACQUIRED_AT = '<verified administrator acquisition time; not file creation time>'
 $env:OFFICECLI_EXPECTED_SOURCE_COMMIT = '<reviewed clean 40-character SHA>'
+$env:NAVSLIDES_OFFICECLI_RECEIPT_PATH = '<external receipt path outside the repository>'
 node scripts/officecli/run-physical-feasibility.mjs `
   --binary $env:NAVSLIDES_OFFICECLI_PATH `
   --valid server/data/test-corpus/officecli/officecli-positive-powerpoint-16.pptx `
@@ -297,14 +298,20 @@ node scripts/officecli/run-physical-feasibility.mjs `
   --manifest server/services/pptx-import/officecli/qualification-manifest.json `
   --acquired-at $env:OFFICECLI_ACQUIRED_AT `
   --expected-source-commit $env:OFFICECLI_EXPECTED_SOURCE_COMMIT `
-  --out plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/officecli-physical-feasibility.json
+  --out $env:NAVSLIDES_OFFICECLI_RECEIPT_PATH
+$receiptHash = Get-FileHash $env:NAVSLIDES_OFFICECLI_RECEIPT_PATH -Algorithm SHA256
+$env:NAVSLIDES_OFFICECLI_RECEIPT_SHA256 = $receiptHash.Hash.ToLowerInvariant()
+node scripts/officecli/verify-physical-feasibility-receipt.mjs `
+  --receipt $env:NAVSLIDES_OFFICECLI_RECEIPT_PATH `
+  --expected-source-commit $env:OFFICECLI_EXPECTED_SOURCE_COMMIT `
+  --expected-receipt-sha256 $env:NAVSLIDES_OFFICECLI_RECEIPT_SHA256
 npx vitest run `
   server/services/pptx-import/officecli/physical-feasibility.test.js `
   server/services/pptx-import/officecli/physical-feasibility-contract.test.js
 ```
 
-Expected RED before a physical run: receipt absent. A fake-backed green result is
-invalid.
+The original RED expectation applied before the 2026-09-27 external receipt was
+retained. Test-only inputs are not physical evidence.
 
 3. Create `release-scope-governance-contract.test.js`.
 4. Assert the manifest exists and uses schema version 1.
@@ -513,10 +520,11 @@ npm run test:pptx:oracle:qualify
 
 The real pinned OfficeCLI rejected the checked-in `good-package.pptx`. The
 [failed-spike report](./reports/officecli-physical-feasibility-blocker.md)
-records the identity, exact OPC validation failure, and successful disposable
-PowerPoint-generated counterexample. A clean isolated account/VM and outbound
-deny policy are also unproven. Apply the stop/re-plan rule above; Phase 1 remains
-pending and no later release gate inherits this developer-session probe.
+records the identity and exact OPC validation failure. The disposable
+PowerPoint-generated counterexample showed feasibility only.
+That 2026-09-25 probe did not demonstrate a clean account/VM or denied egress.
+The scoped 2026-09-27 direct-local waiver removes those requirements only; it
+makes no isolation or egress claim and does not close G1.
 
 ## PowerPoint-generated OfficeCLI positive fixture
 
@@ -536,10 +544,20 @@ unchanged and is not an OfficeCLI-positive fixture. `bad-crc.pptx` and
 
 This fixture provenance is separate from OfficeCLI acquisition provenance. The
 official v1.0.135 binary and SHA256SUMS were downloaded by the operator and
-verified against their pinned hashes. A local production-gateway run accepted
-the positive fixture and rejected both malformed fixtures. Its earlier receipt
-was generated against a dirty tree and lacks schema-v2 source binding, so it
-remains exploratory evidence outside the repository. Independent administrator
-provisioning is not claimed. Re-run on a clean checkout with an independently
-reviewed expected commit before publishing the canonical Phase 1 receipt.
-The scoped G1 account/egress waiver does not close the remaining gates.
+verified against their pinned hashes. The earlier local run's receipt was
+generated against a dirty tree without schema-v2 source binding and remains
+exploratory evidence only; independent administrator provisioning was not
+claimed.
+
+**External evidence update, 2026-09-27:** the manifest records a digest-pinned external
+schema-v2 receipt retained outside the repository and validated with the
+independently supplied source SHA `6c0921105c71c23e80355653efcfd6e1c4db654f` and
+its pinned receipt digest. It records the pinned PowerPoint fixture accepted and
+`bad-crc.pptx` / `malformed-xml.pptx` rejected. Its claim scope is local physical
+feasibility; `accountIsolationClaim`, `egressDenialClaim`, and `containmentClaim`
+are all false. The receipt remains external because adding it to the source
+commit it names would change that source SHA. These in-scope changes create a
+new source subject, so they do not inherit this receipt: retain and validate a
+fresh exact-subject receipt after the final commit, review acquisition
+provenance, and keep G0/G1 blocked until their remaining gates pass. The current
+direct-local waiver does not claim isolation or network egress control.
