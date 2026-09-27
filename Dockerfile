@@ -97,7 +97,7 @@ RUN set -x; \
   && ! command -v npm >/dev/null 2>&1 \
   && ! command -v npx >/dev/null 2>&1 \
   && rclone version >/dev/null \
-  && node -e "require('playwright').chromium.launch().then((browser) => browser.close()).catch(() => process.exit(1))"
+  && node -e "require('playwright').chromium.launch().then((browser) => browser.close()).catch((error) => { console.error(error); process.exitCode = 1 })"
 WORKDIR /app
 
 COPY server/ ./server/
