@@ -1,16 +1,72 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { apiDeletePresentation, expect, test } from './fixtures/test-fixtures.js'
-import { AUDIT_VIEWPORT, buildAuditMetadata, classifyImageClipping, classifyOutOfCanvas, classifyTextOverflow, createAuditRunPaths, ensureAuditRunDirs, importDeckForAudit, sanitizeDiagnosticText, screenshotSlide, selectAuditDecks, selectSlide } from './pages/pptx-import-audit-helper.js'
-import { assertStrictAuditSummary, summarizeDecks, writeAuditReports } from './pages/pptx-import-audit-report-helper.js'
+import {
+  AUDIT_VIEWPORT,
+  buildAuditMetadata,
+  classifyImageClipping,
+  classifyOutOfCanvas,
+  classifyTextOverflow,
+  createAuditRunPaths,
+  ensureAuditRunDirs,
+  importDeckForAudit,
+  sanitizeDiagnosticText,
+  screenshotSlide,
+  selectAuditDecks,
+  selectSlide,
+} from './pages/pptx-import-audit-helper.js'
+import {
+  assertStrictAuditSummary,
+  summarizeDecks,
+  writeAuditReports,
+} from './pages/pptx-import-audit-report-helper.js'
 
 const PPTX_DIR = path.resolve(process.cwd(), 'PPTX')
 const REPORT_DIR = path.resolve(process.cwd(), 'plans', 'reports')
-const ALL_DECKS = fs.readdirSync(PPTX_DIR).filter((name) => name.toLowerCase().endsWith('.pptx')).sort()
+const ALL_DECKS = fs
+  .readdirSync(PPTX_DIR)
+  .filter((name) => name.toLowerCase().endsWith('.pptx'))
+  .sort()
 const DECKS = selectAuditDecks(ALL_DECKS)
 const auditRun = createAuditRunPaths(REPORT_DIR, process.env.PPTX_IMPORT_AUDIT_RUN_ID)
 const auditResults = []
 let metadata
+
+function resourceSource(rawUrl, page) {
+  if (!rawUrl) return 'unknown'
+  try {
+    const url = new URL(rawUrl, page.url())
+    if (url.origin !== new URL(page.url()).origin) return 'external'
+    if (url.pathname.startsWith('/uploads/')) return 'same-origin-upload'
+    if (url.pathname.startsWith('/assets/')) return 'same-origin-assets'
+    if (url.pathname.startsWith('/api/')) return 'same-origin-api'
+    return 'same-origin-other'
+  } catch {
+    return 'unknown'
+  }
+}
+
+function consoleDiagnostic(message, page, slide) {
+  const text = message.text()
+  const kind = /Failed to decode downloaded font|OTS parsing error/i.test(text)
+    ? 'font-decode'
+    : /Access to font at|CORS policy/i.test(text)
+      ? 'font-cors'
+      : /Failed to load resource/i.test(text)
+        ? 'resource-load'
+        : /Refused to|Content Security Policy/i.test(text)
+          ? 'csp'
+          : /Uncaught/i.test(text)
+            ? 'uncaught'
+            : 'unknown'
+  return {
+    kind,
+    stage: slide === null ? 'import' : 'slide',
+    slide,
+    source: resourceSource(message.location()?.url, page),
+    length: Math.min(text.length, 4096),
+  }
+}
 
 async function auditCurrentSlide(page, deckName, index) {
   const screenshot = await screenshotSlide(page, auditRun, deckName, index)
@@ -19,8 +75,8 @@ async function auditCurrentSlide(page, deckName, index) {
     if (!canvasNode) return { missingCanvas: true }
     const c = canvasNode.getBoundingClientRect()
     const elements = Array.from(document.querySelectorAll('[data-testid^="slide-element-"]'))
-      const textOverflow = []
-      const imageClipping = []
+    const textOverflow = []
+    const imageClipping = []
     const rawOutOfCanvas = []
     const zeroSized = []
 
@@ -35,13 +91,22 @@ async function auditCurrentSlide(page, deckName, index) {
         height: Math.round(r.height),
         canvasWidth: Math.round(c.width),
         canvasHeight: Math.round(c.height),
-        hasPointerInteraction: Boolean(node.querySelector('a, [onclick]') || node.getAttribute('data-has-action') === 'true'),
+        hasPointerInteraction: Boolean(
+          node.querySelector('a, [onclick]') || node.getAttribute('data-has-action') === 'true'
+        ),
       }
       if (r.width < 1 || r.height < 1) zeroSized.push(entry)
-      if (r.left < c.left - 2 || r.top < c.top - 2 || r.right > c.right + 2 || r.bottom > c.bottom + 2) {
+      if (
+        r.left < c.left - 2 ||
+        r.top < c.top - 2 ||
+        r.right > c.right + 2 ||
+        r.bottom > c.bottom + 2
+      ) {
         rawOutOfCanvas.push(entry)
       }
-      for (const textNode of Array.from(node.querySelectorAll('.ProseMirror, [contenteditable], p, span'))) {
+      for (const textNode of Array.from(
+        node.querySelectorAll('.ProseMirror, [contenteditable], p, span')
+      )) {
         if (!(textNode.textContent || '').trim()) continue
         const overflowX = textNode.scrollWidth - textNode.clientWidth
         const overflowY = textNode.scrollHeight - textNode.clientHeight
@@ -78,7 +143,10 @@ async function auditCurrentSlide(page, deckName, index) {
         const imgRect = img.getBoundingClientRect()
         const styles = window.getComputedStyle(img)
         const clippedByBox =
-          imgRect.left < r.left - 2 || imgRect.top < r.top - 2 || imgRect.right > r.right + 2 || imgRect.bottom > r.bottom + 2
+          imgRect.left < r.left - 2 ||
+          imgRect.top < r.top - 2 ||
+          imgRect.right > r.right + 2 ||
+          imgRect.bottom > r.bottom + 2
         if (clippedByBox || styles.objectFit === 'cover') {
           const issue = {
             ...entry,
@@ -92,10 +160,20 @@ async function auditCurrentSlide(page, deckName, index) {
         }
       }
     }
-    return { missingCanvas: false, elementCount: elements.length, textOverflow, imageClipping, rawOutOfCanvas, zeroSized }
+    return {
+      missingCanvas: false,
+      elementCount: elements.length,
+      textOverflow,
+      imageClipping,
+      rawOutOfCanvas,
+      zeroSized,
+    }
   })
   const buckets = { acceptedBleed: [], acceptedBleedCandidates: [], unexpectedOutOfCanvas: [] }
-  audit.textOverflow = (audit.textOverflow || []).map((issue) => ({ ...issue, rootCause: classifyTextOverflow(issue) }))
+  audit.textOverflow = (audit.textOverflow || []).map((issue) => ({
+    ...issue,
+    rootCause: classifyTextOverflow(issue),
+  }))
   const intentionalImageCrop = []
   const unexpectedImageClipping = []
   for (const issue of audit.imageClipping || []) {
@@ -110,12 +188,16 @@ async function auditCurrentSlide(page, deckName, index) {
   audit.intentionalImageCrop = intentionalImageCrop
   for (const entry of audit.rawOutOfCanvas || []) {
     const classified = classifyOutOfCanvas({ ...entry, deck: deckName, slide: index + 1 })
-    const bucketName = classified.bucket === 'acceptedBleedCandidate' ? 'acceptedBleedCandidates' : `${classified.bucket}OutOfCanvas`
+    const bucketName =
+      classified.bucket === 'acceptedBleedCandidate'
+        ? 'acceptedBleedCandidates'
+        : `${classified.bucket}OutOfCanvas`
     buckets[bucketName]?.push({
       ...entry,
       classificationReason: classified.reason,
     })
-    if (classified.bucket === 'acceptedBleed') buckets.acceptedBleed.push({ ...entry, classificationReason: classified.reason })
+    if (classified.bucket === 'acceptedBleed')
+      buckets.acceptedBleed.push({ ...entry, classificationReason: classified.reason })
   }
   const status =
     audit.missingCanvas ||
@@ -146,11 +228,42 @@ test.describe.serial('PPTX import real browser audit', () => {
         window.localStorage.setItem('navSlidesTutorialSeen', 'true')
       })
 
-      const deckResult = { deck: deckName, slideCount: 0, slides: [], consoleErrors: [] }
-      page.on('console', (msg) => {
-        if (msg.type() === 'error') deckResult.consoleErrors.push(sanitizeDiagnosticText(msg.text()))
+      const deckResult = {
+        deck: deckName,
+        slideCount: 0,
+        slides: [],
+        consoleErrors: [],
+        httpErrors: { upload: 0, assets: 0, api: 0, other: 0, external: 0 },
+        requestFailures: 0,
+        pageErrors: 0,
+      }
+      let activeSlide = null
+      page.on('console', (message) => {
+        if (message.type() === 'error') {
+          deckResult.consoleErrors.push(consoleDiagnostic(message, page, activeSlide))
+        }
       })
-
+      page.on('response', (response) => {
+        if (response.status() < 400) return
+        const source = resourceSource(response.url(), page)
+        const group =
+          source === 'external'
+            ? 'external'
+            : source === 'same-origin-upload'
+              ? 'upload'
+              : source === 'same-origin-assets'
+                ? 'assets'
+                : source === 'same-origin-api'
+                  ? 'api'
+                  : 'other'
+        deckResult.httpErrors[group]++
+      })
+      page.on('requestfailed', () => {
+        deckResult.requestFailures++
+      })
+      page.on('pageerror', () => {
+        deckResult.pageErrors++
+      })
       let presentationId
       try {
         presentationId = await importDeckForAudit(page, request, PPTX_DIR, deckName)
@@ -158,6 +271,7 @@ test.describe.serial('PPTX import real browser audit', () => {
         await expect(thumbnails.first()).toBeVisible({ timeout: 30000 })
         deckResult.slideCount = await thumbnails.count()
         for (let index = 0; index < deckResult.slideCount; index += 1) {
+          activeSlide = index + 1
           await selectSlide(page, index)
           deckResult.slides.push(await auditCurrentSlide(page, deckName, index))
         }
@@ -174,7 +288,10 @@ test.describe.serial('PPTX import real browser audit', () => {
   }
 
   test('strict audit fails while the raw baseline has strict categories', () => {
-    test.skip(process.env.PPTX_IMPORT_AUDIT_STRICT !== '1', 'Strict mode is opt-in for release and local audit gates.')
+    test.skip(
+      process.env.PPTX_IMPORT_AUDIT_STRICT !== '1',
+      'Strict mode is opt-in for release and local audit gates.'
+    )
     expect(assertStrictAuditSummary(summarizeDecks(auditResults))).toBe(true)
   })
 })
