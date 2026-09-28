@@ -72,6 +72,29 @@ describe('release receipt DAG', () => {
     expect(root.status).toBe('passed')
     expect(root.children['linux-desktop'].status).toBe('not-selected')
     expect(root.children.windows.hash).toBe(hashReceipt(windows))
+    const receiptHash = sha('f')
+    const advisoryLinux = createHostReceipt({
+      ...linux,
+      gates: { ...linux.gates, 'container-scan-advisory': receiptHash },
+      securityAdvisory: { status: 'risk-accepted', receiptHash },
+    })
+    const advisoryParent = hashReceipt(advisoryLinux)
+    const advisoryRoot = createGreenShaRoot({
+      policy: {
+        ...policy,
+        containerSecurityAdvisory: { mode: 'user-risk-accepted', securityPassClaim: false },
+      },
+      linuxReceipt: advisoryLinux,
+      windowsReceipt: { ...windows, parentReceiptHash: advisoryParent },
+      linuxDesktopReceipt: { ...linuxDesktop, parentReceiptHash: advisoryParent },
+      macosDesktopReceipt: { ...macosDesktop, parentReceiptHash: advisoryParent },
+    })
+    expect(advisoryRoot.containerSecurityAdvisory).toEqual({
+      mode: 'user-risk-accepted',
+      status: 'risk-accepted',
+      receiptHash,
+      securityPassClaim: false,
+    })
   })
 
   it('fails closed for selected Windows gates and selected optional hosts', () => {
@@ -186,5 +209,23 @@ describe('release receipt DAG', () => {
         }),
       })
     ).toThrow(/linux-ci missing required gate attestation/i)
+  })
+  it('rejects a green root when advisory scan evidence is absent', () => {
+    const linux = createHostReceipt({
+      ...common,
+      qualificationId: createQualificationId(common),
+      host: 'linux-ci',
+      status: 'passed',
+      gates: { build: sha('1') },
+    })
+    expect(() =>
+      createGreenShaRoot({
+        policy: {
+          ...policy,
+          containerSecurityAdvisory: { mode: 'user-risk-accepted', securityPassClaim: false },
+        },
+        linuxReceipt: linux,
+      })
+    ).toThrow(/container security advisory/i)
   })
 })

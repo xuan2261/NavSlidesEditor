@@ -15,8 +15,6 @@ on:
         value: ${{ jobs.client.outputs.artifact_name }}
       green_receipt_artifact:
         value: ${{ jobs.create-root.outputs.artifact_name }}
-      windows_artifact:
-        value: ${{ jobs.windows.outputs.windows_artifact }}
 
 permissions:
   contents: read
@@ -31,7 +29,12 @@ jobs:
       actions: read
       id-token: write
       attestations: write
-    with: { subject_sha: '${{ inputs.subject_sha }}', mode: '${{ inputs.mode }}', source_run_id: '${{ inputs.source_run_id }}' }
+    with:
+      {
+        subject_sha: '${{ inputs.subject_sha }}',
+        mode: '${{ inputs.mode }}',
+        source_run_id: '${{ inputs.source_run_id }}',
+      }
   unit:
     if: inputs.mode == 'ci'
     runs-on: ubuntu-latest
@@ -52,7 +55,10 @@ jobs:
     container: { image: 'mcr.microsoft.com/playwright:v1.63.0-jammy' }
     strategy:
       fail-fast: false
-      matrix: { lane: [chromium-1, chromium-2, chromium-3, chromium-4, pptx-import, live, mobile, visual] }
+      matrix:
+        {
+          lane: [chromium-1, chromium-2, chromium-3, chromium-4, pptx-import, live, mobile, visual],
+        }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with: { ref: '${{ inputs.subject_sha }}' }
@@ -123,7 +129,12 @@ jobs:
     if: inputs.mode == 'ci'
     needs: docker
     uses: ./.github/workflows/reusable-container-supply-chain.yml
-    with: { subject_sha: '${{ inputs.subject_sha }}', source_run_id: '${{ github.run_id }}', docker_artifact: docker-runtime-qualification }
+    with:
+      {
+        subject_sha: '${{ inputs.subject_sha }}',
+        source_run_id: '${{ github.run_id }}',
+        docker_artifact: docker-runtime-qualification,
+      }
   linux-receipt:
     if: inputs.mode == 'ci'
     needs: [client, unit, e2e, load, docker, container-supply-chain]
@@ -139,18 +150,38 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with: { name: docker-runtime-qualification, path: evidence/docker }
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with: { name: 'container-supply-chain-v1-${{ inputs.subject_sha }}', path: evidence/supply-chain }
+        with:
+          {
+            name: 'container-supply-chain-v1-${{ inputs.subject_sha }}',
+            path: evidence/supply-chain,
+          }
       - shell: bash
         run: node scripts/ci/release-receipt-workflow.mjs linux "${{ inputs.subject_sha }}" "${{ needs.client.outputs.client_digest }}" "${{ inputs.gate_policy_version }}" evidence
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with: { name: '${{ steps.name.outputs.value }}', path: linux-ci-receipt.json, if-no-files-found: error, retention-days: 30 }
+        with:
+          {
+            name: '${{ steps.name.outputs.value }}',
+            path: linux-ci-receipt.json,
+            if-no-files-found: error,
+            retention-days: 30,
+          }
 
   windows:
     if: inputs.mode == 'release'
     needs: [client]
     uses: ./.github/workflows/reusable-windows-qualification.yml
-    secrets: inherit
-    with: { subject_sha: '${{ inputs.subject_sha }}', source_run_id: '${{ github.run_id }}', physical_receipt_run_id: '${{ inputs.source_run_id }}', client_artifact: '${{ needs.client.outputs.artifact_name }}', client_digest: '${{ needs.client.outputs.client_digest }}', linux_receipt_artifact: 'linux-ci-receipt-v1-${{ inputs.subject_sha }}', officecli_receipt_artifact: '${{ inputs.officecli_receipt_artifact }}', fidelity_receipt_artifact: '${{ inputs.fidelity_receipt_artifact }}', gate_policy_version: '${{ inputs.gate_policy_version }}' }
+    with:
+      {
+        subject_sha: '${{ inputs.subject_sha }}',
+        source_run_id: '${{ github.run_id }}',
+        physical_receipt_run_id: '${{ inputs.source_run_id }}',
+        client_artifact: '${{ needs.client.outputs.artifact_name }}',
+        client_digest: '${{ needs.client.outputs.client_digest }}',
+        linux_receipt_artifact: 'linux-ci-receipt-v1-${{ inputs.subject_sha }}',
+        officecli_receipt_artifact: '${{ inputs.officecli_receipt_artifact }}',
+        fidelity_receipt_artifact: '${{ inputs.fidelity_receipt_artifact }}',
+        gate_policy_version: '${{ inputs.gate_policy_version }}',
+      }
   create-root:
     if: inputs.mode == 'release'
     needs: [client, windows]
@@ -160,14 +191,28 @@ jobs:
       artifact_name: ${{ steps.name.outputs.value }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha }}' }
+      - run: test "$(git rev-parse HEAD)" = "${{ inputs.subject_sha }}"
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         name: Import successful main-CI Linux receipt
-        with: { name: 'linux-ci-receipt-v1-${{ inputs.subject_sha }}', run-id: '${{ inputs.source_run_id }}', github-token: '${{ github.token }}', path: receipts }
+        with:
+          {
+            name: 'linux-ci-receipt-v1-${{ inputs.subject_sha }}',
+            run-id: '${{ inputs.source_run_id }}',
+            github-token: '${{ github.token }}',
+            path: receipts,
+          }
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with: { name: '${{ needs.windows.outputs.receipt_artifact }}', path: receipts }
+        with: { name: '${{ needs.windows.outputs.windows_receipt_artifact }}', path: receipts }
       - id: name
         run: echo "value=green-sha-root-receipt-v1-${{ inputs.subject_sha }}" >> "$GITHUB_OUTPUT"
       - name: Create root and explicit not-selected receipts
         run: node scripts/ci/release-receipt-workflow.mjs create-root "${{ inputs.subject_sha }}" "${{ needs.client.outputs.client_digest }}" "${{ inputs.gate_policy_version }}" "${{ inputs.release_tag }}"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with: { name: '${{ steps.name.outputs.value }}', path: '*-receipt.json', if-no-files-found: error, retention-days: 30 }
+        with:
+          {
+            name: '${{ steps.name.outputs.value }}',
+            path: '*-receipt.json',
+            if-no-files-found: error,
+            retention-days: 30,
+          }

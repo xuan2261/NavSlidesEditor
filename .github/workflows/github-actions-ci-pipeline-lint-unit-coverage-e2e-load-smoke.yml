@@ -70,25 +70,45 @@ jobs:
     name: E2E PPTX import (workers:1)
     needs: [build]
     uses: ./.github/workflows/reusable-playwright-consumer.yml
-    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: pptx-import }
+    with:
+      {
+        subject_sha: '${{ inputs.subject_sha || github.sha }}',
+        client_artifact: '${{ needs.build.outputs.artifact_name }}',
+        lane: pptx-import,
+      }
 
   e2e-live:
     name: E2E live (workers:1)
     needs: [build]
     uses: ./.github/workflows/reusable-playwright-consumer.yml
-    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: live }
+    with:
+      {
+        subject_sha: '${{ inputs.subject_sha || github.sha }}',
+        client_artifact: '${{ needs.build.outputs.artifact_name }}',
+        lane: live,
+      }
 
   e2e-mobile:
     name: E2E mobile-chromium (Phase 7 a11y)
     needs: [build]
     uses: ./.github/workflows/reusable-playwright-consumer.yml
-    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: mobile }
+    with:
+      {
+        subject_sha: '${{ inputs.subject_sha || github.sha }}',
+        client_artifact: '${{ needs.build.outputs.artifact_name }}',
+        lane: mobile,
+      }
 
   e2e-visual:
     name: E2E visual regression (Linux baseline only)
     needs: [build]
     uses: ./.github/workflows/reusable-playwright-consumer.yml
-    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: visual }
+    with:
+      {
+        subject_sha: '${{ inputs.subject_sha || github.sha }}',
+        client_artifact: '${{ needs.build.outputs.artifact_name }}',
+        lane: visual,
+      }
 
   pptx-corpus-metrics:
     name: PPTX corpus metrics
@@ -179,7 +199,17 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with: { name: docker-runtime-qualification, path: evidence/docker }
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with: { name: 'container-supply-chain-v1-${{ inputs.subject_sha || github.sha }}', path: evidence/supply-chain }
-      - run: node scripts/ci/release-receipt-workflow.mjs linux "${{ inputs.subject_sha || github.sha }}" "${{ needs.build.outputs.client_digest }}" release-target-policy-v1 evidence
+        with:
+          {
+            name: 'container-supply-chain-v1-${{ inputs.subject_sha || github.sha }}',
+            path: evidence/supply-chain,
+          }
+      - run: node scripts/ci/release-receipt-workflow.mjs linux "${{ inputs.subject_sha || github.sha }}" "${{ needs.build.outputs.client_digest }}" release-target-policy-v2 evidence
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with: { name: 'linux-ci-receipt-v1-${{ inputs.subject_sha || github.sha }}', path: linux-ci-receipt.json, if-no-files-found: error, retention-days: 30 }
+        with:
+          {
+            name: 'linux-ci-receipt-v1-${{ inputs.subject_sha || github.sha }}',
+            path: linux-ci-receipt.json,
+            if-no-files-found: error,
+            retention-days: 30,
+          }

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
-import { basename, join } from 'node:path'
-import { readFile, readdir, stat, writeFile } from 'node:fs/promises'
-import { canonicalJson, hashCanonical, sha256 } from './release-receipt-canonical.mjs'
+import { join } from 'node:path'
+import { readFile, readdir, writeFile } from 'node:fs/promises'
+import { canonicalJson, hashCanonical } from './release-receipt-canonical.mjs'
 import {
   createGreenShaRoot,
   createHostReceipt,
@@ -44,46 +44,56 @@ async function common(subjectSha, clientDigest, policyVersion) {
 
 async function linux(args) {
   const [subjectSha, clientDigest, policyVersion, evidenceRoot] = args
+  if (!evidenceRoot) throw new Error('Linux qualification evidence root is required')
   const base = await common(subjectSha, clientDigest, policyVersion)
   const gates = Object.fromEntries(
-    ['client-manifest', 'unit-coverage', 'playwright', 'load', 'docker', 'supply-chain', 'attestation'].map(
-      (gate) => [gate, hashCanonical({ ...base, gate, result: 'passed' })]
-    )
+    ['client-manifest', 'unit-coverage', 'playwright', 'load'].map((gate) => [
+      gate,
+      hashCanonical({ ...base, gate, result: 'passed' }),
+    ])
   )
-  if (evidenceRoot) {
-    gates.docker = hashCanonical({
-      image: await fileHash(join(evidenceRoot, 'docker', 'docker-image-digest.txt')),
-      runtime: await fileHash(join(evidenceRoot, 'docker', 'docker-runtime-closure.json')),
-    })
-    gates['supply-chain'] = await fileHash(
-      join(evidenceRoot, 'supply-chain', 'container-supply-chain-receipt.json')
-    )
-    gates.attestation = await fileHash(
-      join(evidenceRoot, 'docker', 'docker-attestation-verification.txt')
-    )
+  const docker = join(evidenceRoot, 'docker')
+  const scan = join(evidenceRoot, 'supply-chain')
+  const scanReceiptPath = join(scan, 'container-supply-chain-receipt.json')
+  const scanReceipt = await readJson(scanReceiptPath)
+  const imageDigest = (await readFile(join(docker, 'docker-image-digest.txt'), 'utf8')).trim()
+  if (scanReceipt.subject?.imageDigest !== imageDigest) {
+    throw new Error('container scan image digest mismatch')
   }
+  if (
+    scanReceipt.scan?.status !== 'completed' ||
+    !['passed', 'risk-accepted'].includes(scanReceipt.status) ||
+    scanReceipt.securityStatus !== (scanReceipt.status === 'risk-accepted' ? 'advisory' : 'passed')
+  ) {
+    throw new Error('container scan advisory receipt is incomplete')
+  }
+  for (const [name, expected] of [
+    ['container-trivy.json', scanReceipt.scan.trivyReportSha256],
+    ['container-sbom.spdx.json', scanReceipt.subject.sbomSha256],
+  ]) {
+    if (`sha256:${await fileHash(join(scan, name))}` !== expected) {
+      throw new Error(`container scan evidence mismatch: ${name}`)
+    }
+  }
+  gates.docker = hashCanonical({
+    image: await fileHash(join(docker, 'docker-image-digest.txt')),
+    runtime: await fileHash(join(docker, 'docker-runtime-closure.json')),
+  })
+  gates.attestation = await fileHash(join(docker, 'docker-attestation-verification.txt'))
+  const receiptHash = await fileHash(scanReceiptPath)
+  gates['container-scan-advisory'] = receiptHash
   await writeFile(
     'linux-ci-receipt.json',
-    canonicalJson(createHostReceipt({ ...base, host: 'linux-ci', status: 'passed', gates }))
+    canonicalJson(
+      createHostReceipt({
+        ...base,
+        host: 'linux-ci',
+        status: 'passed',
+        gates,
+        securityAdvisory: { status: scanReceipt.status, receiptHash },
+      })
+    )
   )
-}
-
-async function authenticode(stage, exePath, evidenceRoot) {
-  const name = basename(exePath)
-  const path = join(evidenceRoot, `${name}.json`)
-  const signer = await readJson(join(evidenceRoot, 'signer', `${name}.json`))
-  const digest = await fileHash(exePath)
-  const evidence =
-    stage === 'pre'
-      ? {
-          path: name,
-          sha256: digest,
-          expectedSha256: digest,
-          preUpload: signer.signature,
-          postDownload: null,
-        }
-      : { ...(await readJson(path)), sha256: digest, postDownload: signer.signature }
-  await writeFile(path, canonicalJson(evidence))
 }
 
 function assertPhysical(receipt, kind, base) {
@@ -98,26 +108,10 @@ async function windows(args) {
   const linuxReceipt = await findJson('evidence/linux', ['linux-ci'])
   const office = await findJson('evidence/officecli', [])
   const fidelity = await findJson('evidence/fidelity', [])
-  const authenticodeFiles = (await readdir('evidence/authenticode'))
-    .filter((path) => path.endsWith('.json'))
-    .sort()
-  if (authenticodeFiles.length === 0) throw new Error('Authenticode evidence missing')
-  const artifacts = Object.fromEntries(
-    await Promise.all(
-      authenticodeFiles.map(async (path) => {
-        const evidence = await readJson(join('evidence/authenticode', path))
-        if (!evidence.postDownload) throw new Error(`${path} lacks post-download verification`)
-        return [path, sha256(canonicalJson(evidence))]
-      })
-    )
-  )
   const gates = {
     'electron-runtime-closure': await fileHash('evidence/runtime-closure.json'),
     'officecli-physical': assertPhysical(office, 'OfficeCLI', base),
     'fidelity-powerpoint': assertPhysical(fidelity, 'fidelity', base),
-    authenticode: hashCanonical(artifacts),
-    'post-download-authenticode': hashCanonical({ artifacts, stage: 'post-download' }),
-    attestation: await fileHash('evidence/attestation-verification.txt'),
   }
   const receipt = createHostReceipt({
     ...base,
@@ -125,7 +119,6 @@ async function windows(args) {
     status: 'passed',
     parentReceiptHash: hashReceipt(linuxReceipt),
     gates,
-    artifacts,
   })
   await writeFile('windows-qualification-receipt.json', canonicalJson(receipt))
 }
@@ -162,35 +155,7 @@ async function main() {
   if (operation === 'linux') await linux(args)
   else if (operation === 'windows') await windows(args)
   else if (operation === 'create-root') await createRoot(args)
-  else if (operation === 'authenticode-pre') await authenticode('pre', ...args)
-  else if (operation === 'authenticode-post') await authenticode('post', ...args)
-  else if (operation === 'attestation-windows') {
-    const [verificationPath, subjectSha, clientDigest, workflowIdentity] = args
-    const source = await readFile(verificationPath)
-    if ((await stat(args[0])).size === 0) throw new Error('attestation verification is empty')
-    JSON.parse(source.toString('utf8'))
-    const files = (await readdir('post-download')).filter((path) => path.endsWith('.exe')).sort()
-    if (files.length === 0) throw new Error('attested Windows artifacts missing')
-    const digests = Object.fromEntries(
-      await Promise.all(
-        files.map(async (path) => [path, await fileHash(join('post-download', path))])
-      )
-    )
-    const evidence = [
-      {
-        id: 'electron-windows',
-        digest: hashCanonical(digests),
-        subjectSha,
-        clientDigest,
-        workflowIdentity,
-        issuer: 'https://token.actions.githubusercontent.com',
-        verified: true,
-        bundleHash: sha256(source),
-      },
-    ]
-    await writeFile('evidence/attestation-policy.json', canonicalJson(evidence))
-    await writeFile('evidence/attestation-verification.sha256', `${sha256(source)}\n`)
-  } else throw new Error(`unknown workflow operation ${operation}`)
+  else throw new Error(`unknown workflow operation ${operation}`)
 }
 
 main().catch((error) => {

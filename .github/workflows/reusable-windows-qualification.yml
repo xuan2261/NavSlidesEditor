@@ -83,7 +83,7 @@ jobs:
           "receipt=windows-qualification-receipt-v1-${{ inputs.subject_sha }}" >> $env:GITHUB_OUTPUT
       - name: Create exact-subject Windows evidence receipt
         shell: pwsh
-        run: node scripts/ci/release-receipt-workflow.mjs windows "${{ inputs.subject_sha }}" "${{ inputs.client_digest }}" "${{ inputs.gate_policy_version }}" linux_receipt_hash
+        run: node scripts/ci/release-receipt-workflow.mjs windows "${{ inputs.subject_sha }}" "${{ inputs.client_digest }}" "${{ inputs.gate_policy_version }}"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ steps.names.outputs.receipt }}

@@ -35,6 +35,7 @@ export function createHostReceipt(input) {
     ...(input.parentReceiptHash ? { parentReceiptHash: input.parentReceiptHash } : {}),
     gates: input.gates,
     artifacts: input.artifacts ?? {},
+    ...(input.securityAdvisory ? { securityAdvisory: input.securityAdvisory } : {}),
   }
   assertCommon(receipt)
   if (receipt.qualificationId !== createQualificationId(receipt)) {
@@ -108,6 +109,23 @@ export function createGreenShaRoot(input) {
   for (const gate of linuxTarget?.requiredGates ?? []) {
     if (!linux.gates[gate]) throw new Error(`linux-ci missing required gate ${gate}`)
   }
+  const advisoryPolicy = policy.containerSecurityAdvisory
+  if (advisoryPolicy) {
+    if (
+      advisoryPolicy.mode !== 'user-risk-accepted' ||
+      advisoryPolicy.securityPassClaim !== false
+    ) {
+      throw new Error('invalid container security advisory policy')
+    }
+    const advisory = linux.securityAdvisory
+    if (!advisory || !['risk-accepted', 'passed'].includes(advisory.status)) {
+      throw new Error('container security advisory evidence is required')
+    }
+    assertHex(advisory.receiptHash, SHA256, 'container security advisory receipt hash')
+    if (linux.gates['container-scan-advisory'] !== advisory.receiptHash) {
+      throw new Error('container security advisory receipt hash mismatch')
+    }
+  }
   const linuxHash = hashReceipt(linux)
   const common = linux
   const receipts = {
@@ -132,6 +150,16 @@ export function createGreenShaRoot(input) {
     subjectSha: linux.subjectSha,
     clientDigest: linux.clientDigest,
     lockHashes: linux.lockHashes,
+    ...(advisoryPolicy
+      ? {
+          containerSecurityAdvisory: {
+            mode: advisoryPolicy.mode,
+            status: linux.securityAdvisory.status,
+            receiptHash: linux.securityAdvisory.receiptHash,
+            securityPassClaim: false,
+          },
+        }
+      : {}),
     ...(input.releaseTag ? { releaseTag: input.releaseTag } : {}),
     ...(input.workflow ? { workflow: input.workflow } : {}),
     children: Object.fromEntries(

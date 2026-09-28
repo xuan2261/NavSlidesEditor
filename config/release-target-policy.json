@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1",
-  "policyVersion": "release-target-policy-v1",
+  "policyVersion": "release-target-policy-v2",
   "receiptSchemaVersion": "release-receipt-v1",
   "targets": {
     "linux-ci": {
@@ -11,21 +11,13 @@
         "playwright",
         "load",
         "docker",
-        "supply-chain",
         "attestation"
       ]
     },
     "windows": {
       "selected": true,
-      "publicArtifacts": ["nsis-exe", "portable-exe"],
-      "requiredGates": [
-        "electron-runtime-closure",
-        "officecli-physical",
-        "fidelity-powerpoint",
-        "authenticode",
-        "post-download-authenticode",
-        "attestation"
-      ]
+      "publicArtifacts": [],
+      "requiredGates": ["electron-runtime-closure", "officecli-physical", "fidelity-powerpoint"]
     },
     "linux-desktop": {
       "selected": false,
@@ -38,15 +30,20 @@
       "requiredGates": []
     }
   },
-  "authenticode": {
-    "publisherSubjectSource": "protected-environment:WINDOWS_SIGNING_SUBJECT",
-    "publisherThumbprintSource": "protected-environment:WINDOWS_SIGNING_THUMBPRINT",
-    "requireRfc3161Timestamp": true,
-    "requirePostDownloadVerification": true
+  "containerSecurityAdvisory": {
+    "mode": "user-risk-accepted",
+    "decisionDate": "2026-09-27",
+    "scope": "single-user-private-self-hosted",
+    "requiredEvidence": [
+      "container-trivy.json",
+      "container-sbom.spdx.json",
+      "container-supply-chain-receipt.json"
+    ],
+    "securityPassClaim": false
   },
   "attestations": {
     "issuer": "https://token.actions.githubusercontent.com",
     "requireWorkflowIdentity": true,
-    "requiredArtifacts": ["client-dist", "docker-image", "electron-windows"]
+    "requiredArtifacts": ["client-dist", "docker-image"]
   }
 }

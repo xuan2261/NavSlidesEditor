@@ -1,4 +1,4 @@
-name: Build & Release Electron
+name: Build & Release Docker
 
 on:
   push:
@@ -54,16 +54,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SUBJECT_SHA: ${{ steps.subject.outputs.sha }}
         run: |
-          RUN="$(gh api "repos/${{ github.repository }}/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs?head_sha=${SUBJECT_SHA}&branch=master&event=push&status=success&per_page=1" --jq '.workflow_runs[0] | [.id,.head_sha,.conclusion] | @tsv')"
+          RUN="$(gh api "repos/${{ github.repository }}/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs?head_sha=${SUBJECT_SHA}&event=push&status=success&per_page=100" --jq '[.workflow_runs[] | select(.head_branch == "master" or .head_branch == "main")][0] | [.id,.head_sha,.conclusion] | @tsv')"
           IFS=$'\t' read -r RUN_ID CI_HEAD CONCLUSION <<< "$RUN"
           test -n "$RUN_ID" && test "$CI_HEAD" = "$SUBJECT_SHA" && test "$CONCLUSION" = success
           echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
           echo "head_sha=$CI_HEAD" >> "$GITHUB_OUTPUT"
 
   verification:
-    needs: [resolve, container-supply-chain]
+    needs: resolve
     uses: ./.github/workflows/reusable-green-sha-verification.yml
-    secrets: inherit
     permissions:
       contents: read
       actions: read
@@ -73,79 +72,68 @@ jobs:
       subject_sha: ${{ needs.resolve.outputs.subject_sha }}
       mode: release
       release_tag: ${{ needs.resolve.outputs.tag }}
-      gate_policy_version: release-target-policy-v1
+      gate_policy_version: release-target-policy-v2
       source_run_id: ${{ needs.resolve.outputs.source_run_id }}
       officecli_receipt_artifact: officecli-physical-receipt-v1-${{ needs.resolve.outputs.subject_sha }}
       fidelity_receipt_artifact: powerpoint-fidelity-receipt-v1-${{ needs.resolve.outputs.subject_sha }}
 
-  container-supply-chain:
-    needs: resolve
-    uses: ./.github/workflows/reusable-container-supply-chain.yml
-    with:
-      subject_sha: ${{ needs.resolve.outputs.subject_sha }}
-      source_run_id: ${{ needs.resolve.outputs.source_run_id }}
-      docker_artifact: docker-runtime-qualification
-
   verify-staged-assets:
     needs: [resolve, verification]
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions: { contents: read, actions: read, attestations: read }
     outputs:
       staged_artifact: ${{ steps.name.outputs.value }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ needs.resolve.outputs.subject_sha }}' }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0' }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ needs.verification.outputs.client_artifact }}', path: client-source }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          ref: ${{ needs.resolve.outputs.subject_sha }}
-          fetch-depth: 0
+          { name: '${{ needs.verification.outputs.green_receipt_artifact }}', path: root-evidence }
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with: { name: '${{ needs.verification.outputs.client_artifact }}', path: client-evidence }
+        with:
+          name: docker-runtime-qualification
+          run-id: '${{ needs.resolve.outputs.source_run_id }}'
+          github-token: '${{ github.token }}'
+          path: docker-source
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with: { name: '${{ needs.verification.outputs.windows_artifact }}', path: post-download }
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with: { name: '${{ needs.verification.outputs.green_receipt_artifact }}', path: root-evidence }
-      - name: Verify exact release subject
-        shell: pwsh
-        run: |
-          $root = Get-Content root-evidence/green-sha-root-receipt.json | ConvertFrom-Json
-          $manifest = Get-Content client-evidence/client-dist-manifest.json | ConvertFrom-Json
-          $artifactSubject = $manifest.subject.sha
-          node scripts/ci/release-subject.mjs --tag "${{ needs.resolve.outputs.tag }}" --subject "${{ needs.resolve.outputs.subject_sha }}" --tag-commit "${{ needs.resolve.outputs.subject_sha }}" --checkout "$(git rev-parse HEAD)" --ci-head "${{ needs.resolve.outputs.ci_head_sha }}" --artifact-subjects "$artifactSubject" --receipt-subjects "$($root.subjectSha)"
-      - name: Post-download Authenticode verification
-        shell: pwsh
+        with:
+          name: 'container-supply-chain-v1-${{ needs.resolve.outputs.subject_sha }}'
+          run-id: '${{ needs.resolve.outputs.source_run_id }}'
+          github-token: '${{ github.token }}'
+          path: scan-evidence
+      - name: Verify promoted source and container identity
+        shell: bash
         env:
-          WINDOWS_SIGNING_SUBJECT: ${{ vars.WINDOWS_SIGNING_SUBJECT }}
-          WINDOWS_SIGNING_THUMBPRINT: ${{ vars.WINDOWS_SIGNING_THUMBPRINT }}
+          GH_TOKEN: ${{ github.token }}
+          SUBJECT_SHA: ${{ needs.resolve.outputs.subject_sha }}
+          CI_HEAD_SHA: ${{ needs.resolve.outputs.ci_head_sha }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
         run: |
-          Get-ChildItem post-download/*.exe | ForEach-Object {
-            $signature = Get-AuthenticodeSignature $_.FullName
-            if ($signature.Status -ne 'Valid') { throw "post-download Authenticode invalid: $($_.Name)" }
-            if ($signature.SignerCertificate.Subject -ne $env:WINDOWS_SIGNING_SUBJECT) { throw 'post-download publisher mismatch' }
-            if ($signature.SignerCertificate.Thumbprint -ne $env:WINDOWS_SIGNING_THUMBPRINT) { throw 'post-download thumbprint mismatch' }
-            if (-not $signature.TimeStamperCertificate) { throw 'post-download RFC3161 timestamp missing' }
-          }
-          Get-ChildItem post-download/evidence/authenticode/*.json | ForEach-Object {
-            node scripts/ci/authenticode-policy.mjs $_.FullName $env:WINDOWS_SIGNING_SUBJECT $env:WINDOWS_SIGNING_THUMBPRINT
-          }
-      - name: Verify workflow-bound attestations
-        shell: pwsh
-        env: { GH_TOKEN: '${{ github.token }}' }
-        run: |
-          New-Item -ItemType Directory -Force evidence | Out-Null
-          $identity = "https://github.com/${{ github.repository }}/.github/workflows/reusable-windows-qualification.yml@${{ github.ref }}"
-          $signerWorkflow = "${{ github.repository }}/.github/workflows/reusable-windows-qualification.yml"
-          $results = Get-ChildItem post-download/*.exe | ForEach-Object { gh attestation verify $_.FullName --repo "${{ github.repository }}" --signer-workflow $signerWorkflow --format json | ConvertFrom-Json }
-          $results | ConvertTo-Json -Depth 100 | Out-File attestation-post-download.json
-          node scripts/ci/release-receipt-workflow.mjs attestation-windows attestation-post-download.json "${{ needs.resolve.outputs.subject_sha }}" "$(Get-FileHash client-evidence/client-dist-manifest.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash | ForEach-Object ToLower)" $identity
-          node scripts/ci/attestation-policy.mjs evidence/attestation-policy.json electron-windows "${{ needs.resolve.outputs.subject_sha }}" "$(Get-FileHash client-evidence/client-dist-manifest.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash | ForEach-Object ToLower)" $identity
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SUBJECT_SHA"
+          export GITHUB_SHA_CHECKOUT="$(git rev-parse HEAD)"
+          node scripts/ci/verify-client-dist-manifest.mjs --root client-source/client/dist --manifest client-source/client-dist-manifest.json --subject "$SUBJECT_SHA"
+          gh attestation verify docker-source/navslides-editor-image.tar --repo "${{ github.repository }}" --signer-workflow "${{ github.repository }}/.github/workflows/reusable-docker-qualification.yml" --format json > docker-source/docker-attestation-verification.json
+          docker load --input docker-source/navslides-editor-image.tar
+          test "$(docker image inspect navslides-editor:ci --format '{{.Id}}')" = "$(tr -d '\r\n' < docker-source/docker-image-digest.txt)"
+          node scripts/ci/verify-release-promotion.mjs "$SUBJECT_SHA" "$CI_HEAD_SHA" "$RELEASE_TAG" root-evidence/green-sha-root-receipt.json client-source/client-dist-manifest.json docker-source/docker-image-digest.txt scan-evidence/container-supply-chain-receipt.json scan-evidence/container-trivy.json scan-evidence/container-sbom.spdx.json
       - id: name
-        shell: pwsh
-        run: '"value=staged-release-v1-${{ needs.resolve.outputs.subject_sha }}" >> $env:GITHUB_OUTPUT'
+        run: echo "value=release-staged-docker-v1-${{ needs.resolve.outputs.subject_sha }}" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ steps.name.outputs.value }}
           path: |
-            post-download/*.exe
+            docker-source/navslides-editor-image.tar
+            docker-source/docker-image-digest.txt
+            docker-source/docker-attestation-verification.json
             root-evidence/green-sha-root-receipt.json
+            scan-evidence/container-trivy.json
+            scan-evidence/container-sbom.spdx.json
+            scan-evidence/container-supply-chain-receipt.json
           if-no-files-found: error
           retention-days: 30
 
@@ -158,7 +146,11 @@ jobs:
       actions: read
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with: { name: '${{ needs.verify-staged-assets.outputs.staged_artifact }}', path: release-assets }
+        with:
+          {
+            name: '${{ needs.verify-staged-assets.outputs.staged_artifact }}',
+            path: release-assets,
+          }
       - name: Draft existing-tag release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
@@ -167,7 +159,18 @@ jobs:
           draft: true
           prerelease: ${{ needs.resolve.outputs.kind == 'rc' }}
           generate_release_notes: true
-          files: release-assets/post-download/*.exe
+          body: |
+            **Container security advisory:** This private single-user self-hosted release accepts unresolved HIGH/CRITICAL Trivy findings as user-approved risk; it is not a security pass. Inspect `container-trivy.json`, `container-sbom.spdx.json`, and `container-supply-chain-receipt.json` before deployment.
+            Windows OfficeCLI and PowerPoint qualification are private evidence only. No Windows executable is published.
+          files: |
+            release-assets/docker-source/navslides-editor-image.tar
+            release-assets/docker-source/docker-image-digest.txt
+            release-assets/docker-source/docker-attestation-verification.json
+            release-assets/root-evidence/green-sha-root-receipt.json
+            release-assets/scan-evidence/container-trivy.json
+            release-assets/scan-evidence/container-sbom.spdx.json
+            release-assets/scan-evidence/container-supply-chain-receipt.json
+          fail_on_unmatched_files: true
 
   publish-final:
     if: needs.resolve.outputs.kind == 'final'
@@ -179,7 +182,11 @@ jobs:
       actions: read
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with: { name: '${{ needs.verify-staged-assets.outputs.staged_artifact }}', path: release-assets }
+        with:
+          {
+            name: '${{ needs.verify-staged-assets.outputs.staged_artifact }}',
+            path: release-assets,
+          }
       - name: Publish verified final assets
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
@@ -187,4 +194,15 @@ jobs:
           target_commitish: ${{ needs.resolve.outputs.subject_sha }}
           draft: false
           prerelease: false
-          files: release-assets/post-download/*.exe
+          body: |
+            **Container security advisory:** This private single-user self-hosted release accepts unresolved HIGH/CRITICAL Trivy findings as user-approved risk; it is not a security pass. Inspect `container-trivy.json`, `container-sbom.spdx.json`, and `container-supply-chain-receipt.json` before deployment.
+            Windows OfficeCLI and PowerPoint qualification are private evidence only. No Windows executable is published.
+          files: |
+            release-assets/docker-source/navslides-editor-image.tar
+            release-assets/docker-source/docker-image-digest.txt
+            release-assets/docker-source/docker-attestation-verification.json
+            release-assets/root-evidence/green-sha-root-receipt.json
+            release-assets/scan-evidence/container-trivy.json
+            release-assets/scan-evidence/container-sbom.spdx.json
+            release-assets/scan-evidence/container-supply-chain-receipt.json
+          fail_on_unmatched_files: true
