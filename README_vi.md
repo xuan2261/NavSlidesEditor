@@ -2,7 +2,7 @@
 
 A self-hostable WYSIWYG presentation editor được xây dựng dựa trên [reveal.js](https://revealjs.com/). Build và trình chiếu slide trực tiếp trên trình duyệt — không cần tài khoản, không cần đám mây, không bị theo dõi. Đồng thời cung cấp dưới dạng ứng dụng desktop độc lập thông qua Electron.
 
-Phiên bản hiện tại: **v1.15.0** — phần tử tương tác cho giảng dạy, Mermaid/STEM authoring, 10 game subtype, UX LaTeX, biểu tượng kỹ thuật và kiểm chứng release gate.
+Bản phát hành hiện tại: **v1.16.2**. **v1.17.0** chỉ là ứng viên chưa gắn thẻ/chưa phát hành; không được xem việc vượt qua CI hoặc kiểm chứng PowerPoint là đã hoàn tất.
 
 ## Features
 
@@ -98,17 +98,11 @@ Các công cụ dạy học có thể khám phá từ tab **Insert**: Mermaid di
 
 ### Option A — Desktop App (Electron)
 
-Chạy NavSlides Editor dưới dạng ứng dụng desktop native. Không cần server, không cần Docker, không cần browser.
+Ứng dụng desktop Electron có thể build tại máy người dùng; bản ứng viên v1.17.0 **không** phát hành EXE Windows công khai và không yêu cầu ký Authenticode. Windows chỉ là môi trường kiểm chứng riêng cho OfficeCLI và Microsoft PowerPoint. Bản phát hành dự kiến cung cấp image Docker build một lần cùng receipt gắn với đúng commit; các cổng kiểm chứng vật lý còn chờ bằng chứng.
 
-#### Pre-built packages
+#### Các gói phát hành cũ
 
-Tải xuống từ trang [Releases](https://github.com/xuan2261/NavSlidesEditor/releases). Workflow phát hành hiện tại tự động build artifact Windows; Linux/macOS vẫn build được bằng script local bên dưới:
-
-| Platform | Format                                                  |
-| -------- | ------------------------------------------------------- |
-| Linux    | `.AppImage` (chạy trực tiếp) hoặc `.deb` (cài qua dpkg) |
-| macOS    | `.zip` (giải nén và mở file `.app`)                     |
-| Windows  | file installer `.exe` hoặc bản `.exe` portable          |
+Trang [Releases](https://github.com/xuan2261/NavSlidesEditor/releases) có thể còn gói desktop từ những phiên bản trước, bao gồm v1.16.2. Các lệnh build desktop bên dưới là thao tác **tại máy**, không phải cam kết phân phối gói desktop trong v1.17.0.
 
 **Cài đặt `.deb` trên Linux:**
 
@@ -125,7 +119,7 @@ chmod +x Slides\ Editor-1.0.0.AppImage
 
 #### Build from source
 
-Yêu cầu **Node.js 20+**.
+Yêu cầu **Node.js >=22.13.0**.
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git
@@ -164,6 +158,8 @@ npm run electron:dev
 ### Option B — Docker (khuyên dùng cho server)
 
 Yêu cầu [Docker](https://docs.docker.com/get-docker/) và [Docker Compose](https://docs.docker.com/compose/install/).
+
+**Rủi ro bảo mật của ứng viên v1.17.0:** người vận hành đã chấp nhận các phát hiện Trivy mức HIGH/CRITICAL chưa khắc phục ở chế độ _khuyến cáo_ cho triển khai riêng, một người dùng. Đây không phải kết quả kiểm tra bảo mật đạt chuẩn. Trước khi triển khai, xem `container-trivy.json`, `container-sbom.spdx.json` và `container-supply-chain-receipt.json` đi kèm image; không công khai dịch vụ trực tiếp ra Internet.
 
 #### 1. Clone repository
 

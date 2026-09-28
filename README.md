@@ -72,15 +72,23 @@ only after `GET /health/ready` confirms storage, package ownership, and recovery
 
 ### Desktop app
 
-Download the pre-built Windows package from
-[Releases](https://github.com/xuan2261/NavSlidesEditor/releases). Linux and
-macOS packages can be built locally with Node.js >=22.13.0:
+Earlier tagged releases, including v1.16.2, may offer Windows packages on
+[Releases](https://github.com/xuan2261/NavSlidesEditor/releases). The untagged
+v1.17.0 candidate does **not** authorize a publicly distributed Windows EXE or
+Windows Authenticode signing. Windows remains a private qualification host for
+physical OfficeCLI and local Microsoft PowerPoint evidence; the proposed release
+deliverable is the exact prebuilt Docker image with subject-bound receipts. See
+the [release contract](docs/deployment-guide.md#release) for its pending gates
+and the accepted container vulnerability risk.
+
+Linux, macOS, and Windows desktop packages can still be built locally with
+Node.js >=22.13.0; local build commands are not release distribution promises:
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
 npm run electron:build:linux   # .AppImage + .deb
 npm run electron:build:mac     # .zip
-npm run electron:build:win     # .exe
+npm run electron:build:win     # .exe, local only
 npm run electron:dev           # development mode
 ```
 
@@ -159,13 +167,13 @@ author. Releases, verification, architectural decisions, and known limits are
 kept inspectable in the repository rather than represented by private service
 state.
 
-| Maintenance signal                        | Evidence                                                                                                                                   |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Public source and copyleft license        | [Repository](https://github.com/xuan2261/NavSlidesEditor) · [LICENSE](LICENSE)                                                             |
-| Tagged releases and desktop artifacts     | [GitHub Releases](https://github.com/xuan2261/NavSlidesEditor/releases) · [release workflow](.github/workflows/release.yml)                |
-| Continuous verification                   | [CI workflow](.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml) · [testing guide](#testing--performance) |
-| Current architecture and trust boundaries | [System architecture](docs/system-architecture.md) · [Security Model](#security-model) · [deployment guide](docs/deployment-guide.md)      |
-| Planning and change history               | [Roadmap](docs/project-roadmap.md) · [changelog](docs/project-changelog.md)                                                                |
+| Maintenance signal                            | Evidence                                                                                                                                                                          |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public source and copyleft license            | [Repository](https://github.com/xuan2261/NavSlidesEditor) · [LICENSE](LICENSE)                                                                                                    |
+| Tagged release history and candidate contract | [GitHub Releases](https://github.com/xuan2261/NavSlidesEditor/releases) · [release policy](config/release-target-policy.json) · [release guide](docs/deployment-guide.md#release) |
+| Continuous verification                       | [CI workflow](.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml) · [testing guide](#testing--performance)                                        |
+| Current architecture and trust boundaries     | [System architecture](docs/system-architecture.md) · [Security Model](#security-model) · [deployment guide](docs/deployment-guide.md)                                             |
+| Planning and change history                   | [Roadmap](docs/project-roadmap.md) · [changelog](docs/project-changelog.md)                                                                                                       |
 
 Maintenance spans the React editor, Express and Socket.IO services, shared
 rendering/export code, the Electron shell, and the documentation site.

@@ -159,13 +159,12 @@ On Windows PowerShell, use `$env:PORT=8080; npm start` or run the command inside
 
 ### Pre-built Packages
 
-Download Windows packages from the [Releases](https://github.com/xuan2261/NavSlidesEditor/releases) page. The current GitHub release workflow publishes Windows packages only; Linux and macOS packages can be built locally from source.
-
-| Platform | Format                              |
-| -------- | ----------------------------------- |
-| Windows  | `.exe` installer or portable `.exe` |
-| Linux    | local build: `.AppImage` or `.deb`  |
-| macOS    | local build: `.zip`                 |
+Earlier tagged releases, including v1.16.2, may have Windows downloads on
+[Releases](https://github.com/xuan2261/NavSlidesEditor/releases). That history
+does not authorize a Windows package for the untagged v1.17.0 candidate:
+no public Windows EXE or Authenticode signing is part of its accepted release
+target. Windows is retained for private qualification. Linux and macOS
+desktop packages remain local source builds, not release assets.
 
 ```bash
 # Linux .deb
@@ -183,7 +182,7 @@ npm install
 
 npm run electron:build:linux   # → dist-electron/ (.AppImage + .deb)
 npm run electron:build:mac     # → dist-electron/ (.zip)
-npm run electron:build:win     # → dist-electron/ (.exe installer + portable)
+npm run electron:build:win     # → dist-electron/ (.exe installer + portable), local only
 ```
 
 Dev mode (no package):
@@ -394,7 +393,7 @@ Note: Set `client_max_body_size` (Nginx) or the equivalent to at least 100MB to 
 
 ## CI/CD
 
-The repository includes GitHub Actions workflows for validation and Electron release.
+The repository includes GitHub Actions workflows for validation and release qualification. The candidate contract below is a target, not evidence of a completed release run.
 
 ### Required CI Jobs (blocking)
 
@@ -419,22 +418,40 @@ The repository includes GitHub Actions workflows for validation and Electron rel
 
 ### Release
 
-- Main CI builds the client once as `client-dist-v1-<full-sha>`. Playwright,
-  load, Docker, and Windows Electron consumers download and verify those exact
-  bytes before use.
-- `Build & Release Electron` accepts only an existing `v<package.version>` or
-  `v<package.version>-rc.N` tag whose target is the exact successful main-CI
-  subject. Manual dispatch is rerun/recovery by existing tag name only.
-- Windows signing, draft staging, and final publication use separate protected
-  environments. Missing physical Office/PowerPoint receipts, signing identity,
-  trusted RFC 3161 timestamp, post-download verification, or attestation blocks
-  publication. There is no unsigned public fallback.
-- Linux and macOS Electron packages exist as local `electron-builder` scripts but are not part of the current release workflow.
+The published version remains **v1.16.2**; **v1.17.0** is an untagged candidate
+(`package.json` and workspace manifests own the product version; `runtime-versions.json`
+owns runtime pins). The [release target policy](../config/release-target-policy.json)
+selects an exact prebuilt Docker image and subject-bound receipts as the release
+deliverable, **not** a publicly distributed Windows EXE. Windows is a private
+evidence host: OfficeCLI physical G3 and local Microsoft PowerPoint G5 evidence
+remain mandatory for the same clean source subject. Use the
+[PowerPoint visual-evidence runbook](pptx-visual-evidence-runbook.md) for the
+physical oracle; parser-relative corpus or integrity-only results do not satisfy
+G5. Missing physical receipts block qualification, not just an EXE download.
 
-For a failed rerun, keep the tag immutable and rerun against the same commit.
-If the retained client or Linux receipt artifact expired, rerun full main CI for
-that same SHA. Never move the tag, rebuild from a different SHA, or delete an
-in-progress public release to hide a failed gate.
+The operator accepts reported Trivy **HIGH/CRITICAL** findings as an advisory
+risk for **private, single-user self-hosting only**. Preserve the raw
+`container-trivy.json`, `container-sbom.spdx.json`, and
+`container-supply-chain-receipt.json` with the image/receipts so the decision is
+auditable. This is **not a security pass**, a claim that vulnerabilities are
+fixed, or authorization to expose the image publicly. Digest, SBOM presence,
+runtime closure, provenance, exact-subject and other release checks retain their
+own requirements. The [policy](../config/release-target-policy.json) owns this
+accepted risk; the [supply-chain workflow](../.github/workflows/reusable-container-supply-chain.yml)
+and [verifier](../scripts/verify-container-supply-chain.js) own scan evidence.
+
+The target policy alone does not prove qualification. Consult the
+[release workflow](../.github/workflows/release.yml),
+[Windows qualification workflow](../.github/workflows/reusable-windows-qualification.yml),
+and same-subject receipts before asserting the candidate is published, G3/G5
+has passed, or CI is green. The
+[release-state command](../scripts/ci/release-state.mjs) checks local
+subject/version state only; it cannot replace CI or physical evidence.
+
+An existing release tag must stay immutable during rerun or recovery. If retained
+evidence expires, regenerate evidence for the **same** source SHA, never move the
+tag or claim a different image is the qualified artifact. Linux and macOS
+desktop packages remain local builds, outside the selected release target.
 
 Test commands run locally:
 

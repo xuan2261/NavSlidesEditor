@@ -52,8 +52,9 @@ assumptions used by later phases.
   Phase 6.
 - `/health/live` and `/health/ready` with deterministic, non-secret reason codes.
 - Docker runtime as a non-root user plus an executable healthcheck.
-- Pinned container/runtime/browser inputs, image SBOM production, and OS/browser
-  vulnerability gates.
+- Pinned container/runtime/browser inputs, image SBOM production, and fail-closed
+  scan-evidence validation. The operator accepts the current HIGH/CRITICAL
+  findings as advisory risk for private single-user use, not a security pass.
 - Owner-only `0600` mode on secret-bearing files on POSIX, with explicit Windows
   limitation wording rather than false mode claims.
 - A documented and mechanically tested backup/restore drill for both
@@ -174,9 +175,9 @@ assumptions used by later phases.
     and uses `/health/ready` for `HEALTHCHECK`/Compose health.
 15. Container base images are digest-pinned; runtime OS packages and the
     Playwright/browser payload are version/manifest pinned. CI emits an SPDX or
-    CycloneDX image SBOM, scans OS and browser components under a checked-in
-    severity/exception policy, and fails on unapproved high/critical findings or
-    pin drift.
+    CycloneDX image SBOM and raw Trivy report. Missing/invalid evidence, image
+    or browser identity drift, or findings outside the bounded operator-approved
+    disposition fail closed; accepted HIGH/CRITICAL findings remain advisory.
 16. Secret-bearing files are created and atomically replaced as `0600` on POSIX.
     Existing broader modes are tightened at startup. Non-secret JSON retains the
     existing policy.
@@ -301,7 +302,7 @@ new empty volumes -> verify archives -> extract both -> start
 | Create | `C:\Work\NavSlidesEditor\scripts\verify-container-supply-chain.js`                                           | Verify image/base/OS/browser pins, emit SBOM, invoke policy-bound scanners                                        | CI/image gate              |
 | Create | `C:\Work\NavSlidesEditor\scripts\verify-container-supply-chain.test.js`                                      | Pin drift, missing browser inventory, severity and exception expiry cases                                         | Focused Vitest             |
 | Modify | `C:\Work\NavSlidesEditor\.github\workflows\github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml` | Build image, publish SBOM artifact, scan OS/browser inventory under pinned tooling                                | CI contract                |
-| Modify | `C:\Work\NavSlidesEditor\.github\workflows\release.yml`                                                      | Re-run image SBOM/OS/browser scan before release publication                                                      | Release gate               |
+| Modify | `C:\Work\NavSlidesEditor\.github\workflows\release.yml`                                                      | Promote the exact CI image and its pinned raw scan/SBOM/receipt; no release-time rescan                           | Release evidence           |
 | Create | `C:\Work\NavSlidesEditor\scripts\restore-docker-volumes.ps1`                                                 | Empty-target restore with pre-verification                                                                        | Script integration         |
 | Create | `C:\Work\NavSlidesEditor\scripts\docker-backup-restore-contract.test.js`                                     | Static safety and manifest contract                                                                               | Vitest                     |
 | Modify | `C:\Work\NavSlidesEditor\package.json`                                                                       | Add `backup:docker`, `restore:docker`, and drill command                                                          | Script contract            |
@@ -328,8 +329,9 @@ new empty volumes -> verify archives -> extract both -> start
 13. Readiness remains `200` during shutdown or durable recovery degradation.
 14. Health response exposes a filesystem path or exception text.
 15. Container process UID is zero or cannot write one mounted volume.
-16. Image build uses an unpinned base/browser payload, emits no SBOM, or passes
-    with an unapproved high/critical OS/browser finding.
+16. Image build uses an unpinned base/browser payload, omits SBOM/raw Trivy
+    evidence, presents an unapproved changed finding count as accepted, or
+    claims a security pass while accepted HIGH/CRITICAL findings remain.
 17. `settings.json`, `github-config.json`, or `rclone.conf` remains group/world
     readable after create and atomic replacement on POSIX.
 18. Backup captures only the data volume; restored slides reference missing media.
@@ -366,8 +368,9 @@ new empty volumes -> verify archives -> extract both -> start
     startup repair, candidate files, and post-rename targets.
 13. Convert the image to a fixed unprivileged runtime user; pin base/runtime/browser
     inputs, qualify mounted-volume ownership, and add Docker/Compose health checks.
-14. Add image SBOM generation plus pinned OS/browser vulnerability scanning and
-    expiring exception policy to CI and release.
+14. Add image SBOM generation plus pinned OS/browser vulnerability scanning to
+    CI; release promotes the same CI scan evidence and its explicit advisory
+    receipt rather than replacing it with a new scan.
 15. Implement stopped-service, both-volume backup and empty-volume restore scripts
     with captured pre-state and restart in `finally`.
 16. Add an automated drill fixture with one deck, one history snapshot, one
@@ -398,7 +401,8 @@ new empty volumes -> verify archives -> extract both -> start
 - Live and ready probes distinguish process, startup, degraded recovery, and
   shutdown states.
 - Container runs non-root and writes both volumes.
-- Container SBOM and pinned OS/browser scans pass policy.
+- Container SBOM and pinned OS/browser scans have valid raw evidence; the
+  operator-approved HIGH/CRITICAL findings are disclosed as advisory, not green.
 - Secret-bearing files are owner-only on POSIX after all write paths.
 - The backup/restore drill recreates one complete working deployment from both
   volume archives, and failure still restores the captured running pre-state.
@@ -407,29 +411,29 @@ new empty volumes -> verify archives -> extract both -> start
 
 ## Scenario Matrix
 
-| Scenario                           | Expected durable/result state | Required assertion                                 |
-| ---------------------------------- | ----------------------------- | -------------------------------------------------- |
-| Valid v1.1 archive, no media       | committed                     | One presentation; no media session residue         |
-| Valid legacy archive               | committed-with-warning        | Compatibility warning only                         |
-| ZIP bomb/collision/traversal       | rejected                      | No extracted files/session                         |
-| New media then create failure      | rolled-back                   | Exact new file/hash absent                         |
-| Reused media then create failure   | rolled-back                   | Reused file/hash unchanged                         |
-| Stolen session ID, no capability   | rejected                      | No state/file mutation                             |
-| Active content, no acknowledgement | rejected                      | No session/publication                             |
-| Active content, cross-origin       | rejected                      | No session/publication                             |
-| Acknowledged active content        | committed                     | Author bytes preserved; isolated route             |
-| Disconnect while pending           | recoverable                   | Expiry/explicit rollback converges                 |
-| Crash after `committing`           | committing/reconcile-required | No expiry/rollback deletion; recover forward       |
-| Startup initializing               | live/not-ready                | `200` live, `503` ready                            |
-| Recovery dead letter present       | live/degraded                 | `503` ready with bounded code                      |
-| Graceful shutdown                  | not-ready then stopped        | No ready window after drain begins                 |
-| Docker fresh volumes               | ready                         | Non-root write and health pass                     |
-| Image supply-chain gate            | qualified                     | Pinned inputs + SBOM + OS/browser scan             |
-| Backup + clean restore             | ready                         | Both volume hashes and semantic probes pass        |
-| Backup fails after stop            | restarted/error               | Original and restart errors independently reported |
-| Tampered/missing archive           | restore rejected              | Target volumes remain empty                        |
-| Worker count > 1                   | startup rejected              | No listening socket                                |
-| Second Electron process            | exits                         | First window focused; no second backend            |
+| Scenario                           | Expected durable/result state | Required assertion                                                           |
+| ---------------------------------- | ----------------------------- | ---------------------------------------------------------------------------- |
+| Valid v1.1 archive, no media       | committed                     | One presentation; no media session residue                                   |
+| Valid legacy archive               | committed-with-warning        | Compatibility warning only                                                   |
+| ZIP bomb/collision/traversal       | rejected                      | No extracted files/session                                                   |
+| New media then create failure      | rolled-back                   | Exact new file/hash absent                                                   |
+| Reused media then create failure   | rolled-back                   | Reused file/hash unchanged                                                   |
+| Stolen session ID, no capability   | rejected                      | No state/file mutation                                                       |
+| Active content, no acknowledgement | rejected                      | No session/publication                                                       |
+| Active content, cross-origin       | rejected                      | No session/publication                                                       |
+| Acknowledged active content        | committed                     | Author bytes preserved; isolated route                                       |
+| Disconnect while pending           | recoverable                   | Expiry/explicit rollback converges                                           |
+| Crash after `committing`           | committing/reconcile-required | No expiry/rollback deletion; recover forward                                 |
+| Startup initializing               | live/not-ready                | `200` live, `503` ready                                                      |
+| Recovery dead letter present       | live/degraded                 | `503` ready with bounded code                                                |
+| Graceful shutdown                  | not-ready then stopped        | No ready window after drain begins                                           |
+| Docker fresh volumes               | ready                         | Non-root write and health pass                                               |
+| Image supply-chain evidence        | qualified with advisory risk  | Pinned inputs, raw SBOM/Trivy, accepted-risk receipt; no security-pass claim |
+| Backup + clean restore             | ready                         | Both volume hashes and semantic probes pass                                  |
+| Backup fails after stop            | restarted/error               | Original and restart errors independently reported                           |
+| Tampered/missing archive           | restore rejected              | Target volumes remain empty                                                  |
+| Worker count > 1                   | startup rejected              | No listening socket                                                          |
+| Second Electron process            | exits                         | First window focused; no second backend                                      |
 
 ## Regression Commands
 
@@ -440,7 +444,6 @@ npx vitest run electron/single-instance.test.js tests/unit/docker-compose-networ
 npm run build
 npm run lint
 docker build --tag navslides-editor:phase05 .
-node scripts/verify-container-supply-chain.js --image navslides-editor:phase05 --sbom .tmp/phase05-image-sbom.json
 docker compose up -d --build
 docker compose ps
 Invoke-WebRequest http://127.0.0.1:3002/health/ready
@@ -450,8 +453,9 @@ docker compose down
 
 Mechanical release gate: all commands exit `0`; the built container reports
 `healthy`, its runtime UID is non-zero, and the drill report proves both volume
-archives were verified and restored. The image inputs match pins, its SBOM exists,
-and OS/browser scans have no unapproved high/critical finding. No manual
+archives were verified and restored. The image inputs match pins; the CI SBOM,
+raw Trivy report, and accepted-risk receipt remain bound to the exact image.
+Unresolved HIGH/CRITICAL findings are advisory, not a security pass. No manual
 screenshot counts as proof.
 
 ## Todos
@@ -468,7 +472,8 @@ screenshot counts as proof.
 - [ ] Enforce one-process startup.
 - [ ] Enforce secret-file permissions.
 - [ ] Run non-root Docker health smoke.
-- [ ] Pin image/runtime/browser inputs and pass SBOM/OS/browser scan.
+- [ ] Pin image/runtime/browser inputs and verify raw SBOM/scan with the bounded
+      accepted-risk advisory receipt.
 - [ ] Enforce Electron single-instance ownership before backend startup.
 - [ ] Implement and execute both-volume backup/restore drill.
 - [ ] Align README/deployment wording with the single-user model.
@@ -484,7 +489,8 @@ screenshot counts as proof.
 - [ ] Reused/legacy media cannot be deleted by import rollback.
 - [ ] `/health/live` and `/health/ready` implement the stated transition contract.
 - [ ] Docker runs non-root, writes both volumes, and becomes healthy only when ready.
-- [ ] Container base/runtime/browser pins, SBOM, and OS/browser scan gates pass.
+- [ ] Container base/runtime/browser pins and scan-evidence gates pass; any
+      accepted HIGH/CRITICAL findings remain explicitly advisory.
 - [ ] Every secret-bearing file write is `0600` on POSIX; Windows limitations are truthful.
 - [ ] One reproducible drill backs up and restores both named volumes with hash proof.
 - [ ] Backup restart runs from captured pre-state in `finally` and reports backup/restart failures separately.
@@ -512,7 +518,7 @@ screenshot counts as proof.
 | Restore overwrites valuable volumes                | Non-empty target detected                         | Refuse unless exact empty-target precondition passes                                                 |
 | Single-process check misses orchestrator           | duplicate writer/listener or Socket.IO divergence | Support explicit process-count env guards plus package writer refusal; document unsupported topology |
 | Electron bypasses server topology checks           | two desktop backends race the same root           | Acquire `requestSingleInstanceLock()` before backend start; second instance exits                    |
-| Image/browser dependency drifts                    | SBOM differs or scanner finds unapproved CVE      | Digest/version pins plus fail-closed CI/release scans and expiring exceptions                        |
+| Image/browser dependency drifts                    | SBOM differs or scanner evidence changes          | Fail on pin/evidence drift; disclose bounded accepted findings as advisory, never security green     |
 
 ## Security
 
