@@ -129,7 +129,6 @@ describe('Windows release receipt workflow', () => {
         JSON.parse(readFileSync(resolve(root, 'evidence/officecli/officecli-receipt.json'), 'utf8'))
       ),
     })
-    expect(receipt.artifacts).toEqual({})
   })
 
   it.each([

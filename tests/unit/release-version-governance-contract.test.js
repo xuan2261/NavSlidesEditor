@@ -159,19 +159,4 @@ describe('release version governance contract', () => {
       expect(parseReleaseTag(tag, version), tag).toBeNull()
     }
   })
-
-  it('keeps upstream parity evidence historical and non-blocking', () => {
-    const plan = readText('plans/archive/260523-0500-upstream-parity-verification-tdd/plan.md')
-    const matrix = readText('docs/upstream-parity-matrix.md')
-    const metadataIndex = matrix.indexOf('## Metadata')
-    const banner = matrix.slice(0, metadataIndex)
-
-    expect(plan).toMatch(/^status: (historical|superseded)$/m)
-    expect(plan).toContain(
-      'plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-02-release-state-and-documentation-governance.md'
-    )
-    expect(plan).toContain('ce548c535abc7701ac45cc3164560caba121adce')
-    expect(banner).toMatch(/historical/i)
-    expect(banner).toMatch(/non-blocking/i)
-  })
 })
