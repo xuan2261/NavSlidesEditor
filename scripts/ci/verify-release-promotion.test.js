@@ -31,7 +31,7 @@ function evidence() {
     tag: 'v1.17.0-rc.1',
     packageVersion: '1.17.0',
     policy: {
-      policyVersion: 'release-target-policy-v2',
+      policyVersion: 'release-target-policy-v3',
       containerSecurityAdvisory: { mode: 'user-risk-accepted', securityPassClaim: false },
     },
     vulnerabilityPolicy: {
@@ -43,7 +43,7 @@ function evidence() {
       status: 'passed',
       subjectSha,
       clientDigest: digest(manifestBytes),
-      policyVersion: 'release-target-policy-v2',
+      policyVersion: 'release-target-policy-v3',
       releaseTag: 'v1.17.0-rc.1',
       children: {
         'linux-ci': { status: 'passed' },

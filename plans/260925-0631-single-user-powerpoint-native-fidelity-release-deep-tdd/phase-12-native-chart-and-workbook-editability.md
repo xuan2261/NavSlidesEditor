@@ -364,4 +364,4 @@ npm run build
 - Requires Phase 11 shared registry/server gate and Phase 9 atomic transaction.
 - Reuses Phase 10 physical evidence discipline.
 - Phase 13 may align reconstructed chart export but cannot expand this native row.
-- Phase 15 adds G5 PowerPoint evidence for this exact published subject only.
+- Phase 15 qualifies private Windows runtime closure and exact-source OfficeCLI evidence; future PowerPoint G5 is not selected for v1.17.0 and does not expand this native chart row.

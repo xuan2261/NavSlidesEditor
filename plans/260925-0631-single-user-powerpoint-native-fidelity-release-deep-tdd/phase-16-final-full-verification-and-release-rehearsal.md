@@ -19,10 +19,12 @@ created: 2026-09-25
 - This is the only release-candidate rehearsal for the plan. It verifies one immutable commit and one artifact set.
 - Focused phase tests are necessary but insufficient.
 - Mandatory tests cannot be skipped, converted to warn-only, retried until green without root cause, or replaced by previous receipts.
-- Physical gates G0–G5 apply only where selected by the canonical matrix; Windows G3 is not selected and is not inferred from runtime closure.
+- The selected physical gates are G0/G1/G2/G4. Windows executable G3 and
+  PowerPoint G5 are not selected; neither runtime closure nor importer/editor
+  visuals can infer either gate.
 - Release docs, changelog, version, workflows, generated descriptors, and claim wording are finalized before the RC SHA is cut. The rehearsal permits no tracked-file edit, generated tracked diff, snapshot update, or post-hoc claim correction.
-- Evidence is produced on multiple isolated hosts and joined as a hash-linked receipt DAG: Linux CI/Docker/load, Windows Electron/OfficeCLI/PowerPoint, and optional Linux/macOS desktop lanes.
-- Dependency order is Phase 13 shared export IR, then Phase 14 characterization-only module cleanup, then Phase 15 Windows/PowerPoint evidence. Phase 16 rejects receipts from any other lineage.
+- Evidence is produced on multiple isolated hosts and joined as a hash-linked receipt DAG: Linux CI/Docker/load, Windows Electron/OfficeCLI, and optional Linux/macOS desktop lanes.
+- Dependency order is Phase 13 shared export IR, then Phase 14 characterization-only module cleanup, then Phase 15 Windows runtime/OfficeCLI evidence. Phase 16 rejects receipts from any other lineage.
 
 ## Goal
 
@@ -32,7 +34,7 @@ Produce one auditable RC evidence bundle proving:
 - lint, all Vitest shards, merged coverage, and full unsharded test;
 - one prebuilt client artifact reused without rebuild by source runtime, Docker, Electron, and every package;
 - build, frozen docs, matrix, audits, and all Playwright projects/full E2E;
-- strict PPTX importer/package-first and selected physical G0–G2/G4–G5 gates; Windows G3 is not selected;
+- strict PPTX importer/package-first and selected physical G0/G1/G2/G4 gates; Windows G3 and PowerPoint G5 are not selected;
 - full browser audit, adversarial/performance/load tests;
 - Docker and unpacked Windows Electron runtime closure; no Windows distributable artifact.
 - multi-host exact-SHA receipts, checksums, application/image/OS/browser SBOM and vulnerability results, provenance, rollback/down-migration evidence, and final release decision.
@@ -78,7 +80,7 @@ Produce one auditable RC evidence bundle proving:
 1. Clean worktree and exact commit SHA.
 2. `npm ci` from checked-in lockfile.
 3. Release-state command from Phase 2 passes and records version/docs/lock/runtime consistency.
-4. README, docs, roadmap, changelog, version, release workflows, generated matrices/descriptors, and local-PowerPoint wording are committed and frozen before gate start.
+4. README, docs, roadmap, changelog, version, release workflows, generated matrices/descriptors, and exact selected-gate claim wording are committed and frozen before gate start.
 5. `git status --porcelain=v1 --untracked-files=all` and tracked-file hashes remain unchanged through rehearsal; only ignored run-owned evidence/output paths may change.
 6. Evidence bundle records every command, exit code, start/end, environment, exact Git SHA, parent receipt hashes, and output artifact hash.
 7. A Linux build receipt creates one content-addressed client archive. Every package imports and verifies it; package scripts run with client build disabled.
@@ -97,15 +99,14 @@ Produce one auditable RC evidence bundle proving:
 - Every configured Playwright project plus full E2E.
 - Strict PPTX importer qualification.
 - Package-first no-OfficeCLI claim gate.
-- Selected G0–G2 and G4–G5 physical gates; Windows G3 is not selected.
+- Selected G0/G1/G2/G4 physical gates; Windows G3 and PowerPoint G5 are not selected.
 - Full PPTX browser audit.
 - PPTX adversarial and full performance matrices.
 - API and WebSocket smoke/load/stress according to release policy.
 - Docker build/runtime/persistence/restart.
 - Unpacked Windows Electron runtime-closure qualification; no NSIS/portable executables or G3 smoke.
-- Phase 15 `local_powerpoint_environment` claim evaluation through its dedicated schema/evaluator/CLI; protected-provider policy remains false and separate.
 - Runtime closure for source, Docker, and unpacked Windows Electron; NSIS and portable runtime closure are out of scope.
-- Linux CI/Docker/load and Windows Electron/OfficeCLI/PowerPoint receipt DAG validation.
+- Linux CI/Docker/load and Windows Electron/OfficeCLI receipt DAG validation.
 - Optional Linux/macOS desktop packages only when declared optional before RC; if included, they consume the same prebuilt client and produce exact-SHA child receipts.
 - Previous-release upgrade snapshot, candidate upgrade, previous-binary rollback, and cloned-data down-migration rehearsal.
 - Checksums, application/package/container/OS/browser SBOMs, vulnerability scans, provenance, and frozen release notes/changelog/docs.
@@ -118,7 +119,7 @@ clean RC SHA
   -> dependency install
   -> one content-addressed client build
   -> Linux CI/browser/PPTX/load/Docker receipt
-  -> Windows Electron/OfficeCLI/PowerPoint receipt
+  -> Windows Electron/OfficeCLI receipt
   -> optional Linux/macOS desktop receipts
   -> receipt DAG import and exact-SHA validation
   -> rollback/down-migration receipt
@@ -142,7 +143,7 @@ clean RC SHA
 
 - Root receipt: frozen RC SHA, tracked-tree manifest, lockfiles, version/docs/changelog hashes, gate manifest, and prebuilt-client hash.
 - Linux required child: lint/unit/coverage/build/docs/browser/PPTX software/load/Docker plus container, OS, and browser evidence.
-- Windows required child: imported prebuilt client, unpacked Electron runtime closure, exact-subject OfficeCLI when selected, Phase 15 G5, and `local_powerpoint_environment`; no Authenticode, G3, or executable-artifact gate.
+- Windows required child: imported prebuilt client, unpacked Electron runtime closure, and exact-subject OfficeCLI G1 physical evidence; no Authenticode, executable G3, PowerPoint G5, or public executable gate.
 - Optional desktop children: Linux/macOS packaging and smoke only when marked optional in the root manifest before execution. Optional failure cannot satisfy or weaken any mandatory claim.
 - Rollback child: previous-version subjects, pre-upgrade snapshot, candidate upgrade, previous-binary restoration, down-migration/restore results, and exact data hashes.
 - Final aggregate receipt references child receipt hashes; it never copies or rewrites their claims.
@@ -214,7 +215,7 @@ clean RC SHA
 15. Missing parent, mixed SHA, DAG cycle, duplicate host role, mutated imported receipt, or undeclared optional lane must fail.
 16. Docker/Electron/desktop packaging that executes a client build or consumes a client hash other than the root receipt must fail.
 17. A mandatory test result containing skipped, todo, pending, disabled, excluded, filtered, zero-discovered, or pass-with-no-tests status must fail.
-18. A local PowerPoint record accepted by the protected-provider evaluator, or missing its dedicated `local_powerpoint_environment` contract, must fail.
+18. An importer-corpus result, editor/browser snapshot, or diagnostic local COM screenshot presented as selected PowerPoint fidelity/G5 release proof must fail.
 19. Missing application/package/container/OS/browser SBOM or missing/stale vulnerability database/result must fail.
 20. Vulnerability evidence not bound to the exact scanned subject digest, database digest, policy, tool version, and RC SHA must fail.
 21. Rollback without verified previous binaries, a pre-upgrade snapshot, candidate-upgrade evidence, previous-binary launch, and applicable down-migration/restore proof must fail.
@@ -224,7 +225,7 @@ clean RC SHA
 
 ### 1. Prepare one RC
 
-1. Before cutting the RC, finalize version, README, deployment/architecture/fidelity docs, roadmap, changelog, release workflows, generated matrices/descriptors, and exact local-PowerPoint wording.
+1. Before cutting the RC, finalize version, README, deployment/architecture/fidelity docs, roadmap, changelog, release workflows, generated matrices/descriptors, and selected G0/G1/G2/G4 wording without an unqualified PowerPoint fidelity claim.
 2. Run all docs/contracts/generation checks, commit the results, and record the frozen tracked-tree manifest.
 3. Confirm clean worktree, branch, SHA, lockfiles, runtime versions, and no secrets.
 4. Create a fresh ignored run directory.
@@ -281,14 +282,13 @@ npm run test:pptx:phase13
 Then run selected physical gates and bind each receipt to the canonical matrix subject:
 
 - **G0** exact package authority/original bytes and selected corpus hashes.
-- **G1** direct local OfficeCLI qualification only if selected and available under earlier phases; no fake launcher receipt.
+- **G1** direct local OfficeCLI physical qualification for the exact source subject; no fake launcher or historical feasibility receipt.
 - **G2** exact physical R0→R1 edited-package seed and native re-import/collateral closure.
 - **G3** not selected. Windows runtime closure does not qualify G3; no Windows executable artifact is published.
 - **G4** exact selected canonical row/mutation-surface evidence.
-- **G5** local Microsoft PowerPoint COM oracle from Phase 15, evaluated only as `local_powerpoint_environment`.
+- **G5** not selected. A future local Microsoft PowerPoint COM oracle remains a separate, environment-bounded evidence path, not a v1.17.0 pass or release receipt.
 
-If the release claim requires a selected gate and that gate is unavailable, result is `NO-GO`.
-The Windows host exports an immutable exact-SHA receipt whose parents are the root receipt and prebuilt-client receipt. The coordinator imports and validates it; the protected-provider evaluator remains false.
+If any selected gate is unavailable, result is `NO-GO`; G3/G5 absence is not a selected-gate failure or an inferred pass. The Windows host exports an immutable exact-SHA receipt bound to the Linux parent and prebuilt client. Importer-corpus results and local diagnostic COM screenshots cannot substitute for G5. No PowerPoint fidelity qualification is claimed by this release.
 
 ### 5. Load/performance
 
@@ -314,10 +314,10 @@ The Windows host exports an immutable exact-SHA receipt whose parents are the ro
 1. On the required Windows host, import and verify the root prebuilt-client archive, then prepare from the checked-in server lock.
 2. Build only the unpacked Windows Electron `dir` target; do not build NSIS or portable distributables.
 3. Verify runtime closure and record its exact-subject receipt.
-4. Import external OfficeCLI and PowerPoint G5 receipts; reject any subject SHA or client digest mismatch.
-5. Export a Windows exact-SHA evidence receipt containing only runtime closure, `officecli-physical`, and `fidelity-powerpoint` gates.
+4. Import and validate the external OfficeCLI G1 receipt; reject subject SHA, binary identity, or client-digest mismatch.
+5. Export a Windows exact-SHA evidence receipt containing only runtime closure and `officecli-physical` G1.
 6. Upload the receipt only; never upload the unpacked executable as a release asset.
-7. Do not claim Windows G3, Authenticode, signing, or executable attestation.
+7. Do not claim Windows G3, PowerPoint G5, Authenticode, signing, or executable attestation.
 
 ### 8. Optional desktop lanes
 
@@ -390,8 +390,8 @@ The exact ordered release gate is:
 21. Docker qualification from prebuilt client
 22. Linux host receipt export
 23. Verify unpacked Windows Electron runtime closure from the prebuilt client; do not build NSIS/portable distributables
-24. Import exact-subject OfficeCLI and Microsoft PowerPoint G5 receipts; reject subject or client-digest mismatch
-25. Export a Windows evidence receipt containing runtime closure, OfficeCLI physical evidence, and G5 only
+24. Import exact-subject OfficeCLI G1 physical evidence; reject subject or client-digest mismatch
+25. Export a Windows evidence receipt containing runtime closure and OfficeCLI G1 only
 26. declared optional Linux/macOS desktop lanes, if any
 27. runtime closure for every produced subject
 28. checksums; application/image/OS/browser SBOMs and vulnerability scans; provenance
@@ -404,26 +404,26 @@ Any failure stops promotion. Diagnostics may continue in a separate failed run, 
 
 ## Scenario Matrix
 
-| Domain        | Mandatory scenarios                                              |
-| ------------- | ---------------------------------------------------------------- |
-| Install       | Fresh lockfile install                                           |
-| Unit          | Every shard + full unsharded                                     |
-| Coverage      | Exact complete merge + thresholds                                |
-| Build/docs    | Client and VitePress production builds                           |
-| Matrix/audit  | Feature coverage, manifest completeness, UI/security audits      |
-| Browser       | Chromium, touch, live, PPTX, visual, mobile, full suite          |
-| PPTX importer | Exact manifest, strict pass, zero blockers/unmapped/placeholders |
-| PPTX package  | Original bytes, R1, replay, native re-import, collateral closure |
-| Physical      | Selected G0–G2/G4–G5 receipts; Windows G3 is not selected       |
-| Adversarial   | CRC/XML/nested/external rel/macro/OLE/vector/RTL-CJK policies    |
-| Performance   | Full importer matrix within budgets                              |
-| Load          | API/WS smoke, load, stress thresholds                            |
-| Docker        | Build, start, runtime, import, restart, persistence              |
-| Electron      | Unpacked Windows runtime closure; no NSIS/portable artifact or G3 claim |
-| Multi-host    | Required Linux + Windows DAG; optional desktop child receipts    |
-| Rollback      | Snapshot, upgrade, prior binary, down-migration/restore          |
-| Supply chain  | Checksums, app/image/OS/browser SBOMs, scans, provenance         |
-| Docs          | Frozen before RC; exact claims, commands, no rehearsal edits     |
+| Domain        | Mandatory scenarios                                                      |
+| ------------- | ------------------------------------------------------------------------ |
+| Install       | Fresh lockfile install                                                   |
+| Unit          | Every shard + full unsharded                                             |
+| Coverage      | Exact complete merge + thresholds                                        |
+| Build/docs    | Client and VitePress production builds                                   |
+| Matrix/audit  | Feature coverage, manifest completeness, UI/security audits              |
+| Browser       | Chromium, touch, live, PPTX, visual, mobile, full suite                  |
+| PPTX importer | Exact manifest, strict pass, zero blockers/unmapped/placeholders         |
+| PPTX package  | Original bytes, R1, replay, native re-import, collateral closure         |
+| Physical      | Selected G0/G1/G2/G4 receipts; Windows G3 and PowerPoint G5 not selected |
+| Adversarial   | CRC/XML/nested/external rel/macro/OLE/vector/RTL-CJK policies            |
+| Performance   | Full importer matrix within budgets                                      |
+| Load          | API/WS smoke, load, stress thresholds                                    |
+| Docker        | Build, start, runtime, import, restart, persistence                      |
+| Electron      | Unpacked Windows runtime closure; no NSIS/portable artifact or G3 claim  |
+| Multi-host    | Required Linux + Windows DAG; optional desktop child receipts            |
+| Rollback      | Snapshot, upgrade, prior binary, down-migration/restore                  |
+| Supply chain  | Checksums, app/image/OS/browser SBOMs, scans, provenance                 |
+| Docs          | Frozen before RC; exact claims, commands, no rehearsal edits             |
 
 ## Regression Gates
 
@@ -440,27 +440,26 @@ Any failure stops promotion. Diagnostics may continue in a separate failed run, 
 - No package rebuilt the client or consumed a different client archive.
 - No process/container left running.
 - No release claim above evidence ceiling.
-- Protected-provider remains false; the PowerPoint result is only `local_powerpoint_environment`.
+- Protected-provider remains false; no diagnostic PowerPoint result is promoted to a selected release claim.
 - Every release subject has exact-SHA checksums, applicable SBOMs, and vulnerability results.
 - Previous-binary rollback and applicable down-migration/restore rehearsal pass.
 
 ## Release Decision Matrix
 
-| Condition                                           | Decision                          | Action                                                                         |
-| --------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------ |
-| All mandatory gates pass; evidence valid            | GO                                | Approve exact SHA/artifacts for separate publish process                       |
-| Software green, any required selected physical gate unavailable | NO-GO                      | Keep claim disabled; rerun on qualified host                                   |
-| Any mandatory test fails                            | NO-GO                             | Fix, commit new SHA, restart full rehearsal                                    |
-| Flaky retry needed                                  | NO-GO                             | Root-cause flake; no receipt reuse                                             |
-| Artifact/runtime hash mismatch                      | NO-GO                             | Delete run-owned artifact output, rebuild from clean SHA                       |
-| Docs overclaim                                      | NO-GO                             | Correct docs, new SHA, full rerun                                              |
-| Any tracked edit during rehearsal                   | NO-GO                             | Commit fix, cut new RC, restart from gate 1                                    |
-| Package rebuilt client assets                       | NO-GO                             | Fix packaging to import root client subject; cut new RC                        |
-| Receipt DAG invalid                                 | NO-GO                             | Reject imported lane; rerun exact host from root parents                       |
-| Rollback/down-migration rehearsal fails             | NO-GO                             | Repair compatibility or recovery path before a new RC                          |
-| Optional diagnostic fails only                      | CONDITIONAL REVIEW                | Release only if manifest marks it optional and no required claim depends on it |
-| Security/audit/package safety failure               | NO-GO                             | Stop; security review before new RC                                            |
-| PowerPoint SSIM/prompt/repair failure               | NO-GO for native-fidelity release | Retain lower claim only after docs and matrix are corrected on a new SHA       |
+| Condition                                                       | Decision           | Action                                                                         |
+| --------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------ |
+| All mandatory gates pass; evidence valid                        | GO                 | Approve exact SHA/artifacts for separate publish process                       |
+| Software green, any required selected physical gate unavailable | NO-GO              | Keep claim disabled; rerun on qualified host                                   |
+| Any mandatory test fails                                        | NO-GO              | Fix, commit new SHA, restart full rehearsal                                    |
+| Flaky retry needed                                              | NO-GO              | Root-cause flake; no receipt reuse                                             |
+| Artifact/runtime hash mismatch                                  | NO-GO              | Delete run-owned artifact output, rebuild from clean SHA                       |
+| Docs overclaim                                                  | NO-GO              | Correct docs, new SHA, full rerun                                              |
+| Any tracked edit during rehearsal                               | NO-GO              | Commit fix, cut new RC, restart from gate 1                                    |
+| Package rebuilt client assets                                   | NO-GO              | Fix packaging to import root client subject; cut new RC                        |
+| Receipt DAG invalid                                             | NO-GO              | Reject imported lane; rerun exact host from root parents                       |
+| Rollback/down-migration rehearsal fails                         | NO-GO              | Repair compatibility or recovery path before a new RC                          |
+| Optional diagnostic fails only                                  | CONDITIONAL REVIEW | Release only if manifest marks it optional and no required claim depends on it |
+| Security/audit/package safety failure                           | NO-GO              | Stop; security review before new RC                                            |
 
 ## Rollback Plan
 
@@ -490,8 +489,8 @@ Any failure stops promotion. Diagnostics may continue in a separate failed run, 
 - [ ] Build and seal one prebuilt client subject.
 - [ ] Execute every ordered gate once.
 - [ ] Build and qualify Docker plus unpacked Windows Electron runtime; do not produce NSIS/portable Windows artifacts.
-- [ ] Collect exact-SHA Linux, Windows runtime-closure/OfficeCLI/G5, selected G0–G2/G4–G5, and declared optional desktop receipts; do not collect or claim Windows G3.
-- [ ] Validate dedicated local-PowerPoint claim; keep protected-provider false.
+- [ ] Collect exact-SHA Linux, Windows runtime-closure/OfficeCLI G1, selected G0/G1/G2/G4, and declared optional desktop receipts; do not collect or claim Windows G3 or PowerPoint G5.
+- [ ] Preserve native edited-PPTX scope without claiming PowerPoint fidelity qualified; keep diagnostic COM evidence outside the selected release DAG.
 - [ ] Generate checksums, app/image/OS/browser SBOMs, scans, and provenance.
 - [ ] Rehearse pre-upgrade snapshot, previous-binary rollback, and down-migration/restore.
 - [ ] Validate final evidence.
@@ -504,7 +503,7 @@ Any failure stops promotion. Diagnostics may continue in a separate failed run, 
 - Every mandatory result is PASS; none skipped.
 - Coverage shard inventory and merge are exact.
 - All Playwright projects and full E2E pass.
-- Strict PPTX, package-first, selected G0–G2 and G4–G5, browser, adversarial, perf, and load gates pass; Windows G3 is not selected.
+- Strict PPTX, package-first, selected G0/G1/G2/G4, browser, adversarial, perf, and load gates pass; Windows G3 and PowerPoint G5 are not selected.
 - Docker and unpacked Windows Electron runtime closure pass; NSIS/portable Windows artifacts are not produced or published.
 - One prebuilt client archive is reused unchanged by every selected package/runtime; no client rebuild occurs.
 - Required Linux and Windows receipt-DAG lanes validate; any optional desktop lane is predeclared and exact-SHA bound.
@@ -512,7 +511,7 @@ Any failure stops promotion. Diagnostics may continue in a separate failed run, 
 - Previous-release snapshot, candidate upgrade, previous-binary rollback, and applicable down-migration/restore pass.
 - Docs/changelog state only proven, environment-bounded claims.
 - Docs/changelog were frozen before the RC and no tracked edit occurred during rehearsal.
-- Local PowerPoint evidence passes only its dedicated claim contract; protected-provider remains false.
+- No G5 result is inferred from importer/UI evidence or local COM screenshots; PowerPoint fidelity is not claimed as qualified.
 - Final evidence validator returns GO.
 
 ## Risks / Signals / Responses
@@ -539,10 +538,10 @@ Any failure stops promotion. Diagnostics may continue in a separate failed run, 
 - Bind services to loopback except container-internal listener.
 - Verify upload/package guards and external-network denial.
 - `npm audit` failure is release-blocking at moderate level.
-- No macros/OLE/ActiveX execution during PowerPoint qualification.
+- No macros/OLE/ActiveX execution in selected PPTX qualification.
 - Provenance is unsigned local evidence unless separately signed; never imply protected attestation.
 - Cleanup targets only run-owned paths/processes/containers.
-- Required host lanes use clean isolated users/VMs or ephemeral CI workers with controlled egress; Windows qualification follows Phase 15 no-secrets and loopback-only capture policy.
+- Required host lanes use clean isolated users/VMs or ephemeral CI workers with controlled egress; Windows qualification follows Phase 15 no-secrets and loopback-only policy.
 - Vulnerability database acquisition occurs in a declared setup step; scans record database digest/timestamp and do not silently fetch during offline qualification.
 - Rollback/down-migration operates only on cloned fixture data and verified snapshots.
 
@@ -555,8 +554,8 @@ Any failure stops promotion. Diagnostics may continue in a separate failed run, 
 - Phases 7–12 package-first G0–G4 evidence.
 - Phase 13 shared export parity.
 - Phase 14 characterization-only decomposition after Phase 13 and before physical evidence.
-- Phase 15 Windows runtime-closure, exact-subject OfficeCLI, and G5 receipts; Windows G3 is not selected and no executable publication is authorized.
-- Docker, k6, Chromium, SBOM/scanner tooling, a qualified Linux host, and a qualified isolated Windows/PowerPoint host available.
+- Phase 15 Windows runtime-closure and exact-subject OfficeCLI G1 receipts; Windows G3 and PowerPoint G5 are not selected and no executable publication is authorized.
+- Docker, k6, Chromium, SBOM/scanner tooling, a qualified Linux host, and a qualified isolated Windows/OfficeCLI host available.
 
 ## Unresolved Questions
 

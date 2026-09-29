@@ -176,7 +176,7 @@ The inventory test resolves these exact files, scans the production import graph
   - at least two physical boundary-negative fixtures covering the closest overbroad property/type boundary;
   - exact slide/object native IDs, object names/types, part URIs, relationship IDs/types/targets, media/content types, dependent parts, and allowed changed-part/relationship closure;
   - fixed requested mutation and expected before/after property values;
-  - one `powerpoint-expected.json` describing the later Phase 15 select/edit/save/reopen evidence and unchanged properties. Observed G5 evidence is not required for G4, but the expectation file is mandatory.
+  - one `powerpoint-expected.json` describing future select/edit/save/reopen expectations and unchanged properties. It remains a fixture expectation for potential future G5 qualification, not observed G5 or a v1.17.0 gate; the expectation file is mandatory for this row manifest.
 - The row qualifier loads files only through `native-editability-manifest.js`, verifies all paths/hashes/locators before server start, imports positive R0 and every negative via public routes, and requires downloaded R1 to equal the declared expected-R1 hash.
 - `canonical-feature-matrix.js` promotion accepts a manifest row-entry hash plus physical qualification receipt. Missing/unresolved physical files or mismatched R0/R1 hashes return `PHYSICAL_EVIDENCE_INCOMPLETE`; matrix version/epoch cannot advance.
 
@@ -502,4 +502,4 @@ npm run test:pptx:g4:primitive -- --row primitive.image.whole-replacement
 - Requires physical G2 closure from Phase 10 and Phase 9 transaction durability.
 - Phase 12 consumes the same central registry/gate for one chart property row.
 - Phase 13 can unify reconstructed export parity but must not bypass native mutation gating.
-- Phase 15 supplies G5 evidence; it does not change G4 authorization.
+- Phase 15 supplies private Windows runtime and OfficeCLI evidence, not G5; this does not change G4 authorization.

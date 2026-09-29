@@ -417,4 +417,4 @@ npx vitest run --maxWorkers=1 --no-file-parallelism server/services/pptx-import/
 - Phase 10 consumes this exact async public pipeline for physical G2 closure.
 - Phase 11 plugs independently promoted primitive rows into this transaction.
 - Phase 12 plugs one exact chart/workbook row into the same transaction.
-- Phase 15 supplies G3/G5 artifact/PowerPoint evidence; it cannot authorize publication.
+- Phase 15 supplies private Windows runtime closure and exact-source OfficeCLI G1 evidence; neither executable G3 nor PowerPoint G5 is selected for v1.17.0. This phase cannot authorize publication.

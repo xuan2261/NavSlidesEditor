@@ -107,11 +107,17 @@ async function windows(args) {
   const base = await common(...args.slice(0, 3))
   const linuxReceipt = await findJson('evidence/linux', ['linux-ci'])
   const office = await findJson('evidence/officecli', [])
-  const fidelity = await findJson('evidence/fidelity', [])
+  const runtime = await readJson('evidence/runtime-closure.json')
+  if (
+    runtime.clientDist !== true ||
+    runtime.clientSubject !== base.subjectSha ||
+    !/^[0-9a-f]{64}$/.test(runtime.clientArtifactIdentity ?? '')
+  ) {
+    throw new Error('Windows runtime closure receipt invalid or subject mismatch')
+  }
   const gates = {
     'electron-runtime-closure': await fileHash('evidence/runtime-closure.json'),
     'officecli-physical': assertPhysical(office, 'OfficeCLI', base),
-    'fidelity-powerpoint': assertPhysical(fidelity, 'fidelity', base),
   }
   const receipt = createHostReceipt({
     ...base,

@@ -76,10 +76,13 @@ Earlier tagged releases, including v1.16.2, may offer Windows packages on
 [Releases](https://github.com/xuan2261/NavSlidesEditor/releases). The untagged
 v1.17.0 candidate does **not** authorize a publicly distributed Windows EXE or
 Windows Authenticode signing. Windows remains a private qualification host for
-physical OfficeCLI and local Microsoft PowerPoint evidence; the proposed release
-deliverable is the exact prebuilt Docker image with subject-bound receipts. See
-the [release contract](docs/deployment-guide.md#release) for its pending gates
-and the accepted container vulnerability risk.
+unpacked runtime closure and exact-source physical OfficeCLI G1 evidence. The
+selected native edited-PPTX gates are G0/G1/G2/G4, not Windows executable G3 or
+PowerPoint G5. Importer-corpus and diagnostic local COM screenshots do not
+qualify PowerPoint fidelity. The proposed release deliverable is the exact
+prebuilt Docker image with subject-bound receipts; see the
+[release contract](docs/deployment-guide.md#release) for pending gates and
+accepted container vulnerability risk.
 
 Linux, macOS, and Windows desktop packages can still be built locally with
 Node.js >=22.13.0; local build commands are not release distribution promises:

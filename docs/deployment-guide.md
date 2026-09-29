@@ -280,12 +280,13 @@ uncompressed size, bounded streamed decompressed size, and each entry's CRC32.
 CRC or resource-budget failures are fail-closed.
 
 Parser-relative corpus metrics and browser layout audits are regression signals,
-not native-complete or PowerPoint-fidelity claims. Release qualification uses
-two additional fail-closed gates: the manifest-bound importer-native strict lane
-(`npm run test:pptx:importer-qualification`) and the Microsoft PowerPoint visual
-oracle described in [`pptx-visual-evidence-runbook.md`](pptx-visual-evidence-runbook.md).
-Any blocked deck, missing evidence, or below-policy SSIM result blocks those
-claims even when best-effort import remains usable.
+not native-complete or PowerPoint-fidelity claims. The manifest-bound
+importer-native strict lane (`npm run test:pptx:importer-qualification`) remains
+selected alongside the native edited-PPTX G0/G1/G2/G4 physical gates in the
+[release contract](#release). The Microsoft PowerPoint visual oracle in the
+[runbook](pptx-visual-evidence-runbook.md) is a future/diagnostic evidence path:
+its absence or below-policy SSIM does not block v1.17.0, and neither corpus
+success nor a local diagnostic COM screenshot constitutes a G5 pass.
 
 ### External media
 
@@ -422,12 +423,15 @@ The published version remains **v1.16.2**; **v1.17.0** is an untagged candidate
 (`package.json` and workspace manifests own the product version; `runtime-versions.json`
 owns runtime pins). The [release target policy](../config/release-target-policy.json)
 selects an exact prebuilt Docker image and subject-bound receipts as the release
-deliverable, **not** a publicly distributed Windows EXE. Windows is a private
-evidence host: OfficeCLI physical G3 and local Microsoft PowerPoint G5 evidence
-remain mandatory for the same clean source subject. Use the
-[PowerPoint visual-evidence runbook](pptx-visual-evidence-runbook.md) for the
-physical oracle; parser-relative corpus or integrity-only results do not satisfy
-G5. Missing physical receipts block qualification, not just an EXE download.
+deliverable, **not** a publicly distributed Windows EXE. The selected physical
+PPTX gates are **G0/G1/G2/G4**: native edited-PPTX and exact-source direct
+OfficeCLI evidence remain mandatory. Windows privately qualifies the unpacked
+runtime and physical OfficeCLI G1, not executable-artifact G3. PowerPoint G5 is
+**not selected** for v1.17.0; the [visual-evidence runbook](pptx-visual-evidence-runbook.md)
+remains a future/diagnostic route, not release proof. Importer-corpus results,
+browser/editor visuals and local diagnostic COM screenshots neither satisfy G5
+nor qualify PowerPoint fidelity. Missing _selected_ physical receipts block
+qualification; absent G3/G5 evidence is neither a release block nor a pass.
 
 The operator accepts reported Trivy **HIGH/CRITICAL** findings as an advisory
 risk for **private, single-user self-hosting only**. Preserve the raw
@@ -443,8 +447,8 @@ and [verifier](../scripts/verify-container-supply-chain.js) own scan evidence.
 The target policy alone does not prove qualification. Consult the
 [release workflow](../.github/workflows/release.yml),
 [Windows qualification workflow](../.github/workflows/reusable-windows-qualification.yml),
-and same-subject receipts before asserting the candidate is published, G3/G5
-has passed, or CI is green. The
+and same-subject receipts before asserting the candidate is published, selected
+G0/G1/G2/G4 gates passed, or CI is green. The
 [release-state command](../scripts/ci/release-state.mjs) checks local
 subject/version state only; it cannot replace CI or physical evidence.
 

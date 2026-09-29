@@ -1,9 +1,9 @@
 ---
-title: 'Single-User PowerPoint Native Fidelity and Release Deep TDD'
-description: 'Consolidate release governance, package authority, native edited-PPTX qualification, PowerPoint visual evidence, operational hardening, architecture cleanup, and full release tests for the single-user NavSlides product.'
+title: 'Single-User Native Edited-PPTX and Release Deep TDD'
+description: 'Qualify native edited-PPTX G0/G1/G2/G4 and the single-user release; PowerPoint G5 remains a future strategic evidence path.'
 status: pending
 priority: P0
-effort: '33-46 engineer-weeks plus CI and physical Windows/PowerPoint runtime'
+effort: '33-46 engineer-weeks plus CI and physical Windows/OfficeCLI runtime'
 issue: null
 branch: master
 tags:
@@ -17,43 +17,44 @@ productScope: single-user-self-hosted
 strategicGoal: powerpoint-native-fidelity
 ---
 
-# Single-User PowerPoint Native Fidelity and Release Deep TDD
+# Single-User Native Edited-PPTX and Release Deep TDD
 
 ## Overview
 
-This is the execution authority for moving NavSlides from a conditionally
-production-ready single-user editor to a release with qualified native edited
-PPTX rows and environment-bounded Microsoft PowerPoint fidelity evidence. It
-reuses completed importer, runtime, security, export-policy, and package-store
-work rather than creating parallel implementations.
+This is the execution authority for the limited v1.17.0 release: a conditionally
+production-ready single-user editor with qualified native edited-PPTX rows and
+selected G0/G1/G2/G4 evidence. PowerPoint fidelity is a strategic future goal,
+not a selected v1.17.0 gate or an unqualified release claim. The plan reuses
+completed importer, runtime, security, export-policy, and package-store work.
 
 ## Locked Decisions
 
 - Product scope remains single-user and self-hosted. Built-in accounts,
   multi-tenancy, Redis rooms, and horizontal scaling are out of scope.
-- PowerPoint native fidelity is a strategic release requirement. Claims remain
-  limited to exact promoted rows, corpus, Windows/PowerPoint build, fonts, and
-  artifact hashes.
+- Native edited-PPTX fidelity remains a v1.17.0 requirement limited to exact
+  promoted rows and physical G0/G1/G2/G4 evidence. PowerPoint G5 is not selected
+  for this release; local COM diagnostics and importer-corpus evidence do not
+  establish G5 or justify an unqualified PowerPoint fidelity claim.
 - Direct local OfficeCLI is the active G1 policy. Historical launcher, cloud,
   KMS/HSM, protected-provider, and independent-attestation requirements are not
   active requirements.
 - Upstream parity is historical documentation and cannot gate releases.
 - Package state remains authoritative; `presentations.json` is a recoverable
   compatibility projection. No second package store, outbox, journal, or
-  transaction engine may be introduced. One composite claim evaluator supports
-  distinct protected-provider and environment-bounded local PowerPoint claim kinds.
+  transaction engine may be introduced. Future environment-bounded PowerPoint
+  claims, if separately selected, must not upgrade protected-provider claims.
 - The next release uses a new SemVer greater than `1.16.0`; the existing
   `v1.16.0` tag is immutable and never moved or reused.
 - Release evidence is a multi-host DAG bound to one source SHA and one prebuilt
-  client artifact, not an assumption that Docker, Electron, OfficeCLI, and
-  PowerPoint run on one machine.
+  client artifact, not an assumption that Docker, Electron, and OfficeCLI run
+  on one machine.
 - On 2026-09-27 the operator accepted advisory handling of container
   HIGH/CRITICAL findings for private single-user deployment. CI must still
   scan, retain the raw findings and SBOM, and verify image/browser identity;
   a risk-accepted scan is not a security pass or a zero-vulnerability claim.
-- Signed/public Windows artifacts and G3 are removed from this release scope.
-  Windows remains an evidence host for exact OfficeCLI and local PowerPoint G5;
-  unsigned executables are not public release assets.
+- Signed/public Windows artifacts and executable-artifact G3 are removed from
+  this release scope. Windows remains a private unpacked-runtime and exact-source
+  OfficeCLI G1 evidence host; neither G5 nor any executable is a release asset.
 
 ## Existing Work Reused
 
@@ -74,30 +75,30 @@ G0 + G1 -> 09 transaction/native validation -> 10 physical G2
 G2 -> 11 primitive G4 rows -> 12 chart/workbook row
 11 + 12 -> 13 shared export parity
 13 -> 14 behavior-preserving decomposition
-04 + 10-14 -> 15 local PowerPoint G5 (no signed Windows artifact/G3)
-all phases -> 16 clean RC full verification and release decision
+04 + 10-14 -> 15 private Windows runtime/OfficeCLI evidence (no G3/G5)
+all selected phases -> 16 clean RC full verification and release decision
 ```
 
 ## Phases
 
-| Phase | Name                                                                                                                        | Priority | Dependencies          | Status  |
-| ----: | --------------------------------------------------------------------------------------------------------------------------- | -------: | --------------------- | ------- |
-|     1 | [Baseline consolidation and scope lock](./phase-01-start.md)                                                                |       P0 | None                  | Pending |
-|     2 | [Release state and documentation governance](./phase-02-release-state-and-documentation-governance.md)                      |       P0 | 1                     | Pending |
-|     3 | [Vitest topology and full-suite performance](./phase-03-vitest-topology-and-full-suite-performance.md)                      |       P0 | 1, 2                  | Pending |
-|     4 | [Build-once CI and exact green-SHA release](./phase-04-build-once-ci-and-green-sha-release.md)                              |       P0 | 2, 3                  | Pending |
-|     5 | [Single-user operational hardening](./phase-05-single-user-operational-hardening.md)                                        |       P0 | 4                     | Pending |
-|     6 | [Compatibility projection and durable media recovery](./phase-06-compatibility-projection-and-durable-media-recovery.md)    |       P0 | 5                     | Pending |
-|     7 | [Package authority and matrix G0](./phase-07-package-authority-and-matrix-g0.md)                                            |       P0 | 6                     | Pending |
-|     8 | [Direct OfficeCLI qualification G1](./phase-08-direct-officecli-qualification-g1.md)                                        |       P0 | 7                     | Pending |
-|     9 | [Native re-import and transactional publication](./phase-09-native-reimport-and-transactional-publication.md)               |       P0 | 7, 8                  | Pending |
-|    10 | [Physical edited-package seed G2](./phase-10-physical-edited-package-seed-g2.md)                                            |       P0 | 8, 9                  | Pending |
-|    11 | [Central mutation gating and primitive G4 rows](./phase-11-central-mutation-gating-and-primitive-g4-rows.md)                |       P0 | 9, 10                 | Pending |
-|    12 | [Native chart and workbook editability](./phase-12-native-chart-and-workbook-editability.md)                                |       P1 | 9, 10, 11             | Pending |
-|    13 | [Shared PPTX export plan and parity](./phase-13-shared-pptx-export-plan-and-parity.md)                                      |       P1 | 11, 12                | Pending |
-|    14 | [Module decomposition and registry cleanup](./phase-14-module-decomposition-and-registry-cleanup.md)                        |       P1 | 13                    | Pending |
-|    15 | [PowerPoint oracle G5 and Windows evidence (no G3 publication)](./phase-15-powerpoint-oracle-and-windows-artifact-g3-g5.md) |       P0 | 4, 10, 11, 12, 13, 14 | Pending |
-|    16 | [Final full verification and release rehearsal](./phase-16-final-full-verification-and-release-rehearsal.md)                |       P0 | 1-15                  | Pending |
+| Phase | Name                                                                                                                              | Priority | Dependencies          | Status  |
+| ----: | --------------------------------------------------------------------------------------------------------------------------------- | -------: | --------------------- | ------- |
+|     1 | [Baseline consolidation and scope lock](./phase-01-start.md)                                                                      |       P0 | None                  | Pending |
+|     2 | [Release state and documentation governance](./phase-02-release-state-and-documentation-governance.md)                            |       P0 | 1                     | Pending |
+|     3 | [Vitest topology and full-suite performance](./phase-03-vitest-topology-and-full-suite-performance.md)                            |       P0 | 1, 2                  | Pending |
+|     4 | [Build-once CI and exact green-SHA release](./phase-04-build-once-ci-and-green-sha-release.md)                                    |       P0 | 2, 3                  | Pending |
+|     5 | [Single-user operational hardening](./phase-05-single-user-operational-hardening.md)                                              |       P0 | 4                     | Pending |
+|     6 | [Compatibility projection and durable media recovery](./phase-06-compatibility-projection-and-durable-media-recovery.md)          |       P0 | 5                     | Pending |
+|     7 | [Package authority and matrix G0](./phase-07-package-authority-and-matrix-g0.md)                                                  |       P0 | 6                     | Pending |
+|     8 | [Direct OfficeCLI qualification G1](./phase-08-direct-officecli-qualification-g1.md)                                              |       P0 | 7                     | Pending |
+|     9 | [Native re-import and transactional publication](./phase-09-native-reimport-and-transactional-publication.md)                     |       P0 | 7, 8                  | Pending |
+|    10 | [Physical edited-package seed G2](./phase-10-physical-edited-package-seed-g2.md)                                                  |       P0 | 8, 9                  | Pending |
+|    11 | [Central mutation gating and primitive G4 rows](./phase-11-central-mutation-gating-and-primitive-g4-rows.md)                      |       P0 | 9, 10                 | Pending |
+|    12 | [Native chart and workbook editability](./phase-12-native-chart-and-workbook-editability.md)                                      |       P1 | 9, 10, 11             | Pending |
+|    13 | [Shared PPTX export plan and parity](./phase-13-shared-pptx-export-plan-and-parity.md)                                            |       P1 | 11, 12                | Pending |
+|    14 | [Module decomposition and registry cleanup](./phase-14-module-decomposition-and-registry-cleanup.md)                              |       P1 | 13                    | Pending |
+|    15 | [Private Windows runtime and OfficeCLI evidence (G3/G5 not selected)](./phase-15-powerpoint-oracle-and-windows-artifact-g3-g5.md) |       P0 | 4, 10, 11, 12, 13, 14 | Pending |
+|    16 | [Final full verification and release rehearsal](./phase-16-final-full-verification-and-release-rehearsal.md)                      |       P0 | 1-15                  | Pending |
 
 ## Full-Test Policy
 
@@ -105,10 +106,11 @@ all phases -> 16 clean RC full verification and release decision
   gate before the next dependent phase starts.
 - Phase 16 reruns installation, lint, all Vitest projects, merged coverage,
   unsharded full Vitest, build, docs, matrices, audits, all Playwright projects,
-  strict PPTX/import/package-first gates, browser audit, adversarial/performance
-  checks, load smoke, Docker, Electron, runtime closure, artifact checksums,
-  SBOM/provenance, and local PowerPoint evidence.
-- A missing mandatory physical prerequisite is a blocker, not a skip or inferred
+  strict PPTX/import/package-first G0/G1/G2/G4 gates, browser audit,
+  adversarial/performance checks, load smoke, Docker, unpacked Windows Electron
+  runtime closure, exact-source OfficeCLI, artifact checksums, SBOM/provenance,
+  and release rehearsal. G3 executable publication and G5 are not selected.
+- A missing selected physical prerequisite is a blocker, not a skip or inferred
   pass. Flaky retry-passes require root-cause disposition.
 
 ## Whole-Plan Success Criteria
@@ -121,12 +123,18 @@ all phases -> 16 clean RC full verification and release decision
 - [ ] A physical R1 closes G2 without mutating Original or prior valid heads.
 - [ ] Promoted primitive/chart rows close G4 only after complete client/server mutation-surface evidence.
 - [ ] Browser and server reconstructed exporters consume one semantic export plan.
-- [ ] Exact local PowerPoint evidence closes G5; no signed or unsigned Windows executable is published as a release asset.
+- [ ] Windows unpacked runtime and exact-source OfficeCLI evidence validate;
+      no Windows executable is published and no G3/G5 pass is claimed.
 - [ ] Container scan findings remain visible with exact SBOM/image lineage and
       explicit user risk acceptance; no security-pass claim is made.
+- [ ] Release claims preserve native edited-PPTX evidence without describing
+      PowerPoint fidelity as qualified or G5 as passed.
 - [ ] Release rehearsal has no mandatory skip, stale receipt, docs drift, or unresolved contradiction.
 
-## Red Team Review
+## Historical Red Team Review
+
+This review predates the operator's v1.17.0 G5 removal; its PowerPoint findings
+are retained as historical context, not current release gates.
 
 ### Session — 2026-09-25
 

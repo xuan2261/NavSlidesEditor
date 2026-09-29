@@ -71,7 +71,7 @@
     },
     {
       "id": "environment-bound-powerpoint-evidence",
-      "definition": "Microsoft PowerPoint evidence limited to the recorded build, host, fonts, locale, DPI, corpus, configuration, and artifact hashes."
+      "definition": "Future separately selected Microsoft PowerPoint evidence limited to recorded build, host, fonts, locale, DPI, corpus, configuration, and artifact hashes; not a v1.17.0 gate."
     }
   ],
   "claims": {
@@ -84,9 +84,9 @@
     ],
     "conditionalAfterNamedGate": [
       "valid-edited-package-after-g2",
-      "exact-promoted-editable-rows-after-g4",
-      "environment-bound-powerpoint-fidelity-after-exact-g5-oracle-evidence"
+      "exact-promoted-editable-rows-after-g4"
     ],
+    "futureNotSelected": ["environment-bound-powerpoint-fidelity-after-exact-g5-oracle-evidence"],
     "forbidden": [
       "multi-tenant-security",
       "universal-powerpoint-compatibility",
@@ -295,8 +295,8 @@
       "implementationScope": true,
       "authoritativeCapabilities": ["package-first-edited-export"],
       "reusableOutcome": "Existing package authority, matrix, transaction, gateway, and evidence contracts.",
-      "openWork": "G0-G5 remain open, including direct OfficeCLI, edited-package, exact-row, Windows artifact, and PowerPoint evidence.",
-      "claimCeiling": "No package-first promotion until each named physical/software gate passes.",
+      "openWork": "Selected G0/G1/G2/G4 remain open, including direct OfficeCLI, edited-package, and exact-row evidence. G3 executable and PowerPoint G5 are not selected for v1.17.0.",
+      "claimCeiling": "No v1.17.0 package-first promotion until selected physical/software G0/G1/G2/G4 gates pass; no G3/G5 pass is implied.",
       "freshnessRule": "Gate state, not checkbox count, controls freshness and authority.",
       "subject": "ce034e634fdccd769954fef88f3c199d1f8ab77a | 2026-09-18 | fix(ci): stabilize GitHub push flow and PPTX evidence status"
     },
@@ -418,11 +418,11 @@
       "sourcePath": "plans/260722-1630-pptx-import-p0-readiness-remediation-deep-tdd/plan.md",
       "classification": "blocked-evidence-owner",
       "recordedStatus": "blocked; software phases complete, trusted PowerPoint evidence unavailable",
-      "authoritativeOwner": "260722 phase 4 historical oracle-gap record; current G5 owner is Phase 15/package-first",
-      "relationship": "blocks",
+      "authoritativeOwner": "260722 phase 4 historical oracle-gap record; future G5 needs a separately selected owner",
+      "relationship": "reference",
       "implementationScope": false,
       "reusableOutcome": "Truthful oracle provenance, package-backed capture, and fail-closed claim contracts.",
-      "openWork": "Trusted exact Microsoft PowerPoint bundle/evidence remains required under the current owner.",
+      "openWork": "Trusted exact Microsoft PowerPoint evidence is a future/not-selected path, not a v1.17.0 blocker.",
       "claimCeiling": "Never relabel blocked visual evidence as pass.",
       "freshnessRule": "Only an exact current oracle subject can change the blocked claim state.",
       "subject": "a5a28cf329f8a56e5eb89cb75b4d40e6b292a421 | 2026-07-28 | feat(pptx-import): harden reliability and evidence boundaries"

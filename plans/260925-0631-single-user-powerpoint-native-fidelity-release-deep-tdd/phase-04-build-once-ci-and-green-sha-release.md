@@ -22,7 +22,7 @@ dependencies: [2, 3]
 - [Dockerfile](../../Dockerfile)
 - [Client artifact manifest verifier](../../scripts/ci/verify-client-dist-manifest.mjs)
 - [Release receipt verifier](../../scripts/ci/release-receipts.mjs)
-- [Phase 15 Windows and PowerPoint evidence](./phase-15-powerpoint-oracle-and-windows-artifact-g3-g5.md)
+- [Phase 15 private Windows runtime and OfficeCLI evidence](./phase-15-powerpoint-oracle-and-windows-artifact-g3-g5.md)
 - [Phase 16 release rehearsal](./phase-16-final-full-verification-and-release-rehearsal.md)
 
 ## Goal/Overview
@@ -41,18 +41,18 @@ are user-risk-accepted **advisory**, not a security pass or remediation. Never
 substitute a newly built image during release promotion.
 
 Windows is a **private evidence host**: qualify the unpacked Electron runtime
-without an installer or portable executable, import exact-subject OfficeCLI G3
-physical evidence and local Microsoft PowerPoint G5 evidence, and bind those to
-the Linux receipt. Windows executable-artifact G3 is **not selected**; no
-Windows EXE, Authenticode signature, or Windows executable attestation is a
-release requirement or public asset. The OfficeCLI physical gate and local
-PowerPoint gate are not interchangeable. Linux/macOS desktop publication is
-unselected by the [release target policy](../../config/release-target-policy.json).
+without an installer or portable executable, import exact-subject OfficeCLI G1
+physical evidence, and bind both to the Linux receipt. Windows executable-artifact
+G3 and PowerPoint G5 are **not selected**; no Windows EXE, Authenticode signature,
+Windows executable attestation, or G5 claim is a release requirement or public
+asset. The importer corpus and local diagnostic COM screenshots do not qualify
+G5. Linux/macOS desktop publication is unselected by the
+[release target policy](../../config/release-target-policy.json).
 
 This phase remains **pending**. Repository workflow and contract-test presence
-does not prove a completed main-branch CI run, physical OfficeCLI/PowerPoint
-receipt, G5 result, rehearsal, tag, or published release. Those gates require
-actual evidence from their owning hosts and Phase 16.
+does not prove a completed main-branch CI run, physical OfficeCLI receipt,
+rehearsal, tag, or published release. Those gates require actual evidence from
+their owning hosts and Phase 16.
 
 ## Scope and Non-Goals
 
@@ -83,7 +83,7 @@ actual evidence from their owning hosts and Phase 16.
 - No Docker registry push and no implicit Linux/macOS desktop asset expansion.
 - No claim that SHA-256 hashes alone provide signed producer authenticity.
 - No security-green claim for accepted HIGH/CRITICAL container findings.
-- No final PowerPoint or OfficeCLI pass claim until physical evidence is imported
+- No final OfficeCLI pass claim until exact-subject physical evidence is imported
   and evaluated; Phase 16 owns the full rehearsal and separate publish decision.
 
 ## Key Insights
@@ -95,7 +95,7 @@ actual evidence from their owning hosts and Phase 16.
 3. A root DAG must reject absent required children, mixed SHA/digests, or a
    private Windows evidence receipt masquerading as a public asset gate.
 4. Unpacked Windows runtime closure does not qualify a distributable EXE;
-   OfficeCLI G3 physical evidence does not replace local PowerPoint G5.
+   physical OfficeCLI G1 is mandatory, while PowerPoint G5 is not selected.
 5. The accepted container finding disposition is evidence-bearing: preserve
    raw Trivy JSON and SBOM alongside the receipt, and disclose advisory risk.
 6. GitHub attestation proves producer identity for the client and Docker image;
@@ -117,9 +117,9 @@ actual evidence from their owning hosts and Phase 16.
 4. Produce a Linux child receipt for required quality gates, Docker runtime,
    image/client digests, attestation, and container supply-chain evidence.
 5. Produce a private Windows child receipt from the same client payload and
-   Linux parent: unpacked Electron `dir` runtime closure, imported exact-subject
-   OfficeCLI physical evidence and local PowerPoint G5 evidence. Do not build,
-   upload, sign, or attest NSIS/portable Windows executables.
+   Linux parent: unpacked Electron `dir` runtime closure and imported exact-subject
+   OfficeCLI G1 physical evidence. Do not build, upload, sign, or attest
+   NSIS/portable Windows executables or require G5.
 6. Emit explicit `not-selected` receipts for unselected desktop targets; do not
    treat their absence as an implicit pass. Only a policy change could select
    future Linux/macOS public assets.
@@ -166,8 +166,8 @@ exact commit -> one client build + manifest -> Linux quality/E2E/load
                                       -> raw Trivy + SPDX SBOM + advisory receipt
                                       -> Linux child receipt
 Linux child + same client -> private Windows unpacked runtime closure
-                          -> imported OfficeCLI G3 + local PowerPoint G5 receipts
-                          -> Windows child receipt (no public EXE/executable G3)
+                          -> imported exact-subject OfficeCLI G1 receipt
+                          -> Windows child receipt (no public EXE/G3/G5)
 required child hashes + target policy -> green-SHA root receipt
 existing SemVer tag -> verify tag == green subject and image ancestry
                     -> protected draft -> protected final Docker publication
@@ -191,8 +191,8 @@ Behavioral contracts, not workflow-source snapshots, must reject:
    identity or parent hash, forged `not-selected` pass, and any selected physical
    gate without an exact-subject receipt.
 4. Windows evidence that claims public EXE eligibility, signing, attestation,
-   or Windows executable-artifact G3 instead of unpacked runtime closure,
-   OfficeCLI physical evidence, and local PowerPoint G5.
+   Windows executable-artifact G3, or PowerPoint G5 as selected/passed instead
+   of unpacked runtime closure and OfficeCLI G1 physical evidence.
 5. Missing/malformed Trivy or SBOM, a different scanned image digest, changed
    acceptance policy, or an advisory improperly described as security passed.
    Accepted HIGH/CRITICAL findings remain visible as risk-accepted evidence.
@@ -228,8 +228,8 @@ RED is a development method, not evidence that current workflows are absent.
    attested producer identity.
 6. Import the Linux parent and exact client into the private Windows lane.
    Verify unpacked Electron runtime closure without building NSIS/portable,
-   then import exact-subject OfficeCLI G3 and local PowerPoint G5 physical
-   receipts. Qualify Windows **evidence only**; never upload a public EXE.
+   then import exact-subject OfficeCLI G1 physical evidence. Qualify Windows
+   **evidence only**; never upload a public EXE or select G5.
 7. Validate required child edges, policy-selected gates, and explicit
    `not-selected` optional desktop receipts before issuing the green-SHA root.
    A missing physical input blocks root creation; code/tests cannot fill it.
@@ -268,31 +268,31 @@ GitHub Docker attestation against its producing workflow. The
 promotion sequence; do not replace its inputs with a locally built image.
 
 For release proof, require an observed exact-SHA green CI run, imported
-OfficeCLI physical and local PowerPoint G5 receipts, a validated Linux/Windows
-root receipt and container advisory evidence, then an existing-tag RC draft
-rehearsal. Phase 16 owns the full gate manifest, rollback, and final decision.
+OfficeCLI G1 physical evidence, validated Linux/Windows root receipt and
+container advisory evidence, then an existing-tag RC draft rehearsal. Phase 16
+owns the full selected G0/G1/G2/G4 gate manifest, rollback, and final decision.
 None of these observations is established merely by this plan or passing tests.
 
 ## Test Scenario Matrix
 
-| Priority | Scenario                                                             | Expected result                                                                 |
-| -------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Critical | E2E/load/Docker/Windows consumer rebuilds or changes the client      | Build-once lineage invalid; no green receipt                                    |
-| Critical | Client bytes or manifest changed after build                         | Consumer fails before use                                                       |
-| Critical | Prebuilt image tar/digest differs from green CI image                | Promotion blocked; never rebuild silently                                       |
-| Critical | Existing tag points to another SHA or package version                | Release blocked before staging                                                  |
-| Critical | Manual input names absent tag or `vv1.7.0`                           | Strict tag resolution rejects it                                                |
-| Critical | Required Windows OfficeCLI/G5 physical receipt missing or mismatched | Windows/root qualification blocked; no inferred pass                            |
-| Critical | Windows runtime evidence presented as executable G3/public EXE       | Reject claim/asset; unpacked runtime remains private                            |
-| Critical | Host child has wrong parent, subject, client digest, or lock hashes  | Root DAG validation fails                                                       |
-| Critical | Docker GitHub attestation absent or wrong producer/subject           | Root or promotion blocked                                                       |
-| Critical | Trivy/SBOM missing, stale, or for another image                      | Supply-chain gate and promotion blocked                                         |
-| High     | Policy-accepted HIGH/CRITICAL findings present in valid raw scan     | Advisory published with raw scan/SBOM/receipt; no security-pass claim           |
-| High     | New or changed findings outside approved disposition                 | Policy verification blocks pending explicit risk decision                       |
-| High     | Optional desktop selected without qualifying child receipt           | Policy fails closed; no partial target set                                      |
-| High     | Required quality job cancelled or failed                             | No green receipt                                                                |
-| Medium   | CI artifact expired before rerun                                     | Requalify same subject through full CI; never package new bytes as old evidence |
-| Medium   | Existing-tag manual rerun with intact exact-subject artifacts        | Same subject/assets reverified, not retagged                                    |
+| Priority | Scenario                                                            | Expected result                                                                 |
+| -------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Critical | E2E/load/Docker/Windows consumer rebuilds or changes the client     | Build-once lineage invalid; no green receipt                                    |
+| Critical | Client bytes or manifest changed after build                        | Consumer fails before use                                                       |
+| Critical | Prebuilt image tar/digest differs from green CI image               | Promotion blocked; never rebuild silently                                       |
+| Critical | Existing tag points to another SHA or package version               | Release blocked before staging                                                  |
+| Critical | Manual input names absent tag or `vv1.7.0`                          | Strict tag resolution rejects it                                                |
+| Critical | Required Windows OfficeCLI G1 physical receipt missing/mismatched   | Windows/root qualification blocked; no inferred pass                            |
+| Critical | Windows runtime evidence presented as executable G3/public EXE      | Reject claim/asset; unpacked runtime remains private                            |
+| Critical | Host child has wrong parent, subject, client digest, or lock hashes | Root DAG validation fails                                                       |
+| Critical | Docker GitHub attestation absent or wrong producer/subject          | Root or promotion blocked                                                       |
+| Critical | Trivy/SBOM missing, stale, or for another image                     | Supply-chain gate and promotion blocked                                         |
+| High     | Policy-accepted HIGH/CRITICAL findings present in valid raw scan    | Advisory published with raw scan/SBOM/receipt; no security-pass claim           |
+| High     | New or changed findings outside approved disposition                | Policy verification blocks pending explicit risk decision                       |
+| High     | Optional desktop selected without qualifying child receipt          | Policy fails closed; no partial target set                                      |
+| High     | Required quality job cancelled or failed                            | No green receipt                                                                |
+| Medium   | CI artifact expired before rerun                                    | Requalify same subject through full CI; never package new bytes as old evidence |
+| Medium   | Existing-tag manual rerun with intact exact-subject artifacts       | Same subject/assets reverified, not retagged                                    |
 
 ## Regression Gate Commands
 
@@ -302,15 +302,15 @@ behavioral suites are under `scripts/ci/` and the container verifier's suite
 is beside `scripts/verify-container-supply-chain.js`. The Phase 16 gate
 manifest and physical-host receipts decide release readiness. Full branch CI,
 two target-branch greens if required-check contexts change, RC draft rehearsal,
-and local PowerPoint/OfficeCLI physical qualification are **pending** until
-actually run; no missing gate is a pass.
+and exact-subject OfficeCLI physical qualification are **pending** until actually
+run; no missing selected gate is a pass. PowerPoint G5 is not selected.
 
 ## Todo
 
 - [ ] Observe a passing target-branch CI run with one verified client build,
       Docker attestation, raw Trivy/SBOM, and advisory receipt tied to one image.
-- [ ] Import exact-subject private Windows unpacked-runtime, OfficeCLI G3, and
-      local PowerPoint G5 receipts; verify Linux parent and client digest.
+- [ ] Import exact-subject private Windows unpacked-runtime and OfficeCLI G1
+      receipts; verify Linux parent and client digest without a G3/G5 claim.
 - [ ] Validate the required-child root receipt and optional `not-selected`
       status against the release target policy.
 - [ ] Observe two green target-branch runs before migrating any required-check
@@ -326,8 +326,8 @@ actually run; no missing gate is a pass.
   draft and final release without rebuilding; GitHub Docker attestation
   verifies subject and producing workflow.
 - Exact-subject Linux and private Windows receipts agree on client, locks,
-  policy and parent; Windows records unpacked runtime, OfficeCLI G3 and local
-  PowerPoint G5, not Windows executable-artifact G3.
+  policy and parent; Windows records unpacked runtime and OfficeCLI G1, not
+  Windows executable-artifact G3 or PowerPoint G5.
 - Root receipt exists only after all selected children and physical gates pass.
 - Valid Trivy/SBOM/supply-chain evidence is published alongside the image;
   accepted HIGH/CRITICAL findings are explicitly advisory, never security green.
@@ -347,7 +347,7 @@ actually run; no missing gate is a pass.
 | Expired green artifact         | Exact-subject CI download absent                             | Re-run full verification for the same SHA; never substitute a new subject          |
 | Tag/package mismatch           | Existing tag resolves to different version/SHA               | Block; create a new release subject, never move an existing published tag          |
 | Release race                   | Two runs target the same tag                                 | Serialize by tag; do not cancel an in-progress publish                             |
-| Physical host unavailable      | OfficeCLI/PowerPoint or unpacked-runtime receipt absent      | Keep release blocked; do not mark G5 or OfficeCLI pass                             |
+| Physical host unavailable      | Exact-source OfficeCLI or unpacked-runtime receipt absent    | Keep release blocked; do not infer G1 from prior feasibility                       |
 | Container findings remain      | Valid HIGH/CRITICAL Trivy findings under accepted policy     | Publish raw scan/SBOM and explicit risk-accepted advisory; never claim remediation |
 | Container evidence changes     | Missing/changed scan, SBOM, image digest, or policy          | Reject promotion until evidence/policy is requalified                              |
 | Attestation invalid            | Wrong image subject or producer identity                     | Block root/promotion; local hash is not independent provenance                     |
@@ -358,7 +358,7 @@ actually run; no missing gate is a pass.
 - Keep immutable third-party action pins. Verification jobs need read-only
   content access and only scoped attestation permissions; protected staging
   and final publish alone receive `contents: write`.
-- Never execute untrusted pull-request code in a privileged PowerPoint host or
+- Never execute untrusted pull-request code on a privileged Windows host or
   publish environment. Import hash-verified exact-subject artifacts/receipts.
 - Validate artifact paths against traversal and symlink escape; exclude token
   values, secrets, and raw slide content from manifests and receipts.
@@ -368,16 +368,16 @@ actually run; no missing gate is a pass.
   deployment remain disclosed as advisory with raw Trivy JSON, SPDX SBOM, and
   supply-chain receipt. Acceptance is not vulnerability remediation or a
   blanket permission to ignore missing, stale, or altered scans.
-- Windows remains private unpacked runtime/OfficeCLI/PowerPoint evidence, not a
-  signing or public executable path; do not export Windows EXE artifacts.
+- Windows remains private unpacked runtime/OfficeCLI evidence, not a signing
+  or public executable path; do not export Windows EXE artifacts.
 - Keep tag protections and release environment approvals explicit external
   release prerequisites; workflow files alone do not establish their status.
 
 ## Dependencies/Next Steps
 
 - Phase 2 owns version/tag policy; Phase 3 owns complete test topology.
-- Phase 15 owns private Windows runtime closure, external OfficeCLI receipt
-  import, and local PowerPoint G5 evidence without Windows artifact G3.
+- Phase 15 owns private Windows runtime closure and external exact-source
+  OfficeCLI G1 receipt import; neither G3 nor G5 is selected.
 - Phase 16 owns the full exact-subject rehearsal and release decision. Actual
   tag creation, push, and publication remain operator actions after the
   selected gates have produced real receipts.

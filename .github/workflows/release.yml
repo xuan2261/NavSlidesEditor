@@ -72,10 +72,9 @@ jobs:
       subject_sha: ${{ needs.resolve.outputs.subject_sha }}
       mode: release
       release_tag: ${{ needs.resolve.outputs.tag }}
-      gate_policy_version: release-target-policy-v2
+      gate_policy_version: release-target-policy-v3
       source_run_id: ${{ needs.resolve.outputs.source_run_id }}
       officecli_receipt_artifact: officecli-physical-receipt-v1-${{ needs.resolve.outputs.subject_sha }}
-      fidelity_receipt_artifact: powerpoint-fidelity-receipt-v1-${{ needs.resolve.outputs.subject_sha }}
 
   verify-staged-assets:
     needs: [resolve, verification]
@@ -161,7 +160,7 @@ jobs:
           generate_release_notes: true
           body: |
             **Container security advisory:** This private single-user self-hosted release accepts unresolved HIGH/CRITICAL Trivy findings as user-approved risk; it is not a security pass. Inspect `container-trivy.json`, `container-sbom.spdx.json`, and `container-supply-chain-receipt.json` before deployment.
-            Windows OfficeCLI and PowerPoint qualification are private evidence only. No Windows executable is published.
+            Windows runtime closure and OfficeCLI qualification are private evidence only. PowerPoint fidelity is unqualified. No Windows executable is published.
           files: |
             release-assets/docker-source/navslides-editor-image.tar
             release-assets/docker-source/docker-image-digest.txt
@@ -196,7 +195,7 @@ jobs:
           prerelease: false
           body: |
             **Container security advisory:** This private single-user self-hosted release accepts unresolved HIGH/CRITICAL Trivy findings as user-approved risk; it is not a security pass. Inspect `container-trivy.json`, `container-sbom.spdx.json`, and `container-supply-chain-receipt.json` before deployment.
-            Windows OfficeCLI and PowerPoint qualification are private evidence only. No Windows executable is published.
+            Windows runtime closure and OfficeCLI qualification are private evidence only. PowerPoint fidelity is unqualified. No Windows executable is published.
           files: |
             release-assets/docker-source/navslides-editor-image.tar
             release-assets/docker-source/docker-image-digest.txt

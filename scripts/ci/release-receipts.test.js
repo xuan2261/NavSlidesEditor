@@ -21,7 +21,7 @@ const policy = {
   schemaVersion: '1',
   policyVersion: 'release-targets-v1',
   targets: {
-    windows: { selected: true, requiredGates: ['runtime', 'officecli', 'fidelity'] },
+    windows: { selected: true, requiredGates: ['runtime', 'officecli'] },
     'linux-desktop': { selected: false },
     'macos-desktop': { selected: false },
   },
@@ -47,7 +47,7 @@ describe('release receipt DAG', () => {
       host: 'windows',
       status: 'passed',
       parentReceiptHash: hashReceipt(linux),
-      gates: { runtime: sha('3'), officecli: sha('4'), fidelity: sha('5') },
+      gates: { runtime: sha('3'), officecli: sha('4') },
     })
     const linuxDesktop = createNotSelectedReceipt({
       ...common,
@@ -132,7 +132,7 @@ describe('release receipt DAG', () => {
           parentReceiptHash: hashReceipt(linux),
         }),
       })
-    ).toThrow(/officecli|fidelity/i)
+    ).toThrow(/officecli/i)
     expect(() =>
       createGreenShaRoot({
         policy: {
@@ -149,7 +149,7 @@ describe('release receipt DAG', () => {
           host: 'windows',
           status: 'passed',
           parentReceiptHash: hashReceipt(linux),
-          gates: { runtime: sha('2'), officecli: sha('3'), fidelity: sha('4') },
+          gates: { runtime: sha('2'), officecli: sha('3') },
         }),
         linuxDesktopReceipt: createNotSelectedReceipt({
           ...common,
@@ -193,7 +193,7 @@ describe('release receipt DAG', () => {
           host: 'windows',
           status: 'passed',
           parentReceiptHash: linuxHash,
-          gates: { runtime: sha('2'), officecli: sha('3'), fidelity: sha('4') },
+          gates: { runtime: sha('2'), officecli: sha('3') },
         }),
         linuxDesktopReceipt: createNotSelectedReceipt({
           ...common,

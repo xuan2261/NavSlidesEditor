@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1",
-  "policyVersion": "release-target-policy-v2",
+  "policyVersion": "release-target-policy-v3",
   "receiptSchemaVersion": "release-receipt-v1",
   "targets": {
     "linux-ci": {
@@ -17,7 +17,7 @@
     "windows": {
       "selected": true,
       "publicArtifacts": [],
-      "requiredGates": ["electron-runtime-closure", "officecli-physical", "fidelity-powerpoint"]
+      "requiredGates": ["electron-runtime-closure", "officecli-physical"]
     },
     "linux-desktop": {
       "selected": false,

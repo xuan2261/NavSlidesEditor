@@ -85,7 +85,7 @@ public upload/import
   - every required boundary-negative fixture path/hash and the exact reason code it must produce;
   - exact slide part, native object ID/name/type, paragraph/run or property locator, dependent part URIs, relationship IDs/types/targets, content types, and exclusive/shared ownership expectation;
   - expected R0 and R1 hashes plus allowed changed-part/relationship closure;
-  - a tracked PowerPoint expected-evidence JSON path describing object selection, editable property/action, save/reopen observation, expected unchanged properties, and whether observed G5 evidence is required for the current gate;
+  - a tracked PowerPoint expected-evidence JSON path describing future object selection, editable property/action, save/reopen observation, and expected unchanged properties; this is an expectation only, not observed G5 or a v1.17.0 selected gate;
   - matrix/reason-code subject fields completed by the qualification receipt.
 - For this phase the plain-text row remains `promotionState: "candidate"` and `level4Promoted: false`, but its complete physical mapping is present.
 - Manifest loading rejects missing/untracked/unreadable paths, directories, symlinks/reparse escapes, duplicate paths, zero-byte files, hash/length mismatches, unresolved native locators, or a boundary-negative list with no physical file.
@@ -349,4 +349,4 @@ The physical command must not convert unavailable prerequisites into a skip.
 - Requires Phase 8 direct qualified OfficeCLI and all Phase 9 transactional/job validators.
 - Produces G2 input for Phase 11.
 - Phase 11 independently promotes exact primitive rows to G4; G2 receipt alone is insufficient.
-- Phase 15 later adds G3/G5 evidence against the same R1 subject.
+- Phase 15 qualifies private Windows runtime closure and exact-source OfficeCLI evidence; G3 executable publication and G5 are not selected for v1.17.0.

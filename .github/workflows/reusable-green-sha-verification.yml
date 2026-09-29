@@ -9,7 +9,6 @@ on:
       gate_policy_version: { required: true, type: string }
       source_run_id: { required: false, type: string, default: '' }
       officecli_receipt_artifact: { required: false, type: string, default: '' }
-      fidelity_receipt_artifact: { required: false, type: string, default: '' }
     outputs:
       client_artifact:
         value: ${{ jobs.client.outputs.artifact_name }}
@@ -179,7 +178,6 @@ jobs:
         client_digest: '${{ needs.client.outputs.client_digest }}',
         linux_receipt_artifact: 'linux-ci-receipt-v1-${{ inputs.subject_sha }}',
         officecli_receipt_artifact: '${{ inputs.officecli_receipt_artifact }}',
-        fidelity_receipt_artifact: '${{ inputs.fidelity_receipt_artifact }}',
         gate_policy_version: '${{ inputs.gate_policy_version }}',
       }
   create-root:
