@@ -130,6 +130,7 @@ describe('release scope governance contract', () => {
     }
   })
 
+
   it('keeps deterministic ordering and reproducible baseline commands', () => {
     const manifest = readManifest()
     const keys = manifest.entries.map(

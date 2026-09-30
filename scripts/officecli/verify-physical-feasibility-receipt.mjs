@@ -11,6 +11,7 @@ const MANIFEST_PATH = path.join(
   'server/services/pptx-import/officecli/qualification-manifest.json'
 )
 
+
 export function verifyExternalReceiptFile(
   { receiptPath, expectedSourceCommit, expectedReceiptSha256 },
   manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'))
