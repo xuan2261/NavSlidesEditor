@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto'
-
 export function compareCoreVersions(left, right) {
   const parse = (value) => {
     const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(value)
@@ -14,11 +12,4 @@ export function compareCoreVersions(left, right) {
     }
   }
   return 0
-}
-
-export function semanticLockHash(lock, packagePaths) {
-  const clone = structuredClone(lock)
-  delete clone.version
-  for (const packagePath of packagePaths) delete clone.packages[packagePath].version
-  return createHash('sha256').update(JSON.stringify(clone)).digest('hex')
 }

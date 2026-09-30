@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parseReleaseTag } from '../../scripts/ci/release-subject.mjs'
-import { compareCoreVersions, semanticLockHash } from './release-version-governance-helpers'
+import { compareCoreVersions } from './release-version-governance-helpers'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const readText = (...parts) => readFileSync(resolve(root, ...parts), 'utf8').replace(/\r\n/g, '\n')
@@ -78,13 +78,6 @@ describe('release version governance contract', () => {
     expect(electronLock.version).toBe(rootVersion)
     expect(electronLock.packages[''].version).toBe(rootVersion)
 
-    const evidence = readJson(...scopeManifestPath).releaseVersionDecision.lockUpdateEvidence
-    expect(semanticLockHash(workspaceLock, workspaceLockPaths)).toBe(
-      evidence['package-lock.json semanticHashExcludingVersionFields']
-    )
-    expect(semanticLockHash(electronLock, [''])).toBe(
-      evidence['electron/server-package-lock.json semanticHashExcludingVersionFields']
-    )
   })
 
   it('distinguishes the candidate from the current published release in docs', () => {

@@ -22,8 +22,6 @@ const REPORTS = path.join(
   'plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports'
 )
 const GOVERNANCE = path.join(REPORTS, 'release-scope-manifest.json')
-const externalReceiptEvidence = JSON.parse(fs.readFileSync(GOVERNANCE, 'utf8'))
-  .officeCliPreG0Decision.externalHistoricalReceipt
 const RECEIPT_FIXTURES = [
   {
     name: 'officecli-positive-powerpoint-16.pptx',
