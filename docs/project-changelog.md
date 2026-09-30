@@ -26,7 +26,8 @@ downstream release gates authorize publication.
 - Updated jsdom to 30.1.1, regenerated the isolated Electron server lock, and aligned CI with Node.js 22.23.3 and the supported engine range `^22.22.2 || ^24.15.0 || >=26.0.0`. DOM fixtures now use real jsdom documents, canvas method spies and same-realm Blob/FileReader behavior instead of replacing getter-only globals or pinning CSS serialization.
 - Made PPTX route fixtures await detached import cleanup before resetting the job manager, so cancelled work cannot overlap the next fixture. Removed stale dependency-content and spec-length assertions; version consistency and executable user/security behavior remain the verification contracts.
 - Patched standalone undici to 7.29.1 in the workspace and isolated Electron lock for CVE-2026-19534 and CVE-2026-84961. Approved a version-scoped false-positive exception for rclone CVE-2026-88016 on upstream 1.75.1 only; the existing 71-finding advisory acceptance remains unchanged. The rebuilt image still requires a hosted scan.
-- Kept the Vitest performance ceiling at 270 seconds. The integrated suite's five hosted samples passed all 5,040 tests but had a 387.1-second median; raised the CI worker cap from two to three (still CPU-bounded) for a hosted optimization experiment, not a performance-pass claim.
+- Kept the Vitest performance ceiling at 270 seconds. Five hosted samples with three CI workers passed all tests and reduced the median from 387.1 to 277.1 seconds, still above the ceiling. CI now uses up to four workers bounded by available CPUs; local runs still reserve one CPU. The final timing remains subject to hosted measurement.
+- Hosted container scan run `36743356460` returned exactly the existing 71 risk-accepted HIGH/CRITICAL findings after the undici patch and version-scoped rclone exception; this is policy compliance, not remediation of those 71 findings or a security-pass claim.
 
 ## v1.16.2 — 2026-09-22
 
