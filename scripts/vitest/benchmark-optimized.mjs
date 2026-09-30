@@ -50,6 +50,12 @@ function defaultOutput(mode) {
   return path.join(repoRoot, '.tmp', `vitest-${mode}-benchmark.json`)
 }
 
+export function writeBenchmarkReceipt(outputPath, receipt) {
+  mkdirSync(path.dirname(outputPath), { recursive: true })
+  writeFileSync(outputPath, `${JSON.stringify(receipt, null, 2)}\n`)
+  return receipt.valid ? 0 : 2
+}
+
 export async function runOptimizedBenchmark(values) {
   const mode = values.mode
   const runCount = Number(values.runs || (mode === 'ci-budget' ? 5 : 3))
@@ -192,8 +198,7 @@ export async function runOptimizedBenchmark(values) {
       (mode !== 'ci-budget' || (budgetAuthority.valid && budget.valid)),
   }
   const outputPath = path.resolve(repoRoot, values.out || defaultOutput(mode))
-  mkdirSync(path.dirname(outputPath), { recursive: true })
-  writeFileSync(outputPath, `${JSON.stringify(receipt, null, 2)}\n`)
+  const receiptExitCode = writeBenchmarkReceipt(outputPath, receipt)
   console.log(`[vitest-benchmark] ${mode} median ${summary.medianSeconds} seconds`)
   console.log(`[vitest-benchmark] receipt ${path.relative(repoRoot, outputPath)}`)
   if (mode === 'ci-budget') {
@@ -241,6 +246,6 @@ export async function runOptimizedBenchmark(values) {
       if (subject.dirty)
         console.error(`[vitest-benchmark] dirty files: ${facts.dirtyStatus.join(', ')}`)
     }
-    process.exitCode = 2
+    process.exitCode = receiptExitCode
   }
 }
