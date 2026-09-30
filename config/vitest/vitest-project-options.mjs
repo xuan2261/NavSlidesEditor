@@ -4,7 +4,7 @@ import process from 'node:process'
 import { buildVitestTopology, repoRoot } from './vitest-lanes.mjs'
 
 const requestedWorkers = Number.parseInt(process.env.VITEST_MAX_WORKERS ?? '', 10)
-const defaultCap = process.env.CI ? 2 : 4
+const defaultCap = process.env.CI ? 3 : 4
 const cpuBound = Math.max(1, cpus().length - 1)
 
 export const boundedWorkerCount = Math.max(
