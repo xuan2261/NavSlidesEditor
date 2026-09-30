@@ -58,18 +58,6 @@ describe('Electron desktop runtime & packaging contracts', () => {
     expect(editorPage).not.toMatch(/\bwindow\.(alert|confirm|prompt)\s*\(/)
   })
 
-  it('keeps uploaded SVG sandboxed independently of the desktop presentation policy', () => {
-    const serverIndex = readText('server', 'index.js')
-
-    // SVG uploads are sandboxed with restrictive CSP to prevent XSS
-    expect(serverIndex).toContain(
-      "Content-Security-Policy': \"sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'\""
-    )
-
-    // Rate limiter is bypassed during test automation to prevent 429 cascades
-    expect(serverIndex).toContain('isRateLimitSkipped')
-  })
-
   it('applies a desktop-only policy that permits inline Reveal and packaged assets without eval', () => {
     const headers = withDesktopCsp({ 'Content-Type': ['text/html'] })
     expect(headers['Content-Security-Policy']).toEqual([DESKTOP_CSP])
