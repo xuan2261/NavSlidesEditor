@@ -128,7 +128,7 @@
   "overrides": {
     "image-size": "$image-size",
     "@electron/get": {
-      "undici": "7.29.0"
+      "undici": "7.29.1"
     },
     "@xmldom/xmldom": ">=0.9.5",
     "@tootallnate/once": "^2.0.1",

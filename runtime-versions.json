@@ -5,7 +5,7 @@
   "electron": "42.9.3",
   "electronBuilder": "26.15.3",
   "tiptap": "3.31.3",
-  "undici": "7.29.0",
+  "undici": "7.29.1",
   "playwright": "1.63.0",
   "playwrightImage": "mcr.microsoft.com/playwright:v1.63.0-jammy",
   "playwrightChromiumRevision": "1243",
