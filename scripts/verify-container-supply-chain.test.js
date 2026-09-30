@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -31,6 +31,11 @@ const base = () => ({
   },
   actualImageDigest: `sha256:${sha}`,
 })
+
+const policyReviewTime = Date.parse('2026-09-30T00:00:00.000Z')
+const approvedRclonePolicy = () => JSON.parse(readFileSync(
+  new URL('../config/container-vulnerability-policy.json', import.meta.url), 'utf8'
+))
 
 describe('container supply-chain policy', () => {
   it('accepts a pinned image with SPDX and matching Chromium inventory', () => {
@@ -121,6 +126,69 @@ describe('container supply-chain policy', () => {
     expect(() => verifyContainerSupplyChain(input)).toThrow(/expired/i)
     input.report.Results[0].Vulnerabilities = []
     expect(() => verifyContainerSupplyChain(input)).toThrow(/expired/i)
+  })
+
+  it.each([
+    ['1.75.1', 'rclone', 'CVE-2026-88016', true],
+    ['1.75.0', 'rclone', 'CVE-2026-88016', false],
+    ['1.75.2', 'rclone', 'CVE-2026-88016', false],
+    ['1.75.1+dfsg-1', 'rclone', 'CVE-2026-88016', false],
+    [undefined, 'rclone', 'CVE-2026-88016', false],
+    ['1.75.1', 'other-package', 'CVE-2026-88016', false],
+    ['1.75.1', 'rclone', 'CVE-OTHER', false],
+  ])('limits the approved exception to version %s, package %s, and ID %s',
+    (installedVersion, packageName, id, exempt) => {
+      const input = base()
+      input.policy = approvedRclonePolicy()
+      delete input.policy.unapprovedFindingDisposition
+      input.report.Results = [{
+        Target: 'debian', Class: 'os-pkgs', Type: 'debian',
+        Vulnerabilities: [{
+          VulnerabilityID: id, PkgName: packageName,
+          InstalledVersion: installedVersion, Severity: 'HIGH',
+        }],
+      }]
+      if (exempt) {
+        expect(verifyContainerSupplyChain(input, policyReviewTime)).toMatchObject({
+          status: 'passed', scan: { vulnerabilityCount: 1 },
+          unapprovedFindings: { status: 'none', count: 0 },
+        })
+      } else {
+        expect(() => verifyContainerSupplyChain(input, policyReviewTime))
+          .toThrow(`unapproved vulnerabilities (1): ${id}:${packageName}`)
+      }
+    })
+
+  it.each(['', '   ', null, 1751, {}])(
+    'rejects an invalid supplied exception installedVersion %j', (installedVersion) => {
+      const input = base()
+      input.policy = approvedRclonePolicy()
+      input.policy.exceptions[0].installedVersion = installedVersion
+      expect(() => verifyContainerSupplyChain(input, policyReviewTime))
+        .toThrow('invalid exception for CVE-2026-88016')
+    }
+  )
+
+  it('exempts the patched rclone finding without increasing accepted risk', () => {
+    const input = base()
+    input.policy = approvedRclonePolicy()
+    input.report.Results[0].Vulnerabilities = Array.from({ length: 71 }, (_, index) => ({
+      VulnerabilityID: `CVE-EXISTING-${index}`, PkgName: `package-${index}`, Severity: 'HIGH',
+    }))
+    const rclone = {
+      VulnerabilityID: 'CVE-2026-88016', PkgName: 'rclone',
+      InstalledVersion: '1.75.1', Severity: 'HIGH',
+    }
+    input.report.Results.push({
+      Target: 'debian', Class: 'os-pkgs', Type: 'debian', Vulnerabilities: [rclone],
+    })
+    expect(verifyContainerSupplyChain(input, policyReviewTime)).toMatchObject({
+      status: 'risk-accepted', securityStatus: 'advisory',
+      scan: { vulnerabilityCount: 72 }, unapprovedFindings: { count: 71 },
+    })
+    rclone.InstalledVersion = '1.75.0'
+    expect(() => verifyContainerSupplyChain(input, policyReviewTime))
+      .toThrow('risk acceptance expected exactly 71 unapproved findings; found 72')
   })
 
   it('fails on image, Playwright, Chromium, or SBOM drift', () => {

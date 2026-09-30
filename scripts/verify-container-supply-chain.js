@@ -35,6 +35,7 @@ function assertPolicy(policy, now) {
       !isNonEmptyString(entry.reason) ||
       !isNonEmptyString(entry.expires) ||
       (entry.package !== undefined && !isNonEmptyString(entry.package)) ||
+      (entry.installedVersion !== undefined && !isNonEmptyString(entry.installedVersion)) ||
       !Number.isFinite(Date.parse(entry.expires))
     ) {
       throw new Error(`invalid exception for ${entry?.id ?? 'unknown'}`)
@@ -110,7 +111,8 @@ function approvedException(vulnerability, policy) {
   return policy.exceptions.some(
     (entry) =>
       entry.id === vulnerability.VulnerabilityID &&
-      (!entry.package || entry.package === vulnerability.PkgName)
+      (!entry.package || entry.package === vulnerability.PkgName) &&
+      (entry.installedVersion === undefined || entry.installedVersion === vulnerability.InstalledVersion)
   )
 }
 
