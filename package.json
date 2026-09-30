@@ -90,7 +90,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@vitest/coverage-v8": "^5.0.1",
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.5",
     "electron": "42.9.3",
     "electron-builder": "26.15.3",
     "esbuild": "0.25.12",
