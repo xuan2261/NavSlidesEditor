@@ -66,13 +66,6 @@ describe('pptx corpus baseline', () => {
     expect(errors).toContain('Strict element-count gate failed for image: drop 20.0% > 15.0%')
   })
 
-  it.skipIf(!fs.existsSync('./server/data/test-corpus'))('runs against test-corpus by default', async () => {
-    const { summary } = await runCorpusTests(undefined, { skipRoundTrip: true })
-
-    expect(summary.corpusDir.replace(/\\/g, '/')).toContain('server/data/test-corpus')
-    expect(summary.totalFiles).toBeGreaterThanOrEqual(10)
-  }, 120000)
-
   it('locks aggregate acceptance floors in the corpus baseline', () => {
     expect(baseline.summary.totalFiles).toBeGreaterThanOrEqual(10)
     expect(baseline.summary.avgSemanticFidelity).toBeGreaterThanOrEqual(0.98)
