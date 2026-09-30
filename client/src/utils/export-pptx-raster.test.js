@@ -4,65 +4,39 @@ import QRCode from 'qrcode'
 import { buildLatexRasterMarkup, renderElementFallbackDataUri } from './export-pptx-raster'
 
 describe('export-pptx-raster', () => {
-  const originalWindow = globalThis.window
-  const originalDocument = globalThis.document
-  const originalImage = globalThis.Image
-
   function mockHtmlCaptureEnvironment() {
-    let messageHandler = null
-    const iframe = {
-      contentWindow: {},
-      remove: vi.fn(),
-      setAttribute: vi.fn(),
-      style: {},
-      srcdoc: '',
-    }
+    const iframe = document.createElement('iframe')
+    const createElement = document.createElement.bind(document)
+    const appendChild = document.body.appendChild.bind(document.body)
 
-    globalThis.window = {
-      addEventListener: vi.fn((type, handler) => {
-        if (type === 'message') messageHandler = handler
-      }),
-      location: { origin: 'http://localhost' },
-      removeEventListener: vi.fn(),
-    }
+    vi.spyOn(document, 'createElement').mockImplementation((tag, options) =>
+      tag === 'iframe' ? iframe : createElement(tag, options)
+    )
+    // Snapshot rendering is a browser-only boundary; deliver its message through the real window.
+    vi.spyOn(document.body, 'appendChild').mockImplementation((node) => {
+      const result = appendChild(node)
+      const captureId = node.srcdoc.match(/const CAPTURE_ID="([^"]+)"/)?.[1]
+      setTimeout(() => {
+        window.dispatchEvent(
+          new MessageEvent('message', {
+            data: {
+              __navslidesPptxCapture: true,
+              id: captureId,
+              kind: 'png',
+              payload: 'data:image/png;base64,abc123',
+            },
+            source: node.contentWindow,
+          })
+        )
+      }, 0)
+      return result
+    })
 
-    globalThis.document = {
-      body: {
-        appendChild: vi.fn((node) => {
-          const captureId = node.srcdoc.match(/const CAPTURE_ID="([^"]+)"/)?.[1]
-          setTimeout(() => {
-            messageHandler?.({
-              data: {
-                __navslidesPptxCapture: true,
-                id: captureId,
-                kind: 'png',
-                payload: 'data:image/png;base64,abc123',
-              },
-              source: node.contentWindow,
-            })
-          }, 0)
-        }),
-      },
-      createElement: vi.fn((tag) => {
-        if (tag !== 'iframe') throw new Error(`Unexpected tag: ${tag}`)
-        return iframe
-      }),
-    }
-
-    globalThis.Image = class MockImage {}
     return iframe
   }
 
   afterEach(() => {
-    if (originalWindow === undefined) delete globalThis.window
-    else globalThis.window = originalWindow
-
-    if (originalDocument === undefined) delete globalThis.document
-    else globalThis.document = originalDocument
-
-    if (originalImage === undefined) delete globalThis.Image
-    else globalThis.Image = originalImage
-
+    document.querySelectorAll('iframe').forEach((iframe) => iframe.remove())
     vi.restoreAllMocks()
   })
 
@@ -77,7 +51,8 @@ describe('export-pptx-raster', () => {
     })
 
     expect(result).toBe('data:image/png;base64,abc123')
-    expect(iframe.setAttribute).toHaveBeenCalledWith('sandbox', 'allow-scripts')
+    expect(iframe.getAttribute('sandbox')).toBe('allow-scripts')
+    expect(iframe.isConnected).toBe(false)
     expect(iframe.srcdoc).toContain('<script>window.__chart = true</script>')
   })
 

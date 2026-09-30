@@ -42,60 +42,37 @@ vi.mock('pptxgenjs', () => ({
 import { exportToPptx } from './exportPptx'
 
 describe('exportPptx', () => {
-  const originalDocument = globalThis.document
-  const originalCreateElement = originalDocument?.createElement?.bind(originalDocument)
   const originalFetch = globalThis.fetch
-  const originalWindow = globalThis.window
 
   beforeEach(() => {
     slides.length = 0
     writeFileMock.mockReset()
-    // Mock Image to immediately fire onload for data URIs (JSDOM doesn't support this natively)
-    // Mock Image and canvas.getContext for rasterization tests
-    globalThis.Image = class MockImage {
-      constructor() {
-        this.onload = null
-        this.onerror = null
-      }
-      set src(value) {
-        Promise.resolve().then(() => this.onload && this.onload())
-      }
-      get src() {
-        return ''
-      }
-    }
-    // Ensure canvas has getContext
-    if (!globalThis.document?.createElement('canvas').getContext) {
-      const origCreateElement = globalThis.document?.createElement.bind(globalThis.document)
-      if (origCreateElement) {
-        globalThis.document.createElement = (tag) => {
-          const el = origCreateElement(tag)
-          if (tag === 'canvas') {
-            const origGetContext = el.getContext.bind(el)
-            el.getContext = (type) => {
-              if (type === '2d') return origGetContext('2d')
-              return null
-            }
-          }
-          return el
+    // JSDOM has no image decoding or canvas rendering; mock only those boundaries.
+    vi.stubGlobal(
+      'Image',
+      class MockImage {
+        constructor() {
+          this.onload = null
+          this.onerror = null
+        }
+        set src(value) {
+          Promise.resolve().then(() => this.onload && this.onload())
+        }
+        get src() {
+          return ''
         }
       }
-    }
+    )
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
   })
 
   afterEach(() => {
-    globalThis.document = originalDocument
-    if (globalThis.document && originalCreateElement) {
-      globalThis.document.createElement = originalCreateElement
-    }
     globalThis.fetch = originalFetch
-    globalThis.window = originalWindow
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('heals server-raster elements missing ids so legacy decks still export', async () => {
-    globalThis.window = {}
-    globalThis.document = {}
     globalThis.fetch = vi.fn().mockImplementation(async (_url, init) => {
       const posted = JSON.parse(init.body).presentation.slides[0].elements[0]
       return {
@@ -143,8 +120,6 @@ describe('exportPptx', () => {
   })
 
   it('allows duplicate native ids when server-raster targets remain unique', async () => {
-    globalThis.window = {}
-    globalThis.document = {}
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ rasters: { 'html-target': 'data:image/png;base64,html' } }),
@@ -673,8 +648,6 @@ describe('exportPptx', () => {
   })
 
   it('[cap:element.html depth:export] reports Mermaid PPTX fallback with the Mermaid matrix row', async () => {
-    globalThis.window = {}
-    globalThis.document = {}
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ rasters: { 'mermaid-1': 'data:image/png;base64,mermaid' } }),
@@ -711,8 +684,6 @@ describe('exportPptx', () => {
   })
 
   it('[cap:element.html depth:export] reports STEM simulation PPTX fallback matrix row', async () => {
-    globalThis.window = {}
-    globalThis.document = {}
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ rasters: { 'stem-1': 'data:image/png;base64,stem' } }),
@@ -751,20 +722,8 @@ describe('exportPptx', () => {
   })
 
   it('warns when gradient backgrounds cannot be rasterized', { timeout: 60000 }, async () => {
-    // Mock canvas operations for gradient rasterization
-    const origCreateElement = globalThis.document?.createElement
-    globalThis.document = globalThis.document || {}
-    globalThis.document.createElement = (tag) => {
-      if (tag === 'canvas') {
-        return { width: 0, height: 0, getContext: () => null }
-      }
-      return origCreateElement ? origCreateElement(tag) : {}
-    }
-    // Ensure window and fetch are available
-    globalThis.window = globalThis.window || {}
-    globalThis.fetch = globalThis.fetch || (() => Promise.resolve({ ok: false }))
-    globalThis.requestAnimationFrame = (fn) => setTimeout(fn, 0)
-    globalThis.cancelAnimationFrame = (id) => clearTimeout(id)
+    vi.stubGlobal('requestAnimationFrame', (fn) => setTimeout(fn, 0))
+    vi.stubGlobal('cancelAnimationFrame', (id) => clearTimeout(id))
     const warnings = await exportToPptx({
       title: 'Gradient fallback',
       slides: [
@@ -865,8 +824,6 @@ describe('exportPptx', () => {
   })
 
   it('keeps native elements editable while using server rasters for HTML and LaTeX', async () => {
-    globalThis.window = {}
-    globalThis.document = {}
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -932,8 +889,6 @@ describe('exportPptx', () => {
   })
 
   it('keeps ordinary images editable and rasterizes safe filtered images with their frame metadata', async () => {
-    globalThis.window = {}
-    globalThis.document = {}
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -1004,8 +959,6 @@ describe('exportPptx', () => {
   })
 
   it('does not request a server raster for external image URLs', async () => {
-    globalThis.window = {}
-    globalThis.document = {}
     globalThis.fetch = vi.fn()
 
     const warnings = await exportToPptx({
@@ -1079,8 +1032,6 @@ describe('exportPptx', () => {
   })
 
   it('ignores hidden HTML and LaTeX elements during server raster pre-pass', async () => {
-    globalThis.window = {}
-    globalThis.document = {}
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({

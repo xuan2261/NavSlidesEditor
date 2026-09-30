@@ -26,38 +26,34 @@ vi.mock('./api', () => ({
   },
 }))
 
-describe('pdfToSlides', () => {
-  const originalDocument = globalThis.document
-
-  beforeEach(() => {
-    vi.clearAllMocks()
-    const canvas = {
-      width: 0,
-      height: 0,
-      getContext: () => ({}),
-      toBlob: (callback) => callback(new Blob(['png'], { type: 'image/png' })),
-    }
-    globalThis.document = {
-      createElement: (tag) => {
-        if (tag === 'canvas') return canvas
-        throw new Error('Unsupported element: ' + tag)
-      },
-    }
-    // Polyfill Blob.prototype.arrayBuffer for JSDOM (not available in older JSDOM)
-    if (!Blob.prototype.arrayBuffer) {
-      Blob.prototype.arrayBuffer = function () {
-        const blob = this
-        return new Promise((resolve) => {
+function createPdfFile() {
+  const file = new File(['pdf'], 'demo.pdf', { type: 'application/pdf' })
+  if (!file.arrayBuffer) {
+    // Older JSDOM Files lack arrayBuffer; read this real File without mutating Blob.prototype.
+    Object.defineProperty(file, 'arrayBuffer', {
+      value: () =>
+        new Promise((resolve, reject) => {
           const reader = new FileReader()
           reader.onload = () => resolve(reader.result)
-          reader.readAsArrayBuffer(blob)
-        })
-      }
-    }
+          reader.onerror = () => reject(reader.error)
+          reader.readAsArrayBuffer(file)
+        }),
+    })
+  }
+  return file
+}
+
+describe('pdfToSlides', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({})
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((callback) => {
+      callback(new Blob(['png'], { type: 'image/png' }))
+    })
   })
 
   afterEach(() => {
-    globalThis.document = originalDocument
+    vi.restoreAllMocks()
   })
 
   it('returns slides with warnings when some pages fail to upload', async () => {
@@ -65,7 +61,7 @@ describe('pdfToSlides', () => {
       .mockResolvedValueOnce({ url: '/uploads/page-1.png' })
       .mockRejectedValueOnce(new Error('upload failed'))
 
-    const file = new File(['pdf'], 'demo.pdf', { type: 'application/pdf' })
+    const file = createPdfFile()
     const result = await pdfToSlides(file)
     expect(getDocumentMock).toHaveBeenCalledWith({
       data: expect.any(ArrayBuffer),
@@ -80,7 +76,7 @@ describe('pdfToSlides', () => {
   it('throws when all pages fail', async () => {
     api.uploadFile.mockRejectedValue(new Error('upload failed'))
 
-    const file = new File(['pdf'], 'demo.pdf', { type: 'application/pdf' })
+    const file = createPdfFile()
     await expect(pdfToSlides(file)).rejects.toThrow('All PDF pages failed to import')
   })
 })

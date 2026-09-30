@@ -3,28 +3,12 @@ import { Buffer } from 'node:buffer'
 import { generateOfflineHTML } from './offlineExport'
 
 function blobFrom(text, type = 'text/plain') {
+  // Keep Blob and FileReader in the JSDOM realm; Node Response does not own this Blob.
   return new Blob([text], { type })
 }
 
 describe('generateOfflineHTML', () => {
   beforeEach(() => {
-    vi.stubGlobal('window', {
-      location: new URL('http://localhost:4173/editor/deck-1'),
-    })
-    vi.stubGlobal(
-      'FileReader',
-      class {
-        readAsDataURL(blob) {
-          // Convert Blob chunks to base64 using Response.arrayBuffer
-          const resp = new Response(blob)
-          resp.arrayBuffer().then((ab) => {
-            const bytes = Buffer.from(ab)
-            this.result = `data:${blob.type || 'image/png'};base64,${bytes.toString('base64')}`
-            this.onloadend?.()
-          })
-        }
-      }
-    )
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url) => {
@@ -93,14 +77,14 @@ describe('generateOfflineHTML', () => {
     expect(offline).toContain('<style>/* /vendor/reveal.js/dist/theme/black.css */')
     expect(offline).toContain('<style>/* /reveal-overrides.css */')
     expect(offline).toContain('<\\/script safe')
-    expect(offline).toContain('data:image/png;base64')
+    expect(offline).toContain(`data:image/png;base64,${Buffer.from('png-bytes').toString('base64')}`)
     expect(offline).not.toContain('fonts.googleapis.com')
   })
 
   it('embeds local caption track sources for offline playback', async () => {
     fetch.mockImplementation(async (url) => String(url).includes('/uploads/captions.vtt') ? { ok: true, blob: async () => blobFrom('WEBVTT', 'text/vtt') } : { ok: false, text: async () => '', blob: async () => blobFrom('') })
     const offline = await generateOfflineHTML('<video><track src="/uploads/captions.vtt" kind="captions"></video>')
-    expect(offline).toContain('data:text/vtt;base64,')
+    expect(offline).toContain(`data:text/vtt;base64,${Buffer.from('WEBVTT').toString('base64')}`)
   })
 
   it('embeds local assets referenced by required Reveal theme CSS', async () => {
@@ -123,7 +107,7 @@ describe('generateOfflineHTML', () => {
     const offline = await generateOfflineHTML(html, { strictRequiredAssets: true })
 
     expect(offline).not.toContain('fonts.googleapis.com')
-    expect(offline).toContain('data:font/woff2;base64,')
+    expect(offline).toContain(`data:font/woff2;base64,${Buffer.from('font-bytes').toString('base64')}`)
     expect(offline).not.toContain('../fonts/theme.woff2')
   })
 
@@ -136,7 +120,7 @@ describe('generateOfflineHTML', () => {
     const offline = await generateOfflineHTML(html)
 
     expect(offline).toContain('data-offline-id="__offline_iframe_0"')
-    expect(fetch).toHaveBeenCalledWith('http://localhost:4173/vendor/mermaid/mermaid.min.js')
+    expect(fetch).toHaveBeenCalledWith(`${window.location.origin}/vendor/mermaid/mermaid.min.js`)
   })
 
   it('rejects when strict mode cannot inline a required Reveal asset', async () => {
