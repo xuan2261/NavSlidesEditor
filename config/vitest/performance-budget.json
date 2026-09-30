@@ -6,12 +6,12 @@
   "requiredSampleCount": 5,
   "maxWallSeconds": 270,
   "sampleDurationsSeconds": [
-    254.458596473, 256.1620951, 256.539074173, 256.700816187, 256.551353878
+    221.386382247, 226.772207295, 227.850228993, 225.121749408, 219.333224676
   ],
   "runnerClass": "linux-x64-4cpu-16gb-ci",
-  "inventoryHash": "e78223d0610aa7124a85d9661f5f626719b55681a7fa1bb65cffe172701f547b",
+  "inventoryHash": "eb9d62b1eab293efef19b32600716b60f4a23c9304710ab72e9d5e6ff64b880b",
   "configHash": "c809b6e009747d9d8492116cd51bef0a2ecb372f253859d91a39ec369132ca1e",
-  "measurementCommit": "4fce46b28ef6ff74bafc211eaeed301698133939",
-  "statistic": "median-plus-bounded-observed-margin",
+  "measurementCommit": "685fea26c1f328bb4ca9d72077ac17569b40c1b9",
+  "statistic": "measured-median-with-retained-270-second-ceiling",
   "varianceMargin": 0.05
 }
