@@ -5,8 +5,8 @@
 | Method               | Best For                        | Requirements                      |
 | -------------------- | ------------------------------- | --------------------------------- |
 | Docker (recommended) | Server / VPS                    | Docker 20.10+, Docker Compose v2+ |
-| Node.js from source  | Development, lightweight server | Node.js >=22.13.0, npm            |
-| Electron desktop     | Single-user desktop app         | Node.js >=22.13.0 (build only)    |
+| Node.js from source  | Development, lightweight server | Node.js >=22.22.2, >=24.15.0, or >=26; npm |
+| Electron desktop     | Single-user desktop app         | Node.js >=22.22.2, >=24.15.0, or >=26 (build only) |
 
 ---
 

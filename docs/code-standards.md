@@ -20,7 +20,7 @@
 | Icons (editor UI)      | Lucide                  | 0.441.0 (local npm)                         |
 | Backend                | Express                 | 4                                           |
 | Request validation     | Zod                     | 4.3.6                                       |
-| Runtime                | Node.js                 | >=22.13.0 (CI: 22.22.0; container: 22.23.3) |
+| Runtime                | Node.js                 | >=22.22.2, >=24.15.0, or >=26 (CI/container: 22.23.3) |
 | Desktop                | Electron                | 42                                          |
 | Cloud sync             | rclone                  | system / Docker                             |
 | Storage                | JSON files + filesystem | -                                           |

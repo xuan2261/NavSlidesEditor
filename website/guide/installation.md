@@ -104,7 +104,7 @@ For developers or anyone who wants to customize the editor.
 
 ### Prerequisites
 
-- Node.js >=22.13.0 and npm. CI and container builds pin Node.js 22.22.0.
+- Node.js >=22.22.2, >=24.15.0, or >=26 and npm. CI and container builds pin Node.js 22.23.3.
 
 ### Steps
 

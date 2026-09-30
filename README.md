@@ -85,7 +85,7 @@ prebuilt Docker image with subject-bound receipts; see the
 accepted container vulnerability risk.
 
 Linux, macOS, and Windows desktop packages can still be built locally with
-Node.js >=22.13.0; local build commands are not release distribution promises:
+Node.js >=22.22.2, >=24.15.0, or >=26; local build commands are not release distribution promises:
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
@@ -101,7 +101,7 @@ Desktop data is stored under `~/.config/NavSlides Editor/` on Linux,
 
 ### Node.js from source
 
-Requires Node.js >=22.13.0 and npm. CI uses Node.js 22.22.0; the container uses Node.js 22.23.3 on Debian Trixie Slim and omits npm from its final runtime.
+Requires Node.js >=22.22.2, >=24.15.0, or >=26 and npm. CI/container use Node.js 22.23.3; the container runs Debian Trixie Slim and omits npm from its final runtime.
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
@@ -416,9 +416,9 @@ Only shortcuts implemented by the active game are enabled.
 
 | Method       | Requirement                                        |
 | ------------ | -------------------------------------------------- |
-| Desktop app  | Node.js >=22.13.0 (build only)                     |
-| Docker       | Docker 20.10+ and Docker Compose v2+               |
-| Node.js      | Node.js >=22.13.0 and npm                          |
+| Desktop app  | Node.js >=22.22.2, >=24.15.0, or >=26 (build only)         |
+| Docker       | Docker 20.10+ and Docker Compose v2+                         |
+| Node.js      | Node.js >=22.22.2, >=24.15.0, or >=26 and npm                |
 | Load Testing | [k6](https://k6.io/docs/get-started/installation/) |
 
 ---
@@ -511,7 +511,7 @@ PPTX browser audit artifacts are written under `plans/reports/pptx-import-real-b
 | Icons                | Lucide (editor UI) + inline SVG (slide icons)                              |
 | PowerPoint export    | pptxgenjs + Playwright raster fallback                                     |
 | PowerPoint import    | pptxtojson runtime parser; pptx2json benchmark-sandbox-only                |
-| Backend              | Node.js >=22.13.0 (CI: 22.22.0; container: 22.23.3), Express 4             |
+| Backend              | Node.js >=22.22.2, >=24.15.0, or >=26 (CI/container: 22.23.3), Express 4 |
 | Real-time transport  | Socket.IO                                                                  |
 | Desktop app          | Electron 42                                                                |
 | Cloud sync           | rclone                                                                     |

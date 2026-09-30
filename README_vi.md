@@ -119,7 +119,7 @@ chmod +x Slides\ Editor-1.0.0.AppImage
 
 #### Build from source
 
-Yêu cầu **Node.js >=22.13.0**.
+Yêu cầu **Node.js >=22.22.2, >=24.15.0 hoặc >=26**; CI/container dùng Node.js 22.23.3.
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git
