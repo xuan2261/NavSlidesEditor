@@ -307,8 +307,18 @@ async function incrementShareViews(token) {
   })
 }
 
+// Stricter rate limit dedicated to password verification, to mitigate brute-force
+// enumeration/guessing attacks against share tokens and passwords.
+const shareVerifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many verification attempts, please try again later' }
+})
+
 // Verify password for protected link
-app.post('/share/:token/verify', async (req, res) => {
+app.post('/share/:token/verify', shareVerifyLimiter, async (req, res) => {
   try {
     const tokens = await readShareTokens()
     let tokenData = tokens[req.params.token]
