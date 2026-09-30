@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "kind": "vitest-ci-wall-clock-budget",
+  "status": "measured",
+  "targetMedianImprovement": 0.3,
+  "requiredSampleCount": 5,
+  "maxWallSeconds": 270,
+  "sampleDurationsSeconds": [
+    254.458596473, 256.1620951, 256.539074173, 256.700816187, 256.551353878
+  ],
+  "runnerClass": "linux-x64-4cpu-16gb-ci",
+  "inventoryHash": "e78223d0610aa7124a85d9661f5f626719b55681a7fa1bb65cffe172701f547b",
+  "configHash": "c809b6e009747d9d8492116cd51bef0a2ecb372f253859d91a39ec369132ca1e",
+  "measurementCommit": "4fce46b28ef6ff74bafc211eaeed301698133939",
+  "statistic": "median-plus-bounded-observed-margin",
+  "varianceMargin": 0.05
+}

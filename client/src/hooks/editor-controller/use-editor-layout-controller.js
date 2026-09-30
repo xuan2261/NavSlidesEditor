@@ -17,7 +17,11 @@ export function useEditorLayoutController({
   setSelectedElementIds,
 }) {
   const [showLayoutManager, setShowLayoutManager] = useState(false)
-  const [masterEditId, setMasterEditId] = useState(null)
+  const [masterTarget, setMasterTarget] = useState(null)
+  const masterEditId = masterTarget?.presentationId === presentation?.id &&
+    presentation?.layoutMasters?.some((layout) => layout.id === masterTarget?.layoutId)
+    ? masterTarget.layoutId
+    : null
   const availableLayouts = useMemo(
     () => mergeLayouts(presentation?.layoutMasters),
     [presentation?.layoutMasters]
@@ -130,13 +134,13 @@ export function useEditorLayoutController({
     deleteMasterElement,
     mapAuthoringTarget,
     openLayoutManager: () => setShowLayoutManager(true),
-    exitMasterEdit: () => setMasterEditId(null),
+    exitMasterEdit: () => setMasterTarget(null),
     layoutManagerProps: showLayoutManager
       ? {
           presentation,
           onChange: setPresentation,
           onEditMaster: (layoutId) => {
-            setMasterEditId(layoutId)
+            setMasterTarget({ presentationId: presentation?.id, layoutId })
             setShowLayoutManager(false)
           },
           onClose: () => setShowLayoutManager(false),

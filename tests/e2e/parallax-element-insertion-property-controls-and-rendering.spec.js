@@ -30,7 +30,7 @@ test.describe('Parallax Features E2E', () => {
     const prevCount = await editorPage.getElementCount()
     await editorPage.clickInsertMenuItem('Timeline')
     await editorPage.waitForElementCount(prevCount + 1)
-    await expect(page.locator('[data-testid="timeline-svg"]')).toBeVisible()
+    await expect(page.locator('.slide-canvas [data-testid="timeline-svg"]')).toBeVisible()
   })
 
   test('insert Kinetic Text from insert menu opens modal', async ({ page }) => {

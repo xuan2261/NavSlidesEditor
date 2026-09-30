@@ -66,6 +66,11 @@ Browser / Electron
   and `use-ai-actions` hooks. `EditorPage` remains the composition root and passes
   controller results into the extracted editor shell, ribbon, workspace, and modal
   surfaces.
+- Authoring commands must target the content currently displayed on the canvas.
+  [`use-editor-layout-controller.js`](../client/src/hooks/editor-controller/use-editor-layout-controller.js)
+  owns master-target validity; `EditorPage.navigateToSlide` is the shared navigation
+  boundary for the navigator, Sorter and Find. This prevents a visible slide and
+  its mutation target from diverging after navigation or history restoration.
 - **Ribbon polish**: contextual Format tab driven by `ui-store.formatContext`
   (`{ hasSelection, elementType }`). `RibbonBigButton` promotes primary tab actions.
   `RibbonDensityProvider` measures the ribbon container and uses wide, condensed, or
@@ -76,6 +81,11 @@ Browser / Electron
   standard and wide tiers. Properties and Design Ideas share one inspector host,
   which docks only in the wide tier; narrower tiers open navigator and inspector
   overlays without shrinking the canvas.
+- The inspector owns its scroll area. Notes and layer focus requests must not
+  scroll the surrounding workspace. See
+  [`PropertiesPanel.jsx`](../client/src/components/PropertiesPanel.jsx) and
+  [`tab-bar-with-scroll-and-icons.jsx`](../client/src/components/ribbon/tab-bar-with-scroll-and-icons.jsx)
+  for inspector focus and active-tab visibility after layout changes.
 - `StatusBar` zoom, ribbon/canvas controls, keyboard shortcuts, and command palette
   all read and update `ui-store.zoom`. Manual zoom sets `userZoomMode`; auto-fit uses
   `setAutoFitZoom` so a resize does not overwrite a user's chosen zoom. The view
@@ -96,6 +106,11 @@ Browser / Electron
 - `SlidePanel.jsx` is a semantic slide navigator. It uses list/listitem roles,
   stable slide IDs for selection, keyboard-focusable thumbnails, named controls,
   and a menu surface for reorder, duplicate, vertical-slide, and delete actions.
+- Thumbnails deliberately exclude executable embeds and media runtimes. Static
+  preview fidelity belongs to
+  [`slide-thumbnail-preview.jsx`](../client/src/components/slide-panel/slide-thumbnail-preview.jsx);
+  its [`markup allowlists`](../client/src/components/slide-panel/thumbnail-markup-safety.js)
+  protect the editor document rather than relying on clipping or `inert` for isolation.
 - `SlideCanvas.jsx` owns the core drag, resize, rotate, crop, and snap interaction
   model. Mouse, pen, and touch use Pointer Events with pointer capture and
   cancellation rollback; `use-pinch-zoom.js` handles two-contact zoom and its touch
@@ -174,6 +189,13 @@ Context menu             # Calls the same clipboard callbacks as keyboard shortc
 ```
 
 `createDuplicateOperation` is synchronous (uses `crypto.randomUUID()`) with a +20/+20 offset; includes locked-element guard. `useKeyboard` uses a registry-based dispatch: `shortcut.id → on{capitalize(id)}` callback.
+
+[`editor-command-availability.js`](../client/src/utils/editor-command-availability.js)
+owns shared disabled reasons for the ribbon and command palette. Availability is
+not a substitute for mutation guards. Presentation launch coordinates belong to
+`presentInWindow` in [`shared/src/htmlGenerator.js`](../shared/src/htmlGenerator.js),
+so beginning/current actions do not create separate slideshow implementations.
+
 
 ### Shortcut Registry
 

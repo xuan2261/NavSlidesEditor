@@ -9,6 +9,7 @@ export function CommandPalette({ open, onClose, commands = [] }) {
   const inputRef = useRef(null)
   const dialogRef = useRef(null)
   const previousFocusRef = useRef(null)
+  const selectedRowRef = useRef(null)
 
   useEffect(() => {
     if (open) {
@@ -43,6 +44,7 @@ export function CommandPalette({ open, onClose, commands = [] }) {
   }
 
   const executeCommand = (command) => {
+    if (command.disabled) return
     if (command.id === 'insertLink') {
       closeAndRestoreFocus(command.action)
       return
@@ -55,11 +57,15 @@ export function CommandPalette({ open, onClose, commands = [] }) {
     startTransition(() => setSelectedIndex(0))
   }, [query])
 
+  useEffect(() => {
+    if (open) selectedRowRef.current?.scrollIntoView?.({ block: 'nearest' })
+  }, [open, query, selectedIndex])
+
   const handleKeyDown = (e) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       e.stopPropagation()
-      setSelectedIndex((i) => Math.min(i + 1, filtered.length - 1))
+      setSelectedIndex((i) => Math.max(0, Math.min(i + 1, filtered.length - 1)))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       e.stopPropagation()
@@ -133,15 +139,17 @@ export function CommandPalette({ open, onClose, commands = [] }) {
             </li>
           )}
           {filtered.map((cmd, i) => (
-            <li key={cmd.id}>
+            <li key={cmd.id} ref={i === selectedIndex ? selectedRowRef : null}>
               <button
                 type="button"
+                disabled={cmd.disabled}
+                title={cmd.disabledReason || cmd.label}
                 onClick={() => executeCommand(cmd)}
-                className={`flex w-full cursor-pointer items-center justify-between border-0 px-4 py-2.5 text-left ${
+                className={`flex w-full cursor-pointer items-center justify-between border-0 px-4 py-2.5 text-left disabled:cursor-not-allowed disabled:opacity-60 ${
                   i === selectedIndex ? 'bg-hover' : 'bg-transparent'
                 }`}
               >
-                <span className="text-text-primary">{cmd.label}</span>
+                <span className="text-text-primary">{cmd.label}{cmd.disabledReason && <span className="block text-xs text-text-secondary">{cmd.disabledReason}</span>}</span>
                 {cmd.shortcut && (
                   <kbd className="rounded bg-secondary px-2 py-0.5 text-xs text-text-secondary">
                     {cmd.shortcut}

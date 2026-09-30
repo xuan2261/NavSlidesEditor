@@ -42,6 +42,7 @@ const baseProps = {
   viewMode: 'normal',
   setViewMode: vi.fn(),
   setCurrentSlideIndex: vi.fn(),
+  navigateToSlide: vi.fn(),
   setPresentation: vi.fn(),
   htmlEditorState: null,
   setHtmlEditorState: vi.fn(),

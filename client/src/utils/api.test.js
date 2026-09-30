@@ -558,3 +558,49 @@ describe('PPTX import API', () => {
     expect(blob.aggregateGeneration).toBeUndefined()
   })
 })
+
+describe('atomic project import API', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('keeps capability header-only and forwards abort signals', async () => {
+    const controller = new AbortController()
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ status: 'committed', presentationId: 'deck-1' }),
+    })))
+
+    await api.publishProjectImport('session-1', 'secret-capability', {
+      signal: controller.signal,
+      trustedAuthorActiveContentAcknowledged: true,
+    })
+
+    const [url, init] = fetch.mock.calls[0]
+    expect(url).toBe('/api/project-imports/session-1/publish')
+    expect(init.headers).toMatchObject({
+      'Content-Type': 'application/json',
+      'X-NavSlides-Import-Capability': 'secret-capability',
+    })
+    expect(init.signal).toBe(controller.signal)
+    expect(init.body).not.toContain('secret-capability')
+    expect(url).not.toContain('secret-capability')
+  })
+
+  it('uses relative same-origin endpoints for preflight, media, and rollback', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ sessionId: 'session-1', capability: 'cap' }),
+    })))
+    await api.preflightProjectImport(new File(['{}'], 'deck.navslides.json'))
+    await api.stageProjectImportMedia('session-1', 'cap')
+    await api.rollbackProjectImport('session-1', 'cap')
+
+    expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+      '/api/project-imports/preflight',
+      '/api/project-imports/session-1/media',
+      '/api/project-imports/session-1',
+    ])
+    expect(fetch.mock.calls[1][1].headers).toEqual({
+      'X-NavSlides-Import-Capability': 'cap',
+    })
+  })
+})

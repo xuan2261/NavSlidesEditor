@@ -106,7 +106,9 @@ export function createKeyboardHandler({
     }
 
     if (disabled || isEditing) return
-    const interactiveTarget = isInteractiveKeyboardTarget(getActiveElement())
+    const activeElement = getActiveElement()
+    const interactiveTarget = isInteractiveKeyboardTarget(activeElement)
+    const presentationKeyOnButton = !ctrl && e.key === 'F5' && activeElement?.tagName === 'BUTTON'
 
     // Ctrl chords
     if (ctrl) {
@@ -125,7 +127,7 @@ export function createKeyboardHandler({
       }
     }
 
-    if (interactiveTarget) return
+    if (interactiveTarget && !presentationKeyOnButton) return
 
     // Standalone keys (no Ctrl) — F5, arrows, B, W, Home, End, Escape in presentation
     if (!ctrl) {

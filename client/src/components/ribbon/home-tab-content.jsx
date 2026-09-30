@@ -23,6 +23,7 @@ export default function HomeTabContent({
   onBringToFront,
   onSendToBack,
   onUpdatePresentation,
+  availability,
 }) {
   const { rememberSelection, runTextCommand, handleTextCommandMouseDown } = useSelectionPreservation(editor)
 
@@ -34,6 +35,7 @@ export default function HomeTabContent({
           onCut={onCut}
           onCopy={onCopy}
           onDuplicate={onDuplicate}
+          availability={availability}
         />
       </RibbonSection>
 
@@ -82,6 +84,7 @@ export default function HomeTabContent({
           onSendBackward={onSendBackward}
           onBringToFront={onBringToFront}
           onSendToBack={onSendToBack}
+          availability={availability}
         />
       </RibbonSection>
     </RibbonTabContentRow>

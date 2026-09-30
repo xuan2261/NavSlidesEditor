@@ -1,0 +1,43 @@
+name: Reusable load consumer
+
+on:
+  workflow_call:
+    inputs:
+      subject_sha: { required: true, type: string }
+      client_artifact: { required: true, type: string }
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    env:
+      API_BASE_URL: 'http://127.0.0.1:3002/api'
+      WS_URL: 'ws://127.0.0.1:3002/ws/?EIO=4&transport=websocket'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.subject_sha }}' }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0', cache: npm }
+      - run: npm ci
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ inputs.client_artifact }}', path: . }
+      - run: node scripts/ci/verify-client-dist-manifest.mjs --root client/dist --manifest client-dist-manifest.json --subject "${{ inputs.subject_sha }}"
+      - name: Start production server
+        shell: bash
+        run: |
+          NODE_ENV=production PORT=3002 node server/index.js > server.log 2>&1 &
+          echo $! > server.pid
+          for attempt in $(seq 1 60); do
+            curl -fsS "$API_BASE_URL/presentations" && break
+            sleep 1
+          done
+      - name: k6 smoke
+        shell: bash
+        run: |
+          docker run --rm --network host -e PROFILE=smoke -e API_BASE_URL -v "$PWD:/work" grafana/k6:0.54.0 run /work/tests/load/k6-load-test-api-presentations-post-endpoint-with-profiles.js
+          docker run --rm --network host -e PROFILE=smoke -e WS_URL -v "$PWD:/work" grafana/k6:0.54.0 run /work/tests/load/k6-load-test-socketio-websocket-room-join-and-slide-change-broadcast.js
+      - if: always()
+        run: if [ -f server.pid ]; then kill "$(cat server.pid)" || true; fi

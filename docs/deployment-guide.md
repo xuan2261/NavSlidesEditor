@@ -29,6 +29,8 @@ The container:
 
 - Builds React frontend and bundles it with the Express server
 - Installs rclone for cloud sync support
+- Runs as fixed unprivileged UID/GID `10001:10001`
+- Uses `/health/ready` for Docker and Compose health
 - Creates two named volumes for persistence:
   - `revealjs-data` — presentations, templates, share tokens, version history
   - `revealjs-uploads` — uploaded images, videos, audio
@@ -42,6 +44,7 @@ provides the required external authentication.
 services:
   revealjs-editor:
     build: .
+    user: '10001:10001'
     environment:
       NAVSLIDES_LISTEN_HOST: 0.0.0.0
       NAVSLIDES_PUBLISH_HOST: ${NAVSLIDES_PUBLISH_HOST:-127.0.0.1}
@@ -50,6 +53,18 @@ services:
     volumes:
       - revealjs-data:/app/server/data
       - revealjs-uploads:/app/server/uploads
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3002/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
     restart: unless-stopped
 volumes:
   revealjs-data:
@@ -85,10 +100,19 @@ docker compose down -v
 
 Multi-stage build (confirmed at `Dockerfile` in root):
 
-1. **Builder stage** — pins Node.js 22.22.0 on Debian Bookworm Slim, installs the workspace lockfile without lifecycle scripts, publishes the exact Reveal.js 6.0.1 `dist/` tree plus other vendor assets, then builds the client.
-2. **Production stage** — pins the same Node.js 22.22.0 image, installs rclone and the lock-derived server runtime dependency set, installs Playwright Chromium, copies the built client and published vendor assets, then verifies runtime closure.
+1. **Builder stage** — pins Node.js 22.23.3 on Debian Trixie Slim, installs the workspace lockfile without lifecycle scripts, publishes the Reveal.js 6.0.2 `dist/` tree plus other vendor assets, then builds the client.
+2. **Production stage** — uses the same pinned base and installs the lock-derived server dependencies plus checksum-verified upstream rclone 1.75.1 packages for amd64/arm64. After Chromium installation it removes global npm/npx, clears the shell command cache before checking their absence, and smoke-checks Node, Playwright/Chromium, and rclone. The chain is shell-traced in Docker build output to identify a failed check. Other rclone artifact architectures fail the build explicitly.
 
-Vendor publication records runtime versions and hashes in `server/vendor/vendor-manifest.json`. The final command and server prestart verification reject a missing required Reveal.js asset, a version other than 6.0.1, a hash mismatch, or a legacy `reveal.js/plugin/` tree before `node server/index.js` starts.
+CI uses the separate `production-prebuilt` target. It downloads the single
+manifest-bound client artifact for the exact subject SHA, verifies every byte,
+and then assembles the image without recompiling the client. Normal local
+`docker build .` keeps the source-build path.
+
+Vendor publication records runtime versions and hashes in `server/vendor/vendor-manifest.json`. The final command and server prestart verification reject a missing required Reveal.js asset, a version other than 6.0.2, a hash mismatch, or a legacy `reveal.js/plugin/` tree before `node server/index.js` starts.
+
+The final image creates both mount points for UID/GID `10001:10001` and never
+falls back to root. Existing bind mounts or migrated named volumes must be made
+writable by that identity before startup.
 
 ---
 
@@ -135,13 +159,12 @@ On Windows PowerShell, use `$env:PORT=8080; npm start` or run the command inside
 
 ### Pre-built Packages
 
-Download Windows packages from the [Releases](https://github.com/xuan2261/NavSlidesEditor/releases) page. The current GitHub release workflow publishes Windows packages only; Linux and macOS packages can be built locally from source.
-
-| Platform | Format                              |
-| -------- | ----------------------------------- |
-| Windows  | `.exe` installer or portable `.exe` |
-| Linux    | local build: `.AppImage` or `.deb`  |
-| macOS    | local build: `.zip`                 |
+Earlier tagged releases, including v1.16.2, may have Windows downloads on
+[Releases](https://github.com/xuan2261/NavSlidesEditor/releases). That history
+does not authorize a Windows package for the untagged v1.17.0 candidate:
+no public Windows EXE or Authenticode signing is part of its accepted release
+target. Windows is retained for private qualification. Linux and macOS
+desktop packages remain local source builds, not release assets.
 
 ```bash
 # Linux .deb
@@ -159,7 +182,7 @@ npm install
 
 npm run electron:build:linux   # → dist-electron/ (.AppImage + .deb)
 npm run electron:build:mac     # → dist-electron/ (.zip)
-npm run electron:build:win     # → dist-electron/ (.exe installer + portable)
+npm run electron:build:win     # → dist-electron/ (.exe installer + portable), local only
 ```
 
 Dev mode (no package):
@@ -167,6 +190,10 @@ Dev mode (no package):
 ```bash
 npm run electron:dev
 ```
+
+The desktop renderer runs sandboxed with context isolation, no Node integration or preload/IPC bridge. The application is served by its bundled loopback HTTP server; file exports use browser downloads and Blob URLs. Electron applies a desktop-only CSP to loopback responses (inline Reveal scripts/styles and local vendor assets are permitted, dynamic evaluation is not). Uploaded SVG keeps its separate, stricter sandbox CSP. Presentation popups stay inside the shell only for same-origin URLs; external HTTP(S) links open in the system browser.
+
+To qualify an unpacked desktop build locally, run `npm run electron:prepare`, then `npm run electron:builder -- --win --dir --publish never` on Windows and verify `dist-electron/win-unpacked/resources` with `node scripts/verify-runtime-closure.js --root dist-electron/win-unpacked/resources --require-client-dist`. In the launched shell, F5 presents from the beginning, Shift+F5 presents from the selected slide, and confirmation dialogs are in-app rather than native blocking prompts.
 
 ### Data Location
 
@@ -183,6 +210,7 @@ npm run electron:dev
 | `PORT`                      | `3002`                      | HTTP listen port                                                                                                            |
 | `NAVSLIDES_LISTEN_HOST`     | `127.0.0.1`                 | Server bind host; Docker sets `0.0.0.0` inside the container                                                                |
 | `NAVSLIDES_PUBLISH_HOST`    | `127.0.0.1`                 | Docker host-side publish address; changing it does not provide authentication                                               |
+| `NAVSLIDES_WORKERS`         | `1`                         | Supported process count; values other than `1` fail with `UNSUPPORTED_MULTI_PROCESS_TOPOLOGY`                               |
 | `SLIDES_DATA_DIR`           | `server/data/`              | Directory for JSON data files                                                                                               |
 | `SLIDES_UPLOADS_DIR`        | `server/uploads/`           | Directory for uploaded files                                                                                                |
 | `NODE_ENV`                  | `development`               | Set to `production` to disable Vite proxy and serve `client/dist/`                                                          |
@@ -195,6 +223,22 @@ npm run electron:dev
 | `PPTX_EMF_BINARY_SHA256`    | unset                       | SHA-256 pin required by the EMF/WMF policy                                                                                  |
 
 Set via shell, `.env` file (manually), or Docker environment config.
+
+### Health and supported topology
+
+- `GET /health/live` returns `200` when the HTTP process is serving. It does not
+  inspect dependencies.
+- `GET /health/ready` returns `200` only after package-store initialization and
+  writer ownership, writable data/uploads probes, and startup recovery. It
+  returns `503` during startup, shutdown, or durable recovery degradation.
+- Responses contain only schema version, status, bounded reason codes, and
+  uptime. They do not expose paths, filenames, tokens, hashes, or error text.
+
+Only one NavSlides server process may use a deployment's persistent roots.
+`NAVSLIDES_WORKERS`, `WEB_CONCURRENCY`, `PM2_INSTANCES`, `INSTANCE_COUNT`, and
+`CLUSTER_WORKERS` must be unset or `1`; Node cluster workers are rejected.
+Socket.IO rooms, import jobs, and file/package locks are process-local, so
+horizontal scaling is unsupported.
 
 ### Local mutation ingress and reverse proxy
 
@@ -236,12 +280,13 @@ uncompressed size, bounded streamed decompressed size, and each entry's CRC32.
 CRC or resource-budget failures are fail-closed.
 
 Parser-relative corpus metrics and browser layout audits are regression signals,
-not native-complete or PowerPoint-fidelity claims. Release qualification uses
-two additional fail-closed gates: the manifest-bound importer-native strict lane
-(`npm run test:pptx:importer-qualification`) and the Microsoft PowerPoint visual
-oracle described in [`pptx-visual-evidence-runbook.md`](pptx-visual-evidence-runbook.md).
-Any blocked deck, missing evidence, or below-policy SSIM result blocks those
-claims even when best-effort import remains usable.
+not native-complete or PowerPoint-fidelity claims. The manifest-bound
+importer-native strict lane (`npm run test:pptx:importer-qualification`) remains
+selected alongside the native edited-PPTX G0/G1/G2/G4 physical gates in the
+[release contract](#release). The Microsoft PowerPoint visual oracle in the
+[runbook](pptx-visual-evidence-runbook.md) is a future/diagnostic evidence path:
+its absence or below-policy SSIM does not block v1.17.0, and neither corpus
+success nor a local diagnostic COM screenshot constitutes a G5 pass.
 
 ### External media
 
@@ -277,23 +322,36 @@ PPTX admission returns a one-time per-job capability. Its plaintext handoff is m
 | `server/data/tmp-pptx-imports/`  | Temporary PPTX import uploads         |
 | `server/uploads/`                | Uploaded images, videos, audio        |
 
-All directories are created automatically on first run.
+All directories are created automatically on first run. On POSIX,
+`share-tokens.json`, `github-config.json`, `settings.json`, `rclone.conf`, and
+their atomic replacement candidates are created or tightened to owner-only
+`0600`. Windows does not implement POSIX mode bits; use NTFS ACLs to restrict the
+same files to the account running NavSlides. The application does not claim that
+`chmod 0600` provides a Windows ACL guarantee.
 
-### Backup (Docker)
+### Backup and Restore (Docker)
 
-```bash
-# Export presentations JSON from volume
-docker run --rm \
-  -v revealjs-data:/data \
-  -v $(pwd):/backup \
-  alpine cp /data/presentations.json /backup/presentations.json
+Backups contain credentials, share tokens, author content, package originals,
+history, and media. Store them with the same care as the live volumes.
 
-# Export entire data directory
-docker run --rm \
-  -v revealjs-data:/data \
-  -v $(pwd):/backup \
-  alpine tar czf /backup/revealjs-data-backup.tar.gz /data
+```powershell
+# Captures pre-state, stops only a running service, archives both volumes,
+# writes SHA-256 hashes to manifest.json, and restarts in finally.
+npm run backup:docker -- -OutputDirectory .\backups\navslides-20260925
+
+# Restore into a separate Compose project with new, empty volumes.
+$env:COMPOSE_PROJECT_NAME = "navslides-restore-drill"
+docker compose build
+npm run restore:docker -- -BackupDirectory .\backups\navslides-20260925
 ```
+
+The backup script never calls `docker compose down -v`. A backup/snapshot error
+and a restart error are retained and reported separately; either fails the
+command. Restore verifies both archive hashes before extraction, refuses a
+running service or non-empty target volume, starts the service, waits for
+readiness, and checks presentations JSON, package originals, history, settings,
+and uploaded-media retrieval. Remove the drill project only after verifying it;
+do not point restore at volumes containing data you need.
 
 ---
 
@@ -336,7 +394,7 @@ Note: Set `client_max_body_size` (Nginx) or the equivalent to at least 100MB to 
 
 ## CI/CD
 
-The repository includes GitHub Actions workflows for validation and Electron release.
+The repository includes GitHub Actions workflows for validation and release qualification. The candidate contract below is a target, not evidence of a completed release run.
 
 ### Required CI Jobs (blocking)
 
@@ -361,8 +419,43 @@ The repository includes GitHub Actions workflows for validation and Electron rel
 
 ### Release
 
-- `Build & Release Electron` builds the Windows Electron package and creates a GitHub Release asset when a `v*` tag is pushed or a manual dispatch is used.
-- Linux and macOS Electron packages exist as local `electron-builder` scripts but are not part of the current release workflow.
+The published version remains **v1.16.2**; **v1.17.0** is an untagged candidate
+(`package.json` and workspace manifests own the product version; `runtime-versions.json`
+owns runtime pins). The [release target policy](../config/release-target-policy.json)
+selects an exact prebuilt Docker image and subject-bound receipts as the release
+deliverable, **not** a publicly distributed Windows EXE. The selected physical
+PPTX gates are **G0/G1/G2/G4**: native edited-PPTX and exact-source direct
+OfficeCLI evidence remain mandatory. Windows privately qualifies the unpacked
+runtime and physical OfficeCLI G1, not executable-artifact G3. PowerPoint G5 is
+**not selected** for v1.17.0; the [visual-evidence runbook](pptx-visual-evidence-runbook.md)
+remains a future/diagnostic route, not release proof. Importer-corpus results,
+browser/editor visuals and local diagnostic COM screenshots neither satisfy G5
+nor qualify PowerPoint fidelity. Missing _selected_ physical receipts block
+qualification; absent G3/G5 evidence is neither a release block nor a pass.
+
+The operator accepts reported Trivy **HIGH/CRITICAL** findings as an advisory
+risk for **private, single-user self-hosting only**. Preserve the raw
+`container-trivy.json`, `container-sbom.spdx.json`, and
+`container-supply-chain-receipt.json` with the image/receipts so the decision is
+auditable. This is **not a security pass**, a claim that vulnerabilities are
+fixed, or authorization to expose the image publicly. Digest, SBOM presence,
+runtime closure, provenance, exact-subject and other release checks retain their
+own requirements. The [policy](../config/release-target-policy.json) owns this
+accepted risk; the [supply-chain workflow](../.github/workflows/reusable-container-supply-chain.yml)
+and [verifier](../scripts/verify-container-supply-chain.js) own scan evidence.
+
+The target policy alone does not prove qualification. Consult the
+[release workflow](../.github/workflows/release.yml),
+[Windows qualification workflow](../.github/workflows/reusable-windows-qualification.yml),
+and same-subject receipts before asserting the candidate is published, selected
+G0/G1/G2/G4 gates passed, or CI is green. The
+[release-state command](../scripts/ci/release-state.mjs) checks local
+subject/version state only; it cannot replace CI or physical evidence.
+
+An existing release tag must stay immutable during rerun or recovery. If retained
+evidence expires, regenerate evidence for the **same** source SHA, never move the
+tag or claim a different image is the qualified artifact. Linux and macOS
+desktop packages remain local builds, outside the selected release target.
 
 Test commands run locally:
 
@@ -393,6 +486,8 @@ Current baseline file:
 ## Security Notes
 
 - The application has **no built-in authentication**. Do not expose port 3002 directly to the internet without a reverse proxy + auth layer (e.g., Nginx + HTTP Basic Auth, Authelia, Cloudflare Access).
+- The supported model is one operator, one server process, and one pair of
+  persistent roots. There is no tenant isolation or supported HA/cluster mode.
 - Public share capabilities authorize only their `/share/:token` presentation flow. They do not authorize `/api/analytics/:id`; keep analytics and editor APIs behind operator authentication.
 - GitHub tokens are stored in plaintext in `github-config.json`. Restrict filesystem access accordingly.
 - File-backed settings may contain sensitive values such as API keys or sync credentials. Do not commit or deploy those files publicly.

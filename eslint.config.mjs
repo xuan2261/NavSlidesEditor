@@ -10,7 +10,8 @@ export default [
     ignores: [
       'client/dist/**',
       'dist-electron/**',
-      'node_modules/**',
+      'dist-electron*/**',
+      '.tmp/**',
       'server/node_modules/**',
       'server/vendor/**',
       'plans/**',

@@ -2,30 +2,30 @@
 
 ## Tech Stack
 
-| Layer | Technology | Version |
-| --- | --- | --- |
-| Frontend framework | React | 18 |
-| Routing | React Router DOM | 7.14.1 |
-| Build tool | Vite | 5 |
-| Styling | Tailwind CSS | 3.4.19 |
-| State management | Zustand | 5.0.12 |
-| Rich text | TipTap | 2.6.6 |
-| Presentation engine | reveal.js | 5.1.0 (CDN) |
-| Math rendering | KaTeX | 0.16.40 (local npm) |
-| Diagrams | TikZJax | CDN |
-| Charts | Chart.js | 4.5.1 (local npm) |
-| Syntax highlighting | highlight.js | 11.11.1 (local npm) |
-| Markdown | marked.js | 18.0.0 (local npm) |
-| PowerPoint export | pptxgenjs | 4.0.1 (local npm) |
-| Icons (editor UI) | Lucide | 0.441.0 (local npm) |
-| Backend | Express | 4 |
-| Request validation | Zod | 4.3.6 |
-| Runtime | Node.js | >=22.13.0 (CI/container: 22.22.0) |
-| Desktop | Electron | 42 |
-| Cloud sync | rclone | system / Docker |
-| Storage | JSON files + filesystem | - |
-| Testing | Vitest, Playwright | - |
-| Linting and formatting | ESLint, Prettier | - |
+| Layer                  | Technology              | Version                                     |
+| ---------------------- | ----------------------- | ------------------------------------------- |
+| Frontend framework     | React                   | 18                                          |
+| Routing                | React Router DOM        | 7.14.1                                      |
+| Build tool             | Vite                    | 5                                           |
+| Styling                | Tailwind CSS            | 3.4.19                                      |
+| State management       | Zustand                 | 5.0.12                                      |
+| Rich text              | TipTap                  | 2.6.6                                       |
+| Presentation engine    | reveal.js               | 5.1.0 (CDN)                                 |
+| Math rendering         | KaTeX                   | 0.16.40 (local npm)                         |
+| Diagrams               | TikZJax                 | CDN                                         |
+| Charts                 | Chart.js                | 4.5.1 (local npm)                           |
+| Syntax highlighting    | highlight.js            | 11.11.1 (local npm)                         |
+| Markdown               | marked.js               | 18.0.0 (local npm)                          |
+| PowerPoint export      | pptxgenjs               | 4.0.1 (local npm)                           |
+| Icons (editor UI)      | Lucide                  | 0.441.0 (local npm)                         |
+| Backend                | Express                 | 4                                           |
+| Request validation     | Zod                     | 4.3.6                                       |
+| Runtime                | Node.js                 | >=22.13.0 (CI: 22.22.0; container: 22.23.3) |
+| Desktop                | Electron                | 42                                          |
+| Cloud sync             | rclone                  | system / Docker                             |
+| Storage                | JSON files + filesystem | -                                           |
+| Testing                | Vitest, Playwright      | -                                           |
+| Linting and formatting | ESLint, Prettier        | -                                           |
 
 ## E2E Selector Contract
 
@@ -116,6 +116,7 @@ export function createTeam(overrides = {}) { ... }
 ```
 
 Factory functions:
+
 - Accept an `overrides` object as the last argument and spread it last so callers
   can override any field.
 - Generate IDs with `Date.now()` + random suffix; no `crypto.randomUUID()` for
@@ -128,20 +129,20 @@ Plugin element factories live in `client/src/plugins/plugin-loader.js` because
 `ELEMENT_DEFAULTS`. Plugin elements must persist `pluginId`, `pluginSlug`,
 `pluginData`, and `pluginRuntime`.
 
-| Type | Convention | Example |
-| --- | --- | --- |
-| React components | PascalCase `.jsx` | `SlideCanvas.jsx`, `PropertiesPanel.jsx` |
-| Custom hooks | kebab-case `.js` | `use-autosave.js`, `use-clipboard.js` |
-| Zustand stores | kebab-case `.js` | `editor-store.js`, `presentation-store.js` |
-| Utility modules | kebab-case `.js` | `element-factory.js`, `smart-guides.js` |
-| TipTap extensions | PascalCase `.js` | `MathExtension.js`, `FontSize.js` |
-| Server routes | kebab-case `.js` | `presentations.js`, `share.js` |
-| Server services | kebab-case `.js` | `socket-handler.js`, `live-rooms.js` |
-| CSS files | Single file | All CSS lives in `client/src/index.css` |
-| Type definitions | kebab-case `.js` | `presentation.js` (with JSDoc) |
-| Server entry | lowercase `.js` | `server/index.js` |
-| Electron entry | lowercase `.js` | `electron/main.js` |
-| Test files | `*.test.js` or `*.test.jsx` | `api.test.js`, `pptx-import.test.js` |
+| Type              | Convention                  | Example                                    |
+| ----------------- | --------------------------- | ------------------------------------------ |
+| React components  | PascalCase `.jsx`           | `SlideCanvas.jsx`, `PropertiesPanel.jsx`   |
+| Custom hooks      | kebab-case `.js`            | `use-autosave.js`, `use-clipboard.js`      |
+| Zustand stores    | kebab-case `.js`            | `editor-store.js`, `presentation-store.js` |
+| Utility modules   | kebab-case `.js`            | `element-factory.js`, `smart-guides.js`    |
+| TipTap extensions | PascalCase `.js`            | `MathExtension.js`, `FontSize.js`          |
+| Server routes     | kebab-case `.js`            | `presentations.js`, `share.js`             |
+| Server services   | kebab-case `.js`            | `socket-handler.js`, `live-rooms.js`       |
+| CSS files         | Single file                 | All CSS lives in `client/src/index.css`    |
+| Type definitions  | kebab-case `.js`            | `presentation.js` (with JSDoc)             |
+| Server entry      | lowercase `.js`             | `server/index.js`                          |
+| Electron entry    | lowercase `.js`             | `electron/main.js`                         |
+| Test files        | `*.test.js` or `*.test.jsx` | `api.test.js`, `pptx-import.test.js`       |
 
 ## State Management
 
@@ -149,11 +150,11 @@ Plugin element factories live in `client/src/plugins/plugin-loader.js` because
 
 Editor state is managed via Zustand stores instead of a god component.
 
-| Store | File | Owns |
-| --- | --- | --- |
-| `editor-store` | `stores/editor-store.js` | Selection, editing element, clipboard, UI flags |
+| Store                | File                           | Owns                                                     |
+| -------------------- | ------------------------------ | -------------------------------------------------------- |
+| `editor-store`       | `stores/editor-store.js`       | Selection, editing element, clipboard, UI flags          |
 | `presentation-store` | `stores/presentation-store.js` | Presentation data, current slide index, slide operations |
-| `ui-store` | `stores/ui-store.js` | Theme preference, panel visibility, toolbar state |
+| `ui-store`           | `stores/ui-store.js`           | Theme preference, panel visibility, toolbar state        |
 
 **Access pattern:** components subscribe with selectors.
 
@@ -181,12 +182,12 @@ const selectedElements = useEditorStore((s) => s.selectedElements)
 
 Logic extracted from `EditorPage` lives in `hooks/`.
 
-| Hook | File | Purpose |
-| --- | --- | --- |
-| `useAutosave` | `use-autosave.js` | Debounced auto-save (1500ms) |
-| `useClipboard` | `use-clipboard.js` | Copy/cut/paste/duplicate elements |
-| `useEditorPersistenceController` | `use-editor-persistence-controller.js` | Route-aware autosave, manual save, and conflict actions |
-| `useEditorRecoveryController` | `use-editor-recovery-controller.js` | Durable browser-draft reconciliation after interrupted saves |
+| Hook                             | File                                   | Purpose                                                      |
+| -------------------------------- | -------------------------------------- | ------------------------------------------------------------ |
+| `useAutosave`                    | `use-autosave.js`                      | Debounced auto-save (1500ms)                                 |
+| `useClipboard`                   | `use-clipboard.js`                     | Copy/cut/paste/duplicate elements                            |
+| `useEditorPersistenceController` | `use-editor-persistence-controller.js` | Route-aware autosave, manual save, and conflict actions      |
+| `useEditorRecoveryController`    | `use-editor-recovery-controller.js`    | Durable browser-draft reconciliation after interrupted saves |
 
 ### Element lock, cut, table merge, find-replace
 
@@ -194,24 +195,24 @@ Logic extracted from `EditorPage` lives in `hooks/`.
 - **Table merges:** `normalizeTableShape` **preserves in-bounds** `mergedCells` on ±row/col; drops only OOB merges (`preserveValidMerges`). Do not reintroduce wipe-all `mergedCells: []`.
 - **Find/replace types:** text, code, markdown, latex, html, shape text, and **table cells** (`data[r][c]`). Keep collect + replace paths in sync via `collectElementSearchMatches`.
 - **Geometry floor:** canvas resize / multi-select W-H fan-out uses `MIN_SIZE` (40). New callout defaults are ≥ 40.
-| `useKeyboard` | `use-keyboard.js` | Keyboard shortcut dispatch |
-| `useLivePresentation` | `use-live-presentation.js` | Socket.IO live mode |
-| `useLiveTimer` | `use-live-timer.js` | Presenter timer UI state |
-| `useLiveTimerSync` | `use-live-timer-sync.js` | Socket timer sync |
-| `useSlideOperations` | `use-slide-operations.js` | Slide CRUD + element manipulation |
-| `useRevealPreviewFrame` | `use-reveal-preview-frame.js` | Reveal iframe management for present mode |
-| `useAnnotationSync` | `use-annotation-sync.js` | Presenter annotation sync |
-| `useGameSocket` | `use-game-socket.js` | Game player Socket.IO join/updates |
-| `useTouchGestures` | `use-touch-gestures.js` | Touch gesture normalization |
-| `useSwipeNavigation` | `use-swipe-navigation.js` | Swipe navigation |
-| `usePinchZoom` | `use-pinch-zoom.js` | Pinch zoom |
-| `useCanvasPointerInteraction` | `use-canvas-pointer-interaction.js` | Canvas drag/resize/rotate routing |
-| `useCanvasResizeRotate` | `use-canvas-resize-rotate.js` | Resize math + rotation snap |
-| `useCanvasSnappingHelpers` | `use-canvas-snapping-helpers-for-grid-and-smart-guides.js` | Snap + smart guide math |
-| `useCanvasRubberBandDrag` | `use-canvas-rubber-band-drag-selection.js` | Rubber-band selection |
-| `useElementCreation` | `use-element-creation.js` | Element insertion handlers (extracted from EditorPage) |
-| `useExportActions` | `use-export-actions.js` | Export handlers (HTML/PDF/PPTX/offline) |
-| `useAiActions` | `use-ai-actions.js` | AI copywriter/translate/generate handlers |
+  | `useKeyboard` | `use-keyboard.js` | Keyboard shortcut dispatch |
+  | `useLivePresentation` | `use-live-presentation.js` | Socket.IO live mode |
+  | `useLiveTimer` | `use-live-timer.js` | Presenter timer UI state |
+  | `useLiveTimerSync` | `use-live-timer-sync.js` | Socket timer sync |
+  | `useSlideOperations` | `use-slide-operations.js` | Slide CRUD + element manipulation |
+  | `useRevealPreviewFrame` | `use-reveal-preview-frame.js` | Reveal iframe management for present mode |
+  | `useAnnotationSync` | `use-annotation-sync.js` | Presenter annotation sync |
+  | `useGameSocket` | `use-game-socket.js` | Game player Socket.IO join/updates |
+  | `useTouchGestures` | `use-touch-gestures.js` | Touch gesture normalization |
+  | `useSwipeNavigation` | `use-swipe-navigation.js` | Swipe navigation |
+  | `usePinchZoom` | `use-pinch-zoom.js` | Pinch zoom |
+  | `useCanvasPointerInteraction` | `use-canvas-pointer-interaction.js` | Canvas drag/resize/rotate routing |
+  | `useCanvasResizeRotate` | `use-canvas-resize-rotate.js` | Resize math + rotation snap |
+  | `useCanvasSnappingHelpers` | `use-canvas-snapping-helpers-for-grid-and-smart-guides.js` | Snap + smart guide math |
+  | `useCanvasRubberBandDrag` | `use-canvas-rubber-band-drag-selection.js` | Rubber-band selection |
+  | `useElementCreation` | `use-element-creation.js` | Element insertion handlers (extracted from EditorPage) |
+  | `useExportActions` | `use-export-actions.js` | Export handlers (HTML/PDF/PPTX/offline) |
+  | `useAiActions` | `use-ai-actions.js` | AI copywriter/translate/generate handlers |
 
 Rule: new editor logic goes into a hook or store. `EditorPage` handles
 composition.
@@ -248,6 +249,7 @@ Interaction logic goes into `use-canvas-*.js` hooks that return `{ getSnapOffset
 All editor keyboard shortcuts are defined in `default-keyboard-shortcut-definitions-registry.js`. The registry is the **single source of truth** for default key chords and labels. Toolbar/menu components must read shortcut bindings from the registry, not hardcode strings like `"Ctrl+C"`.
 
 Override flow:
+
 1. `shortcut-local-storage-persistence.js` reads/writes user overrides to `localStorage`.
 2. `getShortcuts(overrides)` merges defaults with overrides at runtime.
 3. `use-keyboard.js` resolves the active chord and dispatches to `on{capitalize(id)}` callbacks.
@@ -283,17 +285,17 @@ Base URL: `/api` (Vite dev proxy -> Express; same origin in production).
 
 ### Server REST conventions
 
-| Pattern | Convention |
-| --- | --- |
-| Resource URL | `/api/presentations/:id` |
-| Collection URL | `/api/presentations` |
-| Action URL | `/api/presentations/:id/duplicate` |
-| Share viewer | `/share/:token` (no `/api` prefix) |
-| Request body | JSON (`Content-Type: application/json`) |
-| Validation | Zod schemas via `validate()` middleware on mutation routes |
-| File upload | `multipart/form-data` via multer (100MB limit, UUID filenames) |
-| Success response | Resource object or `{ success: true, ...data }` |
-| Error response | `{ error: 'message' }` with HTTP 4xx/5xx |
+| Pattern          | Convention                                                     |
+| ---------------- | -------------------------------------------------------------- |
+| Resource URL     | `/api/presentations/:id`                                       |
+| Collection URL   | `/api/presentations`                                           |
+| Action URL       | `/api/presentations/:id/duplicate`                             |
+| Share viewer     | `/share/:token` (no `/api` prefix)                             |
+| Request body     | JSON (`Content-Type: application/json`)                        |
+| Validation       | Zod schemas via `validate()` middleware on mutation routes     |
+| File upload      | `multipart/form-data` via multer (100MB limit, UUID filenames) |
+| Success response | Resource object or `{ success: true, ...data }`                |
+| Error response   | `{ error: 'message' }` with HTTP 4xx/5xx                       |
 | Validation error | `{ error: 'Validation failed', details: [...] }` with HTTP 400 |
 
 ### Plugin Runtime Conventions
@@ -331,15 +333,15 @@ slides.
 
 Server reads and writes JSON files via `fs-extra`.
 
-| File | Initial value |
-| --- | --- |
-| `presentations.json` | `[]` |
-| `templates.json` | `[]` |
-| `share-tokens.json` | `{}` |
-| `github-config.json` | `{ token: '', owner: '', repo: '' }` |
-| `settings.json` | `{ aiApiKey: '', defaultTheme: 'black', defaultTransition: 'slide' }` |
-| `analytics.json` | `{}` |
-| `media.json` | `[]` |
+| File                 | Initial value                                                         |
+| -------------------- | --------------------------------------------------------------------- |
+| `presentations.json` | `[]`                                                                  |
+| `templates.json`     | `[]`                                                                  |
+| `share-tokens.json`  | `{}`                                                                  |
+| `github-config.json` | `{ token: '', owner: '', repo: '' }`                                  |
+| `settings.json`      | `{ aiApiKey: '', defaultTheme: 'black', defaultTransition: 'slide' }` |
+| `analytics.json`     | `{}`                                                                  |
+| `media.json`         | `[]`                                                                  |
 
 `storage.js` wraps each file in an in-memory lock queue so concurrent requests
 do not race. There is still no database layer and no cross-file transaction
@@ -368,22 +370,22 @@ shared component styles. There is no `client/src/styles/` directory.
 Custom extensions in `client/src/extensions/` follow the TipTap Node/Mark class
 pattern.
 
-| Extension | Type | Purpose |
-| --- | --- | --- |
-| `MathExtension.js` | Node | Inline KaTeX rendering within text elements |
-| `FontSize.js` | Mark | Custom `font-size` mark |
-| `FontFamily.js` | Mark | Custom `font-family` mark |
-| `tiptap-font-weight-extension.js` | Mark | Custom `font-weight` mark |
-| `tiptap-line-height-extension.js` | Mark | Custom `line-height` mark |
-| `@tiptap/extension-color` | Mark | Text color |
-| `@tiptap/extension-highlight` | Mark | Text highlighting |
-| `@tiptap/extension-image` | Node | Image elements |
-| `@tiptap/extension-link` | Mark | Hyperlinks |
-| `@tiptap/extension-placeholder` | Node | Editor placeholder text |
-| `@tiptap/extension-table-*` | Node | Table support (table, table-row, table-cell, table-header) |
-| `@tiptap/extension-text-align` | Mark | Text alignment |
-| `@tiptap/extension-text-style` | Mark | Inline text styles |
-| `@tiptap/extension-underline` | Mark | Underline formatting |
+| Extension                         | Type | Purpose                                                    |
+| --------------------------------- | ---- | ---------------------------------------------------------- |
+| `MathExtension.js`                | Node | Inline KaTeX rendering within text elements                |
+| `FontSize.js`                     | Mark | Custom `font-size` mark                                    |
+| `FontFamily.js`                   | Mark | Custom `font-family` mark                                  |
+| `tiptap-font-weight-extension.js` | Mark | Custom `font-weight` mark                                  |
+| `tiptap-line-height-extension.js` | Mark | Custom `line-height` mark                                  |
+| `@tiptap/extension-color`         | Mark | Text color                                                 |
+| `@tiptap/extension-highlight`     | Mark | Text highlighting                                          |
+| `@tiptap/extension-image`         | Node | Image elements                                             |
+| `@tiptap/extension-link`          | Mark | Hyperlinks                                                 |
+| `@tiptap/extension-placeholder`   | Node | Editor placeholder text                                    |
+| `@tiptap/extension-table-*`       | Node | Table support (table, table-row, table-cell, table-header) |
+| `@tiptap/extension-text-align`    | Mark | Text alignment                                             |
+| `@tiptap/extension-text-style`    | Mark | Inline text styles                                         |
+| `@tiptap/extension-underline`     | Mark | Underline formatting                                       |
 
 One `Editor` instance is created in `EditorPage` and reused. When a text element
 is selected, the editor content is swapped to that element's HTML.
@@ -429,14 +431,14 @@ Slide backgrounds support `type: 'fx'` with shape `{ name, params, fallbackColor
 
 The feature-coverage traceability matrix is maintained by a pipeline in `scripts/feature-inventory/`:
 
-| Script | Purpose |
-| --- | --- |
-| `build-inventory.mjs` | Builds capability inventory from `feature-manifest.json` |
-| `extract-tags.mjs` | Scans test files for `[cap:<id>]` annotations |
-| `join-run-status.mjs` | Joins coverage tags with Vitest/Playwright run results |
-| `build-matrix.mjs` | Produces `docs/feature-coverage-matrix.md` + `scripts/feature-inventory/reports/feature-coverage-matrix.json` |
-| `check-coverage-gate.mjs` | Fails if uncovered capabilities exceed the allowlist |
-| `check-manifest-completeness.mjs` | Checks manifest vs. codebase drift |
+| Script                            | Purpose                                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `build-inventory.mjs`             | Builds capability inventory from `feature-manifest.json`                                                      |
+| `extract-tags.mjs`                | Scans test files for `[cap:<id>]` annotations                                                                 |
+| `join-run-status.mjs`             | Joins coverage tags with Vitest/Playwright run results                                                        |
+| `build-matrix.mjs`                | Produces `docs/feature-coverage-matrix.md` + `scripts/feature-inventory/reports/feature-coverage-matrix.json` |
+| `check-coverage-gate.mjs`         | Fails if uncovered capabilities exceed the allowlist                                                          |
+| `check-manifest-completeness.mjs` | Checks manifest vs. codebase drift                                                                            |
 
 ### Test Annotation Convention
 
@@ -471,13 +473,13 @@ Use `npm run matrix:element-control` to run it directly. `npm run matrix:gate` a
 
 The harness verifies all 19 canonical element types, enforces one row per `element/control/surface`, allows only `works`, `partial`, `broken`, and `export-gap`, and requires evidence, testCoverage, and security fields for content-bearing controls. The generated report lives at `plans/260617-0739-element-control-audit-matrix-tdd/reports/element-control-audit-matrix-current.md`.
 
-| File | Function signature | Notes |
-| --- | --- | --- |
-| `generateHTML.js` | `generateRevealHTML(presentation) -> string` | Pure, CDN-dependent re-export from shared |
-| `export-pptx-*.js` (8 files) | async, runs in client | Hybrid PPTX export: native objects for stable types, Playwright raster for complex DOM elements |
-| `server/services/pptx-exporter.js` | server-side | Playwright-based element rasterization endpoint |
-| `server/routes/pptx-import.js` | `POST /api/pptx/import` | Parses `.pptx` via `pptxtojson`, maps to NavSlides elements |
-| `offlineExport.js` | async, calls `generateRevealHTML()` then inlines CDN | Offline HTML export helper |
+| File                               | Function signature                                   | Notes                                                                                           |
+| ---------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `generateHTML.js`                  | `generateRevealHTML(presentation) -> string`         | Pure, CDN-dependent re-export from shared                                                       |
+| `export-pptx-*.js` (8 files)       | async, runs in client                                | Hybrid PPTX export: native objects for stable types, Playwright raster for complex DOM elements |
+| `server/services/pptx-exporter.js` | server-side                                          | Playwright-based element rasterization endpoint                                                 |
+| `server/routes/pptx-import.js`     | `POST /api/pptx/import`                              | Parses `.pptx` via `pptxtojson`, maps to NavSlides elements                                     |
+| `offlineExport.js`                 | async, calls `generateRevealHTML()` then inlines CDN | Offline HTML export helper                                                                      |
 
 CDN URLs are hardcoded in `shared/htmlGenerator.js` for reveal.js 5.1.0,
 highlight.js 11, KaTeX, Chart.js 4, marked.js, and TikZJax.
@@ -515,19 +517,19 @@ Security reviews should still block issues that cross trust boundaries:
 
 If deployment is internet-facing or multi-user, require external authentication and document the content trust boundary before release.
 
-| Measure | Implementation |
-| --- | --- |
-| Request validation | Zod schemas on all POST/PUT endpoints |
-| Targeted content safety | Sanitize only text/markdown/svg/shape-text render paths |
-| Trusted HTML embeds | Keep HTML embed content programmable (no blanket script stripping) |
-| MIME validation | File upload type checking |
-| Rate limiting | Applied to upload and sensitive endpoints |
-| Analytics ownership | `/api/analytics/:id` is operator-authenticated by the deployment boundary; share tokens never grant analytics access, and responses omit raw tokens/full referrers |
-| Live presenter auth | `presenterToken` required for presenter `join-room` |
-| AI custom endpoint guard | Public `http/https` only; private, mapped-private, link-local, and special-use IP ranges blocked |
-| Electron confinement | Sandboxed renderer, exact parsed app-origin navigation, no preload/IPC bridge |
-| Error boundaries | React `ErrorBoundary` prevents crash exposure |
-| Share passwords | Optional password protection for shared links |
+| Measure                  | Implementation                                                                                                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Request validation       | Zod schemas on all POST/PUT endpoints                                                                                                                              |
+| Targeted content safety  | Sanitize only text/markdown/svg/shape-text render paths                                                                                                            |
+| Trusted HTML embeds      | Keep HTML embed content programmable (no blanket script stripping)                                                                                                 |
+| MIME validation          | File upload type checking                                                                                                                                          |
+| Rate limiting            | Applied to upload and sensitive endpoints                                                                                                                          |
+| Analytics ownership      | `/api/analytics/:id` is operator-authenticated by the deployment boundary; share tokens never grant analytics access, and responses omit raw tokens/full referrers |
+| Live presenter auth      | `presenterToken` required for presenter `join-room`                                                                                                                |
+| AI custom endpoint guard | Public `http/https` only; private, mapped-private, link-local, and special-use IP ranges blocked                                                                   |
+| Electron confinement     | Sandboxed renderer, exact parsed app-origin navigation, no preload/IPC bridge                                                                                      |
+| Error boundaries         | React `ErrorBoundary` prevents crash exposure                                                                                                                      |
+| Share passwords          | Optional password protection for shared links                                                                                                                      |
 
 SVG authored content remains trusted presentation content, but SVG render sinks
 must strip active nodes (`script`, `foreignObject`, `iframe`, `object`, `embed`),
@@ -537,11 +539,11 @@ allowed SVG reference forms.
 
 ## What Does Not Exist
 
-| Item | Status |
-| --- | --- |
-| Full TypeScript | JSDoc types only, no `.ts` / `.tsx` migration |
-| Database | None; persistence is file-based only |
-| CSS Modules | Not used; split CSS files and Tailwind utilities are used instead |
-| Authentication | None; single-user self-hosted design |
+| Item            | Status                                                            |
+| --------------- | ----------------------------------------------------------------- |
+| Full TypeScript | JSDoc types only, no `.ts` / `.tsx` migration                     |
+| Database        | None; persistence is file-based only                              |
+| CSS Modules     | Not used; split CSS files and Tailwind utilities are used instead |
+| Authentication  | None; single-user self-hosted design                              |
 
 These are intentional design decisions, not oversights.

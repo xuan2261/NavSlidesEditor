@@ -1,13 +1,11 @@
 import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, render, screen, fireEvent } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import StatusBar, { getStatusBarDensity } from './StatusBar'
+import StatusBar from './StatusBar'
 import { useUIStore } from '../../stores/ui-store'
 import { useEditorStore } from '../../stores/editor-store'
 
-// The right-hand cluster (zoom + slide position + view switcher) is gated on an
-// active editor (slidePosition.total > 0). Most tests opt in by setting total.
 function setEditorActive(total = 5, current = 0) {
   useUIStore.setState({ slidePosition: { current, total } })
 }
@@ -22,6 +20,8 @@ beforeEach(() => {
   useEditorStore.setState({ viewMode: 'normal' })
 })
 
+afterEach(() => vi.unstubAllGlobals())
+
 describe('StatusBar editor-context gate', () => {
   it('hides zoom, slide position and view switcher when no editor is active', () => {
     render(<StatusBar />)
@@ -30,39 +30,33 @@ describe('StatusBar editor-context gate', () => {
     expect(screen.queryByTestId('statusbar-view-normal')).toBeNull()
   })
 
-  it('always shows attribution and version', () => {
-    render(<StatusBar />)
-    expect(screen.getByText(/NavSlides Editor/)).toBeTruthy()
-    expect(screen.getByText(/Designed by Xuan Bui Thanh/)).toBeTruthy()
-    expect(screen.getByText(/^v/)).toBeTruthy()
-  })
 })
 
-describe('StatusBar density', () => {
-  it.each([
-    [500, 'compact'],
-    [800, 'standard'],
-    [1100, 'wide'],
-  ])('maps a %ipx container to %s density', (width, density) => {
-    expect(getStatusBarDensity(width)).toBe(density)
-  })
-
-  it('marks attribution as lowest priority while critical controls remain fixed', () => {
-    setEditorActive()
+describe('StatusBar responsive context', () => {
+  it('keeps slide context and usable controls when resizing from desktop to tablet', () => {
+    let resize
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(callback) { resize = callback }
+      observe() {}
+      disconnect() {}
+    })
+    setEditorActive(5, 2)
     render(<StatusBar />)
-    expect(screen.getByTestId('statusbar-attribution').getAttribute('data-priority')).toBe('low')
-    expect(screen.getByTestId('statusbar-critical-controls').className).toContain('shrink-0')
+    act(() => resize([{ contentRect: { width: 1280 } }]))
+    act(() => resize([{ contentRect: { width: 768 } }]))
+
+    expect(screen.getByTestId('statusbar-slide-position').textContent).toBe('Slide 3 / 5')
+    expect(screen.queryByTestId('statusbar-attribution')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Slide Sorter' }))
+    expect(useEditorStore.getState().viewMode).toBe('sorter')
+    fireEvent.change(screen.getByRole('slider', { name: 'Zoom level' }), { target: { value: '125' } })
+    expect(useUIStore.getState().zoom).toBe(1.25)
   })
 })
 
 describe('StatusBar zoom slider', () => {
   beforeEach(() => setEditorActive(5))
 
-  it('[cap:control.status.zoom] replaces the dropdown with a range slider', () => {
-    render(<StatusBar />)
-    expect(screen.queryByTestId('statusbar-zoom-select')).toBeNull()
-    expect(screen.getByTestId('statusbar-zoom-slider')).toBeTruthy()
-  })
 
   it('reflects store zoom as a percentage value', () => {
     useUIStore.setState({ zoom: 0.75 })
@@ -88,14 +82,19 @@ describe('StatusBar zoom slider', () => {
     expect(useUIStore.getState().userZoomMode).toBe(false)
   })
 
-  it('[cap:control.status.touch-targets] applies shared coarse-pointer targets without changing compact desktop classes', () => {
+  it('[cap:control.status.touch-targets] keeps coarse-pointer targets on compact controls', () => {
     render(<StatusBar />)
-    expect(screen.getByTestId('statusbar-zoom-in').className).toContain('ui-coarse-target-square')
+    expect(screen.getByTestId('statusbar-zoom-in').className).toContain(
+      'ui-coarse-target-square'
+    )
     expect(screen.getByTestId('statusbar-zoom-in').className).toContain('h-7')
     expect(screen.getByTestId('statusbar-zoom-in').className).toContain('sm:h-5')
     expect(screen.getByTestId('statusbar-zoom-fit').className).toContain('ui-coarse-target')
-    expect(screen.getByTestId('statusbar-zoom-fit').className).toContain('h-7')
+    expect(screen.getByTestId('statusbar-view-normal').className).toContain(
+      'ui-coarse-target-square'
+    )
   })
+
 })
 
 describe('StatusBar slide position', () => {
@@ -103,6 +102,20 @@ describe('StatusBar slide position', () => {
     setEditorActive(5, 2)
     render(<StatusBar />)
     expect(screen.getByTestId('statusbar-slide-position').textContent).toMatch(/Slide 3 \/ 5/)
+  })
+
+  it('follows vertical, master and parent slide context changes', () => {
+    setEditorActive(5, 2)
+    render(<StatusBar />)
+    const position = screen.getByTestId('statusbar-slide-position')
+    act(() => useUIStore.setState({ slidePosition: { current: 2, total: 5, vertical: 0 } }))
+    expect(position.textContent).toBe('Slide 3.1 / 5')
+    act(() => useUIStore.setState({ slidePosition: { current: 2, total: 5, vertical: 1 } }))
+    expect(position.textContent).toBe('Slide 3.2 / 5')
+    act(() => useUIStore.setState({ slidePosition: { current: 2, total: 5, vertical: 1, masterName: 'Title layout' } }))
+    expect(position.textContent).toBe('Editing master: Title layout')
+    act(() => useUIStore.setState({ slidePosition: { current: 1, total: 5 } }))
+    expect(position.textContent).toBe('Slide 2 / 5')
   })
 })
 

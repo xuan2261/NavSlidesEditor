@@ -1,9 +1,8 @@
 name: Electron server lock refresh
 
-# Regenerates electron/server-package-lock.json via `npm run electron:lock` on a
-# weekly cadence. Dependabot manages the workspace lockfile at root, but the
-# isolated lock the Electron packaging flow consumes is generated — this job
-# keeps it in sync with in-range server dependency updates.
+# Resolves electron/server-package-lock.json via the explicit `--resolve` mode
+# on a weekly cadence. The default `npm run electron:lock` command performs only
+# release-version metadata synchronization without dependency resolution.
 
 on:
   schedule:
@@ -27,7 +26,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: '22.22.0' }
-      - run: npm run electron:lock
+      - run: npm run electron:lock -- --resolve
       - name: Verify the regenerated lock installs its declared tree
         # prepare-electron performs `npm ci` against the isolated lock and
         # compares the installed tree hash with the lock — the artifact-level
@@ -57,7 +56,7 @@ jobs:
           if [ -z "$open_pr" ]; then
             gh pr create \
               --title "chore: refresh isolated Electron server lock" \
-              --body "Regenerates electron/server-package-lock.json via \`npm run electron:lock\` so the packaged Electron server picks up in-range dependency updates that Dependabot lands on the workspace lockfile. The refresh job verifies the lock installs its declared tree via \`node scripts/prepare-electron.js\`." \
+              --body "Regenerates electron/server-package-lock.json via \`npm run electron:lock -- --resolve\` so the packaged Electron server picks up in-range dependency updates that Dependabot lands on the workspace lockfile. The refresh job verifies the lock installs its declared tree via \`node scripts/prepare-electron.js\`." \
               --base master \
               --head "$branch"
           else

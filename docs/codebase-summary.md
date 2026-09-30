@@ -3,10 +3,12 @@
 ## Snapshot
 
 NavSlides Editor is a self-hostable presentation editor built as a monorepo with
-`client/`, `server/`, `shared/`, and `electron/` runtimes. Current release is
-`v1.16.2`. The repo also carries `docs/`, `plans/`, `scripts/`, `tests/`, and
-checked-in corpus / report artifacts used for verification. The editor shell
-uses the tab-based ribbon as the default controls surface.
+`client/`, `server/`, `shared/`, and `electron/` runtimes. The current published
+release is `v1.16.2`; immutable history includes `v1.16.0` and `v1.16.1`. The
+next release candidate is the untagged `v1.17.0` product version. The repo also
+carries `docs/`, `plans/`, `scripts/`, `tests/`, and checked-in corpus / report
+artifacts used for verification. The editor shell uses the tab-based ribbon as
+the default controls surface.
 
 ## Repository Layout
 
@@ -231,8 +233,21 @@ navslides-editor/
 
 ## Repo Notes
 
-- Root package version is `1.16.2`.
-- Runtime baseline is Node.js >=22.13.0; CI and container builds pin 22.22.0.
+- Root package version is `1.17.0`, the next release candidate.
+- The current published release is `v1.16.2`; `v1.16.0` and `v1.16.1` remain
+  immutable release history.
+- Product manifests and lock metadata own the product version;
+  `runtime-versions.json` owns runtime/toolchain pins.
+- Candidate release boundaries and outstanding evidence are in
+  [`deployment-guide.md#release`](deployment-guide.md#release). The selected
+  release artifact is the exact prebuilt Docker image with receipts; Windows is
+  a private unpacked-runtime and exact-source OfficeCLI G1 evidence host, not a
+  public EXE distribution target. Native edited-PPTX G0/G1/G2/G4 remain selected;
+  executable G3 and PowerPoint G5 do not. HIGH/CRITICAL container findings are
+  user-accepted advisory risk for private single-user self-hosting, not a
+  security pass. [`release-target-policy.json`](../config/release-target-policy.json)
+  owns the target; workflows and physical receipts must still prove execution.
+- Runtime baseline is Node.js >=22.13.0; CI pins 22.22.0 and the container image pins 22.23.3.
 - There is no database layer; persistence is file-based by design.
 - There is no full TypeScript migration; JSDoc is the type system.
 - The repo includes large generated artifacts such as template assets, icon

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import CollapsibleSection from './CollapsibleSection'
 import SelectionPane from './SelectionPane'
 import CommonElementControls from './properties/common-element-controls'
@@ -79,11 +80,31 @@ export default function PropertiesPanel({
   onDeleteSelectedElements,
   onSelectElement,
   isTemplate = false,
+  focusRequest,
+  isMaster = false,
 }) {
+  const panelRef = useRef(null)
+  const notesRef = useRef(null)
+  const layersRef = useRef(null)
+  useEffect(() => {
+    const target = focusRequest?.section === 'notes' ? notesRef.current
+      : focusRequest?.section === 'layers' ? layersRef.current?.querySelector('[role="list"]') : null
+    const panel = panelRef.current
+    if (!target || !panel) return
+    target.focus({ preventScroll: true })
+    const bounds = target.getBoundingClientRect()
+    const viewport = panel.getBoundingClientRect()
+    if (bounds.top < viewport.top || bounds.height > panel.clientHeight) {
+      panel.scrollTop += bounds.top - viewport.top
+    } else if (bounds.bottom > viewport.bottom) {
+      panel.scrollTop += bounds.bottom - viewport.bottom
+    }
+  }, [focusRequest])
   if (!slide) {
     return (
       <div
-        className="properties-panel w-60 shrink-0 bg-panel text-text-primary border-l border-border overflow-y-auto flex flex-col tour-step-properties"
+        ref={panelRef}
+        className="properties-panel w-60 min-h-0 flex-1 bg-panel text-text-primary border-l border-border overflow-y-auto flex flex-col tour-step-properties"
         role="complementary"
         aria-label="Properties panel"
       >
@@ -96,10 +117,44 @@ export default function PropertiesPanel({
 
   return (
     <div
-      className="properties-panel w-60 shrink-0 bg-panel text-text-primary border-l border-border overflow-y-auto flex flex-col tour-step-properties"
+      ref={panelRef}
+      className="properties-panel w-60 min-h-0 flex-1 bg-panel text-text-primary border-l border-border overflow-y-auto flex flex-col tour-step-properties"
       role="complementary"
       aria-label="Properties panel"
     >
+      <div ref={layersRef}>
+          <CollapsibleSection title="Selection Pane" defaultOpen={focusRequest?.section === 'layers'} key={`layers-${focusRequest?.section === 'layers' ? focusRequest.request : 0}`}>
+            <SelectionPane
+              elements={slide?.elements || []}
+              selectedIds={selectedElementIds || []}
+              onSelect={(id, additive) => {
+                if (typeof onSelectElement === 'function') onSelectElement(id, additive)
+              }}
+              onToggleVisibility={(id) => {
+                const el = (slide?.elements || []).find((e) => e.id === id)
+                if (el) onUpdateElement(id, { hidden: !el.hidden })
+              }}
+              onToggleLock={(id) => {
+                const el = (slide?.elements || []).find((e) => e.id === id)
+                if (el) onUpdateElement(id, { locked: !el.locked })
+              }}
+              onRename={(id, name) => onUpdateElement(id, { name })}
+              onReorder={(fromIdx, toIdx) => {
+                const els = [...(slide?.elements || [])]
+                const [moved] = els.splice(fromIdx, 1)
+                els.splice(toIdx, 0, moved)
+                const updates = els.map((el, i) => ({ id: el.id, zIndex: i }))
+                if (typeof onReorderElements === 'function') {
+                  onReorderElements(updates)
+                } else if (typeof onUpdateElements === 'function') {
+                  onUpdateElements(updates)
+                } else {
+                  updates.forEach(({ id, zIndex }) => onUpdateElement(id, { zIndex }))
+                }
+              }}
+            />
+          </CollapsibleSection>
+      </div>
       {/* Element Section */}
       {selectedElement && (
         <div className="p-4 border-b border-border">
@@ -135,38 +190,6 @@ export default function PropertiesPanel({
             selectedElementIds={selectedElementIds || []}
           />
 
-          {/* Selection Pane (layer list) */}
-          <CollapsibleSection title="Selection Pane" defaultOpen={false}>
-            <SelectionPane
-              elements={slide?.elements || []}
-              selectedIds={selectedElementIds || []}
-              onSelect={(id, additive) => {
-                if (typeof onSelectElement === 'function') onSelectElement(id, additive)
-              }}
-              onToggleVisibility={(id) => {
-                const el = (slide?.elements || []).find((e) => e.id === id)
-                if (el) onUpdateElement(id, { hidden: !el.hidden })
-              }}
-              onToggleLock={(id) => {
-                const el = (slide?.elements || []).find((e) => e.id === id)
-                if (el) onUpdateElement(id, { locked: !el.locked })
-              }}
-              onRename={(id, name) => onUpdateElement(id, { name })}
-              onReorder={(fromIdx, toIdx) => {
-                const els = [...(slide?.elements || [])]
-                const [moved] = els.splice(fromIdx, 1)
-                els.splice(toIdx, 0, moved)
-                const updates = els.map((el, i) => ({ id: el.id, zIndex: i }))
-                if (typeof onReorderElements === 'function') {
-                  onReorderElements(updates)
-                } else if (typeof onUpdateElements === 'function') {
-                  onUpdateElements(updates)
-                } else {
-                  updates.forEach(({ id, zIndex }) => onUpdateElement(id, { zIndex }))
-                }
-              }}
-            />
-          </CollapsibleSection>
 
           {/* Type-specific properties */}
           <ElementTypeProperties
@@ -232,17 +255,17 @@ export default function PropertiesPanel({
       )}
 
       {/* Slide Footer */}
-      <SlideFooterSection
+      {!isMaster && <SlideFooterSection
         slide={slide}
         presentation={presentation}
         onUpdateSlide={onUpdateSlide}
         onUpdatePresentation={onUpdatePresentation}
-      />
+      />}
 
       {/* Speaker Notes */}
-      <div className="mt-6 border-t border-border pt-2">
-        <CollapsibleSection title="Speaker Notes">
-          <textarea
+      {!isMaster && <div className="mt-6 border-t border-border pt-2">
+        <CollapsibleSection title="Speaker Notes" key={`notes-${focusRequest?.section === 'notes' ? focusRequest.request : 0}`}>
+          <textarea ref={notesRef}
             aria-label="Speaker notes"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-2 rounded-sm text-xs resize-y min-h-[80px] focus:outline-none focus:border-accent placeholder:text-text-muted"
             value={slide.notes || ''}
@@ -250,7 +273,7 @@ export default function PropertiesPanel({
             placeholder="Add speaker notes here..."
           />
         </CollapsibleSection>
-      </div>
+      </div>}
 
       {/* Custom CSS — template editor only */}
       {isTemplate && presentation && onUpdatePresentation && (

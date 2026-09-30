@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import SlidePanel from './SlidePanel'
 
@@ -87,6 +87,23 @@ describe('SlidePanel control contract', () => {
     expect(within(childButton).getByText('HTML')).toBeTruthy()
   })
 
+  it('shows master content and deck colors in vertical slide previews', () => {
+    const child = { id: 'child', layoutId: 'master', elements: [] }
+    render(<SlidePanel {...defaultProps({
+      slides: [{ ...slides[0], children: [child] }],
+      resolution: { width: 800, height: 600 },
+      designTokens: { colors: { bg: '#101020' } },
+      layoutMasters: [{ id: 'master', name: 'Brand', placeholders: [], fixedElements: [
+        { id: 'brand', type: 'text', x: 20, y: 20, width: 300, height: 80, content: 'Master brand' },
+      ] }],
+    })} />)
+    const childButton = screen.getByRole('button', { name: 'Select vertical slide 1.1' })
+    const preview = childButton.querySelector('[inert]')
+    expect(within(childButton).getByText('Master brand')).toBeTruthy()
+    expect(preview.style.aspectRatio).toBe('800 / 600')
+    expect(preview.style.backgroundColor).toBe('rgb(16, 16, 32)')
+  })
+
   it('[cap:control.slide-panel] exposes executable slide navigation and actions', () => {
     const onSelect = vi.fn()
     const onAdd = vi.fn()
@@ -111,6 +128,40 @@ describe('SlidePanel control contract', () => {
 
     fireEvent.contextMenu(thumbnails[0], { clientX: 10, clientY: 20 })
     expect(screen.getByRole('menu', { name: 'Slide actions' })).toBeTruthy()
+  })
+
+  it('opens from Shift+F10, navigates enabled actions, and restores thumbnail focus on Escape', async () => {
+    const onDuplicate = vi.fn()
+    render(<SlidePanel {...defaultProps({ onDuplicate })} />)
+    const thumbnail = screen.getByRole('button', { name: 'Select slide 1' })
+    thumbnail.focus()
+    fireEvent.keyDown(thumbnail, { key: 'F10', shiftKey: true })
+
+    const menu = screen.getByRole('menu', { name: 'Slide actions' })
+    const duplicate = within(menu).getByRole('menuitem', { name: 'Duplicate' })
+    const lock = within(menu).getByRole('menuitem', { name: 'Lock' })
+    const deleteAction = within(menu).getByRole('menuitem', { name: 'Delete' })
+    expect(document.activeElement).toBe(duplicate)
+    fireEvent.keyDown(duplicate, { key: 'ArrowUp' })
+    expect(document.activeElement).toBe(deleteAction)
+    fireEvent.keyDown(deleteAction, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(duplicate)
+    fireEvent.keyDown(duplicate, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(lock)
+    fireEvent.keyDown(lock, { key: 'Escape' })
+    expect(screen.queryByRole('menu', { name: 'Slide actions' })).toBeNull()
+    await waitFor(() => expect(document.activeElement).toBe(thumbnail))
+    expect(onDuplicate).not.toHaveBeenCalled()
+  })
+
+  it('restores focus to the slide thumbnail when a pointer-opened menu closes', async () => {
+    render(<SlidePanel {...defaultProps()} />)
+    const thumbnail = screen.getByRole('button', { name: 'Select slide 2' })
+    fireEvent.contextMenu(screen.getAllByTestId('slide-panel-item')[1], { clientX: 10, clientY: 20 })
+    const duplicate = within(screen.getByRole('menu', { name: 'Slide actions' })).getByRole('menuitem', { name: 'Duplicate' })
+    expect(document.activeElement).toBe(duplicate)
+    fireEvent.keyDown(duplicate, { key: 'Escape' })
+    await waitFor(() => expect(document.activeElement).toBe(thumbnail))
   })
 
   it('[F2] keeps hidden thumbnail actions out of tab order until the slide has focus', () => {

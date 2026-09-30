@@ -63,3 +63,16 @@ describe('shared media accessibility rendering', () => {
     expect(html).toContain('<summary>Transcript</summary>')
   })
 })
+
+describe('Reveal Mermaid rendering', () => {
+  it('keeps local Mermaid assets resolvable in an embedded presentation', () => {
+    const html = renderElement({
+      id: 'diagram-1', type: 'html', embedKind: 'mermaid',
+      mermaidSource: 'graph TD; A-->B', x: 0, y: 0, width: 400, height: 200,
+    }, {})
+
+    expect(html).toContain('srcdoc="')
+    expect(html).toContain('/vendor/mermaid/mermaid.min.js')
+    expect(html).not.toContain('src="data:text/html')
+  })
+})

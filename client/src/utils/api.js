@@ -7,6 +7,7 @@ function applyTypedErrorFields(error, body) {
   error.failureCode = body.failureCode
   error.failureStage = body.failureStage
   error.reasonCode = body.reasonCode
+  error.activeContent = body.activeContent
   return error
 }
 
@@ -215,6 +216,44 @@ export const api = {
     fd.append('file', file)
     return fetch('/api/upload', { method: 'POST', body: fd }).then(handleResponse)
   },
+  preflightProjectImport: (file, opts = {}) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append(
+      'trustedAuthorActiveContentAcknowledged',
+      String(opts.trustedAuthorActiveContentAcknowledged === true)
+    )
+    return fetch(`${BASE}/project-imports/preflight`, {
+      method: 'POST',
+      body: fd,
+      ...(opts.signal ? { signal: opts.signal } : {}),
+    }).then(handleResponse)
+  },
+  stageProjectImportMedia: (sessionId, capability, opts = {}) =>
+    fetch(`${BASE}/project-imports/${encodeURIComponent(sessionId)}/media`, {
+      method: 'POST',
+      headers: { 'X-NavSlides-Import-Capability': capability },
+      ...(opts.signal ? { signal: opts.signal } : {}),
+    }).then(handleResponse),
+  publishProjectImport: (sessionId, capability, opts = {}) =>
+    fetch(`${BASE}/project-imports/${encodeURIComponent(sessionId)}/publish`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-NavSlides-Import-Capability': capability,
+      },
+      body: JSON.stringify({
+        trustedAuthorActiveContentAcknowledged:
+          opts.trustedAuthorActiveContentAcknowledged === true,
+      }),
+      ...(opts.signal ? { signal: opts.signal } : {}),
+    }).then(handleResponse),
+  rollbackProjectImport: (sessionId, capability, opts = {}) =>
+    fetch(`${BASE}/project-imports/${encodeURIComponent(sessionId)}`, {
+      method: 'DELETE',
+      headers: { 'X-NavSlides-Import-Capability': capability },
+      ...(opts.signal ? { signal: opts.signal } : {}),
+    }).then(handleResponse),
   importPptxAsync: async (file, opts = {}) => {
     const {
       retryOnBusy = false,

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "kind": "vitest-topology-phase-result",
+  "capturedDate": "2026-09-26",
+  "status": "blocked",
+  "functionalStatus": "passed",
+  "releaseGateStatus": "blocked",
+  "projects": [
+    "client-jsdom",
+    "node-parallel",
+    "node-serial"
+  ],
+  "inventory": {
+    "fileCount": 611,
+    "sha256": "fd1086bd9669af3e4b55180e1cc4ef08ac8a0d6a3faa21f3afc805c456422c90",
+    "exactLaneUnion": true,
+    "duplicateExecution": false,
+    "frozenBaselineFilesRetained": 605
+  },
+  "results": {
+    "success": true,
+    "suiteCount": 1471,
+    "testCount": 4896,
+    "passedTests": 4894,
+    "failedTests": 0,
+    "skippedTests": 2,
+    "todoTests": 0
+  },
+  "coverage": {
+    "lines": 76.28,
+    "branches": 65,
+    "functions": 72.01,
+    "statements": 73.25,
+    "floors": {
+      "lines": 74,
+      "branches": 60,
+      "functions": 68,
+      "statements": 71
+    },
+    "passed": true
+  },
+  "orderChecks": {
+    "nodeParallelSeeds": [
+      260925,
+      260926
+    ],
+    "passed": true
+  },
+  "featureMatrix": {
+    "verified": 129,
+    "total": 129,
+    "elementControlRows": 141,
+    "passed": true
+  },
+  "performanceEvidence": {
+    "authoritative": false,
+    "legacyMedianSeconds": 1304.3937988,
+    "optimizedSamplesSeconds": [
+      409.7274023,
+      409.7708011,
+      409.6962201
+    ],
+    "optimizedMedianSeconds": 409.7274023,
+    "indicativeImprovementFraction": 0.685887,
+    "targetImprovementFraction": 0.3,
+    "targetIndicated": true,
+    "comparisonInvalidReasons": [
+      "two frozen contract sources changed during the topology implementation",
+      "the optimized receipt was captured from a dirty working tree"
+    ],
+    "ciBudgetSamplesSeconds": [
+      409.7731899,
+      409.1988872,
+      408.2403609,
+      408.6263531,
+      409.5784655
+    ],
+    "provisionalMaxWallSeconds": 430,
+    "budgetApplied": false,
+    "budgetBlockers": [
+      "samples were captured from a dirty subject",
+      "the local runner was not declared CI-equivalent",
+      "the canonical inventory source hash changed after safety-contract repairs"
+    ]
+  },
+  "requiredToUnblock": [
+    "capture at least five samples from a clean committed subject on the declared CI runner class",
+    "bind measurementCommit, configHash, and inventoryHash to that exact subject",
+    "check in and enforce the mechanically derived maxWallSeconds"
+  ]
+}

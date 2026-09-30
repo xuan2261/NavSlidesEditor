@@ -111,7 +111,7 @@ describe('ViewTabContent', () => {
     const propertiesPane = screen.getByLabelText('Toggle properties panel')
     expect(propertiesPane.getAttribute('aria-pressed')).toBe('true')
 
-    fireEvent.mouseDown(propertiesPane)
+    fireEvent.click(propertiesPane)
 
     expect(useUIStore.getState().rightPanelOpen).toBe(false)
     expect(screen.getByLabelText('Toggle properties panel').getAttribute('aria-pressed')).toBe('false')

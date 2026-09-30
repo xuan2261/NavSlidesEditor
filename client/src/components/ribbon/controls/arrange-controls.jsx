@@ -36,18 +36,20 @@ export default function ArrangeControls({
   onSendBackward,
   onBringToFront,
   onSendToBack,
+  availability,
 }) {
   return (
     <div className="flex items-center gap-0.5">
-      {selectedCount >= 2 && (
+      {(selectedCount >= 2 || availability) && (
         <>
-          {ALIGN_ACTIONS.map(([type, Icon, title]) => (
+          {selectedCount >= 2 && ALIGN_ACTIONS.map(([type, Icon, title]) => (
             <Button
               key={type}
               variant="icon"
               className="h-7 w-7"
-              onClick={() => onAlignElements?.(type)}
-              title={title}
+              onClick={() => { if (!availability?.arrange) onAlignElements?.(type) }}
+              disabled={Boolean(availability?.arrange)}
+              title={availability?.arrange || title}
               aria-label={title}
             >
               <Icon size={14} />
@@ -57,8 +59,9 @@ export default function ArrangeControls({
           <Button
             variant="icon"
             className="h-7 w-7"
-            onClick={onGroup}
-            title="Group elements"
+            onClick={(event) => { if (!availability?.group) onGroup?.(event) }}
+            disabled={Boolean(availability?.group)}
+            title={availability?.group || 'Group elements'}
             aria-label="Group elements"
           >
             <Group size={14} />
@@ -66,8 +69,9 @@ export default function ArrangeControls({
           <Button
             variant="icon"
             className="h-7 w-7"
-            onClick={onUngroup}
-            title="Ungroup elements"
+            onClick={(event) => { if (!availability?.ungroup) onUngroup?.(event) }}
+            disabled={Boolean(availability?.ungroup)}
+            title={availability?.ungroup || 'Ungroup elements'}
             aria-label="Ungroup elements"
           >
             <Ungroup size={14} />
@@ -78,8 +82,9 @@ export default function ArrangeControls({
       <Button
         variant="icon"
         className="h-7 w-7"
-        onClick={onBringForward}
-        title="Bring forward"
+        onClick={(event) => { if (!availability?.arrange) onBringForward?.(event) }}
+        disabled={Boolean(availability?.arrange)}
+        title={availability?.arrange || 'Bring forward'}
         aria-label="Bring forward"
       >
         <ArrowUpToLine size={14} />
@@ -87,8 +92,9 @@ export default function ArrangeControls({
       <Button
         variant="icon"
         className="h-7 w-7"
-        onClick={onSendBackward}
-        title="Send backward"
+        onClick={(event) => { if (!availability?.arrange) onSendBackward?.(event) }}
+        disabled={Boolean(availability?.arrange)}
+        title={availability?.arrange || 'Send backward'}
         aria-label="Send backward"
       >
         <ArrowDownToLine size={14} />
@@ -96,8 +102,9 @@ export default function ArrangeControls({
       <Button
         variant="icon"
         className="h-7 w-7"
-        onClick={onBringToFront}
-        title="Bring to front"
+        onClick={(event) => { if (!availability?.arrange) onBringToFront?.(event) }}
+        disabled={Boolean(availability?.arrange)}
+        title={availability?.arrange || 'Bring to front'}
         aria-label="Bring to front"
       >
         <ChevronsUp size={14} />
@@ -105,8 +112,9 @@ export default function ArrangeControls({
       <Button
         variant="icon"
         className="h-7 w-7"
-        onClick={onSendToBack}
-        title="Send to back"
+        onClick={(event) => { if (!availability?.arrange) onSendToBack?.(event) }}
+        disabled={Boolean(availability?.arrange)}
+        title={availability?.arrange || 'Send to back'}
         aria-label="Send to back"
       >
         <ChevronsDown size={14} />

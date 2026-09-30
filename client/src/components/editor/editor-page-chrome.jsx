@@ -55,6 +55,7 @@ export function EditorPageHeader({ c }) {
             onAIGenerator={() => c.setShowAIGenerator(true)}
             onAITranslate={() => c.setShowAITranslate(true)}
             onPresent={() => presentInWindow(c.presentation)}
+            onPresentCurrent={c.startSlideshowCurrent}
             pptxFidelity={c.pptxFidelity}
             pptxBusy={c.pptxFidelityLoading}
             onReloadPptxFidelity={c.reloadPptxFidelity}
@@ -88,6 +89,7 @@ export function EditorPageOverlays({ c }) {
         viewMode={c.viewMode}
         setViewMode={c.setViewMode}
         setCurrentSlideIndex={c.setCurrentSlideIndex}
+        navigateToSlide={c.navigateToSlide}
         setPresentation={c.setPresentation}
         htmlEditorState={c.htmlEditorState}
         setHtmlEditorState={c.setHtmlEditorState}

@@ -23,7 +23,9 @@ describe('website bootstrap', () => {
     const pkg = JSON.parse(read('website', 'package.json'))
     expect(pkg.name).toBe('navslides-website')
     expect(pkg.private).toBe(true)
-    expect(pkg.scripts['docs:build']).toBe('vitepress build')
+    expect(pkg.scripts['docs:build']).toBe(
+      'node --experimental-require-module ../node_modules/vitepress/bin/vitepress.js build',
+    )
     expect(pkg.devDependencies?.vitepress).toBeDefined()
   })
 

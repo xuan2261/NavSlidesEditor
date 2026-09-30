@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "detectedAfterRun": 1,
+  "stopRuleApplied": true,
+  "reason": "byte-level source fingerprint changed during capture",
+  "initialSourceFingerprint": {
+    "algorithm": "sha256",
+    "fileCount": 3512,
+    "hash": "6cf9cb5b9655fff85f6bb1d834d7585ef2bf4711474f644e330cf3c42a75a826"
+  },
+  "finalSourceFingerprint": {
+    "algorithm": "sha256",
+    "fileCount": 3512,
+    "hash": "3c302391fa7ed91b16d240d7f347367e5d9574d2df4f46b3fad81243e29097ae"
+  },
+  "inventoryUnchanged": true,
+  "finalInventoryHash": "10e291d47867da3fbd10b4a7e0b8c23eb545556e7a51b52758b835a4be945b99",
+  "frozenConfigUnchanged": true,
+  "observedNewDirtyPath": "shared/tests/__snapshots__/htmlgenerator-golden-baseline.test.js.snap",
+  "pathAttributionLimit": "aggregate initial fingerprint did not retain per-source hashes; an already-dirty concurrent file may also have changed",
+  "normalizedSnapshotBlobUnchanged": true,
+  "coverageNotRunReason": "capture stopped immediately after source-fingerprint drift, as required",
+  "failures": [
+    {
+      "file": "server/routes/pptx-export.test.js",
+      "test": "PPTX raster API rasterizes only HTML embeds and LaTeX elements for hybrid PPTX export",
+      "reason": "AssertionError: expected 500 to be 200 // Object.is equality"
+    },
+    {
+      "file": "server/utils/server-background-raster.test.js",
+      "test": "server-background-raster rasterizes gradient backgrounds to PNG data URI",
+      "reason": "browserType.launch: Executable doesn't exist at C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\ms-playwright\\chromium_headless_shell-1243\\chrome-headless-shell-win64\\chrome-headless-shell.exe"
+    },
+    {
+      "file": "server/utils/server-export-chart-table.test.js",
+      "test": "server chart and table PPTX package export keeps radar, supported authored chart options, and rotated merged tables native",
+      "reason": "Error: Failed to launch Chromium for PPTX rasterization. Run \"npx playwright install chromium\" (or set NAVSLIDES_CHROMIUM_PATH to a Chromium binary). Original error: browserType.launch: Executable doesn't exist at C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\ms-playwright\\chromium_headless_shell-1243\\chrome-headless-shell-win64\\chrome-headless-shell.exe"
+    },
+    {
+      "file": "server/utils/server-export.test.js",
+      "test": "server-export integration supports strict gradient background rasterization",
+      "reason": "Error: promise rejected \"Error: Gradient background rasterization …\" instead of resolving"
+    },
+    {
+      "file": "tests/unit/website-bootstrap-workspace-structure-and-config-presence.test.js",
+      "test": "website bootstrap has a website package with vitepress dep and docs scripts",
+      "reason": "AssertionError: expected 'node --experimental-require-module ..…' to be 'vitepress build' // Object.is equality"
+    },
+    {
+      "file": "client/src/pages/editor-live-presenter-route-state.test.jsx",
+      "test": "EditorPage live presenter route state closes deck A live state and clears its popup bridge when rerendered for deck B",
+      "reason": "Error: Unable to find role=\"menuitem\" and name \"Present Live\""
+    },
+    {
+      "file": "client/src/pages/editor-live-presenter-route-state.test.jsx",
+      "test": "EditorPage live presenter route state ignores an outgoing deck live-room response after a route change",
+      "reason": "Error: Unable to find role=\"menuitem\" and name \"Present Live\""
+    },
+    {
+      "file": "client/src/pages/editor-live-presenter-route-state.test.jsx",
+      "test": "EditorPage live presenter route state rejects a stale request when the route returns to the same deck",
+      "reason": "Error: Unable to find role=\"menuitem\" and name \"Present Live\""
+    },
+    {
+      "file": "client/src/pages/editor-live-presenter-route-state.test.jsx",
+      "test": "EditorPage live presenter route state does not report a failed room request after leaving its deck",
+      "reason": "Error: Unable to find role=\"menuitem\" and name \"Present Live\""
+    },
+    {
+      "file": "client/src/pages/home-editor-responsive-source.test.js",
+      "test": "responsive source contracts Status bar wraps or hides long attribution text on narrow screens",
+      "reason": "AssertionError: expected 'import React, { useLayoutEffect, useR…' to contain 'hidden sm:inline-flex'"
+    },
+    {
+      "file": "client/src/__tests__/ui-accessibility-findings-regression.test.js",
+      "test": "verified UI accessibility findings regression guards [cap:control.ribbon.active-reveal] keeps active reveal and overflow affordances semantic",
+      "reason": "AssertionError: expected 'import * as Tabs from \\'@radix-ui/rea…' to contain 'scrollIntoView({ block: \\'nearest\\', …'"
+    },
+    {
+      "file": "client/src/utils/tailwind-inline-style-audit.test.js",
+      "test": "tailwind inline-style audit keeps migrated-scope inline styles within budget",
+      "reason": "AssertionError: unexpected non-exempt inline styles: expected [ [ …(2) ] ] to deeply equal []"
+    }
+  ]
+}

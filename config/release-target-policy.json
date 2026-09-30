@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "1",
+  "policyVersion": "release-target-policy-v3",
+  "receiptSchemaVersion": "release-receipt-v1",
+  "targets": {
+    "linux-ci": {
+      "selected": true,
+      "requiredGates": [
+        "client-manifest",
+        "unit-coverage",
+        "playwright",
+        "load",
+        "docker",
+        "attestation"
+      ]
+    },
+    "windows": {
+      "selected": true,
+      "publicArtifacts": [],
+      "requiredGates": ["electron-runtime-closure", "officecli-physical"]
+    },
+    "linux-desktop": {
+      "selected": false,
+      "unselectedReceiptStatus": "not-selected",
+      "requiredGates": []
+    },
+    "macos-desktop": {
+      "selected": false,
+      "unselectedReceiptStatus": "not-selected",
+      "requiredGates": []
+    }
+  },
+  "containerSecurityAdvisory": {
+    "mode": "user-risk-accepted",
+    "decisionDate": "2026-09-27",
+    "scope": "single-user-private-self-hosted",
+    "requiredEvidence": [
+      "container-trivy.json",
+      "container-sbom.spdx.json",
+      "container-supply-chain-receipt.json"
+    ],
+    "securityPassClaim": false
+  },
+  "attestations": {
+    "issuer": "https://token.actions.githubusercontent.com",
+    "requireWorkflowIdentity": true,
+    "requiredArtifacts": ["client-dist", "docker-image"]
+  }
+}

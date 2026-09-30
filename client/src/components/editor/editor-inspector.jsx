@@ -49,6 +49,8 @@ export default function EditorInspector({
       {!c.showDesignIdeas && (
         <PropertiesPanel
           slide={c.masterEdit ? { id: `master:${c.masterEdit.id}`, elements: c.masterEdit.fixedElements } : c.activeSlide}
+          focusRequest={c.inspectorFocus}
+          isMaster={Boolean(c.masterEdit)}
           selectedElement={c.selectedElement}
           onUpdateSlide={c.updateCurrentSlide}
           onUpdateElement={(idOrUpdates, maybeUpdates) =>

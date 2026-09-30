@@ -90,8 +90,8 @@ async function rerenderPage(rerender, presentationId) {
 }
 
 async function requestLiveRoom() {
-  fireEvent.mouseDown(screen.getByRole('button', { name: 'Share' }))
-  fireEvent.mouseDown(await screen.findByRole('menuitem', { name: 'Present Live' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Share' }))
+  fireEvent.click(await screen.findByRole('menuitem', { name: 'Present Live' }))
 }
 
 let originalFetch

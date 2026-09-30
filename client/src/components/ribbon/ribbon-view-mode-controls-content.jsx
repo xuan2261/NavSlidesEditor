@@ -23,6 +23,11 @@ export default function ViewTabContent({
   onSpeakerNotes,
   onToggleSlideSorter,
   onUpdatePresentation,
+  onOpenSelectionPane,
+  onToggleInspector,
+  onToggleNavigator,
+  onOpenDesignIdeas,
+  isMaster,
 }) {
   const leftPanelOpen = useUIStore((s) => s.leftPanelOpen)
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen)
@@ -76,12 +81,16 @@ export default function ViewTabContent({
           <Button
             variant="ribbon"
             className="h-7"
-            title="Speaker Notes"
             aria-label="Speaker Notes"
             onClick={onSpeakerNotes}
+            disabled={isMaster}
+            title={isMaster ? 'Speaker notes belong to slides, not masters' : 'Speaker Notes'}
           >
             <StickyNote size={14} />
             <span className="text-[11px] hidden lg:inline">Notes</span>
+          </Button>
+          <Button variant="ribbon" className="h-7" aria-label="Open selection pane" title="Selection Pane" onClick={onOpenSelectionPane}>
+            <PanelRight size={14} /><span className="text-[11px] hidden lg:inline">Layers</span>
           </Button>
         </div>
       </RibbonSection>
@@ -91,8 +100,7 @@ export default function ViewTabContent({
           <Button variant="ribbon"
             className={`h-7 ${leftPanelOpen ? 'bg-primary-light text-accent' : ''}`}
             title="Toggle slide panel" aria-label="Toggle slide panel" aria-pressed={leftPanelOpen}
-            onMouseDown={(e) => { e.preventDefault(); toggleLeftPanel() }}
-            onKeyDown={keyboardActivate(toggleLeftPanel)}>
+            onClick={onToggleNavigator || toggleLeftPanel}>
             <PanelLeft size={14} />
             <span className="text-[11px] hidden lg:inline">Slides</span>
           </Button>
@@ -100,8 +108,7 @@ export default function ViewTabContent({
             data-testid="view-toggle-selection-pane"
             className={`h-7 ${rightPanelOpen ? 'bg-primary-light text-accent' : ''}`}
             title="Toggle properties panel" aria-label="Toggle properties panel" aria-pressed={rightPanelOpen}
-            onMouseDown={(e) => { e.preventDefault(); toggleRightPanel() }}
-            onKeyDown={keyboardActivate(toggleRightPanel)}>
+            onClick={onToggleInspector || toggleRightPanel}>
             <PanelRight size={14} />
             <span className="text-[11px] hidden lg:inline">Properties</span>
           </Button>
@@ -116,8 +123,7 @@ export default function ViewTabContent({
           <Button variant="ribbon"
             className={`h-7 ${showDesignIdeas ? 'bg-primary-light text-accent' : ''}`}
             title="Design Ideas" aria-label="Toggle design ideas panel" aria-pressed={showDesignIdeas}
-            onMouseDown={(e) => { e.preventDefault(); toggleDesignIdeas() }}
-            onKeyDown={keyboardActivate(toggleDesignIdeas)}>
+            onClick={onOpenDesignIdeas || toggleDesignIdeas}>
             <Lightbulb size={14} />
             <span className="text-[11px] hidden lg:inline">Ideas</span>
           </Button>
