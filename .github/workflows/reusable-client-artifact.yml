@@ -39,7 +39,7 @@ jobs:
           [[ "${{ inputs.mode }}" == ci || "${{ inputs.mode }}" == release ]]
           if [[ "${{ inputs.mode }}" == release ]]; then test -n "${{ inputs.source_run_id }}"; fi
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with: { node-version: '22.22.0', cache: npm }
+        with: { node-version: '22.23.3', cache: npm }
       - id: names
         run: echo "artifact=client-dist-v1-${{ inputs.subject_sha }}" >> "$GITHUB_OUTPUT"
       - name: Import successful main-CI client artifact

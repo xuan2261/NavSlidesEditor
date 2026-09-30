@@ -20,7 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '22.22.0', cache: npm }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22.23.3', cache: npm }
       - run: npm ci
       - run: npm run build
       - name: Run ribbon 768px specs (warn-only)
