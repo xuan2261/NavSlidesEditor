@@ -561,9 +561,9 @@ export default function InsertTabContent({
             aria-label="Add line"
             onMouseDown={(e) => {
               e.preventDefault()
-              onAddLine?.()
+              onAddLine?.({ arrowEnd: 'none' })
             }}
-            onKeyDown={(e) => handleKeyboardActivation(e, onAddLine)}
+            onKeyDown={(e) => handleKeyboardActivation(e, () => onAddLine?.({ arrowEnd: 'none' }))}
           >
             <Minus size={14} />
           </Button>

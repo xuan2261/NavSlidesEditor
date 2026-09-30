@@ -81,6 +81,7 @@ const EXEMPT_FILES = new Set([
   'client/src/components/ribbon/design-tab-content.jsx',
   'client/src/components/AnimationTimeline.jsx',
   'client/src/components/SlideThumbnail.jsx',
+  'client/src/components/slide-panel/slide-thumbnail-preview.jsx',
   'client/src/components/canvas/canvas-footer-overlay-with-section-and-page-number.jsx',
   'client/src/components/canvas/canvas-right-click-context-menu-for-slide-elements.jsx',
   'client/src/components/canvas/element-renderers/callout-element-renderer.jsx',

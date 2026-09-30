@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowDownRight, ArrowUp, Copy, LayoutTemplate, Lock, Plus, Trash2, Unlock, Wand2 } from 'lucide-react'
 import { Button } from './ui/Button'
 import { SlideNavigatorItem } from './slide-panel/slide-navigator-item'
@@ -7,7 +7,7 @@ const menuClass = 'flex w-full items-center gap-2 px-3 py-2 text-left text-xs ho
 const slideId = (slide, index) => slide?.id || `slide-${index}`
 
 export default function SlidePanel(props) {
-  const { slides, currentIndex, onSelect, onAdd, onDelete, onDuplicate, onDeleteSelected, onDuplicateSelected, onMove, onToggleLock, onToggleAutoAnimate, onAddVerticalSlide, onSelectVertical, currentVerticalIndex, onAddFromTemplate, resolution = {}, layoutOptions = [], onApplyLayout, onChangeLayout, onDetachLayout } = props
+  const { slides, currentIndex, onSelect, onAdd, onDelete, onDuplicate, onDeleteSelected, onDuplicateSelected, onMove, onToggleLock, onToggleAutoAnimate, onAddVerticalSlide, onSelectVertical, currentVerticalIndex, onAddFromTemplate, resolution = {}, designTokens, layoutMasters, layoutOptions = [], onApplyLayout, onChangeLayout, onDetachLayout } = props
   const [selectedIds, setSelectedIds] = useState(() => new Set([slideId(slides[currentIndex], currentIndex)]))
   const [focusIndex, setFocusIndex] = useState(currentIndex)
   const [activeActionIndex, setActiveActionIndex] = useState(null)
@@ -23,14 +23,25 @@ export default function SlidePanel(props) {
     : new Set([ids[currentIndex]])
   const selectedIndices = ids.flatMap((id, index) => effectiveSelectedIds.has(id) ? [index] : [])
 
+  const activeId = ids[currentIndex]
+  const activatedIdRef = useRef(activeId)
+  useEffect(() => {
+    if (activatedIdRef.current !== activeId) {
+      setSelectedIds(new Set([activeId]))
+      setFocusIndex(currentIndex)
+      activatedIdRef.current = activeId
+    }
+  }, [activeId, currentIndex])
   useLayoutEffect(() => {
     if (!ctxMenu || !menuRef.current) return
     menuRef.current.style.top = `${ctxMenu.y}px`
     menuRef.current.style.left = `${ctxMenu.x}px`
+    menuRef.current.querySelector('[role="menuitem"]:not(:disabled)')?.focus()
   }, [ctxMenu])
 
   function activate(event, index) {
     const id = ids[index]
+    activatedIdRef.current = id
     setSelectedIds((previous) => {
       if (event.ctrlKey || event.metaKey) {
         const next = new Set(previous)
@@ -53,8 +64,8 @@ export default function SlidePanel(props) {
     }
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); activate(event, index) }
     if (event.key === 'F10' && event.shiftKey) {
-      event.preventDefault(); originRef.current = event.currentTarget
-      const rect = event.currentTarget.getBoundingClientRect(); setCtxMenu({ x: rect.left + 12, y: rect.top + 12, index })
+      event.preventDefault(); originRef.current = buttonsRef.current[index]
+      const rect = buttonsRef.current[index]?.getBoundingClientRect() ?? event.currentTarget.getBoundingClientRect(); setCtxMenu({ x: rect.left + 12, y: rect.top + 12, index })
     }
   }
 
@@ -68,9 +79,9 @@ export default function SlidePanel(props) {
     <nav aria-label="Slides" className="flex-1 overflow-y-auto p-2">
       <ul className="space-y-2">{slides.map((slide, index) => <SlideNavigatorItem
         key={ids[index]} slide={slide} index={index} current={index === currentIndex} selected={effectiveSelectedIds.has(ids[index])} focused={index === focusIndex} actionsActive={index === activeActionIndex} dragOver={index === dragOverIndex} slideCount={slides.length}
-        resolution={{ width: resolution.width || 960, height: resolution.height || 540 }} currentVerticalIndex={currentVerticalIndex} onSelectVertical={onSelectVertical}
+        resolution={resolution} designTokens={designTokens} layoutMasters={layoutMasters} currentVerticalIndex={currentVerticalIndex} onSelectVertical={onSelectVertical}
         onActivate={(event) => activate(event, index)} onFocus={() => { setFocusIndex(index); setActiveActionIndex(index) }} onKeyDown={(event) => keyDown(event, index)}
-        onContextMenu={(event) => { event.preventDefault(); originRef.current = event.currentTarget; setCtxMenu({ x: event.clientX, y: event.clientY, index }) }}
+        onContextMenu={(event) => { event.preventDefault(); originRef.current = buttonsRef.current[index]; setCtxMenu({ x: event.clientX, y: event.clientY, index }) }}
         onDuplicate={onDuplicate} onDelete={onDelete} onDragStart={() => { dragIndexRef.current = index }} onDragOver={(event) => { event.preventDefault(); setDragOverIndex(index) }} onDragLeave={() => setDragOverIndex(null)}
         onDrop={(event) => { event.preventDefault(); if (dragIndexRef.current !== null && dragIndexRef.current !== index) onMove(dragIndexRef.current, index); dragIndexRef.current = null; setDragOverIndex(null) }} onDragEnd={() => { dragIndexRef.current = null; setDragOverIndex(null) }}
         buttonRef={(node) => { buttonsRef.current[index] = node }}

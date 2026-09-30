@@ -443,7 +443,11 @@ describe('CanvasElement image crop diagnostics', () => {
   it('renders persisted image borders in the editor canvas', () => {
     renderCanvasElement({ ...imageElement, borderWidth: 2, borderColor: '#336699' })
     const image = screen.getByTestId('slide-element-image-1').querySelector('[data-element-content] > div')
-    expect(image.style.border).toBe('2px solid #336699')
+    const expectedStyle = document.createElement('div').style
+    expectedStyle.borderColor = '#336699'
+    expect(image.style.borderWidth).toBe('2px')
+    expect(image.style.borderStyle).toBe('solid')
+    expect(image.style.borderColor).toBe(expectedStyle.borderColor)
   })
 
   it('does not mark regular images as source-cropped', () => {

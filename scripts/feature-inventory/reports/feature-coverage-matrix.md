@@ -64,7 +64,7 @@ Verified (PASS only): 129/129 (100%)  |  PASS: 129
 | control.insert.text | low | smoke | unit | trace | client/src/components/ribbon/big-button-clipboard-and-insert-integration.test.jsx | PASS |
 | control.properties.disclosure | high | smoke | unit | trace | client/src/components/CollapsibleSection.test.jsx | PASS |
 | control.properties.panel | high | smoke | unit | trace | client/src/components/PropertiesPanel.test.jsx | PASS |
-| control.ribbon.active-reveal | high | smoke | unit | trace | client/src/__tests__/ui-accessibility-findings-regression.test.js<br>client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx<br>client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx | PASS |
+| control.ribbon.active-reveal | high | smoke | unit | trace | client/src/__tests__/ui-accessibility-findings-regression.test.js<br>client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx<br>client/src/components/ribbon/tab-bar-with-scroll-and-icons-viewport.test.jsx | PASS |
 | control.ribbon.animations | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |
 | control.ribbon.contextual-format | high | smoke | unit | trace | client/src/components/ribbon/format-tab-dynamic-visibility-and-label.test.jsx<br>client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx<br>client/src/components/ribbon/tab-bar-with-scroll-and-icons.test.jsx<br>client/src/stores/ui-store-ribbon.test.js | PASS |
 | control.ribbon.design | low | smoke | unit | trace | client/src/components/ribbon/ribbon-shell-tab-navigation-and-rendering.test.jsx | PASS |

@@ -17,10 +17,14 @@ function isTrustedAppUrl(rawUrl, appOrigin) {
   return false
 }
 
+function isTrustedPopupUrl(rawUrl, appOrigin) {
+  return rawUrl === 'about:blank' || isTrustedAppUrl(rawUrl, appOrigin)
+}
+
 function isExternalHttpUrl(rawUrl, appOrigin) {
   const target = parseUrl(rawUrl)
   if (!target || (target.protocol !== 'http:' && target.protocol !== 'https:')) return false
   return !isTrustedAppUrl(rawUrl, appOrigin)
 }
 
-module.exports = { isTrustedAppUrl, isExternalHttpUrl }
+module.exports = { isTrustedAppUrl, isTrustedPopupUrl, isExternalHttpUrl }

@@ -1,15 +1,14 @@
-const { app, BrowserWindow, shell, dialog, Menu } = require('electron')
+const { app, BrowserWindow, shell, dialog, Menu, session } = require('electron')
 const path = require('path')
-const { isTrustedAppUrl, isExternalHttpUrl } = require('./navigation-policy')
-
-// Remove default menu bar (File, Edit, View, Window, Help)
-Menu.setApplicationMenu(null)
+const { isTrustedAppUrl, isTrustedPopupUrl, isExternalHttpUrl } = require('./navigation-policy')
+const { acquireSingleInstance, focusExistingWindow } = require('./single-instance')
+const { withDesktopCsp } = require('./content-security-policy')
 
 const PORT = 3002
+const APP_ORIGIN = `http://127.0.0.1:${PORT}`
 let mainWindow
 let serverInstance
 let stopBackend
-
 
 function getResourcePath(...parts) {
   if (app.isPackaged) {
@@ -45,6 +44,23 @@ async function startBackend() {
   console.log(`Data: ${dataDir}`)
 }
 
+function confineWindow(window, appOrigin) {
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    if (isTrustedPopupUrl(url, appOrigin)) return { action: 'allow' }
+    if (isExternalHttpUrl(url, appOrigin)) shell.openExternal(url)
+    return { action: 'deny' }
+  })
+
+  window.webContents.on('will-navigate', (event, url) => {
+    if (isTrustedAppUrl(url, appOrigin)) return
+    event.preventDefault()
+    if (isExternalHttpUrl(url, appOrigin)) shell.openExternal(url)
+  })
+
+  // Electron does not apply the opener's navigation handlers to child windows.
+  window.webContents.on('did-create-window', (child) => confineWindow(child, appOrigin))
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -60,53 +76,53 @@ function createWindow() {
     },
   })
 
-  const APP_ORIGIN = `http://127.0.0.1:${PORT}`
+  confineWindow(mainWindow, APP_ORIGIN)
   mainWindow.loadURL(APP_ORIGIN)
-
-  // Keep app windows on the exact parsed origin. Prefix checks are unsafe:
-  // URLs with userinfo or lookalike hosts can start with APP_ORIGIN while
-  // resolving to a different origin.
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (isTrustedAppUrl(url, APP_ORIGIN)) return { action: 'allow' }
-    if (isExternalHttpUrl(url, APP_ORIGIN)) shell.openExternal(url)
-    return { action: 'deny' }
-  })
-
-  mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (isTrustedAppUrl(url, APP_ORIGIN)) return
-    event.preventDefault()
-    if (isExternalHttpUrl(url, APP_ORIGIN)) shell.openExternal(url)
-  })
 
   mainWindow.on('closed', () => {
     mainWindow = null
   })
 }
 
-app.whenReady().then(async () => {
-  try {
-    await startBackend()
-    createWindow()
-  } catch (err) {
-    dialog.showErrorBox('Startup Error', `Failed to start: ${err.message}`)
-    app.quit()
-  }
+const hasSingleInstanceLock = acquireSingleInstance({
+  app,
+  onSecondInstance: () => focusExistingWindow(mainWindow),
+})
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+if (!hasSingleInstanceLock) {
+  app.quit()
+} else {
+  // Remove default menu bar (File, Edit, View, Window, Help)
+  Menu.setApplicationMenu(null)
+
+  app.whenReady().then(async () => {
+    session.defaultSession.webRequest.onHeadersReceived(
+      { urls: [`${APP_ORIGIN}/*`] },
+      (details, callback) => callback({ responseHeaders: withDesktopCsp(details.responseHeaders) })
+    )
+    try {
+      await startBackend()
+      createWindow()
+    } catch (err) {
+      dialog.showErrorBox('Startup Error', `Failed to start: ${err.message}`)
+      app.quit()
+    }
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    })
   })
-})
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
-})
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit()
+  })
 
-// Quitting must wait for the backend to release the package store writer lock,
-// otherwise the next launch finds the store locked by a process that is gone.
-let quitting = false
-app.on('before-quit', (event) => {
-  if (quitting || !stopBackend) return
-  quitting = true
-  event.preventDefault()
-  stopBackend().catch(() => {}).then(() => app.quit())
-})
+  // Wait for the backend to release the package-store writer lock.
+  let quitting = false
+  app.on('before-quit', (event) => {
+    if (quitting || !stopBackend) return
+    quitting = true
+    event.preventDefault()
+    stopBackend().catch(() => {}).then(() => app.quit())
+  })
+}

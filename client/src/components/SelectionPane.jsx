@@ -151,7 +151,7 @@ export default function SelectionPane({
   }
 
   return (
-    <div className="selection-pane select-none" role="list" aria-label="Slide layers">
+    <div className="selection-pane select-none" role="list" aria-label="Slide layers" tabIndex={-1}>
       {elements.length === 0 && (
         <div className="px-1.5 py-2 text-[11px] italic text-text-muted">
           No elements on this slide

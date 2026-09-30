@@ -264,6 +264,7 @@ export default function DesignTabContent({
   onUpdateSlide,
   onUpdatePresentation,
   onOpenLayoutManager,
+  isMaster,
 }) {
   const [showThemes, setShowThemes] = useState(false)
   const [showBg, setShowBg] = useState(false)
@@ -332,7 +333,8 @@ export default function DesignTabContent({
         <div className="relative">
           <Button variant="ribbon" className="h-7"
             ref={bgTriggerRef}
-            title="Slide background" aria-label="Change slide background"
+            title={isMaster ? 'Exit master editing to change a slide background' : 'Slide background'} aria-label="Change slide background"
+            disabled={isMaster}
             onMouseDown={(e) => { e.preventDefault(); setShowBg((v) => !v) }}
             onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => setShowBg((v) => !v))}>
             <div

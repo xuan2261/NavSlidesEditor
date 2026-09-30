@@ -22,12 +22,16 @@ const { recordView } = require('./routes/analytics')
 const { setupSocketHandlers } = require('./services/socket-handler')
 const { setupGameSocketHandlers } = require('./services/game-socket-handler')
 const {
+  getPackageStore,
   initializePackageStore,
   shutdownPackageStore,
 } = require('./services/pptx-import/package-store-runtime')
 const { stripControlChars } = require('./utils/strip-control-chars')
 const { resolveListenHost, getExposureWarning } = require('./services/listen-host-policy')
 const { sanitizeSvgBuffer } = require('./services/svg-upload-sanitizer')
+const { createHealthState, READY_REASON_CODES } = require('./services/health-state')
+const { assertSingleProcessTopology } = require('./services/health-state-topology')
+const { assertWritableRoot, durableRecoveryReason } = require('./services/health-state-readiness')
 
 /**
  * A store that fails to release is exactly what leaves the writer lock held and
@@ -121,9 +125,18 @@ const pluginsRouter = require('./routes/plugins')
 // ── App setup ────────────────────────────────────────────────────────────────
 const app = express()
 const PORT = process.env.PORT || 3002
+const healthState = createHealthState()
 
-// Initialize data directories and files
-initDataFiles()
+app.get('/health/live', (_req, res) => {
+  res.set('Cache-Control', 'no-store').status(200).json(healthState.live())
+})
+app.get('/health/ready', (_req, res) => {
+  const body = healthState.ready()
+  res
+    .set('Cache-Control', 'no-store')
+    .status(body.status === 'ready' ? 200 : 503)
+    .json(body)
+})
 
 // ── Security: UUID validation for :id and :snapshotId params ─────────────────
 function isValidId(id) {
@@ -159,17 +172,24 @@ app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: false }))
 
 // ── Rate limiting ────────────────────────────────────────────────────────────
+const isRateLimitSkipped = () =>
+  process.env.NODE_ENV === 'test' ||
+  process.env.DISABLE_RATE_LIMIT === 'true' ||
+  Boolean(process.env.PLAYWRIGHT_API_BASE_URL) ||
+  process.env.PLAYWRIGHT_TEST === 'true'
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: process.env.NODE_ENV === 'production' ? 300 : 200000,
   message: { error: 'Too many requests, please try again later' },
+  skip: isRateLimitSkipped,
 })
 app.use('/api/', apiLimiter)
 
 const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: process.env.NODE_ENV === 'production' ? 30 : 300,
-  skip: () => process.env.NODE_ENV === 'test',
+  skip: isRateLimitSkipped,
   message: { error: 'Too many uploads, please try again later' },
 })
 app.use('/api/upload', uploadLimiter)
@@ -178,6 +198,7 @@ const shareLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: process.env.NODE_ENV === 'production' ? 10 : 1000,
   message: 'Too many attempts. Try again later.',
+  skip: isRateLimitSkipped,
 })
 app.use('/share/', shareLimiter)
 
@@ -200,7 +221,8 @@ app.use('/uploads', async (req, res, next) => {
     const sanitized = sanitizeSvgBuffer(await fs.readFile(filePath))
     res.set({
       'Content-Type': 'image/svg+xml; charset=utf-8',
-      'Content-Security-Policy': "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'",
+      'Content-Security-Policy':
+        "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'",
       'X-Content-Type-Options': 'nosniff',
       'Cross-Origin-Resource-Policy': 'same-origin',
     })
@@ -214,7 +236,18 @@ app.use('/uploads', express.static(UPLOADS_DIR))
 if (fs.existsSync(socketIoClientDist)) {
   app.use('/vendor/socket.io', express.static(socketIoClientDist))
 }
-app.use('/vendor', express.static(path.join(__dirname, 'vendor')))
+// LaTeX previews run in sandboxed srcdoc frames with opaque origins. Public
+// KaTeX font files must allow cross-origin font loads even on our own host.
+app.use(
+  '/vendor',
+  express.static(path.join(__dirname, 'vendor'), {
+    setHeaders(res, filePath) {
+      if (/[/\\]katex[/\\]dist[/\\]fonts[/\\][^/\\]+\.(?:woff2?|ttf)$/i.test(filePath)) {
+        res.setHeader('Access-Control-Allow-Origin', '*')
+      }
+    },
+  })
+)
 
 // ── Mount routes ─────────────────────────────────────────────────────────────
 // Core CRUD — order matters: more specific paths before generic ones
@@ -430,6 +463,8 @@ app.use(errorHandler)
 
 // ── Server start ─────────────────────────────────────────────────────────────
 async function startServer(port, options = {}) {
+  healthState.beginStartup()
+  assertSingleProcessTopology()
   const p = port ?? PORT
   const listenHost = resolveListenHost({
     explicitHost: options.host,
@@ -437,14 +472,53 @@ async function startServer(port, options = {}) {
   })
   const exposureWarning = getExposureWarning(listenHost)
   if (exposureWarning) logger.warn(JSON.stringify(exposureWarning))
-  await initializePackageStore({ rootDir: path.resolve(DATA_DIR) })
   packageStoreShutdownPromise = null
+  try {
+    initDataFiles()
+  } catch (error) {
+    healthState.markDegraded(READY_REASON_CODES.DATA_ROOT_NOT_WRITABLE)
+    throw error
+  }
+  try {
+    await initializePackageStore({ rootDir: path.resolve(DATA_DIR) })
+  } catch (error) {
+    healthState.markDegraded(READY_REASON_CODES.PACKAGE_STORE_UNAVAILABLE)
+    throw error
+  }
+  const store = getPackageStore()
+  try {
+    if (!(await store.ownsWriter())) {
+      throw Object.assign(new Error('Package store writer ownership unavailable'), {
+        code: READY_REASON_CODES.PACKAGE_STORE_WRITER_UNAVAILABLE,
+      })
+    }
+  } catch (error) {
+    healthState.markDegraded(READY_REASON_CODES.PACKAGE_STORE_WRITER_UNAVAILABLE)
+    await releasePackageStore()
+    throw error
+  }
+  for (const [rootDir, reason] of [
+    [DATA_DIR, READY_REASON_CODES.DATA_ROOT_NOT_WRITABLE],
+    [UPLOADS_DIR, READY_REASON_CODES.UPLOADS_ROOT_NOT_WRITABLE],
+  ]) {
+    try {
+      await assertWritableRoot(rootDir)
+    } catch (error) {
+      healthState.markDegraded(reason)
+      await releasePackageStore()
+      throw error
+    }
+  }
+  const recoveryReason = durableRecoveryReason(store.getState())
+  if (recoveryReason) healthState.markDegraded(recoveryReason)
+  else healthState.markReady()
   return new Promise((resolve, reject) => {
     const server = http.createServer(app)
     server.once('close', () => {
       if (!serverShutdownPromises.has(server)) releasePackageStore()
     })
     server.once('error', async (error) => {
+      healthState.markDegraded(READY_REASON_CODES.READINESS_DEGRADED)
       await releasePackageStore()
       reject(error)
     })
@@ -458,9 +532,10 @@ async function startServer(port, options = {}) {
 
     server.listen(p, listenHost, () => {
       const address = server.address()
-      const actualAddress = typeof address === 'object' && address
-        ? `${address.address}:${address.port}`
-        : String(address)
+      const actualAddress =
+        typeof address === 'object' && address
+          ? `${address.address}:${address.port}`
+          : String(address)
       logger.log(`Server running on http://${actualAddress}`)
       resolve(server)
     })
@@ -473,6 +548,7 @@ async function startServer(port, options = {}) {
  * while another caller is still draining transports.
  */
 function stopServer(server, options = {}) {
+  healthState.markStopping()
   if (!server) return releasePackageStore()
   const existing = serverShutdownPromises.get(server)
   if (existing) return existing
@@ -512,4 +588,4 @@ if (require.main === module) {
     })
 }
 
-module.exports = { app, startServer, stopServer }
+module.exports = { app, healthState, startServer, stopServer }

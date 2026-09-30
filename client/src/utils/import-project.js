@@ -9,13 +9,16 @@ import {
  * @param {File} file
  * @returns {Promise<{ type: 'zip'|'json', presentation: object, manifest?: object, mediaFiles?: Array }>}
  */
-export async function parseProjectFile(file) {
+export async function parseProjectFile(file, options = {}) {
   const isZip = file.name.endsWith('.navslides') && !file.name.endsWith('.json')
 
   if (!isZip) {
     const text = await file.text()
     const data = JSON.parse(text)
     return { type: 'json', presentation: data.presentation, manifest: data, mediaFiles: [] }
+  }
+  if (options.serverAuthoritative) {
+    return { type: 'zip', file, serverAuthoritative: true }
   }
 
   const zip = await JSZip.loadAsync(file)
@@ -49,6 +52,39 @@ export async function parseProjectFile(file) {
       : buildLegacyArchiveEntries(presentation, archiveFiles)
 
   return { type: 'zip', presentation, manifest, mediaFiles: mediaFiles.filter((entry) => entry.blob) }
+}
+
+export async function importProjectAtomically(api, file, options = {}) {
+  options.onPhase?.('preflight')
+  const admitted = await api.preflightProjectImport(file, {
+    signal: options.signal,
+    trustedAuthorActiveContentAcknowledged:
+      options.trustedAuthorActiveContentAcknowledged === true,
+  })
+  const session = {
+    sessionId: admitted.sessionId,
+    capability: admitted.capability,
+    trustedAuthorActiveContentAcknowledged:
+      admitted.trustedAuthorActiveContentAcknowledged === true,
+  }
+  options.onSession?.(session)
+  if (admitted.mediaCount > 0) {
+    options.onPhase?.('media')
+    await api.stageProjectImportMedia(session.sessionId, session.capability, {
+      signal: options.signal,
+    })
+  }
+  if (options.signal?.aborted) {
+    const error = new Error('The operation was aborted')
+    error.name = 'AbortError'
+    throw error
+  }
+  options.onPhase?.('publishing')
+  return api.publishProjectImport(session.sessionId, session.capability, {
+    signal: options.signal,
+    trustedAuthorActiveContentAcknowledged:
+      session.trustedAuthorActiveContentAcknowledged,
+  })
 }
 
 /**

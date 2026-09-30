@@ -47,7 +47,7 @@
   --font-ui-serif: 'Anthropic Serif', Georgia, 'Times New Roman', serif;
 
   /* Primary */
-  --color-primary: #c96442;
+  --color-primary: #b95736;
   --color-primary-hover: #a94d31;
   --color-primary-light: rgba(201, 100, 66, 0.16);
 
@@ -72,7 +72,7 @@
   /* Text */
   --text-primary: #f4eee7;
   --text-secondary: #c1b3a6;
-  --text-muted: #8c7e72;
+  --text-muted: #ab9c8d;
 
   /* Border */
   --border: rgba(244, 238, 231, 0.08);
@@ -83,7 +83,7 @@
   --accent: #c96442;
   --accent-hover: #a94d31;
   --accent-light: #e0a083;
-  --brand: #c96442;
+  --brand: #b95736;
   --brand-hover: #a94d31;
   --brand-muted: rgba(201, 100, 66, 0.16);
   --focus: #4f8ef7;
@@ -92,8 +92,8 @@
 
   /* Status */
   --success: #22c55e;
-  --danger: #ef4444;
-  --danger-hover: #dc2626;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
   --warning: #f59e0b;
 
   /* Slide ratio */
@@ -135,7 +135,7 @@
 
   --text-primary: #241915;
   --text-secondary: #5f5147;
-  --text-muted: #8b796a;
+  --text-muted: #746456;
 
   --border: rgba(58, 45, 35, 0.12);
   --border-light: rgba(58, 45, 35, 0.18);

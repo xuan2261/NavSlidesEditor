@@ -35,6 +35,7 @@ export default function EditorModals(props) {
     viewMode,
     setViewMode,
     setCurrentSlideIndex,
+    navigateToSlide,
     setPresentation,
     htmlEditorState,
     setHtmlEditorState,
@@ -100,9 +101,12 @@ export default function EditorModals(props) {
       {viewMode === 'sorter' && (
         <SlideSorterView
           slides={presentation.slides}
+          designTokens={presentation.designTokens}
+          layoutMasters={presentation.layoutMasters}
+          resolution={presentation.resolution}
           currentIndex={currentSlideIndex}
           onSelect={(idx) => {
-            setCurrentSlideIndex(idx)
+            navigateToSlide(idx)
             setViewMode('normal')
           }}
           onMove={(fromIdx, toIdx) => {
@@ -161,7 +165,7 @@ export default function EditorModals(props) {
           presentation={presentation}
           onUpdatePresentation={(updates) => setPresentation((prev) => ({ ...prev, ...updates }))}
           currentSlideIndex={currentSlideIndex}
-          onNavigateToSlide={setCurrentSlideIndex}
+          onNavigateToSlide={navigateToSlide}
           onClose={() => setShowFindReplace(false)}
         />
       )}
@@ -178,8 +182,9 @@ export default function EditorModals(props) {
       {showAnimationPreview && presentation && currentSlide && (
         <AnimationPreviewModal
           key={`${presentation.id || 'preview'}-${currentSlide.id || currentSlideIndex}`}
-          presentation={presentation}
-          slideIndex={currentSlideIndex}
+          presentation={{ ...presentation, slides: [currentSlide] }}
+          slideIndex={0}
+          slideLabel={currentSlide.id?.startsWith('master:') ? 'Master' : `${currentSlideIndex + 1}${verticalEdit ? `.${verticalEdit.child + 1}` : ''}`}
           onClose={() => setShowAnimationPreview(false)}
         />
       )}

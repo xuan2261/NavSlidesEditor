@@ -4,6 +4,20 @@ NavSlides Editor
 This product includes design assets adapted from third-party open-source work.
 
 --------------------------------------------------------------------------------
+OfficeCLI (iOfficeAI) - optional, administrator-supplied integration
+--------------------------------------------------------------------------------
+NavSlides contains an optional compatibility integration for:
+
+    OfficeCLI — https://github.com/iOfficeAI/OfficeCLI
+    Pinned compatibility target: v1.0.135
+
+The checked-in OfficeCLI qualification manifest identifies the upstream license
+as Apache-2.0. NavSlides does not bundle or redistribute OfficeCLI. This entry
+records attribution only; it does not grant or determine redistribution rights.
+Operators must obtain OfficeCLI separately and review the upstream license and
+notices before use or redistribution.
+
+--------------------------------------------------------------------------------
 html-ppt-skill (lewislulu)
 --------------------------------------------------------------------------------
 Some of the color palettes and typography pairings expressed as design-token

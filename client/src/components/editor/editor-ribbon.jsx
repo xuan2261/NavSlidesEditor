@@ -3,7 +3,7 @@ import { api } from '../../utils/api'
 
 export default function EditorRibbon({ c }) {
   const assertUploadTarget = (targetSlideId) => {
-    const currentSlideId = c.activeSlideRef?.current?.id ?? c.activeSlide?.id
+    const currentSlideId = c.authoringSlideRef?.current?.id ?? c.authoringSlide?.id
     if (targetSlideId && targetSlideId !== currentSlideId) {
       throw new Error('Upload canceled because the active slide changed')
     }
@@ -13,8 +13,8 @@ export default function EditorRibbon({ c }) {
     <RibbonPanel
       editor={c.editingElementId ? c.editor : null}
       presentation={c.presentation}
-      activeSlideId={c.activeSlide?.id}
-      slide={c.activeSlide}
+      activeSlideId={c.authoringSlide?.id}
+      slide={c.authoringSlide}
       onUpdateSlide={c.updateCurrentSlide}
       onUpdatePresentation={(updates) =>
         c.setPresentation((prev) =>
@@ -22,9 +22,10 @@ export default function EditorRibbon({ c }) {
         )
       }
       selectedElement={c.selectedElement}
+      availability={c.availability}
       onOpenLayoutManager={c.onOpenLayoutManager}
       selectedElementIds={c.selectedElementIds}
-      elements={c.activeSlide?.elements || []}
+      elements={c.authoringSlide?.elements || []}
       onUpdateElement={c.updateSelectedElements}
       onPaste={c.handlePaste}
       onCut={c.handleCut}
@@ -87,12 +88,12 @@ export default function EditorRibbon({ c }) {
       onCssEditor={() => c.setShowCssEditor(true)}
       viewMode={c.viewMode}
       onFindReplace={() => c.setShowFindReplace((value) => !value)}
-      onSpeakerNotes={() => {
-        c.setRightPanelOpen(true)
-        requestAnimationFrame(() =>
-          document.querySelector('textarea[placeholder="Add speaker notes here..."]')?.focus()
-        )
-      }}
+      onSpeakerNotes={c.onSpeakerNotes}
+      onOpenSelectionPane={c.onOpenSelectionPane}
+      onToggleInspector={c.onToggleInspector}
+      onToggleNavigator={c.onToggleNavigator}
+      onOpenDesignIdeas={c.onOpenDesignIdeas}
+      isMaster={Boolean(c.masterEdit)}
       onToggleSlideSorter={() => c.setViewMode((value) => (value === 'sorter' ? 'normal' : 'sorter'))}
       onPreviewAnimation={() => c.setShowAnimationPreview(true)}
       onPreviewTransition={() => c.setShowTransitionPreview(true)}

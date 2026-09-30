@@ -102,4 +102,42 @@ storage.initDataFiles()
 
     await fs.remove(childScript).catch(() => {})
   })
+  describe('Storage secret file policy', () => {
+    const secretNames = [
+      'share-tokens.json',
+      'github-config.json',
+      'settings.json',
+      'rclone.conf',
+    ]
+
+    it('classifies only secret-bearing data paths', async () => {
+      const storage = await freshStorage()
+      for (const name of secretNames) {
+        expect(storage.isSecretBearingPath(path.join(tmpDir, name))).toBe(true)
+      }
+      expect(storage.isSecretBearingPath(path.join(tmpDir, 'presentations.json'))).toBe(false)
+    })
+
+    it.skipIf(process.platform === 'win32')(
+      'creates, replaces, and repairs secret files with owner-only POSIX mode',
+      async () => {
+        const storage = await freshStorage()
+        await fs.writeFile(storage.RCLONE_CONFIG_FILE, '[remote]\ntype = local\n')
+        for (const name of secretNames) {
+          const file = path.join(tmpDir, name)
+          await fs.chmod(file, 0o644)
+        }
+
+        storage.initDataFiles()
+        await storage.writeSettings({ aiApiKey: 'secret' })
+        await storage.writeGithubConfig({ token: 'secret' })
+        await storage.writeShareTokens({ token: { presentationId: 'deck' } })
+
+        for (const name of secretNames) {
+          const mode = (await fs.stat(path.join(tmpDir, name))).mode & 0o777
+          expect(mode).toBe(0o600)
+        }
+      }
+    )
+  })
 })

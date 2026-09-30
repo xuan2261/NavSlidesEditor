@@ -81,17 +81,36 @@ describe('TableRenderer', () => {
     expect(onUpdateElement).toHaveBeenCalledWith('table-mixed', { data: [['B'], []] })
   })
 
-  it('[red defect:renderer.contrast] uses readable light-background defaults', () => {
+  it('renders persisted table borders and distinct header and body backgrounds', () => {
     const { container } = render(
       <TableRenderer
-        element={{ id: 'table-1', type: 'table', data: [['A']] }}
+        element={{
+          id: 'table-1',
+          type: 'table',
+          data: [['Header'], ['Body']],
+          headerRow: true,
+          headerBgColor: '#ffeedd',
+          cellBgColor: '#ddffee',
+          borderWidth: 2,
+          borderStyle: 'dashed',
+          borderColor: '#336699',
+        }}
         isEditing={false}
         onUpdateElement={vi.fn()}
       />
     )
 
-    const cell = container.querySelector('td')
-    expect(cell?.style.color).toBe('rgb(20, 20, 19)')
-    expect(cell?.style.border).toContain('rgba(20,20,19,0.22)')
+    const [header, body] = container.querySelectorAll('td')
+    const expectedStyle = document.createElement('div').style
+    expectedStyle.borderColor = '#336699'
+    for (const cell of [header, body]) {
+      expect(cell.style.borderWidth).toBe('2px')
+      expect(cell.style.borderStyle).toBe('dashed')
+      expect(cell.style.borderColor).toBe(expectedStyle.borderColor)
+    }
+    expectedStyle.backgroundColor = '#ffeedd'
+    expect(header.style.backgroundColor).toBe(expectedStyle.backgroundColor)
+    expectedStyle.backgroundColor = '#ddffee'
+    expect(body.style.backgroundColor).toBe(expectedStyle.backgroundColor)
   })
 })

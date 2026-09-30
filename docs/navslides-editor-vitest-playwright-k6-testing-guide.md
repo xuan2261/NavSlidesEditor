@@ -4,33 +4,33 @@ NavSlides Editor uses three testing layers: Vitest (unit/integration JS), Playwr
 
 ## Quick reference
 
-| Command | Purpose |
-|---|---|
-| `npm test` | Vitest unit/integration suite |
-| `npm run test:coverage` | Vitest with v8 coverage → `coverage/` |
-| `npm run test:coverage:summary` | Markdown summary into `plans/.../reports/coverage-baseline-{date}.md` |
-| `npm run test:e2e` | Playwright e2e (auto-starts dev server) |
-| `npm run test:e2e:report` | Open last Playwright HTML report |
-| `npm run test:e2e:shard 1/4` | Run shard 1 of 4 |
-| `npm run test:audit` | Targeted ribbon audit suite |
-| `npm run test:load:api` | k6 REST load test (smoke profile by default) |
-| `npm run test:load:api:smoke` / `:load` / `:stress` | k6 REST with explicit profile |
-| `npm run test:load:ws` | k6 Socket.IO load test (smoke profile by default) |
-| `npm run test:load:ws:smoke` / `:load` / `:stress` | k6 Socket.IO with explicit profile |
-| `npm run test:pptx:corpus-metrics` | Parser-relative PPTX semantic/round-trip metrics (`test:corpus` is the compatibility alias) |
-| `npm run test:pptx:importer-qualification` | Manifest-bound two-pass importer-native strict gate |
-| `npm run test:pptx:browser-audit:full` | Full real-browser PPTX layout audit |
-| `npm run test:pptx:oracle:integrity` / `:qualify` | PowerPoint evidence-integrity and fixed-policy visual gates |
-| `npm run test:deep` | Run only the `tier:deep` behavior tests (`*.deep.test.*`) |
-| `npm run inventory` | Regenerate the capability inventory (`scripts/feature-inventory/inventory.json`) |
-| `npm run matrix` | Regenerate the feature-coverage matrix → `docs/feature-coverage-matrix.md` + `scripts/feature-inventory/reports/feature-coverage-matrix.json` |
-| `npm run matrix:baseline-report` | Regenerate matrix and Phase 1 baseline gap reports |
-| `npm run matrix:gate` | Regenerate matrix, then run the coverage gate + manifest-completeness drift guard |
+| Command                                             | Purpose                                                                                                                                       |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm test`                                          | Vitest unit/integration suite                                                                                                                 |
+| `npm run test:coverage`                             | Vitest with v8 coverage → `coverage/`                                                                                                         |
+| `npm run test:coverage:summary`                     | Markdown summary into `plans/.../reports/coverage-baseline-{date}.md`                                                                         |
+| `npm run test:e2e`                                  | Playwright e2e (auto-starts dev server)                                                                                                       |
+| `npm run test:e2e:report`                           | Open last Playwright HTML report                                                                                                              |
+| `npm run test:e2e:shard 1/4`                        | Run shard 1 of 4                                                                                                                              |
+| `npm run test:audit`                                | Targeted ribbon audit suite                                                                                                                   |
+| `npm run test:load:api`                             | k6 REST load test (smoke profile by default)                                                                                                  |
+| `npm run test:load:api:smoke` / `:load` / `:stress` | k6 REST with explicit profile                                                                                                                 |
+| `npm run test:load:ws`                              | k6 Socket.IO load test (smoke profile by default)                                                                                             |
+| `npm run test:load:ws:smoke` / `:load` / `:stress`  | k6 Socket.IO with explicit profile                                                                                                            |
+| `npm run test:pptx:corpus-metrics`                  | Parser-relative PPTX semantic/round-trip metrics (`test:corpus` is the compatibility alias)                                                   |
+| `npm run test:pptx:importer-qualification`          | Manifest-bound two-pass importer-native strict gate                                                                                           |
+| `npm run test:pptx:browser-audit:full`              | Full real-browser PPTX layout audit                                                                                                           |
+| `npm run test:pptx:oracle:integrity` / `:qualify`   | PowerPoint evidence-integrity and fixed-policy visual gates                                                                                   |
+| `npm run test:deep`                                 | Run only the `tier:deep` behavior tests (`*.deep.test.*`)                                                                                     |
+| `npm run inventory`                                 | Regenerate the capability inventory (`scripts/feature-inventory/inventory.json`)                                                              |
+| `npm run matrix`                                    | Regenerate the feature-coverage matrix → `docs/feature-coverage-matrix.md` + `scripts/feature-inventory/reports/feature-coverage-matrix.json` |
+| `npm run matrix:baseline-report`                    | Regenerate matrix and Phase 1 baseline gap reports                                                                                            |
+| `npm run matrix:gate`                               | Regenerate matrix, then run the coverage gate + manifest-completeness drift guard                                                             |
 
 ## Feature coverage matrix (capability traceability)
 
 A separate, capability-level signal from line coverage: it tracks whether each
-editor-core capability's *behavior is asserted*, not just whether code ran. See
+editor-core capability's _behavior is asserted_, not just whether code ran. See
 `docs/feature-coverage-matrix.md` for the live map.
 
 - **What it covers**: every `ELEMENT_DEFAULTS` element type, every
@@ -67,7 +67,6 @@ editor-core capability's *behavior is asserted*, not just whether code ran. See
 - **CI**: a non-required `feature-coverage-gate` job runs `matrix:gate` + a
   freshness check on the committed `docs/feature-coverage-matrix.md`.
 
-
 ## Vitest coverage (v8)
 
 `vitest.config.mjs` enables c8 via `@vitest/coverage-v8`:
@@ -96,7 +95,7 @@ Open the HTML report at `coverage/index.html` for line-by-line drilldown.
 
 Every `playwright test` invocation derives a unique `runId` (`{ISO timestamp}-{pid}`) and uses `.playwright/runs/{runId}/data` and `.../uploads` as the server's data root for that run. No two parallel runs share state; each is fully torn down by deleting `.playwright/runs/{runId}` on cleanup.
 
-**Per-WORKER isolation is deferred.** The current setup gives each *run* its own data dir but workers within a run share it. Tests mitigate this by creating presentations with unique IDs via `apiCreatePresentation`, so CRUD is naturally namespaced. Workflows touching shared state (templates list, settings) should run with `workers: 1` (Phase 4 live presentation specs already do).
+**Per-WORKER isolation is deferred.** The current setup gives each _run_ its own data dir but workers within a run share it. Tests mitigate this by creating presentations with unique IDs via `apiCreatePresentation`, so CRUD is naturally namespaced. Workflows touching shared state (templates list, settings) should run with `workers: 1` (Phase 4 live presentation specs already do).
 
 If parallelism causes flakes on shared state in the future, upgrade `tests/e2e/global-setup.js` to spawn one dev/server pair per worker on `PORT=3202+i`. Documented as future work — not blocking the coverage expansion plan.
 
@@ -110,16 +109,16 @@ Unit-tested in `tests/unit/test-fixtures-loopback-baseurl-guard.test.js` (5 case
 
 E2E specs use POM helpers under `tests/e2e/pages/`:
 
-| Helper | Responsibility |
-|---|---|
-| `EditorPage.js` | Top-level page wrapper; delegates to specialised helpers |
-| `canvas-helper.js` | Slide canvas DOM (drag, zoom, element queries) |
-| `ribbon-insert-helper.js` | Insert tab (text/shape/image/table/chart) |
-| `properties-panel-helper.js` | Right-side properties panel |
-| `slide-panel-helper.js` | Left slide thumbnails + reorder |
-| `ribbon-tab-toolbar-helper.js` | Tab switching, main toolbar buttons, overflow metrics |
-| `menu-bar-dropdown-helper.js` | File / AI / Share menu dropdowns (Radix `[role=menuitem]`) |
-| `text-editor-prosemirror-and-find-replace-helper.js` | TipTap editing + find/replace bar |
+| Helper                                               | Responsibility                                             |
+| ---------------------------------------------------- | ---------------------------------------------------------- |
+| `EditorPage.js`                                      | Top-level page wrapper; delegates to specialised helpers   |
+| `canvas-helper.js`                                   | Slide canvas DOM (drag, zoom, element queries)             |
+| `ribbon-insert-helper.js`                            | Insert tab (text/shape/image/table/chart)                  |
+| `properties-panel-helper.js`                         | Right-side properties panel                                |
+| `slide-panel-helper.js`                              | Left slide thumbnails + reorder                            |
+| `ribbon-tab-toolbar-helper.js`                       | Tab switching, main toolbar buttons, overflow metrics      |
+| `menu-bar-dropdown-helper.js`                        | File / AI / Share menu dropdowns (Radix `[role=menuitem]`) |
+| `text-editor-prosemirror-and-find-replace-helper.js` | TipTap editing + find/replace bar                          |
 
 Helpers are kebab-case (file-naming hook); `EditorPage.js` is preserved in PascalCase because 30+ specs already import it.
 
@@ -172,20 +171,20 @@ The workflow is already registered on the default branch, so branch dispatch wor
 
 Two scenarios live under `tests/load/`:
 
-| Script | Target | Custom metrics |
-|---|---|---|
-| `k6-load-test-api-presentations-post-endpoint-with-profiles.js` | `POST /api/presentations` with ~1.5 MB payload | http standard |
-| `k6-load-test-socketio-websocket-room-join-and-slide-change-broadcast.js` | Socket.IO presenter/viewer rooms | `room_join_success_rate`, `slide_change_messages_received` |
+| Script                                                                    | Target                                         | Custom metrics                                             |
+| ------------------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------- |
+| `k6-load-test-api-presentations-post-endpoint-with-profiles.js`           | `POST /api/presentations` with ~1.5 MB payload | http standard                                              |
+| `k6-load-test-socketio-websocket-room-join-and-slide-change-broadcast.js` | Socket.IO presenter/viewer rooms               | `room_join_success_rate`, `slide_change_messages_received` |
 
 ### Profiles
 
 Profiles are selected via `PROFILE` env (default: `smoke`):
 
-| Profile | VUs | Duration | Use case |
-|---|---|---|---|
-| `smoke` | 1 | 30s | CI sanity check; <1 min |
-| `load` | 20 | 5m | Sustained typical traffic |
-| `stress` | 100 | 2m | Peak / breakage discovery |
+| Profile  | VUs | Duration | Use case                  |
+| -------- | --- | -------- | ------------------------- |
+| `smoke`  | 1   | 30s      | CI sanity check; <1 min   |
+| `load`   | 20  | 5m       | Sustained typical traffic |
+| `stress` | 100 | 2m       | Peak / breakage discovery |
 
 ### Thresholds
 
@@ -210,18 +209,18 @@ Phase 9 wires `grafana/setup-k6-action@v1` into `.github/workflows/github-action
 
 The pipeline lives in `.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml` and runs on PRs + pushes to `master`/`main`. A nightly soft-warning workflow `nightly-ribbon-layout-768px-soft-warning-no-pr-gate.yml` runs the 768px ribbon overflow specs without gating PRs.
 
-| Job | Tool | Wall budget | Gate? |
-|---|---|---|---|
-| `lint` | eslint | 5 min | yes |
-| `unit-coverage` | vitest + v8 | 15 min | yes — coverage thresholds |
-| `build` | vite client build | 10 min | yes |
-| `e2e-chromium` (×4 shards) | Playwright in `mcr.microsoft.com/playwright:v1.59.1-jammy` | 25 min/shard | yes — 0 fail |
-| `e2e-live` | Playwright `chromium-live` (workers:1) | 20 min | yes |
-| `e2e-mobile` | Playwright a11y suite on `mobile-chromium` | 15 min | yes |
-| `e2e-visual` | Playwright visual suite (Linux baseline only) | 15 min | yes — snapshot drift |
-| `pptx-corpus` | node corpus tester | 10 min | yes (skipped if `./PPTX` absent) |
-| `load-smoke` | `grafana/setup-k6-action@v1` | 15 min | yes |
-| `required-checks` | summary | < 1 min | yes — fan-in gate |
+| Job                        | Tool                                                       | Wall budget  | Gate?                            |
+| -------------------------- | ---------------------------------------------------------- | ------------ | -------------------------------- |
+| `lint`                     | eslint                                                     | 5 min        | yes                              |
+| `unit-coverage`            | vitest + v8                                                | 15 min       | yes — coverage thresholds        |
+| `build`                    | vite client build                                          | 10 min       | yes                              |
+| `e2e-chromium` (×4 shards) | Playwright in `mcr.microsoft.com/playwright:v1.59.1-jammy` | 25 min/shard | yes — 0 fail                     |
+| `e2e-live`                 | Playwright `chromium-live` (workers:1)                     | 20 min       | yes                              |
+| `e2e-mobile`               | Playwright a11y suite on `mobile-chromium`                 | 15 min       | yes                              |
+| `e2e-visual`               | Playwright visual suite (Linux baseline only)              | 15 min       | yes — snapshot drift             |
+| `pptx-corpus`              | node corpus tester                                         | 10 min       | yes (skipped if `./PPTX` absent) |
+| `load-smoke`               | `grafana/setup-k6-action@v1`                               | 15 min       | yes                              |
+| `required-checks`          | summary                                                    | < 1 min      | yes — fan-in gate                |
 
 `required-checks` fans in on the currently blocking jobs and exits non-zero if any reports `failure`/`cancelled`/`timed_out`. Wire branch protection to require `required-checks` instead of every individual job — keeps the rule list small and stable when shards are renamed.
 
@@ -229,20 +228,20 @@ The pipeline lives in `.github/workflows/github-actions-ci-pipeline-lint-unit-co
 
 Current lane ownership is maintained here as evergreen release evidence. Archived plan reports can provide provenance, but they are not the only contract source.
 
-| Lane | Scope | Promotion rule |
-|---|---|---|
-| PR fast lane | lint, focused unit/contract checks, matrix gate signal | Keep practical for PR feedback; new gates start warn-first |
-| Merge full lane | coverage, build, Playwright shards, visual, PPTX corpus, k6 smoke | Promote after two consecutive green CI runs |
-| Release strict lane | PPTX importer qualification + full browser audit + PowerPoint oracle, Electron prepare/package, load profile, manual checklist | Blocks release signoff, not every PR |
+| Lane                | Scope                                                                                                                                                                                                                                              | Promotion rule                                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| PR fast lane        | lint, focused unit/contract checks, matrix gate signal                                                                                                                                                                                             | Keep practical for PR feedback; new gates start warn-first                                                |
+| Merge full lane     | coverage, build, Playwright shards, visual, PPTX corpus, k6 smoke                                                                                                                                                                                  | Promote after two consecutive green CI runs                                                               |
+| Release strict lane | PPTX importer qualification, selected native edited-PPTX G0/G1/G2/G4 gates, full browser audit, private unpacked Windows runtime and exact-source OfficeCLI, load profile, manual checklist; no Windows executable G3 or PowerPoint G5 for v1.17.0 | Blocks release signoff, not every PR; diagnostic local COM screenshots do not qualify PowerPoint fidelity |
 
 #### Non-functional gate ownership
 
-| Gate | Lane | Local reproduction |
-|---|---|---|
-| Visual snapshots | Merge full lane | `npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js --project=chromium` in the pinned Linux Playwright container |
-| Keyboard/axe/touch a11y | Merge full lane | `npx playwright test tests/e2e/a11y/ --project=chromium` and `PLAYWRIGHT_MOBILE_CHROMIUM=1 npx playwright test tests/e2e/a11y/ --project=mobile-chromium` |
-| k6 smoke | Merge full lane | `npm run test:load:api:smoke` and `npm run test:load:ws:smoke` against loopback only |
-| k6 load/stress profiles | Release strict lane | `npm run test:load:api:load`, `npm run test:load:ws:load`, and stress variants after operator approval |
+| Gate                    | Lane                | Local reproduction                                                                                                                                        |
+| ----------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visual snapshots        | Merge full lane     | `npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js --project=chromium` in the pinned Linux Playwright container                   |
+| Keyboard/axe/touch a11y | Merge full lane     | `npx playwright test tests/e2e/a11y/ --project=chromium` and `PLAYWRIGHT_MOBILE_CHROMIUM=1 npx playwright test tests/e2e/a11y/ --project=mobile-chromium` |
+| k6 smoke                | Merge full lane     | `npm run test:load:api:smoke` and `npm run test:load:ws:smoke` against loopback only                                                                      |
+| k6 load/stress profiles | Release strict lane | `npm run test:load:api:load`, `npm run test:load:ws:load`, and stress variants after operator approval                                                    |
 
 #### Branch protection mapping
 

@@ -8,7 +8,10 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-Current release: **v1.16.2** — fixes the packaged desktop startup crash (`Cannot find module .../shared/src/element-actions.js`) by routing server code through the packaged `revealjs-shared` module, and hardens release CI to catch any future packaged-runtime closure escapes.
+The current published release is **v1.16.2**. Published history also retains
+**v1.16.0** and **v1.16.1**. The next release candidate is the untagged
+**v1.17.0** product version; package manifests own that candidate version, while
+`runtime-versions.json` separately owns runtime and toolchain pins.
 
 <p align="center">
   <img src="website/public/img/editor-empty.png" alt="NavSlides Editor workspace with the ribbon, slide navigator, canvas, and properties panel" width="100%">
@@ -42,8 +45,9 @@ need all three:
 The primary users are academics and researchers, educators and students,
 developer speakers, and privacy-conscious operators. The scope is deliberate:
 NavSlides is a single-user, self-hosted editor rather than a hosted SaaS or
-real-time collaborative document service. Internet-facing deployments therefore
-need the external authentication boundary described in the
+real-time collaborative document service. One application process is supported;
+horizontal workers, cluster mode, and tenant isolation are not. Internet-facing
+deployments therefore need the external authentication boundary described in the
 [Security Model](#security-model) and
 [deployment guide](docs/deployment-guide.md).
 
@@ -63,18 +67,31 @@ the container but publishes to host loopback unless `NAVSLIDES_PUBLISH_HOST`
 is set. Use `docker compose logs -f` to inspect the service, or
 `docker compose up -d --build` after pulling updates. Internet-facing
 deployments require an external authentication layer and reverse proxy.
+The image runs as fixed non-root UID/GID `10001:10001`; Compose reports healthy
+only after `GET /health/ready` confirms storage, package ownership, and recovery.
 
 ### Desktop app
 
-Download the pre-built Windows package from
-[Releases](https://github.com/xuan2261/NavSlidesEditor/releases). Linux and
-macOS packages can be built locally with Node.js >=22.13.0:
+Earlier tagged releases, including v1.16.2, may offer Windows packages on
+[Releases](https://github.com/xuan2261/NavSlidesEditor/releases). The untagged
+v1.17.0 candidate does **not** authorize a publicly distributed Windows EXE or
+Windows Authenticode signing. Windows remains a private qualification host for
+unpacked runtime closure and exact-source physical OfficeCLI G1 evidence. The
+selected native edited-PPTX gates are G0/G1/G2/G4, not Windows executable G3 or
+PowerPoint G5. Importer-corpus and diagnostic local COM screenshots do not
+qualify PowerPoint fidelity. The proposed release deliverable is the exact
+prebuilt Docker image with subject-bound receipts; see the
+[release contract](docs/deployment-guide.md#release) for pending gates and
+accepted container vulnerability risk.
+
+Linux, macOS, and Windows desktop packages can still be built locally with
+Node.js >=22.22.2, >=24.15.0, or >=26; local build commands are not release distribution promises:
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
 npm run electron:build:linux   # .AppImage + .deb
 npm run electron:build:mac     # .zip
-npm run electron:build:win     # .exe
+npm run electron:build:win     # .exe, local only
 npm run electron:dev           # development mode
 ```
 
@@ -84,7 +101,7 @@ Desktop data is stored under `~/.config/NavSlides Editor/` on Linux,
 
 ### Node.js from source
 
-Requires Node.js >=22.13.0 and npm. CI and container builds use Node.js 22.22.0.
+Requires Node.js >=22.22.2, >=24.15.0, or >=26 and npm. CI/container use Node.js 22.23.3; the container runs Debian Trixie Slim and omits npm from its final runtime.
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git && cd NavSlidesEditor && npm install
@@ -153,13 +170,13 @@ author. Releases, verification, architectural decisions, and known limits are
 kept inspectable in the repository rather than represented by private service
 state.
 
-| Maintenance signal                        | Evidence                                                                                                                                   |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Public source and copyleft license        | [Repository](https://github.com/xuan2261/NavSlidesEditor) · [LICENSE](LICENSE)                                                             |
-| Tagged releases and desktop artifacts     | [GitHub Releases](https://github.com/xuan2261/NavSlidesEditor/releases) · [release workflow](.github/workflows/release.yml)                |
-| Continuous verification                   | [CI workflow](.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml) · [testing guide](#testing--performance) |
-| Current architecture and trust boundaries | [System architecture](docs/system-architecture.md) · [Security Model](#security-model) · [deployment guide](docs/deployment-guide.md)      |
-| Planning and change history               | [Roadmap](docs/project-roadmap.md) · [changelog](docs/project-changelog.md)                                                                |
+| Maintenance signal                            | Evidence                                                                                                                                                                          |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public source and copyleft license            | [Repository](https://github.com/xuan2261/NavSlidesEditor) · [LICENSE](LICENSE)                                                                                                    |
+| Tagged release history and candidate contract | [GitHub Releases](https://github.com/xuan2261/NavSlidesEditor/releases) · [release policy](config/release-target-policy.json) · [release guide](docs/deployment-guide.md#release) |
+| Continuous verification                       | [CI workflow](.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml) · [testing guide](#testing--performance)                                        |
+| Current architecture and trust boundaries     | [System architecture](docs/system-architecture.md) · [Security Model](#security-model) · [deployment guide](docs/deployment-guide.md)                                             |
+| Planning and change history                   | [Roadmap](docs/project-roadmap.md) · [changelog](docs/project-changelog.md)                                                                                                       |
 
 Maintenance spans the React editor, Express and Socket.IO services, shared
 rendering/export code, the Electron shell, and the documentation site.
@@ -246,6 +263,11 @@ Named snapshots saved per presentation, restore any previous version, delete ind
 
 All data lives in `server/data/` (presentations, templates, share tokens, GitHub config, settings, analytics, media metadata, history snapshots, rclone config) and `server/uploads/` (media). Docker uses named volumes `revealjs-data` and `revealjs-uploads`. All locations are created automatically on first run.
 
+Back up both volumes at one stopped consistency point with
+`npm run backup:docker`; restore only into empty volumes with
+`npm run restore:docker -- -BackupDirectory <path>`. The manifest verifies both
+archives before extraction. See the [deployment guide](docs/deployment-guide.md#backup-and-restore-docker).
+
 ---
 
 ## Security Model
@@ -263,7 +285,13 @@ Still review issues that cross a trust boundary, including:
 - credential leakage, path traversal, SSRF, command injection, or data loss
 - missing auth protections when deploying beyond local/private single-user use
 
-For internet-facing or multi-user deployments, place NavSlides Editor behind an external authentication layer and treat all editor/API content as privileged. `/api/analytics/:id` is an owner/editor route: share tokens do not authorize it, and its response exposes only aggregate link labels plus timestamp/referrer-host events. If a proxy makes `/share/:token` public, keep `/api/analytics`, presentation APIs, and editor routes behind operator authentication.
+NavSlides has no built-in authentication and no multi-tenant isolation. For
+internet-facing use, place the whole editor/API behind an external authentication
+layer and treat all content as privileged. `/api/analytics/:id` is an
+owner/editor route: share tokens do not authorize it, and its response exposes
+only aggregate link labels plus timestamp/referrer-host events. If a proxy makes
+`/share/:token` public, keep `/api/analytics`, presentation APIs, and editor
+routes behind operator authentication.
 
 ---
 
@@ -388,9 +416,9 @@ Only shortcuts implemented by the active game are enabled.
 
 | Method       | Requirement                                        |
 | ------------ | -------------------------------------------------- |
-| Desktop app  | Node.js >=22.13.0 (build only)                     |
-| Docker       | Docker 20.10+ and Docker Compose v2+               |
-| Node.js      | Node.js >=22.13.0 and npm                          |
+| Desktop app  | Node.js >=22.22.2, >=24.15.0, or >=26 (build only)         |
+| Docker       | Docker 20.10+ and Docker Compose v2+                         |
+| Node.js      | Node.js >=22.22.2, >=24.15.0, or >=26 and npm                |
 | Load Testing | [k6](https://k6.io/docs/get-started/installation/) |
 
 ---
@@ -483,7 +511,7 @@ PPTX browser audit artifacts are written under `plans/reports/pptx-import-real-b
 | Icons                | Lucide (editor UI) + inline SVG (slide icons)                              |
 | PowerPoint export    | pptxgenjs + Playwright raster fallback                                     |
 | PowerPoint import    | pptxtojson runtime parser; pptx2json benchmark-sandbox-only                |
-| Backend              | Node.js >=22.13.0 (CI/container: 22.22.0), Express 4                       |
+| Backend              | Node.js >=22.22.2, >=24.15.0, or >=26 (CI/container: 22.23.3), Express 4 |
 | Real-time transport  | Socket.IO                                                                  |
 | Desktop app          | Electron 42                                                                |
 | Cloud sync           | rclone                                                                     |

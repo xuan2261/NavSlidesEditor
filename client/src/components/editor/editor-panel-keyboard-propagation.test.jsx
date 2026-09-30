@@ -14,7 +14,7 @@ vi.mock('../SlidePanel', () => ({
 
 const createContext = () => ({
   activeSlide: { id: 'slide-1', elements: [] },
-  clearEditingElementRef: vi.fn(),
+  navigateToSlide: vi.fn(),
   currentSlideIndex: 0,
   currentVerticalIndex: null,
   deleteElement: vi.fn(),

@@ -21,10 +21,14 @@ const getJobBlock = (workflow, jobName) => {
 describe('CI release confidence contract', () => {
   it('keeps the feature matrix gate wired but warn-first during rollout', () => {
     const workflow = readText(workflowPath)
+    const quality = readText(
+      resolve(root, '.github', 'workflows', 'reusable-ci-quality.yml')
+    )
     const matrixGate = getJobBlock(workflow, 'feature-coverage-gate')
     const requiredChecks = getJobBlock(workflow, 'required-checks')
 
-    expect(matrixGate).toContain('npm run matrix:gate')
+    expect(matrixGate).toContain('gate: feature-coverage')
+    expect(quality).toContain('npm run matrix:gate')
     expect(matrixGate).toContain('warn-first, non-required')
     expect(requiredChecks).not.toMatch(/-\s*feature-coverage-gate\b/)
   })
@@ -49,8 +53,9 @@ describe('CI release confidence contract', () => {
   })
 
   it('keeps destructive load smoke scoped to loopback targets', () => {
-    const workflow = readText(workflowPath)
-    const loadSmoke = getJobBlock(workflow, 'load-smoke')
+    const loadSmoke = readText(
+      resolve(root, '.github', 'workflows', 'reusable-load-consumer.yml')
+    )
     const apiLoad = readText(
       resolve(
         root,
@@ -77,13 +82,17 @@ describe('CI release confidence contract', () => {
   it('keeps the visual gate aligned with the documented Linux-only visual suites', () => {
     const workflow = readText(workflowPath)
     const visualJob = getJobBlock(workflow, 'e2e-visual')
+    const playwright = readText(
+      resolve(root, '.github', 'workflows', 'reusable-playwright-consumer.yml')
+    )
 
-    expect(visualJob).toContain('image: mcr.microsoft.com/playwright:v1.63.0-jammy')
-    expect(visualJob).toContain(
+    expect(visualJob).toContain('lane: visual')
+    expect(playwright).toContain('mcr.microsoft.com/playwright:v1.63.0-jammy')
+    expect(playwright).toContain(
       'npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js'
     )
-    expect(visualJob).toContain('--project=chromium-visual')
-    expect(visualJob).not.toContain('--update-snapshots')
+    expect(playwright).toContain('--project=chromium-visual')
+    expect(playwright).not.toContain('--update-snapshots')
   })
 
   it('documents lanes, branch-protection rollout, rollback, quarantine, and scans', () => {

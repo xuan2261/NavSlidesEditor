@@ -73,7 +73,7 @@ export function useEditorKeyboardController(c) {
     activeGameType: c.currentGameType,
     isGamePresenterActive: c.isPresenterPopupActive,
     onStartSlideshow: c.startSlideshow,
-    onStartSlideshowCurrent: c.startSlideshow,
+    onStartSlideshowCurrent: c.startSlideshowCurrent,
     onGameHud: () => c.setShowGameHud((v) => !v),
     onGameTimer: () => {
       const shortcut = getGameShortcut(c, 'timer')

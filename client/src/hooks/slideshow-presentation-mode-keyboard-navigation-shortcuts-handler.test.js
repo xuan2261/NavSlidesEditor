@@ -171,6 +171,21 @@ describe('createKeyboardHandler with isPresenting', () => {
     expect(cb.onStartSlideshowCurrent).toHaveBeenCalledTimes(1)
   })
 
+  it('starts from the selected slide while its thumbnail button still has focus', () => {
+    const cb = makeCallbacks()
+    const handler = createKeyboardHandler({
+      ...cb,
+      shortcuts: getShortcuts({}),
+      isPresenting: false,
+      getActiveElement: () => ({ tagName: 'BUTTON' }),
+    })
+
+    handler(createEvent('F5', { shiftKey: true }))
+
+    expect(cb.onStartSlideshowCurrent).toHaveBeenCalledTimes(1)
+    expect(cb.onStartSlideshow).not.toHaveBeenCalled()
+  })
+
   // ── Scope isolation: presentation shortcuts don't fire in editor mode ────
   it('does NOT fire slideNext when ArrowRight pressed in editor mode', () => {
     const cb = makeCallbacks()

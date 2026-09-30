@@ -1,0 +1,84 @@
+name: Reusable Windows evidence qualification
+
+on:
+  workflow_call:
+    inputs:
+      subject_sha: { required: true, type: string }
+      source_run_id: { required: true, type: string }
+      physical_receipt_run_id: { required: true, type: string }
+      client_artifact: { required: true, type: string }
+      client_digest: { required: true, type: string }
+      linux_receipt_artifact: { required: true, type: string }
+      officecli_receipt_artifact: { required: true, type: string }
+      gate_policy_version: { required: true, type: string }
+    outputs:
+      windows_receipt_artifact:
+        value: ${{ jobs.qualify.outputs.windows_receipt_artifact }}
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  qualify:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      windows_receipt_artifact: ${{ steps.names.outputs.receipt }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.subject_sha }}
+          fetch-depth: 0
+      - shell: pwsh
+        run: if ((git rev-parse HEAD) -ne '${{ inputs.subject_sha }}') { throw 'checkout subject mismatch' }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.23.3', cache: npm }
+      - run: npm ci
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ inputs.client_artifact }}
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+          path: .
+      - run: node scripts/ci/verify-client-dist-manifest.mjs --root client/dist --manifest client-dist-manifest.json --subject "${{ inputs.subject_sha }}"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ inputs.linux_receipt_artifact }}
+          run-id: ${{ inputs.physical_receipt_run_id }}
+          github-token: ${{ github.token }}
+          path: evidence/linux
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ inputs.officecli_receipt_artifact }}
+          run-id: ${{ inputs.physical_receipt_run_id }}
+          github-token: ${{ github.token }}
+          path: evidence/officecli
+      - name: Fail closed on absent physical evidence
+        shell: pwsh
+        run: |
+          if (-not (Test-Path evidence/officecli/*.json)) { throw 'officecli physical receipt missing' }
+      - run: node scripts/prepare-electron.js
+      - run: npm run runtime:verify
+      - name: Build unpacked Windows runtime only
+        run: npm run electron:builder -- --win dir --publish never
+      - name: Verify Windows runtime closure without producing a release artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force evidence | Out-Null
+          node scripts/verify-runtime-closure.js --root dist-electron/win-unpacked/resources --require-client-dist --client-subject "${{ inputs.subject_sha }}" | Out-File evidence/runtime-closure.json
+      - id: names
+        shell: pwsh
+        run: |
+          "receipt=windows-qualification-receipt-v1-${{ inputs.subject_sha }}" >> $env:GITHUB_OUTPUT
+      - name: Create exact-subject Windows evidence receipt
+        shell: pwsh
+        run: node scripts/ci/release-receipt-workflow.mjs windows "${{ inputs.subject_sha }}" "${{ inputs.client_digest }}" "${{ inputs.gate_policy_version }}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ steps.names.outputs.receipt }}
+          path: windows-qualification-receipt.json
+          if-no-files-found: error
+          retention-days: 30

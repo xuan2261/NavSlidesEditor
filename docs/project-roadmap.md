@@ -1,10 +1,17 @@
 # Project Roadmap - NavSlides Editor
 
-## Current Status: v1.16.0
+## Current Status: v1.17.0 candidate
 
-Package manifests own the released version.
-[Unreleased changes](project-changelog.md#unreleased) track merged work after
-that release; [system architecture](system-architecture.md),
+The current published release is **v1.16.2**; **v1.16.0** and **v1.16.1**
+remain immutable published history. The next release candidate is the untagged
+**v1.17.0** product version. Package manifests and checked-in lock metadata own
+the product candidate version; `runtime-versions.json` separately owns runtime
+and toolchain pins. [Unreleased changes](project-changelog.md#unreleased-v1170)
+remain pending until work lands after `v1.16.2`.
+
+Historical upstream parity material is retained for provenance only and is
+non-blocking; current source, local executable contracts, and named release
+gates are the release authority. [System architecture](system-architecture.md),
 [deployment](deployment-guide.md), and
 [export/import limits](export-fidelity-and-limits.md) own the current behavioral
 boundaries.

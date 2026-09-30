@@ -12,7 +12,9 @@ export function summarizeTextRootCauses(decks) {
       }
     }
   }
-  return Object.fromEntries(Object.entries(buckets).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])))
+  return Object.fromEntries(
+    Object.entries(buckets).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  )
 }
 
 export function summarizeDecks(decks) {
@@ -49,8 +51,14 @@ export function summarizeDecks(decks) {
       if (slide.status !== 'pass') summary.failedSlides += 1
     }
   }
-  summary.strictFailures = summary.importErrors + summary.text + summary.image +
-    summary.acceptedBleedCandidates + summary.unexpectedOutOfCanvas + summary.zero + summary.consoleErrors
+  summary.strictFailures =
+    summary.importErrors +
+    summary.text +
+    summary.image +
+    summary.acceptedBleedCandidates +
+    summary.unexpectedOutOfCanvas +
+    summary.zero +
+    summary.consoleErrors
   return summary
 }
 
@@ -77,14 +85,20 @@ export function assertStrictAuditSummary(summary) {
 }
 
 function escapeMd(value) {
-  return String(value ?? '').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
+  return String(value ?? '')
+    .replace(/\|/g, '\\|')
+    .replace(/\r?\n/g, ' ')
 }
 
 function summarizeSlide(slide) {
   const issues = [
-    ...slide.unexpectedOutOfCanvas.map((item) => `${item.id}:${item.type}:unexpected-out-of-canvas`),
+    ...slide.unexpectedOutOfCanvas.map(
+      (item) => `${item.id}:${item.type}:unexpected-out-of-canvas`
+    ),
     ...slide.acceptedBleedCandidates.map((item) => `${item.id}:${item.type}:bleed-candidate`),
-    ...slide.textOverflow.map((item) => `${item.id}:text-overflow ${item.overflowX}/${item.overflowY}`),
+    ...slide.textOverflow.map(
+      (item) => `${item.id}:text-overflow ${item.overflowX}/${item.overflowY}`
+    ),
     ...slide.imageClipping.map((item) => `${item.id}:image-clipping ${item.reason}`),
     ...slide.zeroSized.map((item) => `${item.id}:${item.type}:zero-sized`),
   ]
@@ -95,8 +109,14 @@ export function writeAuditReports(paths, metadata, decks) {
   ensureAuditRunDirs(paths)
   const summary = summarizeDecks(decks)
   const sanitizedDecks = decks.map(sanitizeDeckForReport)
-  fs.writeFileSync(paths.reportJson, `${JSON.stringify({ metadata, summary, decks: sanitizedDecks }, null, 2)}\n`)
-  fs.writeFileSync(`${paths.latestPointer}.tmp`, `${JSON.stringify({ runId: paths.id, reportJson: paths.reportJson }, null, 2)}\n`)
+  fs.writeFileSync(
+    paths.reportJson,
+    `${JSON.stringify({ metadata, summary, decks: sanitizedDecks }, null, 2)}\n`
+  )
+  fs.writeFileSync(
+    `${paths.latestPointer}.tmp`,
+    `${JSON.stringify({ runId: paths.id, reportJson: paths.reportJson }, null, 2)}\n`
+  )
   fs.renameSync(`${paths.latestPointer}.tmp`, paths.latestPointer)
 
   const lines = [
@@ -112,19 +132,50 @@ export function writeAuditReports(paths, metadata, decks) {
   ]
   for (const deck of decks) {
     const totals = summarizeDecks([deck])
-    lines.push(`| ${escapeMd(deck.deck)} | ${deck.slideCount} | ${totals.failedSlides} | ${totals.text} | ` +
-      `${totals.image} | ${totals.rawOutOfCanvas} | ${totals.acceptedBleedCandidates} | ` +
-      `${totals.unexpectedOutOfCanvas} | ${totals.consoleErrors} |`)
+    lines.push(
+      `| ${escapeMd(deck.deck)} | ${deck.slideCount} | ${totals.failedSlides} | ${totals.text} | ` +
+        `${totals.image} | ${totals.rawOutOfCanvas} | ${totals.acceptedBleedCandidates} | ` +
+        `${totals.unexpectedOutOfCanvas} | ${totals.consoleErrors} |`
+    )
   }
   writeSlideTables(lines, decks)
   fs.writeFileSync(paths.reportMd, `${lines.join('\n')}\n`)
+}
+
+const CONSOLE_KINDS = new Set([
+  'resource-load',
+  'font-decode',
+  'font-cors',
+  'csp',
+  'uncaught',
+  'unknown',
+])
+const CONSOLE_SOURCES = new Set([
+  'same-origin-upload',
+  'same-origin-assets',
+  'same-origin-api',
+  'same-origin-other',
+  'external',
+  'unknown',
+])
+
+function safeConsoleDiagnostic(value) {
+  if (!value || typeof value !== 'object') return sanitizeDiagnosticText(value)
+  return {
+    kind: CONSOLE_KINDS.has(value.kind) ? value.kind : 'unknown',
+    stage: value.stage === 'slide' ? 'slide' : 'import',
+    slide: Number.isSafeInteger(value.slide) && value.slide > 0 ? value.slide : null,
+    source: CONSOLE_SOURCES.has(value.source) ? value.source : 'unknown',
+    length:
+      Number.isSafeInteger(value.length) && value.length >= 0 ? Math.min(value.length, 4096) : 0,
+  }
 }
 
 function sanitizeDeckForReport(deck) {
   return {
     ...deck,
     importError: deck.importError ? sanitizeDiagnosticText(deck.importError) : deck.importError,
-    consoleErrors: (deck.consoleErrors || []).map((value) => sanitizeDiagnosticText(value)),
+    consoleErrors: (deck.consoleErrors || []).map(safeConsoleDiagnostic),
   }
 }
 
@@ -135,13 +186,18 @@ function writeSlideTables(lines, decks) {
       lines.push(`Import error: ${escapeMd(deck.importError)}`)
       continue
     }
-    lines.push('| Slide | Status | Elements | Text | Image | Raw out | Bleed candidates | Unexpected out | Screenshot |')
+    lines.push(
+      '| Slide | Status | Elements | Text | Image | Raw out | Bleed candidates | Unexpected out | Screenshot |'
+    )
     lines.push('| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |')
     for (const slide of deck.slides) {
-      lines.push(`| ${slide.index + 1} | ${slide.status} | ${slide.elementCount} | ${slide.textOverflow.length} | ` +
-        `${slide.imageClipping.length} | ${slide.rawOutOfCanvas.length} | ${slide.acceptedBleedCandidates.length} | ` +
-        `${slide.unexpectedOutOfCanvas.length} | ${escapeMd(path.relative(process.cwd(), slide.screenshot))} |`)
-      if (slide.status !== 'pass') lines.push(`|  |  |  |  |  |  |  |  | ${escapeMd(summarizeSlide(slide))} |`)
+      lines.push(
+        `| ${slide.index + 1} | ${slide.status} | ${slide.elementCount} | ${slide.textOverflow.length} | ` +
+          `${slide.imageClipping.length} | ${slide.rawOutOfCanvas.length} | ${slide.acceptedBleedCandidates.length} | ` +
+          `${slide.unexpectedOutOfCanvas.length} | ${escapeMd(path.relative(process.cwd(), slide.screenshot))} |`
+      )
+      if (slide.status !== 'pass')
+        lines.push(`|  |  |  |  |  |  |  |  | ${escapeMd(summarizeSlide(slide))} |`)
     }
   }
 }

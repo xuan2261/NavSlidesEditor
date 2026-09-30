@@ -67,11 +67,11 @@ export default function EditorCanvasWorkspace({ overlayOpen, c }) {
           onOpenLatexEditor={c.openLatexEditor}
           masterEdit={Boolean(c.masterEdit)}
           onAddMedia={async (file, dropX, dropY, targetSlideId) => {
-            const targetId = targetSlideId ?? c.activeSlideRef?.current?.id ?? c.activeSlide?.id
+            const targetId = targetSlideId ?? c.authoringSlideRef?.current?.id ?? c.activeSlideRef?.current?.id
             try {
               const result = await api.uploadFile(file)
               if (!result?.url) throw new Error(result?.error || 'Upload failed')
-              const currentSlideId = c.activeSlideRef?.current?.id ?? c.activeSlide?.id
+              const currentSlideId = c.authoringSlideRef?.current?.id ?? c.activeSlideRef?.current?.id
               if (targetId && targetId !== currentSlideId) {
                 throw new Error('Upload canceled because the active slide changed')
               }

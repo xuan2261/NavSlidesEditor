@@ -50,7 +50,8 @@ function mockAtomicDeps(overrides = {}) {
 }
 
 describe('PPTX import route', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    await drainDetachedImportCleanups()
     jobManager._reset()
   })
 
@@ -153,7 +154,7 @@ describe('PPTX import route', () => {
       })
     } finally {
       releaseImport?.()
-      await new Promise((resolve) => setTimeout(resolve, 0))
+      await drainDetachedImportCleanups()
       await fs.rm(dir, { recursive: true, force: true })
     }
   })
@@ -212,7 +213,9 @@ describe('PPTX import route', () => {
       }))
 
       const res = await request(app).post('/api/pptx/import').attach('file', file)
+      expect(res.status, JSON.stringify(res.body)).toBe(202)
       const poll = await waitForJob(app, res.body.jobId, 'done', res.body.capability)
+      expect(poll.body.status, JSON.stringify(poll.body)).toBe('done')
 
       expect(poll.body).toMatchObject({
         status: 'done',

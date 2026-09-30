@@ -1,8 +1,13 @@
 # PPTX PowerPoint visual-evidence runbook
 
-This runbook defines the controlled local procedure for the PPTX visual oracle. It
-is an environment-bounded evidence workflow, not an independent attestation or a
-claim of universal PowerPoint compatibility.
+This runbook defines a controlled local PowerPoint visual-oracle procedure for
+future separately selected fidelity claims. PowerPoint G5 is **not selected** for
+v1.17.0; running this procedure, collecting local diagnostic COM screenshots,
+passing importer-corpus checks, or observing editor/browser snapshots does not
+qualify this release for G5 or unqualified PowerPoint fidelity. Native edited-PPTX
+G0/G1/G2/G4 evidence remains separately required by the
+[release contract](deployment-guide.md#release). This is environment-bounded
+guidance, not independent attestation or universal PowerPoint compatibility.
 
 ## Authority and prerequisites
 
@@ -75,7 +80,6 @@ module globals. A release claim must retain the evidence envelope, manifests,
 receipts, goldens, actuals, and comparison report. A deleted local envelope is
 only an execution receipt, not independently reproducible visual evidence.
 
-
 ```bash
 npm run test:pptx:oracle:capture -- \
   --base-url http://127.0.0.1:3202 \
@@ -109,8 +113,9 @@ npm run test:pptx:oracle:qualify -- \
 
 Integrity may pass with trusted finite below-policy scores; qualification then
 returns non-zero and the report preserves both verdicts. Missing physical
-PowerPoint evidence must remain blocked. Never seed, regenerate, or relabel a
-repository placeholder as a golden.
+PowerPoint evidence cannot become an oracle pass. Even a successful future
+oracle run cannot silently select G5 for v1.17.0. Never seed, regenerate, or
+relabel a repository placeholder as a golden.
 
 ## Editor regression is separate
 

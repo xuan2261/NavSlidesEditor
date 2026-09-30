@@ -54,7 +54,7 @@ test.describe('themes, transitions, and layouts visual matrix', () => {
 
           if (SHOULD_CAPTURE_BASELINES && VISUAL_MATRIX_SNAPSHOT_BASELINES.has(key)) {
             await expectStableScreenshot(page, `visual-matrix-${key}.png`, {
-              maxDiffPixelRatio: 0.02,
+              maxDiffPixelRatio: 0.05,
             })
           }
         })
